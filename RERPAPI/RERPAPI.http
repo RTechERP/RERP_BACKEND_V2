@@ -1,0 +1,6 @@
+@RERPAPI_HostAddress = http://localhost:5207
+
+GET {{RERPAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
