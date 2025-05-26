@@ -1,0 +1,109 @@
+<pre>
+1  
+00:00:01,740 --> 00:00:02,760  
+-: Vì một lý do nào đó,  
+
+2  
+00:00:02,760 --> 00:00:05,280  
+nếu chúng ta phải làm việc với user của mình,  
+
+3  
+00:00:05,280 --> 00:00:06,900  
+thì chúng ta cũng nên tạo  
+
+4  
+00:00:06,900 --> 00:00:09,870  
+một application user repository.  
+
+5  
+00:00:09,870 --> 00:00:11,970  
+Nên để tôi làm nhanh việc đó  
+
+6  
+00:00:11,970 --> 00:00:14,553  
+trước khi tiếp tục khóa học.  
+
+7  
+00:00:15,600 --> 00:00:19,740  
+Nó sẽ là một application user repository đơn giản  
+
+8  
+00:00:19,740 --> 00:00:22,830  
+mà không có chức năng update.  
+
+9  
+00:00:22,830 --> 00:00:27,540  
+Nên để tôi dán nó vào đây, application user,  
+
+10  
+00:00:27,540 --> 00:00:30,750  
+và nó sẽ không có gì để update cả.  
+
+11  
+00:00:30,750 --> 00:00:32,310  
+Nhìn ổn rồi đấy.  
+
+12  
+00:00:32,310 --> 00:00:35,523  
+Sao chép và dán category repository,  
+
+13  
+00:00:36,570 --> 00:00:40,623  
+đổi tên nó thành application user repository.  
+
+14  
+00:00:44,430 --> 00:00:47,553  
+Và để tôi chỉnh sửa các class ở đây.  
+
+15  
+00:00:52,740 --> 00:00:55,353  
+Hoàn hảo, chúng ta không cần update ở đây.  
+
+16  
+00:00:57,360 --> 00:00:58,560  
+Nhìn ổn lắm.  
+
+17  
+00:00:58,560 --> 00:01:01,983  
+Để tôi thêm nó vào unit of work luôn.  
+
+18  
+00:01:02,940 --> 00:01:05,043  
+Trước tiên là interface ở đây,  
+
+19  
+00:01:05,880 --> 00:01:09,420  
+IApplicationUserRepository,  
+
+20  
+00:01:09,420 --> 00:01:11,403  
+và unit of work.  
+
+21  
+00:01:17,640 --> 00:01:21,060  
+Application user được gán bằng new  
+
+22  
+00:01:21,060 --> 00:01:24,000  
+ApplicationUserRepository  
+
+23  
+00:01:24,000 --> 00:01:26,910  
+và underscore db.  
+
+24  
+00:01:26,910 --> 00:01:28,410  
+Hoàn hảo.  
+
+25  
+00:01:28,410 --> 00:01:31,200  
+Với những bước này, để tôi đóng unit of work lại  
+
+26  
+00:01:31,200 --> 00:01:32,430  
+và chúng ta đã thêm  
+
+27  
+00:01:32,430 --> 00:01:35,433  
+application user repository của mình.  
+</pre>
