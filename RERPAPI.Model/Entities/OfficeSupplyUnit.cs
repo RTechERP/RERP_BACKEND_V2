@@ -16,4 +16,6 @@ public partial class OfficeSupplyUnit
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
+    // Thêm trường mới
+    public bool IsDeleted { get; set; }
 }
