@@ -119,3 +119,10 @@ src/.vs/config/applicationhost.config
 # Custom
 appsettings.json
 /MaintenanceSystem/appsettings.json
+
+# Ignore specific project files
+RERPAPI/RERPAPI.csproj
+RERPAPI.Repo/RERPAPI.Repo.csproj
+RERPAPI.Model/RERPAPI.Model.csproj
+RERPAPI.IRepo/RERPAPI.IRepo.csproj
+RERPAPI.Model/Common/Config.cs
