@@ -282,7 +282,6 @@ namespace RERPAPI.Controllers
                         // gán id và gán parent id
                         model.POKHID = dto.POKH.ID;
                         model.ParentID = parentId;
-                        listIDDetail.Add(parentId);
                         //
                         model.ProductID = item.ProductID;
                         model.STT = item.STT;
@@ -315,6 +314,7 @@ namespace RERPAPI.Controllers
                         {
                             await _pokhDetailRepo.CreateAsync(model);
                         }
+                        listIDDetail.Add(model.ID);
                         parentIdMapping.Add(item.ID, model.ID);
                     }
                 }
@@ -337,8 +337,8 @@ namespace RERPAPI.Controllers
                                 RowHandle = item.RowHandle,
                                 STT = item.STT,
                                 ReceiveMoney = item.ReceiveMoney,
-                                Month = item.Month,
-                                Year = item.Year,
+                                Month = dto.POKH.Month,
+                                Year = dto.POKH.Year,
                                 CreatedDate = DateTime.Now,
                             };
                             await _pokhDetailMoneyRepo.CreateAsync(pokhDetailMoney);
