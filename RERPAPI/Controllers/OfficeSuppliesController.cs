@@ -71,7 +71,7 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-        
+
 
         [HttpPost("deleteofficesupply")]
         public async Task<IActionResult> DeleteVpp([FromBody] List<int> ids)
@@ -128,37 +128,37 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-
         //cap nhat and them
         [HttpPost("addandupdate")]
         public async Task<IActionResult> AddandUpdate([FromBody] OfficeSupply officesupply)
         {
-
             try
             {
                 if (officesupply.ID <= 0)
                 {
-                    officesupply.CodeRTC = off.GetNextCodeRTC();
                     await off.CreateAsync(officesupply);
                 }
-                else await off.UpdateAsync(officesupply);
-
+                else
+                {                 
+                    off.UpdateFieldsByID(officesupply.ID, officesupply);
+                }
                 return Ok(new
                 {
                     status = 1,
-
+                    data = officesupply,
+                    message = "Cập nhật thành công!"
                 });
             }
             catch (Exception ex)
             {
-
-                return BadRequest(new
+                return Ok(new
                 {
                     status = 0,
                     message = ex.Message,
                     error = ex.ToString()
                 });
             }
+
         }
 
         //danh sách tính
