@@ -75,15 +75,15 @@ namespace RERPAPI.Controllers
 
                 foreach (var id in ids)
                 {
-                    OfficeSupplyRequest1 item = officesupplyrequests.GetByID(id);
+                    var item = officesupplyrequests.GetByID(id);
 
                     if (item != null && item.IsApproved == false && item.IsAdminApproved == false)
                     {
                         item.IsAdminApproved = true;
-                        item.DateAdminApproved = DateTime.Now;
-
-                        await officesupplyrequests.UpdateAsync(item);
+                        item.DateAdminApproved = DateTime.Now;                      
                     }
+                    officesupplyrequests.UpdateFieldsByID(id, item);
+
                 }
 
                 return Ok(new
@@ -113,14 +113,14 @@ namespace RERPAPI.Controllers
 
                 foreach (var id in ids)
                 {
-                    OfficeSupplyRequest1 item = officesupplyrequests.GetByID(id);
-                    if (item != null)
+                    var item = officesupplyrequests.GetByID(id);
+                    if (item != null && item.IsAdminApproved==true && item.IsApproved==false)
                     {
                         item.IsAdminApproved = false;
                         item.DateAdminApproved = DateTime.Now;
-                        await officesupplyrequests.UpdateAsync(item);
                     }
-                }       
+                    officesupplyrequests.UpdateFieldsByID(id, item);
+                }
                 return Ok(new
                 {
                     status = 1,
@@ -147,14 +147,14 @@ namespace RERPAPI.Controllers
                     return BadRequest("Danh sách ID không hợp lệ.");
                 foreach (var id in ids)
                 {
-                    OfficeSupplyRequest1 item = officesupplyrequests.GetByID(id);
-                    if (item != null)
+                    var item = officesupplyrequests.GetByID(id);
+                    if (item != null && item.IsAdminApproved == true && item.IsApproved == false)
                     {
                         item.IsApproved = true;
-                        item.DateApproved = DateTime.Now;
-                        await officesupplyrequests.UpdateAsync(item);
+                        item.DateApproved = DateTime.Now;                     
                     }
-                }              
+                   officesupplyrequests.UpdateFieldsByID(id, item);
+                }
                 return Ok(new
                 {
                     status = 1,
@@ -170,8 +170,8 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-        [HttpPost("unisapproved")]
-        public async Task<IActionResult> UnIsApproved([FromBody] List<int> ids)
+    [HttpPost("unisapproved")]
+        public IActionResult UnIsApproved([FromBody] List<int> ids)
         {
             try
             {
@@ -179,13 +179,13 @@ namespace RERPAPI.Controllers
                     return BadRequest("Danh sách ID không hợp lệ.");
                 foreach (var id in ids)
                 {
-                    OfficeSupplyRequest1 item = officesupplyrequests.GetByID(id);
-                    if (item != null)
+                    var item = officesupplyrequests.GetByID(id);
+                    if (item != null && item.IsAdminApproved == true && item.IsApproved == true)
                     {
                         item.IsApproved = false;
                         item.DateApproved = DateTime.Now;
-                        await officesupplyrequests.UpdateAsync(item);
                     }
+                    officesupplyrequests.UpdateFieldsByID(id, item);
                 }
                 return Ok(new
                 {
