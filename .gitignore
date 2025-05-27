@@ -123,4 +123,7 @@ appsettings.json
 RERPAPI.Model/Common/Config.cs
 **/*.csproj
 RERPAPI.Repo/GenericEntity/UserRepo.cs
+RERPAPI/Controllers/EmployeeController.cs
+RERPAPI/Controllers/ModulaLocationController.cs
+
 
