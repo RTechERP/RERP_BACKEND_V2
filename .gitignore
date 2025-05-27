@@ -125,5 +125,7 @@ RERPAPI.Model/Common/Config.cs
 RERPAPI.Repo/GenericEntity/UserRepo.cs
 RERPAPI/Controllers/EmployeeController.cs
 RERPAPI/Controllers/ModulaLocationController.cs
+RERPAPI.IRepo/IGenericRepo.cs
+
 
 
