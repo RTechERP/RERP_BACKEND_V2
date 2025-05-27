@@ -10,8 +10,7 @@ namespace RERPAPI.Controllers
     [Route("api/[controller]")]
     [ApiController]
     public class OfficeSupplyRequestsController : ControllerBase
-    {
-        RTCContext db = new RTCContext();
+    {     
         OfficeSupplyRequestsRepo officesupplyrequests = new OfficeSupplyRequestsRepo();
 
         [HttpGet("getdatadepartment")]
@@ -83,7 +82,6 @@ namespace RERPAPI.Controllers
                         item.DateAdminApproved = DateTime.Now;                      
                     }
                     officesupplyrequests.UpdateFieldsByID(id, item);
-
                 }
 
                 return Ok(new
