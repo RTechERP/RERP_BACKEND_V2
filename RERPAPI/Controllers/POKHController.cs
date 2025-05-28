@@ -256,7 +256,6 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                List<int> listIDDetail = new List<int>();
                 if (dto.POKH.ID <= 0)
                 {
                     await _pokhRepo.CreateAsync(dto.POKH);
@@ -304,7 +303,7 @@ namespace RERPAPI.Controllers
                         model.ActualDeliveryDate = item.ActualDeliveryDate;
                         model.RecivedMoneyDate = item.RecivedMoneyDate;
                         model.Note = item.Note;
-                        
+
 
                         if (idOld > 0)
                         {
@@ -314,35 +313,28 @@ namespace RERPAPI.Controllers
                         {
                             await _pokhDetailRepo.CreateAsync(model);
                         }
-                        listIDDetail.Add(model.ID);
                         parentIdMapping.Add(item.ID, model.ID);
                     }
                 }
-                if(dto.pOKHDetailsMoney != null && dto.pOKHDetailsMoney.Count > 0 && listIDDetail.Count > 0)
+                if (dto.pOKHDetailsMoney != null && dto.pOKHDetailsMoney.Count > 0)
                 {
                     await _pokhDetailMoneyRepo.DeleteByPOKHID(dto.POKH.ID);
-                    foreach (var detailID in listIDDetail) 
+                    foreach (var item in dto.pOKHDetailsMoney)
                     {
-                        foreach (var item in dto.pOKHDetailsMoney)
+                        var pokhDetailMoney = new POKHDetailMoney
                         {
-                            var pokhDetailMoney = new POKHDetailMoney
-                            {
-                                //
-                                POKHDetailID = detailID,
-                                POKHID = dto.POKH.ID,
-                                //
-                                PercentUser = item.PercentUser,
-                                UserID = item.UserID,
-                                MoneyUser = item.MoneyUser,
-                                RowHandle = item.RowHandle,
-                                STT = item.STT,
-                                ReceiveMoney = item.ReceiveMoney,
-                                Month = dto.POKH.Month,
-                                Year = dto.POKH.Year,
-                                CreatedDate = DateTime.Now,
-                            };
-                            await _pokhDetailMoneyRepo.CreateAsync(pokhDetailMoney);
-                        }
+                            POKHID = dto.POKH.ID,
+                            PercentUser = item.PercentUser,
+                            UserID = item.ID,
+                            MoneyUser = item.MoneyUser,
+                            RowHandle = item.RowHandle,
+                            STT = item.STT,
+                            ReceiveMoney = item.ReceiveMoney,
+                            Month = dto.POKH.Month,
+                            Year = dto.POKH.Year,
+                            CreatedDate = DateTime.Now,
+                        };
+                        await _pokhDetailMoneyRepo.CreateAsync(pokhDetailMoney);
                     }
                 }
 
