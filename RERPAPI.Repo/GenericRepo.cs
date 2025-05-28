@@ -39,7 +39,7 @@ namespace RERPAPI.Repo
             }
         }
 
-        public T GetByID(long id)
+        public T GetByID(int id)
         {
             try
             {

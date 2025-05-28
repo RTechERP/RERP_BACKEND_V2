@@ -15,9 +15,6 @@ public partial class TSAssetRecovery
 
     public int? EmployeeRecoveryID { get; set; }
 
-    /// <summary>
-    /// 0: chưa duyệt; 1: Đã duyệt
-    /// </summary>
     public int? Status { get; set; }
 
     public string? Note { get; set; }
