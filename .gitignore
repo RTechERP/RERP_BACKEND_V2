@@ -124,4 +124,5 @@ RERPAPI.IRepo/IGenericRepo.cs
 RERPAPI.Repo/RERPAPI.Repo.csproj
 
 RERPAPI/Controllers/ModulaLocationController.cs
+RERPAPI.Model/Common/Config.cs
 
