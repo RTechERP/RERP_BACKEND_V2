@@ -28,7 +28,7 @@ namespace RERPAPI.Controllers
                 List<OficeSuppliesDTO> result = SQLHelper<OficeSuppliesDTO>.ProcedureToList(
               "spGetOfficeSupply",
               new string[] { "@KeyWord" },
-             new object[] { (object)(keyword ?? "") }  // đảm bảo không null
+             new object[] { keyword ?? "" }  // đảm bảo không null
           );
                 var data = result.Where(x => x.IsDeleted == false).ToList();
                 return Ok(new
