@@ -324,7 +324,8 @@ namespace RERPAPI.Controllers
                         var pokhDetailMoney = new POKHDetailMoney
                         {
                             POKHID = dto.POKH.ID,
-                            PercentUser = item.PercentUser,
+                            POKHDetailID = 0,
+                            PercentUser = item.PercentUser / 100,
                             UserID = item.ID,
                             MoneyUser = item.MoneyUser,
                             RowHandle = item.RowHandle,
