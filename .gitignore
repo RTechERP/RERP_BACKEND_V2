@@ -119,13 +119,3 @@ src/.vs/config/applicationhost.config
 # Custom
 appsettings.json
 /MaintenanceSystem/appsettings.json
-
-RERPAPI.Model/Common/Config.cs
-**/*.csproj
-RERPAPI.Repo/GenericEntity/UserRepo.cs
-RERPAPI/Controllers/EmployeeController.cs
-RERPAPI/Controllers/ModulaLocationController.cs
-RERPAPI.IRepo/IGenericRepo.cs
-
-
-
