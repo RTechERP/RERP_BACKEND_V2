@@ -21,7 +21,7 @@ namespace RERPAPI.Controllers
        
 
         [HttpGet("getdataofficesupplies")]
-        public IActionResult GetOfficeSupplies([FromQuery] string keyword = "")
+        public IActionResult GetOfficeSupplies(string keyword = "")
         {
             try
             {
@@ -78,13 +78,7 @@ namespace RERPAPI.Controllers
             try
             {
                 if (ids == null || ids.Count == 0)
-                    return BadRequest(new
-                    {
-                        status = 0,
-                        message= "Lỗi",
-                        error = ToString()
-                    });
-
+                    return BadRequest(new{status = 0,message= "Lỗi",error = ToString()});
                 foreach (var id in ids)
                 {
                     var item = off.GetByID(id);
