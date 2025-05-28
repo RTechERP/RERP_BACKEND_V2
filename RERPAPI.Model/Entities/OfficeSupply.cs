@@ -6,6 +6,7 @@ namespace RERPAPI.Model.Entities;
 public partial class OfficeSupply
 {
     public int ID { get; set; }
+    public bool IsDeleted { get; set; }
 
     public string? CodeRTC { get; set; }
 
