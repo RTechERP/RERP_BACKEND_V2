@@ -70,7 +70,7 @@ namespace RERPAPI.Controllers
             try
             {
                 if (ids == null || ids.Count == 0)
-                    return BadRequest("Danh sách ID không hợp lệ.");
+                      return BadRequest(new{status = 0,message= "Lỗi",error = ToString()});
 
                 foreach (var id in ids)
                 {
@@ -107,7 +107,7 @@ namespace RERPAPI.Controllers
             try
             {
                 if (ids == null || ids.Count == 0)
-                    return BadRequest("Danh sách ID không hợp lệ.");
+                      return BadRequest(new{status = 0,message= "Lỗi",error = ToString()});
 
                 foreach (var id in ids)
                 {
@@ -142,7 +142,7 @@ namespace RERPAPI.Controllers
             try
             {
                 if (ids == null || ids.Count == 0)
-                    return BadRequest("Danh sách ID không hợp lệ.");
+                      return BadRequest(new{status = 0,message= "Lỗi",error = ToString()});
                 foreach (var id in ids)
                 {
                     var item = officesupplyrequests.GetByID(id);
@@ -174,7 +174,7 @@ namespace RERPAPI.Controllers
             try
             {
                 if (ids == null || ids.Count == 0)
-                    return BadRequest("Danh sách ID không hợp lệ.");
+                      return BadRequest(new{status = 0,message= "Lỗi",error = ToString()});
                 foreach (var id in ids)
                 {
                     var item = officesupplyrequests.GetByID(id);

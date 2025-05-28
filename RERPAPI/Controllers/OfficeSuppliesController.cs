@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Azure.Messaging;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
@@ -77,7 +78,12 @@ namespace RERPAPI.Controllers
             try
             {
                 if (ids == null || ids.Count == 0)
-                    return BadRequest("Danh sách ID không hợp lệ.");
+                    return BadRequest(new
+                    {
+                        status = 0,
+                        message= "Lỗi",
+                        error = ToString()
+                    });
 
                 foreach (var id in ids)
                 {
