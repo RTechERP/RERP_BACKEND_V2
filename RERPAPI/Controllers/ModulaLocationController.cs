@@ -28,7 +28,7 @@ namespace RERPAPI.Controllers
             try
             {
                 List<ModulaLocation> listLocations = locationRepo.GetAll().Where(x=>x.IsDeleted == false).ToList();
-                List<List<dynamic>> locationdetails = SQLHelper<object>.ProcedureToList("spGetModulaLocationDetail", new string[] { }, new object[] { });
+                List<List<dynamic>> locationdetails = SQLHelper<object>.ProcedureToDynamicLists("spGetModulaLocationDetail", new string[] { }, new object[] { });
                 var details = SQLHelper<object>.GetListData(locationdetails, 0);
 
                 List<ModulaLocationDTO> locations = new List<ModulaLocationDTO>();
@@ -77,7 +77,7 @@ namespace RERPAPI.Controllers
             try
             {
 
-                List<List<dynamic>> data = SQLHelper<object>.ProcedureToList("spGetProductImportExport",
+                List<List<dynamic>> data = SQLHelper<object>.ProcedureToDynamicLists("spGetProductImportExport",
                                                                 new string[] { "@BillType", "@BillCode" },
                                                                 new object[] { billtype, billcode });
 
@@ -112,7 +112,7 @@ namespace RERPAPI.Controllers
             try
             {
 
-                List<List<dynamic>> locations = SQLHelper<object>.ProcedureToList("spGetModulaLocationDetailByID",
+                List<List<dynamic>> locations = SQLHelper<object>.ProcedureToDynamicLists("spGetModulaLocationDetailByID",
                                                                 new string[] { "@ID" },
                                                                 new object[] { id });
                 return Ok(new

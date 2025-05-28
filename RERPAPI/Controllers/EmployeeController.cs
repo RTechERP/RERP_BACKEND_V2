@@ -42,7 +42,7 @@ namespace RERPAPI.Controllers
             try
             {
                 keyword = string.IsNullOrWhiteSpace(keyword) ? "" : keyword;
-                var employees = SQLHelper<object>.ProcedureToList("spGetEmployee", 
+                var employees = SQLHelper<object>.ProcedureToDynamicLists("spGetEmployee", 
                                                                                     new string[] { "@Status", "@DepartmentID", "@Keyword" }, 
                                                                                     new object[] { status, departmentID, keyword });
                 return Ok(new

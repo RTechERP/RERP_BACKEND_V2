@@ -13,7 +13,7 @@ namespace RERPAPI.Model.Common
         {
             get
             {
-                string connectionString = @"Server={servername};database=RTC;User Id = sa; Password=1;TrustServerCertificate=True";
+                string connectionString = @"Data Source=DESKTOP-ME2R5GM;Initial Catalog=RTC;Integrated Security=True;Encrypt=True;Trust Server Certificate=True";
                 if (_isPublish == 1) connectionString = @"";
                 return connectionString;
             }
