@@ -13,7 +13,7 @@ namespace RERPAPI.Controllers
     public class KPIEmployeeTeamController : ControllerBase
     {
         KPIEmployeeTeamRepo teamRepo = new KPIEmployeeTeamRepo();
-        KPIEmployeeTeamLinkRepo teamLinkRepo = new KPIEmployeeTeamLinkRepo();
+
         DepartmentRepo departmentRepo = new DepartmentRepo();
         EmployeeRepo employeeRepo = new EmployeeRepo();
 
@@ -46,23 +46,14 @@ namespace RERPAPI.Controllers
             }
 
         }
-
-
-        [HttpGet("getkpiemployeeteamlink")]
-        public IActionResult GetKPIEmployeeTeamLink(int kpiEmployeeteamID, int departmentID, int yearValue, int quarterValue)
+        [HttpGet("getemployeeinteam")]
+        public IActionResult GetAllEmployee(int departmentID = 0, int kpiEmployeeTeamID = 0)
         {
             try
             {
-                var teamlinks = SQLHelper<object>.ProcedureToList("spGetKPIEmployeeTeamLink_New",
-                                                                new string[] { "@KPIEmployeeteamID", "@DepartmentID", "@YearValue", "@QuarterValue" },
-                                                                new object[] { kpiEmployeeteamID, departmentID, yearValue, quarterValue });
+                var employees = SQLHelper<object>.ProcedureToList("spGetKPIEmployeeByDepartmentID", new string[] { "@DepartmentID", "@KPIEmployeeTeam" }, new object[] { departmentID, kpiEmployeeTeamID });
 
-
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<object>.GetListData(teamlinks, 0)
-                });
+                return Ok(new { status = 1, data = SQLHelper<object>.GetListData(employees,0) });
             }
             catch (Exception ex)
             {
@@ -74,7 +65,16 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-
+        [HttpGet("getbyid")]
+        public IActionResult FindByID(int id)
+        {
+            KPIEmployeeTeam team = teamRepo.GetByID(id);
+            if (team == null)
+            {
+                return Ok(new { status = 0, message = "Team không có trong cơ sở dữ liệu!" });
+            }
+            return Ok(new { status = 1, data = team });
+        }
 
         [HttpPost("savedata")]
         public async Task<IActionResult> SaveData([FromBody] KPIEmployeeTeam team)

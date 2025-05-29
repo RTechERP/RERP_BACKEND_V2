@@ -18,7 +18,7 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                List<Employee> employees = employeeRepo.GetAll();
+                List<Employee> employees = employeeRepo.GetAll().Where(e=>e.Status!=1).ToList();
                 return Ok(new
                 {
                     status = 1,
@@ -84,7 +84,24 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-
+        [HttpGet("getbydepartmentid")]
+        public IActionResult getEmployeeById(int departmentID)
+        {
+            List<Employee> employees = employeeRepo.GetAll().Where(e => e.DepartmentID == departmentID).ToList();
+            if (employees == null)
+            {
+                return NotFound(new
+                {
+                    status = 0,
+                    message = "Lỗi không tìm thấy nhân viên của phòng ban"
+                });
+            }
+            return Ok(new
+            {
+                status = 1,
+                data = employees
+            });
+        }
         [HttpPost("savedata")]
         public async Task<IActionResult> SaveEmployee([FromBody] Employee employee)
         {
