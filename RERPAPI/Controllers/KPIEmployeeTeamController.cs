@@ -24,7 +24,7 @@ namespace RERPAPI.Controllers
             try
             {
 
-                var teams = SQLHelper<object>.ProcedureToList("spGetALLKPIEmployeeTeam",
+                var teams = SQLHelper<object>.ProcedureToDynamicLists("spGetALLKPIEmployeeTeam",
                                                                 new string[] { "@YearValue", "@QuarterValue", "@DepartmentID" },
                                                                 new object[] { yearValue, quarterValue, departmentID });
 
@@ -53,7 +53,7 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                var teamlinks = SQLHelper<object>.ProcedureToList("spGetKPIEmployeeTeamLink_New",
+                var teamlinks = SQLHelper<object>.ProcedureToDynamicLists("spGetKPIEmployeeTeamLink_New",
                                                                 new string[] { "@KPIEmployeeteamID", "@DepartmentID", "@YearValue", "@QuarterValue" },
                                                                 new object[] { kpiEmployeeteamID, departmentID, yearValue, quarterValue });
 
