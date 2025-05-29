@@ -31,10 +31,16 @@ namespace RERPAPI.Controllers
              new object[] { keyword ?? "" }  // đảm bảo không null
           );
                 var data = result.Where(x => x.IsDeleted == false).ToList();
+                var nextCode = off.GetNextCodeRTC();
+
                 return Ok(new
                 {
                     status = 1,
-                    data = data
+                    data = new
+                    {
+                        officeSupply=data,
+                        nextCode=nextCode,
+                    }
 
                 });
             }
@@ -78,7 +84,7 @@ namespace RERPAPI.Controllers
             try
             {
                 if (ids == null || ids.Count == 0)
-                    return BadRequest(new{status = 0,message= "Lỗi",error = ToString()});
+                    return BadRequest(new { status = 0, message = "Lỗi", error = ToString() });
                 foreach (var id in ids)
                 {
                     var item = off.GetByID(id);
@@ -105,38 +111,38 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-
-        [HttpGet]
-        [Route("next-codeRTC")]
-        public async Task<IActionResult> GetNextCodeRTC()
+        [HttpPost("CheckCodes")]
+        public async Task<IActionResult> CheckCodes([FromBody] List<ProductCodeCheck> codes)
         {
             try
             {
-                var allCodes = off.GetAll()
-                           .Where(x => x.CodeRTC.StartsWith("VPP"))
-                           .Select(x => x.CodeRTC);
-                int maxNumber = 0;
-                foreach (var code in allCodes)
+                // Lấy danh sách các mã cần kiểm tra
+                var codeRTCs = codes.Select(x => x.CodeRTC).ToList();
+                var codeNCCs = codes.Select(x => x.CodeNCC).ToList();
+
+                // Kiểm tra trong database
+                var existingProducts = off.GetAll()
+                    .Where(x => codeRTCs.Contains(x.CodeRTC) || codeNCCs.Contains(x.CodeNCC))
+                    .Select(x => new {
+                        ID = x.ID, // Thêm ID vào đây
+                        CodeRTC = x.CodeRTC,
+                        CodeNCC = x.CodeNCC,
+                        NameRTC = x.NameRTC,
+                        NameNCC = x.NameNCC
+                    })
+                    .ToList();
+
+                return Ok(new
                 {
-                    var numberPart = code.Substring(3);
-                    if (int.TryParse(numberPart, out int num))
+                    data = new
                     {
-                        if (num > maxNumber)
-                            maxNumber = num;
+                        existingProducts = existingProducts
                     }
-                }
-                int nextNumber = maxNumber + 1;
-                var nextCodeRTC = "VPP" + nextNumber;
-                return Ok(nextCodeRTC);
+                });
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(new { message = ex.Message });
             }
         }
         //cap nhat and them
