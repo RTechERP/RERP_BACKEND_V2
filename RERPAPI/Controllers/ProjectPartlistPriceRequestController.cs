@@ -21,6 +21,7 @@ namespace RERPAPI.Controllers
         ProductSaleRepo productSaleRepo = new ProductSaleRepo();
         CurrencyRepo currencyRepo = new CurrencyRepo();
         SupplierSaleRepo supplierSaleRepo = new SupplierSaleRepo();
+        ProjectSolutionRepo projectSolutionRepo = new ProjectSolutionRepo();
 
         [HttpGet("getallProjectParListPriceRequest")]
         public async Task<IActionResult> GetAll( DateTime dateStart,DateTime dateEnd,int statusRequest, int projectId,string? keyword,
@@ -158,51 +159,54 @@ namespace RERPAPI.Controllers
             List<SupplierSale> lst = supplierSaleRepo.GetAll().OrderByDescending(x => x.ID).Take(10).ToList();
             return Ok(new { status = 0, data = lst });
         }
-        [HttpPost("saveDataPriceRequest")]
-        public async Task<IActionResult> SaveDataPriceRequest([FromBody] List<ProjectPartlistPriceRequest> requestList)
+        [HttpPost("download")]
+        public async Task<IActionResult> DownloadFile([FromBody] DownloadProjectPartlistPriceRequestDTO request)
         {
+            var project = projectRepo.GetByID(request.ProjectId);
+            if (project == null || project.CreatedDate == null)
+                return BadRequest(new
+                {
+                    status=0, 
+                    message= "Không tim thấy dự án!"
+                });
+
+            var solutions = SQLHelper<ProjectSolution>.ProcedureToList("spGetProjectSolutionByProjectPartListID",
+                                                            new string[] { "@ProjectPartListID" }, new object[] { request.PartListId });
+
+            if (solutions.Count <= 0)
+                return BadRequest(new
+                {
+                    status = 0,
+                    message = "Không tìm thấy giải pháp dự án!"
+                });
+            var solution = SQLHelper<dynamic>.GetListData(solutions, 0).FirstOrDefault();
+            var year = project.CreatedDate.Value.Year;
+            var pathPattern = $"{year}/{project.ProjectCode.Trim()}/THIETKE.Co/{solution?.CodeSolution.Trim()}/2D/GC/DH";
+            var fileName = $"{request.ProductCode}.pdf";
+
+            var fileUrl = $"http://14.232.152.154:8083/api/project/{pathPattern}/{fileName}";
+
             try
             {
-                if (requestList == null || !requestList.Any())
-                {
-                    return Ok(new { status = 0, message = "Danh sách yêu cầu trống." });
-                }
+                using var httpClient = new HttpClient();
+                var response = await httpClient.GetAsync(fileUrl);
 
-                foreach (var item in requestList)
-                {
-                    try
-                    {
-                        var result = requestRepo.UpdateFieldsByID(item.ID, item);
-                        if (result <= 0)
-                        {
-                            return Ok(new
-                            {
-                                status = 0,
-                                message = $"Không thể cập nhật sản phẩm với ID = {item.ID}"
-                            });
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        return Ok(new
-                        {
-                            status = 0,
-                            message = $"Lỗi khi cập nhật sản phẩm ID = {item.ID}: {ex.Message}"
-                        });
-                    }
-                }
+                if (!response.IsSuccessStatusCode)
+                    return NotFound($"Không tìm thấy file: {fileUrl}");
 
-                return Ok(new { status = 1, message = "Cập nhật thành công." });
+                var stream = await response.Content.ReadAsStreamAsync();
+                return File(stream, "application/pdf", fileName);
             }
             catch (Exception ex)
             {
-                return Ok(new
+                return BadRequest(new
                 {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
+                    status=0,
+                    message=ex.Message,
+                    error=ex.ToString()
                 });
             }
         }
+
     }
 }
