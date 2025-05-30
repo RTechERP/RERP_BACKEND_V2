@@ -72,7 +72,7 @@ public partial class TSAssetManagement
 
     public string? TSCodeNCC { get; set; }
 
-    public long? STT { get; set; }
+    public int? STT { get; set; }
 
 
     /// <summary>

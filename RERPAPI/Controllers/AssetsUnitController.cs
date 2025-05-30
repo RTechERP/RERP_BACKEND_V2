@@ -10,14 +10,14 @@ namespace RERPAPI.Controllers
     [ApiController]
     public class AssetsUnitController : ControllerBase
     {
-        UnitRepo unitrepo = new UnitRepo();
+        UnitRepo unitRepo = new UnitRepo();
 
         [HttpGet("getall")]
         public IActionResult GetAll()
         {
             try
             {
-                var units = unitrepo.GetAll().Where(x => !x.IsDeleted).ToList();
+                var units = unitRepo.GetAll().Where(x => !x.IsDeleted).ToList();
              
                 return Ok(new
                 {
@@ -36,32 +36,32 @@ namespace RERPAPI.Controllers
             }
         }
      
-        [HttpPost("savedataa")]
-        public async Task<IActionResult> SaveData([FromBody] List<UnitCount> uni)
+        [HttpPost("saveData")]
+        public async Task<IActionResult> saveData([FromBody] List<UnitCount> units)
         {
             try
             {
-                if (uni != null && uni.Any())
+                if (units != null && units.Any())
                 {
-                    foreach (var item in uni)
+                    foreach (var item in units)
                     {
                         if (item.ID > 0)
                         {
                             if (item.IsDeleted==false)
                             {
-                                unitrepo.UpdateFieldsByID(item.ID, new UnitCount
+                                unitRepo.UpdateFieldsByID(item.ID, new UnitCount
                                 {
                                     IsDeleted = true
                                 });
                             }
                             else
                             {
-                                unitrepo.UpdateFieldsByID(item.ID, item);
+                                unitRepo.UpdateFieldsByID(item.ID, item);
                             }
                         }
                         else
                         {
-                            unitrepo.Create(item);
+                            unitRepo.Create(item);
                         }
                     }
                 }

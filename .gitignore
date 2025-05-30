@@ -120,9 +120,8 @@ src/.vs/config/applicationhost.config
 appsettings.json
 /MaintenanceSystem/appsettings.json
 RERPAPI.IRepo/IGenericRepo.cs
-
-RERPAPI.Repo/RERPAPI.Repo.csproj
-
-RERPAPI/Controllers/ModulaLocationController.cs
 RERPAPI.Model/Common/Config.cs
+RERPAPI/RERPAPI.csproj
+RERPAPI.Model/RERPAPI.Model.csproj
+
 

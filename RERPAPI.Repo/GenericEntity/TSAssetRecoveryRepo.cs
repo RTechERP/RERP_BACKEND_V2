@@ -9,7 +9,7 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class TSAssetRecoveryRepo : GenericRepo<TSAssetRecovery>
     {
-        public string GenCodeRecovery(DateTime? recoveryDate)
+        public string genCodeRecovery(DateTime? recoveryDate)
         {
 
             var date = recoveryDate.Value.Date;

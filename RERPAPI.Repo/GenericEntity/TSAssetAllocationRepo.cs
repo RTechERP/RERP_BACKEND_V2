@@ -10,7 +10,7 @@ namespace RERPAPI.Repo.GenericEntity
     public class TSAssetAllocationRepo : GenericRepo<TSAssetAllocation>
     {
 
-        public string GenerateAllocationCode( DateTime? allocationDate)
+        public string generateAllocationCode( DateTime? allocationDate)
         {
            
 

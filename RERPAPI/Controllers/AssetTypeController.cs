@@ -9,28 +9,19 @@ namespace RERPAPI.Controllers
     [ApiController]
     public class AssetTypeController : ControllerBase
     {
-        TSAssetRecoveryRepo tSAssetRecoveryRepo = new TSAssetRecoveryRepo();
-        TSLostReportAssetRepo tslostreport = new TSLostReportAssetRepo();
-        TSAllocationEvictionAssetRepo tSAllocationEvictionrepo = new TSAllocationEvictionAssetRepo();
-        TSReportBrokenAssetRepo reportrepo = new TSReportBrokenAssetRepo();
-        TSStatusAssetRepo tSStatusAssetRepo = new TSStatusAssetRepo();
-        TTypeAssetsRepo typerepo = new TTypeAssetsRepo();
+      
+        TTypeAssetsRepo typeAssetRepo = new TTypeAssetsRepo();
 
-        TSAssetManagementRepo tasset = new TSAssetManagementRepo();
-        TSSourceAssetsRepo tssourcerepo = new TSSourceAssetsRepo();
-        TSAssetAllocationRepo tSAssetAllocationRepo = new TSAssetAllocationRepo();
-
-        TSAssetAllocationDetailRepo tSAssetAllocationDetailRepo = new TSAssetAllocationDetailRepo();
-        [HttpGet("gettype")]
-        public IActionResult GetType()
+        [HttpGet("getAssetType")]
+        public IActionResult getAssetType()
         {
             try
             {
-                List<TSAsset> tSAssets = typerepo.GetAll();
+                List<TSAsset> tsAssets = typeAssetRepo.GetAll();
                 return Ok(new
                 {
                     status = 1,
-                    data = tSAssets
+                    data = tsAssets
                 });
             }
             catch (Exception ex)

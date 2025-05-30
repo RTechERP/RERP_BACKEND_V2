@@ -60,7 +60,7 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-        [HttpGet("get-all-with-details")]
+        [HttpGet("getallwithdetails")]
         public IActionResult GetAllWithDetails()
         {
             try
