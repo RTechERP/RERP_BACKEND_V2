@@ -262,7 +262,7 @@ namespace RERPAPI.Controllers
                 }
                 else
                 {
-                    await _pokhRepo.UpdateAsync(dto.POKH);
+                    _pokhRepo.UpdateFieldsByID(dto.POKH.ID, dto.POKH);
                 }
                 var parentIdMapping = new Dictionary<int, int>();
                 if (dto.pOKHDetails.Count > 0)
@@ -284,6 +284,7 @@ namespace RERPAPI.Controllers
                         //
                         model.ProductID = item.ProductID;
                         model.STT = item.STT;
+                        model.KHID = item.KHID;
                         model.GuestCode = item.GuestCode;
                         model.Qty = item.Qty;
                         model.FilmSize = item.FilmSize;
@@ -307,7 +308,7 @@ namespace RERPAPI.Controllers
 
                         if (idOld > 0)
                         {
-                            await _pokhDetailRepo.UpdateAsync(model);
+                            _pokhDetailRepo.UpdateFieldsByID(idOld, model);
                         }
                         else
                         {
@@ -318,24 +319,31 @@ namespace RERPAPI.Controllers
                 }
                 if (dto.pOKHDetailsMoney != null && dto.pOKHDetailsMoney.Count > 0)
                 {
-                    await _pokhDetailMoneyRepo.DeleteByPOKHID(dto.POKH.ID);
                     foreach (var item in dto.pOKHDetailsMoney)
                     {
-                        var pokhDetailMoney = new POKHDetailMoney
+                        int idOld = item.ID;
+                        POKHDetailMoney detailMoney = idOld > 0 ? _pokhDetailMoneyRepo.GetByID(idOld) : new POKHDetailMoney();
+                        detailMoney.POKHID = dto.POKH.ID;
+                        detailMoney.POKHDetailID = 0;
+                        detailMoney.PercentUser = item.PercentUser / 100;
+                        detailMoney.UserID = item.UserID;
+                        detailMoney.MoneyUser = item.MoneyUser;
+                        detailMoney.RowHandle = item.RowHandle;
+                        detailMoney.STT = item.STT;
+                        detailMoney.ReceiveMoney = item.ReceiveMoney;
+                        detailMoney.Month = dto.POKH.Month;
+                        detailMoney.Year = dto.POKH.Year;
+                        detailMoney.CreatedDate = DateTime.Now;
+
+
+                        if (idOld > 0)
                         {
-                            POKHID = dto.POKH.ID,
-                            POKHDetailID = 0,
-                            PercentUser = item.PercentUser / 100,
-                            UserID = item.ID,
-                            MoneyUser = item.MoneyUser,
-                            RowHandle = item.RowHandle,
-                            STT = item.STT,
-                            ReceiveMoney = item.ReceiveMoney,
-                            Month = dto.POKH.Month,
-                            Year = dto.POKH.Year,
-                            CreatedDate = DateTime.Now,
-                        };
-                        await _pokhDetailMoneyRepo.CreateAsync(pokhDetailMoney);
+                            _pokhDetailMoneyRepo.UpdateFieldsByID(idOld, detailMoney);
+                        }
+                        else
+                        {
+                            await _pokhDetailMoneyRepo.CreateAsync(detailMoney);
+                        }
                     }
                 }
 
