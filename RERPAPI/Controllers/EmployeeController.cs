@@ -27,7 +27,7 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new
+                return Ok(new
                 {
                     status = 0,
                     message = ex.Message,
@@ -37,14 +37,14 @@ namespace RERPAPI.Controllers
         }
 
         [HttpGet("getemployees")]
-        public IActionResult GetEmployee(int status, int departmentID,string keyword)
+        public IActionResult GetEmployee(int status, int departmentID,string? keyword)
         {
             try
             {
                 keyword = string.IsNullOrWhiteSpace(keyword) ? "" : keyword;
                 var employees = SQLHelper<object>.ProcedureToList("spGetEmployee", 
-                                                                                    new string[] { "@Status", "@DepartmentID", "@Keyword" }, 
-                                                                                    new object[] { status, departmentID, keyword });
+                                                new string[] { "@Status", "@DepartmentID", "@Keyword" }, 
+                                                new object[] { status, departmentID, keyword });
                 return Ok(new
                 {
                     status = 1,
@@ -53,7 +53,7 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new
+                return Ok(new
                 {
                     status = 0,
                     message = ex.Message,
@@ -76,7 +76,7 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new
+                return Ok(new
                 {
                     status = 0,
                     message = ex.Message,
@@ -101,7 +101,7 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new
+                return Ok(new
                 {
                     status = 0,
                     message = ex.Message,

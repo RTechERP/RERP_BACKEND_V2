@@ -67,4 +67,10 @@ public partial class EmployeeOvertime
     public string? ReasonHREdit { get; set; }
 
     public bool? IsProblem { get; set; }
+
+    public bool? IsApprovedBGD { get; set; }
+
+    public int? ApprovedBGDID { get; set; }
+
+    public DateTime? DateApprovedBGD { get; set; }
 }
