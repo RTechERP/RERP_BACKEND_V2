@@ -18,7 +18,7 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                List<Employee> employees = employeeRepo.GetAll();
+                List<Employee> employees = employeeRepo.GetAll().Where(e=>e.Status!=1).ToList();
                 return Ok(new
                 {
                     status = 1,
@@ -101,7 +101,7 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-                return Ok(new
+                return BadRequest(new
                 {
                     status = 0,
                     message = ex.Message,

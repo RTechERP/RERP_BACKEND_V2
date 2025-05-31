@@ -13,7 +13,7 @@ namespace RERPAPI.Controllers
     public class KPIEmployeeTeamController : ControllerBase
     {
         KPIEmployeeTeamRepo teamRepo = new KPIEmployeeTeamRepo();
-        //KPIEmployeeTeamLinkRepo teamLinkRepo = new KPIEmployeeTeamLinkRepo();
+
         DepartmentRepo departmentRepo = new DepartmentRepo();
         EmployeeRepo employeeRepo = new EmployeeRepo();
 
@@ -46,35 +46,6 @@ namespace RERPAPI.Controllers
             }
 
         }
-
-
-        //[HttpGet("getkpiemployeeteamlink")]
-        //public IActionResult GetKPIEmployeeTeamLink(int kpiEmployeeteamID, int departmentID, int yearValue, int quarterValue)
-        //{
-        //    try
-        //    {
-        //        var teamlinks = SQLHelper<object>.ProcedureToList("spGetKPIEmployeeTeamLink_New",
-        //                                                        new string[] { "@KPIEmployeeteamID", "@DepartmentID", "@YearValue", "@QuarterValue" },
-        //                                                        new object[] { kpiEmployeeteamID, departmentID, yearValue, quarterValue });
-
-
-        //        return Ok(new
-        //        {
-        //            status = 1,
-        //            data = SQLHelper<object>.GetListData(teamlinks, 0)
-        //        });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return Ok(new
-        //        {
-        //            status = 0,
-        //            message = ex.Message,
-        //            error = ex.ToString()
-        //        });
-        //    }
-        //}
-
         [HttpGet("getemployeeinteam")]
         public IActionResult GetAllEmployee(int departmentID = 0, int kpiEmployeeTeamID = 0)
         {
@@ -125,7 +96,6 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-
 
         [HttpPost("savedata")]
         public async Task<IActionResult> SaveData([FromBody] KPIEmployeeTeam team)
