@@ -27,7 +27,7 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new
+                return Ok(new
                 {
                     status = 0,
                     message = ex.Message,
@@ -37,23 +37,23 @@ namespace RERPAPI.Controllers
         }
 
         [HttpGet("getemployees")]
-        public IActionResult GetEmployee(int status, int departmentID,string keyword)
+        public IActionResult GetEmployee(int status, int departmentID,string? keyword)
         {
             try
             {
                 keyword = string.IsNullOrWhiteSpace(keyword) ? "" : keyword;
-                var employees = SQLHelper<EmployeeDTO>.ProcedureToList("spGetEmployee", 
-                                                                                    new string[] { "@Status", "@DepartmentID", "@Keyword" }, 
-                                                                                    new object[] { status, departmentID, keyword });
+                var employees = SQLHelper<object>.ProcedureToList("spGetEmployee", 
+                                                new string[] { "@Status", "@DepartmentID", "@Keyword" }, 
+                                                new object[] { status, departmentID, keyword });
                 return Ok(new
                 {
                     status = 1,
-                    data = employees[0]
+                    data = SQLHelper<object>.GetListData(employees,0)
                 });
             }
             catch (Exception ex)
             {
-                return BadRequest(new
+                return Ok(new
                 {
                     status = 0,
                     message = ex.Message,
@@ -76,7 +76,7 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new
+                return Ok(new
                 {
                     status = 0,
                     message = ex.Message,
@@ -84,24 +84,7 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-        [HttpGet("getbydepartmentid")]
-        public IActionResult getEmployeeById(int departmentID)
-        {
-            List<Employee> employees = employeeRepo.GetAll().Where(e => e.DepartmentID == departmentID).ToList();
-            if (employees == null)
-            {
-                return NotFound(new
-                {
-                    status = 0,
-                    message = "Lỗi không tìm thấy nhân viên của phòng ban"
-                });
-            }
-            return Ok(new
-            {
-                status = 1,
-                data = employees
-            });
-        }
+
         [HttpPost("savedata")]
         public async Task<IActionResult> SaveEmployee([FromBody] Employee employee)
         {

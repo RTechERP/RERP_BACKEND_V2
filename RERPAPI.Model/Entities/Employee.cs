@@ -281,4 +281,10 @@ public partial class Employee
     public int? ProjectTypeID { get; set; }
 
     public int? EmployeeTeamID { get; set; }
+
+    public bool? GiayXacNhanCuTru { get; set; }
+
+    public string? UserZaloID { get; set; }
+
+    public int? TaxCompanyID { get; set; }
 }

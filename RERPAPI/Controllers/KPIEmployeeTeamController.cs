@@ -53,7 +53,7 @@ namespace RERPAPI.Controllers
             {
                 var employees = SQLHelper<object>.ProcedureToList("spGetKPIEmployeeByDepartmentID", new string[] { "@DepartmentID", "@KPIEmployeeTeam" }, new object[] { departmentID, kpiEmployeeTeamID });
 
-                return Ok(new { status = 1, data = SQLHelper<object>.GetListData(employees,0) });
+                return Ok(new { status = 1, data = SQLHelper<object>.GetListData(employees, 0) });
             }
             catch (Exception ex)
             {
@@ -65,15 +65,36 @@ namespace RERPAPI.Controllers
                 });
             }
         }
+
         [HttpGet("getbyid")]
         public IActionResult FindByID(int id)
         {
-            KPIEmployeeTeam team = teamRepo.GetByID(id);
-            if (team == null)
+            try
             {
-                return Ok(new { status = 0, message = "Team không có trong cơ sở dữ liệu!" });
+                KPIEmployeeTeam team = teamRepo.GetByID(id);
+                if (team.ID <= 0)
+                {
+                    return Ok(new
+                    {
+                        status = 0,
+                        message = "Team không có trong cơ sở dữ liệu!"
+                    });
+                }
+                return Ok(new
+                {
+                    status = 1,
+                    data = team
+                });
             }
-            return Ok(new { status = 1, data = team });
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
         }
 
         [HttpPost("savedata")]

@@ -38,15 +38,19 @@ namespace RERPAPI.Controllers
             }
         }
         [HttpPost("savedata")]
-        public IActionResult AddEmployeeToKPITeam([FromBody] List<KPIEmployeeTeamLink> lstTeamLink)
+        public async Task<IActionResult> SaveData([FromBody] List<KPIEmployeeTeamLink> teamLinks)
         {
             try
             {
-                foreach (var e in lstTeamLink)
+                foreach (var item in teamLinks)
                 {
-                    teamLinkRepo.Create(e);
+                    if (item.ID <= 0)
+                    {
+                        await teamLinkRepo.CreateAsync(item);
+                    }
+                    else teamLinkRepo.UpdateFieldsByID(item.ID,item);
                 }
-                return Ok(new { status = 1, message = "Thêm nhân viên vào KPI team thành công." });
+                return Ok(new { status = 1, message = "Cập nhật thành công." });
             }
             catch (Exception ex)
             {
@@ -58,33 +62,34 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-        [HttpPost("deleteemployeeteamlink")]
-        public IActionResult DeleteEmployee([FromBody] List<int> employeeIDs)
-        {
-            if (employeeIDs.Count <= 0) return Ok(new { status = 0, message = "Không có nhân viên nào để xóa" });
 
-            var notFoundIds = new List<int>();
-            foreach (var id in employeeIDs)
-            {
-                var entity = teamLinkRepo.GetByID(id);
-                if (entity == null)
-                {
-                    notFoundIds.Add(id);
-                    continue;
-                }
+        //[HttpPost("deleteemployeeteamlink")]
+        //public IActionResult DeleteEmployee([FromBody] List<int> employeeIDs)
+        //{
+        //    if (employeeIDs.Count <= 0) return Ok(new { status = 0, message = "Không có nhân viên nào để xóa" });
 
-                entity.IsDeleted = true;
-                teamLinkRepo.Update(entity);
-            }
-            if (notFoundIds.Any())
-            {
-                return Ok(new
-                {
-                    status = 0,
-                    message = $"Không tìm thấy nhân viên có ID: {string.Join(", ", notFoundIds)}"
-                });
-            }
-            return Ok(new { status = 1, message = "Đã xóa thành công!" });
-        }
+        //    var notFoundIds = new List<int>();
+        //    foreach (var id in employeeIDs)
+        //    {
+        //        var entity = teamLinkRepo.GetByID(id);
+        //        if (entity == null)
+        //        {
+        //            notFoundIds.Add(id);
+        //            continue;
+        //        }
+
+        //        entity.IsDeleted = true;
+        //        teamLinkRepo.Update(entity);
+        //    }
+        //    if (notFoundIds.Any())
+        //    {
+        //        return Ok(new
+        //        {
+        //            status = 0,
+        //            message = $"Không tìm thấy nhân viên có ID: {string.Join(", ", notFoundIds)}"
+        //        });
+        //    }
+        //    return Ok(new { status = 1, message = "Đã xóa thành công!" });
+        //}
     }
 }
