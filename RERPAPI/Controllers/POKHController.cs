@@ -112,10 +112,11 @@ namespace RERPAPI.Controllers
             try
             {
                 List<POKHFile> file = SQLHelper<POKHFile>.FindByAttribute("POKHID", id);
+                List<POKHFile> list = file.Where(x => x.IsDeleted == false).ToList();
                 return Ok(new
                 {
                     status = 1,
-                    data = file
+                    data = list,
                 });
             }
             catch (Exception ex)
@@ -272,9 +273,9 @@ namespace RERPAPI.Controllers
                         int idOld = item.ID;
                         int parentId = 0;
 
-                        if (parentIdMapping.ContainsKey((int)item.ParentID))
+                        if (item.ParentID.HasValue && parentIdMapping.ContainsKey(item.ParentID.Value))
                         {
-                            parentId = parentIdMapping[(int)item.ParentID];
+                            parentId = parentIdMapping[item.ParentID.Value];
                         }
 
                         POKHDetail model = idOld > 0 ? _pokhDetailRepo.GetByID(idOld) : new POKHDetail();
@@ -291,6 +292,7 @@ namespace RERPAPI.Controllers
                         model.UnitPrice = item.UnitPrice;
                         model.IntoMoney = item.IntoMoney;
                         model.VAT = item.VAT;
+                        model.Spec = item.Spec;
                         model.NetUnitPrice = item.NetUnitPrice;
                         model.TotalPriceIncludeVAT = item.TotalPriceIncludeVAT;
                         model.UserReceiver = item.UserReceiver;
@@ -304,6 +306,7 @@ namespace RERPAPI.Controllers
                         model.ActualDeliveryDate = item.ActualDeliveryDate;
                         model.RecivedMoneyDate = item.RecivedMoneyDate;
                         model.Note = item.Note;
+                        model.IsDeleted = item.IsDeleted;
 
 
                         if (idOld > 0)
@@ -334,7 +337,7 @@ namespace RERPAPI.Controllers
                         detailMoney.Month = dto.POKH.Month;
                         detailMoney.Year = dto.POKH.Year;
                         detailMoney.CreatedDate = DateTime.Now;
-
+                        detailMoney.IsDeleted = item.IsDeleted;
 
                         if (idOld > 0)
                         {
@@ -515,7 +518,7 @@ namespace RERPAPI.Controllers
             }
         }
         [HttpPost("Upload")]
-        public async Task<IActionResult> Upload(int poKHID, List<IFormFile> files)
+        public async Task<IActionResult> Upload(int poKHID, [FromForm] List<IFormFile> files)
         {
             try
             {
@@ -523,7 +526,11 @@ namespace RERPAPI.Controllers
                 var po = _pokhRepo.GetByID(poKHID);
                 if (po == null)
                 {
-                    return NotFound("POKH not found");
+                    return Ok(new
+                    {
+                        status = 0,
+                        message = "POKH not found"
+                    });
                 }
 
                 // Tạo thư mục local cho file
@@ -536,7 +543,8 @@ namespace RERPAPI.Controllers
                     Directory.CreateDirectory(pathUpload);
                 }
 
-                var uploadedFiles = new List<POKHFile>();
+                var processedFile = new List<POKHFile>();
+
 
                 // Lưu từng file vào thư mục local
                 foreach (var file in files)
@@ -557,22 +565,23 @@ namespace RERPAPI.Controllers
                             FileName = fileName,
                             OriginPath = file.FileName,
                             ServerPath = pathUpload,
+                            IsDeleted = false,
                             CreatedBy = User.Identity?.Name ?? "System",
                             CreatedDate = DateTime.Now,
                             UpdatedBy = User.Identity?.Name ?? "System",
                             UpdatedDate = DateTime.Now
                         };
 
-                        _pokhFilesRepo.Create(filePO);
-                        uploadedFiles.Add(filePO);
+                        await _pokhFilesRepo.CreateAsync(filePO);
+                        processedFile.Add(filePO);
                     }
                 }
 
                 return Ok(new
                 {
                     status = 1,
-                    message = $"{uploadedFiles.Count} tệp đã được tải lên thành công",
-                    data = uploadedFiles
+                    message = $"{processedFile.Count} tệp đã được tải lên thành công",
+                    data = processedFile
                 });
             }
             catch (Exception ex)
@@ -585,58 +594,40 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-
-
-        [HttpGet("GetFiles")]
-        public IActionResult GetFiles(int pokhId)
+        [HttpPost("DeleteFile")]
+        public  IActionResult DeleteFile([FromBody] List<int> fileIds)
         {
+            if (fileIds == null || !fileIds.Any())
+                return BadRequest(new { success = false, message = "Danh sách file ID không được trống" });
+
             try
             {
-                string directoryPath = Path.Combine(_uploadPath, $"NB{pokhId}");
-                if (!Directory.Exists(directoryPath))
-                    return Ok(new { status = 1, data = new object[] { } });
+                var results = new List<object>();
 
-                var files = System.IO.Directory.GetFiles(directoryPath)
-                    .Select(file => new
-                    {
-                        ID = 0, // Will be set by database
-                        POKHID = pokhId,
-                        FileName = Path.GetFileName(file),
-                        OriginPath = file,
-                        ServerPath = directoryPath,
-                        CreatedBy = "System",
-                        CreatedDate = System.IO.File.GetCreationTime(file),
-                        UpdatedBy = "System",
-                        UpdatedDate = System.IO.File.GetLastWriteTime(file)
-                    });
+                foreach (var fileId in fileIds)
+                {
+                    var file = _pokhFilesRepo.GetByID(fileId);
 
-                return Ok(new { status = 1, data = files });
+                    // Cập nhật database
+                    file.IsDeleted = true;
+                    //file.UpdatedBy = User.Identity?.Name ?? "System";
+                    //file.UpdatedDate = DateTime.UtcNow;
+                    _pokhFilesRepo.UpdateFieldsByID(file.ID, file);
+
+                    // Xóa file vật lý
+                    var physicalPath = Path.Combine(file.ServerPath, file.FileName);
+                    if (System.IO.File.Exists(physicalPath))
+                        System.IO.File.Delete(physicalPath);
+
+                    results.Add(new { fileId, success = true, message = "Xóa thành công" });
+                }
+
+                return Ok(new { success = true, results });
             }
             catch (Exception ex)
             {
-                return Ok(new { status = 0, message = ex.Message, error = ex.ToString() });
+                return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
-
-        [HttpDelete("DeleteFile/{fileId}")]
-        public IActionResult DeleteFile(int fileId)
-        {
-            try
-            {
-                // TODO: Get file info from database
-                var file = _pokhFilesRepo.GetByID(fileId);
-                // TODO: Delete file from disk
-                // TODO: Delete file record from database
-
-                return Ok(new { status = 1, message = "File deleted successfully" });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { status = 0, message = ex.Message });
-            }
-        }
-
-
-
     }
 }

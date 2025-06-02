@@ -23,6 +23,7 @@ public partial class POKH
     /// dự án
     /// </summary>
     public int? ProjectID { get; set; }
+    
 
     /// <summary>
     /// mã hóa đơn
@@ -129,4 +130,5 @@ public partial class POKH
     public int? PaymentStatus { get; set; }
 
     public int? AccountType { get; set; }
+    public bool? IsDeleted { get; set; }
 }

@@ -85,4 +85,5 @@ public partial class POKHDetail
     public int? ProjectPartListID { get; set; }
 
     public string? Spec { get; set; }
+    public bool? IsDeleted { get; set; }
 }

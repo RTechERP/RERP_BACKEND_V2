@@ -28,4 +28,5 @@ public partial class POKHDetailMoney
     public int? POKHID { get; set; }
 
     public DateTime? CreatedDate { get; set; }
+    public bool? IsDeleted { get; set; }
 }
