@@ -595,7 +595,7 @@ namespace RERPAPI.Controllers
             }
         }
         [HttpPost("DeleteFile")]
-        public  IActionResult DeleteFile([FromBody] List<int> fileIds)
+        public IActionResult DeleteFile([FromBody] List<int> fileIds)
         {
             if (fileIds == null || !fileIds.Any())
                 return BadRequest(new { success = false, message = "Danh sách file ID không được trống" });
@@ -629,5 +629,6 @@ namespace RERPAPI.Controllers
                 return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
+       
     }
 }
