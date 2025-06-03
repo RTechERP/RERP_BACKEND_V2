@@ -80,9 +80,7 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                var teamlinks = SQLHelper<object>.ProcedureToDynamicLists("spGetKPIEmployeeTeamLink_New",
-                                                                new string[] { "@KPIEmployeeteamID", "@DepartmentID", "@YearValue", "@QuarterValue" },
-                                                                new object[] { kpiEmployeeteamID, departmentID, yearValue, quarterValue });
+                var employees = SQLHelper<object>.ProcedureToDynamicLists("spGetKPIEmployeeByDepartmentID", new string[] { "@DepartmentID", "@KPIEmployeeTeam" }, new object[] { departmentID, kpiEmployeeTeamID });
 
                 return Ok(new { status = 1, data = SQLHelper<object>.GetListData(employees, 0) });
             }
