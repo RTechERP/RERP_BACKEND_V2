@@ -78,7 +78,16 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                if(userTeam.ID <= 0)
+                List<UserTeam> userTeams = userTeamRepo.GetAll();
+                if (userTeams.Any(x => (x.Name == userTeam.Name) && x.ID != userTeam.ID))
+                {
+                    return BadRequest(new
+                    {
+                        status = 0,
+                        message = "Tên team đã tồn tại"
+                    });
+                }
+                if (userTeam.ID <= 0)
                 {
                     await userTeamRepo.CreateAsync(userTeam);
                 } else
@@ -191,7 +200,6 @@ namespace RERPAPI.Controllers
             {
                 var userTeamLink = userTeamLinkRepo.GetByID(userTeamLinkID);
                 userTeamLinkRepo.Delete(userTeamLink.ID);
-
                 return Ok(new
                 {
                     status = 1,
