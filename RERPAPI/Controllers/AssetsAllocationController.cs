@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Repo.GenericEntity;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 using System;
@@ -11,6 +10,8 @@ using Microsoft.EntityFrameworkCore;
 using RERPAPI.Model.Context;
 using Microsoft.AspNetCore.Http.HttpResults;
 using System.Collections.Generic;
+using RERPAPI.Model.Param;
+using RERPAPI.Model.DTO;
 
 namespace RERPAPI.Controllers
 {
@@ -21,16 +22,39 @@ namespace RERPAPI.Controllers
         TSAssetManagementRepo tsAssetManagementRepo = new TSAssetManagementRepo();
         TSAssetAllocationRepo tSAssetAllocationRepo = new TSAssetAllocationRepo();
         TSAssetAllocationDetailRepo tSAssetAllocationDetailRepo = new TSAssetAllocationDetailRepo();
-        [HttpGet("getAssetsAllocationDetail")]
-        public IActionResult getAssetAllocationDetail(string? id)
+        [HttpPost("getAllocation")]
+        public async Task<ActionResult> GetAssetAllocationnn([FromBody] AssetAllocationRequestParam request)
         {
             try
             {
-                var assetsAllocationDetail = SQLHelper<dynamic>.ProcedureToList(
-           "spGetTSAssetAllocationDetail",
-           new string[] { "@TSAssetAllocationID" },
-           new object[] { id }
-       );
+                var assetAllocation = SQLHelper<dynamic>.ProcedureToList(
+                    "spGetTSAssetAllocation",
+                    new string[] { "@DateStart", "@DateEnd", "@EmployeeID", "@Status", "@FilterText", "@PageSize", "@PageNumber" },
+                    new object[] { request.DateStart, request.DateEnd, request.EmployeeID, request.Status, request.FilterText ?? string.Empty, request.PageSize, request.PageNumber });
+
+                return Ok(new
+                {
+                    status = 1,
+                    assetAllocation = SQLHelper<dynamic>.GetListData(assetAllocation, 0)
+
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
+        }
+        [HttpGet("getAssetsAllocationDetail")]
+        public IActionResult GetAssetAllocationDetail(string? id)
+        {
+            try
+            {
+                var assetsAllocationDetail = SQLHelper<dynamic>.ProcedureToList("spGetTSAssetAllocationDetail", new string[] { "@TSAssetAllocationID" }, new object[] { id });
                 return Ok(new
                 {
                     status = 1,
@@ -50,39 +74,13 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-        [HttpPost("getAllocation")]
-        public async Task<ActionResult> getAssetAllocationnn([FromBody] AssetAllocationRequestDTO request)
-        {
-            try
-            {
-                var assetAllocation = SQLHelper<dynamic>.ProcedureToList(
-                    "spGetTSAssetAllocation",
-                    new string[] { "@DateStart", "@DateEnd", "@EmployeeID", "@Status", "@FilterText", "@PageSize", "@PageNumber" },
-                    new object[] { request.DateStart, request.DateEnd, request.EmployeeID, request.Status, request.FilterText ?? string.Empty, request.PageSize, request.PageNumber });
-                return Ok(new
-                {
-                    status = 1,
-                    assetAllocation = SQLHelper<dynamic>.GetListData(assetAllocation, 0)
-
-                });
-            }
-            catch (Exception ex)
-            {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
-        }
         [HttpGet("generateAllocationCode")]
-        public async Task<IActionResult> generateAllocationCode([FromQuery] DateTime? allocationDate)
+        public async Task<IActionResult> GenerateAllocationCode([FromQuery] DateTime? allocationDate)
         {
             if (allocationDate == null)
                 return BadRequest("allocationDate is required.");
 
-            string newCode = tSAssetAllocationRepo.generateAllocationCode(allocationDate); 
+            string newCode = tSAssetAllocationRepo.generateAllocationCode(allocationDate);
             return Ok(new
             {
                 status = 1,
@@ -90,7 +88,7 @@ namespace RERPAPI.Controllers
             });
         }
         [HttpPost("saveAllocation")]
-        public async Task<IActionResult> saveAllocationn([FromBody] TSAssetAllocationFullDTO dto)
+        public async Task<IActionResult> SaveAllocationn([FromBody] TSAssetAllocationFullDTO dto)
         {
             try
             {
@@ -110,7 +108,7 @@ namespace RERPAPI.Controllers
                 }
                 else
                 {
-                    allocationModel.ID = await tSAssetAllocationRepo.CreateAsync(allocationModel);
+                    await tSAssetAllocationRepo.CreateAsync(allocationModel);
                 }
                 foreach (var detail in dto.AssetDetails)
                 {
@@ -158,7 +156,7 @@ namespace RERPAPI.Controllers
             }
         }
         [HttpPost("saveData")]
-        public async Task<IActionResult> saveData([FromBody] List<TSAssetAllocation> allocations)
+        public async Task<IActionResult> SaveData([FromBody] List<TSAssetAllocation> allocations)
         {
             try
             {
@@ -187,6 +185,8 @@ namespace RERPAPI.Controllers
                     error = ex.ToString()
                 });
             }
+        
         }
+     
     }
 }

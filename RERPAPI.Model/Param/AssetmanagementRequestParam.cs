@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RERPAPI.Model.DTO
+namespace RERPAPI.Model.Param
 {
-    public class AssetmanagementRequestDTO
+    public class AssetmanagementRequestParam
     {
         public string? FilterText { get; set; }
         public int PageNumber { get; set; }

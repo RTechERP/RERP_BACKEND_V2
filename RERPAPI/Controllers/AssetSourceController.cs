@@ -12,7 +12,7 @@ namespace RERPAPI.Controllers
 
         TSSourceAssetsRepo tsSourceAssetRepo = new TSSourceAssetsRepo();
         [HttpGet("getsourceassets")]
-        public IActionResult getSourceAssets()
+        public IActionResult GetSourceAssets()
         {
             try
             {
@@ -34,6 +34,29 @@ namespace RERPAPI.Controllers
             }
 
         }
+        [HttpPost("saveData")]
+        public async Task<IActionResult> SaveData([FromBody] TSSourceAsset sourceasset)
+        {
+            try
+            {
+                if (sourceasset.ID <= 0) await tsSourceAssetRepo.CreateAsync(sourceasset);
+                else tsSourceAssetRepo.UpdateFieldsByID(sourceasset.ID, sourceasset);
 
+                return Ok(new
+                {
+                    status = 1,
+                    message = "Lưu thành công.",
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
+        }
     }
 }

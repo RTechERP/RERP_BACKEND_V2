@@ -37,7 +37,7 @@ namespace RERPAPI.Controllers
         }
      
         [HttpPost("saveData")]
-        public async Task<IActionResult> saveData([FromBody] List<UnitCount> units)
+        public async Task<IActionResult> SaveData([FromBody] List<UnitCount> units)
         {
             try
             {

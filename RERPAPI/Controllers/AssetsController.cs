@@ -10,7 +10,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 using Microsoft.EntityFrameworkCore;
 using RERPAPI.Model.Context;
 using Microsoft.AspNetCore.Http.HttpResults;
-
+using RERPAPI.Model.Param;
 namespace RERPAPI.Controllers
 {
     [Route("api/[controller]")]
@@ -21,59 +21,9 @@ namespace RERPAPI.Controllers
         TSAllocationEvictionAssetRepo tSAllocationEvictionRepo = new TSAllocationEvictionAssetRepo();
         TSReportBrokenAssetRepo tsReportBrokenAssetRepo = new TSReportBrokenAssetRepo();
         TSAssetManagementRepo tsAssetManagementRepo = new TSAssetManagementRepo();
-        [HttpGet("getAllAssetsManagement")]
-        public IActionResult getAllAsset()
-        {
-            try
-            {
-                List<TSAssetManagement> tSAssetManagements = tsAssetManagementRepo.GetAll();
-                var maxSTT = tSAssetManagements
-                          .Where(x => x.STT.HasValue)
-                          .Max(x => x.STT);
-                return Ok(new
-                {
-                    status = 1,
-                    data = maxSTT
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
-        }
-
-        [HttpGet("getAllReportBroken")]
-        public IActionResult getAllReportBroken()
-        {
-            try
-            {
-                List<TSReportBrokenAsset> reportBroken = tsReportBrokenAssetRepo.GetAll();
-                return Ok(new
-                {
-                    status = 1,
-                    data = reportBroken
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
-        }
-
-
 
         [HttpPost("getAssets")]
-        public IActionResult getListAssets([FromBody] AssetmanagementRequestDTO request)
+        public IActionResult GetListAssets([FromBody] AssetmanagementRequestParam request)
         {
             try
             {
@@ -101,7 +51,7 @@ namespace RERPAPI.Controllers
             }
         }
         [HttpGet("getAllocationDetail")]
-        public IActionResult getAllocation(string? id)
+        public IActionResult GetAllocation(string? id)
         {
             try
             {
@@ -129,10 +79,8 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-
         [HttpPost("saveData")]
-     
-        public async Task<IActionResult> saveData([FromBody] TSAssetManagement asset)
+        public async Task<IActionResult> SaveData([FromBody] TSAssetManagement asset)
         {
             try
             {
@@ -142,7 +90,6 @@ namespace RERPAPI.Controllers
                 return Ok(new
                 {
                     status = 1,
-                    data = asset
                 });
             }
             catch (Exception ex)
@@ -155,155 +102,75 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-        [HttpPost("saveDataReportBroken")]
-        public async Task<IActionResult> saveReportBroken([FromBody] ReportBrokenFullDto dto)
-        {
-            try
-            {
-
-                int? chucVuId = 30;
-                var assetManagementData = tsAssetManagementRepo.GetByID(dto.AssetID) ?? new TSAssetManagement();
-                assetManagementData.ID = dto.AssetID;
-                assetManagementData.Note = dto.Note;
-                assetManagementData.Status = dto.Status;
-                assetManagementData.StatusID = dto.StatusID;
-                if (assetManagementData.ID > 0)
-                    await tsAssetManagementRepo.UpdateAsync(assetManagementData);
-                else
-                    await tsAssetManagementRepo.CreateAsync(assetManagementData);
-
-
-                var reportBrokenData = new TSReportBrokenAsset
-
-                {
-                    AssetManagementID = dto.AssetID,
-                    DateReportBroken = dto.DateReportBroken,
-                    Reason = dto.Reason,
-                    CreatedDate = dto.DateReportBroken,
-                    UpdatedDate = dto.DateReportBroken
-
-                };
-                await tsReportBrokenAssetRepo.CreateAsync(reportBrokenData);
-
-                // 3. Thêm  
-                var allocationEvictionAsset = new TSAllocationEvictionAsset
-                {
-                    AssetManagementID = dto.AssetID,
-                    EmployeeID = dto.EmployeeID,
-                    DepartmentID = dto.DepartmentID,
-                    ChucVuID = chucVuId ?? 0,
-                    DateAllocation = dto.DateReportBroken,
-                    Note = dto.Reason,
-                    Status = "Hỏng"
-                };
-                await tSAllocationEvictionRepo.CreateAsync(allocationEvictionAsset);
-
-                return Ok(new
-                {
-                    status = 1,
-                    data = new
-                    {
-                        assetManagementData,
-                        reportBrokenData,
-                        allocationEvictionAsset
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                return Ok(new { status = 0, message = ex.Message });
-            }
-        }
-        [HttpPost("saveDataReportLost")]
-        public async Task<IActionResult> saveReportLost([FromBody] ReportLostFullDto dto)
-        {
-            try
-            {
-                int? chucVuId = 30;
-                var assetManagementData = tsAssetManagementRepo.GetByID(dto.AssetManagementID) ?? new TSAssetManagement();
-                assetManagementData.ID = dto.AssetManagementID;
-                assetManagementData.Note = dto.Note;
-                assetManagementData.Status = dto.AssetStatus;
-                assetManagementData.StatusID = dto.AssetStatusID;
-                assetManagementData.UpdatedDate = dto.UpdatedDate;
-                assetManagementData.UpdatedBy = dto.UpdatedBy;
-                if (assetManagementData.ID > 0)
-                    await tsAssetManagementRepo.UpdateAsync(assetManagementData);
-                else
-                    await tsAssetManagementRepo.CreateAsync(assetManagementData);
-                var reportLostData = new TSLostReportAsset
-                {
-                    AssetManagementID = dto.AssetManagementID,
-                    DateLostReport = dto.DateLostReport,
-                    Reason = dto.Reason,
-                    CreatedDate = dto.CreatedDate,
-                    CreatedBy = dto.CreatedBy,
-                    UpdatedDate = dto.UpdatedDate,
-                    UpdatedBy = dto.UpdatedBy
-                };
-                await tsLostReportRepo.CreateAsync(reportLostData);
-                var allocationEvictionAsset = new TSAllocationEvictionAsset
-                {
-                    AssetManagementID = dto.AssetManagementID,
-                    EmployeeID = dto.EmployeeID,
-                    DepartmentID = dto.DepartmentID,
-                    ChucVuID = chucVuId ?? 0,
-                    DateAllocation = dto.DateAllocation,
-                    Note = dto.Reason,
-                    Status = "Hỏng",
-                    CreatedDate = dto.CreatedDate,
-                    CreatedBy = dto.CreatedBy,
-                    UpdatedDate = dto.UpdatedDate,
-                    UpdatedBy = dto.UpdatedBy
-                };
-                await tSAllocationEvictionRepo.CreateAsync(allocationEvictionAsset);
-                return Ok(new
-                {
-                    status = 1,
-                    data = new
-                    {
-                        assetManagementData,
-                        reportLostData,
-                        allocationEvictionAsset
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                return Ok(new { status = 0, message = ex.Message });
-            }
-        }
         [HttpGet("generateAllocationCodeAsset")]
-        public async Task<IActionResult> generateAllocationCodeAsset([FromQuery] DateTime? assetDate)
+        public async Task<IActionResult> GenerateAllocationCodeAsset([FromQuery] DateTime? assetDate)
         {
             if (assetDate == null)
                 return BadRequest("allocationDate is required.");
 
-            string newCode = tsAssetManagementRepo.GenerateAllocationCodeAsset(assetDate);
+            var newcode = tsAssetManagementRepo.GenerateAllocationCodeAsset(assetDate);
 
             return Ok(new
             {
                 status = 1,
-                data = newCode
+                data = newcode
             });
         }
-        [HttpPost("deleteAssetManagement")]
-        public async Task<IActionResult> deleteAssetManagement([FromBody] List<int> ids)
+        [HttpPost("saveData2")]
+        public async Task<IActionResult> SaveData2([FromBody] AssetmanagementFullDTO asset)
         {
-            if (ids == null || ids.Count == 0)
-                return BadRequest("Danh sách ID không hợp lệ.");
-            foreach (var ID in ids)
+            try
             {
-                var item = tsAssetManagementRepo.GetByID(ID);
-                if (item != null)
+                if (asset == null)
                 {
-                    item.IsDeleted = true;
-                    tsAssetManagementRepo.UpdateAsync(item);
+                    return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." });
                 }
-                await tsAssetManagementRepo.UpdateAsync(item);
-            }
-            return Ok(new { message = "Đã xóa thành công." });
-        }
+                if (asset.tSAssetManagements != null && asset.tSAssetManagements.Any())
+                {
+                    foreach (var item in asset.tSAssetManagements)
+                    {
+                        if (item.ID <= 0)
+                            await tsAssetManagementRepo.CreateAsync(item);
+                        else
+                            tsAssetManagementRepo.UpdateFieldsByID(item.ID, item);
+                    }
+                }
+                if (asset.tSAllocationEvictionAssets != null && asset.tSAllocationEvictionAssets.Any())
+                {
+                    foreach (var item in asset.tSAllocationEvictionAssets)
+                    {
+                        if (item.ID <= 0)
+                            await tSAllocationEvictionRepo.CreateAsync(item);
+                        else
+                            tSAllocationEvictionRepo.UpdateFieldsByID(item.ID, item);
+                    }
+                }
+                if (asset.tSLostReportAsset != null)
+                {
+                    if (asset.tSLostReportAsset.ID <= 0)
+                        await tsLostReportRepo.CreateAsync(asset.tSLostReportAsset);
+                    else
+                        tsLostReportRepo.UpdateFieldsByID(asset.tSLostReportAsset.ID, asset.tSLostReportAsset);
+                }
+                if (asset.tSReportBrokenAsset != null)
+                {
+                    if (asset.tSReportBrokenAsset.ID <= 0)
+                        await tsReportBrokenAssetRepo.CreateAsync(asset.tSReportBrokenAsset);
+                    else
+                        tsReportBrokenAssetRepo.UpdateFieldsByID(asset.tSReportBrokenAsset.ID, asset.tSReportBrokenAsset);
+                }
 
+                return Ok(new { status = 1, message = "Lưu dữ liệu thành công." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    status = 0,
+                    message = "Lỗi xảy ra khi lưu dữ liệu.",
+                    detail = ex.Message.ToString(),
+                });
+            }
+        }
     }
 }

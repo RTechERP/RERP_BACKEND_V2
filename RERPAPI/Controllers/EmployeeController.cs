@@ -36,14 +36,15 @@ namespace RERPAPI.Controllers
             }
         }
         [HttpGet("getemployees")]
-        public IActionResult GetEmployee(int status, int departmentID, string keyword)
+        public IActionResult GetEmployee([FromQuery] int status,
+                    [FromQuery] int departmentID,
+                    [FromQuery] string keyword="")
         {
             try
             {
                 keyword = string.IsNullOrWhiteSpace(keyword) ? "" : keyword;
                 var employees = SQLHelper<EmployeeDTO>.ProcedureToList("spGetEmployee",
-                                                                                     new string[] { "@Status", "@DepartmentID", "@Keyword" },
-                                                                                     new object[] { status, departmentID, keyword });
+                                                                                     new string[] { "@Status", "@DepartmentID", "@Keyword" },                                                                                     new object[] { status, departmentID, keyword });
                 return Ok(new
                 {
                     status = 1,
@@ -60,57 +61,6 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-        [HttpGet("getallwithdetails")]
-        public IActionResult GetAllWithDetails()
-        {
-            try
-            {
-                var employee = SQLHelper<GetEmployeeDto>.ProcedureToList("GetAllEmployeesWithDetails",
-                    new string[] { }, new object[] { });
-
-                return Ok(new
-                {
-                    status = 1,
-                    data = employee
-                });
-            }
-            catch (Exception ex)
-            {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
-        }
-
-        //[HttpGet("getemployees")]
-        //public IActionResult GetEmployee(int status, int departmentID, string keyword)
-        //{
-        //    try
-        //    {
-        //        keyword = string.IsNullOrWhiteSpace(keyword) ? "" : keyword;
-        //        List<EmployeeDTO> employees = SQLHelper<EmployeeDTO>.ProcedureToList("spGetEmployee",
-        //                                                                            new string[] { "@Status", "@DepartmentID", "@Keyword" },
-        //                                                                            new object[] { status, departmentID, keyword });
-        //        return Ok(new
-        //        {
-        //            status = 1,
-        //            data = employees
-        //        });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(new
-        //        {
-        //            status = 0,
-        //            message = ex.Message,
-        //            error = ex.ToString()
-        //        });
-        //    }
-        //}
-
         [HttpGet("getbyid")]
         public IActionResult GetByID(int id)
         {

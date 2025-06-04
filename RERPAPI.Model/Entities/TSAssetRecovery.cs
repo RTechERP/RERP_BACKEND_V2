@@ -36,4 +36,6 @@ public partial class TSAssetRecovery
     public DateTime? DateApprovedPersonalProperty { get; set; }
 
     public DateTime? DateApprovedHR { get; set; }
+    public bool IsDeleted { get; set; }
+
 }
