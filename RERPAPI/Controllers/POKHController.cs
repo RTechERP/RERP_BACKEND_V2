@@ -18,12 +18,12 @@ namespace RERPAPI.Controllers
     [ApiController]
     public class POKHController : ControllerBase
     {
-
         private readonly string _uploadPath;
         POKHRepo _pokhRepo = new POKHRepo();
         POKHDetailRepo _pokhDetailRepo = new POKHDetailRepo();
         POKHDetailMoneyRepo _pokhDetailMoneyRepo = new POKHDetailMoneyRepo();
         POKHFilesRepo _pokhFilesRepo = new POKHFilesRepo();
+        ProjectRepo _projectRepo = new ProjectRepo();
 
 
         public POKHController(IWebHostEnvironment environment)
@@ -134,42 +134,12 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                string sqlQuery = "SELECT ID,ProjectCode,UserID,ContactID,CustomerID,ProjectName,PO From Project";
-
-                using (SqlConnection conn = new SqlConnection(Config.ConnectionString))
+                var list = _projectRepo.GetAll().Select(x => new {x.ID, x.ProjectCode, x.UserID, x.ContactID, x.CustomerID, x.ProjectName, x.PO});
+                return Ok(new
                 {
-                    using (SqlCommand cmd = new SqlCommand("spSearchAllForTrans", conn))
-                    {
-                        cmd.CommandType = CommandType.StoredProcedure;
-                        cmd.Parameters.Add(new SqlParameter("@sqlCommand", sqlQuery));
-                        cmd.CommandTimeout = 6000;
-
-                        conn.Open();
-                        using (SqlDataReader reader = cmd.ExecuteReader())
-                        {
-                            var result = new List<ProjectDTO>();
-                            while (reader.Read())
-                            {
-                                result.Add(new ProjectDTO
-                                {
-                                    ID = reader.GetInt32(0),
-                                    ProjectCode = reader.GetString(1),
-                                    UserID = reader.IsDBNull(2) ? null : reader.GetInt32(2),
-                                    ContactID = reader.IsDBNull(3) ? null : reader.GetInt32(3),
-                                    CustomerID = reader.IsDBNull(4) ? null : reader.GetInt32(4),
-                                    ProjectName = reader.IsDBNull(5) ? null : reader.GetString(5),
-                                    PO = reader.IsDBNull(6) ? null : reader.GetString(6)
-                                });
-                            }
-                            return Ok(new
-                            {
-                                status = 1,
-                                data = result
-                            });
-                        }
-
-                    }
-                }
+                    status = 1,
+                    data = list,
+                });
             }
             catch (Exception ex)
             {
@@ -367,68 +337,7 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-        [HttpDelete("DeletePOKH")]
-        public async Task<IActionResult> DeletePOKH(int id)
-        {
-            try
-            {
-                var item = _pokhRepo.GetByID(id);
-                if (item == null)
-                {
-                    return Ok(new
-                    {
-                        status = 0,
-                        message = "POKH not found"
-                    });
-                }
-                await _pokhRepo.DeleteAsync(id);
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Deleted successfully"
-                });
-            }
-            catch (Exception ex)
-            {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
-        }
-        [HttpPost("DeleteRangePOKH")]
-        public async Task<IActionResult> DeleteRangePOKH([FromBody] List<int> ids)
-        {
-            try
-            {
-                if (ids == null || ids.Count == 0)
-                {
-                    return Ok(new
-                    {
-                        status = 0,
-                        message = "No IDs provided"
-                    });
-                }
-                var entities = _pokhRepo.GetAll().Where(x => ids.Contains(x.ID)).ToList();
-                await _pokhRepo.DeleteRangeAsync(entities);
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Deleted selected records successfully"
-                });
-            }
-            catch (Exception ex)
-            {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
-        }
+
         [HttpGet("GeneratePOCode")]
         public IActionResult GeneratePOCode(string customer, bool isCopy, int warehouseID, int pokhID)
         {

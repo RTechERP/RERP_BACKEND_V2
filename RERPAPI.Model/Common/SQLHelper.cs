@@ -137,7 +137,35 @@ namespace RERPAPI.Model.Common
             }
         }
 
+        public static List<T> FindByExpression(Expression exp)
+        {
+            SqlConnection conn = new SqlConnection(connectionString);
+            List<T> lst = new List<T>();
+            T model = new T();
+            Type type = model.GetType();
+            string tableName = type.Name.StartsWith("Model") ? type.Name : type.Name.Replace("Model", "");
+            try
+            {
+                string sql = DBUtils.SQLSelect(tableName, exp);
+                SqlCommand cmd = new SqlCommand(sql, conn);
+                ////cmd.CommandTimeout = Timeout;
+                cmd.CommandType = CommandType.Text;
+                conn.Open();
+                SqlDataReader reader = cmd.ExecuteReader();
+                lst = reader.MapToList<T>();
+                reader.Close();
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+            finally
+            {
+                conn.Close();
+            }
 
+            return lst;
+        }
         public static List<dynamic> GetListData(List<List<dynamic>> dynamics, int tableIndex)
         {
             List<dynamic> list = new List<dynamic>();
