@@ -1,28 +1,26 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
-    public class EmployeeController : ControllerBase
+    [Route("api/[controller]")]
+    public class EmployeeContractController : Controller
     {
-        EmployeeRepo employeeRepo = new EmployeeRepo();
+        EmployeeContractRepo employeeContractRepo = new EmployeeContractRepo();
 
-        [HttpGet("getall")]
+        [HttpGet("getAll")]
         public IActionResult GetAll()
         {
             try
             {
-                List<Employee> employees = employeeRepo.GetAll();
+                List<EmployeeContract> employeeContracts = employeeContractRepo.GetAll();
                 return Ok(new
                 {
                     status = 1,
-                    data = employees
+                    data = employeeContracts
                 });
             }
             catch (Exception ex)
@@ -36,20 +34,20 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpGet("getemployees")]
-        public IActionResult GetEmployee(int status, int departmentID, string keyword)
+
+        [HttpGet("getEmployeeContract")]
+        public IActionResult GetEmployeeContract(int employeeID, int employeeContractTypeID, string filterText)
         {
             try
             {
-                keyword = string.IsNullOrWhiteSpace(keyword) ? "" : keyword;
-                var employees = SQLHelper<dynamic>.ProcedureToList("spGetEmployee",
-                                                                                    new string[] { "@Status", "@DepartmentID", "@Keyword" },
-                                                                                      new object[] { status, departmentID, keyword });
-                var employee = SQLHelper<object>.GetListData(employees, 0);
+                filterText = string.IsNullOrWhiteSpace(filterText) ? "" : filterText;
+                var employeeContracts = SQLHelper<object>.ProcedureToList("spGetEmployeeContract",
+                                       new string[] { "@EmployeeID", "@EmployeeContractTypeID", "@FilterText" },
+                                                          new object[] { employeeID, employeeContractTypeID, filterText });
                 return Ok(new
                 {
                     status = 1,
-                    data = employee
+                    data = SQLHelper<object>.GetListData(employeeContracts, 0)
                 });
             }
             catch (Exception ex)
@@ -63,16 +61,16 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpGet("getbyid")]
-        public IActionResult GetByID(int id)
+        [HttpGet("getEmployeeContractByID")]
+        public IActionResult GetEmployeeContractByID(int employeeContractID)
         {
             try
             {
-                Employee employee = employeeRepo.GetByID(id);
+                var employeeContract = employeeContractRepo.GetByID(employeeContractID);
                 return Ok(new
                 {
                     status = 1,
-                    data = employee
+                    data = employeeContract
                 });
             }
             catch (Exception ex)
@@ -86,18 +84,25 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpPost("savedata")]
-        public async Task<IActionResult> SaveEmployee([FromBody] Employee employee)
+        [HttpPost("saveEmployeeContract")]
+        public async Task<IActionResult> SaveEmployeeContract([FromBody] EmployeeContract employeeContract)
         {
             try
             {
-                if (employee.ID <= 0) await employeeRepo.CreateAsync(employee);
-                else await employeeRepo.UpdateAsync(employee);
+               if(employeeContract.ID <= 0)
+                {
+                    await employeeContractRepo.CreateAsync(employeeContract);
+                } else
+                {
+                    employeeContractRepo.UpdateFieldsByID(employeeContract.ID, employeeContract);
+                }
 
+                
                 return Ok(new
                 {
                     status = 1,
-                    data = employee
+                    data = employeeContract,
+                    message = "Lưu thành công"
                 });
             }
             catch (Exception ex)
@@ -110,5 +115,7 @@ namespace RERPAPI.Controllers
                 });
             }
         }
+
+       
     }
 }
