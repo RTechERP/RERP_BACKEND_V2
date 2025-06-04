@@ -113,4 +113,6 @@ public partial class PONCCDetail
     public int? ProductType { get; set; }
 
     public DateTime? DateReturnEstimated { get; set; }
+
+    public bool? IsStock { get; set; }
 }

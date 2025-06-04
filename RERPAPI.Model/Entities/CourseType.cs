@@ -22,4 +22,9 @@ public partial class CourseType
     public int? STT { get; set; }
 
     public bool? IsDeleted { get; set; }
+
+    /// <summary>
+    /// 1: Học lần lượt, 0: ko cần học lần lượt
+    /// </summary>
+    public bool? IsLearnInTurn { get; set; }
 }

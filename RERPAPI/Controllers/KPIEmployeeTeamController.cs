@@ -13,7 +13,7 @@ namespace RERPAPI.Controllers
     public class KPIEmployeeTeamController : ControllerBase
     {
         KPIEmployeeTeamRepo teamRepo = new KPIEmployeeTeamRepo();
-        KPIEmployeeTeamLinkRepo teamLinkRepo = new KPIEmployeeTeamLinkRepo();
+        //KPIEmployeeTeamLinkRepo teamLinkRepo = new KPIEmployeeTeamLinkRepo();
         DepartmentRepo departmentRepo = new DepartmentRepo();
         EmployeeRepo employeeRepo = new EmployeeRepo();
 
@@ -48,20 +48,71 @@ namespace RERPAPI.Controllers
         }
 
 
-        [HttpGet("getkpiemployeeteamlink")]
-        public IActionResult GetKPIEmployeeTeamLink(int kpiEmployeeteamID, int departmentID, int yearValue, int quarterValue)
+        //[HttpGet("getkpiemployeeteamlink")]
+        //public IActionResult GetKPIEmployeeTeamLink(int kpiEmployeeteamID, int departmentID, int yearValue, int quarterValue)
+        //{
+        //    try
+        //    {
+        //        var teamlinks = SQLHelper<object>.ProcedureToList("spGetKPIEmployeeTeamLink_New",
+        //                                                        new string[] { "@KPIEmployeeteamID", "@DepartmentID", "@YearValue", "@QuarterValue" },
+        //                                                        new object[] { kpiEmployeeteamID, departmentID, yearValue, quarterValue });
+
+
+        //        return Ok(new
+        //        {
+        //            status = 1,
+        //            data = SQLHelper<object>.GetListData(teamlinks, 0)
+        //        });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return Ok(new
+        //        {
+        //            status = 0,
+        //            message = ex.Message,
+        //            error = ex.ToString()
+        //        });
+        //    }
+        //}
+
+        [HttpGet("getemployeeinteam")]
+        public IActionResult GetAllEmployee(int departmentID = 0, int kpiEmployeeTeamID = 0)
         {
             try
             {
-                var teamlinks = SQLHelper<object>.ProcedureToDynamicLists("spGetKPIEmployeeTeamLink_New",
-                                                                new string[] { "@KPIEmployeeteamID", "@DepartmentID", "@YearValue", "@QuarterValue" },
-                                                                new object[] { kpiEmployeeteamID, departmentID, yearValue, quarterValue });
+                var employees = SQLHelper<object>.ProcedureToDynamicLists("spGetKPIEmployeeByDepartmentID", new string[] { "@DepartmentID", "@KPIEmployeeTeam" }, new object[] { departmentID, kpiEmployeeTeamID });
 
+                return Ok(new { status = 1, data = SQLHelper<object>.GetListData(employees, 0) });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
+        }
 
+        [HttpGet("getbyid")]
+        public IActionResult FindByID(int id)
+        {
+            try
+            {
+                KPIEmployeeTeam team = teamRepo.GetByID(id);
+                if (team.ID <= 0)
+                {
+                    return Ok(new
+                    {
+                        status = 0,
+                        message = "Team không có trong cơ sở dữ liệu!"
+                    });
+                }
                 return Ok(new
                 {
                     status = 1,
-                    data = SQLHelper<object>.GetListData(teamlinks, 0)
+                    data = team
                 });
             }
             catch (Exception ex)

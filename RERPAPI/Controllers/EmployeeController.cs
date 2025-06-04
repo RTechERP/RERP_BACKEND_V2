@@ -27,7 +27,7 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new
+                return Ok(new
                 {
                     status = 0,
                     message = ex.Message,
@@ -37,7 +37,7 @@ namespace RERPAPI.Controllers
         }
 
         [HttpGet("getemployees")]
-        public IActionResult GetEmployee(int status, int departmentID,string keyword)
+        public IActionResult GetEmployee(int status, int departmentID,string? keyword)
         {
             try
             {
@@ -53,7 +53,7 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new
+                return Ok(new
                 {
                     status = 0,
                     message = ex.Message,
@@ -76,7 +76,7 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new
+                return Ok(new
                 {
                     status = 0,
                     message = ex.Message,
@@ -101,7 +101,7 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new
+                return Ok(new
                 {
                     status = 0,
                     message = ex.Message,
