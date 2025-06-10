@@ -87,4 +87,8 @@ public partial class ProjectPartlistPriceRequest
     public bool? IsJobRequirement { get; set; }
 
     public string? NoteHR { get; set; }
+
+    public int? JobRequirementID { get; set; }
+
+    public bool? IsRequestBuy { get; set; }
 }
