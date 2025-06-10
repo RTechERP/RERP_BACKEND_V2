@@ -126,7 +126,7 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-                return Ok(new
+                return BadRequest(new
                 {
                     status = 0,
                     message = ex.Message,
@@ -135,7 +135,7 @@ namespace RERPAPI.Controllers
             }
 
         }
-
+       
         [HttpPost("isapproved")]
         public async Task<IActionResult> IsApproved([FromBody] List<int> ids)
         {

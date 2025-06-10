@@ -18,15 +18,18 @@ namespace RERPAPI.Controllers
             {
                 List<DailyReportTechcnicalDTO> result = SQLHelper<DailyReportTechcnicalDTO>.ProcedureToList(
                  "spGetDailyReportTechnical",
-                   new string[] { "@DateStart", "@DateEnd","UserID", "@Keyword", "@DepartmentID"},
-                     new object[] { dateStart, dateEnd,userID, keyword,departmenID }
+                   new string[] { "@DateStart", "@DateEnd", "UserID", "@Keyword", "@DepartmentID" },
+                     new object[] { dateStart, dateEnd, userID, keyword, departmenID }
 
-             );        
+
+             );
+                
+                var sortedResult = result.OrderBy(x => x.DateReport).ToList();
 
                 return Ok(new
                 {
                     status = 1,
-                    data = result
+                    data = sortedResult
                 });
             }
             catch (Exception ex)
