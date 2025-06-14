@@ -9,7 +9,7 @@ namespace RERPAPI.Controllers
     public class GroupSaleController : ControllerBase
     {
         GroupSaleRepo groupSaleRepo = new GroupSaleRepo();
-        [HttpGet("getAll")]
+        [HttpGet]
         public IActionResult GetAll()
         {
             try

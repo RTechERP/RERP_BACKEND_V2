@@ -27,4 +27,6 @@ public partial class Holiday
     /// 1: Nghỉ có hưởng lương, 2: Nghỉ không hưởng lương
     /// </summary>
     public int? TypeHoliday { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }

@@ -8,7 +8,7 @@ namespace RERPAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class TeamController : Controller
+    public class TeamController : ControllerBase
     {
         public class AddEmployeeToTeamRequest
         {
@@ -20,14 +20,14 @@ namespace RERPAPI.Controllers
         UserTeamRepo userTeamRepo = new UserTeamRepo();
         UserTeamLinkRepo userTeamLinkRepo = new UserTeamLinkRepo();
 
-        [HttpGet("getAll")]
+        [HttpGet]
         public IActionResult GetAll()
         {
             var teams = teamRepo.GetAll();
             return Ok(teams);
         }
 
-        [HttpGet("getTeamByDepartmentID")]
+        [HttpGet("department/{departmentID}")]
         public IActionResult GetTeamByDepartmentID(int departmentID)
         {
            try
@@ -49,7 +49,7 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpGet("getUserTeam")]
+        [HttpGet("user-team")]
         public IActionResult GetUserTeam(int teamID, int departmentID)
         {
             try
@@ -73,7 +73,7 @@ namespace RERPAPI.Controllers
 
         }
 
-        [HttpPost("savedata")]
+        [HttpPost]
         public async Task<IActionResult> SaveData([FromBody] UserTeam userTeam)
         {
             try
@@ -112,7 +112,7 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpDelete("deleteTeam")]
+        [HttpDelete("{teamID}")]
         public IActionResult DeleteTeam(int teamID)
         {
             try
@@ -145,7 +145,7 @@ namespace RERPAPI.Controllers
         }
 
 
-        [HttpPost("addEmployeeToTeam")]
+        [HttpPost("add-employee")]
         public async Task<IActionResult> AddEmployeeToTeam([FromBody] AddEmployeeToTeamRequest request)
         {
             try
@@ -193,7 +193,7 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpDelete("removeEmployeeFromTeam")]
+        [HttpDelete("remove-employee")]
         public async Task<IActionResult> RemoveEmployeeFromTeam(int userTeamLinkID)
         {
             try
@@ -216,7 +216,7 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpGet("getEmployeeByDepartmentID")]
+        [HttpGet("employee-by-department")]
         public IActionResult GetEmployeeByDepartmentID(int departmentID, int userTeamID)
         {
             try

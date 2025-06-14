@@ -7,10 +7,10 @@ namespace RERPAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class BusinessFieldLinkController : Controller
+    public class BusinessFieldLinkController : ControllerBase
     {
         BusinessFieldLinkRepo businessFieldLinkRepo = new BusinessFieldLinkRepo();
-        [HttpGet("getAll")]
+        [HttpGet]
         public IActionResult GetAll()
         {
             try
@@ -33,7 +33,7 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpGet("getBusinessFieldLinkByCustomerID")]
+        [HttpGet("customer")]
         public IActionResult GetBusinessFieldLinkByCustomerID(int customerID)
         {
             try

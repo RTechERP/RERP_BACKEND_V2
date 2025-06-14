@@ -117,10 +117,10 @@ namespace RERPAPI.Model.Common
                                     IDictionary<string, object> expando = new ExpandoObject();
                                     foreach (DataColumn col in table.Columns)
                                     {
-                                        expando[col.ColumnName] = row[col];
+                                        expando[col.ColumnName] = row[col] == DBNull.Value ? null: row[col];
                                     }
                                     dynamicList.Add(expando);
-                                }
+                                } 
 
                                 resultLists.Add(dynamicList);
                             }
@@ -138,7 +138,7 @@ namespace RERPAPI.Model.Common
         }
 
 
-        public static List<dynamic> GetListData(List<List<dynamic>> dynamics,int tableIndex)
+        public static List<dynamic> GetListData(List<List<dynamic>> dynamics, int tableIndex)
         {
             List<dynamic> list = new List<dynamic>();
             try

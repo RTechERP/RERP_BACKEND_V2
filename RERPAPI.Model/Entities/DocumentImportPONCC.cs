@@ -37,4 +37,6 @@ public partial class DocumentImportPONCC
     public int? EmployeeAdditionalID { get; set; }
 
     public DateTime? DateAdditional { get; set; }
+
+    public int? BillImportID { get; set; }
 }

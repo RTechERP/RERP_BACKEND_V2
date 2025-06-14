@@ -7,35 +7,35 @@ namespace RERPAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class EmployeeContractController : Controller
+    public class EmployeeContractController : ControllerBase
     {
         EmployeeContractRepo employeeContractRepo = new EmployeeContractRepo();
 
-        [HttpGet("getAll")]
-        public IActionResult GetAll()
-        {
-            try
-            {
-                List<EmployeeContract> employeeContracts = employeeContractRepo.GetAll();
-                return Ok(new
-                {
-                    status = 1,
-                    data = employeeContracts
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
-        }
+        //[HttpGet]
+        //public IActionResult GetAll()
+        //{
+        //    try
+        //    {
+        //        List<EmployeeContract> employeeContracts = employeeContractRepo.GetAll();
+        //        return Ok(new
+        //        {
+        //            status = 1,
+        //            data = employeeContracts
+        //        });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(new
+        //        {
+        //            status = 0,
+        //            message = ex.Message,
+        //            error = ex.ToString()
+        //        });
+        //    }
+        //}
 
 
-        [HttpGet("getEmployeeContract")]
+        [HttpGet]
         public IActionResult GetEmployeeContract(int employeeID, int employeeContractTypeID, string filterText)
         {
             try
@@ -61,12 +61,12 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpGet("getEmployeeContractByID")]
-        public IActionResult GetEmployeeContractByID(int employeeContractID)
+        [HttpGet("{id}")]
+        public IActionResult GetEmployeeContractByID(int id)
         {
             try
             {
-                var employeeContract = employeeContractRepo.GetByID(employeeContractID);
+                var employeeContract = employeeContractRepo.GetByID(id);
                 return Ok(new
                 {
                     status = 1,
@@ -84,7 +84,7 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpPost("saveEmployeeContract")]
+        [HttpPost]
         public async Task<IActionResult> SaveEmployeeContract([FromBody] EmployeeContract employeeContract)
         {
             try

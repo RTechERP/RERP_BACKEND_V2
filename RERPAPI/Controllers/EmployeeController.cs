@@ -12,8 +12,9 @@ namespace RERPAPI.Controllers
     public class EmployeeController : ControllerBase
     {
         EmployeeRepo employeeRepo = new EmployeeRepo();
+        EmployeeEducationLevelRepo employeeEducationLevelRepo = new EmployeeEducationLevelRepo();
 
-        [HttpGet("getall")]
+        [HttpGet("get-all")]
         public IActionResult GetAll()
         {
             try
@@ -36,25 +37,24 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpGet("getemployees")]
-        public IActionResult GetEmployee(int status, int departmentID, string keyword)
+        [HttpGet]
+        public IActionResult GetEmployee(int status, int departmentID,string? keyword)
         {
             try
             {
                 keyword = string.IsNullOrWhiteSpace(keyword) ? "" : keyword;
-                var employees = SQLHelper<dynamic>.ProcedureToList("spGetEmployee",
-                                                                                    new string[] { "@Status", "@DepartmentID", "@Keyword" },
-                                                                                      new object[] { status, departmentID, keyword });
-                var employee = SQLHelper<object>.GetListData(employees, 0);
+                var employees = SQLHelper<object>.ProcedureToList("spGetEmployee", 
+                                                new string[] { "@Status", "@DepartmentID", "@Keyword" }, 
+                                                new object[] { status, departmentID, keyword });
                 return Ok(new
                 {
                     status = 1,
-                    data = employee
+                    data = SQLHelper<object>.GetListData(employees,0)
                 });
             }
             catch (Exception ex)
             {
-                return BadRequest(new
+                return Ok(new
                 {
                     status = 0,
                     message = ex.Message,
@@ -63,7 +63,7 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpGet("getbyid")]
+        [HttpGet("{id}")]
         public IActionResult GetByID(int id)
         {
             try
@@ -77,7 +77,7 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new
+                return Ok(new
                 {
                     status = 0,
                     message = ex.Message,
@@ -86,14 +86,46 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpPost("savedata")]
-        public async Task<IActionResult> SaveEmployee([FromBody] Employee employee)
+        [HttpPost]
+        public async Task<IActionResult> SaveEmployee([FromBody] EmployeeDTO employee)
         {
             try
             {
                 if (employee.ID <= 0) await employeeRepo.CreateAsync(employee);
-                else await employeeRepo.UpdateAsync(employee);
+                else employeeRepo.UpdateFieldsByID(employee.ID, employee);
 
+
+                if(employee.ID > 0)
+                {
+                    var existingEductions = SQLHelper<EmployeeEducationLevel>.FindByAttribute("EmployeeID", employee.ID);
+                    var educationToDelete = existingEductions.Where(e => !employee.EmployeeEducationLevels.Any(ed => ed.ID == e.ID)).ToList();
+                    foreach(var education in educationToDelete)
+                    {
+                        await employeeEducationLevelRepo.DeleteAsync(education.ID);
+                    }
+                }
+
+                foreach(var education in employee.EmployeeEducationLevels ?? new List<EmployeeEducationLevel>())
+                {
+                    var employeeEducation = new EmployeeEducationLevel {
+                        ID = education.ID,
+                        EmployeeID = employee.ID,
+                        RankType = education.RankType,
+                        SchoolName = education.SchoolName,
+                        TrainType = education.TrainType,
+                        Major = education.Major,
+                        YearGraduate = education.YearGraduate,
+                        Classification = education.Classification
+                    };
+                    if(employeeEducation.ID <= 0)
+                    {
+                       await employeeEducationLevelRepo.CreateAsync(employeeEducation);
+                    } else
+                    {
+                        employeeEducationLevelRepo.UpdateFieldsByID(employeeEducation.ID, employeeEducation);
+                    }
+
+                }
                 return Ok(new
                 {
                     status = 1,
@@ -102,7 +134,7 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new
+                return Ok(new
                 {
                     status = 0,
                     message = ex.Message,

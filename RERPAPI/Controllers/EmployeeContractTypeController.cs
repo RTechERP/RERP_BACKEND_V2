@@ -6,15 +6,15 @@ namespace RERPAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class EmployeeContractTypeController : Controller
+    public class EmployeeContractTypeController : ControllerBase
     {
         EmployeeContractTypeRepo employeeContractTypeRepo = new EmployeeContractTypeRepo();
-        [HttpGet("getAll")]
+        [HttpGet]
         public IActionResult GetAll()
         {
             try
             {
-                var employeeContractTypes = employeeContractTypeRepo.GetAll();
+                var employeeContractTypes = employeeContractTypeRepo.GetAll().Where(x => x.IsDeleted == false);
                 return Ok(new
                 {
                     status = 1,
@@ -32,12 +32,12 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpGet("getEmployeeContractTypeByID")]
-        public IActionResult GetEmployeeContractTypeByID(int employeeContractTypeID)
+        [HttpGet("{id}")]
+        public IActionResult GetEmployeeContractTypeByID(int id)
         {
             try
             {
-                var employeeContractType = employeeContractTypeRepo.GetByID(employeeContractTypeID);
+                var employeeContractType = employeeContractTypeRepo.GetByID(id);
                 return Ok(new
                 {
                     status = 1,
@@ -55,7 +55,7 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpPost("saveEmployeeContractType")]
+        [HttpPost]
         public async Task<IActionResult> SaveEmployeeContractType([FromBody] EmployeeLoaiHDLD employeeContractType)
         {
             try

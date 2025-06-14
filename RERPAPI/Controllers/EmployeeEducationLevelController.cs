@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
@@ -6,19 +7,19 @@ namespace RERPAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class ProjectTypeController : ControllerBase
+    public class EmployeeEducationLevelController : ControllerBase
     {
-        ProjectTypeRepo projectTypeRepo = new ProjectTypeRepo();
-        [HttpGet]
-        public IActionResult GetAllProjectType()
-        {   
+        EmployeeEducationLevelRepo employeeEducationLevelRepo = new EmployeeEducationLevelRepo();
+        [HttpGet("/employee-id")]
+        public IActionResult GetEmployeeEducationLevelByEmployeeID(int employeeID)
+        {
             try
             {
-                List<ProjectType> projectTypes = projectTypeRepo.GetAll();
+                var employeeEducationLevel = SQLHelper<object>.ProcedureToList("spGetEmployeeEduLevel", new string[] { "@EmployeeID" }, new object[] { employeeID });
                 return Ok(new
                 {
                     status = 1,
-                    data = projectTypes
+                    data = SQLHelper<object>.GetListData(employeeEducationLevel, 0)
                 });
             }
             catch (Exception ex)

@@ -5,10 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RERPAPI.Model.DTO
+namespace RERPAPI.Repo.GenericEntity
 {
-    public class EmployeeDTO:Employee
+    public class ProvinceRepo : GenericRepo<Province>
     {
-       public List<EmployeeEducationLevel>? EmployeeEducationLevels { get; set; }
+        public ProvinceRepo() : base() { }
     }
 }

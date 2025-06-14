@@ -4,24 +4,23 @@ using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
-    public class BusinessFieldController : ControllerBase
+    [Route("api/[controller]")]
+    public class ProvinceController : ControllerBase
     {
-        BusinessFieldRepo businessFieldRepo = new BusinessFieldRepo();
-        [HttpGet()]
-        public IActionResult GetAll()
+       ProvinceRepo provinceRepo = new ProvinceRepo();
+       [HttpGet]
+       public async Task<IActionResult> GetProvinces()
         {
-            try
+           try
             {
-                List<BusinessField> businessFields = businessFieldRepo.GetAll();
+                List<Province> provinces = provinceRepo.GetAll();
                 return Ok(new
                 {
-                    status = 1,
-                    data = businessFields
+                    data = provinces,
+                    status = 1
                 });
-            }
-            catch (Exception ex)
+            } catch (Exception ex)
             {
                 return BadRequest(new
                 {
@@ -30,7 +29,7 @@ namespace RERPAPI.Controllers
                     error = ex.ToString()
                 });
             }
-        }
 
+        }
     }
 }

@@ -85,4 +85,6 @@ public partial class ProjectPartlistPriceRequest
     public string? Maker { get; set; }
 
     public bool? IsJobRequirement { get; set; }
+
+    public string? NoteHR { get; set; }
 }

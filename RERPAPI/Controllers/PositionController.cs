@@ -6,24 +6,24 @@ namespace RERPAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class PositionController : Controller
+    public class PositionController : ControllerBase
     {
         PositionContractRepo positionContractRepo = new PositionContractRepo();
         PositionInternalRepo positionInternalRepo = new PositionInternalRepo();
-        [HttpGet("getPositionContract")]
+        [HttpGet("position-contract")]
         public IActionResult GetPositionContract()
         {
             var result = positionContractRepo.GetAll().OrderBy(x => x.PriorityOrder);
             return Ok(result);
         }
-        [HttpGet("getPositionInternal")]
+        [HttpGet("position-internal")]
         public IActionResult GetPositionInternal()
         {
             var result = positionInternalRepo.GetAll().OrderBy(x => x.PriorityOrder);
             return Ok(result);
         }
 
-        [HttpPost("savePositionContract")]
+        [HttpPost("position-contract")]
         public async Task<IActionResult> SavePositionContract([FromBody] EmployeeChucVuHD employeeChucVuHD)
         {
             try
@@ -67,7 +67,7 @@ namespace RERPAPI.Controllers
         }
 
 
-        [HttpPost("savePositionInternal")]
+        [HttpPost("position-internal")]
         public async Task<IActionResult> SavePositionInternal([FromBody] EmployeeChucVu employeeChucVu)
         {
             try
@@ -109,7 +109,7 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpDelete("deletePositionContract")]
+        [HttpDelete("position-contract/{positionContractId}")]
         public async Task<IActionResult> DeletePositionContract(int positionContractId)
         {
             try
@@ -141,7 +141,7 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpDelete("deletePositionInternal")]
+        [HttpDelete("position-internal/{positionInternalId}")]
         public async Task<IActionResult> DeletePositionInternal(int positionInternalId)
         {
             try

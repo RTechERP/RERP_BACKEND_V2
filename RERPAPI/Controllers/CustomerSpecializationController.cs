@@ -11,7 +11,7 @@ namespace RERPAPI.Controllers
     public class CustomerSpecializationController : ControllerBase
     {
         CustomerSpecializationRepo customerSpecializationRepo = new CustomerSpecializationRepo();
-        [HttpGet("getAll")]
+        [HttpGet]
         public IActionResult GetAll()
         {
             try
@@ -36,12 +36,12 @@ namespace RERPAPI.Controllers
         }
 
 
-        [HttpGet("getCustomerSpecializationById")]
-        public IActionResult GetCustomerSpecializationByID(int customerSpecializationID)
+        [HttpGet("{id}")]
+        public IActionResult GetCustomerSpecializationByID(int id)
         {
             try
             {
-                var customerSpecialization = customerSpecializationRepo.GetByID(customerSpecializationID);
+                var customerSpecialization = customerSpecializationRepo.GetByID(id);
                 return Ok(new
                 {
                     status = 1,
@@ -59,7 +59,7 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpPost("saveCustomerSpecialization")]
+        [HttpPost]
         public async Task<IActionResult> SaveCustomerSpecialization([FromBody]CustomerSpecialization customerSpecialization)
         {
             try
@@ -94,13 +94,13 @@ namespace RERPAPI.Controllers
         }
 
 
-        [HttpDelete("deleteCustomerSpecialization")]
-        public IActionResult DeleteCustomerSpecialization(int customerSpecializationID)
+        [HttpDelete("{id}")]
+        public IActionResult DeleteCustomerSpecialization(int id)
         {
             try
             {
-                var customerSpecialization = customerSpecializationRepo.GetByID(customerSpecializationID);
-                List<Customer> checkList = SQLHelper<Customer>.FindByAttribute("CustomerSpecializationID", customerSpecializationID).ToList();
+                var customerSpecialization = customerSpecializationRepo.GetByID(id);
+                List<Customer> checkList = SQLHelper<Customer>.FindByAttribute("CustomerSpecializationID", id).ToList();
                 if(checkList.Count > 0)
                 {
                     return BadRequest(new

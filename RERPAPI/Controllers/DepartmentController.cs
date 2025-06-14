@@ -15,13 +15,13 @@ namespace RERPAPI.Controllers
     {
         DepartmentRepo departmentRepo = new DepartmentRepo();
 
-        [HttpGet("getall")]
+        [HttpGet]
         public IActionResult GetAll()
         {
 
             try
             {
-                List<Department> departments = departmentRepo.GetAll().OrderBy(x => x.STT).ToList();
+                List<Department> departments = departmentRepo.GetAll().Where(x => x.IsDeleted == false).OrderBy(x => x.STT).ToList();
 
                 return Ok(new
                 {
@@ -42,7 +42,7 @@ namespace RERPAPI.Controllers
         }
 
 
-        [HttpGet("getDepartmentById")]
+        [HttpGet("{id}")]
         public IActionResult GetDepartmentById(int id)
         {
             try
@@ -72,12 +72,12 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-        [HttpPost("saveDepartment")]
+        [HttpPost]
         public async Task<IActionResult> SaveDepartment([FromBody] Department department)
         {
             try
             {
-                List<Department> departments = departmentRepo.GetAll();
+                List<Department> departments = departmentRepo.GetAll().Where(x => x.IsDeleted == false).ToList();
                 department.STT = departments.Count + 1;
                 department.CreatedDate = DateTime.Now;
                 department.UpdatedDate = DateTime.Now;
@@ -116,13 +116,13 @@ namespace RERPAPI.Controllers
 
 
 
-        [HttpDelete("deleteDepartment")]
-        public IActionResult DeleteDepartment(int departmentID)
+        [HttpDelete("{id}")]
+        public IActionResult DeleteDepartment(int id)
         {
             try
             {
-                var department = departmentRepo.GetByID(departmentID);
-                List<Employee> checkList = SQLHelper<Employee>.FindByAttribute("DepartmentID", departmentID).ToList();
+                var department = departmentRepo.GetByID(id);
+                List<Employee> checkList = SQLHelper<Employee>.FindByAttribute("DepartmentID", id).ToList();
                 if (checkList.Count > 0)
                 {
                     return BadRequest(new
