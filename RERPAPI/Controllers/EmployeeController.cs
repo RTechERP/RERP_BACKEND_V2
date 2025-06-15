@@ -36,19 +36,18 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpGet("getemployees")]
-        public IActionResult GetEmployee(int status, int departmentID,string? keyword)
+        [HttpGet("getdataemployee")]
+        public IActionResult GetDataEmployee(int? status, int? departmamentID, string? keyword, int? id)
         {
             try
             {
-                keyword = string.IsNullOrWhiteSpace(keyword) ? "" : keyword;
-                var employees = SQLHelper<object>.ProcedureToDynamicLists("spGetEmployee", 
-                                                                                    new string[] { "@Status", "@DepartmentID", "@Keyword" }, 
-                                                                                    new object[] { status, departmentID, keyword });
+
+                List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToDynamicLists("spGetEmployee", new string[] { "@Status", "@DepartmentID", "@Keyword", "@ID" }, new object[] { status ?? 0, departmamentID ?? 0, keyword ?? "", id ?? 0 });
+                List<dynamic> rs = result[0];
                 return Ok(new
                 {
                     status = 1,
-                    data = SQLHelper<object>.GetListData(employees,0)
+                    data = rs
                 });
             }
             catch (Exception ex)

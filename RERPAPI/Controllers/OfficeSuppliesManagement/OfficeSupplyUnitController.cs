@@ -5,21 +5,20 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using System.Security.Cryptography;
 
-namespace RERPAPI.Controllers
+namespace RERPAPI.Controllers.OfficeSuppliesManagement
 {
     [Route("api/[controller]")]
     [ApiController]
     public class OfficeSupplyUnitController : ControllerBase
     {
-        OfficeSupplyUnitRepo osurepo = new OfficeSupplyUnitRepo();
+        OfficeSupplyUnitRepo _officesupplyunitRepo = new OfficeSupplyUnitRepo();
 
-        [HttpGet("getdataofficesupplyunit")]
-        public IActionResult GetDataOfficeSupplyUnini()
+        [HttpGet("")]
+        public IActionResult getOfficeSupplyUnit()
         {
             try
             {
-                List<OfficeSupplyUnit> result = SQLHelper<OfficeSupplyUnit>.FindAll();
-                var data = result.Where(x => x.IsDeleted == false).ToList();
+                List<OfficeSupplyUnit> data = _officesupplyunitRepo.GetAll().Where(x => x.IsDeleted == false).ToList(); 
                 return Ok(new
                 {
                     status = 1,
@@ -34,15 +33,15 @@ namespace RERPAPI.Controllers
                     message = ex.Message,
                     error = ex.ToString()
                 });
-            }        
+            }
         }
 
-        [HttpGet("getbyidofficesupplyunit")]
-        public IActionResult GetByIDOfficeSupplyUnit(int id)
+        [HttpGet("{id}")]
+        public IActionResult getOfficeSupplyUnitByID(int id)
         {
             try
             {
-                OfficeSupplyUnit dst = osurepo.GetByID(id);
+                OfficeSupplyUnit dst = _officesupplyunitRepo.GetByID(id);
                 return Ok(new
                 {
                     status = 1,
@@ -60,20 +59,20 @@ namespace RERPAPI.Controllers
             }
         }
         //danh sách tính
-        [HttpPost("savedatofficesupplyunit")]
-        public async Task<IActionResult> SaveDST([FromBody] OfficeSupplyUnit dst)
+        [HttpPost("save-data-office-supply-unit")]
+        public async Task<IActionResult> saveDataOfficeSupplyUnit([FromBody] OfficeSupplyUnit dst)
         {
             try
             {
                 if (dst.ID <= 0)
                 {
                     dst.IsDeleted = false;
-                    await osurepo.CreateAsync(dst);
+                    await _officesupplyunitRepo.CreateAsync(dst);
                 }
                 else
-                {                  
-                    osurepo.UpdateFieldsByID(dst.ID, dst);
-                }              
+                {
+                    _officesupplyunitRepo.UpdateFieldsByID(dst.ID, dst);
+                }
                 return Ok(new
                 {
                     status = 1,
@@ -91,29 +90,29 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpPost("deleteofficesupplyunit")]
-        public async Task<IActionResult> DeleteOfficeSupplyUnit([FromBody] List<int> ids)
+        [HttpPost("delete-office-supply-unit")]
+        public async Task<IActionResult> deleteOfficeSupplyUnit([FromBody] List<int> ids)
         {
             try
             {
                 if (ids == null || ids.Count == 0)
-                      return BadRequest(new{status = 0,message= "Lỗi",error = ToString()});
+                    return BadRequest(new { status = 0, message = "Lỗi", error = ToString() });
 
                 foreach (var id in ids)
                 {
-                    var item = osurepo.GetByID(id);
+                    var item = _officesupplyunitRepo.GetByID(id);
                     if (item != null)
                     {
                         item.IsDeleted = true; // Gán trường IsDeleted thành true
                         /* await off.UpdateAsync(item);*/
-                        osurepo.UpdateFieldsByID(id, item);/* // Cập nhật lại mục*/
+                        _officesupplyunitRepo.UpdateFieldsByID(id, item);/* // Cập nhật lại mục*/
                     }
                 }
                 return Ok(new
                 {
                     status = 1,
                     message = "Đã xóa thành công"
-                }) ;
+                });
             }
             catch (Exception ex)
             {

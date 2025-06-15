@@ -1,0 +1,122 @@
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
+using RERPAPI.Repo.GenericEntity;
+
+namespace RERPAPI.Controllers.SaleWareHouseManagement
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ProductGroupController : ControllerBase
+    {
+        ProductGroupRepo _productgroupRepo = new ProductGroupRepo();
+        ProductGroupWareHouseRepo _productgroupwarehouseRepo = new ProductGroupWareHouseRepo();
+
+        [HttpGet("")]
+        public IActionResult getProductGroup(bool isvisible = true)
+        {
+            try
+            {
+                //update isvible ngày 13/06/2025
+                List<ProductGroup> data = _productgroupRepo.GetAll().Where(p => p.IsVisible == isvisible || !isvisible).ToList();
+                return Ok(new
+                {
+                    status = 1,
+                    data = data
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
+        }
+        [HttpGet("{id}")]
+        public IActionResult getProductGroupByID(int id)
+        {
+            try
+            {
+                ProductGroup result = _productgroupRepo.GetByID(id);
+                return Ok(new
+                {
+                    status = 1,
+                    data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
+        }
+        //update 14/06 fix khi xoa tu them 1 ban ghi bang productsalewarehouse
+      
+        [HttpPost("save-data")]
+        public async Task<IActionResult> saveProductGroup([FromBody] ProductGoupDTO dto)
+        {
+            try
+            {
+                if (dto.Productgroup.ID <= 0)
+                {
+                    int newId = await _productgroupRepo.CreateAsync(dto.Productgroup);
+                    dto.ProductgroupWarehouse.ProductGroupID = newId;
+                    await _productgroupwarehouseRepo.CreateAsync(dto.ProductgroupWarehouse);
+                }
+                else
+                {
+                    _productgroupRepo.UpdateFieldsByID(dto.Productgroup.ID, dto.Productgroup);
+
+                    // Nếu không gửi ProductgroupWarehouse thì bỏ qua phần cập nhật dưới đây
+                    if (dto.ProductgroupWarehouse != null)
+                    {
+                        var existing = await _productgroupwarehouseRepo.FindByGroupAndWarehouseAsync(dto.Productgroup.ID, (int)dto.ProductgroupWarehouse.WarehouseID);
+
+                        if (existing != null)
+                        {
+                            existing.EmployeeID = dto.ProductgroupWarehouse.EmployeeID;
+                            existing.UpdatedBy = dto.ProductgroupWarehouse.UpdatedBy;
+                            existing.UpdatedDate = DateTime.Now;
+
+                            await _productgroupwarehouseRepo.UpdateAsync(existing);
+                        }
+                        else
+                        {
+                            dto.ProductgroupWarehouse.ProductGroupID = dto.Productgroup.ID;
+                            await _productgroupwarehouseRepo.CreateAsync(dto.ProductgroupWarehouse);
+                        }
+                    }
+                }
+
+                return Ok(new
+                {
+                    status = 1,
+                    data = dto
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
+
+            // Tránh CS0161:
+            return BadRequest("Unexpected error.");
+        }
+
+     
+
+    }
+}

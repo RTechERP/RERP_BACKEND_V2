@@ -1,29 +1,25 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
-namespace RERPAPI.Controllers
+namespace RERPAPI.Controllers.SaleWareHouseManagement
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class DepartmentController : ControllerBase
+    public class WareHouseController : ControllerBase
     {
-        DepartmentRepo _departmentRepo = new DepartmentRepo();
-
+        WareHouseRepo warehouseRepo = new WareHouseRepo();
         [HttpGet("")]
-        public IActionResult getDepartment()
+        public IActionResult getDataWH()
         {
-
             try
             {
-                List<Department> departments = _departmentRepo.GetAll().OrderBy(x => x.STT).ToList();
-
+                List<Warehouse> warehouse = warehouseRepo.GetAll();
                 return Ok(new
                 {
                     status = 1,
-                    data = departments
+                    data = warehouse
                 });
             }
             catch (Exception ex)
@@ -35,8 +31,6 @@ namespace RERPAPI.Controllers
                     error = ex.ToString()
                 });
             }
-
         }
-
     }
 }

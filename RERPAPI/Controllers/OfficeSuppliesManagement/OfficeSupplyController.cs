@@ -8,38 +8,38 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using System.Security.Cryptography;
 
-namespace RERPAPI.Controllers
+namespace RERPAPI.Controllers.OfficeSuppliesManagement
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class OfficeSuppliesController : ControllerBase
+    public class OfficeSupplyController : ControllerBase
     {
 
-       
-        OfficeSuplyRepo off = new OfficeSuplyRepo();
-        OfficeSupplyUnitRepo osurepo = new OfficeSupplyUnitRepo();
-       
 
-        [HttpGet("getdataofficesupplies")]
-        public IActionResult GetOfficeSupplies(string keyword = "")
+        OfficeSupplyRepo _officesupplyRepo = new OfficeSupplyRepo();
+        OfficeSupplyUnitRepo osurepo = new OfficeSupplyUnitRepo();
+
+
+        [HttpGet("")]
+        public IActionResult getOfficeSupply(string keyword = "")
         {
             try
             {
-                List<OficeSuppliesDTO> result = SQLHelper<OficeSuppliesDTO>.ProcedureToList(
+                List<OfficeSupplyDTO> result = SQLHelper<OfficeSupplyDTO>.ProcedureToList(
               "spGetOfficeSupply",
               new string[] { "@KeyWord" },
              new object[] { keyword ?? "" }  // đảm bảo không null
           );
                 var data = result.Where(x => x.IsDeleted == false).ToList();
-                var nextCode = off.GetNextCodeRTC();
+                var nextCode = _officesupplyRepo.GetNextCodeRTC();
 
                 return Ok(new
                 {
                     status = 1,
                     data = new
                     {
-                        officeSupply=data,
-                        nextCode=nextCode,
+                        officeSupply = data,
+                        nextCode,
                     }
 
                 });
@@ -54,12 +54,17 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-        [HttpGet("getbyidofficesupplies")]
-        public IActionResult GetbyIDOfficeSupplies(int id)
+        /// <summary>
+        /// Hàm tìm kiếm data OfficeSupply theo id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpGet("{id}")]
+        public IActionResult getOfficeSupplyByID(int id)
         {
             try
             {
-                OfficeSupply dst = off.GetByID(id);
+                OfficeSupply dst = _officesupplyRepo.GetByID(id);
                 return Ok(new
                 {
                     status = 1,
@@ -78,8 +83,8 @@ namespace RERPAPI.Controllers
         }
 
 
-        [HttpPost("deleteofficesupply")]
-        public async Task<IActionResult> DeleteVpp([FromBody] List<int> ids)
+        [HttpPost("delete-office-supply")]
+        public async Task<IActionResult> deleteOfficeSupply([FromBody] List<int> ids)
         {
             try
             {
@@ -87,12 +92,12 @@ namespace RERPAPI.Controllers
                     return BadRequest(new { status = 0, message = "Lỗi", error = ToString() });
                 foreach (var id in ids)
                 {
-                    var item = off.GetByID(id);
+                    var item = _officesupplyRepo.GetByID(id);
                     if (item != null)
                     {
                         item.IsDeleted = true; // Gán trường IsDeleted thành true
-                        /* await off.UpdateAsync(item);*/
-                        off.UpdateFieldsByID(id, item);/* // Cập nhật lại mục*/
+                        /* await _officesupplyRepo.UpdateAsync(item);*/
+                        _officesupplyRepo.UpdateFieldsByID(id, item);/* // Cập nhật lại mục*/
                     }
                 }
                 return Ok(new
@@ -111,8 +116,8 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-        [HttpPost("CheckCodes")]
-        public async Task<IActionResult> CheckCodes([FromBody] List<ProductCodeCheck> codes)
+        [HttpPost("check-codes")]
+        public async Task<IActionResult> checkCodes([FromBody] List<ProductCodeCheck> codes)
         {
             try
             {
@@ -121,14 +126,15 @@ namespace RERPAPI.Controllers
                 var codeNCCs = codes.Select(x => x.CodeNCC).ToList();
 
                 // Kiểm tra trong database
-                var existingProducts = off.GetAll()
+                var existingProducts = _officesupplyRepo.GetAll()
                     .Where(x => codeRTCs.Contains(x.CodeRTC) || codeNCCs.Contains(x.CodeNCC))
-                    .Select(x => new {
-                        ID = x.ID, // Thêm ID vào đây
-                        CodeRTC = x.CodeRTC,
-                        CodeNCC = x.CodeNCC,
-                        NameRTC = x.NameRTC,
-                        NameNCC = x.NameNCC
+                    .Select(x => new
+                    {
+                        x.ID, // Thêm ID vào đây
+                        x.CodeRTC,
+                        x.CodeNCC,
+                        x.NameRTC,
+                        x.NameNCC
                     })
                     .ToList();
 
@@ -136,7 +142,7 @@ namespace RERPAPI.Controllers
                 {
                     data = new
                     {
-                        existingProducts = existingProducts
+                        existingProducts
                     }
                 });
             }
@@ -146,18 +152,18 @@ namespace RERPAPI.Controllers
             }
         }
         //cap nhat and them
-        [HttpPost("addandupdate")]
-        public async Task<IActionResult> AddandUpdate([FromBody] OfficeSupply officesupply)
+        [HttpPost("save-date-office-supply")]
+        public async Task<IActionResult> saveDataOfficeSupply([FromBody] OfficeSupply officesupply)
         {
             try
             {
                 if (officesupply.ID <= 0)
                 {
-                    await off.CreateAsync(officesupply);                   
+                    await _officesupplyRepo.CreateAsync(officesupply);
                 }
                 else
                 {
-                    off.UpdateFieldsByID(officesupply.ID, officesupply);
+                    _officesupplyRepo.UpdateFieldsByID(officesupply.ID, officesupply);
                 }
                 return Ok(new
                 {

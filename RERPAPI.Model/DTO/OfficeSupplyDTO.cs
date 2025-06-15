@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Model.DTO
 {
-    public class OficeSuppliesDTO : OfficeSupply
+    public class OfficeSupplyDTO : OfficeSupply
     {
         public string Unit { get; set; }
         public string TypeName { get; set; }

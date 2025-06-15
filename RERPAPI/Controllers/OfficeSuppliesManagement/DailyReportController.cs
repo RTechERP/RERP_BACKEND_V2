@@ -4,26 +4,37 @@ using Microsoft.CodeAnalysis;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
+using RERPAPI.Model.Param;
 
-namespace RERPAPI.Controllers
+namespace RERPAPI.Controllers.OfficeSuppliesManagement
 {
     [Route("api/[controller]")]
     [ApiController]
     public class DailyReportController : ControllerBase
     {
-        [HttpGet("getdailyreporttechnical")]
-        public IActionResult GetDailyReportTechnical(DateTime dateStart, DateTime dateEnd, string keyword = "", int userID = 0,int departmenID=6)
+        /// <summary>
+        /// hàm lấy dữ liệu báo cáo nhân sự hr-it
+        /// </summary>
+        /// <param ngày bắt đầu="dateStart"></param>
+        /// <param ngày kết thúc="dateEnd"></param>
+        /// <param theo tên="keyword"></param>
+        /// <param id nhân viên="userID"></param>
+        /// <param id phòng ban="departmenID"></param>
+        /// <returns></returns>
+        [HttpPost("get-daily-report-technical")]
+     
+        public IActionResult getDailyReportTechnical([FromBody] DailyReportTechnicalRequestParam filter)
         {
             try
             {
                 List<DailyReportTechcnicalDTO> result = SQLHelper<DailyReportTechcnicalDTO>.ProcedureToList(
                  "spGetDailyReportTechnical",
                    new string[] { "@DateStart", "@DateEnd", "UserID", "@Keyword", "@DepartmentID" },
-                     new object[] { dateStart, dateEnd, userID, keyword, departmenID }
+                     new object[] { filter.dateStart, filter.dateEnd, filter.userID, filter.keyword, filter.departmenID }
 
 
              );
-                
+
                 var sortedResult = result.OrderBy(x => x.DateReport).ToList();
 
                 return Ok(new
@@ -42,16 +53,23 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-
-        [HttpGet("getdatafilmanddriver")]
-        public IActionResult GetDataFilmanddriver(DateTime dateStart, DateTime dateEnd, string keyword = "", int employeeID = 0)
+        /// <summary>
+        /// Hàm lấy dữ liệu báo cáo cắt phim-lái xe
+        /// </summary>
+        /// <param ngày bắt đầu="dateStart"></param>
+        /// <param  ngày kết thúc="dateEnd"></param>
+        /// <param từ khóa tìm kiếm="keyword"></param>
+        /// <param id nhân sự ="employeeID"></param>
+        /// <returns></returns>
+        [HttpPost("get-daily-report-film-and-driver")]
+        public IActionResult getDailyReportFilmAndDriver([FromBody] DailyReportHrRequestParam filter)
         {
             try
             {
                 List<DailyReportHRDTO> result = SQLHelper<DailyReportHRDTO>.ProcedureToList(
                     "spGetDailyReportHR",
                     new string[] { "@DateStart", "@DateEnd", "@Keyword", "@EmployeeID" },
-                    new object[] { dateStart, dateEnd, keyword, employeeID }
+                    new object[] { filter.dateStart, filter.dateEnd, filter.keyword, filter.employeeID }
                 );
 
                 var dataFilm = result.Where(x => x.ChucVuHDID == 7 || x.ChucVuHDID == 72).ToList();
@@ -60,8 +78,8 @@ namespace RERPAPI.Controllers
                 return Ok(new
                 {
                     status = 1,
-                    dataFilm = dataFilm,
-                    dataDriver = dataDriver,
+                    dataFilm,
+                    dataDriver,
                 });
             }
             catch (Exception ex)
@@ -76,16 +94,15 @@ namespace RERPAPI.Controllers
         }
 
 
-
-        [HttpGet("getdataemployee")]
-        public IActionResult GetDataEmployee(int departmentID=0, int projectID=0)
+        [HttpGet("get-data-employee")]
+        public IActionResult getDataEmployee(int departmentID = 0, int projectID = 0)
         {
             try
             {
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToDynamicLists(
                 "spGetUserProjectItem",
                         new string[] { "@DepartmentID", "@ProjectID" },
-                       new object[] { departmentID,projectID }
+                       new object[] { departmentID, projectID }
 
                     );
                 List<dynamic> rs = result[0];
@@ -105,5 +122,6 @@ namespace RERPAPI.Controllers
                 });
             }
         }
+
     }
 }

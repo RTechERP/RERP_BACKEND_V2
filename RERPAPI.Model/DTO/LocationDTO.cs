@@ -7,9 +7,7 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Model.DTO
 {
-    public class ProductGoupDTO
+    public class LocationDTO:Location
     {
-        public ProductGroup Productgroup { get; set; }
-        public ProductGroupWarehouse? ProductgroupWarehouse { get; set; }
     }
 }

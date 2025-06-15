@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class OfficeSuplyRepo : GenericRepo<OfficeSupply>
+    public class OfficeSupplyRepo : GenericRepo<OfficeSupply>
     {
         public string GetNextCodeRTC()
         {
