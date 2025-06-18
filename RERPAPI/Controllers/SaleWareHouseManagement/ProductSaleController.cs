@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
+using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using System.Dynamic;
 using System.Text.RegularExpressions;
@@ -17,26 +18,26 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
     [ApiController]
     public class ProductSaleController : ControllerBase
     {
-        ProductGroupRepo productgroupRepo = new ProductGroupRepo();
-        ProductsSaleRepo productsaleRepo = new ProductsSaleRepo();
-        InventoryRepo inventoryRepo = new InventoryRepo();
+        ProductGroupRepo _productgroupRepo = new ProductGroupRepo();
+        ProductsSaleRepo _productsaleRepo = new ProductsSaleRepo();
+        InventoryRepo _inventoryRepo = new InventoryRepo();
 
         //api ngày 12/06/2025
 
         #region hàm lấy dữ liệu vật tư theo id, tên
 
-        [HttpGet("getproductsale")]
-        public IActionResult GetProductSale(int id, string? find, bool checkeedAll)
+        [HttpPost("")]
+        public IActionResult GetProductSale([FromBody] ProductSaleParamRequest filter )
         {
             try
             {
-                if (checkeedAll == true)
+                if (filter.checkedAll == true)
                 {
-                    id = 0;
+                    filter.id = 0;
                 }
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToDynamicLists(
                        "usp_LoadProductsale", new string[] { "@id", "@Find", "@IsDeleted" },
-                    new object[] { id, find ?? "", false }
+                    new object[] { filter.id, filter.find ?? "", false }
                    );
                 List<dynamic> rs = result[0];
 
@@ -64,7 +65,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
         {
             try
             {
-                var rs = productsaleRepo.GetByID(id);
+                var rs = _productsaleRepo.GetByID(id);
 
                 return Ok(new
                 {
@@ -85,12 +86,12 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
         #endregion
 
         #region hàm lấy vật tư theo id nhóm
-        [HttpGet("getProductbyidgroup")]
-        public IActionResult getProductByGroup(int id)
+        [HttpGet("get-product-sale-by-product-group")]
+        public IActionResult getProductSaleByGroup(int productgroupID)
         {
             try
             {
-                List<ProductSale> rs = productsaleRepo.GetAll().Where(x => x.ProductGroupID == id).ToList();
+                List<ProductSale> rs = _productsaleRepo.GetAll().Where(x => x.ProductGroupID == productgroupID).ToList();
                 return Ok(new
                 {
                     status = 1,
@@ -113,14 +114,14 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
         private string GenerateProductNewCode(int productGroupId)
         {
             // Bước 1: Lấy mã nhóm sản phẩm từ ID
-            var productGroup = productgroupRepo.GetByID(productGroupId);
+            var productGroup = _productgroupRepo.GetByID(productGroupId);
             if (productGroup == null || string.IsNullOrWhiteSpace(productGroup.ProductGroupID))
                 return string.Empty;
 
             string productGroupCode = productGroup.ProductGroupID.Trim();
 
             // Bước 2: Lấy danh sách sản phẩm thuộc nhóm này
-            var listProducts = productsaleRepo.GetAll()
+            var listProducts = _productsaleRepo.GetAll()
                 .Where(x => x.ProductGroupID == productGroupId &&
                             !string.IsNullOrWhiteSpace(x.ProductNewCode) &&
                             x.ProductNewCode.StartsWith(productGroupCode))
@@ -140,7 +141,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
         #endregion
         //done+ update ngày 14/06 : xóa nhiều bản ghi 
         #region hàm thêm, sửa, xóa productSale
-        [HttpPost("savedataproductsale")]
+        [HttpPost("save-data")]
         public async Task<IActionResult> SaveDataProductSale([FromBody] List<ProductsSaleDTO> dtos)
         {
             try
@@ -155,15 +156,15 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                             dto.ProductSale.ProductNewCode = GenerateProductNewCode((int)dto.ProductSale.ProductGroupID);
                         }
 
-                        int newId = await productsaleRepo.CreateAsync(dto.ProductSale);
+                        int newId = await _productsaleRepo.CreateAsync(dto.ProductSale);
                         dto.Inventory.ProductSaleID = newId;
                         dto.Inventory.WarehouseID = 1;
-                        await inventoryRepo.CreateAsync(dto.Inventory);
+                        await _inventoryRepo.CreateAsync(dto.Inventory);
                     }
                     else
                     {
                         // Cập nhật
-                        productsaleRepo.UpdateFieldsByID(dto.ProductSale.ID, dto.ProductSale);
+                        _productsaleRepo.UpdateFieldsByID(dto.ProductSale.ID, dto.ProductSale);
                     }
                 }
 
@@ -186,7 +187,41 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
         }
         #endregion
 
+        //check-productsale trong excel
+        [HttpPost("check-codes")]
+        public async Task<IActionResult> checkCodes([FromBody] List<ProductSaleCodeCheck> codes)
+        {
+            try
+            {
+                // Lấy danh sách các mã cần kiểm tra
+                var productsaleCode = codes.Select(x => x.ProductCode).ToList();
+                var productsaleName = codes.Select(x => x.ProductName).ToList();
 
+                // Kiểm tra trong database
+                var existingProducts = _productsaleRepo.GetAll()
+                    .Where(x => productsaleCode.Contains(x.ProductCode) && productsaleName.Contains(x.ProductName))
+                    .Select(x => new
+                    {
+                        x.ID, // Thêm ID vào đây
+                        x.ProductCode,
+                        x.ProductName
+                       
+                    })
+                    .ToList();
+
+                return Ok(new
+                {
+                    data = new
+                    {
+                        existingProducts
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
 
     }
 }

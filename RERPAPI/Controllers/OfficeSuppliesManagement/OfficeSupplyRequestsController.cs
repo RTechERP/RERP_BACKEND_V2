@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
 using RERPAPI.Model.Entities;
+using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.OfficeSuppliesManagement
@@ -14,7 +15,7 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
         OfficeSupplyRequestsRepo officesupplyrequests = new OfficeSupplyRequestsRepo();
 
         #region getdatadepartment cần bỏ
-        [HttpGet("getdatadepartment")]
+        [HttpGet("get-data-department")]
         public IActionResult GetdataDepartment()
         {
             try
@@ -80,15 +81,15 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
         /// </summary>
         /// <param officesupplyrequestsID="id"></param>
         /// <returns></returns>
-        [HttpGet("get-office-supply-request-detail{id}")]
-        public IActionResult GetOfficeSupplyRequestsDetail(int id)
+        [HttpGet("get-office-supply-request-detail")]
+        public IActionResult GetOfficeSupplyRequestsDetail(int officeSupplyRequestsID)
         {
             try
             {
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToDynamicLists(
                         "spGetOfficeSupplyRequestsDetail",
                         new string[] { "@OfficeSupplyRequestsID" },
-                       new object[] { id }
+                       new object[] { officeSupplyRequestsID }
 
                     );
                 List<dynamic> rs = result[0];
@@ -254,18 +255,18 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
         /// <param tên tìm kiếm="keyword"></param>
         /// <param id phòng ban="departmentId"></param>
         /// <returns></returns>
-        [HttpGet("get-office-supply-request-summary")]
-        public IActionResult getOfficeSupplyRequestSummary(int year, int month, string? keyword = "", int departmentId = 0)
+        [HttpPost("get-office-supply-request-summary")]
+        public IActionResult getOfficeSupplyRequestSummary([FromBody] OfficeSupplyRequestSummaryParam filter)
         {
             try
             {
-                DateTime dateStart = new DateTime(year, month, 1, 0, 0, 0);
+                DateTime dateStart = new DateTime(filter.year, filter.month, 1, 0, 0, 0);
                 DateTime dateEnd = dateStart.AddMonths(1).AddSeconds(-1);
 
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToDynamicLists(
                     "spGetOfficeSupplyRequestSummary",
                     new string[] { "@DateStart", "@DateEnd", "@Keyword", "@DepartmentID" },
-                    new object[] { dateStart, dateEnd, keyword, departmentId }
+                    new object[] { dateStart, dateEnd, filter.keyword, filter.departmentId }
                 );
                 return Ok(new
                 {

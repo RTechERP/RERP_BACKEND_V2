@@ -59,7 +59,7 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
             }
         }
         //danh sách tính
-        [HttpPost("save-data-office-supply-unit")]
+        [HttpPost("save-data")]
         public async Task<IActionResult> saveDataOfficeSupplyUnit([FromBody] OfficeSupplyUnit dst)
         {
             try

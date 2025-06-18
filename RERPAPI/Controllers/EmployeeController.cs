@@ -36,7 +36,7 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpGet("getdataemployee")]
+        [HttpGet("get-data-employee")]
         public IActionResult GetDataEmployee(int? status, int? departmamentID, string? keyword, int? id)
         {
             try

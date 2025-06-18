@@ -12,7 +12,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
         LocationRepo _locationRepo = new LocationRepo();
 
         // hàm lấy vị trí cho productSale combobox nếu productGroupID=70 thì tìm theeo ID70 nếu khác thì tìm ID0
-        [HttpGet("get-by-product-group{productgroupID}")]
+        [HttpGet("get-location-by-product-group")]
         public IActionResult getDataLocation(int productgroupID = 70)
         {
             try
@@ -39,12 +39,15 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
       
 
         [HttpPost("save-data")]
-        public async Task<IActionResult> saveLocation([FromBody] LocationDTO dto)
+        public async Task<IActionResult> saveLocation([FromBody] List<LocationDTO> dtos)
         {
             try
             {
-                if (dto.ID <= 0) await _locationRepo.CreateAsync(dto);
-                else await _locationRepo.UpdateAsync(dto);
+                foreach (var dto in dtos)
+                {
+                    if (dto.ID <= 0) await _locationRepo.CreateAsync(dto);
+                    else await _locationRepo.UpdateAsync(dto);
+                }
 
                 return Ok(new
                 {

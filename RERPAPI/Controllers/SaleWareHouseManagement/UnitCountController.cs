@@ -38,13 +38,15 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
         }
       
         [HttpPost("save-data")]
-        public async Task<IActionResult> saveUnitCount([FromBody] UnitCountDTO dto)
+        public async Task<IActionResult> saveUnitCount([FromBody] List<UnitCountDTO> dtos)
         {
             try
             {
-                if (dto.ID <= 0) await _unitcountRepo.CreateAsync(dto);
-                else await _unitcountRepo.UpdateAsync(dto);
-
+                foreach (var dto in dtos)
+                {
+                    if (dto.ID <= 0) await _unitcountRepo.CreateAsync(dto);
+                    else await _unitcountRepo.UpdateAsync(dto);
+                }
                 return Ok(new
                 {
                     status = 1,

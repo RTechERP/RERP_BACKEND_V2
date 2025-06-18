@@ -127,7 +127,7 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
 
                 // Kiểm tra trong database
                 var existingProducts = _officesupplyRepo.GetAll()
-                    .Where(x => codeRTCs.Contains(x.CodeRTC) || codeNCCs.Contains(x.CodeNCC))
+                    .Where(x => codeRTCs.Contains(x.CodeRTC) && codeNCCs.Contains(x.CodeNCC))
                     .Select(x => new
                     {
                         x.ID, // Thêm ID vào đây
@@ -152,7 +152,7 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
             }
         }
         //cap nhat and them
-        [HttpPost("save-date-office-supply")]
+        [HttpPost("save-data")]
         public async Task<IActionResult> saveDataOfficeSupply([FromBody] OfficeSupply officesupply)
         {
             try

@@ -34,19 +34,23 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             }
         }
         [HttpPost("save-data")]
-        public async Task<IActionResult> saveDataFirm([FromBody] FirmDTO dto)
+        public async Task<IActionResult> saveDataFirm([FromBody] List<FirmDTO> dtos)
         {
             try
             {
-                if (dto.ID <= 0) await _firmRepo.CreateAsync(dto);
-                else await _firmRepo.UpdateAsync(dto);
-
-                return Ok(new
+                foreach (var dto in dtos)
                 {
-                    status = 1,
-                    message = "Thêm hãng thành công!",
+                    if (dto.ID <= 0) await _firmRepo.CreateAsync(dto);
+                    else await _firmRepo.UpdateAsync(dto);
 
-                });
+                }
+                    return Ok(new
+                    {
+                        status = 1,
+                        message = "Thêm hãng thành công!",
+
+                    });
+                
             }
             catch (Exception ex)
             {
