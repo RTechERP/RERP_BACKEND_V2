@@ -10,8 +10,13 @@ public partial class RTCContext : DbContext
     public RTCContext(DbContextOptions<RTCContext> options)
         : base(options)
     {
-    }
-
+    }           
+    public virtual DbSet<TSAssetManagementPersonal> TSAssetManagementPersonal { get; set; }
+    public virtual DbSet<TSTypeAssetPersonal> TSTypeAssetPersonal { get; set; }
+    public virtual DbSet<TSAllocationAssetPersonal> TSAllocationAssetPersonal { get; set; }
+    public virtual DbSet<TSAllocationAssetPersonalDetail> TSAllocationAssetPersonalDetail { get; set; }
+    public virtual DbSet<TSRecoveryAssetPersonal> TSRecoveryAssetPersonal { get; set; }
+    public virtual DbSet<TSRecoveryAssetPersonalDetail> TSRecoveryAssetPersonalDetail { get; set; }
     public virtual DbSet<AccountingBill> AccountingBills { get; set; }
 
     public virtual DbSet<AccountingBillApproved> AccountingBillApproveds { get; set; }
