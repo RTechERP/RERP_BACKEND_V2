@@ -12,10 +12,9 @@ namespace RERPAPI.Controllers
     {
         DepartmentRepo departmentRepo = new DepartmentRepo();
 
-        [HttpGet("getall")]
+        [HttpGet("get-all")]
         public IActionResult GetAll()
         {
-
             try
             {
                 List<Department> departments = departmentRepo.GetAll().OrderBy(x => x.STT).ToList();

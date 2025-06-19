@@ -1,0 +1,253 @@
+<pre>
+1  
+00:00:02,280 --> 00:00:04,140  
+Giảng viên: Bây giờ chúng ta muốn làm việc với một  
+
+2  
+00:00:04,140 --> 00:00:06,480  
+trong những chức năng chính là cách  
+
+3  
+00:00:06,480 --> 00:00:09,840  
+thêm một item vào shopping cart.  
+
+4  
+00:00:09,840 --> 00:00:12,060  
+Nếu tôi chạy ứng dụng ở đây,  
+
+5  
+00:00:12,060 --> 00:00:14,460  
+và nếu chúng ta vào phần details này,  
+
+6  
+00:00:14,460 --> 00:00:17,070  
+chúng ta có count và dựa vào đó  
+
+7  
+00:00:17,070 --> 00:00:19,863  
+chúng ta có thể thêm item vào shopping cart.  
+
+8  
+00:00:20,910 --> 00:00:25,113  
+Vì vậy, chúng ta cần kích hoạt nút ở đây và làm việc với nó.  
+
+9  
+00:00:26,430 --> 00:00:28,710  
+Để tôi dừng ứng dụng lại.  
+
+10  
+00:00:28,710 --> 00:00:33,710  
+Nút đó nằm trong customer area views details.  
+
+11  
+00:00:35,640 --> 00:00:38,193  
+Controller là home controller.  
+
+12  
+00:00:39,450 --> 00:00:43,800  
+Nên trong phần details này, nơi chúng ta có nút,  
+
+13  
+00:00:43,800 --> 00:00:48,600  
+tôi sẽ bỏ phần "coming soon" và trạng thái disabled đi.  
+
+14  
+00:00:48,600 --> 00:00:50,550  
+Nhìn ổn rồi đấy.  
+
+15  
+00:00:50,550 --> 00:00:54,600  
+Tôi có một form ở đây nên nó cần có khả năng post  
+
+16  
+00:00:54,600 --> 00:00:57,603  
+count là bao nhiêu và product là gì.  
+
+17  
+00:00:59,100 --> 00:01:03,090  
+Nhưng để post được nơi chúng ta có input count,  
+
+18  
+00:01:03,090 --> 00:01:06,720  
+chúng ta cần thêm ASP.NET tag helper  
+
+19  
+00:01:06,720 --> 00:01:08,943  
+và điều đó yêu cầu một model.  
+
+20  
+00:01:09,900 --> 00:01:14,280  
+Nếu tôi xem ở phần đầu, chúng ta không có model.  
+
+21  
+00:01:14,280 --> 00:01:18,270  
+Chúng ta có product model nhưng trong product model  
+
+22  
+00:01:18,270 --> 00:01:19,833  
+chúng ta không có count.  
+
+23  
+00:01:21,000 --> 00:01:24,060  
+Nên điều chúng ta cần là một model  
+
+24  
+00:01:24,060 --> 00:01:26,190  
+nơi chúng ta sẽ có product  
+
+25  
+00:01:26,190 --> 00:01:30,153  
+và cũng có một counter cho input của chúng ta.  
+
+26  
+00:01:31,140 --> 00:01:33,270  
+Nếu bạn xem xét shopping cart  
+
+27  
+00:01:33,270 --> 00:01:36,513  
+mà chúng ta đã tạo trong models,  
+
+28  
+00:01:37,470 --> 00:01:41,820  
+nó có một product mà sẽ cần được điền dữ liệu  
+
+29  
+00:01:41,820 --> 00:01:44,673  
+và trên hết, nó cũng có count.  
+
+30  
+00:01:45,510 --> 00:01:49,050  
+Nên chúng ta phải chỉnh sửa model trong details  
+
+31  
+00:01:49,050 --> 00:01:51,843  
+từ product sang shopping cart.  
+
+32  
+00:01:52,680 --> 00:01:56,280  
+Khi làm điều đó, mọi thứ ở đây sẽ bị lỗi  
+
+33  
+00:01:56,280 --> 00:01:58,290  
+vì thay vì model,  
+
+34  
+00:01:58,290 --> 00:02:02,190  
+nó sẽ phải điều hướng đến model.product.  
+
+35  
+00:02:02,190 --> 00:02:04,263  
+Nên để tôi chỉnh sửa nó.  
+
+36  
+00:02:16,350 --> 00:02:17,940  
+Và hoàn hảo.  
+
+37  
+00:02:17,940 --> 00:02:22,940  
+Bây giờ với ASP.NET, chúng ta có thể truy cập trực tiếp vào count.  
+
+38  
+00:02:23,070 --> 00:02:25,293  
+Và hoàn hảo, nhìn ổn lắm.  
+
+39  
+00:02:26,430 --> 00:02:30,600  
+Với cấu hình này, để tôi chạy ứng dụng.  
+
+40  
+00:02:30,600 --> 00:02:33,270  
+Lần này khi bạn vào details  
+
+41  
+00:02:33,270 --> 00:02:36,120  
+bạn sẽ thấy một thông báo lỗi.  
+
+42  
+00:02:36,120 --> 00:02:38,970  
+Thông báo lỗi tự giải thích  
+
+43  
+00:02:38,970 --> 00:02:41,823  
+nên hãy thử tìm hiểu xem sai ở đâu.  
+
+44  
+00:02:42,960 --> 00:02:45,840  
+Tôi hy vọng bạn có thể tìm ra vấn đề.  
+
+45  
+00:02:45,840 --> 00:02:49,740  
+Vấn đề nằm ở thứ chúng ta truyền vào view.  
+
+46  
+00:02:49,740 --> 00:02:52,740  
+Nếu chúng ta vào home controller trong details,  
+
+47  
+00:02:52,740 --> 00:02:55,500  
+chúng ta đang truyền product, nhưng trong details,  
+
+48  
+00:02:55,500 --> 00:02:57,300  
+chúng ta lại nói rằng  
+
+49  
+00:02:57,300 --> 00:02:59,973  
+nó phải mong đợi một shopping cart model.  
+
+50  
+00:03:00,810 --> 00:03:02,880  
+Để giải quyết, chúng ta sẽ phải truyền  
+
+51  
+00:03:02,880 --> 00:03:05,070  
+một shopping cart object ở đây.  
+
+52  
+00:03:05,070 --> 00:03:10,070  
+Cart được gán bằng new và bên trong đó chúng ta có product.  
+
+53  
+00:03:11,670 --> 00:03:15,480  
+Tôi có thể cắt cái này, dán vào đây.  
+
+54  
+00:03:15,480 --> 00:03:19,680  
+Trên hết, tôi có thể đặt count mặc định là 1  
+
+55  
+00:03:19,680 --> 00:03:23,100  
+và tôi cũng có thể điền product ID.  
+
+56  
+00:03:23,100 --> 00:03:24,783  
+Đó là product ID.  
+
+57  
+00:03:25,920 --> 00:03:27,840  
+Khi chúng ta quay lại view,  
+
+58  
+00:03:27,840 --> 00:03:32,373  
+chúng ta phải truyền cart vào đây và nhìn ổn rồi đấy.  
+
+59  
+00:03:33,300 --> 00:03:37,170  
+Với cấu hình này, nếu tôi quay lại, hoàn hảo.  
+
+60  
+00:03:37,170 --> 00:03:41,730  
+Details giờ đã hiển thị và chúng ta có count.  
+
+61  
+00:03:41,730 --> 00:03:43,110  
+Trong video tiếp theo,  
+
+62  
+00:03:43,110 --> 00:03:46,680  
+để tôi làm việc với post action method cho details.  
+
+63  
+00:03:46,680 --> 00:03:51,003  
+Như vậy chúng ta sẽ có thể thêm item vào shopping cart.  
+</pre>

@@ -19,6 +19,10 @@ namespace RERPAPI.Repo.GenericEntity
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
 
+        public UserRepo()
+        {
+        }
+
         public UserRepo(UserManager<User> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration)
         {
             _userManager = userManager;
