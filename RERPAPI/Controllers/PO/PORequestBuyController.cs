@@ -27,6 +27,8 @@ namespace RERPAPI.Controllers.PO
                 {
                     var model = new ProjectPartlistPurchaseRequest
                     {
+                        ProjectPartListID = 0, // Chưa có thông tin về ProjectPartListID, cần xác định cách lấy giá trị này
+
                         EmployeeID = item.EmployeeID,
                         ProductCode = item.ProductCode,
                         ProductName = item.ProductName,
@@ -44,7 +46,11 @@ namespace RERPAPI.Controllers.PO
                         ProductGroupID = item.ProductGroupID,
                         CurrencyID = item.CurrencyID,
                         IsCommercialProduct = true,
-                        POKHDetailID = item.POKHDetailID
+                        POKHDetailID = item.POKHDetailID,
+                        IsApprovedTBP = false,
+                        ApprovedTBP = 0,
+                        IsApprovedBGD = false,
+                        ApprovedBGD = 0,
                     };
 
                     // Lấy UnitCountID từ UnitName
