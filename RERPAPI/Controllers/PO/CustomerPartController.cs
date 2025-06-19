@@ -8,18 +8,19 @@ using RERPAPI.Repo.GenericEntity;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace RERPAPI.Controllers
+namespace RERPAPI.Controllers.PO
 {
     [Route("api/[controller]")]
     [ApiController]
     public class CustomerPartController : ControllerBase
     {
         private readonly RTCContext _context;
+        CustomerRepo _customerRepo = new CustomerRepo();
         public CustomerPartController(RTCContext context)
         {
             _context = context;
         }
-        [HttpGet("GetPart")]
+        [HttpGet("get-part")]
         public IActionResult LoadPart(int id)
         {
             //var s = (from a in db.CustomerParts join b in db.Customers on a.CustomerID equals b.ID select a).ToList();
@@ -48,12 +49,12 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-        [HttpGet("GetCustomer")]
+        [HttpGet("get-customer")]
         public IActionResult LoadCustomer()
         {
             try
             {
-                List<Customer> list = SQLHelper<Customer>.FindByAttribute("IsDeleted", 0).ToList();
+                List<Customer> list = _customerRepo.GetAll().Where(x => x.IsDeleted == false).ToList();
                 return Ok(new
                 {
                     status = 1,
@@ -71,7 +72,7 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-        [HttpPost("SaveCustomerParts")]
+        [HttpPost("save-data")]
         public async Task<IActionResult> SaveCustomerParts([FromBody] CustomerPartSaveModel model)
         {
             try

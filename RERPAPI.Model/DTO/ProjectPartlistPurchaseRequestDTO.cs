@@ -7,10 +7,8 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Model.DTO
 {
-    public class POKHDTO
+    public class ProjectPartlistPurchaseRequestDTO : ProjectPartlistPurchaseRequest
     {
-        public POKH POKH { get; set; }
-        public List<POKHDetail> POKHDetails { get; set; }
-        public List<POKHDetailMoney> POKHDetailsMoney { get; set; }
+
     }
 }

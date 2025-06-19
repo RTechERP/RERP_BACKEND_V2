@@ -12,7 +12,7 @@ using System.Text;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace RERPAPI.Controllers
+namespace RERPAPI.Controllers.PO
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -24,7 +24,8 @@ namespace RERPAPI.Controllers
         POKHDetailMoneyRepo _pokhDetailMoneyRepo = new POKHDetailMoneyRepo();
         POKHFilesRepo _pokhFilesRepo = new POKHFilesRepo();
         ProjectRepo _projectRepo = new ProjectRepo();
-
+        CurrencyRepo _currencyRepo = new CurrencyRepo();
+        ProductGroupRepo _productGroupRepo = new ProductGroupRepo();
 
         public POKHController(IWebHostEnvironment environment)
         {
@@ -34,19 +35,19 @@ namespace RERPAPI.Controllers
                 Directory.CreateDirectory(_uploadPath);
             }
         }
-
-        [HttpGet("GetPOKH")]
-        public IActionResult GetPOKH(string? filterText, int pageNumber, int pageSize, int customerId, int userId, int POType, int status, int group, DateTime startDate, DateTime endDate, int warehouseId, int employeeTeamSaleId)
+        #region Các hàm get dữ liệu
+        [HttpGet("get-product")]
+        public IActionResult loadProduct()
         {
             try
             {
-                List<List<dynamic>> POKHs = SQLHelper<dynamic>.ProcedureToDynamicLists("spGetPOKH",
-                    new string[] { "@FilterText", "@PageNumber", "@PageSize", "@CustomerID", "@UserID", "@POType", "@Status", "@Group", "@StartDate", "@EndDate", "@WarehouseID", "@EmployeeTeamSaleID" },
-                    new object[] { filterText, pageNumber, pageSize, customerId, userId, POType, status, group, startDate, endDate, warehouseId, employeeTeamSaleId });
+                var listGroup = _productGroupRepo.GetAll().Select(x => x.ID).ToList();
+                var idGroup = string.Join(",", listGroup);
+                List<List<dynamic>> listProduct = SQLHelper<dynamic>.ProcedureToDynamicLists("spGetProductSale", new string[] { "@IDgroup" }, new object[] { idGroup });
                 return Ok(new
                 {
                     status = 1,
-                    data = POKHs[0]
+                    data = SQLHelper<dynamic>.GetListData(listProduct, 0),
                 });
             }
             catch (Exception ex)
@@ -59,7 +60,53 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-        [HttpGet("GetEmployeeManager")]
+        [HttpGet("get-detail-user")]
+        public IActionResult loadDetailUser(int id, int idDetail)
+        {
+            try
+            {
+                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToDynamicLists("spGetPOKHDetail_New", new string[] { "@ID", "@IDDetail" }, new object[] { id, idDetail });
+                return Ok(new
+                {
+                    status = 1,
+                    data = list,
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
+        }
+        [HttpGet("get-pokh")]
+        public IActionResult GetPOKH(string? filterText, int pageNumber, int pageSize, int customerId, int userId, int POType, int status, int group, DateTime startDate, DateTime endDate, int warehouseId, int employeeTeamSaleId)
+        {
+            try
+            {
+                List<List<dynamic>> POKHs = SQLHelper<dynamic>.ProcedureToDynamicLists("spGetPOKH",
+                    new string[] { "@FilterText", "@PageNumber", "@PageSize", "@CustomerID", "@UserID", "@POType", "@Status", "@Group", "@StartDate", "@EndDate", "@WarehouseID", "@EmployeeTeamSaleID" },
+                    new object[] { filterText, pageNumber, pageSize, customerId, userId, POType, status, group, startDate, endDate, warehouseId, employeeTeamSaleId });
+                return Ok(new
+                {
+                    status = 1,
+                    data = SQLHelper<dynamic>.GetListData(POKHs, 0)
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
+        }
+        [HttpGet("get-employee-manager")]
         public IActionResult LoadEmployeeManager(int group, int userId, int teamId)
         {
             try
@@ -83,17 +130,16 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-        [HttpGet("LoadPOKHProduct")]
+        [HttpGet("get-pokh-product")]
         public IActionResult getPOKHProduct(int id, int idDetail)
         {
             try
             {
                 List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToDynamicLists("spGetPOKHDetail", new string[] { "@ID", "@IDDetail" }, new object[] { id, idDetail });
-                List<dynamic> listPOKHProduct = list[0];
                 return Ok(new
                 {
                     status = 1,
-                    data = listPOKHProduct
+                    data = SQLHelper<dynamic>.GetListData(list, 0)
                 });
             }
             catch (Exception ex)
@@ -106,17 +152,17 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-        [HttpGet("LoadPOKHFiles")]
+
+        [HttpGet("get-pokh-files")]
         public IActionResult getPOKHFiles(int id)
         {
             try
             {
-                List<POKHFile> file = SQLHelper<POKHFile>.FindByAttribute("POKHID", id);
-                List<POKHFile> list = file.Where(x => x.IsDeleted == false).ToList();
+                List<POKHFile> file = _pokhFilesRepo.GetAll().Where(x => x.IsDeleted != true && x.POKHID == id).ToList();
                 return Ok(new
                 {
                     status = 1,
-                    data = list,
+                    data = file,
                 });
             }
             catch (Exception ex)
@@ -129,7 +175,7 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-        [HttpGet("loadProject")]
+        [HttpGet("get-project")]
         public IActionResult LoadProject()
         {
             try
@@ -151,19 +197,18 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-        [HttpGet("GetTypePO")]
+        [HttpGet("get-typePO")]
         public IActionResult LoadTypePO()
         {
 
             try
             {
                 List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToDynamicLists("spGetMainIndex", new string[] { "@Type" }, new object[] { 1 });
-                List<dynamic> listTypePO = list[0];
 
                 return Ok(new
                 {
                     status = 1,
-                    data = listTypePO
+                    data = SQLHelper<dynamic>.GetListData(list,0)
                 });
             }
             catch (Exception ex)
@@ -177,12 +222,12 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpGet("GetCurrency")]
+        [HttpGet("get-currency")]
         public IActionResult LoadCurrency()
         {
             try
             {
-                List<Currency> listCurrency = SQLHelper<Currency>.FindAll();
+                List<Currency> listCurrency = _currencyRepo.GetAll().ToList();
                 return Ok(new
                 {
                     status = 1,
@@ -200,7 +245,7 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpGet("GetPOKHByID")]
+        [HttpGet("{id}")]
         public IActionResult GetByID(int id)
         {
             try
@@ -222,7 +267,21 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-        [HttpPost("Handle")]
+        #endregion
+        #region Hàm lưu dữ liệu POKH, POKHDetail, POKHDetailMoney
+        /// <summary>
+        /// Xử lý tạo mới hoặc cập nhật đơn đặt hàng POKH và các chi tiết liên quan.
+        /// </summary>
+        /// Trả về đối tượng JSON chứa trạng thái thực thi (thành công hoặc thất bại), thông điệp và ID của đơn POKH.
+        /// </returns>
+        /// <remarks>
+        /// - Nếu ID của POKH <= 0: thực hiện tạo mới đơn POKH.
+        /// - Nếu ID > 0: thực hiện cập nhật thông tin đơn POKH hiện có.
+        /// - Duyệt qua danh sách POKHDetails để tạo mới hoặc cập nhật từng dòng chi tiết đơn.
+        ///   + Ánh xạ lại ParentID cho các chi tiết mới.
+        /// - Duyệt qua danh sách POKHDetailsMoney để xử lý tạo/cập nhật thông tin.
+        /// </remarks>
+        [HttpPost("handle")]
         public async Task<IActionResult> Handle([FromBody] POKHDTO dto)
         {
             try
@@ -236,9 +295,9 @@ namespace RERPAPI.Controllers
                     _pokhRepo.UpdateFieldsByID(dto.POKH.ID, dto.POKH);
                 }
                 var parentIdMapping = new Dictionary<int, int>();
-                if (dto.pOKHDetails.Count > 0)
+                if (dto.POKHDetails.Count > 0)
                 {
-                    foreach (var item in dto.pOKHDetails)
+                    foreach (var item in dto.POKHDetails)
                     {
                         int idOld = item.ID;
                         int parentId = 0;
@@ -290,9 +349,9 @@ namespace RERPAPI.Controllers
                         parentIdMapping.Add(item.ID, model.ID);
                     }
                 }
-                if (dto.pOKHDetailsMoney != null && dto.pOKHDetailsMoney.Count > 0)
+                if (dto.POKHDetailsMoney != null && dto.POKHDetailsMoney.Count > 0)
                 {
-                    foreach (var item in dto.pOKHDetailsMoney)
+                    foreach (var item in dto.POKHDetailsMoney)
                     {
                         int idOld = item.ID;
                         POKHDetailMoney detailMoney = idOld > 0 ? _pokhDetailMoneyRepo.GetByID(idOld) : new POKHDetailMoney();
@@ -337,8 +396,9 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-
-        [HttpGet("GeneratePOCode")]
+        #endregion
+        //Tạo POCode
+        [HttpGet("generate-POcode")]
         public IActionResult GeneratePOCode(string customer, bool isCopy, int warehouseID, int pokhID)
         {
             try
@@ -379,54 +439,9 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-        [HttpGet("LoadProduct")]
-        public IActionResult loadProduct()
-        {
-            try
-            {
-                var listGroup = SQLHelper<ProductGroup>.FindAll().Select(x => x.ID).ToList();
-                var idGroup = string.Join(",", listGroup);
-                List<List<dynamic>> listProduct = SQLHelper<dynamic>.ProcedureToDynamicLists("spGetProductSale", new string[] { "@IDgroup" }, new object[] { idGroup });
-                List<dynamic> list = listProduct[0];
-                return Ok(new
-                {
-                    status = 1,
-                    data = list,
-                });
-            }
-            catch (Exception ex)
-            {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
-        }
-        [HttpGet("LoadDetailUser")]
-        public IActionResult loadDetailUser(int id, int idDetail)
-        {
-            try
-            {
-                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToDynamicLists("spGetPOKHDetail_New", new string[] { "@ID", "@IDDetail" }, new object[] { id, idDetail });
-                return Ok(new
-                {
-                    status = 1,
-                    data = list,
-                });
-            }
-            catch (Exception ex)
-            {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
-        }
-        [HttpPost("Upload")]
+
+        #region Hàm xử lí File và lưu bảng POKHFile
+        [HttpPost("upload")]
         public async Task<IActionResult> Upload(int poKHID, [FromForm] List<IFormFile> files)
         {
             try
@@ -454,14 +469,12 @@ namespace RERPAPI.Controllers
 
                 var processedFile = new List<POKHFile>();
 
-
                 // Lưu từng file vào thư mục local
                 foreach (var file in files)
                 {
                     if (file.Length > 0)
                     {
-                        string fileName = _pokhRepo.GenerateUniqueFileName(file.FileName);
-                        string filePath = Path.Combine(pathUpload, fileName);
+                        string filePath = Path.Combine(pathUpload, file.FileName);
 
                         using (var stream = new FileStream(filePath, FileMode.Create))
                         {
@@ -471,8 +484,8 @@ namespace RERPAPI.Controllers
                         var filePO = new POKHFile
                         {
                             POKHID = po.ID,
-                            FileName = fileName,
-                            OriginPath = file.FileName,
+                            FileName = file.FileName,
+                            OriginPath = pathUpload,
                             ServerPath = pathUpload,
                             IsDeleted = false,
                             CreatedBy = User.Identity?.Name ?? "System",
@@ -503,7 +516,7 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-        [HttpPost("DeleteFile")]
+        [HttpPost("delete-file")]
         public IActionResult DeleteFile([FromBody] List<int> fileIds)
         {
             if (fileIds == null || !fileIds.Any())
@@ -538,6 +551,7 @@ namespace RERPAPI.Controllers
                 return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
-       
+        #endregion
+
     }
 }

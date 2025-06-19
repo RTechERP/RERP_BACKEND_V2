@@ -38,4 +38,5 @@ public partial class HandoverMinutesDetail
     public DateTime? UpdatedDate { get; set; }
 
     public int? POKHDetailID { get; set; }
+    public bool? IsDeleted { get; set; }
 }
