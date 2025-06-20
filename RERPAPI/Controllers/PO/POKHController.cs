@@ -293,6 +293,7 @@ namespace RERPAPI.Controllers.PO
                 else
                 {
                     _pokhRepo.UpdateFieldsByID(dto.POKH.ID, dto.POKH);
+
                 }
                 var parentIdMapping = new Dictionary<int, int>();
                 if (dto.POKHDetails.Count > 0)
