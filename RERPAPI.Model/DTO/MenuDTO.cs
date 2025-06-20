@@ -5,10 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RERPAPI.Repo.GenericEntity
+namespace RERPAPI.Model.DTO
 {
-    public class BillImportDetailSerialNumberRepo:GenericRepo<BillImportDetailSerialNumber>
+    public class MenuDTO:Menu
     {
+        public List<Menu> MenuChilds { get; set; }
 
     }
 }

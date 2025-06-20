@@ -126,4 +126,9 @@ public partial class VehicleBookingManagement
     public string? PackageWeight { get; set; }
 
     public int? PackageQuantity { get; set; }
+
+    /// <summary>
+    /// Loại phương tiện (1: Oto, xe máy....; 2: Máy bay)
+    /// </summary>
+    public int? VehicleType { get; set; }
 }

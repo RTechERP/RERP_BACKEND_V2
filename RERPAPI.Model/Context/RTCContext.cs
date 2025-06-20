@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Model.Context;
@@ -11,7 +12,6 @@ public partial class RTCContext : DbContext
         : base(options)
     {
     }
-
     public virtual DbSet<AccountingBill> AccountingBills { get; set; }
 
     public virtual DbSet<AccountingBillApproved> AccountingBillApproveds { get; set; }
@@ -444,6 +444,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<KPISumarize> KPISumarizes { get; set; }
 
+    public virtual DbSet<KPISumaryEvaluation> KPISumaryEvaluations { get; set; }
+
     public virtual DbSet<ListCost> ListCosts { get; set; }
 
     public virtual DbSet<Location> Locations { get; set; }
@@ -748,6 +750,10 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<SupplierSaleContact> SupplierSaleContacts { get; set; }
 
+    public virtual DbSet<TSAllocationAssetPersonal> TSAllocationAssetPersonals { get; set; }
+
+    public virtual DbSet<TSAllocationAssetPersonalDetail> TSAllocationAssetPersonalDetails { get; set; }
+
     public virtual DbSet<TSAllocationEvictionAsset> TSAllocationEvictionAssets { get; set; }
 
     public virtual DbSet<TSAsset> TSAssets { get; set; }
@@ -757,6 +763,8 @@ public partial class RTCContext : DbContext
     public virtual DbSet<TSAssetAllocationDetail> TSAssetAllocationDetails { get; set; }
 
     public virtual DbSet<TSAssetManagement> TSAssetManagements { get; set; }
+
+    public virtual DbSet<TSAssetManagementPersonal> TSAssetManagementPersonals { get; set; }
 
     public virtual DbSet<TSAssetRecovery> TSAssetRecoveries { get; set; }
 
@@ -770,6 +778,10 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<TSPeriodAsset> TSPeriodAssets { get; set; }
 
+    public virtual DbSet<TSRecoveryAssetPersonal> TSRecoveryAssetPersonals { get; set; }
+
+    public virtual DbSet<TSRecoveryAssetPersonalDetail> TSRecoveryAssetPersonalDetails { get; set; }
+
     public virtual DbSet<TSRepairAsset> TSRepairAssets { get; set; }
 
     public virtual DbSet<TSReportBrokenAsset> TSReportBrokenAssets { get; set; }
@@ -781,6 +793,8 @@ public partial class RTCContext : DbContext
     public virtual DbSet<TSTranferAsset> TSTranferAssets { get; set; }
 
     public virtual DbSet<TSTranferAssetDetail> TSTranferAssetDetails { get; set; }
+
+    public virtual DbSet<TSTypeAssetPersonal> TSTypeAssetPersonals { get; set; }
 
     public virtual DbSet<TaxCompany> TaxCompanies { get; set; }
 
@@ -1525,7 +1539,6 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.ID).ValueGeneratedOnAdd();
-            entity.Property(e => e.Note).HasMaxLength(150);
             entity.Property(e => e.Status).HasComment("1.OK 2.NG");
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
@@ -2241,6 +2254,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.DateAdditional).HasColumnType("datetime");
             entity.Property(e => e.DateRecive).HasColumnType("datetime");
             entity.Property(e => e.Status).HasComment("1:Nhận; 2:Huỷ nhận;3:Khum có");
+            entity.Property(e => e.StatusHR).HasComment("1:Nhận; 2:Huỷ nhận;3:Khum có");
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
@@ -3999,6 +4013,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.EmployeeID).HasComment("Người giữ");
+            entity.Property(e => e.Note).HasMaxLength(550);
             entity.Property(e => e.Quantity).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
@@ -4469,6 +4484,15 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.VisionExpertisePoints)
                 .HasComment("Điểm chuyên môn Vision")
                 .HasColumnType("decimal(18, 2)");
+        });
+
+        modelBuilder.Entity<KPISumaryEvaluation>(entity =>
+        {
+            entity.ToTable("KPISumaryEvaluation");
+
+            entity.Property(e => e.BGDPoint).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.EmployeePoint).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TBPPoint).HasColumnType("decimal(18, 2)");
         });
 
         modelBuilder.Entity<ListCost>(entity =>
@@ -7770,6 +7794,49 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
+        modelBuilder.Entity<TSAllocationAssetPersonal>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__TSAlloca__3214EC27C30D22A5");
+
+            entity.ToTable("TSAllocationAssetPersonal");
+
+            entity.Property(e => e.Code).HasMaxLength(250);
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.DateAllocation).HasColumnType("datetime");
+            entity.Property(e => e.DateApprovedHR).HasColumnType("datetime");
+            entity.Property(e => e.DateApprovedPersonalProperty).HasColumnType("datetime");
+            entity.Property(e => e.EmployeeID).HasComment("ID của nhân viên được cấp phát lấy từ bảng Employee");
+            entity.Property(e => e.IsApproveHR)
+                .HasDefaultValue(false)
+                .HasComment("0.Chưa duyệt 1.Đã duyệt");
+            entity.Property(e => e.IsApprovedPersonalProperty)
+                .HasDefaultValue(false)
+                .HasComment("0.Chưa duyệt 1.Đã duyệt");
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false)
+                .HasComment("0.Chưa Xóa 1.Đã xóa");
+            entity.Property(e => e.UpdateDate).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<TSAllocationAssetPersonalDetail>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__TSAlloca__3214EC27EB9AFC01");
+
+            entity.ToTable("TSAllocationAssetPersonalDetail");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false)
+                .HasComment("0.Chưa xóa 1.Đã xóa");
+            entity.Property(e => e.TSAllocationAssetPersonalID).HasComment("Lấy từ bảng TSAllocationAssetPersonal( cột ID)");
+            entity.Property(e => e.TSAssetManagementPersonalID).HasComment("Lấy từ bảng TSAssetManagementPersonal(cột ID)");
+            entity.Property(e => e.UpdateDate).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+        });
+
         modelBuilder.Entity<TSAllocationEvictionAsset>(entity =>
         {
             entity.HasKey(e => e.ID).HasName("PK_TSAllocationAsset");
@@ -7855,6 +7922,25 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
             entity.Property(e => e.WindowActiveStatus).HasComment("1: Chưa active; 2: Đã active; 3: Crack");
+        });
+
+        modelBuilder.Entity<TSAssetManagementPersonal>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__TSAssetM__3214EC27D19D51D7");
+
+            entity.ToTable("TSAssetManagementPersonal");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.DateBuy).HasColumnType("datetime");
+            entity.Property(e => e.EmployeeID).HasComment("ID của nhân viên quản lí tài sản cá nhân");
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false)
+                .HasComment("0.Chưa xóa , 1.Đã xóa");
+            entity.Property(e => e.TSTypeAssetPersonalID).HasComment("Lấy từ bảng TSTypeAssetPersonal cột(ID)");
+            entity.Property(e => e.UnitCountID).HasComment("Lấy từ bảng UnitCount(ID)");
+            entity.Property(e => e.UpdateDate).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
         });
 
         modelBuilder.Entity<TSAssetRecovery>(entity =>
@@ -7945,6 +8031,50 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.PeriodMaintenance).HasComment("Chu kỳ bảo dưỡng");
             entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<TSRecoveryAssetPersonal>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__TSRecove__3214EC277D51219A");
+
+            entity.ToTable("TSRecoveryAssetPersonal");
+
+            entity.Property(e => e.Code).HasMaxLength(250);
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.DateApprovedHR).HasColumnType("datetime");
+            entity.Property(e => e.DateApprovedPersonalProperty).HasColumnType("datetime");
+            entity.Property(e => e.DateRecovery).HasColumnType("datetime");
+            entity.Property(e => e.EmployeeRecoveryID).HasComment("ID của nhân viên thu hồi(Người thu hồi) lấy từ bảng Employee");
+            entity.Property(e => e.EmployeeReturnID).HasComment("ID của nhân viên trả đồ(Thu hồi từ) lấy từ bảng Employee");
+            entity.Property(e => e.IsApproveHR)
+                .HasDefaultValue(false)
+                .HasComment("0. Chưa duyệt 1.Đã duyệt");
+            entity.Property(e => e.IsApprovedPersonalProperty)
+                .HasDefaultValue(false)
+                .HasComment("0. Chưa duyệt 1.Đã duyệt");
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false)
+                .HasComment("0. Chưa xóa 1.Đã xóa");
+            entity.Property(e => e.UpdateDate).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<TSRecoveryAssetPersonalDetail>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__TSRecove__3214EC27FFA1C4B6");
+
+            entity.ToTable("TSRecoveryAssetPersonalDetail");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false)
+                .HasComment("0.Chưa xóa 1.Đã xóa");
+            entity.Property(e => e.TSAssetManagementPersonal).HasComment("Lấy từ bảng TSAssetManagementPersonal(cột ID)");
+            entity.Property(e => e.TSRecoveryAssetPersonalID).HasComment("Lấy từ bảng TSRecoveryAssetPersonal(Cột ID)");
+            entity.Property(e => e.UpdateDate).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
         });
 
         modelBuilder.Entity<TSRepairAsset>(entity =>
@@ -8050,6 +8180,26 @@ public partial class RTCContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<TSTypeAssetPersonal>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__TSTypeAs__3214EC27B1625588");
+
+            entity.ToTable("TSTypeAssetPersonal");
+
+            entity.Property(e => e.Code)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false)
+                .HasComment("0.Chưa xóa 1.Đã xóa");
+            entity.Property(e => e.Name).HasMaxLength(250);
+            entity.Property(e => e.UpdateDate).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.YearValue).HasComment("Năm của tài sản");
         });
 
         modelBuilder.Entity<TaxCompany>(entity =>
@@ -8571,6 +8721,9 @@ public partial class RTCContext : DbContext
                 .IsUnicode(false);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
             entity.Property(e => e.VehicleMoney).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.VehicleType)
+                .HasDefaultValue(1)
+                .HasComment("Loại phương tiện (1: Oto, xe máy....; 2: Máy bay)");
         });
 
         modelBuilder.Entity<VehicleCategory>(entity =>
