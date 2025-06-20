@@ -31,7 +31,7 @@ namespace RERPAPI.Controllers.PO
             //});
             try
             {
-                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToDynamicLists("spGetCustomerPart", new string[] { "@ID" }, new object[] { id });
+                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetCustomerPart", new string[] { "@ID" }, new object[] { id });
                 //List<dynamic> listPart = list[0];
                 return Ok(new
                 {

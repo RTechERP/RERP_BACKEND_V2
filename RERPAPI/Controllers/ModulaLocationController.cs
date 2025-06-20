@@ -69,12 +69,7 @@ namespace RERPAPI.Controllers
             }
         }
 
-        / <summary>
-        / Get danh sách sản phẩm nhập - xuất
-        / </summary>
-        / <param name="billtype">1: Phiếu nhập; 2: Phiếu xuất</param>
-        / <param name="billcode">mã phiếu</param>
-        / <returns></returns>
+
         [HttpGet("getproducts")]
         public IActionResult GetProducts(int? billtype, string? billcode)
         {
@@ -150,7 +145,7 @@ namespace RERPAPI.Controllers
 
                     if (item.BillImportDetailID > 0) //Nếu là nhập kho
                     {
-                        check trong request truyền lên
+                        //check trong request truyền lên
                         var serialNumberRequest = serialNumberModulaLocations.Where(x => x.SerialNumber == item.SerialNumber).ToList();
                         if (serialNumberRequest.Count() > 1)
                         {
@@ -161,7 +156,7 @@ namespace RERPAPI.Controllers
                             });
                         }
 
-                        check trong database
+                        //check trong database
                         var serialNumbers = importDetailSerialNumberRepo.GetAll().Where(x => x.SerialNumber == item.SerialNumber).ToList();
                         if (serialNumbers.Count() > 0)
                         {

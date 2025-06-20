@@ -19,7 +19,7 @@ namespace RERPAPI.Controllers.PO
         {
             try
             {
-                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToDynamicLists("spGetAllHandoverMinutes", new string[] { "@DateStart", "@DateEnd", "@KeyWords" }, new object[] { dateStart, dateEnd, keyWords });
+                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetAllHandoverMinutes", new string[] { "@DateStart", "@DateEnd", "@KeyWords" }, new object[] { dateStart, dateEnd, keyWords });
                 return Ok(new
                 {
                     status = 1,
@@ -41,7 +41,7 @@ namespace RERPAPI.Controllers.PO
         {
             try
             {
-                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToDynamicLists("spGetHanoverMinutesDetail", new string[] { "@HandoverMinutesID" }, new object[] { id });
+                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetHanoverMinutesDetail", new string[] { "@HandoverMinutesID" }, new object[] { id });
                 return Ok(new
                 {
                     status = 1,

@@ -46,43 +46,43 @@ namespace RERPAPI.Model.Common
 
             return model;
         }
-        public static List<T> ProcedureToList(string procedureName, string[] paramName, object[] paramValue)
-        {
-            List<T> lst = new List<T>();
-            SqlConnection mySqlConnection = new SqlConnection(connectionString);
-            SqlParameter sqlParam;
-            mySqlConnection.Open();
+        //public static List<T> ProcedureToList(string procedureName, string[] paramName, object[] paramValue)
+        //{
+        //    List<T> lst = new List<T>();
+        //    SqlConnection mySqlConnection = new SqlConnection(connectionString);
+        //    SqlParameter sqlParam;
+        //    mySqlConnection.Open();
 
-            try
-            {
-                SqlCommand mySqlCommand = new SqlCommand(procedureName, mySqlConnection);
-                mySqlCommand.CommandType = CommandType.StoredProcedure;
-                mySqlCommand.CommandTimeout = commandTimeout;
-                if (paramName != null)
-                {
-                    for (int i = 0; i < paramName.Length; i++)
-                    {
-                        sqlParam = new SqlParameter(paramName[i], paramValue[i]);
-                        mySqlCommand.Parameters.Add(sqlParam);
-                    }
-                }
-                SqlDataReader reader = mySqlCommand.ExecuteReader();
-                lst = reader.MapToList<T>();
-            }
-            catch (SqlException e)
-            {
-                throw new Exception(e.ToString());
-            }
-            finally
-            {
-                mySqlConnection.Close();
-            }
+        //    try
+        //    {
+        //        SqlCommand mySqlCommand = new SqlCommand(procedureName, mySqlConnection);
+        //        mySqlCommand.CommandType = CommandType.StoredProcedure;
+        //        mySqlCommand.CommandTimeout = commandTimeout;
+        //        if (paramName != null)
+        //        {
+        //            for (int i = 0; i < paramName.Length; i++)
+        //            {
+        //                sqlParam = new SqlParameter(paramName[i], paramValue[i]);
+        //                mySqlCommand.Parameters.Add(sqlParam);
+        //            }
+        //        }
+        //        SqlDataReader reader = mySqlCommand.ExecuteReader();
+        //        lst = reader.MapToList<T>();
+        //    }
+        //    catch (SqlException e)
+        //    {
+        //        throw new Exception(e.ToString());
+        //    }
+        //    finally
+        //    {
+        //        mySqlConnection.Close();
+        //    }
 
-            return lst;
-        }
+        //    return lst;
+        //}
 
 
-        public static List<List<dynamic>> ProcedureToDynamicLists(string procedureName, string[] paramName, object[] paramValue)
+        public static List<List<dynamic>> ProcedureToList(string procedureName, string[] paramName, object[] paramValue)
         {
             List<List<dynamic>> resultLists = new List<List<dynamic>>();
 

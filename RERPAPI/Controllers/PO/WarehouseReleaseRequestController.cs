@@ -18,7 +18,7 @@ namespace RERPAPI.Controllers.PO
         {
             try
             {
-                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToDynamicLists("spGetPOKHRequestExport",
+                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetPOKHRequestExport",
                     new string[] { "@WarehouseID", "@CustomerID", "@ProjectID", "@ProductGroupID", "@Keyword" },
                     new object[] { warehouseId, customerId, projectId, productGroupId, keyword});
                 return Ok(new

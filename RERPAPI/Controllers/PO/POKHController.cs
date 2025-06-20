@@ -43,7 +43,7 @@ namespace RERPAPI.Controllers.PO
             {
                 var listGroup = _productGroupRepo.GetAll().Select(x => x.ID).ToList();
                 var idGroup = string.Join(",", listGroup);
-                List<List<dynamic>> listProduct = SQLHelper<dynamic>.ProcedureToDynamicLists("spGetProductSale", new string[] { "@IDgroup" }, new object[] { idGroup });
+                List<List<dynamic>> listProduct = SQLHelper<dynamic>.ProcedureToList("spGetProductSale", new string[] { "@IDgroup" }, new object[] { idGroup });
                 return Ok(new
                 {
                     status = 1,
@@ -65,7 +65,7 @@ namespace RERPAPI.Controllers.PO
         {
             try
             {
-                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToDynamicLists("spGetPOKHDetail_New", new string[] { "@ID", "@IDDetail" }, new object[] { id, idDetail });
+                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetPOKHDetail_New", new string[] { "@ID", "@IDDetail" }, new object[] { id, idDetail });
                 return Ok(new
                 {
                     status = 1,
@@ -87,7 +87,7 @@ namespace RERPAPI.Controllers.PO
         {
             try
             {
-                List<List<dynamic>> POKHs = SQLHelper<dynamic>.ProcedureToDynamicLists("spGetPOKH",
+                List<List<dynamic>> POKHs = SQLHelper<dynamic>.ProcedureToList("spGetPOKH",
                     new string[] { "@FilterText", "@PageNumber", "@PageSize", "@CustomerID", "@UserID", "@POType", "@Status", "@Group", "@StartDate", "@EndDate", "@WarehouseID", "@EmployeeTeamSaleID" },
                     new object[] { filterText, pageNumber, pageSize, customerId, userId, POType, status, group, startDate, endDate, warehouseId, employeeTeamSaleId });
                 return Ok(new
@@ -111,7 +111,7 @@ namespace RERPAPI.Controllers.PO
         {
             try
             {
-                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToDynamicLists("spGetEmployeeManager",
+                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetEmployeeManager",
                     new string[] { "@group", "@UserID", "@TeamID" },
                     new object[] { group, userId, teamId });
                 return Ok(new
@@ -135,7 +135,7 @@ namespace RERPAPI.Controllers.PO
         {
             try
             {
-                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToDynamicLists("spGetPOKHDetail", new string[] { "@ID", "@IDDetail" }, new object[] { id, idDetail });
+                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetPOKHDetail", new string[] { "@ID", "@IDDetail" }, new object[] { id, idDetail });
                 return Ok(new
                 {
                     status = 1,
@@ -203,7 +203,7 @@ namespace RERPAPI.Controllers.PO
 
             try
             {
-                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToDynamicLists("spGetMainIndex", new string[] { "@Type" }, new object[] { 1 });
+                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetMainIndex", new string[] { "@Type" }, new object[] { 1 });
 
                 return Ok(new
                 {

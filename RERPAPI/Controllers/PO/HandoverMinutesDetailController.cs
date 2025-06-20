@@ -53,7 +53,7 @@ namespace RERPAPI.Controllers.PO
         {
             try
             {
-                var product = SQLHelper<dynamic>.ProcedureToDynamicLists("spGetPOKHDetail_New1", new string[] { }, new object[] { });
+                var product = SQLHelper<dynamic>.ProcedureToList("spGetPOKHDetail_New1", new string[] { }, new object[] { });
                 return Ok(new
                 {
                     status = 1,
