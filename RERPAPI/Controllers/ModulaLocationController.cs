@@ -23,12 +23,15 @@ namespace RERPAPI.Controllers
         BillExportDetailSerialNumberModulaLocationRepo serialNumberExportModulaRepo = new BillExportDetailSerialNumberModulaLocationRepo();
 
         [HttpGet("getlocation")]
-        public IActionResult GetLocation()
+        public IActionResult GetLocation(string? keyword)
         {
             try
             {
-                List<ModulaLocation> listLocations = locationRepo.GetAll().Where(x=>x.IsDeleted == false).ToList();
-                List<List<dynamic>> locationdetails = SQLHelper<object>.ProcedureToList("spGetModulaLocationDetail", new string[] { }, new object[] { });
+                keyword = keyword ?? "";
+                List<ModulaLocation> listLocations = locationRepo.GetAll().Where(x => x.IsDeleted == false)
+                                                                          .OrderBy(x => x.STT)
+                                                                          .ToList();
+                List<List<dynamic>> locationdetails = SQLHelper<object>.ProcedureToList("spGetModulaLocationDetail", new string[] { "@Keyword" }, new object[] { keyword.Trim() });
                 var details = SQLHelper<object>.GetListData(locationdetails, 0);
 
                 List<ModulaLocationDTO> locations = new List<ModulaLocationDTO>();
@@ -65,6 +68,7 @@ namespace RERPAPI.Controllers
                 });
             }
         }
+
         /// <summary>
         /// Get danh sách sản phẩm nhập - xuất
         /// </summary>
@@ -72,11 +76,13 @@ namespace RERPAPI.Controllers
         /// <param name="billcode">mã phiếu</param>
         /// <returns></returns>
         [HttpGet("getproducts")]
-        public IActionResult GetProducts(int billtype, string billcode)
+        public IActionResult GetProducts(int? billtype, string? billcode)
         {
             try
             {
 
+                billtype = billtype ?? 0;
+                billcode = billcode ?? "";
                 List<List<dynamic>> data = SQLHelper<object>.ProcedureToList("spGetProductImportExport",
                                                                 new string[] { "@BillType", "@BillCode" },
                                                                 new object[] { billtype, billcode });
@@ -140,6 +146,37 @@ namespace RERPAPI.Controllers
                 for (int i = 0; i < serialNumberModulaLocations.Count; i++)
                 {
                     var item = serialNumberModulaLocations[i];
+                    if (string.IsNullOrWhiteSpace(item.SerialNumber)) continue;
+
+                    if (item.BillImportDetailID > 0) //Nếu là nhập kho
+                    {
+                        //check trong request truyền lên
+                        var serialNumberRequest = serialNumberModulaLocations.Where(x => x.SerialNumber == item.SerialNumber).ToList();
+                        if (serialNumberRequest.Count() > 1)
+                        {
+                            return Ok(new
+                            {
+                                status = 0,
+                                message = $"SerialNumber [{item.SerialNumber}] đã được nhập ở vị trí khác",
+                            });
+                        }
+
+                        //check trong database
+                        var serialNumbers = importDetailSerialNumberRepo.GetAll().Where(x => x.SerialNumber == item.SerialNumber).ToList();
+                        if (serialNumbers.Count() > 0)
+                        {
+                            return Ok(new
+                            {
+                                status = 0,
+                                message = $"SerialNumber [{item.SerialNumber}] đã được nhập ở vị trí khác",
+                            });
+                        }
+                    }
+                }
+
+                for (int i = 0; i < serialNumberModulaLocations.Count; i++)
+                {
+                    var item = serialNumberModulaLocations[i];
                     if (item.BillImportDetailID > 0) //Nếu là nhập kho
                     {
                         if (string.IsNullOrWhiteSpace(item.SerialNumber)) continue;
@@ -158,7 +195,7 @@ namespace RERPAPI.Controllers
                             importDetailSerialNumberRepo.Create(serialNumber);
                         }
 
-                        BillImportDetailSerialNumberModulaLocation import = new BillImportDetailSerialNumberModulaLocation() 
+                        BillImportDetailSerialNumberModulaLocation import = new BillImportDetailSerialNumberModulaLocation()
                         {
                             BillImportDetailSerialNumberID = serialNumber.ID,
                             ModulaLocationDetailID = item.ModulaLocationDetailID,
@@ -224,47 +261,47 @@ namespace RERPAPI.Controllers
         }
 
 
-        [HttpPost("savelocation")]
-        public async Task<IActionResult> SaveLocation([FromBody] ModulaLocationDTO modulaLocation)
-        {
-            try
-            {
+        //[HttpPost("savelocation")]
+        //public async Task<IActionResult> SaveLocation([FromBody] ModulaLocationDTO modulaLocation)
+        //{
+        //    try
+        //    {
 
-                if (modulaLocation.ID <= 0)
-                {
-                    modulaLocation.CreatedDate = modulaLocation.UpdatedDate = DateTime.Now;
-                    await locationRepo.CreateAsync(modulaLocation);
-                }
-                else
-                {
-                    modulaLocation.UpdatedDate = DateTime.Now;
-                    await locationRepo.UpdateAsync(modulaLocation);
-                }
+        //        if (modulaLocation.ID <= 0)
+        //        {
+        //            modulaLocation.CreatedDate = modulaLocation.UpdatedDate = DateTime.Now;
+        //            await locationRepo.CreateAsync(modulaLocation);
+        //        }
+        //        else
+        //        {
+        //            modulaLocation.UpdatedDate = DateTime.Now;
+        //            await locationRepo.UpdateAsync(modulaLocation);
+        //        }
 
-                modulaLocation.LocationDetails.ForEach(x =>
-                {
-                    x.ModulaLocationID = modulaLocation.ID;
-                    x.AxisX = 0;
-                    x.AxisY = 1;
-                });
+        //        modulaLocation.LocationDetails.ForEach(x =>
+        //        {
+        //            x.ModulaLocationID = modulaLocation.ID;
+        //            x.AxisX = 0;
+        //            x.AxisY = 1;
+        //        });
 
-                await detailRepo.CreateRangeAsync(modulaLocation.LocationDetails);
+        //        await detailRepo.CreateRangeAsync(modulaLocation.LocationDetails);
 
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Cập nhật thành công!",
-                });
-            }
-            catch (Exception ex)
-            {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
-        }
+        //        return Ok(new
+        //        {
+        //            status = 1,
+        //            message = "Cập nhật thành công!",
+        //        });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return Ok(new
+        //        {
+        //            status = 0,
+        //            message = ex.Message,
+        //            error = ex.ToString()
+        //        });
+        //    }
+        //}
     }
 }
