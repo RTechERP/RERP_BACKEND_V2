@@ -4,6 +4,7 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using System.Data;
 
 namespace RERPAPI.Controllers.ProjectManager
 {
@@ -100,18 +101,14 @@ namespace RERPAPI.Controllers.ProjectManager
         {
             try
             {
-                //string typeNumberStr = typeNumber != null && typeNumber.Length > 0
-                //                        ? string.Join(",", typeNumber)
-                //                        : "";
-                //DateTime ds = new DateTime(dateStart.Year, dateStart.Month, dateStart.Day, 0, 0, 0);
-                //DateTime de = new DateTime(dateEnd.Year, dateEnd.Month, dateEnd.Day, 23, 59, 59);
-                //var data = SQLHelper<object>.ProcedureToList("spGetTimelineEmployeeWorks"
-                //                          , new string[] { "@DateStart", "@DateEnd", "@DepartmentID", "@UserTeamID", "@UserID", "@IsShowDetail", "@TypeNumber" }
-                //                          , new object[] { ds, de, departmentId, userTeamId, userId, 0, typeNumberStr });
+                string codeNew = code.Replace("\n", "");
+                var data = SQLHelper<object>.ProcedureToList("spGetTimelineEmployeeWorksDetail"
+                                           , new string[] { "@UserID", "@TypeNumber", "@Date", "@Code" }
+                                           , new object[] { userId, type, date, codeNew });
                 return Ok(new
                 {
                     status = 1,
-                    //data = SQLHelper<object>.GetListData(data, 0)
+                    data = SQLHelper<object>.GetListData(data, 0)
                 });
             }
             catch (Exception ex)
