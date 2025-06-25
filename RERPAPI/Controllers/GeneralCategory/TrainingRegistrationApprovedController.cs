@@ -11,8 +11,10 @@ namespace RERPAPI.Controllers.GeneralCategory
     [ApiController]
     public class TrainingRegistrationApprovedController : ControllerBase
     {
-        private readonly TrainingRegistrationApprovedRepo _trainingRegistrationApprovedRepo = new TrainingRegistrationApprovedRepo();
-        private readonly TrainingRegistrationApprovedFlowRepo _trainingRegistrationApprovedFlowRepo = new TrainingRegistrationApprovedFlowRepo();
+        private TrainingRegistrationApprovedRepo _trainingRegistrationApprovedRepo = new TrainingRegistrationApprovedRepo();
+        private TrainingRegistrationApprovedFlowRepo _trainingRegistrationApprovedFlowRepo = new TrainingRegistrationApprovedFlowRepo();
+        private EmployeeApprovedRepo _employeeApprovedRepo = new EmployeeApprovedRepo();
+
         [HttpGet("get-by-training-registration-id")]
         public IActionResult GetTrainingregistrationApproved(int trainingRegistrationID)
         {
@@ -49,12 +51,18 @@ namespace RERPAPI.Controllers.GeneralCategory
                     return BadRequest(new { status = 0, message = "dữ liệu không hợp lệ" });
                 }
                 int flowID = (model.TrainingRegistrationApprovedFlowID ?? 0) - 1;
+                TrainingRegistrationApproved current = _trainingRegistrationApprovedRepo.GetAll(x => x.TrainingRegistrationID == model.TrainingRegistrationID &&
+                                                                            (x.IsDeleted == false || x.IsDeleted==null) &&
+                                                                            x.TrainingRegistrationApprovedFlowID == model.TrainingRegistrationApprovedFlowID).FirstOrDefault();
                 if (model.StatusApproved == 1)
                 {
                     TrainingRegistrationApproved previosApproved = _trainingRegistrationApprovedRepo.GetAll(x => x.TrainingRegistrationID == model.TrainingRegistrationID &&
                                                                             (x.IsDeleted == false || x.IsDeleted==null) &&
                                                                             x.TrainingRegistrationApprovedFlowID==flowID).FirstOrDefault();
-
+                    if (current.StatusApproved == 1)
+                    {
+                        return BadRequest(new { status = 0, message = "Phiếu đăng ký đã duyệt trước đó rồi!" });
+                    }
                     if ( previosApproved == null)
                     {
                         return BadRequest(new { status = 0, message = "Không tìm thấy phê duyệt trước đó" });
@@ -63,11 +71,23 @@ namespace RERPAPI.Controllers.GeneralCategory
                     {
                         return BadRequest(new { status = 0, message = "Phê duyệt trước đó chưa được phê duyệt" });
                     }
+                    List<EmployeeApprove> employeeApproveds = _employeeApprovedRepo.GetAll();
+                    //if (!employeeApproveds.Any(e => e.ID == model.EmployeeApprovedActualID) && model.TrainingRegistrationApprovedFlowID>1   )
+                    //{
+                    //    return BadRequest(new { status = 0, message = "Bạn không có quyền duyệt" });
+                    //}
                 }
-               
-                TrainingRegistrationApproved current = _trainingRegistrationApprovedRepo.GetAll(x => x.TrainingRegistrationID == model.TrainingRegistrationID &&
-                                                                            (x.IsDeleted == false || x.IsDeleted==null) &&
-                                                                            x.TrainingRegistrationApprovedFlowID == model.TrainingRegistrationApprovedFlowID).FirstOrDefault();
+                if( model.StatusApproved == 2)
+                {
+                    if (current.StatusApproved == 2)
+                    {
+                        return BadRequest(new { status = 0, message = "Phiếu đăng ký đã hủy duyệt trước đó!" });
+                    }
+                    if (current.EmployeeApprovedActualID != model.EmployeeApprovedActualID)
+                    {
+                        return BadRequest(new { status = 0, message = "Bạn không có quyền hủy phê duyệt này" });
+                    }
+                }
                 //current.EmployeeApprovedID = model.EmployeeApprovedID;
                 current.EmployeeApprovedActualID = model.EmployeeApprovedActualID;
                 current.DateApproved = model.DateApproved;
