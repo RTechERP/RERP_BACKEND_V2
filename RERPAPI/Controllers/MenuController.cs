@@ -11,7 +11,7 @@ namespace RERPAPI.Controllers
     {
         MenuRepo menuRepo = new MenuRepo();
 
-        [HttpGet("getall")]
+        [HttpGet("get-all")]
         public IActionResult GetAll()
         {
             try

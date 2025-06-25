@@ -12,7 +12,7 @@ namespace RERPAPI.Controllers
     {
         DepartmentRepo departmentRepo = new DepartmentRepo();
 
-        [HttpGet("getall")]
+        [HttpGet("get-all")]
         public IActionResult GetAll()
         {
 

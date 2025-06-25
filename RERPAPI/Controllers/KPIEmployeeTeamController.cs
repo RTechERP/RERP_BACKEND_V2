@@ -12,12 +12,20 @@ namespace RERPAPI.Controllers
     [ApiController]
     public class KPIEmployeeTeamController : ControllerBase
     {
+        #region Khai báo repository
         KPIEmployeeTeamRepo teamRepo = new KPIEmployeeTeamRepo();
-
         DepartmentRepo departmentRepo = new DepartmentRepo();
         EmployeeRepo employeeRepo = new EmployeeRepo();
-
-        [HttpGet("getall")]
+        #endregion
+        #region lấy ra tất cả team
+        /// <summary>
+        /// lấy team theo từng quý, nawmg, phòng ban
+        /// </summary>
+        /// <param name="yearValue"></param>
+        /// <param name="quarterValue"></param>
+        /// <param name="departmentID"></param>
+        /// <returns></returns>
+        [HttpGet("get-all")]
         public IActionResult GetAll(int yearValue, int quarterValue, int departmentID)
         {
 
@@ -46,7 +54,9 @@ namespace RERPAPI.Controllers
             }
 
         }
-        [HttpGet("getemployeeinteam")]
+        #endregion
+        #region lấy danh sách nhân viên không thuộc team
+        [HttpGet("get-employee-in-team")]
         public IActionResult GetAllEmployee(int departmentID = 0, int kpiEmployeeTeamID = 0)
         {
             try
@@ -65,8 +75,9 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-
-        [HttpGet("getbyid")]
+        #endregion
+        #region lấy theo ID
+        [HttpGet("get-by-id")]
         public IActionResult FindByID(int id)
         {
             try
@@ -96,8 +107,9 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-
-        [HttpPost("savedata")]
+        #endregion
+        #region Lưu dữ liệu
+        [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] KPIEmployeeTeam team)
         {
             try
@@ -123,5 +135,6 @@ namespace RERPAPI.Controllers
                 });
             }
         }
+        #endregion
     }
 }

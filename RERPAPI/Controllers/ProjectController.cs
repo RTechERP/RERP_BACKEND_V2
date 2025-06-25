@@ -11,7 +11,7 @@ namespace RERPAPI.Controllers
     public class ProjectController : ControllerBase
     {
         ProjectRepo projectRepo = new ProjectRepo();
-        [HttpGet("getbyid")]
+        [HttpGet("get-by-id")]
         public IActionResult getByID(int id)
         {
             Project p = projectRepo.GetByID(id);

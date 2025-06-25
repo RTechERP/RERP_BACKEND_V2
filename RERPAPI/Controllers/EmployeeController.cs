@@ -13,7 +13,7 @@ namespace RERPAPI.Controllers
     {
         EmployeeRepo employeeRepo = new EmployeeRepo();
 
-        [HttpGet("getall")]
+        [HttpGet("get-all")]
         public IActionResult GetAll()
         {
             try
@@ -36,7 +36,7 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpGet("getemployees")]
+        [HttpGet("get-employees")]
         public IActionResult GetEmployee(int status, int departmentID,string? keyword)
         {
             try
@@ -62,7 +62,7 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpGet("getbyid")]
+        [HttpGet("get-by-id")]
         public IActionResult GetByID(int id)
         {
             try
@@ -85,7 +85,7 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpPost("savedata")]
+        [HttpPost("save-data")]
         public async Task<IActionResult> SaveEmployee([FromBody] Employee employee)
         {
             try

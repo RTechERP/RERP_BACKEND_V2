@@ -15,6 +15,7 @@ namespace RERPAPI.Controllers
     [ApiController]
     public class ProjectPartlistPriceRequestController : ControllerBase
     {
+        #region Khai báo repository
         ProjectRepo projectRepo = new ProjectRepo();
         POKHRepo pOKHRepo = new POKHRepo();
         ProjectPartlistPriceRequestRepo requestRepo = new ProjectPartlistPriceRequestRepo();
@@ -22,15 +23,31 @@ namespace RERPAPI.Controllers
         CurrencyRepo currencyRepo = new CurrencyRepo();
         SupplierSaleRepo supplierSaleRepo = new SupplierSaleRepo();
         ProjectSolutionRepo projectSolutionRepo = new ProjectSolutionRepo();
-
-        [HttpGet("getallProjectParListPriceRequest")]
+        #endregion
+        #region Lấy tất cả yêu cầu báo giá
+        /// <summary>
+        /// lấy tất cả yêu cầu báo giá
+        /// </summary>
+        /// <param name="dateStart"></param>
+        /// <param name="dateEnd"></param>
+        /// <param name="statusRequest"> 0:tất cả;1:Yêu cầu báo giá;2:Đã báo giá;3:Đã hoàn thành</param>
+        /// <param name="projectId"></param>
+        /// <param name="keyword"></param>
+        /// <param name="isDeleted"></param>
+        /// <param name="projectTypeID"></param>
+        /// <param name="poKHID"></param>
+        /// <param name="isCommercialProduct"></param>
+        /// <param name="page"></param>
+        /// <param name="size"></param>
+        /// <returns></returns>
+        [HttpGet("get-all-project-parList-price-request")]
         public async Task<IActionResult> GetAll( DateTime dateStart,DateTime dateEnd,int statusRequest, int projectId,string? keyword,
             int isDeleted,int projectTypeID, int poKHID,int isCommercialProduct = -1,int page = 1, int size = 25)
         {
             if (projectTypeID < 0) isCommercialProduct = 1;
             else poKHID = 0;
 
-            // Gọi stored procedure với tham số phân trang
+            
             List<List<dynamic>> dtPriceRequest = SQLHelper<dynamic>.ProcedureToList("spGetProjectPartlistPriceRequest_New",
                                                                           new string[] {
                                                                   "@DateStart", "@DateEnd", "@StatusRequest", "@ProjectID", "@Keyword", "@IsDeleted",
@@ -57,7 +74,8 @@ namespace RERPAPI.Controllers
                 }
             });
         }
-        [HttpGet("getType")]
+        #endregion
+        [HttpGet("get-type")]
         public async Task<IActionResult> GetAllTypebyEmployeeID(int employeeID)
         {
 
@@ -74,60 +92,49 @@ namespace RERPAPI.Controllers
                 }
             });
         }
-        [HttpGet("getAllProjects")]
+        [HttpGet("get-all-projects")]
         public async Task<IActionResult> GetAllProjects()
         {
             List<Project> lstProjects = projectRepo.GetAll();
             return Ok(new { status = 1, data = lstProjects });
         }
-        [HttpGet("getAllEmployee")]
+        [HttpGet("get-all-employee")]
         public async Task<IActionResult> GetAllEmployee()
         {
             var dtEmployee = SQLHelper<dynamic>.ProcedureToList("spGetEmployee", new string[] { "@Status" }, new object[] { 0 });
             return Ok(new { status = 1, data = new { dtEmployee = dtEmployee[0] } });
         }
-        [HttpGet("getPoCode")]
+        [HttpGet("get-po-code")]
         public async Task<IActionResult> GetPoCode()
         {
             var dtPOKH = pOKHRepo.GetAll();
             return Ok(new { status = 1, data = dtPOKH });
         }
-        [HttpGet("getProductSale")]
-        public async Task<IActionResult> GetProductSale(int page = 1, int pageSize = 20)
+        [HttpGet("get-product-sale")]
+        public async Task<IActionResult> GetProductSale()
         {
-            var query = productSaleRepo.GetAll().AsQueryable();
-
-            var totalRecords = query.Count();
-
-            var pagedData = query
-                .OrderBy(p => p.ID)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
+            var data = productSaleRepo.GetAll().ToList();
 
             return Ok(new
             {
                 status = 1,
-                data = pagedData,
-                totalRecords = totalRecords,
-                page = page,
-                pageSize = pageSize
+                data = data,
             });
         }
-        [HttpGet("getCurrency")]
+        [HttpGet("get-currency")]
         public async Task<IActionResult> GetCurrency()
         {
             List<Currency> currencies = currencyRepo.GetAll();
             return Ok(new { status = 1, data = currencies });
         }
-        [HttpPost("saveData")]
-        public async Task<IActionResult> SaveData([FromBody] List<ProjectPartlistPriceRequest> dto)
+        [HttpPost("save-data")]
+        public async Task<IActionResult> SaveData([FromBody] List<ProjectPartlistPriceRequest> projectPartlistPriceRequest)
         {
             try
             {
-                if (dto != null && dto.Any())
+                if (projectPartlistPriceRequest != null && projectPartlistPriceRequest.Any())
                 {
-                    foreach (var item in dto)
+                    foreach (var item in projectPartlistPriceRequest)
                     {
                         if (item.ID > 0)
                         {
@@ -153,12 +160,13 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpGet("getSupplierSale")]
+        [HttpGet("get-supplier-sale")]
         public async Task<IActionResult> GetSupplierSale()
         {
-            List<SupplierSale> lst = supplierSaleRepo.GetAll().OrderByDescending(x => x.ID).Take(10).ToList();
+            List<SupplierSale> lst = supplierSaleRepo.GetAll().ToList();
             return Ok(new { status = 0, data = lst });
         }
+
         [HttpPost("download")]
         public async Task<IActionResult> DownloadFile([FromBody] DownloadProjectPartlistPriceRequestDTO request)
         {
@@ -183,7 +191,7 @@ namespace RERPAPI.Controllers
             var year = project.CreatedDate.Value.Year;
             var pathPattern = $"{year}/{project.ProjectCode.Trim()}/THIETKE.Co/{solution?.CodeSolution.Trim()}/2D/GC/DH";
             var fileName = $"{request.ProductCode}.pdf";
-
+            //sửa
             var fileUrl = $"http://14.232.152.154:8083/api/project/{pathPattern}/{fileName}";
 
             try
@@ -207,6 +215,6 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-
+       
     }
 }

@@ -71,7 +71,7 @@ namespace RERPAPI.Controllers
         /// <param name="billtype">1: Phiếu nhập; 2: Phiếu xuất</param>
         /// <param name="billcode">mã phiếu</param>
         /// <returns></returns>
-        [HttpGet("getproducts")]
+        [HttpGet("get-products")]
         public IActionResult GetProducts(int billtype, string billcode)
         {
             try
@@ -106,7 +106,7 @@ namespace RERPAPI.Controllers
         }
 
 
-        [HttpGet("getlocationdetail")]
+        [HttpGet("get-location-detail")]
         public IActionResult GetLocationByID(int id)
         {
             try
