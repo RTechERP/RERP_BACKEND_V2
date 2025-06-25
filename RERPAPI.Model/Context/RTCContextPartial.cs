@@ -37,7 +37,7 @@ namespace RERPAPI.Model.Context
                 {
                     if (createdBy != null && createdBy.CanWrite) createdBy.SetValue(item.Entity, "Admin");
                     if (createdDate != null && createdDate.CanWrite) createdDate.SetValue(item.Entity, DateTime.Now);
-                    if (updatedBy != null && updatedBy.CanWrite) updatedBy.SetValue(item.Entity, "Xuân Lươn");
+                    if (updatedBy != null && updatedBy.CanWrite) updatedBy.SetValue(item.Entity, "Xuân Lửng");
                     if (updatedDate != null && updatedDate.CanWrite) updatedDate.SetValue(item.Entity, DateTime.Now);
                     if (isDeleted != null && isDeleted.CanWrite) isDeleted.SetValue(item.Entity,false);
                 }

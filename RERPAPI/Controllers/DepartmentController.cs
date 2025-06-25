@@ -10,7 +10,7 @@ namespace RERPAPI.Controllers
     [ApiController]
     public class DepartmentController : ControllerBase
     {
-        DepartmentRepo departmentRepo = new DepartmentRepo();
+        DepartmentRepo _departmentRepo = new DepartmentRepo();
 
         [HttpGet("getall")]
         public IActionResult GetAll()
@@ -18,7 +18,7 @@ namespace RERPAPI.Controllers
 
             try
             {
-                List<Department> departments = departmentRepo.GetAll().OrderBy(x => x.STT).ToList();
+                List<Department> departments = _departmentRepo.GetAll().OrderBy(x => x.STT).ToList();
 
                 return Ok(new
                 {

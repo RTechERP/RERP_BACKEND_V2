@@ -117,7 +117,7 @@ namespace RERPAPI.Model.Common
                                     IDictionary<string, object> expando = new ExpandoObject();
                                     foreach (DataColumn col in table.Columns)
                                     {
-                                        expando[col.ColumnName] = row[col];
+                                        expando[col.ColumnName] = row[col] == DBNull.Value ? null : row[col];
                                     }
                                     dynamicList.Add(expando);
                                 }

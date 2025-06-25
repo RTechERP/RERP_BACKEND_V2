@@ -15,8 +15,6 @@ namespace RERPAPI.Model.Param.Asset
         public DateTime? DateEnd { get; set; }
         public string? Status { get; set; }
         public string? Department { get; set; }
-
-
     }
 }
 

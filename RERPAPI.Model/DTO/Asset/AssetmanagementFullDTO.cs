@@ -9,6 +9,8 @@ namespace RERPAPI.Model.DTO.Asset
 {
     public class AssetmanagementFullDTO
     {
+        public List<TSRepairAsset>? tSRepairAssets { get; set; }
+        public TSLiQuidationAsset? tSLiQuidationAsset{ get; set; }
         public List<TSAssetManagement>? tSAssetManagements { get; set; }
         public TSLostReportAsset? tSLostReportAsset { get; set; }
         public TSReportBrokenAsset? tSReportBrokenAsset { get; set; }

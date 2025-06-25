@@ -119,7 +119,7 @@ src/.vs/config/applicationhost.config
 # Custom
 appsettings.json
 /MaintenanceSystem/appsettings.json
-RERPAPI.IRepo/IGenericRepo.cs
+
 RERPAPI.Model/Common/Config.cs
 RERPAPI/RERPAPI.csproj
 RERPAPI.Model/RERPAPI.Model.csproj

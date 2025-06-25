@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using RERPAPI.Model.Entities;
 
-namespace RERPAPI.Repo.GenericEntity
+namespace RERPAPI.Repo.GenericEntity.Asset
 {
-    public class TSRepairAssetRepo:GenericRepo<TSRepairAsset>
+    public class TSLiQuidationAssetRepo :GenericRepo<TSLiQuidationAsset>
     {
     }
 }

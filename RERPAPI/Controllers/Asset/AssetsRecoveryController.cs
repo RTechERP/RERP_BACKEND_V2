@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using OfficeOpenXml;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO.Asset;
 using RERPAPI.Model.Entities;
@@ -28,9 +29,9 @@ namespace RERPAPI.Controllers.Asset
                 return Ok(new
                 {
                     status = 1,
-                   
-                        assetsrecovery = SQLHelper<dynamic>.GetListData(assetRecovery, 0)
-                    
+
+                    assetsrecovery = SQLHelper<dynamic>.GetListData(assetRecovery, 0)
+
                 });
             }
             catch (Exception ex)
@@ -107,9 +108,9 @@ namespace RERPAPI.Controllers.Asset
                 return Ok(new
                 {
                     status = 1,
-                   
-                        assetsRecoveryByEmployee = SQLHelper<dynamic>.GetListData(assetsRecoveryByEmployee, 0)
-                   
+
+                    assetsRecoveryByEmployee = SQLHelper<dynamic>.GetListData(assetsRecoveryByEmployee, 0)
+
                 });
             }
             catch (Exception ex)
@@ -122,6 +123,85 @@ namespace RERPAPI.Controllers.Asset
                 });
             }
         }
+        [HttpPost("export-recovery-asset-report")]
+        public IActionResult ExportRecoveryAssetReport([FromBody] AssetRecoveryExportFullDto dto)
+        {
+            var master = dto.Master;
+            var details = dto.Details;
+
+            if (master == null || details == null || !details.Any())
+                return BadRequest("Dữ liệu thu hồi không hợp lệ.");
+            try
+            {
+                ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+                string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "BienBanBanGiao.xlsx");
+                if (!System.IO.File.Exists(templatePath))
+                    return NotFound("Không tìm thấy file mẫu.");
+
+                var fileName = $"PhieuThuHoi_{master.Code}.xlsx";
+                var exportPath = Path.Combine(Path.GetTempPath(), fileName);
+
+                using (var stream = new FileStream(templatePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                using (var package = new ExcelPackage(stream))
+                {
+                    var ws = package.Workbook.Worksheets[0];
+
+                    // Ghi dữ liệu vào file Excel giống như trong Interop
+                    string location = $"Hà Nội, Ngày {master.DateRecovery.Day} tháng {master.DateRecovery.Month} năm {master.DateRecovery.Year} tại Văn phòng Công ty Cổ phần RTC Technology Việt Nam. Chúng tôi gồm các bên sau:";
+                    ws.Cells[4, 1].Value = "BIÊN BẢN THU HỒI TÀI SẢN";
+                    ws.Cells[5, 1].Value = master.Code;
+                    ws.Cells[6, 1].Value = location;
+
+                    ws.Cells[8, 3].Value = master.EmployeeReturnName;
+                    ws.Cells[9, 3].Value = master.PossitionReturn;
+                    ws.Cells[10, 3].Value = master.DepartmentReturn;
+
+                    ws.Cells[13, 3].Value = master.EmployeeRecoveryName;
+                    ws.Cells[14, 3].Value = master.PossitionRecovery;
+                    ws.Cells[15, 3].Value = master.DepartmentRecovery;
+
+                    ws.Cells[17, 3].Value = master.Note;
+
+                    //ws.Cells[32, 1].Value = master.CreatedDate?.ToString("dd/MM/yyyy HH:mm") ?? "";
+                    //ws.Cells[32, 8].Value = master.DateApprovedPersonalProperty?.ToString("dd/MM/yyyy HH:mm") ?? "";
+
+                    // Xoá dòng template sẵn (dòng 20 + 21)
+                    ws.DeleteRow(20, 1);
+
+                    // Ghi dữ liệu chi tiết từ dòng 21 trở đi
+                    int startRow = 20;
+                    for (int i = 0; i < details.Count; i++)
+                    {
+                        var item = details[i];
+                        int row = startRow + i;
+
+                        ws.InsertRow(row, 1);
+                        ws.Cells[row, 1].Value = i + 1;
+                        ws.Cells[row, 2].Value = item.TSCodeNCC;
+                        ws.Cells[row, 3].Value = item.TSAssetName;
+                        ws.Cells[row, 5].Value = item.UnitName;
+                        ws.Cells[row, 6].Value = item.Quantity;
+                        ws.Cells[row, 7].Value = item.TinhTrang;
+                        ws.Cells[row, 8].Value = item.Note;
+                    }
+
+                    // Lưu file tạm rồi trả về
+                    var outStream = new MemoryStream();
+                    package.SaveAs(outStream);
+                    outStream.Position = 0;
+
+                    string contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                    return File(outStream, contentType, fileName);
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi khi xuất Excel: {ex.Message}");
+            }
+        }
+
+
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData2([FromBody] AssetRecoveryDTO asset)
         {

@@ -78,7 +78,6 @@ namespace RERPAPI.Controllers.Asset
                 });
             }
         }
-
         [HttpGet("get-asset-allocation-personal-detail")]
         public IActionResult GetAssetAllocationPersonalDetail(int? TSAllocationAssetPersonalID, int? EmployeeID)
         {

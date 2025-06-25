@@ -11,14 +11,14 @@ namespace RERPAPI.Controllers
     [ApiController]
     public class EmployeeController : ControllerBase
     {
-        EmployeeRepo employeeRepo = new EmployeeRepo();
+        EmployeeRepo _employeeRepo = new EmployeeRepo();
 
         [HttpGet("getall")]
         public IActionResult GetAll()
         {
             try
             {
-                List<Employee> employees = employeeRepo.GetAll();
+                List<Employee> employees = _employeeRepo.GetAll();
                 return Ok(new
                 {
                     status = 1,
@@ -48,7 +48,7 @@ namespace RERPAPI.Controllers
                 return Ok(new
                 {
                     status = 1,
-                    data = employees
+                    employees = SQLHelper<dynamic>.GetListData(employees, 0)
                 });
             }
             catch (Exception ex)
@@ -66,7 +66,7 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                Employee employee = employeeRepo.GetByID(id);
+                Employee employee = _employeeRepo.GetByID(id);
                 return Ok(new
                 {
                     status = 1,
@@ -89,8 +89,8 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                if (employee.ID <= 0) await employeeRepo.CreateAsync(employee);
-                else await employeeRepo.UpdateAsync(employee);
+                if (employee.ID <= 0) await _employeeRepo.CreateAsync(employee);
+                else await _employeeRepo.UpdateAsync(employee);
 
                 return Ok(new
                 {
