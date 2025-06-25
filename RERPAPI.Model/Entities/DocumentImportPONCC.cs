@@ -39,4 +39,9 @@ public partial class DocumentImportPONCC
     public DateTime? DateAdditional { get; set; }
 
     public int? BillImportID { get; set; }
+
+    /// <summary>
+    /// 1:Nhận; 2:Huỷ nhận;3:Khum có
+    /// </summary>
+    public int? StatusHR { get; set; }
 }

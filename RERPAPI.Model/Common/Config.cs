@@ -13,7 +13,11 @@ namespace RERPAPI.Model.Common
         {
             get
             {
+<<<<<<< HEAD
                 string connectionString = @"Data Source=DESKTOP-ME2R5GM;Initial Catalog=RTC;Integrated Security=True;Encrypt=True;Trust Server Certificate=True";
+=======
+                string connectionString = @"";
+>>>>>>> origin/master
                 if (_isPublish == 1) connectionString = @"";
                 return connectionString;
             }
