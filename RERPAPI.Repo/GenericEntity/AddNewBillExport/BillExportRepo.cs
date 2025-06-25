@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RERPAPI.Repo.GenericEntity
+namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
 {
-    public class BillExportDetailSerialNumberRepo : GenericRepo<BillExportDetailSerialNumber>
+    public class BillExportRepo: GenericRepo<BillExport>
     {
     }
 }

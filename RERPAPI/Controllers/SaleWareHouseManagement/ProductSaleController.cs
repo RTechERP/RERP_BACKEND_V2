@@ -49,7 +49,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             }
             catch (Exception ex)
             {
-                return Ok(new
+                return BadRequest(new
                 {
                     status = 0,
                     message = ex.Message,
@@ -75,7 +75,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             }
             catch (Exception ex)
             {
-                return Ok(new
+                return BadRequest(new
                 {
                     status = 0,
                     message = ex.Message,
@@ -100,7 +100,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             }
             catch (Exception ex)
             {
-                return Ok(new
+                return BadRequest(new
                 {
                     status = 0,
                     message = ex.Message,
@@ -177,7 +177,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             }
             catch (Exception ex)
             {
-                return Ok(new
+                return BadRequest(new
                 {
                     status = 0,
                     message = ex.Message,

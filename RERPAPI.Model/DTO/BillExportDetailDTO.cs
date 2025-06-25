@@ -5,9 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RERPAPI.Repo.GenericEntity
+namespace RERPAPI.Model.DTO
 {
-    public class BillExportDetailSerialNumberRepo : GenericRepo<BillExportDetailSerialNumber>
+    public class BillExportDetailDTO: BillExportDetail
     {
+        public List<int>? InventoryProjectIDs { get; set; }
     }
 }

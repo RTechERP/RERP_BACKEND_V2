@@ -7,7 +7,12 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class BillExportDetailSerialNumberRepo : GenericRepo<BillExportDetailSerialNumber>
+    public class CustomerEmployeeRepo : GenericRepo<CustomerEmployee>
     {
+        public CustomerEmployeeRepo() : base()
+        {
+        }
+        
+
     }
 }

@@ -18,7 +18,6 @@ namespace RERPAPI.Controllers
 
         BillImportDetailSerialNumberRepo importDetailSerialNumberRepo = new BillImportDetailSerialNumberRepo();
         BillExportDetailSerialNumberRepo exportDetailSerialNumberRepo = new BillExportDetailSerialNumberRepo();
-
         BillImportDetailSerialNumberModulaLocationRepo serialNumberImportModulaRepo = new BillImportDetailSerialNumberModulaLocationRepo();
         BillExportDetailSerialNumberModulaLocationRepo serialNumberExportModulaRepo = new BillExportDetailSerialNumberModulaLocationRepo();
 

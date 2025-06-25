@@ -45,7 +45,7 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
             }
             catch (Exception ex)
             {
-                return Ok(new
+                return BadRequest(new
                 {
                     status = 0,
                     message = ex.Message,
@@ -84,7 +84,7 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new
+                return BadRequest(new
                 {
                     status = 0,
                     message = "Đã xảy ra lỗi trong quá trình xử lý yêu cầu.",
@@ -114,7 +114,7 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
             }
             catch (Exception ex)
             {
-                return Ok(new
+                return BadRequest(new
                 {
                     status = 0,
                     message = ex.Message,
