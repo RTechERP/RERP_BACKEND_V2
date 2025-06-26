@@ -42,13 +42,13 @@ namespace RERPAPI.Controllers
             try
             {
                 keyword = string.IsNullOrWhiteSpace(keyword) ? "" : keyword;
-                List<EmployeeDTO> employees = SQLHelper<EmployeeDTO>.ProcedureToList("spGetEmployee", 
+                var employees = SQLHelper<object>.ProcedureToList("spGetEmployee", 
                                                                                     new string[] { "@Status", "@DepartmentID", "@Keyword" }, 
                                                                                     new object[] { status, departmentID, keyword });
                 return Ok(new
                 {
                     status = 1,
-                    data = employees
+                    data = employees[0]
                 });
             }
             catch (Exception ex)

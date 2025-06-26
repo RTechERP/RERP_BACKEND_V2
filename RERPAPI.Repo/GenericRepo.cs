@@ -39,7 +39,8 @@ namespace RERPAPI.Repo
             }
         }
 
-        public T GetByID(long id)
+        public T GetByID(int id)
+
         {
             try
             {
@@ -66,6 +67,7 @@ namespace RERPAPI.Repo
                 throw new Exception(ex.ToString());
             }
         }
+
 
         public int CreateRange(List<T> items)
         {
@@ -96,7 +98,7 @@ namespace RERPAPI.Repo
             }
         }
 
-        public int Delete(long id)
+        public int Delete(int id)
         {
             try
             {

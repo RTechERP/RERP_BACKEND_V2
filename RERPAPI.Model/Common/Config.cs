@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RERPAPI.Model.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,10 +14,11 @@ namespace RERPAPI.Model.Common
         {
             get
             {
-                string connectionString = @"Server={servername};database=RTC;User Id = sa; Password=1;TrustServerCertificate=True";
+                string connectionString = @"Server=NAM;database=RTC;User Id = sa; Password=1;TrustServerCertificate=True";
                 if (_isPublish == 1) connectionString = @"";
                 return connectionString;
             }
         }
+        
     }
 }

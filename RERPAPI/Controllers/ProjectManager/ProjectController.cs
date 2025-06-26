@@ -997,7 +997,7 @@ namespace RERPAPI.Controllers.ProjectManager
         {
             try
             {
-                List<Project> prjs = projectRepo.GetAll().OrderBy(x => x.CreatedDate).ToList();
+                List<Project> prjs = projectRepo.GetAll().OrderByDescending(x => x.CreatedDate).ToList();
                 return Ok(new
                 {
                     status = 1,
