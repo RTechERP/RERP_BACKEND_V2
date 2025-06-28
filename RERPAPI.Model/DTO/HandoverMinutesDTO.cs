@@ -10,15 +10,16 @@ namespace RERPAPI.Model.DTO
     public class HandoverMinutesDTO
     {
         public int ID { get; set; } // ID biên bản (0 nếu tạo mới)
-        public DateTime DateMinutes { get; set; } // Ngày biên bản
-        public int CustomerID { get; set; } // ID khách hàng
-        public string CustomerAddress { get; set; } // Địa chỉ khách hàng
-        public string CustomerContact { get; set; } // Người liên hệ
-        public string CustomerPhone { get; set; } // Số điện thoại khách hàng
-        public int EmployeeID { get; set; } // ID nhân viên
-        public string Receiver { get; set; } // Người nhận
-        public string ReceiverPhone { get; set; } // Số điện thoại người nhận
+        public DateTime? DateMinutes { get; set; } // Ngày biên bản
+        public int? CustomerID { get; set; } // ID khách hàng
+        public string? CustomerAddress { get; set; } // Địa chỉ khách hàng
+        public string? CustomerContact { get; set; } // Người liên hệ
+        public string? CustomerPhone { get; set; } // Số điện thoại khách hàng
+        public int? EmployeeID { get; set; } // ID nhân viên
+        public string? Receiver { get; set; } // Người nhận
+        public string? ReceiverPhone { get; set; } // Số điện thoại người nhận
         public int AdminWarehouseID { get; set; } // ID quản trị kho
+        public bool? IsDeleted { get; set; }
         public List<HandoverMinutesDetailRequest>? Details { get; set; } // Danh sách chi tiết
         public List<int>? DeletedDetailIds { get; set; } // Danh sách ID chi tiết cần xóa
     }

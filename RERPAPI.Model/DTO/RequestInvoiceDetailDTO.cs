@@ -1,0 +1,15 @@
+﻿using RERPAPI.Model.Entities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace RERPAPI.Model.DTO
+{
+    public class   RequestInvoiceDetailDTO
+    {
+        public RequestInvoice RequestInvoices { get; set; } = new RequestInvoice(); 
+        public List<RequestInvoiceDetail>? RequestInvoiceDetails { get; set; } = new List<RequestInvoiceDetail>();
+    }
+}

@@ -6,7 +6,7 @@ using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 using System;
 using RERPAPI.Model.DTO;
 
-namespace RERPAPI.Controllers.PO
+namespace RERPAPI.Controllers.HandoverMinutes
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -109,6 +109,7 @@ namespace RERPAPI.Controllers.PO
                 model.ReceiverPhone = dto.ReceiverPhone;
                 model.AdminWarehouseID = dto.AdminWarehouseID;
                 model.UpdatedDate = DateTime.Now;
+                model.IsDeleted = dto.IsDeleted;
                 //model.UpdatedBy = User.Identity.Name; // Mở comment nếu có phân quyền người dùng
                 if (dto.ID > 0)
                 {

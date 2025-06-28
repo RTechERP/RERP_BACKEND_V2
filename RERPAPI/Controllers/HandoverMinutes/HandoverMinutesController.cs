@@ -7,7 +7,7 @@ using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace RERPAPI.Controllers.PO
+namespace RERPAPI.Controllers.HandoverMinutes
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -48,28 +48,6 @@ namespace RERPAPI.Controllers.PO
                 {
                     status = 1,
                     data = SQLHelper<dynamic>.GetListData(list, 0)
-                });
-            }
-            catch (Exception ex)
-            {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
-        }
-
-        [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
-        {
-            try
-            {
-                _handoverMinutesRepo.UpdateFieldsByID(id, new HandoverMinute { IsDeleted = true });
-                return Ok(new
-                {
-                    status = 1,
                 });
             }
             catch (Exception ex)

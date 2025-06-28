@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class ProductSaleRepo:GenericRepo<ProductSale>
+    public class RequestInvoiceDetailRepo:GenericRepo<RequestInvoiceDetail>
     {
     }
 }
