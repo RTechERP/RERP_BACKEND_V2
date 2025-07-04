@@ -5,7 +5,6 @@ using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -27,12 +26,11 @@ namespace RERPAPI.Repo
             table = db.Set<T>();
         }
 
-        public List<T> GetAll(Expression<Func<T, bool>> predicate = null)
+        public List<T> GetAll()
         {
             try
             {
-                if (predicate == null) return table.ToList() ?? new List<T>();
-                else return table.Where(predicate).ToList() ?? new List<T>(); ; // EF sẽ dịch sang SQL WHERE
+                return table.ToList() ?? new List<T>();
             }
             catch (Exception ex)
             {
@@ -42,6 +40,7 @@ namespace RERPAPI.Repo
         }
 
         public T GetByID(int id)
+
         {
             try
             {
@@ -68,6 +67,7 @@ namespace RERPAPI.Repo
                 throw new Exception(ex.ToString());
             }
         }
+
 
         public int CreateRange(List<T> items)
         {

@@ -1,11 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using RERPAPI.IRepo;
-using RERPAPI.Middleware;
+using Microsoft.EntityFrameworkCore;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
-using RERPAPI.Repo;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,39 +28,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<IUserPermissionService, UserPermissionService>();
-
-// Load JWT settings
-var jwtSection = builder.Configuration.GetSection("JwtSettings");
-builder.Services.Configure<JwtSettings>(jwtSection);
-var jwtSettings = jwtSection.Get<JwtSettings>();
-
-builder.Services.AddAuthentication("Bearer")
-                .AddJwtBearer("Bearer", options =>
-                {
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuer = true,
-                        ValidateAudience = true,
-                        ValidateLifetime = true,
-                        ValidateIssuerSigningKey = true,
-
-                        ValidIssuer = jwtSettings.Issuer,
-                        ValidAudience = jwtSettings.Audience,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
-                        NameClaimType = "sub" // Để Middleware lấy đúng UserID
-                    };
-                });
-builder.Services.AddAuthentication();
-
-
-builder.Services.AddRouting(options =>
-{
-    options.LowercaseUrls = true; // Chuyển tất cả URL thành chữ thường
-});
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -77,10 +39,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-//app.UseRouting();
 app.UseAuthorization();
-app.UseAuthorization();
-app.UseMiddleware<DynamicAuthorizationMiddleware>();
 
 app.MapControllers();
 

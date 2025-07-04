@@ -137,6 +137,4 @@ public partial class PONCC
     public bool? IsDeleted { get; set; }
 
     public int? POType { get; set; }
-
-    public string? ShippingPoint { get; set; }
 }

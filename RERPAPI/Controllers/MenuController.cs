@@ -1,13 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Attributes;
-using RERPAPI.IRepo;
-using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using RERPAPI.Repo;
 using RERPAPI.Repo.GenericEntity;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers
 {
@@ -15,40 +9,28 @@ namespace RERPAPI.Controllers
     [ApiController]
     public class MenuController : ControllerBase
     {
-        //Response _response = new Response();
-        MenuRepo _menuRepo = new MenuRepo();
+        MenuRepo menuRepo = new MenuRepo();
 
-        //[RequiresPermission("N42")]
-        [HttpGet("menus/{parentid}")]
-        public IActionResult GetAll(int parentid)
+        [HttpGet("getall")]
+        public IActionResult GetAll()
         {
             try
             {
-                Menu menu = _menuRepo.GetByID(parentid);
-                var menus = ObjectMapper.MapTo<MenuDTO>(menu);
-                menus.MenuChilds = _menuRepo.GetAll(x => x.ParentID == menu.ID);
-                return Ok(ApiResponseFactory.Success(menus,""));
+                List<Menu> employees = menuRepo.GetAll();
+                return Ok(new
+                {
+                    status = 1,
+                    data = employees
+                });
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-
-        [HttpPost("savedata")]
-        public async Task<IActionResult> SaveData([FromBody] Menu menu)
-        {
-            try
-            {
-
-                if (menu.ID <= 0) await _menuRepo.CreateAsync(menu);
-                else _menuRepo.UpdateFieldsByID(menu.ID, menu);
-                return Ok(ApiResponseFactory.Success(menu, "Cập nhật thành công!"));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex,ex.Message));
+                return BadRequest(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
             }
         }
 

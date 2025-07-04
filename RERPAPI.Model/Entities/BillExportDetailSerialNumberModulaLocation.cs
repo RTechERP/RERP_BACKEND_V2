@@ -22,6 +22,4 @@ public partial class BillExportDetailSerialNumberModulaLocation
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
-
-    public int? BillExportTechDetailSerialID { get; set; }
 }

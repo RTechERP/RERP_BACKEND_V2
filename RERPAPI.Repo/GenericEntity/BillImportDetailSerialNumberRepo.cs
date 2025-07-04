@@ -9,6 +9,5 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class BillImportDetailSerialNumberRepo:GenericRepo<BillImportDetailSerialNumber>
     {
-
     }
 }
