@@ -83,17 +83,18 @@ namespace RERPAPI.Controllers.PO
             }
         }
         [HttpGet("get-pokh")]
-        public IActionResult GetPOKH(string? filterText, int pageNumber, int pageSize, int customerId, int userId, int POType, int status, int group, DateTime startDate, DateTime endDate, int warehouseId, int employeeTeamSaleId)
+        public IActionResult GetPOKH(string? filterText, int page, int size, int customerId, int userId, int POType, int status, int group, DateTime startDate, DateTime endDate, int warehouseId, int employeeTeamSaleId)
         {
             try
             {
                 List<List<dynamic>> POKHs = SQLHelper<dynamic>.ProcedureToList("spGetPOKH",
                     new string[] { "@FilterText", "@PageNumber", "@PageSize", "@CustomerID", "@UserID", "@POType", "@Status", "@Group", "@StartDate", "@EndDate", "@WarehouseID", "@EmployeeTeamSaleID" },
-                    new object[] { filterText, pageNumber, pageSize, customerId, userId, POType, status, group, startDate, endDate, warehouseId, employeeTeamSaleId });
+                    new object[] { filterText, page, size, customerId, userId, POType, status, group, startDate, endDate, warehouseId, employeeTeamSaleId });
                 return Ok(new
                 {
                     status = 1,
-                    data = SQLHelper<dynamic>.GetListData(POKHs, 0)
+                    data = SQLHelper<dynamic>.GetListData(POKHs, 0),
+                    totalPages = SQLHelper<dynamic>.GetListData(POKHs, 1),
                 });
             }
             catch (Exception ex)
@@ -553,6 +554,139 @@ namespace RERPAPI.Controllers.PO
             }
         }
         #endregion
+        [HttpPost("copy-dto")]
+        public async Task<IActionResult> CopyFromDTO([FromBody] POKHDTO dto)
+        {
+            try
+            {
+                // 1. Tạo mới POKH (bỏ ID cũ)
+                var newPOKH = new POKH
+                {
+                    Status = dto.POKH.Status,
+                    POCode = dto.POKH.POCode,
+                    UserID = dto.POKH.UserID,
+                    ReceivedDatePO = dto.POKH.ReceivedDatePO,
+                    TotalMoneyPO = dto.POKH.TotalMoneyPO,
+                    TotalMoneyKoVAT = dto.POKH.TotalMoneyKoVAT,
+                    Note = dto.POKH.Note,
+                    IsApproved = dto.POKH.IsApproved,
+                    CustomerID = dto.POKH.CustomerID,
+                    PartID = dto.POKH.PartID,
+                    ProjectID = dto.POKH.ProjectID,
+                    POType = dto.POKH.POType,
+                    NewAccount = dto.POKH.NewAccount,
+                    EndUser = dto.POKH.EndUser,
+                    IsBill = dto.POKH.IsBill,
+                    UserType = dto.POKH.UserType,
+                    QuotationID = dto.POKH.QuotationID,
+                    PONumber = dto.POKH.PONumber,
+                    WarehouseID = dto.POKH.WarehouseID,
+                    CurrencyID = dto.POKH.CurrencyID,
+                    Year = dto.POKH.Year,
+                    Month = dto.POKH.Month,
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now
+                };
+                await _pokhRepo.CreateAsync(newPOKH);
 
+                // 2. Mapping ID cũ (FE gửi lên) -> ID mới
+                var idMapping = new Dictionary<int, int>();
+
+                // 3. Tạo mới từng POKHDetail, lưu mapping
+                foreach (var item in dto.POKHDetails)
+                {
+                    var newDetail = new POKHDetail
+                    {
+                        POKHID = newPOKH.ID,
+                        // Copy các trường khác
+                        ProductID = item.ProductID,
+                        STT = item.STT,
+                        KHID = item.KHID,
+                        GuestCode = item.GuestCode,
+                        Qty = item.Qty,
+                        FilmSize = item.FilmSize,
+                        UnitPrice = item.UnitPrice,
+                        IntoMoney = item.IntoMoney,
+                        VAT = item.VAT,
+                        Spec = item.Spec,
+                        NetUnitPrice = item.NetUnitPrice,
+                        TotalPriceIncludeVAT = item.TotalPriceIncludeVAT,
+                        UserReceiver = item.UserReceiver,
+                        DeliveryRequestedDate = item.DeliveryRequestedDate,
+                        EstimatedPay = item.EstimatedPay,
+                        BillDate = item.BillDate,
+                        BillNumber = item.BillNumber,
+                        Debt = item.Debt,
+                        PayDate = item.PayDate,
+                        GroupPO = item.GroupPO,
+                        ActualDeliveryDate = item.ActualDeliveryDate,
+                        RecivedMoneyDate = item.RecivedMoneyDate,
+                        Note = item.Note,
+                        IsDeleted = false,
+                        CreatedDate = DateTime.Now,
+                        UpdatedDate = DateTime.Now,
+                    };
+                    await _pokhDetailRepo.CreateAsync(newDetail);
+                    idMapping[item.ID] = newDetail.ID; // item.ID là ID cũ FE gửi lên (có thể là số âm hoặc 0)
+                }
+
+                // 4. Cập nhật lại ParentID cho đúng
+                foreach (var item in dto.POKHDetails)
+                {
+                    if (item.ParentID.HasValue && idMapping.ContainsKey(item.ID))
+                    {
+                        var newDetailId = idMapping[item.ID];
+                        var newDetail = _pokhDetailRepo.GetByID(newDetailId);
+
+                        if (idMapping.ContainsKey(item.ParentID.Value))
+                        {
+                            newDetail.ParentID = idMapping[item.ParentID.Value];
+                            _pokhDetailRepo.UpdateFieldsByID(newDetailId, newDetail);
+                        }
+                    }
+                }
+
+                // 5. Tạo mới các bản ghi POKHDetailMoney
+                if (dto.POKHDetailsMoney != null)
+                {
+                    foreach (var item in dto.POKHDetailsMoney)
+                    {
+                        var newMoney = new POKHDetailMoney
+                        {
+                            POKHID = newPOKH.ID,
+                            // Copy các trường khác
+                            POKHDetailID = 0,
+                            PercentUser = item.PercentUser / 100,
+                            UserID = item.UserID,
+                            MoneyUser = item.MoneyUser,
+                            RowHandle = item.RowHandle,
+                            STT = item.STT,
+                            ReceiveMoney = item.ReceiveMoney,
+                            Month = dto.POKH.Month,
+                            Year = dto.POKH.Year,
+                            CreatedDate = DateTime.Now,
+                            IsDeleted = false
+                        };
+                        await _pokhDetailMoneyRepo.CreateAsync(newMoney);
+                    }
+                }
+
+                return Ok(new
+                {
+                    status = 1,
+                    message = "Copy thành công",
+                    data = new { id = newPOKH.ID }
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
+        }
     }
 }

@@ -16,7 +16,6 @@ namespace RERPAPI.Controllers.HandoverMinutes
         HandoverMinutesRepo _handoverMinutesRepo = new HandoverMinutesRepo();
         HandoverMinutesDetailRepo _handoverMinutesDetailRepo = new HandoverMinutesDetailRepo();
         DepartmentRepo _departmentRepo = new DepartmentRepo();
-        CustomerRepo _customerRepo = new CustomerRepo();
         POKHDetailRepo _pokhDetailRepo = new POKHDetailRepo();
 
         [HttpGet("get-employee")]
