@@ -292,7 +292,7 @@ namespace RERPAPI.Controllers.ProjectManager
         public async Task<IActionResult> getprojects(int size, int page,
             DateTime dateTimeS, DateTime dateTimeE, string? projectType,
             int pmID, int leaderID, int bussinessFieldID, string? projectStatus,
-            int customerID, int saleID, int userTechID, int globalUserID, string? keywword
+            int customerID, int saleID, int userTechID, int globalUserID, string? keyword, bool isAGV
             )
         {
             try
@@ -319,6 +319,9 @@ namespace RERPAPI.Controllers.ProjectManager
                     projectStatus = string.Join(",", listStatus);
                 }
 
+                if (isAGV == false) projectStatus = "";
+
+
                 var projects = SQLHelper<object>.ProcedureToList("spGetProject",
                     new string[] {
                         "@PageSize", "@PageNumber", "@DateStart", "@DateEnd", "@FilterText", "@CustomerID", "@UserID",
@@ -326,10 +329,22 @@ namespace RERPAPI.Controllers.ProjectManager
                         "@6", "@7", "@8", "@9", "@UserIDPriotity", "@BusinessFieldID", "@ProjectStatus"
                     },
                     new object[] {
-                        size, page, dateTimeS, dateTimeE, keywword ?? "", customerID, saleID, projectType, leaderID,
+                        size, page, dateTimeS, dateTimeE, keyword ?? "", customerID, saleID, projectType, leaderID,
                         userTechID, pmID, typeCheck[0] ,typeCheck[1] ,typeCheck[2] ,typeCheck[3] ,typeCheck[4] ,typeCheck[5]
                         ,typeCheck[6] ,typeCheck[7] ,typeCheck[8], globalUserID, bussinessFieldID, projectStatus
                     });
+
+                //var projects = SQLHelper<object>.ProcedureToList("spGetProject",
+                //    new string[] {
+                //        "@PageSize", "@PageNumber", "@DateStart", "@DateEnd", "@FilterText", "@CustomerID", "@UserID",
+                //        "@ListProjectType", "@LeaderID", "@UserIDTech", "@EmployeeIDPM", "@1", "@2", "@3", "@4", "@5",
+                //        "@6", "@7", "@8", "@9", "@UserIDPriotity", "@BusinessFieldID"
+                //    },
+                //    new object[] {
+                //        size, page, dateTimeS, dateTimeE, keywword ?? "", customerID, saleID, projectType, leaderID,
+                //        userTechID, pmID, typeCheck[0] ,typeCheck[1] ,typeCheck[2] ,typeCheck[3] ,typeCheck[4] ,typeCheck[5]
+                //        ,typeCheck[6] ,typeCheck[7] ,typeCheck[8], globalUserID, bussinessFieldID
+                //    });
                 return Ok(new
                 {
                     status = 1,
@@ -1132,7 +1147,7 @@ namespace RERPAPI.Controllers.ProjectManager
         }
 
         #region Chức năng gười tham gia dự án
-        [HttpGet("getprojectemployee/{status}")]
+        [HttpGet("get-project-employee/{status}")]
         public async Task<IActionResult> getprojectemployee(int status)
         {
             try
