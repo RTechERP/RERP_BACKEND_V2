@@ -1,6 +1,7 @@
 ﻿using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
@@ -21,6 +22,7 @@ namespace RERPAPI.Controllers.PO
         CustomerRepo _customerRepo = new CustomerRepo();
         CustomerContactRepo _customerContactRepo = new CustomerContactRepo();
         QuotationKHRepo _quotationKHRepo = new QuotationKHRepo();
+        QuotationKHDetailRepo quotationDetailKHRepo = new QuotationKHDetailRepo();
         [HttpGet("get-users")]
         public IActionResult GetUser()
         {
@@ -121,6 +123,51 @@ namespace RERPAPI.Controllers.PO
                 {
                     status = 1,
                     data = code
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
+        }
+        [HttpPost("save-data")]
+        public async Task<IActionResult> SaveDataAsync([FromBody] QuotationDTO dto)
+        {
+            try
+            {
+                if(dto.quotationKHs.ID <= 0)
+                {
+                    await _quotationKHRepo.CreateAsync(dto.quotationKHs);
+                }
+                else
+                {
+                    _quotationKHRepo.UpdateFieldsByID(dto.quotationKHs.ID, dto.quotationKHs);
+                }
+                if(dto.quotationKHDetails.Count > 0)
+                {
+                    foreach (var item in dto.quotationKHDetails)
+                    {
+                        if (item.ID <= 0)
+                        {
+                            item.QuotationKHID = dto.quotationKHs.ID;
+                            await quotationDetailKHRepo.CreateAsync(item);
+                        }
+                        else
+                        {
+                            quotationDetailKHRepo.UpdateFieldsByID(item.ID, item);
+                        }
+                    }
+                } 
+                return Ok(new
+                {
+                    status = 1,
+                    message = "Success",
+
                 });
             }
             catch (Exception ex)

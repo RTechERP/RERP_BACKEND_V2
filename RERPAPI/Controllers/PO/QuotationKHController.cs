@@ -11,7 +11,7 @@ namespace RERPAPI.Controllers.PO
     [ApiController]
     public class QuotationKHController : ControllerBase
     {
-        QuotationDetailKHRepo _quotationDetailKHRepo = new QuotationDetailKHRepo();
+        QuotationKHDetailRepo _quotationDetailKHRepo = new QuotationKHDetailRepo();
         QuotationKHRepo _quotationKHRepo = new QuotationKHRepo();
 
         [HttpGet]

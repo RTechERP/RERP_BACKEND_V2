@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class QuotationDetailKHRepo: GenericRepo<QuotationKHDetail>
+    public class QuotationKHDetailRepo: GenericRepo<QuotationKHDetail>
     {
     }
 }

@@ -97,7 +97,16 @@ namespace RERPAPI.Controllers.HandoverMinutes
         {
             try
             {
-                HandoverMinute model = _handoverMinutesRepo.GetByID(dto.ID) ?? new HandoverMinute();
+                var model = _handoverMinutesRepo.GetByID(dto.ID) ?? new HandoverMinute();
+
+                // Trường hợp soft delete
+                if (dto.IsDeleted == true)
+                {
+                    model.IsDeleted = true;
+                    model.UpdatedDate = DateTime.Now;
+                    _handoverMinutesRepo.UpdateFieldsByID(dto.ID, model);
+                    return Ok(new { status = 1, success = true, message = "Soft deleted successfully." });
+                }
                 model.DateMinutes = dto.DateMinutes;
                 model.CustomerID = dto.CustomerID;
                 model.CustomerAddress = dto.CustomerAddress;
@@ -108,7 +117,7 @@ namespace RERPAPI.Controllers.HandoverMinutes
                 model.ReceiverPhone = dto.ReceiverPhone;
                 model.AdminWarehouseID = dto.AdminWarehouseID;
                 model.UpdatedDate = DateTime.Now;
-                model.IsDeleted = dto.IsDeleted;
+                model.IsDeleted = false;
                 //model.UpdatedBy = User.Identity.Name; // Mở comment nếu có phân quyền người dùng
                 if (dto.ID > 0)
                 {
@@ -118,7 +127,7 @@ namespace RERPAPI.Controllers.HandoverMinutes
                 {
                     model.Code = $"BBBG.{DateTime.Now:yy}{DateTime.Now:MMdd}.{GetNextCodeNumber()}";
                     model.CreatedDate = DateTime.Now;
-                    //model.CreatedBy = User.Identity.Name; // Mở comment nếu có phân quyền người dùng
+                    //model.CreatedBy = User.Idetity.Name; // Mở comment nếu có phân quyền người dùng
                     _handoverMinutesRepo.Create(model);
                 }
                 if(dto.DeletedDetailIds != null && dto.DeletedDetailIds.Count > 0)

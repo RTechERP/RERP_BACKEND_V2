@@ -197,6 +197,20 @@ namespace RERPAPI.Controllers.RequestInvoice
                 {
                     _requestInvoiceRepo.UpdateFieldsByID(dto.RequestInvoices.ID, dto.RequestInvoices);
                 }
+                if (dto.DeletedDetailIds != null && dto.DeletedDetailIds.Count > 0)
+                {
+                    foreach (var item in dto.DeletedDetailIds)
+                    {
+                        var detailToDelete = _requestInvoiceDetailRepo.GetByID(item);
+                        if (detailToDelete != null)
+                        {
+                            detailToDelete.IsDeleted = true;
+                            //detailToDelete.UpdatedBy = User.Identity.Name; // Mở comment nếu có phân quyền người dùng
+                            detailToDelete.UpdatedDate = DateTime.Now;
+                            _requestInvoiceDetailRepo.UpdateFieldsByID(item, detailToDelete);
+                        }
+                    }
+                }
                 if (dto.RequestInvoiceDetails.Count > 0)
                 {
                     foreach (var item in dto.RequestInvoiceDetails)

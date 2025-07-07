@@ -36,4 +36,6 @@ public partial class RequestInvoiceDetail
     public DateTime? UpdatedDate { get; set; }
 
     public string? Note { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }
