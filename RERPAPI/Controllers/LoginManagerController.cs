@@ -51,6 +51,15 @@ namespace RERPAPI.Controllers
         {
             try
             {
+                //var existingLoginName = SQLHelper<User>.FindByAttribute("LoginName", loginInfo.LoginName.Trim());
+                //if(existingLoginName != null)
+                //{
+                //    return BadRequest(new
+                //    {
+                //        status = 0,
+                //        message = "Tên đăng nhập đã tồn tại"
+                //    });
+                //}
                 if (string.IsNullOrEmpty(loginInfo.Code))
                 {
                     return BadRequest(new
@@ -62,40 +71,7 @@ namespace RERPAPI.Controllers
                 User user = new User();
                 Employee employee = new Employee();
 
-                if(loginInfo.UserID > 0)
-                {
-                    user = loginManagerRepo.GetByID(loginInfo.UserID);
-                    if(user == null)
-                    {
-                        return BadRequest(new
-                        {
-                            status = 0,
-                            message = "Không tìm thấy thông tin người dùng"
-                        });
-                    }
-                    employee = (SQLHelper<Employee>.FindByAttribute("UserID", loginInfo.UserID.ToString())).FirstOrDefault();
-                    if (employee == null)
-                    {
-                        return BadRequest(new
-                        {
-                            status = 0,
-                            message = "Không tìm thấy nhân viên liên kết với người dùng"
-                        });
-                    }
-                }
-                else
-                {
-                    // For new user, find employee by Code
-                    employee = (SQLHelper<Employee>.FindByAttribute("Code", loginInfo.Code)).FirstOrDefault();
-                    if (employee == null)
-                    {
-                        return BadRequest(new
-                        {
-                            status = 0,
-                            message = "Không tìm thấy nhân viên với mã được cung cấp"
-                        });
-                    }
-                }
+               
                 if (loginInfo.Status)
                 {
                     // Validate login name and password
@@ -112,6 +88,7 @@ namespace RERPAPI.Controllers
                     user.PasswordHash = MaHoaMD5.EncryptPassword(loginInfo.PasswordHash.Trim());
                     user.Status = 0;
                     user.FullName = loginInfo.FullName;
+                    user.TeamID = loginInfo.TeamID;
                     employee.Status = 0;
                     employee.EndWorking = null;
                 }
@@ -127,14 +104,14 @@ namespace RERPAPI.Controllers
                 // Update or insert records
                 if (loginInfo.UserID > 0)
                 {
-                    loginManagerRepo.UpdateFieldsByID(user.ID, user);
-                    employeeRepo.UpdateFieldsByID(employee.ID, employee);
+                    loginManagerRepo.UpdateFieldsByID(loginInfo.UserID, user);
+                    employeeRepo.UpdateAsync(employee);
                 }
                 else
                 {
                     user.ID = await loginManagerRepo.CreateAsync(user);
                     employee.UserID = user.ID;
-                    employeeRepo.UpdateFieldsByID(employee.ID, employee);
+                    employeeRepo.UpdateAsync(employee);
                 }
 
                 return Ok(new

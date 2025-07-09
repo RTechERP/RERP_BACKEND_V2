@@ -16,7 +16,7 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                List<CustomerSpecialization> customerSpecializations = customerSpecializationRepo.GetAll();
+                List<CustomerSpecialization> customerSpecializations = customerSpecializationRepo.GetAll().Where(x => x.IsDeleted == false).ToList();
                
                 return Ok(new
                 {
@@ -94,48 +94,48 @@ namespace RERPAPI.Controllers
         }
 
 
-        [HttpDelete("{id}")]
-        public IActionResult DeleteCustomerSpecialization(int id)
-        {
-            try
-            {
-                var customerSpecialization = customerSpecializationRepo.GetByID(id);
-                List<Customer> checkList = SQLHelper<Customer>.FindByAttribute("CustomerSpecializationID", id).ToList();
-                if(checkList.Count > 0)
-                {
-                    return BadRequest(new
-                    {
-                        status = 0,
-                        message = "Không thể xóa vì mã này đã được khách hàng sử dụng."
-                    });
-                }
-                if (customerSpecialization != null)
-                {
-                    customerSpecializationRepo.Delete(customerSpecialization.ID);
-                    return Ok(new
-                    {
-                        status = 1,
-                        message = "Customer Specialization deleted successfully."
-                    });
-                }
-                else
-                {
-                    return NotFound(new
-                    {
-                        status = 0,
-                        message = "Customer Specialization not found."
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
-        }
+        //[HttpDelete("{id}")]
+        //public IActionResult DeleteCustomerSpecialization(int id)
+        //{
+        //    try
+        //    {
+        //        var customerSpecialization = customerSpecializationRepo.GetByID(id);
+        //        List<Customer> checkList = SQLHelper<Customer>.FindByAttribute("CustomerSpecializationID", id).ToList();
+        //        if(checkList.Count > 0)
+        //        {
+        //            return BadRequest(new
+        //            {
+        //                status = 0,
+        //                message = "Không thể xóa vì mã này đã được khách hàng sử dụng."
+        //            });
+        //        }
+        //        if (customerSpecialization != null)
+        //        {
+        //            customerSpecializationRepo.Delete(customerSpecialization.ID);
+        //            return Ok(new
+        //            {
+        //                status = 1,
+        //                message = "Customer Specialization deleted successfully."
+        //            });
+        //        }
+        //        else
+        //        {
+        //            return NotFound(new
+        //            {
+        //                status = 0,
+        //                message = "Customer Specialization not found."
+        //            });
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(new
+        //        {
+        //            status = 0,
+        //            message = ex.Message,
+        //            error = ex.ToString()
+        //        });
+        //    }
+        //}
     }
 }

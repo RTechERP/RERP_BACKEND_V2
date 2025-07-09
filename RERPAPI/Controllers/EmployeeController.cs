@@ -4,6 +4,7 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using System.Linq;
 
 namespace RERPAPI.Controllers
 {
@@ -19,7 +20,7 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                List<Employee> employees = employeeRepo.GetAll();
+                List<Employee> employees = employeeRepo.GetAll().Where(x => x.Status == 0).ToList();
                 return Ok(new
                 {
                     status = 1,
@@ -91,6 +92,15 @@ namespace RERPAPI.Controllers
         {
             try
             {
+                List<Employee> employees = employeeRepo.GetAll().Where(x => x.Status == 0).ToList();
+                if (employees.Any(d => d.Code == employee.Code && d.ID != employee.ID))
+                {
+                    return BadRequest(new
+                    {
+                        status = 0,
+                        message = "Mã nhân viên đã tồn tại"
+                    });
+                }
                 if (employee.ID <= 0) await employeeRepo.CreateAsync(employee);
                 else employeeRepo.UpdateFieldsByID(employee.ID, employee);
 
@@ -142,5 +152,47 @@ namespace RERPAPI.Controllers
                 });
             }
         }
+
+
+        public class EmployeeCodeCheck
+        {
+            public string Code { get; set; }
+        }
+
+
+
+        [HttpPost("check-codes")]
+        public async Task<IActionResult> CheckCodes([FromBody] List<EmployeeCodeCheck> codes)
+        {
+            try
+            {
+                var codeList = codes.Select(x => x.Code).ToList();
+
+                // Kiểm tra trong database
+                var existingEmployees = employeeRepo.GetAll()
+                    .Where(x => codeList.Contains(x.Code))
+                    .Select(x => new
+                    {
+                        x.ID,
+                        x.Code,
+                    })
+                    .ToList();
+
+                return Ok(new
+                {
+                    data = new
+                    {
+                        existingEmployees
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+
     }
 }
+

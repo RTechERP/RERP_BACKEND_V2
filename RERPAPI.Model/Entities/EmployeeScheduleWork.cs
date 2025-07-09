@@ -7,7 +7,7 @@ public partial class EmployeeScheduleWork
 {
     public int ID { get; set; }
 
-    public DateTime? DateValue { get; set; }
+    public DateTime? DateValue { get; set; } 
 
     public bool? Status { get; set; }
 
@@ -17,7 +17,7 @@ public partial class EmployeeScheduleWork
 
     public int? WorkYear { get; set; }
 
-    public bool? IsApproved { get; set; }
+    public bool IsApproved { get; set; }
 
     public int? Approver { get; set; }
 

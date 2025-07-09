@@ -9,13 +9,22 @@ namespace RERPAPI.Controllers
     [Route("api/[controller]")]
     public class EmployeeApproveController : ControllerBase
     {
+
+
+        private class EmployeeApproveSelected
+        {
+            public int EmployeeID { get; set; }
+            public string Code { get; set; }
+            public string FullName { get; set; }
+        }
+
         EmployeeApproveRepo employeeApproveRepo = new EmployeeApproveRepo();
         EmployeeRepo employeeRepo = new EmployeeRepo();
 
         
 
         [HttpGet]
-        public async Task<IActionResult> GetEmployeeApprove(int type, int projectID)
+        public async Task<IActionResult> GetEmployeeApprove()
         {
             try
             {
@@ -38,16 +47,31 @@ namespace RERPAPI.Controllers
             }
         }
 
+        public class AddEmployeeApproveRequest
+        {
+            public List<int> ListEmployeeID { get; set; } = new List<int>();
+        }
+
         [HttpPost]
-        public async Task<IActionResult> AddEmployeeApprove(List<int> ListEmployeeID)
+        public async Task<IActionResult> AddEmployeeApprove([FromBody] AddEmployeeApproveRequest request)
         {
             try
             {
-                var employeeApproves = new List<EmployeeApprove>();
-                foreach (var employeeID in ListEmployeeID)
+                if (request?.ListEmployeeID == null || !request.ListEmployeeID.Any())
                 {
-                    var employeeAprrove = SQLHelper<EmployeeApprove>.FindByAttribute("EmployeeID", employeeID);
-                    if (employeeAprrove.Any())
+                    return BadRequest(new
+                    {
+                        status = 0,
+                        message = "Danh sách nhân viên không được để trống"
+                    });
+                }
+
+                var employeeApproves = new List<EmployeeApprove>();
+
+                foreach (var employeeID in request.ListEmployeeID)
+                {
+                    var existingEmployeeApprove = SQLHelper<EmployeeApprove>.FindByAttribute("EmployeeID", employeeID);
+                    if (existingEmployeeApprove.Any())
                     {
                         return BadRequest(new
                         {
@@ -75,26 +99,30 @@ namespace RERPAPI.Controllers
                     };
                     employeeApproves.Add(employeeApprove);
                 }
+
                 foreach (var employeeApprove in employeeApproves)
                 {
                     await employeeApproveRepo.CreateAsync(employeeApprove);
                 }
+
                 return Ok(new
                 {
                     status = 1,
                     message = "Thêm người duyệt thành công",
                     data = employeeApproves
                 });
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 return BadRequest(new
                 {
                     status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
+                    message = "Có lỗi xảy ra khi thêm người duyệt",
+                    error = ex.Message
                 });
             }
         }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEmployeeApprove(int id)
         {

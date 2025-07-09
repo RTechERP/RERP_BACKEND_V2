@@ -71,7 +71,7 @@ namespace RERPAPI.Controllers
             try
             {
                 filterText = string.IsNullOrWhiteSpace(filterText) ? " " : filterText;
-                var customers = SQLHelper<object>.ProcedureToList("spGetCustomer" ,new string[] { "@PageNumber", "@PageSize", "@EmployeeID", "@GroupID", "@FilterText" }, new object[] {pageNumber, pageSize, employeeId, groupId, filterText });
+                var customers = SQLHelper<object>.ProcedureToList("spGetCustomer" ,new string[] { "@PageNumber", "@PageSize", "@EmployeeID", "@GroupID", "@FilterText" }, new object[] {pageNumber, pageSize, employeeId, groupId, filterText ?? "" });
                 return Ok(new
                 {
                     status = 1,
@@ -332,7 +332,7 @@ namespace RERPAPI.Controllers
         }
 
 
-        [HttpDelete("{customerID}")]
+        [HttpGet("{customerID}")]
         public IActionResult DeleteCustomer(int customerID)
         {
             try

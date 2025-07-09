@@ -13,13 +13,13 @@ namespace RERPAPI.Controllers
         [HttpGet("position-contract")]
         public IActionResult GetPositionContract()
         {
-            var result = positionContractRepo.GetAll().OrderBy(x => x.PriorityOrder);
+            var result = positionContractRepo.GetAll().Where(x => x.IsDeleted == false).OrderBy(x => x.PriorityOrder);
             return Ok(result);
         }
         [HttpGet("position-internal")]
         public IActionResult GetPositionInternal()
         {
-            var result = positionInternalRepo.GetAll().OrderBy(x => x.PriorityOrder);
+            var result = positionInternalRepo.GetAll().Where(x => x.IsDeleted == false).OrderBy(x => x.PriorityOrder);
             return Ok(result);
         }
 
@@ -109,68 +109,68 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpDelete("position-contract/{positionContractId}")]
-        public async Task<IActionResult> DeletePositionContract(int positionContractId)
-        {
-            try
-            {
-                var position = positionContractRepo.GetByID(positionContractId);
-                if (position == null)
-                {
-                    return NotFound(new
-                    {
-                        status = 0,
-                        message = "Chức vụ hợp đồng không tồn tại"
-                    });
-                }
-                await positionContractRepo.DeleteAsync(positionContractId);
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Xóa chức vụ hợp đồng thành công"
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = "Lỗi khi xóa chức vụ hợp đồng",
-                    error = ex.Message
-                });
-            }
-        }
+        //[HttpDelete("position-contract/{positionContractId}")]
+        //public async Task<IActionResult> DeletePositionContract(int positionContractId)
+        //{
+        //    try
+        //    {
+        //        var position = positionContractRepo.GetByID(positionContractId);
+        //        if (position == null)
+        //        {
+        //            return NotFound(new
+        //            {
+        //                status = 0,
+        //                message = "Chức vụ hợp đồng không tồn tại"
+        //            });
+        //        }
+        //        await positionContractRepo.DeleteAsync(positionContractId);
+        //        return Ok(new
+        //        {
+        //            status = 1,
+        //            message = "Xóa chức vụ hợp đồng thành công"
+        //        });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(new
+        //        {
+        //            status = 0,
+        //            message = "Lỗi khi xóa chức vụ hợp đồng",
+        //            error = ex.Message
+        //        });
+        //    }
+        //}
 
-        [HttpDelete("position-internal/{positionInternalId}")]
-        public async Task<IActionResult> DeletePositionInternal(int positionInternalId)
-        {
-            try
-            {
-                var position = positionInternalRepo.GetByID(positionInternalId);
-                if (position == null)
-                {
-                    return NotFound(new
-                    {
-                        status = 0,
-                        message = "Chức vụ nội bộ không tồn tại"
-                    });
-                }
-                await positionInternalRepo.DeleteAsync(positionInternalId);
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Xóa chức vụ nội bộ thành công"
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = "Lỗi khi xóa chức vụ nội bộ",
-                    error = ex.Message
-                });
-            }   
-        }
+        //[HttpDelete("position-internal/{positionInternalId}")]
+        //public async Task<IActionResult> DeletePositionInternal(int positionInternalId)
+        //{
+        //    try
+        //    {
+        //        var position = positionInternalRepo.GetByID(positionInternalId);
+        //        if (position == null)
+        //        {
+        //            return NotFound(new
+        //            {
+        //                status = 0,
+        //                message = "Chức vụ nội bộ không tồn tại"
+        //            });
+        //        }
+        //        await positionInternalRepo.DeleteAsync(positionInternalId);
+        //        return Ok(new
+        //        {
+        //            status = 1,
+        //            message = "Xóa chức vụ nội bộ thành công"
+        //        });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(new
+        //        {
+        //            status = 0,
+        //            message = "Lỗi khi xóa chức vụ nội bộ",
+        //            error = ex.Message
+        //        });
+        //    }   
+        //}
     }
 }

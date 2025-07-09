@@ -7,7 +7,7 @@ namespace RERPAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class HolidayController : Controller
+    public class HolidayController : ControllerBase
     {
         HolidayRepo holidayRepo = new HolidayRepo();
 
@@ -36,21 +36,48 @@ namespace RERPAPI.Controllers
                 });
             }
         }
+        //[HttpGet("schedule-work")]
+        //public IActionResult GetEmployeeScheduleWork(int month, int year)
+        //{
+        //    try
+        //    {
+        //        var dtScheduleWork = SQLHelper<object>.ProcedureToList("spGetEmployeeScheduleWorkByDate",
+        //                                                   new string[] {  "@Year" , "@Month"},
+        //                                                        new object[] { year, month });
+        //        return Ok(new
+        //        {
+        //            status = 1,
+        //            data = SQLHelper<object>.GetListData(dtScheduleWork, 0)
+        //        });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(new
+        //        {
+        //            status = 0,
+        //            message = ex.Message,
+        //            error = ex.ToString()
+        //        });
+        //    }
+        //}
 
         [HttpPost]
         public async Task<IActionResult> SaveHoliday([FromBody] Holiday holiday)
         {
             try
             {
-                List<Holiday> holidays = holidayRepo.GetAll().Where(x => x.IsDeleted == false).ToList();
-                if(holidays.Any(x => x.HolidayDate == holiday.HolidayDate && x.ID != holiday.ID))
+                var existingHoliday = holidayRepo.GetAll()
+                    .Where(x => x.HolidayYear == holiday.HolidayYear && x.HolidayDay == holiday.HolidayDay && x.HolidayMonth == holiday.HolidayMonth && x.ID != holiday.ID);
+
+                if (existingHoliday.Any())
                 {
                     return BadRequest(new
                     {
                         status = 0,
-                        message = "Ngày nghỉ đã tồn tại"
+                        message = "Ngày nghỉ này đã có. Vui lòng chọn ngày khác!"
                     });
                 }
+
                 if (holiday.ID <= 0)
                 {
                     await holidayRepo.CreateAsync(holiday);
@@ -76,5 +103,6 @@ namespace RERPAPI.Controllers
                 });
             }
         }
+
     }
 }

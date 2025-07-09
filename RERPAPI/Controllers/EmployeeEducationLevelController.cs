@@ -10,12 +10,12 @@ namespace RERPAPI.Controllers
     public class EmployeeEducationLevelController : ControllerBase
     {
         EmployeeEducationLevelRepo employeeEducationLevelRepo = new EmployeeEducationLevelRepo();
-        [HttpGet("/employee-id")]
-        public IActionResult GetEmployeeEducationLevelByEmployeeID(int employeeID)
+        [HttpGet("{id}")]
+        public IActionResult GetEmployeeEducationLevelByEmployeeID(int id)
         {
             try
             {
-                var employeeEducationLevel = SQLHelper<object>.ProcedureToList("spGetEmployeeEduLevel", new string[] { "@EmployeeID" }, new object[] { employeeID });
+                var employeeEducationLevel = SQLHelper<object>.ProcedureToList("spGetEmployeeEduLevel", new string[] { "@EmployeeID" }, new object[] { id });
                 return Ok(new
                 {
                     status = 1,

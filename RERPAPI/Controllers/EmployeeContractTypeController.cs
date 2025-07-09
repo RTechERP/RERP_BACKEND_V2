@@ -14,7 +14,7 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                var employeeContractTypes = employeeContractTypeRepo.GetAll().Where(x => x.IsDeleted == false);
+                var employeeContractTypes = employeeContractTypeRepo.GetAll();
                 return Ok(new
                 {
                     status = 1,

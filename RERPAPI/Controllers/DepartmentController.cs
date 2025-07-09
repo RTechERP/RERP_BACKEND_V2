@@ -21,7 +21,7 @@ namespace RERPAPI.Controllers
 
             try
             {
-                List<Department> departments = departmentRepo.GetAll().Where(x => x.IsDeleted == false).OrderBy(x => x.STT).ToList();
+                List<Department> departments = departmentRepo.GetAll().OrderBy(x => x.STT).ToList();
 
                 return Ok(new
                 {
@@ -42,42 +42,42 @@ namespace RERPAPI.Controllers
         }
 
 
-        [HttpGet("{id}")]
-        public IActionResult GetDepartmentById(int id)
-        {
-            try
-            {
-                var department = departmentRepo.GetByID(id);
-                if (department == null)
-                {
-                    return NotFound(new
-                    {
-                        status = 0,
-                        message = "Department not found"
-                    });
-                }
-                return Ok(new
-                {
-                    status = 1,
-                    data = department
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
-        }
+        //[HttpGet("{id}")]
+        //public IActionResult GetDepartmentById(int id)
+        //{
+        //    try
+        //    {
+        //        var department = departmentRepo.GetByID(id);
+        //        if (department == null)
+        //        {
+        //            return NotFound(new
+        //            {
+        //                status = 0,
+        //                message = "Department not found"
+        //            });
+        //        }
+        //        return Ok(new
+        //        {
+        //            status = 1,
+        //            data = department
+        //        });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(new
+        //        {
+        //            status = 0,
+        //            message = ex.Message,
+        //            error = ex.ToString()
+        //        });
+        //    }
+        //}
         [HttpPost]
         public async Task<IActionResult> SaveDepartment([FromBody] Department department)
         {
             try
             {
-                List<Department> departments = departmentRepo.GetAll().Where(x => x.IsDeleted == false).ToList();
+                List<Department> departments = departmentRepo.GetAll().ToList();
                 department.STT = departments.Count + 1;
                 department.CreatedDate = DateTime.Now;
                 department.UpdatedDate = DateTime.Now;
@@ -116,7 +116,7 @@ namespace RERPAPI.Controllers
 
 
 
-        [HttpDelete("{id}")]
+        [HttpGet("{id}")]
         public IActionResult DeleteDepartment(int id)
         {
             try
