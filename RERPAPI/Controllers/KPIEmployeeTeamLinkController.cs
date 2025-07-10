@@ -1,54 +1,17 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class KPIEmployeeTeamController : ControllerBase
+    public class KPIEmployeeTeamLinkController : ControllerBase
     {
-        KPIEmployeeTeamRepo teamRepo = new KPIEmployeeTeamRepo();
         KPIEmployeeTeamLinkRepo teamLinkRepo = new KPIEmployeeTeamLinkRepo();
-        DepartmentRepo departmentRepo = new DepartmentRepo();
-        EmployeeRepo employeeRepo = new EmployeeRepo();
-
         [HttpGet("getall")]
-        public IActionResult GetAll(int yearValue, int quarterValue, int departmentID)
-        {
-
-            try
-            {
-
-                var teams = SQLHelper<object>.ProcedureToList("spGetALLKPIEmployeeTeam",
-                                                                new string[] { "@YearValue", "@QuarterValue", "@DepartmentID" },
-                                                                new object[] { yearValue, quarterValue, departmentID });
-
-
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<object>.GetListData(teams, 0)
-                });
-            }
-            catch (Exception ex)
-            {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
-
-        }
-
-
-        [HttpGet("getkpiemployeeteamlink")]
         public IActionResult GetKPIEmployeeTeamLink(int kpiEmployeeteamID, int departmentID, int yearValue, int quarterValue)
         {
             try
@@ -74,23 +37,20 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-
-
         [HttpPost("savedata")]
-        public async Task<IActionResult> SaveData([FromBody] KPIEmployeeTeam team)
+        public async Task<IActionResult> SaveData([FromBody] List<KPIEmployeeTeamLink> teamLinks)
         {
             try
             {
-
-                if (team.ID <= 0) await teamRepo.CreateAsync(team);
-                else teamRepo.UpdateFieldsByID(team.ID, team);
-
-                return Ok(new
+                foreach (var item in teamLinks)
                 {
-                    status = 1,
-                    data = team,
-                    message = "Cập nhật thành công!"
-                });
+                    if (item.ID <= 0)
+                    {
+                        await teamLinkRepo.CreateAsync(item);
+                    }
+                    else teamLinkRepo.UpdateFieldsByID(item.ID,item);
+                }
+                return Ok(new { status = 1, message = "Cập nhật thành công." });
             }
             catch (Exception ex)
             {
@@ -102,5 +62,34 @@ namespace RERPAPI.Controllers
                 });
             }
         }
+
+        //[HttpPost("deleteemployeeteamlink")]
+        //public IActionResult DeleteEmployee([FromBody] List<int> employeeIDs)
+        //{
+        //    if (employeeIDs.Count <= 0) return Ok(new { status = 0, message = "Không có nhân viên nào để xóa" });
+
+        //    var notFoundIds = new List<int>();
+        //    foreach (var id in employeeIDs)
+        //    {
+        //        var entity = teamLinkRepo.GetByID(id);
+        //        if (entity == null)
+        //        {
+        //            notFoundIds.Add(id);
+        //            continue;
+        //        }
+
+        //        entity.IsDeleted = true;
+        //        teamLinkRepo.Update(entity);
+        //    }
+        //    if (notFoundIds.Any())
+        //    {
+        //        return Ok(new
+        //        {
+        //            status = 0,
+        //            message = $"Không tìm thấy nhân viên có ID: {string.Join(", ", notFoundIds)}"
+        //        });
+        //    }
+        //    return Ok(new { status = 1, message = "Đã xóa thành công!" });
+        //}
     }
 }

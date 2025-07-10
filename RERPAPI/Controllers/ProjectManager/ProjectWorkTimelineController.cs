@@ -10,7 +10,7 @@ namespace RERPAPI.Controllers.ProjectManager
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ProjectWorkTimelineController : ControllerBase
+    public class ProjectWorkItemTimelineController : ControllerBase
     {
         #region Khai báo biến
         ProjectRepo projectRepo = new ProjectRepo();
@@ -18,110 +18,35 @@ namespace RERPAPI.Controllers.ProjectManager
         DepartmentRepo departmentRepo = new DepartmentRepo();
         UserTeamRepo userTeamRepo = new UserTeamRepo();
         #endregion
-
-        #region Lấy danh sách tiến độ công việc
-        [HttpGet("get-department")]
-        public async Task<IActionResult> getDepartment()
-        {
-            try
-            {
-                List<Department> departments = departmentRepo.GetAll().ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data = departments
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
-        }
-
-        [HttpGet("get-user-team/{departmentId}")]
-        public async Task<IActionResult> getUserTeam(int departmentId)
-        {
-            try
-            {
-                List<UserTeam> userTeams = userTeamRepo.GetAll().Where(x => x.DepartmentID == departmentId).ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data = userTeams
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
-        }
-
+        #region Load dữ liệu timeline hạng mục công việc
         [HttpGet("get-data")]
-        public async Task<IActionResult> getData(DateTime dateStart, DateTime dateEnd, int departmentId, int userTeamId, int userId, [FromQuery] int[] typeNumber)
+        public async Task<IActionResult> getData(DateTime dateStart, DateTime dateEnd, int departmentId, int userTeamId, int employeeId, int status)
         {
             try
             {
-                string typeNumberStr = typeNumber != null && typeNumber.Length > 0
-                                        ? string.Join(",", typeNumber)
-                                        : "";
                 DateTime ds = new DateTime(dateStart.Year, dateStart.Month, dateStart.Day, 0, 0, 0);
                 DateTime de = new DateTime(dateEnd.Year, dateEnd.Month, dateEnd.Day, 23, 59, 59);
-                var data = SQLHelper<object>.ProcedureToList("spGetTimelineEmployeeWorks"
-                                          , new string[] { "@DateStart", "@DateEnd", "@DepartmentID", "@UserTeamID", "@UserID", "@IsShowDetail", "@TypeNumber" }
-                                          , new object[] { ds, de, departmentId, userTeamId, userId, 0, typeNumberStr });
-                return Ok(new
+                var data = SQLHelper<object>.ProcedureToList("sp_GetHangMucCongViec",
+                                                   new string[] { "@DateStart", "@DateEnd", "@EmployeeID", "@TeamID", "@DepartmentID", "@Status" },
+                                                   new object[] { ds, de, employeeId, userTeamId, departmentId, status });
+                // Lấy từng bảng trong DataSet
+                var dt = SQLHelper<object>.GetListData(data, 0);
+                var dtAllDate = SQLHelper<object>.GetListData(data, 1);
+                var dtMonth = SQLHelper<object>.GetListData(data, 2);
+
+                var result = new
                 {
-                    status = 1,
-                    data = SQLHelper<object>.GetListData(data, 0)
-                });
+                    dt = dt,
+                    dtAllDate = dtAllDate,
+                    dtMonth = dtMonth
+                };
+                return Ok(ApiResponseFactory.Success(result, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-        [HttpGet("get-data-detail")]
-        public async Task<IActionResult> getDataDetail(int userId, int type, DateTime date, string typeText, string code)
-        {
-            try
-            {
-                string codeNew = code.Replace("\n", "");
-                var data = SQLHelper<object>.ProcedureToList("spGetTimelineEmployeeWorksDetail"
-                                           , new string[] { "@UserID", "@TypeNumber", "@Date", "@Code" }
-                                           , new object[] { userId, type, date, codeNew });
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<object>.GetListData(data, 0)
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
-        }
-
         #endregion
 
     }

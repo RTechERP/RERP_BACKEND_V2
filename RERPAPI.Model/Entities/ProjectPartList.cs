@@ -120,4 +120,6 @@ public partial class ProjectPartList
     public bool? IsApprovedTBPNewCode { get; set; }
 
     public DateTime? DateApprovedNewCode { get; set; }
+
+    public bool? IsStock { get; set; }
 }

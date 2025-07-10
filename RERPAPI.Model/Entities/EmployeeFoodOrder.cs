@@ -30,4 +30,9 @@ public partial class EmployeeFoodOrder
     public string? ReasonDeciline { get; set; }
 
     public bool? IsDeleted { get; set; }
+
+    /// <summary>
+    /// 1: VP Hà nội, 2: Đan phượng
+    /// </summary>
+    public int? Location { get; set; }
 }

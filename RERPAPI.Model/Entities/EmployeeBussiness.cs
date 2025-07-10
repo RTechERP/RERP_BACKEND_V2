@@ -79,4 +79,10 @@ public partial class EmployeeBussiness
     public string? Reason { get; set; }
 
     public int? ProvinceID { get; set; }
+
+    public bool? IsApprovedBGD { get; set; }
+
+    public int? ApprovedBGDID { get; set; }
+
+    public DateTime? DateApprovedBGD { get; set; }
 }

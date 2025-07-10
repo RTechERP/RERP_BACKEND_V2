@@ -15,10 +15,11 @@ namespace RERPAPI.Model.Common
             get
             {
                 string connectionString = @"Server=NAM;database=RTC;User Id = sa; Password=1;TrustServerCertificate=True";
-                if (_isPublish == 1) connectionString = @"";
+                if (_isPublish == 1) connectionString = @"Server=NAM;Initial Catalog=RTC;User ID=sa;Password=1";
                 return connectionString;
             }
         }
+
         
     }
 }
