@@ -18,7 +18,7 @@ namespace RERPAPI.Controllers.ProjectManager
         DepartmentRepo departmentRepo = new DepartmentRepo();
         UserTeamRepo userTeamRepo = new UserTeamRepo();
         #endregion
-        #region Load dữ liệu timeline hạng mục công việc
+        #region Load  timeline hạng mục công việc
         [HttpGet("get-data")]
         public async Task<IActionResult> getData(DateTime dateStart, DateTime dateEnd, int departmentId, int userTeamId, int employeeId, int status)
         {
