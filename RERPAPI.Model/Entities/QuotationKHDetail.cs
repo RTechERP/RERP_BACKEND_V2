@@ -52,4 +52,6 @@ public partial class QuotationKHDetail
     public string? ProductNewCode { get; set; }
 
     public string? TypeOfPrice { get; set; }
+    
+    public bool? IsDeleted { get; set; }
 }

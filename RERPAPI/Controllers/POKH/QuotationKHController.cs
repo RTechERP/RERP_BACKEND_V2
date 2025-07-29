@@ -43,7 +43,7 @@ namespace RERPAPI.Controllers.PO
         {
             try
             {
-                var list = _quotationDetailKHRepo.GetAll().Where(x => x.QuotationKHID == id);
+                var list = _quotationDetailKHRepo.GetAll().Where(x => x.QuotationKHID == id && x.IsDeleted != true);
                 return Ok(new
                 {
                     status = 1,

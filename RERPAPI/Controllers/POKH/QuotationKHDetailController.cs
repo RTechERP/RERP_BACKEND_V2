@@ -22,7 +22,7 @@ namespace RERPAPI.Controllers.PO
         CustomerRepo _customerRepo = new CustomerRepo();
         CustomerContactRepo _customerContactRepo = new CustomerContactRepo();
         QuotationKHRepo _quotationKHRepo = new QuotationKHRepo();
-        QuotationKHDetailRepo quotationDetailKHRepo = new QuotationKHDetailRepo();
+        QuotationKHDetailRepo _quotationDetailKHRepo = new QuotationKHDetailRepo();
         [HttpGet("get-users")]
         public IActionResult GetUser()
         {
@@ -148,18 +148,31 @@ namespace RERPAPI.Controllers.PO
                 {
                     _quotationKHRepo.UpdateFieldsByID(dto.quotationKHs.ID, dto.quotationKHs);
                 }
-                if(dto.quotationKHDetails.Count > 0)
+                if (dto.DeletedDetailIds != null && dto.DeletedDetailIds.Count > 0)
+                {
+                    foreach (var item in dto.DeletedDetailIds)
+                    {
+                        var detailToDelete = _quotationDetailKHRepo.GetByID(item);
+                        if (detailToDelete != null)
+                        {
+                            detailToDelete.IsDeleted = true;
+                            //detailToDelete.UpdatedBy = User.Identity.Name; // Mở comment nếu có phân quyền người dùng
+                            _quotationDetailKHRepo.UpdateFieldsByID(item, detailToDelete);
+                        }
+                    }
+                }
+                if (dto.quotationKHDetails.Count > 0)
                 {
                     foreach (var item in dto.quotationKHDetails)
                     {
                         if (item.ID <= 0)
                         {
                             item.QuotationKHID = dto.quotationKHs.ID;
-                            await quotationDetailKHRepo.CreateAsync(item);
+                            await _quotationDetailKHRepo.CreateAsync(item);
                         }
                         else
                         {
-                            quotationDetailKHRepo.UpdateFieldsByID(item.ID, item);
+                            _quotationDetailKHRepo.UpdateFieldsByID(item.ID, item);
                         }
                     }
                 } 

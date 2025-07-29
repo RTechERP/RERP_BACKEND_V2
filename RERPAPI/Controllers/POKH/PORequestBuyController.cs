@@ -15,7 +15,7 @@ namespace RERPAPI.Controllers.PO
     public class PORequestBuyController : ControllerBase
     {
         ProjectPartlistPurchaseRequestRepo _PPPRRepo = new ProjectPartlistPurchaseRequestRepo();
-        UnitCountRepo _UnitCountRepo = new UnitCountRepo();
+        UnitCountRepo _unitCountRepo = new UnitCountRepo();
         [HttpPost("save-data")]
         public async Task<IActionResult> Save([FromBody] List<ProjectPartlistPurchaseRequest> request)
         {
@@ -96,7 +96,7 @@ namespace RERPAPI.Controllers.PO
         {
             try
             {
-                UnitCount? unitCount = _UnitCountRepo.GetAll().FirstOrDefault(x => x.UnitName == unitName.Trim());
+                UnitCount? unitCount = _unitCountRepo.GetAll().FirstOrDefault(x => x.UnitName == unitName.Trim());
                 return unitCount;
             }
             catch (Exception ex)

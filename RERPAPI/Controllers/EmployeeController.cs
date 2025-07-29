@@ -61,6 +61,33 @@ namespace RERPAPI.Controllers
                 return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpGet("get-employees")]
+        //[RequiresPermission("N42")]
+        public IActionResult GetEmployees(int? status)
+        {
+            try
+            {
+                status = status ?? 0;
+                var employees = SQLHelper<object>.ProcedureToList("spGetEmployee",
+                                                new string[] { "@Status" },
+                                                new object[] { status });
+                return Ok(new
+                {
+                    status = 1,
+                    message = "Success",
+                    data = SQLHelper<object>.GetListData(employees, 0)
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
+        }
 
         [HttpGet("employee/{id}")]
         //[RequiresPermission("N42")]

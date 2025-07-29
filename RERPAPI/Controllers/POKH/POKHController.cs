@@ -60,6 +60,29 @@ namespace RERPAPI.Controllers.PO
                 });
             }
         }
+        [HttpGet("get-pokh-kpi-detail")]
+        public IActionResult loadPOKHKpiDetail(int id)
+        {
+            try
+            {
+                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetPOKH_KPI", new string[] { "@IDMaster" }, new object[] { id });
+                return Ok(new
+                {
+                    status = 1,
+                    data = SQLHelper<dynamic>.GetListData(list, 0),
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
+
+        }
         [HttpGet("get-detail-user")]
         public IActionResult loadDetailUser(int id, int idDetail)
         {
