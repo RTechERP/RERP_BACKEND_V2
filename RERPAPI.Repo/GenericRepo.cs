@@ -249,5 +249,15 @@ namespace RERPAPI.Repo
                 throw new Exception($"Error updating entity: {ex.Message}", ex);
             }
         }
+
+        public T GetByID(long id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Delete(long id)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
