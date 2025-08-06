@@ -3,6 +3,7 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
+using System.ComponentModel;
 
 namespace RERPAPI.Controllers
 {
@@ -17,7 +18,7 @@ namespace RERPAPI.Controllers
             try
             {
                 var arrParamName = new string[] { "@FilterText", "@PageNumber", "@PageSize", "@Month", "@Year", "@DepartmentID", "@IDApprovedTP", "@Status" };
-                var arrParamValue = new object[] { param.filterText, param.pageNumber, param.pageSize, param.month, param.year, param.departmentId, param.idApprovedTp, param.status};
+                var arrParamValue = new object[] { param.keyWord ?? "", param.pageNumber, param.pageSize, param.month, param.year, param.departmentId, param.idApprovedTp, param.status};
                 var employeeEarlyLate = SQLHelper<object>.ProcedureToList("spGetEmployeeEarlyLate", arrParamName, arrParamValue);
                 return Ok(new {
                     data = SQLHelper<object>.GetListData(employeeEarlyLate, 0),
@@ -41,26 +42,48 @@ namespace RERPAPI.Controllers
         {
             try
             {
+
                if(employeeEarlyLate.ID <= 0)
                 {
-                    var result = await employeeEarlyLateRepo.CreateAsync(employeeEarlyLate);
-                    return Ok(new
+                    if (employeeEarlyLate.DateStart.HasValue)
                     {
-                        status = 1,
-                        message = "Thêm thành công",
-                        data = result
-                    });
-                }
-                else
-                {
-                    var result = employeeEarlyLateRepo.UpdateFieldsByID(employeeEarlyLate.ID, employeeEarlyLate);
-                    return Ok(new
+                        employeeEarlyLate.DateStart = DateTime.SpecifyKind(employeeEarlyLate.DateStart.Value, DateTimeKind.Utc);
+                    }
+                    if (employeeEarlyLate.DateEnd.HasValue)
                     {
-                        status = 1,
-                        message = "Cập nhật thành công",
-                        data = result
-                    });
-                }
+                        employeeEarlyLate.DateEnd = DateTime.SpecifyKind(employeeEarlyLate.DateEnd.Value, DateTimeKind.Utc);
+                    }
+                    var exisingEmployeeEarlyLate = employeeEarlyLateRepo.GetAll().Where(x =>  x.EmployeeID == employeeEarlyLate.EmployeeID && 
+                                                                                                 x.DateRegister.Value.Date == employeeEarlyLate.DateRegister.Value.Date &&
+                                                                                                    x.Type == employeeEarlyLate.Type &&
+                                                                                                     x.ID != employeeEarlyLate.ID);
+
+                    if (exisingEmployeeEarlyLate.Any())
+                    {
+                        return BadRequest(new
+                        {
+                            status = 0,
+                            message = "Nhân viên đã khai báo ngày này rồi! Vui lòng kiếm tra lại",
+                        });
+                    }
+                        var result = await employeeEarlyLateRepo.CreateAsync(employeeEarlyLate);
+                        return Ok(new
+                        {
+                            status = 1,
+                            message = "Thêm thành công",
+                            data = result
+                        });
+                    }
+                    else
+                    {
+                        var result = employeeEarlyLateRepo.UpdateFieldsByID(employeeEarlyLate.ID, employeeEarlyLate);
+                        return Ok(new
+                        {
+                            status = 1,
+                            message = "Cập nhật thành công",
+                            data = result
+                        });
+                    }
             }
             catch (Exception ex)
             {
@@ -74,3 +97,4 @@ namespace RERPAPI.Controllers
         }
     }
 }
+    

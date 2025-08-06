@@ -8,7 +8,7 @@ namespace RERPAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class EmployeeFoodOrderController : Controller
+    public class EmployeeFoodOrderController : ControllerBase
     {
         EmployeeFoodOrderRepo employeeFoodOrderRepo = new EmployeeFoodOrderRepo();
 

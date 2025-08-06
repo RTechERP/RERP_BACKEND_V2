@@ -65,6 +65,14 @@ namespace RERPAPI.Controllers
             try
             {
                 List<CustomerSpecialization> listData = customerSpecializationRepo.GetAll();
+                if (listData.Any(x => (x.Name == customerSpecialization.Name || x.Code == customerSpecialization.Code) && x.ID != customerSpecialization.ID))
+                {
+                    return BadRequest(new
+                    {
+                        status = 0,
+                        message = "Tên hoặc mã ngành nghề đã tồn tại"
+                    });
+                }
                 customerSpecialization.STT = listData.Count + 1;
                 customerSpecialization.CreatedDate = DateTime.Now;
                 customerSpecialization.UpdatedDate = DateTime.Now;

@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Model.Param
 {
-    public class EmployeeEarlyLateParam
+    public class EmployeeBussinessParam
     {
-        public string? keyWord { get; set; }
-        public int pageNumber { get; set; }
-        public int pageSize { get; set; }
-        public int month { get; set; }
-        public int year { get; set; }
+        public string keyWord { get; set; }
+        public int pageNumber { get; set; } = 1;
+        public int pageSize { get; set; } = 1000000;
+        public DateTime dateStart { get; set; }
+        public DateTime dateEnd { get; set; }
         public int departmentId { get; set; }
         public int idApprovedTp { get; set; }
         public int status { get; set; }

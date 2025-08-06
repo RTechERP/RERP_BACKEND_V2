@@ -58,4 +58,5 @@ public partial class EmployeeEarlyLate
     public string? ReasonHREdit { get; set; }
 
     public bool? IsProblem { get; set; }
+    public bool? IsDeleted { get; set; }
 }

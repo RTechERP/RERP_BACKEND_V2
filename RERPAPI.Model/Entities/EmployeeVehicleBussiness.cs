@@ -17,4 +17,5 @@ public partial class EmployeeVehicleBussiness
     /// True: Cho phép người khai báo công tác sửa chi phí đi lại, False: Không cho phép
     /// </summary>
     public bool? EditCost { get; set; }
+    public bool? IsDeleted { get; set;}
 }

@@ -6,15 +6,12 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Model.Param
 {
-    public class EmployeeEarlyLateParam
+    public class EmployeeOverTimeByMonthParam
     {
-        public string? keyWord { get; set; }
-        public int pageNumber { get; set; }
-        public int pageSize { get; set; }
         public int month { get; set; }
         public int year { get; set; }
+        public int employeeId { get; set; }
         public int departmentId { get; set; }
-        public int idApprovedTp { get; set; }
-        public int status { get; set; }
+        public string? keyWord { get; set; }
     }
 }
