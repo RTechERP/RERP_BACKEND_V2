@@ -136,4 +136,6 @@ public partial class ProjectPartlistPurchaseRequest
     public string? UnitName { get; set; }
 
     public string? Maker { get; set; }
+
+    public int? ProjectPartlistPurchaseRequestTypeID { get; set; }
 }

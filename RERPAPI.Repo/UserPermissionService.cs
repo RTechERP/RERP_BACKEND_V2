@@ -16,12 +16,15 @@ namespace RERPAPI.Repo
     public class UserPermissionService : IUserPermissionService
     {
         protected RTCContext _dbContext { get; set; }
+        public Dictionary<string, string> Claims { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
         private readonly IHttpContextAccessor _httpContextAccessor;
         public UserPermissionService(RTCContext db, IHttpContextAccessor httpContextAccessor)
         {
             _dbContext = db;
             _httpContextAccessor = httpContextAccessor;
         }
+
 
         public async Task<bool> HasPermissionAsync(string userId, string permission)
         {

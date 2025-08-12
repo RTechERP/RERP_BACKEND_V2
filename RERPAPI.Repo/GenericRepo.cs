@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using RERPAPI.IRepo;
 using RERPAPI.Model.Context;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
@@ -14,17 +15,20 @@ namespace RERPAPI.Repo
     public class GenericRepo<T> : IGenericRepo<T> where T : class, new()
     {
         protected RTCContext db { get; set; }
-        protected DbSet<T> table = null;
+        protected DbSet<T> table;
+
+        //protected readonly IUserPermissionService _userPermissionService;
         public GenericRepo()
         {
             db = new RTCContext();
             table = db.Set<T>();
         }
 
-        public GenericRepo(RTCContext db)
+        public GenericRepo(RTCContext db,IUserPermissionService userPermissionService)
         {
             this.db = db;
             table = db.Set<T>();
+            //_userPermissionService = userPermissionService;
         }
 
         public List<T> GetAll(Expression<Func<T, bool>> predicate = null)
@@ -85,16 +89,69 @@ namespace RERPAPI.Repo
 
         public int Update(T item)
         {
+            //try
+            //{
+            //    table.Attach(item);
+            //    db.Entry(item).State = EntityState.Modified;
+            //    return db.SaveChanges();
+            //}
+            //catch (Exception ex)
+            //{
+
+            //    throw new Exception(ex.ToString());
+            //}
+
             try
             {
-                table.Attach(item);
-                db.Entry(item).State = EntityState.Modified;
+                var fieldValues = new Dictionary<string, object>();
+                int id = 0;
+                var propid = typeof(T).GetProperty("ID");
+                if (propid != null) id = Convert.ToInt32(propid.GetValue(item));
+
+                var properties = typeof(T).GetProperties();
+                foreach (var prop in properties)
+                {
+                    // Bỏ qua thuộc tính ID hoặc các thuộc tính không cần cập nhật
+                    if (prop.Name != "ID" && prop.CanRead)
+                    {
+                        var value = prop.GetValue(item);
+                        if (value != null) // Chỉ thêm nếu giá trị không null
+                        {
+                            fieldValues.Add(prop.Name, value);
+                        }
+                    }
+                }
+
+                // Tìm entity theo ID
+                var entity = db.Set<T>().Find(id);
+                if (entity == null)
+                {
+                    throw new Exception($"Entity with ID {id} not found.");
+                }
+
+                // Lấy type của entity
+                Type type = typeof(T);
+
+                // Cập nhật các trường động
+                foreach (var field in fieldValues)
+                {
+                    // Kiểm tra thuộc tính
+                    var property = type.GetProperty(field.Key);
+                    if (property == null || !property.CanWrite)
+                    {
+                        throw new Exception($"Property {field.Key} not found or is not writable.");
+                    }
+
+                    // Gán giá trị cho thuộc tính (xử lý null)
+                    property.SetValue(entity, field.Value == null ? null : field.Value);
+                }
+
+                // Lưu thay đổi vào cơ sở dữ liệu
                 return db.SaveChanges();
             }
             catch (Exception ex)
             {
-
-                throw new Exception(ex.ToString());
+                throw new Exception($"Error updating entity: {ex.Message}", ex);
             }
         }
 
@@ -129,16 +186,71 @@ namespace RERPAPI.Repo
 
         public async Task<int> UpdateAsync(T item)
         {
+            //try
+            //{
+            //    table.Attach(item);
+            //    db.Entry(item).State = EntityState.Modified;
+            //    return await db.SaveChangesAsync();
+            //}
+            //catch (Exception ex)
+            //{
+
+            //    throw new Exception(ex.ToString());
+            //}
+
             try
             {
-                table.Attach(item);
-                db.Entry(item).State = EntityState.Modified;
+                //var claims = _userPermissionService.GetClaims();
+                var fieldValues = new Dictionary<string, object>();
+                int id = 0;
+                var propid = typeof(T).GetProperty("ID");
+                if (propid != null) id = Convert.ToInt32(propid.GetValue(item));
+
+
+                var properties = typeof(T).GetProperties();
+                foreach (var prop in properties)
+                {
+                    // Bỏ qua thuộc tính ID hoặc các thuộc tính không cần cập nhật
+                    if (prop.Name != "ID" && prop.CanRead)
+                    {
+                        var value = prop.GetValue(item);
+                        if (value != null) // Chỉ thêm nếu giá trị không null
+                        {
+                            fieldValues.Add(prop.Name, value);
+                        }
+                    }
+                }
+
+                // Tìm entity theo ID
+                var entity = db.Set<T>().Find(id);
+                if (entity == null)
+                {
+                    throw new Exception($"Entity with ID {id} not found.");
+                }
+
+                // Lấy type của entity
+                Type type = typeof(T);
+
+                // Cập nhật các trường động
+                foreach (var field in fieldValues)
+                {
+                    // Kiểm tra thuộc tính
+                    var property = type.GetProperty(field.Key);
+                    if (property == null || !property.CanWrite)
+                    {
+                        throw new Exception($"Property {field.Key} not found or is not writable.");
+                    }
+
+                    // Gán giá trị cho thuộc tính (xử lý null)
+                    property.SetValue(entity, field.Value == null ? null : field.Value);
+                }
+
+                // Lưu thay đổi vào cơ sở dữ liệu
                 return await db.SaveChangesAsync();
             }
             catch (Exception ex)
             {
-
-                throw new Exception(ex.ToString());
+                throw new Exception($"Error updating entity: {ex.Message}", ex);
             }
         }
 
@@ -198,58 +310,64 @@ namespace RERPAPI.Repo
             }
         }
 
-        public int UpdateFieldsByID(int ID, T item)
-        {
-            try
-            {
-                var fieldValues = new Dictionary<string, object>();
+        //public void SetClaim(Dictionary<string, string> claim)
+        //{
+        //    db.Claim = claim;
+        //}
+
+        //public int UpdateFieldsByID(T item)
+        //{
+        //    try
+        //    {
+        //        var fieldValues = new Dictionary<string, object>();
+        //        var id = typeof(T).GetProperty("ID");
 
 
-                var properties = typeof(T).GetProperties();
-                foreach (var prop in properties)
-                {
-                    // Bỏ qua thuộc tính ID hoặc các thuộc tính không cần cập nhật
-                    if (prop.Name != "ID" && prop.CanRead)
-                    {
-                        var value = prop.GetValue(item);
-                        if (value != null) // Chỉ thêm nếu giá trị không null
-                        {
-                            fieldValues.Add(prop.Name, value);
-                        }
-                    }
-                }
+        //        var properties = typeof(T).GetProperties();
+        //        foreach (var prop in properties)
+        //        {
+        //            // Bỏ qua thuộc tính ID hoặc các thuộc tính không cần cập nhật
+        //            if (prop.Name != "ID" && prop.CanRead)
+        //            {
+        //                var value = prop.GetValue(item);
+        //                if (value != null) // Chỉ thêm nếu giá trị không null
+        //                {
+        //                    fieldValues.Add(prop.Name, value);
+        //                }
+        //            }
+        //        }
 
-                // Tìm entity theo ID
-                var entity = db.Set<T>().Find(ID);
-                if (entity == null)
-                {
-                    throw new Exception($"Entity with ID {ID} not found.");
-                }
+        //        // Tìm entity theo ID
+        //        var entity = db.Set<T>().Find(id);
+        //        if (entity == null)
+        //        {
+        //            throw new Exception($"Entity with ID {id} not found.");
+        //        }
 
-                // Lấy type của entity
-                Type type = typeof(T);
+        //        // Lấy type của entity
+        //        Type type = typeof(T);
 
-                // Cập nhật các trường động
-                foreach (var field in fieldValues)
-                {
-                    // Kiểm tra thuộc tính
-                    var property = type.GetProperty(field.Key);
-                    if (property == null || !property.CanWrite)
-                    {
-                        throw new Exception($"Property {field.Key} not found or is not writable.");
-                    }
+        //        // Cập nhật các trường động
+        //        foreach (var field in fieldValues)
+        //        {
+        //            // Kiểm tra thuộc tính
+        //            var property = type.GetProperty(field.Key);
+        //            if (property == null || !property.CanWrite)
+        //            {
+        //                throw new Exception($"Property {field.Key} not found or is not writable.");
+        //            }
 
-                    // Gán giá trị cho thuộc tính (xử lý null)
-                    property.SetValue(entity, field.Value == null ? null : field.Value);
-                }
+        //            // Gán giá trị cho thuộc tính (xử lý null)
+        //            property.SetValue(entity, field.Value == null ? null : field.Value);
+        //        }
 
-                // Lưu thay đổi vào cơ sở dữ liệu
-                return db.SaveChanges();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error updating entity: {ex.Message}", ex);
-            }
-        }
+        //        // Lưu thay đổi vào cơ sở dữ liệu
+        //        return db.SaveChanges();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw new Exception($"Error updating entity: {ex.Message}", ex);
+        //    }
+        //}
     }
 }

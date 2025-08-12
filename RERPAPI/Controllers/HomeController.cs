@@ -6,6 +6,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.Context;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using System.IdentityModel.Tokens.Jwt;
@@ -20,15 +22,17 @@ namespace RERPAPI.Controllers
     public class HomeController : ControllerBase
     {
         private readonly JwtSettings _jwtSettings;
-        //private Response _response = new Response();
+        private readonly RTCContext _context;
 
         UserRepo _userRepo = new UserRepo();
         vUserGroupLinksRepo _vUserGroupLinksRepo = new vUserGroupLinksRepo();
 
-        public HomeController(IOptions<JwtSettings> jwtSettings)
+        public HomeController(IOptions<JwtSettings> jwtSettings, RTCContext context)
         {
             _jwtSettings = jwtSettings.Value;
+            _context = context;
         }
+
 
         [HttpPost("login")]
         public IActionResult Login([FromBody] User user)
@@ -52,16 +56,6 @@ namespace RERPAPI.Controllers
                 var hasUser = SQLHelper<object>.GetListData(login, 0)[0];
 
                 //2. Tạo Claims
-
-                //var permissions = "";
-                //var vUserGroupLinks = _vUserGroupLinksRepo.GetAll().Where(x => x.UserID == hasUser.ID).ToList();
-
-                //if (vUserGroupLinks.Count() > 0) permissions = string.Join(",", vUserGroupLinks.Select(x => x.Code));
-                //var claims = new[]
-                //{
-
-                //};
-
 
                 var claims = new List<Claim>()
                 {
@@ -87,12 +81,12 @@ namespace RERPAPI.Controllers
                     issuer: _jwtSettings.Issuer,
                     audience: _jwtSettings.Audience,
                     claims: claims.ToArray(),
-                    expires: DateTime.UtcNow.AddMinutes(2),
+                    expires: DateTime.UtcNow.AddMinutes(_jwtSettings.ExpireMinutes),
                     signingCredentials: creds
                 );
 
                 var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
-
+                _context.CurrentUser = ObjectMapper.GetCurrentUser(claims.ToDictionary(x => x.Type, x => x.Value));
                 return Ok(new
                 {
                     access_token = tokenString,
@@ -113,8 +107,17 @@ namespace RERPAPI.Controllers
         [HttpGet("current-user")]
         public IActionResult GetCurrentUser()
         {
-            var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-            return Ok(claims);
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                return Ok(ApiResponseFactory.Success(currentUser, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
         }
     }
 }

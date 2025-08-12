@@ -132,7 +132,7 @@ namespace RERPAPI.Model.Common
             }
             catch (Exception ex)
             {
-                return resultLists;
+                //return resultLists;
                 throw new Exception(ex.Message);
             }
         }

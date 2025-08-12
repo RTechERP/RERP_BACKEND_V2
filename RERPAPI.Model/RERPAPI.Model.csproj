@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Context\RTCContextWithAccessor.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
@@ -18,6 +22,10 @@
 
   <ItemGroup>
     <Folder Include="Param\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RERPAPI.IRepo\RERPAPI.IRepo.csproj" />
   </ItemGroup>
 
 </Project>
