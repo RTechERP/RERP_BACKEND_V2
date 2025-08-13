@@ -11,5 +11,6 @@ namespace RERPAPI.Model.DTO
     {
         public TradePrice tradePrices { get; set; }
         public List<TradePriceDetail> tradePriceDetails { get; set; }
+        public List<int> deletedTradePriceDetails { get; set; }
     }
 }

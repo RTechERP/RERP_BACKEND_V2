@@ -1,4 +1,5 @@
-﻿using DocumentFormat.OpenXml.Office2010.Excel;
+﻿using DocumentFormat.OpenXml.Office.CustomUI;
+using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using RERPAPI.Model.Common;
@@ -24,6 +25,7 @@ namespace RERPAPI.Controllers.TinhGia
         {
             try
             {
+                //CHƯA CÓ XỬ LÍ EMPID THEO NGƯỜI DÙNG HIỆN TẠI NÊN ĐANG GET ALL THEO EMPID = -1
                 int empId = -1;
                 List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetTradePrice",
                     new string[] { "@ID", "@EmpID", "@EmployeeID", "@SaleAdminID", "@ProjectID", "@CustomerID", "@Keyword" },
@@ -49,7 +51,6 @@ namespace RERPAPI.Controllers.TinhGia
         {
             try
             {
-                int empId = -1;
                 List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetTradePriceDetail",
                     new string[] { "@TradePriceID" },
                     new object[] { id });
@@ -69,6 +70,7 @@ namespace RERPAPI.Controllers.TinhGia
                 });
             }
         }
+
         [HttpGet("get-unitcount")]
         public  IActionResult GetUnitCount()
         {
@@ -91,6 +93,7 @@ namespace RERPAPI.Controllers.TinhGia
                 });
             }
         }
+
         [HttpPost("save-data")]
         public async Task<IActionResult> Save([FromBody] TradePriceDTO dto)
         {
@@ -177,6 +180,19 @@ namespace RERPAPI.Controllers.TinhGia
                         parentIdMapping.Add(item.ID, model.ID);
                     }
                 }
+                if(dto.deletedTradePriceDetails.Count > 0)
+                {
+                    foreach( var item in dto.deletedTradePriceDetails)
+                    {
+                        var itemDel = _tradePriceDetailRepo.GetByID(item);
+                        if(itemDel != null)
+                        {
+                            itemDel.IsDeleted = true;
+                            itemDel.UpdatedDate = DateTime.Now;
+                            _tradePriceDetailRepo.UpdateFieldsByID(item, itemDel);
+                        }    
+                    }    
+                }    
 
                 return Ok(new
                 {
