@@ -165,7 +165,7 @@ namespace RERPAPI.Controllers.PO
             {
                 foreach (var item in model)
                 {
-                    _pokhDetailRepo.UpdateFieldsByID(item.ID, item);
+                    _pokhDetailRepo.Update(item);
                 }
                 return Ok(new
                 {

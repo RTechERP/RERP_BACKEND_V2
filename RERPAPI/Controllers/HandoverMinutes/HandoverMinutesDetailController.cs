@@ -93,7 +93,7 @@ namespace RERPAPI.Controllers.HandoverMinutes
             }
         }
         [HttpPost("save-data")]
-        public IActionResult SaveData([FromBody] HandoverMinutesDTO dto )
+        public async Task<IActionResult> SaveData([FromBody] HandoverMinutesDTO dto)
         {
             try
             {
@@ -104,7 +104,7 @@ namespace RERPAPI.Controllers.HandoverMinutes
                 {
                     model.IsDeleted = true;
                     model.UpdatedDate = DateTime.Now;
-                    _handoverMinutesRepo.UpdateFieldsByID(dto.ID, model);
+                    await _handoverMinutesRepo.UpdateAsync(model);
                     return Ok(new { status = 1, success = true, message = "Soft deleted successfully." });
                 }
                 model.DateMinutes = dto.DateMinutes;
@@ -121,7 +121,7 @@ namespace RERPAPI.Controllers.HandoverMinutes
                 //model.UpdatedBy = User.Identity.Name; // Mở comment nếu có phân quyền người dùng
                 if (dto.ID > 0)
                 {
-                    _handoverMinutesRepo.UpdateFieldsByID(dto.ID, model);
+                    await _handoverMinutesRepo.UpdateAsync(model);
                 }
                 else
                 {
@@ -140,7 +140,7 @@ namespace RERPAPI.Controllers.HandoverMinutes
                             detailToDelete.IsDeleted = true;
                             //detailToDelete.UpdatedBy = User.Identity.Name; // Mở comment nếu có phân quyền người dùng
                             detailToDelete.UpdatedDate = DateTime.Now;
-                            _handoverMinutesDetailRepo.UpdateFieldsByID(item, detailToDelete);
+                            await _handoverMinutesDetailRepo.UpdateAsync(detailToDelete);
                         }
                     }
                 }
@@ -168,7 +168,7 @@ namespace RERPAPI.Controllers.HandoverMinutes
                         
                         if(detail.ID > 0)
                         {
-                            _handoverMinutesDetailRepo.UpdateFieldsByID(detailRequest.ID, detail);
+                            await _handoverMinutesDetailRepo.UpdateAsync(detail);
                         }
                         else
                         {

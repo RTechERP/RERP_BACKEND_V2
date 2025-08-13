@@ -142,7 +142,7 @@ namespace RERPAPI.Controllers.RequestInvoice
                         ID = dto.RequestInvoices.ID,
                         IsDeleted = dto.RequestInvoices.IsDeleted
                     };
-                    _requestInvoiceRepo.UpdateFieldsByID(dto.RequestInvoices.ID, updatedRequestInvoice);
+                    await _requestInvoiceRepo.UpdateAsync(updatedRequestInvoice);
                     return Ok(new
                     {
                         status = 1,
@@ -195,7 +195,7 @@ namespace RERPAPI.Controllers.RequestInvoice
                 }
                 else
                 {
-                    _requestInvoiceRepo.UpdateFieldsByID(dto.RequestInvoices.ID, dto.RequestInvoices);
+                    await _requestInvoiceRepo.UpdateAsync(dto.RequestInvoices);
                 }
                 if (dto.DeletedDetailIds != null && dto.DeletedDetailIds.Count > 0)
                 {
@@ -207,7 +207,7 @@ namespace RERPAPI.Controllers.RequestInvoice
                             detailToDelete.IsDeleted = true;
                             //detailToDelete.UpdatedBy = User.Identity.Name; // Mở comment nếu có phân quyền người dùng
                             detailToDelete.UpdatedDate = DateTime.Now;
-                            _requestInvoiceDetailRepo.UpdateFieldsByID(item, detailToDelete);
+                            await _requestInvoiceDetailRepo.UpdateAsync(detailToDelete);
                         }
                     }
                 }
@@ -222,7 +222,7 @@ namespace RERPAPI.Controllers.RequestInvoice
                         }
                         else
                         {
-                            _requestInvoiceDetailRepo.UpdateFieldsByID(item.ID, item);
+                            await _requestInvoiceDetailRepo.UpdateAsync(item);
                         }
                     }
                 }
@@ -337,7 +337,7 @@ namespace RERPAPI.Controllers.RequestInvoice
                     file.IsDeleted = true;
                     //file.UpdatedBy = User.Identity?.Name ?? "System";
                     //file.UpdatedDate = DateTime.UtcNow;
-                    _requestInvoiceFileRepo.UpdateFieldsByID(file.ID, file);
+                    _requestInvoiceFileRepo.Update(file);
 
                     // Xóa file vật lý
                     var physicalPath = Path.Combine(file.ServerPath, file.FileName);

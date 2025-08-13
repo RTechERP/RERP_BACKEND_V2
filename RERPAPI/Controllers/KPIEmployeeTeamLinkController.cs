@@ -48,7 +48,7 @@ namespace RERPAPI.Controllers
                     {
                         await teamLinkRepo.CreateAsync(item);
                     }
-                    else teamLinkRepo.UpdateFieldsByID(item.ID,item);
+                    else await teamLinkRepo.UpdateAsync(item);
                 }
                 return Ok(new { status = 1, message = "Cập nhật thành công." });
             }

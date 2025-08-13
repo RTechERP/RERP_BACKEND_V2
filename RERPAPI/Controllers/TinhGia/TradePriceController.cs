@@ -105,7 +105,7 @@ namespace RERPAPI.Controllers.TinhGia
                 }
                 else
                 {
-                    _tradePriceRepo.UpdateFieldsByID(dto.tradePrices.ID, dto.tradePrices);
+                    await _tradePriceRepo.UpdateAsync(dto.tradePrices);
 
                 }
                 var parentIdMapping = new Dictionary<int, int>();
@@ -167,11 +167,11 @@ namespace RERPAPI.Controllers.TinhGia
                         model.ProductCodeOrigin = item.ProductCodeOrigin;
                         model.CurrencyID = item.CurrencyID;
                         model.CurrencyRate = item.CurrencyRate;
-                        model.Margin = item.Margin;
+                        model.Margin = item.Margin; 
 
                         if (idOld > 0)
                         {
-                            _tradePriceDetailRepo.UpdateFieldsByID(idOld, model);
+                            await _tradePriceDetailRepo.UpdateAsync(model);
                         }
                         else
                         {
@@ -189,7 +189,7 @@ namespace RERPAPI.Controllers.TinhGia
                         {
                             itemDel.IsDeleted = true;
                             itemDel.UpdatedDate = DateTime.Now;
-                            _tradePriceDetailRepo.UpdateFieldsByID(item, itemDel);
+                            await _tradePriceDetailRepo.UpdateAsync(itemDel);
                         }    
                     }    
                 }    

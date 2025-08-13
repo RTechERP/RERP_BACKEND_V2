@@ -316,7 +316,7 @@ namespace RERPAPI.Controllers.PO
                 }
                 else
                 {
-                    _pokhRepo.UpdateFieldsByID(dto.POKH.ID, dto.POKH);
+                    await _pokhRepo.UpdateAsync(dto.POKH);
 
                 }
                 var parentIdMapping = new Dictionary<int, int>();
@@ -365,7 +365,7 @@ namespace RERPAPI.Controllers.PO
 
                         if (idOld > 0)
                         {
-                            _pokhDetailRepo.UpdateFieldsByID(idOld, model);
+                            await _pokhDetailRepo.UpdateAsync(model);
                         }
                         else
                         {
@@ -395,7 +395,7 @@ namespace RERPAPI.Controllers.PO
 
                         if (idOld > 0)
                         {
-                            _pokhDetailMoneyRepo.UpdateFieldsByID(idOld, detailMoney);
+                            await _pokhDetailMoneyRepo.UpdateAsync(detailMoney);
                         }
                         else
                         {
@@ -559,7 +559,7 @@ namespace RERPAPI.Controllers.PO
                     file.IsDeleted = true;
                     //file.UpdatedBy = User.Identity?.Name ?? "System";
                     //file.UpdatedDate = DateTime.UtcNow;
-                    _pokhFilesRepo.UpdateFieldsByID(file.ID, file);
+                    _pokhFilesRepo.Update(file);
 
                     // Xóa file vật lý
                     var physicalPath = Path.Combine(file.ServerPath, file.FileName);
@@ -664,7 +664,7 @@ namespace RERPAPI.Controllers.PO
                         if (idMapping.ContainsKey(item.ParentID.Value))
                         {
                             newDetail.ParentID = idMapping[item.ParentID.Value];
-                            _pokhDetailRepo.UpdateFieldsByID(newDetailId, newDetail);
+                            _pokhDetailRepo.Update(newDetail);
                         }
                     }
                 }

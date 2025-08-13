@@ -146,7 +146,7 @@ namespace RERPAPI.Controllers.PO
                 }
                 else
                 {
-                    _quotationKHRepo.UpdateFieldsByID(dto.quotationKHs.ID, dto.quotationKHs);
+                    await _quotationKHRepo.UpdateAsync(dto.quotationKHs);
                 }
                 if (dto.DeletedDetailIds != null && dto.DeletedDetailIds.Count > 0)
                 {
@@ -157,7 +157,7 @@ namespace RERPAPI.Controllers.PO
                         {
                             detailToDelete.IsDeleted = true;
                             //detailToDelete.UpdatedBy = User.Identity.Name; // Mở comment nếu có phân quyền người dùng
-                            _quotationDetailKHRepo.UpdateFieldsByID(item, detailToDelete);
+                            await _quotationDetailKHRepo.UpdateAsync(detailToDelete);
                         }
                     }
                 }
@@ -172,7 +172,7 @@ namespace RERPAPI.Controllers.PO
                         }
                         else
                         {
-                            _quotationDetailKHRepo.UpdateFieldsByID(item.ID, item);
+                            await _quotationDetailKHRepo.UpdateAsync(item);
                         }
                     }
                 } 
