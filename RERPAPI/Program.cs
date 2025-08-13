@@ -1,9 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using RERPAPI.IRepo;
 using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
+using RERPAPI.Model.DTO;
 using RERPAPI.Repo;
 using System.Text;
 
@@ -17,8 +20,13 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IUserPermissionService, UserPermissionService>();
+builder.Services.AddScoped<RTCContext>();
+
 //Config connect database
 builder.Services.AddDbContext<RTCContext>(o => o.UseSqlServer(Config.ConnectionString));
+
 builder.Services.AddMvc().AddJsonOptions(opt => opt.JsonSerializerOptions.PropertyNamingPolicy = null);
 
 
@@ -34,13 +42,13 @@ builder.Services.AddCors(options =>
 });
 
 
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<IUserPermissionService, UserPermissionService>();
+
+
 
 // Load JWT settings
 var jwtSection = builder.Configuration.GetSection("JwtSettings");
 builder.Services.Configure<JwtSettings>(jwtSection);
-var jwtSettings = jwtSection.Get<JwtSettings>();
+var jwtSettings = jwtSection.Get<JwtSettings>() ?? new JwtSettings();
 
 builder.Services.AddAuthentication("Bearer")
                 .AddJwtBearer("Bearer", options =>
@@ -66,6 +74,26 @@ builder.Services.AddRouting(options =>
     options.LowercaseUrls = true; // Chuyển tất cả URL thành chữ thường
 });
 
+
+builder.Services.Configure<ModulaConfig>(builder.Configuration.GetSection("ModulaConfig"));
+
+// Nếu bạn muốn inject trực tiếp:
+builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<ModulaConfig>>().Value);
+
+builder.Services.AddSingleton(sp =>
+{
+    var config = sp.GetRequiredService<ModulaConfig>();
+
+    return new PersistentTcpClientService(
+        config.IpAddress,
+        config.Port,
+        connectTimeoutMs: 3000,
+        sendTimeoutMs: 3000,
+        receiveTimeoutMs: 3000,
+        maxReconnectAttempts: 3,
+        reconnectDelayMs: 1000
+    );
+});
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -85,5 +113,17 @@ app.UseMiddleware<DynamicAuthorizationMiddleware>();
 app.MapControllers();
 
 app.UseCors("MyCors");
+
+//Config static file
+app.UseStaticFiles();
+List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();
+foreach (var item in staticFiles)
+{
+    app.UseStaticFiles(new StaticFileOptions()
+    {
+        FileProvider = new PhysicalFileProvider(item.PathFull),
+        RequestPath = new PathString($"/api/{item.PathName.Trim().ToLower()}")
+    });
+}
 
 app.Run();

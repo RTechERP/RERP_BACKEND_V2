@@ -29,6 +29,13 @@ namespace RERPAPI.Middleware
                     return;
                 }
 
+                permissionService.Claims = new Dictionary<string, string>()
+                {
+                    {"ID","1181" },
+                    {"FullName","Lê Thế Anh" },
+                    {"LoginName","ltanh" },
+                };
+
                 foreach (var attr in permissionAttributes)
                 {
                     var hasPermission = await permissionService.HasPermissionAsync(userId, attr.permission);

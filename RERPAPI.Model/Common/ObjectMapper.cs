@@ -35,7 +35,6 @@ namespace RERPAPI.Model.Common
                 throw;
             }
 
-
         }
 
 
