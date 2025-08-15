@@ -1,6 +1,4 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Model.Common;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
@@ -8,19 +6,19 @@ namespace RERPAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ProjectController : ControllerBase
+    public class ProductGroupRTCController : ControllerBase
     {
-        ProjectRepo _projectRepo = new ProjectRepo();
+        ProductGroupRTCRepo _productGroupRTCRepo = new ProductGroupRTCRepo();
         [HttpGet("get-all")]
         public IActionResult GetAll()
         {
             try
             {
-                var projects = _projectRepo.GetAll().OrderByDescending(x => x.ID).ToList(); ;
+                List<ProductGroupRTC> productGroups = _productGroupRTCRepo.GetAll(x => x.WarehouseID == 1 && !x.ProductGroupNo.Contains("DBH") && x.ProductGroupNo != "CCDC");
                 return Ok(new
                 {
                     status = 1,
-                    data = projects
+                    data = productGroups
                 });
             }
             catch (Exception ex)
@@ -32,17 +30,6 @@ namespace RERPAPI.Controllers
                     error = ex.ToString()
                 });
             }
-        }
-
-        [HttpGet("get-by-id")]
-        public IActionResult getByID(int id)
-        {
-            Project p = _projectRepo.GetByID(id);
-            return Ok(new
-            {
-                status = 1,
-                data = p
-            });
         }
     }
 }

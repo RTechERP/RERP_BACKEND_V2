@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using RERPAPI.IRepo;
 using RERPAPI.Model.Context;
 using RERPAPI.Model.Entities;
@@ -52,6 +52,19 @@ namespace RERPAPI.Repo
             catch (Exception ex)
             {
 
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<T> GetByIDAsync(int id)
+        {
+            try
+            {
+                T model = await table.FindAsync(id);
+                return model;
+            }
+            catch (Exception ex)
+            {
                 throw new Exception(ex.ToString());
             }
         }

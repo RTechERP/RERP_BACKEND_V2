@@ -1,26 +1,27 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using System.Data;
 
 namespace RERPAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ProjectController : ControllerBase
+    public class SupplierSaleController : ControllerBase
     {
-        ProjectRepo _projectRepo = new ProjectRepo();
+        SupplierSaleRepo _supplierSaleRepo = new SupplierSaleRepo();
+        #region Lấy tất cả nhà cung cấp
         [HttpGet("get-all")]
         public IActionResult GetAll()
         {
             try
             {
-                var projects = _projectRepo.GetAll().OrderByDescending(x => x.ID).ToList(); ;
+                List<SupplierSale> result = _supplierSaleRepo.GetAll().OrderBy(x => x.ID).ToList();
                 return Ok(new
                 {
                     status = 1,
-                    data = projects
+                    data = result
                 });
             }
             catch (Exception ex)
@@ -33,16 +34,6 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-
-        [HttpGet("get-by-id")]
-        public IActionResult getByID(int id)
-        {
-            Project p = _projectRepo.GetByID(id);
-            return Ok(new
-            {
-                status = 1,
-                data = p
-            });
-        }
+        #endregion
     }
 }

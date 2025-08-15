@@ -1,6 +1,5 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
@@ -8,19 +7,19 @@ namespace RERPAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ProjectController : ControllerBase
+    public class EmployeeApproveController : ControllerBase
     {
-        ProjectRepo _projectRepo = new ProjectRepo();
+        EmployeeApproveRepo _employeeApproveRepo = new EmployeeApproveRepo();
         [HttpGet("get-all")]
         public IActionResult GetAll()
         {
             try
             {
-                var projects = _projectRepo.GetAll().OrderByDescending(x => x.ID).ToList(); ;
+                List<EmployeeApprove> employeeApprovals = _employeeApproveRepo.GetAll();
                 return Ok(new
                 {
                     status = 1,
-                    data = projects
+                    data = employeeApprovals
                 });
             }
             catch (Exception ex)
@@ -32,17 +31,6 @@ namespace RERPAPI.Controllers
                     error = ex.ToString()
                 });
             }
-        }
-
-        [HttpGet("get-by-id")]
-        public IActionResult getByID(int id)
-        {
-            Project p = _projectRepo.GetByID(id);
-            return Ok(new
-            {
-                status = 1,
-                data = p
-            });
         }
     }
 }

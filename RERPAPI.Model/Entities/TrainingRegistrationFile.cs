@@ -3,15 +3,19 @@ using System.Collections.Generic;
 
 namespace RERPAPI.Model.Entities;
 
-public partial class BillImportDetailSerialNumberModulaLocation
+public partial class TrainingRegistrationFile
 {
     public int ID { get; set; }
 
-    public int? BillImportDetailSerialNumberID { get; set; }
+    public int? TrainingRegistrationID { get; set; }
 
-    public int? ModulaLocationDetailID { get; set; }
+    public string? FileName { get; set; }
 
-    public decimal? Quantity { get; set; }
+    public string? OriginPath { get; set; }
+
+    public string? OriginName { get; set; }
+
+    public string? ServerPath { get; set; }
 
     public bool? IsDeleted { get; set; }
 

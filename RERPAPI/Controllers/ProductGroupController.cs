@@ -1,26 +1,28 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using System.Data;
 
 namespace RERPAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ProjectController : ControllerBase
+    public class ProductGroupController : ControllerBase
     {
-        ProjectRepo _projectRepo = new ProjectRepo();
+        ProductGroupRepo _productGroupRepo = new ProductGroupRepo();
+        #region Lấy tất cả nhóm sản phẩm
         [HttpGet("get-all")]
         public IActionResult GetAll()
         {
             try
             {
-                var projects = _projectRepo.GetAll().OrderByDescending(x => x.ID).ToList(); ;
+                List<ProductGroup> productGroups = _productGroupRepo.GetAll(x=>x.IsVisible==true);
+
                 return Ok(new
                 {
                     status = 1,
-                    data = projects
+                    data = productGroups
                 });
             }
             catch (Exception ex)
@@ -33,16 +35,6 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-
-        [HttpGet("get-by-id")]
-        public IActionResult getByID(int id)
-        {
-            Project p = _projectRepo.GetByID(id);
-            return Ok(new
-            {
-                status = 1,
-                data = p
-            });
-        }
+        #endregion
     }
 }
