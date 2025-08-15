@@ -59,7 +59,7 @@ namespace RERPAPI.Controllers.ProjectManager
                         model.ApprovedUrgentID = globalEmployeeId;
                         model.UpdatedBy = loginName;
                         model.UpdatedDate = DateTime.Now;
-                        projectSurveyRepo.UpdateAsync(model);
+                        await projectSurveyRepo.UpdateAsync(model);
                     }
                 }
 
@@ -85,7 +85,7 @@ namespace RERPAPI.Controllers.ProjectManager
                 model.UpdatedBy = updatedBy;
                 model.UpdatedDate = DateTime.Now;
                 model.SurveySession = surveySession;
-                projectSurveyDetailRepo.UpdateAsync(model);
+                await projectSurveyDetailRepo.UpdateAsync(model);
 
                 return Ok(ApiResponseFactory.Success(1
                     , ""));
@@ -154,7 +154,7 @@ namespace RERPAPI.Controllers.ProjectManager
                 ProjectSurvey model = projectSurveyDTO.projectSurvey;
                 if (projectSurveyDTO.projectSurvey.ID > 0)
                 {
-                    projectSurveyRepo.UpdateFieldsByID(projectSurveyDTO.projectSurvey.ID, model);
+                    await projectSurveyRepo.UpdateAsync(model);
                 }
                 else
                 {
@@ -170,11 +170,11 @@ namespace RERPAPI.Controllers.ProjectManager
                         modelDetail.ProjectSurveyID = model.ID;
                         if (item.ID > 0)
                         {
-                            projectSurveyDetailRepo.UpdateFieldsByID(item.ID, modelDetail);
+                            await projectSurveyDetailRepo.UpdateAsync(modelDetail);
                         }
                         else
                         {
-                            projectSurveyDetailRepo.Create(modelDetail);
+                            await projectSurveyDetailRepo.CreateAsync(modelDetail);
                         }
                     }
                 }
@@ -311,7 +311,7 @@ namespace RERPAPI.Controllers.ProjectManager
                 model.IsDeleted = true;
                 model.UpdatedBy = ""; // Chưa có tên người đăng nhập
                 model.UpdatedDate = DateTime.Now;
-                projectSurveyRepo.UpdateFieldsByID(projectSurveyId, model);
+                await projectSurveyRepo.UpdateAsync( model);
 
                 return Ok(ApiResponseFactory.Success(1, ""));
             }
@@ -416,7 +416,7 @@ namespace RERPAPI.Controllers.ProjectManager
             {
                 ProjectSurveyDetail modelDetail = projectSurveyDetailRepo.GetByID(projectSurveyDetailId);
                 modelDetail.Result = result;
-                projectSurveyDetailRepo.UpdateFieldsByID(projectSurveyDetailId, modelDetail);
+                await projectSurveyDetailRepo.UpdateAsync(modelDetail);
 
                 // Upload file
                 // nhớ sửa lại đường dẫn này

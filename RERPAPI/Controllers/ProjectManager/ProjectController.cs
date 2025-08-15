@@ -1415,7 +1415,7 @@ namespace RERPAPI.Controllers.ProjectManager
                     prjTypeLink.ProjectTypeID = item.ID;
                     prjTypeLink.Selected = item.Selected;
 
-                    if (prjTypeLink.ID > 0) projectTypeLinkRepo.UpdateFieldsByID(projectTypeLinkID, prjTypeLink);
+                    if (prjTypeLink.ID > 0) projectTypeLinkRepo.Update(prjTypeLink);
                     else projectTypeLinkRepo.CreateAsync(prjTypeLink);
                 }
 
@@ -1639,7 +1639,7 @@ namespace RERPAPI.Controllers.ProjectManager
 
                 if (projectPriority.ID > 0)
                 {
-                    projectPriorityRepo.UpdateFieldsByID(projectPriority.ID, model);
+                    projectPriorityRepo.Update(model);
                 }
                 else
                 {
@@ -1693,7 +1693,7 @@ namespace RERPAPI.Controllers.ProjectManager
 
                         if (model.ID > 0)
                         {
-                            projectStatusDetailRepo.UpdateFieldsByID(model.ID, model);
+                            projectStatusDetailRepo.Update(model);
                         }
                         else
                         {
@@ -1769,11 +1769,11 @@ namespace RERPAPI.Controllers.ProjectManager
                         model.Priotity = projectPersonalPriotity.Priotity;
                         if (model.ID > 0)
                         {
-                            projectPersonalPriotityRepo.UpdateFieldsByID(prjPersonal.ID, model);
+                           await  projectPersonalPriotityRepo.UpdateAsync(model);
                         }
                         else
                         {
-                            projectPersonalPriotityRepo.Create(model);
+                            await projectPersonalPriotityRepo.CreateAsync(model);
                         }
                     }
                 }
@@ -1808,7 +1808,7 @@ namespace RERPAPI.Controllers.ProjectManager
                     model.ProjectID = projectPersonalPriotity.ProjectIDNew;
                     model.UpdatedDate = DateTime.Now;
                     model.UpdatedBy = "";
-                    dailyReportTechnicalRepo.UpdateFieldsByID(id, model);
+                    await dailyReportTechnicalRepo.UpdateAsync(model);
                 }
 
                 return Ok(new
@@ -1849,11 +1849,11 @@ namespace RERPAPI.Controllers.ProjectManager
 
                     if (id > 0)
                     {
-                        projectEmployeeRepo.UpdateFieldsByID(id, model);
+                        await projectEmployeeRepo.UpdateAsync(model);
                     }
                     else
                     {
-                        projectEmployeeRepo.CreateAsync(model);
+                        await projectEmployeeRepo.CreateAsync(model);
                     }
 
                     if (model.ReceiverID > 0)
@@ -1874,7 +1874,7 @@ namespace RERPAPI.Controllers.ProjectManager
                             prjEm.ReceiverID = 0;
                             prjEm.IsLeader = false;
                             prjEm.IsDeleted = false;
-                            projectEmployeeRepo.CreateAsync(prjEm);
+                            await projectEmployeeRepo.CreateAsync(prjEm);
                         }
                     }
                 }
@@ -1885,7 +1885,7 @@ namespace RERPAPI.Controllers.ProjectManager
                     {
                         ProjectEmployee model = projectEmployeeRepo.GetByID(id);
                         model.IsDeleted = true;
-                        projectEmployeeRepo.UpdateFieldsByID(id, model);
+                        await projectEmployeeRepo.UpdateAsync(model);
                     }
                 }
 
