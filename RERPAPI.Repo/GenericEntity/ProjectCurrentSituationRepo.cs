@@ -5,12 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RERPAPI.Model.DTO
+namespace RERPAPI.Repo.GenericEntity
 {
-    public class EmployeeDTO:Employee
+    public class ProjectCurrentSituationRepo : GenericRepo<ProjectCurrentSituation>
     {
-        public string DepartmentName { get; set; }
-        public string ChucVu { get; set; }
     }
 }
-    

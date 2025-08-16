@@ -130,4 +130,12 @@ public partial class ProjectPartlistPurchaseRequest
     public DateTime? DateReturnEstimated { get; set; }
 
     public int? EmployeeApproveID { get; set; }
+
+    public string? NoteHR { get; set; }
+
+    public string? UnitName { get; set; }
+
+    public string? Maker { get; set; }
+
+    public int? ProjectPartlistPurchaseRequestTypeID { get; set; }
 }

@@ -117,10 +117,10 @@ namespace RERPAPI.Model.Common
                                     IDictionary<string, object> expando = new ExpandoObject();
                                     foreach (DataColumn col in table.Columns)
                                     {
-                                        expando[col.ColumnName] = row[col] == DBNull.Value ? null : row[col];
+                                        expando[col.ColumnName] = row[col] == DBNull.Value ? null: row[col];
                                     }
                                     dynamicList.Add(expando);
-                                }
+                                } 
 
                                 resultLists.Add(dynamicList);
                             }
@@ -132,13 +132,64 @@ namespace RERPAPI.Model.Common
             }
             catch (Exception ex)
             {
-                return resultLists;
+                //return resultLists;
                 throw new Exception(ex.Message);
             }
         }
 
+        //public static List<List<dynamic>> ProcedureToList(string procedureName, string[] paramName, object[] paramValue)
+        //{
+        //    var resultLists = new List<List<dynamic>>();
 
-        public static List<dynamic> GetListData(List<List<dynamic>> dynamics,int tableIndex)
+        //    try
+        //    {
+        //        using (var conn = new SqlConnection(connectionString))
+        //        using (var cmd = new SqlCommand(procedureName, conn))
+        //        {
+        //            cmd.CommandType = CommandType.StoredProcedure;
+        //            cmd.CommandTimeout = commandTimeout;
+
+        //            if (paramName != null)
+        //            {
+        //                for (int i = 0; i < paramName.Length; i++)
+        //                    cmd.Parameters.AddWithValue(paramName[i], paramValue[i] ?? DBNull.Value);
+        //            }
+
+        //            conn.Open();
+        //            using (var reader = cmd.ExecuteReader())
+        //            {
+        //                do
+        //                {
+        //                    if (!reader.HasRows)
+        //                        continue;
+
+        //                    var table = new List<dynamic>();
+        //                    while (reader.Read())
+        //                    {
+        //                        IDictionary<string, object> row = new ExpandoObject();
+        //                        for (int i = 0; i < reader.FieldCount; i++)
+        //                            row[reader.GetName(i)] = reader.IsDBNull(i) ? null : reader.GetValue(i);
+
+        //                        table.Add(row);
+        //                    }
+
+        //                    resultLists.Add(table);
+        //                }
+        //                while (reader.NextResult());
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw new Exception("Error executing stored procedure: " + ex.Message, ex);
+        //    }
+
+        //    return resultLists;
+        //}
+
+
+
+        public static List<dynamic> GetListData(List<List<dynamic>> dynamics, int tableIndex)
         {
             List<dynamic> list = new List<dynamic>();
             try

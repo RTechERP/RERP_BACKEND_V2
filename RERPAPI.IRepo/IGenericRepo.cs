@@ -9,13 +9,13 @@ namespace RERPAPI.IRepo
 {
     public interface IGenericRepo<T> where T : class
     {
-        List<T> GetAll(Expression<Func<T, bool>> predicate );
+        List<T> GetAll(Expression<Func<T, bool>> predicate = null);
         T GetByID(int id);
 
         int Create(T item);
         int CreateRange(List<T> items);
         int Update(T item);
-        int Delete(long id);
+        int Delete(int id);
         int DeleteRange(List<T> items);
 
         Task<int> CreateAsync(T item);
@@ -24,6 +24,6 @@ namespace RERPAPI.IRepo
         Task<int> DeleteAsync(int id);
         Task<int> DeleteRangeAsync(List<T> items);
 
-        int UpdateFieldsByID(int ID, T item);
+        //void SetClaim(Dictionary<string, string> claim);
     }
 }
