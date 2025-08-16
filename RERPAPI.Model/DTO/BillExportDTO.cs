@@ -9,7 +9,8 @@ namespace RERPAPI.Model.DTO
 {
     public class BillExportDTO
     {
-        public BillExport billExport { get; set; }
-        public List<BillExportDetailDTO> billExportDetail { get; set; }
+        public BillExport? billExport { get; set; }
+        public List<BillExportDetail>? billExportDetail { get; set; }
+        public List<int>? DeletedDetailIDs { get; set; }
     }
 }

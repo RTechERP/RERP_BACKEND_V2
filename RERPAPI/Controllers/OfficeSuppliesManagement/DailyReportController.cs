@@ -27,20 +27,15 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
         {
             try
             {
-                List<DailyReportTechcnicalDTO> result = SQLHelper<DailyReportTechcnicalDTO>.ProcedureToList(
+                List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
                  "spGetDailyReportTechnical",
                    new string[] { "@DateStart", "@DateEnd", "UserID", "@Keyword", "@DepartmentID" },
                      new object[] { filter.dateStart, filter.dateEnd, filter.userID, filter.keyword, filter.departmenID }
-
-
              );
-
-                var sortedResult = result.OrderBy(x => x.DateReport).ToList();
-
                 return Ok(new
                 {
                     status = 1,
-                    data = sortedResult
+                    data = result
                 });
             }
             catch (Exception ex)
@@ -66,15 +61,16 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
         {
             try
             {
-                List<DailyReportHRDTO> result = SQLHelper<DailyReportHRDTO>.ProcedureToList(
+                List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
                     "spGetDailyReportHR",
                     new string[] { "@DateStart", "@DateEnd", "@Keyword", "@EmployeeID" },
                     new object[] { filter.dateStart, filter.dateEnd, filter.keyword, filter.employeeID }
                 );
 
-                var dataFilm = result.Where(x => x.ChucVuHDID == 7 || x.ChucVuHDID == 72).ToList();
-                var dataDriver = result.Where(x => x.ChucVuHDID == 6).ToList();
+                var flatResult = result.FirstOrDefault() ?? new List<dynamic>();
 
+                var dataFilm = flatResult.Where(x => x.ChucVuHDID == 7 || x.ChucVuHDID == 72).ToList();
+                var dataDriver = flatResult.Where(x => x.ChucVuHDID == 6).ToList();
                 return Ok(new
                 {
                     status = 1,
@@ -99,7 +95,7 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
         {
             try
             {
-                List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToDynamicLists(
+                List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
                 "spGetUserProjectItem",
                         new string[] { "@DepartmentID", "@ProjectID" },
                        new object[] { departmentID, projectID }

@@ -27,7 +27,7 @@ namespace RERPAPI.Controllers
                 Menu menu = _menuRepo.GetByID(parentid);
                 var menus = ObjectMapper.MapTo<MenuDTO>(menu);
                 menus.MenuChilds = _menuRepo.GetAll(x => x.ParentID == menu.ID);
-                return Ok(ApiResponseFactory.Success(menus,""));
+                return Ok(ApiResponseFactory.Success(menus, ""));
             }
             catch (Exception ex)
             {
@@ -48,7 +48,7 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex,ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 

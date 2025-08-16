@@ -52,7 +52,7 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
         {
             try
             {
-                List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToDynamicLists(
+                List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
                     "spGetOfficeSupplyRequests",
                     new string[] { "@KeyWord", "@MonthInput", "@EmployeeID", "@DepartmentID" },
                    new object[] { keyword, monthInput, employeeID, departmentID }  // đảm bảo không null
@@ -86,7 +86,7 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
         {
             try
             {
-                List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToDynamicLists(
+                List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
                         "spGetOfficeSupplyRequestsDetail",
                         new string[] { "@OfficeSupplyRequestsID" },
                        new object[] { officeSupplyRequestsID }
@@ -263,7 +263,7 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
                 DateTime dateStart = new DateTime(filter.year, filter.month, 1, 0, 0, 0);
                 DateTime dateEnd = dateStart.AddMonths(1).AddSeconds(-1);
 
-                List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToDynamicLists(
+                List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
                     "spGetOfficeSupplyRequestSummary",
                     new string[] { "@DateStart", "@DateEnd", "@Keyword", "@DepartmentID" },
                     new object[] { dateStart, dateEnd, filter.keyword, filter.departmentId }

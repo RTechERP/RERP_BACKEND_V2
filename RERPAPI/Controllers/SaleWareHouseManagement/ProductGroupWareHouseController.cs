@@ -16,7 +16,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
         {
             try
             {
-                List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToDynamicLists(
+                List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
                     "spGetProductGroupWarehouse",
                     new string[] { "@WarehouseID", "@ProductGroupID" },
                     new object[] { warehouseID ?? 0, productgroupID ?? 0 }

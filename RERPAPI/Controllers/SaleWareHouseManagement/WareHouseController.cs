@@ -9,13 +9,13 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
     [ApiController]
     public class WareHouseController : ControllerBase
     {
-        WareHouseRepo warehouseRepo = new WareHouseRepo();
+        WareHouseRepo _warehouseRepo = new WareHouseRepo();
         [HttpGet("")]
         public IActionResult getDataWH()
         {
             try
             {
-                List<Warehouse> warehouse = warehouseRepo.GetAll();
+                List<Warehouse> warehouse = _warehouseRepo.GetAll();
                 return Ok(new
                 {
                     status = 1,

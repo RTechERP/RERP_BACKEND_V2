@@ -21,7 +21,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
         ProductGroupRepo _productgroupRepo = new ProductGroupRepo();
         ProductsSaleRepo _productsaleRepo = new ProductsSaleRepo();
         InventoryRepo _inventoryRepo = new InventoryRepo();
-
+        FirmRepo _firmRepo = new FirmRepo();
         //api ngày 12/06/2025
 
         #region hàm lấy dữ liệu vật tư theo id, tên
@@ -35,7 +35,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                 {
                     filter.id = 0;
                 }
-                List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToDynamicLists(
+                List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
                        "usp_LoadProductsale", new string[] { "@id", "@Find", "@IsDeleted" },
                     new object[] { filter.id, filter.find ?? "", false }
                    );
@@ -155,10 +155,19 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                         {
                             dto.ProductSale.ProductNewCode = GenerateProductNewCode((int)dto.ProductSale.ProductGroupID);
                         }
-
-                        int newId = await _productsaleRepo.CreateAsync(dto.ProductSale);
+                        dto.ProductSale.Import = dto.ProductSale.Export = dto.ProductSale.NumberInStoreCuoiKy = dto.ProductSale.NumberInStoreDauky;
+                        dto.ProductSale.SupplierName = "";
+                        dto.ProductSale.ItemType = "";
+                        int newId = await _productsaleRepo.CreateAsynC(dto.ProductSale);
                         dto.Inventory.ProductSaleID = newId;
                         dto.Inventory.WarehouseID = 1;
+                        dto.Inventory.Export = 0;
+                        dto.Inventory.Import = 0;
+                        dto.Inventory.TotalQuantityFirst = 0;
+                        dto.Inventory.TotalQuantityLast = 0;
+                        dto.Inventory.MinQuantity = 0;
+                        dto.Inventory.IsStock = false;
+
                         await _inventoryRepo.CreateAsync(dto.Inventory);
                     }
                     else

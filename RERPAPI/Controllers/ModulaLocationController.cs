@@ -26,16 +26,12 @@ namespace RERPAPI.Controllers
         {
             try
             {
-<<<<<<< HEAD
-                List<ModulaLocation> listLocations = locationRepo.GetAll().Where(x=>x.IsDeleted == false).ToList();
-                List<List<dynamic>> locationdetails = SQLHelper<object>.ProcedureToDynamicLists("spGetModulaLocationDetail", new string[] { }, new object[] { });
-=======
+
                 keyword = keyword ?? "";
                 List<ModulaLocation> listLocations = locationRepo.GetAll().Where(x => x.IsDeleted == false)
                                                                           .OrderBy(x => x.STT)
                                                                           .ToList();
                 List<List<dynamic>> locationdetails = SQLHelper<object>.ProcedureToList("spGetModulaLocationDetail", new string[] { "@Keyword" }, new object[] { keyword.Trim() });
->>>>>>> origin/master
                 var details = SQLHelper<object>.GetListData(locationdetails, 0);
 
                 List<ModulaLocationDTO> locations = new List<ModulaLocationDTO>();
@@ -85,13 +81,10 @@ namespace RERPAPI.Controllers
             try
             {
 
-<<<<<<< HEAD
-                List<List<dynamic>> data = SQLHelper<object>.ProcedureToDynamicLists("spGetProductImportExport",
-=======
+
                 billtype = billtype ?? 0;
                 billcode = billcode ?? "";
                 List<List<dynamic>> data = SQLHelper<object>.ProcedureToList("spGetProductImportExport",
->>>>>>> origin/master
                                                                 new string[] { "@BillType", "@BillCode" },
                                                                 new object[] { billtype, billcode });
 
@@ -126,7 +119,7 @@ namespace RERPAPI.Controllers
             try
             {
 
-                List<List<dynamic>> locations = SQLHelper<object>.ProcedureToDynamicLists("spGetModulaLocationDetailByID",
+                List<List<dynamic>> locations = SQLHelper<object>.ProcedureToList("spGetModulaLocationDetailByID",
                                                                 new string[] { "@ID" },
                                                                 new object[] { id });
                 return Ok(new

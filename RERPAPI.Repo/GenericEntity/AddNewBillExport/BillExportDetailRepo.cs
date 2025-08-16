@@ -1,4 +1,6 @@
-﻿using RERPAPI.Model.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using RERPAPI.Model.Context;
+using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,5 +11,12 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
 {
     public class BillExportDetailRepo: GenericRepo<BillExportDetail>
     {
+        RTCContext _context= new RTCContext();
+        public async Task<int> CreateAsynC(BillExportDetail item)
+        {
+            await _context.BillExportDetails.AddAsync(item);
+            await _context.SaveChangesAsync();
+            return item.ID;
+        }
     }
 }

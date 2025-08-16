@@ -72,4 +72,7 @@ public partial class BillImportDetail
     public int? InventoryProjectID { get; set; }
 
     public DateTime? DateSomeBill { get; set; }
+
+    //TN.binh update 01/08/25
+    public bool? isDeleted { get; set;}
 }

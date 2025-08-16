@@ -14,12 +14,25 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
         ProductGroupWareHouseRepo _productgroupwarehouseRepo = new ProductGroupWareHouseRepo();
 
         [HttpGet("")]
-        public IActionResult getProductGroup(bool isvisible = true)
+        public IActionResult getProductGroup(bool isvisible = true, string warehousecode="")
         {
             try
             {
-                //update isvible ngày 13/06/2025
-                List<ProductGroup> data = _productgroupRepo.GetAll().Where(p => p.IsVisible == isvisible || !isvisible).ToList();
+                //update 17/07/25 them truong hop warehousecode=HCM
+                List<ProductGroup> data;
+                List<int> excludedIds = new List<int> { 73, 74, 75, 76, 77 };
+
+                if (warehousecode == "HN")
+                {
+                    //update isvible ngày 13/06/2025
+                    data = _productgroupRepo.GetAll().Where(p => p.IsVisible == isvisible || !isvisible).ToList();
+                }
+                else
+                {
+                    //update 17/07/25 them truong hop warehousecode=HCM
+                    data = _productgroupRepo.GetAll().Where(p => (p.IsVisible == isvisible || !isvisible) && !excludedIds.Contains(p.ID)).ToList();
+                }
+               
                 return Ok(new
                 {
                     status = 1,
@@ -67,7 +80,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             {
                 if (dto.Productgroup.ID <= 0)
                 {
-                    int newId = await _productgroupRepo.CreateAsync(dto.Productgroup);
+                    int newId = await _productgroupRepo.CreateAsynC(dto.Productgroup);
                     dto.ProductgroupWarehouse.ProductGroupID = newId;
                     await _productgroupwarehouseRepo.CreateAsync(dto.ProductgroupWarehouse);
                 }

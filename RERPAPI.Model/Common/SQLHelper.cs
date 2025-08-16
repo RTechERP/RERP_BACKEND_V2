@@ -46,7 +46,116 @@ namespace RERPAPI.Model.Common
 
             return model;
         }
-        public static List<T> FindAll()
+        //public static List<T> ProcedureToList(string procedureName, string[] paramName, object[] paramValue)
+        //{
+        //    List<T> lst = new List<T>();
+        //    SqlConnection mySqlConnection = new SqlConnection(connectionString);
+        //    SqlParameter sqlParam;
+        //    mySqlConnection.Open();
+
+        //    try
+        //    {
+        //        SqlCommand mySqlCommand = new SqlCommand(procedureName, mySqlConnection);
+        //        mySqlCommand.CommandType = CommandType.StoredProcedure;
+        //        mySqlCommand.CommandTimeout = commandTimeout;
+        //        if (paramName != null)
+        //        {
+        //            for (int i = 0; i < paramName.Length; i++)
+        //            {
+        //                sqlParam = new SqlParameter(paramName[i], paramValue[i]);
+        //                mySqlCommand.Parameters.Add(sqlParam);
+        //            }
+        //        }
+        //        SqlDataReader reader = mySqlCommand.ExecuteReader();
+        //        lst = reader.MapToList<T>();
+        //    }
+        //    catch (SqlException e)
+        //    {
+        //        throw new Exception(e.ToString());
+        //    }
+        //    finally
+        //    {
+        //        mySqlConnection.Close();
+        //    }
+
+        //    return lst;
+        //}
+
+
+        //TN.Bình update 01/08/25
+        public static void ExcuteProcedure(string storeProcedureName, string[] paramName, object[] paramValue)
+        {
+            SqlConnection cn = new SqlConnection(connectionString);
+            try
+            {
+                cn = new SqlConnection(connectionString);
+                SqlCommand cmd = new SqlCommand(storeProcedureName, cn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandTimeout = 0;
+                SqlParameter sqlParam;
+                cn.Open();
+                if (paramName != null)
+                {
+                    for (int i = 0; i < paramName.Length; i++)
+                    {
+                        sqlParam = new SqlParameter(paramName[i], paramValue[i]);
+                        cmd.Parameters.Add(sqlParam);
+                    }
+                }
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+            finally
+            {
+                cn.Close();
+            }
+
+        }
+
+        public static object ExcuteScalar(string procedureName, string[] paramName, object[] paramValue)
+        {
+            object value = null;
+            SqlConnection mySqlConnection = new SqlConnection(connectionString);
+            try
+            {
+
+                SqlParameter sqlParam;
+                mySqlConnection.Open();
+
+                SqlCommand mySqlCommand = new SqlCommand(procedureName, mySqlConnection);
+                mySqlCommand.CommandType = CommandType.StoredProcedure;
+                SqlDataAdapter mySqlDataAdapter = new SqlDataAdapter(mySqlCommand);
+
+                if (paramName != null)
+                {
+                    for (int i = 0; i < paramName.Length; i++)
+                    {
+                        sqlParam = new SqlParameter(paramName[i], paramValue[i]);
+                        mySqlCommand.Parameters.Add(sqlParam);
+                    }
+                }
+
+                value = mySqlCommand.ExecuteScalar();
+            }
+            catch (SqlException ex)
+            {
+                throw new Exception(ex.Message);
+            }
+            finally
+            {
+                mySqlConnection.Close();
+            }
+
+            return value;
+        }
+
+
+        //end update
+
+        public static List<T> FindByAttribute(string fieldName, object fieldValue)
         {
             SqlConnection conn = new SqlConnection(connectionString);
             List<T> lst = new List<T>();
@@ -55,9 +164,9 @@ namespace RERPAPI.Model.Common
             string tableName = type.Name.StartsWith("Model") ? type.Name : type.Name.Replace("Model", "");
             try
             {
-                string sql = string.Format("SELECT * FROM [{0}] with (nolock)", tableName);
+                string sql = $"SELECT * FROM {tableName} with (nolock)  WHERE {fieldName} = {fieldValue}";
                 SqlCommand cmd = new SqlCommand(sql, conn);
-                cmd.CommandTimeout = 2000;
+                cmd.CommandTimeout = commandTimeout;
                 cmd.CommandType = CommandType.Text;
                 conn.Open();
                 SqlDataReader reader = cmd.ExecuteReader();
@@ -74,43 +183,7 @@ namespace RERPAPI.Model.Common
 
             return lst;
         }
-        public static List<T> ProcedureToList(string procedureName, string[] paramName, object[] paramValue)
-        {
-            List<T> lst = new List<T>();
-            SqlConnection mySqlConnection = new SqlConnection(connectionString);
-            SqlParameter sqlParam;
-            mySqlConnection.Open();
-
-            try
-            {
-                SqlCommand mySqlCommand = new SqlCommand(procedureName, mySqlConnection);
-                mySqlCommand.CommandType = CommandType.StoredProcedure;
-                mySqlCommand.CommandTimeout = commandTimeout;
-                if (paramName != null)
-                {
-                    for (int i = 0; i < paramName.Length; i++)
-                    {
-                        sqlParam = new SqlParameter(paramName[i], paramValue[i]);
-                        mySqlCommand.Parameters.Add(sqlParam);
-                    }
-                }
-                SqlDataReader reader = mySqlCommand.ExecuteReader();
-                lst = reader.MapToList<T>();
-            }
-            catch (SqlException e)
-            {
-                throw new Exception(e.ToString());
-            }
-            finally
-            {
-                mySqlConnection.Close();
-            }
-
-            return lst;
-        }
-
-
-        public static List<List<dynamic>> ProcedureToDynamicLists(string procedureName, string[] paramName, object[] paramValue)
+        public static List<List<dynamic>> ProcedureToList(string procedureName, string[] paramName, object[] paramValue)
         {
             List<List<dynamic>> resultLists = new List<List<dynamic>>();
 
@@ -145,10 +218,10 @@ namespace RERPAPI.Model.Common
                                     IDictionary<string, object> expando = new ExpandoObject();
                                     foreach (DataColumn col in table.Columns)
                                     {
-                                        expando[col.ColumnName] = row[col] == DBNull.Value ? null: row[col];
+                                        expando[col.ColumnName] = row[col] == DBNull.Value ? null : row[col];
                                     }
                                     dynamicList.Add(expando);
-                                } 
+                                }
 
                                 resultLists.Add(dynamicList);
                             }
@@ -166,6 +239,68 @@ namespace RERPAPI.Model.Common
         }
 
 
+        public static List<T> FindAll()
+        {
+            SqlConnection conn = new SqlConnection(connectionString);
+            List<T> lst = new List<T>();
+            T model = new T();
+            Type type = model.GetType();
+            string tableName = type.Name.StartsWith("Model") ? type.Name : type.Name.Replace("Model", "");
+            try
+            {
+                string sql = string.Format("SELECT * FROM [{0}] with (nolock)", tableName);
+                SqlCommand cmd = new SqlCommand(sql, conn);
+                cmd.CommandTimeout = 2000;
+                cmd.CommandType = CommandType.Text;
+                conn.Open();
+                SqlDataReader reader = cmd.ExecuteReader();
+                lst = reader.MapToList<T>();
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.ToString());
+            }
+            finally
+            {
+                conn.Close();
+            }
+
+            return lst;
+        }
+     /*   public static List<T> ProcedureToList(string procedureName, string[] paramName, object[] paramValue)
+        {
+            List<T> lst = new List<T>();
+            SqlConnection mySqlConnection = new SqlConnection(connectionString);
+            SqlParameter sqlParam;
+            mySqlConnection.Open();
+
+            try
+            {
+                SqlCommand mySqlCommand = new SqlCommand(procedureName, mySqlConnection);
+                mySqlCommand.CommandType = CommandType.StoredProcedure;
+                mySqlCommand.CommandTimeout = commandTimeout;
+                if (paramName != null)
+                {
+                    for (int i = 0; i < paramName.Length; i++)
+                    {
+                        sqlParam = new SqlParameter(paramName[i], paramValue[i]);
+                        mySqlCommand.Parameters.Add(sqlParam);
+                    }
+                }
+                SqlDataReader reader = mySqlCommand.ExecuteReader();
+                lst = reader.MapToList<T>();
+            }
+            catch (SqlException e)
+            {
+                throw new Exception(e.ToString());
+            }
+            finally
+            {
+                mySqlConnection.Close();
+            }
+
+            return lst;
+        }*/
         public static List<dynamic> GetListData(List<List<dynamic>> dynamics, int tableIndex)
         {
             List<dynamic> list = new List<dynamic>();

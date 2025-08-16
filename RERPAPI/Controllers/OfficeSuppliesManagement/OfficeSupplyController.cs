@@ -25,20 +25,20 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
         {
             try
             {
-                List<OfficeSupplyDTO> result = SQLHelper<OfficeSupplyDTO>.ProcedureToList(
+                List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
               "spGetOfficeSupply",
               new string[] { "@KeyWord" },
              new object[] { keyword ?? "" }  // đảm bảo không null
           );
-                var data = result.Where(x => x.IsDeleted == false).ToList();
+              
                 var nextCode = _officesupplyRepo.GetNextCodeRTC();
-
+                List<dynamic> rs = result[0];
                 return Ok(new
                 {
                     status = 1,
                     data = new
                     {
-                        officeSupply = data,
+                        officeSupply = rs,
                         nextCode,
                     }
 

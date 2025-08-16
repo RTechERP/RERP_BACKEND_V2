@@ -83,7 +83,7 @@ namespace RERPAPI.Repo
             }
         }
 
-        public int Update(T item)
+        /*public int Update(T item)
         {
             try
             {
@@ -96,7 +96,76 @@ namespace RERPAPI.Repo
 
                 throw new Exception(ex.ToString());
             }
+        }*/
+
+        public int Update(T item)
+        {
+            //try
+            //{
+            //    table.Attach(item);
+            //    db.Entry(item).State = EntityState.Modified;
+            //    return db.SaveChanges();
+            //}
+            //catch (Exception ex)
+            //{
+
+            //    throw new Exception(ex.ToString());
+            //}
+
+            try
+            {
+                var fieldValues = new Dictionary<string, object>();
+                int id = 0;
+                var propid = typeof(T).GetProperty("ID");
+                if (propid != null) id = Convert.ToInt32(propid.GetValue(item));
+
+                var properties = typeof(T).GetProperties();
+                foreach (var prop in properties)
+                {
+                    // Bỏ qua thuộc tính ID hoặc các thuộc tính không cần cập nhật
+                    if (prop.Name != "ID" && prop.CanRead)
+                    {
+                        var value = prop.GetValue(item);
+                        if (value != null) // Chỉ thêm nếu giá trị không null
+                        {
+                            fieldValues.Add(prop.Name, value);
+                        }
+                    }
+                }
+
+                // Tìm entity theo ID
+                var entity = db.Set<T>().Find(id);
+                if (entity == null)
+                {
+                    throw new Exception($"Entity with ID {id} not found.");
+                }
+
+                // Lấy type của entity
+                Type type = typeof(T);
+
+                // Cập nhật các trường động
+                foreach (var field in fieldValues)
+                {
+                    // Kiểm tra thuộc tính
+                    var property = type.GetProperty(field.Key);
+                    if (property == null || !property.CanWrite)
+                    {
+                        throw new Exception($"Property {field.Key} not found or is not writable.");
+                    }
+
+                    // Gán giá trị cho thuộc tính (xử lý null)
+                    property.SetValue(entity, field.Value == null ? null : field.Value);
+                }
+
+                // Lưu thay đổi vào cơ sở dữ liệu
+                return db.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error updating entity: {ex.Message}", ex);
+            }
         }
+
 
         public int Delete(int id)
         {
@@ -197,6 +266,53 @@ namespace RERPAPI.Repo
                 throw new Exception(ex.ToString());
             }
         }
+        public async Task<int> DeleteByAttributeAsync(string propertyName, object value)
+        {
+            try
+            {
+                // Tạo tham số x
+                var parameter = Expression.Parameter(typeof(T), "x");
+                var property = Expression.Property(parameter, propertyName);
+
+                // Ép kiểu value về đúng kiểu của property (xử lý nullable)
+                var propertyType = property.Type;
+                if (propertyType.IsGenericType && propertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                {
+                    // Nullable<T> → ép sang kiểu T?
+                    var underlyingType = Nullable.GetUnderlyingType(propertyType);
+                    value = value == null ? null : Convert.ChangeType(value, underlyingType);
+                }
+                else
+                {
+                    // Kiểu thường
+                    value = Convert.ChangeType(value, propertyType);
+                }
+
+                var constant = Expression.Constant(value, propertyType);
+
+                // x => x.PropertyName == value
+                var equal = Expression.Equal(property, constant);
+                var lambda = Expression.Lambda<Func<T, bool>>(equal, parameter);
+
+                // Lấy bản ghi đầu tiên thỏa điều kiện
+                var entityToDelete = await table.FirstOrDefaultAsync(lambda);
+
+                if (entityToDelete == null)
+                {
+                    return 0; // Không có bản ghi nào cần xóa
+                }
+
+                // Xóa và lưu
+                table.Remove(entityToDelete);
+                return await db.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error deleting by attribute: {ex.Message}", ex);
+            }
+        }
+
+
 
         public int UpdateFieldsByID(int ID, T item)
         {
