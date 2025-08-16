@@ -10,7 +10,9 @@ public partial class RTCContext : DbContext
     public RTCContext(DbContextOptions<RTCContext> options)
         : base(options)
     {
-    }           
+    }
+    public virtual DbSet<Category> Categories { get; set; }
+    public virtual DbSet<Product> Products { get; set; }
     public virtual DbSet<TSAssetManagementPersonal> TSAssetManagementPersonal { get; set; }
     public virtual DbSet<TSTypeAssetPersonal> TSTypeAssetPersonal { get; set; }
     public virtual DbSet<TSAllocationAssetPersonal> TSAllocationAssetPersonal { get; set; }

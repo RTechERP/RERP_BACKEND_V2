@@ -2,13 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Common;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
-using System;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using Microsoft.EntityFrameworkCore;
-using RERPAPI.Model.Context;
-using Microsoft.AspNetCore.Http.HttpResults;
-using System.Collections.Generic;
 using RERPAPI.Model.Param;
 using RERPAPI.Model.DTO.Asset;
 using RERPAPI.Repo.GenericEntity.Asset;

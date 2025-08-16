@@ -28,18 +28,22 @@ namespace RERPAPI.Model.Context
                 var type = item.Entity.GetType();
 
                 var createdBy = type.GetProperty("CreatedBy");
+                var createDate = type.GetProperty("CreateDate");
                 var createdDate = type.GetProperty("CreatedDate");
                 var updatedBy = type.GetProperty("UpdatedBy");
                 var updatedDate = type.GetProperty("UpdatedDate");
                 var isDeleted = type.GetProperty("IsDeleted");
+                var isDelete = type.GetProperty("IsDelete");
 
                 if (item.State == EntityState.Added) //Thêm mới
                 {
                     if (createdBy != null && createdBy.CanWrite) createdBy.SetValue(item.Entity, "Admin");
                     if (createdDate != null && createdDate.CanWrite) createdDate.SetValue(item.Entity, DateTime.Now);
+                    if (createDate != null && createDate.CanWrite) createDate.SetValue(item.Entity, DateTime.Now);
                     if (updatedBy != null && updatedBy.CanWrite) updatedBy.SetValue(item.Entity, "Xuân Lửng");
                     if (updatedDate != null && updatedDate.CanWrite) updatedDate.SetValue(item.Entity, DateTime.Now);
                     if (isDeleted != null && isDeleted.CanWrite) isDeleted.SetValue(item.Entity,false);
+                    if (isDelete != null && isDelete.CanWrite) isDelete.SetValue(item.Entity, false);
                 }
 
                 if (item.State == EntityState.Modified)

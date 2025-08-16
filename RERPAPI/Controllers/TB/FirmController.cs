@@ -1,51 +1,56 @@
-﻿
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using RERPAPI.Repo.GenericEntity.Asset;
+using RERPAPI.Repo.GenericEntity;
 
-namespace RERPAPI.Controllers.Asset
+namespace RERPAPI.Controllers.SaleWareHouseManagement
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AssetSourceController : ControllerBase
+    public class FirmController : ControllerBase
     {
-
-        TSSourceAssetsRepo _tsSourceAssetRepo = new TSSourceAssetsRepo();
-        [HttpGet("get-source-asset")]
-        public IActionResult GetSourceAssets()
-        {            try
+        FirmRepo _firmRepo = new FirmRepo();
+        [HttpGet("")]
+        public IActionResult getDataFirm()
+        {
+            try
             {
-                List<TSSourceAsset> tsSources = _tsSourceAssetRepo.GetAll();
+                List<Firm> dataFirm = _firmRepo.GetAll();
                 return Ok(new
                 {
                     status = 1,
-                    data = tsSources
+                    data = dataFirm,
                 });
             }
             catch (Exception ex)
             {
-                return BadRequest(new
+                return Ok(new
                 {
                     status = 0,
                     message = ex.Message,
                     error = ex.ToString()
                 });
             }
-
         }
         [HttpPost("save-data")]
-        public async Task<IActionResult> SaveData([FromBody] TSSourceAsset sourceasset)
+        public async Task<IActionResult> saveDataFirm([FromBody] List<Firm> dtos)
         {
             try
             {
-                if (sourceasset.ID <= 0) await _tsSourceAssetRepo.CreateAsync(sourceasset);
-                else _tsSourceAssetRepo.UpdateFieldsByID(sourceasset.ID, sourceasset);
+                foreach (var dto in dtos)
+                {
+                    if (dto.ID <= 0) await _firmRepo.CreateAsync(dto);
+                    else await _firmRepo.UpdateAsync(dto);
 
+                }
                 return Ok(new
                 {
                     status = 1,
-                    message = "Lưu thành công.",
+                    message = "Thêm hãng thành công!",
+
                 });
+
             }
             catch (Exception ex)
             {
@@ -59,4 +64,3 @@ namespace RERPAPI.Controllers.Asset
         }
     }
 }
-
