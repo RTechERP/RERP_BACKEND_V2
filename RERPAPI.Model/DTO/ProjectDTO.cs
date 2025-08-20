@@ -10,7 +10,7 @@ namespace RERPAPI.Model.DTO
     public class ProjectDTO 
     {
         public int projectStatusOld { get; set; }
-        public Project project { get; set; } 
+       public Entities.Project project { get; set; } 
         public ProjectStatusLog projectStatusLog { get; set; } 
         public FollowProjectBase followProjectBase { get; set; }
         public List<prjTypeLinkDTO> projectTypeLinks { get; set; }

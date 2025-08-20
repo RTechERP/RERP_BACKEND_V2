@@ -9,9 +9,6 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class EmployeeRepo:GenericRepo<Employee>
     {
-        //public string GenerateAllocationCodeAsset()
-        //{
 
-        //}
     }
 }

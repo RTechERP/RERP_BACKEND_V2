@@ -12,7 +12,7 @@ public partial class TSTypeAssetPersonal
     public string? Name { get; set; }
 
     public string? Code { get; set; }
-
+    public int? StandardAmount { set; get; }
     public DateTime? CreatedDate { get; set; }
 
     public string? CreatedBy { get; set; }

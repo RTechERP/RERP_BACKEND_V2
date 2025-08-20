@@ -89,4 +89,5 @@ public partial class ProjectItem
     /// lưu tên người yêu cầu lấy từ bảng Employee, nếu  = 0 thì là tên KH
     /// </summary>
     public string? EmployeeRequestName { get; set; }
+    public bool IsDeleted { get; set; }
 }

@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RERPAPI.Repo.GenericEntity
+namespace RERPAPI.Repo.GenericEntity.Technical
 {
-    public class ProductRTCQRCodeRepo:GenericRepo<ProductRTCQRCode>
+    public class BillExportTechDetailSerialRepo:GenericRepo<BillExportTechDetailSerial>
     {
     }
 }
