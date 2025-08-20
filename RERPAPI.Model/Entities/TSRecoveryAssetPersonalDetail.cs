@@ -8,11 +8,11 @@ public partial class TSRecoveryAssetPersonalDetail
     public int ID { get; set; }
 
     public int? STT { get; set; }
-        
+
     /// <summary>
     /// Lấy từ bảng TSRecoveryAssetPersonal(Cột ID)
     /// </summary>
-    public int? TSRecoveryAssetPersonalID { get; set; } 
+    public int? TSRecoveryAssetPersonalID { get; set; }
 
     /// <summary>
     /// Lấy từ bảng TSAssetManagementPersonal(cột ID)

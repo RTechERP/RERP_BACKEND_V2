@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RERPAPI.Repo.GenericEntity
+namespace RERPAPI.Repo.GenericEntity.Project
 {
-    public class BillImportTechDetailSerialRepo:GenericRepo<BillImportTechDetailSerial>
+    public class ProjectItemFileRepo:GenericRepo<ProjectItemFile>
     {
     }
 }

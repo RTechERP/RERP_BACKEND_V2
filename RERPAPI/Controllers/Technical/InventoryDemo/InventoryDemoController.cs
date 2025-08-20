@@ -91,7 +91,7 @@ namespace RERPAPI.Controllers.Technical.InventoryDemo
                 if (productRTCQRCode.ID <= 0) 
                     await _productRTCQRCodeRepo.CreateAsync(productRTCQRCode);
                 else 
-                    _productRTCQRCodeRepo.UpdateFieldsByID(productRTCQRCode.ID, productRTCQRCode);
+                    _productRTCQRCodeRepo.UpdateAsync( productRTCQRCode);
 
                 return Ok(new
                 {

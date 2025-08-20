@@ -219,7 +219,7 @@ namespace RERPAPI.Controllers.Asset
                     }
                     else
                     {
-                        _tSAssetRecoveryRepo.UpdateFieldsByID(asset.tSAssetRecovery.ID, asset.tSAssetRecovery);
+                        _tSAssetRecoveryRepo.UpdateAsync( asset.tSAssetRecovery);
                     }
                 }
                 if (asset.TSAssetRecoveryDetails != null && asset.TSAssetRecoveryDetails.Any())
@@ -230,7 +230,7 @@ namespace RERPAPI.Controllers.Asset
                         if (item.ID <= 0)
                             await _tSAssetRecoveryDetailRepo.CreateAsync(item);
                         else
-                            _tSAssetRecoveryDetailRepo.UpdateFieldsByID(item.ID, item);
+                            _tSAssetRecoveryDetailRepo.UpdateAsync( item);
                     }
                 }
                 if (asset.tSAssetManagements != null && asset.tSAssetManagements.Any())
@@ -241,7 +241,7 @@ namespace RERPAPI.Controllers.Asset
                         if (item.ID <= 0)
                             await _tsAssetManagementRepo.CreateAsync(item);
                         else
-                            _tsAssetManagementRepo.UpdateFieldsByID(item.ID, item);
+                            _tsAssetManagementRepo.UpdateAsync(item);
                     }
                 }
                 if (asset.tSAllocationEvictionAssets != null && asset.tSAllocationEvictionAssets.Any())
@@ -252,7 +252,7 @@ namespace RERPAPI.Controllers.Asset
                         if (item.ID <= 0)
                             await _tSAllocationEvictionAssetRepo.CreateAsync(item);
                         else
-                            _tSAllocationEvictionAssetRepo.UpdateFieldsByID(item.ID, item);
+                            _tSAllocationEvictionAssetRepo.UpdateAsync( item);
                     }
                 }
                 return Ok(new

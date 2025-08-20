@@ -178,7 +178,7 @@ namespace RERPAPI.Controllers.Asset
                         if (allocations.tSAssetAllocation.ID <= 0)
                             await _tSAssetAllocationRepo.CreateAsync(allocations.tSAssetAllocation);
                         else
-                            _tSAssetAllocationRepo.UpdateFieldsByID(allocations.tSAssetAllocation.ID, allocations.tSAssetAllocation);
+                            _tSAssetAllocationRepo.UpdateAsync( allocations.tSAssetAllocation);
                     }
                 
                 if (allocations.tSAssetAllocationDetails != null && allocations.tSAssetAllocationDetails.Any())
@@ -189,7 +189,7 @@ namespace RERPAPI.Controllers.Asset
                         if (item.ID <= 0)
                             await _tSAssetAllocationDetailRepo.CreateAsync(item);
                         else
-                            _tSAssetAllocationDetailRepo.UpdateFieldsByID(item.ID, item);
+                            _tSAssetAllocationDetailRepo.UpdateAsync(item);
                     }
                 }
                 if (allocations.tSAssetManagements != null && allocations.tSAssetManagements.Any())
@@ -200,7 +200,7 @@ namespace RERPAPI.Controllers.Asset
                         if (item.ID <= 0)
                             await _tsAssetManagementRepo.CreateAsync(item);
                         else
-                            _tsAssetManagementRepo.UpdateFieldsByID(item.ID, item);
+                            _tsAssetManagementRepo.UpdateAsync( item);
                     }
                 }
                 if (allocations.tSAllocationEvictionAssets != null && allocations.tSAllocationEvictionAssets.Any())
@@ -211,7 +211,7 @@ namespace RERPAPI.Controllers.Asset
                         if (item.ID <= 0)
                             await tSAllocationEvictionAssetRepo.CreateAsync(item);
                         else
-                            tSAllocationEvictionAssetRepo.UpdateFieldsByID(item.ID, item);
+                            tSAllocationEvictionAssetRepo.UpdateAsync( item);
                     }
                 }
                 return Ok(new { status = 1 });

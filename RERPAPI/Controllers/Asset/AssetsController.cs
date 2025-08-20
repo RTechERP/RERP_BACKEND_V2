@@ -177,7 +177,7 @@ namespace RERPAPI.Controllers.Asset
                         if (item.ID <= 0)
                             await _tsAssetManagementRepo.CreateAsync(item);
                         else
-                            _tsAssetManagementRepo.UpdateFieldsByID(item.ID, item);
+                            _tsAssetManagementRepo.UpdateAsync( item);
                     }
                 }
                 if (asset.tSAllocationEvictionAssets != null && asset.tSAllocationEvictionAssets.Any())
@@ -187,7 +187,7 @@ namespace RERPAPI.Controllers.Asset
                         if (item.ID <= 0)
                             await _tSAllocationEvictionRepo.CreateAsync(item);
                         else
-                            _tSAllocationEvictionRepo.UpdateFieldsByID(item.ID, item);
+                            _tSAllocationEvictionRepo.UpdateAsync( item);
                     }
                 }
                 if (asset.tSLostReportAsset != null)
@@ -195,21 +195,21 @@ namespace RERPAPI.Controllers.Asset
                     if (asset.tSLostReportAsset.ID <= 0)
                         await _tsLostReportRepo.CreateAsync(asset.tSLostReportAsset);
                     else
-                        _tsLostReportRepo.UpdateFieldsByID(asset.tSLostReportAsset.ID, asset.tSLostReportAsset);
+                        _tsLostReportRepo.UpdateAsync( asset.tSLostReportAsset);
                 }
                 if (asset.tSReportBrokenAsset != null)
                 {
                     if (asset.tSReportBrokenAsset.ID <= 0)
                         await _tsReportBrokenAssetRepo.CreateAsync(asset.tSReportBrokenAsset);
                     else
-                        _tsReportBrokenAssetRepo.UpdateFieldsByID(asset.tSReportBrokenAsset.ID, asset.tSReportBrokenAsset);
+                        _tsReportBrokenAssetRepo.UpdateAsync( asset.tSReportBrokenAsset);
                 }
                 if (asset.tSLiQuidationAsset != null)
                 {
                     if (asset.tSLiQuidationAsset.ID <= 0)
                         await _tsLiQuidationAssetRepo.CreateAsync(asset.tSLiQuidationAsset);
                     else
-                        _tsLiQuidationAssetRepo.UpdateFieldsByID(asset.tSLiQuidationAsset.ID, asset.tSLiQuidationAsset);
+                        _tsLiQuidationAssetRepo.UpdateAsync(asset.tSLiQuidationAsset);
                 }
                 if (asset.tSRepairAssets != null && asset.tSRepairAssets.Any())
                 {
@@ -218,7 +218,7 @@ namespace RERPAPI.Controllers.Asset
                         if (item.ID <= 0)
                             await _tSRepairAssetRepo.CreateAsync(item);
                         else
-                            _tSRepairAssetRepo.UpdateFieldsByID(item.ID, item);
+                            _tSRepairAssetRepo.UpdateAsync( item);
                     }
                 }
                 return Ok(new { status = 1, message = "Lưu dữ liệu thành công." });

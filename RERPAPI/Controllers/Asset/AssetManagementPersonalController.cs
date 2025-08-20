@@ -208,7 +208,7 @@ namespace RERPAPI.Controllers.Asset
                     }
                     else
                     {
-                        _tSAssetManagementPersonalRepo.UpdateFieldsByID(dto.tSAssetManagementPersonal.ID, dto.tSAssetManagementPersonal);
+                        _tSAssetManagementPersonalRepo.UpdateAsync( dto.tSAssetManagementPersonal);
                     }
                 }
                 if (dto.tSTypeAssetPersonal != null)
@@ -219,7 +219,7 @@ namespace RERPAPI.Controllers.Asset
                     }
                     else
                     {
-                        _typeAssetPersonalRepo.UpdateFieldsByID(dto.tSTypeAssetPersonal.ID, dto.tSTypeAssetPersonal);
+                        _typeAssetPersonalRepo.UpdateAsync(dto.tSTypeAssetPersonal);
                     }
                 }
                 if (dto.tSAllocationAssetPersonal != null)
@@ -230,7 +230,7 @@ namespace RERPAPI.Controllers.Asset
                     }
                     else
                     {
-                        _tSAllocationAssetPersonalRepo.UpdateFieldsByID(dto.tSAllocationAssetPersonal.ID, dto.tSAllocationAssetPersonal);
+                        _tSAllocationAssetPersonalRepo.UpdateAsync(dto.tSAllocationAssetPersonal);
                     }
                 }
                 if (dto.tSRecoveryAssetPersonal != null)
@@ -242,7 +242,7 @@ namespace RERPAPI.Controllers.Asset
                     }
                     else
                     {
-                        _tSRecoveryAssetPersonalRepo.UpdateFieldsByID(dto.tSRecoveryAssetPersonal.ID, dto.tSRecoveryAssetPersonal);
+                        _tSRecoveryAssetPersonalRepo.UpdateAsync( dto.tSRecoveryAssetPersonal);
                     }
                 }
                 if (dto.tSRecoveryAssetPersonalDetails != null && dto.tSRecoveryAssetPersonalDetails.Any())
@@ -253,7 +253,7 @@ namespace RERPAPI.Controllers.Asset
                         if (item.ID <= 0)
                             await _tSRecoveryAssetPersonalDetailRepo.CreateAsync(item);
                         else
-                            _tSRecoveryAssetPersonalDetailRepo.UpdateFieldsByID(item.ID, item);
+                            _tSRecoveryAssetPersonalDetailRepo.UpdateAsync( item);
                     }
                 }
                 if (dto.tSAllocationAssetPersonalDetails != null && dto.tSAllocationAssetPersonalDetails.Any())
@@ -265,7 +265,7 @@ namespace RERPAPI.Controllers.Asset
                         if (item.ID <= 0)
                             await _tSAssetAllocationDetailRepo.CreateAsync(item);
                         else
-                            _tSAssetAllocationDetailRepo.UpdateFieldsByID(item.ID, item);
+                            _tSAssetAllocationDetailRepo.UpdateAsync( item);
                     }
                 }
                 return Ok(new

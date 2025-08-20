@@ -9,7 +9,7 @@ public partial class ModulaLocationDetail
 
     public int? STT { get; set; }
 
-    public int? STT { get; set; }
+
 
     public int? ModulaLocationID { get; set; }
 

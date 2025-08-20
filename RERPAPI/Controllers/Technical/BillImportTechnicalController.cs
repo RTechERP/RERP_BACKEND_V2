@@ -389,7 +389,7 @@ namespace RERPAPI.Controllers.Technical
                     if (product.historyDeleteBill.ID <= 0)
                         await _historyDeleteBillRepo.CreateAsync(product.historyDeleteBill);
                     else
-                        _historyDeleteBillRepo.UpdateFieldsByID(product.historyDeleteBill.ID, product.historyDeleteBill);
+                        _historyDeleteBillRepo.UpdateAsync( product.historyDeleteBill);
                 }
 
                 // Lưu phiếu nhập
@@ -398,7 +398,7 @@ namespace RERPAPI.Controllers.Technical
                     if (product.billImportTechnical.ID <= 0)
                         await _billImportTechnicalRepo.CreateAsync(product.billImportTechnical);
                     else
-                        _billImportTechnicalRepo.UpdateFieldsByID(product.billImportTechnical.ID, product.billImportTechnical);
+                        _billImportTechnicalRepo.UpdateAsync( product.billImportTechnical);
                 }
 
                 // Map STT -> ID sau khi insert chi tiết phiếu
@@ -425,7 +425,7 @@ namespace RERPAPI.Controllers.Technical
                         }
                         else
                         {
-                            _billImportTechnicalDetailRepo.UpdateFieldsByID(item.ID, item);
+                            _billImportTechnicalDetailRepo.UpdateAsync(item);
 
                             if (product.billImportDetailTechnicals.Count == 1)
                                 singleDetailId = item.ID;
@@ -455,7 +455,7 @@ namespace RERPAPI.Controllers.Technical
                         }
                         else
                         {
-                            _billImportTechDetailSerialRepo.UpdateFieldsByID(item.ID, item);
+                            _billImportTechDetailSerialRepo.UpdateAsync(item);
                         }
 
                         savedSerials.Add(item);

@@ -11,5 +11,6 @@ namespace RERPAPI.Model.DTO.Project
     {
         public ProjectItemProblem? projectItemProblem { get; set; }
         public List<ProjectItem>? projectItems { get; set; }
+        public ProjectItemFile? ProjectItemFile { get; set; }
     }
 }

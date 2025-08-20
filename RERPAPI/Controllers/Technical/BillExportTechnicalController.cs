@@ -222,7 +222,7 @@ namespace RERPAPI.Controllers.Technical
                     if (product.historyDeleteBill.ID <= 0)
                         await _historyDeleteBillRepo.CreateAsync(product.historyDeleteBill);
                     else
-                        _historyDeleteBillRepo.UpdateFieldsByID(product.historyDeleteBill.ID, product.historyDeleteBill);
+                        _historyDeleteBillRepo.UpdateAsync( product.historyDeleteBill);
                 }
 
                 // Lưu phiếu xuất
@@ -231,7 +231,7 @@ namespace RERPAPI.Controllers.Technical
                     if (product.billExportTechnical.ID <= 0)
                         await _billExportTechnicalRepo.CreateAsync(product.billExportTechnical);
                     else
-                        _billExportTechnicalRepo.UpdateFieldsByID(product.billExportTechnical.ID, product.billExportTechnical);
+                        _billExportTechnicalRepo.UpdateAsync( product.billExportTechnical);
                 }
 
                 // Map STT -> ID sau khi insert chi tiết phiếu
@@ -258,7 +258,7 @@ namespace RERPAPI.Controllers.Technical
                         }
                         else
                         {
-                            _billExportDetailTechnicalRepo.UpdateFieldsByID(item.ID, item);
+                            _billExportDetailTechnicalRepo.UpdateAsync( item);
 
                             if (product.billExportDetailTechnicals.Count == 1)
                                 singleDetailId = item.ID;
@@ -289,7 +289,7 @@ namespace RERPAPI.Controllers.Technical
                         }
                         else
                         {
-                            _billExportTechDetailSerialRepo.UpdateFieldsByID(item.ID, item);
+                            _billExportTechDetailSerialRepo.UpdateAsync( item);
                         }
 
                         savedSerials.Add(item);
@@ -303,7 +303,7 @@ namespace RERPAPI.Controllers.Technical
                         if (item.ID <= 0)
                             await _inventoryDemoRepo.CreateAsync(item);
                         else
-                            _inventoryDemoRepo.UpdateFieldsByID(item.ID, item);
+                            _inventoryDemoRepo.UpdateAsync(item);
                     }
                 }
                 if(product.historyProductRTCs!=null&&product.historyProductRTCs.Any())
@@ -314,7 +314,7 @@ namespace RERPAPI.Controllers.Technical
                         if (item.ID <= 0)
                             await _historyProductRTCRepo.CreateAsync(item);
                         else
-                            _historyProductRTCRepo.UpdateFieldsByID(item.ID, item);
+                            _historyProductRTCRepo.UpdateAsync( item);
                     }
                 }    
                 

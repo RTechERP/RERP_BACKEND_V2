@@ -39,7 +39,7 @@ namespace RERPAPI.Controllers.Asset
             try
             {
                 if (sourceasset.ID <= 0) await _tsSourceAssetRepo.CreateAsync(sourceasset);
-                else _tsSourceAssetRepo.UpdateFieldsByID(sourceasset.ID, sourceasset);
+                else _tsSourceAssetRepo.UpdateAsync( sourceasset);
 
                 return Ok(new
                 {

@@ -41,7 +41,7 @@ namespace RERPAPI.Controllers.Asset
             try
             {
                 if (typeasset.ID <= 0) await _typeAssetRepo.CreateAsync(typeasset);
-                else _typeAssetRepo.UpdateFieldsByID(typeasset.ID, typeasset);
+                else _typeAssetRepo.UpdateAsync( typeasset);
 
                 return Ok(new
                 {

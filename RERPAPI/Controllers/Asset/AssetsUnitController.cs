@@ -17,7 +17,7 @@ namespace RERPAPI.Controllers.Asset
         {
             try
             {
-                var units = _unitRepo.GetAll().Where(x => !x.IsDeleted).ToList();
+                var units = _unitRepo.GetAll().Where(x => x.isDeleted==false).ToList();
              
                 return Ok(new
                 {
@@ -48,7 +48,7 @@ namespace RERPAPI.Controllers.Asset
                         if (item.ID > 0)
                         {
 
-                            _unitRepo.UpdateFieldsByID(item.ID, item);
+                            _unitRepo.UpdateAsync( item);
                         }
                         else
                         {

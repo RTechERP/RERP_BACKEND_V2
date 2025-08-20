@@ -72,7 +72,7 @@ namespace RERPAPI.Controllers.TB
             try
             {
                 if (category.Id <= 0) await _categoriesRepo.CreateAsync(category);
-                else _categoriesRepo.UpdateFieldsByID(category.Id, category);
+                else _categoriesRepo.   UpdateAsync( category);
 
                 return Ok(new
                 {

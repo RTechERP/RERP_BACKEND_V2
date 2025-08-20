@@ -68,7 +68,7 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                Employee employee = employeeRepo.GetByID(id);
+                Employee employee = _employeeRepo.GetByID(id);
                 return Ok(ApiResponseFactory.Success(employee, ""));
             }
             catch (Exception ex)

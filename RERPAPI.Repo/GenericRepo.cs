@@ -24,7 +24,7 @@ namespace RERPAPI.Repo
             table = db.Set<T>();
         }
 
-        public GenericRepo(RTCContext db,IUserPermissionService userPermissionService)
+        public GenericRepo(RTCContext db, IUserPermissionService userPermissionService)
         {
             this.db = db;
             table = db.Set<T>();

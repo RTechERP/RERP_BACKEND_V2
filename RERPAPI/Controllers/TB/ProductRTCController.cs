@@ -109,7 +109,7 @@ new object[] { request.ProductGroupID, request.Keyword, request.CheckAll, reques
                             Message = "Chỉ được upload file ảnh (jpg, jpeg, png, gif, bmp)"
                         });
                     }
-                    string path = Config.Path() + @"\ProductRTC\";
+                    string path = "";
                     if (!Directory.Exists(path))
                     {
                         Directory.CreateDirectory(path);
@@ -196,7 +196,7 @@ new object[] { request.ProductGroupID, request.Keyword, request.CheckAll, reques
                     if (product.productGroupRTC.ID <= 0)
                         await _productGroupRTCRepo.CreateAsync(product.productGroupRTC);
                     else
-                        _productGroupRTCRepo.UpdateFieldsByID(product.productGroupRTC.ID, product.productGroupRTC);
+                        _productGroupRTCRepo.UpdateAsync( product.productGroupRTC);
                 }
                 if (product.productRTCs != null && product.productRTCs.Any())
                 {
@@ -206,7 +206,7 @@ new object[] { request.ProductGroupID, request.Keyword, request.CheckAll, reques
                         if (item.ID <= 0)
                             await _productRTCRepo.CreateAsync(item);
                         else
-                            _productRTCRepo.UpdateFieldsByID(item.ID, item);
+                            _productRTCRepo.UpdateAsync( item);
                     }
                 }
 
