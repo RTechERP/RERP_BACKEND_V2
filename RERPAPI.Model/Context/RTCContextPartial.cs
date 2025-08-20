@@ -25,7 +25,6 @@ namespace RERPAPI.Model.Context
         {
 
         }
-
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer(Config.ConnectionString);
 
@@ -108,4 +107,4 @@ namespace RERPAPI.Model.Context
 
 
     }
-}
+    }

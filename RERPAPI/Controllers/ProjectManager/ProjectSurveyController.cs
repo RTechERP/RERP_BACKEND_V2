@@ -427,7 +427,7 @@ namespace RERPAPI.Controllers.ProjectManager
                 //    return;
                 //}
                 ProjectSurvey model = projectSurveyRepo.GetByID(projectSurveyId);
-                Project prj = projectRepo.GetByID(projectId);
+                RERPAPI.Model.Entities.Project prj = projectRepo.GetByID(projectId);
 
                 var dt = SQLHelper<object>.ProcedureToList("sp_GetProjectTypeTreeFolder",
                                                                 new string[] { "@ProjectTypeID" },

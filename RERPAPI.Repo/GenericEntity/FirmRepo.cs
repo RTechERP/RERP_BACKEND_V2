@@ -7,8 +7,7 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class BillImportDetailSerialNumberRepo:GenericRepo<BillImportDetailSerialNumber>
+    public class FirmRepo : GenericRepo<Firm>
     {
-
     }
 }

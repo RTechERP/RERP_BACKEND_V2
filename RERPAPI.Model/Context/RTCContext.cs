@@ -17,8 +17,14 @@ public partial class RTCContext : DbContext
         //_userPermissionService = userPermissionService;
     }
 
-    
-
+    public virtual DbSet<Category> Categories { get; set; }
+    public virtual DbSet<Product> Products { get; set; }
+    public virtual DbSet<TSAssetManagementPersonal> TSAssetManagementPersonal { get; set; }
+    public virtual DbSet<TSTypeAssetPersonal> TSTypeAssetPersonal { get; set; }
+    public virtual DbSet<TSAllocationAssetPersonal> TSAllocationAssetPersonal { get; set; }
+    public virtual DbSet<TSAllocationAssetPersonalDetail> TSAllocationAssetPersonalDetail { get; set; }
+    public virtual DbSet<TSRecoveryAssetPersonal> TSRecoveryAssetPersonal { get; set; }
+    public virtual DbSet<TSRecoveryAssetPersonalDetail> TSRecoveryAssetPersonalDetail { get; set; }
     public virtual DbSet<AccountingBill> AccountingBills { get; set; }
 
     public virtual DbSet<AccountingBillApproved> AccountingBillApproveds { get; set; }
