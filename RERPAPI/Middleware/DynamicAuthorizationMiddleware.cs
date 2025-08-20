@@ -7,13 +7,37 @@ namespace RERPAPI.Middleware
     public class DynamicAuthorizationMiddleware
     {
         private readonly RequestDelegate _next;
-        public DynamicAuthorizationMiddleware(RequestDelegate next)
+        private readonly string _apiKey;
+        public DynamicAuthorizationMiddleware(RequestDelegate next, IConfiguration configuration)
         {
             _next = next;
+            _apiKey = configuration["ApiKey"] ?? throw new Exception("ApiKey missing in config");
         }
 
         public async Task InvokeAsync(HttpContext context, IUserPermissionService permissionService)
         {
+            if (context.Request.Headers.TryGetValue("x-api-key",out var apiKey))
+            {
+                if (apiKey == _apiKey)
+                {
+                    context.Items["AuthType"] = "ApiKey";
+                    await _next(context);
+                    return;
+                }
+                else
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    await context.Response.WriteAsync("Key không đúng");
+                    return;
+                }
+            }
+            //else
+            //{
+            //    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            //    await context.Response.WriteAsync("Unauthorized");
+            //    return;
+            //}
+
             var endpoint = context.GetEndpoint();
 
             var permissionAttributes = endpoint?.Metadata.GetOrderedMetadata<RequiresPermissionAttribute>();

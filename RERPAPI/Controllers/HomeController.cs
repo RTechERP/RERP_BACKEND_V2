@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using RERPAPI.Attributes;
 using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
@@ -104,6 +105,7 @@ namespace RERPAPI.Controllers
 
 
         [Authorize]
+        [ApiKeyAuthorize]
         [HttpGet("current-user")]
         public IActionResult GetCurrentUser()
         {
