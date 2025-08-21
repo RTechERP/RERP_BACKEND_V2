@@ -127,7 +127,7 @@ namespace RERPAPI.Controllers.Project
 
                             item.IsDeleted = false;
                             await _projectItemRepo.CreateAsync(item);
-                        }
+                        } 
                         else
                         {
                             string validateMsg;
@@ -136,7 +136,7 @@ namespace RERPAPI.Controllers.Project
                                 return BadRequest(ApiResponseFactory.Fail(null, validateMsg));
                             }
                             if (!currentUser.IsAdmin && approved > 0)
-                                return StatusCode(409, ApiResponseFactory.Fail(null, "Hạng mục đã duyệt không thể sửa"));
+                                return BadRequest( ApiResponseFactory.Fail(null, "Hạng mục đã duyệt không thể sửa"));
                             _projectItemRepo.Update(item);
                         }
                     }
