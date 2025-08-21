@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DocumentFormat.OpenXml.VariantTypes;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using RERPAPI.Model.Common;
@@ -44,20 +45,12 @@ namespace RERPAPI.Controllers.PO
                 var listGroup = _productGroupRepo.GetAll().Select(x => x.ID).ToList();
                 var idGroup = string.Join(",", listGroup);
                 List<List<dynamic>> listProduct = SQLHelper<dynamic>.ProcedureToList("spGetProductSale", new string[] { "@IDgroup" }, new object[] { idGroup });
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<dynamic>.GetListData(listProduct, 0),
-                });
+                var data = SQLHelper<dynamic>.GetListData(listProduct, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-pokh-kpi-detail")]
@@ -66,20 +59,12 @@ namespace RERPAPI.Controllers.PO
             try
             {
                 List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetPOKH_KPI", new string[] { "@IDMaster" }, new object[] { id });
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<dynamic>.GetListData(list, 0),
-                });
+                var data = SQLHelper<dynamic>.GetListData(list, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
 
         }
@@ -89,20 +74,11 @@ namespace RERPAPI.Controllers.PO
             try
             {
                 List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetPOKHDetail_New", new string[] { "@ID", "@IDDetail" }, new object[] { id, idDetail });
-                return Ok(new
-                {
-                    status = 1,
-                    data = list,
-                });
+                return Ok(ApiResponseFactory.Success(list, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-pokh")]
@@ -122,12 +98,7 @@ namespace RERPAPI.Controllers.PO
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-employee-manager")]
@@ -138,20 +109,11 @@ namespace RERPAPI.Controllers.PO
                 List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetEmployeeManager",
                     new string[] { "@group", "@UserID", "@TeamID" },
                     new object[] { group, userId, teamId });
-                return Ok(new
-                {
-                    status = 1,
-                    data = list
-                });
+                return Ok(ApiResponseFactory.Success(list, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString(),
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-pokh-product")]
@@ -160,20 +122,12 @@ namespace RERPAPI.Controllers.PO
             try
             {
                 List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetPOKHDetail", new string[] { "@ID", "@IDDetail" }, new object[] { id, idDetail });
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<dynamic>.GetListData(list, 0)
-                });
+                var data = SQLHelper<dynamic>.GetListData(list, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -183,20 +137,11 @@ namespace RERPAPI.Controllers.PO
             try
             {
                 List<POKHFile> file = _pokhFilesRepo.GetAll().Where(x => x.IsDeleted != true && x.POKHID == id).ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data = file,
-                });
+                return Ok(ApiResponseFactory.Success(file, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-project")]
@@ -205,20 +150,11 @@ namespace RERPAPI.Controllers.PO
             try
             {
                 var list = _projectRepo.GetAll().Select(x => new {x.ID, x.ProjectCode, x.UserID, x.ContactID, x.CustomerID, x.ProjectName, x.PO});
-                return Ok(new
-                {
-                    status = 1,
-                    data = list,
-                });
+                return Ok(ApiResponseFactory.Success(list, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-typePO")]
@@ -228,12 +164,8 @@ namespace RERPAPI.Controllers.PO
             try
             {
                 List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetMainIndex", new string[] { "@Type" }, new object[] { 1 });
-
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<dynamic>.GetListData(list,0)
-                });
+                var data = SQLHelper<dynamic>.GetListData(list, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {
@@ -252,20 +184,11 @@ namespace RERPAPI.Controllers.PO
             try
             {
                 List<Currency> listCurrency = _currencyRepo.GetAll().ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data = listCurrency
-                });
+                return Ok(ApiResponseFactory.Success(listCurrency, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -275,20 +198,11 @@ namespace RERPAPI.Controllers.PO
             try
             {
                 POKH pokh = _pokhRepo.GetByID(id);
-                return Ok(new
-                {
-                    status = 1,
-                    data = pokh
-                });
+                return Ok(ApiResponseFactory.Success(pokh, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         #endregion
@@ -404,21 +318,17 @@ namespace RERPAPI.Controllers.PO
                     }
                 }
 
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Success",
-                    data = new { id = dto.POKH.ID }
-                });
+                //return Ok(new
+                //{
+                //    status = 1,
+                //    message = "Success",
+                //    data = new { id = dto.POKH.ID }
+                //});
+                return Ok(ApiResponseFactory.Success(new {id = dto.POKH.ID}, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         #endregion
@@ -447,21 +357,11 @@ namespace RERPAPI.Controllers.PO
                 }
 
                 string newPOCode = $"{customer}_{maPO}.{nextNumber}";
-                return Ok(new
-                {
-                    status = 1,
-                    data = newPOCode
-                });
+                return Ok(ApiResponseFactory.Success(newPOCode, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -475,11 +375,7 @@ namespace RERPAPI.Controllers.PO
                 var po = _pokhRepo.GetByID(poKHID);
                 if (po == null)
                 {
-                    return Ok(new
-                    {
-                        status = 0,
-                        message = "POKH not found"
-                    });
+                    throw new Exception("POKH not found");
                 }
 
                 // Tạo thư mục local cho file
@@ -524,28 +420,27 @@ namespace RERPAPI.Controllers.PO
                     }
                 }
 
-                return Ok(new
-                {
-                    status = 1,
-                    message = $"{processedFile.Count} tệp đã được tải lên thành công",
-                    data = processedFile
-                });
+                //return Ok(new
+                //{
+                //    status = 1,
+                //    message = $"{processedFile.Count} tệp đã được tải lên thành công",
+                //    data = processedFile
+                //});
+                return Ok(ApiResponseFactory.Success(processedFile, $"{processedFile.Count} tệp đã được tải lên thành công"));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpPost("delete-file")]
         public IActionResult DeleteFile([FromBody] List<int> fileIds)
         {
             if (fileIds == null || !fileIds.Any())
-                return BadRequest(new { success = false, message = "Danh sách file ID không được trống" });
+            //return BadRequest(new { success = false, message = "Danh sách file ID không được trống" });
+            {
+                throw new Exception("Danh sách file ID không được trống");
+            }    
 
             try
             {
@@ -569,11 +464,11 @@ namespace RERPAPI.Controllers.PO
                     results.Add(new { fileId, success = true, message = "Xóa thành công" });
                 }
 
-                return Ok(new { success = true, results });
+                return Ok(ApiResponseFactory.Success(results, ""));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, message = ex.Message });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         #endregion
@@ -694,21 +589,17 @@ namespace RERPAPI.Controllers.PO
                     }
                 }
 
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Copy thành công",
-                    data = new { id = newPOKH.ID }
-                });
+                //return Ok(new
+                //{
+                //    status = 1,
+                //    message = "Copy thành công",
+                //    data = new { id = newPOKH.ID }
+                //});
+                return Ok(ApiResponseFactory.Success(new {id = newPOKH.ID}, "Copy thành công"));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

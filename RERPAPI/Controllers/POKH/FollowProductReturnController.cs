@@ -22,22 +22,14 @@ namespace RERPAPI.Controllers.PO
                 List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetPOKHProductReturn",
                     new string[] { "@FilterText", "@CustomerID", "@UserID", "@Group", "@StartDate", "@EndDate" },
                     new object[] { keywords, customerId, userId, groupSaleId, dateStart, dateEnd });
-                {
-                    return Ok(new
-                    {
-                        status = 1,
-                        data = SQLHelper<dynamic>.GetListData(list, 0)
-                    });
-                }
+                var data = SQLHelper<dynamic>.GetListData(list, 0);
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-users")]
@@ -46,20 +38,11 @@ namespace RERPAPI.Controllers.PO
             try
             {
                 List<User> list = _userRepo.GetAll().ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data = list
-                });
+                return Ok(ApiResponseFactory.Success(list, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

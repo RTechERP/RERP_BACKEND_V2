@@ -21,20 +21,12 @@ namespace RERPAPI.Controllers.PO
                 List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetPOKHRequestExport",
                     new string[] { "@WarehouseID", "@CustomerID", "@ProjectID", "@ProductGroupID", "@Keyword" },
                     new object[] { warehouseId, customerId, projectId, productGroupId, keyword});
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<dynamic>.GetListData(list,0)
-                });
+                var data = SQLHelper<dynamic>.GetListData(list, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-productgroup")]
@@ -43,20 +35,11 @@ namespace RERPAPI.Controllers.PO
             try
             {
                 var data = _productGroupRepo.GetAll();
-                return Ok(new
-                {
-                    status = 1,
-                    data
-                });
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-warehouse")]
@@ -65,20 +48,11 @@ namespace RERPAPI.Controllers.PO
             try
             {
                 var data = _warehouseRepo.GetAll();
-                return Ok(new
-                {
-                    status = 1,
-                    data
-                });
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

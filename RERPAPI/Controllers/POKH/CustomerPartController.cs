@@ -33,20 +33,11 @@ namespace RERPAPI.Controllers.PO
             {
                 List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetCustomerPart", new string[] { "@ID" }, new object[] { id });
                 //List<dynamic> listPart = list[0];
-                return Ok(new
-                {
-                    status = 1,
-                    data = list
-                });
+                return Ok(ApiResponseFactory.Success(list, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-customer")]
@@ -55,21 +46,12 @@ namespace RERPAPI.Controllers.PO
             try
             {
                 List<Customer> list = _customerRepo.GetAll().Where(x => x.IsDeleted == false).ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data = list
-                });
+                return Ok(ApiResponseFactory.Success(list, ""));
 
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpPost("save-data")]
@@ -83,7 +65,7 @@ namespace RERPAPI.Controllers.PO
                     {
                         if (part.CustomerID == 0)
                         {
-                            return BadRequest(new { status = 0, message = "CustomerID không được để trống" });
+                            throw new Exception("CustomerID không được để trống");
                         }
                     }
                 }
@@ -122,19 +104,19 @@ namespace RERPAPI.Controllers.PO
 
                         await _context.SaveChangesAsync();
                         await transaction.CommitAsync();
-                        return Ok(new { status = 1, message = "Lưu thành công" });
+                        return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
                     }
                     catch (Exception ex)
                     {
                         await transaction.RollbackAsync();
-                        return BadRequest(new { status = 0, message = ex.Message });
+                        return Ok(ApiResponseFactory.Fail(ex, ex.Message));
                     }
                 }
             }
             catch (Exception ex)
             {
-                return BadRequest(new { status = 0, message = ex.Message });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }
-}
+}ư

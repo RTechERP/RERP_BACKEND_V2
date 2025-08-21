@@ -80,16 +80,11 @@ namespace RERPAPI.Controllers.PO
                     results.Add(new { item.ProductCode, Success = insertResult > 0 });
                 }
 
-                return Ok(new { status = 1, success = true, message = "Purchase requests saved successfully", data = results });
+                return Ok(ApiResponseFactory.Success(results, "Purchase requests saved successfully"));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = "Có lỗi xảy ra: " + ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         private UnitCount GetUnitCountByName(string unitName)

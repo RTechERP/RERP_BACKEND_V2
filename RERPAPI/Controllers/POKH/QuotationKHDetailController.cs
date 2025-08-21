@@ -35,20 +35,11 @@ namespace RERPAPI.Controllers.PO
                     x.Code,
                     UserInfo = x.Code + " - " + x.FullName
                 }).ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data = list
-                });
+                return Ok(ApiResponseFactory.Success(list, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-contacts")]
@@ -63,20 +54,11 @@ namespace RERPAPI.Controllers.PO
                     x.ContactName,
                     x.ID
                 }).ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data = list
-                });
+                return Ok(ApiResponseFactory.Success(list, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("generate-code")]
@@ -119,20 +101,11 @@ namespace RERPAPI.Controllers.PO
 
                 // Tạo code mới
                 string code = $"RTC_QUO_{customer}_{DateOnly.Parse(createDate):ddMMyyyy}_{stt}";
-                return Ok(new
-                {
-                    status = 1,
-                    data = code
-                });
+                return Ok(ApiResponseFactory.Success(code, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpPost("save-data")]
@@ -176,21 +149,11 @@ namespace RERPAPI.Controllers.PO
                         }
                     }
                 } 
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Success",
-
-                });
+                return Ok(ApiResponseFactory.Success(null,"Success"));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 

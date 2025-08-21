@@ -36,20 +36,11 @@ namespace RERPAPI.Controllers.RequestInvoice
             try
             {
                 var data = _employeeRepo.GetAll().Where(x => x.Status == 0 && x.FullName != "").ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data,
-                });
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-productsale")]
@@ -58,20 +49,11 @@ namespace RERPAPI.Controllers.RequestInvoice
             try
             {
                 var data = _productSaleRepo.GetAll().ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data,
-                });
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }     
         }
         [HttpGet("get-project")]
@@ -80,20 +62,11 @@ namespace RERPAPI.Controllers.RequestInvoice
             try
             {
                 var data = _projectRepo.GetAll().OrderByDescending(x=>x.CreatedDate).ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data,
-                });
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpPost("generate-bill-number")]
@@ -113,20 +86,22 @@ namespace RERPAPI.Controllers.RequestInvoice
                 {
                     if (string.IsNullOrEmpty(billCode))
                     {
-                        return Ok(new { status = 1, data = $"YCXHD{date}001" });
+                        //return Ok(new { status = 1, data = $"YCXHD{date}001" });
+                        return Ok(ApiResponseFactory.Success($"YCXHD{date}001", ""));
                     }
                     else
                     {
                         int number = int.Parse(billCode.Substring(billCode.Length - 3));
                         string dem = (number + 1).ToString().PadLeft(3, '0');
-                        return Ok(new { status = 1, data = $"YCXHD{date}{dem}" });
+                        //return Ok(new { status = 1, data = $"YCXHD{date}{dem}" });
+                        return Ok(ApiResponseFactory.Success($"YCXHD{date}{dem}", ""));
                     }
                 }
-                return Ok(new { status = 1, data = billCode });
+                return Ok(ApiResponseFactory.Success(billCode,""));
             }
             catch (Exception ex)
             {
-                return Ok(new { status = 0, message = ex.Message, error = ex.ToString() });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -143,38 +118,39 @@ namespace RERPAPI.Controllers.RequestInvoice
                         IsDeleted = dto.RequestInvoices.IsDeleted
                     };
                     await _requestInvoiceRepo.UpdateAsync(updatedRequestInvoice);
-                    return Ok(new
-                    {
-                        status = 1,
-                        message = "Đã xóa thành công",
-                        data = new { id = dto.RequestInvoices.ID }
-                    });
+                    //return Ok(new
+                    //{
+                    //    status = 1,
+                    //    message = "Đã xóa thành công",
+                    //    data = new { id = dto.RequestInvoices.ID }
+                    //});
+                    return Ok(ApiResponseFactory.Success(new {id = dto.RequestInvoices.ID}, ""));
                 }
                 if (dto.RequestInvoices.CustomerID == null || dto.RequestInvoices.CustomerID <= 0)
                 {
-                    return Ok(new { status = 0, message = "Xin hãy chọn khách hàng." });
+                    throw new Exception("Xin hãy chọn khách hàng.");
                 }
                 if (dto.RequestInvoices.Status == null || dto.RequestInvoices.Status < 0)
                 {
-                    return Ok(new { status = 0, message = "Xin hãy chọn trạng thái." });
+                    throw new Exception("Xin hãy chọn trạng thái.");
                 }
                 if (dto.RequestInvoices.EmployeeRequestID == null || dto.RequestInvoices.EmployeeRequestID < 0)
                 {
-                    return Ok(new { status = 0, message = "Xin hãy chọn người yêu cầu." });
+                    throw new Exception("Xin hãy chọn người yêu cầu.");
                 }
                 if (dto.RequestInvoiceDetails.Count == 0 || dto.RequestInvoiceDetails == null)
                 {
-                    return Ok(new { status = 0, message = "Vui lòng thêm ít nhất 1 sản phẩm" });
+                    throw new Exception("Vui lòng thêm ít nhất 1 sản phẩm");
                 }
                 foreach (var item in dto.RequestInvoiceDetails)
                 {
                     if (item.ProductSaleID == 0 || item.ProductSaleID == null)
                     {
-                        return Ok(new { status = 0, message = "Vui lòng chọn sản phẩm cho dòng còn thiếu!" });
+                        throw new Exception("Vui lòng chọn sản phẩm cho dòng còn thiếu!");
                     }
                     if (item.ProjectID == 0 || item.ProjectID == null)
                     {
-                        return Ok(new { status = 0, message = "Vui lòng chọn dự án cho dòng còn thiếu!" });
+                        throw new Exception("Vui lòng chọn dự án cho dòng còn thiếu!");
                     }
                 }
 
@@ -186,7 +162,7 @@ namespace RERPAPI.Controllers.RequestInvoice
                     .FirstOrDefault();
                 if (exist != null)
                 {
-                    return Ok(new { status = 0, message = "Số phiếu này đã tồn tại!" });
+                    throw new Exception("Số phiếu này đã tồn tại!");
                 }
 
                 if (dto.RequestInvoices.ID <= 0)
@@ -226,21 +202,17 @@ namespace RERPAPI.Controllers.RequestInvoice
                         }
                     }
                 }
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Success",
-                    data = new { id = dto.RequestInvoices.ID }
-                });
+                //return Ok(new
+                //{
+                //    status = 1,
+                //    message = "Success",
+                //    data = new { id = dto.RequestInvoices.ID }
+                //});
+                return Ok(ApiResponseFactory.Success(new {id = dto.RequestInvoices.ID}, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -253,11 +225,7 @@ namespace RERPAPI.Controllers.RequestInvoice
                 var ri = _requestInvoiceRepo.GetByID(RequestInvoiceID);
                 if (ri == null)
                 {
-                    return Ok(new
-                    {
-                        status = 0,
-                        message = "RequestInvoice not found"
-                    });
+                    throw new Exception("RequestInvoice not found");
                 }
 
                 // Tạo thư mục local cho file
@@ -302,28 +270,24 @@ namespace RERPAPI.Controllers.RequestInvoice
                     }
                 }
 
-                return Ok(new
-                {
-                    status = 1,
-                    message = $"{processedFile.Count} tệp đã được tải lên thành công",
-                    data = processedFile
-                });
+                //return Ok(new
+                //{
+                //    status = 1,
+                //    message = $"{processedFile.Count} tệp đã được tải lên thành công",
+                //    data = processedFile
+                //});
+                return Ok(ApiResponseFactory.Success(processedFile, $"{processedFile.Count} tệp đã được tải lên thành công"));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpPost("delete-file")]
         public IActionResult DeleteFile([FromBody] List<int> fileIds)
         {
             if (fileIds == null || !fileIds.Any())
-                return BadRequest(new { success = false, message = "Danh sách file ID không được trống" });
+                throw new Exception("Danh sách file ID không được trống");
 
             try
             {
@@ -347,11 +311,11 @@ namespace RERPAPI.Controllers.RequestInvoice
                     results.Add(new { fileId, success = true, message = "Xóa thành công" });
                 }
 
-                return Ok(new { success = true, results });
+                return Ok(ApiResponseFactory.Success(results, ""));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, message = ex.Message });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         #endregion

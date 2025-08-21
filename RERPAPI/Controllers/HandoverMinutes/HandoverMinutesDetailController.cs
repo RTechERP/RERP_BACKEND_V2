@@ -30,20 +30,11 @@ namespace RERPAPI.Controllers.HandoverMinutes
                     Employee = e,
                     Department = departments.FirstOrDefault(d => d.ID == e.DepartmentID)
                 });
-                return Ok(new
-                {
-                    status = 1,
-                    data = result
-                });
+                return Ok(ApiResponseFactory.Success(result,""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -53,20 +44,11 @@ namespace RERPAPI.Controllers.HandoverMinutes
             try
             {
                 var product = SQLHelper<dynamic>.ProcedureToList("spGetPOKHDetail_New1", new string[] { }, new object[] { });
-                return Ok(new
-                {
-                    status = 1,
-                    data = product
-                });
+                return Ok(ApiResponseFactory.Success(product, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -76,20 +58,11 @@ namespace RERPAPI.Controllers.HandoverMinutes
             try
             {
                 var product = _handoverMinutesRepo.GetAll();
-                return Ok(new
-                {
-                    status = 1,
-                    data = product
-                });
+                return Ok(ApiResponseFactory.Success(product, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpPost("save-data")]
@@ -176,20 +149,11 @@ namespace RERPAPI.Controllers.HandoverMinutes
                         }
                     }
                 }    
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Biên bản bàn giao đã được lưu thành công.",
-                });
+                return Ok(ApiResponseFactory.Success(null,"Biên bản bàn giao được lưu thành công"));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         private string GetNextCodeNumber()

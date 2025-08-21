@@ -19,20 +19,11 @@ namespace RERPAPI.Controllers
             {
                 List<Department> departments = departmentRepo.GetAll().OrderBy(x => x.STT).ToList();
 
-                return Ok(new
-                {
-                    status = 1,
-                    data = departments
-                });
+                return Ok(ApiResponseFactory.Success(departments, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
 
         }

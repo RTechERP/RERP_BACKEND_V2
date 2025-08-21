@@ -1,4 +1,5 @@
 ﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
@@ -21,20 +22,12 @@ namespace RERPAPI.Controllers.HandoverMinutes
             try
             {
                 List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetAllHandoverMinutes", new string[] { "@DateStart", "@DateEnd", "@KeyWords" }, new object[] { dateStart, dateEnd, keyWords });
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<dynamic>.GetListData(list, 0)
-                });
+                var data = SQLHelper<dynamic>.GetListData(list, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -44,20 +37,12 @@ namespace RERPAPI.Controllers.HandoverMinutes
             try
             {
                 List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetHanoverMinutesDetail", new string[] { "@HandoverMinutesID" }, new object[] { id });
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<dynamic>.GetListData(list, 0)
-                });
+                var data = SQLHelper<dynamic>.GetListData(list, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -66,7 +51,7 @@ namespace RERPAPI.Controllers.HandoverMinutes
         {
             try
             {
-                // Dùng phạm vi ngày an toàn
+
                 DateTime start = new DateTime(2000, 1, 1);
                 DateTime end = new DateTime(2099, 12, 31);
                 List<List<dynamic>> handoverList = SQLHelper<dynamic>.ProcedureToList(
@@ -77,13 +62,13 @@ namespace RERPAPI.Controllers.HandoverMinutes
 
                 if (handoverList == null || !handoverList.Any() || !handoverList[0].Any())
                 {
-                    return BadRequest(new { status = 0, message = "Không có dữ liệu từ spGetAllHandoverMinutes" });
+                    throw new Exception("Không có dữ liệu từ spGetAllHandoverMinutes");
                 }
 
                 var handoverData = SQLHelper<dynamic>.GetListData(handoverList, 0).FirstOrDefault(h => h.ID == id);
                 if (handoverData == null)
                 {
-                    return BadRequest(new { status = 0, message = $"Không tìm thấy biên bản bàn giao với ID {id}" });
+                    throw new Exception($"Không tìm thấy biên bản bàn giao với ID {id}");
                 }
 
                 // Lấy chi tiết biên bản
@@ -95,14 +80,14 @@ namespace RERPAPI.Controllers.HandoverMinutes
                 var detailData = SQLHelper<dynamic>.GetListData(detailList, 0);
                 if (!detailData.Any())
                 {
-                    return BadRequest(new { status = 0, message = "Không có dữ liệu chi tiết để xuất" });
+                    throw new Exception("Không có dữ liệu chi tiết để xuất");
                 }
 
                 // Đường dẫn mẫu Excel
                 string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "BBBGTemplate.xlsx");
                 if (!System.IO.File.Exists(templatePath))
                 {
-                    return BadRequest(new { status = 0, message = "Không tìm thấy file mẫu Excel" });
+                    throw new Exception("Không tìm thấy file mẫu Excel");
                 }
 
                 // Mở file Excel mẫu
@@ -126,7 +111,7 @@ namespace RERPAPI.Controllers.HandoverMinutes
                     int startRow = 22;
 
                     // Nếu có nhiều hơn 1 sản phẩm thì insert thêm dòng bên dưới dòng 22
-                    if (detailData.Count > 1)
+                    if (detailData.Count > 2)
                     {
                         sheet.Row(startRow + 1).InsertRowsBelow(detailData.Count - 2);
                     }
@@ -190,12 +175,7 @@ namespace RERPAPI.Controllers.HandoverMinutes
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 

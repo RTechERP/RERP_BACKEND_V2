@@ -29,21 +29,13 @@ namespace RERPAPI.Controllers.PO
                 List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetViewPOKHDetail", 
                          new string[] { "@DateStart", "@DateEnd", "@EmployeeTeamSaleID", "@UserID", "@POType", "@Status", "@CustomerID", "@Keyword" }, 
                          new object[] { dateTimeS , dateTimeE , employeeTeamSaleID, userID, poType, status, customerID, keyword });
+                var data = SQLHelper<dynamic>.GetListData(list, 0);
 
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<dynamic>.GetListData(list, 0)
-                });
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-user")]
@@ -52,20 +44,11 @@ namespace RERPAPI.Controllers.PO
             try
             {
                 List<Employee> list = _employeeRepo.GetAll().Where(x => x.UserID != 0).ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data = list
-                });
+                return Ok(ApiResponseFactory.Success(list, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-customer")]
@@ -75,20 +58,11 @@ namespace RERPAPI.Controllers.PO
             {
                 var list = _customerViewPOKHRepo.GetAll()
                            .Where(x => x.IsDeleted != true).OrderByDescending(x => x.CreatedDate).ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data = list
-                });
+                return Ok(ApiResponseFactory.Success(list, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-groupsale")]
@@ -97,20 +71,11 @@ namespace RERPAPI.Controllers.PO
             try
             {
                 var list = _groupSaleRepo.GetAll().Select(x => new { x.ID, x.GroupSalesName }).ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data = list
-                });
+                return Ok(ApiResponseFactory.Success(list, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-employee-team-sale")]
@@ -119,20 +84,11 @@ namespace RERPAPI.Controllers.PO
             try
             {
                 var list = _employeeTeamSaleRepo.GetAll().Where(x=>x.ParentID == 0).ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data = list
-                });
+                return Ok(ApiResponseFactory.Success(list, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-mainindex")]
@@ -142,20 +98,11 @@ namespace RERPAPI.Controllers.PO
             {
                 List<int> ids = new List<int> { 8, 9, 10, 11, 12, 13 };
                 var list = _mainIndexRepo.GetAll().Where(x => ids.Contains(x.ID)).ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data = list
-                });
+                return Ok(ApiResponseFactory.Success(list, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpPost("save-data")]
@@ -167,19 +114,11 @@ namespace RERPAPI.Controllers.PO
                 {
                     _pokhDetailRepo.Update(item);
                 }
-                return Ok(new
-                {
-                    status = 1,
-                });
+                return Ok(ApiResponseFactory.Success(null, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

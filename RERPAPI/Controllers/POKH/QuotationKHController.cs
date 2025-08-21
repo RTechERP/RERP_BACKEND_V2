@@ -22,20 +22,12 @@ namespace RERPAPI.Controllers.PO
                 List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetQuotationKH",
                     new string[] { "@FilterText", "@Status", "@CustomerID", "@UserID", "@PageSize", "@PageNumber" },
                     new object[] { filterText, status, customerId, userId, size, page  });
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<dynamic>.GetListData(list, 0),
-                });
+                var data = SQLHelper<dynamic>.GetListData(list, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-details")]
@@ -44,20 +36,11 @@ namespace RERPAPI.Controllers.PO
             try
             {
                 var list = _quotationDetailKHRepo.GetAll().Where(x => x.QuotationKHID == id && x.IsDeleted != true);
-                return Ok(new
-                {
-                    status = 1,
-                    data = list,
-                });
+                return Ok(ApiResponseFactory.Success(list, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

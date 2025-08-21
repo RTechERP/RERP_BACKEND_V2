@@ -25,20 +25,12 @@ namespace RERPAPI.Controllers.PO
                 List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetPOKHHistory",
                     new string[] { "@Keywords", "@PODateStart", "@PODateEnd", "@CustomerCode" },
                     new object[] { keywords, startDate, endDate, cusCode });
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<dynamic>.GetListData(list, 0)
-                });
+                var data = SQLHelper<dynamic>.GetListData(list, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
             }   
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpPost("save-data")]
@@ -51,16 +43,11 @@ namespace RERPAPI.Controllers.PO
                     await _pokhHistoryRepo.CreateAsync(item);
 
                 }
-                return Ok(new { status = 1, message = "POKH History added successfully." });
+                return Ok(ApiResponseFactory.Success(null, "POKH history added successfully"));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
 
         }

@@ -20,20 +20,12 @@ namespace RERPAPI.Controllers.RequestInvoice
             try
             {
                 List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetRequestInvoice", new string[] { "@DateStart", "@DateEnd", "@Keywords" }, new object[] { dateStart, dateEnd, keyWords });
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<dynamic>.GetListData(list, 0)
-                });
+                var data = SQLHelper<dynamic>.GetListData(list, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-details")]
@@ -52,12 +44,7 @@ namespace RERPAPI.Controllers.RequestInvoice
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

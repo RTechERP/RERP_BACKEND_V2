@@ -9,18 +9,18 @@ using static RERPAPI.Model.DTO.ModulaLocationDTO;
 
 namespace RERPAPI.Controllers
 {
-   [Route("api/[controller]")]
-   [ApiController]
-   public class ModulaLocationController : ControllerBase
-   {
-       ModulaLocationRepo locationRepo = new ModulaLocationRepo();
-       ModulaLocationDetailRepo detailRepo = new ModulaLocationDetailRepo();
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ModulaLocationController : ControllerBase
+    {
+        ModulaLocationRepo locationRepo = new ModulaLocationRepo();
+        ModulaLocationDetailRepo detailRepo = new ModulaLocationDetailRepo();
 
-       BillImportDetailSerialNumberRepo importDetailSerialNumberRepo = new BillImportDetailSerialNumberRepo();
-       BillExportDetailSerialNumberRepo exportDetailSerialNumberRepo = new BillExportDetailSerialNumberRepo();
+        BillImportDetailSerialNumberRepo importDetailSerialNumberRepo = new BillImportDetailSerialNumberRepo();
+        BillExportDetailSerialNumberRepo exportDetailSerialNumberRepo = new BillExportDetailSerialNumberRepo();
 
-       BillImportDetailSerialNumberModulaLocationRepo serialNumberImportModulaRepo = new BillImportDetailSerialNumberModulaLocationRepo();
-       BillExportDetailSerialNumberModulaLocationRepo serialNumberExportModulaRepo = new BillExportDetailSerialNumberModulaLocationRepo();
+        BillImportDetailSerialNumberModulaLocationRepo serialNumberImportModulaRepo = new BillImportDetailSerialNumberModulaLocationRepo();
+        BillExportDetailSerialNumberModulaLocationRepo serialNumberExportModulaRepo = new BillExportDetailSerialNumberModulaLocationRepo();
 
 
 
@@ -52,23 +52,23 @@ namespace RERPAPI.Controllers
                 List<List<dynamic>> locationdetails = SQLHelper<object>.ProcedureToList("spGetModulaLocationDetail", new string[] { "@Keyword" }, new object[] { keyword.Trim() });
                 var details = SQLHelper<object>.GetListData(locationdetails, 0);
 
-               List<ModulaLocationDTO> locations = new List<ModulaLocationDTO>();
-               foreach (var item in listLocations)
-               {
-                   ModulaLocationDTO location = new ModulaLocationDTO();
-                   location.ID = item.ID;
-                   location.STT = item.STT;
-                   location.Code = item.Code;
-                   location.Name = item.Name;
-                   location.Width = item.Width;
-                   location.Height = item.Height;
-                   location.AxisX = item.AxisX;
-                   location.AxisY = item.AxisY;
-                   location.IsDeleted = item.IsDeleted;
-                   location.ModulaLocationDetails = details.Where(x => x.ModulaLocationID == item.ID).ToList();
+                List<ModulaLocationDTO> locations = new List<ModulaLocationDTO>();
+                foreach (var item in listLocations)
+                {
+                    ModulaLocationDTO location = new ModulaLocationDTO();
+                    location.ID = item.ID;
+                    location.STT = item.STT;
+                    location.Code = item.Code;
+                    location.Name = item.Name;
+                    location.Width = item.Width;
+                    location.Height = item.Height;
+                    location.AxisX = item.AxisX;
+                    location.AxisY = item.AxisY;
+                    location.IsDeleted = item.IsDeleted;
+                    location.ModulaLocationDetails = details.Where(x => x.ModulaLocationID == item.ID).ToList();
 
-                   locations.Add(location);
-               }
+                    locations.Add(location);
+                }
 
                 return Ok(new
                 {
@@ -101,55 +101,55 @@ namespace RERPAPI.Controllers
                                                                 new object[] { billtype, billcode });
 
 
-               List<dynamic> importDetails = new List<dynamic>();
-               List<dynamic> exportDetails = new List<dynamic>();
+                List<dynamic> importDetails = new List<dynamic>();
+                List<dynamic> exportDetails = new List<dynamic>();
 
-               if (billtype == 1) importDetails = SQLHelper<object>.GetListData(data, 0);
-               else if (billtype == 2) exportDetails = SQLHelper<object>.GetListData(data, 0);
+                if (billtype == 1) importDetails = SQLHelper<object>.GetListData(data, 0);
+                else if (billtype == 2) exportDetails = SQLHelper<object>.GetListData(data, 0);
 
-               return Ok(new
-               {
-                   status = 1,
-                   data = new { importDetails, exportDetails }
-               });
-           }
-           catch (Exception ex)
-           {
-               return Ok(new
-               {
-                   status = 0,
-                   message = ex.Message,
-                   error = ex.ToString()
-               });
-           }
-       }
+                return Ok(new
+                {
+                    status = 1,
+                    data = new { importDetails, exportDetails }
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
+        }
 
 
-       [HttpGet("getlocationdetail")]
-       public IActionResult GetLocationByID(int id)
-       {
-           try
-           {
+        [HttpGet("getlocationdetail")]
+        public IActionResult GetLocationByID(int id)
+        {
+            try
+            {
 
-               List<List<dynamic>> locations = SQLHelper<object>.ProcedureToList("spGetModulaLocationDetailByID",
-                                                               new string[] { "@ID" },
-                                                               new object[] { id });
-               return Ok(new
-               {
-                   status = 1,
-                   data = SQLHelper<object>.GetListData(locations, 0)
-               });
-           }
-           catch (Exception ex)
-           {
-               return Ok(new
-               {
-                   status = 0,
-                   message = ex.Message,
-                   error = ex.ToString()
-               });
-           }
-       }
+                List<List<dynamic>> locations = SQLHelper<object>.ProcedureToList("spGetModulaLocationDetailByID",
+                                                                new string[] { "@ID" },
+                                                                new object[] { id });
+                return Ok(new
+                {
+                    status = 1,
+                    data = SQLHelper<object>.GetListData(locations, 0)
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
+        }
 
         [HttpPost("savedata")]
         public async Task<IActionResult> SaveData([FromBody] List<ModulaLocationDTO.SerialNumberModulaLocation> serialNumberModulaLocations)
@@ -194,19 +194,19 @@ namespace RERPAPI.Controllers
                     {
                         if (string.IsNullOrWhiteSpace(item.SerialNumber)) continue;
 
-                       BillImportDetailSerialNumber serialNumber = importDetailSerialNumberRepo.GetAll().FirstOrDefault(x => x.SerialNumber == item.SerialNumber) ?? new BillImportDetailSerialNumber();
+                        BillImportDetailSerialNumber serialNumber = importDetailSerialNumberRepo.GetAll().FirstOrDefault(x => x.SerialNumber == item.SerialNumber) ?? new BillImportDetailSerialNumber();
 
-                       if (serialNumber.ID <= 0)
-                       {
-                           serialNumber.STT = i + 1;
-                           serialNumber.SerialNumber = item.SerialNumber.Trim();
-                           serialNumber.BillImportDetailID = item.BillImportDetailID;
-                           serialNumber.SerialNumberRTC = "";
-                           serialNumber.CreatedBy = serialNumber.UpdatedBy = item.CreatedBy;
-                           serialNumber.CreatedDate = serialNumber.UpdatedDate = DateTime.Now;
+                        if (serialNumber.ID <= 0)
+                        {
+                            serialNumber.STT = i + 1;
+                            serialNumber.SerialNumber = item.SerialNumber.Trim();
+                            serialNumber.BillImportDetailID = item.BillImportDetailID;
+                            serialNumber.SerialNumberRTC = "";
+                            serialNumber.CreatedBy = serialNumber.UpdatedBy = item.CreatedBy;
+                            serialNumber.CreatedDate = serialNumber.UpdatedDate = DateTime.Now;
 
-                           importDetailSerialNumberRepo.Create(serialNumber);
-                       }
+                            importDetailSerialNumberRepo.Create(serialNumber);
+                        }
 
                         BillImportDetailSerialNumberModulaLocation import = new BillImportDetailSerialNumberModulaLocation()
                         {
@@ -217,212 +217,212 @@ namespace RERPAPI.Controllers
                             CreatedBy = item.CreatedBy,
                             UpdatedBy = item.CreatedBy,
 
-                           CreatedDate = DateTime.Now,
-                           UpdatedDate = DateTime.Now,
-                       };
+                            CreatedDate = DateTime.Now,
+                            UpdatedDate = DateTime.Now,
+                        };
 
-                       await serialNumberImportModulaRepo.CreateAsync(import);
-                   }
-                   else
-                   {
-                       BillExportDetailSerialNumber serialNumber = exportDetailSerialNumberRepo.GetAll().FirstOrDefault(x => x.SerialNumber == item.SerialNumber) ?? new BillExportDetailSerialNumber();
-                       if (serialNumber.ID <= 0)
-                       {
-                           serialNumber.STT = i + 1;
-                           serialNumber.SerialNumber = item.SerialNumber.Trim();
-                           serialNumber.BillExportDetailID = item.BillExportDetailID;
-                           serialNumber.SerialNumberRTC = "";
-                           serialNumber.CreatedBy = serialNumber.UpdatedBy = item.CreatedBy;
-                           serialNumber.CreatedDate = serialNumber.UpdatedDate = DateTime.Now;
+                        await serialNumberImportModulaRepo.CreateAsync(import);
+                    }
+                    else
+                    {
+                        BillExportDetailSerialNumber serialNumber = exportDetailSerialNumberRepo.GetAll().FirstOrDefault(x => x.SerialNumber == item.SerialNumber) ?? new BillExportDetailSerialNumber();
+                        if (serialNumber.ID <= 0)
+                        {
+                            serialNumber.STT = i + 1;
+                            serialNumber.SerialNumber = item.SerialNumber.Trim();
+                            serialNumber.BillExportDetailID = item.BillExportDetailID;
+                            serialNumber.SerialNumberRTC = "";
+                            serialNumber.CreatedBy = serialNumber.UpdatedBy = item.CreatedBy;
+                            serialNumber.CreatedDate = serialNumber.UpdatedDate = DateTime.Now;
 
-                           exportDetailSerialNumberRepo.Create(serialNumber);
-                       }
+                            exportDetailSerialNumberRepo.Create(serialNumber);
+                        }
 
-                       BillExportDetailSerialNumberModulaLocation export = new BillExportDetailSerialNumberModulaLocation()
-                       {
-                           BillExportDetailSerialNumberID = serialNumber.ID,
-                           ModulaLocationDetailID = item.ModulaLocationDetailID,
-                           Quantity = item.Quantity,
-                           IsDeleted = false,
-                           CreatedBy = item.CreatedBy,
-                           UpdatedBy = item.CreatedBy,
+                        BillExportDetailSerialNumberModulaLocation export = new BillExportDetailSerialNumberModulaLocation()
+                        {
+                            BillExportDetailSerialNumberID = serialNumber.ID,
+                            ModulaLocationDetailID = item.ModulaLocationDetailID,
+                            Quantity = item.Quantity,
+                            IsDeleted = false,
+                            CreatedBy = item.CreatedBy,
+                            UpdatedBy = item.CreatedBy,
 
-                           CreatedDate = DateTime.Now,
-                           UpdatedDate = DateTime.Now,
-                       };
+                            CreatedDate = DateTime.Now,
+                            UpdatedDate = DateTime.Now,
+                        };
 
-                       await serialNumberExportModulaRepo.CreateAsync(export);
-                   }
-               }
+                        await serialNumberExportModulaRepo.CreateAsync(export);
+                    }
+                }
 
 
-               return Ok(new
-               {
-                   status = 1,
-                   message = "Cập nhật thành công!",
-               });
-           }
-           catch (Exception ex)
-           {
-               return Ok(new
-               {
-                   status = 0,
-                   message = ex.Message,
-                   error = ex.ToString()
-               });
-           }
-       }
+                return Ok(new
+                {
+                    status = 1,
+                    message = "Cập nhật thành công!",
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
+        }
 
 
         [HttpPost("savelocation")]
         public async Task<IActionResult> SaveLocation([FromBody] ModulaLocationDTO modulaLocation)
         {
-           try
-           {
+            try
+            {
 
-               if (modulaLocation.ID <= 0)
-               {
-                   modulaLocation.CreatedDate = modulaLocation.UpdatedDate = DateTime.Now;
-                   await locationRepo.CreateAsync(modulaLocation);
-               }
-               else
-               {
-                   modulaLocation.UpdatedDate = DateTime.Now;
-                   await locationRepo.UpdateAsync(modulaLocation);
-               }
+                if (modulaLocation.ID <= 0)
+                {
+                    modulaLocation.CreatedDate = modulaLocation.UpdatedDate = DateTime.Now;
+                    await locationRepo.CreateAsync(modulaLocation);
+                }
+                else
+                {
+                    modulaLocation.UpdatedDate = DateTime.Now;
+                    await locationRepo.UpdateAsync(modulaLocation);
+                }
 
-               modulaLocation.LocationDetails.ForEach(x =>
-               {
-                   x.ModulaLocationID = modulaLocation.ID;
-                   x.AxisX = 0;
-                   x.AxisY = 1;
-               });
+                modulaLocation.LocationDetails.ForEach(x =>
+                {
+                    x.ModulaLocationID = modulaLocation.ID;
+                    x.AxisX = 0;
+                    x.AxisY = 1;
+                });
 
-               await detailRepo.CreateRangeAsync(modulaLocation.LocationDetails);
+                await detailRepo.CreateRangeAsync(modulaLocation.LocationDetails);
 
-        //        return Ok(new
-        //        {
-        //            status = 1,
-        //            message = "Cập nhật thành công!",
-        //        });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return Ok(new
-        //        {
-        //            status = 0,
-        //            message = ex.Message,
-        //            error = ex.ToString()
-        //        });
-        //    }
-        //}
+                return Ok(new
+                {
+                    status = 1,
+                    message = "Cập nhật thành công!",
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
+        }
 
 
 
         [HttpPost("call-modula")]
-        public async Task<IActionResult> CallModula([FromBody] ModulaLocationDTO.CallModula model)
-        {
-            try
-            {
-                if (model == null || string.IsNullOrEmpty(model.Code))
+                public async Task<IActionResult> CallModula([FromBody] ModulaLocationDTO.CallModula model)
                 {
-                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy Tray hoặc Vị trí!"));
-                }
-
-                await _tcpClient.SendStringAsync(_statusModula);
-                string resultStatus = await _tcpClient.ReceiveStringAsync(4096);
-
-                string call = _callModula.Replace("@", model.Code.Trim());
-
-                await _tcpClient.SendStringAsync(call);
-
-                string resultCall = await _tcpClient.ReceiveStringAsync(4096);
-
-                if (string.IsNullOrEmpty(resultCall) || !resultCall.Contains('|'))
-                {
-                    return BadRequest(ApiResponseFactory.Fail(null, "Không nhận được phản hồi từ Modula!"));
-                }
-                if (resultCall.Split('|')[3].Trim() != "0")
-                {
-                    string errorMessage = (resultCall.Split('|')[3].Trim()) switch
+                    try
                     {
-                        "-1" => "Số khay không hợp lệ.",
-                        "-2" => "Vị trí không hợp lệ.",
-                        "-3" => "Vị trí đang bận.",
-                        "-4" => "Khay đang bận.",
-                        "-5" => "Vị trí bị vô hiệu hóa hoặc không có người dùng đăng nhập.",
-                        "-6" => "Máy không ở chế độ tự động.",
-                        _ => "Lỗi không xác định."
-                    };
-                    return BadRequest(ApiResponseFactory.Fail(null, errorMessage));
-                }
-                // Lazer
-                string lazerGo = _lazerGoModula.Replace("x", model.AxisX.ToString()).Replace("y", model.AxisY.ToString());
+                        if (model == null || string.IsNullOrEmpty(model.Code))
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy Tray hoặc Vị trí!"));
+                        }
 
-                await _tcpClient.SendStringAsync(lazerGo);
+                        await _tcpClient.SendStringAsync(_statusModula);
+                        string resultStatus = await _tcpClient.ReceiveStringAsync(4096);
 
-                string resultLazerGo = await _tcpClient.ReceiveStringAsync(4096);
+                        string call = _callModula.Replace("@", model.Code.Trim());
 
-                await _tcpClient.SendStringAsync(_lazerOnModula);
+                        await _tcpClient.SendStringAsync(call);
+
+                        string resultCall = await _tcpClient.ReceiveStringAsync(4096);
+
+                        if (string.IsNullOrEmpty(resultCall) || !resultCall.Contains('|'))
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null, "Không nhận được phản hồi từ Modula!"));
+                        }
+                        if (resultCall.Split('|')[3].Trim() != "0")
+                        {
+                            string errorMessage = (resultCall.Split('|')[3].Trim()) switch
+                            {
+                                "-1" => "Số khay không hợp lệ.",
+                                "-2" => "Vị trí không hợp lệ.",
+                                "-3" => "Vị trí đang bận.",
+                                "-4" => "Khay đang bận.",
+                                "-5" => "Vị trí bị vô hiệu hóa hoặc không có người dùng đăng nhập.",
+                                "-6" => "Máy không ở chế độ tự động.",
+                                _ => "Lỗi không xác định."
+                            };
+                            return BadRequest(ApiResponseFactory.Fail(null, errorMessage));
+                        }
+                        // Lazer
+                        string lazerGo = _lazerGoModula.Replace("x", model.AxisX.ToString()).Replace("y", model.AxisY.ToString());
+
+                        await _tcpClient.SendStringAsync(lazerGo);
+
+                        string resultLazerGo = await _tcpClient.ReceiveStringAsync(4096);
+
+                        await _tcpClient.SendStringAsync(_lazerOnModula);
 
 
-                string resultLazerOn = await _tcpClient.ReceiveStringAsync(4096);
+                        string resultLazerOn = await _tcpClient.ReceiveStringAsync(4096);
 
 
-                string messageShow = _displayShowModula.Replace("message", model.Name);
+                        string messageShow = _displayShowModula.Replace("message", model.Name);
 
-                await _tcpClient.SendStringAsync(messageShow);
+                        await _tcpClient.SendStringAsync(messageShow);
 
-                string resultShow = await _tcpClient.ReceiveStringAsync(4096);
+                        string resultShow = await _tcpClient.ReceiveStringAsync(4096);
 
-                return Ok(ApiResponseFactory.Success(null, $"Call thành công: {resultCall}| Result Lazer Go:{resultLazerGo} | Result Lazer On: {resultLazerOn} | Result show: {resultShow}"));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-
-        }
-
-
-        [HttpGet("return-modula")]
-        public async Task<IActionResult> ReturnModula()
-        {
-            try
-            {
-                await _tcpClient.SendStringAsync(_lazerOffModula);
-                string resultLazerOff = await _tcpClient.ReceiveStringAsync(4096);
-                if (string.IsNullOrEmpty(resultLazerOff) || !resultLazerOff.Contains('|'))
-                {
-                    return BadRequest(ApiResponseFactory.Fail(null, "Không nhận được phản hồi từ Modula!"));
-                }
-                await _tcpClient.SendStringAsync(_returnModula);
-                string resultCall = await _tcpClient.ReceiveStringAsync(4096);
-                if (string.IsNullOrEmpty(resultCall) || !resultCall.Contains('|'))
-                {
-                    return BadRequest(ApiResponseFactory.Fail(null, "Không nhận được phản hồi từ Modula!"));
-                }
-
-                if (resultCall.Split('|')[3].Trim() != "0")
-                {
-                    string errorMessage = (resultCall.Split('|')[3].Trim()) switch
+                        return Ok(ApiResponseFactory.Success(null, $"Call thành công: {resultCall}| Result Lazer Go:{resultLazerGo} | Result Lazer On: {resultLazerOn} | Result show: {resultShow}"));
+                    }
+                    catch (Exception ex)
                     {
-                        "-1" => "Vị trí trống (không có khay để trả).",
-                        "-2" => "Vị trí không hợp lệ.",
-                        "-3" => "Vị trí đang bận (đang xử lý thao tác khác).",
-                        "-6" => "Máy không ở chế độ tự động.",
-                        "-100" => "Lỗi chung (kiểm tra log WMS).",
-                        _ => "Lỗi không xác định."
-                    };
-                    return BadRequest(ApiResponseFactory.Fail(null, errorMessage));
+                        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+                    }
+
                 }
-                await _tcpClient.SendStringAsync(_displayClearModula);
-                return Ok(ApiResponseFactory.Success(null, $"Return: {resultCall}"));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+
+
+                [HttpGet("return-modula")]
+                public async Task<IActionResult> ReturnModula()
+                {
+                    try
+                    {
+                        await _tcpClient.SendStringAsync(_lazerOffModula);
+                        string resultLazerOff = await _tcpClient.ReceiveStringAsync(4096);
+                        if (string.IsNullOrEmpty(resultLazerOff) || !resultLazerOff.Contains('|'))
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null, "Không nhận được phản hồi từ Modula!"));
+                        }
+                        await _tcpClient.SendStringAsync(_returnModula);
+                        string resultCall = await _tcpClient.ReceiveStringAsync(4096);
+                        if (string.IsNullOrEmpty(resultCall) || !resultCall.Contains('|'))
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null, "Không nhận được phản hồi từ Modula!"));
+                        }
+
+                        if (resultCall.Split('|')[3].Trim() != "0")
+                        {
+                            string errorMessage = (resultCall.Split('|')[3].Trim()) switch
+                            {
+                                "-1" => "Vị trí trống (không có khay để trả).",
+                                "-2" => "Vị trí không hợp lệ.",
+                                "-3" => "Vị trí đang bận (đang xử lý thao tác khác).",
+                                "-6" => "Máy không ở chế độ tự động.",
+                                "-100" => "Lỗi chung (kiểm tra log WMS).",
+                                _ => "Lỗi không xác định."
+                            };
+                            return BadRequest(ApiResponseFactory.Fail(null, errorMessage));
+                        }
+                        await _tcpClient.SendStringAsync(_displayClearModula);
+                        return Ok(ApiResponseFactory.Success(null, $"Return: {resultCall}"));
+                    }
+                    catch (Exception ex)
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+                    }
+                }
             }
         }
-    }
-}
