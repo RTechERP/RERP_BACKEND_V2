@@ -42,6 +42,8 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
         ProjectRepo _projectRepo = new ProjectRepo();
         HistoryDeleteBillRepo _historyDeleteBillRepo = new HistoryDeleteBillRepo();
         BillExportDetailSerialNumberRepo _billExportDetailSerialNumberRepo = new BillExportDetailSerialNumberRepo();
+        WareHouseRepo _warehouseRepo = new WareHouseRepo();
+        BillExportDetailSerialNumberRepo billExportDetailSerialNumberRepo = new BillExportDetailSerialNumberRepo();
         [HttpGet("get-all-project")]
         public IActionResult getAllProject()
         {
@@ -63,31 +65,31 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                 });
             }
         }
-        [HttpGet("get-product")]
-        public IActionResult getProductSale(int id)
-        {
-            try
-            {
-                List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
-                       "spGetInventory", new string[] { "@ID", "@Find", "@WarehouseCode", "@IsStock", "@IsDeleted" },
-                    new object[] { id, "", "HN", false, false }
-                   );
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<object>.GetListData(result, 0)
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
-        }
+        /*   [HttpGet("get-product")]
+           public IActionResult getProductSale(int id)
+           {
+               try
+               {
+                   List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
+                          "spGetInventory", new string[] { "@ID", "@Find", "@WarehouseCode", "@IsStock", "@IsDeleted" },
+                       new object[] { id, "", "HN", false, false }
+                      );
+                   return Ok(new
+                   {
+                       status = 1,
+                       data = SQLHelper<object>.GetListData(result, 0)
+                   });
+               }
+               catch (Exception ex)
+               {
+                   return BadRequest(new
+                   {
+                       status = 0,
+                       message = ex.Message,
+                       error = ex.ToString()
+                   });
+               }
+           }*/
         //done
         [HttpPost("")]
         public IActionResult getBillExport([FromBody] BillExportParamRequest filter)
@@ -103,6 +105,41 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
                        "spGetBillExport_New", new string[] { "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@Status", "@KhoType", "@FilterText", "@WarehouseCode" },
                     new object[] { filter.PageNumber, filter.PageSize, filter.DateStart, filter.DateEnd, filter.Status, filter.KhoType, filter.FilterText, filter.WarehouseCode }
+                   );
+                /* List<dynamic> billList = result[0]; // dữ liệu hóa đơn*/
+                int totalPage = 0;
+
+                if (result.Count > 1 && result[1].Count > 0)
+                {
+                    totalPage = (int)result[1][0].TotalPage;
+                }
+
+                return Ok(new
+                {
+                    status = 1,
+                    data = SQLHelper<object>.GetListData(result, 0),
+                    totalPage = totalPage
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
+        }
+        [HttpGet("get-product")]
+        public IActionResult getOptionProduct(string warehouseCode, int productGroupID)
+        {
+            try
+            {
+                /*  var warehouse = _warehouseRepo.GetByID(warehouseID);*/
+                List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
+                       "spGetInventory", new string[] { "@ID", "@Find", "@WarehouseCode" },
+                    new object[] { productGroupID, "", warehouseCode }
                    );
                 /* List<dynamic> billList = result[0]; // dữ liệu hóa đơn*/
                 int totalPage = 0;
@@ -170,12 +207,103 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                 });
             }
         }
+        private async Task<(bool IsValid, string ErrorMessage)> ValidateBillExport(BillExportDTO dto)
+        {
+            // Validate Code
+            if (string.IsNullOrWhiteSpace(dto.billExport?.Code))
+            {
+                return (false, "Xin hãy điền số phiếu.");
+            }
 
+            // Check for duplicate code
+            var existingBill = _billexportRepo.GetAll().Where(p => p.Code == dto.billExport.Code).FirstOrDefault();
+            if (dto.billExport.ID > 0)
+            {
+                // For update: check if code exists for a different ID
+                if (existingBill != null && existingBill.ID != dto.billExport.ID)
+                {
+                    return (false, "Số phiếu này đã tồn tại. Vui lòng chọn số phiếu khác!");
+                }
+            }
+            else
+            {
+                // For create: check if code already exists
+                if (existingBill != null)
+                {
+                    // Optionally generate new code here if loadBillNumber equivalent is needed
+                    return (false, $"Phiếu đã tồn tại. Vui lòng chọn số phiếu khác hoặc tải lại số phiếu!");
+                }
+            }
+
+            // Validate Customer or Supplier
+            if ((dto.billExport.CustomerID <= 0 || dto.billExport.CustomerID == null) &&
+                (dto.billExport.SupplierID <= 0 || dto.billExport.SupplierID == null))
+            {
+                return (false, "Xin hãy chọn Khách hàng hoặc Nhà cung cấp!");
+            }
+
+            // Validate Warehouse Type
+            if (string.IsNullOrWhiteSpace(dto.billExport.WarehouseType))
+            {
+                return (false, "Xin hãy chọn kho quản lý.");
+            }
+
+            /*  // Validate Group
+              if (string.IsNullOrWhiteSpace(dto.billExport.GroupID))
+              {
+                  return (false, "Xin hãy chọn nhóm.");
+              }*/
+
+            // Validate Sender
+            if (dto.billExport.SenderID == null)
+            {
+                return (false, "Xin hãy chọn người giao.");
+            }
+
+            // Validate Status
+            if (dto.billExport.Status < 0)
+            {
+                return (false, "Xin hãy chọn trạng thái.");
+            }
+
+            /*   // Validate Creation Date
+               if (dto.billExport.Status != 6 && !dto.billExport.CreatedDate.HasValue)
+               {
+                   return (false, "Xin hãy chọn Ngày xuất!");
+               }*/
+
+            return (true, string.Empty);
+        }
         [HttpPost("save-data")]
         public async Task<IActionResult> saveDataBillExport([FromBody] BillExportDTO dto)
         {
             try
             {
+                // validation
+                var (isValid, errorMessage) = await ValidateBillExport(dto);
+                if (!isValid)
+                {
+                    return BadRequest(new
+                    {
+                        status = 0,
+                        message = errorMessage
+                    });
+                }
+                // trường hợp xóa 
+                if (dto.billExportDetail == null && dto.DeletedDetailIDs == null)
+                {
+                    // Cập nhật phiếu nhập
+
+                    dto.billExport.UpdatedDate = DateTime.Now;
+                    _billexportRepo.Update(dto.billExport);
+                    return Ok(new
+                    {
+                        status = 1,
+                        message = "Đã xóa thành công phiếu " + dto.billExport.Code
+
+                    });
+                }
+
                 /*  var inventoryLookup = _inventoryRepo.GetAll()
                                             .ToDictionary(x => new { x.WarehouseID, x.ProductSaleID });*/
                 var inventoryList = _inventoryRepo.GetAll().ToList();
@@ -197,7 +325,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                 {
                     dto.billExport.IsMerge = false;
                     dto.billExport.UnApprove = 0;
-                    dto.billExport.IsDeleted= false;
+                    dto.billExport.IsDeleted = false;
                     await _billexportRepo.CreateAsync(dto.billExport);
                     billExportId = dto.billExport.ID;
 
@@ -217,13 +345,13 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                     }
                 }
                 else // Cập nhật phiếu xuất
-                {    
+                {
                     dto.billExport.UpdatedDate = DateTime.Now;
                     _billexportRepo.Update(dto.billExport);
                     billExportId = dto.billExport.ID;
                 }
                 //chi tiết phiếu xuất
-                foreach (var detail in dto.billExportDetail)
+                foreach (var detail in  dto.billExportDetail)
                 {
                     detail.BillID = billExportId;
 
@@ -240,9 +368,47 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                         var existingDetail = _billExportDetailRepo.GetByID(detail.ID);
                         if (existingDetail != null)
                         {
-                            _billExportDetailRepo.Update(existingDetail);
+                                _billExportDetailRepo.Update(detail);
                         }
                     }
+                    //serial
+                    // Update serial với BillExportDetailID
+                    if (detail.SerialNumber != null && detail.SerialNumber.Any())
+                    {
+                        // Lấy serial từ SerialNumbers, kiểm tra CreatedDate gần nhất để tránh xung đột
+                        var serialIds = detail.SerialNumber
+                                .Split(',', StringSplitOptions.RemoveEmptyEntries) // tách theo dấu phẩy
+                                .Select(x => int.Parse(x.Trim())) // chuyển sang int
+                                .ToList();
+                        var serials = _billExportDetailSerialNumberRepo.GetAll()
+                            .Where(s => serialIds.Contains(s.ID) &&
+                                        s.IsDeleted != true &&
+                                        s.BillExportDetailID == null)            
+                            .ToList();
+
+                        if (detail.Qty.HasValue && serials.Count != (int)detail.Qty)
+                        {
+                            return BadRequest(new { 
+                                status = 0,
+                                message = $"Số serial ({serials.Count}) không khớp Qty ({detail.Qty})" 
+                            });
+                        }
+                        // Update SerialNumber nếu chưa có
+                        if (string.IsNullOrEmpty(detail.SerialNumber))
+                        {
+                            detail.SerialNumber = serials.Any() ? string.Join(",", serials.Select(s => s.SerialNumber)) : null;
+                            _billExportDetailRepo.Update(detail);
+                        }
+
+                        // Cập nhật BillExportDetailID
+                        foreach (var serial in serials)
+                        {
+                            //.BillExportDetailID = detail.ID;
+                            serial.UpdatedDate = DateTime.Now;
+                            _billExportDetailSerialNumberRepo.Update(serial);
+                        }
+                    }
+
 
                     if (dto.DeletedDetailIDs != null && dto.DeletedDetailIDs.Any())
                     {
@@ -266,7 +432,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                                 bxSn.UpdatedDate = DateTime.Now;
                                 _billExportDetailSerialNumberRepo.Update(bxSn);
                             }
-                            
+
 
                         }
                     }
@@ -294,29 +460,29 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                         .Where(x => x.BillExportDetailID == detail.ID && x.InventoryProjectID == 0)
                         .ToList();
 
-               /*     var newProjectIds = detail.InventoryProjectIDs ?? new List<int>();*/
+                    /*     var newProjectIds = detail.InventoryProjectIDs ?? new List<int>();*/
 
                     // 1. Xóa mềm các dự án không còn
                     foreach (var old in oldProjects)
-                    {                     
-                            old.IsDeleted = true;
-                            await _inventoryprojectexportRepo.UpdateAsync(old);              
+                    {
+                        old.IsDeleted = true;
+                        await _inventoryprojectexportRepo.UpdateAsync(old);
                     }
 
                     // 2. Thêm mới nếu chưa có
-                   
-                        bool existsInOld = oldProjects.Any(x => x.InventoryProjectID == 0 && x.IsDeleted == false);
-                        if (!existsInOld)
+
+                    bool existsInOld = oldProjects.Any(x => x.InventoryProjectID == 0 && x.IsDeleted == false);
+                    if (!existsInOld)
+                    {
+                        InventoryProjectExport projectExport = new InventoryProjectExport
                         {
-                            InventoryProjectExport projectExport = new InventoryProjectExport
-                            {
-                                BillExportDetailID = detail.ID,
-                                InventoryProjectID = 0,
-                                UpdatedDate = DateTime.Now,
-                                IsDeleted = false
-                            };
-                            await _inventoryprojectexportRepo.CreateAsync(projectExport);
-                        }
+                            BillExportDetailID = detail.ID,
+                            InventoryProjectID = 0,
+                            UpdatedDate = DateTime.Now,
+                            IsDeleted = false
+                        };
+                        await _inventoryprojectexportRepo.CreateAsync(projectExport);
+                    }
                 }
 
                 return Ok(new
@@ -853,8 +1019,8 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
         }
 
 
-       
 
-   }
+
+    }
 
 }

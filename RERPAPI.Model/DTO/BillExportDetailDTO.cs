@@ -7,8 +7,9 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Model.DTO
 {
-    public class BillExportDetailDTO: BillExportDetail
+    public class BillExportDetailDTO
     {
-        public List<int>? InventoryProjectIDs { get; set; }
+        public BillExportDetail billExportDetail { get; set; } = new BillExportDetail();
+        public List<BillExportDetailSerialNumber> SerialNumbers { get; set; } = new List<BillExportDetailSerialNumber>();
     }
 }

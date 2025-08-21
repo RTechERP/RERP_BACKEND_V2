@@ -36,6 +36,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
         InvoiceLinkRepo _invoiceLinkRepo = new InvoiceLinkRepo();
         InventoryProjectRepo _inventoryProjectRepo = new InventoryProjectRepo();
         InventoryRepo _inventoryRepo = new InventoryRepo();
+        BillImportDetailSerialNumberRepo _billImportDetailSerialNumberRepo = new BillImportDetailSerialNumberRepo();
         private List<InvoiceDTO> listInvoice = new List<InvoiceDTO>();
         /// <summary>
         /// lấy danh sách phiếu nhập
@@ -211,6 +212,47 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                 });
             }
         }
+        private async Task<(bool IsValid, string ErrorMessage)> ValidateBillImport(BillImportDTO dto)
+        {
+        
+            // Validate Supplier
+            if (dto.billImport.SupplierID == null)
+            {
+                return (false, "Xin hãy điền thông tin nhà cung cấp.");
+            }
+
+            // Validate Receiver
+            if (string.IsNullOrWhiteSpace(dto.billImport.Reciver))
+            {
+                return (false, "Xin hãy điền thông tin người nhập.");
+            }
+
+            // Validate Warehouse Type
+            if (string.IsNullOrWhiteSpace(dto.billImport.KhoType))
+            {
+                return (false, "Xin hãy chọn kho quản lý.");
+            }
+
+            // Validate Deliver
+            if (string.IsNullOrWhiteSpace(dto.billImport.Deliver))
+            {
+                return (false, "Xin hãy điền thông tin người giao.");
+            }
+
+            // Validate Bill Type and Creation Date
+            if (dto.billImport.BillTypeNew != 4 && !dto.billImport.CreatedDate.HasValue)
+            {
+                return (false, "Vui lòng nhập Ngày nhập!");
+            }
+
+            // Validate Payment Rule
+            if (dto.billImport.RulePayID <= 0)
+            {
+                return (false, "Vui lòng nhập Điều khoản TT!");
+            }
+
+            return (true, string.Empty);
+        }
 
         [HttpGet("get-bill-code")]
         public ActionResult<string> getBillCode(int billType)
@@ -225,11 +267,21 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
 
             try
             {
-                if(dto.billImportDetail == null && dto.DeletedDetailIDs == null )
+                // Perform validation
+                var (isValid, errorMessage) = await ValidateBillImport(dto);
+                if (!isValid)
+                {
+                    return BadRequest(new
+                    {
+                        status = 0,
+                        message = errorMessage
+                    });
+                }
+                if (dto.billImportDetail == null && dto.DeletedDetailIDs == null )
                 {
                     // Cập nhật phiếu nhập
                     dto.billImport.UpdatedDate = DateTime.Now;
-                    await _billImportRepo.UpdateAsync(dto.billImport);
+                    _billImportRepo.Update(dto.billImport);
                     return Ok(new
                     {
                         status=1,
@@ -322,7 +374,45 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                         var existingDetail = _billImportDetailRepo.GetByID(detail.ID);
                         if (existingDetail != null)
                         {
-                            await _billImportDetailRepo.UpdateAsync(existingDetail);
+                            _billImportDetailRepo.Update(detail);
+                        }
+                    }
+                    //serial
+                    // Update serial với BillExportDetailID
+                    if (detail.SerialNumber != null && detail.SerialNumber.Any())
+                    {
+                        // Lấy serial từ SerialNumbers, kiểm tra CreatedDate gần nhất để tránh xung đột
+                        var serialIds = detail.SerialNumber
+                                .Split(',', StringSplitOptions.RemoveEmptyEntries) // tách theo dấu phẩy
+                                .Select(x => int.Parse(x.Trim())) // chuyển sang int
+                                .ToList();
+                        var serials = _billImportDetailSerialNumberRepo.GetAll()
+                            .Where(s => serialIds.Contains(s.ID) &&
+                                        s.IsDeleted != true &&
+                                        s.BillImportDetailID == null)
+                            .ToList();
+
+                        if (detail.Qty.HasValue && serials.Count != (int)detail.Qty)
+                        {
+                            return BadRequest(new
+                            {
+                                status = 0,
+                                message = $"Số serial ({serials.Count}) không khớp Qty ({detail.Qty})"
+                            });
+                        }
+                        // Update SerialNumber nếu chưa có
+                        if (string.IsNullOrEmpty(detail.SerialNumber))
+                        {
+                            detail.SerialNumber = serials.Any() ? string.Join(",", serials.Select(s => s.SerialNumber)) : null;
+                            _billImportDetailRepo.Update(detail);
+                        }
+
+                        // Cập nhật BillExportDetailID
+                        foreach (var serial in serials)
+                        {
+                            //.BillExportDetailID = detail.ID;
+                            serial.UpdatedDate = DateTime.Now;
+                            _billImportDetailSerialNumberRepo.Update(serial);
                         }
                     }
 

@@ -14,7 +14,6 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
         {
             try
             {
-              
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
                        "spGetBillExportDetail", new string[] { "@BillID"},
                     new object[] {billExportID}
