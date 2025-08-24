@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class CustomerRepo:GenericRepo<Customer>
+    public class CustomerRepo : GenericRepo<Customer>
     {
 
     }

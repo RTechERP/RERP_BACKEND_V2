@@ -141,4 +141,10 @@ public partial class ProjectPartlistPurchaseRequest
     public string? Maker { get; set; }
 
     public int? ProjectPartlistPurchaseRequestTypeID { get; set; }
+
+    public decimal? TargetPrice { get; set; }
+
+    public int? DuplicateID { get; set; }
+
+    public decimal? OriginQuantity { get; set; }
 }

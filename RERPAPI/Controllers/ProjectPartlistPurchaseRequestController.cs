@@ -1,14 +1,10 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ViewEngines;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using System.Data;
-using System.Text.Json;
-
 
 namespace RERPAPI.Controllers
 {
@@ -17,11 +13,12 @@ namespace RERPAPI.Controllers
     public class ProjectPartlistPurchaseRequestController : ControllerBase
     {
         #region Khai báo repository
+
         private ProjectPartlistPurchaseRequestRepo _repo = new ProjectPartlistPurchaseRequestRepo();
         private InventoryProjectRepo _inventoryProjectRepo = new InventoryProjectRepo();
         //private InventoryRepo _invRepo = new InventoryRepo();
 
-        #endregion
+        #endregion Khai báo repository
 
         [HttpPost("get-all")]
         public IActionResult GetAll([FromBody] ProjectPartlistPurchaseRequestParam filter, int employeeID)
@@ -77,6 +74,7 @@ namespace RERPAPI.Controllers
                 });
             }
         }
+
         //[HttpPost("save-data")]
         //public async Task<IActionResult> SaveData([FromBody] List<ProjectPartlistPurchaseRequest> data)
         //{
@@ -111,6 +109,7 @@ namespace RERPAPI.Controllers
                 data = purchaseRequest
             });
         }
+
         [HttpPost("check-order")]
         public IActionResult CheckOrder([FromBody] List<ProjectPartlistPurchaseRequest> data)
         {
@@ -144,7 +143,7 @@ namespace RERPAPI.Controllers
                         existingRequest.EmployeeIDRequestApproved =
                             existingRequest.EmployeeIDRequestApproved == 0 ? employeeId : 0;
 
-                        _repo.UpdateFieldsByID(id, existingRequest);
+                        _repo.Update(existingRequest);
                     }
                     catch
                     {
@@ -159,6 +158,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(new { status = 0, message = ex.Message });
             }
         }
+
         [HttpPost("cancel-request")]
         public IActionResult CancelRequest([FromBody] List<ProjectPartlistPurchaseRequest> data)
         {
@@ -182,7 +182,7 @@ namespace RERPAPI.Controllers
 
                         existingRequest.IsDeleted = item.IsDeleted;
 
-                        _repo.UpdateFieldsByID(id, existingRequest);
+                        _repo.Update(existingRequest);
                         if (item.InventoryProjectID > 0)
                         {
                             InventoryProject inven = new InventoryProject
@@ -190,7 +190,7 @@ namespace RERPAPI.Controllers
                                 ID = item.InventoryProjectID ?? 0,
                                 IsDeleted = true
                             };
-                            _inventoryProjectRepo.UpdateFieldsByID(inven.ID, inven);
+                            _inventoryProjectRepo.Update(inven);
                         }
                     }
                     catch
@@ -206,6 +206,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(new { status = 0, message = ex.Message });
             }
         }
+
         [HttpPost("request-approved")]
         public IActionResult RequestApproved([FromBody] List<ProjectPartlistPurchaseRequest> data)
         {
@@ -225,7 +226,7 @@ namespace RERPAPI.Controllers
                         //item.UpdatedDate = DateTime.Now;
                         //item.UpdatedBy = Global.LoginName;
 
-                        _repo.UpdateFieldsByID(item.ID, item);
+                        _repo.Update(item);
                     }
                     catch
                     {
@@ -241,6 +242,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(new { status = 0, message = $"Lỗi xử lý: {ex.Message}" });
             }
         }
+
         [HttpPost("complete-request-buy")]
         public IActionResult CompleteRequest([FromBody] List<ProjectPartlistPurchaseRequest> data)
         {
@@ -256,7 +258,7 @@ namespace RERPAPI.Controllers
                     //item.UpdatedDate = DateTime.Now;
                     //item.UpdatedBy = Global.LoginName;
 
-                    _repo.UpdateFieldsByID(item.ID, item);
+                    _repo.Update(item);
                 }
                 catch
                 {
@@ -266,6 +268,7 @@ namespace RERPAPI.Controllers
 
             return Ok(new { status = 1, message = "Cập nhật trạng thái hoàn thành thành công!" });
         }
+
         [HttpPost("approve")]
         public IActionResult Approve([FromBody] List<ProjectPartlistPurchaseRequest> requests, int employeeID)
         {
@@ -297,7 +300,7 @@ namespace RERPAPI.Controllers
                         item.DateApprovedTBP = now;
                     }
 
-                    _repo.UpdateFieldsByID(item.ID, item);
+                    _repo.Update(item);
                 }
                 catch
                 {
@@ -324,7 +327,7 @@ namespace RERPAPI.Controllers
                     //item.UpdatedBy = item.UpdatedBy ?? "System";
 
                     // Cập nhật nhiều field cùng lúc
-                    _repo.UpdateFieldsByID(item.ID, item);
+                    _repo.Update(item);
                 }
                 catch
                 {
@@ -333,6 +336,7 @@ namespace RERPAPI.Controllers
             }
             return Ok(new { status = 1, message = "Cập nhật thành công." });
         }
+
         [HttpPost("keep-product")]
         public IActionResult KeepProduct([FromBody] List<ProductHoldDTO> data)
         {
@@ -360,7 +364,6 @@ namespace RERPAPI.Controllers
                     }
                     ;
 
-
                     // Tạo hoặc cập nhật InventoryProject
                     var inventoryProject = item.ID > 0
                         ? _inventoryProjectRepo.GetByID(item.ID)
@@ -383,8 +386,7 @@ namespace RERPAPI.Controllers
                         if (purchaseRequestID <= 0) continue;
                         ProjectPartlistPurchaseRequest itemPR = _repo.GetByID(purchaseRequestID);
                         itemPR.InventoryProjectID = inventoryProject.ID;
-                        _repo.UpdateFieldsByID(item.ID, itemPR);
-
+                        _repo.Update(itemPR);
                     }
                     //itemPR.UpdatedDate = DateTime.Now;
                     //itemPR.UpdatedBy = item.UpdatedBy ?? "system";
@@ -397,6 +399,5 @@ namespace RERPAPI.Controllers
 
             return Ok(new { status = 1, message = "Đã cập nhật giữ hàng thành công." });
         }
-
     }
 }

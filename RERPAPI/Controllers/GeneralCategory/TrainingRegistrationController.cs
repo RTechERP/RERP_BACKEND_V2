@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -13,14 +11,14 @@ namespace RERPAPI.Controllers.GeneralCategory
     [ApiController]
     public class TrainingRegistrationController : ControllerBase
     {
-        TrainingRegistrationRepo _trainingRegistrationRepo = new TrainingRegistrationRepo();
-        TrainingRegistrationApprovedRepo _trainingRegistrationApprovedRepo = new TrainingRegistrationApprovedRepo();
-        TrainingRegistrationApprovedFlowRepo _trainingRegistrationApprovedFlowRepo = new TrainingRegistrationApprovedFlowRepo();
-        TrainingRegistrationFileRepo _trainingRegistrationFileRepo = new TrainingRegistrationFileRepo();
-        TrainingRegistrationDetailRepo _trainingRegistrationDetailRepo = new TrainingRegistrationDetailRepo();
-        EmployeeRepo _employeeRepo = new EmployeeRepo();
-        EmployeeApprovedRepo _employeeApprovedRepo = new EmployeeApprovedRepo();
-        UserTeamRepo _userTeamRepo = new UserTeamRepo();
+        private TrainingRegistrationRepo _trainingRegistrationRepo = new TrainingRegistrationRepo();
+        private TrainingRegistrationApprovedRepo _trainingRegistrationApprovedRepo = new TrainingRegistrationApprovedRepo();
+        private TrainingRegistrationApprovedFlowRepo _trainingRegistrationApprovedFlowRepo = new TrainingRegistrationApprovedFlowRepo();
+        private TrainingRegistrationFileRepo _trainingRegistrationFileRepo = new TrainingRegistrationFileRepo();
+        private TrainingRegistrationDetailRepo _trainingRegistrationDetailRepo = new TrainingRegistrationDetailRepo();
+        private EmployeeRepo _employeeRepo = new EmployeeRepo();
+        private EmployeeApprovedRepo _employeeApprovedRepo = new EmployeeApprovedRepo();
+        private UserTeamRepo _userTeamRepo = new UserTeamRepo();
 
         [HttpPost]
         public IActionResult GetAll(TrainingRegistrationParam param)
@@ -31,8 +29,7 @@ namespace RERPAPI.Controllers.GeneralCategory
                     "spGetTrainingRegistration",
                     new string[] { "@DateStart", "@DateEnd", "@DepartmentID", "@TrainingCategoryID" },
                     new object[] { param.DateStart, param.DateEnd, param.DepartmentID, param.TrainingCategoryID });
-                var a = SQLHelper<dynamic>.GetListData(lstAll, 0); 
-
+                var a = SQLHelper<dynamic>.GetListData(lstAll, 0);
 
                 return Ok(new
                 {
@@ -42,7 +39,6 @@ namespace RERPAPI.Controllers.GeneralCategory
             }
             catch (Exception ex)
             {
-
                 return BadRequest(new
                 {
                     status = 0,
@@ -51,12 +47,13 @@ namespace RERPAPI.Controllers.GeneralCategory
                 });
             }
         }
+
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData(TrainingRegistrationDTO model)
         {
             try
             {
-                bool success = false; 
+                bool success = false;
                 TrainingRegistrationCategoryRepo _trainingRegistrationCategoryRepo = new TrainingRegistrationCategoryRepo();
 
                 // Save Training registration data
@@ -101,7 +98,7 @@ namespace RERPAPI.Controllers.GeneralCategory
                 }
                 else
                 {
-                    if (_trainingRegistrationRepo.UpdateFieldsByID(model.ID, model) > 0)
+                    if (_trainingRegistrationRepo.Update(model) > 0)
                         success = true;
                 }
 
@@ -125,7 +122,7 @@ namespace RERPAPI.Controllers.GeneralCategory
                         }
                         else
                         {
-                            if (_trainingRegistrationFileRepo.UpdateFieldsByID(file.ID, file) > 0)
+                            if (_trainingRegistrationFileRepo.Update(file) > 0)
                                 success = true;
                         }
                     }
@@ -143,7 +140,7 @@ namespace RERPAPI.Controllers.GeneralCategory
                         }
                         else
                         {
-                            if (_trainingRegistrationDetailRepo.UpdateFieldsByID(detail.ID, detail) > 0)
+                            if (_trainingRegistrationDetailRepo.Update(detail) > 0)
                                 success = true;
                         }
                     }
@@ -209,7 +206,6 @@ namespace RERPAPI.Controllers.GeneralCategory
                     //statusCode = 1;
                     //fileName = file.FileName;
                     //message = "Upload File thành công!";
-
                 }
                 else
                 {

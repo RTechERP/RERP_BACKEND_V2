@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 
 namespace RERPAPI.Controllers.GeneralCategory
@@ -24,7 +23,7 @@ namespace RERPAPI.Controllers.GeneralCategory
                     data = SQLHelper<dynamic>.GetListData(dtAll, 0)
                 });
             }
-            catch (Exception ex )
+            catch (Exception ex)
             {
                 return BadRequest(new
                 {

@@ -1,0 +1,29 @@
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Model.Common;
+using RERPAPI.Model.Entities;
+using RERPAPI.Repo.GenericEntity;
+
+namespace RERPAPI.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ProjectSolutionFileController : ControllerBase
+    {
+        ProjectSolutionFileRepo _repo= new ProjectSolutionFileRepo();
+        [HttpGet("get-all")]
+        public IActionResult GetAll(int projectSolutionID)
+        {
+            try
+            {
+                List<ProjectSolutionFile> dtAll  = _repo.GetAll(x => x.ProjectSolutionID == projectSolutionID );
+                return Ok(ApiResponseFactory.Success(dtAll, ""));
+                
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex,ex.Message));
+            }
+        }
+    }
+}

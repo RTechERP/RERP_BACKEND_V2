@@ -138,7 +138,7 @@ namespace RERPAPI.Controllers
                     {
                         if (item.ID > 0)
                         {
-                            requestRepo.UpdateFieldsByID(item.ID, item);
+                            requestRepo.Update(item);
                         }
                         else
                         {

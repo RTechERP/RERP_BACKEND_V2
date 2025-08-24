@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
@@ -9,13 +8,14 @@ namespace RERPAPI.Controllers.GeneralCategory
     [ApiController]
     public class TrainingRegistrationFileController : ControllerBase
     {
-        TrainingRegistrationFileRepo _trainingRegistrationRepo = new TrainingRegistrationFileRepo();
+        private TrainingRegistrationFileRepo _trainingRegistrationRepo = new TrainingRegistrationFileRepo();
+
         [HttpGet("get-by-training-registration-id")]
         public IActionResult GetAll(int trainingRegistrationID)
         {
             try
             {
-                List<TrainingRegistrationFile> lstFile = _trainingRegistrationRepo.GetAll(x => x.TrainingRegistrationID == trainingRegistrationID && x.IsDeleted==false);
+                List<TrainingRegistrationFile> lstFile = _trainingRegistrationRepo.GetAll(x => x.TrainingRegistrationID == trainingRegistrationID && x.IsDeleted == false);
                 return Ok(new
                 {
                     status = 1,

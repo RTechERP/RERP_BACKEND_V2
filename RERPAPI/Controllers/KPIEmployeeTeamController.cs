@@ -54,9 +54,8 @@ namespace RERPAPI.Controllers
             }
 
         }
-        #endregion
-        #region lấy danh sách nhân viên không thuộc team
-        [HttpGet("get-employee-in-team")]
+
+        [HttpGet("getemployeeinteam")]
         public IActionResult GetAllEmployee(int departmentID = 0, int kpiEmployeeTeamID = 0)
         {
             try
@@ -116,7 +115,7 @@ namespace RERPAPI.Controllers
             {
 
                 if (team.ID <= 0) await teamRepo.CreateAsync(team);
-                else teamRepo.UpdateFieldsByID(team.ID, team);
+                else  await teamRepo.UpdateAsync(team);
 
                 return Ok(new
                 {

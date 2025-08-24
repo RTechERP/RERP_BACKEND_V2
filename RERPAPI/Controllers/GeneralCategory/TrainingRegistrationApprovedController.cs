@@ -1,7 +1,5 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
@@ -46,28 +44,28 @@ namespace RERPAPI.Controllers.GeneralCategory
         {
             try
             {
-                if (model == null || model.TrainingRegistrationID <= 0 || model.TrainingRegistrationApprovedFlowID<=0)
+                if (model == null || model.TrainingRegistrationID <= 0 || model.TrainingRegistrationApprovedFlowID <= 0)
                 {
                     return BadRequest(new { status = 0, message = "dữ liệu không hợp lệ" });
                 }
                 int flowID = (model.TrainingRegistrationApprovedFlowID ?? 0) - 1;
                 TrainingRegistrationApproved current = _trainingRegistrationApprovedRepo.GetAll(x => x.TrainingRegistrationID == model.TrainingRegistrationID &&
-                                                                            (x.IsDeleted == false || x.IsDeleted==null) &&
+                                                                            (x.IsDeleted == false || x.IsDeleted == null) &&
                                                                             x.TrainingRegistrationApprovedFlowID == model.TrainingRegistrationApprovedFlowID).FirstOrDefault();
                 if (model.StatusApproved == 1)
                 {
                     TrainingRegistrationApproved previosApproved = _trainingRegistrationApprovedRepo.GetAll(x => x.TrainingRegistrationID == model.TrainingRegistrationID &&
-                                                                            (x.IsDeleted == false || x.IsDeleted==null) &&
-                                                                            x.TrainingRegistrationApprovedFlowID==flowID).FirstOrDefault();
+                                                                            (x.IsDeleted == false || x.IsDeleted == null) &&
+                                                                            x.TrainingRegistrationApprovedFlowID == flowID).FirstOrDefault();
                     if (current.StatusApproved == 1)
                     {
                         return BadRequest(new { status = 0, message = "Phiếu đăng ký đã duyệt trước đó rồi!" });
                     }
-                    if ( previosApproved == null)
+                    if (previosApproved == null)
                     {
                         return BadRequest(new { status = 0, message = "Không tìm thấy phê duyệt trước đó" });
                     }
-                    if(previosApproved.StatusApproved <=0)
+                    if (previosApproved.StatusApproved <= 0)
                     {
                         return BadRequest(new { status = 0, message = "Phê duyệt trước đó chưa được phê duyệt" });
                     }
@@ -77,7 +75,7 @@ namespace RERPAPI.Controllers.GeneralCategory
                     //    return BadRequest(new { status = 0, message = "Bạn không có quyền duyệt" });
                     //}
                 }
-                if( model.StatusApproved == 2)
+                if (model.StatusApproved == 2)
                 {
                     if (current.StatusApproved == 2)
                     {
@@ -94,17 +92,13 @@ namespace RERPAPI.Controllers.GeneralCategory
                 current.StatusApproved = model.StatusApproved;
                 current.UnapprovedReason = model.UnapprovedReason;
                 current.Note = model.Note;
-                _trainingRegistrationApprovedRepo.UpdateFieldsByID(current.ID, current);
-                return Ok(new { status = 1, data=current });
-
-
+                _trainingRegistrationApprovedRepo.Update(current);
+                return Ok(new { status = 1, data = current });
             }
             catch (Exception ex)
             {
                 return BadRequest(new { status = 0, message = ex.Message, error = ex.ToString() });
             }
         }
-
-
     }
 }

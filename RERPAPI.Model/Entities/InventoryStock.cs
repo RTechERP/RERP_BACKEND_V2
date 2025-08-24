@@ -18,4 +18,18 @@ public partial class InventoryStock
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
+
+    public int? EmployeeStock { get; set; }
+
+    public int? ProductSaleID { get; set; }
+
+    public int? WarehouseID { get; set; }
+
+    public int? ProjectTypeID { get; set; }
+
+    public int? EmployeeIDRequest { get; set; }
+
+    public bool? IsDeleted { get; set; }
+
+    public string? Note { get; set; }
 }

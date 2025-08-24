@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
@@ -9,7 +8,8 @@ namespace RERPAPI.Controllers.GeneralCategory
     [ApiController]
     public class TrainingRegistrationCategoryController : ControllerBase
     {
-        TrainingRegistrationCategoryRepo _trainingRegistrationCategoryRepo = new TrainingRegistrationCategoryRepo();
+        private TrainingRegistrationCategoryRepo _trainingRegistrationCategoryRepo = new TrainingRegistrationCategoryRepo();
+
         [HttpGet]
         public IActionResult GetAll()
         {
