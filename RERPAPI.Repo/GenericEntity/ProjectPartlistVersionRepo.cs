@@ -1,4 +1,5 @@
 ﻿using RERPAPI.Model.Entities;
+using System;
 using System.Linq.Expressions;
 
 namespace RERPAPI.Repo.GenericEntity
@@ -10,6 +11,11 @@ namespace RERPAPI.Repo.GenericEntity
         public bool Validate(ProjectPartListVersion item, out string message)
         {
             message = "";
+            ProjectPartListVersion oldVersion = GetByID(item.ID);
+            if (oldVersion.IsApproved != item.IsApproved)
+            {
+                return true;
+            }
             if (item.IsDeleted == true && item.ID > 0)
             {
                 if (string.IsNullOrEmpty(item.ReasonDeleted))
@@ -97,23 +103,24 @@ namespace RERPAPI.Repo.GenericEntity
             }
             return true;
         }
-        public bool ValidateApprove(ProjectPartListVersion version, bool isApproved, out string message)
+        public bool ValidateApprove(ProjectPartListVersion version, out string message)
         {
             message = "";
-
-            if (version == null)
+            ProjectPartListVersion oldVersion = GetByID(version.ID);
+            
+            if (version == null || oldVersion.ID<=0)
             {
                 message = "Không tìm thấy phiên bản.";
                 return false;
             }
-
-            if (isApproved && version.IsApproved == true)
+            
+            if (version.IsApproved==true && oldVersion.IsApproved == true)
             {
                 message = "Phiên bản này đã được duyệt trước đó.";
                 return false;
             }
 
-            if (!isApproved && version.IsApproved == false)
+            if (version.IsApproved==false && oldVersion.IsApproved == false)
             {
                 message = "Phiên bản này chưa được duyệt để hủy.";
                 return false;
