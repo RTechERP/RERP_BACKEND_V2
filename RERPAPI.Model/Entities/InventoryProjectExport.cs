@@ -20,4 +20,6 @@ public partial class InventoryProjectExport
     public string? CreatedBy { get; set; }
 
     public string? UpdatedBy { get; set; }
+
+    public decimal? Quantity { get; set; }
 }

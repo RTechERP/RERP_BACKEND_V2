@@ -86,9 +86,5 @@ public partial class POKHDetail
 
     public string? Spec { get; set; }
 
-    public bool? IsPaid { get; set; }
-
     public bool? IsDelivered { get; set; }
-
-    public bool? IsInvoice { get; set; }
 }

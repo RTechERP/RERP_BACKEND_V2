@@ -70,5 +70,4 @@ public partial class TSTranferAsset
     public DateTime? DateApprovedPersonalProperty { get; set; }
 
     public DateTime? DateApprovedHR { get; set; }
-    public bool IsDeleted { get; set; }
 }

@@ -3,17 +3,13 @@ using System.Collections.Generic;
 
 namespace RERPAPI.Model.Entities;
 
-public partial class BillDocumentImportTechnicalLog
+public partial class ProjectPartlistPriceRequestType
 {
     public int ID { get; set; }
 
-    public int? BillDocumentImportTechnicalID { get; set; }
+    public string? RequestTypeName { get; set; }
 
-    public int? Status { get; set; }
-
-    public DateTime? LogDate { get; set; }
-
-    public string? Note { get; set; }
+    public bool? IsIgnoreBGD { get; set; }
 
     public string? CreatedBy { get; set; }
 
@@ -22,6 +18,4 @@ public partial class BillDocumentImportTechnicalLog
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
-
-    public int? DocumentImportID { get; set; }
 }

@@ -17,8 +17,8 @@ namespace RERPAPI.Controllers.Asset
         {
             try
             {
-                var units = _unitRepo.GetAll().Where(x => x.isDeleted==false).ToList();
-             
+                var units = _unitRepo.GetAll().Where(x => x.IsDeleted == false).ToList();
+
                 return Ok(new
                 {
                     status = 1,
@@ -35,7 +35,7 @@ namespace RERPAPI.Controllers.Asset
                 });
             }
         }
-     
+
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] List<UnitCount> units)
         {
@@ -45,15 +45,9 @@ namespace RERPAPI.Controllers.Asset
                 {
                     foreach (var item in units)
                     {
-                        if (item.ID > 0)
-                        {
+                        if (item.ID > 0) await _unitRepo.UpdateAsync(item);
+                        else await _unitRepo.CreateAsync(item);
 
-                            _unitRepo.UpdateAsync( item);
-                        }
-                        else
-                        {
-                            _unitRepo.Create(item);
-                        }
                     }
                 }
                 return Ok(new { status = 1 });

@@ -118,4 +118,6 @@ public partial class PONCCDetail
     public DateTime? DateReturnEstimated { get; set; }
 
     public bool? IsStock { get; set; }
+
+    public string? UnitName { get; set; }
 }

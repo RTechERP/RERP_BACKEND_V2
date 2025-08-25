@@ -23,7 +23,5 @@ public partial class BillExportDetailSerialNumberModulaLocation
 
     public DateTime? UpdatedDate { get; set; }
 
-    public int? AGVBillExportDetailSerialID { get; set; }
-
     public int? BillExportTechDetailSerialID { get; set; }
 }

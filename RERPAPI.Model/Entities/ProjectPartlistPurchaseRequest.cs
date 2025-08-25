@@ -140,6 +140,9 @@ public partial class ProjectPartlistPurchaseRequest
 
     public string? Maker { get; set; }
 
+    /// <summary>
+    /// 1: Mua dự án; 2: Kỹ thuật đã mua; 3: Mua demo; 4: Mượn demo;5: Hàng thương mại; 6: Hàng HR; 7: Hàng Marketing
+    /// </summary>
     public int? ProjectPartlistPurchaseRequestTypeID { get; set; }
 
     public decimal? TargetPrice { get; set; }

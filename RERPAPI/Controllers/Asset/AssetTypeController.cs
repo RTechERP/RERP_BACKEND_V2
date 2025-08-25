@@ -17,7 +17,7 @@ namespace RERPAPI.Controllers.Asset
             try
             {
 
-                var tsAssets = _typeAssetRepo.GetAll().Where(x => !x.IsDeleted).ToList();
+                var tsAssets = _typeAssetRepo.GetAll().Where(x => x.IsDeleted == false).ToList();
                 return Ok(new
                 {
                     status = 1,
@@ -41,7 +41,7 @@ namespace RERPAPI.Controllers.Asset
             try
             {
                 if (typeasset.ID <= 0) await _typeAssetRepo.CreateAsync(typeasset);
-                else _typeAssetRepo.UpdateAsync( typeasset);
+                else await _typeAssetRepo.UpdateAsync( typeasset);
 
                 return Ok(new
                 {

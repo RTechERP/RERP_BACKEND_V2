@@ -64,9 +64,8 @@ public partial class BillExportTechnical
     public DateTime? UpdatedDate { get; set; }
 
     public int? SupplierSaleID { get; set; }
-                                          
+
     public int? BillDocumentExportType { get; set; }
 
     public int? ApproverID { get; set; }
-    public bool? IsDeleted { get; set; }
-}                     
+}

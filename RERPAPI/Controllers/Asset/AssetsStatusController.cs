@@ -9,16 +9,16 @@ namespace RERPAPI.Controllers.Asset
     [ApiController]
     public class AssetsStatusController : ControllerBase
     {
-        
+
         TSStatusAssetRepo _tsStatusAssetRepo = new TSStatusAssetRepo();
-       
+
         [HttpGet("get-asset-status")]
         public IActionResult GetStatus()
         {
             try
             {
-                var tsStatusAssets = _tsStatusAssetRepo.GetAll().Where(x => !x.IsDeleted).ToList();
-           
+                var tsStatusAssets = _tsStatusAssetRepo.GetAll().Where(x => x.IsDeleted == false).ToList();
+
                 return Ok(new
                 {
                     status = 1,
@@ -41,7 +41,7 @@ namespace RERPAPI.Controllers.Asset
             try
             {
                 if (statusasset.ID <= 0) await _tsStatusAssetRepo.CreateAsync(statusasset);
-                else _tsStatusAssetRepo.UpdateAsync(statusasset);
+                else await _tsStatusAssetRepo.UpdateAsync(statusasset);
 
                 return Ok(new
                 {

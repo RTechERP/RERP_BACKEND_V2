@@ -65,11 +65,11 @@ public partial class BillImportDetailTechnical
 
     public DateTime? DateSomeBill { get; set; }
 
-    public int? DPO { get; set; }
-
-    public DateTime? DueDate { get; set; }
+    public decimal? COFormE { get; set; }
 
     public decimal? TaxReduction { get; set; }
 
-    public decimal? COFormE { get; set; }
+    public DateTime? DueDate { get; set; }
+
+    public int? DPO { get; set; }
 }

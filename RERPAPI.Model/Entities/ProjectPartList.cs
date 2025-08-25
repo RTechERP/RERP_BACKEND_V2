@@ -122,4 +122,6 @@ public partial class ProjectPartList
     public DateTime? DateApprovedNewCode { get; set; }
 
     public bool? IsStock { get; set; }
+
+    public int? EmployeeApprovedNewCode { get; set; }
 }

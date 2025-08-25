@@ -91,4 +91,6 @@ public partial class ProjectPartlistPriceRequest
     public bool? IsRequestBuy { get; set; }
 
     public string? NoteHR { get; set; }
+
+    public int? ProjectPartlistPriceRequestTypeID { get; set; }
 }
