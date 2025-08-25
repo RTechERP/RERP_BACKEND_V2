@@ -172,6 +172,7 @@ namespace RERPAPI.Controllers
                             request.RequestDate = null;
                             request.ExpectedReturnDate = null;
                             request.Status = 2;
+                            request.ID = 0;
                             await _projectPartlistRepo.CreateAsync(request);
                         }
                         else

@@ -47,14 +47,23 @@ namespace RERPAPI.Repo.GenericEntity
                         message = $"Vật tư TT [{item.STT}] đã được TBP duyệt.\nVui lòng huỷ duyệt trước!";
                         return false;
                     }
-                    if (item.ReasonDeleted == null || string.IsNullOrWhiteSpace(item.ReasonDeleted.Trim()))
+                    if (item.ReasonDeleted == null || string.IsNullOrWhiteSpace((item.ReasonDeleted ?? "").Trim()))
                     {
                         message = $"Vui lòng nhập Lý do xóa!";
                         return false;
                     }
                     return true;
                 }
-                else if (item.IsApprovedTBP == true) //TBP duyệt
+                else if (item.IsProblem == true)
+                {
+                    if (string.IsNullOrWhiteSpace(item.ReasonProblem))
+                    {
+                        message = "Vật tư phát sinh phải có Lý do phát sinh!";
+                        return false;
+                    }
+                    return true;
+                }
+                else if (item.IsApprovedTBP == true)
                 {
                     string errorMessage = string.Empty;
                     if (!ValidateApproveTBP(item, true, out errorMessage))
@@ -64,7 +73,7 @@ namespace RERPAPI.Repo.GenericEntity
                     }
                     return true;
                 }
-                else if (item.IsApprovedPurchase == true) //Yêu cầu mua
+                else if (item.IsApprovedPurchase == true)
                 {
                     string errorMessage = string.Empty;
                     if (!ValidateApprovePurchase(item, true, out errorMessage))
@@ -82,6 +91,26 @@ namespace RERPAPI.Repo.GenericEntity
                     message = $"Thiết bị mã [{item.ProductCode}] đã yêu cầu mua. Bạn không thể sửa.\nVui lòng liên hệ nhân viên mua hàng hoặc PM để hủy YÊU CẦU MUA HÀNG trước";
                     return false;
                 }
+                //check yêu cầu báo giá
+                ProjectPartlistPriceRequest priceRequest = _priceRepo.GetAll(x => x.ProjectPartListID == item.ID && x.IsDeleted != true && x.IsCommercialProduct != true).FirstOrDefault() ?? new ProjectPartlistPriceRequest();
+                if (priceRequest.ProjectPartListID > 0)
+                {
+                    if (priceRequest.IsCheckPrice == true)
+                    {
+                        message = $"Thiết bị mã [{item.ProductCode}] đang được check giá. Bạn không thể sửa.\nVui lòng liên hệ nhân viên mua hàng";
+                        return false;
+                    }
+                    if (priceRequest.StatusRequest == 2)
+                    {
+                        message = $"Thiết bị mã [{item.ProductCode}] đã báo giá. Bạn không thể sửa.\nVui lòng liên hệ nhân viên mua hàng";
+                        return false;
+                    }
+                    if (priceRequest.StatusRequest == 3)
+                    {
+                        message = $"Thiết bị mã [{item.ProductCode}] đã hoàn thành báo giá. Bạn không thể sửa.\nVui lòng liên hệ nhân viên mua hàng";
+                        return false;
+                    }
+                }
             }
 
             //else
@@ -93,25 +122,7 @@ namespace RERPAPI.Repo.GenericEntity
             //        return false;
             //    }
             //}
-            ProjectPartlistPriceRequest priceRequest = _priceRepo.GetAll(x => x.ProjectPartListID == item.ID && x.IsDeleted != true && x.IsCommercialProduct != true).FirstOrDefault() ?? new ProjectPartlistPriceRequest();
-            if (priceRequest.ProjectPartListID > 0)
-            {
-                if (priceRequest.IsCheckPrice == true)
-                {
-                    message = $"Thiết bị mã [{item.ProductCode}] đang được check giá. Bạn không thể sửa.\nVui lòng liên hệ nhân viên mua hàng";
-                    return false;
-                }
-                if (priceRequest.StatusRequest == 2)
-                {
-                    message = $"Thiết bị mã [{item.ProductCode}] đã báo giá. Bạn không thể sửa.\nVui lòng liên hệ nhân viên mua hàng";
-                    return false;
-                }
-                if (priceRequest.StatusRequest == 3)
-                {
-                    message = $"Thiết bị mã [{item.ProductCode}] đã hoàn thành báo giá. Bạn không thể sửa.\nVui lòng liên hệ nhân viên mua hàng";
-                    return false;
-                }
-            }
+
 
             string pattern = @"^[^àáảãạâầấẩẫậăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵÀÁẢÃẠÂẦẤẨẪẬĂẰẮẲẴẶÈÉẺẼẸÊỀẾỂỄỆÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴ]+$";
             Regex regex = new Regex(pattern);
@@ -132,40 +143,44 @@ namespace RERPAPI.Repo.GenericEntity
             }
             else
             {
-                List<ProjectPartList> projectPartLists = GetAll(x => x.ProjectPartListVersionID == item.ProjectPartListVersionID
-                                                                    && x.TT.Trim() == item.TT.Trim()
-                                                                    && x.ID != item.ID
-                                                                    && x.IsDeleted != true
-                                                                    && x.IsProblem != true);
+                List<ProjectPartList> projectPartLists = GetAll(x => x.ProjectPartListVersionID == item.ProjectPartListVersionID && (x.TT ?? "").Trim() == (item.TT ?? "").Trim() && x.ID != item.ID && x.IsDeleted != true && x.IsProblem != true);
                 if (projectPartLists.Count > 0 && item.IsProblem == false)
                 {
                     message = $"TT [{item.TT}] đã tồn tại.\nVui lòng kiểm tra lại!";
                     return false;
                 }
+                //check cùng TT giữa các danh mục phát sinh
+                List<ProjectPartList> partLists = GetAll(x => x.ProjectPartListVersionID == item.ProjectPartListVersionID && (x.TT ?? "").Trim() == (item.TT ?? "").Trim() && x.ID != item.ID && x.IsDeleted != true && x.IsProblem == true);
+                if (partLists.Count > 0 && item.IsProblem == false)
+                {
+                    message = $"TT [{item.TT}] là mục phát sinh đã tồn tại .\nVui lòng kiểm tra lại!";
+                    return false;
+                }
+
             }
             List<ProjectPartList> listChilds = GetAll(x => x.IsDeleted != true && x.ParentID == item.ParentID);
             if (listChilds.Count < 0)
             {
-                if (string.IsNullOrEmpty(item.ProductCode.Trim()))
+                if (string.IsNullOrEmpty((item.ProductCode ?? "").Trim()))
                 {
                     message = "Vui lòng nhập Mã thiết bị!";
                     return false;
                 }
                 else
                 {
-                    bool isCheck = regex.IsMatch(item.ProductCode.Trim());
+                    bool isCheck = regex.IsMatch((item.ProductCode ?? "").Trim());
                     if (!isCheck)
                     {
                         message = "Mã thiết bị không được chứa ký tự tiếng Việt!";
                         return false;
                     }
                 }
-                if (string.IsNullOrEmpty(item.GroupMaterial.Trim()))
+                if (string.IsNullOrEmpty((item.GroupMaterial ?? "").Trim()))
                 {
                     message = "Vui lòng nhập Tên thiết bị!";
                     return false;
                 }
-                if (item.IsProblem == true && string.IsNullOrWhiteSpace(item.ReasonProblem.Trim()))
+                if (item.IsProblem == true && string.IsNullOrWhiteSpace((item.ReasonProblem ?? "").Trim()))
                 {
                     message = "Vui lòng nhập Lý do phát sinh!";
                     return false;
@@ -177,6 +192,29 @@ namespace RERPAPI.Repo.GenericEntity
             //{
 
             //}
+            var productSale = _productSaleRepo.GetAll(x => x.IsDeleted != true && x.ProductCode == item.ProductCode).FirstOrDefault();
+            if (productSale != null && productSale.ID > 0 && productSale.IsFix == true)
+            {
+                List<string> errors = new List<string>();
+                if (UnicodeConverterService.ConvertUnicode((item.GroupMaterial ?? "").ToLower(), 1) != UnicodeConverterService.ConvertUnicode((productSale.ProductName ?? "").ToLower(), 1))
+                {
+                    errors.Add($"\nTên thiết bị (tích xanh: [{productSale.ProductName}], hiện tại: [{item.GroupMaterial}])");
+                }
+                if (UnicodeConverterService.ConvertUnicode((item.Manufacturer ?? "").ToLower(), 1) != UnicodeConverterService.ConvertUnicode((productSale.Maker ?? "").ToLower(), 1))
+                {
+                    errors.Add($"\nHãng sản xuất (tích xanh: [{productSale.Maker}], hiện tại: [{item.Manufacturer}])");
+                }
+                if (UnicodeConverterService.ConvertUnicode((item.Unit ?? "").ToLower(), 1) != UnicodeConverterService.ConvertUnicode((productSale.Unit ?? "").ToLower(), 1))
+                {
+                    errors.Add($"\nĐơn vị (tích xanh: [{productSale.Unit}], hiện tại: [{item.Unit}])");
+                }
+                if (errors.Any())
+                {
+                    message = $"Mã thiết bị {item.ProductCode} đã có TÍCH XANH.\n" +
+                        $"Các trường không khớp:\n {string.Join("\n", errors)}\n\n";
+                    return false;
+                }
+            }
             return true;
         }
         public bool ValidateApproveTBP(ProjectPartList partlist, bool isApproved, out string message)
@@ -205,7 +243,7 @@ namespace RERPAPI.Repo.GenericEntity
                 return false;
             }
             //validate product sale
-            List<ProductSale> prdSale = _productSaleRepo.GetAll(x => x.ProductCode.Trim() == partlist.ProductCode.Trim() && x.IsDeleted == false);
+            List<ProductSale> prdSale = _productSaleRepo.GetAll(x => x.ProductCode == partlist.ProductCode && x.IsDeleted == false);
             if (prdSale.Count <= 0)
             {
                 message = $"Không thể duyệt tích xanh vì sản phẩm [{partlist.ProductCode}] không có trong kho sale!";
@@ -215,19 +253,19 @@ namespace RERPAPI.Repo.GenericEntity
             if (fixedProduct != null)
             {
                 List<string> errors = new List<string>();
-                string productNameConvert = UnicodeConverterService.ConvertUnicode(fixedProduct.ProductName.ToLower(), 1);
-                string makerConvert = UnicodeConverterService.ConvertUnicode(fixedProduct.Maker.ToLower(), 1);
-                string unitConvert = UnicodeConverterService.ConvertUnicode(fixedProduct.Unit.ToLower(), 1);
-                if (productNameConvert != UnicodeConverterService.ConvertUnicode(partlist.GroupMaterial.ToLower(), 1))
+                string productNameConvert = UnicodeConverterService.ConvertUnicode((fixedProduct.ProductName ?? "").ToLower(), 1);
+                string makerConvert = UnicodeConverterService.ConvertUnicode((fixedProduct.Maker ?? "").ToLower(), 1);
+                string unitConvert = UnicodeConverterService.ConvertUnicode((fixedProduct.Unit ?? "").ToLower(), 1);
+                if (productNameConvert != UnicodeConverterService.ConvertUnicode((partlist.GroupMaterial ?? "").ToLower(), 1))
                 {
                     errors.Add($"\nMã sản phẩm (tích xanh: [{fixedProduct.ProductName}], hiện tại: [{partlist.GroupMaterial}])");
                     return false;
                 }
-                if (makerConvert != UnicodeConverterService.ConvertUnicode(partlist.Manufacturer.ToLower(), 1))
+                if (makerConvert != UnicodeConverterService.ConvertUnicode((partlist.Manufacturer ?? "").ToLower(), 1))
                 {
                     errors.Add($"\nNhà sản xuất (tích xanh: [{fixedProduct.Maker}], hiện tại: [{partlist.Manufacturer}])");
                 }
-                if (unitConvert != UnicodeConverterService.ConvertUnicode(partlist.Unit.ToLower(), 1))
+                if (unitConvert != UnicodeConverterService.ConvertUnicode((partlist.Unit ?? "").ToLower(), 1))
                 {
                     errors.Add($"\nĐơn vị (tích xanh: [{fixedProduct.Unit}], hiện tại: [{partlist.Unit}])");
                 }
@@ -248,7 +286,7 @@ namespace RERPAPI.Repo.GenericEntity
         public bool ValidateProduct(ProjectPartList partlist, out string message)
         {
             message = string.Empty;
-            List<ProductSale> prdSale = _productSaleRepo.GetAll(x => x.ProductCode.Trim() == partlist.ProductCode.Trim() && x.IsDeleted == false);
+            List<ProductSale> prdSale = _productSaleRepo.GetAll(x => (x.ProductCode ?? "").Trim() == (partlist.ProductCode ?? "").Trim() && x.IsDeleted == false);
             if (prdSale.Count <= 0)
             {
                 message = $"Không thể duyệt tích xanh vì sản phẩm [{partlist.ProductCode}] không có trong kho sale!";
@@ -258,19 +296,19 @@ namespace RERPAPI.Repo.GenericEntity
             if (fixedProduct != null)
             {
                 List<string> errors = new List<string>();
-                string productNameConvert = UnicodeConverterService.ConvertUnicode(fixedProduct.ProductName.ToLower(), 1);
-                string makerConvert = UnicodeConverterService.ConvertUnicode(fixedProduct.Maker.ToLower(), 1);
-                string unitConvert = UnicodeConverterService.ConvertUnicode(fixedProduct.Unit.ToLower(), 1);
-                if (productNameConvert != UnicodeConverterService.ConvertUnicode(partlist.GroupMaterial.ToLower(), 1))
+                string productNameConvert = UnicodeConverterService.ConvertUnicode((fixedProduct.ProductName ?? "").ToLower(), 1);
+                string makerConvert = UnicodeConverterService.ConvertUnicode((fixedProduct.Maker ?? "").ToLower(), 1);
+                string unitConvert = UnicodeConverterService.ConvertUnicode((fixedProduct.Unit ?? "").ToLower(), 1);
+                if (productNameConvert != UnicodeConverterService.ConvertUnicode((partlist.GroupMaterial ?? "").ToLower(), 1))
                 {
                     errors.Add($"\nMã sản phẩm (tích xanh: [{fixedProduct.ProductName}], hiện tại: [{partlist.GroupMaterial}])");
                     return false;
                 }
-                if (makerConvert != UnicodeConverterService.ConvertUnicode(partlist.Manufacturer.ToLower(), 1))
+                if (makerConvert != UnicodeConverterService.ConvertUnicode((partlist.Manufacturer ?? "").ToLower(), 1))
                 {
                     errors.Add($"\nNhà sản xuất (tích xanh: [{fixedProduct.Maker}], hiện tại: [{partlist.Manufacturer}])");
                 }
-                if (unitConvert != UnicodeConverterService.ConvertUnicode(partlist.Unit.ToLower(), 1))
+                if (unitConvert != UnicodeConverterService.ConvertUnicode((partlist.Unit ?? "").ToLower(), 1))
                 {
                     errors.Add($"\nĐơn vị (tích xanh: [{fixedProduct.Unit}], hiện tại: [{partlist.Unit}])");
                 }
@@ -327,12 +365,12 @@ namespace RERPAPI.Repo.GenericEntity
         public bool CheckValidate(ProjectPartList item, out string message)
         {
             message = string.Empty;
-            if (string.IsNullOrEmpty(item.ProductCode.Trim()))
+            if (string.IsNullOrEmpty((item.ProductCode ?? "").Trim()))
             {
                 message = $"[Mã thiết bị] có số thứ tự [{item.STT}] không được trống!\nVui lòng kiểm tra lại!";
                 return false;
             }
-            if (string.IsNullOrEmpty(item.GroupMaterial.Trim()))
+            if (string.IsNullOrEmpty((item.GroupMaterial ?? "").Trim()))
             {
                 message = $"[Tên vật tư] có số thứ tự [{item.STT}] không được trống!\nVui lòng kiểm tra lại!";
                 return false;
