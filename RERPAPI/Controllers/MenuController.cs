@@ -43,7 +43,7 @@ namespace RERPAPI.Controllers
             {
 
                 if (menu.ID <= 0) await _menuRepo.CreateAsync(menu);
-                else _menuRepo.UpdateFieldsByID(menu.ID, menu);
+                else await _menuRepo.UpdateAsync(menu);
                 return Ok(ApiResponseFactory.Success(menu, "Cập nhật thành công!"));
             }
             catch (Exception ex)

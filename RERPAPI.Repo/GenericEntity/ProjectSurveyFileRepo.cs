@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class UserRepo : GenericRepo<User>
+    public class ProjectSurveyFileRepo : GenericRepo<ProjectSurveyFile>
     {
 
     }

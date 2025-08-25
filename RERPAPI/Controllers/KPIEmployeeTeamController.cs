@@ -106,7 +106,7 @@ namespace RERPAPI.Controllers
             {
 
                 if (team.ID <= 0) await teamRepo.CreateAsync(team);
-                else teamRepo.UpdateFieldsByID(team.ID, team);
+                else  await teamRepo.UpdateAsync(team);
 
                 return Ok(new
                 {

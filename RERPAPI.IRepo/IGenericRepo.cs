@@ -24,6 +24,6 @@ namespace RERPAPI.IRepo
         Task<int> DeleteAsync(int id);
         Task<int> DeleteRangeAsync(List<T> items);
 
-        int UpdateFieldsByID(int ID, T item);
+        //void SetClaim(Dictionary<string, string> claim);
     }
 }

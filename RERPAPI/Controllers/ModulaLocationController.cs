@@ -21,6 +21,24 @@ namespace RERPAPI.Controllers
         BillImportDetailSerialNumberModulaLocationRepo serialNumberImportModulaRepo = new BillImportDetailSerialNumberModulaLocationRepo();
         BillExportDetailSerialNumberModulaLocationRepo serialNumberExportModulaRepo = new BillExportDetailSerialNumberModulaLocationRepo();
 
+
+
+        private readonly PersistentTcpClientService _tcpClient;
+
+        string _statusModula = "11|1001|STATUS\r";
+        string _callModula = "11|8328|CALL|@|1\r";
+        string _returnModula = "11|1111|RETURN|1\r";
+        string _lazerGoModula = "11|7777|LASER_GO|1|x|y\r";
+        string _lazerOnModula = "11|3333|LASER_ON\r";
+        string _lazerOffModula = "11|5555|LASER_OFF\r";
+        string _displayClearModula = "11|6666|DISPLAY_CLEAR\r";
+        string _displayShowModula = "11|2222|DISPLAY_SHOW|message|10|0\r";
+
+        public ModulaLocationController(PersistentTcpClientService tcpClient)
+        {
+            _tcpClient = tcpClient;
+        }
+
         [HttpGet("getlocation")]
         public IActionResult GetLocation(string? keyword)
         {
@@ -304,5 +322,113 @@ namespace RERPAPI.Controllers
         //        });
         //    }
         //}
+
+
+
+        [HttpPost("call-modula")]
+        public async Task<IActionResult> CallModula([FromBody] ModulaLocationDTO.CallModula model)
+        {
+            try
+            {
+                if (model == null || string.IsNullOrEmpty(model.Code))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy Tray hoặc Vị trí!"));
+                }
+
+                await _tcpClient.SendStringAsync(_statusModula);
+                string resultStatus = await _tcpClient.ReceiveStringAsync(4096);
+
+                string call = _callModula.Replace("@", model.Code.Trim());
+
+                await _tcpClient.SendStringAsync(call);
+
+                string resultCall = await _tcpClient.ReceiveStringAsync(4096);
+
+                if (string.IsNullOrEmpty(resultCall) || !resultCall.Contains('|'))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không nhận được phản hồi từ Modula!"));
+                }
+                if (resultCall.Split('|')[3].Trim() != "0")
+                {
+                    string errorMessage = (resultCall.Split('|')[3].Trim()) switch
+                    {
+                        "-1" => "Số khay không hợp lệ.",
+                        "-2" => "Vị trí không hợp lệ.",
+                        "-3" => "Vị trí đang bận.",
+                        "-4" => "Khay đang bận.",
+                        "-5" => "Vị trí bị vô hiệu hóa hoặc không có người dùng đăng nhập.",
+                        "-6" => "Máy không ở chế độ tự động.",
+                        _ => "Lỗi không xác định."
+                    };
+                    return BadRequest(ApiResponseFactory.Fail(null, errorMessage));
+                }
+                // Lazer
+                string lazerGo = _lazerGoModula.Replace("x", model.AxisX.ToString()).Replace("y", model.AxisY.ToString());
+
+                await _tcpClient.SendStringAsync(lazerGo);
+
+                string resultLazerGo = await _tcpClient.ReceiveStringAsync(4096);
+
+                await _tcpClient.SendStringAsync(_lazerOnModula);
+
+
+                string resultLazerOn = await _tcpClient.ReceiveStringAsync(4096);
+
+
+                string messageShow = _displayShowModula.Replace("message", model.Name);
+
+                await _tcpClient.SendStringAsync(messageShow);
+
+                string resultShow = await _tcpClient.ReceiveStringAsync(4096);
+
+                return Ok(ApiResponseFactory.Success(null, $"Call thành công: {resultCall}| Result Lazer Go:{resultLazerGo} | Result Lazer On: {resultLazerOn} | Result show: {resultShow}"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+
+        }
+
+
+        [HttpGet("return-modula")]
+        public async Task<IActionResult> ReturnModula()
+        {
+            try
+            {
+                await _tcpClient.SendStringAsync(_lazerOffModula);
+                string resultLazerOff = await _tcpClient.ReceiveStringAsync(4096);
+                if (string.IsNullOrEmpty(resultLazerOff) || !resultLazerOff.Contains('|'))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không nhận được phản hồi từ Modula!"));
+                }
+                await _tcpClient.SendStringAsync(_returnModula);
+                string resultCall = await _tcpClient.ReceiveStringAsync(4096);
+                if (string.IsNullOrEmpty(resultCall) || !resultCall.Contains('|'))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không nhận được phản hồi từ Modula!"));
+                }
+
+                if (resultCall.Split('|')[3].Trim() != "0")
+                {
+                    string errorMessage = (resultCall.Split('|')[3].Trim()) switch
+                    {
+                        "-1" => "Vị trí trống (không có khay để trả).",
+                        "-2" => "Vị trí không hợp lệ.",
+                        "-3" => "Vị trí đang bận (đang xử lý thao tác khác).",
+                        "-6" => "Máy không ở chế độ tự động.",
+                        "-100" => "Lỗi chung (kiểm tra log WMS).",
+                        _ => "Lỗi không xác định."
+                    };
+                    return BadRequest(ApiResponseFactory.Fail(null, errorMessage));
+                }
+                await _tcpClient.SendStringAsync(_displayClearModula);
+                return Ok(ApiResponseFactory.Success(null, $"Return: {resultCall}"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 }
