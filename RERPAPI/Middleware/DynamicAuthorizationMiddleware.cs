@@ -7,6 +7,7 @@ namespace RERPAPI.Middleware
     public class DynamicAuthorizationMiddleware
     {
         private readonly RequestDelegate _next;
+
         public DynamicAuthorizationMiddleware(RequestDelegate next)
         {
             _next = next;

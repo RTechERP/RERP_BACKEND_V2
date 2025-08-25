@@ -2,14 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using RERPAPI.IRepo;
 using RERPAPI.Model.Context;
-using RERPAPI.Model.DTO;
-using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo
 {
@@ -19,12 +11,12 @@ namespace RERPAPI.Repo
         public Dictionary<string, string> Claims { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         private readonly IHttpContextAccessor _httpContextAccessor;
+
         public UserPermissionService(RTCContext db, IHttpContextAccessor httpContextAccessor)
         {
             _dbContext = db;
             _httpContextAccessor = httpContextAccessor;
         }
-
 
         public async Task<bool> HasPermissionAsync(string userId, string permission)
         {

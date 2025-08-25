@@ -9,5 +9,6 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class ProjectTypeRepo : GenericRepo<ProjectType>
     {
+
     }
 }

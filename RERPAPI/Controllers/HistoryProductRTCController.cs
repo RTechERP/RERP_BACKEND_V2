@@ -1,12 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers
 {
@@ -14,8 +11,8 @@ namespace RERPAPI.Controllers
     [ApiController]
     public class HistoryProductRTCController : ControllerBase
     {
-        const int WAREHOUSE_ID = 1;
-        HistoryProductRTCRepo _historyRepo = new HistoryProductRTCRepo();
+        private const int WAREHOUSE_ID = 1;
+        private HistoryProductRTCRepo _historyRepo = new HistoryProductRTCRepo();
 
         [Authorize]
         [HttpGet("get-all")]
@@ -55,7 +52,6 @@ namespace RERPAPI.Controllers
                 //_historyRepo.SetClaim(claims);
                 foreach (var item in historyProducts)
                 {
-
                     if (currentUser.ID != item.PeopleID) continue;
                     await _historyRepo.UpdateAsync(item);
                 }
@@ -64,7 +60,6 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }

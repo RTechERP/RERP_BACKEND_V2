@@ -22,4 +22,10 @@ public partial class BillDocumentImportTechnicalLog
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
+
+    public string? ReasonCancel { get; set; }
+
+    public int? DocumentImportID { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }

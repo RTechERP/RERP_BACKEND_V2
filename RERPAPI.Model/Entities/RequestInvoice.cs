@@ -46,4 +46,8 @@ public partial class RequestInvoice
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
+
+    public bool? IsUrgency { get; set; }
+
+    public DateTime? DealineUrgency { get; set; }
 }

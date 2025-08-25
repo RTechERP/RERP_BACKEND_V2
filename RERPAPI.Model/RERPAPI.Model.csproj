@@ -21,10 +21,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Param\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\RERPAPI.IRepo\RERPAPI.IRepo.csproj" />
   </ItemGroup>
 

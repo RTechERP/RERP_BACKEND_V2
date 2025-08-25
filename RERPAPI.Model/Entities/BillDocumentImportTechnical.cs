@@ -24,4 +24,12 @@ public partial class BillDocumentImportTechnical
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
+
+    public string? ReasonCancel { get; set; }
+
+    public int? StatusPurchase { get; set; }
+
+    public DateTime? DateReceive { get; set; }
+
+    public int? EmployeeReceiveID { get; set; }
 }

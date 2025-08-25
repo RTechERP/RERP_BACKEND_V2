@@ -5,7 +5,7 @@ namespace RERPAPI.Model.Entities;
 
 public partial class ModulaLocationDetail
 {
-    public int ID { get; set; } = 0;
+    public int ID { get; set; }
 
     public int? STT { get; set; }
 
