@@ -10,18 +10,24 @@ namespace RERPAPI.Repo.GenericEntity.Project
 {
     public class ProjectItemRepo : GenericRepo<ProjectItem>
     {
+        ProjectRepo projectRepo = new ProjectRepo();
         public string GenerateProjectItemCode(int projectId)
         {
             try
             {
-                var listItem = table.Where(x => x.ProjectID == projectId).ToList();
-                var project = db.Projects.FirstOrDefault(p => p.ID == projectId);
-                string newCode = $"{project.ProjectCode}_{listItem.Count + 1}";
+                var projectItems = GetAll(x => x.ProjectID == projectId);
+                var project = projectRepo.GetByID(projectId);
+                if (project.ID <= 0)
+                {
+                    throw new Exception($"Không có Project nào có ID là :{projectId}");
+                }
+
+                string newCode = $"{project.ProjectCode}_{projectItems.Count + 1}";
                 return newCode;
             }
-            catch
+            catch(Exception ex)
             {
-                throw new Exception($"Không tìm thấy Project với ID = {projectId}");
+                throw new Exception($"{ex.Message}\r\n{ex.ToString()}");
             }
 
         }

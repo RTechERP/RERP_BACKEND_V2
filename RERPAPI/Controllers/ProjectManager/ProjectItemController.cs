@@ -2,17 +2,19 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.Asset;
 using RERPAPI.Model.DTO.Project;
 using RERPAPI.Model.Entities;
+using RERPAPI.Model.Param.Project;
 using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.Project;
 using System.Net.WebSockets;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace RERPAPI.Controllers.Project
+namespace RERPAPI.Controllers.ProjectManager
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -22,17 +24,16 @@ namespace RERPAPI.Controllers.Project
         ProjectItemRepo _projectItemRepo = new ProjectItemRepo();
         ProjectItemFileRepo _projectItemFileRepo = new ProjectItemFileRepo();
 
-        //hàm lấy list hạng mục công việc từ ProjectID
-        [HttpGet("get-project-item")]
-        public IActionResult GetProjectItem(int projectID, int userID,string? keyWord , string status)
+        //API lấy list hạng mục công việc 
+        [ApiKeyAuthorize]
+        [HttpPost("get-project-item")]
+        public IActionResult GetProjectItem(ProjectItemRequestParam request)
         {
             try
             {
-                var today = DateTime.Now;
-                var projectItem = SQLHelper<dynamic>.ProcedureToList(
-                    "spGetProjectItem",
-                    new[] { "@ProjectID", "@UserID", "@Keyword", "@Status" },
-                    new object[] { projectID, userID,keyWord, status });
+                var projectItem = SQLHelper<dynamic>.ProcedureToList("spGetProjectItem",
+                    new[] { "DateStart", "DateEnd", "@ProjectID", "@UserID", "@Keyword", "@Status" },
+                    new object[] { request.DateStart, request.DateEnd, request.ProjectID, request.UserID, request.Keyword, request.Status });
                 var rows = SQLHelper<dynamic>.GetListData(projectItem, 0);
                 return Ok(ApiResponseFactory.Success(rows, ""));
             }
@@ -42,7 +43,7 @@ namespace RERPAPI.Controllers.Project
             }
         }
         //Hàm lấy mã hạng mục công việc
-        // [Authorize]
+        [ApiKeyAuthorize]
         [HttpGet("get-project-item-code")]
         public IActionResult GetProjectItemCode([FromQuery] int projectId)
         {
@@ -78,11 +79,12 @@ namespace RERPAPI.Controllers.Project
         //    {
         //        throw new Exception("Lỗi"+ex);
         //    }
-          
+
 
         //}
-       
+
         //Hàm lưu dữ liệu
+        [ApiKeyAuthorize]
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] ProjectItemFullDTO dto)
         {
@@ -101,7 +103,7 @@ namespace RERPAPI.Controllers.Project
                         int approved = existing?.IsApproved ?? 0;
 
                         // Xóa mềm
-                        if (item.IsDeleted && item.ID != 0)
+                        if (item.IsDeleted == true && item.ID != 0)
                         {
                             if (!(currentUser.IsAdmin || isTBP || isPBP))
                                 return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền xóa hạng mục"));
@@ -166,22 +168,23 @@ namespace RERPAPI.Controllers.Project
                 //        _projectItemFileRepo.Update(dto.ProjectItemFile);
                 //    }
                 //}
+
                 // 4) Tính lại % theo TotalDayPlan cho toàn bộ Project
                 int projectId = dto.projectItems?.FirstOrDefault()?.ProjectID ?? 0;
                 if (projectId > 0)
                 {
-                    var items = _projectItemRepo.GetAll(x => x.ProjectID == projectId && !x.IsDeleted);
-                    decimal total = items.Sum(x => (decimal)(x.TotalDayPlan ?? 0m));
+                    var items = _projectItemRepo.GetAll(x => x.ProjectID == projectId && x.IsDeleted == false);
+                    decimal total = items.Sum(x => x.TotalDayPlan ?? 0m);
                     foreach (var it in items)
                     {
-                        var plan = (decimal)(it.TotalDayPlan ?? 0m);
+                        var plan = it.TotalDayPlan ?? 0m;
 
-                        it.PercentItem = total > 0 ? (plan / total) * 100m : 0m;
+                        it.PercentItem = total > 0 ? plan / total * 100m : 0m;
 
                         _projectItemRepo.Update(it);
                     }
                 }
-               
+
                 return Ok(ApiResponseFactory.Success(null, "Lưu hạng mục thành công"));
             }
             catch (Exception ex)

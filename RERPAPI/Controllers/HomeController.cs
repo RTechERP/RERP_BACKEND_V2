@@ -25,7 +25,7 @@ namespace RERPAPI.Controllers
         private readonly JwtSettings _jwtSettings;
         private readonly RTCContext _context;
 
-        UserRepo _userRepo = new UserRepo();
+        //UserRepo _userRepo = new UserRepo();
         vUserGroupLinksRepo _vUserGroupLinksRepo = new vUserGroupLinksRepo();
 
         public HomeController(IOptions<JwtSettings> jwtSettings, RTCContext context)
