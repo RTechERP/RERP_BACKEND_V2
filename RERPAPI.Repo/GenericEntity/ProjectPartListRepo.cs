@@ -33,45 +33,56 @@ namespace RERPAPI.Repo.GenericEntity
         {
             message = string.Empty;
             //check đã có yc báo giá chưa
-
-            if (item.IsDeleted == true)
+            if (item.ID > 0)
             {
-                if( item.IsApprovedPurchase==true)
+                if (item.IsDeleted == true)
                 {
-                    message = $"Thiết bị mã [{item.ProductCode}] đã yêu cầu mua. Bạn không thể xóa.\nVui lòng liên hệ nhân viên mua hàng hoặc PM để hủy YÊU CẦU MUA HÀNG trước";
+                    if (item.IsApprovedPurchase == true)
+                    {
+                        message = $"Thiết bị mã [{item.ProductCode}] đã yêu cầu mua. Bạn không thể xóa.\nVui lòng liên hệ nhân viên mua hàng hoặc PM để hủy YÊU CẦU MUA HÀNG trước";
+                        return false;
+                    }
+                    if (item.IsApprovedTBP == true)
+                    {
+                        message = $"Vật tư TT [{item.STT}] đã được TBP duyệt.\nVui lòng huỷ duyệt trước!";
+                        return false;
+                    }
+                    if (item.ReasonDeleted == null || string.IsNullOrWhiteSpace(item.ReasonDeleted.Trim()))
+                    {
+                        message = $"Vui lòng nhập Lý do xóa!";
+                        return false;
+                    }
+                    return true;
+                }
+                if (item.IsApprovedTBP == true)
+                {
+                    string errorMessage = string.Empty;
+                    if (!ValidateApproveTBP(item, true, out errorMessage))
+                    {
+                        message = errorMessage;
+                        return false;
+                    }
+                    return true;
+                }
+                if (item.IsApprovedPurchase == true)
+                {
+                    string errorMessage = string.Empty;
+                    if (!ValidateApprovePurchase(item, true, out errorMessage))
+                    {
+                        message = errorMessage;
+                        return false;
+                    }
+                }
+                //check đã có yc mua hàng chưa
+                var purchaseRequestDeletes = _purchaseRepo.GetAll(x => x.ProjectPartListID == item.ID && x.IsDeleted == false);
+                var purchaseRequestCancels = _purchaseRepo.GetAll(x => x.ProjectPartListID == item.ID && x.StatusRequest != 2);
+                if (purchaseRequestDeletes.Count > 0 && purchaseRequestCancels.Count > 0)
+                {
+                    message = $"Thiết bị mã [{item.ProductCode}] đã yêu cầu mua. Bạn không thể sửa.\nVui lòng liên hệ nhân viên mua hàng hoặc PM để hủy YÊU CẦU MUA HÀNG trước";
                     return false;
                 }
-                if(item.IsApprovedTBP == true)
-                {
-                    message = $"Vật tư TT [{item.STT}] đã được TBP duyệt.\nVui lòng huỷ duyệt trước!";
-                    return false;
-                }
-                if(item.ReasonDeleted==null || string.IsNullOrWhiteSpace(item.ReasonDeleted.Trim()))
-                {
-                    message = $"Vui lòng nhập Lý do xóa!";
-                    return false;
-                }
-                return true;
             }
-            if (item.IsApprovedTBP==true)
-            {
-                string errorMessage = string.Empty;
-                if (!ValidateApproveTBP(item, true, out errorMessage))
-                {
-                    message = errorMessage;
-                    return false;
-                }
-                return true;
-            }
-            if( item.IsApprovedPurchase==true)
-            {
-                string errorMessage = string.Empty;
-                if (!ValidateApprovePurchase(item, true, out errorMessage))
-                {
-                    message = errorMessage;
-                    return false;
-                }
-            }
+            
             //else
             //{
             //    ProjectPartlistPriceRequest priceRequestCheck = _priceRepo.GetAll(x => x.ProjectPartListID == item.ID && x.IsDeleted != true).FirstOrDefault() ?? new ProjectPartlistPriceRequest();
@@ -100,17 +111,7 @@ namespace RERPAPI.Repo.GenericEntity
                     return false;
                 }
             }
-            //check đã có yc mua hàng chưa
-            if (item.ID > 0)
-            {
-                var purchaseRequestDeletes = _purchaseRepo.GetAll(x => x.ProjectPartListID == item.ID && x.IsDeleted == false);
-                var purchaseRequestCancels = _purchaseRepo.GetAll(x => x.ProjectPartListID == item.ID && x.StatusRequest != 2);
-                if (purchaseRequestDeletes.Count > 0 && purchaseRequestCancels.Count > 0)
-                {
-                    message = $"Thiết bị mã [{item.ProductCode}] đã yêu cầu mua. Bạn không thể sửa.\nVui lòng liên hệ nhân viên mua hàng hoặc PM để hủy YÊU CẦU MUA HÀNG trước";
-                    return false;
-                }
-            }
+
             string pattern = @"^[^àáảãạâầấẩẫậăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵÀÁẢÃẠÂẦẤẨẪẬĂẰẮẲẴẶÈÉẺẼẸÊỀẾỂỄỆÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴ]+$";
             Regex regex = new Regex(pattern);
             if (item.ProjectID <= 0)
