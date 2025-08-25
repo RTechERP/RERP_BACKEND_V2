@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -11,22 +10,21 @@ namespace RERPAPI.Controllers.V2
     [ApiController]
     public class ModulaLocationController : ControllerBase
     {
-        ModulaLocationRepo _locationRepo = new ModulaLocationRepo();
+        private ModulaLocationRepo _locationRepo = new ModulaLocationRepo();
 
         //BillImportTechDetailSerialRepo _importDetailSerialNumberRepo = new BillImportTechDetailSerialRepo();
         //BillExportTechDetailSerialRepo _exportDetailSerialNumberRepo = new BillExportTechDetailSerialRepo();
 
-        BillImportDetailSerialNumberModulaLocationRepo _serialNumberImportModulaRepo = new BillImportDetailSerialNumberModulaLocationRepo();
-        BillExportDetailSerialNumberModulaLocationRepo _serialNumberExportModulaRepo = new BillExportDetailSerialNumberModulaLocationRepo();
+        private BillImportDetailSerialNumberModulaLocationRepo _serialNumberImportModulaRepo = new BillImportDetailSerialNumberModulaLocationRepo();
+        private BillExportDetailSerialNumberModulaLocationRepo _serialNumberExportModulaRepo = new BillExportDetailSerialNumberModulaLocationRepo();
 
-        HistoryProductRTCRepo _historyRepo = new HistoryProductRTCRepo();
-
+        private HistoryProductRTCRepo _historyRepo = new HistoryProductRTCRepo();
 
         /// <summary>
         /// 1: Kho sale
         /// 2: Kho demo
         /// </summary>
-        const int WAREHOUSE_TYPE = 2;
+        private const int WAREHOUSE_TYPE = 2;
 
         [HttpGet("getlocation")]
         public IActionResult GetLocation(string? keyword)
@@ -94,7 +92,6 @@ namespace RERPAPI.Controllers.V2
                                                                 new string[] { "@BillType", "@BillCode", "@WarehouseType" },
                                                                 new object[] { billtype, billcode, WAREHOUSE_TYPE });
 
-
                 List<dynamic> importDetails = new List<dynamic>();
                 List<dynamic> exportDetails = new List<dynamic>();
                 List<dynamic> productRTCs = new List<dynamic>();
@@ -127,20 +124,18 @@ namespace RERPAPI.Controllers.V2
         {
             try
             {
-
                 List<List<dynamic>> locations = SQLHelper<object>.ProcedureToList("spGetModulaLocationDetailByID",
                                                                 new string[] { "@ID", "@WarehouseType" },
                                                                 new object[] { id, WAREHOUSE_TYPE });
 
                 var data = SQLHelper<object>.GetListData(locations, 0);
-                return Ok(ApiResponseFactory.Success(data,""));
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex,ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         [HttpPost("savedata")]
         public async Task<IActionResult> SaveDataAsync([FromBody] List<ModulaLocationDTO.SerialNumberModulaLocation> serialNumberModulaLocations)
@@ -160,7 +155,7 @@ namespace RERPAPI.Controllers.V2
                     if (item.BillType == 1) //Nếu là nhập kho
                     {
                         if (string.IsNullOrWhiteSpace(item.SerialNumber)) continue;
-                         string message =  await _serialNumberImportModulaRepo.SaveDataAsync(item, i);
+                        string message = await _serialNumberImportModulaRepo.SaveDataAsync(item, i);
                         if (!string.IsNullOrWhiteSpace(message))
                         {
                             return BadRequest(new
@@ -180,12 +175,11 @@ namespace RERPAPI.Controllers.V2
                     }
                 }
 
-
-                return Ok(ApiResponseFactory.Success(null,"Cập nhật thành công!"));
+                return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex,ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

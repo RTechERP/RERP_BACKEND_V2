@@ -5,6 +5,7 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.Technical;
 using static RERPAPI.Model.DTO.ModulaLocationDTO;
 
 namespace RERPAPI.Controllers
@@ -16,7 +17,7 @@ namespace RERPAPI.Controllers
         ModulaLocationRepo locationRepo = new ModulaLocationRepo();
         ModulaLocationDetailRepo detailRepo = new ModulaLocationDetailRepo();
 
-     //   BillImportDetailSerialNumberRepo importDetailSerialNumberRepo = new BillImportDetailSerialNumberRepo();
+        BillImportDetailSerialNumberRepo importDetailSerialNumberRepo = new BillImportDetailSerialNumberRepo();
         BillExportDetailSerialNumberRepo exportDetailSerialNumberRepo = new BillExportDetailSerialNumberRepo();
 
         BillImportDetailSerialNumberModulaLocationRepo serialNumberImportModulaRepo = new BillImportDetailSerialNumberModulaLocationRepo();
@@ -130,7 +131,7 @@ namespace RERPAPI.Controllers
         }
 
 
-        [HttpGet("getlocationdetail")]
+        [HttpGet("get-location-detail")]
         public IActionResult GetLocationByID(int id)
         {
             try
@@ -156,127 +157,127 @@ namespace RERPAPI.Controllers
             }
         }
 
-        //[HttpPost("savedata")]
-        //public async Task<IActionResult> SaveData([FromBody] List<ModulaLocationDTO.SerialNumberModulaLocation> serialNumberModulaLocations)
-        //{
-        //    try
-        //    {
-        //        for (int i = 0; i < serialNumberModulaLocations.Count; i++)
-        //        {
-        //            var item = serialNumberModulaLocations[i];
-        //            if (string.IsNullOrWhiteSpace(item.SerialNumber)) continue;
+        [HttpPost("savedata")]
+        public async Task<IActionResult> SaveData([FromBody] List<ModulaLocationDTO.SerialNumberModulaLocation> serialNumberModulaLocations)
+        {
+            try
+            {
+                for (int i = 0; i < serialNumberModulaLocations.Count; i++)
+                {
+                    var item = serialNumberModulaLocations[i];
+                    if (string.IsNullOrWhiteSpace(item.SerialNumber)) continue;
 
-        //            if (item.BillImportDetailID > 0) //Nếu là nhập kho
-        //            {
-        //                //check trong request truyền lên
-        //                var serialNumberRequest = serialNumberModulaLocations.Where(x => x.SerialNumber == item.SerialNumber).ToList();
-        //                if (serialNumberRequest.Count() > 1)
-        //                {
-        //                    return Ok(new
-        //                    {
-        //                        status = 0,
-        //                        message = $"SerialNumber [{item.SerialNumber}] đã được nhập ở vị trí khác",
-        //                    });
-        //                }
+                    if (item.BillImportDetailID > 0) //Nếu là nhập kho
+                    {
+                        //check trong request truyền lên
+                        var serialNumberRequest = serialNumberModulaLocations.Where(x => x.SerialNumber == item.SerialNumber).ToList();
+                        if (serialNumberRequest.Count() > 1)
+                        {
+                            return Ok(new
+                            {
+                                status = 0,
+                                message = $"SerialNumber [{item.SerialNumber}] đã được nhập ở vị trí khác",
+                            });
+                        }
 
-        //                //check trong database
-        //       //         var serialNumbers = importDetailSerialNumberRepo.GetAll().Where(x => x.SerialNumber == item.SerialNumber).ToList();
-        //                //if (serialNumbers.Count() > 0)
-        //                //{
-        //                //    return Ok(new
-        //                //    {
-        //                //        status = 0,
-        //                //        message = $"SerialNumber [{item.SerialNumber}] đã được nhập ở vị trí khác",
-        //                //    });
-        //                //}
-        //            }
-        //        }
+                        //check trong database
+                        //         var serialNumbers = importDetailSerialNumberRepo.GetAll().Where(x => x.SerialNumber == item.SerialNumber).ToList();
+                        //if (serialNumbers.Count() > 0)
+                        //{
+                        //    return Ok(new
+                        //    {
+                        //        status = 0,
+                        //        message = $"SerialNumber [{item.SerialNumber}] đã được nhập ở vị trí khác",
+                        //    });
+                        //}
+                    }
+                }
 
-        //        for (int i = 0; i < serialNumberModulaLocations.Count; i++)
-        //        {
-        //            var item = serialNumberModulaLocations[i];
-        //            if (item.BillImportDetailID > 0) //Nếu là nhập kho
-        //            {
-        //                if (string.IsNullOrWhiteSpace(item.SerialNumber)) continue;
+                for (int i = 0; i < serialNumberModulaLocations.Count; i++)
+                {
+                    var item = serialNumberModulaLocations[i];
+                    if (item.BillImportDetailID > 0) //Nếu là nhập kho
+                    {
+                        if (string.IsNullOrWhiteSpace(item.SerialNumber)) continue;
 
-        //                BillImportDetailSerialNumber serialNumber = importDetailSerialNumberRepo.GetAll().FirstOrDefault(x => x.SerialNumber == item.SerialNumber) ?? new BillImportDetailSerialNumber();
+                        BillImportDetailSerialNumber serialNumber = importDetailSerialNumberRepo.GetAll().FirstOrDefault(x => x.SerialNumber == item.SerialNumber) ?? new BillImportDetailSerialNumber();
 
-        //                if (serialNumber.ID <= 0)
-        //                {
-        //                    serialNumber.STT = i + 1;
-        //                    serialNumber.SerialNumber = item.SerialNumber.Trim();
-        //                    serialNumber.BillImportDetailID = item.BillImportDetailID;
-        //                    serialNumber.SerialNumberRTC = "";
-        //                    serialNumber.CreatedBy = serialNumber.UpdatedBy = item.CreatedBy;
-        //                    serialNumber.CreatedDate = serialNumber.UpdatedDate = DateTime.Now;
+                        if (serialNumber.ID <= 0)
+                        {
+                            serialNumber.STT = i + 1;
+                            serialNumber.SerialNumber = item.SerialNumber.Trim();
+                            serialNumber.BillImportDetailID = item.BillImportDetailID;
+                            serialNumber.SerialNumberRTC = "";
+                            serialNumber.CreatedBy = serialNumber.UpdatedBy = item.CreatedBy;
+                            serialNumber.CreatedDate = serialNumber.UpdatedDate = DateTime.Now;
 
-        //                    importDetailSerialNumberRepo.Create(serialNumber);
-        //                }
+                            importDetailSerialNumberRepo.Create(serialNumber);
+                        }
 
-        //                BillImportDetailSerialNumberModulaLocation import = new BillImportDetailSerialNumberModulaLocation()
-        //                {
-        //                    BillImportDetailSerialNumberID = serialNumber.ID,
-        //                    ModulaLocationDetailID = item.ModulaLocationDetailID,
-        //                    Quantity = item.Quantity,
-        //                    IsDeleted = false,
-        //                    CreatedBy = item.CreatedBy,
-        //                    UpdatedBy = item.CreatedBy,
+                        BillImportDetailSerialNumberModulaLocation import = new BillImportDetailSerialNumberModulaLocation()
+                        {
+                            BillImportDetailSerialNumberID = serialNumber.ID,
+                            ModulaLocationDetailID = item.ModulaLocationDetailID,
+                            Quantity = item.Quantity,
+                            IsDeleted = false,
+                            CreatedBy = item.CreatedBy,
+                            UpdatedBy = item.CreatedBy,
 
-        //                    CreatedDate = DateTime.Now,
-        //                    UpdatedDate = DateTime.Now,
-        //                };
+                            CreatedDate = DateTime.Now,
+                            UpdatedDate = DateTime.Now,
+                        };
 
-        //                await serialNumberImportModulaRepo.CreateAsync(import);
-        //            }
-        //            else
-        //            {
-        //                BillExportDetailSerialNumber serialNumber = exportDetailSerialNumberRepo.GetAll().FirstOrDefault(x => x.SerialNumber == item.SerialNumber) ?? new BillExportDetailSerialNumber();
-        //                if (serialNumber.ID <= 0)
-        //                {
-        //                    serialNumber.STT = i + 1;
-        //                    serialNumber.SerialNumber = item.SerialNumber.Trim();
-        //                    serialNumber.BillExportDetailID = item.BillExportDetailID;
-        //                    serialNumber.SerialNumberRTC = "";
-        //                    serialNumber.CreatedBy = serialNumber.UpdatedBy = item.CreatedBy;
-        //                    serialNumber.CreatedDate = serialNumber.UpdatedDate = DateTime.Now;
+                        await serialNumberImportModulaRepo.CreateAsync(import);
+                    }
+                    else
+                    {
+                        BillExportDetailSerialNumber serialNumber = exportDetailSerialNumberRepo.GetAll().FirstOrDefault(x => x.SerialNumber == item.SerialNumber) ?? new BillExportDetailSerialNumber();
+                        if (serialNumber.ID <= 0)
+                        {
+                            serialNumber.STT = i + 1;
+                            serialNumber.SerialNumber = item.SerialNumber.Trim();
+                            serialNumber.BillExportDetailID = item.BillExportDetailID;
+                            serialNumber.SerialNumberRTC = "";
+                            serialNumber.CreatedBy = serialNumber.UpdatedBy = item.CreatedBy;
+                            serialNumber.CreatedDate = serialNumber.UpdatedDate = DateTime.Now;
 
-        //                    exportDetailSerialNumberRepo.Create(serialNumber);
-        //                }
+                            exportDetailSerialNumberRepo.Create(serialNumber);
+                        }
 
-        //                BillExportDetailSerialNumberModulaLocation export = new BillExportDetailSerialNumberModulaLocation()
-        //                {
-        //                    BillExportDetailSerialNumberID = serialNumber.ID,
-        //                    ModulaLocationDetailID = item.ModulaLocationDetailID,
-        //                    Quantity = item.Quantity,
-        //                    IsDeleted = false,
-        //                    CreatedBy = item.CreatedBy,
-        //                    UpdatedBy = item.CreatedBy,
+                        BillExportDetailSerialNumberModulaLocation export = new BillExportDetailSerialNumberModulaLocation()
+                        {
+                            BillExportDetailSerialNumberID = serialNumber.ID,
+                            ModulaLocationDetailID = item.ModulaLocationDetailID,
+                            Quantity = item.Quantity,
+                            IsDeleted = false,
+                            CreatedBy = item.CreatedBy,
+                            UpdatedBy = item.CreatedBy,
 
-        //                    CreatedDate = DateTime.Now,
-        //                    UpdatedDate = DateTime.Now,
-        //                };
+                            CreatedDate = DateTime.Now,
+                            UpdatedDate = DateTime.Now,
+                        };
 
-        //                await serialNumberExportModulaRepo.CreateAsync(export);
-        //            }
-        //        }
+                        await serialNumberExportModulaRepo.CreateAsync(export);
+                    }
+                }
 
 
-        //        return Ok(new
-        //        {
-        //            status = 1,
-        //            message = "Cập nhật thành công!",
-        //        });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return Ok(new
-        //        {
-        //            status = 0,
-        //            message = ex.Message,
-        //            error = ex.ToString()
-        //        });
-        //    }
-        //}
+                return Ok(new
+                {
+                    status = 1,
+                    message = "Cập nhật thành công!",
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
+        }
 
 
         [HttpPost("savelocation")]

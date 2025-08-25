@@ -64,7 +64,7 @@ namespace RERPAPI.Repo.GenericEntity
 
             BillImportDetailSerialNumberModulaLocation import = new BillImportDetailSerialNumberModulaLocation()
             {
-                BillImportTechDetailSerialID = serialNumber.ID,
+                //BillImportTechDetailSerialID = serialNumber.ID,
                 ModulaLocationDetailID = item.ModulaLocationDetailID,
                 Quantity = item.Quantity,
                 IsDeleted = false,

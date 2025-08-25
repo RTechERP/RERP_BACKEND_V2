@@ -1,23 +1,25 @@
 ﻿
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using System.Data;
 
-
-namespace RERPAPI.Controllers.SaleWareHouseManagement
+namespace RERPAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class SupplierSaleController : ControllerBase
     {
         SupplierSaleRepo _supplierSaleRepo = new SupplierSaleRepo();
-        [HttpGet("get-ncc")]
-        public IActionResult getSupplierSale()
+        #region Lấy tất cả nhà cung cấp
+        [HttpGet("get-all")]
+        public IActionResult GetAll()
         {
             try
             {
-                List<SupplierSale> result = _supplierSaleRepo.GetAll();
+                List<SupplierSale> result = _supplierSaleRepo.GetAll().OrderBy(x => x.ID).ToList();
                 return Ok(new
                 {
                     status = 1,
@@ -26,7 +28,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             }
             catch (Exception ex)
             {
-                return Ok(new
+                return BadRequest(new
                 {
                     status = 0,
                     message = ex.Message,
@@ -34,5 +36,6 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                 });
             }
         }
+        #endregion
     }
 }

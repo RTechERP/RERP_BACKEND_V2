@@ -1,12 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers
 {
@@ -41,7 +37,7 @@ namespace RERPAPI.Controllers
         //}
 
         [HttpGet("employees")]
-        //[RequiresPermission("N42")]
+        [RequiresPermission("N42")]
         public IActionResult GetEmployee(int? status, int? departmentid, string? keyword)
         {
             try
@@ -63,7 +59,6 @@ namespace RERPAPI.Controllers
         }
 
         [HttpGet("employee/{id}")]
-        //[RequiresPermission("N42")]
         public IActionResult GetByID(int id)
         {
             try
@@ -77,7 +72,7 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpPost("savedata")]
+        [HttpPost("save-data")]
         public async Task<IActionResult> SaveEmployee([FromBody] Employee employee)
         {
             try
@@ -93,7 +88,7 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-                return Ok(new
+                return BadRequest(new
                 {
                     status = 0,
                     message = ex.Message,

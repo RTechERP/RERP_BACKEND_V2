@@ -1,15 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
+﻿using Microsoft.EntityFrameworkCore;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
-using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Model.Context
 {
@@ -23,11 +14,9 @@ namespace RERPAPI.Model.Context
 
         public RTCContext()
         {
-
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer(Config.ConnectionString);
-
 
         public override int SaveChanges()
         {
@@ -66,7 +55,6 @@ namespace RERPAPI.Model.Context
             return base.SaveChanges();
         }
 
-
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             string loginName = CurrentUser.LoginName;
@@ -103,8 +91,5 @@ namespace RERPAPI.Model.Context
             }
             return await base.SaveChangesAsync(cancellationToken);
         }
-
-
-
     }
     }

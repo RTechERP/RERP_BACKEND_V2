@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -11,7 +12,7 @@ namespace RERPAPI.Controllers
     public class CustomerController : ControllerBase
     {
         CustomerRepo _customerRepo = new CustomerRepo();
-   
+
 
         [HttpGet("get-customers")]
         public IActionResult GetAll()
@@ -35,9 +36,6 @@ namespace RERPAPI.Controllers
                 });
             }
         }
- 
-        
-
-        
     }
 }
+

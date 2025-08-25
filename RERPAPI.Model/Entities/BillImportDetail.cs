@@ -74,6 +74,4 @@ public partial class BillImportDetail
     public DateTime? DateSomeBill { get; set; }
 
     public bool? IsDeleted { get; set; }
-
-    public string? UnitName { get; set; }
 }

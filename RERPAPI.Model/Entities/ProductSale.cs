@@ -48,4 +48,6 @@ public partial class ProductSale
     public int? FirmID { get; set; }
 
     public bool? IsDeleted { get; set; }
+
+    public bool? IsFix { get; set; }
 }

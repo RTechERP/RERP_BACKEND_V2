@@ -22,4 +22,6 @@ public partial class PaymentOrderFileBankSlip
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
+
+    public int Filetype { get; set; }
 }

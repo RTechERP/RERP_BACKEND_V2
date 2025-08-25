@@ -125,6 +125,9 @@ public partial class ProjectPartlistPurchaseRequest
 
     public int? ProductRTCID { get; set; }
 
+    /// <summary>
+    /// 0: yêu cầu mua; 1: Yêu cầu mượn
+    /// </summary>
     public int? TicketType { get; set; }
 
     public DateTime? DateReturnEstimated { get; set; }
@@ -138,4 +141,10 @@ public partial class ProjectPartlistPurchaseRequest
     public string? Maker { get; set; }
 
     public int? ProjectPartlistPurchaseRequestTypeID { get; set; }
+
+    public decimal? TargetPrice { get; set; }
+
+    public int? DuplicateID { get; set; }
+
+    public decimal? OriginQuantity { get; set; }
 }

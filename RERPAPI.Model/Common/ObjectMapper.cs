@@ -1,11 +1,4 @@
 ﻿using RERPAPI.Model.DTO;
-using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Model.Common
 {
@@ -24,7 +17,6 @@ namespace RERPAPI.Model.Common
                 {
                     var tProp = targetProps.FirstOrDefault(x => x.Name == sp.Name && x.PropertyType == sp.PropertyType);
                     if (tProp != null && tProp.CanWrite) tProp.SetValue(target, sp.GetValue(source));
-
                 }
 
                 return target;
@@ -34,9 +26,7 @@ namespace RERPAPI.Model.Common
                 return target;
                 throw;
             }
-
         }
-
 
         public static CurrentUser GetCurrentUser(Dictionary<string, string> claims)
         {
