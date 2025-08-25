@@ -11,6 +11,7 @@ namespace RERPAPI.Controllers
     public class ProjectRequestController : ControllerBase
     {
         ProjectRequestRepo _projectRequestRepo = new ProjectRequestRepo();
+        ProjectRepo _projectRepo = new ProjectRepo();
         [HttpGet("get-all")]
         public IActionResult GetAll(int projectID)
         {
@@ -35,9 +36,15 @@ namespace RERPAPI.Controllers
         {
             try
             {
+                string msg = string.Empty;
+                if(!_projectRequestRepo.Validate(request, out msg))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, msg));
+                }
                 if (request.ID > 0)
                 {
-                    List<ProjectRequest> project = _projectRequestRepo.GetAll(x => x.ID != request.ID && x.CodeRequest == request.CodeRequest && x.ProjectID == request.ProjectID);
+                    //List<ProjectRequest> project = _projectRequestRepo.GetAll(x => x.ID != request.ID && x.CodeRequest == request.CodeRequest && x.ProjectID == request.ProjectID);
+                   
                     await _projectRequestRepo.UpdateAsync(request);
                     return Ok(ApiResponseFactory.Success(
                         request,

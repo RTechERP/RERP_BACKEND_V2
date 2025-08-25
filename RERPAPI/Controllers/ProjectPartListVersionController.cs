@@ -81,28 +81,11 @@ namespace RERPAPI.Controllers
         //    }
         //}
         [HttpPost("save-data")]
-        public async Task<IActionResult> SaveData([FromBody] ProjectPartListVersionDTO requestDTO)
+        public async Task<IActionResult> SaveData([FromBody] ProjectPartListVersion request)
         {
             try
             {
-                string message = "";
-
-                var request = (ProjectPartListVersion)requestDTO;
-                if (requestDTO.IsApproveAction.HasValue)
-                {
-                    if (!_projectPartlistVersionRepo.ValidateApprove(request, requestDTO.IsApproveAction.Value, out message))
-                    {
-                        return BadRequest(ApiResponseFactory.Fail(null, message));
-                    }
-
-                    var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                    var currentUser = ObjectMapper.GetCurrentUser(claims);
-
-                    request.IsApproved = requestDTO.IsApproveAction;
-                    request.ApprovedID = currentUser?.EmployeeID;
-                }
-
-                // Regular validation
+                 string message = "";
                 if (!_projectPartlistVersionRepo.Validate(request, out message))
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, message));
@@ -110,7 +93,18 @@ namespace RERPAPI.Controllers
 
                 if (request.ID > 0)
                 {
+                    if (!_projectPartlistVersionRepo.ValidateApprove(request, out message))
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, message));
+                    }
+
+                    var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                    var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+
+                    request.ApprovedID = currentUser?.EmployeeID;
                     await _projectPartlistVersionRepo.UpdateAsync(request);
+                    request = _projectPartlistVersionRepo.GetByID(request.ID);
                 }
                 else
                 {
@@ -121,8 +115,8 @@ namespace RERPAPI.Controllers
                 {
                     var myDict = new Dictionary<Expression<Func<ProjectPartList, object>>, object>
                         {
-                            { x => x.IsApprovedTBP, 0 },
-                            { x => x.IsApprovedPurchase, 0 }
+                            { x => x.IsApprovedTBP, false },
+                            { x => x.IsApprovedPurchase, false }
                         };
                     await _projectPartListRepo.UpdateFieldByAttributeAsync(x => x.ProjectPartListVersionID == request.ID, myDict);
                 }
@@ -131,7 +125,7 @@ namespace RERPAPI.Controllers
                 {
                     var myDict = new Dictionary<Expression<Func<ProjectPartList, object>>, object>
                         {
-                            { x => x.IsDeleted, 1 },
+                            { x => x.IsDeleted, true },
                             { x => x.ReasonDeleted, request.ReasonDeleted}
                         };
                     await _projectPartListRepo.UpdateFieldByAttributeAsync(x => x.ProjectPartListVersionID == request.ID, myDict);
