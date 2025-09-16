@@ -37,7 +37,7 @@ namespace RERPAPI.Controllers
         //}
 
         [HttpGet("employees")]
-        [RequiresPermission("N42")]
+        //[RequiresPermission("N42")]
         public IActionResult GetEmployee(int? status, int? departmentid, string? keyword)
         {
             try

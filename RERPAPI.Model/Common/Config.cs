@@ -12,7 +12,7 @@ namespace RERPAPI.Model.Common
         private static int _isPublish = 0;
         public static string Path()
         {
-            string path = @"C:\RTC\UPLOADFILE";
+            string path = @"D:\\LeTheAnh\\RTC";
             return path;
         }
 

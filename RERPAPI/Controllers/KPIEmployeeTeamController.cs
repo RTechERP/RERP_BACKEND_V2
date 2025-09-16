@@ -25,7 +25,7 @@ namespace RERPAPI.Controllers
         /// <param name="quarterValue"></param>
         /// <param name="departmentID"></param>
         /// <returns></returns>
-        [HttpGet("get-all")]
+        [HttpGet("getall")]
         public IActionResult GetAll(int yearValue, int quarterValue, int departmentID)
         {
 
@@ -76,7 +76,7 @@ namespace RERPAPI.Controllers
         }
         #endregion
         #region lấy theo ID
-        [HttpGet("get-by-id")]
+        [HttpGet("getbyid")]
         public IActionResult FindByID(int id)
         {
             try
@@ -108,7 +108,7 @@ namespace RERPAPI.Controllers
         }
         #endregion
         #region Lưu dữ liệu
-        [HttpPost("save-data")]
+        [HttpPost("savedata")]
         public async Task<IActionResult> SaveData([FromBody] KPIEmployeeTeam team)
         {
             try

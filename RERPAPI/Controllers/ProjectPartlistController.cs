@@ -14,6 +14,7 @@ namespace RERPAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [ApiKeyAuthorize]
     public class ProjectPartlistController : ControllerBase
     {
         ProjectPartListRepo _projectPartlistRepo = new ProjectPartListRepo();

@@ -14,7 +14,7 @@ namespace RERPAPI.Controllers
         KPIEmployeeTeamLinkRepo teamLinkRepo = new KPIEmployeeTeamLinkRepo();
         #endregion
         #region Lấy tất cả nhân viên trong team
-        [HttpGet("get-all")]
+        [HttpGet("getall")]
         public IActionResult GetKPIEmployeeTeamLink(int kpiEmployeeteamID, int departmentID, int yearValue, int quarterValue)
         {
             try
@@ -42,7 +42,7 @@ namespace RERPAPI.Controllers
         }
         #endregion
         #region Lưu dữ liệu
-        [HttpPost("save-data")]
+        [HttpPost("savedata")]
         public async Task<IActionResult> SaveData([FromBody] List<KPIEmployeeTeamLink> teamLinks)
         {
             try

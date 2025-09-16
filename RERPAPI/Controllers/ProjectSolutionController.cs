@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -9,6 +10,7 @@ namespace RERPAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [ApiKeyAuthorize]
     public class ProjectSolutionController : ControllerBase
     {
         private ProjectSolutionRepo _projectSolutionRepo = new ProjectSolutionRepo();

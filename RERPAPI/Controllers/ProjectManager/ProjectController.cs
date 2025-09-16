@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore.Query;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -19,6 +20,8 @@ namespace RERPAPI.Controllers.ProjectManager
 {
     [Route("api/[controller]")]
     [ApiController]
+
+    // [ApiKeyAuthorize]
     public class ProjectController : ControllerBase
     {
         #region Khai báo biến
@@ -64,155 +67,108 @@ namespace RERPAPI.Controllers.ProjectManager
 
         #region API GET
         // Lấy danh sách thư mục 
-        [HttpGet("getfolders")]
-        public async Task<IActionResult> getfolders()
+        // [ApiKeyAuthorize]
+        [HttpGet("get-folders")]
+        public async Task<IActionResult> GetFolders()
         {
             try
             {
                 List<ProjectTreeFolder> projectTreeFolders = projectTreeFolderRepo.GetAll();
-                return Ok(new
-                {
-                    status = 1,
-                    data = projectTreeFolders
-                });
+                return Ok(ApiResponseFactory.Success(projectTreeFolders, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         // Danh sách nhân viên khi thêm dự án lấy table 1
-        [HttpGet("getpms")]
-        public async Task<IActionResult> getpms()
+        [HttpGet("get-pms")]
+        //[ApiKeyAuthorize]
+        public async Task<IActionResult> GetPms()
         {
             try
             {
                 var pms = getDataUser(0);
-                return Ok(new
-                {
-                    status = 1,
-                    data = pms
-                });
+                return Ok(ApiResponseFactory.Success(pms, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         // Lấy danh sách khách hàng
-        [HttpGet("getcustomers")]
-        public async Task<IActionResult> getcustomers()
+        [HttpGet("get-customers")]
+        //  [ApiKeyAuthorize]
+        public async Task<IActionResult> GetCustomers()
         {
             try
             {
                 List<Customer> customers = customerRepo.GetAll().Where(x => x.IsDeleted == false).OrderByDescending(x => x.CreatedDate).ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data = customers
-                });
+                return Ok(ApiResponseFactory.Success(customers, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         // Danh sách nhân viên khi thêm dự án lấy table 2 phụ trách sale/ phụ trách kỹ thuật/ leader
-        [HttpGet("getusers")]
-        public async Task<IActionResult> getusers()
+        [HttpGet("get-users")]
+        // [ApiKeyAuthorize]
+        public async Task<IActionResult> GetUsers()
         {
             try
             {
                 var users = getDataUser(1);
-                return Ok(new
-                {
-                    status = 1,
-                    data = users
-                });
+                return Ok(ApiResponseFactory.Success(users, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         // Danh sách loại dự án 
-        [HttpGet("getprojecttypes")]
-        public async Task<IActionResult> getprojecttypes()
+        [HttpGet("get-project-types")]
+        //   [ApiKeyAuthorize]
+        public async Task<IActionResult> GetProjectTypes()
         {
             try
             {
                 List<ProjectType> projectTypes = projectTypeRepo.GetAll().Where(x => x.ID != 4).ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data = projectTypes
-                });
+                return Ok(ApiResponseFactory.Success(projectTypes, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         // Danh sách loại dự án ProjectTypeLink
-        [HttpGet("getprojecttypelinks/{id}")]
-        public async Task<IActionResult> getprojecttypelinks(int id)
+        [HttpGet("get-project-type-links")]
+        //   [ApiKeyAuthorize]
+        public async Task<IActionResult> GetProjectTypeLinks(int id)
         {
             try
             {
                 //List<ProjectTypeLinkDTO> projectTypeLinkDTOs = SQLHelper<ProjectTypeLinkDTO>
                 //    .ProcedureToList("spGetProjectTypeLink", new string[] { "@ProjectID" }, new object[] { id });
                 var projectTypeLinkDTOs = SQLHelper<object>.ProcedureToList("spGetProjectTypeLink", new string[] { "@ProjectID" }, new object[] { id });
-                return Ok(new
 
-                {
-                    status = 1,
-                    data = projectTypeLinkDTOs.FirstOrDefault()
-                });
+                return Ok(ApiResponseFactory.Success(projectTypeLinkDTOs.FirstOrDefault(), ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         // Load Hạng mục công việc
-        [HttpGet("getprojectitems")]
-        public async Task<IActionResult> getprojectitems(int id)
+        [HttpGet("get-project-items")]
+        //   [ApiKeyAuthorize]
+        public async Task<IActionResult> GetProjectItems(int id)
         {
             try
             {
@@ -221,75 +177,51 @@ namespace RERPAPI.Controllers.ProjectManager
                 //List<ProjectItemDTO> projectItems = SQLHelper<ProjectItemDTO>
                 //    .ProcedureToList("spGetProjectItem", new string[] { "@ProjectID" }, new object[] { id });
                 var projectItems = SQLHelper<object>.ProcedureToList("spGetProjectItem", new string[] { "@ProjectID" }, new object[] { id });
-                return Ok(new
-                {
-                    status = 1,
-                    data = projectItems[0]
-                });
+                return Ok(ApiResponseFactory.Success(projectItems[0], ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
 
         // Danh sách trạng thái dự án 
-        [HttpGet("getprojectstatus")]
-        public async Task<IActionResult> getprojectstatus()
+        [HttpGet("get-project-status")]
+        //   [ApiKeyAuthorize]
+        public async Task<IActionResult> GetProjectStatus()
         {
             try
             {
                 List<ProjectStatus> projectStatus = projectStatusRepo.GetAll().OrderBy(x => x.STT).ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data = projectStatus
-                });
+                return Ok(ApiResponseFactory.Success(projectStatus, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         // Danh sách lĩnh vực kinh doanh
-        [HttpGet("getbusinessfields")]
-        public async Task<IActionResult> getbusinessfields()
+        [HttpGet("get-business-fields")]
+        // [ApiKeyAuthorize]
+        public async Task<IActionResult> GetBusinessFields()
         {
             try
             {
                 List<BusinessField> businessFields = businessFieldRepo.GetAll().OrderBy(x => x.STT).ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data = businessFields
-                });
+                return Ok(ApiResponseFactory.Success(businessFields, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         // Danh sách dự án 
-        [HttpGet("getprojects")]
-        public async Task<IActionResult> getprojects(int size, int page,
+        [HttpGet("get-projects")]
+        //  [ApiKeyAuthorize]
+        public async Task<IActionResult> GetProjects(int size, int page,
             DateTime dateTimeS, DateTime dateTimeE, string? projectType,
             int pmID, int leaderID, int bussinessFieldID, string? projectStatus,
             int customerID, int saleID, int userTechID, int globalUserID, string? keyword, bool isAGV
@@ -345,27 +277,19 @@ namespace RERPAPI.Controllers.ProjectManager
                 //        userTechID, pmID, typeCheck[0] ,typeCheck[1] ,typeCheck[2] ,typeCheck[3] ,typeCheck[4] ,typeCheck[5]
                 //        ,typeCheck[6] ,typeCheck[7] ,typeCheck[8], globalUserID, bussinessFieldID
                 //    });
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<object>.GetListData(projects, 0),
-                    totalPage = SQLHelper<object>.GetListData(projects, 1).FirstOrDefault().TotalPage
-                });
+                var project = SQLHelper<object>.GetListData(projects, 0);
+                var totalPage = SQLHelper<object>.GetListData(projects, 1).FirstOrDefault().TotalPage;
+                return Ok(ApiResponseFactory.Success(new { project, totalPage }, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
         // Lấy danh sách dự án chi tiết ở dưới
-        [HttpGet("getprojectdetails/{id}")]
-        public async Task<IActionResult> getprojectdetails(int id)
+        [HttpGet("get-project-details")]
+        //  [ApiKeyAuthorize]
+        public async Task<IActionResult> GetProjectDetails(int id)
         {
             // Update store spGetProjectDetail p.Note => p.Note AS ProjectNote 
             try
@@ -373,52 +297,35 @@ namespace RERPAPI.Controllers.ProjectManager
                 //List<ProjectDetailDTO> projectDetails = SQLHelper<ProjectDetailDTO>
                 //    .ProcedureToList("spGetProjectDetail", new string[] { "@ID" }, new object[] { id });
                 var projectDetails = SQLHelper<object>.ProcedureToList("spGetProjectDetail", new string[] { "@ID" }, new object[] { id });
-                return Ok(new
-                {
-                    status = 1,
-                    data = projectDetails
-                });
+                return Ok(ApiResponseFactory.Success(projectDetails, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+
+
         }
-
-
-
         // Lấy danh sách dự án chi tiết ở dưới
-        [HttpGet("getproject/{id}")]
-        public async Task<IActionResult> getproject(int id)
+        [HttpGet("get-project")]
+        //  [ApiKeyAuthorize]
+        public async Task<IActionResult> GetProject(int id)
         {
             try
             {
                 var projectDetail = projectRepo.GetByID(id);
-                return Ok(new
-                {
-                    status = 1,
-                    data = projectDetail
-                });
+                return Ok(ApiResponseFactory.Success(projectDetail, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         // Lấy hiện trạng dự án 
-        [HttpGet("getprojectcurrentsituation/{projectId}/{employeeId}")]
-        public async Task<IActionResult> getprojectcurrentsituation(int projectId, int employeeId)
+        [HttpGet("get-project-current-situation")]
+        //[ApiKeyAuthorize]
+        public async Task<IActionResult> GetProjectCurrentSituation(int projectId, int employeeId)
         {
             try
             {
@@ -427,195 +334,134 @@ namespace RERPAPI.Controllers.ProjectManager
                     .OrderByDescending(x => x.DateSituation).FirstOrDefault();
                 projectDetail = projectDetail ?? new ProjectCurrentSituation();
 
-                return Ok(new
-                {
-                    status = 1,
-                    data = projectDetail.ContentSituation
-                });
+
+                return Ok(ApiResponseFactory.Success(projectDetail.ContentSituation, ""));
+
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
+
         // modal lấy danh sách nhóm file
-        [HttpGet("getgroupfiles")]
-        public async Task<IActionResult> getgroupfiles()
+        [HttpGet("get-group-files")]
+        // [ApiKeyAuthorize]
+        public async Task<IActionResult> GetGroupFiles()
         {
             try
             {
                 List<GroupFile> grf = groupFileRepo.GetAll();
-                return Ok(new
-                {
-                    status = 1,
-                    data = grf
-                });
+                return Ok(ApiResponseFactory.Success(grf, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         // modal lấy danh sách FirmBase
-        [HttpGet("getfirmbases")]
-        public async Task<IActionResult> getfirmbases()
+        [HttpGet("get-firm-bases")]
+        //  [ApiKeyAuthorize]
+        public async Task<IActionResult> GetFirmBases()
         {
             try
             {
                 List<FirmBase> firmBases = firmBaseRepo.GetAll();
-                return Ok(new
-                {
-                    status = 1,
-                    data = firmBases
-                });
+                return Ok(ApiResponseFactory.Success(firmBases, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         // modal lấy kiểu dự án Base
-        [HttpGet("getprojecttypeBases")]
-        public async Task<IActionResult> getprojecttypeBases()
+        [HttpGet("get-project-type-bases")]
+        //  [ApiKeyAuthorize]
+        public async Task<IActionResult> GetProjectTypeBases()
         {
             try
             {
                 List<ProjectTypeBase> pfb = projectTypeBaseRepo.GetAll();
-                return Ok(new
-                {
-                    status = 1,
-                    data = pfb
-                });
+                return Ok(ApiResponseFactory.Success(pfb, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         // modal lấy người dùng dự án 
-        [HttpGet("getprojectusers/{id}")]
-        public async Task<IActionResult> getprojectusers(int id)
+        [HttpGet("get-project-users")]
+        //  [ApiKeyAuthorize]
+        public async Task<IActionResult> GetProjectUsers(int id)
         {
             try
             {
                 var projectUser = SQLHelper<object>.ProcedureToList("spGetProjectUser", new string[] { "@ID" }, new object[] { id });
-                return Ok(new
-                {
-                    status = 1,
-                    data = projectUser.FirstOrDefault()
-                });
+                return Ok(ApiResponseFactory.Success(projectUser.FirstOrDefault(), ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         //modal lấy dữ liệu FollowProjectBase
-        [HttpGet("getfollowprojectbases/{id}")]
-        public async Task<IActionResult> getfollowprojectbases(int id)
+        [HttpGet("get-follow-project-bases")]
+        //   [ApiKeyAuthorize]
+        public async Task<IActionResult> GetFollowProjectBases(int id)
         {
             try
             {
                 FollowProjectBase followProjectBase = followProjectBaseRepo
                     .GetAll().Where(x => x.ProjectID == id)
                     .OrderByDescending(x => x.ExpectedPlanDate).FirstOrDefault();
-                return Ok(new
-                {
-                    status = 1,
-                    data = followProjectBase
-                });
+                return Ok(ApiResponseFactory.Success(followProjectBase, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         //modal lấy dữ liệu PriorityType
-        [HttpGet("getprioritytype")]
-        public async Task<IActionResult> getprioritytype()
+        [HttpGet("get-priority-type")]
+        // [ApiKeyAuthorize]
+        public async Task<IActionResult> GetPriorityType()
         {
             try
             {
                 var projectType = projectPriorityRepo.GetAll().Where(x => x.ParentID == 0).ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data = projectType
-                });
+                return Ok(ApiResponseFactory.Success(projectType, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         //modal lấy dữ liệu PriorityType
-        [HttpGet("getprojectprioritydetail/{id}")]
-        public async Task<IActionResult> getprojectprioritydetail(int id)
+        [HttpGet("get-project-priority-detail")]
+        // [ApiKeyAuthorize]
+        public async Task<IActionResult> GetProjectPriorityDetail(int id)
         {
             try
             {
                 var projectType = projectPriorityRepo.GetByID(id);
-                return Ok(new
-                {
-                    status = 1,
-                    data = projectType
-                });
+                return Ok(ApiResponseFactory.Success(projectType, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         //modal lấy dữ liệu priorytipersion
-        [HttpGet("getpersonalpriority/{projectId}/{userId}")]
-        public async Task<IActionResult> getpersonalpriority(int projectId, int userId)
+        [HttpGet("get-personal-priority")]
+        // [ApiKeyAuthorize]
+        public async Task<IActionResult> GetPersonalPriority(int projectId, int userId)
         {
             try
             {
@@ -625,52 +471,36 @@ namespace RERPAPI.Controllers.ProjectManager
                 {
                     prio = (int)priority.Priotity;
                 }
-                return Ok(new
-                {
-                    status = 1,
-                    data = prio
-                });
+                return Ok(ApiResponseFactory.Success(prio, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         //modal kiểm tra mã ưu tiê
-        [HttpGet("checkprojectpriority/{id}/{code}")]
-        public async Task<IActionResult> checkprojectpriority(int id, string code)
+        [HttpGet("check-project-priority")]
+        //  [ApiKeyAuthorize]
+        public async Task<IActionResult> CheckProjectPriority(int id, string code)
         {
             try
             {
                 bool check = false;
                 var projectPriority = projectPriorityRepo.GetAll().Where(x => x.ID != id && x.Code == code);
                 if (projectPriority.Count() > 0) check = true;
-                return Ok(new
-                {
-                    status = 1,
-                    data = check
-                });
+                return Ok(ApiResponseFactory.Success(check, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         // Xóa dữ liệu project
-        [HttpGet("deletedproject/{ids}")]
-        public async Task<IActionResult> deletedproject(string ids)
+        [HttpGet("deleted-project")]
+        //  [ApiKeyAuthorize]
+        public async Task<IActionResult> DeletedProject(string ids)
         {
             try
             {
@@ -682,26 +512,17 @@ namespace RERPAPI.Controllers.ProjectManager
                         projectRepo.Delete(id);
                     }
                 }
-
-                return Ok(new
-                {
-                    status = 1,
-                    data = "Đã xóa dự án!"
-                });
+                return Ok(ApiResponseFactory.Success(null, "Xóa dự án thành công"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
-        [HttpGet("checkprojectcode/{id}/{projectCode}")]
-        public async Task<IActionResult> checkprojectcode(int id, string projectCode)
+        [HttpGet("check-project-code")]
+        //[ApiKeyAuthorize]
+        public async Task<IActionResult> CheckProjectCode(int id, string projectCode)
         {
             try
             {
@@ -715,70 +536,46 @@ namespace RERPAPI.Controllers.ProjectManager
                     projects = projectRepo.GetAll().Where(x => x.ProjectCode.Contains(projectCode)).ToList();
                 }
 
-                return Ok(new
-                {
-                    status = 1,
-                    data = projects.Count() > 0 ? 0 : 1
-                });
+
+                return Ok(ApiResponseFactory.Success(projects.Count() > 0 ? 0 : 1, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
-        [HttpGet("savechangeproject/{projectIdOld}/{projectIdNew}")]
-        public async Task<IActionResult> savechangeproject(int projectIdOld, int projectIdNew)
+        [HttpGet("save-change-project")]
+        //  [ApiKeyAuthorize]
+        public async Task<IActionResult> SaveChangeProject(int projectIdOld, int projectIdNew)
         {
             try
             {
                 var data = SQLHelper<object>.ProcedureToList("spUpdateProjectIDInDailyReportTechnical_ByNewProjectID",
                     new string[] { "@OldProjectID", "@NewProjectID" }, new object[] { projectIdOld, projectIdNew });
 
-                return Ok(new
-                {
-                    status = 1,
-                    data = true
-                });
+                return Ok(ApiResponseFactory.Success(true, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         // lấy trạng thái dự án 
-        [HttpGet("getprojectstatuss/{projectId}")]
-        public async Task<IActionResult> getprojectstatus(int projectId)
+        [HttpGet("get-project-statuss")]
+        // [ApiKeyAuthorize]
+        public async Task<IActionResult> GetProjectStatus(int projectId)
         {
             try
             {
                 var status = SQLHelper<object>.ProcedureToList("spGetProjectStatus", new string[] { "@ProjectID" }, new object[] { projectId });
-                var data = SQLHelper<object>.GetListData(status, 0);
-                return Ok(new
-                {
-                    status = 1,
-                    data
-                });
+                var statuss = SQLHelper<object>.GetListData(status, 0);
+                return Ok(ApiResponseFactory.Success(statuss, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -901,8 +698,9 @@ namespace RERPAPI.Controllers.ProjectManager
 
 
         // modal loadProjectCode
-        [HttpGet("getprojectcodemodal/{projectId}/{customerShortName}/{projectType}")]
-        public async Task<IActionResult> getprojectcodemodal(int projectId, string customerShortName, int projectType)
+        [HttpGet("get-project-code-modal")]
+        //[ApiKeyAuthorize]
+        public async Task<IActionResult> GePprojectCodeModal(int projectId, string customerShortName, int projectType)
         {
             try
             {
@@ -964,75 +762,49 @@ namespace RERPAPI.Controllers.ProjectManager
                     }
                 }
 
-                return Ok(new
-                {
-                    status = 1,
-                    data = returnProjectCode == "" ? projectCode : returnProjectCode
-                });
+
+                return Ok(ApiResponseFactory.Success(returnProjectCode == "" ? projectCode : returnProjectCode, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         // Lấy danh sách khách hàng
-        [HttpGet("getuserteams")]
-        public async Task<IActionResult> getuserteams()
+        [HttpGet("get-user-teams")]
+        public async Task<IActionResult> GetUserTeams()
         {
             try
             {
                 var userTeams = SQLHelper<object>.ProcedureToList("spGetUserTeam", new string[] { "@DepartmentID" }, new object[] { 0 });
-                var data = SQLHelper<object>.GetListData(userTeams, 1);
-                return Ok(new
-                {
-                    status = 1,
-                    data
-                });
+                var usTeam = SQLHelper<object>.GetListData(userTeams, 1);
+                return Ok(ApiResponseFactory.Success(usTeam, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         // Lấy danh sách dự án
-        [HttpGet("getprojectmodal")]
-        public async Task<IActionResult> getprojectmodal()
+        [HttpGet("get-project-modal")]
+        public async Task<IActionResult> GetProjectModal()
         {
             try
             {
                 List<Project> prjs = projectRepo.GetAll().OrderByDescending(x => x.CreatedDate).ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data = prjs
-                });
+                return Ok(ApiResponseFactory.Success(prjs, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         // Lấy danh sách ưu tiên dự án
-        [HttpGet("getprojectprioritymodal/{projectId}")]
-        public async Task<IActionResult> getprojectprioritymodal(int projectId)
+        [HttpGet("get-project-priority-modal")]
+        public async Task<IActionResult> GetProjectPriorityModal(int projectId)
         {
             try
             {
@@ -1051,226 +823,145 @@ namespace RERPAPI.Controllers.ProjectManager
                         }
                     }
                 }
-                return Ok(new
-                {
-                    status = 1,
-                    data = prjPriority,
-                    checks
-                });
+
+                return Ok(ApiResponseFactory.Success(new { prjPriority, checks }, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         // Lấy chi tiết tổng hợp nhân công
-        [HttpGet("getprojectworkersynthetic")]
-        public async Task<IActionResult> getprojectworkersynthetic(int projectId, int prjWorkerTypeId, string? keyword)
+        [HttpGet("get-project-worker-synthetic")]
+        public async Task<IActionResult> GetProjectWorkerSynthetic(int projectId, int prjWorkerTypeId, string? keyword)
         {
             try
             {
                 var data = SQLHelper<object>.ProcedureToList("spGetProjectWokerSynthetic",
                 new string[] { "@ProjectID", "@ProjectWorkerTypeID", "@Keyword" },
                 new object[] { projectId, prjWorkerTypeId, keyword ?? "" });
-
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<object>.GetListData(data, 0)
-                });
+                var projectWorker = SQLHelper<object>.GetListData(data, 0);
+                return Ok(ApiResponseFactory.Success(projectWorker, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         // Lấy chi tiết tổng hợp báo cáo công việc
-        [HttpGet("getprojectworkreport")]
-        public async Task<IActionResult> getprojectworkreport(int page, int size, int projectId, string? keyword)
+        [HttpGet("get-project-work-report")]
+        public async Task<IActionResult> GetProjectWorkReport(int page, int size, int projectId, string? keyword)
         {
             try
             {
                 var data = SQLHelper<object>.ProcedureToList("spGetDailyReportTechnical_New",
                 new string[] { "@ProjectID", "@FilterText", "@PageSize", "@PageNumber" },
                 new object[] { projectId, keyword ?? "", page, size });
-
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<object>.GetListData(data, 1)
-                });
+                var projectwork = SQLHelper<object>.GetListData(data, 1);
+                return Ok(ApiResponseFactory.Success(projectwork, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
-        [HttpGet("getworkertype")]
-        public async Task<IActionResult> getworkertype()
+        [HttpGet("get-worker-type")]
+        public async Task<IActionResult> GetWorkerType()
         {
             try
             {
                 var workerTypes = projectWorkerTypeRepo.GetAll();
-                return Ok(new
-                {
-                    status = 1,
-                    data = workerTypes
-                });
+                return Ok(ApiResponseFactory.Success(workerTypes, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         #region Chức năng gười tham gia dự án
-        [HttpGet("get-project-employee/{status}")]
-        public async Task<IActionResult> getprojectemployee(int status)
+        [HttpGet("get-project-employee")]
+        public async Task<IActionResult> GetProjectEmployee(int status)
         {
             try
             {
                 var employees = SQLHelper<object>.ProcedureToList("spGetEmployee", new string[] { "@Status" }, new object[] { status });
-                var data = SQLHelper<object>.GetListData(employees, 0);
-                return Ok(new
-                {
-                    status = 1,
-                    data = data
-                });
+                var employee = SQLHelper<object>.GetListData(employees, 0);
+                return Ok(ApiResponseFactory.Success(employee, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
-        [HttpGet("getstatusprojectemployee")]
-        public async Task<IActionResult> getstatusprojectemployee()
+        [HttpGet("get-status-project-employee")]
+        public async Task<IActionResult> GetStatusProjectEmployee()
         {
             try
             {
                 var status = projectStatusRepo.GetAll();
-                return Ok(new
-                {
-                    status = 1,
-                    data = status
-                });
+                return Ok(ApiResponseFactory.Success(status, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
-        [HttpGet("getprojecttype")]
-        public async Task<IActionResult> getprojecttype()
+        [HttpGet("get-project-type")]
+        public async Task<IActionResult> GetProjectType()
         {
             try
             {
                 var projectTpye = projectTypeRepo.GetAll();
-                return Ok(new
-                {
-                    status = 1,
-                    data = projectTpye
-                });
+                return Ok(ApiResponseFactory.Success(projectTpye, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
-        [HttpGet("getemployeesuggest/{projectId}")]
-        public async Task<IActionResult> getemployeesuggest(int projectId)
+        [HttpGet("get-employee-suggest")]
+        public async Task<IActionResult> GetEmployeeSuggest(int projectId)
         {
             try
             {
                 var employee = SQLHelper<object>.ProcedureToList("spGetProjectParticipant",
                                             new string[] { "@ProjectID" },
                                             new object[] { projectId });
-                var data = SQLHelper<object>.GetListData(employee, 0);
-                return Ok(new
-                {
-                    status = 1,
-                    data
-                });
+                var employees = SQLHelper<object>.GetListData(employee, 0);
+                return Ok(ApiResponseFactory.Success(employees, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
-        [HttpGet("getemployeemain/{projectId}/{isDeleted}")]
-        public async Task<IActionResult> getemployeemain(int projectId, int isDeleted)
+        [HttpGet("get-employee-main")]
+        public async Task<IActionResult> GetEmployeeMain(int projectId, int isDeleted)
         {
             try
             {
                 var employee = SQLHelper<object>.ProcedureToList("spGetProjectEmployee",
                                             new string[] { "@ProjectID", "@IsDeleted" },
                                             new object[] { projectId, isDeleted });
-                var data = SQLHelper<object>.GetListData(employee, 0);
-                return Ok(new
-                {
-                    status = 1,
-                    data
-                });
+                var employees = SQLHelper<object>.GetListData(employee, 0);
+                return Ok(ApiResponseFactory.Success(employees, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
-        [HttpGet("getemployeepermission/{projectId}/{employeeId}")]
-        public async Task<IActionResult> getemployeepermission(int projectId, int employeeId)
+        [HttpGet("get-employee-permission")]
+        public async Task<IActionResult> GetEmployeePermission(int projectId, int employeeId)
         {
             try
             {
@@ -1286,20 +977,11 @@ namespace RERPAPI.Controllers.ProjectManager
 
                 // Check quyền sau khi có phân quyền
                 //if(project.ProjectManager == Global.EmployeeID || project.UserID == Global.UserID || Global.IsAdmin || valueRow > 0 || project.UserTechnicalID == Global.UserID)
-                return Ok(new
-                {
-                    status = 1,
-                    data = havePermission
-                });
+                return Ok(ApiResponseFactory.Success(havePermission, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -1309,8 +991,8 @@ namespace RERPAPI.Controllers.ProjectManager
         #endregion
 
         #region API POST
-        [HttpPost("saveproject")]
-        public async Task<IActionResult> saveproject([FromBody] ProjectDTO prj)
+        [HttpPost("save-project")]
+        public async Task<IActionResult> SaveProject([FromBody] ProjectDTO prj)
         {
             try
             {
@@ -1522,27 +1204,18 @@ namespace RERPAPI.Controllers.ProjectManager
                     }
                 }
 
-                return Ok(new
-                {
-                    status = 1,
-                    data = true
-                });
+                return Ok(ApiResponseFactory.Success(true, "Lưu dự án thành công"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         // lưu trạng thái dự án 
 
-        [HttpPost("saveprojectstatus")]
-        public async Task<IActionResult> saveprojectstatus(int Stt, string statusName)
+        [HttpPost("save-project-status")]
+        public async Task<IActionResult> SaveProjectStatus(int Stt, string statusName)
         {
             try
             {
@@ -1551,26 +1224,17 @@ namespace RERPAPI.Controllers.ProjectManager
                 prjs.StatusName = statusName;
                 projectStatusRepo.Create(prjs);
 
-                return Ok(new
-                {
-                    status = 1,
-                    data = ""
-                });
+                return Ok(ApiResponseFactory.Success(true, "Lưu trạng thái dự án thành công"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         // Lưu leader dự án
-        [HttpPost("saveprojecttypelink")]
-        public async Task<IActionResult> saveprojecttypelink([FromBody] ProjectTypeLinkDTO prjTypeLink)
+        [HttpPost("save-project-type-link")]
+        public async Task<IActionResult> SaveProjectTypeLink([FromBody] ProjectTypeLinkDTO prjTypeLink)
         {
             try
             {
@@ -1605,26 +1269,18 @@ namespace RERPAPI.Controllers.ProjectManager
                     }
                 }
 
-                return Ok(new
-                {
-                    status = 1,
-                    data = ""
-                });
+                return Ok(ApiResponseFactory.Success(true, "Lưu Leader dự án thành công"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+
             }
         }
 
         // lưu đợ ưu tiên dự án
-        [HttpPost("saveprojectpriority")]
-        public async Task<IActionResult> saveprojectpriority([FromBody] ProjectPriority projectPriority)
+        [HttpPost("save-project-priority")]
+        public async Task<IActionResult> SaveProjectPriority([FromBody] ProjectPriority projectPriority)
         {
             try
             {
@@ -1646,26 +1302,18 @@ namespace RERPAPI.Controllers.ProjectManager
                     model.CreatedDate = DateTime.Now;
                     projectPriorityRepo.Create(model);
                 }
-                return Ok(new
-                {
-                    status = 1,
-                    data = ""
-                });
+                return Ok(ApiResponseFactory.Success(true, "Lưu mức độ ưu tiên dự án thành công"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+
             }
         }
 
         // lưu trạng thái dự án
-        [HttpPost("saveprojectstatuses")]
-        public async Task<IActionResult> saveprojectstatus([FromBody] List<ProjectStatusDetail> projectStatuses)
+        [HttpPost("save-project-statuses")]
+        public async Task<IActionResult> SaveProjectStatus([FromBody] List<ProjectStatusDetail> projectStatuses)
         {
             try
             {
@@ -1701,26 +1349,17 @@ namespace RERPAPI.Controllers.ProjectManager
                         }
                     }
                 }
-                return Ok(new
-                {
-                    status = 1,
-                    data = true
-                });
+                return Ok(ApiResponseFactory.Success(true, "Lưu trạng thái dự án thành công"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         // Xóa mức độ ưu tiên dự án
-        [HttpPost("deletedprojectpriority")]
-        public async Task<IActionResult> deletedprojectpriority([FromBody] List<int> projectPriorityIds)
+        [HttpPost("deleted-project-priority")]
+        public async Task<IActionResult> DeletedProjectPriority([FromBody] List<int> projectPriorityIds)
         {
             try
             {
@@ -1731,27 +1370,18 @@ namespace RERPAPI.Controllers.ProjectManager
                         projectPriorityRepo.Delete(id);
                     }
                 }
-                return Ok(new
-                {
-                    status = 1,
-                    data = true
-                });
+                return Ok(ApiResponseFactory.Success(true, "Xóa mức độ ưu tiên thành công"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
 
         // Lưu độ ưu tiên cá nhân
-        [HttpPost("saveprojectpersonalpriority")]
-        public async Task<IActionResult> saveProjectPersonalPriority([FromBody] ProjectPersonalPriotityDTO projectPersonalPriotity)
+        [HttpPost("save-project-personal-priority")]
+        public async Task<IActionResult> SaveProjectPersonalPriority([FromBody] ProjectPersonalPriotityDTO projectPersonalPriotity)
         {
             try
             {
@@ -1779,26 +1409,17 @@ namespace RERPAPI.Controllers.ProjectManager
                 }
 
 
-                return Ok(new
-                {
-                    status = 1,
-                    data = true
-                });
+                return Ok(ApiResponseFactory.Success(true, "Lưu dữ liệu thành công"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         // Lưu độ ưu chuyển hạng mục công việc 
-        [HttpPost("saveprojectworkreport")]
-        public async Task<IActionResult> saveprojectworkreport([FromBody] ProjectWorkReportDTO projectPersonalPriotity)
+        [HttpPost("save-project-work-report")]
+        public async Task<IActionResult> SaveProjectWorkReport([FromBody] ProjectWorkReportDTO projectPersonalPriotity)
         {
             try
             {
@@ -1810,27 +1431,17 @@ namespace RERPAPI.Controllers.ProjectManager
                     model.UpdatedBy = "";
                     await dailyReportTechnicalRepo.UpdateAsync(model);
                 }
-
-                return Ok(new
-                {
-                    status = 1,
-                    data = true
-                });
+                return Ok(ApiResponseFactory.Success(true, "Lưu dữ liệu thành công"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         // Lưu người tham gia dự án
         [HttpPost("save-project-employee")]
-        public async Task<IActionResult> saveprojectemployee([FromBody] ProjectEmployeeDTO prjEmployees)
+        public async Task<IActionResult> SaveProjectEmployee([FromBody] ProjectEmployeeDTO prjEmployees)
         {
             try
             {
@@ -1889,20 +1500,11 @@ namespace RERPAPI.Controllers.ProjectManager
                     }
                 }
 
-                return Ok(new
-                {
-                    status = 1,
-                    data = true
-                });
+                return Ok(ApiResponseFactory.Success(true, "Lưu dữ liệu thành công"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         #endregion

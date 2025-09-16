@@ -18,6 +18,7 @@ namespace RERPAPI.Controllers.ProjectManager
 {
     [Route("api/[controller]")]
     [ApiController]
+    [ApiKeyAuthorize]
     public class ProjectItemController : ControllerBase
     {
         ProjectItemProblemRepo _projectItemProblemRepo = new ProjectItemProblemRepo();
