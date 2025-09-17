@@ -18,7 +18,7 @@ namespace RERPAPI.Model.DTO.ProjectAGV
         [JsonPropertyName("name")]
         public string? ProjectName { get; set; }
         [JsonPropertyName("description")]
-        public string? description { get; set; } = "RERP Không có";
+        public string? Description { get; set; } = "RERP Không có";
         [JsonPropertyName("status")]
         public string? ProjectStatusName { get; set; }
 
@@ -26,14 +26,14 @@ namespace RERPAPI.Model.DTO.ProjectAGV
 
         public Decimal? Priotity { get; set; }
         [JsonPropertyName("progress")]
-        public string? progress { get; set; } = "RERP Không có";
+        public string? Progress { get; set; } = "RERP Không có";
         [JsonPropertyName("start_date")]
         public DateTime? ActualDateStart { get; set; }
         [JsonPropertyName("end_date")]
         public DateTime? ActualDateEnd { get; set; }
 
         [JsonPropertyName("tags")]
-        public string? tags { get; set; }  = "RERP Không có";
+        public string? Tags { get; set; }  = "RERP Không có";
         [JsonPropertyName("project_type")]
         public int? ProjectType { get; set; }
         [JsonPropertyName("business_field")]
@@ -49,7 +49,7 @@ namespace RERPAPI.Model.DTO.ProjectAGV
         [JsonPropertyName("sale_id")]
         public int? SaleID { get; set; }
         [JsonPropertyName("pic_ids")]
-        public string? pic_ids { get; set; } = "RERP Không có";
+        public string? PICids { get; set; } = "RERP Không có";
         [JsonPropertyName("note")]
         public string? Note { get; set; }
         [JsonPropertyName("created_by")]
@@ -59,13 +59,13 @@ namespace RERPAPI.Model.DTO.ProjectAGV
         [JsonPropertyName("create_at")]
         public DateTime? CreatedDate { get; set; }
         [JsonPropertyName("tasks")]
-        public List<ProjectItemDTO>? tasks { get; set; }
+        public List<ProjectItemDTO>? Tasks { get; set; }
         [JsonPropertyName("documents")]
-        public List<ProjectDocumentDTO>? documents { get; set; }
+        public List<ProjectDocumentDTO>? Documents { get; set; }
         [JsonPropertyName("issues")]
-        public List<ProjectIssueDTO>? issues { get; set; }
+        public List<ProjectIssueDTO>? Issues { get; set; }
         [JsonPropertyName("is_deleted")]
-        public string? is_deleted { get; set; } = "RERP Không có";
+        public string? IsDeleted { get; set; } = "RERP Không có";
         [JsonPropertyName("project_status")]
 
         public int? ProjectStatus { get; set; }

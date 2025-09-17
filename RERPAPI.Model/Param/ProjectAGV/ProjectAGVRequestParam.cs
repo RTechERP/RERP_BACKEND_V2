@@ -14,6 +14,7 @@ namespace RERPAPI.Model.Param.ProjectAGV
         public DateTime? DateStart { get; set; }
         public DateTime? DateEnd { get; set; }
         public string? ProjectType { get; set; }
+        public string? FilterText { get; set; }
         public int? PmID { get; set; }
         public int? LeaderID { get; set; }
         public int? BussinessFieldID { get; set; }

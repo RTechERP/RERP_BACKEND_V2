@@ -25,7 +25,7 @@ namespace RERPAPI.Repo.GenericEntity
                 message = "Vui lòng nhập tiêu đề";
                 return false;
             }
-         
+
             if (item.Impact == null)
             {
                 message = "Vui lòng nhập sự ảnh hưởng";
@@ -41,7 +41,8 @@ namespace RERPAPI.Repo.GenericEntity
             }
             if (item.EmployeeCode != null && item.EmployeeCode.Trim().Length > 0)
             {
-                var employeeByEmployeeCode = _employeeDocumentRepo.GetAll().FirstOrDefault(x => x.Code.ToLower().Equals(item.EmployeeCode));
+                var employeeByEmployeeCode = _employeeDocumentRepo.GetAll().FirstOrDefault(x => x.Code.ToLower().Equals(item.EmployeeCode.ToLower()));
+                var te = _employeeDocumentRepo.GetAll();
                 if (employeeByEmployeeCode == null)
                 {
                     message = "Vui lòng nhập mã nhân viên chính xác";
@@ -64,20 +65,14 @@ namespace RERPAPI.Repo.GenericEntity
             projectIssues.ProjectID = projectIssueDTO.ProjectID;
             projectIssues.Description = projectIssueDTO.Description;
             projectIssues.Impact = projectIssueDTO.Impact;
-            projectIssues.Status = projectIssueDTO.Status;
             projectIssues.Solution = projectIssueDTO.Solution;
-            projectIssues.Description = projectIssueDTO.Description;
             projectIssues.MitigationPlan = projectIssueDTO.MitigationPlan;
             projectIssues.FilePath = projectIssueDTO.FilePath;
             projectIssues.CreatedDate = projectIssueDTO.CreatedDate;
             projectIssues.UpdatedDate = projectIssueDTO.UpdatedDate;
-            projectIssues.Description = projectIssueDTO.Description;
-            projectIssues.Description = projectIssueDTO.Description;
-            projectIssues.Description = projectIssueDTO.Description;
-
             if (projectIssueDTO.EmployeeCode != null && projectIssueDTO.EmployeeCode.Trim().Length > 0)
             {
-                var employeeByEmployeeCode = _employeeDocumentRepo.GetAll().FirstOrDefault(x => x.Code.ToLower().Equals(projectIssueDTO.EmployeeCode));
+                var employeeByEmployeeCode = _employeeDocumentRepo.GetAll().FirstOrDefault(x => x.Code.ToLower().Equals(projectIssueDTO.EmployeeCode.ToLower()));
                 if (employeeByEmployeeCode != null)
                 {
                     projectIssues.EmployeeID = employeeByEmployeeCode.ID;
