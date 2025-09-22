@@ -1021,7 +1021,7 @@ namespace RERPAPI.Controllers.ProjectManager
                 {
                     ProjectStatusLog statusLog = new ProjectStatusLog();
                     statusLog.ProjectID = project.ID;
-                    statusLog.ProjectStatusID = project.ProjectStatus;
+                    statusLog.ProjectStatusID = project.ProjectStatus ?? 0;
                     statusLog.EmployeeID = prj.projectStatusLog.EmployeeID;
                     statusLog.DateLog = prj.projectStatusLog.DateLog;
                     projectStatusLogRepo.CreateAsync(statusLog);

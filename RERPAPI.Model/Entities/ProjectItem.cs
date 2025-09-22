@@ -13,7 +13,7 @@ public partial class ProjectItem
 
     public int? UserID { get; set; }
 
-    public int? ProjectID { get; set; }
+    public int ProjectID { get; set; }
 
     public string? Mission { get; set; }
 
