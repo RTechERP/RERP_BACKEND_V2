@@ -14,7 +14,7 @@ namespace RERPAPI.Model.DTO.ProjectAGV
         [JsonPropertyName("project_id")]
         public int ProjectID { get; set; }
         [JsonPropertyName("name")]
-        public string? name { get; set; }
+        public string? Name { get; set; }
         [JsonPropertyName("description")]
         public string? Mission { get; set; }
         [JsonPropertyName("status")]
@@ -22,11 +22,11 @@ namespace RERPAPI.Model.DTO.ProjectAGV
         [JsonPropertyName("type")]
         public int? TypeProjectItem { get; set; }
         [JsonPropertyName("priority")]
-        public decimal? priority { get; set; } = 0;// k có trong DB
+        public decimal? Priority { get; set; } = 0;// k có trong DB
         [JsonPropertyName("progress")]
         public decimal? PercentItem { get; set; }
         [JsonPropertyName("steps")]
-        public string? steps { get; set; }// K CO TRONG DB
+        public string? Steps { get; set; }// K CO TRONG DB
         [JsonPropertyName("start_date")]
 
         public DateTime? PlanStartDate { get; set; }
@@ -38,11 +38,11 @@ namespace RERPAPI.Model.DTO.ProjectAGV
         public DateTime? ActualEndDate { get; set; }
         [JsonPropertyName("pic_employee_code")]
         // Chưa 
-        public string? pic_employee_code { get; set; } = "Không có trong db";// k có trong DB
+        public string? PICEmployeeCode { get; set; } = "Không có trong db";// k có trong DB
         [JsonPropertyName("supports")]
-        public string? supports { get; set; } = "Không có trong R_ERP";// k có trong DB
+        public string? Supports { get; set; } = "Không có trong R_ERP";// k có trong DB
         [JsonPropertyName("file_paths")]
-        public string? file_paths { get; set; } = "";// k có trong DB
+        public string? FilePaths { get; set; } = "";// k có trong DB
         [JsonPropertyName("created_at")]
         public DateTime? CreatedDate { get; set; } = null;
         [JsonPropertyName("update_at")]

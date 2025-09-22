@@ -7,6 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="GenericEntity\ProjectAGV\**" />
+    <EmbeddedResource Remove="GenericEntity\ProjectAGV\**" />
+    <None Remove="GenericEntity\ProjectAGV\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Remove="GenericEntity\BillExportDetailSerialNumberRepo.cs" />
     <Compile Remove="GenericEntity\ProductGroupRTCRepo.cs" />
     <Compile Remove="GenericEntity\ProductRTCRepo.cs" />
