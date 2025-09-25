@@ -34,7 +34,7 @@ namespace RERPAPI.Controllers.HandoverMinutes
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -48,7 +48,7 @@ namespace RERPAPI.Controllers.HandoverMinutes
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -62,7 +62,7 @@ namespace RERPAPI.Controllers.HandoverMinutes
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpPost("save-data")]
@@ -153,7 +153,7 @@ namespace RERPAPI.Controllers.HandoverMinutes
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         private string GetNextCodeNumber()

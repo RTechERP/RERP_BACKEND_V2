@@ -50,7 +50,7 @@ namespace RERPAPI.Controllers.PO
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-pokh-kpi-detail")]
@@ -64,7 +64,7 @@ namespace RERPAPI.Controllers.PO
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
 
         }
@@ -78,7 +78,7 @@ namespace RERPAPI.Controllers.PO
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-pokh")]
@@ -98,7 +98,7 @@ namespace RERPAPI.Controllers.PO
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-employee-manager")]
@@ -113,7 +113,7 @@ namespace RERPAPI.Controllers.PO
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-pokh-product")]
@@ -127,7 +127,7 @@ namespace RERPAPI.Controllers.PO
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -141,7 +141,7 @@ namespace RERPAPI.Controllers.PO
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-project")]
@@ -154,7 +154,7 @@ namespace RERPAPI.Controllers.PO
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-typePO")]
@@ -188,7 +188,7 @@ namespace RERPAPI.Controllers.PO
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -202,7 +202,7 @@ namespace RERPAPI.Controllers.PO
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         #endregion
@@ -328,7 +328,7 @@ namespace RERPAPI.Controllers.PO
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         #endregion
@@ -361,7 +361,7 @@ namespace RERPAPI.Controllers.PO
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -430,7 +430,7 @@ namespace RERPAPI.Controllers.PO
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpPost("delete-file")]
@@ -468,7 +468,7 @@ namespace RERPAPI.Controllers.PO
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         #endregion
@@ -599,7 +599,7 @@ namespace RERPAPI.Controllers.PO
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

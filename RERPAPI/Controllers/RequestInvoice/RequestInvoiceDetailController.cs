@@ -40,7 +40,7 @@ namespace RERPAPI.Controllers.RequestInvoice
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-productsale")]
@@ -53,7 +53,7 @@ namespace RERPAPI.Controllers.RequestInvoice
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }     
         }
         [HttpGet("get-project")]
@@ -66,7 +66,7 @@ namespace RERPAPI.Controllers.RequestInvoice
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpPost("generate-bill-number")]
@@ -101,7 +101,7 @@ namespace RERPAPI.Controllers.RequestInvoice
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -212,7 +212,7 @@ namespace RERPAPI.Controllers.RequestInvoice
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -280,7 +280,7 @@ namespace RERPAPI.Controllers.RequestInvoice
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpPost("delete-file")]
@@ -315,7 +315,7 @@ namespace RERPAPI.Controllers.RequestInvoice
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         #endregion

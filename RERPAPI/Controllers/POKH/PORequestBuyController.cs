@@ -84,7 +84,7 @@ namespace RERPAPI.Controllers.PO
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         private UnitCount GetUnitCountByName(string unitName)

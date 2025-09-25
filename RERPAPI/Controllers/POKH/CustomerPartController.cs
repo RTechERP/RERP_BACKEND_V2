@@ -37,7 +37,7 @@ namespace RERPAPI.Controllers.PO
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-customer")]
@@ -51,7 +51,7 @@ namespace RERPAPI.Controllers.PO
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpPost("save-data")]
@@ -109,13 +109,13 @@ namespace RERPAPI.Controllers.PO
                     catch (Exception ex)
                     {
                         await transaction.RollbackAsync();
-                        return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
                     }
                 }
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }
