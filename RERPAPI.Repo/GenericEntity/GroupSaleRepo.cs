@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 namespace RERPAPI.Repo.GenericEntity
 {
     public class GroupSaleRepo:GenericRepo<GroupSale>
-    {
-    }
+        {
+
+        }
 }
+

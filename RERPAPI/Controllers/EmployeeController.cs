@@ -14,33 +14,31 @@ namespace RERPAPI.Controllers
     [ApiController]
     public class EmployeeController : ControllerBase
     {
-        EmployeeRepo employeeRepo = new EmployeeRepo();
+        EmployeeRepo _employeeRepo = new EmployeeRepo();
 
-        //[HttpGet("employees")]
-        //[RequiresPermission("N42")]
-        //public IActionResult GetAll()
-        //{
-        //    try
-        //    {
-        //        List<Employee> employees = employeeRepo.GetAll();
-        //        return Ok(new
-        //        {
-        //            status = 1,
-        //            data = employees
-        //        });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return Ok(new
-        //        {
-        //            status = 0,
-        //            message = ex.Message,
-        //            error = ex.ToString()
-        //        });
-        //    }
-        //}
-
-        [HttpGet("employees")]
+        [HttpGet("get-all")]
+        public IActionResult GetAll()
+        {
+            try
+            {
+                List<Employee> employees = _employeeRepo.GetAll();
+                return Ok(new
+                {
+                    status = 1,
+                    data = employees
+               });
+            }
+            catch (Exception ex)
+           {
+               return Ok(new
+               {
+                   status = 0,
+                   message = ex.Message,
+                   error = ex.ToString()
+               });
+           }
+        }
+        [HttpGet("")]
         //[RequiresPermission("N42")]
         public IActionResult GetEmployee(int? status, int? departmentid, string? keyword)
         {
@@ -55,6 +53,7 @@ namespace RERPAPI.Controllers
                 var data = SQLHelper<object>.GetListData(employees, 0);
 
                 return Ok(ApiResponseFactory.Success(data, ""));
+
             }
             catch (Exception ex)
             {
@@ -95,7 +94,7 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                Employee employee = employeeRepo.GetByID(id);
+                Employee employee = _employeeRepo.GetByID(id);
                 return Ok(ApiResponseFactory.Success(employee, ""));
             }
             catch (Exception ex)
@@ -109,8 +108,8 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                if (employee.ID <= 0) await employeeRepo.CreateAsync(employee);
-                else await employeeRepo.UpdateAsync(employee);
+                if (employee.ID <= 0) await _employeeRepo.CreateAsync(employee);
+                else await _employeeRepo.UpdateAsync(employee);
 
                 return Ok(new
                 {

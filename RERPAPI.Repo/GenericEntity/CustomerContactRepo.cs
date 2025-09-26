@@ -9,7 +9,12 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class CustomerContactRepo:GenericRepo<CustomerContact>
+    public class CustomerContactRepo : GenericRepo<CustomerContact>
     {
+        public CustomerContactRepo() : base()
+        {
+
+        }
+
     }
 }

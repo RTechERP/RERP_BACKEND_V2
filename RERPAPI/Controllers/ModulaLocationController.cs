@@ -18,7 +18,6 @@ namespace RERPAPI.Controllers
 
         BillImportDetailSerialNumberRepo importDetailSerialNumberRepo = new BillImportDetailSerialNumberRepo();
         BillExportDetailSerialNumberRepo exportDetailSerialNumberRepo = new BillExportDetailSerialNumberRepo();
-
         BillImportDetailSerialNumberModulaLocationRepo serialNumberImportModulaRepo = new BillImportDetailSerialNumberModulaLocationRepo();
         BillExportDetailSerialNumberModulaLocationRepo serialNumberExportModulaRepo = new BillExportDetailSerialNumberModulaLocationRepo();
 
@@ -45,6 +44,7 @@ namespace RERPAPI.Controllers
         {
             try
             {
+
                 keyword = keyword ?? "";
                 List<ModulaLocation> listLocations = locationRepo.GetAll().Where(x => x.IsDeleted == false)
                                                                           .OrderBy(x => x.STT)
@@ -93,6 +93,7 @@ namespace RERPAPI.Controllers
         {
             try
             {
+
 
                 billtype = billtype ?? 0;
                 billcode = billcode ?? "";

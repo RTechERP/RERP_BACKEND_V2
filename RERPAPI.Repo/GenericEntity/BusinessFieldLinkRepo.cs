@@ -11,5 +11,9 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class BusinessFieldLinkRepo : GenericRepo<BusinessFieldLink>
     {
+        public BusinessFieldLinkRepo() : base()
+        {
+        }
+    
     }
 }

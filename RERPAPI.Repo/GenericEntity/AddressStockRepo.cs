@@ -9,7 +9,11 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class AddressStockRepo:GenericRepo<AddressStock>
+    public class AddressStockRepo : GenericRepo<AddressStock>
     {
+        public AddressStockRepo() : base()
+        {
+        }
+        
     }
 }
