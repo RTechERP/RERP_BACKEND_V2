@@ -80,4 +80,6 @@ public partial class EmployeeOnLeave
     public int? ApprovedBGDID { get; set; }
 
     public DateTime? DateApprovedBGD { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }

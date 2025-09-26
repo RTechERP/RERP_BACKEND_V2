@@ -12,4 +12,5 @@ public partial class EmployeeTypeBussiness
     public string? TypeName { get; set; }
 
     public decimal? Cost { get; set; }
+    public bool? IsDeleted { get; set; }
 }

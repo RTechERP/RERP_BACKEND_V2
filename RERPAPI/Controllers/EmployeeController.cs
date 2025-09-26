@@ -4,6 +4,12 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
+
+//using RERPAPI.Model.Common;
+//using RERPAPI.Model.Entities;
+//using RERPAPI.Repo.GenericEntity;
+using System.Linq;
+
 namespace RERPAPI.Controllers
 {
     [Route("api/[controller]")]
@@ -54,7 +60,7 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -68,7 +74,7 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -80,21 +86,66 @@ namespace RERPAPI.Controllers
                 if (employee.ID <= 0) await _employeeRepo.CreateAsync(employee);
                 else await _employeeRepo.UpdateAsync(employee);
 
-                return Ok(new
-                {
-                    status = 1,
-                    data = employee
-                });
+
+                //return Ok(new
+                //{
+                //    status = 1,
+                //    data = employee
+                //});
+
+                return Ok(ApiResponseFactory.Success(employee, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+
+        public class EmployeeCodeCheck
+        {
+            public string Code { get; set; }
+        }
+
+
+
+        [HttpPost("check-codes")]
+        public async Task<IActionResult> CheckCodes([FromBody] List<EmployeeCodeCheck> codes)
+        {
+            try
+            {
+                var codeList = codes.Select(x => x.Code).ToList();
+
+                // Ki?m tra trong database
+                var existingEmployees = _employeeRepo.GetAll()
+                    .Where(x => codeList.Contains(x.Code))
+                    .Select(x => new
+                    {
+                        x.ID,
+                        x.Code,
+                    })
+                    .ToList();
+
+                //return Ok(new
+                //{
+                //    data = new
+                //    {
+                //        existingEmployees
+                //    }
+                //});
+
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    existingEmployees
+                }, ""));
+            }
+            catch (Exception ex)
+            {
+                //return BadRequest(new { message = ex.Message });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
     }
 }

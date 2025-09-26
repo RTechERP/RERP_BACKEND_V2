@@ -9,5 +9,6 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class BusinessFieldRepo : GenericRepo<BusinessField>
     {
+        public BusinessFieldRepo() : base() {         }
     }
 }

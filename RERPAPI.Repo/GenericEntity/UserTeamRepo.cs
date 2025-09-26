@@ -9,5 +9,8 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class UserTeamRepo : GenericRepo<UserTeam>
     {
+        public UserTeamRepo() : base ()
+        {
+        }
     }
 }

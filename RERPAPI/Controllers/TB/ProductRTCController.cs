@@ -29,7 +29,7 @@ namespace RERPAPI.Controllers.TB
     public class ProductRTCController : ControllerBase
     {
         ProductGroupRTCRepo _productGroupRTCRepo = new ProductGroupRTCRepo();
-        ProductRTCRepo _productRTCRepo  = new ProductRTCRepo();
+        ProductRTCRepo _productRTCRepo = new ProductRTCRepo();
         ProductLocationRepo _productLocationRepo = new ProductLocationRepo();
 
         [HttpPost("get-productRTC")]
@@ -39,25 +39,37 @@ namespace RERPAPI.Controllers.TB
             {
                 var products = SQLHelper<dynamic>.ProcedureToList("spGetProductRTC",
                 new string[] { "@ProductGroupID", "@Keyword", "@CheckAll", "@WarehouseID", "@ProductRTCID", "@ProductGroupNo", "@PageNumber", "@PageSize" },
-new object[] { request.ProductGroupID, request.Keyword, request.CheckAll, request.WarehouseID, request.ProductRTCID, request.ProductGroupNo, request.Page, request.Size });
+                new object[] { request.ProductGroupID, request.Keyword, request.CheckAll, request.WarehouseID, request.ProductRTCID, request.ProductGroupNo, request.Page, request.Size });
 
-                return Ok(new
+
+
+                var data = new
                 {
-                    status = 1,
-                    
-                        products = SQLHelper<dynamic>.GetListData(products, 0),
-                         TotalPage = SQLHelper<dynamic>.GetListData(products, 1)
-                });
+                    products = SQLHelper<dynamic>.GetListData(products, 0),
+                    TotalPage = SQLHelper<dynamic>.GetListData(products, 1)
+                };
+
+                //return Ok(new
+                //{
+                //    status = 1,
+
+                //    products = SQLHelper<dynamic>.GetListData(products, 0),
+                //    TotalPage = SQLHelper<dynamic>.GetListData(products, 1)
+                //});
+
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
+                //return Ok(new
+                //{
 
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                //    status = 0,
+                //    message = ex.Message,
+                //    error = ex.ToString()
+                //});
+
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-productRTC-group")]
@@ -67,23 +79,26 @@ new object[] { request.ProductGroupID, request.Keyword, request.CheckAll, reques
             {
                 List<ProductGroupRTC> productGroup = _productGroupRTCRepo
                     .GetAll()
-                    .Where(x => x.IsDeleted == false) 
+                    .Where(x => x.IsDeleted == false)
                     .ToList();
 
-                return Ok(new
-                {
-                    status = 1,
-                    data = productGroup
-                });
+                //return Ok(new
+                //{
+                //    status = 1,
+                //    data = productGroup
+                //});
+
+                return Ok(ApiResponseFactory.Success(productGroup, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                //return BadRequest(new
+                //{
+                //    status = 0,
+                //    message = ex.Message,
+                //    error = ex.ToString()
+                //});
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpPost("upload")]
@@ -103,11 +118,12 @@ new object[] { request.ProductGroupID, request.Keyword, request.CheckAll, reques
 
                     if (!allowedExtensions.Contains(fileExtension))
                     {
-                        return BadRequest(new
-                        {
-                            status = 0,
-                            Message = "Chỉ được upload file ảnh (jpg, jpeg, png, gif, bmp)"
-                        });
+                        //return BadRequest(new
+                        //{
+                        //    status = 0,
+                        //    Message = "Chỉ được upload file ảnh (jpg, jpeg, png, gif, bmp)"
+                        //});
+                        return Ok(ApiResponseFactory.Fail(null, "Chỉ được upload file ảnh (jpg, jpeg, png, gif, bmp)"));
                     }
                     string path = "";
                     if (!Directory.Exists(path))
@@ -131,59 +147,59 @@ new object[] { request.ProductGroupID, request.Keyword, request.CheckAll, reques
                     message = "Không có file được gửi lên.";
                 }
 
-                return Ok(new
-                {
-                    status = statusCode,
-                    FileName = fileName,
-                    Message = message
-                });
+                //return Ok(new
+                //{
+                //    status = statusCode,
+                //    FileName = fileName,
+                //    Message = message
+                //});
+
+                return Ok(ApiResponseFactory.Success(fileName, message));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    Message = $"Upload file thất bại! ({ex.Message})"
-                });
+                //return Ok(new
+                //{
+                //    status = 0,
+                //    Message = $"Upload file thất bại! ({ex.Message})"
+                //});
+
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-location")]
-        public IActionResult GetLocation(string? id)
+        public IActionResult GetLocation(int? warehouseID)
         {
             try
             {
-                var location = SQLHelper<dynamic>.ProcedureToList("spGetLocationByWarehouseID", new string[] { "@WarehouseID" }, new object[] { id });
-                return Ok(new
-                {
-                    status = 1,
-                    data = new
-                    {
-                        location = SQLHelper<dynamic>.GetListData(location, 0)
-                    }
-                });
+                var location = _productLocationRepo.GetAll(x => x.WarehouseID == warehouseID);
+                return Ok(ApiResponseFactory.Success(new { location }, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         [HttpGet("get-product-code")]
-        public async Task<IActionResult> GenerateProductCode()
+        public IActionResult GenerateProductCode()
         {
-          
 
-            string newCode = _productRTCRepo.generateProductCode();
-            return Ok(new
+            try
             {
-                status = 1,
-                data = newCode
-            });
+                string newCode = _productRTCRepo.generateProductCode();
+                //return Ok(new
+                //{
+                //    status = 1,
+                //    data = newCode
+                //});
+
+                return Ok(ApiResponseFactory.Success(newCode, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
         }
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] ProductRTCFullDTO product)
@@ -193,10 +209,11 @@ new object[] { request.ProductGroupID, request.Keyword, request.CheckAll, reques
                 if (product == null) { return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." }); }
                 if (product.productGroupRTC != null)
                 {
+                    
                     if (product.productGroupRTC.ID <= 0)
                         await _productGroupRTCRepo.CreateAsync(product.productGroupRTC);
                     else
-                        _productGroupRTCRepo.UpdateAsync( product.productGroupRTC);
+                        await _productGroupRTCRepo.UpdateAsync(product.productGroupRTC);
                 }
                 if (product.productRTCs != null && product.productRTCs.Any())
                 {
@@ -206,20 +223,22 @@ new object[] { request.ProductGroupID, request.Keyword, request.CheckAll, reques
                         if (item.ID <= 0)
                             await _productRTCRepo.CreateAsync(item);
                         else
-                            _productRTCRepo.UpdateAsync( item);
+                            await _productRTCRepo.UpdateAsync(item);
                     }
                 }
 
-                return Ok(new { status = 1 });
+                //return Ok(new { status = 1 });
+                return Ok(ApiResponseFactory.Success(null, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                //return BadRequest(new
+                //{
+                //    status = 0,
+                //    message = ex.Message,
+                //    error = ex.ToString()
+                //});
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
 
         }

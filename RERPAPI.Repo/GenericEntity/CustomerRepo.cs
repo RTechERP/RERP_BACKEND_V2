@@ -12,4 +12,5 @@ namespace RERPAPI.Repo.GenericEntity
     {
 
     }
+    
 }

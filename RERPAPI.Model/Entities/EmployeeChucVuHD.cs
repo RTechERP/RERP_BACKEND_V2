@@ -22,4 +22,5 @@ public partial class EmployeeChucVuHD
     public int? PriorityOrder { get; set; }
 
     public bool? IsBusinessCost { get; set; }
+    public bool IsDeleted { get; set; }
 }
