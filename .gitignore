@@ -28,3 +28,4 @@ secrets.json
 # Rider / Resharper / JetBrains IDEs
 .idea/
 *.sln.iml
+/RERPAPI/Templates

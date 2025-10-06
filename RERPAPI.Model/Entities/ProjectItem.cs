@@ -13,7 +13,7 @@ public partial class ProjectItem
 
     public int? UserID { get; set; }
 
-    public int ProjectID { get; set; }
+    public int? ProjectID { get; set; }
 
     public string? Mission { get; set; }
 
@@ -90,5 +90,5 @@ public partial class ProjectItem
     /// </summary>
     public string? EmployeeRequestName { get; set; }
 
-    public bool? IsDeleted { get; set; }
+    public bool IsDeleted { get; set; }
 }

@@ -13,14 +13,14 @@ public partial class EmployeeOvertime
 
     public int? ApprovedID { get; set; }
 
-    public DateTime DateRegister { get; set; }
+    public DateTime? DateRegister { get; set; }
 
     /// <summary>
     /// 1:Văn phòng; 2;Địa điểm công tác
     /// </summary>
     public int? Location { get; set; }
 
-    public int TypeID { get; set; }
+    public int? TypeID { get; set; }
 
     public DateTime? TimeStart { get; set; }
 
@@ -80,5 +80,5 @@ public partial class EmployeeOvertime
 
     public DateTime? DateApprovedSenitor { get; set; }
 
-    public bool? IsDeleted { get; set; }
+    public bool IsDeleted { get; set; }
 }

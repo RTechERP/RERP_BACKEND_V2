@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RERPAPI.Model.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,8 +8,8 @@ using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class RulePayRepo : GenericRepo<RulePay>
-
+    public class RulePayRepo:GenericRepo<RulePay>
     {
+
     }
 }

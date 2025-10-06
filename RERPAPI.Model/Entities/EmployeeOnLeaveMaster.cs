@@ -30,5 +30,4 @@ public partial class EmployeeOnLeaveMaster
     public decimal? TotalDayRemain { get; set; }
 
     public int? YearOnleave { get; set; }
-    public bool IsDeleted { get; set; }
 }

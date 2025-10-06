@@ -50,4 +50,8 @@ public partial class RequestInvoice
     public bool? IsUrgency { get; set; }
 
     public DateTime? DealineUrgency { get; set; }
+
+    public string? AmendReason { get; set; }
+
+    public bool? IsCustomsDeclared { get; set; }
 }

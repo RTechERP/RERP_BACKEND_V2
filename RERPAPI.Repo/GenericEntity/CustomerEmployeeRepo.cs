@@ -9,10 +9,7 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class CustomerEmployeeRepo : GenericRepo<CustomerEmployee>
     {
-        public CustomerEmployeeRepo() : base()
-        {
-        }
-        
+       
 
     }
 }

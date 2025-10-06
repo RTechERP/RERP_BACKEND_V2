@@ -15,17 +15,16 @@ namespace RERPAPI.Model.Common
             string path = @"D:\\LeTheAnh\\RTC";
             return path;
         }
+        public static string ConnectionString { get; set; } = "";
 
-        public static string ConnectionString
-        {
-            get
-            {
-                string connectionString = @"Server=192.168.1.2,9000;database=RTC;User Id = sa; Password=1;TrustServerCertificate=True";
-                if (_isPublish == 1) connectionString = @"";
-                return connectionString;
-            }
-        }
-
-
+        //public static string ConnectionString
+        //{
+        //    get
+        //    {
+        //        string connectionString = @"Server=192.168.1.2,9000;database=RTC;User Id = sa; Password=1;TrustServerCertificate=True";
+        //        if (_isPublish == 1) connectionString = @"";
+        //        return connectionString;
+        //    }
+        //}
     }
 }

@@ -22,4 +22,8 @@ public partial class RequestInvoiceFile
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
+
+    public int? FileType { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }

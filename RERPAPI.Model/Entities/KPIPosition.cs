@@ -22,4 +22,10 @@ public partial class KPIPosition
     public DateTime? UpdatedDate { get; set; }
 
     public int? STT { get; set; }
+
+    public int? TypePosition { get; set; }
+
+    public int? KPISessionID { get; set; }
+
+    public int? KPIPositionTypeID { get; set; }
 }

@@ -15,7 +15,7 @@ public partial class POKHDetail
 
     public int? KHID { get; set; }
 
-    public int? Qty { get; set; }
+    public decimal? Qty { get; set; }
 
     public decimal? UnitPrice { get; set; }
 
@@ -62,9 +62,9 @@ public partial class POKHDetail
 
     public string? GuestCode { get; set; }
 
-    public int? QtyTT { get; set; }
+    public decimal? QtyTT { get; set; }
 
-    public int? QtyCL { get; set; }
+    public decimal? QtyCL { get; set; }
 
     public bool? IsExport { get; set; }
 
@@ -72,7 +72,7 @@ public partial class POKHDetail
 
     public string? UserReceiver { get; set; }
 
-    public int? QtyRequest { get; set; }
+    public decimal? QtyRequest { get; set; }
 
     public decimal? NetUnitPrice { get; set; }
 

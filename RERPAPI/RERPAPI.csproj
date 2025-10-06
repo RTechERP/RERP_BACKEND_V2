@@ -14,16 +14,40 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Controllers\CustomerController.cs" />
+    <Compile Remove="Controllers\Old\POKHController.cs" />
+    <Compile Remove="Controllers\Old\POKH\POKHController.cs" />
+    <Compile Remove="Controllers\Old\TB\FirmController.cs" />
+    <Compile Remove="Controllers\UsersController.cs" />
+    <Compile Remove="Controllers\WareHouseController.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.105.0" />
     <PackageReference Include="DocX" Version="5.0.0" />
-    <PackageReference Include="EPPlus" Version="5.12.0" />
+    <PackageReference Include="EPPlus" Version="8.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.5" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="QRCoder" Version="1.6.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+    <PackageReference Include="System.Drawing.Common" Version="9.0.6" />
+    <PackageReference Include="ZXing.Net" Version="0.16.10" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\RERPAPI.Model\RERPAPI.Model.csproj" />
     <ProjectReference Include="..\RERPAPI.Repo\RERPAPI.Repo.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Controllers\CRM\" />
+    <Folder Include="Controllers\Warehouse\" />
+    <Folder Include="Controllers\Project\" />
+    <Folder Include="Controllers\Sale\" />
+    <Folder Include="Controllers\Purchase\" />
+    <Folder Include="Controllers\System\" />
+    <Folder Include="Uploads\POKH\NB16111\" />
   </ItemGroup>
 
 </Project>

@@ -9,8 +9,5 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class StatusWorkingProcessRepo : GenericRepo<EmployeeStatus>
     {
-        public StatusWorkingProcessRepo() : base()
-        {
-        }
     }
 }

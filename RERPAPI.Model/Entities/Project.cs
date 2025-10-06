@@ -27,7 +27,7 @@ public partial class Project
     /// <summary>
     /// 0: Chưa hoàn thành, 1: Hoàn thành
     /// </summary>
-    public int? ProjectStatus { get; set; }
+    public int ProjectStatus { get; set; }
 
     /// <summary>
     /// Người phụ trách chính

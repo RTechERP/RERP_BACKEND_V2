@@ -9,6 +9,5 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class EmployeeVehicleBussinessRepo : GenericRepo<EmployeeVehicleBussiness>
     {
-        public EmployeeVehicleBussinessRepo() : base() { }
     }
 }

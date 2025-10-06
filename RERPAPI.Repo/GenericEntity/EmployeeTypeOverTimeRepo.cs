@@ -9,8 +9,6 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class EmployeeTypeOverTimeRepo : GenericRepo<EmployeeTypeOvertime>
     {
-        public EmployeeTypeOverTimeRepo() : base()
-        {
-        }
+
     }
 }
