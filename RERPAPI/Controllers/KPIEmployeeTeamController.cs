@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -12,11 +13,19 @@ namespace RERPAPI.Controllers
     [ApiController]
     public class KPIEmployeeTeamController : ControllerBase
     {
+        #region Khai báo repository
         KPIEmployeeTeamRepo teamRepo = new KPIEmployeeTeamRepo();
-        //KPIEmployeeTeamLinkRepo teamLinkRepo = new KPIEmployeeTeamLinkRepo();
         DepartmentRepo departmentRepo = new DepartmentRepo();
         EmployeeRepo employeeRepo = new EmployeeRepo();
-
+        #endregion
+        #region lấy ra tất cả team
+        /// <summary>
+        /// lấy team theo từng quý, nawmg, phòng ban
+        /// </summary>
+        /// <param name="yearValue"></param>
+        /// <param name="quarterValue"></param>
+        /// <param name="departmentID"></param>
+        /// <returns></returns>
         [HttpGet("getall")]
         public IActionResult GetAll(int yearValue, int quarterValue, int departmentID)
         {
@@ -66,7 +75,8 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-
+        #endregion
+        #region lấy theo ID
         [HttpGet("getbyid")]
         public IActionResult FindByID(int id)
         {
@@ -97,8 +107,8 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-
-
+        #endregion
+        #region Lưu dữ liệu
         [HttpPost("savedata")]
         public async Task<IActionResult> SaveData([FromBody] KPIEmployeeTeam team)
         {
@@ -106,7 +116,7 @@ namespace RERPAPI.Controllers
             {
 
                 if (team.ID <= 0) await teamRepo.CreateAsync(team);
-                else  await teamRepo.UpdateAsync(team);
+                else await teamRepo.UpdateAsync(team);
 
                 return Ok(new
                 {
@@ -125,5 +135,6 @@ namespace RERPAPI.Controllers
                 });
             }
         }
+        #endregion
     }
 }

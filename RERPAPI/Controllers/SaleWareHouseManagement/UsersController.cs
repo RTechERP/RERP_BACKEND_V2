@@ -23,19 +23,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                                  new object[] { 0}
                                 );
                 List<dynamic> rs = result[0];
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<object>.GetListData(result, 0)
-                });
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(result, 0), "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    ex.Message
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -44,19 +36,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             try
             {
                 List<User> result = _userRepo.GetAll();
-                return Ok(new
-                {
-                    status = 1,
-                    data = result
-                });
+                return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    ex.Message
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
 
 

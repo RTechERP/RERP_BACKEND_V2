@@ -24,27 +24,14 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
 
                 if (result == null || result.Count == 0 || result[0] == null)
                 {
-                    return Ok(new
-                    {
-                        status = 1,
-                        data = new List<dynamic>()
-                    });
+                    return Ok(ApiResponseFactory.Success(new List<dynamic>(), "Lấy dữ liệu thành công!"));         
                 }
 
-                return Ok(new
-                {
-                    status = 1,
-                    data = result[0]
-                });
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(result, 0), "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

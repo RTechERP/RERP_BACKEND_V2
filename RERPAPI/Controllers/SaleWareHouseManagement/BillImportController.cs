@@ -75,12 +75,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -111,12 +106,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -131,22 +121,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             try
             {
                 BillImport result = _billImportRepo.GetByID(id);
-                /*   var newCode = _billexportRepo.GetBillCode()*/
-                return Ok(new
-                {
-                    status = 1,
-                    data = result,
-                    /*  newCode = newCode,*/
-                });
+                return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu BillImport theo ID thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -161,22 +140,17 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
         {
             try
             {
+                string messageError;
                 string message = isapproved ? "nhận chứng từ" : "hủy nhận chứng từ";
                 if (billImport.Status == false && isapproved == false)
                 {
-                    return Ok(new
-                    {
-                        status = 0,
-                        message = $"{billImport.BillImportCode} chưa nhận chứng từ!",
-                    });
+                    messageError = $"{billImport.BillImportCode} chưa nhận chứng từ!";
+                    throw new Exception(messageError);
                 }
                 if (billImport.BillTypeNew == 4)
                 {
-                    return Ok(new
-                    {
-                        status = 0,
-                        message = $"Bạn không thể {message} cho phiếu Yêu cầu nhập kho!",
-                    });
+                    messageError = $"Bạn không thể {message} cho phiếu Yêu cầu nhập kho!";
+                    throw new Exception(messageError);
                 }
                 // Cập nhật trạng thái duyệt phiếu
                 billImport.Status = isapproved;
@@ -195,21 +169,13 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                     StatusBill = isapproved,
                     DateStatus = DateTime.Now,
                 };
-                await _billImportLogRepo.CreateAsync(log);
-                return Ok(new
-                {
-                    status = 1,
-                    message = $"Phiếu {billImport.BillImportCode} đã được {message} thành công!"
-                });
+                await _billImportLogRepo.CreateAsync(log);        
+                return Ok(ApiResponseFactory.Success(null,  $"Phiếu {billImport.BillImportCode} đã được {message} thành công!" ));
+               
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         private async Task<(bool IsValid, string ErrorMessage)> ValidateBillImport(BillImportDTO dto)
@@ -258,7 +224,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
         public ActionResult<string> getBillCode(int billType)
         {
             var newCode = _billImportRepo.GetBillCode(billType);
-            return Ok(new { data = newCode }); // <-- Đây là điểm quan trọng
+            return Ok(ApiResponseFactory.Success(newCode, "Lấy mã phiếu thành công!"));
         }
         //thêm sửa dữ liệu 
         [HttpPost("save-data")]
@@ -271,22 +237,14 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                 var (isValid, errorMessage) = await ValidateBillImport(dto);
                 if (!isValid)
                 {
-                    return BadRequest(new
-                    {
-                        status = 0,
-                        message = errorMessage
-                    });
+                   throw new Exception(errorMessage);
                 }
                 if (dto.billImportDetail == null && dto.DeletedDetailIDs == null )
                 {
                     // Cập nhật phiếu nhập
                     dto.billImport.UpdatedDate = DateTime.Now;
                     _billImportRepo.Update(dto.billImport);
-                    return Ok(new
-                    {
-                        status=1,
-                        message="Đã xóa thành công phiếu "+ dto.billImport.BillImportCode
-                    });
+                    return Ok(ApiResponseFactory.Success(null, "Đã xóa thành công phiếu " + dto.billImport.BillImportCode));
                 }
                 var inventoryList = _inventoryRepo.GetAll().ToList();
 
@@ -345,15 +303,14 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                         var item = _billImportDetailRepo.GetByID(id);
                         if (item != null)
                         {
-                            item.isDeleted = true;
+                            item.IsDeleted = true;
                             item.UpdatedDate = DateTime.Now;
                             _billImportDetailRepo.Update(item);
                             var invoiceLink = _invoiceLinkRepo.GetAll().Where(p => p.BillImportDetailID == id);
                             if(invoiceLink.Any())
                             {
                                 await _invoiceLinkRepo.DeleteByAttributeAsync("BillImportDetailID", id);
-                            }
-                            
+                            }   
                         }
                     }
                 }
@@ -365,7 +322,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
 
                     if (detail.ID <= 0)
                     {
-                        detail.isDeleted = false;
+                        detail.IsDeleted = false;
                         await _billImportDetailRepo.CreateAsync(detail);
                     }
                     else
@@ -394,11 +351,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
 
                         if (detail.Qty.HasValue && serials.Count != (int)detail.Qty)
                         {
-                            return BadRequest(new
-                            {
-                                status = 0,
-                                message = $"Số serial ({serials.Count}) không khớp Qty ({detail.Qty})"
-                            });
+                            throw new Exception($"Số serial ({serials.Count}) không khớp Qty ({detail.Qty})");
                         }
                         // Update SerialNumber nếu chưa có
                         if (string.IsNullOrEmpty(detail.SerialNumber))
@@ -415,8 +368,6 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                             _billImportDetailSerialNumberRepo.Update(serial);
                         }
                     }
-
-
                     // Xử lý tồn kho dự án
                     if (detail.ProjectID > 0)
                     {
@@ -481,21 +432,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                         new object[] { poNCCDetailID });
                 }
 
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Xử lý thành công",
-                    data = dto
-                });
+                return Ok(ApiResponseFactory.Success(dto, "Xử lý dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         //test
@@ -508,11 +449,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                     new string[] { "@ID" },
                     new object[] { id }
                 );
-            return Ok(new
-            {
-                status = 1,
-                data = SQLHelper<object>.GetListData(resultSets, 0),
-            });
+            return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(resultSets, 0), "Lấy dữ liệu thành công!"));
         }
 
         [HttpGet("import-excel")]
@@ -533,7 +470,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
 
                 if (!detailList.Any())
                 {
-                    return BadRequest(new { status = 0, message = "Không tìm thấy dữ liệu từ spGetBillImportDetail" });
+                    throw new Exception("Không tìm thấy dữ liệu từ spGetBillImportDetail");
                 }
 
                 // Use the first record for master data
@@ -543,7 +480,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                 string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "BillImportSale.xlsx");
                 if (!System.IO.File.Exists(templatePath))
                 {
-                    return BadRequest(new { status = 0, message = "Không tìm thấy file mẫu Excel" });
+                    throw new Exception("Không tìm thấy file mẫu Excel");
                 }
 
                 using (var workbook = new XLWorkbook(templatePath))
@@ -679,17 +616,13 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = "Lỗi khi xuất Excel",
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         /// <summary>
         /// tổng hợp phiếu nhập
+        /// 
         /// </summary>
         [HttpPost("bill-import-synthetic")]
         public IActionResult getBillExportSynthetic([FromBody] BillExportSyntheticParamRequest filter)
@@ -707,20 +640,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                  new string[] { "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@Status", "@KhoType", "@FilterText", "@WarehouseCode", "@IsDeleted" },
                     new object[] { filter.PageNumber, filter.PageSize, filter.DateStart, filter.DateEnd, filter.Status, filter.KhoType, filter.FilterText, filter.WarehouseCode, filter.IsDeleted }
                    );
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<object>.GetListData(result, 0)
-                });
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(result, 0), "Lấy dữ liệu hành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
 
         }
@@ -731,8 +655,9 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             try
             {
                 if (string.IsNullOrWhiteSpace(code))
-                    return BadRequest(new { status = 0, message = "Mã QR không được để trống." });
-
+                {
+                    throw new Exception("Mã QR không được để trống!");
+                }
                 // 1. Tìm phiếu có mã code
                 var bills = SQLHelper<BillImport>.FindByAttribute("BillImportCode", $"'{code}'"); 
                 var bill = bills.FirstOrDefault();
@@ -740,44 +665,18 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                 if (bill == null)
                     return NotFound(new { status = 0, message = $"Không tìm thấy phiếu với mã {code}." });
 
-             /*   // 2. Kiểm tra nếu là phiếu không được quét
-                string tableName = typeof(BillImport).Name.Replace("Model", "");
-                int billTypeNew = tableName == "BillImport" ? 4 : (tableName == "BillImportTechnical" ? 5 : 0);
-
-                if (billTypeNew != 0)
-                {
-                    var check = SQLHelper<BillImport>.FindByAttribute("BillImportCode", $"'{code}'")
-                        .Where(x => x.Status == billTypeNew)
-                        .FirstOrDefault();
-
-                            if (check != null)
-                        return BadRequest(new { status = 0, message = "Không thể quét phiếu loại Yêu cầu nhập kho." });
-                }*/
-
+         
                 // 3. Gọi store procedure lấy chi tiết phiếu
                 var result = SQLHelper<BillImport>.ProcedureToList(
                     "spGetBillImportScanQR",
                     new string[] { "@FilterText", "@WareHouseId" },
                     new object[] { code, warehouseId }
                 );
-
-                var detailList = SQLHelper<BillImport>.GetListData(result, 0); // lấy bảng đầu tiên
-
-                if (detailList == null || detailList.Count == 0)
-                {
-                    return NotFound(new { status = 0, message = "Không có chi tiết phiếu trong kho." });
-                }
-
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Thành công",
-                    data = detailList
-                });
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(result, 0), "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { status = 0, message = "Lỗi hệ thống", detail = ex.Message });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

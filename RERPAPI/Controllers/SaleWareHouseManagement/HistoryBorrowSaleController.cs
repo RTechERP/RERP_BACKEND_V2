@@ -5,6 +5,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
+using ZXing;
 
 namespace RERPAPI.Controllers.SaleWareHouseManagement
 {
@@ -27,19 +28,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                     new string[] { "@PageNumber", "@PageSize", "@DateBegin", "@DateEnd", "@ProductGroupID", "@ReturnStatus", "@FilterText", "@WareHouseID", "@EmployeeID" },
                     new object[] { filter.PageNumber, filter.PageSize, filter.DateStart, filter.DateEnd, filter .ProductGroupID, filter.Status -1 , filter.FilterText, rs.ID, filter.EmployeeID }
                     );
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<object>.GetListData(result, 0)
-                });
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(result, 0), "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    error = ex.Message
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -55,42 +48,24 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                 {
                     if (id <= 0)
                     {
-                        return BadRequest(new
-                        {
-                            status = 0,
-                            message = $"ID không hợp lệ: {id}"
-                        });
+                        throw new Exception($"ID không hợp lệ: {id}");         
                     }
 
                     var result = _billExportDetailRepo.GetByID(id);
                     if (result == null)
                     {
-                        return BadRequest(new
-                        {
-                            status = 0,
-                            message = $"Không tìm thấy bản ghi với ID: {id}"
-                        });
+                        throw new Exception($"Không tìm thấy bản ghi với ID: {id}");
                     }
 
                     result.ReturnedStatus = isApproved;
                     result.UpdatedDate = DateTime.Now;
-                    _billExportDetailRepo.UpdateFieldsByID(id, result);
+                    _billExportDetailRepo.Update(result);
                 }
-
-                return Ok(new
-                {
-                    status = 1,
-                    message = $"{(isApproved ? "Đã trả!" : "Đã hủy trả")}"
-                });
+                return Ok(ApiResponseFactory.Success(null,$"{(isApproved ? "Đã trả!" : "Đã hủy trả")}" ));      
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

@@ -32,20 +32,16 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
                    new string[] { "@DateStart", "@DateEnd", "UserID", "@Keyword", "@DepartmentID" },
                      new object[] { filter.dateStart, filter.dateEnd, filter.userID, filter.keyword, filter.departmenID }
              );
-                return Ok(new
+                return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu thành công báo cáo công việc!"));
+             /*   return Ok(new
                 {
                     status = 1,
                     data = result
-                });
+                });*/
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         /// <summary>
@@ -71,21 +67,17 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
 
                 var dataFilm = flatResult.Where(x => x.ChucVuHDID == 7 || x.ChucVuHDID == 72).ToList();
                 var dataDriver = flatResult.Where(x => x.ChucVuHDID == 6).ToList();
-                return Ok(new
-                {
-                    status = 1,
+                var data = new {
                     dataFilm,
                     dataDriver,
-                });
+                };
+
+
+                return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công báo cáo công việc"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = "Đã xảy ra lỗi trong quá trình xử lý yêu cầu.",
-                    error = ex.Message
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -101,21 +93,11 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
                        new object[] { departmentID, projectID }
 
                     );
-                List<dynamic> rs = result[0];
-                return Ok(new
-                {
-                    status = 1,
-                    data = rs
-                });
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(result, 0), "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 

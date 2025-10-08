@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
@@ -20,20 +21,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             {
                 List<RulePay> rules = _rulePayRepo.GetAll();
 
-                return Ok(new
-                {
-                    status=1,
-                    data = rules
-                });
+                return Ok(ApiResponseFactory.Success(rules, "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                });
-
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
            
         }

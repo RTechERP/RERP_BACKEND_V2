@@ -23,20 +23,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                        "spGetInventory", new string[] { "@ID", "@Find", "@WarehouseCode", "@IsStock" },
                     new object[] { filter.productGroupID, filter.Find, filter.WarehouseCode, filter.IsStock == false ? 0 : 1 }
                    );
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<object>.GetListData(result, 0)
-                });
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(result, 0), "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("{id}")]
@@ -45,19 +36,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             try
             {
                 Inventory result = _inventoryRepo.GetByID(id);
-                return Ok(new
-                {
-                    status = 1,
-                    data = result
-                });
+                return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-productgroup-warehouse")]
@@ -71,20 +54,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                        "spGetProductGroupWarehouse", new string[] { "@WarehouseID", "@ProductGroupID" },
                     new object[] { WarehouseID, productGroupID }
                    );
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<object>.GetListData(result, 0)
-                });
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(result, 0), "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpPost("get-inventory-borrow-ncc")]
@@ -98,19 +72,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                     new string[] { "@PageNumber", "@PageSize", "@FilterText", "@DateStart", "@DateEnd", "@WarehouseID", "SupplierSaleID" },
                     new object[] { filter.PageNumber, filter.PageSize, filter.FilterText, filter.DateStart, filter.DateEnd, filter.WareHouseID, filter.SupplierSaleID }
                     );
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<object>.GetListData(result, 0)
-                });
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(result, 0), "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    error = ex.Message
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

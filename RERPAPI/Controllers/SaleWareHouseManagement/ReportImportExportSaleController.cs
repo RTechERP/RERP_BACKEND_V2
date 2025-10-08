@@ -23,20 +23,12 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                     new string[] { "@StartDate", "@EndDate", "@Find", "@Group", "@WarehouseCode" },
                     new object[] { filter.StartDate, filter.EndDate, filter.Find,filter.Group, filter.WareHouseCode  }
                     );
-                
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<object>.GetListData(result, 0)
-                });
+
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(result, 0), "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    error = ex.Message
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -52,19 +44,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                     new object[] { productsaleID, warehouseCode}
                     );
 
-                return Ok(new
-                {
-                    status = 1,
-                    data=result,
-                });
+                return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    error = ex.Message
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Microsoft.IdentityModel.Tokens;
@@ -9,6 +10,7 @@ using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using System.Dynamic;
 using System.Text.RegularExpressions;
+using ZXing;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -39,22 +41,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                        "usp_LoadProductsale", new string[] { "@id", "@Find", "@IsDeleted" },
                     new object[] { filter.id, filter.find ?? "", false }
                    );
-                List<dynamic> rs = result[0];
-
-                return Ok(new
-                {
-                    status = 1,
-                    data = rs
-                });
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(result, 0), "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         #endregion
@@ -67,20 +58,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             {
                 var rs = _productsaleRepo.GetByID(id);
 
-                return Ok(new
-                {
-                    status = 1,
-                    data = rs
-                });
+                return Ok(ApiResponseFactory.Success(rs, "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         #endregion
@@ -92,20 +74,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             try
             {
                 List<ProductSale> rs = _productsaleRepo.GetAll().Where(x => x.ProductGroupID == productgroupID).ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data = rs
-                });
+                return Ok(ApiResponseFactory.Success(rs, "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         #endregion
@@ -173,25 +146,15 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                     else
                     {
                         // Cập nhật
-                        _productsaleRepo.UpdateFieldsByID(dto.ProductSale.ID, dto.ProductSale);
+                        _productsaleRepo.Update(dto.ProductSale);
                     }
                 }
 
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Xử lý thành công",
-                    data = dtos
-                });
+                return Ok(ApiResponseFactory.Success(dtos, "Xử lý dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         #endregion
@@ -217,18 +180,12 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                        
                     })
                     .ToList();
-
-                return Ok(new
-                {
-                    data = new
-                    {
-                        existingProducts
-                    }
-                });
+                return Ok(ApiResponseFactory.Success( new{existingProducts}, "kiểm tra code thành công!"));
+                
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 

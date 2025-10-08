@@ -18,22 +18,12 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                        "spGetBillExportDetail", new string[] { "@BillID"},
                     new object[] {billExportID}
                    );
-                List<dynamic> billDetail = result[0]; // dữ liệu chi tiết hóa đơn
                 int totalPage = 0;
-                return Ok(new
-                {
-                    status = 1,
-                    data = billDetail, 
-                });
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(result, 0), "Lấy dữ liệu chi tiết hóa đơn thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

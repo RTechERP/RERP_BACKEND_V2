@@ -21,20 +21,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                       "spGetAllDocumentImportByPONCCID", new string[] { "@PONCCID", "@BillImportID" },
                 new object[] { poNCCId, billImportID }
                   );
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<object>.GetListData(result, 0)
-                });
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(result, 0), "Lấy dữ liệu document thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(
-                    new
-                    {
-                        status = 0,
-                        error = ex.Message
-                    });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("dropdownmenu")]
@@ -43,20 +34,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             try
             {
                 List<DocumentImport> result = _documentImportRepo.GetAll().Where(p => !p.IsDeleted.GetValueOrDefault()).ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data = result,
-                });
+                return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(
-                    new
-                    {
-                        status = 0,
-                        error = ex.Message
-                    });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
        

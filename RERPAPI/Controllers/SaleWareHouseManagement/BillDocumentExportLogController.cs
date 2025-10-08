@@ -18,20 +18,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                       "spGetBillDocumentExportLog", new string[] { "@BillDocumentExportID" },
                    new object[] { bdeID }
                   );
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<object>.GetListData(result, 0)
-                });
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(result, 0), "Lấy dữ liệu thành công thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(
-                    new
-                    {
-                        status = 0,
-                        error = ex.Message
-                    });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
@@ -17,20 +18,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             {
                 var result = _billImportDetailSerialNumberRepo.GetByID(id);
 
-                return Ok(new
-                {
-                    status = 1,
-                    data = result,
-                });
+                return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu chi tiết theo id hành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(
-                    new 
-                    {
-                        status = 0, 
-                        message = ex.Message
-                    });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

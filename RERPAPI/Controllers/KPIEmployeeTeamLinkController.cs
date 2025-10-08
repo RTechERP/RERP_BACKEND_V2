@@ -10,7 +10,10 @@ namespace RERPAPI.Controllers
     [ApiController]
     public class KPIEmployeeTeamLinkController : ControllerBase
     {
+        #region Khai báo repository
         KPIEmployeeTeamLinkRepo teamLinkRepo = new KPIEmployeeTeamLinkRepo();
+        #endregion
+        #region Lấy tất cả nhân viên trong team
         [HttpGet("getall")]
         public IActionResult GetKPIEmployeeTeamLink(int kpiEmployeeteamID, int departmentID, int yearValue, int quarterValue)
         {
@@ -37,6 +40,8 @@ namespace RERPAPI.Controllers
                 });
             }
         }
+        #endregion
+        #region Lưu dữ liệu
         [HttpPost("savedata")]
         public async Task<IActionResult> SaveData([FromBody] List<KPIEmployeeTeamLink> teamLinks)
         {
@@ -62,34 +67,6 @@ namespace RERPAPI.Controllers
                 });
             }
         }
-
-        //[HttpPost("deleteemployeeteamlink")]
-        //public IActionResult DeleteEmployee([FromBody] List<int> employeeIDs)
-        //{
-        //    if (employeeIDs.Count <= 0) return Ok(new { status = 0, message = "Không có nhân viên nào để xóa" });
-
-        //    var notFoundIds = new List<int>();
-        //    foreach (var id in employeeIDs)
-        //    {
-        //        var entity = teamLinkRepo.GetByID(id);
-        //        if (entity == null)
-        //        {
-        //            notFoundIds.Add(id);
-        //            continue;
-        //        }
-
-        //        entity.IsDeleted = true;
-        //        teamLinkRepo.Update(entity);
-        //    }
-        //    if (notFoundIds.Any())
-        //    {
-        //        return Ok(new
-        //        {
-        //            status = 0,
-        //            message = $"Không tìm thấy nhân viên có ID: {string.Join(", ", notFoundIds)}"
-        //        });
-        //    }
-        //    return Ok(new { status = 1, message = "Đã xóa thành công!" });
-        //}
+        #endregion
     }
 }

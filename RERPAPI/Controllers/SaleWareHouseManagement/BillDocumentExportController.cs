@@ -24,15 +24,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             try
             {
                 List<BillDocumentExport> result = _billDocumentExportRepo.GetAll();
-                return Ok(new
-                {
-                    status = 1,
-                    data = result
-                });
+                return Ok(ApiResponseFactory.Success(result, "Xử lý thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new { status = 0, ex.Message });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-by-billID/{billID}")]
@@ -45,20 +41,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                       "spGetBillDocumentExport", new string[] { "@BillExportID" },
                    new object[] { billID }
                   );
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<object>.GetListData(result, 0)
-                });
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(result, 0), "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(
-                    new
-                    {
-                        status = 0,
-                        error = ex.Message
-                    });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -68,7 +55,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             try
             {
                 if (dtos == null || !dtos.Any())
-                    return BadRequest(new { status = 0, error = "Danh sách rỗng." });
+                    throw new Exception("Danh sách rỗng!");
 
                 bool isStatus2 = false;
                 int billExportID = 0;
@@ -123,15 +110,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                     }
                 }
 
-                return Ok(new { status = 1 });
+                return Ok(ApiResponseFactory.Success(null, "Xử lý thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    error = ex.Message
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 

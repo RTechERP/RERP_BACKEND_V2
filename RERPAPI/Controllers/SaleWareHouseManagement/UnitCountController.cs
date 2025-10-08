@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using ZXing;
 
 namespace RERPAPI.Controllers.SaleWareHouseManagement
 {
@@ -20,20 +23,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             try
             {
                 List<UnitCount> dataUnit = _unitcountRepo.GetAll();
-                return Ok(new
-                {
-                    status = 1,
-                    data = dataUnit,
-                });
+                return Ok(ApiResponseFactory.Success(dataUnit, "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
       
@@ -47,21 +41,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                     if (dto.ID <= 0) await _unitcountRepo.CreateAsync(dto);
                     else await _unitcountRepo.UpdateAsync(dto);
                 }
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Thêm đơn vị tính thành công!",
-
-                });
+                return Ok(ApiResponseFactory.Success(null, "Xử lý dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
       

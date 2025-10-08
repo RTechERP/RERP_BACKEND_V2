@@ -209,7 +209,7 @@ namespace RERPAPI.Controllers
                     await customerRepo.CreateAsync(customer);
                 } else
                 {
-                    customerRepo.UpdateFieldsByID(customer.ID, customer);
+                    customerRepo.Update(customer);
                 }
                 
                 if(request.ID > 0)
@@ -255,7 +255,7 @@ namespace RERPAPI.Controllers
                     }
                     else
                     {
-                        customerContactRepo.UpdateFieldsByID(customerContact.ID, customerContact);
+                        customerContactRepo.Update(customerContact);
                     }
                 }
 
@@ -276,7 +276,7 @@ namespace RERPAPI.Controllers
                     }
                     else
                     {
-                        addressStockRepo.UpdateFieldsByID(customerAddress.ID, customerAddress);
+                        addressStockRepo.Update(customerAddress);
                     }
                 }
 
@@ -294,7 +294,7 @@ namespace RERPAPI.Controllers
                     }
                     else
                     {
-                        customerEmployeeRepo.UpdateFieldsByID(sale.ID, sale);
+                        customerEmployeeRepo.Update(sale);
                     }
                 }
 

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
@@ -15,19 +16,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             try
             {
                 List<AddressStock> result = _addressStockRepo.GetAll().Where(x=>x.CustomerID==customerID).ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data = result
-                });
+                return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu vị trí thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    ex.Message
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

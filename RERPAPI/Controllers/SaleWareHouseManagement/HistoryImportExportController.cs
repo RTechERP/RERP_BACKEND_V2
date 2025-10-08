@@ -26,19 +26,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                     new string[] { "@PageNumber", "@PageSize", "@FilterText", "@DateStart", "@DateEnd", "@Status", "@WarehouseCode" },
                     new object[] { filter.PageNumber, filter.PageSize, filter.FilterText, filter.DateStart,filter.DateEnd,filter.Status, filter.WareHouseCode }
                     );
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<object>.GetListData(result, 0)
-                });
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(result, 0), "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    error = ex.Message
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

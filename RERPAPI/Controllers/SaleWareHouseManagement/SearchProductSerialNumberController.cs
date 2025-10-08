@@ -18,20 +18,20 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                     new string[] {"@FilterText" },
                     new object[] {keyword ?? ""}
                     );
-                return Ok(new
+              /*  return Ok(new
                 {
                     status = 1,
                     dataImport = SQLHelper<object>.GetListData(result, 0),
                     dataExport = SQLHelper<object>.GetListData(result, 1),
-                });
+                });*/
+                return Ok(ApiResponseFactory.Success(new {
+                    dataImport = SQLHelper<object>.GetListData(result, 0),
+                    dataExport = SQLHelper<object>.GetListData(result, 1),
+                }, "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status=0,
-                    message=ex.Message
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

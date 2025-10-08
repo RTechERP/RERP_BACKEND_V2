@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -21,11 +22,12 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             {
                 if (request.Ids == null || !request.Ids.Any())
                 {
-                    return BadRequest(new { status = 0, message = "Danh sách ID không hợp lệ" });
+                    throw new Exception("Danh sách ID không hợp lệ");
+                  
                 }
                 if (request.Type != 1 && request.Type != 2)
                 {
-                    return BadRequest(new { status = 0, message = "Giá trị type không hợp lệ" });
+                    throw new Exception("Giá trị type không hợp lệ");
                 }
 
                 var results = new List<object>();
@@ -49,22 +51,14 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
 
                 if (!results.Any())
                 {
-                    return NotFound(new { status = 0, message = "Không tìm thấy dữ liệu cho bất kỳ ID nào" });
+                    throw new Exception("Không tìm thấy dữ liệu cho bất kỳ ID nào");
                 }
 
-                return Ok(new
-                {
-                    status = 1,
-                    data = results
-                });
+                return Ok(ApiResponseFactory.Success(results, "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -80,14 +74,14 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             {
                 if (dto == null)
                 {
-                    return BadRequest(new { status = 0, message = "Dữ liệu không hợp lệ" });
+                    throw new Exception("Dữ liệu không hợp lệ");
                 }
 
                 if (dto.type == 1)
                 {
                     if (dto.billImportDetailSerialNumbers == null || !dto.billImportDetailSerialNumbers.Any())
                     {
-                        return BadRequest(new { status = 0, message = "Danh sách nhập hóa đơn rỗng" });
+                        throw new Exception("Danh sách nhập hóa đơn rỗng");
                     }
 
                     foreach (var item in dto.billImportDetailSerialNumbers)
@@ -106,7 +100,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                 {
                     if (dto.billExportDetailSerialNumbers == null || !dto.billExportDetailSerialNumbers.Any())
                     {
-                        return BadRequest(new { status = 0, message = "Danh sách xuất hóa đơn rỗng" });
+                        throw new Exception("Danh sách xuất hóa đơn rỗng");
                     }
 
                     foreach (var item in dto.billExportDetailSerialNumbers)
@@ -122,21 +116,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                     }
                 }
 
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Xử lý thành công",
-                    data = dto
-                });
+                return Ok(ApiResponseFactory.Success(dto, "Xử lý thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using ZXing;
 
 namespace RERPAPI.Controllers.SaleWareHouseManagement
 {
@@ -32,21 +35,12 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                     //update 17/07/25 them truong hop warehousecode=HCM
                     data = _productgroupRepo.GetAll().Where(p => (p.IsVisible == isvisible || !isvisible) && !excludedIds.Contains(p.ID)).ToList();
                 }
-               
-                return Ok(new
-                {
-                    status = 1,
-                    data = data
-                });
+
+                return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("{id}")]
@@ -55,20 +49,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             try
             {
                 ProductGroup result = _productgroupRepo.GetByID(id);
-                return Ok(new
-                {
-                    status = 1,
-                    data = result
-                });
+                return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         //update 14/06 fix khi xoa tu them 1 ban ghi bang productsalewarehouse
@@ -86,7 +71,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                 }
                 else
                 {
-                    _productgroupRepo.UpdateFieldsByID(dto.Productgroup.ID, dto.Productgroup);
+                    _productgroupRepo.Update(dto.Productgroup);
 
                     // Nếu không gửi ProductgroupWarehouse thì bỏ qua phần cập nhật dưới đây
                     if (dto.ProductgroupWarehouse != null)
@@ -109,24 +94,12 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                     }
                 }
 
-                return Ok(new
-                {
-                    status = 1,
-                    data = dto
-                });
+                return Ok(ApiResponseFactory.Success(dto, "Xử lý dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
-            // Tránh CS0161:
-            return BadRequest("Unexpected error.");
         }
 
      

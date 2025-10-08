@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using ZXing;
 
 namespace RERPAPI.Controllers.SaleWareHouseManagement
 {
@@ -17,20 +20,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             try
             {
                 List<Firm> dataFirm = _firmRepo.GetAll();
-                return Ok(new
-                {
-                    status = 1,
-                    data = dataFirm,
-                });
+                return Ok(ApiResponseFactory.Success(dataFirm, "Lấy dữ liệu hãng thành công!"));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpPost("save-data")]
@@ -44,22 +38,12 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                     else await _firmRepo.UpdateAsync(dto);
 
                 }
-                    return Ok(new
-                    {
-                        status = 1,
-                        message = "Thêm hãng thành công!",
+                return Ok(ApiResponseFactory.Success(null, "Xử lý dữ liệu thành công!"));
 
-                    });
-                
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
+using ZXing;
 
 namespace RERPAPI.Controllers.OfficeSuppliesManagement
 {
@@ -21,20 +23,12 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
             try
             {
                 List<Department> departmentList = SQLHelper<Department>.FindAll().OrderBy(x => x.STT).ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data = departmentList
-                });
+
+                return Ok(ApiResponseFactory.Success(departmentList, "Lấy dữ liệu phòng ban thành công!"));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         #endregion
@@ -56,23 +50,12 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
                     "spGetOfficeSupplyRequests",
                     new string[] { "@KeyWord", "@MonthInput", "@EmployeeID", "@DepartmentID" },
                    new object[] { keyword, monthInput, employeeID, departmentID }  // đảm bảo không null
-                );
-                List<dynamic> rs = result[0];
-
-                return Ok(new
-                {
-                    status = 1,
-                    data = rs
-                });
+                );     
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(result, 0), "Lấy dữ liệu danh sách đăng ký Vpp thành công!"));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
        
@@ -92,21 +75,11 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
                        new object[] { officeSupplyRequestsID }
 
                     );
-                List<dynamic> rs = result[0];
-                return Ok(new
-                {
-                    status = 1,
-                    data = rs
-                });
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(result, 0), "Lấy dữ liệu danh sách chi tiết đăng ký Vpp thành công!"));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -127,23 +100,13 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
                         item.IsAdminApproved = true;
                         item.DateAdminApproved = DateTime.Now;
                     }
-                    officesupplyrequests.UpdateFieldsByID(id, item);
+                    officesupplyrequests.Update(item);
                 }
-
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Phê duyệt thành công."
-                });
+                return Ok(ApiResponseFactory.Success(null, "Phê duyệt thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -163,21 +126,13 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
                         item.IsAdminApproved = false;
                         item.DateAdminApproved = DateTime.Now;
                     }
-                    officesupplyrequests.UpdateFieldsByID(id, item);
+                    officesupplyrequests.Update(item);
                 }
-                return Ok(new
-                {
-                    status = 1,
-                });
+                return Ok(ApiResponseFactory.Success(null, "Hủy duyệt thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
 
         }
@@ -197,21 +152,13 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
                         item.IsApproved = true;
                         item.DateApproved = DateTime.Now;
                     }
-                    officesupplyrequests.UpdateFieldsByID(id, item);
+                    officesupplyrequests.Update(item);
                 }
-                return Ok(new
-                {
-                    status = 1,
-                });
+                return Ok(ApiResponseFactory.Success(null, "Phê duyệt thành công!"));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpPost("un-is-approved")]
@@ -229,21 +176,13 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
                         item.IsApproved = false;
                         item.DateApproved = DateTime.Now;
                     }
-                    officesupplyrequests.UpdateFieldsByID(id, item);
+                    officesupplyrequests.Update(item);
                 }
-                return Ok(new
-                {
-                    status = 1,
-                });
+                return Ok(ApiResponseFactory.Success(null, "Hủy duyệt thành công!"));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -268,20 +207,11 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
                     new string[] { "@DateStart", "@DateEnd", "@Keyword", "@DepartmentID" },
                     new object[] { dateStart, dateEnd, filter.keyword, filter.departmentId }
                 );
-                return Ok(new
-                {
-                    status = 1,
-                    data = result[0]
-                });
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(result, 0), "Lấy dữ liệu danh sách tổng hợp đăng ký Vpp thành công!"));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 

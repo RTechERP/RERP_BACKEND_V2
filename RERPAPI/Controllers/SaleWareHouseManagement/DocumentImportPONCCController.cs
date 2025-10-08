@@ -5,6 +5,7 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
+using ZXing;
 
 namespace RERPAPI.Controllers.SaleWareHouseManagement
 {
@@ -24,20 +25,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                       "spGetAllDocumentImportPONCC", new string[] { "@BillImportID" },
                    new object[] { bdiID }
                   );
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<object>.GetListData(result, 0)
-                });
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(result, 0), "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(
-                    new
-                    {
-                        status = 0,
-                        error = ex.Message
-                    });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -81,19 +73,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                     }
                 }
 
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Đã lưu thành công!"
-                });
+                return Ok(ApiResponseFactory.Success(null, "Xử lý dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    error = $"Lỗi khi lưu dữ liệu: {ex.Message}"
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -124,21 +108,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                         await _documentRepo.UpdateAsync(result);
                     }
                 }
-
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Đã bổ sung chứng từ thành công!"
-                });
+                return Ok(ApiResponseFactory.Success(null, "Đã bổ sung chứng từ thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(
-                        new
-                        {
-                            status = 0,
-                            error = ex.Message
-                        });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

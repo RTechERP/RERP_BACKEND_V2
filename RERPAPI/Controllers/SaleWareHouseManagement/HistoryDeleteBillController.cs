@@ -4,6 +4,7 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
+using ZXing;
 
 namespace RERPAPI.Controllers.SaleWareHouseManagement
 {
@@ -19,18 +20,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             try
             {
                 List<HistoryDeleteBill> result = _historyDeleteBillReoi.GetAll().ToList();
-                return Ok(new
-                {
-                    status=1,
-                    data=result,
-                });
-            }catch (Exception ex)
+                return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu thành công!"));
+            }
+            catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    message = ex.Message,
-                    status = 0,
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpPost("get-by-billtype")]
@@ -70,19 +64,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                   );
                     rs = result[0];
                 }
-                return Ok(new
-                {
-                    status = 1,
-                    data = rs,
-                });
+                return Ok(ApiResponseFactory.Success(rs, "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    message = ex.Message,
-                    status = 0,
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("{id}")]
@@ -91,19 +77,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             try
             {
                 var result = _historyDeleteBillReoi.GetByID(id);
-                return Ok(new
-                {
-                    status = 1,
-                    data = result,
-                });
+                return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    message = ex.Message,
-                    status = 0,
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

@@ -33,16 +33,12 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
               
                 var nextCode = _officesupplyRepo.GetNextCodeRTC();
                 List<dynamic> rs = result[0];
-                return Ok(new
+                var data = new
                 {
-                    status = 1,
-                    data = new
-                    {
-                        officeSupply = rs,
-                        nextCode,
-                    }
-
-                });
+                    officeSupply = rs,
+                    nextCode
+                };
+                return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu văn phòng phẩm thành công!"));
             }
             catch (Exception ex)
             {
@@ -97,7 +93,7 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
                     {
                         item.IsDeleted = true; // Gán trường IsDeleted thành true
                         /* await _officesupplyRepo.UpdateAsync(item);*/
-                        _officesupplyRepo.UpdateFieldsByID(id, item);/* // Cập nhật lại mục*/
+                        _officesupplyRepo.Update(item);/* // Cập nhật lại mục*/
                     }
                 }
                 return Ok(new
@@ -163,7 +159,7 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
                 }
                 else
                 {
-                    _officesupplyRepo.UpdateFieldsByID(officesupply.ID, officesupply);
+                    _officesupplyRepo.Update(officesupply);
                 }
                 return Ok(new
                 {

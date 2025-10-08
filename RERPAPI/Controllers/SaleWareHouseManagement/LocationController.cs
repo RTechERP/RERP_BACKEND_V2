@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Repo.GenericEntity;
+using ZXing;
 
 namespace RERPAPI.Controllers.SaleWareHouseManagement
 {
@@ -20,20 +23,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                 var dataLocation = _locationRepo.GetAll()
            .Where(x => productgroupID == 70 ? x.ProductGroupID == 70 : true)
            .ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data = dataLocation
-                });
+                return Ok(ApiResponseFactory.Success(dataLocation, "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
       
@@ -49,21 +43,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                     else await _locationRepo.UpdateAsync(dto);
                 }
 
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Thêm vị trí mới thành công!",
-
-                });
+                return Ok(ApiResponseFactory.Success(null, "Xử lý dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
      

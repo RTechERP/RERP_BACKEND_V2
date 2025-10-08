@@ -5,6 +5,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Model.DTO;
+using ZXing;
 
 namespace RERPAPI.Controllers.SaleWareHouseManagement
 {
@@ -21,15 +22,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             try
             {
                 List<BillDocumentImport> result = _billDocumentImportRepo.GetAll();
-                return Ok(new
-                {
-                    status = 1,
-                    data = result
-                });
+                return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new { status = 0, ex.Message });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-by-billID/{billID}")]
@@ -42,20 +39,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                       "spGetBillDocumentImport", new string[] { "@BillImportID" },
                    new object[] { billID }
                   );
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<object>.GetListData(result, 0)
-                });
+                return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu theo ID thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(
-                    new
-                    {
-                        status = 0,
-                        error = ex.Message
-                    });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -65,29 +53,29 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             try
             {
                 if (dtos == null || !dtos.Any())
-                    return BadRequest(new { status = 0, error = "Danh sách rỗng." });
+                    throw new Exception("Danh sách rỗng!");
 
-             /*   // Validation
-                foreach (var dto in dtos)
-                {
-                    if (dto.DocumentStatus <= 0)
-                    {
-                        return BadRequest(new
-                        {
-                            status = 0,
-                            error = $"Vui lòng nhập Trạng thái của chứng từ [{dto.DocumentImportID ?? "N/A"}]."
-                        });
-                    }
-                    if (dto.DocumentStatus == 2 && string.IsNullOrEmpty(dto.ReasonCancel))
-                    {
-                        return BadRequest(new
-                        {
-                            status = 0,
-                            error = $"Vui lòng nhập Lý do hủy của chứng từ [{dto.DocumentImportID ?? "N/A"}]."
-                        });
-                    }
-                }
-*/
+                /*   // Validation
+                   foreach (var dto in dtos)
+                   {
+                       if (dto.DocumentStatus <= 0)
+                       {
+                           return BadRequest(new
+                           {
+                               status = 0,
+                               error = $"Vui lòng nhập Trạng thái của chứng từ [{dto.DocumentImportID ?? "N/A"}]."
+                           });
+                       }
+                       if (dto.DocumentStatus == 2 && string.IsNullOrEmpty(dto.ReasonCancel))
+                       {
+                           return BadRequest(new
+                           {
+                               status = 0,
+                               error = $"Vui lòng nhập Lý do hủy của chứng từ [{dto.DocumentImportID ?? "N/A"}]."
+                           });
+                       }
+                   }
+   */
                 bool isStatus2 = false;
                 int billImportID = 0;
 
@@ -143,15 +131,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                     }
                 }
 
-                return Ok(new { status = 1 });
+                return Ok(ApiResponseFactory.Success(null, "Xử lý dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    error = $"Lỗi khi lưu dữ liệu: {ex.Message}"
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

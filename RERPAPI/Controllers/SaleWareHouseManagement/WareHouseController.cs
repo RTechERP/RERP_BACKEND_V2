@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using ZXing;
 
 namespace RERPAPI.Controllers.SaleWareHouseManagement
 {
@@ -16,20 +18,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             try
             {
                 List<Warehouse> warehouse = _warehouseRepo.GetAll();
-                return Ok(new
-                {
-                    status = 1,
-                    data = warehouse
-                });
+                return Ok(ApiResponseFactory.Success(warehouse, "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

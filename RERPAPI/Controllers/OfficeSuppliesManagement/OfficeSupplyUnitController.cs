@@ -18,21 +18,12 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
         {
             try
             {
-                List<OfficeSupplyUnit> data = _officesupplyunitRepo.GetAll().Where(x => x.IsDeleted == false).ToList(); 
-                return Ok(new
-                {
-                    status = 1,
-                    data=data
-                });
+                List<OfficeSupplyUnit> data = _officesupplyunitRepo.GetAll().Where(x => x.IsDeleted == false).ToList();
+                return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu đơn vị tính thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -42,20 +33,11 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
             try
             {
                 OfficeSupplyUnit dst = _officesupplyunitRepo.GetByID(id);
-                return Ok(new
-                {
-                    status = 1,
-                    data = dst
-                });
+                return Ok(ApiResponseFactory.Success(dst, "Phê duyệt thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         //danh sách tính
@@ -71,22 +53,13 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
                 }
                 else
                 {
-                    _officesupplyunitRepo.UpdateFieldsByID(dst.ID, dst);
+                    _officesupplyunitRepo.Update(dst);
                 }
-                return Ok(new
-                {
-                    status = 1,
-                    data = dst
-                });
+                return Ok(ApiResponseFactory.Success(dst , "Lưu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -105,23 +78,14 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
                     {
                         item.IsDeleted = true; // Gán trường IsDeleted thành true
                         /* await off.UpdateAsync(item);*/
-                        _officesupplyunitRepo.UpdateFieldsByID(id, item);/* // Cập nhật lại mục*/
+                        _officesupplyunitRepo.Update(item);/* // Cập nhật lại mục*/
                     }
                 }
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Đã xóa thành công"
-                });
+                return Ok(ApiResponseFactory.Success(null, "Xóa thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
 
         }
