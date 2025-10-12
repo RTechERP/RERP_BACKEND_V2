@@ -17,8 +17,6 @@ namespace RERPAPI.Controllers.GeneralCategory
         private TrainingRegistrationFileRepo _trainingRegistrationFileRepo = new TrainingRegistrationFileRepo();
         private TrainingRegistrationDetailRepo _trainingRegistrationDetailRepo = new TrainingRegistrationDetailRepo();
         private EmployeeRepo _employeeRepo = new EmployeeRepo();
-        private EmployeeApprovedRepo _employeeApprovedRepo = new EmployeeApprovedRepo();
-        private UserTeamRepo _userTeamRepo = new UserTeamRepo();
 
         [HttpPost]
         public IActionResult GetAll(TrainingRegistrationParam param)
@@ -170,64 +168,5 @@ namespace RERPAPI.Controllers.GeneralCategory
             }
         }
 
-        [HttpPost("upload")]
-        public IActionResult Upload(IFormFile file)
-        {
-            try
-            {
-                int statusCode = 0;
-                string fileName = "";
-                string message = "Upload file thất bại!";
-
-                if (file != null)
-                {
-                    string path = Config.Path() + @"\TrainingRegistration\";
-                    if (!Directory.Exists(path))
-                    {
-                        Directory.CreateDirectory(path);
-                    }
-
-                    //string name = System.IO.Path.GetFileNameWithoutExtension(path + file.FileName);
-                    //string extention = System.IO.Path.GetExtension(path + file.FileName);
-                    //string filePath = path + fileName +  "_" + DateTime.Now.ToString("ddMMyyHHmm") + extention;
-                    //string sourceFileName = System.IO.Path.GetFullPath(file.FileName);
-                    //System.IO.File.Move(sourceFileName, path + file.FileName);
-
-                    using (FileStream fileStream = System.IO.File.Create(path + file.FileName))
-                    {
-                        file.CopyTo(fileStream);
-                        fileStream.Flush();
-
-                        statusCode = 1;
-                        fileName = file.FileName;
-                        message = "Upload File thành công!";
-                    }
-
-                    //statusCode = 1;
-                    //fileName = file.FileName;
-                    //message = "Upload File thành công!";
-                }
-                else
-                {
-                    statusCode = 0;
-                    message = "Not Upload File!";
-                }
-
-                return Ok(new
-                {
-                    status = statusCode,
-                    FileName = fileName,
-                    Message = message
-                });
-            }
-            catch (Exception ex)
-            {
-                return Ok(new
-                {
-                    status = 0,
-                    Message = $"Upload file thất bại! ({ex.Message})"
-                });
-            }
-        }
     }
 }

@@ -106,14 +106,14 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-//app.UseRouting();
+app.UseRouting();
+app.UseCors("MyCors");
 app.UseAuthorization();
-app.UseAuthorization();
+//app.UseAuthentication();
 app.UseMiddleware<DynamicAuthorizationMiddleware>();
 
 app.MapControllers();
 
-app.UseCors("MyCors");
 
 //Config static file
 app.UseStaticFiles();
