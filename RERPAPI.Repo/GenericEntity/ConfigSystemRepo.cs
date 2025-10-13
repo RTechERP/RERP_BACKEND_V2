@@ -7,8 +7,9 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-   public  class ConfigSystemRepo:GenericRepo<ConfigSystem>
+    public class ConfigSystemRepo : GenericRepo<ConfigSystem>
     {
+
         /// <summary>
         /// Lấy đường dẫn upload từ bảng ConfigSystem theo key
         /// </summary>

@@ -16,6 +16,7 @@ namespace RERPAPI.Controllers.GeneralCategory.TrainingRegistration
         private TrainingRegistrationApprovedFlowRepo _trainingRegistrationApprovedFlowRepo = new TrainingRegistrationApprovedFlowRepo();
         private TrainingRegistrationFileRepo _trainingRegistrationFileRepo = new TrainingRegistrationFileRepo();
         private TrainingRegistrationDetailRepo _trainingRegistrationDetailRepo = new TrainingRegistrationDetailRepo();
+        TrainingRegistrationCategoryRepo _trainingRegistrationCategoryRepo = new TrainingRegistrationCategoryRepo();
         private EmployeeRepo _employeeRepo = new EmployeeRepo();
 
         [HttpPost]
@@ -55,11 +56,12 @@ namespace RERPAPI.Controllers.GeneralCategory.TrainingRegistration
                 CurrentUser _currentUser = ObjectMapper.GetCurrentUser(claims);
 
                 bool success = false;
-                TrainingRegistrationCategoryRepo _trainingRegistrationCategoryRepo = new TrainingRegistrationCategoryRepo();
+
 
                 // Save Training registration data
                 if (model.ID <= 0)
                 {
+                    model.Code = _trainingRegistrationRepo.GetNewCode(model);
                     if (await _trainingRegistrationRepo.CreateAsync(model) > 0)
                         success = true;
 
@@ -78,10 +80,14 @@ namespace RERPAPI.Controllers.GeneralCategory.TrainingRegistration
                     {
                         int employeeApprovedId = 0;
                         int statusApproved = 0;
+
+                        DateTime? dateApproved = null;
+                        
                         if (flow.STT == 1)
                         {
                             employeeApprovedId = model.EmployeeID ?? 0;
                             statusApproved = employeeApprovedId == 0 ? 0 : 1;
+                            dateApproved = DateTime.Now;
                         }
 
                         approvedList.Add(new TrainingRegistrationApproved
@@ -91,11 +97,16 @@ namespace RERPAPI.Controllers.GeneralCategory.TrainingRegistration
                             StatusApproved = statusApproved,
                             EmployeeApprovedID = employeeApprovedId,
                             EmployeeApprovedActualID = employeeApprovedId,
+                            DateApproved = dateApproved,
                             CreatedBy = _currentUser.LoginName,
                             UpdatedBy = _currentUser.LoginName
 
                         });
                     }
+
+
+
+                    
 
                     await _trainingRegistrationApprovedRepo.CreateRangeAsync(approvedList);
                     success = true;

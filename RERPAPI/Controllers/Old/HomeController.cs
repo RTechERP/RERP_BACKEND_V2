@@ -251,10 +251,38 @@ namespace RERPAPI.Controllers.Old
                     return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: {key}"));
                 }
 
-                // Tạo thư mục nếu chưa tồn tại
-                if (!Directory.Exists(uploadPath))
+                // Đọc subPath từ form (nếu có) và ghép vào uploadPath
+                var subPathRaw = form["subPath"].ToString()?.Trim() ?? "";
+                string targetFolder = uploadPath;
+                if (!string.IsNullOrWhiteSpace(subPathRaw))
                 {
-                    Directory.CreateDirectory(uploadPath);
+                    // Chuẩn hóa dấu phân cách và loại bỏ ký tự không hợp lệ trong từng segment
+                    var separator = Path.DirectorySeparatorChar;
+                    var segments = subPathRaw
+                        .Replace('/', separator)
+                        .Replace('\\', separator)
+                        .Split(separator, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(seg =>
+                        {
+                            var invalidChars = Path.GetInvalidFileNameChars();
+                            var cleaned = new string(seg.Where(c => !invalidChars.Contains(c)).ToArray());
+                            // Ngăn chặn đường dẫn leo lên thư mục cha
+                            cleaned = cleaned.Replace("..", "").Trim();
+                            return cleaned;
+                        })
+                        .Where(s => !string.IsNullOrWhiteSpace(s))
+                        .ToArray();
+
+                    if (segments.Length > 0)
+                    {
+                        targetFolder = Path.Combine(uploadPath, Path.Combine(segments));
+                    }
+                }
+
+                // Tạo thư mục nếu chưa tồn tại
+                if (!Directory.Exists(targetFolder))
+                {
+                    Directory.CreateDirectory(targetFolder);
                 }
 
                 var uploadResults = new List<object>();
@@ -267,7 +295,7 @@ namespace RERPAPI.Controllers.Old
                         var fileExtension = Path.GetExtension(file.FileName);
                         var originalFileName = Path.GetFileNameWithoutExtension(file.FileName);
                         var uniqueFileName = $"{originalFileName}_{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid().ToString("N")[..8]}{fileExtension}";
-                        var fullPath = Path.Combine(uploadPath, uniqueFileName);
+                        var fullPath = Path.Combine(targetFolder, uniqueFileName);
 
                         // Lưu file
                         using (var stream = new FileStream(fullPath, FileMode.Create))
