@@ -27,9 +27,9 @@ namespace RERPAPI.Repo.GenericEntity.Project
                 string newCode = $"{project.ProjectCode}_{projectItem.Count + 1}";
                 return newCode;
             }
-            catch (Exception ex)
+            catch(Exception ex)
             {
-                throw new Exception("Lỗi:" + ex.Message);
+                throw new Exception($"Lỗi: {ex.Message}\r\n{ex.ToString()}");
             }
         }
         public string GetMaxSTT(int? projectID)

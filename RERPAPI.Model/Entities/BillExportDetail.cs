@@ -74,4 +74,7 @@ public partial class BillExportDetail
     public decimal? TotalInventory { get; set; }
 
     public DateTime? ExpectReturnDate { get; set; }
+    public
+   bool? IsDelete { get; set; }
+    public bool IsDeleted { get; set; }
 }

@@ -85,4 +85,19 @@ public partial class PaymentOrder
     public bool? IsSpecialOrder { get; set; }
 
     public int? ProjectID { get; set; }
+
+    /// <summary>
+    /// Có hóa đơn
+    /// </summary>
+    public bool? IsBill { get; set; }
+
+    /// <summary>
+    /// Điểm đi
+    /// </summary>
+    public string? StartLocation { get; set; }
+
+    /// <summary>
+    /// Điểm đến
+    /// </summary>
+    public string? EndLocation { get; set; }
 }

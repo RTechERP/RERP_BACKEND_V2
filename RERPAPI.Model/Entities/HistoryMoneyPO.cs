@@ -36,4 +36,6 @@ public partial class HistoryMoneyPO
     public bool? IsFilm { get; set; }
 
     public bool? IsMergePO { get; set; }
+
+    public decimal? MoneyNotPaid { get; set; }
 }

@@ -29,4 +29,14 @@ public partial class InventoryProject
     public string? CreatedBy { get; set; }
 
     public string? UpdatedBy { get; set; }
+
+    public int? POKHDetailID { get; set; }
+
+    public int? CustomerID { get; set; }
+
+    public string? Note { get; set; }
+
+    public decimal? QuantityOrigin { get; set; }
+
+    public int? ParentID { get; set; }
 }

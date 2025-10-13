@@ -9,5 +9,6 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class FirmRepo : GenericRepo<Firm>
     {
+
     }
 }

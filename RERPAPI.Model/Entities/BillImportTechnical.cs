@@ -61,5 +61,5 @@ public partial class BillImportTechnical
 
     public int? ApproverID { get; set; }
 
-    public bool? IsDeleted { get; set; }
+    public bool IsDeleted { get; set; }
 }

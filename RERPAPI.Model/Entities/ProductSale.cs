@@ -48,4 +48,9 @@ public partial class ProductSale
     public int? FirmID { get; set; }
 
     public bool? IsDeleted { get; set; }
+
+    /// <summary>
+    /// Trường tích xanh (cho phép dữ liệu có được sửa hay không)
+    /// </summary>
+    public bool? IsFix { get; set; }
 }

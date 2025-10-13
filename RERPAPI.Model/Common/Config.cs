@@ -10,16 +10,21 @@ namespace RERPAPI.Model.Common
     public static class Config
     {
         private static int _isPublish = 0;
-        public static string ConnectionString
+        public static string Path()
         {
-            get
-            {
-                string connectionString = @"Server=DESKTOP-96C4JBL;database=RTC;User Id = sa; Password=1;TrustServerCertificate=True";
-          //      if (_isPublish == 1) connectionString = @"Server=192.168.1.2;database=RTC;User Id = sa; Password=rtc@rtca;TrustServerCertificate=True";
-                return connectionString;
-            }
+            string path = @"D:\\LeTheAnh\\RTC";
+            return path;
         }
+        public static string ConnectionString { get; set; } = @"Server=DESKTOP-GQKB5KK\SQLEXPRESS;database=RTC_Test;User Id = sa; Password=1;TrustServerCertificate=True";
 
-        
+        //public static string ConnectionString
+        //{
+        //    get
+        //    {
+        //        string connectionString = @"Server=DESKTOP-GQKB5KK\SQLEXPRESS;database=RTC_Test;User Id = sa; Password=1;TrustServerCertificate=True";
+        //        if (_isPublish == 1) connectionString = @"";
+        //        return connectionString;
+        //    }
+        //}
     }
 }

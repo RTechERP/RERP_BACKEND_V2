@@ -83,6 +83,4 @@ public partial class TSAssetManagement
     /// 1: Chưa active; 2: Đã active; 3: Crack
     /// </summary>
     public int? WindowActiveStatus { get; set; }
-
-    public bool isDeleted { get; set; }
 }

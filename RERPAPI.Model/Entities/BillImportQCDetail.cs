@@ -33,4 +33,10 @@ public partial class BillImportQCDetail
     public int? BillImportDetailID { get; set; }
 
     public bool? IsDeleted { get; set; }
+
+    public int? ProjectID { get; set; }
+
+    public string? POKHCode { get; set; }
+
+    public decimal? Quantity { get; set; }
 }

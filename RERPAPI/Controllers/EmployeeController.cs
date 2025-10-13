@@ -63,7 +63,7 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpGet("employee/{id}")]
+        [HttpGet("employees/{id}")]
         //[RequiresPermission("N42")]
         public IActionResult GetByID(int id)
         {

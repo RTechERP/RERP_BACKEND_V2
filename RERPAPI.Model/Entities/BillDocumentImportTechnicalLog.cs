@@ -22,4 +22,6 @@ public partial class BillDocumentImportTechnicalLog
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
+
+    public int? DocumentImportID { get; set; }
 }

@@ -85,4 +85,12 @@ public partial class ProjectPartlistPriceRequest
     public string? Maker { get; set; }
 
     public bool? IsJobRequirement { get; set; }
+
+    public string? NoteHR { get; set; }
+
+    public int? JobRequirementID { get; set; }
+
+    public bool? IsRequestBuy { get; set; }
+
+    public int? ProjectPartlistPriceRequestTypeID { get; set; }
 }

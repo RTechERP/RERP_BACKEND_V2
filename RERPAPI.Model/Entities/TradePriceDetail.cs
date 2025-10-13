@@ -92,4 +92,6 @@ public partial class TradePriceDetail
     public decimal? CurrencyRate { get; set; }
 
     public decimal? Margin { get; set; }
+
+    public bool IsDeleted { get; set; }
 }

@@ -46,4 +46,12 @@ public partial class RequestInvoice
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
+
+    public bool? IsUrgency { get; set; }
+
+    public DateTime? DealineUrgency { get; set; }
+
+    public string? AmendReason { get; set; }
+
+    public bool? IsCustomsDeclared { get; set; }
 }

@@ -25,6 +25,7 @@ builder.Services.AddScoped<IUserPermissionService, UserPermissionService>();
 builder.Services.AddScoped<RTCContext>();
 
 //Config connect database
+Config.ConnectionString = builder.Configuration.GetValue<string>("ConnectionString") ?? "";
 builder.Services.AddDbContext<RTCContext>(o => o.UseSqlServer(Config.ConnectionString));
 
 builder.Services.AddMvc().AddJsonOptions(opt => opt.JsonSerializerOptions.PropertyNamingPolicy = null);
@@ -116,14 +117,14 @@ app.UseCors("MyCors");
 
 //Config static file
 app.UseStaticFiles();
-List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();
-foreach (var item in staticFiles)
-{
-    app.UseStaticFiles(new StaticFileOptions()
-    {
-        FileProvider = new PhysicalFileProvider(item.PathFull),
-        RequestPath = new PathString($"/api/{item.PathName.Trim().ToLower()}")
-    });
-}
+//List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();
+//foreach (var item in staticFiles)
+//{
+//    app.UseStaticFiles(new StaticFileOptions()
+//    {
+//        FileProvider = new PhysicalFileProvider(item.PathFull),
+//        RequestPath = new PathString($"/api/{item.PathName.Trim().ToLower()}")
+//    });
+//}
 
 app.Run();

@@ -64,4 +64,12 @@ public partial class BillImportDetailTechnical
     public DateTime? DeadlineReturnNCC { get; set; }
 
     public DateTime? DateSomeBill { get; set; }
+
+    public decimal? COFormE { get; set; }
+
+    public decimal? TaxReduction { get; set; }
+
+    public DateTime? DueDate { get; set; }
+
+    public int? DPO { get; set; }
 }

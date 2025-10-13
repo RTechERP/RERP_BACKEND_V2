@@ -50,7 +50,7 @@ namespace RERPAPI.Model.DTO.ProjectAGV
         [JsonPropertyName("is_deleted")]
 
         //   public bool IsDeleted { get; set; }
-        public bool IsDeleted { get; set; } = false;
+        public bool? IsDeleted { get; set; } = false;
         [JsonPropertyName("user_id")]
 
         //   public bool IsDeleted { get; set; }

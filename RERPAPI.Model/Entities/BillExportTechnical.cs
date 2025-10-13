@@ -68,9 +68,6 @@ public partial class BillExportTechnical
     public int? BillDocumentExportType { get; set; }
 
     public int? ApproverID { get; set; }
-
-    /// <summary>
-    /// 0
-    /// </summary>
     public bool? IsDeleted { get; set; }
+
 }

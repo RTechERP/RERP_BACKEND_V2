@@ -20,4 +20,6 @@ public partial class InvoiceLink
     public DateTime? UpdatedDate { get; set; }
 
     public int? AccountingBillID { get; set; }
+
+    public bool IsDeleted { get; set; }
 }
