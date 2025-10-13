@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using DocumentFormat.OpenXml.Wordprocessing;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -9,6 +11,7 @@ using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
 using RERPAPI.Repo;
 using System.Text;
+using static Microsoft.IO.RecyclableMemoryStreamManager;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,6 +45,28 @@ builder.Services.AddCors(options =>
     });
 });
 
+
+
+//Config FormOption
+
+builder.Services.Configure<IISServerOptions>(options =>
+{
+    options.MaxRequestBodySize = int.MaxValue;
+});
+
+builder.Services.Configure<FormOptions>(opt =>
+{
+    // Kích thước tối đa mỗi phần form (field/file) 
+    opt.MultipartBodyLengthLimit = Int32.MaxValue;
+
+    // Nếu file < 1 MB thì vẫn buffer hết trong RAM trước khi viết ra
+    opt.MemoryBufferThreshold = 1 * 1024 * 1024;
+    // (Tuỳ chọn) nếu có rất nhiều fields, tăng số fields tối đa
+    opt.ValueCountLimit = 1000;
+
+    // (Tuỳ chọn) tăng độ dài tối đa tên key/value nếu cần
+    opt.ValueLengthLimit = 64 * 1024;
+});
 
 
 
