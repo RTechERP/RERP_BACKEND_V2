@@ -12,7 +12,7 @@ public partial class TSTypeAssetPersonal
     public string? Name { get; set; }
 
     public string? Code { get; set; }
-    public int? StandardAmount { set; get; }
+
     public DateTime? CreatedDate { get; set; }
 
     public string? CreatedBy { get; set; }
@@ -30,4 +30,6 @@ public partial class TSTypeAssetPersonal
     /// 0.Chưa xóa 1.Đã xóa
     /// </summary>
     public bool? IsDeleted { get; set; }
+
+    public int? StandardAmount { get; set; }
 }

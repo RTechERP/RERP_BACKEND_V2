@@ -98,7 +98,7 @@ new object[] { request.ProductGroupID, request.Keyword, request.CheckAll, reques
                 if (file != null)
                 {
                     // Danh sách định dạng ảnh cho phép
-                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp" };
+                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp",".png" };
                     var fileExtension = Path.GetExtension(file.FileName).ToLower();
 
                     if (!allowedExtensions.Contains(fileExtension))
@@ -109,7 +109,7 @@ new object[] { request.ProductGroupID, request.Keyword, request.CheckAll, reques
                             Message = "Chỉ được upload file ảnh (jpg, jpeg, png, gif, bmp)"
                         });
                     }
-                    string path = "";
+                    string path = "D:\\RTC_Sw\\RTC\\ProductRTC\\";
                     if (!Directory.Exists(path))
                     {
                         Directory.CreateDirectory(path);
@@ -148,28 +148,16 @@ new object[] { request.ProductGroupID, request.Keyword, request.CheckAll, reques
             }
         }
         [HttpGet("get-location")]
-        public IActionResult GetLocation(string? id)
+        public IActionResult GetLocation(int? id)
         {
             try
             {
-                var location = SQLHelper<dynamic>.ProcedureToList("spGetLocationByWarehouseID", new string[] { "@WarehouseID" }, new object[] { id });
-                return Ok(new
-                {
-                    status = 1,
-                    data = new
-                    {
-                        location = SQLHelper<dynamic>.GetListData(location, 0)
-                    }
-                });
+                var location = _productLocationRepo.GetAll(x => x.WarehouseID == id);
+                return Ok(ApiResponseFactory.Success(new {location}, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 

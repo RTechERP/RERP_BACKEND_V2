@@ -32,8 +32,6 @@ namespace RERPAPI.Controllers
             _jwtSettings = jwtSettings.Value;
             _context = context;
         }
-
-
         [HttpPost("login")]
         public IActionResult Login([FromBody] User user)
         {

@@ -17,7 +17,7 @@ namespace RERPAPI.Controllers.Asset
         {
             try
             {
-                var tsStatusAssets = _tsStatusAssetRepo.GetAll().Where(x => !x.IsDeleted).ToList();
+                var tsStatusAssets = _tsStatusAssetRepo.GetAll().Where(x => x.IsDeleted==false).ToList();
            
                 return Ok(new
                 {

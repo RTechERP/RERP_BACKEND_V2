@@ -14,7 +14,7 @@ public partial class TSAllocationAssetPersonal
     public DateTime? DateAllocation { get; set; }
 
     /// <summary>
-    /// ID của nhân viên được cấp phát lấy từ bảng Employee
+    /// ID của nhân viên được cấp phát
     /// </summary>
     public int? EmployeeID { get; set; }
 

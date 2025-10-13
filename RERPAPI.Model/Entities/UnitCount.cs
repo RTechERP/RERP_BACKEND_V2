@@ -10,5 +10,6 @@ public partial class UnitCount
     public string? UnitCode { get; set; }
 
     public string? UnitName { get; set; }
+
     public bool isDeleted { get; set; }
 }

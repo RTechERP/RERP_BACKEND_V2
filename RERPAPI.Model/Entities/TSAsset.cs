@@ -21,5 +21,6 @@ public partial class TSAsset
     public DateTime? UpdatedDate { get; set; }
 
     public string? UpdatedBy { get; set; }
-    public bool IsDeleted { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }

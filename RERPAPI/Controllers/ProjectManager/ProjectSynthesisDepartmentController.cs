@@ -20,7 +20,7 @@ namespace RERPAPI.Controllers.ProjectManager
         #endregion
         #region Load  timeline hạng mục công việc
         [HttpGet("get-data")]
-        public async Task<IActionResult> getData(DateTime dateStart, DateTime dateEnd, int departmentId, int userTeamId, int userId, int projectTypeId, string? keyword)
+        public async Task<IActionResult> GetData(DateTime dateStart, DateTime dateEnd, int departmentId, int userTeamId, int userId, int projectTypeId, string? keyword)
         {
             try
             {

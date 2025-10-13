@@ -9,16 +9,19 @@ using RERPAPI.Repo;
 using RERPAPI.Repo.GenericEntity;
 using System.Threading.Tasks;
 
-namespace RERPAPI.Controllers
+namespace RERPAPI.Controllers.Old
 {
     [Route("api/[controller]")]
     [ApiController]
+
+    //[ApiKeyAuthorize]
     public class MenuController : ControllerBase
     {
         //Response _response = new Response();
         MenuRepo _menuRepo = new MenuRepo();
 
         //[RequiresPermission("N42")]
+        //[ApiKeyAuthorize]
         [HttpGet("menus/{parentid}")]
         public IActionResult GetAll(int parentid)
         {
@@ -27,7 +30,7 @@ namespace RERPAPI.Controllers
                 Menu menu = _menuRepo.GetByID(parentid);
                 var menus = ObjectMapper.MapTo<MenuDTO>(menu);
                 menus.MenuChilds = _menuRepo.GetAll(x => x.ParentID == menu.ID);
-                return Ok(ApiResponseFactory.Success(menus,""));
+                return Ok(ApiResponseFactory.Success(menus, ""));
             }
             catch (Exception ex)
             {
@@ -35,6 +38,33 @@ namespace RERPAPI.Controllers
             }
         }
 
+
+        [HttpGet("menus/parent")]
+        public IActionResult GetAllParent()
+        {
+            try
+            {
+                var menuparents = _menuRepo.GetAll(x => x.ParentID == 0).ToList();
+                //return Ok(new
+                //{
+                //    status = 1,
+                //    data = menuparents
+                //});
+                return Ok(ApiResponseFactory.Success(menuparents, ""));
+
+            }
+            catch (Exception ex)
+            {
+                //return BadRequest(new
+                //{
+                //    status = 0,
+                //    mesage = ex.Message,
+                //    error = ex.ToString()
+                //});
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+
+            }
+        }
 
         [HttpPost("savedata")]
         public async Task<IActionResult> SaveData([FromBody] Menu menu)
@@ -48,7 +78,7 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex,ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
