@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 
-namespace RERPAPI.Controllers.GeneralCategory
+namespace RERPAPI.Controllers.GeneralCategory.TrainingRegistration
 {
     [Route("api/[controller]")]
     [ApiController]

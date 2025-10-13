@@ -5,7 +5,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 
-namespace RERPAPI.Controllers.GeneralCategory
+namespace RERPAPI.Controllers.GeneralCategory.TrainingRegistration
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -16,9 +16,8 @@ namespace RERPAPI.Controllers.GeneralCategory
         private TrainingRegistrationApprovedFlowRepo _trainingRegistrationApprovedFlowRepo = new TrainingRegistrationApprovedFlowRepo();
         private TrainingRegistrationFileRepo _trainingRegistrationFileRepo = new TrainingRegistrationFileRepo();
         private TrainingRegistrationDetailRepo _trainingRegistrationDetailRepo = new TrainingRegistrationDetailRepo();
+        TrainingRegistrationCategoryRepo _trainingRegistrationCategoryRepo = new TrainingRegistrationCategoryRepo();
         private EmployeeRepo _employeeRepo = new EmployeeRepo();
-        private EmployeeApprovedRepo _employeeApprovedRepo = new EmployeeApprovedRepo();
-        private UserTeamRepo _userTeamRepo = new UserTeamRepo();
 
         [HttpPost]
         public IActionResult GetAll(TrainingRegistrationParam param)
@@ -53,12 +52,16 @@ namespace RERPAPI.Controllers.GeneralCategory
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser _currentUser = ObjectMapper.GetCurrentUser(claims);
+
                 bool success = false;
-                TrainingRegistrationCategoryRepo _trainingRegistrationCategoryRepo = new TrainingRegistrationCategoryRepo();
+
 
                 // Save Training registration data
                 if (model.ID <= 0)
                 {
+                    model.Code = _trainingRegistrationRepo.GetNewCode(model);
                     if (await _trainingRegistrationRepo.CreateAsync(model) > 0)
                         success = true;
 
@@ -77,10 +80,14 @@ namespace RERPAPI.Controllers.GeneralCategory
                     {
                         int employeeApprovedId = 0;
                         int statusApproved = 0;
+
+                        DateTime? dateApproved = null;
+                        
                         if (flow.STT == 1)
                         {
                             employeeApprovedId = model.EmployeeID ?? 0;
                             statusApproved = employeeApprovedId == 0 ? 0 : 1;
+                            dateApproved = DateTime.Now;
                         }
 
                         approvedList.Add(new TrainingRegistrationApproved
@@ -89,9 +96,17 @@ namespace RERPAPI.Controllers.GeneralCategory
                             TrainingRegistrationApprovedFlowID = flow.ID,
                             StatusApproved = statusApproved,
                             EmployeeApprovedID = employeeApprovedId,
-                            EmployeeApprovedActualID = employeeApprovedId
+                            EmployeeApprovedActualID = employeeApprovedId,
+                            DateApproved = dateApproved,
+                            CreatedBy = _currentUser.LoginName,
+                            UpdatedBy = _currentUser.LoginName
+
                         });
                     }
+
+
+
+                    
 
                     await _trainingRegistrationApprovedRepo.CreateRangeAsync(approvedList);
                     success = true;
@@ -170,64 +185,5 @@ namespace RERPAPI.Controllers.GeneralCategory
             }
         }
 
-        [HttpPost("upload")]
-        public IActionResult Upload(IFormFile file)
-        {
-            try
-            {
-                int statusCode = 0;
-                string fileName = "";
-                string message = "Upload file thất bại!";
-
-                if (file != null)
-                {
-                    string path = Config.Path() + @"\TrainingRegistration\";
-                    if (!Directory.Exists(path))
-                    {
-                        Directory.CreateDirectory(path);
-                    }
-
-                    //string name = System.IO.Path.GetFileNameWithoutExtension(path + file.FileName);
-                    //string extention = System.IO.Path.GetExtension(path + file.FileName);
-                    //string filePath = path + fileName +  "_" + DateTime.Now.ToString("ddMMyyHHmm") + extention;
-                    //string sourceFileName = System.IO.Path.GetFullPath(file.FileName);
-                    //System.IO.File.Move(sourceFileName, path + file.FileName);
-
-                    using (FileStream fileStream = System.IO.File.Create(path + file.FileName))
-                    {
-                        file.CopyTo(fileStream);
-                        fileStream.Flush();
-
-                        statusCode = 1;
-                        fileName = file.FileName;
-                        message = "Upload File thành công!";
-                    }
-
-                    //statusCode = 1;
-                    //fileName = file.FileName;
-                    //message = "Upload File thành công!";
-                }
-                else
-                {
-                    statusCode = 0;
-                    message = "Not Upload File!";
-                }
-
-                return Ok(new
-                {
-                    status = statusCode,
-                    FileName = fileName,
-                    Message = message
-                });
-            }
-            catch (Exception ex)
-            {
-                return Ok(new
-                {
-                    status = 0,
-                    Message = $"Upload file thất bại! ({ex.Message})"
-                });
-            }
-        }
     }
 }

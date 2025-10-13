@@ -2,7 +2,7 @@
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
-namespace RERPAPI.Controllers.GeneralCategory
+namespace RERPAPI.Controllers.GeneralCategory.TrainingRegistration
 {
     [Route("api/[controller]")]
     [ApiController]
