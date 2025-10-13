@@ -16,6 +16,7 @@ namespace RERPAPI.Controllers.GeneralCategory
         private TrainingRegistrationApprovedFlowRepo _trainingRegistrationApprovedFlowRepo = new TrainingRegistrationApprovedFlowRepo();
         private TrainingRegistrationFileRepo _trainingRegistrationFileRepo = new TrainingRegistrationFileRepo();
         private TrainingRegistrationDetailRepo _trainingRegistrationDetailRepo = new TrainingRegistrationDetailRepo();
+        TrainingRegistrationCategoryRepo _trainingRegistrationCategoryRepo = new TrainingRegistrationCategoryRepo();
         private EmployeeRepo _employeeRepo = new EmployeeRepo();
 
         [HttpPost]
@@ -52,11 +53,12 @@ namespace RERPAPI.Controllers.GeneralCategory
             try
             {
                 bool success = false;
-                TrainingRegistrationCategoryRepo _trainingRegistrationCategoryRepo = new TrainingRegistrationCategoryRepo();
+
 
                 // Save Training registration data
                 if (model.ID <= 0)
                 {
+                    model.Code = _trainingRegistrationRepo.GetNewCode(model);
                     if (await _trainingRegistrationRepo.CreateAsync(model) > 0)
                         success = true;
 

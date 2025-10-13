@@ -50,7 +50,7 @@ namespace RERPAPI.Controllers.GeneralCategory
                 }
                 int flowID = (model.TrainingRegistrationApprovedFlowID ?? 0) - 1;
                 TrainingRegistrationApproved current = _trainingRegistrationApprovedRepo.GetAll(x => x.TrainingRegistrationID == model.TrainingRegistrationID &&
-                                                                            (x.IsDeleted == false || x.IsDeleted == null) &&
+                                                                            x.IsDeleted == false &&
                                                                             x.TrainingRegistrationApprovedFlowID == model.TrainingRegistrationApprovedFlowID).FirstOrDefault();
                 if (model.StatusApproved == 1)
                 {
@@ -88,7 +88,9 @@ namespace RERPAPI.Controllers.GeneralCategory
                 }
                 //current.EmployeeApprovedID = model.EmployeeApprovedID;
                 current.EmployeeApprovedActualID = model.EmployeeApprovedActualID;
-                current.DateApproved = model.DateApproved;
+                //current.DateApproved = model.DateApproved;
+                current.DateApproved = DateTime.Now;
+
                 current.StatusApproved = model.StatusApproved;
                 current.UnapprovedReason = model.UnapprovedReason;
                 current.Note = model.Note;
