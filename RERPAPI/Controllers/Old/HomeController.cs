@@ -1,6 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -13,7 +11,6 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
 using System.IdentityModel.Tokens.Jwt;
-using System.Reflection;
 using System.Security.Claims;
 using System.Text;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
@@ -32,6 +29,7 @@ namespace RERPAPI.Controllers.Old
 
         EmployeeOnLeaveRepo _onLeaveRepo = new EmployeeOnLeaveRepo();
         EmployeeWFHRepo _wfhRepo = new EmployeeWFHRepo();
+        ConfigSystemRepo _configSystemRepo = new ConfigSystemRepo();
 
         public HomeController(IOptions<JwtSettings> jwtSettings, RTCContext context)
         {
@@ -150,6 +148,150 @@ namespace RERPAPI.Controllers.Old
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        /// <summary>
+        /// Upload file chung cho hệ thống
+        /// </summary>
+        [HttpPost("upload")]
+        [Authorize]
+        //[ApiKeyAuthorize]
+        public async Task<IActionResult> UploadFile()
+        {
+            try
+            {
+                var form = await Request.ReadFormAsync();
+                var key = form["key"].ToString();
+                var file = form.Files.FirstOrDefault();
+
+                // Kiểm tra input
+                if (string.IsNullOrWhiteSpace(key))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Key không được để trống!"));
+                }
+
+                if (file == null || file.Length == 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "File không được để trống!"));
+                }
+
+                // Lấy đường dẫn từ ConfigSystem
+                var uploadPath = _configSystemRepo.GetUploadPathByKey(key);
+                if (string.IsNullOrWhiteSpace(uploadPath))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: {key}"));
+                }
+
+                // Tạo thư mục nếu chưa tồn tại
+                if (!Directory.Exists(uploadPath))
+                {
+                    Directory.CreateDirectory(uploadPath);
+                }
+
+                // Tạo tên file unique để tránh trùng lặp
+                var fileExtension = Path.GetExtension(file.FileName);
+                var originalFileName = Path.GetFileNameWithoutExtension(file.FileName);
+                var uniqueFileName = $"{originalFileName}_{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid().ToString("N")[..8]}{fileExtension}";
+                var fullPath = Path.Combine(uploadPath, uniqueFileName);
+
+                // Lưu file
+                using (var stream = new FileStream(fullPath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                // Trả về thông tin file đã upload
+                var result = new
+                {
+                    OriginalFileName = file.FileName,
+                    SavedFileName = uniqueFileName,
+                    FilePath = fullPath,
+                    FileSize = file.Length,
+                    ContentType = file.ContentType,
+                    UploadTime = DateTime.Now
+                };
+
+                return Ok(ApiResponseFactory.Success(result, "Upload file thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi upload file: {ex.Message}"));
+            }
+        }
+
+        /// <summary>
+        /// Upload nhiều file cùng lúc
+        /// </summary>
+        [HttpPost("upload-multiple")]
+        [Authorize]
+        //[ApiKeyAuthorize]
+        public async Task<IActionResult> UploadMultipleFiles()
+        {
+            try
+            {
+                var form = await Request.ReadFormAsync();
+                var key = form["key"].ToString();
+                var files = form.Files;
+
+                // Kiểm tra input
+                if (string.IsNullOrWhiteSpace(key))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Key không được để trống!"));
+                }
+
+                if (files == null || files.Count == 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Danh sách file không được để trống!"));
+                }
+
+                // Lấy đường dẫn từ ConfigSystem
+                var uploadPath = _configSystemRepo.GetUploadPathByKey(key);
+                if (string.IsNullOrWhiteSpace(uploadPath))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: {key}"));
+                }
+
+                // Tạo thư mục nếu chưa tồn tại
+                if (!Directory.Exists(uploadPath))
+                {
+                    Directory.CreateDirectory(uploadPath);
+                }
+
+                var uploadResults = new List<object>();
+
+                foreach (var file in files)
+                {
+                    if (file.Length > 0)
+                    {
+                        // Tạo tên file unique
+                        var fileExtension = Path.GetExtension(file.FileName);
+                        var originalFileName = Path.GetFileNameWithoutExtension(file.FileName);
+                        var uniqueFileName = $"{originalFileName}_{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid().ToString("N")[..8]}{fileExtension}";
+                        var fullPath = Path.Combine(uploadPath, uniqueFileName);
+
+                        // Lưu file
+                        using (var stream = new FileStream(fullPath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
+
+                        uploadResults.Add(new
+                        {
+                            OriginalFileName = file.FileName,
+                            SavedFileName = uniqueFileName,
+                            FilePath = fullPath,
+                            FileSize = file.Length,
+                            ContentType = file.ContentType,
+                            UploadTime = DateTime.Now
+                        });
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(uploadResults, $"Upload thành công {uploadResults.Count} file!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi upload file: {ex.Message}"));
             }
         }
 

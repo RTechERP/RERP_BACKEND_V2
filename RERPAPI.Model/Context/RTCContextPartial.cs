@@ -76,7 +76,7 @@ namespace RERPAPI.Model.Context
 
                 if (item.State == EntityState.Added) //Thêm mới
                 {
-                    if (createdBy != null && createdBy.CanWrite) createdBy.SetValue(item.Entity, Convert.ToString(updatedBy.GetValue(item.Entity)) ?? loginName);
+                    if (createdBy != null && createdBy.CanWrite) createdBy.SetValue(item.Entity, Convert.ToString(createdBy.GetValue(item.Entity)) ?? loginName);
                     if (createdDate != null && createdDate.CanWrite) createdDate.SetValue(item.Entity, DateTime.Now);
                     if (updatedBy != null && updatedBy.CanWrite && updatedBy.GetValue(item.Entity) != null) updatedBy.SetValue(item.Entity, Convert.ToString(updatedBy.GetValue(item.Entity)) ?? loginName);
                     if (name != null && name.CanWrite) name.SetValue(item.Entity, loginName);
