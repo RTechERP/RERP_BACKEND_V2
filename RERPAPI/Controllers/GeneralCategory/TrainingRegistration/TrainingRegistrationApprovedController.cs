@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
-namespace RERPAPI.Controllers.GeneralCategory
+namespace RERPAPI.Controllers.GeneralCategory.TrainingRegistration
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -44,6 +45,9 @@ namespace RERPAPI.Controllers.GeneralCategory
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser _currentUser = ObjectMapper.GetCurrentUser(claims);
+
                 if (model == null || model.TrainingRegistrationID <= 0 || model.TrainingRegistrationApprovedFlowID <= 0)
                 {
                     return BadRequest(new { status = 0, message = "dữ liệu không hợp lệ" });
@@ -51,12 +55,12 @@ namespace RERPAPI.Controllers.GeneralCategory
                 int flowID = (model.TrainingRegistrationApprovedFlowID ?? 0) - 1;
                 TrainingRegistrationApproved current = _trainingRegistrationApprovedRepo.GetAll(x => x.TrainingRegistrationID == model.TrainingRegistrationID &&
                                                                             (x.IsDeleted == false || x.IsDeleted == null) &&
-                                                                            x.TrainingRegistrationApprovedFlowID == model.TrainingRegistrationApprovedFlowID).FirstOrDefault();
+                                                                            x.TrainingRegistrationApprovedFlowID == model.TrainingRegistrationApprovedFlowID).FirstOrDefault() ?? new TrainingRegistrationApproved();
                 if (model.StatusApproved == 1)
                 {
                     TrainingRegistrationApproved previosApproved = _trainingRegistrationApprovedRepo.GetAll(x => x.TrainingRegistrationID == model.TrainingRegistrationID &&
                                                                             (x.IsDeleted == false || x.IsDeleted == null) &&
-                                                                            x.TrainingRegistrationApprovedFlowID == flowID).FirstOrDefault();
+                                                                            x.TrainingRegistrationApprovedFlowID == flowID).FirstOrDefault() ?? new TrainingRegistrationApproved();
                     if (current.StatusApproved == 1)
                     {
                         return BadRequest(new { status = 0, message = "Phiếu đăng ký đã duyệt trước đó rồi!" });
@@ -88,11 +92,12 @@ namespace RERPAPI.Controllers.GeneralCategory
                 }
                 //current.EmployeeApprovedID = model.EmployeeApprovedID;
                 current.EmployeeApprovedActualID = model.EmployeeApprovedActualID;
-                current.DateApproved = model.DateApproved;
+                current.DateApproved = DateTime.Now;
                 current.StatusApproved = model.StatusApproved;
                 current.UnapprovedReason = model.UnapprovedReason;
                 current.Note = model.Note;
-                _trainingRegistrationApprovedRepo.Update(current);
+                current.UpdatedBy = _currentUser.LoginName;
+                await _trainingRegistrationApprovedRepo.UpdateAsync(current);
                 return Ok(new { status = 1, data = current });
             }
             catch (Exception ex)

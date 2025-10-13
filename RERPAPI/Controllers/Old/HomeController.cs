@@ -11,10 +11,12 @@ using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.HRM;
 using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -27,6 +29,9 @@ namespace RERPAPI.Controllers.Old
 
         //UserRepo _userRepo = new UserRepo();
         vUserGroupLinksRepo _vUserGroupLinksRepo = new vUserGroupLinksRepo();
+
+        EmployeeOnLeaveRepo _onLeaveRepo = new EmployeeOnLeaveRepo();
+        EmployeeWFHRepo _wfhRepo = new EmployeeWFHRepo();
 
         public HomeController(IOptions<JwtSettings> jwtSettings, RTCContext context)
         {
@@ -148,12 +153,88 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
+        [HttpGet("employee-onleave-and-wfh")]
+        public IActionResult GetEmployeeOnleaveAndWFHByDate()
+        {
+            try
+            {
+                //var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                //CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                DateTime dateStart = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 0, 0, 0).AddSeconds(-1);
+                DateTime dateEnd = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 23, 59, 59).AddSeconds(+1);
+
+                //dateStart = new DateTime(2025, 10, 08, 0, 0, 0).AddSeconds(-1);
+                //dateEnd = new DateTime(2025, 10, 08, 23, 59, 59).AddSeconds(+1);
+
+                string keyword = "";
+                int employeeID = 0;
+                int isApproved = -1;
+                int type = 0;
+
+                var dataOnleaves = SQLHelper<object>.ProcedureToList("spGetEmployeeOnLeaveInWeb",
+                                                            new string[] { "@DateStart", "@DateEnd", "@Keyword", "@EmployeeID", "@IsApproved", "@Type" },
+                                                            new object[] { dateStart, dateEnd, keyword, employeeID, isApproved, type });
+
+                var dataWfhs = SQLHelper<object>.ProcedureToList("spGetEmployeeWFHInWeb",
+                                                            new string[] { "@DateStart", "@DateEnd", "@EmployeeID", "@IsApproved", "@TimeWFH", "@Keyword" },
+                                                            new object[] { dateStart, dateEnd, employeeID, isApproved, type, keyword });
+
+                var data = new
+                {
+                    employeeOnleaves = SQLHelper<object>.GetListData(dataOnleaves, 0)
+                                            .GroupBy(x => new
+                                            {
+                                                DepartmentID = (int)x.DepartmentID,
+                                                DepartmentName = (string)x.DepartmentName,
+                                                DepartmentSTT = (int)x.DepartmentSTT
+                                            })
+                                            .OrderBy(g => g.Key.DepartmentSTT)
+                                            .Select(g => new
+                                            {
+                                                DepartmentName = g.Key.DepartmentName,
+                                                Employees = g.Select(item => new
+                                                {
+                                                    EmployeeLeave = item.EmployeeLeave,
+                                                    TimeOnLeaveText = item.TimeOnLeave == 1 ? " (S)" : (item.TimeOnLeave == 2 ? " (C)" : "")
+                                                }).ToList()
+                                            }).ToList(),
+
+                    employeeWfhs = SQLHelper<object>.GetListData(dataWfhs, 0)
+                                        .GroupBy(x => new
+                                        {
+                                            DepartmentID = (int)x.DepartmentID,
+                                            DepartmentName = (string)x.DepartmentName,
+                                            DepartmentSTT = (int)x.DepartmentSTT
+                                        })
+                                        .OrderBy(g => g.Key.DepartmentSTT)
+                                        .Select(g => new
+                                        {
+                                            DepartmentName = g.Key.DepartmentName,
+                                            Employees = g.Select(item => new
+                                            {
+                                                EmployeeName = item.EmployeeName,
+                                                TimeWFHText = item.TimeWFH == 1 ? " (S)" : (item.TimeWFH == 2 ? " (C)" : ""),
+                                                IsApprovedBGDText = (bool)item.IsApprovedBGD == true ? "" : " - BGĐ chưa duyệt",
+                                            }).ToList()
+                                        }).ToList(),
+                };
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+
+        }
+
         //[HttpGet("download")]
         //public IActionResult DownloadFile([FromQuery] string controllerName, [FromQuery] string subPath) {
 
         //        return BadRequest(new { status = 0, message = ex.Message, error = ex.ToString()
-    
-            
+
+
         //}
 
         //[HttpGet("download-folder")]

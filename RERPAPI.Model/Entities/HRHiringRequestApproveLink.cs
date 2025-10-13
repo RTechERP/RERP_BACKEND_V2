@@ -13,7 +13,10 @@ public partial class HRHiringRequestApproveLink
 
     public int ApproveID { get; set; }
 
-    public bool IsApprove { get; set; }
+    /// <summary>
+    /// 0: chờ duyệt; 1: Đã duyệt; 2: Hủy duyệt
+    /// </summary>
+    public int IsApprove { get; set; }
 
     public DateTime? DateApprove { get; set; }
 

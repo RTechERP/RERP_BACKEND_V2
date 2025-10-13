@@ -878,6 +878,18 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<TradePriceDetail> TradePriceDetails { get; set; }
 
+    public virtual DbSet<TrainingRegistration> TrainingRegistrations { get; set; }
+
+    public virtual DbSet<TrainingRegistrationApproved> TrainingRegistrationApproveds { get; set; }
+
+    public virtual DbSet<TrainingRegistrationApprovedFlow> TrainingRegistrationApprovedFlows { get; set; }
+
+    public virtual DbSet<TrainingRegistrationCategory> TrainingRegistrationCategories { get; set; }
+
+    public virtual DbSet<TrainingRegistrationDetail> TrainingRegistrationDetails { get; set; }
+
+    public virtual DbSet<TrainingRegistrationFile> TrainingRegistrationFiles { get; set; }
+
     public virtual DbSet<UnitCount> UnitCounts { get; set; }
 
     public virtual DbSet<UnitCountKT> UnitCountKTs { get; set; }
@@ -3962,6 +3974,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.DateApprove).HasColumnType("datetime");
+            entity.Property(e => e.IsApprove).HasComment("0: chờ duyệt; 1: Đã duyệt; 2: Hủy duyệt");
             entity.Property(e => e.ReasonUnApprove).HasMaxLength(500);
             entity.Property(e => e.StepName).HasMaxLength(100);
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
@@ -4729,7 +4742,9 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.PositionCode).HasMaxLength(250);
             entity.Property(e => e.PositionName).HasMaxLength(250);
-            entity.Property(e => e.TypePosition).HasDefaultValue(1);
+            entity.Property(e => e.TypePosition)
+                .HasDefaultValue(1)
+                .HasComment("1: Kỹ thuật, Pro; 2: Admin; 3: Senior; 4: Phó phòng");
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
@@ -5161,6 +5176,7 @@ public partial class RTCContext : DbContext
                 .HasComment("mã hóa đơn");
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.DeliveryStatus).HasComment("tình trạng tiến độ giao hàng: 1 Chưa giao, 2 : Giao 1 phần, 3: Đã giao");
+            entity.Property(e => e.Discount).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.EndDate)
                 .HasComment("ngày kết thúc giao hàng")
                 .HasColumnType("datetime");
@@ -5183,6 +5199,7 @@ public partial class RTCContext : DbContext
                 .HasComment("ngày bắt đầu")
                 .HasColumnType("datetime");
             entity.Property(e => e.Status).HasComment("0:Chưa giao , chưa thanh toán - 1:Đã giao, đã thanh toán -  2: Chưa giao,đã thanh toán - 3: Đã giao, nhưng thanh toán - 4:Đã thanh toán, GH chưa xuất hóa đơn");
+            entity.Property(e => e.TotalMoneyDiscount).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.TotalMoneyKoVAT).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.TotalMoneyPO)
                 .HasComment("tổng tiền nhận PO")
@@ -8996,6 +9013,99 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UnitPriceExpectCustomer).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.UnitPriceIncludeFees).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.UnitPricePerCOM).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<TrainingRegistration>(entity =>
+        {
+            entity.ToTable("TrainingRegistration");
+
+            entity.Property(e => e.CompletionAssessment)
+                .HasMaxLength(550)
+                .HasComment("Đánh giá mức độ hoàn thành");
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.DateEnd).HasColumnType("datetime");
+            entity.Property(e => e.DateRegister).HasColumnType("datetime");
+            entity.Property(e => e.DateStart).HasColumnType("datetime");
+            entity.Property(e => e.EmployeeID).HasComment("Người đăng ký lấy từ bảng Employee");
+            entity.Property(e => e.IsCertification).HasComment("1: Có cấp chứng chỉ; 0: Không cấp");
+            entity.Property(e => e.Purpose).HasMaxLength(550);
+            entity.Property(e => e.SessionDuration).HasComment("Thời lượng 1 buổi (Phút)");
+            entity.Property(e => e.SessionsPerCourse).HasComment("Số buổi/khóa");
+            entity.Property(e => e.TrainingType).HasComment("1: Đào tạo nội bộ; 2: Đào tạo ngoài");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<TrainingRegistrationApproved>(entity =>
+        {
+            entity.ToTable("TrainingRegistrationApproved");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.DateApproved).HasColumnType("datetime");
+            entity.Property(e => e.EmployeeApprovedActualID).HasComment("Người duyệt thực tế");
+            entity.Property(e => e.EmployeeApprovedID).HasComment("Người duyệt mặc định");
+            entity.Property(e => e.Note).HasMaxLength(550);
+            entity.Property(e => e.StatusApproved).HasComment("Trạng thái: 1: Đã duyệt; 2 Hủy duyệt...");
+            entity.Property(e => e.UnapprovedReason).HasMaxLength(550);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<TrainingRegistrationApprovedFlow>(entity =>
+        {
+            entity.ToTable("TrainingRegistrationApprovedFlow");
+
+            entity.Property(e => e.Code)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.Name).HasMaxLength(520);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<TrainingRegistrationCategory>(entity =>
+        {
+            entity.ToTable("TrainingRegistrationCategory");
+
+            entity.Property(e => e.Code)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.Name).HasMaxLength(250);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<TrainingRegistrationDetail>(entity =>
+        {
+            entity.ToTable("TrainingRegistrationDetail");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.DescriptionDetail).HasMaxLength(550);
+            entity.Property(e => e.Note).HasMaxLength(550);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<TrainingRegistrationFile>(entity =>
+        {
+            entity.ToTable("TrainingRegistrationFile");
+
+            entity.Property(e => e.ID).ValueGeneratedNever();
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.FileName).HasMaxLength(550);
+            entity.Property(e => e.OriginName).HasMaxLength(550);
+            entity.Property(e => e.OriginPath).HasMaxLength(550);
+            entity.Property(e => e.ServerPath).HasMaxLength(550);
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });

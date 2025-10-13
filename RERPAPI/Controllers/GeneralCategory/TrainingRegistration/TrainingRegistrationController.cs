@@ -5,7 +5,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 
-namespace RERPAPI.Controllers.GeneralCategory
+namespace RERPAPI.Controllers.GeneralCategory.TrainingRegistration
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -53,6 +53,9 @@ namespace RERPAPI.Controllers.GeneralCategory
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser _currentUser = ObjectMapper.GetCurrentUser(claims);
+
                 bool success = false;
                 TrainingRegistrationCategoryRepo _trainingRegistrationCategoryRepo = new TrainingRegistrationCategoryRepo();
 
@@ -89,7 +92,10 @@ namespace RERPAPI.Controllers.GeneralCategory
                             TrainingRegistrationApprovedFlowID = flow.ID,
                             StatusApproved = statusApproved,
                             EmployeeApprovedID = employeeApprovedId,
-                            EmployeeApprovedActualID = employeeApprovedId
+                            EmployeeApprovedActualID = employeeApprovedId,
+                            CreatedBy = _currentUser.LoginName,
+                            UpdatedBy = _currentUser.LoginName
+
                         });
                     }
 
