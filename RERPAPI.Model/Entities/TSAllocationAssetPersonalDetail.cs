@@ -33,4 +33,6 @@ public partial class TSAllocationAssetPersonalDetail
     /// 0.Chưa xóa 1.Đã xóa
     /// </summary>
     public bool? IsDeleted { get; set; }
+
+    public int? QuantityAllocation { get; set; }
 }

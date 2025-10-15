@@ -4,11 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using RERPAPI.Model.Entities;
 
-namespace RERPAPI.Repo.GenericEntity
+namespace RERPAPI.Model.DTO
 {
-    public class WarehouseRepo: GenericRepo<Warehouse>
+    public class EmployeeDTO:Employee
     {
+        public string DepartmentName { get; set; }
+        public string ChucVu { get; set; }
     }
 }
+    

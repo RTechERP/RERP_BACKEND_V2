@@ -1,22 +1,15 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System;
+using System.Collections.Generic;
 
-namespace RERPAPI.Model.Entities
+namespace RERPAPI.Model.Entities;
+
+public partial class Product
 {
-   
-    public class Product
-    {
-        [Key]
-        public int Id { get; set; }
+    public int Id { get; set; }
 
-        [Required]
-        [MaxLength(100)]
-        public string? Name { get; set; }
+    public string Name { get; set; } = null!;
 
-        [Range(0, double.MaxValue)]
-        public decimal? Price { get; set; }
+    public decimal Price { get; set; }
 
-    
-        public int? CategoryId { get; set; }
-    }
+    public int CategoryId { get; set; }
 }

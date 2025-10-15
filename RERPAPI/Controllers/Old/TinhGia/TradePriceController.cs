@@ -190,7 +190,7 @@ namespace RERPAPI.Controllers.Old.TinhGia
             try
             {
                 TradePrice tradePrice = _tradePriceRepo.GetByID(id);
-                Project project = _projectRepo.GetByID(tradePrice.ProjectID ?? 0);
+                Model.Entities.Project project = _projectRepo.GetByID(tradePrice.ProjectID ?? 0);
                 Customer customer = _customerRepo.GetByID(tradePrice.CustomerID ?? 0);
              
                 List<List<dynamic>> data = SQLHelper<dynamic>.ProcedureToList("spGetTradePriceDetail", 

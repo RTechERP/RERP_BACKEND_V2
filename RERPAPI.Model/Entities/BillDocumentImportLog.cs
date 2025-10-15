@@ -22,6 +22,4 @@ public partial class BillDocumentImportLog
     public string? UpdatedBy { get; set; }
 
     public string? Note { get; set; }
-
-    public int? DocumentImportID { get; set; }
 }

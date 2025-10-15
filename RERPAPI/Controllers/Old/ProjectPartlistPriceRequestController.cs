@@ -98,7 +98,7 @@ namespace RERPAPI.Controllers.Old
         [HttpGet("get-all-projects")]
         public async Task<IActionResult> GetAllProjects()
         {
-            List<Project> lstProjects = projectRepo.GetAll();
+            List<Model.Entities.Project> lstProjects = projectRepo.GetAll();
             return Ok(new { status = 1, data = lstProjects });
         }
         [HttpGet("get-all-employee")]

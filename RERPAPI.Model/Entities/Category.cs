@@ -1,18 +1,13 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System;
+using System.Collections.Generic;
 
-namespace RERPAPI.Model.Entities
+namespace RERPAPI.Model.Entities;
+
+public partial class Category
 {
-    public class Category
-    {
-        [Key]
-        public int Id { get; set; }
+    public int Id { get; set; }
 
-        [Required]
-        [MaxLength(100)]
-        public string? Name { get; set; }
-        public bool? IsDeleted { get; set; }
+    public string Name { get; set; } = null!;
 
-    }
+    public bool? IsDeleted { get; set; }
 }

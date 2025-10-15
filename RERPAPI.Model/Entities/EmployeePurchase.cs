@@ -22,6 +22,4 @@ public partial class EmployeePurchase
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
-
-    public string? FullName { get; set; }
 }

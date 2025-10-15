@@ -113,7 +113,7 @@ namespace RERPAPI.Controllers.Old.TB
                 if (file != null)
                 {
                     // Danh sách định dạng ảnh cho phép
-                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp" };
+                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp",".png" };
                     var fileExtension = Path.GetExtension(file.FileName).ToLower();
 
                     if (!allowedExtensions.Contains(fileExtension))
@@ -125,7 +125,7 @@ namespace RERPAPI.Controllers.Old.TB
                         //});
                         return Ok(ApiResponseFactory.Fail(null, "Chỉ được upload file ảnh (jpg, jpeg, png, gif, bmp)"));
                     }
-                    string path = "";
+                    string path = "D:\\RTC_Sw\\RTC\\ProductRTC\\";
                     if (!Directory.Exists(path))
                     {
                         Directory.CreateDirectory(path);
