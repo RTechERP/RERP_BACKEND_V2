@@ -970,7 +970,25 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [RequiresPermission("N56")]
+        [HttpPost("approved-tbp-hr")]
+        public async Task<IActionResult> ApprovedTBPHR([FromBody] List<HRHiringRequestApproveLink> approveds)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
 
+                var result = await _hiringRequestApproveLinkRepo.Approved(approveds, currentUser);
+                if (result.status == 1) return Ok(result);
+                else return BadRequest(result);
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [RequiresPermission("N58")]
         [HttpPost("approved-bgd")]
         public async Task<IActionResult> ApprovedBGD([FromBody] List<HRHiringRequestApproveLink> approveds)
