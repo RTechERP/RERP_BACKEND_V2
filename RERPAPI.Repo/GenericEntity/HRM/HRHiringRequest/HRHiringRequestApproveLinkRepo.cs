@@ -42,13 +42,24 @@ namespace RERPAPI.Repo.GenericEntity
                             CreatedBy = currentUser.LoginName,
                             UpdatedBy = currentUser.LoginName
                         },
-                        new HRHiringRequestApproveLink()
+                              new HRHiringRequestApproveLink()
                         {
                             STT = 3,
                             HRHiringRequestID = hrHiring.ID,
                             ApproveID = 0,
                             IsApprove = 0,
                             Step = 3,
+                            StepName = "TBP HR xác nhận",
+                            CreatedBy = currentUser.LoginName,
+                            UpdatedBy = currentUser.LoginName
+                        },
+                        new HRHiringRequestApproveLink()
+                        {
+                            STT = 4,
+                            HRHiringRequestID = hrHiring.ID,
+                            ApproveID = 0,
+                            IsApprove = 0,
+                            Step = 4,
                             StepName = "BGĐ xác nhận",
                             CreatedBy = currentUser.LoginName,
                             UpdatedBy = currentUser.LoginName

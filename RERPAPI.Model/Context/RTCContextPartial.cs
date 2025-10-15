@@ -124,7 +124,7 @@ namespace RERPAPI.Model.Context
             }
 
 
-            ActivityLogs.AddRange(logs);
+          //  ActivityLogs.AddRange(logs);
         }
 
         private string GetDetails(EntityEntry entry)

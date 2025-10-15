@@ -837,30 +837,80 @@ namespace RERPAPI.Controllers
         }
 
         // API lấy trạng thái duyệt
+        //[HttpGet("get-approval-status/{hiringRequestId}")]
+        //public IActionResult GetApprovalStatus(int hiringRequestId)
+        //                    {
+        //    try
+        //    {
+        //        var approvals = _hiringRequestApproveLinkRepo.GetAll()
+        //            .Where(x => x.HRHiringRequestID == hiringRequestId && x.IsDeleted != true)
+        //            .OrderBy(x => x.Step)
+        //            .Select(x => new
+        //            {
+        //                x.Step,
+        //                x.StepName,
+        //                x.IsApprove,
+        //                x.DateApprove,
+        //                x.ReasonUnApprove,
+        //                x.Note,
+        //                x.CreatedBy,
+        //                x.CreatedDate
+        //            })
+        //            .ToList();
+
+        //        var currentStep = GetCurrentApprovalStep(_hiringRequestApproveLinkRepo.GetAll()
+        //            .Where(x => x.HRHiringRequestID == hiringRequestId && x.IsDeleted != true)
+        //            .ToList());
+
+        //        return Ok(ApiResponseFactory.Success(new
+        //        {
+        //            approvals,
+        //            currentStep,
+        //            canApproveTBP = currentStep == 0,
+        //            canApproveHCNS = currentStep == 1,
+        //            canApproveBGD = currentStep == 2,
+        //            canCancelTBP = currentStep >= 1,
+        //            canCancelHCNS = currentStep >= 2,
+        //            canCancelBGD = currentStep == 3
+        //        }, "Lấy trạng thái duyệt thành công"));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
         [HttpGet("get-approval-status/{hiringRequestId}")]
         public IActionResult GetApprovalStatus(int hiringRequestId)
         {
             try
             {
-                var approvals = _hiringRequestApproveLinkRepo.GetAll()
-                    .Where(x => x.HRHiringRequestID == hiringRequestId && x.IsDeleted != true)
-                    .OrderBy(x => x.Step)
-                    .Select(x => new
+                // left join Employee theo ApproveID -> lấy FullName người duyệt
+                var approvals = (
+                    from a in _hiringRequestApproveLinkRepo.GetAll()
+                    where a.HRHiringRequestID == hiringRequestId && a.IsDeleted != true
+                    orderby a.Step
+                    join e in _employeeRepo.GetAll() on a.ApproveID equals e.ID into ae
+                    from e in ae.DefaultIfEmpty() // left join
+                    select new
                     {
-                        x.Step,
-                        x.StepName,
-                        x.IsApprove,
-                        x.DateApprove,
-                        x.ReasonUnApprove,
-                        x.Note,
-                        x.CreatedBy,
-                        x.CreatedDate
-                    })
-                    .ToList();
+                        a.ApproveID,
+                        ApproverFullName = e != null ? e.FullName : null,
+                        a.Step,
+                        a.StepName,
+                        a.IsApprove,
+                        a.DateApprove,
+                        a.ReasonUnApprove,
+                        a.Note,
+                        a.CreatedBy,
+                        a.CreatedDate
+                    }
+                ).ToList();
 
-                var currentStep = GetCurrentApprovalStep(_hiringRequestApproveLinkRepo.GetAll()
-                    .Where(x => x.HRHiringRequestID == hiringRequestId && x.IsDeleted != true)
-                    .ToList());
+                var currentStep = GetCurrentApprovalStep(
+                    _hiringRequestApproveLinkRepo.GetAll()
+                        .Where(x => x.HRHiringRequestID == hiringRequestId && x.IsDeleted != true)
+                        .ToList()
+                );
 
                 return Ok(ApiResponseFactory.Success(new
                 {
@@ -879,7 +929,6 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         #region Duyệt yêu cầu
         [RequiresPermission("N57")]
