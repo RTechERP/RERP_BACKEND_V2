@@ -4,7 +4,7 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
-namespace RERPAPI.Controllers
+namespace RERPAPI.Controllers.Old
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -55,7 +55,7 @@ namespace RERPAPI.Controllers
                     }
                     else await teamLinkRepo.UpdateAsync(item);
                 }
-                return Ok(new { status = 1, message = "Cập nhật thành công." });
+                return Ok(new { data = teamLinks, status = 1, message = "Cập nhật thành công." });
             }
             catch (Exception ex)
             {
