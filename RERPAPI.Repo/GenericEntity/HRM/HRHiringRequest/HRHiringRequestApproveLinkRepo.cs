@@ -86,7 +86,7 @@ namespace RERPAPI.Repo.GenericEntity
                 foreach (var actionApproved in actionApproveds)
                 {
                     var approves = GetAll(x => x.HRHiringRequestID == actionApproved.HRHiringRequestID && x.IsDeleted == false);
-                    int nextStep = actionApproved.Step + 1;
+                    int nextStep = actionApproved.Step ?? 0 + 1;
                     switch (actionApproved.Step)
                     {
                         case 1: //Nếu là TBP

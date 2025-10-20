@@ -42,6 +42,9 @@
 
   <ItemGroup>
     <Folder Include="Controllers\CRM\" />
+    <Folder Include="Controllers\Old\NewFolder1\" />
+    <Folder Include="Controllers\Old\NewFolder2\" />
+    <Folder Include="Controllers\Old\NewFolder\" />
     <Folder Include="Controllers\Warehouse\" />
     <Folder Include="Controllers\Project\" />
     <Folder Include="Controllers\Sale\" />
