@@ -14,7 +14,7 @@ namespace RERPAPI.Model.Param.Asset
         public int? EmployeeReturnID { get; set; }
         public int? EmployeeRecoveryID { get; set; }
         public int? Status { get; set; } = -1;
-        public string? Filtertext { get; set; }
+        public string? Filtertext { get; set; } = "";   
         public int PageSize { get; set; } = 1;
         public int PageNumber { get; set; } = 10000;
     }
