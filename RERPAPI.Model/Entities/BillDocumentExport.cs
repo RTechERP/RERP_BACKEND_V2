@@ -24,5 +24,4 @@ public partial class BillDocumentExport
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
-    public bool? IsDelete { get; set; }
 }

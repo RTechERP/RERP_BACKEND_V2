@@ -110,10 +110,15 @@ public partial class PONCCDetail
 
     public bool? IsBill { get; set; }
 
-    /// <summary>
-    /// 0: Phi mậu dịch; 1: Hàng thương mại; 2: Tạp nhập tái xuất
-    /// </summary>
     public int? ProductType { get; set; }
 
     public DateTime? DateReturnEstimated { get; set; }
+
+    public bool? IsStock { get; set; }
+
+    public string? UnitName { get; set; }
+
+    public string? ParentProductCode { get; set; }
+
+    public bool? IsPurchase { get; set; }
 }

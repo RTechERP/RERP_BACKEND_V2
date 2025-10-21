@@ -14,12 +14,12 @@ public partial class TSRecoveryAssetPersonal
     public DateTime? DateRecovery { get; set; }
 
     /// <summary>
-    /// ID của nhân viên trả đồ(Thu hồi từ)
+    /// ID của nhân viên trả đồ(Thu hồi từ) lấy từ bảng Employee
     /// </summary>
     public int? EmployeeReturnID { get; set; }
 
     /// <summary>
-    /// ID của nhân viên thu hồi(Người thu hồi)
+    /// ID của nhân viên thu hồi(Người thu hồi) lấy từ bảng Employee
     /// </summary>
     public int? EmployeeRecoveryID { get; set; }
 
