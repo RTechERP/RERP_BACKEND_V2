@@ -7,14 +7,36 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Controllers\OfficeSuppliesManagement\**" />
     <Compile Remove="Controllers\ProjectAGV\**" />
+    <Compile Remove="Controllers\ProjectManager\**" />
+    <Compile Remove="Controllers\SaleWareHouseManagement\**" />
+    <Compile Remove="Controllers\V2\**" />
+    <Content Remove="Controllers\OfficeSuppliesManagement\**" />
     <Content Remove="Controllers\ProjectAGV\**" />
+    <Content Remove="Controllers\ProjectManager\**" />
+    <Content Remove="Controllers\SaleWareHouseManagement\**" />
+    <Content Remove="Controllers\V2\**" />
+    <EmbeddedResource Remove="Controllers\OfficeSuppliesManagement\**" />
     <EmbeddedResource Remove="Controllers\ProjectAGV\**" />
+    <EmbeddedResource Remove="Controllers\ProjectManager\**" />
+    <EmbeddedResource Remove="Controllers\SaleWareHouseManagement\**" />
+    <EmbeddedResource Remove="Controllers\V2\**" />
+    <None Remove="Controllers\OfficeSuppliesManagement\**" />
     <None Remove="Controllers\ProjectAGV\**" />
+    <None Remove="Controllers\ProjectManager\**" />
+    <None Remove="Controllers\SaleWareHouseManagement\**" />
+    <None Remove="Controllers\V2\**" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Remove="Controllers\CustomerController.cs" />
+    <Compile Remove="Controllers\HistoryProductRTCController.cs" />
+    <Compile Remove="Controllers\HomeController.cs" />
+    <Compile Remove="Controllers\KPIEmployeeTeamController.cs" />
+    <Compile Remove="Controllers\KPIEmployeeTeamLinkController.cs" />
+    <Compile Remove="Controllers\MenuController.cs" />
+    <Compile Remove="Controllers\ModulaLocationController.cs" />
     <Compile Remove="Controllers\Old\POKHController.cs" />
     <Compile Remove="Controllers\Old\POKH\POKHController.cs" />
     <Compile Remove="Controllers\Old\TB\FirmController.cs" />

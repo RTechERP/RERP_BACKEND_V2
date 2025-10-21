@@ -7,7 +7,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using ZXing;
 
-namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
+namespace RERPAPI.Controllers.SaleWareHouseManagement
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -63,12 +63,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         {
             try
             {
-                //TN.Binh update 19/10/25
-                if (!CheckProductGroupCode(dto))
-                {
-                    return Ok(new { status = 0, message = $"Mã nhóm [{dto.Productgroup.ProductGroupID}] đã tồn tại!" });
-                }
-                //end update 
                 if (dto.Productgroup.ID <= 0)
                 {
                     int newId = await _productgroupRepo.CreateAsynC(dto.Productgroup);
@@ -108,18 +102,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             }
         }
 
-        //TN.Binh update 19/10/25
-        #region check trùng mã sản phẩm khi thêm, sửa nhóm vật tư
-        private bool CheckProductGroupCode(ProductGoupDTO dto)
-        {
-            bool check = true;
-            var exists = _productgroupRepo.GetAll()
-                .Where(x => x.ProductGroupID == dto.Productgroup.ProductGroupID
-                            && x.ID != dto.Productgroup.ID).ToList();
-            if (exists.Count > 0) check = false;
-            return check;
-        }
-        //end update
-        #endregion
+     
+
     }
 }

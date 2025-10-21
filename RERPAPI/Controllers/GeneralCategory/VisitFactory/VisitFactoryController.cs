@@ -82,12 +82,13 @@ namespace RERPAPI.Controllers
 					DateEnd = request.DateEnd,
 					Purpose = request.Purpose,
 					Note = request.Note,
-					EmployeeID = request.EmployeeId,
+					EmployeeID = _currentUser.EmployeeID,
 					Company = request.Company,
 					GuestTypeID = request.GuestTypeId,
 					TotalPeople = request.TotalPeople,
 					IsReceive = request.IsReceive,
-					EmployeeReceive = request.EmployeeReceive,
+					//EmployeeReceive = request.EmployeeReceive,
+					EmployeeReceive = 558,
 					CreatedBy = _currentUser.LoginName,
 					CreatedDate = DateTime.Now,
 					UpdatedBy = _currentUser.LoginName,
@@ -245,14 +246,14 @@ namespace RERPAPI.Controllers
 		}
 
 		[HttpGet("employee-list")]
-        public IActionResult getAllEmployee()
+        public IActionResult getAllEmployee(int status = 0, int departmentId = 0, string keyword = "", int id = 0)
         {
             try
             {
                 var resultLists = SQLHelper<dynamic>.ProcedureToList(
-                    "spGetEmployeeAndEmployeeApprover",
-                    Array.Empty<string>(),
-                    Array.Empty<object>()
+                    "spGetEmployee",
+                    new string[] { "@Status", "@DepartmentID", "@Keyword", "@ID" },
+                    new object[] { status, departmentId, keyword ?? "", id }
                 );
 
                 var employeeList = SQLHelper<dynamic>.GetListData(resultLists, 0);
@@ -261,8 +262,8 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex, "Có lỗi xảy ra khi lấy danh sách Employee."));
+                return BadRequest(ApiResponseFactory.Fail(ex,ex.Message));
             }
         }
-	}
+    }
 }

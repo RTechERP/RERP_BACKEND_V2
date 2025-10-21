@@ -14,7 +14,7 @@ using ZXing;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
+namespace RERPAPI.Controllers.SaleWareHouseManagement
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -121,12 +121,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             {
                 foreach (var dto in dtos)
                 {
-                    //TN.Binh update 19/10/25
-                    if (!CheckProductCode(dto))
-                    {
-                        return Ok(new {  status =0,message = $"Mã sản phẩm [{dto.ProductSale.ProductCode}] đã tồn tại trong nhóm !" });
-                    }
-                    //end update 
                     if (dto.ProductSale.ID <= 0)
                     {
                         // Tạo mới
@@ -137,9 +131,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         dto.ProductSale.Import = dto.ProductSale.Export = dto.ProductSale.NumberInStoreCuoiKy = dto.ProductSale.NumberInStoreDauky;
                         dto.ProductSale.SupplierName = "";
                         dto.ProductSale.ItemType = "";
-                        //int newId = await _productsaleRepo.CreateAsynC(dto.ProductSale);
-                        await _productsaleRepo.CreateAsync(dto.ProductSale);
-                        int newId = dto.ProductSale.ID;
+                        int newId = await _productsaleRepo.CreateAsynC(dto.ProductSale);
                         dto.Inventory.ProductSaleID = newId;
                         dto.Inventory.WarehouseID = 1;
                         dto.Inventory.Export = 0;
@@ -165,21 +157,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
-
-        //TN.Binh update 19/10/25
-        #region check trùng mã sản phẩm khi thêm, sửa vật tư 
-        private bool CheckProductCode(ProductsSaleDTO dto)
-        {
-            bool check = true;
-            var exists = _productsaleRepo.GetAll()
-                .Where(x => x.ProductCode == dto.ProductSale.ProductCode
-                            && x.ProductGroupID == dto.ProductSale.ProductGroupID
-                            && x.ID != dto.ProductSale.ID).ToList();
-            if (exists.Count > 0)  check = false;
-            return check ;
-        }
-        //end update
         #endregion
 
         //check-productsale trong excel
