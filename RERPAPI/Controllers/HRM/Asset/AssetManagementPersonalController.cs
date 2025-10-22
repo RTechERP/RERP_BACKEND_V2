@@ -150,7 +150,7 @@ namespace RERPAPI.Controllers.Old.Asset
             try
             {
                 if (allocationDate == null)
-                    return BadRequest("allocationDate is required.");
+                    return BadRequest(ApiResponseFactory.Fail(null, "Chưa chọn ngày cấp phát"));
 
                 string newCode = _tSAllocationAssetPersonalRepo.generateAllocationPersonalCode(allocationDate);
                 return Ok(ApiResponseFactory.Success(newCode, "Lấy dữ liệu thành công"));
@@ -167,7 +167,7 @@ namespace RERPAPI.Controllers.Old.Asset
             try
             {
                 if (recoveryDate == null)
-                    return BadRequest("recoveryDate is required.");
+                    return BadRequest(ApiResponseFactory.Fail(null, "Chưa chọn ngày thu hồi"));
 
                 string newCode = _tSRecoveryAssetPersonalRepo.generateRecoveryPersonalCode(recoveryDate);
                 return Ok(ApiResponseFactory.Success(newCode, "Lấy dữ liệu thành công"));
