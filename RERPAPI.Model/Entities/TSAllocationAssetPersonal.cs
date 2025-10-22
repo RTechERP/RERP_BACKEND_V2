@@ -10,6 +10,7 @@ public partial class TSAllocationAssetPersonal
     public int? STT { get; set; }
 
     public string? Code { get; set; }
+    public string? Note { get; set; }
 
     public DateTime? DateAllocation { get; set; }
 
