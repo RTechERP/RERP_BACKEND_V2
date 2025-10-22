@@ -10,8 +10,9 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Model.Param.Asset;
 using RERPAPI.Repo.GenericEntity.Asset;
-//using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
+using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
 using System;
+using ZXing;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -49,20 +50,12 @@ namespace RERPAPI.Controllers.Old.Asset
             {
                 var tSAssetManagmentPersonal = SQLHelper<dynamic>.ProcedureToList(
                      "spGetTSAssetManagmentPersonal", new string[] { }, new object[] { });
-                return Ok(new
-                {
-                    status = 1,
-                    tSAssetManagmentPersonal = SQLHelper<dynamic>.GetListData(tSAssetManagmentPersonal, 0)
-                });
+                var dataList = SQLHelper<dynamic>.GetListData(tSAssetManagmentPersonal, 0);
+                return Ok(ApiResponseFactory.Success(dataList, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpPost("get-asset-allocation-personal")]
@@ -75,22 +68,12 @@ namespace RERPAPI.Controllers.Old.Asset
                 new string[] { "@DateStart", "@DateEnd", "@EmployeeID", "@Status", "@FilterText", "@PageSize", "@PageNumber" },
                     new object[] { request.DateStart, request.DateEnd, request.EmployeeID, request.Status, request.FilterText ?? string.Empty, request.PageSize, request.PageNumber });
                 var dataList = SQLHelper<dynamic>.GetListData(assetAllocationPersonal, 0);
-              //  var maxSTT = dataList.Max(x => (int)x.STT);
-                return Ok(new
-                {
-                    status = 1,
-                    assetAllocationPersonal = SQLHelper<dynamic>.GetListData(assetAllocationPersonal, 0),
-                 //   MaxSTT = maxSTT,
-                });
+                //var maxSTT = dataList.Max(x => (int)x.STT);
+                return Ok(ApiResponseFactory.Success(dataList, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-asset-allocation-personal-detail")]
@@ -100,23 +83,20 @@ namespace RERPAPI.Controllers.Old.Asset
             {
                 var assetsAllocationPersonalDetail = SQLHelper
                     <dynamic>.ProcedureToList("spGetTSAssetAllocationPersonalDetail", new string[] { "@TSAllocationAssetPersonalID", "@EmployeeID" }, new object[] { TSAllocationAssetPersonalID, EmployeeID });
-                return Ok(new
-                {
-                    status = 1,
-                    data = new
-                    {
-                        assetsAllocationPersonalDetail = SQLHelper<dynamic>.GetListData(assetsAllocationPersonalDetail, 0)
-                    }
-                });
+                //return Ok(new
+                //{
+                //    status = 1,
+                //    data = new
+                //    {
+                //        assetsAllocationPersonalDetail = SQLHelper<dynamic>.GetListData(assetsAllocationPersonalDetail, 0)
+                //    }
+                //});
+                var dataList = SQLHelper<dynamic>.GetListData(assetsAllocationPersonalDetail, 0);
+                return Ok(ApiResponseFactory.Success(dataList, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpPost("get-asset-recovery-personal")]
@@ -135,70 +115,68 @@ namespace RERPAPI.Controllers.Old.Asset
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [HttpGet("get-asset-recovery-personal-detail")] 
+        [HttpGet("get-asset-recovery-personal-detail")]
         public IActionResult GetAssetsRecoveryPersonalDetail(int? TSAssetRecoveryPersonID)
         {
             try
             {
                 var result = SQLHelper<dynamic>.ProcedureToList(
              "spGetTSAssetRecoveryPersonalDetail",
-             new string[] { "@TSAssetRecoveryPersonID"},
+             new string[] { "@TSAssetRecoveryPersonID" },
              new object[] { TSAssetRecoveryPersonID }
          );
-
-                return Ok(new
-                {
-                    status = 1,
-                    data = new
-                    {
-                        assetsRecoveryDetail = SQLHelper<dynamic>.GetListData(result, 0)
-                    }
-                });
+                var dataList = SQLHelper<dynamic>.GetListData(result, 0);
+                //return Ok(new
+                //{
+                //    status = 1,
+                //    data = new
+                //    {
+                //        assetsRecoveryDetail = SQLHelper<dynamic>.GetListData(result, 0)
+                //    }s
+                //});
+                return Ok(ApiResponseFactory.Success(dataList, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-allocation-personal-code")]
-        public async Task<IActionResult> GenerateAllocationPersonalCode([FromQuery] DateTime? allocationDate)
+        public IActionResult GenerateAllocationPersonalCode([FromQuery] DateTime? allocationDate)
         {
-            if (allocationDate == null)
-                return BadRequest("allocationDate is required.");
-
-            string newCode = _tSAllocationAssetPersonalRepo.generateAllocationPersonalCode(allocationDate);
-            return Ok(new
+            try
             {
-                status = 1,
-                data = newCode
-            });
+                if (allocationDate == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Chưa chọn ngày cấp phát"));
+
+                string newCode = _tSAllocationAssetPersonalRepo.generateAllocationPersonalCode(allocationDate);
+                return Ok(ApiResponseFactory.Success(newCode, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+
         }
         [HttpGet("get-recovery-personal-code")]
-        public async Task<IActionResult> GenerateRecoveryPersonalCode([FromQuery] DateTime? recoveryDate)
+        public IActionResult GenerateRecoveryPersonalCode([FromQuery] DateTime? recoveryDate)
         {
-            if (recoveryDate == null)
-                return BadRequest("recoveryDate is required.");
-
-            string newCode = _tSRecoveryAssetPersonalRepo.generateRecoveryPersonalCode(recoveryDate);
-            return Ok(new
+            try
             {
-                status = 1,
-                data = newCode
-            });
+                if (recoveryDate == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Chưa chọn ngày thu hồi"));
+
+                string newCode = _tSRecoveryAssetPersonalRepo.generateRecoveryPersonalCode(recoveryDate);
+                return Ok(ApiResponseFactory.Success(newCode, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+
         }
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] TSAssetManagementPersonalFullDTO dto)
@@ -219,12 +197,12 @@ namespace RERPAPI.Controllers.Old.Asset
                     }
                     else
                     {
-                        _tSAssetManagementPersonalRepo.UpdateAsync(dto.tSAssetManagementPersonal);
+                        await _tSAssetManagementPersonalRepo.UpdateAsync(dto.tSAssetManagementPersonal);
                     }
                 }
                 if (dto.tSTypeAssetPersonal != null)
                 {
-                    if (dto.tSTypeAssetPersonal.ID <= 0)        
+                    if (dto.tSTypeAssetPersonal.ID <= 0)
                     {
                         var maxSTT = _typeAssetPersonalRepo.GetAll().Max(x => x.STT) + 1 ?? 0;
                         dto.tSTypeAssetPersonal.STT = maxSTT;
@@ -232,18 +210,22 @@ namespace RERPAPI.Controllers.Old.Asset
                     }
                     else
                     {
-                        _typeAssetPersonalRepo.UpdateAsync(dto.tSTypeAssetPersonal);
+                        await _typeAssetPersonalRepo.UpdateAsync(dto.tSTypeAssetPersonal);
                     }
                 }
                 if (dto.tSAllocationAssetPersonal != null)
                 {
+
                     if (dto.tSAllocationAssetPersonal.ID <= 0)
                     {
+                        var maxSTT = _tSAllocationAssetPersonalRepo.GetAll().Max(x => x.STT) + 1 ?? 0;
+                        dto.tSAllocationAssetPersonal.STT = maxSTT;
+
                         await _tSAllocationAssetPersonalRepo.CreateAsync(dto.tSAllocationAssetPersonal);
                     }
                     else
                     {
-                        _tSAllocationAssetPersonalRepo.UpdateAsync(dto.tSAllocationAssetPersonal);
+                        await _tSAllocationAssetPersonalRepo.UpdateAsync(dto.tSAllocationAssetPersonal);
                     }
                 }
                 if (dto.tSRecoveryAssetPersonal != null)
@@ -255,7 +237,7 @@ namespace RERPAPI.Controllers.Old.Asset
                     }
                     else
                     {
-                        _tSRecoveryAssetPersonalRepo.UpdateAsync(dto.tSRecoveryAssetPersonal);
+                        await _tSRecoveryAssetPersonalRepo.UpdateAsync(dto.tSRecoveryAssetPersonal);
                     }
                 }
                 if (dto.tSRecoveryAssetPersonalDetails != null && dto.tSRecoveryAssetPersonalDetails.Any())
@@ -266,7 +248,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tSRecoveryAssetPersonalDetailRepo.CreateAsync(item);
                         else
-                            _tSRecoveryAssetPersonalDetailRepo.UpdateAsync(item);
+                            await _tSRecoveryAssetPersonalDetailRepo.UpdateAsync(item);
                     }
                 }
                 if (dto.tSAllocationAssetPersonalDetails != null && dto.tSAllocationAssetPersonalDetails.Any())
@@ -278,22 +260,14 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tSAssetAllocationDetailRepo.CreateAsync(item);
                         else
-                            _tSAssetAllocationDetailRepo.UpdateAsync(item);
+                            await _tSAssetAllocationDetailRepo.UpdateAsync(item);
                     }
                 }
-                return Ok(new
-                {
-                    status = 1,
-                });
+                return Ok(ApiResponseFactory.Success(null, "Lưu dữ liệu thành công"));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }
