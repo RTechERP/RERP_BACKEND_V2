@@ -226,6 +226,8 @@ namespace RERPAPI.Controllers.Old.Asset
                 {
                     if (dto.tSTypeAssetPersonal.ID <= 0)
                     {
+                        var maxSTT = _typeAssetPersonalRepo.GetAll().Max(x => x.STT) + 1 ?? 0;
+                        dto.tSTypeAssetPersonal.STT = maxSTT;
                         await _typeAssetPersonalRepo.CreateAsync(dto.tSTypeAssetPersonal);
                     }
                     else
