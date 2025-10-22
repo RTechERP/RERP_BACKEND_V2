@@ -1,25 +1,26 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Model.Entities;
-using RERPAPI.Model.Common;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
-using System;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using Microsoft.EntityFrameworkCore;
-using RERPAPI.Model.Context;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using RERPAPI.Model.Common;
+using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
+using RERPAPI.Model.DTO.Asset;
+using RERPAPI.Model.DTO.TB;
+using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
-using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo;
 using RERPAPI.Model.Param.Asset;
 using RERPAPI.Model.Param.TB;
-using RERPAPI.Repo.GenericEntity.TB;
-using RERPAPI.Model.DTO.Asset;
-using RERPAPI.Repo.GenericEntity.Asset;
-using RERPAPI.Model.DTO.TB;
-using System.Data;
 using RERPAPI.Model.Param.Technical;
+using RERPAPI.Repo;
+using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.Asset;
+using RERPAPI.Repo.GenericEntity.TB;
+using System;
+using System.Data;
+using System.Net.Mime;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 
 namespace RERPAPI.Controllers.Old.TB
@@ -31,7 +32,7 @@ namespace RERPAPI.Controllers.Old.TB
         ProductGroupRTCRepo _productGroupRTCRepo = new ProductGroupRTCRepo();
         ProductRTCRepo _productRTCRepo = new ProductRTCRepo();
         ProductLocationRepo _productLocationRepo = new ProductLocationRepo();
-
+        ConfigSystemRepo config = new ConfigSystemRepo();
         [HttpPost("get-productRTC")]
         public IActionResult GetListAssets([FromBody] ProductRTCRequetParam request)
         {
@@ -101,71 +102,99 @@ namespace RERPAPI.Controllers.Old.TB
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        //[HttpPost("upload")]
+        //public IActionResult Upload(IFormFile file, string path)
+        //{
+        //    try
+        //    {
+        //        int statusCode = 0;
+        //        string fileName = "";
+        //        string message = "Upload file thất bại!";
+
+        //        if (file != null)
+        //        {
+        //            // Danh sách định dạng ảnh cho phép
+        //           // var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp",".png" };
+        //            var fileExtension = Path.GetExtension(file.FileName).ToLower();
+
+        //            //if (!allowedExtensions.Contains(fileExtension))
+        //            //{
+        //            //    //return BadRequest(new
+        //            //    //{
+        //            //    //    status = 0,
+        //            //    //    Message = "Chỉ được upload file ảnh (jpg, jpeg, png, gif, bmp)"
+        //            //    //});
+        //            //    return Ok(ApiResponseFactory.Fail(null, "Chỉ được upload file ảnh (jpg, jpeg, png, gif, bmp)"));
+        //            //}
+        //           // string path = "D:\\RTC_Sw\\RTC\\ProductRTC\\";
+        //            if (!Directory.Exists(path))
+        //            {
+        //                Directory.CreateDirectory(path);
+        //            }
+
+        //            using (FileStream fileStream = System.IO.File.Create(path + file.FileName))
+        //            {
+        //                file.CopyTo(fileStream);
+        //                fileStream.Flush();
+
+        //                statusCode = 1;
+        //                fileName = file.FileName;
+        //                message = "Upload File thành công!";
+        //            }
+        //        }
+        //        else
+        //        {
+        //            statusCode = 0;
+        //            message = "Không có file được gửi lên.";
+        //        }
+
+        //        //return Ok(new
+        //        //{
+        //        //    status = statusCode,
+        //        //    FileName = fileName,
+        //        //    Message = message
+        //        //});
+
+        //        return Ok(ApiResponseFactory.Success(fileName, message));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        //return Ok(new
+        //        //{
+        //        //    status = 0,
+        //        //    Message = $"Upload file thất bại! ({ex.Message})"
+        //        //});
+
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
+        public class UploadRequest
+        {
+            public IFormFile file { get; set; }
+            public string path { get; set; }
+        }
         [HttpPost("upload")]
-        public IActionResult Upload(IFormFile file)
+        [Consumes("multipart/form-data")]
+        public IActionResult Upload([FromForm] UploadRequest req)
         {
             try
             {
-                int statusCode = 0;
-                string fileName = "";
-                string message = "Upload file thất bại!";
+                if (req?.file == null || req.file.Length == 0)
+                    return BadRequest("No file");
+                if (string.IsNullOrWhiteSpace(req.path))
+                    return BadRequest("path required");
 
-                if (file != null)
-                {
-                    // Danh sách định dạng ảnh cho phép
-                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp",".png" };
-                    var fileExtension = Path.GetExtension(file.FileName).ToLower();
-
-                    if (!allowedExtensions.Contains(fileExtension))
-                    {
-                        //return BadRequest(new
-                        //{
-                        //    status = 0,
-                        //    Message = "Chỉ được upload file ảnh (jpg, jpeg, png, gif, bmp)"
-                        //});
-                        return Ok(ApiResponseFactory.Fail(null, "Chỉ được upload file ảnh (jpg, jpeg, png, gif, bmp)"));
-                    }
-                    string path = "D:\\RTC_Sw\\RTC\\ProductRTC\\";
-                    if (!Directory.Exists(path))
-                    {
-                        Directory.CreateDirectory(path);
-                    }
-
-                    using (FileStream fileStream = System.IO.File.Create(path + file.FileName))
-                    {
-                        file.CopyTo(fileStream);
-                        fileStream.Flush();
-
-                        statusCode = 1;
-                        fileName = file.FileName;
-                        message = "Upload File thành công!";
-                    }
-                }
-                else
-                {
-                    statusCode = 0;
-                    message = "Không có file được gửi lên.";
-                }
-
-                //return Ok(new
-                //{
-                //    status = statusCode,
-                //    FileName = fileName,
-                //    Message = message
-                //});
-
-                return Ok(ApiResponseFactory.Success(fileName, message));
+                Directory.CreateDirectory(req.path);
+                var dest = Path.Combine(req.path, req.file.FileName);
+                using var fs = System.IO.File.Create(dest);
+                req.file.CopyTo(fs);
+                return Ok(ApiResponseFactory.Success(null, "Upload thành công"));
             }
-            catch (Exception ex)
+            catch( Exception ex)
             {
-                //return Ok(new
-                //{
-                //    status = 0,
-                //    Message = $"Upload file thất bại! ({ex.Message})"
-                //});
-
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+          
         }
         [HttpGet("get-location")]
         public IActionResult GetLocation(int? warehouseID)
@@ -200,6 +229,46 @@ namespace RERPAPI.Controllers.Old.TB
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+        }
+        [HttpGet("preveiw")]
+        public IActionResult GetPreview([FromQuery] string full)
+        {
+            if (string.IsNullOrWhiteSpace(full)) return BadRequest("full required");
+            var con = config.GetAll(x=>x.KeyName== "PathPreview").FirstOrDefault()?? new ConfigSystem();
+            string root = "";
+            if (con.ID > 0)
+            {
+                root = con.KeyValue.Trim();
+            }
+            // Chuẩn hoá đường dẫn
+            full = full.Replace('/', '\\');                       // hỗ trợ cả / và \
+            var normalized = Path.GetFullPath(full);
+            var rootFull = Path.GetFullPath(root);
+
+            // Chặn truy cập ngoài ROOT
+            if (!normalized.StartsWith(rootFull, System.StringComparison.OrdinalIgnoreCase))
+                return Forbid();
+
+            if (!System.IO.File.Exists(normalized)) return NotFound();
+
+            var ext = Path.GetExtension(normalized).ToLowerInvariant();
+            var mime = ext switch
+            {
+                ".png" => "image/png",
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".gif" => "image/gif",
+                ".bmp" => "image/bmp",
+                ".webp" => "image/webp",
+                ".pdf" => "application/pdf",
+                ".txt" => "text/plain",
+                _ => "application/octet-stream"
+            };
+
+            // Ảnh/PDF hiển thị inline, còn lại browser tự xử lý
+            Response.Headers["Content-Disposition"] =
+                new ContentDisposition { FileName = Path.GetFileName(normalized), Inline = true }.ToString();
+
+            return File(System.IO.File.OpenRead(normalized), mime);
         }
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] ProductRTCFullDTO product)

@@ -1,18 +1,19 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Model.Entities;
-using RERPAPI.Model.Common;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
-using System;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using Microsoft.EntityFrameworkCore;
-using RERPAPI.Model.Context;
+﻿using Azure.Core;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
-using RERPAPI.Model.Param;
-using Azure.Core;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using RERPAPI.Model.Common;
+using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO.Asset;
+using RERPAPI.Model.Entities;
+using RERPAPI.Model.Param;
 using RERPAPI.Model.Param.Asset;
 using RERPAPI.Repo.GenericEntity.Asset;
+//using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
+using System;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers.Old.Asset
 {
@@ -27,6 +28,20 @@ namespace RERPAPI.Controllers.Old.Asset
         TSAssetManagementPersonalRepo _tSAssetManagementPersonalRepo = new TSAssetManagementPersonalRepo();
         TSTypeAssetPersonalRepo _typeAssetPersonalRepo = new TSTypeAssetPersonalRepo();
 
+        //Lấy danh sách loại tài sản
+        [HttpGet("get-type-asset-personal")]
+        public IActionResult GetVehicleRepairType()
+        {
+            try
+            {
+                var typeAsset = _typeAssetPersonalRepo.GetAll().FindAll(x => x.IsDeleted != true).ToList();
+                return Ok(ApiResponseFactory.Success(typeAsset, "Lấy loại tài sản thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [HttpGet("get-all-asset-management-personal")]
         public IActionResult GetAllTSAssetManagementPersonal()
         {
@@ -60,12 +75,12 @@ namespace RERPAPI.Controllers.Old.Asset
                 new string[] { "@DateStart", "@DateEnd", "@EmployeeID", "@Status", "@FilterText", "@PageSize", "@PageNumber" },
                     new object[] { request.DateStart, request.DateEnd, request.EmployeeID, request.Status, request.FilterText ?? string.Empty, request.PageSize, request.PageNumber });
                 var dataList = SQLHelper<dynamic>.GetListData(assetAllocationPersonal, 0);
-                var maxSTT = dataList.Max(x => (int)x.STT);
+              //  var maxSTT = dataList.Max(x => (int)x.STT);
                 return Ok(new
                 {
                     status = 1,
                     assetAllocationPersonal = SQLHelper<dynamic>.GetListData(assetAllocationPersonal, 0),
-                    MaxSTT=maxSTT,
+                 //   MaxSTT = maxSTT,
                 });
             }
             catch (Exception ex)
@@ -110,19 +125,13 @@ namespace RERPAPI.Controllers.Old.Asset
             try
             {
                 var assetsrecoveryPersonal = SQLHelper<dynamic>.ProcedureToList(
-                    "spGetTSAssetRecoveryPersonal",
-                    new string[] {"@DateStart", "@DateEnd", "@EmployeeReturnID","@EmployeeRecoveryID", "@Status", "@FilterText","@PageSize", "@PageNumber"},
-                    new object[] {request.DateStart,request.DateEnd,request.EmployeeRecoveryID,request.EmployeeReturnID,request.Status,request.Filtertext,request.PageSize, request.PageNumber });
+                    "spGetTSAssetRecoveryyPersonal",
+                    new string[] { "@DateStart", "@DateEnd", "@EmployeeReturnID", "@EmployeeRecoveryID", "@Status", "@FilterText", "@PageSize", "@PageNumber" },
+                    new object[] { request.DateStart, request.DateEnd, request.EmployeeRecoveryID, request.EmployeeReturnID, request.Status, request.Filtertext, request.PageSize, request.PageNumber });
                 var dataList = SQLHelper<dynamic>.GetListData(assetsrecoveryPersonal, 0);
-
-                var maxSTT = dataList.Max(x => (int)x.STT);
-                return Ok(new
-                {
-                    status = 1,
-                    assetsrecoveryPersonal = SQLHelper<dynamic>.GetListData(assetsrecoveryPersonal, 0),
-                    maxSTT
-                   
-                });
+                var TotalPage = SQLHelper<object>.GetListData(assetsrecoveryPersonal, 1);
+                var maxSTT = _tSRecoveryAssetPersonalRepo.GetAll().Max(x => (int?)x.STT) + 1 ?? 0;
+                return Ok(ApiResponseFactory.Success(new { dataList, maxSTT, TotalPage }, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
             {
@@ -134,15 +143,15 @@ namespace RERPAPI.Controllers.Old.Asset
                 });
             }
         }
-        [HttpGet("get-asset-recovery-personal-detail")]
-        public IActionResult GetAssetsRecoveryPersonalDetail(int? TSAssetRecoveryPersonID, int? EmployeeID)
+        [HttpGet("get-asset-recovery-personal-detail")] 
+        public IActionResult GetAssetsRecoveryPersonalDetail(int? TSAssetRecoveryPersonID)
         {
             try
             {
                 var result = SQLHelper<dynamic>.ProcedureToList(
              "spGetTSAssetRecoveryPersonalDetail",
-             new string[] { "@TSAssetRecoveryPersonID", "@EmployeeID" },
-             new object[] { TSAssetRecoveryPersonID, EmployeeID }
+             new string[] { "@TSAssetRecoveryPersonID"},
+             new object[] { TSAssetRecoveryPersonID }
          );
 
                 return Ok(new
@@ -204,17 +213,21 @@ namespace RERPAPI.Controllers.Old.Asset
                 {
                     if (dto.tSAssetManagementPersonal.ID <= 0)
                     {
+                        var maxSTT = _tSAssetManagementPersonalRepo.GetAll().Max(x => x.STT) + 1 ?? 0;
+                        dto.tSAssetManagementPersonal.STT = maxSTT;
                         await _tSAssetManagementPersonalRepo.CreateAsync(dto.tSAssetManagementPersonal);
                     }
                     else
                     {
-                        _tSAssetManagementPersonalRepo.UpdateAsync( dto.tSAssetManagementPersonal);
+                        _tSAssetManagementPersonalRepo.UpdateAsync(dto.tSAssetManagementPersonal);
                     }
                 }
                 if (dto.tSTypeAssetPersonal != null)
                 {
-                    if (dto.tSTypeAssetPersonal.ID <= 0)
+                    if (dto.tSTypeAssetPersonal.ID <= 0)        
                     {
+                        var maxSTT = _typeAssetPersonalRepo.GetAll().Max(x => x.STT) + 1 ?? 0;
+                        dto.tSTypeAssetPersonal.STT = maxSTT;
                         await _typeAssetPersonalRepo.CreateAsync(dto.tSTypeAssetPersonal);
                     }
                     else
@@ -242,7 +255,7 @@ namespace RERPAPI.Controllers.Old.Asset
                     }
                     else
                     {
-                        _tSRecoveryAssetPersonalRepo.UpdateAsync( dto.tSRecoveryAssetPersonal);
+                        _tSRecoveryAssetPersonalRepo.UpdateAsync(dto.tSRecoveryAssetPersonal);
                     }
                 }
                 if (dto.tSRecoveryAssetPersonalDetails != null && dto.tSRecoveryAssetPersonalDetails.Any())
@@ -253,7 +266,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tSRecoveryAssetPersonalDetailRepo.CreateAsync(item);
                         else
-                            _tSRecoveryAssetPersonalDetailRepo.UpdateAsync( item);
+                            _tSRecoveryAssetPersonalDetailRepo.UpdateAsync(item);
                     }
                 }
                 if (dto.tSAllocationAssetPersonalDetails != null && dto.tSAllocationAssetPersonalDetails.Any())
@@ -265,7 +278,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tSAssetAllocationDetailRepo.CreateAsync(item);
                         else
-                            _tSAssetAllocationDetailRepo.UpdateAsync( item);
+                            _tSAssetAllocationDetailRepo.UpdateAsync(item);
                     }
                 }
                 return Ok(new
