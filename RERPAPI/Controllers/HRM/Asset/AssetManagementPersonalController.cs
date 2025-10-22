@@ -270,5 +270,5 @@ namespace RERPAPI.Controllers.Old.Asset
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-    }
+    } 
 }
