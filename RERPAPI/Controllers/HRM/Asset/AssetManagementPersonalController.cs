@@ -5,10 +5,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.Asset;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Model.Param.Asset;
+using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
 using System;
@@ -28,7 +30,7 @@ namespace RERPAPI.Controllers.Old.Asset
         TSRecoveryAssetPersonalRepo _tSRecoveryAssetPersonalRepo = new TSRecoveryAssetPersonalRepo();
         TSAssetManagementPersonalRepo _tSAssetManagementPersonalRepo = new TSAssetManagementPersonalRepo();
         TSTypeAssetPersonalRepo _typeAssetPersonalRepo = new TSTypeAssetPersonalRepo();
-
+        vUserGroupLinksRepo _vUserGroupLinksRepo = new vUserGroupLinksRepo();
         //Lấy danh sách loại tài sản
         [HttpGet("get-type-asset-personal")]
         public IActionResult GetVehicleRepairType()
@@ -63,10 +65,26 @@ namespace RERPAPI.Controllers.Old.Asset
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var vUserHR = _vUserGroupLinksRepo
+                    .GetAll()
+                    .FirstOrDefault(x => x.Code == "N59" && x.UserID == currentUser.ID);
+
+                int employeeID;
+                if (vUserHR != null)
+                {
+                    employeeID = request.EmployeeID.Value;
+                }
+                else
+                {
+                    employeeID = currentUser.EmployeeID;
+                }
                 var assetAllocationPersonal = SQLHelper<dynamic>.ProcedureToList(
                 "spGetTSAssetAllocationPersonal",
                 new string[] { "@DateStart", "@DateEnd", "@EmployeeID", "@Status", "@FilterText", "@PageSize", "@PageNumber" },
-                    new object[] { request.DateStart, request.DateEnd, request.EmployeeID, request.Status, request.FilterText ?? string.Empty, request.PageSize, request.PageNumber });
+                    new object[] { request.DateStart, request.DateEnd, employeeID, request.Status, request.FilterText ?? string.Empty, request.PageSize, request.PageNumber });
                 var dataList = SQLHelper<dynamic>.GetListData(assetAllocationPersonal, 0);
                 //var maxSTT = dataList.Max(x => (int)x.STT);
                 return Ok(ApiResponseFactory.Success(dataList, "Lấy dữ liệu thành công"));
@@ -104,10 +122,27 @@ namespace RERPAPI.Controllers.Old.Asset
         {
             try
             {
+
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var vUserHR = _vUserGroupLinksRepo
+                    .GetAll()
+                    .FirstOrDefault(x => x.Code == "N59" && x.UserID == currentUser.ID);
+
+                int employeeID;
+                if (vUserHR != null)
+                {
+                    employeeID = request.EmployeeReturnID.Value;
+                }
+                else
+                {
+                    employeeID = currentUser.EmployeeID;
+                }
                 var assetsrecoveryPersonal = SQLHelper<dynamic>.ProcedureToList(
                     "spGetTSAssetRecoveryyPersonal",
                     new string[] { "@DateStart", "@DateEnd", "@EmployeeReturnID", "@EmployeeRecoveryID", "@Status", "@FilterText", "@PageSize", "@PageNumber" },
-                    new object[] { request.DateStart, request.DateEnd, request.EmployeeRecoveryID, request.EmployeeReturnID, request.Status, request.Filtertext, request.PageSize, request.PageNumber });
+                    new object[] { request.DateStart, request.DateEnd, request.EmployeeRecoveryID, employeeID, request.Status, request.Filtertext, request.PageSize, request.PageNumber });
                 var dataList = SQLHelper<dynamic>.GetListData(assetsrecoveryPersonal, 0);
                 var TotalPage = SQLHelper<object>.GetListData(assetsrecoveryPersonal, 1);
                 var maxSTT = _tSRecoveryAssetPersonalRepo.GetAll().Max(x => (int?)x.STT) + 1 ?? 0;
@@ -150,7 +185,7 @@ namespace RERPAPI.Controllers.Old.Asset
             try
             {
                 if (allocationDate == null)
-                    return BadRequest(ApiResponseFactory.Fail(null, "Chưa chọn ngày cấp phát"));
+                    return BadRequest("allocationDate is required.");
 
                 string newCode = _tSAllocationAssetPersonalRepo.generateAllocationPersonalCode(allocationDate);
                 return Ok(ApiResponseFactory.Success(newCode, "Lấy dữ liệu thành công"));
@@ -167,7 +202,7 @@ namespace RERPAPI.Controllers.Old.Asset
             try
             {
                 if (recoveryDate == null)
-                    return BadRequest(ApiResponseFactory.Fail(null, "Chưa chọn ngày thu hồi"));
+                    return BadRequest("recoveryDate is required.");
 
                 string newCode = _tSRecoveryAssetPersonalRepo.generateRecoveryPersonalCode(recoveryDate);
                 return Ok(ApiResponseFactory.Success(newCode, "Lấy dữ liệu thành công"));
@@ -230,7 +265,8 @@ namespace RERPAPI.Controllers.Old.Asset
                 }
                 if (dto.tSRecoveryAssetPersonal != null)
                 {
-
+                    var maxSTT = _tSRecoveryAssetPersonalRepo.GetAll().Max(x => x.STT) + 1 ?? 0;
+                    dto.tSRecoveryAssetPersonal.STT = maxSTT;
                     if (dto.tSRecoveryAssetPersonal.ID <= 0)
                     {
                         await _tSRecoveryAssetPersonalRepo.CreateAsync(dto.tSRecoveryAssetPersonal);
@@ -270,5 +306,58 @@ namespace RERPAPI.Controllers.Old.Asset
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-    } 
+        [HttpPost("save-approve")]
+        public async Task<IActionResult> SaveApprove([FromBody] TSAssetPersonalApproveDTO dto)
+        {
+            try
+            {
+                if (dto == null)
+                {
+                    return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." });
+                }
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                var vUserHR = _vUserGroupLinksRepo
+               .GetAll()
+               .FirstOrDefault(x => x.Code == "N59" && x.UserID == currentUser.ID);
+                if (dto.tSAllocationAssetPersonal != null)
+                {
+                    if (dto.tSAllocationAssetPersonal.ID > 0)
+                    {
+                        if (dto.tSAllocationAssetPersonal.EmployeeID != currentUser.EmployeeID && dto.tSAllocationAssetPersonal.IsApprovedPersonalProperty != null)
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền duyệt, hủy duyệt"));
+                        }
+                        if (vUserHR == null && dto.tSAllocationAssetPersonal.IsApproveHR != null)
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null, "Bạn không phải HR"));
+                        }
+                        await _tSAllocationAssetPersonalRepo.UpdateAsync(dto.tSAllocationAssetPersonal);
+                    }
+                }
+                if (dto.tSRecoveryAssetPersonal != null)
+                {
+
+                    if (dto.tSRecoveryAssetPersonal.ID > 0)
+                    {
+                        if (dto.tSRecoveryAssetPersonal.EmployeeReturnID != currentUser.EmployeeID && dto.tSRecoveryAssetPersonal.IsApprovedPersonalProperty != null)
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền duyệt, hủy duyệt"));
+                        }
+                        if (vUserHR == null && dto.tSRecoveryAssetPersonal.IsApproveHR != null)
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null, "Bạn không phải HR"));
+                        }
+                        await _tSRecoveryAssetPersonalRepo.UpdateAsync(dto.tSRecoveryAssetPersonal);
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(null, "Lưu dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+    }
 }
