@@ -15,7 +15,7 @@ namespace RERPAPI.Repo.GenericEntity.Asset
             var latestCode = table.Where(x => x.DateAllocation.HasValue && x.DateAllocation.Value.Date == date &&
                                     !string.IsNullOrEmpty(x.Code)).OrderByDescending(x => x.ID).Select(x => x.Code).FirstOrDefault();
 
-            string baseCode = $"TSCN{date:ddMMyyyy}";
+            string baseCode = $"TSCN.{date:ddMMyyyy}";
             string code = string.IsNullOrEmpty(latestCode) ? $"{baseCode}00000" : latestCode;
 
             string numberPart = code.Substring(code.Length - 5);
