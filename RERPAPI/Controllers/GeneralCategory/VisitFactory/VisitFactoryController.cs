@@ -100,25 +100,25 @@ namespace RERPAPI.Controllers
 				var start = entity.DateStart ?? entity.DateVisit;
 				var end = entity.DateEnd ?? entity.DateVisit;
 				if (end < start)
-					return BadRequest(new { status = 0, message = "Khoảng thời gian không hợp lệ (End < Start)." });
+					return BadRequest(new { status = 0, message = "Khoảng thời gian không hợp lệ (End nhỏ hơn Start)." });
 
-				var existing = visitFactoryRepo.GetAll(x => !x.IsDeleted);
-				// Không so sánh với chính nó khi cập nhật
-				var conflict = existing
-					.Where(v => v.ID != entity.ID)
-					.Where(v =>
-					{
-						var vStart = v.DateStart ?? v.DateVisit;
-						var vEnd = v.DateEnd ?? v.DateVisit;
-						// Nếu có chỉ định người nhận, kiểm tra trùng theo người nhận để tránh double-book
-						var sameReceiver = !entity.EmployeeReceive.HasValue || v.EmployeeReceive == entity.EmployeeReceive;
-						return sameReceiver && vStart <= end && start <= vEnd;
-					})
-					.FirstOrDefault();
-				if (conflict != null)
-				{
-					return BadRequest(new { status = 0, message = "Khung giờ đã có đăng ký trùng. Vui lòng chọn khung khác hoặc người nhận khác." });
-				}
+				//var existing = visitFactoryRepo.GetAll(x => !x.IsDeleted);
+				//// Không so sánh với chính nó khi cập nhật
+				//var conflict = existing
+				//	.Where(v => v.ID != entity.ID)
+				//	.Where(v =>
+				//	{
+				//		var vStart = v.DateStart ?? v.DateVisit;
+				//		var vEnd = v.DateEnd ?? v.DateVisit;
+				//		// Nếu có chỉ định người nhận, kiểm tra trùng theo người nhận để tránh double-book
+				//		var sameReceiver = !entity.EmployeeReceive.HasValue || v.EmployeeReceive == entity.EmployeeReceive;
+				//		return sameReceiver && vStart <= end && start <= vEnd;
+				//	})
+				//	.FirstOrDefault();
+				//if (conflict != null)
+				//{
+				//	return BadRequest(new { status = 0, message = "Khung giờ đã có đăng ký trùng. Vui lòng chọn khung khác hoặc người nhận khác." });
+				//}
 				bool isCreate = entity.ID <= 0;
 				if (isCreate)
 				{
