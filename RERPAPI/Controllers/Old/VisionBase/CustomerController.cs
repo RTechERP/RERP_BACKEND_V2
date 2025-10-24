@@ -159,104 +159,119 @@ namespace RERPAPI.Controllers.Old.VisionBase
         {
             try
             {
-                Customer customer = dto.Customer.ID > 0 ? _customerRepo.GetByID(dto.Customer.ID) : new Customer();
-                customer.Province = dto.Customer.Province;
-                customer.CustomerCode = dto.Customer.CustomerCode;
-                customer.CustomerName = dto.Customer.CustomerName;
-                customer.CustomerShortName = dto.Customer.CustomerShortName;
-                customer.Address = dto.Customer.Address;
-                customer.CustomerType = dto.Customer.CustomerType;
-                customer.ProductDetails = dto.Customer.ProductDetails;
-                customer.NoteDelivery = dto.Customer.NoteDelivery;
-                customer.NoteVoucher = dto.Customer.NoteVoucher;
-                customer.CheckVoucher = dto.Customer.CheckVoucher;
-                customer.HardCopyVoucher = dto.Customer.HardCopyVoucher;
-                customer.CustomerSpecializationID = dto.Customer.CustomerSpecializationID;
-                customer.ClosingDateDebt = dto.Customer.ClosingDateDebt;
-                customer.Debt = dto.Customer.Debt;
-                customer.TaxCode = dto.Customer.TaxCode;
-                customer.IsDeleted = dto.Customer.IsDeleted;
-                customer.BigAccount = dto.Customer.BigAccount;
-                if(customer.ID > 0)
+                //TN.Binh update xóa nhiều 24/10/25
+                if(dto.isDeleted != null)
                 {
-                    //customer.UpdatedBy =
-                    customer.UpdatedDate = DateTime.Now;
-                    await _customerRepo.UpdateAsync(customer);
-                }
-                else
-                {
-                    //customer.CreatedBy = 
-                    customer.CreatedDate = DateTime.Now;
-                    await _customerRepo.CreateAsync(customer);
-                }
-                if (dto.CustomerContacts != null && dto.CustomerContacts.Count > 0)
-                {
-                    foreach (var item in dto.CustomerContacts)
+                    foreach (var item in dto.isDeleted)
                     {
-                        CustomerContact contact = item.ID > 0 ? _customerContactRepo.GetByID(item.ID) : new CustomerContact();
-                        contact.CustomerID = customer.ID;
-                        contact.ContactName = item.ContactName;
-                        contact.ContactPhone = item.ContactPhone;
-                        contact.ContactEmail = item.ContactEmail;
-                        contact.CustomerPart = item.CustomerPart;
-                        contact.CustomerPosition = item.CustomerPosition;
-                        contact.CustomerTeam = item.CustomerTeam;
-                        if (contact.ID > 0)
-                        {
-                            await _customerContactRepo.UpdateAsync(contact);
-                        }
-                        else
-                        {
-                            await _customerContactRepo.CreateAsync(contact);
-                        }
+                        var cus = _customerRepo.GetAll(x => x.ID == item).FirstOrDefault();
+                        cus.IsDeleted = true;
+                        await _customerRepo.UpdateAsync(cus);
                     }
                 }
-                if(dto.AddressStocks != null && dto.AddressStocks.Count > 0)
+                //end
+                if(dto.Customer != null)
                 {
-                    foreach (var item in dto.AddressStocks)
+                    Customer customer = dto.Customer.ID > 0 ? _customerRepo.GetByID(dto.Customer.ID) : new Customer();
+                    customer.Province = dto.Customer.Province;
+                    customer.CustomerCode = dto.Customer.CustomerCode;
+                    customer.CustomerName = dto.Customer.CustomerName;
+                    customer.CustomerShortName = dto.Customer.CustomerShortName;
+                    customer.Address = dto.Customer.Address;
+                    customer.CustomerType = dto.Customer.CustomerType;
+                    customer.ProductDetails = dto.Customer.ProductDetails;
+                    customer.NoteDelivery = dto.Customer.NoteDelivery;
+                    customer.NoteVoucher = dto.Customer.NoteVoucher;
+                    customer.CheckVoucher = dto.Customer.CheckVoucher;
+                    customer.HardCopyVoucher = dto.Customer.HardCopyVoucher;
+                    customer.CustomerSpecializationID = dto.Customer.CustomerSpecializationID;
+                    customer.ClosingDateDebt = dto.Customer.ClosingDateDebt;
+                    customer.Debt = dto.Customer.Debt;
+                    customer.TaxCode = dto.Customer.TaxCode;
+                    customer.IsDeleted = dto.Customer.IsDeleted;
+                    customer.BigAccount = dto.Customer.BigAccount;
+                    if (customer.ID > 0)
                     {
-                        AddressStock address = item.ID > 0 ? _addressStockRepo.GetByID(item.ID) : new AddressStock();
-                        address.CustomerID = customer.ID;
-                        address.Address = item.Address;
-                        if (address.ID > 0)
+                        //customer.UpdatedBy =
+                        customer.UpdatedDate = DateTime.Now;
+                        await _customerRepo.UpdateAsync(customer);
+                    }
+                    else
+                    {
+                        //customer.CreatedBy = 
+                        customer.CreatedDate = DateTime.Now;
+                        await _customerRepo.CreateAsync(customer);
+                    }
+                    if (dto.CustomerContacts != null && dto.CustomerContacts.Count > 0)
+                    {
+                        foreach (var item in dto.CustomerContacts)
                         {
-                            await _addressStockRepo.UpdateAsync(address);
-                        }
-                        else
-                        {
-                            await _addressStockRepo.CreateAsync(address);
+                            CustomerContact contact = item.ID > 0 ? _customerContactRepo.GetByID(item.ID) : new CustomerContact();
+                            contact.CustomerID = customer.ID;
+                            contact.ContactName = item.ContactName;
+                            contact.ContactPhone = item.ContactPhone;
+                            contact.ContactEmail = item.ContactEmail;
+                            contact.CustomerPart = item.CustomerPart;
+                            contact.CustomerPosition = item.CustomerPosition;
+                            contact.CustomerTeam = item.CustomerTeam;
+                            if (contact.ID > 0)
+                            {
+                                await _customerContactRepo.UpdateAsync(contact);
+                            }
+                            else
+                            {
+                                await _customerContactRepo.CreateAsync(contact);
+                            }
                         }
                     }
-                }
-                if(dto.CustomerEmployees != null && dto.CustomerEmployees.Count > 0)
-                {
-                    foreach (var item in dto.CustomerEmployees)
+                    if (dto.AddressStocks != null && dto.AddressStocks.Count > 0)
                     {
-                        CustomerEmployee customerEmployee = item.ID > 0 ? _customerEmployeeRepo.GetByID(item.ID) : new CustomerEmployee();
-                        customerEmployee.CustomerID = customer.ID;
-                        customerEmployee.EmployeeID = item.EmployeeID;
-                        if (customerEmployee.ID > 0)
+                        foreach (var item in dto.AddressStocks)
                         {
-                            await _customerEmployeeRepo.UpdateAsync(customerEmployee);
-                        }
-                        else
-                        {
-                            await _customerEmployeeRepo.CreateAsync(customerEmployee);
+                            AddressStock address = item.ID > 0 ? _addressStockRepo.GetByID(item.ID) : new AddressStock();
+                            address.CustomerID = customer.ID;
+                            address.Address = item.Address;
+                            if (address.ID > 0)
+                            {
+                                await _addressStockRepo.UpdateAsync(address);
+                            }
+                            else
+                            {
+                                await _addressStockRepo.CreateAsync(address);
+                            }
                         }
                     }
+                    if (dto.CustomerEmployees != null && dto.CustomerEmployees.Count > 0)
+                    {
+                        foreach (var item in dto.CustomerEmployees)
+                        {
+                            CustomerEmployee customerEmployee = item.ID > 0 ? _customerEmployeeRepo.GetByID(item.ID) : new CustomerEmployee();
+                            customerEmployee.CustomerID = customer.ID;
+                            customerEmployee.EmployeeID = item.EmployeeID;
+                            if (customerEmployee.ID > 0)
+                            {
+                                await _customerEmployeeRepo.UpdateAsync(customerEmployee);
+                            }
+                            else
+                            {
+                                await _customerEmployeeRepo.CreateAsync(customerEmployee);
+                            }
+                        }
+                    }
+                    BusinessFieldLink business = _businessFieldLinkRepo.GetAll().FirstOrDefault(x => x.CustomerID == customer.ID);
+                    if (business == null) business = new BusinessFieldLink();
+                    business.CustomerID = customer.ID;
+                    business.BusinessFieldID = dto.BusinessFieldID;
+                    if (business.ID > 0)
+                    {
+                        await _businessFieldLinkRepo.UpdateAsync(business);
+                    }
+                    else
+                    {
+                        await _businessFieldLinkRepo.CreateAsync(business);
+                    }
                 }
-                BusinessFieldLink business = _businessFieldLinkRepo.GetAll().FirstOrDefault(x => x.CustomerID == customer.ID);
-                if (business == null) business = new BusinessFieldLink();
-                business.CustomerID = customer.ID;
-                business.BusinessFieldID = dto.BusinessFieldID;
-                if (business.ID > 0)
-                {
-                    await _businessFieldLinkRepo.UpdateAsync(business);
-                }
-                else
-                {
-                    await _businessFieldLinkRepo.CreateAsync(business);
-                }
+
                 return Ok(ApiResponseFactory.Success("", "Lưu thành công"));
             }
             catch (Exception ex)
