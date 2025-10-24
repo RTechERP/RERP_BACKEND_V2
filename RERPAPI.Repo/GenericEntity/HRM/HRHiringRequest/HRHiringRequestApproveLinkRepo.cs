@@ -42,13 +42,24 @@ namespace RERPAPI.Repo.GenericEntity
                             CreatedBy = currentUser.LoginName,
                             UpdatedBy = currentUser.LoginName
                         },
-                        new HRHiringRequestApproveLink()
+                              new HRHiringRequestApproveLink()
                         {
                             STT = 3,
                             HRHiringRequestID = hrHiring.ID,
                             ApproveID = 0,
                             IsApprove = 0,
                             Step = 3,
+                            StepName = "TBP HR xác nhận",
+                            CreatedBy = currentUser.LoginName,
+                            UpdatedBy = currentUser.LoginName
+                        },
+                        new HRHiringRequestApproveLink()
+                        {
+                            STT = 4,
+                            HRHiringRequestID = hrHiring.ID,
+                            ApproveID = 0,
+                            IsApprove = 0,
+                            Step = 4,
                             StepName = "BGĐ xác nhận",
                             CreatedBy = currentUser.LoginName,
                             UpdatedBy = currentUser.LoginName
@@ -159,14 +170,66 @@ namespace RERPAPI.Repo.GenericEntity
                             }
                             break;
 
-                        case 3: //Nếu là BGĐ
+                        case 3: //Nếu là TBP HR 
                             if (actionApproved.IsApprove == 1) //Nếu là duyệt
                             {
-                                //Kiểm tra HR đã duyệt chưa
+                                //var approve = approves.FirstOrDefault(x => x.Step == actionApproved.Step) ?? new HRHiringRequestApproveLink();
+                                //approve.ApproveID = currentUser.EmployeeID;
+                                //approve.IsApprove = actionApproved.IsApprove;
+                                //approve.DateApprove = DateTime.Now;
+                                //approve.ReasonUnApprove = actionApproved.ReasonUnApprove;
+                                //approve.Note = actionApproved.Note;
+                                //approve.UpdatedBy = currentUser.LoginName;
+                                //await UpdateAsync(approve);
+                                //response = ApiResponseFactory.Success(null, "Duyệt thành công!");
+                                var approveTBP = approves.FirstOrDefault(x => x.Step == actionApproved.Step - 1) ?? new HRHiringRequestApproveLink();
+                                if (approveTBP.IsApprove != 1)
+                                {
+                                    response = ApiResponseFactory.Fail(null, "Nhân viên HR  chưa duyệt. Vui lòng duyệt ở HR trước!");
+                                }
+                                else
+                                {
+                                    var approve = approves.FirstOrDefault(x => x.Step == actionApproved.Step) ?? new HRHiringRequestApproveLink();
+                                    approve.ApproveID = currentUser.EmployeeID;
+                                    approve.IsApprove = actionApproved.IsApprove;
+                                    approve.DateApprove = DateTime.Now;
+                                    approve.ReasonUnApprove = actionApproved.ReasonUnApprove;
+                                    approve.Note = actionApproved.Note;
+                                    approve.UpdatedBy = currentUser.LoginName;
+                                    await UpdateAsync(approve);
+                                    response = ApiResponseFactory.Success(approve, "Duyệt thành công!");
+                                }
+                            }
+                            else if (actionApproved.IsApprove == 2) //Nếu là hủy duyệt
+                            {
+                                // Kiểm tra BGD đã hủy duyệt chưa
+                                var approveHR = approves.FirstOrDefault(x => x.Step == nextStep) ?? new HRHiringRequestApproveLink();
+                                if (approveHR.IsApprove == 1)
+                                {
+                                    response = ApiResponseFactory.Fail(null, "BGD đã duyệt. Vui lòng hủy duyệt ở BGD trước!");
+                                }
+                                else
+                                {
+                                    var approve = approves.FirstOrDefault(x => x.Step == actionApproved.Step) ?? new HRHiringRequestApproveLink();
+                                    approve.ApproveID = currentUser.EmployeeID;
+                                    approve.IsApprove = actionApproved.IsApprove;
+                                    approve.DateApprove = DateTime.Now;
+                                    approve.ReasonUnApprove = actionApproved.ReasonUnApprove;
+                                    approve.Note = actionApproved.Note;
+                                    approve.UpdatedBy = currentUser.LoginName;
+                                    await UpdateAsync(approve);
+                                    response = ApiResponseFactory.Success(null, "Hủy duyệt thành công!");
+                                }
+                            }
+                            break;
+                        case 4: //Nếu là BGĐ
+                            if (actionApproved.IsApprove == 1) //Nếu là duyệt
+                            {
+                                //Kiểm tra TBP HR đã duyệt chưa
                                 var approveBGD = approves.FirstOrDefault(x => x.Step == actionApproved.Step - 1) ?? new HRHiringRequestApproveLink();
                                 if (approveBGD.IsApprove != 1)
                                 {
-                                    response = ApiResponseFactory.Fail(null, "HR chưa duyệt. Vui lòng duyệt ở HR trước!");
+                                    response = ApiResponseFactory.Fail(null, "TBP HR chưa duyệt. Vui lòng duyệt ở HR trước!");
                                 }
                                 else
                                 {

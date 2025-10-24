@@ -1,21 +1,21 @@
-﻿using Azure.Core;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Model.Common;
-using RERPAPI.Model.Context;
-using RERPAPI.Model.DTO;
-using RERPAPI.Model.DTO.Project;
-using RERPAPI.Model.DTO.ProjectAGV;
-using RERPAPI.Model.Entities;
-using RERPAPI.Model.Param;
-using RERPAPI.Model.Param.Project;
-using RERPAPI.Model.Param.ProjectAGV;
-using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.Project;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
-using System.Drawing;
-using System;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+﻿//using Azure.Core;
+//using Microsoft.AspNetCore.Http;
+//using Microsoft.AspNetCore.Mvc;
+//using RERPAPI.Model.Common;
+//using RERPAPI.Model.Context;
+//using RERPAPI.Model.DTO;
+//using RERPAPI.Model.DTO.Project;
+//using RERPAPI.Model.DTO.ProjectAGV;
+//using RERPAPI.Model.Entities;
+//using RERPAPI.Model.Param;
+//using RERPAPI.Model.Param.Project;
+//using RERPAPI.Model.Param.ProjectAGV;
+//using RERPAPI.Repo.GenericEntity;
+//using RERPAPI.Repo.GenericEntity.Project;
+//using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
+//using System.Drawing;
+//using System;
+//using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers.ProjectAGV
 {
@@ -117,42 +117,42 @@ namespace RERPAPI.Controllers.ProjectAGV
                 }
 
 
-                foreach (ProjectDocumentDTO item in documents)
-                {
-                    // Xử lý xóa mềm trước
-                    if (item.IsDeleted == true && item.ID > 0)
-                    {
-                        ProjectDocument deleteModel = _projectDocumentsRepo.GetByID(item.ID.Value);
-                        if (deleteModel != null)
-                        {
-                            deleteModel.IsDeleted = true;
-                            _projectDocumentsRepo.PrepareForSave(deleteModel, false);
-                            await _projectDocumentsRepo.UpdateAsync(deleteModel);
-                        }
-                        continue; // Skip đến item tiếp theo
-                    }
+//                foreach (ProjectDocumentDTO item in documents)
+//                {
+//                    // Xử lý xóa mềm trước
+//                    if (item.IsDeleted == true && item.ID > 0)
+//                    {
+//                        ProjectDocument deleteModel = _projectDocumentsRepo.GetByID(item.ID.Value);
+//                        if (deleteModel != null)
+//                        {
+//                            deleteModel.IsDeleted = true;
+//                            _projectDocumentsRepo.PrepareForSave(deleteModel, false);
+//                            await _projectDocumentsRepo.UpdateAsync(deleteModel);
+//                        }
+//                        continue; // Skip đến item tiếp theo
+//                    }
 
-                    if (!_projectDocumentsRepo.ValidateForSaveDTO(item, out string message1))
-                    {
-                        return BadRequest(ApiResponseFactory.Fail(null, message1));
-                    }
-                    int id = item.ID ?? 0;
-                    ProjectDocument model = id > 0 ? _projectDocumentsRepo.GetByID(id) : new ProjectDocument();
-                    model.ProjectID = item.ProjectID ?? 0;
-                    model.Name = item.Name;
-                    model.Type = item.Type ?? 0;
-                    model.FilePath = item.FilePath;
-                    model.Version = item.Version;
-                    model.Size = item.Size;
-                    model.CreateBy = item.CreateBy;
-                    model.UpdatedBy = item.UpdatedBy;
-                    model.IsDeleted = false;
+//                    if (!_projectDocumentsRepo.ValidateForSaveDTO(item, out string message1))
+//                    {
+//                        return BadRequest(ApiResponseFactory.Fail(null, message1));
+//                    }
+//                    int id = item.ID ?? 0;
+//                    ProjectDocument model = id > 0 ? _projectDocumentsRepo.GetByID(id) : new ProjectDocument();
+//                    model.ProjectID = item.ProjectID ?? 0;
+//                    model.Name = item.Name;
+//                    model.Type = item.Type ?? 0;
+//                    model.FilePath = item.FilePath;
+//                    model.Version = item.Version;
+//                    model.Size = item.Size;
+//                    model.CreateBy = item.CreateBy;
+//                    model.UpdatedBy = item.UpdatedBy;
+//                    model.IsDeleted = false;
 
-                    //// Validate sử dụng repo validation
-                    //if (!_projectDocumentsRepo.ValidateForSave(model, out string message))
-                    //{
-                    //    return BadRequest(ApiResponseFactory.Fail(null, message));
-                    //}
+//                    //// Validate sử dụng repo validation
+//                    //if (!_projectDocumentsRepo.ValidateForSave(model, out string message))
+//                    //{
+//                    //    return BadRequest(ApiResponseFactory.Fail(null, message));
+//                    //}
 
                     if (id > 0)
                     {
@@ -284,10 +284,10 @@ namespace RERPAPI.Controllers.ProjectAGV
             try
             {
 
-                if (!_projectRepo.ValidateDTOAGV(dto, out string validateDTOMsg))
-                {
-                    return BadRequest(ApiResponseFactory.Fail(null, validateDTOMsg));
-                }
+//                if (!_projectRepo.ValidateDTOAGV(dto, out string validateDTOMsg))
+//                {
+//                    return BadRequest(ApiResponseFactory.Fail(null, validateDTOMsg));
+//                }
 
                 Project model = new Project();
                 model.ID = dto.ID;
@@ -327,8 +327,8 @@ namespace RERPAPI.Controllers.ProjectAGV
                     }
                 }
 
-                if (dto.Tasks != null)
-                {
+//                if (dto.Tasks != null)
+//                {
 
                     foreach (var item in dto.Tasks)
                     {
@@ -358,15 +358,15 @@ namespace RERPAPI.Controllers.ProjectAGV
                         {
                             projectItem.STT = _projectItemRepo.GetMaxSTT(item.ProjectID);
 
-                            string validateMsg;
-                            //if (!_projectItemRepo.Validate(projectItem, out validateMsg))
-                            //{
-                            //    return BadRequest(ApiResponseFactory.Fail(null, validateMsg));
-                            //}
-                            _projectItemRepo.Create(projectItem);
-                        }
-                        else
-                        {
+//                            string validateMsg;
+//                            //if (!_projectItemRepo.Validate(projectItem, out validateMsg))
+//                            //{
+//                            //    return BadRequest(ApiResponseFactory.Fail(null, validateMsg));
+//                            //}
+//                            _projectItemRepo.Create(projectItem);
+//                        }
+//                        else
+//                        {
 
 
                             string validateMsg;
@@ -430,23 +430,23 @@ namespace RERPAPI.Controllers.ProjectAGV
                                 continue;
                             }
 
-                            int id = item.ID ?? 0;
-                            ProjectDocument model1 = id > 0 ? _projectDocumentsRepo.GetByID(id) : new ProjectDocument();
-                            model1.ProjectID = item.ProjectID ?? 0;
-                            model1.Name = item.Name;
-                            model1.Type = item.Type ?? 0;
-                            model1.FilePath = item.FilePath;
-                            model1.Version = item.Version;
-                            model1.Size = item.Size;
-                            model1.CreateBy = item.CreateBy;
-                            model1.UpdatedBy = item.UpdatedBy;
-                            model1.IsDeleted = false;
+//                            int id = item.ID ?? 0;
+//                            ProjectDocument model1 = id > 0 ? _projectDocumentsRepo.GetByID(id) : new ProjectDocument();
+//                            model1.ProjectID = item.ProjectID ?? 0;
+//                            model1.Name = item.Name;
+//                            model1.Type = item.Type ?? 0;
+//                            model1.FilePath = item.FilePath;
+//                            model1.Version = item.Version;
+//                            model1.Size = item.Size;
+//                            model1.CreateBy = item.CreateBy;
+//                            model1.UpdatedBy = item.UpdatedBy;
+//                            model1.IsDeleted = false;
 
-                            //Validate sử dụng repo validation
-                            //if (!_projectDocumentsRepo.ValidateForSave(model1, out string message))
-                            //{
-                            //    return BadRequest(ApiResponseFactory.Fail(null, message));
-                            //}
+//                            //Validate sử dụng repo validation
+//                            //if (!_projectDocumentsRepo.ValidateForSave(model1, out string message))
+//                            //{
+//                            //    return BadRequest(ApiResponseFactory.Fail(null, message));
+//                            //}
 
                             if (id > 0)
                             {
@@ -577,5 +577,5 @@ namespace RERPAPI.Controllers.ProjectAGV
 
 
 
-    }
-}
+//    }
+//}

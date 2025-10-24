@@ -16,7 +16,7 @@ using System.Security.Claims;
 using System.Text;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
-namespace RERPAPI.Controllers.Old
+namespace RERPAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -37,8 +37,6 @@ namespace RERPAPI.Controllers.Old
             _jwtSettings = jwtSettings.Value;
             _context = context;
         }
-
-
         [HttpPost("login")]
         public IActionResult Login([FromBody] User user)
         {
@@ -208,7 +206,7 @@ namespace RERPAPI.Controllers.Old
                     SavedFileName = uniqueFileName,
                     FilePath = fullPath,
                     FileSize = file.Length,
-                    ContentType = file.ContentType,
+                    file.ContentType,
                     UploadTime = DateTime.Now
                 };
 
@@ -310,7 +308,7 @@ namespace RERPAPI.Controllers.Old
                             SavedFileName = uniqueFileName,
                             FilePath = fullPath,
                             FileSize = file.Length,
-                            ContentType = file.ContentType,
+                            file.ContentType,
                             UploadTime = DateTime.Now
                         });
                     }
@@ -363,11 +361,11 @@ namespace RERPAPI.Controllers.Old
                                             .OrderBy(g => g.Key.DepartmentSTT)
                                             .Select(g => new
                                             {
-                                                DepartmentName = g.Key.DepartmentName,
+                                                g.Key.DepartmentName,
                                                 Employees = g.Select(item => new
                                                 {
-                                                    EmployeeLeave = item.EmployeeLeave,
-                                                    TimeOnLeaveText = item.TimeOnLeave == 1 ? " (S)" : (item.TimeOnLeave == 2 ? " (C)" : "")
+                                                    item.EmployeeLeave,
+                                                    TimeOnLeaveText = item.TimeOnLeave == 1 ? " (S)" : item.TimeOnLeave == 2 ? " (C)" : ""
                                                 }).ToList()
                                             }).ToList(),
 
@@ -381,11 +379,11 @@ namespace RERPAPI.Controllers.Old
                                         .OrderBy(g => g.Key.DepartmentSTT)
                                         .Select(g => new
                                         {
-                                            DepartmentName = g.Key.DepartmentName,
+                                            g.Key.DepartmentName,
                                             Employees = g.Select(item => new
                                             {
-                                                EmployeeName = item.EmployeeName,
-                                                TimeWFHText = item.TimeWFH == 1 ? " (S)" : (item.TimeWFH == 2 ? " (C)" : ""),
+                                                item.EmployeeName,
+                                                TimeWFHText = item.TimeWFH == 1 ? " (S)" : item.TimeWFH == 2 ? " (C)" : "",
                                                 IsApprovedBGDText = (bool)item.IsApprovedBGD == true ? "" : " - BGĐ chưa duyệt",
                                             }).ToList()
                                         }).ToList(),

@@ -18,22 +18,32 @@ namespace RERPAPI.Controllers.Old
             try
             {
                 var holidays = SQLHelper<object>.ProcedureToList("spGetHoliday",
-                                                           new string[] { "@Month", "@Year"},
-                                                                new object[] { month, year});
-                return Ok(new
+                                                                new string[] { "@Month", "@Year" },
+                                                                new object[] { month, year });
+                //return Ok(new
+                //{
+                //    status = 1,
+                //    data = SQLHelper<object>.GetListData(holidays, 0)
+                //});
+                var data = new
                 {
-                    status = 1,
-                    data = SQLHelper<object>.GetListData(holidays, 0)
-                });
+                    holidays = SQLHelper<object>.GetListData(holidays, 0),
+                    scheduleWorkSaturdays = SQLHelper<object>.GetListData(holidays, 1),
+                };
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+
+
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                //return BadRequest(new
+                //{
+                //    status = 0,
+                //    message = ex.Message,
+                //    error = ex.ToString()
+                //});
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         //[HttpGet("schedule-work")]

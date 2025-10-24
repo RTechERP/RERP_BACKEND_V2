@@ -147,4 +147,8 @@ public partial class ProjectPartlistPurchaseRequest
     public int? DuplicateID { get; set; }
 
     public decimal? OriginQuantity { get; set; }
+
+    public string? ParentProductCode { get; set; }
+
+    public bool? IsPurchase { get; set; }
 }
