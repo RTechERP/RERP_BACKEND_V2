@@ -136,17 +136,10 @@ public partial class PONCC
 
     public bool? IsDeleted { get; set; }
 
+    /// <summary>
+    /// 0: PO Thương mại; 1: PO mượn
+    /// </summary>
     public int? POType { get; set; }
 
     public string? ShippingPoint { get; set; }
-
-    /// <summary>
-    /// Không đạt chất lượng đơn hàng
-    /// </summary>
-    public bool? OrderQualityNotMet { get; set; }
-
-    /// <summary>
-    /// Ngày tới hạn
-    /// </summary>
-    public string? ReasonForFailure { get; set; }
 }

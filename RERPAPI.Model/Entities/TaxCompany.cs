@@ -11,6 +11,8 @@ public partial class TaxCompany
 
     public string? Name { get; set; }
 
+    public string? FullName { get; set; }
+
     public string? CreatedBy { get; set; }
 
     public DateTime? CreatedDate { get; set; }
@@ -30,18 +32,4 @@ public partial class TaxCompany
     public string? Director { get; set; }
 
     public string? Position { get; set; }
-
-    public string? FullName { get; set; }
-
-    public string? BuyerEnglish { get; set; }
-
-    public string? AddressBuyerEnglish { get; set; }
-
-    public string? LegalRepresentativeEnglish { get; set; }
-
-    public string? BuyerVietnamese { get; set; }
-
-    public string? AddressBuyerVienamese { get; set; }
-
-    public string? TaxVietnamese { get; set; }
 }

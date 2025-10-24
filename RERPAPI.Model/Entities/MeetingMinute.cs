@@ -28,6 +28,4 @@ public partial class MeetingMinute
     public string? UpdatedBy { get; set; }
 
     public bool? IsDeleted { get; set; }
-
-    public int? CreatorID { get; set; }
 }

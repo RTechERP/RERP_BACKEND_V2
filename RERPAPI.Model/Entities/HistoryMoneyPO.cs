@@ -37,5 +37,5 @@ public partial class HistoryMoneyPO
 
     public bool? IsMergePO { get; set; }
 
-    public decimal? MoneyNotPaid { get; set; }
+    public bool? IsDelivered { get; set; }
 }

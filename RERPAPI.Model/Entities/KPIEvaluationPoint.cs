@@ -51,10 +51,4 @@ public partial class KPIEvaluationPoint
     public decimal? TBPPointInput { get; set; }
 
     public decimal? BGDPointInput { get; set; }
-
-    public DateTime? DateEmployeeConfirm { get; set; }
-
-    public DateTime? DateTBPConfirm { get; set; }
-
-    public DateTime? DateBGDConfirm { get; set; }
 }

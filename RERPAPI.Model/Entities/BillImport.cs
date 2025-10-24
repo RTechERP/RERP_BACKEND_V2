@@ -82,11 +82,4 @@ public partial class BillImport
     public int? RulePayID { get; set; }
 
     public bool? IsDeleted { get; set; }
-
-    /// <summary>
-    /// 1: đã đủ, 0: chưa đủ
-    /// </summary>
-    public bool? StatusDocumentImport { get; set; }
-
-    public int? BillExportID { get; set; }
 }

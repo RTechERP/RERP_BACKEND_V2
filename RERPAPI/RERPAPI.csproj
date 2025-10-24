@@ -16,7 +16,6 @@
   <ItemGroup>
     <Compile Remove="Controllers\CustomerController.cs" />
     <Compile Remove="Controllers\Old\POKHController.cs" />
-    <Compile Remove="Controllers\Old\POKH\POKHController.cs" />
     <Compile Remove="Controllers\Old\TB\FirmController.cs" />
     <Compile Remove="Controllers\UsersController.cs" />
     <Compile Remove="Controllers\WareHouseController.cs" />

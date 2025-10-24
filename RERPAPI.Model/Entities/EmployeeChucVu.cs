@@ -23,5 +23,5 @@ public partial class EmployeeChucVu
 
     public bool? IsBusinessCost { get; set; }
 
-    public bool IsDeleted { get; set; }
+    public bool? IsDeleted { get; set; }
 }

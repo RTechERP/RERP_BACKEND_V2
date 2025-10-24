@@ -23,7 +23,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                List<Employee> employees = _employeeRepo.GetAll();
+                List<Employee> employees = _employeeRepo.GetAll().Where(x => !string.IsNullOrWhiteSpace(x.FullName)).ToList() ;
                 return Ok(new
                 {
                     status = 1,

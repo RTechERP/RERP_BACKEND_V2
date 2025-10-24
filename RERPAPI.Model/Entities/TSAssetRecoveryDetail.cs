@@ -24,10 +24,4 @@ public partial class TSAssetRecoveryDetail
     public DateTime? UpdatedDate { get; set; }
 
     public string? UpdatedBy { get; set; }
-
-    public int? LastTSStatusAssetID { get; set; }
-
-    public int? LastEmployeeID { get; set; }
-
-    public bool? IsDeleted { get; set; }
 }
