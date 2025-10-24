@@ -13,7 +13,7 @@ namespace RERPAPI.Controllers.Old
     public class CustomerSpecializationController : ControllerBase
     {
         CustomerSpecializationRepo _customerSpecializationRepo = new CustomerSpecializationRepo();
-        [HttpPost]
+        [HttpPost("save-data")]
         public async Task<IActionResult> Post(CustomerSpecialization model)
         {
             try
