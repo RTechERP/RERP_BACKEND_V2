@@ -609,7 +609,13 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         //                //pathLocation = @"\\rtctechnologydata.ddns.net\DUAN\Projects\";
         //                pathLocation = @"\\14.232.152.154\DUAN\Projects\";
         //            }
+//        }
 
+//        // lấy trạng thái dự án 
+//        [HttpGet("get-project-statuss")]
+//        // [ApiKeyAuthorize]
+//        public async Task<IActionResult> GetProjectStatus(int projectId)
+//        {
         //            try
         //            {
         //                Directory.CreateDirectory(pathLocation);
@@ -618,6 +624,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         //            {
         //                pathLocation = @"\\rtctechnologydata.ddns.net\DUAN\Projects\";
         //            }
+//        }
 
         //            string path = $@"{pathLocation}\{year}\{code}";
         //            List<int> listProjectTypeID = new List<int>();
@@ -663,6 +670,9 @@ namespace RERPAPI.Controllers.Old.ProjectManager
 
         //                    ////string parentfolder = TextUtils.ToString(dt.Rows[0]["FolderName"]);
 
+//        //                    if (dt.Count() <= 0)
+//        //                        continue;
+//        //                    dt.Columns.Add("Path", typeof(string));
 
         //                    //string subPath = "";
         //                    //for (int j = 0; j < dt.Rows.Count; j++)
@@ -704,6 +714,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         //    }
         //}
 
+//        //                    //    //subPath += parentfolder + "\\" + subFolder;
 
         // modal loadProjectCode
         [HttpGet("get-project-code-modal")]
@@ -801,7 +812,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         {
             try
             {
-                List<Model.Entities.Project> prjs = _projectRepo.GetAll().OrderByDescending(x => x.CreatedDate).ToList();
+                List<Model.Entities.Project> prjs = projectRepo.GetAll().OrderByDescending(x => x.CreatedDate).ToList();
                 return Ok(ApiResponseFactory.Success(prjs, ""));
             }
             catch (Exception ex)
@@ -981,7 +992,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
 
                 int valueRow = (int)data[0]["RowNumber"];
 
-                Model.Entities.Project project = _projectRepo.GetByID(projectId);
+                Model.Entities.Project project = projectRepo.GetByID(projectId);
 
                 // Check quyền sau khi có phân quyền
                 //if(project.ProjectManager == Global.EmployeeID || project.UserID == Global.UserID || Global.IsAdmin || valueRow > 0 || project.UserTechnicalID == Global.UserID)
@@ -1008,7 +1019,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 var pr = prj.project ?? null;
                 int projectId = prj.project.ID;
 
-                Model.Entities.Project project = projectId > 0 ? _projectRepo.GetByID(projectId) : new Model.Entities.Project();
+                Model.Entities.Project project = projectId > 0 ? projectRepo.GetByID(projectId) : new Model.Entities.Project();
                 project.ProjectCode = prj.project.ProjectCode;
                 project.ProjectName = prj.project.ProjectName;
                 project.ProjectStatus = prj.project.ProjectStatus;
@@ -1248,7 +1259,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
             {
                 if (prjTypeLink.ProjectID > 0)
                 {
-                    Model.Entities.Project project = _projectRepo.GetByID(prjTypeLink.ProjectID);
+                    Model.Entities.Project project = projectRepo.GetByID(prjTypeLink.ProjectID);
                     project.ProjectStatus = prjTypeLink.ProjectStatus;
                     _projectRepo.Update(project);
 
@@ -1328,7 +1339,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 if (projectStatuses.Count() > 0)
                 {
                     int id = (int)projectStatuses[0].ProjectID;
-                    Model.Entities.Project project = _projectRepo.GetByID(id);
+                    Model.Entities.Project project = projectRepo.GetByID(id);
                     foreach (var item in projectStatuses)
                     {
                         ProjectStatusDetail model = item.ID > 0 ? _projectStatusDetailRepo.GetByID(item.ID) : new ProjectStatusDetail();

@@ -6,11 +6,11 @@ namespace RERPAPI.Repo.GenericEntity
     {
         public string GetNewCode(TrainingRegistration model)
         {
-            string prefix = "DT";
-            string datePart = model.CreatedDate?.ToString("yyyyMMdd") ?? DateTime.Now.ToString("yyyyMMdd");
-            string fullPrefix = $"{prefix}.{datePart}"; // Ví dụ: DT20251013
+            //string prefix = "DT";
+            //string datePart = model.CreatedDate?.ToString("yyyyMMdd") ?? DateTime.Now.ToString("yyyyMMdd");
+            //string fullPrefix = $"{prefix}.{datePart}"; // Ví dụ: DT20251013
 
-            // Lấy bản ghi có cùng ngày tạo
+            //// Lấy bản ghi có cùng ngày tạo
             //var lastRecord = GetAll(x => x.Code != null && x.Code.StartsWith(fullPrefix))
             //                 .OrderByDescending(x => x.Code)
             //                 .FirstOrDefault();
@@ -28,8 +28,7 @@ namespace RERPAPI.Repo.GenericEntity
 
             //// Chỉ có 1 dấu chấm trước phần số
             //string newCode = $"{fullPrefix}.{newNumber:D3}";
-            //return newCode;
-            return "a";
+            return "newCode";
         }
 
     }

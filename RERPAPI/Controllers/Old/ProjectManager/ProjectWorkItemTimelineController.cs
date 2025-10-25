@@ -21,53 +21,37 @@ namespace RERPAPI.Controllers.Old.ProjectManager
 
         #region Lấy danh sách tiến độ công việc
         [HttpGet("get-department")]
-        public async Task<IActionResult> getDepartment()
+        public async Task<IActionResult> GetDepartment()
         {
             try
             {
                 List<Department> departments = departmentRepo.GetAll().ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data = departments
-                });
+                return Ok(ApiResponseFactory.Success(departments, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+
             }
         }
 
-        [HttpGet("get-user-team/{departmentId}")]
-        public async Task<IActionResult> getUserTeam(int departmentId)
+        [HttpGet("get-user-team")]
+        public async Task<IActionResult> GetUserTeam(int departmentId)
         {
             try
             {
                 List<UserTeam> userTeams = userTeamRepo.GetAll().Where(x => x.DepartmentID == departmentId).ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data = userTeams
-                });
+                return Ok(ApiResponseFactory.Success(userTeams, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+
             }
         }
 
         [HttpGet("get-data")]
-        public async Task<IActionResult> getData(DateTime dateStart, DateTime dateEnd, int departmentId, int userTeamId, int userId, [FromQuery] int[] typeNumber)
+        public async Task<IActionResult> GetData(DateTime dateStart, DateTime dateEnd, int departmentId, int userTeamId, int userId, [FromQuery] int[] typeNumber)
         {
             try
             {
@@ -79,25 +63,18 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 var data = SQLHelper<object>.ProcedureToList("spGetTimelineEmployeeWorks"
                                           , new string[] { "@DateStart", "@DateEnd", "@DepartmentID", "@UserTeamID", "@UserID", "@IsShowDetail", "@TypeNumber" }
                                           , new object[] { ds, de, departmentId, userTeamId, userId, 0, typeNumberStr });
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<object>.GetListData(data, 0)
-                });
+                var timeLine = SQLHelper<object>.GetListData(data, 0);
+                return Ok(ApiResponseFactory.Success(timeLine, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+
             }
         }
 
         [HttpGet("get-data-detail")]
-        public async Task<IActionResult> getDataDetail(int userId, int type, DateTime date, string typeText, string code)
+        public async Task<IActionResult> GetDataDetail(int userId, int type, DateTime date, string typeText, string code)
         {
             try
             {
@@ -105,20 +82,12 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 var data = SQLHelper<object>.ProcedureToList("spGetTimelineEmployeeWorksDetail"
                                            , new string[] { "@UserID", "@TypeNumber", "@Date", "@Code" }
                                            , new object[] { userId, type, date, codeNew });
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<object>.GetListData(data, 0)
-                });
+                var timeLineDetails = SQLHelper<object>.GetListData(data, 0);
+                return Ok(ApiResponseFactory.Success(timeLineDetails, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 

@@ -1,9 +1,16 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.IdentityModel.Tokens;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using System.Threading.Tasks;
+using ZXing;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers
 {
@@ -36,6 +43,7 @@ namespace RERPAPI.Controllers
 
 
         [HttpPost("savedata")]
+        
         public async Task<IActionResult> SaveData([FromBody] HRHiringRequestDTO model)
         {
             try
@@ -56,13 +64,16 @@ namespace RERPAPI.Controllers
                     model.HiringRequests.HiringRequestCode = _hrHiringRequestRepo.GetRequestCode().HiringRequestCode;
                     model.HiringRequests.CreatedDate = DateTime.Now;
                     model.HiringRequests.IsDeleted = false;
+                    model.HiringRequests.CreatedBy =  model.HiringRequests.UpdatedBy =  _currentUser.LoginName;
                     await _hrHiringRequestRepo.CreateAsync(model.HiringRequests);
                     hiringRequestId = model.HiringRequests.ID;
+
+                    await _hiringRequestApproveLinkRepo.CreateApprove(model.HiringRequests,_currentUser);
                 }
                 else
                 {
                     // UPDATE hoặc SOFT DELETE
-                    model.HiringRequests.UpdatedDate = DateTime.Now;
+                    model.HiringRequests.UpdatedBy = _currentUser.LoginName;
                     await _hrHiringRequestRepo.UpdateAsync(model.HiringRequests);
 
                     // Nếu là soft delete, chỉ cần update main record và return
@@ -622,19 +633,19 @@ namespace RERPAPI.Controllers
         }
 
         [HttpPost("approve")]
-        public async Task<IActionResult> ApproveRequest([FromBody] ApproveRequestDTO request)
+        public async Task<IActionResult> ApproveRequest([FromBody] HRHiringRequestApproveLink request)
         {
             try
             {
-                Console.WriteLine($"Approve request: {System.Text.Json.JsonSerializer.Serialize(request)}");
+                //Console.WriteLine($"Approve request: {System.Text.Json.JsonSerializer.Serialize(request)}");
 
-                if (request == null || request.HiringRequestID <= 0)
-                {
-                    return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu không hợp lệ"));
-                }
+                //if (request == null || request.HiringRequestID <= 0)
+                //{
+                //    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy yêu cầu tuyển dụng"));
+                //}
 
                 // Kiểm tra hiring request có tồn tại không
-                var hiringRequest = _hrHiringRequestRepo.GetByID(request.HiringRequestID);
+                var hiringRequest = _hrHiringRequestRepo.GetByID(request.HRHiringRequestID);
                 if (hiringRequest == null)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy yêu cầu tuyển dụng"));
@@ -642,7 +653,7 @@ namespace RERPAPI.Controllers
 
                 // Lấy danh sách approval hiện tại
                 var currentApprovals = _hiringRequestApproveLinkRepo.GetAll()
-                    .Where(x => x.HRHiringRequestID == request.HiringRequestID && x.IsDeleted != true)
+                    .Where(x => x.HRHiringRequestID == request.HRHiringRequestID && x.IsDeleted != true)
                     .OrderBy(x => x.Step)
                     .ToList();
 
@@ -665,7 +676,7 @@ namespace RERPAPI.Controllers
 
         // In the ProcessApproval method, rename the inner variable 'stepName' to avoid CS0136
 
-        private async Task<ApprovalResult> ProcessApproval(ApproveRequestDTO request, List<HRHiringRequestApproveLink> currentApprovals)
+        private async Task<ApprovalResult> ProcessApproval(HRHiringRequestApproveLink request, List<HRHiringRequestApproveLink> currentApprovals)
         {
             try
             {
@@ -673,10 +684,10 @@ namespace RERPAPI.Controllers
                 var currentStep = GetCurrentApprovalStep(currentApprovals);
 
                 // Validate step logic
-                if (!ValidateApprovalStep(request.Step, currentStep, request.IsApprove))
+                if (!ValidateApprovalStep(request.Step, currentStep, request.IsApprove == 1))
                 {
                     var stepNameForError = GetStepName(request.Step); // Renamed variable to avoid CS0136
-                    if (request.IsApprove)
+                    if (request.IsApprove == 1)
                     {
                         return new ApprovalResult
                         {
@@ -698,7 +709,7 @@ namespace RERPAPI.Controllers
                 await CreateOrUpdateApproval(request, currentApprovals);
 
                 var stepName = GetStepName(request.Step);
-                var action = request.IsApprove ? "duyệt" : "hủy duyệt";
+                var action = request.IsApprove == 1 ? "duyệt" : "hủy duyệt";
 
                 return new ApprovalResult
                 {
@@ -744,19 +755,19 @@ namespace RERPAPI.Controllers
         }
 
         // Tạo hoặc cập nhật approval record
-        private async Task CreateOrUpdateApproval(ApproveRequestDTO request, List<HRHiringRequestApproveLink> currentApprovals)
+        private async Task CreateOrUpdateApproval(HRHiringRequestApproveLink request, List<HRHiringRequestApproveLink> currentApprovals)
         {
             var existingApproval = currentApprovals.FirstOrDefault(x => x.Step == request.Step);
 
             if (existingApproval != null)
             {
                 // Cập nhật existing record
-                existingApproval.IsApprove = request.IsApprove == true ? 1 : 0;
-                existingApproval.DateApprove = request.IsApprove ? DateTime.Now : (DateTime?)null;
-                existingApproval.ReasonUnApprove = request.IsApprove ? "" : (request.ReasonUnApprove ?? "");
+                existingApproval.IsApprove = request.IsApprove;
+                existingApproval.DateApprove = request.IsApprove == 1 ? DateTime.Now : (DateTime?)null;
+                existingApproval.ReasonUnApprove = request.IsApprove == 1 ? "" : (request.ReasonUnApprove ?? "");
                 existingApproval.Note = request.Note ?? "";
-                existingApproval.UpdatedDate = DateTime.Now;
-                existingApproval.UpdatedBy = request.ApproverName ?? "SYSTEM";
+                //existingApproval.UpdatedDate = DateTime.Now;
+                //existingApproval.UpdatedBy = request.ApproverName ?? "SYSTEM";
 
                 _hiringRequestApproveLinkRepo.UpdateAsync(existingApproval);
             }
@@ -765,13 +776,13 @@ namespace RERPAPI.Controllers
                 // Tạo mới record
                 var newApproval = new HRHiringRequestApproveLink
                 {
-                    HRHiringRequestID = request.HiringRequestID,
+                    HRHiringRequestID = request.HRHiringRequestID,
                     ApproveID = request.ApproveID,
                     Step = request.Step,
                     StepName = GetStepName(request.Step),
-                    IsApprove = request.IsApprove == true ? 1 : 0,
-                    DateApprove = request.IsApprove ? DateTime.Now : (DateTime?)null,
-                    ReasonUnApprove = request.IsApprove ? "" : (request.ReasonUnApprove ?? ""),
+                    IsApprove = request.IsApprove,
+                    DateApprove = request.IsApprove == 1 ? DateTime.Now : (DateTime?)null,
+                    ReasonUnApprove = request.IsApprove == 1 ? "" : (request.ReasonUnApprove ?? ""),
                     Note = request.Note ?? "",
                     //CreatedDate = DateTime.Now,
                     //CreatedBy = request.ApproverName ?? "SYSTEM",
@@ -782,15 +793,15 @@ namespace RERPAPI.Controllers
             }
 
             // Nếu là hủy duyệt, xóa các step cao hơn
-            if (!request.IsApprove)
+            if (request.IsApprove == 2)
             {
                 var higherSteps = currentApprovals.Where(x => x.Step > request.Step && x.IsApprove == 1);
                 foreach (var step in higherSteps)
                 {
                     step.IsDeleted = true;
-                    step.UpdatedDate = DateTime.Now;
-                    step.UpdatedBy = request.ApproverName ?? "SYSTEM";
-                    _hiringRequestApproveLinkRepo.UpdateAsync(step);
+                    //step.UpdatedDate = DateTime.Now;
+                    //step.UpdatedBy = request.ApproverName ?? "SYSTEM";
+                    await _hiringRequestApproveLinkRepo.UpdateAsync(step);
                 }
             }
         }
@@ -799,24 +810,24 @@ namespace RERPAPI.Controllers
         {
             return step switch
             {
-                1 => "HCNS",
-                2 => "TBP",
+                1 => "TBP",
+                2 => "HCNS",
                 3 => "BGĐ",
                 _ => $"Step {step}"
             };
         }
 
         // Helper classes
-        public class ApproveRequestDTO
-        {
-            public int HiringRequestID { get; set; }
-            public int ApproveID { get; set; }
-            public int Step { get; set; }
-            public bool IsApprove { get; set; }
-            public string? ReasonUnApprove { get; set; }
-            public string? Note { get; set; }
-            public string? ApproverName { get; set; }
-        }
+        //public class ApproveRequestDTO
+        //{
+        //    public int HiringRequestID { get; set; }
+        //    public int ApproveID { get; set; }
+        //    public int Step { get; set; }
+        //    public bool IsApprove { get; set; }
+        //    public string? ReasonUnApprove { get; set; }
+        //    public string? Note { get; set; }
+        //    public string? ApproverName { get; set; }
+        //}
 
         public class ApprovalResult
         {
@@ -825,40 +836,90 @@ namespace RERPAPI.Controllers
         }
 
         // API lấy trạng thái duyệt
+        //[HttpGet("get-approval-status/{hiringRequestId}")]
+        //public IActionResult GetApprovalStatus(int hiringRequestId)
+        //                    {
+        //    try
+        //    {
+        //        var approvals = _hiringRequestApproveLinkRepo.GetAll()
+        //            .Where(x => x.HRHiringRequestID == hiringRequestId && x.IsDeleted != true)
+        //            .OrderBy(x => x.Step)
+        //            .Select(x => new
+        //            {
+        //                x.Step,
+        //                x.StepName,
+        //                x.IsApprove,
+        //                x.DateApprove,
+        //                x.ReasonUnApprove,
+        //                x.Note,
+        //                x.CreatedBy,
+        //                x.CreatedDate
+        //            })
+        //            .ToList();
+
+        //        var currentStep = GetCurrentApprovalStep(_hiringRequestApproveLinkRepo.GetAll()
+        //            .Where(x => x.HRHiringRequestID == hiringRequestId && x.IsDeleted != true)
+        //            .ToList());
+
+        //        return Ok(ApiResponseFactory.Success(new
+        //        {
+        //            approvals,
+        //            currentStep,
+        //            canApproveTBP = currentStep == 0,
+        //            canApproveHCNS = currentStep == 1,
+        //            canApproveBGD = currentStep == 2,
+        //            canCancelTBP = currentStep >= 1,
+        //            canCancelHCNS = currentStep >= 2,
+        //            canCancelBGD = currentStep == 3
+        //        }, "Lấy trạng thái duyệt thành công"));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
         [HttpGet("get-approval-status/{hiringRequestId}")]
         public IActionResult GetApprovalStatus(int hiringRequestId)
         {
             try
             {
-                var approvals = _hiringRequestApproveLinkRepo.GetAll()
-                    .Where(x => x.HRHiringRequestID == hiringRequestId && x.IsDeleted != true)
-                    .OrderBy(x => x.Step)
-                    .Select(x => new
+                // left join Employee theo ApproveID -> lấy FullName người duyệt
+                var approvals = (
+                    from a in _hiringRequestApproveLinkRepo.GetAll()
+                    where a.HRHiringRequestID == hiringRequestId && a.IsDeleted != true
+                    orderby a.Step
+                    join e in _employeeRepo.GetAll() on a.ApproveID equals e.ID into ae
+                    from e in ae.DefaultIfEmpty() // left join
+                    select new
                     {
-                        x.Step,
-                        x.StepName,
-                        x.IsApprove,
-                        x.DateApprove,
-                        x.ReasonUnApprove,
-                        x.Note,
-                        x.CreatedBy,
-                        x.CreatedDate
-                    })
-                    .ToList();
+                        a.ApproveID,
+                        ApproverFullName = e != null ? e.FullName : null,
+                        a.Step,
+                        a.StepName,
+                        a.IsApprove,
+                        a.DateApprove,
+                        a.ReasonUnApprove,
+                        a.Note,
+                        a.CreatedBy,
+                        a.CreatedDate
+                    }
+                ).ToList();
 
-                var currentStep = GetCurrentApprovalStep(_hiringRequestApproveLinkRepo.GetAll()
-                    .Where(x => x.HRHiringRequestID == hiringRequestId && x.IsDeleted != true)
-                    .ToList());
+                var currentStep = GetCurrentApprovalStep(
+                    _hiringRequestApproveLinkRepo.GetAll()
+                        .Where(x => x.HRHiringRequestID == hiringRequestId && x.IsDeleted != true)
+                        .ToList()
+                );
 
                 return Ok(ApiResponseFactory.Success(new
                 {
                     approvals,
                     currentStep,
-                    canApproveHCNS = currentStep == 0,
-                    canApproveTBP = currentStep == 1,
+                    canApproveTBP = currentStep == 0,
+                    canApproveHCNS = currentStep == 1,
                     canApproveBGD = currentStep == 2,
-                    canCancelHCNS = currentStep >= 1,
-                    canCancelTBP = currentStep >= 2,
+                    canCancelTBP = currentStep >= 1,
+                    canCancelHCNS = currentStep >= 2,
                     canCancelBGD = currentStep == 3
                 }, "Lấy trạng thái duyệt thành công"));
             }
@@ -867,5 +928,86 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        #region Duyệt yêu cầu
+        [RequiresPermission("N57")]
+        [HttpPost("approved-tbp")]
+        public async Task<IActionResult> ApprovedTBP([FromBody] List<HRHiringRequestApproveLink> approveds)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var result = await _hiringRequestApproveLinkRepo.Approved(approveds, currentUser);
+                if (result.status == 1) return Ok(result);
+                else return BadRequest(result);
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [RequiresPermission("N56")]
+        [HttpPost("approved-hr")]
+        public async Task<IActionResult> ApprovedHR([FromBody] List<HRHiringRequestApproveLink> approveds)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var result = await _hiringRequestApproveLinkRepo.Approved(approveds, currentUser);
+                if (result.status == 1) return Ok(result);
+                else return BadRequest(result);
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [RequiresPermission("N56")]
+        [HttpPost("approved-tbp-hr")]
+        public async Task<IActionResult> ApprovedTBPHR([FromBody] List<HRHiringRequestApproveLink> approveds)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var result = await _hiringRequestApproveLinkRepo.Approved(approveds, currentUser);
+                if (result.status == 1) return Ok(result);
+                else return BadRequest(result);
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [RequiresPermission("N58")]
+        [HttpPost("approved-bgd")]
+        public async Task<IActionResult> ApprovedBGD([FromBody] List<HRHiringRequestApproveLink> approveds)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var result = await _hiringRequestApproveLinkRepo.Approved(approveds, currentUser);
+                if (result.status == 1) return Ok(result);
+                else return BadRequest(result);
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        #endregion
+
     }
 }

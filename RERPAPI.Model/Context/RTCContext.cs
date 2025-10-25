@@ -4873,7 +4873,9 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.PositionCode).HasMaxLength(250);
             entity.Property(e => e.PositionName).HasMaxLength(250);
-            entity.Property(e => e.TypePosition).HasDefaultValue(1);
+            entity.Property(e => e.TypePosition)
+                .HasDefaultValue(1)
+                .HasComment("1: Kỹ thuật, Pro; 2: Admin; 3: Senior; 4: Phó phòng");
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });

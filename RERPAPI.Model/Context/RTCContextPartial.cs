@@ -76,17 +76,18 @@ namespace RERPAPI.Model.Context
 
                 if (item.State == EntityState.Added) //Thêm mới
                 {
-                    if (createdBy != null && createdBy.CanWrite) createdBy.SetValue(item.Entity, "AdminSW");
+                    if (createdBy != null && createdBy.CanWrite) createdBy.SetValue(item.Entity, Convert.ToString(createdBy.GetValue(item.Entity)) ?? loginName);
                     if (createdDate != null && createdDate.CanWrite) createdDate.SetValue(item.Entity, DateTime.Now);
-                    if (updatedBy != null && updatedBy.CanWrite) updatedBy.SetValue(item.Entity, "Nhubinh214");
-                    if (name != null && name.CanWrite) name.SetValue(item.Entity, "Nhubinh214");
+                    if (updatedBy != null && updatedBy.CanWrite && updatedBy.GetValue(item.Entity) != null) updatedBy.SetValue(item.Entity, Convert.ToString(updatedBy.GetValue(item.Entity)) ?? loginName);
+                    if (name != null && name.CanWrite) name.SetValue(item.Entity, loginName);
                     if (updatedDate != null && updatedDate.CanWrite) updatedDate.SetValue(item.Entity, DateTime.Now);
                     if (isDeleted != null && isDeleted.CanWrite) isDeleted.SetValue(item.Entity, false);
                 }
 
                 if (item.State == EntityState.Modified)
                 {
-                    if (updatedBy != null && updatedBy.CanWrite) updatedBy.SetValue(item.Entity, "");
+
+                    if (updatedBy != null && updatedBy.CanWrite) updatedBy.SetValue(item.Entity, Convert.ToString(updatedBy.GetValue(item.Entity)) ?? loginName); ;
                     if (updatedDate != null && updatedDate.CanWrite) updatedDate.SetValue(item.Entity, DateTime.Now);
                 }
             }
@@ -123,7 +124,7 @@ namespace RERPAPI.Model.Context
             }
 
 
-            ActivityLogs.AddRange(logs);
+          //  ActivityLogs.AddRange(logs);
         }
 
         private string GetDetails(EntityEntry entry)

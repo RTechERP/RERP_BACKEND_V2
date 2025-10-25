@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -7,18 +7,47 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Controllers\Admin\**" />
+    <Compile Remove="Controllers\OfficeSuppliesManagement\**" />
+    <Compile Remove="Controllers\Old\NewFolder1\**" />
+    <Compile Remove="Controllers\Old\NewFolder2\**" />
+    <Compile Remove="Controllers\Old\NewFolder\**" />
     <Compile Remove="Controllers\ProjectAGV\**" />
-    <Content Remove="Controllers\Admin\**" />
+    <Compile Remove="Controllers\ProjectManager\**" />
+    <Compile Remove="Controllers\SaleWareHouseManagement\**" />
+    <Compile Remove="Controllers\V2\**" />
+    <Content Remove="Controllers\OfficeSuppliesManagement\**" />
+    <Content Remove="Controllers\Old\NewFolder1\**" />
+    <Content Remove="Controllers\Old\NewFolder2\**" />
+    <Content Remove="Controllers\Old\NewFolder\**" />
     <Content Remove="Controllers\ProjectAGV\**" />
-    <EmbeddedResource Remove="Controllers\Admin\**" />
+    <Content Remove="Controllers\ProjectManager\**" />
+    <Content Remove="Controllers\SaleWareHouseManagement\**" />
+    <Content Remove="Controllers\V2\**" />
+    <EmbeddedResource Remove="Controllers\OfficeSuppliesManagement\**" />
+    <EmbeddedResource Remove="Controllers\Old\NewFolder1\**" />
+    <EmbeddedResource Remove="Controllers\Old\NewFolder2\**" />
+    <EmbeddedResource Remove="Controllers\Old\NewFolder\**" />
     <EmbeddedResource Remove="Controllers\ProjectAGV\**" />
-    <None Remove="Controllers\Admin\**" />
+    <EmbeddedResource Remove="Controllers\ProjectManager\**" />
+    <EmbeddedResource Remove="Controllers\SaleWareHouseManagement\**" />
+    <EmbeddedResource Remove="Controllers\V2\**" />
+    <None Remove="Controllers\OfficeSuppliesManagement\**" />
+    <None Remove="Controllers\Old\NewFolder1\**" />
+    <None Remove="Controllers\Old\NewFolder2\**" />
+    <None Remove="Controllers\Old\NewFolder\**" />
     <None Remove="Controllers\ProjectAGV\**" />
+    <None Remove="Controllers\ProjectManager\**" />
+    <None Remove="Controllers\SaleWareHouseManagement\**" />
+    <None Remove="Controllers\V2\**" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Remove="Controllers\CustomerController.cs" />
+    <Compile Remove="Controllers\HistoryProductRTCController.cs" />
+    <Compile Remove="Controllers\KPIEmployeeTeamController.cs" />
+    <Compile Remove="Controllers\KPIEmployeeTeamLinkController.cs" />
+    <Compile Remove="Controllers\MenuController.cs" />
+    <Compile Remove="Controllers\ModulaLocationController.cs" />
     <Compile Remove="Controllers\Old\POKHController.cs" />
     <Compile Remove="Controllers\Old\POKH\POKHController.cs" />
     <Compile Remove="Controllers\Old\TB\FirmController.cs" />

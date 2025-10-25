@@ -1,4 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO.Project;
@@ -50,144 +54,84 @@ namespace RERPAPI.Controllers.Old.ProjectManager
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
-        // API tính lại và cập nhật giá trị ItemLate cho tất cả ProjectItem của 1 Project.
-        //private void RecalcItemLateInternal(int projectId)
+
+        ////Hàm lưu dữ liệu
+        //[ApiKeyAuthorize]
+        //[HttpPost("save-data")]
+        //public async Task<IActionResult> SaveData([FromBody] ProjectItemFullDTO dto)
         //{
         //    try
         //    {
-        //        var today = DateTime.Now;
-        //        var items = _projectItemRepo.GetAll(x => x.ProjectID == projectId && !x.IsDeleted);
-        //        foreach (var it in items)
+        //        var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+        //        var currentUser = ObjectMapper.GetCurrentUser(claims);
+        //        bool isTBP = currentUser.EmployeeID == 54;
+        //        bool isPBP = currentUser.PositionCode == "CV57" || currentUser.PositionCode == "CV28";
+        //        // 1) Hạng mục
+        //        if (dto.projectItems != null)
         //        {
-        //            var v = _projectItemRepo.CalcItemLate(it.PlanStartDate, it.PlanEndDate, it.ActualStartDate, it.ActualEndDate, today);
-        //            it.ItemLate = v;
+        //            foreach (var item in dto.projectItems)
+        //            {
+        //                ProjectItem? existing = item.ID > 0 ? _projectItemRepo.GetByID(item.ID) : null;
+        //                int approved = existing?.IsApproved ?? 0;
 
-        //            _projectItemRepo.Update(it);
+        //                // Xóa mềm
+        //                if (item.IsDeleted == true && item.ID != 0)
+        //                {
+        //                    if (!(currentUser.IsAdmin || isTBP || isPBP))
+        //                        return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền xóa hạng mục"));
+        //                    if (approved > 0)
+        //                        return BadRequest(ApiResponseFactory.Fail(null, "Hạng mục đã duyệt không thể xóa"));
+
+        //                    if (dto.projectItemProblem != null)
+        //                    {
+        //                        if (dto.projectItemProblem.ID <= 0)
+        //                        {
+        //                            await _projectItemProblemRepo.CreateAsync(dto.projectItemProblem);
+        //                        }
+        //                        else
+        //                        {
+        //                            _projectItemProblemRepo.Update(dto.projectItemProblem);
+        //                        }
+        //                    }
+        //                    //// 3) File--Tạm thời chưa cần
+        //                    //if (dto.ProjectItemFile != null)
+        //                    //{
+        //                    //    if (dto.ProjectItemFile.ID <= 0)
+        //                    //    {
+        //                    //        await _projectItemFileRepo.CreateAsync(dto.ProjectItemFile);
+        //                    //    }
+        //                    //    else
+        //                    //    {
+        //                    //        _projectItemFileRepo.Update(dto.ProjectItemFile);
+        //                    //    }
+        //                    //}
+
+        //                    // 4) Tính lại % theo TotalDayPlan cho toàn bộ Project
+        //                    int projectId = dto.projectItems?.FirstOrDefault()?.ProjectID ?? 0;
+        //                    if (projectId > 0)
+        //                    {
+        //                        var items = _projectItemRepo.GetAll(x => x.ProjectID == projectId && x.IsDeleted == false);
+        //                        decimal total = items.Sum(x => x.TotalDayPlan ?? 0m);
+        //                        foreach (var it in items)
+        //                        {
+        //                            var plan = it.TotalDayPlan ?? 0m;
+
+        //                            it.PercentItem = total > 0 ? plan / total * 100m : 0m;
+
+        //                            _projectItemRepo.Update(it);
+        //                        }
+        //                    }
+
+        //                    return Ok(ApiResponseFactory.Success(null, "Lưu hạng mục thành công"));
+        //                }
+        //            }
         //        }
         //    }
-        //    catch(Exception ex)
-
+        //    catch (Exception ex)
         //    {
-        //        throw new Exception("Lỗi"+ex);
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
         //    }
-
-
         //}
-
-        //Hàm lưu dữ liệu
-        [ApiKeyAuthorize]
-        [HttpPost("save-data")]
-        public async Task<IActionResult> SaveData([FromBody] ProjectItemFullDTO dto)
-        {
-            try
-            {
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                var currentUser = ObjectMapper.GetCurrentUser(claims);
-                bool isTBP = currentUser.EmployeeID == 54;
-                bool isPBP = currentUser.PositionCode == "CV57" || currentUser.PositionCode == "CV28";
-                // 1) Hạng mục
-                if (dto.projectItems != null)
-                {
-                    foreach (var item in dto.projectItems)
-                    {
-                        ProjectItem? existing = item.ID > 0 ? _projectItemRepo.GetByID(item.ID) : null;
-                        int approved = existing?.IsApproved ?? 0;
-
-                        // Xóa mềm
-                        if (
-                            //item.IsDeleted == true &&
-                            item.ID != 0)
-                        {
-                            if (!(currentUser.IsAdmin || isTBP || isPBP))
-                                return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền xóa hạng mục"));
-                            if (approved > 0)
-                                return BadRequest(ApiResponseFactory.Fail(null, "Hạng mục đã duyệt không thể xóa"));
-
-                            if (existing != null)
-                            {
-                                //existing.IsDeleted = true
-                                _projectItemRepo.Update(existing);
-                            }
-                            continue;
-                        }
-
-                        // Thêm / Sửa
-                        if (item.ID <= 0)
-                        {
-                            string validateMsg;
-                            if (!_projectItemRepo.Validate(item, out validateMsg))
-                            {
-                                return BadRequest(ApiResponseFactory.Fail(null, validateMsg));
-                            }
-
-                            //item.IsDeleted = false;
-                            await _projectItemRepo.CreateAsync(item);
-                        }
-                        else
-                        {
-                            string validateMsg;
-                            if (!_projectItemRepo.Validate(item, out validateMsg))
-                            {
-                                return BadRequest(ApiResponseFactory.Fail(null, validateMsg));
-                            }
-                            if (!currentUser.IsAdmin && approved > 0)
-                                return BadRequest(ApiResponseFactory.Fail(null, "Hạng mục đã duyệt không thể sửa"));
-                            _projectItemRepo.Update(item);
-                        }
-                    }
-                }
-
-                // 2) Phát sinh
-                if (dto.projectItemProblem != null)
-                {
-                    if (dto.projectItemProblem.ID <= 0)
-                    {
-                        await _projectItemProblemRepo.CreateAsync(dto.projectItemProblem);
-                    }
-                    else
-                    {
-                        _projectItemProblemRepo.Update(dto.projectItemProblem);
-                    }
-                }
-                //// 3) File--Tạm thời chưa cần
-                //if (dto.ProjectItemFile != null)
-                //{
-                //    if (dto.ProjectItemFile.ID <= 0)
-                //    {
-                //        await _projectItemFileRepo.CreateAsync(dto.ProjectItemFile);
-                //    }
-                //    else
-                //    {
-                //        _projectItemFileRepo.Update(dto.ProjectItemFile);
-                //    }
-                //}
-
-                // 4) Tính lại % theo TotalDayPlan cho toàn bộ Project
-                int projectId = dto.projectItems?.FirstOrDefault()?.ProjectID ?? 0;
-                if (projectId > 0)
-                {
-                    var items = _projectItemRepo.GetAll(x => x.ProjectID == projectId
-                    //&& x.IsDeleted == false
-                    );
-                    decimal total = items.Sum(x => x.TotalDayPlan ?? 0m);
-                    foreach (var it in items)
-                    {
-                        var plan = it.TotalDayPlan ?? 0m;
-
-                        it.PercentItem = total > 0 ? plan / total * 100m : 0m;
-
-                        _projectItemRepo.Update(it);
-                    }
-                }
-
-                return Ok(ApiResponseFactory.Success(null, "Lưu hạng mục thành công"));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
     }
 }

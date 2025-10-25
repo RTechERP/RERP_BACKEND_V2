@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Microsoft.IdentityModel.Tokens;
@@ -9,6 +10,7 @@ using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using System.Dynamic;
 using System.Text.RegularExpressions;
+using ZXing;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -39,22 +41,11 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                        "usp_LoadProductsale", new string[] { "@id", "@Find", "@IsDeleted" },
                     new object[] { filter.id, filter.find ?? "", false }
                    );
-                List<dynamic> rs = result[0];
-
-                return Ok(new
-                {
-                    status = 1,
-                    data = rs
-                });
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(result, 0), "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         #endregion
@@ -67,20 +58,11 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             {
                 var rs = _productsaleRepo.GetByID(id);
 
-                return Ok(new
-                {
-                    status = 1,
-                    data = rs
-                });
+                return Ok(ApiResponseFactory.Success(rs, "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         #endregion
@@ -92,20 +74,11 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             try
             {
                 List<ProductSale> rs = _productsaleRepo.GetAll().Where(x => x.ProductGroupID == productgroupID).ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data = rs
-                });
+                return Ok(ApiResponseFactory.Success(rs, "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         #endregion
@@ -148,6 +121,12 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             {
                 foreach (var dto in dtos)
                 {
+                    //TN.Binh update 19/10/25
+                    if (!CheckProductCode(dto))
+                    {
+                        return Ok(new {  status =0,message = $"Mã sản phẩm [{dto.ProductSale.ProductCode}] đã tồn tại trong nhóm !" });
+                    }
+                    //end update 
                     if (dto.ProductSale.ID <= 0)
                     {
                         // Tạo mới
@@ -158,7 +137,9 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         dto.ProductSale.Import = dto.ProductSale.Export = dto.ProductSale.NumberInStoreCuoiKy = dto.ProductSale.NumberInStoreDauky;
                         dto.ProductSale.SupplierName = "";
                         dto.ProductSale.ItemType = "";
-                        int newId = await _productsaleRepo.CreateAsynC(dto.ProductSale);
+                        //int newId = await _productsaleRepo.CreateAsynC(dto.ProductSale);
+                        await _productsaleRepo.CreateAsync(dto.ProductSale);
+                        int newId = dto.ProductSale.ID;
                         dto.Inventory.ProductSaleID = newId;
                         dto.Inventory.WarehouseID = 1;
                         dto.Inventory.Export = 0;
@@ -173,27 +154,32 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     else
                     {
                         // Cập nhật
-                        _productsaleRepo.Update( dto.ProductSale);
+                        _productsaleRepo.Update(dto.ProductSale);
                     }
                 }
 
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Xử lý thành công",
-                    data = dtos
-                });
+                return Ok(ApiResponseFactory.Success(dtos, "Xử lý dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        #endregion
+
+        //TN.Binh update 19/10/25
+        #region check trùng mã sản phẩm khi thêm, sửa vật tư 
+        private bool CheckProductCode(ProductsSaleDTO dto)
+        {
+            bool check = true;
+            var exists = _productsaleRepo.GetAll()
+                .Where(x => x.ProductCode == dto.ProductSale.ProductCode
+                            && x.ProductGroupID == dto.ProductSale.ProductGroupID
+                            && x.ID != dto.ProductSale.ID).ToList();
+            if (exists.Count > 0)  check = false;
+            return check ;
+        }
+        //end update
         #endregion
 
         //check-productsale trong excel
@@ -217,18 +203,12 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                        
                     })
                     .ToList();
-
-                return Ok(new
-                {
-                    data = new
-                    {
-                        existingProducts
-                    }
-                });
+                return Ok(ApiResponseFactory.Success( new{existingProducts}, "kiểm tra code thành công!"));
+                
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
