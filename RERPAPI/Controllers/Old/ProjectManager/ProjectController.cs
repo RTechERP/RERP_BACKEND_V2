@@ -1,20 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore.Query;
-using RERPAPI.Attributes;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System.Collections.Generic;
 using System.Data;
-using System.Dynamic;
-using System.Linq.Expressions;
-using System.Net.WebSockets;
-using System.Text.Json;
-using System.Xml.Linq;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers.Old.ProjectManager
 {
@@ -25,34 +14,34 @@ namespace RERPAPI.Controllers.Old.ProjectManager
     public class ProjectController : ControllerBase
     {
         #region Khai báo biến
-        ProjectRepo projectRepo = new ProjectRepo();
-        ProjectTreeFolderRepo projectTreeFolderRepo = new ProjectTreeFolderRepo();
-        CustomerRepo customerRepo = new CustomerRepo();
-        ProjectTypeRepo projectTypeRepo = new ProjectTypeRepo();
-        ProjectStatusRepo projectStatusRepo = new ProjectStatusRepo();
-        BusinessFieldRepo businessFieldRepo = new BusinessFieldRepo();
+        ProjectRepo _projectRepo = new ProjectRepo();
+        ProjectTreeFolderRepo _projectTreeFolderRepo = new ProjectTreeFolderRepo();
+        CustomerRepo _customerRepo = new CustomerRepo();
+        ProjectTypeRepo _projectTypeRepo = new ProjectTypeRepo();
+        ProjectStatusRepo _projectStatusRepo = new ProjectStatusRepo();
+        BusinessFieldRepo _businessFieldRepo = new BusinessFieldRepo();
 
-        GroupFileRepo groupFileRepo = new GroupFileRepo();
-        FirmBaseRepo firmBaseRepo = new FirmBaseRepo();
-        ProjectTypeBaseRepo projectTypeBaseRepo = new ProjectTypeBaseRepo();
-        FollowProjectBaseRepo followProjectBaseRepo = new FollowProjectBaseRepo();
+        GroupFileRepo _groupFileRepo = new GroupFileRepo();
+        FirmBaseRepo _firmBaseRepo = new FirmBaseRepo();
+        ProjectTypeBaseRepo _projectTypeBaseRepo = new ProjectTypeBaseRepo();
+        FollowProjectBaseRepo _followProjectBaseRepo = new FollowProjectBaseRepo();
 
-        ProjectStatusLogRepo projectStatusLogRepo = new ProjectStatusLogRepo();
-        ProjectEmployeeRepo projectEmployeeRepo = new ProjectEmployeeRepo();
+        ProjectStatusLogRepo _projectStatusLogRepo = new ProjectStatusLogRepo();
+        ProjectEmployeeRepo _projectEmployeeRepo = new ProjectEmployeeRepo();
 
-        ProjectUserRepo projectUserRepo = new ProjectUserRepo();
-        ProjectTypeLinkRepo projectTypeLinkRepo = new ProjectTypeLinkRepo();
+        ProjectUserRepo _projectUserRepo = new ProjectUserRepo();
+        ProjectTypeLinkRepo _projectTypeLinkRepo = new ProjectTypeLinkRepo();
 
-        ProjectCostRepo projectCostRepo = new ProjectCostRepo();
-        ProjectPriorityLinkRepo projectPriorityLinkRepo = new ProjectPriorityLinkRepo();
+        ProjectCostRepo _projectCostRepo = new ProjectCostRepo();
+        ProjectPriorityLinkRepo _projectPriorityLinkRepo = new ProjectPriorityLinkRepo();
 
-        ProjectCurrentSituationRepo projectCurrentSituationRepo = new ProjectCurrentSituationRepo();
+        ProjectCurrentSituationRepo _projectCurrentSituationRepo = new ProjectCurrentSituationRepo();
 
-        ProjectPriorityRepo projectPriorityRepo = new ProjectPriorityRepo();
-        ProjectPersonalPriotityRepo projectPersonalPriotityRepo = new ProjectPersonalPriotityRepo();
-        ProjectWorkerTypeRepo projectWorkerTypeRepo = new ProjectWorkerTypeRepo();
-        DailyReportTechnicalRepo dailyReportTechnicalRepo = new DailyReportTechnicalRepo();
-        ProjectStatusDetailRepo projectStatusDetailRepo = new ProjectStatusDetailRepo();
+        ProjectPriorityRepo _projectPriorityRepo = new ProjectPriorityRepo();
+        ProjectPersonalPriotityRepo _projectPersonalPriotityRepo = new ProjectPersonalPriotityRepo();
+        ProjectWorkerTypeRepo _projectWorkerTypeRepo = new ProjectWorkerTypeRepo();
+        DailyReportTechnicalRepo _dailyReportTechnicalRepo = new DailyReportTechnicalRepo();
+        ProjectStatusDetailRepo _projectStatusDetailRepo = new ProjectStatusDetailRepo();
         #endregion
 
         #region Hàm dùng chung
@@ -73,7 +62,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         {
             try
             {
-                List<ProjectTreeFolder> projectTreeFolders = projectTreeFolderRepo.GetAll();
+                List<ProjectTreeFolder> projectTreeFolders = _projectTreeFolderRepo.GetAll();
                 return Ok(ApiResponseFactory.Success(projectTreeFolders, ""));
             }
             catch (Exception ex)
@@ -105,7 +94,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         {
             try
             {
-                List<Customer> customers = customerRepo.GetAll().Where(x => x.IsDeleted == false).OrderByDescending(x => x.CreatedDate).ToList();
+                List<Customer> customers = _customerRepo.GetAll().Where(x => x.IsDeleted == false).OrderByDescending(x => x.CreatedDate).ToList();
                 return Ok(ApiResponseFactory.Success(customers, ""));
             }
             catch (Exception ex)
@@ -137,7 +126,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         {
             try
             {
-                List<ProjectType> projectTypes = projectTypeRepo.GetAll().Where(x => x.ID != 4).ToList();
+                List<ProjectType> projectTypes = _projectTypeRepo.GetAll().Where(x => x.ID != 4).ToList();
                 return Ok(ApiResponseFactory.Success(projectTypes, ""));
             }
             catch (Exception ex)
@@ -193,7 +182,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         {
             try
             {
-                List<ProjectStatus> projectStatus = projectStatusRepo.GetAll().OrderBy(x => x.STT).ToList();
+                List<ProjectStatus> projectStatus = _projectStatusRepo.GetAll().OrderBy(x => x.STT).ToList();
                 return Ok(ApiResponseFactory.Success(projectStatus, ""));
             }
             catch (Exception ex)
@@ -209,7 +198,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         {
             try
             {
-                List<BusinessField> businessFields = businessFieldRepo.GetAll().OrderBy(x => x.STT).ToList();
+                List<BusinessField> businessFields = _businessFieldRepo.GetAll().OrderBy(x => x.STT).ToList();
                 return Ok(ApiResponseFactory.Success(businessFields, ""));
             }
             catch (Exception ex)
@@ -218,6 +207,12 @@ namespace RERPAPI.Controllers.Old.ProjectManager
             }
         }
 
+        [HttpGet("get-all")]
+        public async Task<IActionResult> GetAll()
+        {
+            List<Model.Entities.Project> projects = _projectRepo.GetAll();
+            return Ok(ApiResponseFactory.Success(projects, "Lấy dữ liệu thành công"));
+        }
         // Danh sách dự án 
         [HttpGet("get-projects")]
         //  [ApiKeyAuthorize]
@@ -230,7 +225,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
             try
             {
                 int[] typeCheck = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-                List<int> projectTypeIDs = projectTypeRepo.GetAll().Select(x => x.ID).ToList();
+                List<int> projectTypeIDs = _projectTypeRepo.GetAll().Select(x => x.ID).ToList();
 
                 if (string.IsNullOrWhiteSpace(projectType)) projectType = string.Join(",", projectTypeIDs);
                 else
@@ -247,7 +242,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
 
                 if (string.IsNullOrWhiteSpace(projectStatus))
                 {
-                    List<int> listStatus = projectStatusRepo.GetAll().Select(x => x.ID).ToList();
+                    List<int> listStatus = _projectStatusRepo.GetAll().Select(x => x.ID).ToList();
                     projectStatus = string.Join(",", listStatus);
                 }
 
@@ -286,6 +281,19 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpGet("getprojects")]
+        public IActionResult GetAction()
+        {
+            try
+            {
+                var projects = _projectRepo.GetAll().OrderByDescending(x => x.CreatedDate).ToList();
+                return Ok(ApiResponseFactory.Success(projects, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         // Lấy danh sách dự án chi tiết ở dưới
         [HttpGet("get-project-details")]
         //  [ApiKeyAuthorize]
@@ -313,7 +321,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         {
             try
             {
-                var projectDetail = projectRepo.GetByID(id);
+                var projectDetail = _projectRepo.GetByID(id);
                 return Ok(ApiResponseFactory.Success(projectDetail, ""));
             }
             catch (Exception ex)
@@ -329,7 +337,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         {
             try
             {
-                ProjectCurrentSituation projectDetail = projectCurrentSituationRepo.GetAll()
+                ProjectCurrentSituation projectDetail = _projectCurrentSituationRepo.GetAll()
                     .Where(x => x.ProjectID == projectId && x.EmployeeID == employeeId)
                     .OrderByDescending(x => x.DateSituation).FirstOrDefault();
                 projectDetail = projectDetail ?? new ProjectCurrentSituation();
@@ -352,7 +360,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         {
             try
             {
-                List<GroupFile> grf = groupFileRepo.GetAll();
+                List<GroupFile> grf = _groupFileRepo.GetAll();
                 return Ok(ApiResponseFactory.Success(grf, ""));
             }
             catch (Exception ex)
@@ -368,7 +376,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         {
             try
             {
-                List<FirmBase> firmBases = firmBaseRepo.GetAll();
+                List<FirmBase> firmBases = _firmBaseRepo.GetAll();
                 return Ok(ApiResponseFactory.Success(firmBases, ""));
             }
             catch (Exception ex)
@@ -383,7 +391,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         {
             try
             {
-                List<ProjectTypeBase> pfb = projectTypeBaseRepo.GetAll();
+                List<ProjectTypeBase> pfb = _projectTypeBaseRepo.GetAll();
                 return Ok(ApiResponseFactory.Success(pfb, ""));
             }
             catch (Exception ex)
@@ -415,7 +423,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         {
             try
             {
-                FollowProjectBase followProjectBase = followProjectBaseRepo
+                FollowProjectBase followProjectBase = _followProjectBaseRepo
                     .GetAll().Where(x => x.ProjectID == id)
                     .OrderByDescending(x => x.ExpectedPlanDate).FirstOrDefault();
                 return Ok(ApiResponseFactory.Success(followProjectBase, ""));
@@ -433,7 +441,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         {
             try
             {
-                var projectType = projectPriorityRepo.GetAll().Where(x => x.ParentID == 0).ToList();
+                var projectType = _projectPriorityRepo.GetAll().Where(x => x.ParentID == 0).ToList();
                 return Ok(ApiResponseFactory.Success(projectType, ""));
             }
             catch (Exception ex)
@@ -449,7 +457,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         {
             try
             {
-                var projectType = projectPriorityRepo.GetByID(id);
+                var projectType = _projectPriorityRepo.GetByID(id);
                 return Ok(ApiResponseFactory.Success(projectType, ""));
             }
             catch (Exception ex)
@@ -466,7 +474,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
             try
             {
                 int prio = 0;
-                var priority = projectPersonalPriotityRepo.GetAll().Where(x => x.ProjectID == projectId && x.UserID == userId).FirstOrDefault();
+                var priority = _projectPersonalPriotityRepo.GetAll().Where(x => x.ProjectID == projectId && x.UserID == userId).FirstOrDefault();
                 if (priority != null)
                 {
                     prio = (int)priority.Priotity;
@@ -487,7 +495,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
             try
             {
                 bool check = false;
-                var projectPriority = projectPriorityRepo.GetAll().Where(x => x.ID != id && x.Code == code);
+                var projectPriority = _projectPriorityRepo.GetAll().Where(x => x.ID != id && x.Code == code);
                 if (projectPriority.Count() > 0) check = true;
                 return Ok(ApiResponseFactory.Success(check, ""));
             }
@@ -509,7 +517,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 {
                     foreach (int id in idArray)
                     {
-                        projectRepo.Delete(id);
+                        _projectRepo.Delete(id);
                     }
                 }
                 return Ok(ApiResponseFactory.Success(null, "Xóa dự án thành công"));
@@ -526,14 +534,14 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         {
             try
             {
-                List<Project> projects = new List<Project>();
+                List<Model.Entities.Project> projects = new List<Model.Entities.Project>();
                 if (id > 0)
                 {
-                    projects = projectRepo.GetAll().Where(x => x.ProjectCode.Contains(projectCode) && x.ID != id).ToList();
+                    projects = _projectRepo.GetAll().Where(x => x.ProjectCode.Contains(projectCode) && x.ID != id).ToList();
                 }
                 else
                 {
-                    projects = projectRepo.GetAll().Where(x => x.ProjectCode.Contains(projectCode)).ToList();
+                    projects = _projectRepo.GetAll().Where(x => x.ProjectCode.Contains(projectCode)).ToList();
                 }
 
 
@@ -713,7 +721,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 DateTime to = from.AddYears(1);
                 string cusShortName = $"{customerShortName}.";
 
-                var listCodes = projectRepo.GetAll()
+                var listCodes = _projectRepo.GetAll()
                     .Where(x => x.ProjectCode.Contains(cusShortName) && x.CreatedDate >= from && x.CreatedDate < to)
                     .Select(x => new
                     {
@@ -793,7 +801,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         {
             try
             {
-                List<Project> prjs = projectRepo.GetAll().OrderByDescending(x => x.CreatedDate).ToList();
+                List<Model.Entities.Project> prjs = _projectRepo.GetAll().OrderByDescending(x => x.CreatedDate).ToList();
                 return Ok(ApiResponseFactory.Success(prjs, ""));
             }
             catch (Exception ex)
@@ -808,12 +816,12 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         {
             try
             {
-                var prjPriority = projectPriorityRepo.GetAll();
+                var prjPriority = _projectPriorityRepo.GetAll();
 
                 List<int> checks = new List<int>();
                 if (projectId != 0)
                 {
-                    var listProjectPrioLink = projectPriorityLinkRepo.GetAll().Where(x => x.ProjectID == projectId);
+                    var listProjectPrioLink = _projectPriorityLinkRepo.GetAll().Where(x => x.ProjectID == projectId);
                     if (listProjectPrioLink.Count() > 0)
                     {
                         foreach (var item in listProjectPrioLink)
@@ -873,7 +881,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         {
             try
             {
-                var workerTypes = projectWorkerTypeRepo.GetAll();
+                var workerTypes = _projectWorkerTypeRepo.GetAll();
                 return Ok(ApiResponseFactory.Success(workerTypes, ""));
             }
             catch (Exception ex)
@@ -903,7 +911,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         {
             try
             {
-                var status = projectStatusRepo.GetAll();
+                var status = _projectStatusRepo.GetAll();
                 return Ok(ApiResponseFactory.Success(status, ""));
             }
             catch (Exception ex)
@@ -917,7 +925,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         {
             try
             {
-                var projectTpye = projectTypeRepo.GetAll();
+                var projectTpye = _projectTypeRepo.GetAll();
                 return Ok(ApiResponseFactory.Success(projectTpye, ""));
             }
             catch (Exception ex)
@@ -973,7 +981,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
 
                 int valueRow = (int)data[0]["RowNumber"];
 
-                Project project = projectRepo.GetByID(projectId);
+                Model.Entities.Project project = _projectRepo.GetByID(projectId);
 
                 // Check quyền sau khi có phân quyền
                 //if(project.ProjectManager == Global.EmployeeID || project.UserID == Global.UserID || Global.IsAdmin || valueRow > 0 || project.UserTechnicalID == Global.UserID)
@@ -1000,7 +1008,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 var pr = prj.project ?? null;
                 int projectId = prj.project.ID;
 
-                Project project = projectId > 0 ? projectRepo.GetByID(projectId) : new Project();
+                Model.Entities.Project project = projectId > 0 ? _projectRepo.GetByID(projectId) : new Model.Entities.Project();
                 project.ProjectCode = prj.project.ProjectCode;
                 project.ProjectName = prj.project.ProjectName;
                 project.ProjectStatus = prj.project.ProjectStatus;
@@ -1024,13 +1032,13 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                     statusLog.ProjectStatusID = project.ProjectStatus;
                     statusLog.EmployeeID = prj.projectStatusLog.EmployeeID;
                     statusLog.DateLog = prj.projectStatusLog.DateLog;
-                    projectStatusLogRepo.CreateAsync(statusLog);
+                    _projectStatusLogRepo.CreateAsync(statusLog);
                 }
 
-                if (project.ID > 0) projectRepo.Update(project);
+                if (project.ID > 0) _projectRepo.Update(project);
                 else
                 {
-                    projectRepo.Create(project);
+                    _projectRepo.Create(project);
                     projectId = project.ID;
                 }
                 ;
@@ -1058,7 +1066,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
 
                             int employeeID = item.EmployeeID;
 
-                            var projectEmployee = projectEmployeeRepo
+                            var projectEmployee = _projectEmployeeRepo
                                 .GetAll()
                                 .Where(x => x.ProjectID == project.ID && x.EmployeeID == employeeID
                                 && x.ProjectTypeID == projectTypeID && x.IsDeleted != true);
@@ -1072,12 +1080,12 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                             model.ProjectTypeID = projectTypeID;
                             model.IsLeader = true;
 
-                            if (model.ID > 0) projectEmployeeRepo.Update(model);
+                            if (model.ID > 0) _projectEmployeeRepo.Update(model);
                             else
                             {
-                                var list = projectEmployeeRepo.GetAll().Where(x => x.ProjectID == projectId && x.IsDeleted != true);
+                                var list = _projectEmployeeRepo.GetAll().Where(x => x.ProjectID == projectId && x.IsDeleted != true);
                                 model.STT = list.Count() + 1;
-                                projectEmployeeRepo.Create(model);
+                                _projectEmployeeRepo.Create(model);
                             }
                         }
 
@@ -1090,15 +1098,15 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 {
                     int projectTypeLinkID = item.ProjectTypeLinkID;
                     ProjectTypeLink prjTypeLink = new ProjectTypeLink();
-                    if (projectTypeLinkID > 0) prjTypeLink = projectTypeLinkRepo.GetByID(projectTypeLinkID);
+                    if (projectTypeLinkID > 0) prjTypeLink = _projectTypeLinkRepo.GetByID(projectTypeLinkID);
 
                     prjTypeLink.ProjectID = project.ID;
                     prjTypeLink.LeaderID = item.LeaderID;
                     prjTypeLink.ProjectTypeID = item.ID;
                     prjTypeLink.Selected = item.Selected;
 
-                    if (prjTypeLink.ID > 0) projectTypeLinkRepo.Update(prjTypeLink);
-                    else projectTypeLinkRepo.CreateAsync(prjTypeLink);
+                    if (prjTypeLink.ID > 0) _projectTypeLinkRepo.Update(prjTypeLink);
+                    else _projectTypeLinkRepo.CreateAsync(prjTypeLink);
                 }
 
                 // Lưu thông tin người tham gia
@@ -1119,7 +1127,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 //    }
                 //}
 
-                var projectCost = projectCostRepo.GetAll().Where(x => x.ProjectID == projectId);
+                var projectCost = _projectCostRepo.GetAll().Where(x => x.ProjectID == projectId);
                 if (projectCost.Count() <= 0)
                 {
                     var update = SQLHelper<object>.ProcedureToList("spSaveProjectCost", new string[] { "@ID" }, new object[] { projectId });
@@ -1127,7 +1135,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
 
                 if (projectId > 0)
                 {
-                    List<FollowProjectBase> followProjectBases = followProjectBaseRepo.GetAll().Where(x => x.ProjectID == projectId && x.WarehouseID == 1).ToList();
+                    List<FollowProjectBase> followProjectBases = _followProjectBaseRepo.GetAll().Where(x => x.ProjectID == projectId && x.WarehouseID == 1).ToList();
                     FollowProjectBase model = new FollowProjectBase();
                     if (followProjectBases.Count() <= 0)
                     {
@@ -1150,7 +1158,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                         model.ProjectStartDate = project.CreatedDate;
                         model.WarehouseID = 1;
 
-                        followProjectBaseRepo.CreateAsync(model);
+                        _followProjectBaseRepo.CreateAsync(model);
                     }
                     else
                     {
@@ -1175,21 +1183,21 @@ namespace RERPAPI.Controllers.Old.ProjectManager
 
                             model.ProjectStartDate = project.CreatedDate;
 
-                            if (model.ID > 0) followProjectBaseRepo.Update(model);
+                            if (model.ID > 0) _followProjectBaseRepo.Update(model);
                             else
                             {
                                 model.WarehouseID = 1;
-                                followProjectBaseRepo.CreateAsync(model);
+                                _followProjectBaseRepo.CreateAsync(model);
                             }
                         }
                     }
                 }
 
 
-                List<ProjectPriorityLink> projectPriorityLink = projectPriorityLinkRepo.GetAll().Where(x => x.ProjectID == projectId).ToList();
+                List<ProjectPriorityLink> projectPriorityLink = _projectPriorityLinkRepo.GetAll().Where(x => x.ProjectID == projectId).ToList();
                 if (projectPriorityLink.Count() > 0)
                 {
-                    projectPriorityLinkRepo.DeleteRange(projectPriorityLink);
+                    _projectPriorityLinkRepo.DeleteRange(projectPriorityLink);
                 }
 
                 var listPriorities = prj.listPriorities;
@@ -1200,7 +1208,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                         ProjectPriorityLink model = new ProjectPriorityLink();
                         model.ProjectPriorityID = item.ID;
                         model.ProjectID = projectId;
-                        projectPriorityLinkRepo.Create(model);
+                        _projectPriorityLinkRepo.Create(model);
                     }
                 }
 
@@ -1222,7 +1230,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 ProjectStatus prjs = new ProjectStatus();
                 prjs.STT = Stt;
                 prjs.StatusName = statusName;
-                projectStatusRepo.Create(prjs);
+                _projectStatusRepo.Create(prjs);
 
                 return Ok(ApiResponseFactory.Success(true, "Lưu trạng thái dự án thành công"));
             }
@@ -1240,21 +1248,21 @@ namespace RERPAPI.Controllers.Old.ProjectManager
             {
                 if (prjTypeLink.ProjectID > 0)
                 {
-                    Project project = projectRepo.GetByID(prjTypeLink.ProjectID);
+                    Model.Entities.Project project = _projectRepo.GetByID(prjTypeLink.ProjectID);
                     project.ProjectStatus = prjTypeLink.ProjectStatus;
-                    projectRepo.Update(project);
+                    _projectRepo.Update(project);
 
                     if (prjTypeLink.prjTypeLinks.Count() > 0)
                     {
                         foreach (var item in prjTypeLink.prjTypeLinks)
                         {
-                            ProjectTypeLink model = projectTypeLinkRepo.GetByID(item.ProjectTypeLinkID);
+                            ProjectTypeLink model = _projectTypeLinkRepo.GetByID(item.ProjectTypeLinkID);
                             model.ProjectTypeID = item.ID;
                             model.ProjectID = prjTypeLink.ProjectID;
                             model.LeaderID = item.LeaderID;
                             model.Selected = item.Selected;
-                            if (model.ID > 0) projectTypeLinkRepo.Update(model);
-                            else projectTypeLinkRepo.Create(model);
+                            if (model.ID > 0) _projectTypeLinkRepo.Update(model);
+                            else _projectTypeLinkRepo.Create(model);
                         }
                     }
 
@@ -1265,7 +1273,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                         situation.EmployeeID = prjTypeLink.GlobalEmployeeId;
                         situation.DateSituation = DateTime.Now;
                         situation.ContentSituation = prjTypeLink.Situlator;
-                        projectCurrentSituationRepo.Create(situation);
+                        _projectCurrentSituationRepo.Create(situation);
                     }
                 }
 
@@ -1284,7 +1292,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         {
             try
             {
-                ProjectPriority model = projectPriority.ID > 0 ? projectPriorityRepo.GetByID(projectPriority.ID) : new ProjectPriority();
+                ProjectPriority model = projectPriority.ID > 0 ? _projectPriorityRepo.GetByID(projectPriority.ID) : new ProjectPriority();
                 model.Code = projectPriority.Code;
                 model.ProjectCheckpoint = projectPriority.ProjectCheckpoint;
                 model.Rate = projectPriority.Rate;
@@ -1295,12 +1303,12 @@ namespace RERPAPI.Controllers.Old.ProjectManager
 
                 if (projectPriority.ID > 0)
                 {
-                    projectPriorityRepo.Update(model);
+                    _projectPriorityRepo.Update(model);
                 }
                 else
                 {
                     model.CreatedDate = DateTime.Now;
-                    projectPriorityRepo.Create(model);
+                    _projectPriorityRepo.Create(model);
                 }
                 return Ok(ApiResponseFactory.Success(true, "Lưu mức độ ưu tiên dự án thành công"));
             }
@@ -1320,10 +1328,10 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 if (projectStatuses.Count() > 0)
                 {
                     int id = (int)projectStatuses[0].ProjectID;
-                    Project project = projectRepo.GetByID(id);
+                    Model.Entities.Project project = _projectRepo.GetByID(id);
                     foreach (var item in projectStatuses)
                     {
-                        ProjectStatusDetail model = item.ID > 0 ? projectStatusDetailRepo.GetByID(item.ID) : new ProjectStatusDetail();
+                        ProjectStatusDetail model = item.ID > 0 ? _projectStatusDetailRepo.GetByID(item.ID) : new ProjectStatusDetail();
                         model.ProjectID = id;
                         model.ProjectStatusID = item.ProjectStatusID;
                         model.EstimatedEndDate = item.EstimatedEndDate;
@@ -1336,16 +1344,16 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                         if (model.Selected == true)
                         {
                             project.ProjectStatus = (int)model.ProjectStatusID;
-                            projectRepo.Update(project);
+                            _projectRepo.Update(project);
                         }
 
                         if (model.ID > 0)
                         {
-                            projectStatusDetailRepo.Update(model);
+                            _projectStatusDetailRepo.Update(model);
                         }
                         else
                         {
-                            projectStatusDetailRepo.Create(model);
+                            _projectStatusDetailRepo.Create(model);
                         }
                     }
                 }
@@ -1367,7 +1375,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 {
                     if (id > 0)
                     {
-                        projectPriorityRepo.Delete(id);
+                        _projectPriorityRepo.Delete(id);
                     }
                 }
                 return Ok(ApiResponseFactory.Success(true, "Xóa mức độ ưu tiên thành công"));
@@ -1389,21 +1397,21 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 {
                     foreach (int id in projectPersonalPriotity.ProjectIDs)
                     {
-                        var prjPersonal = projectPersonalPriotityRepo.GetAll()
+                        var prjPersonal = _projectPersonalPriotityRepo.GetAll()
                     .Where(x => x.ProjectID == id && x.UserID == projectPersonalPriotity.UserID)
                     .FirstOrDefault();
 
-                        ProjectPersonalPriotity model = prjPersonal == null ? new ProjectPersonalPriotity() : projectPersonalPriotityRepo.GetByID(prjPersonal.ID);
+                        ProjectPersonalPriotity model = prjPersonal == null ? new ProjectPersonalPriotity() : _projectPersonalPriotityRepo.GetByID(prjPersonal.ID);
                         model.ProjectID = id;
                         model.UserID = projectPersonalPriotity.UserID;
                         model.Priotity = projectPersonalPriotity.Priotity;
                         if (model.ID > 0)
                         {
-                            await projectPersonalPriotityRepo.UpdateAsync(model);
+                            await _projectPersonalPriotityRepo.UpdateAsync(model);
                         }
                         else
                         {
-                            await projectPersonalPriotityRepo.CreateAsync(model);
+                            await _projectPersonalPriotityRepo.CreateAsync(model);
                         }
                     }
                 }
@@ -1425,11 +1433,11 @@ namespace RERPAPI.Controllers.Old.ProjectManager
             {
                 foreach (int id in projectPersonalPriotity.reportIDs)
                 {
-                    DailyReportTechnical model = dailyReportTechnicalRepo.GetByID(id);
+                    DailyReportTechnical model = _dailyReportTechnicalRepo.GetByID(id);
                     model.ProjectID = projectPersonalPriotity.ProjectIDNew;
                     model.UpdatedDate = DateTime.Now;
                     model.UpdatedBy = "";
-                    await dailyReportTechnicalRepo.UpdateAsync(model);
+                    await _dailyReportTechnicalRepo.UpdateAsync(model);
                 }
                 return Ok(ApiResponseFactory.Success(true, "Lưu dữ liệu thành công"));
             }
@@ -1448,7 +1456,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 foreach (ProjectEmployee item in prjEmployees.prjEms)
                 {
                     int id = item.ID;
-                    ProjectEmployee model = id > 0 ? projectEmployeeRepo.GetByID(id) : new ProjectEmployee();
+                    ProjectEmployee model = id > 0 ? _projectEmployeeRepo.GetByID(id) : new ProjectEmployee();
                     model.STT = item.STT;
                     model.ProjectID = prjEmployees.ProjectID;
                     model.EmployeeID = item.EmployeeID;
@@ -1460,16 +1468,16 @@ namespace RERPAPI.Controllers.Old.ProjectManager
 
                     if (id > 0)
                     {
-                        await projectEmployeeRepo.UpdateAsync(model);
+                        await _projectEmployeeRepo.UpdateAsync(model);
                     }
                     else
                     {
-                        await projectEmployeeRepo.CreateAsync(model);
+                        await _projectEmployeeRepo.CreateAsync(model);
                     }
 
                     if (model.ReceiverID > 0)
                     {
-                        List<ProjectEmployee> projectEmployee = projectEmployeeRepo.GetAll().
+                        List<ProjectEmployee> projectEmployee = _projectEmployeeRepo.GetAll().
                             Where(x => x.ProjectID == model.ProjectID && x.EmployeeID == model.ReceiverID && x.IsDeleted != true).
                             ToList();
 
@@ -1485,7 +1493,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                             prjEm.ReceiverID = 0;
                             prjEm.IsLeader = false;
                             prjEm.IsDeleted = false;
-                            await projectEmployeeRepo.CreateAsync(prjEm);
+                            await _projectEmployeeRepo.CreateAsync(prjEm);
                         }
                     }
                 }
@@ -1494,9 +1502,9 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 {
                     foreach (int id in prjEmployees.deletedIds)
                     {
-                        ProjectEmployee model = projectEmployeeRepo.GetByID(id);
+                        ProjectEmployee model = _projectEmployeeRepo.GetByID(id);
                         model.IsDeleted = true;
-                        await projectEmployeeRepo.UpdateAsync(model);
+                        await _projectEmployeeRepo.UpdateAsync(model);
                     }
                 }
 

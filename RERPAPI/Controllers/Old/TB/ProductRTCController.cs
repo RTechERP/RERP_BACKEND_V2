@@ -1,25 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Model.Entities;
-using RERPAPI.Model.Common;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
-using System;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using RERPAPI.Model.Context;
-using Microsoft.AspNetCore.Http.HttpResults;
-using RERPAPI.Model.DTO;
-using RERPAPI.Model.Param;
-using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo;
-using RERPAPI.Model.Param.Asset;
-using RERPAPI.Model.Param.TB;
-using RERPAPI.Repo.GenericEntity.TB;
-using RERPAPI.Model.DTO.Asset;
-using RERPAPI.Repo.GenericEntity.Asset;
+using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO.TB;
-using System.Data;
-using RERPAPI.Model.Param.Technical;
+using RERPAPI.Model.Entities;
+using RERPAPI.Model.Param.TB;
+using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.TB;
 
 
 namespace RERPAPI.Controllers.Old.TB
@@ -78,9 +64,9 @@ namespace RERPAPI.Controllers.Old.TB
             try
             {
                 List<ProductGroupRTC> productGroup = _productGroupRTCRepo
-                    .GetAll()
-                    .Where(x => x.IsDeleted == false)
-                    .ToList();
+                    .GetAll();
+                //.Where(x => x.IsDeleted == false)
+                //.ToList();
 
                 //return Ok(new
                 //{
@@ -209,7 +195,7 @@ namespace RERPAPI.Controllers.Old.TB
                 if (product == null) { return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." }); }
                 if (product.productGroupRTC != null)
                 {
-                    
+
                     if (product.productGroupRTC.ID <= 0)
                         await _productGroupRTCRepo.CreateAsync(product.productGroupRTC);
                     else

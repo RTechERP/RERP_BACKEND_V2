@@ -129,4 +129,8 @@ public partial class POKH
     public int? PaymentStatus { get; set; }
 
     public int? AccountType { get; set; }
+
+    public decimal? Discount { get; set; }
+
+    public decimal? TotalMoneyDiscount { get; set; }
 }

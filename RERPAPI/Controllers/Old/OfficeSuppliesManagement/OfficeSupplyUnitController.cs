@@ -1,9 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Model.Common;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System.Security.Cryptography;
 
 namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
 {
@@ -18,7 +15,7 @@ namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
         {
             try
             {
-                List<OfficeSupplyUnit> data = _officesupplyunitRepo.GetAll().Where(x => x.IsDeleted == false).ToList(); 
+                List<OfficeSupplyUnit> data = _officesupplyunitRepo.GetAll().ToList();
                 return Ok(new
                 {
                     status = 1,
@@ -66,7 +63,7 @@ namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
             {
                 if (dst.ID <= 0)
                 {
-                    dst.IsDeleted = false;
+                    //dst.IsDeleted = false;
                     await _officesupplyunitRepo.CreateAsync(dst);
                 }
                 else
@@ -103,7 +100,7 @@ namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
                     var item = _officesupplyunitRepo.GetByID(id);
                     if (item != null)
                     {
-                        item.IsDeleted = true; // Gán trường IsDeleted thành true
+                        //item.IsDeleted = true; // Gán trường IsDeleted thành true
                         /* await off.UpdateAsync(item);*/
                         _officesupplyunitRepo.Update(item);/* // Cập nhật lại mục*/
                     }

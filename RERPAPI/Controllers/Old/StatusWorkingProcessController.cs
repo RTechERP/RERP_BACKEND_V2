@@ -14,7 +14,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                var statusWorkingProcesses = statusWorkingProcessRepo.GetAll().Where(x => x.IsDeleted == false);
+                var statusWorkingProcesses = statusWorkingProcessRepo.GetAll();
                 return Ok(new
                 {
                     status = 1,
@@ -36,8 +36,8 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                List<EmployeeStatus> statusWorkingProcesses = statusWorkingProcessRepo.GetAll().Where(x => x.IsDeleted == false).ToList();
-                if(statusWorkingProcesses.Any(x => (x.StatusName == statusWorkingProcess.StatusName || x.StatusCode == statusWorkingProcess.StatusCode) && x.ID != statusWorkingProcess.ID))
+                List<EmployeeStatus> statusWorkingProcesses = statusWorkingProcessRepo.GetAll().ToList();
+                if (statusWorkingProcesses.Any(x => (x.StatusName == statusWorkingProcess.StatusName || x.StatusCode == statusWorkingProcess.StatusCode) && x.ID != statusWorkingProcess.ID))
                 {
                     return BadRequest(new
                     {
@@ -46,10 +46,11 @@ namespace RERPAPI.Controllers.Old
                     });
                 }
 
-                if(statusWorkingProcess.ID <= 0)
+                if (statusWorkingProcess.ID <= 0)
                 {
                     await statusWorkingProcessRepo.CreateAsync(statusWorkingProcess);
-                } else
+                }
+                else
                 {
                     await statusWorkingProcessRepo.UpdateAsync(statusWorkingProcess);
                 }
@@ -70,7 +71,7 @@ namespace RERPAPI.Controllers.Old
                 });
             }
         }
-        
-        
+
+
     }
 }

@@ -1,18 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
-using RERPAPI.Model.DTO.Asset;
 using RERPAPI.Model.DTO.Project;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.Project;
-using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.Project;
-using System.Net.WebSockets;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers.Old.ProjectManager
 {
@@ -104,7 +96,9 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                         int approved = existing?.IsApproved ?? 0;
 
                         // Xóa mềm
-                        if (item.IsDeleted == true && item.ID != 0)
+                        if (
+                            //item.IsDeleted == true &&
+                            item.ID != 0)
                         {
                             if (!(currentUser.IsAdmin || isTBP || isPBP))
                                 return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền xóa hạng mục"));
@@ -113,7 +107,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
 
                             if (existing != null)
                             {
-                                existing.IsDeleted = true;
+                                //existing.IsDeleted = true
                                 _projectItemRepo.Update(existing);
                             }
                             continue;
@@ -128,9 +122,9 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                                 return BadRequest(ApiResponseFactory.Fail(null, validateMsg));
                             }
 
-                            item.IsDeleted = false;
+                            //item.IsDeleted = false;
                             await _projectItemRepo.CreateAsync(item);
-                        } 
+                        }
                         else
                         {
                             string validateMsg;
@@ -139,7 +133,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                                 return BadRequest(ApiResponseFactory.Fail(null, validateMsg));
                             }
                             if (!currentUser.IsAdmin && approved > 0)
-                                return BadRequest( ApiResponseFactory.Fail(null, "Hạng mục đã duyệt không thể sửa"));
+                                return BadRequest(ApiResponseFactory.Fail(null, "Hạng mục đã duyệt không thể sửa"));
                             _projectItemRepo.Update(item);
                         }
                     }
@@ -174,7 +168,9 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 int projectId = dto.projectItems?.FirstOrDefault()?.ProjectID ?? 0;
                 if (projectId > 0)
                 {
-                    var items = _projectItemRepo.GetAll(x => x.ProjectID == projectId && x.IsDeleted == false);
+                    var items = _projectItemRepo.GetAll(x => x.ProjectID == projectId
+                    //&& x.IsDeleted == false
+                    );
                     decimal total = items.Sum(x => x.TotalDayPlan ?? 0m);
                     foreach (var it in items)
                     {

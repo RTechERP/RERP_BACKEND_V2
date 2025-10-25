@@ -1,14 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers
 {
@@ -410,7 +405,7 @@ namespace RERPAPI.Controllers
             try
             {
 
-                var dataSet = SQLHelper<object>.ProcedureToList("spGetEmployeeChucVu",new string[] { },new object[] { });
+                var dataSet = SQLHelper<object>.ProcedureToList("spGetEmployeeChucVu", new string[] { }, new object[] { });
 
 
                 var chucVuList = SQLHelper<object>.GetListData(dataSet, 1);
@@ -725,7 +720,7 @@ namespace RERPAPI.Controllers
         private int GetCurrentApprovalStep(List<HRHiringRequestApproveLink> approvals)
         {
             var approvedSteps = approvals
-                .Where(x => x.IsApprove == true)
+                .Where(x => x.IsApprove == 1)
                 .Select(x => x.Step)
                 .ToList();
 
@@ -756,7 +751,7 @@ namespace RERPAPI.Controllers
             if (existingApproval != null)
             {
                 // Cập nhật existing record
-                existingApproval.IsApprove = request.IsApprove;
+                existingApproval.IsApprove = request.IsApprove == true ? 1 : 0;
                 existingApproval.DateApprove = request.IsApprove ? DateTime.Now : (DateTime?)null;
                 existingApproval.ReasonUnApprove = request.IsApprove ? "" : (request.ReasonUnApprove ?? "");
                 existingApproval.Note = request.Note ?? "";
@@ -774,7 +769,7 @@ namespace RERPAPI.Controllers
                     ApproveID = request.ApproveID,
                     Step = request.Step,
                     StepName = GetStepName(request.Step),
-                    IsApprove = request.IsApprove,
+                    IsApprove = request.IsApprove == true ? 1 : 0,
                     DateApprove = request.IsApprove ? DateTime.Now : (DateTime?)null,
                     ReasonUnApprove = request.IsApprove ? "" : (request.ReasonUnApprove ?? ""),
                     Note = request.Note ?? "",
@@ -789,13 +784,13 @@ namespace RERPAPI.Controllers
             // Nếu là hủy duyệt, xóa các step cao hơn
             if (!request.IsApprove)
             {
-                var higherSteps = currentApprovals.Where(x => x.Step > request.Step && x.IsApprove == true);
+                var higherSteps = currentApprovals.Where(x => x.Step > request.Step && x.IsApprove == 1);
                 foreach (var step in higherSteps)
                 {
                     step.IsDeleted = true;
                     step.UpdatedDate = DateTime.Now;
                     step.UpdatedBy = request.ApproverName ?? "SYSTEM";
-                    _hiringRequestApproveLinkRepo.UpdateAsync( step);
+                    _hiringRequestApproveLinkRepo.UpdateAsync(step);
                 }
             }
         }

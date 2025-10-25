@@ -1,1 +1,1 @@
-﻿Scaffold-DbContext "Server = DESKTOP-96C4JBL;database=RTC;User Id = sa; Password=123456a@;TrustServerCertificate=True" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Entities -ContextDir Context -UseDatabaseNames -NoOnConfiguring -Force
+﻿Scaffold-DbContext "Server = 192.168.1.2,9000;database=RTC;User Id = sa; Password=1;TrustServerCertificate=True" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Entities -ContextDir Context -UseDatabaseNames -NoOnConfiguring -Force

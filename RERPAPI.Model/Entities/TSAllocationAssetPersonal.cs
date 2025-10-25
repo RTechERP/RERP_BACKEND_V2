@@ -44,4 +44,6 @@ public partial class TSAllocationAssetPersonal
     /// 0.Chưa Xóa 1.Đã xóa
     /// </summary>
     public bool? IsDeleted { get; set; }
+
+    public string? Note { get; set; }
 }

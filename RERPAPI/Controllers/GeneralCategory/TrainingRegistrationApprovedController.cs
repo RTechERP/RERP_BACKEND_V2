@@ -51,12 +51,12 @@ namespace RERPAPI.Controllers.GeneralCategory
                 int flowID = (model.TrainingRegistrationApprovedFlowID ?? 0) - 1;
                 TrainingRegistrationApproved current = _trainingRegistrationApprovedRepo.GetAll(x => x.TrainingRegistrationID == model.TrainingRegistrationID &&
                                                                             x.IsDeleted == false &&
-                                                                            x.TrainingRegistrationApprovedFlowID == model.TrainingRegistrationApprovedFlowID).FirstOrDefault();
+                                                                            x.TrainingRegistrationApprovedFlowID == model.TrainingRegistrationApprovedFlowID).FirstOrDefault() ?? new TrainingRegistrationApproved();
                 if (model.StatusApproved == 1)
                 {
                     TrainingRegistrationApproved previosApproved = _trainingRegistrationApprovedRepo.GetAll(x => x.TrainingRegistrationID == model.TrainingRegistrationID &&
                                                                             (x.IsDeleted == false || x.IsDeleted == null) &&
-                                                                            x.TrainingRegistrationApprovedFlowID == flowID).FirstOrDefault();
+                                                                            x.TrainingRegistrationApprovedFlowID == flowID).FirstOrDefault() ?? new TrainingRegistrationApproved();
                     if (current.StatusApproved == 1)
                     {
                         return BadRequest(new { status = 0, message = "Phiếu đăng ký đã duyệt trước đó rồi!" });

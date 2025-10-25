@@ -1,11 +1,4 @@
-﻿using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.Common
+﻿namespace RERPAPI.Model.Common
 {
     public static class Config
     {
@@ -15,16 +8,23 @@ namespace RERPAPI.Model.Common
             string path = @"D:\\LeTheAnh\\RTC";
             return path;
         }
-        public static string ConnectionString { get; set; } = "";
+        public static string _connectionString { get; set; } = "";
 
-        //public static string ConnectionString
-        //{
-        //    get
-        //    {
-        //        string connectionString = @"Server=192.168.1.2,9000;database=RTC;User Id = sa; Password=1;TrustServerCertificate=True";
-        //        if (_isPublish == 1) connectionString = @"";
-        //        return connectionString;
-        //    }
-        //}
+        public static string ConnectionString
+        {
+            get
+            {
+                //_connectionString = @"Server=LAPTOP-PFOO9T76\LENOVO;database=RTC;User Id = sa; Password=1;TrustServerCertificate=True";
+                string connectionString = @"Server=192.168.1.2,9000;database=RTC;User Id = sa; Password=1;TrustServerCertificate=True";
+                if (_isPublish == 1) _connectionString = @"";
+                return _connectionString;
+            }
+            set
+            {
+                _connectionString = value;
+            }
+        }
+
+
     }
 }

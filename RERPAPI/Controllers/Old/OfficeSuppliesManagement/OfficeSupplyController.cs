@@ -1,12 +1,8 @@
-﻿using Azure.Messaging;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System.Security.Cryptography;
 
 namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
 {
@@ -30,7 +26,7 @@ namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
               new string[] { "@KeyWord" },
              new object[] { keyword ?? "" }  // đảm bảo không null
           );
-              
+
                 var nextCode = _officesupplyRepo.GetNextCodeRTC();
                 List<dynamic> rs = result[0];
                 return Ok(new
@@ -95,7 +91,7 @@ namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
                     var item = _officesupplyRepo.GetByID(id);
                     if (item != null)
                     {
-                        item.IsDeleted = true; // Gán trường IsDeleted thành true
+                        //item.IsDeleted = true; // Gán trường IsDeleted thành true
                         /* await _officesupplyRepo.UpdateAsync(item);*/
                         _officesupplyRepo.Update(item);/* // Cập nhật lại mục*/
                     }

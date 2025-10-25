@@ -1,13 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System;
 using System.Diagnostics;
-using System.Net.WebSockets;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers.Old.ProjectManager
 {
@@ -311,7 +307,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 model.IsDeleted = true;
                 model.UpdatedBy = ""; // Chưa có tên người đăng nhập
                 model.UpdatedDate = DateTime.Now;
-                await projectSurveyRepo.UpdateAsync( model);
+                await projectSurveyRepo.UpdateAsync(model);
 
                 return Ok(ApiResponseFactory.Success(1, ""));
             }
@@ -427,7 +423,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 //    return;
                 //}
                 ProjectSurvey model = projectSurveyRepo.GetByID(projectSurveyId);
-                Project prj = projectRepo.GetByID(projectId);
+                Model.Entities.Project prj = projectRepo.GetByID(projectId);
 
                 var dt = SQLHelper<object>.ProcedureToList("sp_GetProjectTypeTreeFolder",
                                                                 new string[] { "@ProjectTypeID" },

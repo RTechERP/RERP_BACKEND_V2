@@ -106,6 +106,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseStaticFiles();
 app.UseRouting();
 app.UseCors("MyCors");
 app.UseAuthorization();
@@ -116,7 +117,6 @@ app.MapControllers();
 
 
 //Config static file
-app.UseStaticFiles();
 List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();
 foreach (var item in staticFiles)
 {

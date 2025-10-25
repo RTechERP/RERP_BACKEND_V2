@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class DocumentImportPONCCRepo:GenericRepo<DocumentImportPONCC>
+    public class DocumentImportPONCCRepo : GenericRepo<DocumentImportPONCC>
     {
     }
 }
