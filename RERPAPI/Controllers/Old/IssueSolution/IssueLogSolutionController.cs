@@ -68,7 +68,7 @@ namespace RERPAPI.Controllers.Old.IssueSolution
         {
             try
             {
-                var statuses = _issueSolutionStatusRepo.GetAll();
+                var statuses = _issueSolutionStatusRepo.GetAll().Where(x=>x.IsDeleted != true);
                 return Ok(ApiResponseFactory.Success(statuses, ""));
             }
             catch (Exception ex)
@@ -81,7 +81,7 @@ namespace RERPAPI.Controllers.Old.IssueSolution
         {
             try
             {
-                var causes = _issueCauseRepo.GetAll();
+                var causes = _issueCauseRepo.GetAll().Where(x => x.IsDeleted != true);
                 return Ok(ApiResponseFactory.Success(causes, ""));
             }
             catch (Exception ex)

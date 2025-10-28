@@ -39,13 +39,18 @@ namespace RERPAPI.Controllers.Old.IssueSolution
             }
         }
 
-        [HttpGet("save")]
+        [HttpPost("save")]
         public async Task<IActionResult> Save(IssueSolutionStatus model)
         {
             try
             {
                 if (model.ID <= 0)
                 {
+                    var existing = _issueSolutionStatusRepo.GetAll().FirstOrDefault(x => x.StatusCode == model.StatusCode && x.IsDeleted == false);
+                    if (existing != null)
+                    {
+                        return Ok(ApiResponseFactory.Fail(null, "Mã trạng thái đã tồn tại."));
+                    }
                     await _issueSolutionStatusRepo.CreateAsync(model);
                 }
                 else

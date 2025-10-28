@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -40,13 +41,18 @@ namespace RERPAPI.Controllers.Old.IssueSolution
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [HttpGet("save")]
+        [HttpPost("save")]
         public async Task<IActionResult> Save(IssueCause model)
         {
             try
             {
                 if (model.ID <= 0)
                 {
+                    var existing = _issueCauseRepo.GetAll().FirstOrDefault(x => x.IssueCauseCode == model.IssueCauseCode && x.IsDeleted == false);
+                    if(existing != null)
+                    {
+                        return Ok(ApiResponseFactory.Fail(null, "Mã trạng thái đã tồn tại."));
+                    }    
                     await _issueCauseRepo.CreateAsync(model);
                 }
                 else
