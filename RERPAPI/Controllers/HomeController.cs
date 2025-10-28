@@ -110,33 +110,7 @@ namespace RERPAPI.Controllers
         [HttpGet("current-user")]
         public IActionResult GetCurrentUser()
         {
-            //try
-            //{
-            //    if (string.IsNullOrWhiteSpace(controllerName))
-            //        return BadRequest(new { status = 0, message = "Controller name is required." });
-
-            //    if (string.IsNullOrWhiteSpace(subPath))
-            //        return BadRequest(new { status = 0, message = "Sub path is required." });
-
-            //    // Get base path from config and append controller name
-            //    var basePath = Config.Path();
-            //    var folderPath = Path.Combine(basePath, controllerName);
-
-            //    // Combine with the provided subPath
-            //    var fullPath = Path.Combine(folderPath, subPath);
-
-            //    if (!System.IO.File.Exists(fullPath))
-            //        return NotFound(new { status = 0, message = "File not found." });
-
-            //    var fileBytes = System.IO.File.ReadAllBytes(fullPath);
-            //    var fileName = Path.GetFileName(fullPath);
-            //    var contentType = "application/octet-stream";
-            //    return File(fileBytes, contentType, fileName);
-            //}
-            //catch (Exception ex)
-            //{
-            //    return BadRequest(new { status = 0, message = ex.Message, error = ex.ToString() });
-            //}
+           
             try
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
