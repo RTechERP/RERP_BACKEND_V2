@@ -54,9 +54,9 @@ namespace RERPAPI.Controllers.Old.VisionBase
         {
             try
             {
-                var contact = _customerContactRepo.GetAll().Where(x => x.CustomerID == customerId).ToList();
-                var address = _addressStockRepo.GetAll().Where(x => x.CustomerID == customerId).ToList();
-                var customerEmployee = _customerEmployeeRepo.GetAll().Where(x => x.CustomerID == customerId).ToList();
+                var contact = _customerContactRepo.GetAll().Where(x => x.CustomerID == customerId && x.IsDeleted ==false).ToList();
+                var address = _addressStockRepo.GetAll().Where(x => x.CustomerID == customerId && x.IsDeleted == false).ToList();
+                var customerEmployee = _customerEmployeeRepo.GetAll().Where(x => x.CustomerID == customerId && x.IsDeleted == false).ToList();
                 var employees = _employeeRepo.GetAll().ToList();
                 var employee = (from ce in customerEmployee
                                join e in employees on ce.EmployeeID equals e.ID
@@ -78,7 +78,7 @@ namespace RERPAPI.Controllers.Old.VisionBase
         {
             try
             {
-                var data = _customerSpecializationRepo.GetAll().OrderBy(x=>x.STT).ToList();
+                var data = _customerSpecializationRepo.GetAll( x=>x.IsDeleted==false).OrderBy(x=>x.STT).ToList();
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
@@ -128,9 +128,10 @@ namespace RERPAPI.Controllers.Old.VisionBase
                     if (model.CustomerCode.Trim().Length >= 3) provinceCode = model.CustomerCode.Substring(0, 3);
                 }
                 var business = _businessFieldLinkRepo.GetAll().FirstOrDefault(x => x.CustomerID == id);
-                var addressStock = _addressStockRepo.GetAll().Where(x => x.CustomerID == id);
-                var customerContact = _customerContactRepo.GetAll().Where(x => x.CustomerID == id);
-                var customerEmployee = _customerEmployeeRepo.GetAll().Where(x => x.CustomerID == id).ToList();
+                var addressStock = _addressStockRepo.GetAll().Where(x => x.CustomerID == id && x.IsDeleted == false);
+
+                var customerContact = _customerContactRepo.GetAll().Where(x => x.CustomerID == id && x.IsDeleted == false);
+                var customerEmployee = _customerEmployeeRepo.GetAll().Where(x => x.CustomerID == id && x.IsDeleted == false).ToList();
                 var employees = _employeeRepo.GetAll().ToList();
                 var customerEmployeeWithName = (from ce in customerEmployee
                                                 join e in employees on ce.EmployeeID equals e.ID
@@ -223,6 +224,16 @@ namespace RERPAPI.Controllers.Old.VisionBase
                                 await _customerContactRepo.CreateAsync(contact);
                             }
                         }
+
+                    }
+                    if (dto.deletedIdsContact != null)
+                    {
+                        foreach (int id in dto.deletedIdsContact)
+                        {
+                            CustomerContact model = _customerContactRepo.GetByID(id);
+                            model.IsDeleted = true;
+                            await _customerContactRepo.UpdateAsync(model);
+                        }
                     }
                     if (dto.AddressStocks != null && dto.AddressStocks.Count > 0)
                     {
@@ -241,6 +252,15 @@ namespace RERPAPI.Controllers.Old.VisionBase
                             }
                         }
                     }
+                    if (dto.deletedIdsAdrress != null)
+                    {
+                        foreach (int id in dto.deletedIdsAdrress)
+                        {
+                            AddressStock model = _addressStockRepo.GetByID(id);
+                            model.IsDeleted = true;
+                            await _addressStockRepo.UpdateAsync(model);
+                        }
+                    }
                     if (dto.CustomerEmployees != null && dto.CustomerEmployees.Count > 0)
                     {
                         foreach (var item in dto.CustomerEmployees)
@@ -256,6 +276,15 @@ namespace RERPAPI.Controllers.Old.VisionBase
                             {
                                 await _customerEmployeeRepo.CreateAsync(customerEmployee);
                             }
+                        }
+                    }
+                    if (dto.deletedIdsEmp != null)
+                    {
+                        foreach (int id in dto.deletedIdsEmp)
+                        {
+                            CustomerEmployee model = _customerEmployeeRepo.GetByID(id);
+                            model.IsDeleted = true;
+                            await _customerEmployeeRepo.UpdateAsync(model);
                         }
                     }
                     BusinessFieldLink business = _businessFieldLinkRepo.GetAll().FirstOrDefault(x => x.CustomerID == customer.ID);

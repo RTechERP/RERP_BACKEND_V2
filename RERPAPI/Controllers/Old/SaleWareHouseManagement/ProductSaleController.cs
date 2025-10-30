@@ -177,7 +177,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                             && x.ProductGroupID == dto.ProductSale.ProductGroupID
                             && x.ID != dto.ProductSale.ID).ToList();
             if (exists.Count > 0)  check = false;
-            return check ;
+            return check;
         }
         //end update
         #endregion
@@ -200,18 +200,18 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         x.ID, // Thêm ID vào đây
                         x.ProductCode,
                         x.ProductName
-                       
+
                     })
                     .ToList();
-                return Ok(ApiResponseFactory.Success( new{existingProducts}, "kiểm tra code thành công!"));
-                
+                return Ok(ApiResponseFactory.Success(new { existingProducts }, "kiểm tra code thành công!"));
+
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+         
     }
 }
 

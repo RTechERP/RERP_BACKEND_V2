@@ -529,7 +529,8 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 List<Model.Entities.Project> projects = new List<Model.Entities.Project>();
                 if (id > 0)
                 {
-                    projects = projectRepo.GetAll().Where(x => x.ProjectCode.Contains(projectCode) && x.ID != id).ToList();
+                    var check = projectRepo.GetAll(x => x.ProjectCode == projectCode);
+                    projects = projectRepo.GetAll(x => x.ProjectCode == projectCode && x.ID != id);
                 }
                 else
                 {
@@ -601,13 +602,13 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         //                //pathLocation = @"\\rtctechnologydata.ddns.net\DUAN\Projects\";
         //                pathLocation = @"\\14.232.152.154\DUAN\Projects\";
         //            }
-//        }
+        //        }
 
-//        // lấy trạng thái dự án 
-//        [HttpGet("get-project-statuss")]
-//        // [ApiKeyAuthorize]
-//        public async Task<IActionResult> GetProjectStatus(int projectId)
-//        {
+        //        // lấy trạng thái dự án 
+        //        [HttpGet("get-project-statuss")]
+        //        // [ApiKeyAuthorize]
+        //        public async Task<IActionResult> GetProjectStatus(int projectId)
+        //        {
         //            try
         //            {
         //                Directory.CreateDirectory(pathLocation);
@@ -616,7 +617,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         //            {
         //                pathLocation = @"\\rtctechnologydata.ddns.net\DUAN\Projects\";
         //            }
-//        }
+        //        }
 
         //            string path = $@"{pathLocation}\{year}\{code}";
         //            List<int> listProjectTypeID = new List<int>();
@@ -662,9 +663,9 @@ namespace RERPAPI.Controllers.Old.ProjectManager
 
         //                    ////string parentfolder = TextUtils.ToString(dt.Rows[0]["FolderName"]);
 
-//        //                    if (dt.Count() <= 0)
-//        //                        continue;
-//        //                    dt.Columns.Add("Path", typeof(string));
+        //        //                    if (dt.Count() <= 0)
+        //        //                        continue;
+        //        //                    dt.Columns.Add("Path", typeof(string));
 
         //                    //string subPath = "";
         //                    //for (int j = 0; j < dt.Rows.Count; j++)
@@ -706,7 +707,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         //    }
         //}
 
-//        //                    //    //subPath += parentfolder + "\\" + subFolder;
+        //        //                    //    //subPath += parentfolder + "\\" + subFolder;
 
         // modal loadProjectCode
         [HttpGet("get-project-code-modal")]
@@ -1511,6 +1512,37 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                     }
                 }
 
+                return Ok(ApiResponseFactory.Success(true, "Lưu dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        #endregion
+
+        #region
+        [HttpPost("save-firm-base")]
+        public async Task<IActionResult> SaveFirmBase([FromBody] FirmBase firmBase)
+        {
+            try
+            {    
+                var exists = firmBaseRepo.GetAll()
+                    .Where(x => x.FirmCode == firmBase.FirmCode
+                                && x.ID != firmBase.ID ).ToList();
+                if (exists.Count > 0)
+                {
+                    return Ok(new { status = 0, message = $"Mã hãng [{firmBase.FirmName}] đã tồn tại!" });
+                }
+             
+                if (firmBase.ID > 0)
+                    {
+                        await firmBaseRepo.UpdateAsync(firmBase);
+                    }
+                    else
+                    {
+                        await firmBaseRepo.CreateAsync(firmBase);
+                    }
                 return Ok(ApiResponseFactory.Success(true, "Lưu dữ liệu thành công"));
             }
             catch (Exception ex)

@@ -22,4 +22,5 @@ public partial class CustomerContact
     public string? CustomerPart { get; set; }
 
     public string? CustomerPosition { get; set; }
+    public bool? IsDeleted { get; set; }
 }
