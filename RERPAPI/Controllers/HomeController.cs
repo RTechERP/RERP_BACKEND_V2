@@ -68,7 +68,7 @@ namespace RERPAPI.Controllers
                 var dictionary = (IDictionary<string, object>)hasUser;
                 foreach (var item in dictionary)
                 {
-                    if (item.Key.ToLower() == "passwordhash") continue;
+                    //if (item.Key.ToLower() == "passwordhash") continue;
 
                     var claim = new Claim(item.Key.ToLower(), item.Value?.ToString() ?? "");
                     claims.Add(claim);
