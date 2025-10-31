@@ -155,7 +155,7 @@ namespace RERPAPI.Controllers.Old.VisionBase
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [HttpPost]
+        [HttpPost("save-data-old")]
         public async Task<IActionResult> Save(InsertCustomerDTO dto )
         {
             try

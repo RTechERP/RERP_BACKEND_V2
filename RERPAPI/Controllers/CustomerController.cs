@@ -76,7 +76,7 @@ namespace RERPAPI.Controllers
         }
 
 
-        [HttpGet]
+        [HttpGet("get-data-by-procedure")]
         public IActionResult GetCustomer(int groupId, int employeeId, string? filterText, int pageNumber, int pageSize)
         {
             try
@@ -215,7 +215,7 @@ namespace RERPAPI.Controllers
         }
 
 
-        [HttpPost]
+        [HttpPost("save-data")]
         public async Task<IActionResult> SaveCustomer([FromBody] CustomerDTO request)
         {
             try
