@@ -9,6 +9,9 @@ public partial class HistoryMoneyPO
 
     public int? Number { get; set; }
 
+    /// <summary>
+    /// Tổng tiền sau VAT
+    /// </summary>
     public decimal? Money { get; set; }
 
     public DateTime? MoneyDate { get; set; }
@@ -25,6 +28,9 @@ public partial class HistoryMoneyPO
 
     public string? BankName { get; set; }
 
+    /// <summary>
+    /// Tổng tiền trước VAT
+    /// </summary>
     public decimal? MoneyVAT { get; set; }
 
     public decimal? VAT { get; set; }
@@ -36,6 +42,16 @@ public partial class HistoryMoneyPO
     public bool? IsFilm { get; set; }
 
     public bool? IsMergePO { get; set; }
+
+    public bool? IsDeleted { get; set; }
+
+    public string? CreatedBy { get; set; }
+
+    public DateTime? CreatedDate { get; set; }
+
+    public string? UpdatedBy { get; set; }
+
+    public DateTime? UpdatedDate { get; set; }
 
     public decimal? MoneyNotPaid { get; set; }
 }

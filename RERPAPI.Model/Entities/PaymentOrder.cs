@@ -100,4 +100,6 @@ public partial class PaymentOrder
     /// Điểm đến
     /// </summary>
     public string? EndLocation { get; set; }
+
+    public int? RegisterContractID { get; set; }
 }

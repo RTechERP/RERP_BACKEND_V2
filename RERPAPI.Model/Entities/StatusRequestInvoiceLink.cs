@@ -3,13 +3,17 @@ using System.Collections.Generic;
 
 namespace RERPAPI.Model.Entities;
 
-public partial class ProjectPartlistPurchaseRequestType
+public partial class StatusRequestInvoiceLink
 {
     public int ID { get; set; }
 
-    public string? RequestTypeName { get; set; }
+    public int? RequestInvoiceID { get; set; }
 
-    public bool? IsIgnoreBGD { get; set; }
+    public int? StatusID { get; set; }
+
+    public int? IsApproved { get; set; }
+
+    public bool? IsCurrent { get; set; }
 
     public string? CreatedBy { get; set; }
 
@@ -19,5 +23,7 @@ public partial class ProjectPartlistPurchaseRequestType
 
     public DateTime? UpdatedDate { get; set; }
 
-    public string? RequestTypeCode { get; set; }
+    public bool? IsDeleted { get; set; }
+
+    public string? AmendReason { get; set; }
 }
