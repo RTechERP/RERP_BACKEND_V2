@@ -42,7 +42,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Controllers\CustomerController.cs" />
     <Compile Remove="Controllers\DepartmentController.cs" />
     <Compile Remove="Controllers\HistoryProductRTCController.cs" />
     <Compile Remove="Controllers\KPIEmployeeTeamController.cs" />
@@ -51,7 +50,9 @@
     <Compile Remove="Controllers\ModulaLocationController.cs" />
     <Compile Remove="Controllers\Old\POKHController.cs" />
     <Compile Remove="Controllers\Old\POKH\POKHController.cs" />
+    <Compile Remove="Controllers\Old\ProductRTCController.cs" />
     <Compile Remove="Controllers\Old\TB\FirmController.cs" />
+    <Compile Remove="Controllers\Old\VisionBase\CustomerController.cs" />
     <Compile Remove="Controllers\UsersController.cs" />
     <Compile Remove="Controllers\WareHouseController.cs" />
   </ItemGroup>
@@ -75,12 +76,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\CRM\" />
-    <Folder Include="Controllers\Warehouse\" />
     <Folder Include="Controllers\Project\" />
     <Folder Include="Controllers\Sale\" />
     <Folder Include="Controllers\Purchase\" />
-    <Folder Include="Controllers\System\" />
     <Folder Include="Uploads\POKH\NB16111\" />
   </ItemGroup>
 
