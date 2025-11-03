@@ -13,10 +13,14 @@ namespace RERPAPI.Controllers.Old.TB
     [ApiController]
     public class ProductRTCController : ControllerBase
     {
-        Repo.GenericEntity.ProductGroupRTCRepo _productGroupRTCRepo = new Repo.GenericEntity.ProductGroupRTCRepo();
+
+        const int WAREHOUSEID = 1;
+        ProductGroupRTCRepo _productGroupRTCRepo = new ProductGroupRTCRepo();
         ProductRTCRepo _productRTCRepo = new ProductRTCRepo();
         ProductLocationRepo _productLocationRepo = new ProductLocationRepo();
         ConfigSystemRepo config = new ConfigSystemRepo();
+
+
         [HttpPost("get-productRTC")]
         public IActionResult GetListAssets([FromBody] ProductRTCRequetParam request)
         {
@@ -294,6 +298,36 @@ namespace RERPAPI.Controllers.Old.TB
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
 
+        }
+
+
+        [HttpGet("get-by-qrcode")]
+        public IActionResult GetProductByQrCode(string qrCode)
+        {
+            try
+            {
+                var datas = SQLHelper<object>.ProcedureToList("spGetProductRTCByQrCode", 
+                                                                new string[] { "@ProductRTCQRCode", "@WarehouseID" },
+                                                                new object[] { qrCode, WAREHOUSEID });
+
+                var historys = SQLHelper<object>.GetListData(datas, 0);
+
+                if (historys.Count > 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Thiết bị có mã QR [{qrCode}] đang được mượn!", historys));
+                }
+                else
+                {
+                    var products = SQLHelper<object>.GetListData(datas, 1);
+                    return Ok(ApiResponseFactory.Success(products, $""));
+                }
+                
+                
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
         }
     }
 }
