@@ -20,7 +20,7 @@ namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
         OfficeSupplyUnitRepo osurepo = new OfficeSupplyUnitRepo();
 
 
-        [HttpGet("")]
+        [HttpGet("get-office-supply")]
         public IActionResult getOfficeSupply(string keyword = "")
         {
             try
@@ -28,9 +28,9 @@ namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
               "spGetOfficeSupply",
               new string[] { "@KeyWord" },
-             new object[] { keyword ?? "" }  // đảm bảo không null
+             new object[] { keyword ?? "" }
           );
-              
+
                 var nextCode = _officesupplyRepo.GetNextCodeRTC();
                 List<dynamic> rs = result[0];
                 return Ok(new
@@ -59,7 +59,7 @@ namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpGet("{id}")]
+        [HttpGet("get-office-supply-by-id")]
         public IActionResult getOfficeSupplyByID(int id)
         {
             try

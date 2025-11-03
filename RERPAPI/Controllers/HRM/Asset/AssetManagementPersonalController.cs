@@ -142,7 +142,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 var assetsrecoveryPersonal = SQLHelper<dynamic>.ProcedureToList(
                     "spGetTSAssetRecoveryyPersonal",
                     new string[] { "@DateStart", "@DateEnd", "@EmployeeReturnID", "@EmployeeRecoveryID", "@Status", "@FilterText", "@PageSize", "@PageNumber" },
-                    new object[] { request.DateStart, request.DateEnd, request.EmployeeRecoveryID, employeeID, request.Status, request.Filtertext, request.PageSize, request.PageNumber });
+                    new object[] { request.DateStart, request.DateEnd, employeeID, request.EmployeeRecoveryID, request.Status, request.Filtertext, request.PageSize, request.PageNumber });
                 var dataList = SQLHelper<dynamic>.GetListData(assetsrecoveryPersonal, 0);
                 var TotalPage = SQLHelper<object>.GetListData(assetsrecoveryPersonal, 1);
                 var maxSTT = _tSRecoveryAssetPersonalRepo.GetAll().Max(x => (int?)x.STT) + 1 ?? 0;
@@ -265,7 +265,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 }
                 if (dto.tSRecoveryAssetPersonal != null)
                 {
-                    var maxSTT = _tSRecoveryAssetPersonalRepo.GetAll().Max(x => x.STT) + 1 ?? 0;
+                    var maxSTT = _tSRecoveryAssetPersonalRepo.GetAll().Max(x => x.STT)??0 + 1 ;
                     dto.tSRecoveryAssetPersonal.STT = maxSTT;
                     if (dto.tSRecoveryAssetPersonal.ID <= 0)
                     {
@@ -319,7 +319,60 @@ namespace RERPAPI.Controllers.Old.Asset
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
                 var vUserHR = _vUserGroupLinksRepo
                .GetAll()
-               .FirstOrDefault(x => x.Code == "N59" && x.UserID == currentUser.ID);
+               .FirstOrDefault(x => x.Code == "N23" && x.UserID == currentUser.ID);
+                if (dto.tSAllocationAssetPersonal != null)
+                {
+                    if (dto.tSAllocationAssetPersonal.ID > 0)
+                    {
+                        if (dto.tSAllocationAssetPersonal.EmployeeID != currentUser.EmployeeID && dto.tSAllocationAssetPersonal.IsApprovedPersonalProperty != null)
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền duyệt, hủy duyệt"));
+                        }
+                        if (vUserHR == null && dto.tSAllocationAssetPersonal.IsApproveHR != null)
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null, "Bạn không phải HR"));
+                        }
+                        await _tSAllocationAssetPersonalRepo.UpdateAsync(dto.tSAllocationAssetPersonal);
+                    }
+                }
+                if (dto.tSRecoveryAssetPersonal != null)
+                {
+
+                    if (dto.tSRecoveryAssetPersonal.ID > 0)
+                    {
+                        if (dto.tSRecoveryAssetPersonal.EmployeeReturnID != currentUser.EmployeeID && dto.tSRecoveryAssetPersonal.IsApprovedPersonalProperty != null)
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền duyệt, hủy duyệt"));
+                        }
+                        if (vUserHR == null && dto.tSRecoveryAssetPersonal.IsApproveHR != null)
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null, "Bạn không phải HR"));
+                        }
+                        await _tSRecoveryAssetPersonalRepo.UpdateAsync(dto.tSRecoveryAssetPersonal);
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(null, "Lưu dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpPost("save-approve-person")]
+        public async Task<IActionResult> SaveApprovePersonal([FromBody] TSAssetPersonalApproveDTO dto)
+        {
+            try
+            {
+                if (dto == null)
+                {
+                    return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." });
+                }
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                var vUserHR = _vUserGroupLinksRepo
+               .GetAll()
+               .FirstOrDefault(x => x.Code == "N23" && x.UserID == currentUser.ID);
                 if (dto.tSAllocationAssetPersonal != null)
                 {
                     if (dto.tSAllocationAssetPersonal.ID > 0)

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.Asset;
 namespace RERPAPI.Controllers.Old.Asset
@@ -17,7 +18,7 @@ namespace RERPAPI.Controllers.Old.Asset
             try
             {
 
-                var tsAssets = _typeAssetRepo.GetAll().Where(x => x.IsDeleted == false).ToList();
+                var tsAssets = _typeAssetRepo.GetAll().Where(x => x.IsDeleted !=true).OrderByDescending(x => x.CreatedDate).ToList();
                 return Ok(new
                 {
                     status = 1,
@@ -40,7 +41,16 @@ namespace RERPAPI.Controllers.Old.Asset
         {
             try
             {
-                if (typeasset.ID <= 0) await _typeAssetRepo.CreateAsync(typeasset);
+                if (typeasset != null && typeasset.IsDeleted != true)
+                {
+                    if (!_typeAssetRepo.Validate(typeasset, out string message))
+                        return BadRequest(ApiResponseFactory.Fail(null, message));
+                }
+                if (typeasset.ID <= 0)
+                {
+                    await _typeAssetRepo.CreateAsync(typeasset);
+                }
+               
                 else await _typeAssetRepo.UpdateAsync( typeasset);
 
                 return Ok(new
