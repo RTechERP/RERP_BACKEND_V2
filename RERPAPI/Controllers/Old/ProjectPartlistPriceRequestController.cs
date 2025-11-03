@@ -9,7 +9,7 @@ namespace RERPAPI.Controllers.Old
 {
     [Route("api/[controller]")]
     [ApiController]
-    [ApiKeyAuthorize]
+    //[ApiKeyAuthorize]
     public class ProjectPartlistPriceRequestController : ControllerBase
     {
         #region Khai báo repository
@@ -157,11 +157,43 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
+        // Lấy nhà cung cấp
         [HttpGet("get-supplier-sale")]
         public async Task<IActionResult> GetSupplierSale()
         {
-            List<SupplierSale> lst = supplierSaleRepo.GetAll().ToList();
-            return Ok(new { status = 0, data = lst });
+            try
+            {
+                var purchaseRequest = supplierSaleRepo.GetAll()
+                    .OrderBy(x => x.NgayUpdate)
+                    .Select(x => new
+                    {
+                        x.ID,
+                        x.CodeNCC
+                    })
+                    .ToList();
+                return Ok(ApiResponseFactory.Success(purchaseRequest, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-price-history-partlist")]
+        public async Task<IActionResult> GetPriceHistoryPartlist(int projectId, int supplierSaleId, int employeeRequestId, string? keyword)
+        {
+            try
+            {
+                var priceHistoryPartlist = SQLHelper<object>.ProcedureToList("spGetHistoryPricePartlist",
+                new string[] { "@Keyword", "@ProjectID", "@SupplierSaleID", "@EmployeeRequestID" },
+                new object[] { keyword ?? "", projectId, supplierSaleId, employeeRequestId });
+                var data = SQLHelper<object>.GetListData(priceHistoryPartlist, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
         }
 
         [HttpPost("download")]

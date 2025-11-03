@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Azure.Messaging;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -16,7 +19,7 @@ namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
         OfficeSupplyUnitRepo osurepo = new OfficeSupplyUnitRepo();
 
 
-        [HttpGet("")]
+        [HttpGet("get-office-supply")]
         public IActionResult getOfficeSupply(string keyword = "")
         {
             try
@@ -24,7 +27,7 @@ namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
               "spGetOfficeSupply",
               new string[] { "@KeyWord" },
-             new object[] { keyword ?? "" }  // đảm bảo không null
+             new object[] { keyword ?? "" }
           );
 
                 var nextCode = _officesupplyRepo.GetNextCodeRTC();
@@ -55,7 +58,7 @@ namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpGet("{id}")]
+        [HttpGet("get-office-supply-by-id")]
         public IActionResult getOfficeSupplyByID(int id)
         {
             try
@@ -112,6 +115,7 @@ namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
                 });
             }
         }
+
         [HttpPost("check-codes")]
         public async Task<IActionResult> checkCodes([FromBody] List<ProductCodeCheck> codes)
         {
@@ -147,6 +151,7 @@ namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
                 return BadRequest(new { message = ex.Message });
             }
         }
+        [RequiresPermission("N2,N34,N1")]
         //cap nhat and them
         [HttpPost("save-data")]
         public async Task<IActionResult> saveDataOfficeSupply([FromBody] OfficeSupply officesupply)

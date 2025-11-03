@@ -5,10 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RERPAPI.Repo.GenericEntity.Technical
+namespace RERPAPI.Repo.GenericEntity.HRM.Vehicle
 {
-    public class ProductRTCQRCodeRepo:GenericRepo<ProductRTCQRCode>
+    public class VehicleRepairHistoryFileRepo : GenericRepo<VehicleRepairHistoryFile>
     {
-
     }
 }

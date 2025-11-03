@@ -6,7 +6,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using System.Threading.Tasks;
 
-namespace RERPAPI.Controllers
+namespace RERPAPI.Controllers.CRM
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -76,7 +76,7 @@ namespace RERPAPI.Controllers
         }
 
 
-        [HttpGet]
+        [HttpGet()]
         public IActionResult GetCustomer(int groupId, int employeeId, string? filterText, int pageNumber, int pageSize)
         {
             try

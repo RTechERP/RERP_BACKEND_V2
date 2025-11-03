@@ -380,9 +380,25 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<HRHiringRequestLanguageLink> HRHiringRequestLanguageLinks { get; set; }
 
+    public virtual DbSet<Handover> Handovers { get; set; }
+
+    public virtual DbSet<HandoverApprove> HandoverApproves { get; set; }
+
+    public virtual DbSet<HandoverAssetManagement> HandoverAssetManagements { get; set; }
+
+    public virtual DbSet<HandoverFinance> HandoverFinances { get; set; }
+
     public virtual DbSet<HandoverMinute> HandoverMinutes { get; set; }
 
     public virtual DbSet<HandoverMinutesDetail> HandoverMinutesDetails { get; set; }
+
+    public virtual DbSet<HandoverReceiver> HandoverReceivers { get; set; }
+
+    public virtual DbSet<HandoverSubordinate> HandoverSubordinates { get; set; }
+
+    public virtual DbSet<HandoverWarehouseAsset> HandoverWarehouseAssets { get; set; }
+
+    public virtual DbSet<HandoverWork> HandoverWorks { get; set; }
 
     public virtual DbSet<HistoryDeleteBill> HistoryDeleteBills { get; set; }
 
@@ -575,6 +591,8 @@ public partial class RTCContext : DbContext
     public virtual DbSet<PaymentOrderLog> PaymentOrderLogs { get; set; }
 
     public virtual DbSet<PaymentOrderOrderType> PaymentOrderOrderTypes { get; set; }
+
+    public virtual DbSet<PaymentOrderPO> PaymentOrderPOs { get; set; }
 
     public virtual DbSet<PaymentOrderType> PaymentOrderTypes { get; set; }
 
@@ -4162,6 +4180,59 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
+        modelBuilder.Entity<Handover>(entity =>
+        {
+            entity.ToTable("Handover");
+
+            entity.Property(e => e.Code).HasMaxLength(50);
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.HandoverDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<HandoverApprove>(entity =>
+        {
+            entity.ToTable("HandoverApprove");
+
+            entity.Property(e => e.ApproveDate).HasColumnType("datetime");
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.RejectReason).HasMaxLength(500);
+            entity.Property(e => e.RoleName).HasMaxLength(50);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<HandoverAssetManagement>(entity =>
+        {
+            entity.ToTable("HandoverAssetManagement");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.IsSigned).HasDefaultValue(false);
+            entity.Property(e => e.SignedBy).HasMaxLength(50);
+            entity.Property(e => e.Status).HasMaxLength(50);
+            entity.Property(e => e.TSAssetCode).HasMaxLength(50);
+            entity.Property(e => e.Unit).HasMaxLength(50);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<HandoverFinance>(entity =>
+        {
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.DebtType).HasMaxLength(50);
+            entity.Property(e => e.IsApprove).HasDefaultValue(false);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
         modelBuilder.Entity<HandoverMinute>(entity =>
         {
             entity.Property(e => e.AdminWarehouseID).HasComment("thủ kho (Lấy từ ID Employee)");
@@ -4197,6 +4268,55 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.ProductStatus).HasComment("1: Hàng mới");
             entity.Property(e => e.Quantity).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<HandoverReceiver>(entity =>
+        {
+            entity.ToTable("HandoverReceiver");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<HandoverSubordinate>(entity =>
+        {
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<HandoverWarehouseAsset>(entity =>
+        {
+            entity.ToTable("HandoverWarehouseAsset");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.ProductGroupName).HasMaxLength(500);
+            entity.Property(e => e.SignedBy).HasMaxLength(50);
+            entity.Property(e => e.Status).HasMaxLength(50);
+            entity.Property(e => e.Unit).HasMaxLength(50);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<HandoverWork>(entity =>
+        {
+            entity.ToTable("HandoverWork");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.FileName).HasMaxLength(500);
+            entity.Property(e => e.Frequency).HasMaxLength(500);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.SignedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
@@ -5958,6 +6078,18 @@ public partial class RTCContext : DbContext
         modelBuilder.Entity<PaymentOrderOrderType>(entity =>
         {
             entity.ToTable("PaymentOrderOrderType");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<PaymentOrderPO>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__PaymentO__3214EC27AE0C2E09");
+
+            entity.ToTable("PaymentOrderPO");
 
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
