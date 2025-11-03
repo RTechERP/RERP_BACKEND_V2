@@ -7,7 +7,7 @@ using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class ProductGroupRTCRepo: GenericRepo<ProductGroupRTC>
+    public class KPIEvaluationRepo:GenericRepo<KPIEvaluation>
     {
     }
 }

@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using RERPAPI.Model.Entities;
-
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class ProductGroupRTCRepo: GenericRepo<ProductGroupRTC>
+    public class TaxCompanyRepo: GenericRepo<TaxCompany>
     {
     }
 }

@@ -1,26 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.Context;
-using RERPAPI.Model.DTO;
-using RERPAPI.Model.DTO.Asset;
 using RERPAPI.Model.DTO.TB;
 using RERPAPI.Model.Entities;
-using RERPAPI.Model.Param;
-using RERPAPI.Model.Param.Asset;
 using RERPAPI.Model.Param.TB;
-using RERPAPI.Model.Param.Technical;
-using RERPAPI.Repo;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.Asset;
-using RERPAPI.Repo.GenericEntity.TB;
-using System;
-using System.Data;
 using System.Net.Mime;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 
 namespace RERPAPI.Controllers.Old.TB
@@ -29,7 +13,7 @@ namespace RERPAPI.Controllers.Old.TB
     [ApiController]
     public class ProductRTCController : ControllerBase
     {
-        ProductGroupRTCRepo _productGroupRTCRepo = new ProductGroupRTCRepo();
+        Repo.GenericEntity.ProductGroupRTCRepo _productGroupRTCRepo = new Repo.GenericEntity.ProductGroupRTCRepo();
         ProductRTCRepo _productRTCRepo = new ProductRTCRepo();
         ProductLocationRepo _productLocationRepo = new ProductLocationRepo();
         ConfigSystemRepo config = new ConfigSystemRepo();
@@ -190,11 +174,11 @@ namespace RERPAPI.Controllers.Old.TB
                 req.file.CopyTo(fs);
                 return Ok(ApiResponseFactory.Success(null, "Upload thành công"));
             }
-            catch( Exception ex)
+            catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-          
+
         }
         [HttpGet("get-location")]
         public IActionResult GetLocation(int? warehouseID)
@@ -234,7 +218,7 @@ namespace RERPAPI.Controllers.Old.TB
         public IActionResult GetPreview([FromQuery] string full)
         {
             if (string.IsNullOrWhiteSpace(full)) return BadRequest("full required");
-            var con = config.GetAll(x=>x.KeyName== "PathPreview").FirstOrDefault()?? new ConfigSystem();
+            var con = config.GetAll(x => x.KeyName == "PathPreview").FirstOrDefault() ?? new ConfigSystem();
             string root = "";
             if (con.ID > 0)
             {
