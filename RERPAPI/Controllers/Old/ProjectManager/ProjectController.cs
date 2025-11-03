@@ -53,6 +53,8 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         ProjectWorkerTypeRepo projectWorkerTypeRepo = new ProjectWorkerTypeRepo();
         DailyReportTechnicalRepo dailyReportTechnicalRepo = new DailyReportTechnicalRepo();
         ProjectStatusDetailRepo projectStatusDetailRepo = new ProjectStatusDetailRepo();
+
+        EmployeeProjectTypeRepo projectEmployeeProjectTypeRepo = new EmployeeProjectTypeRepo();
         #endregion
 
         #region Hàm dùng chung
@@ -1526,23 +1528,23 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         public async Task<IActionResult> SaveFirmBase([FromBody] FirmBase firmBase)
         {
             try
-            {    
+            {
                 var exists = firmBaseRepo.GetAll()
                     .Where(x => x.FirmCode == firmBase.FirmCode
-                                && x.ID != firmBase.ID ).ToList();
+                                && x.ID != firmBase.ID).ToList();
                 if (exists.Count > 0)
                 {
                     return Ok(new { status = 0, message = $"Mã hãng [{firmBase.FirmName}] đã tồn tại!" });
                 }
-             
+
                 if (firmBase.ID > 0)
-                    {
-                        await firmBaseRepo.UpdateAsync(firmBase);
-                    }
-                    else
-                    {
-                        await firmBaseRepo.CreateAsync(firmBase);
-                    }
+                {
+                    await firmBaseRepo.UpdateAsync(firmBase);
+                }
+                else
+                {
+                    await firmBaseRepo.CreateAsync(firmBase);
+                }
                 return Ok(ApiResponseFactory.Success(true, "Lưu dữ liệu thành công"));
             }
             catch (Exception ex)
@@ -1551,5 +1553,64 @@ namespace RERPAPI.Controllers.Old.ProjectManager
             }
         }
         #endregion
+
+
+        //  lấy danh sách leader của loại dự án
+        [HttpGet("getemployeeprojecttype/{projectTypeId}")]
+        public async Task<IActionResult> getemployeeprojecttype(int projectTypeId)
+        {
+            try
+            {
+                var employeeProjectType = SQLHelper<object>.ProcedureToList("spGetEmployeeProjectType",
+                                            new string[] { "@ProjectTypeID" },
+                                            new object[] { projectTypeId });
+                var data = SQLHelper<object>.GetListData(employeeProjectType, 0);
+                return Ok(ApiResponseFactory.Success(data, ""))
+                ;
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpPost("saveemployeeprojecttype")]
+        public async Task<IActionResult> saveemployeeprojecttype(List<EmployeeProjectType> employeeProjectType)
+        {
+            try
+            {
+                foreach(var item in employeeProjectType)
+                {
+                    if (item.ID <= 0)
+                    {
+                        await projectEmployeeProjectTypeRepo.CreateAsync(item);
+                    }
+                    else
+                    {
+                        projectEmployeeProjectTypeRepo.Update(item);
+                    }
+                }
+               
+                return Ok(ApiResponseFactory.Success(employeeProjectType, ""));
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-project-employee-filter/{departmentID}")]
+        public async Task<IActionResult> getprojectemployeefilter(int departmentID)
+        {
+            try
+            {
+                var employees = SQLHelper<object>.ProcedureToList("spGetEmployee", new string[] { "@DepartmentID", "@Status" }, new object[] { departmentID, 0 });
+                var data = SQLHelper<object>.GetListData(employees, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 }
