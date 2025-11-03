@@ -6,7 +6,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using System.Threading.Tasks;
 
-namespace RERPAPI.Controllers
+namespace RERPAPI.Controllers.CRM
 {
     [Route("api/[controller]")]
     [ApiController]
