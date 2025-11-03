@@ -5,10 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RERPAPI.Repo.GenericEntity.Technical
+namespace RERPAPI.Repo.GenericEntity.BBNV
 {
-    public class ProductRTCQRCodeRepo:GenericRepo<ProductRTCQRCode>
+    public class HandoverRepo: GenericRepo<Handover>
     {
-
     }
 }

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
@@ -307,10 +308,12 @@ namespace RERPAPI.Controllers.Old.Asset
             }
         }
         [HttpPost("save-approve")]
+        [RequiresPermission("N23")]
         public async Task<IActionResult> SaveApprove([FromBody] TSAssetPersonalApproveDTO dto)
         {
             try
             {
+                const string PERMISSION_HR = "N23";
                 if (dto == null)
                 {
                     return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." });
@@ -319,7 +322,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
                 var vUserHR = _vUserGroupLinksRepo
                .GetAll()
-               .FirstOrDefault(x => x.Code == "N23" && x.UserID == currentUser.ID);
+               .FirstOrDefault(x => x.Code == PERMISSION_HR && x.UserID == currentUser.ID);
                 if (dto.tSAllocationAssetPersonal != null)
                 {
                     if (dto.tSAllocationAssetPersonal.ID > 0)
@@ -359,11 +362,14 @@ namespace RERPAPI.Controllers.Old.Asset
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-approve-person")]
-        public async Task<IActionResult> SaveApprovePersonal([FromBody] TSAssetPersonalApproveDTO dto)
+        //[RequiresPermission("N23")]
+        public async Task<IActionResult> SaveApprovePerson([FromBody] TSAssetPersonalApproveDTO dto)
         {
             try
             {
+                const string PERMISSION_HR = "N23";
                 if (dto == null)
                 {
                     return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." });
@@ -372,7 +378,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
                 var vUserHR = _vUserGroupLinksRepo
                .GetAll()
-               .FirstOrDefault(x => x.Code == "N23" && x.UserID == currentUser.ID);
+               .FirstOrDefault(x => x.Code == PERMISSION_HR && x.UserID == currentUser.ID);
                 if (dto.tSAllocationAssetPersonal != null)
                 {
                     if (dto.tSAllocationAssetPersonal.ID > 0)
