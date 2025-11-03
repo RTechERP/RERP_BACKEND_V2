@@ -61,7 +61,7 @@ namespace RERPAPI.Controllers.GeneralCategory.TrainingRegistration
                 // Save Training registration data
                 if (model.ID <= 0)
                 {
-                    model.Code = _trainingRegistrationRepo.GetNewCode(model);
+                    //model.Code = _trainingRegistrationRepo.GetNewCode(model);
                     if (await _trainingRegistrationRepo.CreateAsync(model) > 0)
                         success = true;
 
@@ -184,6 +184,5 @@ namespace RERPAPI.Controllers.GeneralCategory.TrainingRegistration
                 });
             }
         }
-
     }
 }

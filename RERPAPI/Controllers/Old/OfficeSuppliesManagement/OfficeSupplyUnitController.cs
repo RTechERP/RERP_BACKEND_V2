@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Model.Common;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Asset;
@@ -68,7 +66,7 @@ namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
                 }
                 if (dst.ID <= 0)
                 {
-                    dst.IsDeleted = false;
+                    //dst.IsDeleted = false;
                     await _officesupplyunitRepo.CreateAsync(dst);
                 }
                 else

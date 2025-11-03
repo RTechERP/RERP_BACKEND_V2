@@ -10,7 +10,7 @@ namespace RERPAPI.Controllers.Old.Asset
     [ApiController]
     public class AssetTypeController : ControllerBase
     {
-      
+
         TTypeAssetsRepo _typeAssetRepo = new TTypeAssetsRepo();
         [RequiresPermission("N23,N1")]
         [HttpGet("get-asset-type")]
