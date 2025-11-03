@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.Asset;
@@ -11,7 +12,7 @@ namespace RERPAPI.Controllers.Old.Asset
     {
       
         TTypeAssetsRepo _typeAssetRepo = new TTypeAssetsRepo();
-
+        [RequiresPermission("N23,N1")]
         [HttpGet("get-asset-type")]
         public IActionResult GetAssetType()
         {
@@ -36,6 +37,7 @@ namespace RERPAPI.Controllers.Old.Asset
             }
 
         }
+        [RequiresPermission("N23,N1")]
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] TSAsset typeasset)
         {

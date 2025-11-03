@@ -1,6 +1,7 @@
 ﻿using Azure.Messaging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
@@ -116,6 +117,7 @@ namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
                 });
             }
         }
+
         [HttpPost("check-codes")]
         public async Task<IActionResult> checkCodes([FromBody] List<ProductCodeCheck> codes)
         {
@@ -151,6 +153,7 @@ namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
                 return BadRequest(new { message = ex.Message });
             }
         }
+        [RequiresPermission("N2,N34,N1")]
         //cap nhat and them
         [HttpPost("save-data")]
         public async Task<IActionResult> saveDataOfficeSupply([FromBody] OfficeSupply officesupply)

@@ -1,5 +1,6 @@
 ﻿
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.Asset;
@@ -9,6 +10,7 @@ namespace RERPAPI.Controllers.Old.Asset
 {
     [Route("api/[controller]")]
     [ApiController]
+    [RequiresPermission("N23,N1")]
     public class AssetSourceController : ControllerBase
     {
 
@@ -35,6 +37,7 @@ namespace RERPAPI.Controllers.Old.Asset
             }
 
         }
+        [RequiresPermission("N23,N1")]
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] TSSourceAsset sourceasset)
         {
