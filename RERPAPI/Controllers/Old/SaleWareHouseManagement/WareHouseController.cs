@@ -15,7 +15,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         {
             try
             {
-                List<Warehouse> warehouse = _warehouseRepo.GetAll();
+                List<RERPAPI.Model.Entities.Warehouse> warehouse = _warehouseRepo.GetAll();
                 return Ok(new
                 {
                     status = 1,
