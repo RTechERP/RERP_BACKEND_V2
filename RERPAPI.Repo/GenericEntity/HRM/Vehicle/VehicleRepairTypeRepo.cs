@@ -18,6 +18,13 @@ namespace RERPAPI.Repo.GenericEntity.HRM.Vehicle
                 message = "Vui lòng nhập tên loại sửa chữa";
                 return false;
             }
+            bool exists = GetAll().Any(x => x.RepairTypeCode == item.RepairTypeCode && x.ID != item.ID && x.IsDeleted != true);
+
+            if (exists)
+            {
+                message = "Mã loại sửa chữa đã tồn tại";
+                return false;
+            }
             return true;
         }
     }
