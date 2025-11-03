@@ -55,7 +55,7 @@ namespace RERPAPI.Controllers.Old
 
         }
 
-        [HttpGet("getemployeeinteam")]
+        [HttpGet("get-employee-in-team")]
         public IActionResult GetAllEmployee(int departmentID = 0, int kpiEmployeeTeamID = 0)
         {
             try

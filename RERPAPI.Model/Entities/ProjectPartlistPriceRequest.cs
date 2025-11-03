@@ -16,7 +16,7 @@ public partial class ProjectPartlistPriceRequest
     public string? ProductName { get; set; }
 
     /// <summary>
-    /// 1:Yêu cầu báo giá; 2:Đã báo giá
+    /// 1:Yêu cầu báo giá; 2:Đã báo giá;3:Từ chối báo giá
     /// </summary>
     public int? StatusRequest { get; set; }
 
@@ -86,11 +86,11 @@ public partial class ProjectPartlistPriceRequest
 
     public bool? IsJobRequirement { get; set; }
 
-    public string? NoteHR { get; set; }
-
     public int? JobRequirementID { get; set; }
 
     public bool? IsRequestBuy { get; set; }
+
+    public string? NoteHR { get; set; }
 
     public int? ProjectPartlistPriceRequestTypeID { get; set; }
 

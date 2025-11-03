@@ -1,8 +1,6 @@
-﻿using DocumentFormat.OpenXml.Wordprocessing;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
-using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -113,7 +111,7 @@ namespace RERPAPI.Controllers.Old.POKH
         {
             try
             {
-                if(dto.quotationKHs.ID <= 0)
+                if (dto.quotationKHs.ID <= 0)
                 {
                     await _quotationKHRepo.CreateAsync(dto.quotationKHs);
                 }
@@ -128,7 +126,7 @@ namespace RERPAPI.Controllers.Old.POKH
                         var detailToDelete = _quotationDetailKHRepo.GetByID(item);
                         if (detailToDelete != null)
                         {
-                            detailToDelete.IsDeleted = true;
+                            //detailToDelete.IsDeleted = true;
                             //detailToDelete.UpdatedBy = User.Identity.Name; // Mở comment nếu có phân quyền người dùng
                             await _quotationDetailKHRepo.UpdateAsync(detailToDelete);
                         }
@@ -148,8 +146,8 @@ namespace RERPAPI.Controllers.Old.POKH
                             await _quotationDetailKHRepo.UpdateAsync(item);
                         }
                     }
-                } 
-                return Ok(ApiResponseFactory.Success(null,"Success"));
+                }
+                return Ok(ApiResponseFactory.Success(null, "Success"));
             }
             catch (Exception ex)
             {

@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -21,7 +20,7 @@ namespace RERPAPI.Controllers.Old.POKH
             {
                 List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetQuotationKH",
                     new string[] { "@FilterText", "@Status", "@CustomerID", "@UserID", "@PageSize", "@PageNumber" },
-                    new object[] { filterText, status, customerId, userId, size, page  });
+                    new object[] { filterText, status, customerId, userId, size, page });
                 var data = SQLHelper<dynamic>.GetListData(list, 0);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
@@ -35,7 +34,9 @@ namespace RERPAPI.Controllers.Old.POKH
         {
             try
             {
-                var list = _quotationDetailKHRepo.GetAll().Where(x => x.QuotationKHID == id && x.IsDeleted != true);
+                var list = _quotationDetailKHRepo.GetAll().Where(x => x.QuotationKHID == id
+                //&& x.IsDeleted != true
+                );
                 return Ok(ApiResponseFactory.Success(list, ""));
             }
             catch (Exception ex)
