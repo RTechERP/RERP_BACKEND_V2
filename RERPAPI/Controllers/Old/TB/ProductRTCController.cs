@@ -4,6 +4,7 @@ using RERPAPI.Model.DTO.TB;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.TB;
 using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.TB;
 using System.Net.Mime;
 
 
