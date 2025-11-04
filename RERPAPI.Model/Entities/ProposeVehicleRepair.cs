@@ -6,7 +6,7 @@ namespace RERPAPI.Model.Entities;
 /// <summary>
 /// Danh mục xe đi sửa chữa
 /// </summary>
-public partial class VehicleRepair
+public partial class ProposeVehicleRepair
 {
     /// <summary>
     /// ID của bản ghi
@@ -22,11 +22,6 @@ public partial class VehicleRepair
     /// ID bảng VehicleManagement
     /// </summary>
     public int? VehicleManagementID { get; set; }
-
-    /// <summary>
-    /// Ngày báo cáo
-    /// </summary>
-    public DateTime? DateReport { get; set; }
 
     /// <summary>
     /// ID bảng VehicleRepairType
@@ -49,17 +44,12 @@ public partial class VehicleRepair
     public string? Reason { get; set; }
 
     /// <summary>
-    /// Chi phí sửa chữa ước tính
+    /// Nội dung đề xuất
     /// </summary>
-    public decimal? CostRepairEstimate { get; set; }
+    public string? ProposeContent { get; set; }
 
     /// <summary>
-    /// Chi phí sửa chữa thực tế
-    /// </summary>
-    public decimal? CostRepairActual { get; set; }
-
-    /// <summary>
-    /// ID nhân viên thực hiện đem xe đi sửa chữa
+    /// ID nhân viên thực hiện đem xe đi sửa
     /// </summary>
     public int? EmployeeID { get; set; }
 
@@ -93,55 +83,7 @@ public partial class VehicleRepair
     /// </summary>
     public bool? IsDeleted { get; set; }
 
-    public string? RepairGarageName { get; set; }
+    public int? EmployeeProposeID { get; set; }
 
-    public string? ContactPhone { get; set; }
-
-    public string? GaraAddress { get; set; }
-
-    public string? FileName { get; set; }
-
-    public string? FilePath { get; set; }
-
-    /// <summary>
-    /// Nội dung đề nghị
-    /// </summary>
-    public string? ContentPropose { get; set; }
-
-    /// <summary>
-    /// 0. Chưa duyệt 1. Đã duyệt 2.Không duyệt
-    /// </summary>
-    public int? IsApprove { get; set; }
-
-    public int? ApproveID { get; set; }
-
-    /// <summary>
-    /// ID bảng đơn vị tính UnitCount
-    /// </summary>
-    public int? UnitCountID { get; set; }
-
-    /// <summary>
-    /// Số lượng
-    /// </summary>
-    public int? Quantity { get; set; }
-
-    /// <summary>
-    /// Đơn giá
-    /// </summary>
-    public decimal? UnitPrice { get; set; }
-
-    /// <summary>
-    /// Thành tiền
-    /// </summary>
-    public decimal? TotalPrice { get; set; }
-
-    /// <summary>
-    /// Thời gian bảo hành(tháng)
-    /// </summary>
-    public int? WarrantyPeriod { get; set; }
-
-    /// <summary>
-    /// Địa chỉ NCC
-    /// </summary>
-    public string? AddressNCC { get; set; }
+    public DateTime? DatePropose { get; set; }
 }
