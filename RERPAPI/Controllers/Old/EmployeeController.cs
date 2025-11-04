@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -8,7 +7,6 @@ using RERPAPI.Repo.GenericEntity;
 //using RERPAPI.Model.Common;
 //using RERPAPI.Model.Entities;
 //using RERPAPI.Repo.GenericEntity;
-using System.Linq;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -28,17 +26,17 @@ namespace RERPAPI.Controllers.Old
                 {
                     status = 1,
                     data = employees
-               });
+                });
             }
             catch (Exception ex)
-           {
-               return Ok(new
-               {
-                   status = 0,
-                   message = ex.Message,
-                   error = ex.ToString()
-               });
-           }
+            {
+                return Ok(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
         }
         [HttpGet("")]
         //[RequiresPermission("N42")]

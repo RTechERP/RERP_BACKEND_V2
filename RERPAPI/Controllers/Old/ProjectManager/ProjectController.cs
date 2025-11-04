@@ -1,20 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore.Query;
-using RERPAPI.Attributes;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System.Collections.Generic;
 using System.Data;
-using System.Dynamic;
-using System.Linq.Expressions;
-using System.Net.WebSockets;
-using System.Text.Json;
-using System.Xml.Linq;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers.Old.ProjectManager
 {
@@ -53,6 +42,14 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         ProjectWorkerTypeRepo projectWorkerTypeRepo = new ProjectWorkerTypeRepo();
         DailyReportTechnicalRepo dailyReportTechnicalRepo = new DailyReportTechnicalRepo();
         ProjectStatusDetailRepo projectStatusDetailRepo = new ProjectStatusDetailRepo();
+
+        // Added repos for employee status and curricular
+        EmployeeStatusRepo _employeeStatusRepo = new EmployeeStatusRepo();
+        EmployeeCurricularRepo _employeeCurricularRepo = new EmployeeCurricularRepo();
+        EmployeeRepo _employeeRepo = new EmployeeRepo();
+        PositionInternalRepo _positionInternalRepo = new PositionInternalRepo();
+        EmployeeWorkingProcessRepo _employeeWorkingProcessRepo = new EmployeeWorkingProcessRepo();
+        UnitCountRepo _unitCountRepo = new UnitCountRepo();
         #endregion
 
         #region Hàm dùng chung
@@ -601,13 +598,13 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         //                //pathLocation = @"\\rtctechnologydata.ddns.net\DUAN\Projects\";
         //                pathLocation = @"\\14.232.152.154\DUAN\Projects\";
         //            }
-//        }
+        //        }
 
-//        // lấy trạng thái dự án 
-//        [HttpGet("get-project-statuss")]
-//        // [ApiKeyAuthorize]
-//        public async Task<IActionResult> GetProjectStatus(int projectId)
-//        {
+        //        // lấy trạng thái dự án 
+        //        [HttpGet("get-project-statuss")]
+        //        // [ApiKeyAuthorize]
+        //        public async Task<IActionResult> GetProjectStatus(int projectId)
+        //        {
         //            try
         //            {
         //                Directory.CreateDirectory(pathLocation);
@@ -616,7 +613,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         //            {
         //                pathLocation = @"\\rtctechnologydata.ddns.net\DUAN\Projects\";
         //            }
-//        }
+        //        }
 
         //            string path = $@"{pathLocation}\{year}\{code}";
         //            List<int> listProjectTypeID = new List<int>();
@@ -662,9 +659,9 @@ namespace RERPAPI.Controllers.Old.ProjectManager
 
         //                    ////string parentfolder = TextUtils.ToString(dt.Rows[0]["FolderName"]);
 
-//        //                    if (dt.Count() <= 0)
-//        //                        continue;
-//        //                    dt.Columns.Add("Path", typeof(string));
+        //        //                    if (dt.Count() <= 0)
+        //        //                        continue;
+        //        //                    dt.Columns.Add("Path", typeof(string));
 
         //                    //string subPath = "";
         //                    //for (int j = 0; j < dt.Rows.Count; j++)
@@ -706,7 +703,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         //    }
         //}
 
-//        //                    //    //subPath += parentfolder + "\\" + subFolder;
+        //        //                    //    //subPath += parentfolder + "\\" + subFolder;
 
         // modal loadProjectCode
         [HttpGet("get-project-code-modal")]
@@ -1518,6 +1515,237 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        #region Employee Related Endpoints
+
+        // Get all employees
+        [HttpGet("get-employee")]
+        public async Task<IActionResult> GetEmployee()
+        {
+            try
+            {
+                var employees = _employeeRepo.GetAll()
+                    .Select(x => new { x.ID, x.Code, x.FullName })
+                    .ToList();
+                return Ok(ApiResponseFactory.Success(employees, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        // Get employee positions (ChucVu)
+        [HttpGet("get-employee-ChucVu")]
+        public async Task<IActionResult> GetEmployeeChucVu()
+        {
+            try
+            {
+                var positions = _positionInternalRepo.GetAll()
+                    .Select(x => new { x.ID, x.Code, x.Name })
+                    .ToList();
+                return Ok(ApiResponseFactory.Success(positions, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        // Save employee curricular
+        [HttpPost("save-employee-curricular")]
+        public async Task<IActionResult> SaveEmployeeCurricular([FromBody] EmployeeCurricular model)
+        {
+            try
+            {
+                if (model.ID > 0)
+                {
+                    // Update existing record
+                    var existing = _employeeCurricularRepo.GetByID(model.ID);
+                    if (existing != null)
+                    {
+                        existing.CurricularCode = model.CurricularCode;
+                        existing.CurricularName = model.CurricularName;
+                        existing.CurricularDay = model.CurricularDay;
+                        existing.CurricularMonth = model.CurricularMonth;
+                        existing.CurricularYear = model.CurricularYear;
+                        existing.EmployeeID = model.EmployeeID;
+                        existing.Note = model.Note;
+                        existing.UpdatedBy = model.UpdatedBy;
+                        existing.UpdatedDate = DateTime.Now;
+
+                        await _employeeCurricularRepo.UpdateAsync(existing);
+                    }
+                }
+                else
+                {
+                    // Check if record already exists
+                    var existingRecord = _employeeCurricularRepo.GetAll()
+                        .FirstOrDefault(x => x.EmployeeID == model.EmployeeID &&
+                                           x.CurricularDay == model.CurricularDay &&
+                                           x.CurricularMonth == model.CurricularMonth &&
+                                           x.CurricularYear == model.CurricularYear);
+
+                    if (existingRecord != null)
+                    {
+                        // Update existing record
+                        existingRecord.CurricularCode = model.CurricularCode;
+                        existingRecord.CurricularName = model.CurricularName;
+                        existingRecord.Note = model.Note;
+                        existingRecord.UpdatedBy = model.UpdatedBy;
+                        existingRecord.UpdatedDate = DateTime.Now;
+
+                        await _employeeCurricularRepo.UpdateAsync(existingRecord);
+                    }
+                    else
+                    {
+                        // Create new record
+                        model.CreatedDate = DateTime.Now;
+                        await _employeeCurricularRepo.CreateAsync(model);
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(true, "Lưu dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         #endregion
+        #endregion
+
+        [HttpGet]
+        [Route("getemployeestatus")]
+        public IActionResult GetEmployeeStatus()
+        {
+            try
+            {
+                var employeeStatuses = _employeeStatusRepo.GetAll()
+                    .Where(x => x.IsDeleted == false)
+                    .Select(x => new
+                    {
+                        ID = x.ID,
+                        StatusCode = x.StatusCode,
+                        StatusName = x.StatusName
+                    })
+                    .ToList();
+
+                return Ok(employeeStatuses);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        [Route("checkemployeestatus")]
+        public IActionResult CheckEmployeeStatus(string statusCode, int id)
+        {
+            try
+            {
+                var exists = _employeeStatusRepo.GetAll()
+                    .Any(x => x.StatusCode == statusCode && x.ID != id && x.IsDeleted == false);
+
+                return Ok(new { exists = exists });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        [Route("checkemployeecurricular")]
+        public IActionResult CheckEmployeeCurricular(int employeeID, string date)
+        {
+            try
+            {
+                var exists = _employeeCurricularRepo.GetAll()
+                    .Any(x => x.EmployeeID == employeeID &&
+                             $"{x.CurricularDay:D2}/{x.CurricularMonth:D2}/{x.CurricularYear}" == date);
+
+                return Ok(new { status = exists ? 1 : 0 });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        [Route("getworkingprocess")]
+        public IActionResult GetWorkingProcess([FromBody] dynamic request)
+        {
+            try
+            {
+                var result = SQLHelper<object>.ProcedureToList("spLoadEmployeeWorkingProcess",
+                    new string[] { "@EmployeeCode", "@EmployeeName", "@DepartmentID", "@FromDate", "@ToDate", "@PageIndex", "@PageSize" },
+                    new object[] {
+                        request?.EmployeeCode?.ToString() ?? "",
+                        request?.EmployeeName?.ToString() ?? "",
+                        request?.DepartmentID ?? 0,
+                        request?.FromDate ?? DateTime.MinValue,
+                        request?.ToDate ?? DateTime.MaxValue,
+                        request?.PageIndex ?? 1,
+                        request?.PageSize ?? 10
+                    });
+
+                return Ok(ApiResponseFactory.Success(result, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost]
+        [Route("getemployeecurricular")]
+        public IActionResult GetEmployeeCurricular([FromBody] dynamic request)
+        {
+            try
+            {
+                var result = SQLHelper<object>.ProcedureToList("spGetEmployeeCurricular",
+                    new string[] { "@Month", "@Year", "@DepartmentID", "@EmployeeID" },
+                    new object[] {
+                        request?.Month ?? 1,
+                        request?.Year ?? DateTime.Now.Year,
+                        request?.DepartmentID ?? 0,
+                        request?.EmployeeID ?? 0
+                    });
+
+                return Ok(ApiResponseFactory.Success(result, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet]
+        [Route("getunitcount")]
+        public IActionResult GetUnitCount()
+        {
+            try
+            {
+                var unitCounts = _unitCountRepo.GetAll()
+                    .Where(x => x.IsDeleted != true)
+                    .Select(x => new
+                    {
+                        ID = x.ID,
+                        UnitCode = x.UnitCode,
+                        UnitName = x.UnitName
+                    }).ToList();
+
+                return Ok(ApiResponseFactory.Success(unitCounts, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
     }
 }

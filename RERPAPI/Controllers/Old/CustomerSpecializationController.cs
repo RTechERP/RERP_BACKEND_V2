@@ -1,8 +1,5 @@
-﻿using DocumentFormat.OpenXml.Office2010.Excel;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
@@ -18,7 +15,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                if(model.ID > 0)
+                if (model.ID > 0)
                 {
                     await _customerSpecializationRepo.UpdateAsync(model);
                 }
@@ -40,7 +37,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                var data = _customerSpecializationRepo.GetAll().Where(x => x.IsDeleted != true);
+                var data = _customerSpecializationRepo.GetAll();
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
@@ -56,7 +53,7 @@ namespace RERPAPI.Controllers.Old
             {
                 var data = _customerSpecializationRepo.GetByID(id);
                 return Ok(ApiResponseFactory.Success(data, ""));
-       
+
 
             }
             catch (Exception ex)

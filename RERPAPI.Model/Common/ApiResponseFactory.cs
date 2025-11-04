@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Model.Common
 {
@@ -20,13 +21,14 @@ namespace RERPAPI.Model.Common
             };
         }
 
-        public static APIResponse Fail(Exception? ex,string message)
+        public static APIResponse Fail(Exception? ex,string message, object? data = null)
         {
             return new APIResponse
             {
                 status = 0,
                 message = message,
-                error = ex?.ToString()
+                error = ex?.ToString(),
+                data = data
             };
         }
 
