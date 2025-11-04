@@ -76,18 +76,20 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             }
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteFirm(int id)
+        [HttpPost("delete-multiple")]
+        public async Task<IActionResult> DeleteFirm([FromBody] List<int> ids)
         {
             try
             {
-                var firm = _firmRepo.GetByID(id);
-                if (firm == null)
+                foreach (var item in ids)
                 {
-                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy hãng"));
+                    var firm = await _firmRepo.GetByIDAsync(item);
+                    if (firm == null)
+                        return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy hãng có ID = {item}"));
+
+                    firm.IsDelete = true;
+                    await _firmRepo.UpdateAsync(firm);
                 }
-                firm.IsDelete = true;
-                await _firmRepo.UpdateAsync(firm);
 
                 return Ok(ApiResponseFactory.Success(null, "Xóa hãng thành công!"));
             }
@@ -96,5 +98,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
     }
 }
