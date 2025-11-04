@@ -50,6 +50,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         PositionInternalRepo _positionInternalRepo = new PositionInternalRepo();
         EmployeeWorkingProcessRepo _employeeWorkingProcessRepo = new EmployeeWorkingProcessRepo();
         UnitCountRepo _unitCountRepo = new UnitCountRepo();
+        EmployeeProjectTypeRepo projectEmployeeProjectTypeRepo = new EmployeeProjectTypeRepo();
         #endregion
 
         #region Hàm dùng chung
@@ -526,7 +527,8 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 List<Model.Entities.Project> projects = new List<Model.Entities.Project>();
                 if (id > 0)
                 {
-                    projects = projectRepo.GetAll().Where(x => x.ProjectCode.Contains(projectCode) && x.ID != id).ToList();
+                    var check = projectRepo.GetAll(x => x.ProjectCode == projectCode);
+                    projects = projectRepo.GetAll(x => x.ProjectCode == projectCode && x.ID != id);
                 }
                 else
                 {
@@ -1614,138 +1616,96 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         }
 
         #endregion
+
+        #region
+        [HttpPost("save-firm-base")]
+        public async Task<IActionResult> SaveFirmBase([FromBody] FirmBase firmBase)
+        {
+            try
+            {
+                var exists = firmBaseRepo.GetAll()
+                    .Where(x => x.FirmCode == firmBase.FirmCode
+                                && x.ID != firmBase.ID).ToList();
+                if (exists.Count > 0)
+                {
+                    return Ok(new { status = 0, message = $"Mã hãng [{firmBase.FirmName}] đã tồn tại!" });
+                }
+
+                if (firmBase.ID > 0)
+                {
+                    await firmBaseRepo.UpdateAsync(firmBase);
+                }
+                else
+                {
+                    await firmBaseRepo.CreateAsync(firmBase);
+                }
+                return Ok(ApiResponseFactory.Success(true, "Lưu dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         #endregion
 
-        [HttpGet]
-        [Route("getemployeestatus")]
-        public IActionResult GetEmployeeStatus()
+
+        //  lấy danh sách leader của loại dự án
+        [HttpGet("getemployeeprojecttype/{projectTypeId}")]
+        public async Task<IActionResult> getemployeeprojecttype(int projectTypeId)
         {
             try
             {
-                var employeeStatuses = _employeeStatusRepo.GetAll()
-                    .Where(x => x.IsDeleted == false)
-                    .Select(x => new
+                var employeeProjectType = SQLHelper<object>.ProcedureToList("spGetEmployeeProjectType",
+                                            new string[] { "@ProjectTypeID" },
+                                            new object[] { projectTypeId });
+                var data = SQLHelper<object>.GetListData(employeeProjectType, 0);
+                return Ok(ApiResponseFactory.Success(data, ""))
+                ;
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpPost("saveemployeeprojecttype")]
+        public async Task<IActionResult> saveemployeeprojecttype(List<EmployeeProjectType> employeeProjectType)
+        {
+            try
+            {
+                foreach (var item in employeeProjectType)
+                {
+                    if (item.ID <= 0)
                     {
-                        ID = x.ID,
-                        StatusCode = x.StatusCode,
-                        StatusName = x.StatusName
-                    })
-                    .ToList();
-
-                return Ok(employeeStatuses);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
-
-        [HttpGet]
-        [Route("checkemployeestatus")]
-        public IActionResult CheckEmployeeStatus(string statusCode, int id)
-        {
-            try
-            {
-                var exists = _employeeStatusRepo.GetAll()
-                    .Any(x => x.StatusCode == statusCode && x.ID != id && x.IsDeleted == false);
-
-                return Ok(new { exists = exists });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
-
-        [HttpGet]
-        [Route("checkemployeecurricular")]
-        public IActionResult CheckEmployeeCurricular(int employeeID, string date)
-        {
-            try
-            {
-                var exists = _employeeCurricularRepo.GetAll()
-                    .Any(x => x.EmployeeID == employeeID &&
-                             $"{x.CurricularDay:D2}/{x.CurricularMonth:D2}/{x.CurricularYear}" == date);
-
-                return Ok(new { status = exists ? 1 : 0 });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
-
-        [HttpPost]
-        [Route("getworkingprocess")]
-        public IActionResult GetWorkingProcess([FromBody] dynamic request)
-        {
-            try
-            {
-                var result = SQLHelper<object>.ProcedureToList("spLoadEmployeeWorkingProcess",
-                    new string[] { "@EmployeeCode", "@EmployeeName", "@DepartmentID", "@FromDate", "@ToDate", "@PageIndex", "@PageSize" },
-                    new object[] {
-                        request?.EmployeeCode?.ToString() ?? "",
-                        request?.EmployeeName?.ToString() ?? "",
-                        request?.DepartmentID ?? 0,
-                        request?.FromDate ?? DateTime.MinValue,
-                        request?.ToDate ?? DateTime.MaxValue,
-                        request?.PageIndex ?? 1,
-                        request?.PageSize ?? 10
-                    });
-
-                return Ok(ApiResponseFactory.Success(result, ""));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        [HttpPost]
-        [Route("getemployeecurricular")]
-        public IActionResult GetEmployeeCurricular([FromBody] dynamic request)
-        {
-            try
-            {
-                var result = SQLHelper<object>.ProcedureToList("spGetEmployeeCurricular",
-                    new string[] { "@Month", "@Year", "@DepartmentID", "@EmployeeID" },
-                    new object[] {
-                        request?.Month ?? 1,
-                        request?.Year ?? DateTime.Now.Year,
-                        request?.DepartmentID ?? 0,
-                        request?.EmployeeID ?? 0
-                    });
-
-                return Ok(ApiResponseFactory.Success(result, ""));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        [HttpGet]
-        [Route("getunitcount")]
-        public IActionResult GetUnitCount()
-        {
-            try
-            {
-                var unitCounts = _unitCountRepo.GetAll()
-                    .Where(x => x.IsDeleted != true)
-                    .Select(x => new
+                        await projectEmployeeProjectTypeRepo.CreateAsync(item);
+                    }
+                    else
                     {
-                        ID = x.ID,
-                        UnitCode = x.UnitCode,
-                        UnitName = x.UnitName
-                    }).ToList();
+                        projectEmployeeProjectTypeRepo.Update(item);
+                    }
+                }
 
-                return Ok(ApiResponseFactory.Success(unitCounts, ""));
+                return Ok(ApiResponseFactory.Success(employeeProjectType, ""));
+
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [HttpGet("get-project-employee-filter/{departmentID}")]
+        public async Task<IActionResult> getprojectemployeefilter(int departmentID)
+        {
+            try
+            {
+                var employees = SQLHelper<object>.ProcedureToList("spGetEmployee", new string[] { "@DepartmentID", "@Status" }, new object[] { departmentID, 0 });
+                var data = SQLHelper<object>.GetListData(employees, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
+    #endregion
 }
