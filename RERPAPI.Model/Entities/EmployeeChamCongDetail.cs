@@ -76,4 +76,5 @@ public partial class EmployeeChamCongDetail
     public int? FoodOrderUse { get; set; }
 
     public string? IDChamCong { get; set; }
+    public bool? IsDeleted { get; set; }
 }

@@ -3,6 +3,7 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.TB;
 using System.Linq;
 using System.Linq.Expressions;
 namespace RERPAPI.Controllers
