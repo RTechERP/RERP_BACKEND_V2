@@ -9332,9 +9332,6 @@ public partial class RTCContext : DbContext
         {
             entity.ToTable("TrainingRegistration");
 
-            entity.Property(e => e.Code)
-                .HasMaxLength(250)
-                .IsUnicode(false);
             entity.Property(e => e.CompletionAssessment)
                 .HasMaxLength(550)
                 .HasComment("Đánh giá mức độ hoàn thành");

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.Asset;
 
@@ -17,7 +15,7 @@ namespace RERPAPI.Controllers.Old.Asset
         {
             try
             {
-                var units = _unitRepo.GetAll().Where(x => x.IsDeleted == false).ToList();
+                var units = _unitRepo.GetAll();
 
                 return Ok(new
                 {

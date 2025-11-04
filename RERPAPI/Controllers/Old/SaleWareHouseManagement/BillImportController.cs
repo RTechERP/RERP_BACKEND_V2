@@ -1,27 +1,16 @@
 ﻿using ClosedXML.Excel;
-using DocumentFormat.OpenXml.ExtendedProperties;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using QRCoder;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
-using System.Collections.Generic;
+using RERPAPI.Repo.GenericEntity.Technical;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.Drawing.Imaging;
 using ZXing;
 using ZXing.Common;
-using ZXing.QrCode;
-using System.Drawing;
-using System.Drawing.Imaging;
-using DocumentFormat.OpenXml.Office2010.Excel;
-using Microsoft.AspNetCore.Http.HttpResults;
-using DocumentFormat.OpenXml.VariantTypes;
-using RERPAPI.Repo.GenericEntity.Technical;
 
 namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 {
@@ -87,13 +76,13 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
         //get-option-product-sale
         [HttpGet("get-product")]
-        public IActionResult getOptionProduct(int  warehouseID, int productGroupID )
+        public IActionResult getOptionProduct(int warehouseID, int productGroupID)
         {
             try
             {
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
-                       "spGetProductImportSale", new string[] { "@GroupProductID", "@WarehouseCode",  },
-                    new object[] { productGroupID, warehouseID}
+                       "spGetProductImportSale", new string[] { "@GroupProductID", "@WarehouseCode", },
+                    new object[] { productGroupID, warehouseID }
                    );
                 /* List<dynamic> billList = result[0]; // dữ liệu hóa đơn*/
                 int totalPage = 0;
@@ -215,7 +204,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
         private async Task<(bool IsValid, string ErrorMessage)> ValidateBillImport(BillImportDTO dto)
         {
-        
+
             // Validate Supplier
             if (dto.billImport.SupplierID == null)
             {
@@ -563,25 +552,25 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     return BadRequest(new { status = 0, message = "Mã QR không được để trống." });
 
                 // 1. Tìm phiếu có mã code
-                var bills = SQLHelper<BillImport>.FindByAttribute("BillImportCode", $"'{code}'"); 
+                var bills = SQLHelper<BillImport>.FindByAttribute("BillImportCode", $"'{code}'");
                 var bill = bills.FirstOrDefault();
 
                 if (bill == null)
                     return NotFound(new { status = 0, message = $"Không tìm thấy phiếu với mã {code}." });
 
-             /*   // 2. Kiểm tra nếu là phiếu không được quét
-                string tableName = typeof(BillImport).Name.Replace("Model", "");
-                int billTypeNew = tableName == "BillImport" ? 4 : (tableName == "BillImportTechnical" ? 5 : 0);
+                /*   // 2. Kiểm tra nếu là phiếu không được quét
+                   string tableName = typeof(BillImport).Name.Replace("Model", "");
+                   int billTypeNew = tableName == "BillImport" ? 4 : (tableName == "BillImportTechnical" ? 5 : 0);
 
-                if (billTypeNew != 0)
-                {
-                    var check = SQLHelper<BillImport>.FindByAttribute("BillImportCode", $"'{code}'")
-                        .Where(x => x.Status == billTypeNew)
-                        .FirstOrDefault();
+                   if (billTypeNew != 0)
+                   {
+                       var check = SQLHelper<BillImport>.FindByAttribute("BillImportCode", $"'{code}'")
+                           .Where(x => x.Status == billTypeNew)
+                           .FirstOrDefault();
 
-                            if (check != null)
-                        return BadRequest(new { status = 0, message = "Không thể quét phiếu loại Yêu cầu nhập kho." });
-                }*/
+                               if (check != null)
+                           return BadRequest(new { status = 0, message = "Không thể quét phiếu loại Yêu cầu nhập kho." });
+                   }*/
 
                 // 3. Gọi store procedure lấy chi tiết phiếu
                 var result = SQLHelper<BillImport>.ProcedureToList(

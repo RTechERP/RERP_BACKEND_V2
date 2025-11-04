@@ -143,7 +143,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 var assetsrecoveryPersonal = SQLHelper<dynamic>.ProcedureToList(
                     "spGetTSAssetRecoveryyPersonal",
                     new string[] { "@DateStart", "@DateEnd", "@EmployeeReturnID", "@EmployeeRecoveryID", "@Status", "@FilterText", "@PageSize", "@PageNumber" },
-                    new object[] { request.DateStart, request.DateEnd, request.EmployeeRecoveryID, employeeID, request.Status, request.Filtertext, request.PageSize, request.PageNumber });
+                    new object[] { request.DateStart, request.DateEnd, employeeID, request.EmployeeRecoveryID, request.Status, request.Filtertext, request.PageSize, request.PageNumber });
                 var dataList = SQLHelper<dynamic>.GetListData(assetsrecoveryPersonal, 0);
                 var TotalPage = SQLHelper<object>.GetListData(assetsrecoveryPersonal, 1);
                 var maxSTT = _tSRecoveryAssetPersonalRepo.GetAll().Max(x => (int?)x.STT) + 1 ?? 0;
@@ -266,7 +266,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 }
                 if (dto.tSRecoveryAssetPersonal != null)
                 {
-                    var maxSTT = _tSRecoveryAssetPersonalRepo.GetAll().Max(x => x.STT) + 1 ?? 0;
+                    var maxSTT = _tSRecoveryAssetPersonalRepo.GetAll().Max(x => x.STT)??0 + 1 ;
                     dto.tSRecoveryAssetPersonal.STT = maxSTT;
                     if (dto.tSRecoveryAssetPersonal.ID <= 0)
                     {

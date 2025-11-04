@@ -1,0 +1,364 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
+using RERPAPI.Repo.GenericEntity;
+
+namespace RERPAPI.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class EmployeeAttendanceController : ControllerBase
+    {
+        EmployeeRepo _employeeRepo = new EmployeeRepo();
+        EmployeeAttendanceRepo _employeeAttendanceRepo = new EmployeeAttendanceRepo();
+        [HttpGet("get-department")]
+        public async Task<IActionResult> getDepartment()
+        {
+            try
+            {
+                DepartmentRepo departmentRepo = new DepartmentRepo();
+                List<Department> departments = departmentRepo.GetAll().ToList();
+                return Ok(ApiResponseFactory.Success(departments, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-employee/{status}")]
+        public async Task<IActionResult> getEmployee(int status)
+        {
+            try
+            {
+                var employees = SQLHelper<object>.ProcedureToList("spGetEmployee", new string[] { "@Status" }, new object[] { status });
+                var data = SQLHelper<object>.GetListData(employees, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-employee-attendance")]
+        public async Task<IActionResult> getEmployeeAttendance(int departmentID, int employeeID, string? findText, DateTime dateStart, DateTime dateEnd)
+        {
+            try
+            {
+                DateTime ds = new DateTime(dateStart.Year, dateStart.Month, dateStart.Day, 0, 0, 0);
+                DateTime de = new DateTime(dateEnd.Year, dateEnd.Month, dateEnd.Day, 23, 59, 59);
+                var dt = SQLHelper<object>.ProcedureToList("spGetEmployeeAttendance",
+                                                   new string[] { "@DepartmentID", "@EmployeeID", "@FindText", "@DateStart", "@DateEnd" },
+                                                   new object[] { departmentID, employeeID, findText ?? "", ds, de, });
+                var data = SQLHelper<object>.GetListData(dt, 0);
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpPost("import-excel")]
+        public IActionResult ImportExcel([FromBody] ImportAttendancePayload payload)
+        {
+            if (payload == null)
+                return BadRequest(ApiResponseFactory.Fail(null, "Payload không được null."));
+            if (payload.Rows == null || payload.Rows.Count == 0)
+                return BadRequest(ApiResponseFactory.Fail(null, "Payload thiếu 'rows' hoặc 'rows' rỗng."));
+            if (payload.DateStart > payload.DateEnd)
+                return BadRequest(ApiResponseFactory.Fail(null, "DateStart không được lớn hơn DateEnd."));
+
+            try
+            {
+                DateTime ds = payload.DateStart.Date;
+                DateTime de = payload.DateEnd.Date.AddDays(1).AddSeconds(-1);
+
+                // Lấy danh sách nhân viên trong phòng ban (để tránh query lại mỗi dòng)
+                var employees = _employeeRepo
+                    .GetAll(x => payload.DepartmentId == 0 || x.DepartmentID == payload.DepartmentId)
+                    .ToDictionary(x => x.Code, x => x);
+
+                // Nếu bật overwrite thì xóa trước
+                if (payload.Overwrite)
+                {
+                    var empIds = employees.Values
+                        .Where(e => !string.IsNullOrEmpty(e.IDChamCongMoi))
+                        .Select(e => e.IDChamCongMoi)
+                        .ToList();
+
+                    var existingToDelete = _employeeAttendanceRepo.GetAll(ea =>
+                        ea.AttendanceDate >= ds && ea.AttendanceDate <= de &&
+                        empIds.Contains(ea.IDChamCongMoi)
+                    );
+
+                    if (existingToDelete.Any())
+                        _employeeAttendanceRepo.DeleteRange(existingToDelete);
+                }
+
+                int created = 0, updated = 0;
+                var newList = new List<EmployeeAttendance>();
+                var errors = new List<ImportError>();
+
+                // Tập hợp trước các bản ghi chấm công hiện có để cập nhật nhanh
+                var existingRecords = _employeeAttendanceRepo.GetAll(ea =>
+                    ea.AttendanceDate >= ds && ea.AttendanceDate <= de
+                ).ToList();
+
+                foreach (var row in payload.Rows)
+                {
+                    try
+                    {
+                        var filtered = row
+                            .Where(kvp => !kvp.Key.StartsWith("__"))
+                            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+                        int stt = ToInt(GetString(filtered, "STT"));
+                        string code = GetString(filtered, "Mã nhân viên", "Mã NV", "Code");
+                        DateTime? date = GetDate(filtered, "Ngày", "Date", "AttendanceDate");
+                        string sIn = GetString(filtered, "Giờ vào", "CheckIn", "In");
+                        string sOut = GetString(filtered, "Giờ ra", "CheckOut", "Out");
+                        string dayWeek = GetString(filtered, "Thứ", "DayOfWeek", "Day");
+
+                        if (string.IsNullOrWhiteSpace(code) || !date.HasValue)
+                            throw new Exception("Thiếu 'Mã nhân viên' hoặc 'Ngày'.");
+
+                        if (date.Value < ds || date.Value > de)
+                            continue;
+
+                        if (!employees.TryGetValue(code, out var emp))
+                            throw new Exception($"Không tìm thấy nhân viên Code='{code}'.");
+
+                        if (string.IsNullOrWhiteSpace(emp.IDChamCongMoi))
+                            throw new Exception($"Nhân viên Code='{code}' không có IDChamCongMoi.");
+
+                        DateTime? inDt = ParseTimeOnDate(date.Value, sIn);
+                        DateTime? outDt = ParseTimeOnDate(date.Value, sOut);
+                        var comp = ComputeAttendance(emp.DepartmentID ?? 0, date.Value, inDt, outDt);
+
+                        var existing = existingRecords.FirstOrDefault(x =>
+                            x.IDChamCongMoi == emp.IDChamCongMoi &&
+                            x.AttendanceDate == date.Value
+                        );
+
+                        if (existing != null)
+                        {
+                            // UPDATE
+                            existing.STT = stt;
+                            existing.DayWeek = dayWeek ?? "";
+                            existing.CheckIn = inDt?.ToString("HH:mm");
+                            existing.CheckOut = outDt?.ToString("HH:mm");
+                            existing.CheckInDate = inDt;
+                            existing.CheckOutDate = outDt;
+                            existing.IsLate = comp.IsLate;
+                            existing.TimeLate = comp.TimeLate;
+                            existing.IsEarly = comp.IsEarly;
+                            existing.TimeEarly = comp.TimeEarly;
+                            existing.TotalHour = comp.TotalHour;
+                            existing.TotalDay = comp.TotalDay;
+                            existing.IsLunch = comp.IsLunch;
+                            existing.UpdatedDate = DateTime.Now;
+
+                            updated++;
+                        }
+                        else
+                        {
+                            // INSERT
+                            var newRecord = new EmployeeAttendance
+                            {
+                                STT = stt,
+                                IDChamCongMoi = emp.IDChamCongMoi,
+                                AttendanceDate = date.Value,
+                                DayWeek = dayWeek ?? "",
+                                Interval = "(00:00:00-23:59:00)",
+                                CheckIn = inDt?.ToString("HH:mm"),
+                                CheckOut = outDt?.ToString("HH:mm"),
+                                CheckInDate = inDt,
+                                CheckOutDate = outDt,
+                                IsLate = comp.IsLate,
+                                TimeLate = comp.TimeLate,
+                                IsEarly = comp.IsEarly,
+                                TimeEarly = comp.TimeEarly,
+                                TotalHour = comp.TotalHour,
+                                TotalDay = comp.TotalDay,
+                                IsLunch = comp.IsLunch,
+                                CreatedDate = DateTime.Now,
+                                UpdatedDate = DateTime.Now
+                            };
+
+                            newList.Add(newRecord);
+                            created++;
+                        }
+                    }
+                    catch (Exception exRow)
+                    {
+                        errors.Add(new ImportError
+                        {
+                            Row = row.TryGetValue("STT", out var sttVal) ? sttVal?.ToString() ?? "?" : "?",
+                            Message = exRow.Message
+                        });
+                    }
+                }
+
+                // Ghi tất cả thay đổi cùng lúc
+                if (newList.Any())
+                    _employeeAttendanceRepo.CreateRange(newList);
+
+
+                var result = new ImportResult
+                {
+                    Created = created,
+                    Updated = updated,
+                    Skipped = errors.Count,
+                    Errors = errors
+                };
+
+                return Ok(ApiResponseFactory.Success(result, "Import hoàn tất."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi server: {ex.Message}"));
+            }
+        }
+
+
+
+        [HttpGet("check-existing")]
+        public IActionResult CheckExisting(DateTime dateStart, DateTime dateEnd, int departmentId)
+        {
+
+            try
+            {
+                int count = _employeeAttendanceRepo.CheckExisting(dateStart, dateEnd, departmentId);
+                var result = new { count = count };
+                return Ok(ApiResponseFactory.Success(result, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+
+        }
+
+        // ===== Helper methods remain the same =====
+        static string GetString(Dictionary<string, object> r, params string[] keys)
+        {
+            foreach (var k in keys)
+                if (r.TryGetValue(k, out var v) && v != null) return v.ToString()!.Trim();
+            return string.Empty;
+        }
+
+        static int ToInt(string s) => int.TryParse(s, out var n) ? n : 0;
+
+        static DateTime? GetDate(Dictionary<string, object> r, params string[] keys)
+        {
+            foreach (var k in keys)
+            {
+                if (!r.TryGetValue(k, out var v) || v == null) continue;
+                if (v is DateTime dt) return dt;
+                var s = v.ToString();
+                if (DateTime.TryParse(s, out var d1)) return d1;
+                if (double.TryParse(s, out var dbl))
+                {
+                    try { return DateTime.FromOADate(dbl); }
+                    catch { }
+                }
+            }
+            return null;
+        }
+
+        static DateTime? ParseTimeOnDate(DateTime d, string hm)
+        {
+            if (string.IsNullOrWhiteSpace(hm)) return null;
+            if (TimeSpan.TryParse(hm, out var ts))
+                return new DateTime(d.Year, d.Month, d.Day, ts.Hours, ts.Minutes, 0);
+            if (DateTime.TryParse(hm, out var dtFull))
+                return new DateTime(d.Year, d.Month, d.Day, dtFull.Hour, dtFull.Minute, 0);
+            if (double.TryParse(hm, out var dbl) && dbl >= 0 && dbl < 1)
+            {
+                var minutes = (int)Math.Round(dbl * 24 * 60);
+                return new DateTime(d.Year, d.Month, d.Day, minutes / 60, minutes % 60, 0);
+            }
+            return null;
+        }
+
+        static (bool IsLate, int TimeLate, bool IsEarly, int TimeEarly, decimal TotalHour, decimal TotalDay, bool IsLunch)
+            ComputeAttendance(int departmentId, DateTime date, DateTime? inDt, DateTime? outDt)
+        {
+            bool isLate = false, isEarly = false, isLunch = false;
+            int timeLate = 0, timeEarly = 0;
+            decimal totalHour = 0, totalDay = 0;
+
+            if (inDt.HasValue && outDt.HasValue)
+            {
+                DateTime startAM = new(date.Year, date.Month, date.Day, 8, 1, 0);
+                DateTime endAM = new(date.Year, date.Month, date.Day, 12, 0, 0);
+                DateTime startPM = new(date.Year, date.Month, date.Day, 13, 31, 0);
+                DateTime endPM = new(date.Year, date.Month, date.Day, 17, 30, 0);
+
+                var HCM_SWITCH = new DateTime(2023, 12, 1);
+                if (departmentId == 11 && date >= HCM_SWITCH)
+                {
+                    startPM = new(date.Year, date.Month, date.Day, 13, 1, 0);
+                    endPM = new(date.Year, date.Month, date.Day, 17, 0, 0);
+                }
+
+                bool workAM = false, workPM = false;
+
+                var difIn = (inDt.Value - startAM).TotalMinutes;
+                if (difIn <= 60)
+                {
+                    isLate = difIn > 0;
+                    timeLate = isLate ? (int)Math.Round(difIn) : 0;
+                    workAM = true;
+                }
+                else
+                {
+                    difIn = (inDt.Value - startPM).TotalMinutes;
+                    if (difIn <= 60)
+                    {
+                        isLate = difIn > 0;
+                        timeLate = isLate ? (int)Math.Round(difIn) : 0;
+                        workPM = true;
+                    }
+                }
+
+                var difOut = (outDt.Value - endPM).TotalMinutes;
+                if (difOut >= -60)
+                {
+                    isEarly = difOut < 0;
+                    timeEarly = isEarly ? (int)Math.Abs(Math.Round(difOut)) : 0;
+                    workPM = true;
+                }
+                else
+                {
+                    difOut = (outDt.Value - endAM).TotalMinutes;
+                    if (difOut >= -60)
+                    {
+                        isEarly = difOut < 0;
+                        timeEarly = isEarly ? (int)Math.Abs(Math.Round(difOut)) : 0;
+                        workAM = true;
+                    }
+                }
+
+                if (workAM && workPM)
+                {
+                    var lunch = (startPM - endAM).TotalHours - (1.0 / 60.0);
+                    totalHour = (decimal)((outDt.Value - inDt.Value).TotalHours - lunch);
+                    totalHour = Math.Round(totalHour, 2);
+                    totalDay = totalHour >= 6 ? 1 : 0;
+                }
+                else
+                {
+                    totalHour = (decimal)(outDt.Value - inDt.Value).TotalHours;
+                    totalHour = Math.Round(totalHour, 2);
+                    totalDay = totalHour >= 3 ? 0.5m : 0;
+                }
+                isLunch = totalHour >= 6 && totalDay > 0.5m;
+            }
+            return (isLate, timeLate, isEarly, timeEarly, totalHour, totalDay, isLunch);
+        }
+    }
+}

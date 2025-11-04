@@ -14,7 +14,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                var result = employeeTypeBussinessRepo.GetAll().Where(x => x.IsDeleted == false);
+                var result = employeeTypeBussinessRepo.GetAll();
                 return Ok(new
                 {
                     status = 1,
