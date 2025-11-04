@@ -152,6 +152,4 @@ public partial class ProjectPartlistPurchaseRequest
     public decimal? OriginQuantity { get; set; }
 
     public string? ParentProductCode { get; set; }
-
-    public bool? IsPurchase { get; set; }
 }

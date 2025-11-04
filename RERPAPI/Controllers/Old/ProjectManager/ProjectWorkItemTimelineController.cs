@@ -36,11 +36,11 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         }
 
         [HttpGet("get-user-team")]
-        public async Task<IActionResult> GetUserTeam(int departmentId)
+        public async Task<IActionResult> GetUserTeam(int depID)
         {
             try
             {
-                List<UserTeam> userTeams = userTeamRepo.GetAll().Where(x => x.DepartmentID == departmentId).ToList();
+                List<UserTeam> userTeams = userTeamRepo.GetAll(x => x.DepartmentID == depID);
                 return Ok(ApiResponseFactory.Success(userTeams, ""));
             }
             catch (Exception ex)

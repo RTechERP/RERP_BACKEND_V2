@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -49,5 +50,21 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         }
         #endregion
 
-    }
+        #region lấy danh sách team theo phòng ban
+        [HttpGet("get-user-team")]
+        public async Task<IActionResult> getUserTeam(int depID)
+        {
+            try
+            {
+                var data = userTeamRepo.GetAll(x => x.DepartmentID == depID);
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+            #endregion
+
+        }
 }
