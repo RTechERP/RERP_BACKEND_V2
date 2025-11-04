@@ -12,7 +12,7 @@ namespace RERPAPI.Controllers.Old
     {
         #region Khai báo repository
         KPIEmployeeTeamLinkRepo teamLinkRepo = new KPIEmployeeTeamLinkRepo();
-        #endregion
+        #endregion  
         #region Lấy tất cả nhân viên trong team
         [HttpGet("getall")]
         public IActionResult GetKPIEmployeeTeamLink(int kpiEmployeeteamID, int departmentID, int yearValue, int quarterValue)

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class BillImportDetailRepo:GenericRepo<BillImportDetail>
+    public class BillImportDetailRepo : GenericRepo<BillImportDetail>
     {
         InvoiceLinkRepo _invoicelinkrepo = new InvoiceLinkRepo();
         BillImportDetailSerialNumberRepo _billImportDetailSerialNumberRepo = new BillImportDetailSerialNumberRepo();

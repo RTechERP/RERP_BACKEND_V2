@@ -42,6 +42,11 @@ namespace RERPAPI.Controllers
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(user.LoginName) || string.IsNullOrWhiteSpace(user.PasswordHash))
+                {
+                    return Unauthorized(ApiResponseFactory.Fail(null, "Vui lòng nhập Tên đăng nhập và Mật khẩu!"));
+                }
+
                 //1. Check user
                 string loginName = user.LoginName ?? "";
                 string password = MaHoaMD5.EncryptPassword(user.PasswordHash ?? "");

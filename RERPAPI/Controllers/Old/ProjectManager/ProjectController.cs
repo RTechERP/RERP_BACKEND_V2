@@ -1,20 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore.Query;
-using RERPAPI.Attributes;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System.Collections.Generic;
 using System.Data;
-using System.Dynamic;
-using System.Linq.Expressions;
-using System.Net.WebSockets;
-using System.Text.Json;
-using System.Xml.Linq;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers.Old.ProjectManager
 {
@@ -54,6 +43,13 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         DailyReportTechnicalRepo dailyReportTechnicalRepo = new DailyReportTechnicalRepo();
         ProjectStatusDetailRepo projectStatusDetailRepo = new ProjectStatusDetailRepo();
 
+        // Added repos for employee status and curricular
+        EmployeeStatusRepo _employeeStatusRepo = new EmployeeStatusRepo();
+        EmployeeCurricularRepo _employeeCurricularRepo = new EmployeeCurricularRepo();
+        EmployeeRepo _employeeRepo = new EmployeeRepo();
+        PositionInternalRepo _positionInternalRepo = new PositionInternalRepo();
+        EmployeeWorkingProcessRepo _employeeWorkingProcessRepo = new EmployeeWorkingProcessRepo();
+        UnitCountRepo _unitCountRepo = new UnitCountRepo();
         EmployeeProjectTypeRepo projectEmployeeProjectTypeRepo = new EmployeeProjectTypeRepo();
         #endregion
 
@@ -1521,6 +1517,104 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        #region Employee Related Endpoints
+
+        // Get all employees
+        [HttpGet("get-employee")]
+        public async Task<IActionResult> GetEmployee()
+        {
+            try
+            {
+                var employees = _employeeRepo.GetAll()
+                    .Select(x => new { x.ID, x.Code, x.FullName })
+                    .ToList();
+                return Ok(ApiResponseFactory.Success(employees, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        // Get employee positions (ChucVu)
+        [HttpGet("get-employee-ChucVu")]
+        public async Task<IActionResult> GetEmployeeChucVu()
+        {
+            try
+            {
+                var positions = _positionInternalRepo.GetAll()
+                    .Select(x => new { x.ID, x.Code, x.Name })
+                    .ToList();
+                return Ok(ApiResponseFactory.Success(positions, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        // Save employee curricular
+        [HttpPost("save-employee-curricular")]
+        public async Task<IActionResult> SaveEmployeeCurricular([FromBody] EmployeeCurricular model)
+        {
+            try
+            {
+                if (model.ID > 0)
+                {
+                    // Update existing record
+                    var existing = _employeeCurricularRepo.GetByID(model.ID);
+                    if (existing != null)
+                    {
+                        existing.CurricularCode = model.CurricularCode;
+                        existing.CurricularName = model.CurricularName;
+                        existing.CurricularDay = model.CurricularDay;
+                        existing.CurricularMonth = model.CurricularMonth;
+                        existing.CurricularYear = model.CurricularYear;
+                        existing.EmployeeID = model.EmployeeID;
+                        existing.Note = model.Note;
+                        existing.UpdatedBy = model.UpdatedBy;
+                        existing.UpdatedDate = DateTime.Now;
+
+                        await _employeeCurricularRepo.UpdateAsync(existing);
+                    }
+                }
+                else
+                {
+                    // Check if record already exists
+                    var existingRecord = _employeeCurricularRepo.GetAll()
+                        .FirstOrDefault(x => x.EmployeeID == model.EmployeeID &&
+                                           x.CurricularDay == model.CurricularDay &&
+                                           x.CurricularMonth == model.CurricularMonth &&
+                                           x.CurricularYear == model.CurricularYear);
+
+                    if (existingRecord != null)
+                    {
+                        // Update existing record
+                        existingRecord.CurricularCode = model.CurricularCode;
+                        existingRecord.CurricularName = model.CurricularName;
+                        existingRecord.Note = model.Note;
+                        existingRecord.UpdatedBy = model.UpdatedBy;
+                        existingRecord.UpdatedDate = DateTime.Now;
+
+                        await _employeeCurricularRepo.UpdateAsync(existingRecord);
+                    }
+                    else
+                    {
+                        // Create new record
+                        model.CreatedDate = DateTime.Now;
+                        await _employeeCurricularRepo.CreateAsync(model);
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(true, "Lưu dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         #endregion
 
         #region
@@ -1578,7 +1672,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         {
             try
             {
-                foreach(var item in employeeProjectType)
+                foreach (var item in employeeProjectType)
                 {
                     if (item.ID <= 0)
                     {
@@ -1589,7 +1683,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                         projectEmployeeProjectTypeRepo.Update(item);
                     }
                 }
-               
+
                 return Ok(ApiResponseFactory.Success(employeeProjectType, ""));
 
             }
@@ -1613,4 +1707,5 @@ namespace RERPAPI.Controllers.Old.ProjectManager
             }
         }
     }
+    #endregion
 }

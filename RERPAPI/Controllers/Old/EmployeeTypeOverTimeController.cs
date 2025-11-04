@@ -14,7 +14,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                var employeeTypeOverTimes = employeeTypeOverTimeRepo.GetAll().Where(x => x.IsDeleted == false);
+                var employeeTypeOverTimes = employeeTypeOverTimeRepo.GetAll();
                 return Ok(new
                 {
                     status = 1,
@@ -40,7 +40,9 @@ namespace RERPAPI.Controllers.Old
             {
                 List<EmployeeTypeOvertime> existingEmployeeTypeOverTimes = employeeTypeOverTimeRepo.GetAll();
 
-                if(existingEmployeeTypeOverTimes.Any(x => (x.Type == employeeTypeOverTime.Type || x.TypeCode == employeeTypeOverTime.TypeCode) && x.ID != employeeTypeOverTime.ID && x.IsDeleted == false))
+                if (existingEmployeeTypeOverTimes.Any(x => (x.Type == employeeTypeOverTime.Type || x.TypeCode == employeeTypeOverTime.TypeCode) && x.ID != employeeTypeOverTime.ID
+                //&& x.IsDeleted == false
+                ))
                 {
                     return BadRequest(new
                     {
