@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Technical;
@@ -27,11 +28,35 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             catch (Exception ex)
             {
                 return BadRequest(
-                    new 
+                    new
                     {
-                        status = 0, 
+                        status = 0,
                         message = ex.Message
                     });
+            }
+        }
+
+        [HttpPost("save-data")]
+        public async Task<IActionResult> saveData([FromBody] List<BillImportDetailSerialNumber> data)
+        {
+            try
+            {
+                foreach (var item in data)
+                {
+                    if (item.ID > 0)
+                    {
+                        await _billImportDetailSerialNumberRepo.UpdateAsync(item);
+                    }
+                    else
+                    {
+                        await _billImportDetailSerialNumberRepo.CreateAsync(item);
+                    }
+                }
+                return Ok(ApiResponseFactory.Success(data, "Lưu dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }
