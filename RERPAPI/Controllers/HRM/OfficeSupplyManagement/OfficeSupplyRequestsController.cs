@@ -1,12 +1,13 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 
-namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
+namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -14,7 +15,7 @@ namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
     {
         OfficeSupplyRequestsRepo officesupplyrequests = new OfficeSupplyRequestsRepo();
         DepartmentRepo _departmentRepo = new DepartmentRepo();
-
+        [RequiresPermission("N1,N2,N34")]
         #region getdatadepartment cần bỏ
         [HttpGet("get-data-department")]
         public IActionResult GetdataDepartment()
@@ -49,7 +50,8 @@ namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
         /// <param id phòng ban đăng ký="departmentID"></param>
         /// <param tháng="monthInput"></param>
         /// <returns></returns>
-        [HttpGet("")]
+        [RequiresPermission("N1,N2,N34")]
+        [HttpGet("get-office-supply-request")]
         public IActionResult getOfficeSupplyRequests(string? keyword, int? employeeID, int? departmentID, DateTime? monthInput)
         {
             try
@@ -59,8 +61,7 @@ namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
                     new string[] { "@KeyWord", "@MonthInput", "@EmployeeID", "@DepartmentID" },
                    new object[] { keyword, monthInput, employeeID, departmentID }  // đảm bảo không null
                 );
-                List<dynamic> rs = result[0];
-
+                List<dynamic> rs = result[0]; 
                 return Ok(new
                 {
                     status = 1,
@@ -77,12 +78,13 @@ namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
                 });
             }
         }
-       
+
         /// <summary>
         /// Hàm lấy chi tiết đăng ký văn phòng phẩm
         /// </summary>
         /// <param officesupplyrequestsID="id"></param>
         /// <returns></returns>
+           [RequiresPermission("N1,N2,N34")]
         [HttpGet("get-office-supply-request-detail")]
         public IActionResult GetOfficeSupplyRequestsDetail(int officeSupplyRequestsID)
         {
@@ -111,7 +113,7 @@ namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
                 });
             }
         }
-
+        [RequiresPermission("N1,N2,N34")]
         [HttpPost("admin-approved")]
         public async Task<IActionResult> adminApproved([FromBody] List<int> ids)
         {
