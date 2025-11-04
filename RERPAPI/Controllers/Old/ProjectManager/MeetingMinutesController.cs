@@ -233,6 +233,7 @@ namespace RERPAPI.Controllers.Duan.MeetingMinutes
                 var employeeDetails = SQLHelper<dynamic>.GetListData(allResults, 2);       // nhân viên tham dự
                 var employeeAttendance = SQLHelper<dynamic>.GetListData(allResults, 1);    // nội dung 
                 var customerAttendance = SQLHelper<dynamic>.GetListData(allResults, 3);    // Khách hàng tham dự
+                var file = SQLHelper<dynamic>.GetListData(allResults, 4);    // file
 
                 return Ok(new
                 {
@@ -242,7 +243,8 @@ namespace RERPAPI.Controllers.Duan.MeetingMinutes
                         customerDetails,
                         employeeDetails,
                         employeeAttendance,
-                        customerAttendance
+                        customerAttendance,
+                        file
                     }
                 });
             }
