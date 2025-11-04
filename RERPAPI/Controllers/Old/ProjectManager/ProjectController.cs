@@ -26,6 +26,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         ProjectTypeBaseRepo projectTypeBaseRepo = new ProjectTypeBaseRepo();
         FollowProjectBaseRepo followProjectBaseRepo = new FollowProjectBaseRepo();
 
+        EmployeeProjectTypeRepo projectEmployeeProjectTypeRepo = new EmployeeProjectTypeRepo();
         ProjectStatusLogRepo projectStatusLogRepo = new ProjectStatusLogRepo();
         ProjectEmployeeRepo projectEmployeeRepo = new ProjectEmployeeRepo();
 
@@ -475,7 +476,73 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        //  lấy danh sách leader của loại dự án
+        [HttpGet("getemployeeprojecttype/{projectTypeId}")]
+        public async Task<IActionResult> getemployeeprojecttype(int projectTypeId)
+        {
+            try
+            {
+                var employeeProjectType = SQLHelper<object>.ProcedureToList("spGetEmployeeProjectType",
+                                            new string[] { "@ProjectTypeID" },
+                                            new object[] { projectTypeId });
+                var data = SQLHelper<object>.GetListData(employeeProjectType, 0);
+                return Ok(ApiResponseFactory.Success(data, ""))
+                ;
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpPost("saveemployeeprojecttype")]
+        public async Task<IActionResult> saveemployeeprojecttype(EmployeeProjectType employeeProjectType)
+        {
+            try
+            {
+                if (employeeProjectType.ID <= 0)
+                {
+                    await projectEmployeeProjectTypeRepo.CreateAsync(employeeProjectType);
+                }
+                else
+                {
+                    projectEmployeeProjectTypeRepo.Update(employeeProjectType);
+                }
 
+                //var objFromDb = projectEmployeeProjectTypeRepo.GetAll(c=>c.EmployeeID== employeeProjectType.EmployeeID&&c.ProjectTypeID==employeeProjectType.ProjectTypeID);
+                //// nếu không trùng leader và project thì tạo mới, else Isdeleted=true
+                //if (objFromDb.Count==0)
+                //{
+                //  var response =  await projectEmployeeProjectTypeRepo.CreateAsync(employeeProjectType);
+                //}
+                //else
+                //{
+                //    objFromDb.FirstOrDefault().IsDeleted = true;
+
+                //  var response =  await projectEmployeeProjectTypeRepo.UpdateAsync(objFromDb.FirstOrDefault());
+                //}
+
+                return Ok(ApiResponseFactory.Success(employeeProjectType, ""));
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-project-employee-filter/{departmentID}")]
+        public async Task<IActionResult> getprojectemployeefilter(int departmentID)
+        {
+            try
+            {
+                var employees = SQLHelper<object>.ProcedureToList("spGetEmployee", new string[] { "@DepartmentID", "@Status" }, new object[] { departmentID, 0 });
+                var data = SQLHelper<object>.GetListData(employees, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         //modal kiểm tra mã ưu tiê
         [HttpGet("check-project-priority")]
         //  [ApiKeyAuthorize]

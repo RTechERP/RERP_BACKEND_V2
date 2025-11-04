@@ -1,12 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Attributes;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers
 {
@@ -41,7 +36,7 @@ namespace RERPAPI.Controllers
         //}
 
 
-        [HttpGet("employees")]          
+        [HttpGet("employees")]
         //[RequiresPermission("N42")]==================keyword
         public IActionResult GetEmployee(int? status, int? departmentid, string? keyword)
         {
