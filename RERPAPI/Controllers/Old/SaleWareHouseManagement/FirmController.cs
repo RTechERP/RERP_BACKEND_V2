@@ -16,7 +16,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         {
             try
             {
-                List<Firm> dataFirm = _firmRepo.GetAll();
+                List<Firm> dataFirm = _firmRepo.GetAll(x => x.IsDelete == false);
                 return Ok(ApiResponseFactory.Success(dataFirm, ""));
             }
             catch (Exception ex)
@@ -84,10 +84,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 var firm = _firmRepo.GetByID(id);
                 if (firm == null)
                 {
-                    return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy hãng"));
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy hãng"));
                 }
-
-                // Soft delete: cập nhật trường IsDelete thành true
                 firm.IsDelete = true;
                 await _firmRepo.UpdateAsync(firm);
 

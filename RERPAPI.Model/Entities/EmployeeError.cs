@@ -24,4 +24,6 @@ public partial class EmployeeError
     public string? UpdatedBy { get; set; }
 
     public DateTime? DateError { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }

@@ -933,7 +933,9 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     return BadRequest(new { status = 0, message = "Mã QR không được để trống." });
 
                 // 1. Tìm phiếu có mã code
-                var bills = SQLHelper<BillExport>.FindByAttribute("Code", $"'{code}'"); // nhớ thêm nháy đơn
+                var bills = _billexportRepo.GetAll()
+                    .Where(b => b.Code == code && b.IsDeleted != true)
+                    .ToList();
                 var bill = bills.FirstOrDefault();
 
                 if (bill == null)
@@ -945,7 +947,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
                 if (billTypeNew != 0)
                 {
-                    var check = SQLHelper<BillExport>.FindByAttribute("Code", $"'{code}'")
+                    var check = _billexportRepo.GetAll().Where(b => b.Code == code && b.IsDeleted != true).ToList()
                         .Where(x => x.Status == billTypeNew)
                         .FirstOrDefault();
 

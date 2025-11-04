@@ -462,10 +462,11 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     }
 
                     // Cập nhật trạng thái
-                    SQLHelper<dynamic>.ExcuteScalar("spUpdateReturnedStatusForBillExportDetail",
+                    SQLHelper<dynamic>.ExcuteProcedure("spUpdateReturnedStatusForBillExportDetail",
                         new string[] { "@BillImportID", "@Approved" },
                         new object[] { detail.BillImportID ?? billImportId, 0 });
-                    var listDetails = SQLHelper<BillImportDetail>.FindByAttribute("BillImportID", detail.BillImportID ?? billImportId);
+                    //var listDetails = SQLHelper<BillImportDetail>.FindByAttribute("BillImportID", detail.BillImportID ?? billImportId);
+                    var listDetails = _billImportDetailRepo.GetAll(x => x.BillImportID == detail.BillImportID);
                     string poNCCDetailID = string.Join(",", listDetails.Select(x => x.PONCCDetailID));
                     SQLHelper<dynamic>.ExcuteProcedure("spUpdateStatusPONCC",
                         new string[] { "@PONCCDetailID" },
@@ -725,7 +726,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     return BadRequest(new { status = 0, message = "Mã QR không được để trống." });
 
                 // 1. Tìm phiếu có mã code
-                var bills = SQLHelper<BillImport>.FindByAttribute("BillImportCode", $"'{code}'");
+                var bills = _billImportRepo.GetAll(x => x.BillImportCode == code);
                 var bill = bills.FirstOrDefault();
 
                 if (bill == null)
