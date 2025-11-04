@@ -5,15 +5,10 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
-using RERPAPI.Model.DTO.Asset;
 using RERPAPI.Model.DTO.Project;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.Project;
-using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.Project;
-using System.Net.WebSockets;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers.Old.ProjectManager
 {

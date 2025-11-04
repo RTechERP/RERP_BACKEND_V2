@@ -1,6 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Model.DTO;
+using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
@@ -11,55 +10,92 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     public class FirmController : ControllerBase
     {
         FirmRepo _firmRepo = new FirmRepo();
+
         [HttpGet("")]
-        public IActionResult getDataFirm()
+        public IActionResult GetFirms()
         {
             try
             {
                 List<Firm> dataFirm = _firmRepo.GetAll();
-                return Ok(new
-                {
-                    status = 1,
-                    data = dataFirm,
-                });
+                return Ok(ApiResponseFactory.Success(dataFirm, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [HttpPost("save-data")]
-        public async Task<IActionResult> saveDataFirm([FromBody] List<FirmDTO> dtos)
+
+        [HttpGet("{id}")]
+        public IActionResult GetFirmById(int id)
         {
             try
             {
-                foreach (var dto in dtos)
+                var firm = _firmRepo.GetByID(id);
+                if (firm == null)
                 {
-                    if (dto.ID <= 0) await _firmRepo.CreateAsync(dto);
-                    else await _firmRepo.UpdateAsync(dto);
-
+                    return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy hãng"));
                 }
-                    return Ok(new
-                    {
-                        status = 1,
-                        message = "Thêm hãng thành công!",
 
-                    });
-                
+                return Ok(ApiResponseFactory.Success(firm, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("check-code")]
+        public IActionResult CheckFirmCodeExists(string firmCode, int? id = null)
+        {
+            try
+            {
+                bool exists = _firmRepo.CheckFirmCodeExists(firmCode, id);
+                return Ok(ApiResponseFactory.Success(exists, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("")]
+        public async Task<IActionResult> SaveFirm([FromBody] Firm firm)
+        {
+            try
+            {
+                if (firm.ID <= 0)
+                    await _firmRepo.CreateAsync(firm);
+                else
+                    await _firmRepo.UpdateAsync(firm);
+
+                return Ok(ApiResponseFactory.Success(null, "Lưu hãng thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteFirm(int id)
+        {
+            try
+            {
+                var firm = _firmRepo.GetByID(id);
+                if (firm == null)
                 {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                    return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy hãng"));
+                }
+
+                // Soft delete: cập nhật trường IsDelete thành true
+                firm.IsDelete = true;
+                await _firmRepo.UpdateAsync(firm);
+
+                return Ok(ApiResponseFactory.Success(null, "Xóa hãng thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

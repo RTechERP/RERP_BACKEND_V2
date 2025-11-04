@@ -14,13 +14,14 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                var result = employeeVehicleBussinessRepo.GetAll().Where(x => x.IsDeleted == false);
+                var result = employeeVehicleBussinessRepo.GetAll();
                 return Ok(new
                 {
                     status = 1,
                     data = result
                 });
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 return BadRequest(new
                 {
@@ -29,7 +30,7 @@ namespace RERPAPI.Controllers.Old
                     error = ex.ToString()
                 });
             }
-            
+
         }
 
 
@@ -39,13 +40,13 @@ namespace RERPAPI.Controllers.Old
             try
             {
                 List<EmployeeVehicleBussiness> listData = employeeVehicleBussinessRepo.GetAll();
-       
+
                 if (employeeVehicleBussiness.ID <= 0)
                 {
                     await employeeVehicleBussinessRepo.CreateAsync(employeeVehicleBussiness);
                 }
                 else
-                {   
+                {
                     await employeeVehicleBussinessRepo.UpdateAsync(employeeVehicleBussiness);
                 }
                 return Ok(new

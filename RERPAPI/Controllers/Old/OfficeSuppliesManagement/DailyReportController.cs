@@ -1,9 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
-using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 
 namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
@@ -22,7 +18,7 @@ namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
         /// <param id phòng ban="departmenID"></param>
         /// <returns></returns>
         [HttpPost("get-daily-report-technical")]
-     
+
         public IActionResult getDailyReportTechnical([FromBody] DailyReportTechnicalRequestParam filter)
         {
             try

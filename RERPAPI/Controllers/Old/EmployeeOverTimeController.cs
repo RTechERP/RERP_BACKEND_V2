@@ -68,8 +68,8 @@ namespace RERPAPI.Controllers.Old
                     employeeOverTime.IsApprovedHR = employeeOvertime.IsApprovedHR;
                     employeeOverTime.IsApprovedBGD = employeeOvertime?.IsApprovedBGD;
                     employeeOverTime.IsProblem = false;
-                    employeeOverTime.IsDeleted = employeeOvertime.IsDeleted;
-                    
+                    //employeeOverTime.IsDeleted = employeeOvertime.IsDeleted;
+
 
 
                     // Calculate TimeReality
@@ -78,10 +78,11 @@ namespace RERPAPI.Controllers.Old
                         employeeOverTime.TimeReality = (decimal)(employeeOverTime.EndTime.Value - employeeOverTime.TimeStart.Value).TotalHours;
                     }
 
-                    if(employeeOverTime.Overnight == true)
+                    if (employeeOverTime.Overnight == true)
                     {
                         employeeOverTime.CostOvernight = 30000;
-                    } else
+                    }
+                    else
                     {
                         employeeOverTime.CostOvernight = 0;
                     }
@@ -95,7 +96,7 @@ namespace RERPAPI.Controllers.Old
 
                     if (employeeOverTime.ID > 0)
                     {
-                       
+
                         await employeeOverTimeRepo.UpdateAsync(employeeOverTime);
                     }
                     else

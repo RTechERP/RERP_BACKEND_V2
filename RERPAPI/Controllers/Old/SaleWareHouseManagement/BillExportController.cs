@@ -1,27 +1,16 @@
 ﻿using ClosedXML.Excel;
-using DocumentFormat.OpenXml.ExtendedProperties;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using QRCoder;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
-using System.Collections.Generic;
+using RERPAPI.Repo.GenericEntity.Technical;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.Drawing.Imaging;
 using ZXing;
 using ZXing.Common;
-using ZXing.QrCode;
-using System.Drawing;
-using System.Drawing.Imaging;
-using DocumentFormat.OpenXml.Office2010.Excel;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.IdentityModel.Tokens;
-using RERPAPI.Repo.GenericEntity.Technical;
 
 
 namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
@@ -352,7 +341,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     billExportId = dto.billExport.ID;
                 }
                 //chi tiết phiếu xuất
-                foreach (var detail in  dto.billExportDetail)
+                foreach (var detail in dto.billExportDetail)
                 {
                     detail.BillID = billExportId;
 
@@ -369,7 +358,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         var existingDetail = _billExportDetailRepo.GetByID(detail.ID);
                         if (existingDetail != null)
                         {
-                                _billExportDetailRepo.Update(detail);
+                            _billExportDetailRepo.Update(detail);
                         }
                     }
                     //serial
@@ -383,15 +372,16 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                                 .ToList();
                         var serials = _billExportDetailSerialNumberRepo.GetAll()
                             .Where(s => serialIds.Contains(s.ID) &&
-                                        s.IsDeleted != true &&
-                                        s.BillExportDetailID == null)            
+                                        //s.IsDeleted != true &&
+                                        s.BillExportDetailID == null)
                             .ToList();
 
                         if (detail.Qty.HasValue && serials.Count() != (int)detail.Qty)
                         {
-                            return BadRequest(new { 
+                            return BadRequest(new
+                            {
                                 status = 0,
-                                message = $"Số serial ({serials.Count()}) không khớp Qty ({detail.Qty})" 
+                                message = $"Số serial ({serials.Count()}) không khớp Qty ({detail.Qty})"
                             });
                         }
                         // Update SerialNumber nếu chưa có
@@ -429,7 +419,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                             var bxSn = _billExportDetailSerialNumberRepo.GetAll().Where(p => p.BillExportDetailID == dto.DeletedDetailIDs[j]).FirstOrDefault();
                             if (bxSn != null)
                             {
-                                bxSn.IsDeleted = true;
+                                //bxSn.IsDeleted = true;
                                 bxSn.UpdatedDate = DateTime.Now;
                                 _billExportDetailSerialNumberRepo.Update(bxSn);
                             }

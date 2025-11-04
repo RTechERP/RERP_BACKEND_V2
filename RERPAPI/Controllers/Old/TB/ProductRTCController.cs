@@ -1,26 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.Context;
-using RERPAPI.Model.DTO;
-using RERPAPI.Model.DTO.Asset;
 using RERPAPI.Model.DTO.TB;
 using RERPAPI.Model.Entities;
-using RERPAPI.Model.Param;
-using RERPAPI.Model.Param.Asset;
 using RERPAPI.Model.Param.TB;
-using RERPAPI.Model.Param.Technical;
-using RERPAPI.Repo;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.Asset;
-using RERPAPI.Repo.GenericEntity.TB;
-using System;
-using System.Data;
 using System.Net.Mime;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 
 namespace RERPAPI.Controllers.Old.TB
@@ -29,10 +13,14 @@ namespace RERPAPI.Controllers.Old.TB
     [ApiController]
     public class ProductRTCController : ControllerBase
     {
+
+        const int WAREHOUSEID = 1;
         ProductGroupRTCRepo _productGroupRTCRepo = new ProductGroupRTCRepo();
         ProductRTCRepo _productRTCRepo = new ProductRTCRepo();
         ProductLocationRepo _productLocationRepo = new ProductLocationRepo();
         ConfigSystemRepo config = new ConfigSystemRepo();
+
+
         [HttpPost("get-productRTC")]
         public IActionResult GetListAssets([FromBody] ProductRTCRequetParam request)
         {
@@ -79,9 +67,9 @@ namespace RERPAPI.Controllers.Old.TB
             try
             {
                 List<ProductGroupRTC> productGroup = _productGroupRTCRepo
-                    .GetAll()
-                    .Where(x => x.IsDeleted == false)
-                    .ToList();
+                    .GetAll();
+                //.Where(x => x.IsDeleted == false)
+                //.ToList();
 
                 //return Ok(new
                 //{
@@ -190,11 +178,11 @@ namespace RERPAPI.Controllers.Old.TB
                 req.file.CopyTo(fs);
                 return Ok(ApiResponseFactory.Success(null, "Upload thành công"));
             }
-            catch( Exception ex)
+            catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-          
+
         }
         [HttpGet("get-location")]
         public IActionResult GetLocation(int? warehouseID)
@@ -234,7 +222,7 @@ namespace RERPAPI.Controllers.Old.TB
         public IActionResult GetPreview([FromQuery] string full)
         {
             if (string.IsNullOrWhiteSpace(full)) return BadRequest("full required");
-            var con = config.GetAll(x=>x.KeyName== "PathPreview").FirstOrDefault()?? new ConfigSystem();
+            var con = config.GetAll(x => x.KeyName == "PathPreview").FirstOrDefault() ?? new ConfigSystem();
             string root = "";
             if (con.ID > 0)
             {
@@ -278,7 +266,7 @@ namespace RERPAPI.Controllers.Old.TB
                 if (product == null) { return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." }); }
                 if (product.productGroupRTC != null)
                 {
-                    
+
                     if (product.productGroupRTC.ID <= 0)
                         await _productGroupRTCRepo.CreateAsync(product.productGroupRTC);
                     else
@@ -310,6 +298,36 @@ namespace RERPAPI.Controllers.Old.TB
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
 
+        }
+
+
+        [HttpGet("get-by-qrcode")]
+        public IActionResult GetProductByQrCode(string qrCode)
+        {
+            try
+            {
+                var datas = SQLHelper<object>.ProcedureToList("spGetProductRTCByQrCode", 
+                                                                new string[] { "@ProductRTCQRCode", "@WarehouseID" },
+                                                                new object[] { qrCode, WAREHOUSEID });
+
+                var historys = SQLHelper<object>.GetListData(datas, 0);
+
+                if (historys.Count > 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Thiết bị có mã QR [{qrCode}] đang được mượn!", historys));
+                }
+                else
+                {
+                    var products = SQLHelper<object>.GetListData(datas, 1);
+                    return Ok(ApiResponseFactory.Success(products, $""));
+                }
+                
+                
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
         }
     }
 }
