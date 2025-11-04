@@ -177,7 +177,7 @@ namespace RERPAPI.Controllers.Old.TB
                 var dest = Path.Combine(req.path, req.file.FileName);
                 using var fs = System.IO.File.Create(dest);
                 req.file.CopyTo(fs);
-                return Ok(ApiResponseFactory.Success(null, "Upload thành công"));
+                return Ok(ApiResponseFactory.Success(req.file.FileName, "Upload thành công")); //TN.Binh update
             }
             catch (Exception ex)
             {
@@ -265,6 +265,7 @@ namespace RERPAPI.Controllers.Old.TB
             try
             {
                 if (product == null) { return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." }); }
+          
                 if (product.productGroupRTC != null)
                 {
 
@@ -275,14 +276,23 @@ namespace RERPAPI.Controllers.Old.TB
                 }
                 if (product.productRTCs != null && product.productRTCs.Any())
                 {
+                    //TN.Binh update logic xoa
                     foreach (var item in product.productRTCs)
                     {
-
-                        if (item.ID <= 0)
-                            await _productRTCRepo.CreateAsync(item);
+                        if (item.IsDelete == true)
+                        {
+                            if (item.ID > 0)
+                                await _productRTCRepo.UpdateAsync(item);
+                        }
                         else
-                            await _productRTCRepo.UpdateAsync(item);
+                        {
+                            if (item.ID <= 0)
+                                await _productRTCRepo.CreateAsync(item);
+                            else
+                                await _productRTCRepo.UpdateAsync(item);
+                        }
                     }
+                    //end
                 }
 
                 //return Ok(new { status = 1 });
