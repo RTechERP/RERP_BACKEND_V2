@@ -22,7 +22,7 @@ namespace RERPAPI.Model.Context
             //LoginName = _httpContextAccessor.HttpContext?.User?.FindFirst("loginname")?.Value;
             string loginName = CurrentUser.LoginName;
             var entries = ChangeTracker.Entries()
-                                            .Where(x => x.Entity != null && (x.State == EntityState.Added || x.State == EntityState.Modified));
+                                       .Where(x => x.Entity != null && (x.State == EntityState.Added || x.State == EntityState.Modified));
 
             foreach (var item in entries)
             {
@@ -37,12 +37,12 @@ namespace RERPAPI.Model.Context
 
                 if (item.State == EntityState.Added) //Thêm mới
                 {
-                    if (createdBy != null && createdBy.CanWrite) createdBy.SetValue(item.Entity, loginName);
+                    if (createdBy != null && createdBy.CanWrite) createdBy.SetValue(item.Entity, Convert.ToString(createdBy.GetValue(item.Entity)) ?? loginName);
                     if (createdDate != null && createdDate.CanWrite) createdDate.SetValue(item.Entity, DateTime.Now);
-                    if (updatedBy != null && updatedBy.CanWrite) updatedBy.SetValue(item.Entity, loginName);
+                    if (updatedBy != null && updatedBy.CanWrite && updatedBy.GetValue(item.Entity) != null) updatedBy.SetValue(item.Entity, Convert.ToString(updatedBy.GetValue(item.Entity)) ?? loginName);
+                    //if (name != null && name.CanWrite) name.SetValue(item.Entity, loginName);
                     if (updatedDate != null && updatedDate.CanWrite) updatedDate.SetValue(item.Entity, DateTime.Now);
                     if (isDeleted != null && isDeleted.CanWrite) isDeleted.SetValue(item.Entity, false);
-                    if (isDelete != null && isDelete.CanWrite) isDelete.SetValue(item.Entity, false);
                 }
 
                 if (item.State == EntityState.Modified)
@@ -61,7 +61,7 @@ namespace RERPAPI.Model.Context
             string loginName = CurrentUser.LoginName;
             //var claim = _userPermissionService.Claims;
             var entries = ChangeTracker.Entries()
-                                            .Where(x => x.Entity != null && (x.State == EntityState.Added || x.State == EntityState.Modified));
+                                       .Where(x => x.Entity != null && (x.State == EntityState.Added || x.State == EntityState.Modified));
 
             foreach (var item in entries)
             {
@@ -72,14 +72,14 @@ namespace RERPAPI.Model.Context
                 var updatedBy = type.GetProperty("UpdatedBy");
                 var updatedDate = type.GetProperty("UpdatedDate");
                 var isDeleted = type.GetProperty("IsDeleted");
-                var name = type.GetProperty("Name");
+                //var name = type.GetProperty("Name");
 
                 if (item.State == EntityState.Added) //Thêm mới
                 {
                     if (createdBy != null && createdBy.CanWrite) createdBy.SetValue(item.Entity, Convert.ToString(createdBy.GetValue(item.Entity)) ?? loginName);
                     if (createdDate != null && createdDate.CanWrite) createdDate.SetValue(item.Entity, DateTime.Now);
                     if (updatedBy != null && updatedBy.CanWrite && updatedBy.GetValue(item.Entity) != null) updatedBy.SetValue(item.Entity, Convert.ToString(updatedBy.GetValue(item.Entity)) ?? loginName);
-                    if (name != null && name.CanWrite) name.SetValue(item.Entity, loginName);
+                    //if (name != null && name.CanWrite) name.SetValue(item.Entity, loginName);
                     if (updatedDate != null && updatedDate.CanWrite) updatedDate.SetValue(item.Entity, DateTime.Now);
                     if (isDeleted != null && isDeleted.CanWrite) isDeleted.SetValue(item.Entity, false);
                 }
