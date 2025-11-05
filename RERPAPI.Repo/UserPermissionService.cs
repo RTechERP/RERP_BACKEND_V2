@@ -22,8 +22,16 @@ namespace RERPAPI.Repo
         {
             if (!int.TryParse(userId, out var id)) return false;
 
-            var isPermission = await _dbContext.vUserGroupLinks.AnyAsync(p => p.UserID == id && p.Code == permission);
-            return isPermission;
+            var permissions = permission.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries); //NTA B update 051125
+
+            foreach (var perm in permissions) //NTA B update 051125
+            {
+                var hasPerm = await _dbContext.vUserGroupLinks.AnyAsync(p => p.UserID == id && p.Code == perm);
+                if (hasPerm) return true;
+            }
+
+            //var isPermission = await _dbContext.vUserGroupLinks.AnyAsync(p => p.UserID == id && p.Code == permission);
+            return false;
         }
 
         public Dictionary<string, string> GetClaims()
