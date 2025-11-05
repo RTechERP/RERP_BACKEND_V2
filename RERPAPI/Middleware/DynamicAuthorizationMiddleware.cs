@@ -109,6 +109,13 @@ namespace RERPAPI.Middleware
                     return;
                 }
 
+                var isAdminClaim = context.User.FindFirst("isadmin")?.Value; //NTA B update 041125
+                if(!string.IsNullOrEmpty(isAdminClaim) && bool.TryParse(isAdminClaim, out bool isAdmin) && isAdmin)
+                {
+                    await _next(context);
+                    return;
+                }    
+
                 foreach (var attr in permissionAttributes)
                 {
                     var hasPermission = await permissionService.HasPermissionAsync(userId, attr.permission);
