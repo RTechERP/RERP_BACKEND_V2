@@ -30,7 +30,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 DateTime de = new DateTime(dateEnd.Year, dateEnd.Month, dateEnd.Day, 23, 59, 59);
                 var dt = SQLHelper<object>.ProcedureToList("spGetProjectSurvey",
                                                     new string[] { "@DateStart", "@DateEnd", "@ProjectID", "@EmployeeRequestID", "@EmployeeTechID", "@Keyword" },
-                                                    new object[] { ds, de, projectId, saleId, technicalId, "" });
+                                                    new object[] { ds, de, projectId, saleId, technicalId, keyword });
                 var data = SQLHelper<object>.GetListData(dt, 0);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }

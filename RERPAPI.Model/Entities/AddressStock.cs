@@ -10,4 +10,6 @@ public partial class AddressStock
     public string? Address { get; set; }
 
     public int CustomerID { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }
