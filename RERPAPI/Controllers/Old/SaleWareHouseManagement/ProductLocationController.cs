@@ -9,14 +9,15 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     [ApiController]
     public class ProductLocationController : ControllerBase
     {
-        ProductLocationRepo _productLocationRepo = new ProductLocationRepo();
+        LocationRepo _productLocationRepo = new LocationRepo();
 
         [HttpPost("get-product-locations")]
         public IActionResult getProductLocations()
         {
             try
             {
-                List<ProductLocation> dataProductLocation = _productLocationRepo.GetAll(x => x.IsDeleted != true);
+                var data = SQLHelper<dynamic>.ProcedureToList("spLoadLocation", new string[] { "@GroupID" }, new object[] { 0 });
+                var dataProductLocation = SQLHelper<dynamic>.GetListData(data, 0);
                 return Ok(ApiResponseFactory.Success(dataProductLocation, ""));
             }
             catch (Exception ex)
@@ -51,6 +52,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             {
                 bool exists = _productLocationRepo.CheckLocationCodeExists(locationCode, id);
                 return Ok(ApiResponseFactory.Success(exists, ""));
+                return Ok();
             }
             catch (Exception ex)
             {
@@ -59,7 +61,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpPost("save-data")]
-        public async Task<IActionResult> saveData([FromBody] ProductLocation productLocation)
+        public async Task<IActionResult> saveData([FromBody] Location productLocation)
         {
             try
             {

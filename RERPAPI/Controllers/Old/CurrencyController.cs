@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -15,7 +15,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                List<Currency> currencies = _currencyRepo.GetAll();
+                List<Currency> currencies = _currencyRepo.GetAll(x => x.IsDeleted == false);
 
                 return Ok(new
                 {
@@ -82,8 +82,8 @@ namespace RERPAPI.Controllers.Old
             try
             {
                 if (currency == null)
-                    return Ok(ApiResponseFactory.Fail(null, "Invalid data"));
-
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu của loại tiền"));
+                if (_currencyRepo.CheckExist(currency) && currency.IsDeleted != true) return Ok(ApiResponseFactory.Fail(null, "Mã loại tiền đã có trong hệ thống!"));
                 if (currency.ID <= 0)
                 {
                     await _currencyRepo.CreateAsync(currency);
