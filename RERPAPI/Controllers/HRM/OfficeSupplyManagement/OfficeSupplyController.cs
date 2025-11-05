@@ -19,7 +19,6 @@ namespace RERPAPI.Controllers.HRM.OfficeSupply
         OfficeSupplyRepo _officesupplyRepo = new OfficeSupplyRepo();
         OfficeSupplyUnitRepo osurepo = new OfficeSupplyUnitRepo();
 
-        [RequiresPermission("N1,N2,N34")]
         [HttpGet("get-office-supply")]
         public IActionResult getOfficeSupply(string keyword = "")
         {
@@ -59,7 +58,7 @@ namespace RERPAPI.Controllers.HRM.OfficeSupply
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [RequiresPermission("N1,N2,N34")]
+      
         [HttpGet("get-office-supply-by-id")]
         public IActionResult getOfficeSupplyByID(int id)
         {
@@ -83,7 +82,7 @@ namespace RERPAPI.Controllers.HRM.OfficeSupply
             }
         }
 
-        [RequiresPermission("N1,N2,N34")]
+       
         [HttpPost("delete-office-supply")]
         public async Task<IActionResult> deleteOfficeSupply([FromBody] List<int> ids)
         {
@@ -117,7 +116,7 @@ namespace RERPAPI.Controllers.HRM.OfficeSupply
                 });
             }
         }
-        [RequiresPermission("N1,N2,N34")]
+    
         [HttpPost("check-codes")]
         public async Task<IActionResult> checkCodes([FromBody] List<ProductCodeCheck> codes)
         {
@@ -155,7 +154,7 @@ namespace RERPAPI.Controllers.HRM.OfficeSupply
         }
 
         //cap nhat and them
-        [RequiresPermission("N1,N2,N34")]
+       
         [HttpPost("save-data")]
         public async Task<IActionResult> saveDataOfficeSupply([FromBody] RERPAPI.Model.Entities.OfficeSupply officesupply)
         {
