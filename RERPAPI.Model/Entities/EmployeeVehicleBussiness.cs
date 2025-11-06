@@ -18,5 +18,5 @@ public partial class EmployeeVehicleBussiness
     /// </summary>
     public bool? EditCost { get; set; }
 
-    public bool IsDeleted { get; set; }
+    public bool? IsDeleted { get; set; }
 }

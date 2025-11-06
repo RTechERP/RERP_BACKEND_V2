@@ -97,4 +97,5 @@ public partial class ProjectPartlistPriceRequest
     public string? ReasonUnPrice { get; set; }
 
     public int? EmployeeIDUnPrice { get; set; }
+    public string? NoteHR { get; set; }
 }

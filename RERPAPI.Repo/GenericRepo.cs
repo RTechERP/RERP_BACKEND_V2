@@ -244,7 +244,7 @@ namespace RERPAPI.Repo
             try
             {
                 await table.AddAsync(item);
-                return db.SaveChanges();
+                return await db.SaveChangesAsync();
             }
             catch (Exception ex)
             {
@@ -519,5 +519,7 @@ namespace RERPAPI.Repo
         //{
         //    db.Claim = claim;
         //}
+
+
     }
 }

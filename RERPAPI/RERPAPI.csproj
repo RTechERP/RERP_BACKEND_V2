@@ -55,7 +55,6 @@
     <Compile Remove="Controllers\ModulaLocationController.cs" />
     <Compile Remove="Controllers\Old\POKHController.cs" />
     <Compile Remove="Controllers\Old\POKH\POKHController.cs" />
-    <Compile Remove="Controllers\Old\ProductRTCController.cs" />
     <Compile Remove="Controllers\Old\TB\FirmController.cs" />
     <Compile Remove="Controllers\Old\VisionBase\CustomerController.cs" />
     <Compile Remove="Controllers\PONCCController.cs" />
