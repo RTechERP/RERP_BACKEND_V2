@@ -21,5 +21,5 @@ public partial class InvoiceLink
 
     public int? AccountingBillID { get; set; }
 
-    public bool? IsDeleted { get; set; }
+    public bool IsDeleted { get; set; }
 }

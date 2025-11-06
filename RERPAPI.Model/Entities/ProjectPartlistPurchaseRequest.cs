@@ -125,9 +125,6 @@ public partial class ProjectPartlistPurchaseRequest
 
     public int? ProductRTCID { get; set; }
 
-    /// <summary>
-    /// 0: yêu cầu mua; 1: Yêu cầu mượn
-    /// </summary>
     public int? TicketType { get; set; }
 
     public DateTime? DateReturnEstimated { get; set; }
