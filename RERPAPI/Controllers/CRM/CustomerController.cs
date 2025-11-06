@@ -1,10 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.CRM
 {
@@ -172,7 +170,8 @@ namespace RERPAPI.Controllers.CRM
             try
             {
                 string employeeName = "";
-                List<CustomerEmployee> employeeSales = SQLHelper<CustomerEmployee>.FindByAttribute("CustomerID", id);
+                //List<CustomerEmployee> employeeSales = SQLHelper<CustomerEmployee>.FindByAttribute("CustomerID", id);
+                List<CustomerEmployee> employeeSales = customerEmployeeRepo.GetAll(x => x.CustomerID == id);
                 //foreach (var employee in employeeSales)
                 //{
                 //    //employeeName = SQLHelper<Employee>.FindByID((long)employee.EmployeeID).FullName;
@@ -252,20 +251,22 @@ namespace RERPAPI.Controllers.CRM
 
                 if (request.ID > 0)
                 {
-                    var existingContacts = SQLHelper<CustomerContact>.FindByAttribute("CustomerID", customer.ID);
+                    //var existingContacts = SQLHelper<CustomerContact>.FindByAttribute("CustomerID", customer.ID);
+                    var existingContacts = customerContactRepo.GetAll(x => x.CustomerID == customer.ID);
                     var contactsToDelete = existingContacts.Where(c => !request.Contacts.Any(rc => rc.idConCus == c.ID)).ToList();
                     foreach (var contact in contactsToDelete)
                     {
                         await customerContactRepo.DeleteAsync(contact.ID);
                     }
 
-                    var existingAddresses = SQLHelper<AddressStock>.FindByAttribute("CustomerID", customer.ID);
+                    //var existingAddresses = SQLHelper<AddressStock>.FindByAttribute("CustomerID", customer.ID);
+                    var existingAddresses = addressStockRepo.GetAll(x => x.CustomerID == customer.ID);
                     var addressesToDelete = existingAddresses.Where(a => !request.Addresses.Any(ra => ra.ID == a.ID)).ToList();
                     foreach (var address in addressesToDelete)
                     {
                         await addressStockRepo.DeleteAsync(address.ID);
                     }
-                    var existingSales = SQLHelper<CustomerEmployee>.FindByAttribute("CustomerID", customer.ID);
+                    var existingSales = customerEmployeeRepo.GetAll(x => x.CustomerID == customer.ID);
                     var salesToDelete = existingSales.Where(s => !request.Sales.Any(rs => rs.ID == s.ID)).ToList();
                     foreach (var sale in salesToDelete)
                     {
@@ -336,7 +337,8 @@ namespace RERPAPI.Controllers.CRM
                     }
                 }
 
-                var business = SQLHelper<BusinessFieldLink>.FindByAttribute("CustomerID", customer.ID).FirstOrDefault() ?? new BusinessFieldLink();
+                //var business = SQLHelper<BusinessFieldLink>.FindByAttribute("CustomerID", customer.ID).FirstOrDefault() ?? new BusinessFieldLink();
+                var business = businessFieldLinkRepo.GetAll(x => x.CustomerID == customer.ID).FirstOrDefault() ?? new BusinessFieldLink();
 
                 business.CustomerID = customer.ID;
                 business.BusinessFieldID = request.BusinessFieldID;
@@ -408,7 +410,7 @@ namespace RERPAPI.Controllers.CRM
         {
             try
             {
-                var addressStock = SQLHelper<AddressStock>.FindByAttribute("CustomerID", id);
+                var addressStock = addressStockRepo.GetAll(x => x.CustomerID == id);
                 //return Ok(new
                 //{
                 //    status = 1,

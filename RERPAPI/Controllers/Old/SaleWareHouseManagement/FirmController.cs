@@ -33,7 +33,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 var firm = _firmRepo.GetByID(id);
                 if (firm == null)
                 {
-                    return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy hãng"));
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy hãng"));
                 }
 
                 return Ok(ApiResponseFactory.Success(firm, ""));
