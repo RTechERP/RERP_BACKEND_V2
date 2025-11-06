@@ -78,4 +78,10 @@ public partial class BillExport
     public int? BillDocumentExportType { get; set; }
 
     public bool? IsDeleted { get; set; }
+
+    public bool? BillImportID { get; set; }
+
+    public int? WareHouseTranferID { get; set; }
+
+    public bool? IsTransfer { get; set; }
 }

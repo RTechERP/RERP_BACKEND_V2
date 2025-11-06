@@ -16,7 +16,7 @@ public partial class ProjectPartlistPriceRequest
     public string? ProductName { get; set; }
 
     /// <summary>
-    /// 1:Yêu cầu báo giá; 2:Đã báo giá
+    /// 1:Yêu cầu báo giá; 2:Đã báo giá;3: Từ chối báo giá
     /// </summary>
     public int? StatusRequest { get; set; }
 
