@@ -38,6 +38,4 @@ public partial class Currency
     public DateTime? DateExpriedOfficialQuota { get; set; }
 
     public DateTime? DateExpriedUnofficialQuota { get; set; }
-
-    public bool? IsDeleted { get; set; }
 }

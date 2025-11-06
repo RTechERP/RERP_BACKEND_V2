@@ -39,5 +39,5 @@ public partial class HandoverMinutesDetail
 
     public int? POKHDetailID { get; set; }
 
-    public bool? IsDeleted { get; set; }
+    public bool IsDeleted { get; set; }
 }

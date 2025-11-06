@@ -32,4 +32,6 @@ public partial class Inventory
     public bool? IsStock { get; set; }
 
     public decimal? MinQuantity { get; set; }
+
+    public int? EmployeeStock { get; set; }
 }
