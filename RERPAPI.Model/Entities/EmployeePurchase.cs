@@ -24,6 +24,4 @@ public partial class EmployeePurchase
     public DateTime? UpdatedDate { get; set; }
 
     public string? FullName { get; set; }
-
-    public bool? IsDeleted { get; set; }
 }

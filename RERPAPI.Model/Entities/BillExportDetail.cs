@@ -76,6 +76,4 @@ public partial class BillExportDetail
     public DateTime? ExpectReturnDate { get; set; }
 
     public bool? IsDeleted { get; set; }
-
-    public string? CustomerResponse { get; set; }
 }

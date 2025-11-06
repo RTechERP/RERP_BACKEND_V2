@@ -18,6 +18,4 @@ public partial class InventoryDemo
     public string? CreatedBy { get; set; }
 
     public string? UpdatedBy { get; set; }
-
-    public int? AGVProductID { get; set; }
 }
