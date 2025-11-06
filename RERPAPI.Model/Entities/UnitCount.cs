@@ -20,4 +20,5 @@ public partial class UnitCount
     public string? UpdatedBy { get; set; }
 
     public bool? IsDeleted { get; set; }
+
 }

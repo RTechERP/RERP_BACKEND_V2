@@ -37,7 +37,7 @@ public partial class RequestInvoiceDetail
 
     public string? Note { get; set; }
 
-    public bool IsDeleted { get; set; }
-
     public bool? IsStock { get; set; }
+
+    public bool IsDeleted { get; set; }
 }

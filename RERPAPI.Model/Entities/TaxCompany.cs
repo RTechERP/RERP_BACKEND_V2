@@ -10,7 +10,6 @@ public partial class TaxCompany
     public string? Code { get; set; }
 
     public string? Name { get; set; }
-
     public string? FullName { get; set; }
 
     public string? CreatedBy { get; set; }
