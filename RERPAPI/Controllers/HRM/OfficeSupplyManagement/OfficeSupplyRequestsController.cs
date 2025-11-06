@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
@@ -15,7 +16,7 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
     {
         OfficeSupplyRequestsRepo officesupplyrequests = new OfficeSupplyRequestsRepo();
         DepartmentRepo _departmentRepo = new DepartmentRepo();
-        [RequiresPermission("N1,N2,N34")]
+       
         #region getdatadepartment cần bỏ
         [HttpGet("get-data-department")]
         public IActionResult GetdataDepartment()
@@ -50,7 +51,7 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
         /// <param id phòng ban đăng ký="departmentID"></param>
         /// <param tháng="monthInput"></param>
         /// <returns></returns>
-        [RequiresPermission("N1,N2,N34")]
+     
         [HttpGet("get-office-supply-request")]
         public IActionResult getOfficeSupplyRequests(string? keyword, int? employeeID, int? departmentID, DateTime? monthInput)
         {
@@ -84,7 +85,7 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
         /// </summary>
         /// <param officesupplyrequestsID="id"></param>
         /// <returns></returns>
-           [RequiresPermission("N1,N2,N34")]
+        
         [HttpGet("get-office-supply-request-detail")]
         public IActionResult GetOfficeSupplyRequestsDetail(int officeSupplyRequestsID)
         {
@@ -113,7 +114,7 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
                 });
             }
         }
-        [RequiresPermission("N1,N2,N34")]
+      
         [HttpPost("admin-approved")]
         public async Task<IActionResult> adminApproved([FromBody] List<int> ids)
         {
@@ -191,6 +192,8 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
                 if (ids == null || ids.Count == 0)
                     return BadRequest(new { status = 0, message = "Lỗi", error = ToString() });
                 foreach (var id in ids)
@@ -200,6 +203,7 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
                     {
                         item.IsApproved = true;
                         item.DateApproved = DateTime.Now;
+                        item.ApprovedID = currentUser.EmployeeID;
                     }
                     officesupplyrequests.Update(item);
                 }

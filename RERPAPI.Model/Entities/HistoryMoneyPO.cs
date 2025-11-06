@@ -54,4 +54,5 @@ public partial class HistoryMoneyPO
     public DateTime? UpdatedDate { get; set; }
 
     public decimal? MoneyNotPaid { get; set; }
+    public bool? IsDelivered { get; set; }
 }
