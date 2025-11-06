@@ -74,11 +74,11 @@ public partial class EmployeeOvertime
 
     public DateTime? DateApprovedBGD { get; set; }
 
-    public int? ApprovedSeniorID { get; set; }
-
     public bool? IsSeniorApproved { get; set; }
 
-    public DateTime? DateApprovedSenitor { get; set; }
-    public bool? IsDeleted { get; set; }
+    public int? ApprovedSeniorID { get; set; }
 
+    public DateTime? DateApprovedSenitor { get; set; }
+
+    public bool IsDeleted { get; set; }
 }

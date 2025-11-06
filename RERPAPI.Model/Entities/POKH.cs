@@ -130,8 +130,6 @@ public partial class POKH
 
     public int? AccountType { get; set; }
 
-    public bool? IsDeleted { get; set; }
-
     public decimal? Discount { get; set; }
 
     public decimal? TotalMoneyDiscount { get; set; }
