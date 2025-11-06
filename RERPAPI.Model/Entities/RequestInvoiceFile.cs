@@ -23,7 +23,7 @@ public partial class RequestInvoiceFile
 
     public DateTime? UpdatedDate { get; set; }
 
-    public int? FileType { get; set; }
-
     public bool? IsDeleted { get; set; }
+
+    public int? FileType { get; set; }
 }

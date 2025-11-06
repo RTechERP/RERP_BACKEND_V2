@@ -31,6 +31,4 @@ public partial class ProductRTCQRCode
     public DateTime? UpdatedDate { get; set; }
 
     public int? WarehouseID { get; set; }
-
-    public int? ModulaLocationDetailID { get; set; }
 }

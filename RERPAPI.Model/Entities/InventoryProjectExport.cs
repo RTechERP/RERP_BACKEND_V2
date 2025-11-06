@@ -21,5 +21,5 @@ public partial class InventoryProjectExport
 
     public string? UpdatedBy { get; set; }
 
-    public decimal? Quantity { get; set; }
+    public int? Quantity { get; set; }
 }
