@@ -23,5 +23,5 @@ public partial class BillImportDetailSerialNumber
 
     public string? UpdatedBy { get; set; }
 
-    public bool? IsDeleted { get; set; }
+    public bool IsDeleted { get; set; }
 }

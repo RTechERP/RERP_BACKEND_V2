@@ -126,7 +126,7 @@ namespace RERPAPI.Controllers
                     .Where(x => x.ID != currentId &&
                                x.EmployeeID == employeeId &&
                                x.TaxCompayID == companyId
-                               //&& x.IsDelete == false
+                               && x.IsDeleted == false
                                );
 
                 if (employeePurchase.Count() > 0) check = true;
