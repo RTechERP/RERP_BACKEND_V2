@@ -36,6 +36,4 @@ public partial class CourseLesson
     public int? LessonCopyID { get; set; }
 
     public bool? IsDeleted { get; set; }
-
-    public int? EmployeeID { get; set; }
 }

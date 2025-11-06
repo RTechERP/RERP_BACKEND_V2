@@ -31,5 +31,5 @@ public partial class OfficeSupply
 
     public DateTime? UpdatedDate { get; set; }
 
-    public bool IsDeleted { get; set; }
+    public bool? IsDeleted { get; set; }
 }
