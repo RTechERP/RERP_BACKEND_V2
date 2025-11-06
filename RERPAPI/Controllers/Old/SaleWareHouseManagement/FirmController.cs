@@ -16,7 +16,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
         {
             try
             {
-                List<Firm> dataFirm = _firmRepo.GetAll(x => x.IsDelete == false);
+                List<Firm> dataFirm = _firmRepo.GetAll(x => x.IsDelete != true);
                 return Ok(ApiResponseFactory.Success(dataFirm, ""));
             }
             catch (Exception ex)

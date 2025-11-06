@@ -19,7 +19,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
             try
             {
-                List<UnitCount> dataUnit = _unitcountRepo.GetAll(x => x.IsDeleted == false);
+                List<UnitCount> dataUnit = _unitcountRepo.GetAll(x => x.IsDeleted != true);
                 return Ok(new
                 {
                     status = 1,
