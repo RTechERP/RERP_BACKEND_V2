@@ -35,8 +35,4 @@ public partial class InventoryProject
     public int? CustomerID { get; set; }
 
     public string? Note { get; set; }
-
-    public decimal? QuantityOrigin { get; set; }
-
-    public int? ParentID { get; set; }
 }
