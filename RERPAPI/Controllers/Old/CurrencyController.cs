@@ -58,7 +58,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         // GET: api/currency/123
-        [HttpGet("{id}")]
+        [HttpGet("get-by-id")]
         public IActionResult GetByID(int id)
         {
             try
@@ -76,7 +76,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         // POST: api/currency
-        [HttpPost]
+        [HttpPost("save-data")]
         public async Task<IActionResult> Save([FromBody] Currency currency)
         {
             try
@@ -101,29 +101,5 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
-
-
-        // DELETE (soft delete): api/currency/123
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> SoftDelete(int id)
-        {
-            try
-            {
-                Currency c = _currencyRepo.GetByID(id);
-                if (c != null)
-                {
-                    c.IsDeleted = true;
-                    var success = await _currencyRepo.UpdateAsync(c);
-                    return Ok(ApiResponseFactory.Success(null, "Deleted successfully"));
-                }
-                else return NotFound(ApiResponseFactory.Fail(null, "Currency not found."));
-
-
-            }
-            catch (Exception ex)
-            {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
     }
 }

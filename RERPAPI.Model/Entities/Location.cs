@@ -21,4 +21,6 @@ public partial class Location
     public string? LocationName { get; set; }
 
     public int? ProductGroupID { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }
