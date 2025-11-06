@@ -19,5 +19,5 @@ public partial class EmployeeStatus
 
     public string? UpdatedBy { get; set; }
 
-    public bool? IsDeleted { get; set; }
+    public bool IsDeleted { get; set; }
 }

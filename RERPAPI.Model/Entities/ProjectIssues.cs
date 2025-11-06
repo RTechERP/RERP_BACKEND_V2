@@ -12,18 +12,18 @@ namespace RERPAPI.Model.Entities
     {
         public int ID { get; set; }
         public int? STT { get; set; }    
-        public int ProjectID { get; set; }//3
-        public string? Title { get; set; } //5
-        public string? Description { get; set; }//5
+        public int ProjectID { get; set; }
+        public string? Title { get; set; }
+        public string? Description { get; set; }
 
-        public byte? Probability { get; set; }//Khả năng xảy ra
+        public byte? Probability { get; set; }
         public byte? Impact { get; set; }
-        public byte? Status { get; set; }//Trạng thái: Tiếp nhận đang xử lí, đã xử lí
+        public byte? Status { get; set; }
 
-        public string? Solution { get; set; }//8--Giair phap
-        public int? DepartmentID { get; set; }//7
-        public string? MitigationPlan { get; set; }// Kế hoạch thực hiện
-        public string? FilePath { get; set; }//Đường dẫn file mô tả
+        public string? Solution { get; set; }
+        public int? DepartmentID { get; set; }
+        public string? MitigationPlan { get; set; }
+        public string? FilePath { get; set; }
 
         public bool? IsApprove { get; set; }
         public string? Note { get; set; }
