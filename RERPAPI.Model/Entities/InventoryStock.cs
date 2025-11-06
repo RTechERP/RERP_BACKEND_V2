@@ -33,6 +33,4 @@ public partial class InventoryStock
     public int? EmployeeIDRequest { get; set; }
 
     public bool? IsDeleted { get; set; }
-
-    public string? Note { get; set; }
 }

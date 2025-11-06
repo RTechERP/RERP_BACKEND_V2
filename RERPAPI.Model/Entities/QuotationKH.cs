@@ -62,6 +62,4 @@ public partial class QuotationKH
     public string? Company { get; set; }
 
     public bool? IsMerge { get; set; }
-
-    public bool IsDeleted { get; set; }
 }

@@ -32,4 +32,12 @@ public partial class Document
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
+
+    public int? SignedEmployeeID { get; set; }
+
+    public string? AffectedScope { get; set; }
+
+    public bool? IsOnWeb { get; set; }
+
+    public bool? IsPromulgated { get; set; }
 }
