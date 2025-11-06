@@ -12,6 +12,7 @@ using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
 using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net.Mime;
 using System.Security.Claims;
 using System.Text;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
@@ -115,7 +116,7 @@ namespace RERPAPI.Controllers
         [HttpGet("current-user")]
         public IActionResult GetCurrentUser()
         {
-           
+
             try
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
@@ -272,7 +273,8 @@ namespace RERPAPI.Controllers
                         // Tạo tên file unique
                         var fileExtension = Path.GetExtension(file.FileName);
                         var originalFileName = Path.GetFileNameWithoutExtension(file.FileName);
-                        var uniqueFileName = $"{originalFileName}_{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid().ToString("N")[..8]}{fileExtension}";
+                        //var uniqueFileName = $"{originalFileName}_{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid().ToString("N")[..8]}{fileExtension}";originalFileName}_{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid().ToString("N")[..8]}{fileExtension}";
+                        var uniqueFileName = originalFileName;
                         var fullPath = Path.Combine(targetFolder, uniqueFileName);
 
                         // Lưu file
@@ -435,5 +437,51 @@ namespace RERPAPI.Controllers
         //        return BadRequest(new { status = 0, message = ex.Message, error = ex.ToString() });
         //    }
         //}
+
+        [HttpGet("download")]
+        public IActionResult DownloadFile([FromQuery] string path)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(path))
+                    return BadRequest("File path is required.");
+
+                if (!System.IO.File.Exists(path))
+                    return NotFound("File not found.");
+
+                // Lấy tên file từ đường dẫn
+                var fileName = Path.GetFileName(path);
+
+                // Đọc file thành byte[]
+                var fileBytes = System.IO.File.ReadAllBytes(path);
+
+                // Xác định kiểu content (MIME)
+                var contentType = GetContentType(path);
+
+                // Trả file về client
+                return File(fileBytes, contentType, fileName);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error downloading file: {ex.Message}");
+            }
+        }
+
+        // Hàm phụ: xác định ContentType theo phần mở rộng file
+        private string GetContentType(string path)
+        {
+            var ext = Path.GetExtension(path).ToLowerInvariant();
+            return ext switch
+            {
+                ".txt" => MediaTypeNames.Text.Plain,
+                ".pdf" => MediaTypeNames.Application.Pdf,
+                ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                ".xls" => "application/vnd.ms-excel",
+                ".csv" => "text/csv",
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                _ => MediaTypeNames.Application.Octet
+            };
+        }
     }
 }
