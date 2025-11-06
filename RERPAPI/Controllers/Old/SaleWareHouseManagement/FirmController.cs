@@ -1,18 +1,18 @@
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
-namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
+namespace RERPAPI.Controllers.SaleWareHouseManagement
 {
     [Route("api/[controller]")]
     [ApiController]
     public class FirmController : ControllerBase
     {
         FirmRepo _firmRepo = new FirmRepo();
-
         [HttpGet("")]
-        public IActionResult GetFirms()
+        public IActionResult getDataFirm()
         {
             try
             {
@@ -21,54 +21,32 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+                return Ok(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
             }
         }
-
-        [HttpGet("{id}")]
-        public IActionResult GetFirmById(int id)
+        [HttpPost("save-data")]
+        public async Task<IActionResult> saveDataFirm([FromBody] List<Firm> dtos)
         {
             try
             {
-                var firm = _firmRepo.GetByID(id);
-                if (firm == null)
+                foreach (var dto in dtos)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy hãng"));
                 }
 
-                return Ok(ApiResponseFactory.Success(firm, ""));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
+                }
+                return Ok(new
+                {
+                    status = 1,
+                    message = "Thêm hãng thành công!",
 
-        [HttpGet("check-code")]
-        public IActionResult CheckFirmCodeExists(string firmCode, int? id = null)
-        {
-            try
-            {
-                bool exists = _firmRepo.CheckFirmCodeExists(firmCode, id);
-                return Ok(ApiResponseFactory.Success(exists, ""));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
+                });
 
-        [HttpPost("")]
-        public async Task<IActionResult> SaveFirm([FromBody] Firm firm)
-        {
-            try
-            {
-                if (firm.ID <= 0)
-                    await _firmRepo.CreateAsync(firm);
-                else
-                    await _firmRepo.UpdateAsync(firm);
-
-                return Ok(ApiResponseFactory.Success(null, "Lưu hãng thành công!"));
             }
             catch (Exception ex)
             {

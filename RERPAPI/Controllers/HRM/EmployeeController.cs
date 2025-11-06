@@ -3,7 +3,7 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
-namespace RERPAPI.Controllers
+namespace RERPAPI.Controllers.HRM
 {
     [Route("api/[controller]")]
     [ApiController]

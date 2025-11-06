@@ -27,14 +27,21 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
                 if (warehousecode == "HN")
                 {
-                    //update isvible ngày 13/06/2025
-                    data = _productgroupRepo.GetAll().Where(p => p.IsVisible == isvisible || !isvisible).ToList();
+                    data = _productgroupRepo.GetAll()
+                        .Where(p => p.IsVisible == isvisible || !isvisible)
+                        .OrderByDescending(p => p.IsVisible)
+                        .ThenBy(p => p.ID)                  
+                        .ToList();
                 }
                 else
                 {
-                    //update 17/07/25 them truong hop warehousecode=HCM
-                    data = _productgroupRepo.GetAll().Where(p => (p.IsVisible == isvisible || !isvisible) && !excludedIds.Contains(p.ID)).ToList();
+                    data = _productgroupRepo.GetAll()
+                        .Where(p => (p.IsVisible == isvisible || !isvisible) && !excludedIds.Contains(p.ID))
+                        .OrderByDescending(p => p.IsVisible)
+                        .ThenBy(p => p.ID)
+                        .ToList();
                 }
+
 
                 return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công!"));
             }

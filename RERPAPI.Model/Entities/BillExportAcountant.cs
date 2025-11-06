@@ -24,4 +24,6 @@ public partial class BillExportAcountant
     public string? CreatedBy { get; set; }
 
     public string? UpdatedBy { get; set; }
+
+    public string? InvoiceNumber { get; set; }
 }
