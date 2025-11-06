@@ -62,9 +62,9 @@ public partial class POKHDetail
 
     public string? GuestCode { get; set; }
 
-    public decimal? QtyTT { get; set; }
+    public int? QtyTT { get; set; }
 
-    public decimal? QtyCL { get; set; }
+    public int? QtyCL { get; set; }
 
     public bool? IsExport { get; set; }
 
@@ -72,7 +72,7 @@ public partial class POKHDetail
 
     public string? UserReceiver { get; set; }
 
-    public decimal? QtyRequest { get; set; }
+    public int? QtyRequest { get; set; }
 
     public decimal? NetUnitPrice { get; set; }
 
@@ -85,6 +85,8 @@ public partial class POKHDetail
     public int? ProjectPartListID { get; set; }
 
     public string? Spec { get; set; }
+
+    public bool? IsDeleted { get; set; }
 
     public bool? IsDelivered { get; set; }
 }
