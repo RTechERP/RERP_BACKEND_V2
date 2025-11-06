@@ -18,4 +18,6 @@ public partial class ProjectPartlistPurchaseRequestType
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
+
+    public string? RequestTypeCode { get; set; }
 }
