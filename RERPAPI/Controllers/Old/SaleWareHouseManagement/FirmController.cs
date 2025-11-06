@@ -16,12 +16,8 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
         {
             try
             {
-                List<Firm> dataFirm = _firmRepo.GetAll();
-                return Ok(new
-                {
-                    status = 1,
-                    data = dataFirm,
-                });
+                List<Firm> dataFirm = _firmRepo.GetAll(x => x.IsDelete != true);
+                return Ok(ApiResponseFactory.Success(dataFirm, ""));
             }
             catch (Exception ex)
             {
@@ -40,8 +36,8 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             {
                 foreach (var dto in dtos)
                 {
-                    if (dto.ID <= 0) await _firmRepo.CreateAsync(dto);
-                    else await _firmRepo.UpdateAsync(dto);
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy hãng"));
+                }
 
                 }
                 return Ok(new
@@ -54,13 +50,32 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        [HttpPost("delete-multiple")]
+        public async Task<IActionResult> DeleteFirm([FromBody] List<int> ids)
+        {
+            try
+            {
+                foreach (var item in ids)
+                {
+                    var firm = await _firmRepo.GetByIDAsync(item);
+                    if (firm == null)
+                        return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy hãng có ID = {item}"));
+
+                    firm.IsDelete = true;
+                    await _firmRepo.UpdateAsync(firm);
+                }
+
+                return Ok(ApiResponseFactory.Success(null, "Xóa hãng thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
     }
 }

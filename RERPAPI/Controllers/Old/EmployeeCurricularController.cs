@@ -1,10 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using OfficeOpenXml;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using OfficeOpenXml;
-using System.Data;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -29,8 +28,8 @@ namespace RERPAPI.Controllers.Old
                 // Sử dụng SQLHelper cho stored procedure như trong projectSumary.txt
                 var result = SQLHelper<object>.ProcedureToList("spGetEmployeeCurricular",
                     new string[] { "@Month", "@Year", "@DepartmentID", "@EmployeeID" },
-                    new object[] { month == 0 ? DateTime.Now.Month : month, 
-                                  year == 0 ? DateTime.Now.Year : year, 
+                    new object[] { month == 0 ? DateTime.Now.Month : month,
+                                  year == 0 ? DateTime.Now.Year : year,
                                   departmentId, employeeId });
 
                 var data = SQLHelper<object>.GetListData(result, 0);
@@ -62,7 +61,7 @@ namespace RERPAPI.Controllers.Old
                         existing.Note = model.Note;
                         existing.UpdatedBy = model.UpdatedBy;
                         existing.UpdatedDate = DateTime.Now;
-                        
+
                         await _employeeCurricularRepo.UpdateAsync(existing);
                     }
                 }
@@ -83,7 +82,7 @@ namespace RERPAPI.Controllers.Old
                         existingRecord.Note = model.Note;
                         existingRecord.UpdatedBy = model.UpdatedBy;
                         existingRecord.UpdatedDate = DateTime.Now;
-                        
+
                         await _employeeCurricularRepo.UpdateAsync(existingRecord);
                     }
                     else
@@ -101,7 +100,7 @@ namespace RERPAPI.Controllers.Old
                             CreatedBy = model.CreatedBy,
                             CreatedDate = DateTime.Now
                         };
-                        
+
                         await _employeeCurricularRepo.CreateAsync(newRecord);
                     }
                 }
@@ -120,18 +119,18 @@ namespace RERPAPI.Controllers.Old
             try
             {
                 // Sử dụng SQLHelper.FindByExpression như trong projectSumary.txt
-                var employee = SQLHelper<EmployeeCurricular>.FindByAttribute("Code", employeeId.ToString()).FirstOrDefault();
+                var employee = _employeeCurricularRepo.GetAll(x => x.EmployeeID == employeeId);
                 if (employee != null)
                 {
                     var exists = _employeeCurricularRepo.GetAll()
-                        .Any(x => x.EmployeeID == employeeId && 
+                        .Any(x => x.EmployeeID == employeeId &&
                                  x.CurricularDay == curricularDay &&
                                  x.CurricularMonth == curricularMonth &&
                                  x.CurricularYear == curricularYear);
 
                     return Ok(ApiResponseFactory.Success(new { exists }, exists ? "Dữ liệu đã tồn tại!" : "Dữ liệu chưa tồn tại!"));
                 }
-                
+
                 return Ok(ApiResponseFactory.Success(new { exists = false }, "Nhân viên không tồn tại!"));
             }
             catch (Exception ex)
@@ -159,7 +158,7 @@ namespace RERPAPI.Controllers.Old
                     using (var package = new ExcelPackage(stream))
                     {
                         ExcelWorksheet worksheet;
-                        
+
                         if (string.IsNullOrEmpty(sheetName))
                         {
                             worksheet = package.Workbook.Worksheets.FirstOrDefault();
@@ -175,7 +174,7 @@ namespace RERPAPI.Controllers.Old
                         }
 
                         var rowCount = worksheet.Dimension?.Rows ?? 0;
-                        
+
                         // Assuming first row is header, start from row 2
                         for (int row = 2; row <= rowCount; row++)
                         {
@@ -223,7 +222,7 @@ namespace RERPAPI.Controllers.Old
                                     existingRecord.CurricularName = curricularName;
                                     existingRecord.UpdatedDate = DateTime.Now;
                                     existingRecord.UpdatedBy = "Excel Import";
-                                    
+
                                     await _employeeCurricularRepo.UpdateAsync(existingRecord);
                                     importResults.Add(new { Row = row, Action = "Updated", EmployeeCode = employeeCode });
                                 }
@@ -241,7 +240,7 @@ namespace RERPAPI.Controllers.Old
                                         CreatedDate = DateTime.Now,
                                         CreatedBy = "Excel Import"
                                     };
-                                    
+
                                     await _employeeCurricularRepo.CreateAsync(newRecord);
                                     importResults.Add(new { Row = row, Action = "Created", EmployeeCode = employeeCode });
                                 }
@@ -254,8 +253,8 @@ namespace RERPAPI.Controllers.Old
                     }
                 }
 
-                return Ok(ApiResponseFactory.Success(new 
-                { 
+                return Ok(ApiResponseFactory.Success(new
+                {
                     ImportedCount = importResults.Count,
                     ErrorCount = errorList.Count,
                     Results = importResults,
