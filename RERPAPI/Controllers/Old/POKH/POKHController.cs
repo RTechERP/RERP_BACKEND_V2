@@ -197,7 +197,7 @@ namespace RERPAPI.Controllers.Old.POKH
         {
             try
             {
-                POKH pokh = _pokhRepo.GetByID(id);
+                RERPAPI.Model.Entities.POKH pokh = _pokhRepo.GetByID(id);
                 return Ok(ApiResponseFactory.Success(pokh, ""));
             }
             catch (Exception ex)
@@ -478,7 +478,7 @@ namespace RERPAPI.Controllers.Old.POKH
             try
             {
                 // 1. Tạo mới POKH (bỏ ID cũ)
-                var newPOKH = new POKH
+                var newPOKH = new RERPAPI.Model.Entities.POKH
                 {
                     Status = dto.POKH.Status,
                     POCode = dto.POKH.POCode,

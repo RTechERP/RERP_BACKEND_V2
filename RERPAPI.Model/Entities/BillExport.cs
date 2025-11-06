@@ -79,7 +79,7 @@ public partial class BillExport
 
     public bool? IsDeleted { get; set; }
 
-    public int? BillImportID { get; set; }
+    public bool? BillImportID { get; set; }
 
     public int? WareHouseTranferID { get; set; }
 

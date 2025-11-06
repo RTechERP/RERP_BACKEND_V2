@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Controllers\Film\**" />
     <Compile Remove="Controllers\OfficeSuppliesManagement\**" />
     <Compile Remove="Controllers\Old\NewFolder1\**" />
     <Compile Remove="Controllers\Old\NewFolder2\**" />
@@ -16,6 +17,7 @@
     <Compile Remove="Controllers\ProjectManager\**" />
     <Compile Remove="Controllers\SaleWareHouseManagement\**" />
     <Compile Remove="Controllers\V2\**" />
+    <Content Remove="Controllers\Film\**" />
     <Content Remove="Controllers\OfficeSuppliesManagement\**" />
     <Content Remove="Controllers\Old\NewFolder1\**" />
     <Content Remove="Controllers\Old\NewFolder2\**" />
@@ -25,6 +27,7 @@
     <Content Remove="Controllers\ProjectManager\**" />
     <Content Remove="Controllers\SaleWareHouseManagement\**" />
     <Content Remove="Controllers\V2\**" />
+    <EmbeddedResource Remove="Controllers\Film\**" />
     <EmbeddedResource Remove="Controllers\OfficeSuppliesManagement\**" />
     <EmbeddedResource Remove="Controllers\Old\NewFolder1\**" />
     <EmbeddedResource Remove="Controllers\Old\NewFolder2\**" />
@@ -34,6 +37,7 @@
     <EmbeddedResource Remove="Controllers\ProjectManager\**" />
     <EmbeddedResource Remove="Controllers\SaleWareHouseManagement\**" />
     <EmbeddedResource Remove="Controllers\V2\**" />
+    <None Remove="Controllers\Film\**" />
     <None Remove="Controllers\OfficeSuppliesManagement\**" />
     <None Remove="Controllers\Old\NewFolder1\**" />
     <None Remove="Controllers\Old\NewFolder2\**" />
@@ -46,6 +50,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Controllers\BaseController.cs" />
     <Compile Remove="Controllers\DepartmentController.cs" />
     <Compile Remove="Controllers\HistoryProductRTCController.cs" />
     <Compile Remove="Controllers\KPIEmployeeTeamController.cs" />
@@ -55,8 +60,10 @@
     <Compile Remove="Controllers\Old\POKHController.cs" />
     <Compile Remove="Controllers\Old\POKH\POKHController.cs" />
     <Compile Remove="Controllers\Old\ProductRTCController.cs" />
+    <Compile Remove="Controllers\Old\SaleWareHouseManagement\ProductLocationController.cs" />
     <Compile Remove="Controllers\Old\TB\FirmController.cs" />
     <Compile Remove="Controllers\Old\VisionBase\CustomerController.cs" />
+    <Compile Remove="Controllers\PONCCController.cs" />
     <Compile Remove="Controllers\UsersController.cs" />
     <Compile Remove="Controllers\WareHouseController.cs" />
   </ItemGroup>
@@ -88,6 +95,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Controllers\Sale\" />
+    <Folder Include="Controllers\Purchase\" />
     <Folder Include="Controllers\Project\" />
     <Folder Include="Controllers\Sale\" />
     <Folder Include="Controllers\Purchase\" />

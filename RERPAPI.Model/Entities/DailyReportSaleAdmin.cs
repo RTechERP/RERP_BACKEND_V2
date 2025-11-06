@@ -34,4 +34,6 @@ public partial class DailyReportSaleAdmin
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
+
+    public int? ProjectID { get; set; }
 }

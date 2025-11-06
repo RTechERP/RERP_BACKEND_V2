@@ -42,6 +42,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         {
             try
             {
+                //TN.Binh update 19/10/25
                 foreach (var dto in dtos)
                 {
                     if (!_unitcountRepo.ValidateCode(dto))

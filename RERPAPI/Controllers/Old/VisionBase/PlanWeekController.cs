@@ -1,6 +1,7 @@
 ﻿using DocumentFormat.OpenXml.Office.CustomUI;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
@@ -83,6 +84,7 @@ namespace RERPAPI.Controllers.Old.VisionBase
                     else
                     {
                         await _weekPlanRepo.CreateAsync(weekPlan);
+                        
                     }
                 }
                 return Ok(ApiResponseFactory.Success(null, "Lưu thành công!"));
@@ -92,5 +94,25 @@ namespace RERPAPI.Controllers.Old.VisionBase
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpPost("delete")]
+        public async Task<IActionResult> Delete(PlanWeekDTO dto)
+        {
+            try
+            {
+                List<WeekPlan> weekPlans = _weekPlanRepo.GetAll().Where(x => x.UserID == dto.userId && x.DatePlan == dto.datePlan).ToList();
+
+                if (!weekPlans.Any())
+                    return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy kế hoạch để xoá!"));
+                    await _weekPlanRepo.DeleteRangeAsync(weekPlans);
+                
+
+                return Ok(ApiResponseFactory.Success(null, "Xoá thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
     }
 }
