@@ -18,7 +18,7 @@ namespace RERPAPI.Controllers.PurchasingManagement
         {
             try
             {
-                List<RulePay> data = _rulePayRepo.GetAll().Where(r => r.IsDeleted == false).ToList();
+                List<RulePay> data = _rulePayRepo.GetAll().Where(r => r.IsDeleted != true).ToList();
                 return Ok(ApiResponseFactory.Success(data, "Lấy danh sách RulePay thành công."));
             }
             catch (Exception ex)
@@ -97,7 +97,7 @@ namespace RERPAPI.Controllers.PurchasingManagement
                     }
                     else
                     {
-                        return BadRequest(ApiResponseFactory.Fail(null, "Mã code đã tồn tại."));
+                        return BadRequest(ApiResponseFactory.Fail(null, "Mã đã tồn tại."));
                     }
 
                     return Ok(ApiResponseFactory.Success(dst, "Lưu dữ liệu thành công."));
