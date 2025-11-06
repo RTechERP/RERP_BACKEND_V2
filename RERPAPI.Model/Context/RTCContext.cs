@@ -1340,6 +1340,9 @@ public partial class RTCContext : DbContext
 
             entity.HasIndex(e => e.TradePriceDetailID, "Index_BillExportDetail_TradePriceDetailID");
 
+            entity.Property(e => e.BillExportDetail1)
+                .HasMaxLength(550)
+                .HasColumnName("BillExportDetail");
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.ExpectReturnDate).HasColumnType("datetime");
@@ -4305,12 +4308,16 @@ public partial class RTCContext : DbContext
             entity.ToTable("HistoryMoneyPO");
 
             entity.Property(e => e.BankName).HasMaxLength(50);
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.InvoiceNo).HasMaxLength(50);
             entity.Property(e => e.Money).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.MoneyDate).HasColumnType("datetime");
             entity.Property(e => e.MoneyNotPaid).HasColumnType("decimal(18, 0)");
             entity.Property(e => e.MoneyVAT).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.Note).HasMaxLength(250);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
             entity.Property(e => e.VAT).HasColumnType("decimal(18, 2)");
         });
 
@@ -6738,7 +6745,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.LeadTime).HasMaxLength(100);
             entity.Property(e => e.Maker).HasMaxLength(150);
             entity.Property(e => e.Quantity).HasColumnType("decimal(18, 2)");
-            entity.Property(e => e.StatusRequest).HasComment("1:Yêu cầu báo giá; 2:Đã báo giá");
+            entity.Property(e => e.StatusRequest).HasComment("1:Yêu cầu báo giá; 2:Đã báo giá;3: Từ chối báo giá");
             entity.Property(e => e.TotaMoneyVAT).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.TotalImportPrice).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.TotalPrice).HasColumnType("decimal(18, 2)");
@@ -6887,6 +6894,9 @@ public partial class RTCContext : DbContext
 
             entity.Property(e => e.CreatedBy).HasMaxLength(50);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.RequestTypeCode)
+                .HasMaxLength(150)
+                .IsUnicode(false);
             entity.Property(e => e.RequestTypeName).HasMaxLength(50);
             entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
@@ -9555,6 +9565,7 @@ public partial class RTCContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.SpecificDestinationAddress).HasMaxLength(500);
+            entity.Property(e => e.StartTimeActual).HasColumnType("datetime");
             entity.Property(e => e.TimeNeedPresent).HasColumnType("datetime");
             entity.Property(e => e.TimeReturn).HasColumnType("datetime");
             entity.Property(e => e.UpdatedBy)
