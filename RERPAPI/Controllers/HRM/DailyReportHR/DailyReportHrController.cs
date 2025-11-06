@@ -13,7 +13,7 @@ namespace RERPAPI.Controllers.HRM.DailyReportHR
     {
         [HttpPost("get-daily-report-hr")]
         public IActionResult GetDailyReportHr([FromBody] DailyReportHrRequestParam request)
-            {
+        {
             try
             {
                 // Hôm nay
@@ -36,18 +36,18 @@ namespace RERPAPI.Controllers.HRM.DailyReportHR
                 var dataTech = SQLHelper<object>.ProcedureToList(
                     "spGetDailyReportTechnical",
                     new[] { "@DateStart", "@DateEnd", "@UserID", "@Keyword", "@DepartmentID" },
-                    new object[] { ds, de, request.userID, keyword, request.departmentID }
+                    new object[] { ds, de, request.userID, keyword, 6 }
                 );
 
-                var technical = dataTech.Count > 0 ? dataTech[0] : new List<dynamic>();
 
+                var technical = SQLHelper<object>.GetListData(dataTech, 0);
                 var dataHr = SQLHelper<object>.ProcedureToList(
                     "spGetDailyReportHR",
                     new[] { "@DateStart", "@DateEnd", "@Keyword", "@EmployeeID" },
                     new object[] { ds, de, keyword, request.employeeID }
                 );
 
-                var hrAll = dataHr.Count > 0 ? dataHr[0] : new List<dynamic>();
+                var hrAll = SQLHelper<object>.GetListData(dataHr, 0);
 
                 var dataFilm = hrAll
                     .Where(x =>
