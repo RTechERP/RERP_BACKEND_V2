@@ -33,6 +33,7 @@ namespace RERPAPI.Controllers.Old.Asset
         TSTypeAssetPersonalRepo _typeAssetPersonalRepo = new TSTypeAssetPersonalRepo();
         vUserGroupLinksRepo _vUserGroupLinksRepo = new vUserGroupLinksRepo();
         //Lấy danh sách loại tài sản
+        [RequiresPermission("N23,N52,N1,N67,N36")]
         [HttpGet("get-type-asset-personal")]
         public IActionResult GetVehicleRepairType()
         {
