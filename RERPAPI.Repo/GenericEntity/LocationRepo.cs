@@ -1,13 +1,17 @@
 ﻿using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class LocationRepo:GenericRepo<Location>
+    public class LocationRepo : GenericRepo<Location>
     {
+        public bool CheckLocationCodeExists(string locationCode, int? id = null)
+        {
+            var query = GetAll(x => x.LocationCode.ToUpper() == locationCode.ToUpper() && x.IsDeleted == false);
+            if (id.HasValue)
+            {
+                query = query.Where(x => x.ID != id.Value).ToList();
+            }
+            return query.Any();
+        }
     }
 }

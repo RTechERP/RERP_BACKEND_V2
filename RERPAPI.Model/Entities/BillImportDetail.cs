@@ -74,4 +74,28 @@ public partial class BillImportDetail
     public DateTime? DateSomeBill { get; set; }
 
     public bool? IsDeleted { get; set; }
+
+    public string? UnitName { get; set; }
+
+    /// <summary>
+    /// Số ngày công nợ
+    /// </summary>
+    public int? DPO { get; set; }
+
+    /// <summary>
+    /// Ngày tới hạn
+    /// </summary>
+    public DateTime? DueDate { get; set; }
+
+    /// <summary>
+    /// Tiền thuế giảm
+    /// </summary>
+    public decimal? TaxReduction { get; set; }
+
+    /// <summary>
+    /// Chi phí FE
+    /// </summary>
+    public decimal? COFormE { get; set; }
+
+    public bool? IsNotKeep { get; set; }
 }
