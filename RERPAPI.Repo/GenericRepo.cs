@@ -417,7 +417,7 @@ namespace RERPAPI.Repo
                 throw new Exception($"Error deleting by attribute: {ex.Message}", ex);
             }
         }
-        public async Task<int> UpdateRangeAsync<TValue>(Expression<Func<T, bool>> predicate, Dictionary<Expression<Func<T, object>>,TValue> updatedFields)
+        public async Task<int> UpdateRangeAsync<TValue>(Expression<Func<T, bool>> predicate, Dictionary<Expression<Func<T, object>>, TValue> updatedFields)
         {
             try
             {
@@ -426,10 +426,10 @@ namespace RERPAPI.Repo
 
 
 
-        //public void SetClaim(Dictionary<string, string> claim)
-        //{
-        //    db.Claim = claim;
-        //}
+                //public void SetClaim(Dictionary<string, string> claim)
+                //{
+                //    db.Claim = claim;
+                //}
                 foreach (var entity in entities)
                 {
                     foreach (var field in updatedFields)
@@ -455,7 +455,7 @@ namespace RERPAPI.Repo
             }
         }
 
-        public int UpdateFieldByAttribute<TValue>(Expression<Func<T, bool>> predicate,Dictionary<Expression<Func<T, object>>, TValue> updatedFields)
+        public int UpdateFieldByAttribute<TValue>(Expression<Func<T, bool>> predicate, Dictionary<Expression<Func<T, object>>, TValue> updatedFields)
         {
             try
             {

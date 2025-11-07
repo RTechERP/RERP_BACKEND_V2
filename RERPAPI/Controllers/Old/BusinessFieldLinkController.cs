@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
@@ -38,7 +37,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                var businessFieldLink = SQLHelper<BusinessFieldLink>.FindByAttribute("CustomerID", customerID);
+                var businessFieldLink = businessFieldLinkRepo.GetAll(x => x.CustomerID == customerID);
                 if (businessFieldLink == null)
                 {
                     return NotFound(new
