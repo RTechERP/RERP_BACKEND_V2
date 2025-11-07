@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -77,7 +76,7 @@ namespace RERPAPI.Controllers.Old
 
                 foreach (var employeeID in request.ListEmployeeID)
                 {
-                    var existingEmployeeApprove = SQLHelper<EmployeeApprove>.FindByAttribute("EmployeeID", employeeID);
+                    var existingEmployeeApprove = _employeeApproveRepo.GetAll(x => x.EmployeeID == employeeID);
                     if (existingEmployeeApprove.Any())
                     {
                         //return BadRequest(new

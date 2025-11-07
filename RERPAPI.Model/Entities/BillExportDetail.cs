@@ -77,5 +77,7 @@ public partial class BillExportDetail
 
     public bool? IsDeleted { get; set; }
 
+    public string? BillExportDetail1 { get; set; }
+
     public string? CustomerResponse { get; set; }
 }

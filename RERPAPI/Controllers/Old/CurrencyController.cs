@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -15,7 +15,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                List<Currency> currencies = _currencyRepo.GetAll();
+                List<Currency> currencies = _currencyRepo.GetAll(x => x.IsDeleted == false);
 
                 return Ok(new
                 {
@@ -58,7 +58,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         // GET: api/currency/123
-        [HttpGet("{id}")]
+        [HttpGet("get-by-id")]
         public IActionResult GetByID(int id)
         {
             try
@@ -76,14 +76,14 @@ namespace RERPAPI.Controllers.Old
         }
 
         // POST: api/currency
-        [HttpPost]
+        [HttpPost("save-data")]
         public async Task<IActionResult> Save([FromBody] Currency currency)
         {
             try
             {
                 if (currency == null)
-                    return Ok(ApiResponseFactory.Fail(null, "Invalid data"));
-
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu của loại tiền"));
+                if (_currencyRepo.CheckExist(currency) && currency.IsDeleted != true) return Ok(ApiResponseFactory.Fail(null, "Mã loại tiền đã có trong hệ thống!"));
                 if (currency.ID <= 0)
                 {
                     await _currencyRepo.CreateAsync(currency);
@@ -101,29 +101,5 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
-
-
-        // DELETE (soft delete): api/currency/123
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> SoftDelete(int id)
-        {
-            try
-            {
-                Currency c = _currencyRepo.GetByID(id);
-                if (c != null)
-                {
-                    c.IsDeleted = true;
-                    var success = await _currencyRepo.UpdateAsync(c);
-                    return Ok(ApiResponseFactory.Success(null, "Deleted successfully"));
-                }
-                else return NotFound(ApiResponseFactory.Fail(null, "Currency not found."));
-
-
-            }
-            catch (Exception ex)
-            {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
     }
 }
