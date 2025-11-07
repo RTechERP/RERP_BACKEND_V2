@@ -52,7 +52,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         PositionInternalRepo _positionInternalRepo = new PositionInternalRepo();
         EmployeeWorkingProcessRepo _employeeWorkingProcessRepo = new EmployeeWorkingProcessRepo();
         UnitCountRepo _unitCountRepo = new UnitCountRepo();
-        EmployeeProjectTypeRepo projectEmployeeProjectTypeRepo = new EmployeeProjectTypeRepo();
+
         #endregion
 
         #region Hàm dùng chung
@@ -1910,26 +1910,6 @@ namespace RERPAPI.Controllers.Old.ProjectManager
             }
         }
         #endregion
-
-
-        //  lấy danh sách leader của loại dự án
-        [HttpGet("getemployeeprojecttype/{projectTypeId}")]
-        public async Task<IActionResult> getemployeeprojecttype(int projectTypeId)
-        {
-            try
-            {
-                var employeeProjectType = SQLHelper<object>.ProcedureToList("spGetEmployeeProjectType",
-                                            new string[] { "@ProjectTypeID" },
-                                            new object[] { projectTypeId });
-                var data = SQLHelper<object>.GetListData(employeeProjectType, 0);
-                return Ok(ApiResponseFactory.Success(data, ""))
-                ;
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
         [HttpPost("saveemployeeprojecttype")]
         public async Task<IActionResult> saveemployeeprojecttype(List<EmployeeProjectType> employeeProjectType)
         {
@@ -1955,20 +1935,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [HttpGet("get-project-employee-filter/{departmentID}")]
-        public async Task<IActionResult> getprojectemployeefilter(int departmentID)
-        {
-            try
-            {
-                var employees = SQLHelper<object>.ProcedureToList("spGetEmployee", new string[] { "@DepartmentID", "@Status" }, new object[] { departmentID, 0 });
-                var data = SQLHelper<object>.GetListData(employees, 0);
-                return Ok(ApiResponseFactory.Success(data, ""));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }     
+       
     }
 
     #endregion
