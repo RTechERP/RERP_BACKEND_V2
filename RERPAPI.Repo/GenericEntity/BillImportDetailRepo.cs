@@ -51,10 +51,11 @@ namespace RERPAPI.Repo.GenericEntity
                 // xử lý liên kết hóa đơn
                 await _invoicelinkrepo.InvoiceLinkForBillImport(detail);
                 // Cập nhật trạng thái
-                SQLHelper<dynamic>.ExcuteScalar("spUpdateReturnedStatusForBillExportDetail",
+                SQLHelper<dynamic>.ProcedureToList("spUpdateReturnedStatusForBillExportDetail",
                     new string[] { "@BillImportID", "@Approved" },
                     new object[] { detail.BillImportID ?? billImportId, 0 });
-                var listDetails = SQLHelper<BillImportDetail>.FindByAttribute("BillImportID", detail.BillImportID ?? billImportId);
+                //var listDetails = SQLHelper<BillImportDetail>.FindByAttribute("BillImportID", detail.BillImportID ?? billImportId);
+                var listDetails = new List<BillImportDetail>();
                 string poNCCDetailID = string.Join(",", listDetails.Select(x => x.PONCCDetailID));
                 SQLHelper<dynamic>.ExcuteProcedure("spUpdateStatusPONCC",
                     new string[] { "@PONCCDetailID" },
