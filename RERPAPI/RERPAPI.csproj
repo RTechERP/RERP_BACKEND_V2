@@ -103,4 +103,11 @@
     <Folder Include="Uploads\POKH\NB16111\" />
   </ItemGroup>
 
+	<ItemGroup>
+		<None Update="jsonProvinces.txt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+
 </Project>
