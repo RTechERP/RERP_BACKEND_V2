@@ -16,4 +16,5 @@ public partial class ProjectType
     public string? RootFolder { get; set; }
 
     public int? ApprovedTBPID { get; set; }
+    public bool? IsDeleted { get; set; }
 }
