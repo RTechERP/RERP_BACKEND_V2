@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -128,6 +129,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        //dành cho kiểu dự án
 
         // Danh sách loại dự án 
         [HttpGet("get-project-types")]
@@ -144,6 +146,200 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        //Lưu folder trong mục project type
+        [HttpPost("save-folder-project")]
+        public async Task<IActionResult> Savefolder([FromBody] ProjectTreeFolderDTO prjFolder)
+        {
+
+            try
+            {
+                if (prjFolder.ID > 0)
+                {
+                    // UPDATE
+                    //ProjectTreeFolder projectFolder = projectTreeFolderRepo.GetByID(prjFolder.ID);
+                    //if (projectFolder == null)
+                    //{
+                    //    return NotFound(new { status = 0, message = "ProjectFolder not found." });
+                    //}
+
+                    //// Cập nhật thông tin
+                    //projectFolder.ProjectTypeID = null;
+                    //projectFolder.FolderName = projectFolder.FolderName;
+                    //projectFolder.ParentID = projectFolder.ParentID;
+                    //projectFolder.ProjectTypeID = projectFolder.ProjectTypeID;
+
+                    //projectTreeFolderRepo.Update(projectFolder);
+                    //List<ProjectTreeFolder> childProjectFolder = projectTreeFolderRepo.GetAll().Where(x => x.ParentID == prjFolder.ID).ToList();
+                    //foreach (var pro in childProjectFolder)
+                    //{
+                    //    pro.ProjectTypeID = null;
+                    //    projectTreeFolderRepo.Update(pro);
+                    //}
+                    await projectTreeFolderRepo.UpdateAsync(prjFolder);
+                }
+                else
+                {
+                    await projectTreeFolderRepo.CreateAsync(prjFolder);
+                }
+                return Ok(ApiResponseFactory.Success(prjFolder, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpPost("delete-project-folder")]
+        public async Task<IActionResult> DeleteFolder([FromBody] ProjectTreeFolderDTO prjFolder)
+        {
+
+            try
+            {
+                prjFolder.IsDeleted = true;
+                await projectTreeFolderRepo.UpdateAsync(prjFolder);
+                List<ProjectTreeFolder> data = projectTreeFolderRepo.GetAll(x => x.ParentID == prjFolder.ID);
+                if (data != null)
+                {
+                    foreach(var item in data)
+                    {
+                        item.IsDeleted = true;
+                        await projectTreeFolderRepo.UpdateAsync(item);
+                    }
+                }
+                return Ok(ApiResponseFactory.Success(prjFolder, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        //lưu loại dự ánd
+        [HttpPost("saveprojecttype")]
+        public async Task<IActionResult> saveprojecttype([FromBody] ProjectTypeDTO prjType)
+        {
+
+            try
+            {
+                List<ProjectType> check = projectTypeRepo.GetAll(x => x.ProjectTypeCode == prjType.ProjectTypeCode && x.ID != prjType.ID && x.IsDeleted == false);
+                if (check.Count > 0)
+                {
+                    return Ok(new
+                    {
+                        status = 2,
+                        message ="Mã kiểu dự án đã tồn tại"
+                    });
+                }
+                if (prjType.ID > 0)
+                {
+                    //// UPDATE
+                    //ProjectType projectType = projectTypeRepo.GetByID(prjType.ID);
+                    //if (projectType == null)
+                    //{
+                    //    return NotFound(new { status = 0, message = "ProjectType not found." });
+                    //}
+                    //// Cập nhật thông tin
+                    //projectType.ProjectTypeCode = prjType.ProjectTypeCode;
+                    //projectType.ProjectTypeName = prjType.ProjectTypeName;
+                    //projectType.ParentID = prjType.ParentID;
+                    //projectType.RootFolder = string.Empty;
+                    //projectType.IsDeleted = prjType.IsDeleted;
+                    //projectType.ApprovedTBPID = 0;//Update phụ thuộc vào phân quyền người dùng
+
+                    //projectTypeRepo.Update(projectType);
+
+                    await projectTypeRepo.UpdateAsync(prjType);
+                }
+                else
+                {
+                    //// CREATE
+                    //ProjectType projectType = new ProjectType
+                    //{
+                    //    ProjectTypeCode = prjType.ProjectTypeCode,
+                    //    ProjectTypeName = prjType.ProjectTypeName,
+                    //    IsDeleted = false,
+                    //    ParentID = prjType.ParentID,
+                    //    RootFolder = string.Empty,
+                    //    ApprovedTBPID = 0//Update phụ thuộc vào phân quyền người dùng
+                    //};
+
+                    await projectTypeRepo.CreateAsync(prjType);
+                }
+
+                return Ok(ApiResponseFactory.Success(prjType, "Lưu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        //hàm lấy kiểu dự án theo id
+        [HttpGet("get-project-types/{id}")]
+        public async Task<IActionResult> getprojecttypes(int id)
+        {
+            try
+            {
+                List<ProjectType> projectTypes = projectTypeRepo.GetAll().Where(x => x.ID == id && x.IsDeleted == false).ToList();
+                return Ok(new
+                {
+                    status = 1,
+                    data = projectTypes
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
+        }
+        //hàm lấy kiểu dự án cha 
+        [HttpGet("get-parent-project-types")]
+        public async Task<IActionResult> getparentprojecttypes()
+        {
+            try
+            {
+                List<ProjectType> projectTypes = projectTypeRepo.GetAll().Where(x => x.ID != 4 && x.ParentID == 0 && x.IsDeleted == false && x.ParentID == 0).ToList();
+                return Ok(ApiResponseFactory.Success(projectTypes, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("getprojecttypesbycondition")]
+        public async Task<IActionResult> getprojecttypesbycondition([FromQuery] string keyword = "")
+        {
+            try
+            {
+                var projectTypes = SQLHelper<object>.ProcedureToList("spGetProjectType", new string[] { "@FilterText" }, new object[] { keyword.Trim() });
+                return Ok(ApiResponseFactory.Success(projectTypes.FirstOrDefault(), ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        //Danh sách thư mục theo loại dự án
+        [HttpGet("getfoldersbyprojecttypes/{id}")]
+        public async Task<IActionResult> getfoldersbyprojecttypes(int id)
+        {
+            try
+            {
+                var foldersByProjectTypeDTOs = SQLHelper<object>.ProcedureToList("sp_GetProjectTypeTreeFolder", new string[] { "@ProjectTypeID" }, new object[] { id });
+                Console.Write(foldersByProjectTypeDTOs.FirstOrDefault());
+                var rs = SQLHelper<object>.GetListData(foldersByProjectTypeDTOs, 0);
+                return Ok(ApiResponseFactory.Success(rs, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        //end
 
         // Danh sách loại dự án ProjectTypeLink
         [HttpGet("get-project-type-links")]
@@ -1772,7 +1968,8 @@ namespace RERPAPI.Controllers.Old.ProjectManager
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-        }
+        }     
     }
+
     #endregion
 }
