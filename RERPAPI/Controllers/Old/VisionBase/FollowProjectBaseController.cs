@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using ClosedXML.Excel;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
@@ -8,6 +9,7 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
+using System.Data;
 using System.Globalization;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
@@ -184,6 +186,7 @@ namespace RERPAPI.Controllers.KhoBaseManager
                 var data = _projectRepo.GetAll()
                     .Select(p => new
                     {
+                        p.ID,
                         p.ProjectCode,
                         p.ProjectName,
                         ProjectFullName = p.ProjectCode + "_" + p.ProjectName
@@ -482,6 +485,308 @@ namespace RERPAPI.Controllers.KhoBaseManager
             }
 
         }
+
+        [HttpGet("exportfollowprojectbase")]
+        public IActionResult ExportFollowProjectBase(
+                                                    int followProjectBaseID = 0,
+                                                    int projectID = 0,
+                                                    int userID = 0,
+                                                    int customerID = 0,
+                                                    int pm = 0,
+                                                    int warehouseID = 1,
+                                                    string filterText = "",
+                                                    string fileNameElement = "")
+        {
+            try
+            {
+                // 1. Lấy dữ liệu từ stored procedure với SQLHelper
+                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetFollowProjectBaseExport",
+                    new string[] { "@FollowProjectBaseID", "@ProjectID", "@UserID", "@CustomerID", "@PM", "@WarehouseID", "@FilterText" },
+                    new object[] { followProjectBaseID, projectID, userID, customerID, pm, warehouseID, filterText });
+
+                // Lấy result set đầu tiên (dữ liệu chính)
+                var data = SQLHelper<dynamic>.GetListData(list, 0);
+
+                // Nếu cần result set thứ 2 (ví dụ: data Sale/PM)
+                // var data1 = SQLHelper<dynamic>.GetListData(list, 1);
+
+                if (data == null || data.Count == 0)
+                {
+                    return BadRequest(new { message = "Không có dữ liệu để xuất!" });
+                }
+
+                // 2. Tạo workbook với ClosedXML
+                using (var workbook = new XLWorkbook())
+                {
+                    var worksheet = workbook.Worksheets.Add("Follow Dự Án");
+
+                    // 3. Thêm header
+                    var headers = new string[]
+                    {
+                        "Mã dự án", "Tên dự án", "Sale phụ trách", "PM", "Đối tác(KH)", "End User",
+                        "Trạng thái", "Ngày bắt đầu", "Loại dự án", "Hãng",
+                        "Khả năng có PO",
+                        "Dự Kiến: Ngày lên PA", "Dự Kiến: Ngày báo giá", "Dự Kiến: Ngày PO", "Dự Kiến: Ngày kết thúc",
+                        "Thực tế: Ngày lên PA", "Thực tế: Ngày báo giá", "Thực tế: Ngày PO", "Thực tế: Ngày kết thúc",
+                        "Tổng báo giá chưa VAT", "Người phụ trách chính", "Ghi chú",
+                        "Sale: Ngày đã làm", "Sale: Việc đã làm", "Sale: Ngày sẽ làm", "Sale: Việc sẽ làm",
+                        "PM: Ngày đã làm", "PM: Việc đã làm", "PM: Ngày sẽ làm", "PM: Việc sẽ làm"
+                    };
+
+                    // Style cho header
+                    for (int i = 0; i < headers.Length; i++)
+                    {
+                        var cell = worksheet.Cell(1, i + 1);
+                        cell.Value = headers[i];
+                        cell.Style.Font.Bold = true;
+                        cell.Style.Fill.BackgroundColor = XLColor.LightGray;
+                        cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                        cell.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                        cell.Style.Alignment.WrapText = true;
+
+                    }
+                    worksheet.Row(1).AdjustToContents();
+
+                    // 4. Thêm dữ liệu - QUAN TRỌNG: Dùng dynamic thay vì DataRow
+                    int row = 2;
+                    foreach (dynamic item in data)
+                    {
+                        worksheet.Cell(row, 1).Value = GetDynamicValue(item, "ProjectCode");
+                        worksheet.Cell(row, 2).Value = GetDynamicValue(item, "ProjectName");
+                        worksheet.Cell(row, 3).Value = GetDynamicValue(item, "FullName");
+                        worksheet.Cell(row, 4).Value = GetDynamicValue(item, "ProjectManager");
+                        worksheet.Cell(row, 5).Value = GetDynamicValue(item, "CustomerName");
+                        worksheet.Cell(row, 6).Value = GetDynamicValue(item, "EndUser");
+                        worksheet.Cell(row, 7).Value = GetDynamicValue(item, "ProjectStatusName");
+
+                        // Ngày bắt đầu
+                        SetDateCellDynamic(worksheet, row, 8, item, "ProjectStartDate");
+
+                        worksheet.Cell(row, 9).Value = GetDynamicValue(item, "ProjectTypeName");
+                        worksheet.Cell(row, 10).Value = GetDynamicValue(item, "FirmName");
+                        worksheet.Cell(row, 11).Value = GetDynamicValue(item, "PossibilityPO");
+
+                        // Dự kiến (Expected)
+                        SetDateCellDynamic(worksheet, row, 12, item, "ExpectedPlanDate");
+                        SetDateCellDynamic(worksheet, row, 13, item, "ExpectedQuotationDate");
+                        SetDateCellDynamic(worksheet, row, 14, item, "ExpectedPODate");
+                        SetDateCellDynamic(worksheet, row, 15, item, "ExpectedProjectEndDate");
+
+                        // Thực tế (Reality)
+                        SetDateCellDynamic(worksheet, row, 16, item, "RealityPlanDate");
+                        SetDateCellDynamic(worksheet, row, 17, item, "RealityQuotationDate");
+                        SetDateCellDynamic(worksheet, row, 18, item, "RealityPODate");
+                        SetDateCellDynamic(worksheet, row, 19, item, "RealityProjectEndDate");
+
+                        // Follow dự án
+                        SetNumericCellDynamic(worksheet, row, 20, item, "TotalWithoutVAT");
+                        worksheet.Cell(row, 21).Value = GetDynamicValue(item, "ProjectContactName");
+                        worksheet.Cell(row, 22).Value = GetDynamicValue(item, "Note");
+                        worksheet.Cell(row, 22).Style.Alignment.WrapText = true;
+
+                        // Sale báo cáo
+                        SetDateCellDynamic(worksheet, row, 23, item, "ImplementationDateSale");
+                        worksheet.Cell(row, 24).Value = GetDynamicValue(item, "WorkDoneSale");
+                        worksheet.Cell(row, 24).Style.Alignment.WrapText = true;
+                        SetDateCellDynamic(worksheet, row, 25, item, "ExpectedDateSale");
+                        worksheet.Cell(row, 26).Value = GetDynamicValue(item, "WorkWillDoSale");
+                        worksheet.Cell(row, 26).Style.Alignment.WrapText = true;
+
+                        // PM báo cáo
+                        SetDateCellDynamic(worksheet, row, 27, item, "ImplementationDatePM");
+                        worksheet.Cell(row, 28).Value = GetDynamicValue(item, "WorkDonePM");
+                        worksheet.Cell(row, 28).Style.Alignment.WrapText = true;
+                        SetDateCellDynamic(worksheet, row, 29, item, "ExpectedDatePM");
+                        worksheet.Cell(row, 30).Value = GetDynamicValue(item, "WorkWillDoPM");
+                        worksheet.Cell(row, 30).Style.Alignment.WrapText = true;
+
+                        row++;
+                    }
+
+                    // === GROUP VÀ MERGE THEO MÃ DỰ ÁN ===
+
+                    // Các cột cần merge (theo thứ tự cột bạn tạo header)
+                    int[] mergeCols = { 1, 2, 11, 20, 21, 22 };
+
+                    // Nhóm dữ liệu theo mã dự án
+                    var groups = data
+                        .GroupBy(x => GetDynamicValue(x, "ProjectCode"))
+                        .ToList();
+
+                    // Dòng bắt đầu dữ liệu (bỏ qua header)
+                    int currentRow = 2;
+
+                    foreach (var group in groups)
+                    {
+                        int groupStart = currentRow;
+                        int groupCount = group.Count();
+                        int groupEnd = groupStart + groupCount - 1;
+
+                        // Với mỗi cột cần merge
+                        foreach (int colIndex in mergeCols)
+                        {
+                            var range = worksheet.Range(groupStart, colIndex, groupEnd, colIndex);
+                            if (groupCount > 1)
+                            {
+                                range.Merge();
+                                range.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                                range.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                            }
+                        }
+
+                        // Di chuyển row pointer sang nhóm kế tiếp
+                        currentRow += groupCount;
+                    }
+
+
+                    // 5. Format columns
+                    worksheet.Columns().AdjustToContents();
+                    foreach (var column in worksheet.Columns())
+                    {
+                        if (column.Width > 50) column.Width = 50;
+                        if (column.Width < 10) column.Width = 10;
+                    }
+
+                    // 6. Freeze header row
+                    worksheet.SheetView.FreezeRows(1);
+
+                    // 7. Add AutoFilter
+                    worksheet.RangeUsed().SetAutoFilter();
+
+                    // 8. Tạo tên file
+                    string fileName = $"FollowProject_{fileNameElement}_{DateTime.Now:ddMMyy}.xlsx";
+
+                    // 9. Save to stream và return
+                    using (var stream = new MemoryStream())
+                    {
+                        workbook.SaveAs(stream);
+                        stream.Position = 0;
+
+                        return File(stream.ToArray(),
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            fileName);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi xuất Excel: " + ex.Message, stack = ex.StackTrace });
+            }
+        }
+
+        // ===== HELPER METHODS - Thêm vào controller =====
+
+        /// <summary>
+        /// Lấy giá trị từ dynamic object
+        /// </summary>
+        private string GetDynamicValue(dynamic item, string propertyName)
+        {
+            try
+            {
+                // Thử truy cập như Dictionary
+                if (item is IDictionary<string, object> dict)
+                {
+                    return dict.ContainsKey(propertyName) ? dict[propertyName]?.ToString() ?? "" : "";
+                }
+
+                // Thử reflection cho dynamic object
+                var type = item.GetType();
+                var property = type.GetProperty(propertyName);
+                if (property != null)
+                {
+                    return property.GetValue(item)?.ToString() ?? "";
+                }
+
+                return "";
+            }
+            catch
+            {
+                return "";
+            }
+        }
+
+        /// <summary>
+        /// Set date cell từ dynamic object
+        /// </summary>
+        private void SetDateCellDynamic(IXLWorksheet worksheet, int row, int col, dynamic item, string propertyName)
+        {
+            try
+            {
+                object value = null;
+
+                if (item is IDictionary<string, object> dict)
+                {
+                    value = dict.ContainsKey(propertyName) ? dict[propertyName] : null;
+                }
+                else
+                {
+                    var type = item.GetType();
+                    var property = type.GetProperty(propertyName);
+                    value = property?.GetValue(item);
+                }
+
+                if (value != null && value != DBNull.Value)
+                {
+                    if (value is DateTime date)
+                    {
+                        var cell = worksheet.Cell(row, col);
+                        cell.Value = date;
+                        cell.Style.DateFormat.Format = "dd/mm/yyyy";
+                        cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    }
+                    else if (DateTime.TryParse(value.ToString(), out DateTime parsedDate))
+                    {
+                        var cell = worksheet.Cell(row, col);
+                        cell.Value = parsedDate;
+                        cell.Style.DateFormat.Format = "dd/mm/yyyy";
+                        cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore error
+            }
+        }
+
+        /// <summary>
+        /// Set numeric cell từ dynamic object
+        /// </summary>
+        private void SetNumericCellDynamic(IXLWorksheet worksheet, int row, int col, dynamic item, string propertyName)
+        {
+            try
+            {
+                object value = null;
+
+                if (item is IDictionary<string, object> dict)
+                {
+                    value = dict.ContainsKey(propertyName) ? dict[propertyName] : null;
+                }
+                else
+                {
+                    var type = item.GetType();
+                    var property = type.GetProperty(propertyName);
+                    value = property?.GetValue(item);
+                }
+
+                if (value != null && value != DBNull.Value)
+                {
+                    if (decimal.TryParse(value.ToString(), out decimal number))
+                    {
+                        var cell = worksheet.Cell(row, col);
+                        cell.Value = number;
+                        cell.Style.NumberFormat.Format = "#,##0";
+                        cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore error
+            }
+        }
+
+
         [HttpPost("importexcel")]
         public IActionResult ImportExcel([FromBody] List<Dictionary<string, object>> projects)
         {

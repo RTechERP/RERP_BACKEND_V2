@@ -67,6 +67,23 @@ namespace RERPAPI.Controllers.Old.VisionBase
             {
                 foreach (var item in model)
                 {
+
+                    var validate = item;
+
+                    List<string> errors = new List<string>();
+
+                    if (validate.Result?.Length > 500)
+                        errors.Add("Kết quả mong đợi không được vượt quá 500 ký tự");
+                    if (validate.ContentPlan?.Length > 500)
+                        errors.Add("Nội dung không được vượt quá 500 ký tự");
+
+
+                    if (errors.Any())
+                    {
+                        var errorMessage = "Dữ liệu không hợp lệ: " + string.Join("; ", errors);
+                        return Ok(ApiResponseFactory.Fail(null, errorMessage, new { Errors = errors }));
+                    }
+
                     WeekPlan weekPlan = item.ID > 0 ? _weekPlanRepo.GetByID(item.ID) : new WeekPlan();
                     weekPlan.ID = item.ID;
                     weekPlan.DatePlan = item.DatePlan;
@@ -77,15 +94,23 @@ namespace RERPAPI.Controllers.Old.VisionBase
                     weekPlan.CreatedBy = item.CreatedBy;
                     weekPlan.UpdatedDate = DateTime.Now;
                     weekPlan.UpdatedBy = item.UpdatedBy;
-                    if (weekPlan.ID > 0)
+                    if (string.IsNullOrWhiteSpace(weekPlan.ContentPlan) && string.IsNullOrWhiteSpace(weekPlan.Result))
                     {
-                        await _weekPlanRepo.UpdateAsync(weekPlan);
+                        await _weekPlanRepo.DeleteAsync(weekPlan.ID);
                     }
                     else
                     {
-                        await _weekPlanRepo.CreateAsync(weekPlan);
-                        
+                        if (weekPlan.ID > 0)
+                        {
+                            await _weekPlanRepo.UpdateAsync(weekPlan);
+                        }
+                        else
+                        {
+                            await _weekPlanRepo.CreateAsync(weekPlan);
+
+                        }
                     }
+
                 }
                 return Ok(ApiResponseFactory.Success(null, "Lưu thành công!"));
             }
