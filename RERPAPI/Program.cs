@@ -143,15 +143,30 @@ app.MapControllers();
 
 
 //Config static file
+
+app.Use(async (context, next) =>
+{
+    context.Request.Path = context.Request.Path.Value?.ToLower();
+    await next();
+});
+
+
 app.UseStaticFiles();
-//List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();
-//foreach (var item in staticFiles)
-//{
-//    app.UseStaticFiles(new StaticFileOptions()
-//    {
-//        FileProvider = new PhysicalFileProvider(item.PathFull),
-//        RequestPath = new PathString($"/api/{item.PathName.Trim().ToLower()}")
-//    });
-//}
+List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();
+foreach (var item in staticFiles)
+{
+    app.UseStaticFiles(new StaticFileOptions()
+    {
+        FileProvider = new PhysicalFileProvider($@"\\192.168.1.190\Software"),
+        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+    });
+
+
+    app.UseDirectoryBrowser(new DirectoryBrowserOptions
+    {
+        FileProvider = new PhysicalFileProvider(item.PathFull),
+        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+    });
+}
 
 app.Run();
