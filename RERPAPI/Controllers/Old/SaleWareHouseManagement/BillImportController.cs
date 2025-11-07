@@ -552,7 +552,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     return BadRequest(new { status = 0, message = "Mã QR không được để trống." });
 
                 // 1. Tìm phiếu có mã code
-                var bills = SQLHelper<BillImport>.FindByAttribute("BillImportCode", $"'{code}'");
+                var bills = _billImportRepo.GetAll(x => x.BillImportCode == code);
                 var bill = bills.FirstOrDefault();
 
                 if (bill == null)

@@ -1,10 +1,4 @@
-using Microsoft.EntityFrameworkCore;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
@@ -14,13 +8,13 @@ namespace RERPAPI.Repo.GenericEntity
         {
             try
             {
-                var query = table.Where(f => f.FirmCode == firmCode && f.IsDelete != true);
-                
+                var query = table.Where(f => f.FirmCode.ToUpper() == firmCode.ToUpper() && f.IsDelete != true);
+
                 if (id.HasValue)
                 {
                     query = query.Where(f => f.ID != id.Value);
                 }
-                
+
                 return query.Any();
             }
             catch (Exception ex)

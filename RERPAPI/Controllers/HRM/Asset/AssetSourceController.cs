@@ -4,7 +4,6 @@ using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.Asset;
-using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
 
 namespace RERPAPI.Controllers.Old.Asset
 {
@@ -17,9 +16,12 @@ namespace RERPAPI.Controllers.Old.Asset
         TSSourceAssetsRepo _tsSourceAssetRepo = new TSSourceAssetsRepo();
         [HttpGet("get-source-asset")]
         public IActionResult GetSourceAssets()
-        {            try
+        {
+            try
             {
-                List<TSSourceAsset> tsSources = _tsSourceAssetRepo.GetAll(x=>x.IsDeleted!=true).OrderByDescending(x => x.CreatedDate).ToList()  ;
+                List<TSSourceAsset> tsSources = _tsSourceAssetRepo.GetAll(
+                    x => x.IsDeleted != true
+                    ).OrderByDescending(x => x.CreatedDate).ToList();
                 return Ok(new
                 {
                     status = 1,
@@ -43,7 +45,8 @@ namespace RERPAPI.Controllers.Old.Asset
         {
             try
             {
-                if (sourceasset!= null && sourceasset.IsDeleted != true)
+                if (sourceasset != null && sourceasset.IsDeleted != true
+                    )
                 {
                     if (!_tsSourceAssetRepo.Validate(sourceasset, out string message))
                         return BadRequest(ApiResponseFactory.Fail(null, message));

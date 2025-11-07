@@ -175,9 +175,15 @@ namespace RERPAPI.Controllers.Old.Asset
                     foreach (var item in asset.tSAssetManagements)
                     {
                         if (item.ID <= 0)
+                        {
+                            item.StatusID = 1;
+                            item.Status = "Chưa sử dụng";
+
                             await _tsAssetManagementRepo.CreateAsync(item);
+                        }
+
                         else
-                            _tsAssetManagementRepo.UpdateAsync( item);
+                            _tsAssetManagementRepo.UpdateAsync(item);
                     }
                 }
                 if (asset.tSAllocationEvictionAssets != null && asset.tSAllocationEvictionAssets.Any())
@@ -187,7 +193,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tSAllocationEvictionRepo.CreateAsync(item);
                         else
-                            _tSAllocationEvictionRepo.UpdateAsync( item);
+                            _tSAllocationEvictionRepo.UpdateAsync(item);
                     }
                 }
                 if (asset.tSLostReportAsset != null)
@@ -195,14 +201,14 @@ namespace RERPAPI.Controllers.Old.Asset
                     if (asset.tSLostReportAsset.ID <= 0)
                         await _tsLostReportRepo.CreateAsync(asset.tSLostReportAsset);
                     else
-                        _tsLostReportRepo.UpdateAsync( asset.tSLostReportAsset);
+                        _tsLostReportRepo.UpdateAsync(asset.tSLostReportAsset);
                 }
                 if (asset.tSReportBrokenAsset != null)
                 {
                     if (asset.tSReportBrokenAsset.ID <= 0)
                         await _tsReportBrokenAssetRepo.CreateAsync(asset.tSReportBrokenAsset);
                     else
-                        _tsReportBrokenAssetRepo.UpdateAsync( asset.tSReportBrokenAsset);
+                        _tsReportBrokenAssetRepo.UpdateAsync(asset.tSReportBrokenAsset);
                 }
                 if (asset.tSLiQuidationAsset != null)
                 {
@@ -218,7 +224,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tSRepairAssetRepo.CreateAsync(item);
                         else
-                            _tSRepairAssetRepo.UpdateAsync( item);
+                            _tSRepairAssetRepo.UpdateAsync(item);
                     }
                 }
                 return Ok(new { status = 1, message = "Lưu dữ liệu thành công." });
