@@ -9,8 +9,6 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class EmployeeApproveRepo : GenericRepo<EmployeeApprove>
     {
-        public EmployeeApproveRepo() : base()
-        {
-        }
+
     }
 }

@@ -59,7 +59,6 @@ namespace RERPAPI.Model.Context
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             string loginName = CurrentUser.LoginName;
-            //var claim = _userPermissionService.Claims;
             var entries = ChangeTracker.Entries()
                                        .Where(x => x.Entity != null && (x.State == EntityState.Added || x.State == EntityState.Modified));
 
