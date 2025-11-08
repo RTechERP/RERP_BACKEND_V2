@@ -10,6 +10,7 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
+using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Mime;
 using System.Security.Claims;
@@ -19,6 +20,7 @@ namespace RERPAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+
     public class HomeController : ControllerBase
     {
         private readonly JwtSettings _jwtSettings;
@@ -481,5 +483,33 @@ namespace RERPAPI.Controllers
                 _ => MediaTypeNames.Application.Octet
             };
         }
+
+
+        //[HttpGet("open-folder")]
+        //[Authorize]
+        //public IActionResult OpenFolder(string path)
+        //{
+        //    try
+        //    {
+        //        if (string.IsNullOrWhiteSpace(path)) return BadRequest(ApiResponseFactory.Fail(null, $"Vui lòng nhập đường dẫn thư mục!"));
+
+        //        // Kiểm tra thư mục tồn tại
+        //        if (!Directory.Exists(path)) return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy thư mục [{path}]!"));
+
+        //        // Mở thư mục bằng File Explorer (chạy trên máy server)
+        //        Process.Start(new ProcessStartInfo()
+        //        {
+        //            FileName = "explorer.exe",
+        //            Arguments = path,
+        //            UseShellExecute = true
+        //        });
+
+        //        return Ok(ApiResponseFactory.Success(path, ""));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex,ex.Message));
+        //    }
+        //}
     }
 }
