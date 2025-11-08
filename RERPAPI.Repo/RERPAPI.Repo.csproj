@@ -19,6 +19,7 @@
     <Compile Remove="GenericEntity\BillImportDetailSerialNumberRepo.cs" />
     <Compile Remove="GenericEntity\BillImportTechDetailSerialRepo.cs" />
     <Compile Remove="GenericEntity\HistoryDeleteBillRepo.cs" />
+    <Compile Remove="GenericEntity\ProductRTCQRCodeRepo.cs" />
     <Compile Remove="GenericEntity\ProductRTCRepo.cs" />
     <Compile Remove="GenericEntity\SupplierSaleRepo.cs" />
   </ItemGroup>
