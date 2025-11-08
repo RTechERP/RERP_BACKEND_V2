@@ -1,18 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Azure.Core;
-using RERPAPI.Model.Context;
+﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using static System.Runtime.CompilerServices.RuntimeHelpers;
 
 namespace RERPAPI.Repo.GenericEntity
 {
     public class HRHiringRequestRepo : GenericRepo<HRHiringRequest>
     {
-        
+        public HRHiringRequestRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
+
         public int GetSTT()
         {
             try

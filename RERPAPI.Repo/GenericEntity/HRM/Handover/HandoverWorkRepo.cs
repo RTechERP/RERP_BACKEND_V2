@@ -1,13 +1,12 @@
-﻿using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Repo.GenericEntity.BBNV
 {
-    public class HandoverWorkRepo: GenericRepo<HandoverWork>
+    public class HandoverWorkRepo : GenericRepo<HandoverWork>
     {
+        public HandoverWorkRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
     }
 }
