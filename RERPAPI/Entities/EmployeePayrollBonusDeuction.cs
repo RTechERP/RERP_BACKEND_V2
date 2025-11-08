@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace RERPAPI.Model.Entities;
+namespace RERPAPI.Entities;
 
 public partial class EmployeePayrollBonusDeuction
 {
@@ -67,5 +67,6 @@ public partial class EmployeePayrollBonusDeuction
     public string? CreatedBy { get; set; }
 
     public string? UpdatedBy { get; set; }
+
     public bool? IsDeleted { get; set; }
 }
