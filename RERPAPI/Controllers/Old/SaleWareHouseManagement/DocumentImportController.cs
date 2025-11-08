@@ -11,7 +11,12 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     [ApiController]
     public class DocumentImportController : ControllerBase
     {
-        DocumentImportRepo _documentImportRepo = new DocumentImportRepo();
+        private readonly DocumentImportRepo _documentImportRepo;
+
+        public DocumentImportController(DocumentImportRepo documentImportRepo)
+        {
+            _documentImportRepo = documentImportRepo;
+        }
         [HttpGet("")]
         public IActionResult getDocumentImportByPO(int poNCCId,int billImportID)
         {

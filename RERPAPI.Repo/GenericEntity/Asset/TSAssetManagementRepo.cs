@@ -1,14 +1,19 @@
-﻿using RERPAPI.Model.DTO;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Repo.GenericEntity.Asset
 {
-    public class TSAssetManagementRepo : GenericRepo<TSAssetManagement>
+    public class TSAssetManagementRepo:GenericRepo<TSAssetManagement>
     {
         public TSAssetManagementRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
-
         public string GenerateAssetCode(DateTime? assetdate)
         {
             var date = assetdate.Value.Date;
@@ -26,7 +31,7 @@ namespace RERPAPI.Repo.GenericEntity.Asset
             if (!string.IsNullOrEmpty(latestCode) && latestCode.Length >= baseCode.Length + 5)
             {
                 numberPart = latestCode.Substring(latestCode.Length - 5);
-            }
+            }       
             int nextNumber = int.TryParse(numberPart, out int num) ? num + 1 : 1;
             string numberStr = nextNumber.ToString("D5");
             string newCode = $"{baseCode}{numberStr}";
@@ -42,7 +47,7 @@ namespace RERPAPI.Repo.GenericEntity.Asset
                 message = $"Mã tài sản {item.TSAssetCode} đã tồn tại";
                 return false;
             }
-
+          
             return true;
         }
     }

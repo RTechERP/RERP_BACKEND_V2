@@ -6,12 +6,15 @@ namespace RERPAPI.Repo.GenericEntity
     public class VisitFactoryRepo : GenericRepo<VisitFactory>
     {
 
-        EmployeeRepo employeeRepo = new EmployeeRepo();
-        VisitFactoryDetailRepo visitFactoryDetailRepo = new VisitFactoryDetailRepo();
-        EmployeeSendEmailRepo sendEmailRepo = new EmployeeSendEmailRepo();
+        EmployeeRepo employeeRepo;
+        VisitFactoryDetailRepo visitFactoryDetailRepo;
+        EmployeeSendEmailRepo sendEmailRepo;
 
-        public VisitFactoryRepo(CurrentUser currentUser) : base(currentUser)
+        public VisitFactoryRepo(CurrentUser currentUser, EmployeeRepo employeeRepo, VisitFactoryDetailRepo visitFactoryDetailRepo, EmployeeSendEmailRepo employeeSendEmailRepo) : base(currentUser)
         {
+            this.employeeRepo = employeeRepo;
+            this.visitFactoryDetailRepo = visitFactoryDetailRepo;
+            this.sendEmailRepo = employeeSendEmailRepo;
         }
 
         public async Task SendEmail(VisitFactory visit)

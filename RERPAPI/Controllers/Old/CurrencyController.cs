@@ -9,7 +9,11 @@ namespace RERPAPI.Controllers.Old
     [ApiController]
     public class CurrencyController : ControllerBase
     {
-        CurrencyRepo _currencyRepo = new CurrencyRepo();
+        private CurrencyRepo _currencyRepo;
+        public CurrencyController(CurrencyRepo currencyRepo)
+        {
+            _currencyRepo = currencyRepo;
+        }   
         [HttpGet("get-all")]
         public IActionResult GetAll()
         {

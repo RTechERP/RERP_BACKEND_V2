@@ -1,5 +1,10 @@
-﻿using RERPAPI.Model.DTO;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using RERPAPI.Model.Entities;
+using System.Threading.Tasks;
+using RERPAPI.Model.DTO;
 
 namespace RERPAPI.Repo.GenericEntity.Asset
 {
@@ -9,7 +14,6 @@ namespace RERPAPI.Repo.GenericEntity.Asset
         public TSSourceAssetsRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
-
         public bool Validate(TSSourceAsset item, out string message)
         {
             message = "";

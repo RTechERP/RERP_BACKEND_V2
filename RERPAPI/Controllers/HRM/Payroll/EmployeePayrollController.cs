@@ -11,11 +11,25 @@ namespace RERPAPI.Controllers.Old
     [ApiController]
     public class EmployeePayrollController : Controller
     {
-        private EmployeePayrollRepo employeePayrollRepo = new EmployeePayrollRepo();
-        private EmployeePayrollDetailRepo employeePayrollDetailRepo = new EmployeePayrollDetailRepo();
-        private DepartmentRepo departmentRepo = new DepartmentRepo();
-        private EmployeePayrollBonusDeuctionRepo employeePayrollBonusDeuctionRepo = new EmployeePayrollBonusDeuctionRepo();
-        private EmployeeRepo employeeRepo = new EmployeeRepo();
+        private readonly EmployeePayrollRepo employeePayrollRepo;
+        private readonly EmployeePayrollDetailRepo employeePayrollDetailRepo;
+        private readonly DepartmentRepo departmentRepo;
+        private readonly EmployeePayrollBonusDeuctionRepo employeePayrollBonusDeuctionRepo;
+        private readonly EmployeeRepo employeeRepo;
+
+        public EmployeePayrollController(
+            EmployeePayrollRepo employeePayrollRepo,
+            EmployeePayrollDetailRepo employeePayrollDetailRepo,
+            DepartmentRepo departmentRepo,
+            EmployeePayrollBonusDeuctionRepo employeePayrollBonusDeuctionRepo,
+            EmployeeRepo employeeRepo)
+        {
+            this.employeePayrollRepo = employeePayrollRepo;
+            this.employeePayrollDetailRepo = employeePayrollDetailRepo;
+            this.departmentRepo = departmentRepo;
+            this.employeePayrollBonusDeuctionRepo = employeePayrollBonusDeuctionRepo;
+            this.employeeRepo = employeeRepo;
+        }
 
         [HttpGet("employee-payroll")]
         public async Task<IActionResult> getemployeepayroll(int year, string? keyWord, int page, int size)

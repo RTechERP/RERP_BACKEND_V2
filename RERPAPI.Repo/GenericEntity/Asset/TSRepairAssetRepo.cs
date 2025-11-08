@@ -1,4 +1,6 @@
-﻿using RERPAPI.Model.DTO;
+﻿using System;
+using System.Linq;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Repo.GenericEntity.Asset
@@ -8,7 +10,6 @@ namespace RERPAPI.Repo.GenericEntity.Asset
         public TSRepairAssetRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
-
         public object? GetLatestRepairByAssetManagementID(int assetManagementID)
         {
             return table

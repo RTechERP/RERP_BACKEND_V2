@@ -15,7 +15,11 @@ namespace RERPAPI.Controllers
     public class HistoryProductRTCController : ControllerBase
     {
         const int WAREHOUSE_ID = 1;
-        HistoryProductRTCRepo _historyRepo = new HistoryProductRTCRepo();
+        HistoryProductRTCRepo _historyRepo;
+        public HistoryProductRTCController(HistoryProductRTCRepo historyRepo)
+        {
+            _historyRepo = historyRepo;
+        }
 
         [Authorize]
         [HttpGet("get-all")]

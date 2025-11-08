@@ -9,7 +9,12 @@ namespace RERPAPI.Controllers.Old
     [Route("api/[controller]")]
     public class EmployeeScheduleWorkController : ControllerBase
     {
-        EmployeeScheduleWorkRepo employeeScheduleWorkRepo = new EmployeeScheduleWorkRepo();
+        private readonly EmployeeScheduleWorkRepo _employeeScheduleWorkRepo;
+
+        public EmployeeScheduleWorkController(EmployeeScheduleWorkRepo employeeScheduleWorkRepo)
+        {
+            _employeeScheduleWorkRepo = employeeScheduleWorkRepo;
+        }       
 
         [HttpGet("schedule-work")]
         public IActionResult GetEmployeeScheduleWork(int month, int year)
@@ -78,10 +83,10 @@ namespace RERPAPI.Controllers.Old
 
                 if(employeeScheduleWork.ID <= 0)
                 {
-                    await employeeScheduleWorkRepo.CreateAsync(employeeScheduleWork);
+                    await _employeeScheduleWorkRepo.CreateAsync(employeeScheduleWork);
                 } else
                 {
-                    await employeeScheduleWorkRepo.UpdateAsync(employeeScheduleWork);
+                    await _employeeScheduleWorkRepo.UpdateAsync(employeeScheduleWork);
                 }
                 return Ok(new
                 {

@@ -1,16 +1,23 @@
-﻿using RERPAPI.Model.Common;
+﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System.Diagnostics.Metrics;
 using System.Text.RegularExpressions;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 namespace RERPAPI.Repo.GenericEntity
 {
     public class ProjectPartListRepo : GenericRepo<ProjectPartList>
     {
-        private ProjectPartlistPriceRequestRepo _priceRepo = new ProjectPartlistPriceRequestRepo();
-        private ProjectPartlistPurchaseRequestRepo _purchaseRepo = new ProjectPartlistPurchaseRequestRepo();
-        private ProductSaleRepo _productSaleRepo = new ProductSaleRepo();
-        ProjectPartlistVersionRepo _versionRepo = new ProjectPartlistVersionRepo();
+        private readonly ProjectPartlistPriceRequestRepo _priceRepo;
+        private readonly ProjectPartlistPurchaseRequestRepo _purchaseRepo;
+        private readonly ProductSaleRepo _productSaleRepo;
+        private readonly ProjectPartlistVersionRepo _versionRepo;
+
+        public ProjectPartListRepo(CurrentUser currentUser, ProjectPartlistPriceRequestRepo projectPartlistPriceRequestRepo, ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo, ProductSaleRepo productSaleRepo, ProjectPartlistVersionRepo projectPartlistVersionRepo) : base(currentUser)
+        {
+            _priceRepo = projectPartlistPriceRequestRepo;
+            _purchaseRepo = projectPartlistPurchaseRequestRepo;
+            _productSaleRepo = productSaleRepo;
+            _versionRepo = projectPartlistVersionRepo;
+        }
+
         public int getSTT(int projectVersionID)
         {
             List<ProjectPartList> listPartList = GetAll(x => x.ProjectPartListVersionID == projectVersionID);

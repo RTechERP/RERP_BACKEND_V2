@@ -20,16 +20,32 @@ namespace RERPAPI.Controllers.Old.POKH
     public class POKHController : ControllerBase
     {
         private readonly string _uploadPath;
-        POKHRepo _pokhRepo = new POKHRepo();
-        POKHDetailRepo _pokhDetailRepo = new POKHDetailRepo();
-        POKHDetailMoneyRepo _pokhDetailMoneyRepo = new POKHDetailMoneyRepo();
-        POKHFilesRepo _pokhFilesRepo = new POKHFilesRepo();
-        ProjectRepo _projectRepo = new ProjectRepo();
-        CurrencyRepo _currencyRepo = new CurrencyRepo();
-        ProductGroupRepo _productGroupRepo = new ProductGroupRepo();
+        private readonly POKHRepo _pokhRepo;
+        private readonly POKHDetailRepo _pokhDetailRepo;
+        private readonly POKHDetailMoneyRepo _pokhDetailMoneyRepo;
+        private readonly POKHFilesRepo _pokhFilesRepo;
+        private readonly ProjectRepo _projectRepo;
+        private readonly CurrencyRepo _currencyRepo;
+        private readonly ProductGroupRepo _productGroupRepo;
 
-        public POKHController(IWebHostEnvironment environment)
+        public POKHController(
+            IWebHostEnvironment environment,
+            POKHRepo pokhRepo,
+            POKHDetailRepo pokhDetailRepo,
+            POKHDetailMoneyRepo pokhDetailMoneyRepo,
+            POKHFilesRepo pokhFilesRepo,
+            ProjectRepo projectRepo,
+            CurrencyRepo currencyRepo,
+            ProductGroupRepo productGroupRepo)
         {
+            _pokhRepo = pokhRepo;
+            _pokhDetailRepo = pokhDetailRepo;
+            _pokhDetailMoneyRepo = pokhDetailMoneyRepo;
+            _pokhFilesRepo = pokhFilesRepo;
+            _projectRepo = projectRepo;
+            _currencyRepo = currencyRepo;
+            _productGroupRepo = productGroupRepo;
+
             _uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "POKH");
             if (!Directory.Exists(_uploadPath))
             {

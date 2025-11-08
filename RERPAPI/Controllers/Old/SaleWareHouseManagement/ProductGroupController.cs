@@ -13,8 +13,13 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     [ApiController]
     public class ProductGroupController : ControllerBase
     {
-        ProductGroupRepo _productgroupRepo = new ProductGroupRepo();
-        ProductGroupWareHouseRepo _productgroupwarehouseRepo = new ProductGroupWareHouseRepo();
+        private readonly ProductGroupRepo _productgroupRepo;
+        private readonly ProductGroupWareHouseRepo _productgroupwarehouseRepo;
+        public ProductGroupController(ProductGroupRepo productgroupRepo, ProductGroupWareHouseRepo productgroupwarehouseRepo)
+        {
+            _productgroupRepo = productgroupRepo;
+            _productgroupwarehouseRepo = productgroupwarehouseRepo;
+        }
 
         [HttpGet("")]
         public IActionResult getProductGroup(bool isvisible = true, string warehousecode="")

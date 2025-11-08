@@ -8,8 +8,13 @@ namespace RERPAPI.Controllers.Old
     [Route("api/[controller]")]
     public class PositionController : ControllerBase
     {
-        PositionContractRepo positionContractRepo = new PositionContractRepo();
-        PositionInternalRepo positionInternalRepo = new PositionInternalRepo();
+        private readonly PositionContractRepo positionContractRepo;
+        private readonly PositionInternalRepo positionInternalRepo;
+        public PositionController(PositionContractRepo positionContractRepo, PositionInternalRepo positionInternalRepo)
+        {
+            this.positionContractRepo = positionContractRepo;
+            this.positionInternalRepo = positionInternalRepo;
+        }
         [HttpGet("position-contract")]
         public IActionResult GetPositionContract()
         {

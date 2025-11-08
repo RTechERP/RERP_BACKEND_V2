@@ -18,9 +18,20 @@ namespace RERPAPI.Controllers.Project
     [ApiController]
     public class ProjectItemNewController : ControllerBase
     {
-        ProjectItemProblemRepo _projectItemProblemRepo = new ProjectItemProblemRepo();
-        ProjectItemRepo _projectItemRepo = new ProjectItemRepo();
-        ProjectItemFileRepo _projectItemFileRepo = new ProjectItemFileRepo();
+        private readonly ProjectItemProblemRepo _projectItemProblemRepo;
+        private readonly ProjectItemRepo _projectItemRepo;
+        private readonly ProjectItemFileRepo _projectItemFileRepo;
+
+        public ProjectItemNewController(
+            ProjectItemProblemRepo projectItemProblemRepo,
+            ProjectItemRepo projectItemRepo,
+            ProjectItemFileRepo projectItemFileRepo
+        )
+        {
+            _projectItemProblemRepo = projectItemProblemRepo;
+            _projectItemRepo = projectItemRepo;
+            _projectItemFileRepo = projectItemFileRepo;
+        }
         [Authorize]
         //Hàm check truy cập cho hạng mục công việc 
         [HttpGet("get-project-employee-permission")]

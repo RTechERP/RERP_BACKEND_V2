@@ -11,7 +11,12 @@ namespace RERPAPI.Controllers.Old
     [Route("api/[controller]")]
     public class EmployeeWorkingProcessController : Controller
     {
-        EmployeeWorkingProcessRepo employeeWorkingProcessRepo = new EmployeeWorkingProcessRepo();
+        private readonly EmployeeWorkingProcessRepo _employeeWorkingProcessRepo;
+
+        public EmployeeWorkingProcessController(EmployeeWorkingProcessRepo employeeWorkingProcessRepo)
+        {
+            _employeeWorkingProcessRepo = employeeWorkingProcessRepo;
+        }   
         [HttpGet]
         public async Task<IActionResult> GetAll(string? filterText, DateTime dateStart, DateTime dateEnd, int pageNumber, int pageSize)
         {
@@ -42,7 +47,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                var workingProcess = employeeWorkingProcessRepo.GetByID(id);
+                var workingProcess = _employeeWorkingProcessRepo.GetByID(id);
                 if (workingProcess == null)
                 {
                     return NotFound(new
@@ -75,7 +80,7 @@ namespace RERPAPI.Controllers.Old
             {
                 if(employeeWorkingProcess.ID <= 0)
                 {
-                    await employeeWorkingProcessRepo.CreateAsync(employeeWorkingProcess);
+                    await _employeeWorkingProcessRepo.CreateAsync(employeeWorkingProcess);
                 } else
                 {
                     if(employeeWorkingProcess.IsApproved == true)
@@ -86,7 +91,7 @@ namespace RERPAPI.Controllers.Old
                             message = "Không thể cập nhật hoặc xóa quá trình làm việc đã được phê duyệt."
                         });
                     }
-                    await employeeWorkingProcessRepo.UpdateAsync(employeeWorkingProcess);
+                    await _employeeWorkingProcessRepo.UpdateAsync(employeeWorkingProcess);
                 }
                 return Ok(new
                 {

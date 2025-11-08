@@ -10,8 +10,12 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     [ApiController]
     public class UnitCountController : ControllerBase
     {
-        UnitCountRepo _unitcountRepo = new UnitCountRepo();
+        private readonly UnitCountRepo _unitcountRepo;
 
+        public UnitCountController(UnitCountRepo unitcountRepo)
+        {
+            _unitcountRepo = unitcountRepo;
+        }
 
         [HttpGet("")]
         public IActionResult getUnitCount()
