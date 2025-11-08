@@ -18,7 +18,12 @@ namespace RERPAPI.Controllers.Old.V2
         private BillImportDetailSerialNumberModulaLocationRepo _serialNumberImportModulaRepo = new BillImportDetailSerialNumberModulaLocationRepo();
         private BillExportDetailSerialNumberModulaLocationRepo _serialNumberExportModulaRepo = new BillExportDetailSerialNumberModulaLocationRepo();
 
-        private HistoryProductRTCRepo _historyRepo = new HistoryProductRTCRepo();
+        private HistoryProductRTCRepo _historyRepo;
+
+        public ModulaLocationController(HistoryProductRTCRepo historyRepo)
+        {
+            _historyRepo = historyRepo;
+        }
 
         /// <summary>
         /// 1: Kho sale

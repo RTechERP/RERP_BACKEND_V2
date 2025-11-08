@@ -25,18 +25,21 @@ namespace RERPAPI.Controllers
     {
         private readonly JwtSettings _jwtSettings;
         private readonly RTCContext _context;
+        private readonly IConfiguration _configuration;
 
         //UserRepo _userRepo = new UserRepo();
         vUserGroupLinksRepo _vUserGroupLinksRepo = new vUserGroupLinksRepo();
 
-        EmployeeOnLeaveRepo _onLeaveRepo = new EmployeeOnLeaveRepo();
+        private readonly EmployeeOnLeaveRepo _onLeaveRepo;
         EmployeeWFHRepo _wfhRepo = new EmployeeWFHRepo();
         ConfigSystemRepo _configSystemRepo = new ConfigSystemRepo();
 
-        public HomeController(IOptions<JwtSettings> jwtSettings, RTCContext context)
+        public HomeController(IOptions<JwtSettings> jwtSettings, RTCContext context, IConfiguration configuration,EmployeeOnLeaveRepo onLeaveRepo)
         {
             _jwtSettings = jwtSettings.Value;
             _context = context;
+            _configuration = configuration;
+            _onLeaveRepo = onLeaveRepo;
         }
         [HttpPost("login")]
         public IActionResult Login([FromBody] User user)
@@ -94,7 +97,10 @@ namespace RERPAPI.Controllers
                 );
 
                 var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
-                _context.CurrentUser = ObjectMapper.GetCurrentUser(claims.ToDictionary(x => x.Type, x => x.Value));
+
+                //4.Lưu session trên server
+                HttpContext.Session.SetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey"), ObjectMapper.GetCurrentUser(claims.ToDictionary(x => x.Type, x => x.Value)));
+
                 return Ok(new
                 {
                     access_token = tokenString,
@@ -119,8 +125,10 @@ namespace RERPAPI.Controllers
 
             try
             {
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                //var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+
+                string key = _configuration.GetValue<string>("SessionKey") ?? "";
+                CurrentUser currentUser = HttpContext.Session.GetObject<CurrentUser>(key);
 
                 return Ok(ApiResponseFactory.Success(currentUser, ""));
             }
@@ -308,6 +316,7 @@ namespace RERPAPI.Controllers
         {
             try
             {
+                var a = _onLeaveRepo.GetAll();
                 //var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 //CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
 
