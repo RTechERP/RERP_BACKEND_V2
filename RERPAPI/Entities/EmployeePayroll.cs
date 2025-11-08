@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace RERPAPI.Model.Entities;
+namespace RERPAPI.Entities;
 
 public partial class EmployeePayroll
 {
@@ -24,5 +24,6 @@ public partial class EmployeePayroll
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
+
     public bool? IsDeleted { get; set; }
 }
