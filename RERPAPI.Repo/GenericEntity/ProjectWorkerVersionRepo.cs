@@ -1,4 +1,5 @@
-﻿using RERPAPI.Model.Entities;
+﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,11 @@ namespace RERPAPI.Repo.GenericEntity
     public class ProjectWorkerVersionRepo:GenericRepo<ProjectWorkerVersion>
     {
         ProjectTypeRepo _projectTypeRepo = new ProjectTypeRepo();
+
+        public ProjectWorkerVersionRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
+
         public string LoadVersionCode(int projectSolutionId, int projectTypeId)
         {
             var maxCode = GetAll(x => x.ProjectSolutionID == projectSolutionId && x.ProjectTypeID==projectTypeId && x.IsDeleted==false)

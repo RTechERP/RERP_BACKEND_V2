@@ -10,6 +10,11 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
 {
     public class InvoiceLinkRepo:GenericRepo<InvoiceLink>
     {
+        public InvoiceLinkRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
+
+
         private List<InvoiceDTO> listInvoice = new List<InvoiceDTO>();
         #region  liên kết hóa đơn theo phiếu
         public async Task InvoiceLinkForBillImport(BillImportDetail detail)

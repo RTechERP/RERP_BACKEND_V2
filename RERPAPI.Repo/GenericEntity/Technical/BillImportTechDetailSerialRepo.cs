@@ -3,11 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Repo.GenericEntity.Technical
 {
-    public class BillImportTechDetailSerialRepo:GenericRepo<BillImportTechDetailSerial>
+    public class BillImportTechDetailSerialRepo : GenericRepo<BillImportTechDetailSerial>
     {
+        public BillImportTechDetailSerialRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
     }
 }

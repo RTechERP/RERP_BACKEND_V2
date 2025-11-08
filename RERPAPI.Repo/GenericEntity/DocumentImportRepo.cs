@@ -1,4 +1,5 @@
-﻿using RERPAPI.Model.Entities;
+﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,11 @@ namespace RERPAPI.Repo.GenericEntity
     public class DocumentImportRepo : GenericRepo<DocumentImport>
     {
         BillDocumentImportRepo _billDocumentImportRepo = new BillDocumentImportRepo();
+
+
+        public DocumentImportRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
         #region thêm chứng từ 
         public async Task NewDocumentImport(int billImportId)
         {

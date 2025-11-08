@@ -1,4 +1,5 @@
-﻿using RERPAPI.Model.Entities;
+﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
 using System;
 using System.Linq.Expressions;
 
@@ -7,6 +8,11 @@ namespace RERPAPI.Repo.GenericEntity
     public class ProjectPartlistVersionRepo : GenericRepo<ProjectPartListVersion>
     {
         private ProjectTypeRepo _projectTypeRepo = new ProjectTypeRepo();
+
+
+        public ProjectPartlistVersionRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
 
         public bool Validate(ProjectPartListVersion item, out string message)
         {

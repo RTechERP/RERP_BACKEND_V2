@@ -10,6 +10,8 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class MeetingTypeRepo : GenericRepo<MeetingType>
     {
-
+        public MeetingTypeRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
     }
 }

@@ -1,3 +1,4 @@
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
@@ -9,7 +10,7 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class EmployeeCurricularRepo : GenericRepo<EmployeeCurricular>
     {
-        public EmployeeCurricularRepo() : base()
+        public EmployeeCurricularRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
     }

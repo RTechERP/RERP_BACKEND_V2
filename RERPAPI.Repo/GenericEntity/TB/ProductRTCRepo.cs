@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo;
 
@@ -10,6 +11,10 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class ProductRTCRepo: GenericRepo<ProductRTC>
     {
+        public ProductRTCRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
+
         public string generateProductCode()
         {
             string numberCodeDefault = "00000001";

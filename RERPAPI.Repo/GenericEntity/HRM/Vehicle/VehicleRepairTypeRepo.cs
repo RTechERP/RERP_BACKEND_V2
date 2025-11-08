@@ -1,4 +1,5 @@
-﻿using RERPAPI.Model.Entities;
+﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,10 @@ namespace RERPAPI.Repo.GenericEntity.HRM.Vehicle
 {
     public class VehicleRepairTypeRepo:GenericRepo<VehicleRepairType>
     {
+        public VehicleRepairTypeRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
+
         public bool Validate(VehicleRepairType item, out string message)
         {
             message = "";

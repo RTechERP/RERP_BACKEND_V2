@@ -1,4 +1,5 @@
 ﻿using RERPAPI.Model.Context;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class POKHDetailMoneyRepo: GenericRepo<POKHDetailMoney>
+    public class POKHDetailMoneyRepo : GenericRepo<POKHDetailMoney>
     {
         //RTCContext _context = new RTCContext();
         //public async Task<int> DeleteByID(int id)
@@ -28,5 +29,8 @@ namespace RERPAPI.Repo.GenericEntity
         //        throw new Exception(ex.ToString());
         //    }
         //}
+        public POKHDetailMoneyRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
     }
 }

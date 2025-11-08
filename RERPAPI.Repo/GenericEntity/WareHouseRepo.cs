@@ -5,10 +5,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using RERPAPI.Model.Entities;
+using RERPAPI.Model.DTO;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class WarehouseRepo: GenericRepo<Warehouse> 
+    public class WarehouseRepo : GenericRepo<Warehouse>
     {
+        public WarehouseRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
     }
 }

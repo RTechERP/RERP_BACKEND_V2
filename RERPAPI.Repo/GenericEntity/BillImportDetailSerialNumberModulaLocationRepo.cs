@@ -12,6 +12,9 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class BillImportDetailSerialNumberModulaLocationRepo : GenericRepo<BillImportDetailSerialNumberModulaLocation>
     {
+        public BillImportDetailSerialNumberModulaLocationRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
         BillImportTechDetailSerialRepo _importDetailSerialNumberRepo = new BillImportTechDetailSerialRepo();
         ProductRTCQRCodeRepo _qrCodeRepo = new ProductRTCQRCodeRepo();
 

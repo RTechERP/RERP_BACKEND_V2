@@ -1,10 +1,15 @@
-﻿using RERPAPI.Model.Entities;
+﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Repo.GenericEntity
 {
     public class EmployeeAttendanceRepo : GenericRepo<EmployeeAttendance>
     {
         private readonly EmployeeRepo _employeeRepo;
+
+        public EmployeeAttendanceRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
 
         /// <summary>
         /// Kiểm tra số lượng bản ghi Attendance tồn tại trong khoảng ngày & phòng ban.

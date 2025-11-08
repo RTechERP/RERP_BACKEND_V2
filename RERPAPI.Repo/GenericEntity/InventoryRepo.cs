@@ -10,6 +10,9 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class InventoryRepo:GenericRepo<Inventory>
     {
+        public InventoryRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
         #region kiểm tra tồn kho cho phiếu nhập
         public async Task CheckInventoryForImport(List<BillImportDetail> billImportDetail, BillImport billImport)
         {

@@ -4,12 +4,16 @@ using System.Linq;
 using System.Text;
 using RERPAPI.Model.Entities;
 using System.Threading.Tasks;
+using RERPAPI.Model.DTO;
 
 namespace RERPAPI.Repo.GenericEntity.Asset
 {
     public class
         TSSourceAssetsRepo : GenericRepo<TSSourceAsset>
     {
+        public TSSourceAssetsRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
         public bool Validate(TSSourceAsset item, out string message)
         {
             message = "";

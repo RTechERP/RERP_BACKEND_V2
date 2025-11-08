@@ -1,5 +1,6 @@
 ﻿
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
 using RERPAPI.Repo.GenericEntity.Technical;
@@ -13,6 +14,11 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class BillImportDetailRepo : GenericRepo<BillImportDetail>
     {
+        public BillImportDetailRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
+
+
         InvoiceLinkRepo _invoicelinkrepo = new InvoiceLinkRepo();
         BillImportDetailSerialNumberRepo _billImportDetailSerialNumberRepo = new BillImportDetailSerialNumberRepo();
         InventoryProjectRepo _inventoryProjectRepo = new InventoryProjectRepo();

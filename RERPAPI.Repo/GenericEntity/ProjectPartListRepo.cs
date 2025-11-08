@@ -1,4 +1,5 @@
 ﻿using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using System.Diagnostics.Metrics;
 using System.Text.RegularExpressions;
@@ -11,6 +12,11 @@ namespace RERPAPI.Repo.GenericEntity
         private ProjectPartlistPurchaseRequestRepo _purchaseRepo = new ProjectPartlistPurchaseRequestRepo();
         private ProductSaleRepo _productSaleRepo = new ProductSaleRepo();
         ProjectPartlistVersionRepo _versionRepo = new ProjectPartlistVersionRepo();
+
+        public ProjectPartListRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
+
         public int getSTT(int projectVersionID)
         {
             List<ProjectPartList> listPartList = GetAll(x => x.ProjectPartListVersionID == projectVersionID);

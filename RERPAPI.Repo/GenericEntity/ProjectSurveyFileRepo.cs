@@ -3,6 +3,7 @@ using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
@@ -16,6 +17,8 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class ProjectSurveyFileRepo : GenericRepo<ProjectSurveyFile>
     {
-
+        public ProjectSurveyFileRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
     }
 }

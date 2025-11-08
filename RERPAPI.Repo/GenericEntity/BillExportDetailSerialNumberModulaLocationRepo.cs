@@ -10,6 +10,10 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class BillExportDetailSerialNumberModulaLocationRepo:GenericRepo<BillExportDetailSerialNumberModulaLocation>
     {
+
+        public BillExportDetailSerialNumberModulaLocationRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
         BillExportTechDetailSerialRepo _exportDetailSerialNumberRepo = new BillExportTechDetailSerialRepo();
         public async Task SaveDataAsync(ModulaLocationDTO.SerialNumberModulaLocation item, int index)
         {

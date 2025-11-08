@@ -13,5 +13,8 @@ namespace RERPAPI.Repo.GenericEntity
     public class AddressStockRepo : GenericRepo<AddressStock>
     {
        
+        public AddressStockRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
     }
 }

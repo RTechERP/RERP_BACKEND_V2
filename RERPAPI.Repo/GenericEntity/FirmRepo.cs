@@ -1,9 +1,14 @@
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Repo.GenericEntity
 {
     public class FirmRepo : GenericRepo<Firm>
     {
+        public FirmRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
+
         public bool CheckFirmCodeExists(string firmCode, int? id = null)
         {
             try

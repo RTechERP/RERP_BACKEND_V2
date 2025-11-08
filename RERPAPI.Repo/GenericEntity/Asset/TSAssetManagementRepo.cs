@@ -4,12 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Repo.GenericEntity.Asset
 {
     public class TSAssetManagementRepo:GenericRepo<TSAssetManagement>
     {
+        public TSAssetManagementRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
         public string GenerateAssetCode(DateTime? assetdate)
         {
             var date = assetdate.Value.Date;

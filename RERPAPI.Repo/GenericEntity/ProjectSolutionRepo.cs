@@ -1,9 +1,14 @@
-﻿using RERPAPI.Model.Entities;
+﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Repo.GenericEntity
 {
     public class ProjectSolutionRepo : GenericRepo<ProjectSolution>
     {
+        public ProjectSolutionRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
+
         public string GetSolutionCode(int projectRequestId)
         {
             var solutions = GetAll(x => x.ProjectRequestID == projectRequestId).ToList();

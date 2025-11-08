@@ -1,4 +1,5 @@
 ﻿using RERPAPI.Model.Context;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
@@ -11,6 +12,10 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class RequestInvoiceRepo:GenericRepo<RequestInvoice>
     {
+        public RequestInvoiceRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
+
         public string GetLatestCodeByDate(DateTime date)
         {
             var item = GetAll()

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using System;
 
@@ -11,6 +12,10 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class OfficeSupplyRepo : GenericRepo<OfficeSupply>
     {
+        public OfficeSupplyRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
+
         public string GetNextCodeRTC()
         {
          var allCodes = table.Where(x=>x.CodeRTC.StartsWith("VPP")).Select(x=>x.CodeRTC).ToList();

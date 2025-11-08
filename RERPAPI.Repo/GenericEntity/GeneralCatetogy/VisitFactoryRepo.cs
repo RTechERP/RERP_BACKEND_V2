@@ -1,5 +1,6 @@
 ﻿using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
@@ -16,6 +17,11 @@ namespace RERPAPI.Repo.GenericEntity
         EmployeeRepo employeeRepo = new EmployeeRepo();
         VisitFactoryDetailRepo visitFactoryDetailRepo = new VisitFactoryDetailRepo();
         EmployeeSendEmailRepo sendEmailRepo = new EmployeeSendEmailRepo();
+
+        public VisitFactoryRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
+
         public async Task SendEmail(VisitFactory visit)
 		{
             Employee employee = employeeRepo.GetByID(visit.EmployeeID);

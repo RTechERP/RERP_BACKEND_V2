@@ -15,6 +15,10 @@ namespace RERPAPI.Repo.GenericEntity
         private PONCCDetailLogRepo _repoDetailLog = new PONCCDetailLogRepo();
         private SupplierSaleRepo _supplierSaleRepo = new SupplierSaleRepo();
 
+        public PONCCRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
+
         public bool Validate(PONCCDTO pONCCDTO, out string errorMessage)
         {
             string message = "";

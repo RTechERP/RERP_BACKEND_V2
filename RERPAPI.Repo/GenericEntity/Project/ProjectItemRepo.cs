@@ -1,4 +1,5 @@
 ﻿using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.ProjectAGV;
 using RERPAPI.Model.Entities;
 using System;
@@ -13,6 +14,11 @@ namespace RERPAPI.Repo.GenericEntity.Project
     public class ProjectItemRepo : GenericRepo<ProjectItem>
     {
         ProjectRepo _projectRepo = new ProjectRepo();
+
+        public ProjectItemRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
+
         public string GenerateProjectItemCode(int projectId)
         {
             try

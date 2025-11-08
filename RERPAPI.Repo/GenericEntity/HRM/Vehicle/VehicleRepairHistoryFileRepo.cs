@@ -1,4 +1,5 @@
-﻿using RERPAPI.Model.Entities;
+﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,5 +10,8 @@ namespace RERPAPI.Repo.GenericEntity.HRM.Vehicle
 {
     public class VehicleRepairHistoryFileRepo : GenericRepo<VehicleRepairHistoryFile>
     {
+        public VehicleRepairHistoryFileRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
     }
 }
