@@ -1,4 +1,5 @@
-﻿using DocumentFormat.OpenXml.Wordprocessing;
+﻿using DocumentFormat.OpenXml.VariantTypes;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -9,7 +10,10 @@ using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
 using RERPAPI.Repo;
+using RERPAPI.Repo.GenericEntity;
+using System.Security.Claims;
 using System.Text;
 using static Microsoft.IO.RecyclableMemoryStreamManager;
 
@@ -26,6 +30,18 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserPermissionService, UserPermissionService>();
 builder.Services.AddScoped<RTCContext>();
+builder.Services.AddScoped<EmployeeOnLeaveRepo>();
+builder.Services.AddScoped<HistoryProductRTCRepo>();
+
+builder.Services.AddScoped<CurrentUser>(provider =>
+{
+
+    var context = provider.GetRequiredService<IHttpContextAccessor>().HttpContext;
+    var claims = context?.User.Claims.ToDictionary(x => x.Type, x => x.Value);
+    CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+    return currentUser;
+    
+});
 
 //Config connect database
 Config.ConnectionString = builder.Configuration.GetValue<string>("ConnectionString") ?? "";
@@ -45,6 +61,8 @@ builder.Services.AddCors(options =>
                .AllowAnyHeader();
     });
 });
+
+
 
 
 
@@ -70,8 +88,6 @@ builder.Services.Configure<FormOptions>(opt =>
 });
 
 
-
-
 // Load JWT settings
 var jwtSection = builder.Configuration.GetSection("JwtSettings");
 builder.Services.Configure<JwtSettings>(jwtSection);
@@ -94,6 +110,17 @@ builder.Services.AddAuthentication("Bearer")
                     };
                 });
 builder.Services.AddAuthentication();
+
+
+//Config session
+builder.Services.AddSession(opt =>
+{
+    opt.IdleTimeout = TimeSpan.FromMinutes(jwtSettings.ExpireMinutes);
+    opt.Cookie.HttpOnly = true;
+    opt.Cookie.IsEssential = true;
+    opt.Cookie.Name = "r-erp";
+});
+
 
 
 builder.Services.AddRouting(options =>
@@ -137,6 +164,7 @@ app.UseRouting();
 app.UseCors("MyCors");
 app.UseAuthorization();
 //app.UseAuthentication();
+app.UseSession();
 app.UseMiddleware<DynamicAuthorizationMiddleware>();
 
 app.MapControllers();
