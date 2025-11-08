@@ -34,6 +34,17 @@ namespace RERPAPI.Repo.GenericEntity.Asset
 
             return newCode;
         }
-
+        public bool Validate(TSAssetManagement item, out string message)
+        {
+            message = "";
+            bool exists = GetAll().Any(x => x.TSAssetCode == item.TSAssetCode && x.ID != item.ID && x.IsDeleted != true);
+            if (exists)
+            {
+                message = $"Mã tài sản {item.TSAssetCode} đã tồn tại";
+                return false;
+            }
+          
+            return true;
+        }
     }
 }
