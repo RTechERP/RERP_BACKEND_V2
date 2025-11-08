@@ -12,7 +12,12 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
     [ApiController]
     public class RulePayController : ControllerBase
     {
-        RulePayRepo _rulePayRepo= new RulePayRepo();
+        private readonly RulePayRepo _rulePayRepo;
+
+        public RulePayController(RulePayRepo rulePayRepo)
+        {
+            _rulePayRepo = rulePayRepo;
+        }
 
         [HttpGet("")]
         public IActionResult getAll()

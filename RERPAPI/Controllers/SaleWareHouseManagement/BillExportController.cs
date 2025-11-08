@@ -30,22 +30,50 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
     [ApiController]
     public class BillExportController : ControllerBase
     {
-        ProductGroupRepo _productgroupRepo = new ProductGroupRepo();
+         private readonly ProductGroupRepo _productgroupRepo;
+        private readonly BillDocumentExportRepo _billdocumentexportRepo;
+        private readonly BillExportDetailRepo _billExportDetailRepo;
+        private readonly BillExportRepo _billexportRepo;
+        private readonly InventoryRepo _inventoryRepo;
+        private readonly InventoryProjectExportRepo _inventoryprojectexportRepo;
+        private readonly BillExportDetailSerialNumberRepo _billexportdetailserialnumberRepo;
+        private readonly DocumentExportRepo _documentexportRepo;
+        private readonly BillExportLogRepo _billexportlogRepo;
+        private readonly ProjectRepo _projectRepo;
+        private readonly HistoryDeleteBillRepo _historyDeleteBillRepo;
+        private readonly BillExportDetailSerialNumberRepo _billExportDetailSerialNumberRepo;
+        private readonly WarehouseRepo _warehouseRepo;
+        private readonly BillExportDetailSerialNumberRepo billExportDetailSerialNumberRepo;
 
-        BillDocumentExportRepo _billdocumentexportRepo = new BillDocumentExportRepo();
-        BillExportDetailRepo _billExportDetailRepo = new BillExportDetailRepo();
-        BillExportRepo _billexportRepo = new BillExportRepo();
-        InventoryRepo _inventoryRepo = new InventoryRepo();
-        InventoryProjectExportRepo _inventoryprojectexportRepo = new InventoryProjectExportRepo();
-        BillExportDetailSerialNumberRepo _billexportdetailserialnumberRepo = new BillExportDetailSerialNumberRepo();
-        DocumentExportRepo _documentexportRepo = new DocumentExportRepo();
-        BillExportLogRepo _billexportlogRepo = new BillExportLogRepo();
-        ProjectRepo _projectRepo = new ProjectRepo();
-        HistoryDeleteBillRepo _historyDeleteBillRepo = new HistoryDeleteBillRepo();
-        BillExportDetailSerialNumberRepo _billExportDetailSerialNumberRepo = new BillExportDetailSerialNumberRepo();
-        WarehouseRepo _warehouseRepo = new WarehouseRepo();
-        BillExportDetailSerialNumberRepo billExportDetailSerialNumberRepo = new BillExportDetailSerialNumberRepo();
-        [HttpGet("get-all-project")]
+        public BillExportController(
+            ProductGroupRepo productgroupRepo,
+            BillDocumentExportRepo billdocumentexportRepo,
+            BillExportDetailRepo billExportDetailRepo,
+            BillExportRepo billexportRepo,
+            InventoryRepo inventoryRepo,
+            InventoryProjectExportRepo inventoryprojectexportRepo,
+            BillExportDetailSerialNumberRepo billExportDetailSerialNumberRepoInstance,
+            DocumentExportRepo documentexportRepo,
+            BillExportLogRepo billexportlogRepo,
+            ProjectRepo projectRepo,
+            HistoryDeleteBillRepo historyDeleteBillRepo,
+            WarehouseRepo warehouseRepo)
+        {
+            _productgroupRepo = productgroupRepo;
+            _billdocumentexportRepo = billdocumentexportRepo;
+            _billExportDetailRepo = billExportDetailRepo;
+            _billexportRepo = billexportRepo;
+            _inventoryRepo = inventoryRepo;
+            _inventoryprojectexportRepo = inventoryprojectexportRepo;
+            _billexportdetailserialnumberRepo = billExportDetailSerialNumberRepoInstance;
+            _billExportDetailSerialNumberRepo = billExportDetailSerialNumberRepoInstance;
+            billExportDetailSerialNumberRepo = billExportDetailSerialNumberRepoInstance;
+            _documentexportRepo = documentexportRepo;
+            _billexportlogRepo = billexportlogRepo;
+            _projectRepo = projectRepo;
+            _historyDeleteBillRepo = historyDeleteBillRepo;
+            _warehouseRepo = warehouseRepo;
+        }
         public IActionResult getAllProject()
         {
             try

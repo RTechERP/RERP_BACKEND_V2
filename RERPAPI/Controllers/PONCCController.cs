@@ -11,14 +11,27 @@ namespace RERPAPI.Controllers
     [ApiController]
     public class PONCCController : ControllerBase
     {
-        PONCCRepo _ponccRepo = new PONCCRepo();
-        PONCCDetailRepo _ponccDetailRepo = new PONCCDetailRepo();
-        PONCCRulePayRepo _ponccRulePayRepo = new PONCCRulePayRepo();
-        DocumentImportPONCCRepo _documentImportRepo = new DocumentImportPONCCRepo();
-        PONCCDetailRequestBuyRepo _detailRequestBuyRepo = new PONCCDetailRequestBuyRepo();
-        BillImportDetailRepo _billImportDetailRepo = new BillImportDetailRepo();
-        PONCCDetailLogRepo _detailLogRepo = new PONCCDetailLogRepo();
-        SupplierSaleRepo _supplierSaleRepo = new SupplierSaleRepo();
+        PONCCRepo _ponccRepo;
+        PONCCDetailRepo _ponccDetailRepo;
+        PONCCRulePayRepo _ponccRulePayRepo;
+        DocumentImportPONCCRepo _documentImportRepo;
+        PONCCDetailRequestBuyRepo _detailRequestBuyRepo;
+        BillImportDetailRepo _billImportDetailRepo;
+        PONCCDetailLogRepo _detailLogRepo;
+        SupplierSaleRepo _supplierSaleRepo;
+
+        public PONCCController(PONCCRepo ponccRepo, PONCCDetailRepo ponccDetailRepo, PONCCRulePayRepo ponccRulePayRepo, DocumentImportPONCCRepo documentImportRepo, PONCCDetailRequestBuyRepo detailRequestBuyRepo, BillImportDetailRepo billImportDetailRepo, PONCCDetailLogRepo detailLogRepo, SupplierSaleRepo supplierSaleRepo)
+        {
+            _ponccRepo = ponccRepo;
+            _ponccDetailRepo = ponccDetailRepo;
+            _ponccRulePayRepo = ponccRulePayRepo;
+            _documentImportRepo = documentImportRepo;
+            _detailRequestBuyRepo = detailRequestBuyRepo;
+            _billImportDetailRepo = billImportDetailRepo;
+            _detailLogRepo = detailLogRepo;
+            _supplierSaleRepo = supplierSaleRepo;
+        }
+
 
         [HttpGet("getall")]
         public IActionResult GetAll([FromQuery] PONCCParam param)

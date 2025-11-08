@@ -10,15 +10,21 @@ namespace RERPAPI.Controllers.PurchasingManagement
     [ApiController]
     public class RulePayController : ControllerBase
     {
+        private readonly RulePayRepo _rulePayRepo;
 
-        RulePayRepo _rulePayRepo = new RulePayRepo();
+        public RulePayController(RulePayRepo rulePayRepo)
+        {
+            _rulePayRepo = rulePayRepo;
+        }
 
         [HttpGet("")]
         public async Task<IActionResult> getAllRulePay()
         {
             try
             {
-                List<RulePay> data = _rulePayRepo.GetAll().Where(r => r.IsDeleted != true).ToList();
+                List<RulePay> data = _rulePayRepo.GetAll(
+                    //r => r.IsDeleted != true
+                    );
                 return Ok(ApiResponseFactory.Success(data, "Lấy danh sách RulePay thành công."));
             }
             catch (Exception ex)
@@ -62,7 +68,7 @@ namespace RERPAPI.Controllers.PurchasingManagement
                             var item = _rulePayRepo.GetByID(id);
                             if (item != null)
                             {
-                                item.IsDeleted = true;
+                                //item.IsDeleted = true;
                                 await _rulePayRepo.UpdateAsync(item);
                             }
                         }

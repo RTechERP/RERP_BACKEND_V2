@@ -14,8 +14,16 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
     [ApiController]
     public class OfficeSupplyRequestsController : ControllerBase
     {
-        OfficeSupplyRequestsRepo officesupplyrequests = new OfficeSupplyRequestsRepo();
-        DepartmentRepo _departmentRepo = new DepartmentRepo();
+        private readonly OfficeSupplyRequestsRepo officesupplyrequests;
+        private readonly DepartmentRepo _departmentRepo;
+
+        public OfficeSupplyRequestsController(
+            OfficeSupplyRequestsRepo officesupplyrequests,
+            DepartmentRepo departmentRepo)
+        {
+            this.officesupplyrequests = officesupplyrequests;
+            _departmentRepo = departmentRepo;
+        }
        
         #region getdatadepartment cần bỏ
         [HttpGet("get-data-department")]

@@ -11,7 +11,11 @@ namespace RERPAPI.Controllers.Old
     [Route("api/[controller]")]
     public class EmployeeEarlyLateController : Controller
     {
-        EmployeeEarlyLateRepo employeeEarlyLateRepo = new EmployeeEarlyLateRepo();
+        private readonly EmployeeEarlyLateRepo _employeeEarlyLateRepo;
+        public EmployeeEarlyLateController(EmployeeEarlyLateRepo employeeEarlyLateRepo)
+        {
+            _employeeEarlyLateRepo = employeeEarlyLateRepo;
+        }
         [HttpPost]
         public IActionResult GetEmployeeEarlyLate(EmployeeEarlyLateParam param)
         {
@@ -53,7 +57,7 @@ namespace RERPAPI.Controllers.Old
                     {
                         employeeEarlyLate.DateEnd = DateTime.SpecifyKind(employeeEarlyLate.DateEnd.Value, DateTimeKind.Utc);
                     }
-                    var exisingEmployeeEarlyLate = employeeEarlyLateRepo.GetAll().Where(x =>  x.EmployeeID == employeeEarlyLate.EmployeeID && 
+                    var exisingEmployeeEarlyLate = _employeeEarlyLateRepo.GetAll().Where(x =>  x.EmployeeID == employeeEarlyLate.EmployeeID && 
                                                                                                  x.DateRegister.Value.Date == employeeEarlyLate.DateRegister.Value.Date &&
                                                                                                     x.Type == employeeEarlyLate.Type &&
                                                                                                      x.ID != employeeEarlyLate.ID);
@@ -66,7 +70,7 @@ namespace RERPAPI.Controllers.Old
                             message = "Nhân viên đã khai báo ngày này rồi! Vui lòng kiếm tra lại",
                         });
                     }
-                        var result = await employeeEarlyLateRepo.CreateAsync(employeeEarlyLate);
+                        var result = await _employeeEarlyLateRepo.CreateAsync(employeeEarlyLate);
                         return Ok(new
                         {
                             status = 1,
@@ -76,7 +80,7 @@ namespace RERPAPI.Controllers.Old
                     }
                     else
                     {
-                        var result = await employeeEarlyLateRepo.UpdateAsync(employeeEarlyLate);
+                        var result = await _employeeEarlyLateRepo.UpdateAsync(employeeEarlyLate);
                         return Ok(new
                         {
                             status = 1,

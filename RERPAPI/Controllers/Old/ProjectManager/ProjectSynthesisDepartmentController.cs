@@ -12,12 +12,23 @@ namespace RERPAPI.Controllers.Old.ProjectManager
     [ApiController]
     public class ProjectSynthesisDepartmentController : ControllerBase
     {
-        #region Khai báo biến
-        ProjectRepo projectRepo = new ProjectRepo();
-        CustomerRepo customerRepo = new CustomerRepo();
-        DepartmentRepo departmentRepo = new DepartmentRepo();
-        UserTeamRepo userTeamRepo = new UserTeamRepo();
-        #endregion
+        private readonly ProjectRepo projectRepo;
+        private readonly CustomerRepo customerRepo;
+        private readonly DepartmentRepo departmentRepo;
+        private readonly UserTeamRepo userTeamRepo;
+
+        public ProjectSynthesisDepartmentController(
+            ProjectRepo projectRepo,
+            CustomerRepo customerRepo,
+            DepartmentRepo departmentRepo,
+            UserTeamRepo userTeamRepo
+        )
+        {
+            this.projectRepo = projectRepo;
+            this.customerRepo = customerRepo;
+            this.departmentRepo = departmentRepo;
+            this.userTeamRepo = userTeamRepo;
+        }
         #region Load  timeline hạng mục công việc
         [HttpGet("get-data")]
         public async Task<IActionResult> GetData(DateTime dateStart, DateTime dateEnd, int departmentId, int userTeamId, int userId, int projectTypeId, string? keyword)

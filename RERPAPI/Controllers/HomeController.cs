@@ -10,7 +10,6 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
-using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Mime;
 using System.Security.Claims;
@@ -28,18 +27,22 @@ namespace RERPAPI.Controllers
         private readonly IConfiguration _configuration;
 
         //UserRepo _userRepo = new UserRepo();
-        vUserGroupLinksRepo _vUserGroupLinksRepo = new vUserGroupLinksRepo();
+        vUserGroupLinksRepo _vUserGroupLinksRepo;
+
 
         private readonly EmployeeOnLeaveRepo _onLeaveRepo;
-        EmployeeWFHRepo _wfhRepo = new EmployeeWFHRepo();
-        ConfigSystemRepo _configSystemRepo = new ConfigSystemRepo();
+        private readonly EmployeeWFHRepo _wfhRepo;
+        private readonly ConfigSystemRepo _configSystemRepo;
 
-        public HomeController(IOptions<JwtSettings> jwtSettings, RTCContext context, IConfiguration configuration,EmployeeOnLeaveRepo onLeaveRepo)
+        public HomeController(IOptions<JwtSettings> jwtSettings, RTCContext context, IConfiguration configuration, EmployeeOnLeaveRepo onLeaveRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeWFHRepo employeeWFHRepo, ConfigSystemRepo configSystemRepo)
         {
             _jwtSettings = jwtSettings.Value;
             _context = context;
             _configuration = configuration;
             _onLeaveRepo = onLeaveRepo;
+            _vUserGroupLinksRepo = vUserGroupLinksRepo;
+            _wfhRepo = employeeWFHRepo;
+            _configSystemRepo = configSystemRepo;
         }
         [HttpPost("login")]
         public IActionResult Login([FromBody] User user)

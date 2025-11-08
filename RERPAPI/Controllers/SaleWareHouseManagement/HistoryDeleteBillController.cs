@@ -13,7 +13,12 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
     [ApiController]
     public class HistoryDeleteBillController : ControllerBase
     {
-        HistoryDeleteBillRepo _historyDeleteBillReoi = new HistoryDeleteBillRepo();
+        private readonly HistoryDeleteBillRepo _historyDeleteBillReoi;
+
+        public HistoryDeleteBillController(HistoryDeleteBillRepo historyDeleteBillReoi)
+        {
+            _historyDeleteBillReoi = historyDeleteBillReoi;
+        }
 
         [HttpGet]
         public IActionResult getAll()

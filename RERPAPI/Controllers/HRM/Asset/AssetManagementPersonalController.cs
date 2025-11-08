@@ -25,13 +25,18 @@ namespace RERPAPI.Controllers.Old.Asset
     [ApiController]
     public class AssetManagementPersonalController : ControllerBase
     {
-        TSAllocationAssetPersonalRepo _tSAllocationAssetPersonalRepo = new TSAllocationAssetPersonalRepo();
-        TSAllocationAssetPersonalDetailRepo _tSAssetAllocationDetailRepo = new TSAllocationAssetPersonalDetailRepo();
-        TSRecoveryAssetPersonalDetailRepo _tSRecoveryAssetPersonalDetailRepo = new TSRecoveryAssetPersonalDetailRepo();
-        TSRecoveryAssetPersonalRepo _tSRecoveryAssetPersonalRepo = new TSRecoveryAssetPersonalRepo();
-        TSAssetManagementPersonalRepo _tSAssetManagementPersonalRepo = new TSAssetManagementPersonalRepo();
-        TSTypeAssetPersonalRepo _typeAssetPersonalRepo = new TSTypeAssetPersonalRepo();
-        vUserGroupLinksRepo _vUserGroupLinksRepo = new vUserGroupLinksRepo();
+        TSAllocationAssetPersonalRepo _tSAllocationAssetPersonalRepo;
+        TSAllocationAssetPersonalDetailRepo _tSAssetAllocationDetailRepo;
+        TSRecoveryAssetPersonalDetailRepo _tSRecoveryAssetPersonalDetailRepo;
+        TSRecoveryAssetPersonalRepo _tSRecoveryAssetPersonalRepo;
+        TSAssetManagementPersonalRepo _tSAssetManagementPersonalRepo;
+        TSTypeAssetPersonalRepo _typeAssetPersonalRepo;
+        vUserGroupLinksRepo _vUserGroupLinksRepo;
+
+        public AssetManagementPersonalController()
+        {
+        }
+
         //Lấy danh sách loại tài sản
         [RequiresPermission("N23,N52,N1,N67,N36")]
         [HttpGet("get-type-asset-personal")]

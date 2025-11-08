@@ -10,9 +10,16 @@ namespace RERPAPI.Controllers.GeneralCategory.TrainingRegistration
     [ApiController]
     public class TrainingRegistrationApprovedController : ControllerBase
     {
-        private TrainingRegistrationApprovedRepo _trainingRegistrationApprovedRepo = new TrainingRegistrationApprovedRepo();
-        private TrainingRegistrationApprovedFlowRepo _trainingRegistrationApprovedFlowRepo = new TrainingRegistrationApprovedFlowRepo();
-        private EmployeeApprovedRepo _employeeApprovedRepo = new EmployeeApprovedRepo();
+        private TrainingRegistrationApprovedRepo _trainingRegistrationApprovedRepo;
+        private TrainingRegistrationApprovedFlowRepo _trainingRegistrationApprovedFlowRepo;
+        private EmployeeApprovedRepo _employeeApprovedRepo;
+
+        public TrainingRegistrationApprovedController(TrainingRegistrationApprovedRepo trainingRegistrationApprovedRepo, TrainingRegistrationApprovedFlowRepo trainingRegistrationApprovedFlowRepo, EmployeeApprovedRepo employeeApprovedRepo)
+        {
+            _trainingRegistrationApprovedRepo = trainingRegistrationApprovedRepo;
+            _trainingRegistrationApprovedFlowRepo = trainingRegistrationApprovedFlowRepo;
+            _employeeApprovedRepo = employeeApprovedRepo;
+        }
 
         [HttpGet("get-by-training-registration-id")]
         public IActionResult GetTrainingregistrationApproved(int trainingRegistrationID)

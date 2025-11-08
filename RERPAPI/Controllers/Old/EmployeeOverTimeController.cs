@@ -11,8 +11,13 @@ namespace RERPAPI.Controllers.Old
     [Route("api/[controller]")]
     public class EmployeeOverTimeController : ControllerBase
     {
-        EmployeeOverTimeRepo employeeOverTimeRepo = new EmployeeOverTimeRepo();
-        EmployeeTypeOverTimeRepo employeeTypeOvertimeRepo = new EmployeeTypeOverTimeRepo();
+        private readonly EmployeeOverTimeRepo _employeeOverTimeRepo;
+        private readonly EmployeeTypeOverTimeRepo _employeeTypeOvertimeRepo;
+        public EmployeeOverTimeController(EmployeeOverTimeRepo employeeOverTimeRepo, EmployeeTypeOverTimeRepo employeeTypeOvertimeRepo)
+        {
+            _employeeOverTimeRepo = employeeOverTimeRepo;
+            _employeeTypeOvertimeRepo = employeeTypeOvertimeRepo;
+        }
 
         [HttpPost]
         public IActionResult GetEmployeeOverTime([FromBody] EmployeeOverTimeParam param)
@@ -49,7 +54,7 @@ namespace RERPAPI.Controllers.Old
                     EmployeeOvertime existingOvertime = null;
                     if (employeeOvertime.ID > 0)
                     {
-                        existingOvertime = employeeOverTimeRepo.GetByID(employeeOvertime.ID);
+                        existingOvertime = _employeeOverTimeRepo.GetByID(employeeOvertime.ID);
                     }
 
                     var employeeOverTime = existingOvertime ?? new EmployeeOvertime();
@@ -88,7 +93,7 @@ namespace RERPAPI.Controllers.Old
                     }
 
                     // Get ratio from EmployeeTypeOvertime
-                    var type = employeeTypeOvertimeRepo.GetByID(Convert.ToInt32(employeeOverTime.TypeID));
+                    var type = _employeeTypeOvertimeRepo.GetByID(Convert.ToInt32(employeeOverTime.TypeID));
                     if (type != null)
                     {
                         employeeOverTime.TotalTime = employeeOverTime.TimeReality * (type.Ratio / 100);
@@ -97,7 +102,7 @@ namespace RERPAPI.Controllers.Old
                     if (employeeOverTime.ID > 0)
                     {
 
-                        await employeeOverTimeRepo.UpdateAsync(employeeOverTime);
+                        await _employeeOverTimeRepo.UpdateAsync(employeeOverTime);
                     }
                     else
                     {
@@ -105,14 +110,14 @@ namespace RERPAPI.Controllers.Old
                         employeeOverTime.CreatedDate = DateTime.Now;
                         employeeOverTime.IsApproved = false;
                         employeeOverTime.IsApprovedHR = false;
-                        await employeeOverTimeRepo.CreateAsync(employeeOverTime);
+                        await _employeeOverTimeRepo.CreateAsync(employeeOverTime);
                     }
                 }
 
                 // Delete records if listId is provided
                 //if (request.ListId?.Count > 0)
                 //{
-                //    await employeeOverTimeRepo.DeleteByIdsAsync(request.ListId);
+                //    await _employeeOverTimeRepo.DeleteByIdsAsync(request.ListId);
                 //}
 
 
@@ -138,7 +143,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                var employeeOverTime = employeeOverTimeRepo
+                var employeeOverTime = _employeeOverTimeRepo
                 .GetAll()
                 .Where(e => e.EmployeeID == employeeId && e.DateRegister.Value.Date == dateRegister.Date)
                 .OrderBy(x => x.TimeStart);

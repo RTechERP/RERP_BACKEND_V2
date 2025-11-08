@@ -11,7 +11,7 @@ namespace RERPAPI.Controllers.Old
     public class EmployeeApproveController : ControllerBase
     {
 
-        EmployeeApprovedRepo _employeeApproveRepo = new EmployeeApprovedRepo();
+        private EmployeeApprovedRepo _employeeApprovedRepo;
         private class EmployeeApproveSelected
         {
             public int EmployeeID { get; set; }
@@ -19,8 +19,13 @@ namespace RERPAPI.Controllers.Old
             public string FullName { get; set; }
         }
 
-        EmployeeApproveRepo employeeApproveRepo = new EmployeeApproveRepo();
-        EmployeeRepo employeeRepo = new EmployeeRepo();
+        private EmployeeApproveRepo _employeeApproveRepo;
+        private EmployeeRepo _employeeRepo;
+        public EmployeeApproveController(EmployeeApproveRepo employeeApproveRepo, EmployeeRepo employeeRepo)
+        {
+            _employeeApproveRepo = employeeApproveRepo;
+            _employeeRepo = employeeRepo;
+        }
 
 
 
@@ -88,7 +93,7 @@ namespace RERPAPI.Controllers.Old
                         return BadRequest(ApiResponseFactory.Fail(null, $"Nhân viên với ID {employeeID} đã có trong danh sách người duyệt"));
                     }
 
-                    var employee = employeeRepo.GetByID(employeeID);
+                    var employee = _employeeRepo.GetByID(employeeID);
                     if (employee == null)
                     {
                         //return BadRequest(new
@@ -112,7 +117,7 @@ namespace RERPAPI.Controllers.Old
 
                 foreach (var employeeApprove in employeeApproves)
                 {
-                    await employeeApproveRepo.CreateAsync(employeeApprove);
+                    await _employeeApproveRepo.CreateAsync(employeeApprove);
                 }
 
                 //return Ok(new
@@ -142,7 +147,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                var employeeApprove = employeeApproveRepo.GetByID(id);
+                var employeeApprove = _employeeApproveRepo.GetByID(id);
                 if (employeeApprove == null)
                 {
                     //return NotFound(new
@@ -153,7 +158,7 @@ namespace RERPAPI.Controllers.Old
 
                     return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy người duyệt với ID " + id));
                 }
-                await employeeApproveRepo.DeleteAsync(id);
+                await _employeeApproveRepo.DeleteAsync(id);
                 //return Ok(new
                 //{
                 //    status = 1,

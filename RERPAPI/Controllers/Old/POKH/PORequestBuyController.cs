@@ -14,8 +14,14 @@ namespace RERPAPI.Controllers.Old.POKH
     [ApiController]
     public class PORequestBuyController : ControllerBase
     {
-        ProjectPartlistPurchaseRequestRepo _PPPRRepo = new ProjectPartlistPurchaseRequestRepo();
-        UnitCountRepo _unitCountRepo = new UnitCountRepo();
+        private readonly ProjectPartlistPurchaseRequestRepo _PPPRRepo;
+        private readonly UnitCountRepo _unitCountRepo;
+
+        public PORequestBuyController(ProjectPartlistPurchaseRequestRepo pPPRRepo, UnitCountRepo unitCountRepo)
+        {
+            _PPPRRepo = pPPRRepo;
+            _unitCountRepo = unitCountRepo;
+        }
         [HttpPost("save-data")]
         public async Task<IActionResult> Save([FromBody] List<ProjectPartlistPurchaseRequest> request)
         {

@@ -1,20 +1,25 @@
-﻿using DocumentFormat.OpenXml.VariantTypes;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using ZXing;
 
 namespace RERPAPI.Controllers.Old
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class EmployeePayrollDetailController : Controller
+    public class EmployeePayrollDetailController : ControllerBase
     {
-        EmployeePayrollDetailRepo employeePayrollDetailRepo = new EmployeePayrollDetailRepo();
-        EmployeePayrollRepo employeePayrollRepo = new EmployeePayrollRepo();
-        EmployeeRepo employeeRepo = new EmployeeRepo();
+        EmployeePayrollDetailRepo _employeePayrollDetailRepo;
+        EmployeePayrollRepo _employeePayrollRepo;
+        EmployeeRepo _employeeRepo;
+
+        public EmployeePayrollDetailController(EmployeePayrollDetailRepo employeePayrollDetailRepo, EmployeePayrollRepo employeePayrollRepo, EmployeeRepo employeeRepo)
+        {
+            _employeePayrollDetailRepo = employeePayrollDetailRepo;
+            _employeePayrollRepo = employeePayrollRepo;
+            _employeeRepo = employeeRepo;
+        }
+
         [HttpGet("employee-payroll-detail")]
         public async Task<IActionResult> getemployeepayrolldetail(int? year, int? month, int departmentID, int employeeID, string? keyword)
         {
@@ -31,7 +36,7 @@ namespace RERPAPI.Controllers.Old
                     .Distinct()
                     .FirstOrDefault() ?? 0;
 
-                var payrollId = employeePayrollRepo.GetAll(x => x._Year == year && x._Month == month).FirstOrDefault()?.ID;
+                var payrollId = _employeePayrollRepo.GetAll(x => x._Year == year && x._Month == month).FirstOrDefault()?.ID;
                 var result = new
                 {
                     data = data,
@@ -51,7 +56,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                var data = employeePayrollDetailRepo.GetByID(ID);
+                var data = _employeePayrollDetailRepo.GetByID(ID);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
@@ -68,8 +73,8 @@ namespace RERPAPI.Controllers.Old
             {
                 if (type == 2)
                 {
-                    List<EmployeePayrollDetail> employeePayrollDetails = employeePayrollDetailRepo.GetAll(x => x.PayrollID == payrollID);
-                    if (employeePayrollDetails.Count() > 0) employeePayrollDetailRepo.DeleteRange(employeePayrollDetails);
+                    List<EmployeePayrollDetail> employeePayrollDetails = _employeePayrollDetailRepo.GetAll(x => x.PayrollID == payrollID);
+                    if (employeePayrollDetails.Count() > 0) _employeePayrollDetailRepo.DeleteRange(employeePayrollDetails);
                     employeeID = 0;
                 }
 
@@ -92,13 +97,13 @@ namespace RERPAPI.Controllers.Old
             {
                 if (listID.Count() > 0)
                 {
-                    List<EmployeePayrollDetail> employeePayrollDetails = employeePayrollDetailRepo.GetAll().Where(x => listID.Contains(x.ID)).ToList();
+                    List<EmployeePayrollDetail> employeePayrollDetails = _employeePayrollDetailRepo.GetAll().Where(x => listID.Contains(x.ID)).ToList();
                     if (employeePayrollDetails.Count() > 0)
                     {
                         foreach (EmployeePayrollDetail item in employeePayrollDetails)
                         {
                             item.IsPublish = isPublish;
-                            employeePayrollDetailRepo.UpdateAsync(item);
+                            _employeePayrollDetailRepo.UpdateAsync(item);
                         }
                     }
                 }
@@ -131,11 +136,11 @@ namespace RERPAPI.Controllers.Old
 
 
                         EmployeePayrollDetail employeePayrollDetail = new EmployeePayrollDetail();
-                        var employee = employeeRepo.GetAll(c => c.Code == code);
+                        var employee = _employeeRepo.GetAll(c => c.Code == code);
 
                         if (employee.Any())
                         {
-                            var lstExistFromDB = employeePayrollDetailRepo.GetAll(c =>
+                            var lstExistFromDB = _employeePayrollDetailRepo.GetAll(c =>
                                 c.EmployeeID == employee.First().ID &&
                                 c.BasicSalary == BasicSalary &&
                                 c.PayrollID == PayrollID);
@@ -226,12 +231,12 @@ namespace RERPAPI.Controllers.Old
                             // Lưu
                             if (lstExistFromDB.Any())
                             {
-                                employeePayrollDetailRepo.Update(employeePayrollDetail);
+                                _employeePayrollDetailRepo.Update(employeePayrollDetail);
                                 updated++;
                             }
                             else
                             {
-                                employeePayrollDetailRepo.Create(employeePayrollDetail);
+                                _employeePayrollDetailRepo.Create(employeePayrollDetail);
                                 created++;
                             }
                         }
@@ -267,11 +272,11 @@ namespace RERPAPI.Controllers.Old
             {
                 if (obj.ID <= 0)
                 {
-                    await employeePayrollDetailRepo.CreateAsync(obj);
+                    await _employeePayrollDetailRepo.CreateAsync(obj);
                 }
                 else
                 {
-                    employeePayrollDetailRepo.Update(obj);
+                    _employeePayrollDetailRepo.Update(obj);
                 }
 
                 return Ok(ApiResponseFactory.Success(1, ""));

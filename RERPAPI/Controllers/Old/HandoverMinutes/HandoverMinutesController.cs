@@ -14,8 +14,16 @@ namespace RERPAPI.Controllers.Old.HandoverMinutes
     [ApiController]
     public class HandoverMinutesController : ControllerBase
     {
-        HandoverMinutesRepo _handoverMinutesRepo = new HandoverMinutesRepo();
-        HandoverMinutesDetailRepo _handoverMinutesDetailRepo = new HandoverMinutesDetailRepo();
+        private readonly HandoverMinutesRepo _handoverMinutesRepo;
+        private readonly HandoverMinutesDetailRepo _handoverMinutesDetailRepo;
+
+        public HandoverMinutesController(
+            HandoverMinutesRepo handoverMinutesRepo,
+            HandoverMinutesDetailRepo handoverMinutesDetailRepo)
+        {
+            _handoverMinutesRepo = handoverMinutesRepo;
+            _handoverMinutesDetailRepo = handoverMinutesDetailRepo;
+        }
         [HttpGet]
         public IActionResult Get(DateTime dateStart, DateTime dateEnd, string keyWords = "")
         {

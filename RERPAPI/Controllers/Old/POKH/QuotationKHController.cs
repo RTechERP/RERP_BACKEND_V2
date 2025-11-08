@@ -10,8 +10,14 @@ namespace RERPAPI.Controllers.Old.POKH
     [ApiController]
     public class QuotationKHController : ControllerBase
     {
-        QuotationKHDetailRepo _quotationDetailKHRepo = new QuotationKHDetailRepo();
-        QuotationKHRepo _quotationKHRepo = new QuotationKHRepo();
+        private readonly QuotationKHDetailRepo _quotationDetailKHRepo;
+        private readonly QuotationKHRepo _quotationKHRepo;
+
+        public QuotationKHController(QuotationKHDetailRepo quotationDetailKHRepo, QuotationKHRepo quotationKHRepo)
+        {
+            _quotationDetailKHRepo = quotationDetailKHRepo;
+            _quotationKHRepo = quotationKHRepo;
+        }
 
         [HttpGet]
         public IActionResult Get(int status, int customerId, int userId, int size, int page, string filterText = "")
