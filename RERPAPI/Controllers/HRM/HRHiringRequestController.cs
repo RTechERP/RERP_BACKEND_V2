@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using RERPAPI.Attributes;
+using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
@@ -18,7 +20,20 @@ namespace RERPAPI.Controllers
     [ApiController]
     public class HRHiringRequestController : ControllerBase
     {
-        private readonly HRHiringRequestRepo _hrHiringRequestRepo = new HRHiringRequestRepo();
+
+        private readonly IConfiguration _configuration;
+        private readonly string key;
+        private readonly CurrentUser currentUser;
+        public HRHiringRequestController(IConfiguration configuration)
+        {
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+
+            // Initialize fields here, after _configuration is set
+            key = _configuration.GetValue<string>("SessionKey") ?? "";
+            currentUser = HttpContext.Session.GetObject<CurrentUser>(key) ?? new CurrentUser(); 
+        }
+        
+        private readonly HRHiringRequestRepo _hrHiringRequestRepo = new HRHiringRequestRepo(currentUser);
         private readonly HRHiringRequestEducationLinkRepo _hiringRequestEducationLinkRepo = new HRHiringRequestEducationLinkRepo();
         private readonly HRHiringRequestExperienceLinkRepo _hiringRequestExperienceLinkRepo = new HRHiringRequestExperienceLinkRepo();
         private readonly HRHiringRequestGenderLinkRepo _hiringRequestGenderLinkRepo = new HRHiringRequestGenderLinkRepo();

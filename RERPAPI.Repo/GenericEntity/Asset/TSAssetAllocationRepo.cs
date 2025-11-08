@@ -1,18 +1,17 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using RERPAPI.Model.Context;
+﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Repo.GenericEntity.Asset
 {
     public class TSAssetAllocationRepo : GenericRepo<TSAssetAllocation>
     {
-
-        public string generateAllocationCode( DateTime? allocationDate)
+        public TSAssetAllocationRepo(CurrentUser currentUser) : base(currentUser)
         {
-           
+        }
+
+        public string generateAllocationCode(DateTime? allocationDate)
+        {
+
 
             var date = allocationDate.Value.Date;
 
@@ -30,7 +29,7 @@ namespace RERPAPI.Repo.GenericEntity.Asset
 
             return newCode;
         }
-        public string test { get; set; }    
+        public string test { get; set; }
         public string test2 { get; set; }
     }
 }

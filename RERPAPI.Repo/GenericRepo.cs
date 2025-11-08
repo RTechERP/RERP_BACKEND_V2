@@ -11,11 +11,11 @@ namespace RERPAPI.Repo
         protected RTCContext db { get; set; }
         protected DbSet<T> table;
 
-        //public GenericRepo()
-        //{
-        //    db = new RTCContext();
-        //    table = db.Set<T>();
-        //}
+        public GenericRepo()
+        {
+            db = new RTCContext();
+            table = db.Set<T>();
+        }
 
 
         public GenericRepo(CurrentUser currentUser)
@@ -97,11 +97,11 @@ namespace RERPAPI.Repo
             }
         }
 
-        
+
 
         public int Update(T item)
         {
-            
+
             try
             {
                 var fieldValues = new Dictionary<string, object>();
