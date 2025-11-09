@@ -9,7 +9,12 @@ namespace RERPAPI.Controllers.Old
     [Route("api/[controller]")]
     public class HolidayController : ControllerBase
     {
-        HolidayRepo holidayRepo = new HolidayRepo();
+        private readonly HolidayRepo _holidayRepo;
+
+        public HolidayController(HolidayRepo holidayRepo)
+        {
+            _holidayRepo = holidayRepo;
+        }   
 
 
         [HttpGet]
@@ -76,8 +81,8 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                var existingHoliday = holidayRepo.GetAll()
-                    .Where(x => x.HolidayYear == holiday.HolidayYear && x.HolidayDay == holiday.HolidayDay && x.HolidayMonth == holiday.HolidayMonth && x.ID != holiday.ID);
+                var existingHoliday = _holidayRepo.GetAll(
+                    x => x.HolidayYear == holiday.HolidayYear && x.HolidayDay == holiday.HolidayDay && x.HolidayMonth == holiday.HolidayMonth && x.ID != holiday.ID);
 
                 if (existingHoliday.Any())
                 {
@@ -90,11 +95,11 @@ namespace RERPAPI.Controllers.Old
 
                 if (holiday.ID <= 0)
                 {
-                    await holidayRepo.CreateAsync(holiday);
+                    await _holidayRepo.CreateAsync(holiday);
                 }
                 else
                 {
-                    await holidayRepo.UpdateAsync(holiday);
+                    await _holidayRepo.UpdateAsync(holiday);
                 }
                 return Ok(new
                 {

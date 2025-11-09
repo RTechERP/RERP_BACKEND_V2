@@ -10,8 +10,13 @@ namespace RERPAPI.Controllers.Old
     [Route("api/[controller]")]
     public class EmployeeOnLeaveController : ControllerBase
     {
-        EmployeeOnLeaveRepo employeeOnLeaveRepo = new EmployeeOnLeaveRepo();
-        EmployeeRepo employeeRepo = new EmployeeRepo();
+        private readonly EmployeeOnLeaveRepo _employeeOnLeaveRepo;
+        private readonly EmployeeRepo _employeeRepo;
+        public EmployeeOnLeaveController(EmployeeOnLeaveRepo employeeOnLeaveRepo, EmployeeRepo employeeRepo)
+        {
+            _employeeOnLeaveRepo = employeeOnLeaveRepo;
+            _employeeRepo = employeeRepo;
+        }   
 
         [HttpPost]
         public IActionResult GetAllEmployeeOnLeave(EmployeeOnLeaveParam param)
@@ -75,7 +80,7 @@ namespace RERPAPI.Controllers.Old
                     employeeOnLeave.EndDate = DateTime.SpecifyKind(employeeOnLeave.EndDate.Value, DateTimeKind.Utc);
                 }
 
-                var existingLeaves = employeeOnLeaveRepo.GetAll()
+                var existingLeaves = _employeeOnLeaveRepo.GetAll()
                     .Where(x => x.EmployeeID == employeeOnLeave.EmployeeID
                         && x.TypeIsReal == employeeOnLeave.TypeIsReal
                         && x.ID != employeeOnLeave.ID
@@ -94,10 +99,10 @@ namespace RERPAPI.Controllers.Old
 
                 if (employeeOnLeave.ID <= 0)
                 {
-                    await employeeOnLeaveRepo.CreateAsync(employeeOnLeave);
+                    await _employeeOnLeaveRepo.CreateAsync(employeeOnLeave);
                 } else
                 {
-                    await employeeOnLeaveRepo.UpdateAsync(employeeOnLeave);
+                    await _employeeOnLeaveRepo.UpdateAsync(employeeOnLeave);
                 }
                 return Ok(new
                 {

@@ -10,11 +10,25 @@ namespace RERPAPI.Controllers.Old.HandoverMinutes
     [ApiController]
     public class HandoverMinutesDetailController : ControllerBase
     {
-        EmployeeRepo _employeeRepo = new EmployeeRepo();
-        HandoverMinutesRepo _handoverMinutesRepo = new HandoverMinutesRepo();
-        HandoverMinutesDetailRepo _handoverMinutesDetailRepo = new HandoverMinutesDetailRepo();
-        DepartmentRepo _departmentRepo = new DepartmentRepo();
-        POKHDetailRepo _pokhDetailRepo = new POKHDetailRepo();
+        private readonly EmployeeRepo _employeeRepo;
+        private readonly HandoverMinutesRepo _handoverMinutesRepo;
+        private readonly HandoverMinutesDetailRepo _handoverMinutesDetailRepo;
+        private readonly DepartmentRepo _departmentRepo;
+        private readonly POKHDetailRepo _pokhDetailRepo;
+
+        public HandoverMinutesDetailController(
+            EmployeeRepo employeeRepo,
+            HandoverMinutesRepo handoverMinutesRepo,
+            HandoverMinutesDetailRepo handoverMinutesDetailRepo,
+            DepartmentRepo departmentRepo,
+            POKHDetailRepo pokhDetailRepo)
+        {
+            _employeeRepo = employeeRepo;
+            _handoverMinutesRepo = handoverMinutesRepo;
+            _handoverMinutesDetailRepo = handoverMinutesDetailRepo;
+            _departmentRepo = departmentRepo;
+            _pokhDetailRepo = pokhDetailRepo;
+        }
 
         [HttpGet("get-employee")]
         public IActionResult GetEmployee()

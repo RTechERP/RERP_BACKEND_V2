@@ -8,7 +8,12 @@ namespace RERPAPI.Controllers.Old.Asset
     [ApiController]
     public class AssetsUnitController : ControllerBase
     {
-        UnitRepo _unitRepo = new UnitRepo();
+        private readonly UnitRepo _unitRepo;
+
+        public AssetsUnitController(UnitRepo unitRepo)
+        {
+            _unitRepo = unitRepo;
+        }
 
         [HttpGet("get-unit")]
         public IActionResult GetAll()

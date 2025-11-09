@@ -1,9 +1,14 @@
-﻿using RERPAPI.Model.Entities;
+﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Repo.GenericEntity
 {
     public class ProductLocationRepo : GenericRepo<ProductLocation>
     {
+        public ProductLocationRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
+
         public bool CheckLocationCodeExists(string locationCode, int? excludeId = null)
         {
             try

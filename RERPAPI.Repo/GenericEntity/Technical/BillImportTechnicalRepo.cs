@@ -1,4 +1,5 @@
-﻿using RERPAPI.Model.Entities;
+﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
 using RERPAPI.Repo;
 
 using System;
@@ -11,6 +12,10 @@ namespace RTCApi.Repo.GenericRepo
 {
     public class BillImportTechnicalRepo : GenericRepo<BillImportTechnical>
     {
+        public BillImportTechnicalRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
+
         public string GetBillCode(int billtype)
         {
             string billCode = "";

@@ -12,9 +12,16 @@ namespace RERPAPI.Controllers.HRM.Vehicle
     [ApiController]
     public class VehicleRepairHistoryController : ControllerBase
     {
+        private readonly VehicleRepairHistoryRepo _vehicleRepairHistoryRepo;
+        private readonly VehicleRepairHistoryFileRepo _vsehicleRepairHistoryFileRepo;
 
-        VehicleRepairHistoryRepo _vehicleRepairHistoryRepo = new VehicleRepairHistoryRepo();
-        VehicleRepairHistoryFileRepo _vsehicleRepairHistoryFileRepo = new VehicleRepairHistoryFileRepo();
+        public VehicleRepairHistoryController(
+            VehicleRepairHistoryRepo vehicleRepairHistoryRepo,
+            VehicleRepairHistoryFileRepo vehicleRepairHistoryFileRepo)
+        {
+            _vehicleRepairHistoryRepo = vehicleRepairHistoryRepo;
+            _vsehicleRepairHistoryFileRepo = vehicleRepairHistoryFileRepo;
+        }
 
         //Lấy danh sách theo dõi sửa chữa theo xe nội bộ
         [HttpGet("get-vehicle-repair-history")]

@@ -15,44 +15,113 @@ namespace RERPAPI.Controllers.Old.ProjectManager
     public class ProjectController : ControllerBase
     {
         #region Khai báo biến
-        ProjectRepo projectRepo = new ProjectRepo();
-        ProjectTreeFolderRepo projectTreeFolderRepo = new ProjectTreeFolderRepo();
-        CustomerRepo customerRepo = new CustomerRepo();
-        ProjectTypeRepo projectTypeRepo = new ProjectTypeRepo();
-        ProjectStatusRepo projectStatusRepo = new ProjectStatusRepo();
-        BusinessFieldRepo businessFieldRepo = new BusinessFieldRepo();
+        private readonly ProjectRepo projectRepo;
+        private readonly ProjectTreeFolderRepo projectTreeFolderRepo;
+        private readonly CustomerRepo customerRepo;
+        private readonly ProjectTypeRepo projectTypeRepo;
+        private readonly ProjectStatusRepo projectStatusRepo;
+        private readonly BusinessFieldRepo businessFieldRepo;
 
-        GroupFileRepo groupFileRepo = new GroupFileRepo();
-        FirmBaseRepo firmBaseRepo = new FirmBaseRepo();
-        ProjectTypeBaseRepo projectTypeBaseRepo = new ProjectTypeBaseRepo();
-        FollowProjectBaseRepo followProjectBaseRepo = new FollowProjectBaseRepo();
+        private readonly GroupFileRepo groupFileRepo;
+        private readonly FirmBaseRepo firmBaseRepo;
+        private readonly ProjectTypeBaseRepo projectTypeBaseRepo;
+        private readonly FollowProjectBaseRepo followProjectBaseRepo;
 
-        EmployeeProjectTypeRepo projectEmployeeProjectTypeRepo = new EmployeeProjectTypeRepo();
-        ProjectStatusLogRepo projectStatusLogRepo = new ProjectStatusLogRepo();
-        ProjectEmployeeRepo projectEmployeeRepo = new ProjectEmployeeRepo();
+        private readonly EmployeeProjectTypeRepo projectEmployeeProjectTypeRepo;
+        private readonly ProjectStatusLogRepo projectStatusLogRepo;
+        private readonly ProjectEmployeeRepo projectEmployeeRepo;
 
-        ProjectUserRepo projectUserRepo = new ProjectUserRepo();
-        ProjectTypeLinkRepo projectTypeLinkRepo = new ProjectTypeLinkRepo();
+        private readonly ProjectUserRepo projectUserRepo;
+        private readonly ProjectTypeLinkRepo projectTypeLinkRepo;
 
-        ProjectCostRepo projectCostRepo = new ProjectCostRepo();
-        ProjectPriorityLinkRepo projectPriorityLinkRepo = new ProjectPriorityLinkRepo();
+        private readonly ProjectCostRepo projectCostRepo;
+        private readonly ProjectPriorityLinkRepo projectPriorityLinkRepo;
 
-        ProjectCurrentSituationRepo projectCurrentSituationRepo = new ProjectCurrentSituationRepo();
+        private readonly ProjectCurrentSituationRepo projectCurrentSituationRepo;
 
-        ProjectPriorityRepo projectPriorityRepo = new ProjectPriorityRepo();
-        ProjectPersonalPriotityRepo projectPersonalPriotityRepo = new ProjectPersonalPriotityRepo();
-        ProjectWorkerTypeRepo projectWorkerTypeRepo = new ProjectWorkerTypeRepo();
-        DailyReportTechnicalRepo dailyReportTechnicalRepo = new DailyReportTechnicalRepo();
-        ProjectStatusDetailRepo projectStatusDetailRepo = new ProjectStatusDetailRepo();
+        private readonly ProjectPriorityRepo projectPriorityRepo;
+        private readonly ProjectPersonalPriotityRepo projectPersonalPriotityRepo;
+        private readonly ProjectWorkerTypeRepo projectWorkerTypeRepo;
+        private readonly DailyReportTechnicalRepo dailyReportTechnicalRepo;
+        private readonly ProjectStatusDetailRepo projectStatusDetailRepo;
 
         // Added repos for employee status and curricular
-        EmployeeStatusRepo _employeeStatusRepo = new EmployeeStatusRepo();
-        EmployeeCurricularRepo _employeeCurricularRepo = new EmployeeCurricularRepo();
-        EmployeeRepo _employeeRepo = new EmployeeRepo();
-        PositionInternalRepo _positionInternalRepo = new PositionInternalRepo();
-        EmployeeWorkingProcessRepo _employeeWorkingProcessRepo = new EmployeeWorkingProcessRepo();
-        UnitCountRepo _unitCountRepo = new UnitCountRepo();
-        //EmployeeProjectTypeRepo projectEmployeeProjectTypeRepo = new EmployeeProjectTypeRepo();
+        private readonly EmployeeStatusRepo _employeeStatusRepo;
+        private readonly EmployeeCurricularRepo _employeeCurricularRepo;
+        private readonly EmployeeRepo _employeeRepo;
+        private readonly PositionInternalRepo _positionInternalRepo;
+        private readonly EmployeeWorkingProcessRepo _employeeWorkingProcessRepo;
+        private readonly UnitCountRepo _unitCountRepo;
+
+        public ProjectController(
+            ProjectRepo projectRepo,
+            ProjectTreeFolderRepo projectTreeFolderRepo,
+            CustomerRepo customerRepo,
+            ProjectTypeRepo projectTypeRepo,
+            ProjectStatusRepo projectStatusRepo,
+            BusinessFieldRepo businessFieldRepo,
+            GroupFileRepo groupFileRepo,
+            FirmBaseRepo firmBaseRepo,
+            ProjectTypeBaseRepo projectTypeBaseRepo,
+            FollowProjectBaseRepo followProjectBaseRepo,
+            EmployeeProjectTypeRepo projectEmployeeProjectTypeRepo,
+            ProjectStatusLogRepo projectStatusLogRepo,
+            ProjectEmployeeRepo projectEmployeeRepo,
+            ProjectUserRepo projectUserRepo,
+            ProjectTypeLinkRepo projectTypeLinkRepo,
+            ProjectCostRepo projectCostRepo,
+            ProjectPriorityLinkRepo projectPriorityLinkRepo,
+            ProjectCurrentSituationRepo projectCurrentSituationRepo,
+            ProjectPriorityRepo projectPriorityRepo,
+            ProjectPersonalPriotityRepo projectPersonalPriotityRepo,
+            ProjectWorkerTypeRepo projectWorkerTypeRepo,
+            DailyReportTechnicalRepo dailyReportTechnicalRepo,
+            ProjectStatusDetailRepo projectStatusDetailRepo,
+            EmployeeStatusRepo employeeStatusRepo,
+            EmployeeCurricularRepo employeeCurricularRepo,
+            EmployeeRepo employeeRepo,
+            PositionInternalRepo positionInternalRepo,
+            EmployeeWorkingProcessRepo employeeWorkingProcessRepo,
+            UnitCountRepo unitCountRepo
+        )
+        {
+            this.projectRepo = projectRepo;
+            this.projectTreeFolderRepo = projectTreeFolderRepo;
+            this.customerRepo = customerRepo;
+            this.projectTypeRepo = projectTypeRepo;
+            this.projectStatusRepo = projectStatusRepo;
+            this.businessFieldRepo = businessFieldRepo;
+
+            this.groupFileRepo = groupFileRepo;
+            this.firmBaseRepo = firmBaseRepo;
+            this.projectTypeBaseRepo = projectTypeBaseRepo;
+            this.followProjectBaseRepo = followProjectBaseRepo;
+
+            this.projectEmployeeProjectTypeRepo = projectEmployeeProjectTypeRepo;
+            this.projectStatusLogRepo = projectStatusLogRepo;
+            this.projectEmployeeRepo = projectEmployeeRepo;
+
+            this.projectUserRepo = projectUserRepo;
+            this.projectTypeLinkRepo = projectTypeLinkRepo;
+
+            this.projectCostRepo = projectCostRepo;
+            this.projectPriorityLinkRepo = projectPriorityLinkRepo;
+
+            this.projectCurrentSituationRepo = projectCurrentSituationRepo;
+
+            this.projectPriorityRepo = projectPriorityRepo;
+            this.projectPersonalPriotityRepo = projectPersonalPriotityRepo;
+            this.projectWorkerTypeRepo = projectWorkerTypeRepo;
+            this.dailyReportTechnicalRepo = dailyReportTechnicalRepo;
+            this.projectStatusDetailRepo = projectStatusDetailRepo;
+
+            _employeeStatusRepo = employeeStatusRepo;
+            _employeeCurricularRepo = employeeCurricularRepo;
+            _employeeRepo = employeeRepo;
+            _positionInternalRepo = positionInternalRepo;
+            _employeeWorkingProcessRepo = employeeWorkingProcessRepo;
+            _unitCountRepo = unitCountRepo;
+        }
         #endregion
 
         #region Hàm dùng chung

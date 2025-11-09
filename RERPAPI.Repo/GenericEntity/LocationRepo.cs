@@ -1,9 +1,14 @@
-﻿using RERPAPI.Model.Entities;
+﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Repo.GenericEntity
 {
     public class LocationRepo : GenericRepo<Location>
     {
+        public LocationRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
+
         public bool CheckLocationCodeExists(string locationCode, int? id = null)
         {
             var query = GetAll(x => x.LocationCode.ToUpper() == locationCode.ToUpper() && x.IsDeleted == false);

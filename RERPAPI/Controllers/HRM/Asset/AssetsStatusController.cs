@@ -8,8 +8,12 @@ namespace RERPAPI.Controllers.Old.Asset
     [ApiController]
     public class AssetsStatusController : ControllerBase
     {
+        private readonly TSStatusAssetRepo _tsStatusAssetRepo;
 
-        TSStatusAssetRepo _tsStatusAssetRepo = new TSStatusAssetRepo();
+        public AssetsStatusController(TSStatusAssetRepo tsStatusAssetRepo)
+        {
+            _tsStatusAssetRepo = tsStatusAssetRepo;
+        }
 
         [HttpGet("get-asset-status")]
         public IActionResult GetStatus()

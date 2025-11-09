@@ -9,7 +9,11 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     [ApiController]
     public class WareHouseController : ControllerBase
     {
-        WarehouseRepo _warehouseRepo = new WarehouseRepo();
+        private readonly WarehouseRepo _warehouseRepo;
+        public WareHouseController(WarehouseRepo warehouseRepo)
+        {
+            _warehouseRepo = warehouseRepo;
+        }
         [HttpGet("")]
         public IActionResult getDataWH()
         {
