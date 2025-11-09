@@ -1,4 +1,5 @@
-﻿using RERPAPI.Model.DTO.ProjectAGV;
+﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.DTO.ProjectAGV;
 using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
@@ -11,6 +12,11 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class ProjectRepo : GenericRepo<RERPAPI.Model.Entities.Project>
     {
+        public ProjectRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
+
+
         public bool ValidateAGV(RERPAPI.Model.Entities.Project e, out string message)
         {
             message = "";

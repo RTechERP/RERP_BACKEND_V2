@@ -1,4 +1,5 @@
-﻿using RERPAPI.Model.Entities;
+﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,10 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity.MeetingMinutesRepo
 {
-    public class MeetingMinutesFileRepo:GenericRepo<MeetingMinutesFile>
+    public class MeetingMinutesFileRepo : GenericRepo<MeetingMinutesFile>
     {
+        public MeetingMinutesFileRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
     }
 }

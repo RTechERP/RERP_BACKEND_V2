@@ -1,0 +1,13 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace RERPAPI.Entities;
+
+public partial class UnitCountKT
+{
+    public int ID { get; set; }
+
+    public string? UnitCountCode { get; set; }
+
+    public string? UnitCountName { get; set; }
+}

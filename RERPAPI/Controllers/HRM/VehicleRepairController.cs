@@ -13,15 +13,29 @@ namespace RERPAPI.Controllers.HRM
     [ApiController]
     public class VehicleRepairController : ControllerBase
     {
-        VehicleManagementRepo _vehicleManagementRepo = new VehicleManagementRepo();
-        VehicleCategoryRepo _vehicleCategoryRepo = new VehicleCategoryRepo();
-        EmployeeRepo _employeeRepo = new EmployeeRepo();
-        VehicleRepairRepo _vehicleRepairRepo = new VehicleRepairRepo();
-        VehicleRepairTypeRepo _vehicleRepairTypeRepo = new VehicleRepairTypeRepo();
+        private readonly VehicleManagementRepo _vehicleManagementRepo;
+        private readonly VehicleCategoryRepo _vehicleCategoryRepo;
+        private readonly EmployeeRepo _employeeRepo;
+        private readonly VehicleRepairRepo _vehicleRepairRepo;
+        private readonly VehicleRepairTypeRepo _vehicleRepairTypeRepo;
+
+        public VehicleRepairController(
+            VehicleManagementRepo vehicleManagementRepo,
+            VehicleCategoryRepo vehicleCategoryRepo,
+            EmployeeRepo employeeRepo,
+            VehicleRepairRepo vehicleRepairRepo,
+            VehicleRepairTypeRepo vehicleRepairTypeRepo)
+        {
+            _vehicleManagementRepo = vehicleManagementRepo;
+            _vehicleCategoryRepo = vehicleCategoryRepo;
+            _employeeRepo = employeeRepo;
+            _vehicleRepairRepo = vehicleRepairRepo;
+            _vehicleRepairTypeRepo = vehicleRepairTypeRepo;
+        }
         //Lấy danh sách sửa chữa, bảo dưỡng
         [HttpPost("get-vehicles-repair")]
-        public IActionResult GetVehicleRepair([FromBody] VehicleRepairRequestParam   request)
-         {
+        public IActionResult GetVehicleRepair([FromBody] VehicleRepairRequestParam request)
+        {
             try
             {
                 

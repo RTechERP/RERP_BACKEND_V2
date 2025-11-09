@@ -11,14 +11,16 @@ namespace RERPAPI.Controllers.Old
     [Route("api/[controller]")]
     public class EmployeeContractController : ControllerBase
     {
-        EmployeeContractRepo employeeContractRepo = new EmployeeContractRepo();
-
+        private EmployeeContractRepo _employeeContractRepo;
         private readonly IWebHostEnvironment _environment;
-
-        public EmployeeContractController(IWebHostEnvironment environment)
+        public EmployeeContractController(EmployeeContractRepo employeeContractRepo, IWebHostEnvironment environment)
         {
+            _employeeContractRepo = employeeContractRepo;
             _environment = environment;
         }
+
+
+        
 
         //[HttpGet]
         //public IActionResult GetAll()
@@ -79,7 +81,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                var employeeContract = employeeContractRepo.GetByID(id);
+                var employeeContract = _employeeContractRepo.GetByID(id);
                 //return Ok(new
                 //{
                 //    status = 1,
@@ -106,8 +108,8 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                if (employeeContract.ID <= 0) await employeeContractRepo.CreateAsync(employeeContract);
-                else await employeeContractRepo.UpdateAsync(employeeContract);
+                if (employeeContract.ID <= 0) await _employeeContractRepo.CreateAsync(employeeContract);
+                else await _employeeContractRepo.UpdateAsync(employeeContract);
 
                 //return Ok(new
                 //{

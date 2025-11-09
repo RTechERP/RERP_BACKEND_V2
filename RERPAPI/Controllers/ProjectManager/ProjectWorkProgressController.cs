@@ -12,8 +12,13 @@ namespace RERPAPI.Controllers.ProjectManager
     public class ProjectWorkPropressController : ControllerBase
     {
         #region Khai báo biến
-        ProjectRepo projectRepo = new ProjectRepo();
-        CustomerRepo customerRepo = new CustomerRepo();
+        ProjectRepo projectRepo;
+        CustomerRepo customerRepo;
+        public ProjectWorkPropressController(ProjectRepo projectRepo, CustomerRepo customerRepo)
+        {
+            this.projectRepo = projectRepo;
+            this.customerRepo = customerRepo;
+        }
         #endregion
 
         #region Lấy danh sách tiến độ công việc

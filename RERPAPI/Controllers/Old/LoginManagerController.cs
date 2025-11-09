@@ -3,7 +3,6 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System.Security.Cryptography;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -11,8 +10,13 @@ namespace RERPAPI.Controllers.Old
     [Route("api/[controller]")]
     public class LoginManagerController : ControllerBase
     {
-        LoginManagerRepo loginManagerRepo = new LoginManagerRepo();
-        EmployeeRepo employeeRepo = new EmployeeRepo();
+        LoginManagerRepo loginManagerRepo;
+        EmployeeRepo employeeRepo;
+        public LoginManagerController(LoginManagerRepo loginManagerRepo, EmployeeRepo employeeRepo)
+        {
+            this.loginManagerRepo = loginManagerRepo;
+            this.employeeRepo = employeeRepo;
+        }
         [HttpGet("{id}")]
         public IActionResult GetLoginInfo(int id)
         {

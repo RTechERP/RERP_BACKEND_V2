@@ -13,7 +13,12 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
     [ApiController]
     public class RequestInvoiceController : ControllerBase
     {
-        RequestInvoiceRepo _requestInvoiceRepo = new RequestInvoiceRepo();
+        private readonly RequestInvoiceRepo _requestInvoiceRepo;
+
+        public RequestInvoiceController(RequestInvoiceRepo requestInvoiceRepo)
+        {
+            _requestInvoiceRepo = requestInvoiceRepo;
+        }
         [HttpGet]
         public IActionResult Get(DateTime dateStart, DateTime dateEnd, string keyWords = "")
         {

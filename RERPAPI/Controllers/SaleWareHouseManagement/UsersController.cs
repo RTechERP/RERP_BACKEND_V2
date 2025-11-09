@@ -12,7 +12,12 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
     [ApiController]
     public class UsersController : ControllerBase
     {
-        UserRepo _userRepo = new UserRepo();
+        private readonly UserRepo _userRepo;
+
+        public UsersController(UserRepo userRepo)
+        {
+            _userRepo = userRepo;
+        }
 
         [HttpGet("cbb-user")]
         public IActionResult getDataCbbUser() {

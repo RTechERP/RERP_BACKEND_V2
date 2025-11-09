@@ -11,7 +11,12 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
     [ApiController]
     public class InventoryController : ControllerBase
     {
-        InventoryRepo _inventoryRepo = new InventoryRepo();
+        private readonly InventoryRepo _inventoryRepo;
+
+        public InventoryController(InventoryRepo inventoryRepo)
+        {
+            _inventoryRepo = inventoryRepo;
+        }
         [HttpPost("get-inventory")]
         public IActionResult getInventory(InventoryPram filter)
         {

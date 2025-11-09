@@ -13,7 +13,11 @@ namespace RERPAPI.Controllers.Old
     [ApiKeyAuthorize]
     public class ProjectSolutionController : ControllerBase
     {
-        private ProjectSolutionRepo _projectSolutionRepo = new ProjectSolutionRepo();
+        private ProjectSolutionRepo _projectSolutionRepo;
+        public ProjectSolutionController(ProjectSolutionRepo projectSolutionRepo)
+        {
+            _projectSolutionRepo = projectSolutionRepo;
+        }   
 
         [HttpGet("get-all")]
         public async Task<IActionResult> GetAll(int projectID)

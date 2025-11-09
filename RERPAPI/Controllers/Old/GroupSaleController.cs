@@ -8,13 +8,18 @@ namespace RERPAPI.Controllers.Old
     [ApiController]
     public class GroupSaleController : ControllerBase
     {
-        GroupSaleRepo groupSaleRepo = new GroupSaleRepo();
+        private readonly GroupSaleRepo _groupSaleRepo;
+
+        public GroupSaleController(GroupSaleRepo groupSaleRepo)
+        {
+            _groupSaleRepo = groupSaleRepo;
+        }
         [HttpGet]
         public IActionResult GetAll()
         {
             try
             {
-                List<GroupSale> groupSales = groupSaleRepo.GetAll();
+                List<GroupSale> groupSales = _groupSaleRepo.GetAll();
                 return Ok(new
                 {
                     status = 1,
