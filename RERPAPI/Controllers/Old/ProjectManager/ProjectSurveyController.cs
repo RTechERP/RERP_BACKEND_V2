@@ -12,11 +12,26 @@ namespace RERPAPI.Controllers.Old.ProjectManager
     public class ProjectSurveyController : ControllerBase
     {
         #region Khai báo biến
-        ProjectRepo projectRepo = new ProjectRepo();
-        CustomerRepo customerRepo = new CustomerRepo();
-        ProjectSurveyDetailRepo projectSurveyDetailRepo = new ProjectSurveyDetailRepo();
-        ProjectSurveyRepo projectSurveyRepo = new ProjectSurveyRepo();
-        ProjectSurveyFileRepo projectSurveyFileRepo = new ProjectSurveyFileRepo();
+private readonly ProjectRepo projectRepo;
+    private readonly CustomerRepo customerRepo;
+    private readonly ProjectSurveyDetailRepo projectSurveyDetailRepo;
+    private readonly ProjectSurveyRepo projectSurveyRepo;
+    private readonly ProjectSurveyFileRepo projectSurveyFileRepo;
+
+    public ProjectSurveyController(
+        ProjectRepo projectRepo,
+        CustomerRepo customerRepo,
+        ProjectSurveyDetailRepo projectSurveyDetailRepo,
+        ProjectSurveyRepo projectSurveyRepo,
+        ProjectSurveyFileRepo projectSurveyFileRepo
+    )
+    {
+        this.projectRepo = projectRepo;
+        this.customerRepo = customerRepo;
+        this.projectSurveyDetailRepo = projectSurveyDetailRepo;
+        this.projectSurveyRepo = projectSurveyRepo;
+        this.projectSurveyFileRepo = projectSurveyFileRepo;
+    }
         #endregion
 
         #region Lấy danh sách tiến độ công việc

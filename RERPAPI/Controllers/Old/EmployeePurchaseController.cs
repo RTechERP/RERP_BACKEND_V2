@@ -9,15 +9,16 @@ namespace RERPAPI.Controllers
     [ApiController]
     public class EmployeePurchaseController : ControllerBase
     {
-        private readonly EmployeePurchaseRepo employeepurchaseRepo;
-        private readonly TaxCompanyRepo taxcompanyRepo = new TaxCompanyRepo();
+        private readonly EmployeePurchaseRepo _employeePurchaseRepo;
+        private readonly TaxCompanyRepo _taxCompanyRepo;
 
         /// <summary>
 
 
-        public EmployeePurchaseController()
+        public EmployeePurchaseController(EmployeePurchaseRepo employeePurchaseRepo, TaxCompanyRepo taxCompanyRepo)
         {
-            employeepurchaseRepo = new EmployeePurchaseRepo();
+            _employeePurchaseRepo = employeePurchaseRepo;
+            _taxCompanyRepo = taxCompanyRepo;   
         }
 
         /// <summary>
@@ -48,7 +49,7 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                EmployeePurchase employeePurchase = employeepurchaseRepo.GetByID(id);
+                EmployeePurchase employeePurchase = _employeePurchaseRepo.GetByID(id);
                 return Ok(ApiResponseFactory.Success(employeePurchase, ""));
             }
             catch (Exception ex)
@@ -87,7 +88,7 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                var taxcompanies = taxcompanyRepo.GetAll(p => p.IsDeleted == false);
+                var taxcompanies = _taxCompanyRepo.GetAll(p => p.IsDeleted == false);
                 return Ok(ApiResponseFactory.Success(taxcompanies, ""));
             }
             catch (Exception ex)
@@ -104,9 +105,9 @@ namespace RERPAPI.Controllers
             try
             {
                 if (employeepurchase.ID <= 0)
-                    await employeepurchaseRepo.CreateAsync(employeepurchase);
+                    await _employeePurchaseRepo.CreateAsync(employeepurchase);
                 else
-                    await employeepurchaseRepo.UpdateAsync(employeepurchase);
+                    await _employeePurchaseRepo.UpdateAsync(employeepurchase);
                 return Ok(ApiResponseFactory.Success(employeepurchase, "Cập nhật thành công!"));
             }
             catch (Exception ex)
@@ -122,8 +123,8 @@ namespace RERPAPI.Controllers
             {
                 bool check = false;
 
-                var employeePurchase = employeepurchaseRepo.GetAll()
-                    .Where(x => x.ID != currentId &&
+                var employeePurchase = _employeePurchaseRepo.GetAll(
+                    x => x.ID != currentId &&
                                x.EmployeeID == employeeId &&
                                x.TaxCompayID == companyId
                                && x.IsDeleted == false

@@ -10,5 +10,8 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class EmployeeOnLeaveRepo : GenericRepo<EmployeeOnLeave>
     {
+        public EmployeeOnLeaveRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
     }
 }

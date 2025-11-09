@@ -10,7 +10,11 @@ namespace RERPAPI.Controllers
     [ApiController]
     public class DepartmentController : ControllerBase
     {
-        DepartmentRepo _departmentRepo = new DepartmentRepo();
+        DepartmentRepo _departmentRepo;
+        public DepartmentController(DepartmentRepo departmentRepo)
+        {
+            _departmentRepo = departmentRepo;
+        }
 
         [HttpGet("getall")]
         public IActionResult GetAll()

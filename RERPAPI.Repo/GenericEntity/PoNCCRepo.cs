@@ -7,13 +7,24 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class PONCCRepo : GenericRepo<PONCC>
     {
-        private PONCCDetailRepo _pONCCDetailRepo = new PONCCDetailRepo();
-        private PONCCRulePayRepo _repoRulePay = new PONCCRulePayRepo();
-        private DocumentImportPONCCRepo _repoDocImport = new DocumentImportPONCCRepo();
-        private PONCCDetailRequestBuyRepo _repoDetailRequest = new PONCCDetailRequestBuyRepo();
-        private BillImportDetailRepo _repoBillImport = new BillImportDetailRepo();
-        private PONCCDetailLogRepo _repoDetailLog = new PONCCDetailLogRepo();
-        private SupplierSaleRepo _supplierSaleRepo = new SupplierSaleRepo();
+        private PONCCDetailRepo _pONCCDetailRepo;
+        private PONCCRulePayRepo _repoRulePay;
+        private DocumentImportPONCCRepo _repoDocImport;
+        private PONCCDetailRequestBuyRepo _repoDetailRequest;
+        private BillImportDetailRepo _repoBillImport;
+        private PONCCDetailLogRepo _repoDetailLog;
+        private SupplierSaleRepo _supplierSaleRepo;
+
+        public PONCCRepo(CurrentUser currentUser, PONCCDetailRepo pONCCDetailRepo, PONCCRulePayRepo pONCCRulePayRepo, DocumentImportPONCCRepo documentImportPONCCRepo, PONCCDetailRequestBuyRepo pONCCDetailRequestBuyRepo, BillImportDetailRepo billImportDetailRepo, PONCCDetailLogRepo pONCCDetailLogRepo, SupplierSaleRepo supplierSaleRepo) : base(currentUser)
+        {
+            _pONCCDetailRepo = pONCCDetailRepo;
+            _repoRulePay = pONCCRulePayRepo;
+            _repoDocImport = documentImportPONCCRepo;
+            _repoDetailRequest = pONCCDetailRequestBuyRepo;
+            _repoBillImport = billImportDetailRepo;
+            _repoDetailLog = pONCCDetailLogRepo;
+            _supplierSaleRepo = supplierSaleRepo;
+        }
 
         public bool Validate(PONCCDTO pONCCDTO, out string errorMessage)
         {

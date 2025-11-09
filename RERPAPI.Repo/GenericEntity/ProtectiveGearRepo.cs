@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class ProtectiveGearRepo
+    public class ProtectiveGearRepo 
     {
     }
 }

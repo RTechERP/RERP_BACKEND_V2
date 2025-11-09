@@ -9,7 +9,14 @@ namespace RERPAPI.Controllers
     [ApiController]
     public class EmployeeErrorController : ControllerBase
     {
-        private readonly EmployeeErrorRepo _employeeErrorRepo = new EmployeeErrorRepo();
+        private readonly EmployeeErrorRepo _employeeErrorRepo;
+        private readonly EmployeeRepo _employeeRepo;
+        public EmployeeErrorController(EmployeeErrorRepo employeeErrorRepo, EmployeeRepo employeeRepo)
+        {
+            _employeeErrorRepo = employeeErrorRepo;
+            _employeeRepo = employeeRepo;
+
+        }
 
         [HttpGet("get-employee-error")]
         public async Task<IActionResult> getEmployeeError(string? keyword, int pageNumber, int pageSize, DateTime dateStart, DateTime dateEnd)
@@ -67,9 +74,8 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                var employeeRepo = new EmployeeRepo();
 
-                var employees = employeeRepo.GetAll()
+                var employees = _employeeRepo.GetAll()
                     .Select(x => new
                     {
                         x.ID,

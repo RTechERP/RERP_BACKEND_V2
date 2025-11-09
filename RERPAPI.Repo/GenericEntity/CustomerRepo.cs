@@ -7,12 +7,16 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using RERPAPI.Model.Entities;
+using RERPAPI.Model.DTO;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class CustomerRepo:GenericRepo<Customer>
+    public class CustomerRepo : GenericRepo<Customer>
     {
 
+        public CustomerRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
     }
-    
+
 }

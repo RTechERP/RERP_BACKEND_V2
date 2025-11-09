@@ -14,13 +14,13 @@ namespace RERPAPI.Controllers.Old
     [ApiController]
     public class ModulaLocationController : ControllerBase
     {
-        ModulaLocationRepo locationRepo = new ModulaLocationRepo();
-        ModulaLocationDetailRepo detailRepo = new ModulaLocationDetailRepo();
+        ModulaLocationRepo locationRepo;
+        ModulaLocationDetailRepo detailRepo;
 
-        BillImportDetailSerialNumberRepo importDetailSerialNumberRepo = new BillImportDetailSerialNumberRepo();
-        BillExportDetailSerialNumberRepo exportDetailSerialNumberRepo = new BillExportDetailSerialNumberRepo();
-        BillImportDetailSerialNumberModulaLocationRepo serialNumberImportModulaRepo = new BillImportDetailSerialNumberModulaLocationRepo();
-        BillExportDetailSerialNumberModulaLocationRepo serialNumberExportModulaRepo = new BillExportDetailSerialNumberModulaLocationRepo();
+        BillImportDetailSerialNumberRepo importDetailSerialNumberRepo;
+        BillExportDetailSerialNumberRepo exportDetailSerialNumberRepo;
+        BillImportDetailSerialNumberModulaLocationRepo serialNumberImportModulaRepo;
+        BillExportDetailSerialNumberModulaLocationRepo serialNumberExportModulaRepo;
 
 
 
@@ -35,9 +35,15 @@ namespace RERPAPI.Controllers.Old
         string _displayClearModula = "11|6666|DISPLAY_CLEAR\r";
         string _displayShowModula = "11|2222|DISPLAY_SHOW|message|10|0\r";
 
-        public ModulaLocationController(PersistentTcpClientService tcpClient)
+        public ModulaLocationController(PersistentTcpClientService tcpClient, ModulaLocationRepo locationRepo, ModulaLocationDetailRepo detailRepo, BillImportDetailSerialNumberRepo importDetailSerialNumberRepo, BillExportDetailSerialNumberRepo exportDetailSerialNumberRepo)
         {
             _tcpClient = tcpClient;
+            this.locationRepo = locationRepo;
+            this.detailRepo = detailRepo;
+            this.importDetailSerialNumberRepo = importDetailSerialNumberRepo;
+            this.exportDetailSerialNumberRepo = exportDetailSerialNumberRepo;
+            this.serialNumberImportModulaRepo = serialNumberImportModulaRepo;
+            this.serialNumberExportModulaRepo = serialNumberExportModulaRepo;
         }
 
         [HttpGet("getlocation")]

@@ -10,7 +10,12 @@ namespace RERPAPI.Controllers.Old.IssueSolution
     [ApiController]
     public class IssueSolutionStatusController : ControllerBase
     {
-        private readonly IssueSolutionStatusRepo _issueSolutionStatusRepo = new IssueSolutionStatusRepo();
+        private readonly IssueSolutionStatusRepo _issueSolutionStatusRepo;
+
+        public IssueSolutionStatusController(IssueSolutionStatusRepo issueSolutionStatusRepo)
+        {
+            _issueSolutionStatusRepo = issueSolutionStatusRepo;
+        }
 
         [HttpGet()]
         public IActionResult GetAllIssueSolutionStatus()

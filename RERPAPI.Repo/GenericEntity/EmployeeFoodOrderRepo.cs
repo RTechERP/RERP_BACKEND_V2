@@ -1,4 +1,5 @@
-﻿using RERPAPI.Model.Entities;
+﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,8 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class EmployeeFoodOrderRepo : GenericRepo<EmployeeFoodOrder>
     {
-        public EmployeeFoodOrderRepo() : base() { }
+        public EmployeeFoodOrderRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
     }
 }

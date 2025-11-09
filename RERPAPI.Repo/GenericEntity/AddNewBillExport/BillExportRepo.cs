@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using RERPAPI.Model.Context;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
@@ -11,6 +12,9 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
 {
     public class BillExportRepo: GenericRepo<BillExport>
     {
+        public BillExportRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
         public string GetBillCode(int billtype)
         {
             string billCode = "";

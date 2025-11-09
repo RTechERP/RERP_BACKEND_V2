@@ -14,10 +14,10 @@ namespace RERPAPI.Controllers.Old.Asset
     [ApiController]
     public class AssetTranferController : ControllerBase
     {
-        TSAssetTransferRepo _tSAssetTransferRepo = new TSAssetTransferRepo();
-        TSAllocationEvictionAssetRepo _tSAllocationEvictionRepo = new TSAllocationEvictionAssetRepo();
-        TSAssetManagementRepo _tsAssetManagementRepo = new TSAssetManagementRepo();
-        TSAssetTransferDetailRepo _tSAssetTransferDetailRepo = new TSAssetTransferDetailRepo();
+        private readonly TSAssetTransferRepo _tSAssetTransferRepo;
+        private readonly TSAllocationEvictionAssetRepo _tSAllocationEvictionRepo;
+        private readonly TSAssetManagementRepo _tsAssetManagementRepo;
+        private readonly TSAssetTransferDetailRepo _tSAssetTransferDetailRepo;
         TSTranferAsset tSTranferAsset = new TSTranferAsset();
         TSTranferAssetDetail tranferAssetDetail = new TSTranferAssetDetail();
         [HttpPost("get-asset-tranfer")]

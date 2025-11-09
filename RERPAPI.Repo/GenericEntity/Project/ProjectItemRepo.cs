@@ -1,18 +1,19 @@
-﻿using RERPAPI.Model.Common;
+﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.ProjectAGV;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity.Project
 {
     public class ProjectItemRepo : GenericRepo<ProjectItem>
     {
-        ProjectRepo _projectRepo = new ProjectRepo();
+        ProjectRepo _projectRepo;
+
+        public ProjectItemRepo(CurrentUser currentUser, ProjectRepo projectRepo) : base(currentUser)
+        {
+            _projectRepo = projectRepo;
+        }
+
         public string GenerateProjectItemCode(int projectId)
         {
             try
@@ -27,7 +28,7 @@ namespace RERPAPI.Repo.GenericEntity.Project
                 string newCode = $"{project.ProjectCode}_{projectItem.Count + 1}";
                 return newCode;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw new Exception($"Lỗi: {ex.Message}\r\n{ex.ToString()}");
             }
@@ -36,8 +37,8 @@ namespace RERPAPI.Repo.GenericEntity.Project
         {
             if (projectID is null) return "1";
             var max = GetAll(x => x.ProjectID == projectID)
-                .Select(x => x.STT)                
-                .AsEnumerable()                
+                .Select(x => x.STT)
+                .AsEnumerable()
                 .Select(s =>
                 {
                     if (string.IsNullOrWhiteSpace(s)) return (int?)null;
@@ -123,7 +124,7 @@ namespace RERPAPI.Repo.GenericEntity.Project
                 }
             }
 
-            if (item.ProjectID <= 0||item.ProjectID==null)
+            if (item.ProjectID <= 0 || item.ProjectID == null)
             {
                 message = "Vui lòng chọn dự án";
                 return false;
@@ -150,7 +151,7 @@ namespace RERPAPI.Repo.GenericEntity.Project
             }
             if (item.Status == 2)
             {
-             
+
                 if (!item.ActualEndDate.HasValue)
                 {
                     message = "Vui lòng nhập ngày kết thúc thực tế";
@@ -174,7 +175,7 @@ namespace RERPAPI.Repo.GenericEntity.Project
                     message = "Vui lòng chọn kiểu dự án";
                     return false;
                 }
-             
+
             }
 
             if (item.ProjectID <= 0 || item.ProjectID == null)

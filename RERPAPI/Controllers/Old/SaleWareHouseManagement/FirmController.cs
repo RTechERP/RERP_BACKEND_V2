@@ -11,7 +11,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
     [ApiController]
     public class FirmController : ControllerBase
     {
-        FirmRepo _firmRepo = new FirmRepo();
+        private readonly FirmRepo _firmRepo;
+        public FirmController(FirmRepo firmRepo)
+        {
+            _firmRepo = firmRepo;
+        }
         [HttpGet("")]
         public IActionResult getDataFirm()
         {
