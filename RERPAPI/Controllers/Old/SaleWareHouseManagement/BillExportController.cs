@@ -160,19 +160,18 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                        "spGetInventory", new string[] { "@ID", "@Find", "@WarehouseCode" },
                     new object[] { productGroupID, "", warehouseCode }
                    );
-                /* List<dynamic> billList = result[0]; // dữ liệu hóa đơn*/
-                int totalPage = 0;
+                ///* List<dynamic> billList = result[0]; // dữ liệu hóa đơn*/
+                //int totalPage = 0;
 
-                if (result.Count > 1 && result[1].Count > 0)
-                {
-                    totalPage = (int)result[1][0].TotalPage;
-                }
+                //if (result.Count > 1 && result[1].Count > 0)
+                //{
+                //    totalPage = (int)result[1][0].TotalPage;
+                //}
 
                 return Ok(new
                 {
                     status = 1,
                     data = SQLHelper<object>.GetListData(result, 0),
-                    totalPage
                 });
             }
             catch (Exception ex)
@@ -935,10 +934,11 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                  new string[] { "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@Status", "@KhoType", "@FilterText", "@WarehouseCode", "@IsDeleted" },
                     new object[] { filter.PageNumber, filter.PageSize, filter.DateStart, filter.DateEnd, filter.Status, filter.KhoType, filter.FilterText, filter.WarehouseCode, filter.IsDeleted }
                    );
+                var data = SQLHelper<dynamic>.GetListData(result, 0);
                 return Ok(new
                 {
                     status = 1,
-                    data = SQLHelper<object>.GetListData(result, 0)
+                    data = data
                 });
             }
             catch (Exception ex)
