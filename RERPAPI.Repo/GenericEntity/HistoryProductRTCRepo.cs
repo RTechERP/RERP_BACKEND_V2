@@ -14,6 +14,10 @@ namespace RERPAPI.Repo.GenericEntity
         const int WAREHOUSE_ID = 1;
         ProductRTCQRCodeRepo _qrCodeRepo = new ProductRTCQRCodeRepo();
 
+        public HistoryProductRTCRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
+
         public async Task SaveDataAsync(ModulaLocationDTO.SerialNumberModulaLocation item)
         {
             string productQRCode = item.SerialNumber ?? "";

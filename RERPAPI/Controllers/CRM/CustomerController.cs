@@ -575,6 +575,84 @@ namespace RERPAPI.Controllers.CRM
         {
             try
             {
+                var validate = dto.Customer;
+
+                List<string> errors = new List<string>();
+
+                if (validate.CustomerName?.Length > 200)
+                    errors.Add("Tên khách hàng không được vượt quá 200 ký tự");
+                if (string.IsNullOrWhiteSpace(validate.CustomerName))
+                    errors.Add("Tên khách hàng là bắt buộc");
+
+                if (validate.CustomerCode?.Length > 30)
+                    errors.Add("Mã khách hàng không được vượt quá 30 ký tự");
+                if (string.IsNullOrWhiteSpace(validate.CustomerCode))
+                    errors.Add("Mã khách hàng là bắt buộc");
+
+                if (validate.CustomerShortName?.Length > 200)
+                    errors.Add("Tên viết tắt không được vượt quá 200 ký tự");
+
+                if (validate.Address?.Length > 200)
+                    errors.Add("Địa chỉ không được vượt quá 200 ký tự");
+
+                if (validate.Phone?.Length > 100)
+                    errors.Add("Số điện thoại (Phone) không được vượt quá 100 ký tự");
+
+                if (validate.Email?.Length > 200)
+                    errors.Add("Email không được vượt quá 200 ký tự");
+
+                if (validate.Note?.Length > 255)
+                    errors.Add("Ghi chú (Note) không được vượt quá 255 ký tự");
+
+                if (validate.ContactName?.Length > 100)
+                    errors.Add("Tên người liên hệ (ContactName) không được vượt quá 100 ký tự");
+
+                if (validate.ContactPhone?.Length > 100)
+                    errors.Add("Số điện thoại liên hệ (ContactPhone) không được vượt quá 100 ký tự");
+
+                if (validate.ContactEmail?.Length > 100)
+                    errors.Add("Email liên hệ (ContactEmail) không được vượt quá 100 ký tự");
+
+                if (validate.ContactNote?.Length > 300)
+                    errors.Add("Ghi chú liên hệ (ContactNote) không được vượt quá 300 ký tự");
+
+                if (validate.NoteDelivery?.Length > 500)
+                    errors.Add("Lưu ý giao không được vượt quá 500 ký tự");
+
+                if (validate.NoteVoucher?.Length > 500)
+                    errors.Add("Ghi chú hóa đơn (NoteVoucher) không được vượt quá 500 ký tự");
+
+                if (validate.CheckVoucher?.Length > 500)
+                    errors.Add("Đầu mối check chứng từ không được vượt quá 500 ký tự");
+
+                if (validate.HardCopyVoucher?.Length > 500)
+                    errors.Add("Hard copy voucher không được vượt quá 500 ký tự");
+
+                if (validate.Debt?.Length > 500)
+                    errors.Add("Công nợ không được vượt quá 500 ký tự");
+
+                if (validate.AdressStock?.Length > 500)
+                    errors.Add("Địa chỉ kho (AdressStock) không được vượt quá 500 ký tự");
+
+                if (validate.TaxCode?.Length > 500)
+                    errors.Add("Mã số thuế (TaxCode) không được vượt quá 500 ký tự");
+
+                if (validate.CustomerDetails?.Length > 500)
+                    errors.Add("Chi tiết khách hàng (CustomerDetails) không được vượt quá 500 ký tự");
+
+                if (validate.ProductDetails?.Length > 500)
+                    errors.Add("Chi tiết sản phẩm (ProductDetails) không được vượt quá 500 ký tự");
+
+                if (validate.Province?.Length > 50)
+                    errors.Add("Tỉnh/Thành phố (Province) không được vượt quá 50 ký tự");
+
+                if (errors.Any())
+                {
+                    var errorMessage = "Dữ liệu không hợp lệ: " + string.Join("; ", errors);
+                    return Ok(ApiResponseFactory.Fail(null, errorMessage, new { Errors = errors }));
+                }
+
+
                 Customer customer = dto.Customer.ID > 0 ? _customerRepo.GetByID(dto.Customer.ID) : new Customer();
                 customer.Province = dto.Customer.Province;
                 customer.CustomerCode = dto.Customer.CustomerCode;
@@ -674,6 +752,27 @@ namespace RERPAPI.Controllers.CRM
                     await _businessFieldLinkRepo.CreateAsync(business);
                 }
                 return Ok(ApiResponseFactory.Success("", "Lưu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("delete-multiple")]
+        public async Task<IActionResult> DeleteMultiple(List<int> ids)
+        {
+            try
+            {
+                foreach(int id in ids)
+                {
+                    Customer customer = _customerRepo.GetByID(id);
+                    customer.UpdatedDate = DateTime.Now;
+                    customer.IsDeleted = true;
+                    await _customerRepo.UpdateAsync(customer);
+
+                }    
+                return Ok(ApiResponseFactory.Success("", "Xóa thành công"));
             }
             catch (Exception ex)
             {

@@ -10,6 +10,7 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
+using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Mime;
 using System.Security.Claims;
@@ -19,22 +20,26 @@ namespace RERPAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+
     public class HomeController : ControllerBase
     {
         private readonly JwtSettings _jwtSettings;
         private readonly RTCContext _context;
+        private readonly IConfiguration _configuration;
 
         //UserRepo _userRepo = new UserRepo();
         vUserGroupLinksRepo _vUserGroupLinksRepo = new vUserGroupLinksRepo();
 
-        EmployeeOnLeaveRepo _onLeaveRepo = new EmployeeOnLeaveRepo();
+        private readonly EmployeeOnLeaveRepo _onLeaveRepo;
         EmployeeWFHRepo _wfhRepo = new EmployeeWFHRepo();
         ConfigSystemRepo _configSystemRepo = new ConfigSystemRepo();
 
-        public HomeController(IOptions<JwtSettings> jwtSettings, RTCContext context)
+        public HomeController(IOptions<JwtSettings> jwtSettings, RTCContext context, IConfiguration configuration,EmployeeOnLeaveRepo onLeaveRepo)
         {
             _jwtSettings = jwtSettings.Value;
             _context = context;
+            _configuration = configuration;
+            _onLeaveRepo = onLeaveRepo;
         }
         [HttpPost("login")]
         public IActionResult Login([FromBody] User user)
@@ -92,7 +97,10 @@ namespace RERPAPI.Controllers
                 );
 
                 var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
-                _context.CurrentUser = ObjectMapper.GetCurrentUser(claims.ToDictionary(x => x.Type, x => x.Value));
+
+                //4.Lưu session trên server
+                HttpContext.Session.SetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey"), ObjectMapper.GetCurrentUser(claims.ToDictionary(x => x.Type, x => x.Value)));
+
                 return Ok(new
                 {
                     access_token = tokenString,
@@ -117,8 +125,10 @@ namespace RERPAPI.Controllers
 
             try
             {
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                //var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+
+                string key = _configuration.GetValue<string>("SessionKey") ?? "";
+                CurrentUser currentUser = HttpContext.Session.GetObject<CurrentUser>(key);
 
                 return Ok(ApiResponseFactory.Success(currentUser, ""));
             }
@@ -306,6 +316,7 @@ namespace RERPAPI.Controllers
         {
             try
             {
+                var a = _onLeaveRepo.GetAll();
                 //var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 //CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
 
@@ -481,5 +492,33 @@ namespace RERPAPI.Controllers
                 _ => MediaTypeNames.Application.Octet
             };
         }
+
+
+        //[HttpGet("open-folder")]
+        //[Authorize]
+        //public IActionResult OpenFolder(string path)
+        //{
+        //    try
+        //    {
+        //        if (string.IsNullOrWhiteSpace(path)) return BadRequest(ApiResponseFactory.Fail(null, $"Vui lòng nhập đường dẫn thư mục!"));
+
+        //        // Kiểm tra thư mục tồn tại
+        //        if (!Directory.Exists(path)) return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy thư mục [{path}]!"));
+
+        //        // Mở thư mục bằng File Explorer (chạy trên máy server)
+        //        Process.Start(new ProcessStartInfo()
+        //        {
+        //            FileName = "explorer.exe",
+        //            Arguments = path,
+        //            UseShellExecute = true
+        //        });
+
+        //        return Ok(ApiResponseFactory.Success(path, ""));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex,ex.Message));
+        //    }
+        //}
     }
 }
