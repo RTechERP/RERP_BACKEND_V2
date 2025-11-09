@@ -15,12 +15,23 @@ namespace RERPAPI.Controllers.Old.Technical
     [ApiController]
     public class BillExportTechnicalController : ControllerBase
     {
-        HistoryDeleteBillRepo _historyDeleteBillRepo = new HistoryDeleteBillRepo();
-        BillExportTechnicalRepo _billExportTechnicalRepo = new BillExportTechnicalRepo();
-        BillExportDetailTechnicalRepo _billExportDetailTechnicalRepo = new BillExportDetailTechnicalRepo();
-        BillExportTechDetailSerialRepo _billExportTechDetailSerialRepo = new BillExportTechDetailSerialRepo();
-        InventoryDemoRepo _inventoryDemoRepo = new InventoryDemoRepo();
-        HistoryProductRTCRepo _historyProductRTCRepo = new HistoryProductRTCRepo();
+        private readonly HistoryDeleteBillRepo _historyDeleteBillRepo;
+        private readonly BillExportTechnicalRepo _billExportTechnicalRepo;
+        private readonly BillExportDetailTechnicalRepo _billExportDetailTechnicalRepo;
+        private readonly BillExportTechDetailSerialRepo _billExportTechDetailSerialRepo;
+        private readonly InventoryDemoRepo _inventoryDemoRepo;
+        private readonly HistoryProductRTCRepo _historyProductRTCRepo;
+        private readonly ProductRTCQRCodeRepo _productRTCQRCodeRepo;
+        public BillExportTechnicalController(ProductRTCQRCodeRepo productRTCQRCodeRepo,BillExportTechnicalRepo billExportTechnicalRepo,BillExportDetailTechnicalRepo billExportDetailTechnicalRepo,BillExportTechDetailSerialRepo billExportTechDetailSerialRepo,HistoryDeleteBillRepo historyDeleteBillRepo,HistoryProductRTCRepo historyProductRTCRepo,InventoryDemoRepo inventoryDemoRepo)
+        {
+            _productRTCQRCodeRepo = productRTCQRCodeRepo;
+            _billExportTechnicalRepo = billExportTechnicalRepo;
+            _billExportDetailTechnicalRepo = billExportDetailTechnicalRepo;
+            _billExportTechDetailSerialRepo = billExportTechDetailSerialRepo;
+            _historyDeleteBillRepo = historyDeleteBillRepo;
+            _historyProductRTCRepo = historyProductRTCRepo;
+            _inventoryDemoRepo = inventoryDemoRepo;
+        }
         [HttpPost("get-bill-export-technical")]
         public async Task<ActionResult> GetBillExportTechnical([FromBody] BillExportTechnicalRequestParam request)
         {                 

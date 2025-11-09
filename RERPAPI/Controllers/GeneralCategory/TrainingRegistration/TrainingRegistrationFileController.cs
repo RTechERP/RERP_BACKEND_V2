@@ -8,7 +8,12 @@ namespace RERPAPI.Controllers.GeneralCategory.TrainingRegistration
     [ApiController]
     public class TrainingRegistrationFileController : ControllerBase
     {
-        private TrainingRegistrationFileRepo _trainingRegistrationRepo = new TrainingRegistrationFileRepo();
+        private TrainingRegistrationFileRepo _trainingRegistrationRepo;
+
+        public TrainingRegistrationFileController(TrainingRegistrationFileRepo trainingRegistrationRepo)
+        {
+            _trainingRegistrationRepo = trainingRegistrationRepo;
+        }
 
         [HttpGet("get-by-training-registration-id")]
         public IActionResult GetAll(int trainingRegistrationID)

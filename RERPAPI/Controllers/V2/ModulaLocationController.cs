@@ -20,6 +20,13 @@ namespace RERPAPI.Controllers.V2
         BillExportDetailSerialNumberModulaLocationRepo _serialNumberExportModulaRepo = new BillExportDetailSerialNumberModulaLocationRepo();
 
         HistoryProductRTCRepo _historyRepo = new HistoryProductRTCRepo();
+        public ModulaLocationController(ModulaLocationRepo locationRepo, HistoryProductRTCRepo historyRepo,BillExportDetailSerialNumberModulaLocationRepo serialNumberExportModulaRepo, BillImportDetailSerialNumberModulaLocationRepo serialNumberImportModulaRepo)
+        {
+            _locationRepo = locationRepo;
+            _historyRepo = historyRepo;
+            _serialNumberImportModulaRepo = serialNumberImportModulaRepo;
+            _serialNumberExportModulaRepo = serialNumberExportModulaRepo;
+        }
 
 
         /// <summary>

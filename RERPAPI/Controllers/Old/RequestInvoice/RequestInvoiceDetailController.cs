@@ -13,19 +13,26 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
     public class RequestInvoiceDetailController : ControllerBase
     {
         private readonly string _uploadPath;
-        RequestInvoiceRepo _requestInvoiceRepo = new RequestInvoiceRepo();
-        RequestInvoiceDetailRepo _requestInvoiceDetailRepo = new RequestInvoiceDetailRepo();
-        RequestInvoiceFileRepo _requestInvoiceFileRepo = new RequestInvoiceFileRepo();
-        EmployeeRepo _employeeRepo = new EmployeeRepo();
-        ProductSaleRepo _productSaleRepo = new ProductSaleRepo();
-        ProjectRepo _projectRepo = new ProjectRepo();
-        public RequestInvoiceDetailController(IWebHostEnvironment environment)
+        RequestInvoiceRepo _requestInvoiceRepo;
+        RequestInvoiceDetailRepo _requestInvoiceDetailRepo;
+        RequestInvoiceFileRepo _requestInvoiceFileRepo;
+        EmployeeRepo _employeeRepo;
+        ProductSaleRepo _productSaleRepo;
+        ProjectRepo _projectRepo;
+
+        public RequestInvoiceDetailController(IWebHostEnvironment environment, RequestInvoiceRepo requestInvoiceRepo, RequestInvoiceDetailRepo requestInvoiceDetailRepo, RequestInvoiceFileRepo requestInvoiceFileRepo, EmployeeRepo employeeRepo, ProductSaleRepo productSaleRepo, ProjectRepo projectRepo)
         {
-            _uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "RequestInvoice");
+            _uploadPath = Path.Combine(environment.ContentRootPath, "Uploads", "RequestInvoice");
             if (!Directory.Exists(_uploadPath))
             {
                 Directory.CreateDirectory(_uploadPath);
             }
+            _requestInvoiceRepo = requestInvoiceRepo;
+            _requestInvoiceDetailRepo = requestInvoiceDetailRepo;
+            _requestInvoiceFileRepo = requestInvoiceFileRepo;
+            _employeeRepo = employeeRepo;
+            _productSaleRepo = productSaleRepo;
+            _projectRepo = projectRepo;
         }
 
         [HttpGet("get-employee")]

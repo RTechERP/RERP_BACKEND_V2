@@ -24,13 +24,23 @@ namespace RERPAPI.Controllers.ProjectAGV
     public class ProjectAGVController : ControllerBase
     {
         //API Get Projects
-        ProjectRepo _projectRepo = new ProjectRepo();
-        ProjectTypeRepo _projectTypeRepo = new ProjectTypeRepo();
-        ProjectStatusRepo _projectStatusRepo = new ProjectStatusRepo();
-        ProjectItemRepo _projectItemRepo = new ProjectItemRepo();
-        readonly ProjectIssuesRepo _projectIssuesRepo = new ProjectIssuesRepo();
-        readonly ProjectDocumentsRepo _projectDocumentsRepo = new ProjectDocumentsRepo();
+        ProjectRepo _projectRepo;
+        ProjectTypeRepo _projectTypeRepo;
+        ProjectStatusRepo _projectStatusRepo;
+        ProjectItemRepo _projectItemRepo;
+        readonly ProjectIssuesRepo _projectIssuesRepo;
+        readonly ProjectDocumentsRepo _projectDocumentsRepo;
         RoleConfig _roleConfig = new RoleConfig();
+        public ProjectAGVController(ProjectRepo projectRepo, ProjectTypeRepo projectTypeRepo, ProjectStatusRepo projectStatusRepo, ProjectItemRepo projectItemRepo, ProjectIssuesRepo projectIssuesRepo, ProjectDocumentsRepo projectDocumentsRepo)
+        {
+            _roleConfig = new RoleConfig();
+            _projectRepo = projectRepo;
+            _projectTypeRepo = projectTypeRepo;
+            _projectStatusRepo = projectStatusRepo;
+            _projectItemRepo = projectItemRepo;
+            _projectIssuesRepo = projectIssuesRepo;
+            _projectDocumentsRepo = projectDocumentsRepo;
+        }
         //API lấy danh sách tàI liệu dự án 
         [HttpPost("get-project-issues")]
         public async Task<ActionResult> spGetProjectIssues([FromBody] ProjectIssuesRequestParam request)

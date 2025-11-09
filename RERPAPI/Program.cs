@@ -1,6 +1,4 @@
-﻿using DocumentFormat.OpenXml.VariantTypes;
-using DocumentFormat.OpenXml.Wordprocessing;
-using Microsoft.AspNetCore.Http.Features;
+﻿using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
@@ -10,7 +8,6 @@ using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
-using RERPAPI.Model.Entities;
 using RERPAPI.Repo;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
@@ -24,9 +21,7 @@ using RERPAPI.Repo.GenericEntity.Systems;
 using RERPAPI.Repo.GenericEntity.TB;
 using RERPAPI.Repo.GenericEntity.Technical;
 using RTCApi.Repo.GenericRepo;
-using System.Security.Claims;
 using System.Text;
-using static Microsoft.IO.RecyclableMemoryStreamManager;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,8 +37,6 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserPermissionService, UserPermissionService>();
 builder.Services.AddScoped<RTCContext>();
 builder.Services.AddScoped<EmployeeOnLeaveRepo>();
-builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.HistoryProductRTCRepo>();
-
 builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.AddressStockRepo>();
 builder.Services.AddScoped<BillDocumentExportLogRepo>();
 builder.Services.AddScoped<BillDocumentImportLogRepo>();
@@ -122,7 +115,7 @@ builder.Services.AddScoped<KPIEvaluationRepo>();
 builder.Services.AddScoped<LocationRepo>();
 builder.Services.AddScoped<LoginManagerRepo>();
 builder.Services.AddScoped<MainIndexRepo>();
-builder.Services.AddScoped<MeetingMinutesFileRepo>();
+builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.MeetingMinutesFileRepo>();
 builder.Services.AddScoped<MenuRepo>();
 builder.Services.AddScoped<ModulaLocationDetailRepo>();
 builder.Services.AddScoped<ModulaLocationRepo>();
@@ -275,7 +268,7 @@ builder.Services.AddScoped<HandoverWorkRepo>();
 builder.Services.AddScoped<MeetingMinuteRepo>();
 builder.Services.AddScoped<MeetingMinutesAttendanceRepo>();
 builder.Services.AddScoped<MeetingMinutesDetailRepo>();
-builder.Services.AddScoped<MeetingMinutesFileRepo>();
+builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.MeetingMinutesFileRepo>();
 builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.MeetingTypeRepo>();
 builder.Services.AddScoped<ProjectHistoryProblemRepo>();
 builder.Services.AddScoped<ProjectManagerRepo>();
@@ -304,10 +297,6 @@ builder.Services.AddScoped<InventoryProjectExportRepo>();
 builder.Services.AddScoped<InvoiceLinkRepo>();
 builder.Services.AddScoped<SupplierSaleRepo>();
 
-builder.Services.AddScoped<EmployeePayrollBonusDeuctionRepo>();
-builder.Services.AddScoped<EmployeePayrollDetailRepo>();
-builder.Services.AddScoped<EmployeePayrollRepo>();
-
 // BillExportTechnicalRepo in RTCApi namespace (used by Old Technical controller)
 builder.Services.AddScoped<BillExportTechnicalRepo>();
 
@@ -318,7 +307,7 @@ builder.Services.AddScoped<CurrentUser>(provider =>
     var claims = context?.User.Claims.ToDictionary(x => x.Type, x => x.Value);
     CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
     return currentUser;
-    
+
 });
 
 //Config connect database
@@ -333,7 +322,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("MyCors", builder =>
     {
-       
+
         builder.AllowAnyOrigin()
                .AllowAnyMethod()
                .AllowAnyHeader();

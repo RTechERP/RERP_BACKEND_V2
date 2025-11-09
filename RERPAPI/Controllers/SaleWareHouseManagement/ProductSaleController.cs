@@ -20,10 +20,22 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
     [ApiController]
     public class ProductSaleController : ControllerBase
     {
-        ProductGroupRepo _productgroupRepo = new ProductGroupRepo();
-        ProductsSaleRepo _productsaleRepo = new ProductsSaleRepo();
-        InventoryRepo _inventoryRepo = new InventoryRepo();
-        FirmRepo _firmRepo = new FirmRepo();
+        private readonly ProductGroupRepo _productgroupRepo;
+        private readonly ProductsSaleRepo _productsaleRepo;
+        private readonly InventoryRepo _inventoryRepo;
+        private readonly FirmRepo _firmRepo;
+
+        public ProductSaleController(
+            ProductGroupRepo productgroupRepo,
+            ProductsSaleRepo productsaleRepo,
+            InventoryRepo inventoryRepo,
+            FirmRepo firmRepo)
+        {
+            _productgroupRepo = productgroupRepo;
+            _productsaleRepo = productsaleRepo;
+            _inventoryRepo = inventoryRepo;
+            _firmRepo = firmRepo;
+        }
         //api ngày 12/06/2025
 
         #region hàm lấy dữ liệu vật tư theo id, tên

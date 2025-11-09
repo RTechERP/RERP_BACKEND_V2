@@ -9,7 +9,12 @@ namespace RERPAPI.Controllers.Old
     [Route("api/[controller]")]
     public class EmployeeTeamController : Controller
     {
-        EmployeeTeamRepo employeeTeamRepo = new EmployeeTeamRepo();
+        private readonly EmployeeTeamRepo _employeeTeamRepo;
+
+        public EmployeeTeamController(EmployeeTeamRepo employeeTeamRepo)
+        {
+            _employeeTeamRepo = employeeTeamRepo;
+        }   
 
         [HttpGet]
         public IActionResult GetEmployeeTeams()
@@ -42,11 +47,11 @@ namespace RERPAPI.Controllers.Old
             {
                 if(employeeTeam.ID <= 0)
                 {
-                    await employeeTeamRepo.CreateAsync(employeeTeam);
+                    await _employeeTeamRepo.CreateAsync(employeeTeam);
                 }
                 else
                 {
-                    await employeeTeamRepo.UpdateAsync(employeeTeam);
+                    await _employeeTeamRepo.UpdateAsync(employeeTeam);
                 }
                 return Ok(new
                 {

@@ -18,8 +18,11 @@ namespace RERPAPI.Controllers.Old
     public class MenuController : ControllerBase
     {
         //Response _response = new Response();
-        MenuRepo _menuRepo = new MenuRepo();
-
+        MenuRepo _menuRepo ;
+        public MenuController(MenuRepo menuRepo)
+        {
+            this._menuRepo = menuRepo;
+        }
         //[RequiresPermission("N42")]
         //[ApiKeyAuthorize]
         [HttpGet("menus/{parentid}")]

@@ -9,8 +9,22 @@ namespace RERPAPI.Controllers
     [ApiController]
     public class EmployeeTimekeepingController : ControllerBase
     {
-        private readonly EmployeeChamCongMasterRepo _employeeChamCongMaster = new EmployeeChamCongMasterRepo();
-        private readonly EmployeeChamCongDetailRepo _employeeChamCongDetail = new EmployeeChamCongDetailRepo();
+        private readonly EmployeeChamCongMasterRepo _employeeChamCongMaster;
+        private readonly EmployeeChamCongDetailRepo _employeeChamCongDetail;
+        private readonly DepartmentRepo _departmentRepo;
+        private readonly EmployeeRepo _employeeRepo;
+
+        public EmployeeTimekeepingController(
+            EmployeeChamCongMasterRepo employeeChamCongMaster,
+            EmployeeChamCongDetailRepo employeeChamCongDetail,
+            DepartmentRepo departmentRepo,
+            EmployeeRepo employeeRepo)
+        {
+            _employeeChamCongMaster = employeeChamCongMaster;
+            _employeeChamCongDetail = employeeChamCongDetail;
+            _departmentRepo = departmentRepo;
+            _employeeRepo = employeeRepo;
+        }
         [HttpGet("get-employee-timekeeping")]
         public async Task<IActionResult> GetEmployeeTimekeeping(int year, string? keyword)
         {
@@ -101,21 +115,11 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                var departmentRepo = new DepartmentRepo();
+                var departments = _departmentRepo.GetAll()
+                    .Select(x => new { x.ID, x.Code, x.Name })
+                    .ToList();
 
-                var departments = departmentRepo.GetAll()
-                    .Select(x => new
-                    {
-                        x.ID,
-                        x.Code,
-                        x.Name
-                    }).ToList();
-
-                return Ok(new
-                {
-                    status = 1,
-                    data = departments
-                });
+                return Ok(new { status = 1, data = departments });
             }
             catch (Exception ex)
             {
@@ -128,21 +132,11 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                var employeeRepo = new EmployeeRepo();
+                var employees = _employeeRepo.GetAll()
+                    .Select(x => new { x.ID, x.Code, x.FullName })
+                    .ToList();
 
-                var employees = employeeRepo.GetAll()
-                    .Select(x => new
-                    {
-                        x.ID,
-                        x.Code,
-                        x.FullName,
-                    }).ToList();
-
-                return Ok(new
-                {
-                    status = 1,
-                    data = employees
-                });
+                return Ok(new { status = 1, data = employees });
             }
             catch (Exception ex)
             {

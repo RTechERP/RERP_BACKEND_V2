@@ -13,9 +13,16 @@ namespace RERPAPI.Controllers.Old
     public class KPIEmployeeTeamController : ControllerBase
     {
         #region Khai báo repository
-        KPIEmployeeTeamRepo teamRepo = new KPIEmployeeTeamRepo();
-        DepartmentRepo departmentRepo = new DepartmentRepo();
-        EmployeeRepo employeeRepo = new EmployeeRepo();
+        private readonly KPIEmployeeTeamRepo _kPIEmployeeTeamRepo;
+        private readonly DepartmentRepo _departmentRepo;
+        private readonly EmployeeRepo _employeeRepo;
+
+        public KPIEmployeeTeamController(KPIEmployeeTeamRepo kPIEmployeeTeamRepo, DepartmentRepo departmentRepo, EmployeeRepo employeeRepo)
+        {
+            _kPIEmployeeTeamRepo = kPIEmployeeTeamRepo;
+            _departmentRepo = departmentRepo;
+            _employeeRepo = employeeRepo;
+        }
         #endregion
         #region lấy ra tất cả team
         /// <summary>
@@ -81,7 +88,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                KPIEmployeeTeam team = teamRepo.GetByID(id);
+                KPIEmployeeTeam team = _kPIEmployeeTeamRepo.GetByID(id);
                 if (team.ID <= 0)
                 {
                     return Ok(new
@@ -114,8 +121,8 @@ namespace RERPAPI.Controllers.Old
             try
             {
 
-                if (team.ID <= 0) await teamRepo.CreateAsync(team);
-                else await teamRepo.UpdateAsync(team);
+                if (team.ID <= 0) await _kPIEmployeeTeamRepo.CreateAsync(team);
+                else await _kPIEmployeeTeamRepo.UpdateAsync(team);
 
                 return Ok(new
                 {

@@ -13,7 +13,11 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     [ApiController]
     public class BillImportDetailSerialNumberController : ControllerBase
     {
-        BillImportDetailSerialNumberRepo _billImportDetailSerialNumberRepo = new BillImportDetailSerialNumberRepo();
+        private readonly BillImportDetailSerialNumberRepo _billImportDetailSerialNumberRepo;
+        public BillImportDetailSerialNumberController(BillImportDetailSerialNumberRepo billImportDetailSerialNumberRepo)
+        {
+            _billImportDetailSerialNumberRepo = billImportDetailSerialNumberRepo;
+        }
         [HttpGet("{id}")]
         public IActionResult getDataByID(int id)
         {

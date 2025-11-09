@@ -12,7 +12,6 @@ namespace RERPAPI.Repo.GenericEntity
     public class VisitGuestTypeRepo : GenericRepo<VisitGuestType>
     {
 
-        //public VisitGuestTypeRepo(RTCContext context) : base(context) { }
         public VisitGuestTypeRepo(CurrentUser currentUser) : base(currentUser)
         {
         }

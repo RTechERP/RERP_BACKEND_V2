@@ -1,20 +1,16 @@
 ﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class BillExportDetailSerialNumberModulaLocationRepo:GenericRepo<BillExportDetailSerialNumberModulaLocation>
+    public class BillExportDetailSerialNumberModulaLocationRepo : GenericRepo<BillExportDetailSerialNumberModulaLocation>
     {
+        BillExportTechDetailSerialRepo _exportDetailSerialNumberRepo;
 
-        public BillExportDetailSerialNumberModulaLocationRepo(CurrentUser currentUser) : base(currentUser)
+        public BillExportDetailSerialNumberModulaLocationRepo(CurrentUser currentUser, BillExportTechDetailSerialRepo exportDetailSerialNumberRepo) : base(currentUser)
         {
+            _exportDetailSerialNumberRepo = exportDetailSerialNumberRepo;
         }
-        BillExportTechDetailSerialRepo _exportDetailSerialNumberRepo = new BillExportTechDetailSerialRepo();
         public async Task SaveDataAsync(ModulaLocationDTO.SerialNumberModulaLocation item, int index)
         {
             BillExportTechDetailSerial serialNumber = _exportDetailSerialNumberRepo.GetAll().FirstOrDefault(x => x.SerialNumber == item.SerialNumber) ?? new BillExportTechDetailSerial();

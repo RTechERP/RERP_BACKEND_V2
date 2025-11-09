@@ -11,7 +11,11 @@ namespace RERPAPI.Controllers.Old
     public class KPIEmployeeTeamLinkController : ControllerBase
     {
         #region Khai báo repository
-        KPIEmployeeTeamLinkRepo teamLinkRepo = new KPIEmployeeTeamLinkRepo();
+        private readonly KPIEmployeeTeamLinkRepo _teamLinkRepo;
+        public KPIEmployeeTeamLinkController(KPIEmployeeTeamLinkRepo teamLinkRepo)
+        {
+            this._teamLinkRepo = teamLinkRepo;
+        }
         #endregion  
         #region Lấy tất cả nhân viên trong team
         [HttpGet("getall")]
@@ -51,9 +55,9 @@ namespace RERPAPI.Controllers.Old
                 {
                     if (item.ID <= 0)
                     {
-                        await teamLinkRepo.CreateAsync(item);
+                        await _teamLinkRepo.CreateAsync(item);
                     }
-                    else await teamLinkRepo.UpdateAsync(item);
+                    else await _teamLinkRepo.UpdateAsync(item);
                 }
                 return Ok(new {data=teamLinks, status = 1, message = "Cập nhật thành công." });
             }

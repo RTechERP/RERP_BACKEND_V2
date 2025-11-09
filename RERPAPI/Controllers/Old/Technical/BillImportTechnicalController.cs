@@ -20,11 +20,19 @@ namespace RERPAPI.Controllers.Old.Technical
     [ApiController]
     public class BillImportTechnicalController : ControllerBase
     {
-        HistoryDeleteBillRepo _historyDeleteBillRepo = new HistoryDeleteBillRepo();
-        BillImportTechnicalRepo _billImportTechnicalRepo = new BillImportTechnicalRepo();
-        BillImportTechnicalDetailRepo _billImportTechnicalDetailRepo = new BillImportTechnicalDetailRepo();
-        BillImportTechDetailSerialRepo _billImportTechDetailSerialRepo = new BillImportTechDetailSerialRepo();
-        RulePayRepo _rulePayRepo = new RulePayRepo();
+        private readonly HistoryDeleteBillRepo _historyDeleteBillRepo;
+        private readonly BillImportTechnicalRepo _billImportTechnicalRepo;
+        private readonly BillImportTechnicalDetailRepo _billImportTechnicalDetailRepo;
+        private readonly BillImportTechDetailSerialRepo _billImportTechDetailSerialRepo;
+        private readonly RulePayRepo _rulePayRepo;
+        public BillImportTechnicalController(HistoryDeleteBillRepo historyDeleteBillRepo,BillImportTechnicalRepo billImportTechnicalRepo,BillImportTechnicalDetailRepo billImportTechnicalDetailRepo,BillImportTechDetailSerialRepo billImportTechDetailSerialRepo,RulePayRepo rulePayRepo)
+        {
+            _historyDeleteBillRepo = historyDeleteBillRepo;
+            _billImportTechnicalRepo = billImportTechnicalRepo;
+            _billImportTechnicalDetailRepo = billImportTechnicalDetailRepo;
+            _billImportTechDetailSerialRepo = billImportTechDetailSerialRepo;
+            _rulePayRepo = rulePayRepo;
+        }
         [HttpGet("get-rulepay")]
         public IActionResult GetRulepay()
         {

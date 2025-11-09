@@ -1,19 +1,19 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
-using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.TB;
-using System.Linq;
-using System.Linq.Expressions;
 namespace RERPAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class ProtectiveGearController : Controller
     {
+        ProductGroupRTCRepo productGroupRTCRepo;
+        public ProtectiveGearController(ProductGroupRTCRepo productGroupRTCRepo)
+        {
+            this.productGroupRTCRepo = productGroupRTCRepo;
+        }
         [HttpGet("protective-gears")]
-        public IActionResult GetProtectiveGears(int productGroupID , string? keyword = "", int allProduct = 1, int warehouseID = 5)
+        public IActionResult GetProtectiveGears(int productGroupID, string? keyword = "", int allProduct = 1, int warehouseID = 5)
         {
             try
             {
@@ -39,9 +39,9 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                var productGroupRTCRepo = new ProductGroupRTCRepo();
+
                 var productGroups = productGroupRTCRepo.GetAll(p => p.WarehouseID == 1 && p.ProductGroupNo == "DBH");
-                    
+
 
                 return Ok(new
                 {

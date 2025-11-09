@@ -1,10 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -13,9 +10,16 @@ namespace RERPAPI.Controllers.Old
     public class KPIEmployeeTeamController : ControllerBase
     {
         #region Khai báo repository
-        KPIEmployeeTeamRepo teamRepo = new KPIEmployeeTeamRepo();
-        DepartmentRepo departmentRepo = new DepartmentRepo();
-        EmployeeRepo employeeRepo = new EmployeeRepo();
+        KPIEmployeeTeamRepo teamRepo;
+        DepartmentRepo departmentRepo;
+        EmployeeRepo employeeRepo;
+        public KPIEmployeeTeamController(KPIEmployeeTeamRepo teamRepo, EmployeeRepo employeeRepo, DepartmentRepo departmentRepo)
+        {
+            this.teamRepo = teamRepo;
+            this.employeeRepo = employeeRepo;
+            this.departmentRepo = departmentRepo;
+        }
+
         #endregion
         #region lấy ra tất cả team
         /// <summary>
@@ -115,7 +119,7 @@ namespace RERPAPI.Controllers.Old
             {
 
                 if (team.ID <= 0) await teamRepo.CreateAsync(team);
-                else  await teamRepo.UpdateAsync(team);
+                else await teamRepo.UpdateAsync(team);
 
                 return Ok(new
                 {

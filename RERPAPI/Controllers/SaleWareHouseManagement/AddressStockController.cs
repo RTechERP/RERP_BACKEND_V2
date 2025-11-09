@@ -10,7 +10,12 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
     [ApiController]
     public class AddressStockController : ControllerBase
     {
-        AddressStockRepo _addressStockRepo = new AddressStockRepo();
+        private readonly AddressStockRepo _addressStockRepo;
+
+        public AddressStockController(AddressStockRepo addressStockRepo)
+        {
+            _addressStockRepo = addressStockRepo;
+        }
         [HttpGet("get-by-customerID")]
         public IActionResult getDataCbbAddressStock(int customerID) {
             try

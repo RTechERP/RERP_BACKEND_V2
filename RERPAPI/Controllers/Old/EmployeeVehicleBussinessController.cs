@@ -8,13 +8,18 @@ namespace RERPAPI.Controllers.Old
     [Route("api/[controller]")]
     public class EmployeeVehicleBussinessController : Controller
     {
-        EmployeeVehicleBussinessRepo employeeVehicleBussinessRepo = new EmployeeVehicleBussinessRepo();
+        private readonly EmployeeVehicleBussinessRepo _employeeVehicleBussinessRepo;
+
+        public EmployeeVehicleBussinessController(EmployeeVehicleBussinessRepo employeeVehicleBussinessRepo)
+        {
+            _employeeVehicleBussinessRepo = employeeVehicleBussinessRepo;
+        }
         [HttpGet]
         public IActionResult GetEmployeeVehicleBussiness()
         {
             try
             {
-                var result = employeeVehicleBussinessRepo.GetAll();
+                var result = _employeeVehicleBussinessRepo.GetAll();
                 return Ok(new
                 {
                     status = 1,
@@ -39,15 +44,15 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                List<EmployeeVehicleBussiness> listData = employeeVehicleBussinessRepo.GetAll();
+                List<EmployeeVehicleBussiness> listData = _employeeVehicleBussinessRepo.GetAll();
 
                 if (employeeVehicleBussiness.ID <= 0)
                 {
-                    await employeeVehicleBussinessRepo.CreateAsync(employeeVehicleBussiness);
+                    await _employeeVehicleBussinessRepo.CreateAsync(employeeVehicleBussiness);
                 }
                 else
                 {
-                    await employeeVehicleBussinessRepo.UpdateAsync(employeeVehicleBussiness);
+                    await _employeeVehicleBussinessRepo.UpdateAsync(employeeVehicleBussiness);
                 }
                 return Ok(new
                 {

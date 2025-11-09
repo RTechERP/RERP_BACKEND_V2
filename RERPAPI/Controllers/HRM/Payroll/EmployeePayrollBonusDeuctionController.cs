@@ -1,10 +1,7 @@
-﻿using DocumentFormat.OpenXml.VariantTypes;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using ZXing;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -12,8 +9,13 @@ namespace RERPAPI.Controllers.Old
     [ApiController]
     public class EmployeePayrollBonusDeuctionController : Controller
     {
-        EmployeePayrollBonusDeuctionRepo employeePayrollBonusDeuctionRepo = new EmployeePayrollBonusDeuctionRepo();
-        EmployeeRepo employeeRepo = new EmployeeRepo();
+        EmployeePayrollBonusDeuctionRepo _employeePayrollBonusDeuctionRepo;
+        EmployeeRepo _employeeRepo;
+        public EmployeePayrollBonusDeuctionController(EmployeePayrollBonusDeuctionRepo employeePayrollBonusDeuctionRepo, EmployeeRepo employeeRepo)
+        {
+            _employeePayrollBonusDeuctionRepo = employeePayrollBonusDeuctionRepo;
+            _employeeRepo = employeeRepo;
+        }
         [HttpGet("employee-payroll-bonus-deduction")]
         public async Task<IActionResult> getemployeepayrollbonusdeduction(int? year, int? month, int page, int size, int departmentID, int employeeID, string? keyword)
         {
@@ -44,9 +46,9 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                EmployeePayrollBonusDeuction model = employeePayrollBonusDeuctionRepo.GetByID(ID);
+                EmployeePayrollBonusDeuction model = _employeePayrollBonusDeuctionRepo.GetByID(ID);
                 model.IsDeleted = true;
-                employeePayrollBonusDeuctionRepo.UpdateAsync(model);
+                _employeePayrollBonusDeuctionRepo.UpdateAsync(model);
                 return Ok(ApiResponseFactory.Success("", ""));
             }
             catch (Exception ex)
@@ -60,7 +62,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                EmployeePayrollBonusDeuction model = employeePayrollBonusDeuctionRepo
+                EmployeePayrollBonusDeuction model = _employeePayrollBonusDeuctionRepo
                     .GetAll(x => x.YearValue == year && x.MonthValue == month && x.EmployeeID == employeeId && x.IsDeleted != true)
                     .FirstOrDefault();
                 return Ok(ApiResponseFactory.Success(model, ""));
@@ -78,11 +80,11 @@ namespace RERPAPI.Controllers.Old
             {
                 if (obj.ID <= 0)
                 {
-                    await employeePayrollBonusDeuctionRepo.CreateAsync(obj);
+                    await _employeePayrollBonusDeuctionRepo.CreateAsync(obj);
                 }
                 else
                 {
-                    employeePayrollBonusDeuctionRepo.Update(obj);
+                    _employeePayrollBonusDeuctionRepo.Update(obj);
                 }
 
                 return Ok(ApiResponseFactory.Success(1, ""));
@@ -108,11 +110,11 @@ namespace RERPAPI.Controllers.Old
                     try
                     {
                         string? Code = row["Code"]?.ToString();
-                        var employee = employeeRepo.GetAll(c => c.Code == Code);
+                        var employee = _employeeRepo.GetAll(c => c.Code == Code);
                         EmployeePayrollBonusDeuction employeePayrollBonusDeuction = new EmployeePayrollBonusDeuction();
                         if (employee.Any())
                         {
-                            var lstExistFromDB = employeePayrollBonusDeuctionRepo.GetAll(c =>
+                            var lstExistFromDB = _employeePayrollBonusDeuctionRepo.GetAll(c =>
                                 c.EmployeeID == employee.First().ID &&
                                c.YearValue == year && c.MonthValue == month);
 
@@ -139,12 +141,12 @@ namespace RERPAPI.Controllers.Old
                             // Lưu
                             if (lstExistFromDB.Any())
                             {
-                                employeePayrollBonusDeuctionRepo.Update(employeePayrollBonusDeuction);
+                                _employeePayrollBonusDeuctionRepo.Update(employeePayrollBonusDeuction);
                                 updated++;
                             }
                             else
                             {
-                                employeePayrollBonusDeuctionRepo.Create(employeePayrollBonusDeuction);
+                                _employeePayrollBonusDeuctionRepo.Create(employeePayrollBonusDeuction);
                                 created++;
                             }
                         }

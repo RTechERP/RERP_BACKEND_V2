@@ -10,19 +10,22 @@ namespace RERPAPI.Controllers.Old.V2
     [ApiController]
     public class ModulaLocationController : ControllerBase
     {
-        private ModulaLocationRepo _locationRepo = new ModulaLocationRepo();
+        private ModulaLocationRepo _locationRepo;
 
         //BillImportTechDetailSerialRepo _importDetailSerialNumberRepo = new BillImportTechDetailSerialRepo();
         //BillExportTechDetailSerialRepo _exportDetailSerialNumberRepo = new BillExportTechDetailSerialRepo();
 
-        private BillImportDetailSerialNumberModulaLocationRepo _serialNumberImportModulaRepo = new BillImportDetailSerialNumberModulaLocationRepo();
-        private BillExportDetailSerialNumberModulaLocationRepo _serialNumberExportModulaRepo = new BillExportDetailSerialNumberModulaLocationRepo();
+        private BillImportDetailSerialNumberModulaLocationRepo _serialNumberImportModulaRepo;
+        private BillExportDetailSerialNumberModulaLocationRepo _serialNumberExportModulaRepo;
 
         private HistoryProductRTCRepo _historyRepo;
 
-        public ModulaLocationController(HistoryProductRTCRepo historyRepo)
+        public ModulaLocationController(HistoryProductRTCRepo historyRepo, ModulaLocationRepo locationRepo, BillImportDetailSerialNumberModulaLocationRepo serialNumberImportModulaRepo, BillExportDetailSerialNumberModulaLocationRepo serialNumberExportModulaRepo)
         {
             _historyRepo = historyRepo;
+            _locationRepo = locationRepo;
+            _serialNumberImportModulaRepo = serialNumberImportModulaRepo;
+            _serialNumberExportModulaRepo = serialNumberExportModulaRepo;
         }
 
         /// <summary>

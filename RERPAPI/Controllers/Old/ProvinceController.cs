@@ -8,13 +8,17 @@ namespace RERPAPI.Controllers.Old
     [Route("api/[controller]")]
     public class ProvinceController : ControllerBase
     {
-       ProvinceRepo provinceRepo = new ProvinceRepo();
-       [HttpGet]
+        private ProvinceRepo _provinceRepo;
+        public ProvinceController(ProvinceRepo provinceRepo)
+        {
+            _provinceRepo = provinceRepo;
+        }
+        [HttpGet]
        public async Task<IActionResult> GetProvinces()
         {
            try
             {
-                List<Province> provinces = provinceRepo.GetAll();
+                List<Province> provinces = _provinceRepo.GetAll();
                 return Ok(new
                 {
                     data = provinces,

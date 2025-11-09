@@ -12,12 +12,11 @@ namespace RERPAPI.Controllers.Old
         private readonly SupplierSaleRepo _supplierSaleRepo;
         private readonly SupplierSaleContactRepo _supplierSaleContactRepo;
         private readonly EmployeeRepo _employeeRepo;
-
-        public SupplierSaleController()
+        public SupplierSaleController(SupplierSaleRepo supplierSaleRepo, SupplierSaleContactRepo supplierSaleContactRepo, EmployeeRepo employeeRepo)
         {
-            _supplierSaleRepo = new SupplierSaleRepo();
-            _supplierSaleContactRepo = new SupplierSaleContactRepo();
-            _employeeRepo = new EmployeeRepo();
+            _supplierSaleRepo = supplierSaleRepo;
+            _supplierSaleContactRepo = supplierSaleContactRepo;
+            _employeeRepo = employeeRepo;
         }
 
         /// <summary>

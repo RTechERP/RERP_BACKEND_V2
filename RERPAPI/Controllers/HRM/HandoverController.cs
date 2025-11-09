@@ -14,20 +14,44 @@ namespace RERPAPI.Controllers
     [Route("api/[controller]")]
     [ApiController]
     public class HandoverController : ControllerBase
-    {
+        {
+        private readonly DepartmentRepo _tsDepartment;
+        private readonly EmployeeChucVuHDRepo _positionRepo;
+        private readonly HandoverRepo _handoverRepo;
+        private readonly HandoverReceiverRepo _handoverReceiverRepo;
+        private readonly HandoverWorkRepo _handoverWorkRepo;
+        private readonly HandoverWarehouseAssetRepo _handoverWarehouseAssetRepo;
+        private readonly HandoverAssetManagementRepo _handoverAssetManagementRepo;
+        private readonly HandoverFinanceRepo _handoverFinanceRepo;
+        private readonly HandoverSubordinateRepo _handoverSubordinateRepo;
+        private readonly HandoverApproveRepo _approveRepo;
+        private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
 
-        DepartmentRepo _tsDepartment = new DepartmentRepo();
-        //EmployeeRepo _tsEmployee = new EmployeeRepo();
-        EmployeeChucVuHDRepo _positionRepo = new EmployeeChucVuHDRepo();
-        HandoverRepo _handoverRepo = new HandoverRepo();
-        HandoverReceiverRepo _handoverReceiverRepo = new HandoverReceiverRepo();
-        HandoverWorkRepo _handoverWorkRepo = new HandoverWorkRepo();
-        HandoverWarehouseAssetRepo _handoverWarehouseAssetRepo = new HandoverWarehouseAssetRepo();
-        HandoverAssetManagementRepo _handoverAssetManagementRepo = new HandoverAssetManagementRepo();
-        HandoverFinanceRepo _handoverFinanceRepo = new HandoverFinanceRepo();
-        HandoverSubordinateRepo _handoverSubordinateRepo = new HandoverSubordinateRepo();
-        HandoverApproveRepo _approveRepo = new HandoverApproveRepo();
-        vUserGroupLinksRepo _vUserGroupLinksRepo = new vUserGroupLinksRepo();
+        public HandoverController(
+            DepartmentRepo tsDepartment,
+            EmployeeChucVuHDRepo positionRepo,
+            HandoverRepo handoverRepo,
+            HandoverReceiverRepo handoverReceiverRepo,
+            HandoverWorkRepo handoverWorkRepo,
+            HandoverWarehouseAssetRepo handoverWarehouseAssetRepo,
+            HandoverAssetManagementRepo handoverAssetManagementRepo,
+            HandoverFinanceRepo handoverFinanceRepo,
+            HandoverSubordinateRepo handoverSubordinateRepo,
+            HandoverApproveRepo approveRepo,
+            vUserGroupLinksRepo vUserGroupLinksRepo)
+        {
+            _tsDepartment = tsDepartment;
+            _positionRepo = positionRepo;
+            _handoverRepo = handoverRepo;
+            _handoverReceiverRepo = handoverReceiverRepo;
+            _handoverWorkRepo = handoverWorkRepo;
+            _handoverWarehouseAssetRepo = handoverWarehouseAssetRepo;
+            _handoverAssetManagementRepo = handoverAssetManagementRepo;
+            _handoverFinanceRepo = handoverFinanceRepo;
+            _handoverSubordinateRepo = handoverSubordinateRepo;
+            _approveRepo = approveRepo;
+            _vUserGroupLinksRepo = vUserGroupLinksRepo;
+        }
 
 
 

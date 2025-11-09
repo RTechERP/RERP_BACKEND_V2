@@ -14,7 +14,11 @@ namespace RERPAPI.Controllers.Old
     [ApiController]
     public class EmployeeController : ControllerBase
     {
-        EmployeeRepo _employeeRepo = new EmployeeRepo();
+        private EmployeeRepo _employeeRepo;
+        public EmployeeController(EmployeeRepo employeeRepo)
+        {
+            _employeeRepo = employeeRepo;
+        }   
 
         [HttpGet("get-all")]
         public IActionResult GetAll()

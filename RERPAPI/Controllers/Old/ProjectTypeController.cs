@@ -8,13 +8,17 @@ namespace RERPAPI.Controllers.Old
     [Route("api/[controller]")]
     public class ProjectTypeController : ControllerBase
     {
-        ProjectTypeRepo projectTypeRepo = new ProjectTypeRepo();
+        private ProjectTypeRepo _projectTypeRepo;
+        public ProjectTypeController(ProjectTypeRepo projectTypeRepo)
+        {
+            _projectTypeRepo = projectTypeRepo;
+        }
         [HttpGet]
         public IActionResult GetAllProjectType()
         {   
             try
             {
-                List<ProjectType> projectTypes = projectTypeRepo.GetAll();
+                List<ProjectType> projectTypes = _projectTypeRepo.GetAll(); 
                 return Ok(new
                 {
                     status = 1,

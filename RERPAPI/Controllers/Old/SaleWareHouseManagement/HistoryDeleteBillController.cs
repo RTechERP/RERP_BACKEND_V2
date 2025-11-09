@@ -1,9 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
-using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Technical;
 
 namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
@@ -12,20 +10,25 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     [ApiController]
     public class HistoryDeleteBillController : ControllerBase
     {
-        HistoryDeleteBillRepo _historyDeleteBillReoi = new HistoryDeleteBillRepo();
+        private readonly HistoryDeleteBillRepo _historyDeleteBillRepo;
+        public HistoryDeleteBillController(HistoryDeleteBillRepo historyDeleteBillRepo)
+        {
+            _historyDeleteBillRepo = historyDeleteBillRepo;
+        }
 
         [HttpGet]
         public IActionResult getAll()
         {
             try
             {
-                List<HistoryDeleteBill> result = _historyDeleteBillReoi.GetAll().ToList();
+                List<HistoryDeleteBill> result = _historyDeleteBillRepo.GetAll().ToList();
                 return Ok(new
                 {
-                    status=1,
-                    data=result,
+                    status = 1,
+                    data = result,
                 });
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 return BadRequest(new
                 {
@@ -35,7 +38,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             }
         }
         [HttpPost("get-by-billtype")]
-        public IActionResult getByBillType([FromBody] HistoryBillDeleteParamRequest filter) {
+        public IActionResult getByBillType([FromBody] HistoryBillDeleteParamRequest filter)
+        {
             try
             {
                 List<dynamic> rs;
@@ -91,7 +95,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         {
             try
             {
-                var result = _historyDeleteBillReoi.GetByID(id);
+                var result = _historyDeleteBillRepo.GetByID(id);
                 return Ok(new
                 {
                     status = 1,

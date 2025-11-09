@@ -15,14 +15,30 @@ namespace RERPAPI.Controllers.Old.POKH
     [ApiController]
     public class ViewPOKHController : ControllerBase
     {
-        GroupSaleRepo _groupSaleRepo = new GroupSaleRepo();
-        MainIndexRepo _mainIndexRepo = new MainIndexRepo();
-        CustomerRepo _customerViewPOKHRepo = new CustomerRepo();
-        EmployeeTeamSaleRepo _employeeTeamSaleRepo = new EmployeeTeamSaleRepo();
-        EmployeeRepo _employeeRepo = new EmployeeRepo();
-        POKHDetailRepo _pokhDetailRepo = new POKHDetailRepo();
+        private readonly GroupSaleRepo _groupSaleRepo;
+        private readonly MainIndexRepo _mainIndexRepo;
+        private readonly CustomerRepo _customerViewPOKHRepo;
+        private readonly EmployeeTeamSaleRepo _employeeTeamSaleRepo;
+        private readonly EmployeeRepo _employeeRepo;
+        private readonly POKHDetailRepo _pokhDetailRepo;
+
+        public ViewPOKHController(
+            GroupSaleRepo groupSaleRepo,
+            MainIndexRepo mainIndexRepo,
+            CustomerRepo customerViewPOKHRepo,
+            EmployeeTeamSaleRepo employeeTeamSaleRepo,
+            EmployeeRepo employeeRepo,
+            POKHDetailRepo pokhDetailRepo)
+        {
+            _groupSaleRepo = groupSaleRepo;
+            _mainIndexRepo = mainIndexRepo;
+            _customerViewPOKHRepo = customerViewPOKHRepo;
+            _employeeTeamSaleRepo = employeeTeamSaleRepo;
+            _employeeRepo = employeeRepo;
+            _pokhDetailRepo = pokhDetailRepo;
+        }
         [HttpGet("get-viewpokh")]
-        public IActionResult Get(DateTime dateTimeS, DateTime dateTimeE, int employeeTeamSaleID, int userID, int poType,int status, int customerID, string keyword = "")
+        public IActionResult Get(DateTime dateTimeS, DateTime dateTimeE, int employeeTeamSaleID, int userID, int poType, int status, int customerID, string keyword = "")
         {
             try
             {

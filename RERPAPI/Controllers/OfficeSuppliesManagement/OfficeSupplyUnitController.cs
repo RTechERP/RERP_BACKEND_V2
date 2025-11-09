@@ -11,7 +11,12 @@ namespace RERPAPI.Controllers.OfficeSuppliesManagement
     [ApiController]
     public class OfficeSupplyUnitController : ControllerBase
     {
-        OfficeSupplyUnitRepo _officesupplyunitRepo = new OfficeSupplyUnitRepo();
+        private readonly OfficeSupplyUnitRepo _officesupplyunitRepo;
+
+        public OfficeSupplyUnitController(OfficeSupplyUnitRepo officesupplyunitRepo)
+        {
+            _officesupplyunitRepo = officesupplyunitRepo;
+        }
 
         [HttpGet("")]
         public IActionResult getOfficeSupplyUnit()

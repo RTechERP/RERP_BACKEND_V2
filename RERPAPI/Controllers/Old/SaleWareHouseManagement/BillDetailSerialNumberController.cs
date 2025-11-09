@@ -12,8 +12,16 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     [ApiController]
     public class BillDetailSerialNumberController : ControllerBase
     {
-        BillExportDetailSerialNumberRepo _billExportDetailSerialNumberRepo = new BillExportDetailSerialNumberRepo();
-        BillImportDetailSerialNumberRepo _billImportDetailSerialNumberRepo = new BillImportDetailSerialNumberRepo();
+        private readonly BillExportDetailSerialNumberRepo _billExportDetailSerialNumberRepo;
+        private readonly BillImportDetailSerialNumberRepo _billImportDetailSerialNumberRepo;
+        public BillDetailSerialNumberController(
+            BillExportDetailSerialNumberRepo billExportDetailSerialNumberRepo,
+            BillImportDetailSerialNumberRepo billImportDetailSerialNumberRepo
+        )
+        {
+            _billExportDetailSerialNumberRepo = billExportDetailSerialNumberRepo;
+            _billImportDetailSerialNumberRepo = billImportDetailSerialNumberRepo;
+        }
 
         [HttpPost("get-by-ids")]
         public async Task<IActionResult> getDataByIDs([FromBody] GetByIdsRequest request)

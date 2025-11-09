@@ -11,7 +11,14 @@ namespace RERPAPI.Controllers
     [ApiController]
     public class EmployeeWFHController : ControllerBase
     {
-        private readonly EmployeeWFHRepo _employeeWFHRepo = new EmployeeWFHRepo();
+        private readonly EmployeeWFHRepo _employeeWFHRepo;
+        private readonly DepartmentRepo _departmentRepo;
+
+        public EmployeeWFHController(EmployeeWFHRepo employeeWFHRepo, DepartmentRepo departmentRepo)
+        {
+            _employeeWFHRepo = employeeWFHRepo;
+            _departmentRepo = departmentRepo;
+        }
 
 
 
@@ -91,21 +98,11 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                var departmentRepo = new DepartmentRepo();
+                var departments = _departmentRepo.GetAll()
+                    .Select(x => new { x.ID, x.Code, x.Name })
+                    .ToList();
 
-                var departments = departmentRepo.GetAll()
-                    .Select(x => new
-                    {
-                        x.ID,
-                        x.Code,
-                        x.Name
-                    }).ToList();
-
-                return Ok(new
-                {
-                    status = 1,
-                    data = departments
-                });
+                return Ok(new { status = 1, data = departments });
             }
             catch (Exception ex)
             {

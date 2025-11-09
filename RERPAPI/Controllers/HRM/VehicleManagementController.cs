@@ -11,10 +11,19 @@ namespace RERPAPI.Controllers
     [ApiController]
     public class VehicleManagementController : ControllerBase
     {
-        VehicleManagementRepo _vehicleManagementRepo = new VehicleManagementRepo();
-        VehicleCategoryRepo _vehicleCategoryRepo = new VehicleCategoryRepo();
-       
-        EmployeeRepo _employeeRepo = new EmployeeRepo();
+        private readonly VehicleManagementRepo _vehicleManagementRepo;
+        private readonly VehicleCategoryRepo _vehicleCategoryRepo;
+        private readonly EmployeeRepo _employeeRepo;
+
+        public VehicleManagementController(
+            VehicleManagementRepo vehicleManagementRepo,
+            VehicleCategoryRepo vehicleCategoryRepo,
+            EmployeeRepo employeeRepo)
+        {
+            _vehicleManagementRepo = vehicleManagementRepo;
+            _vehicleCategoryRepo = vehicleCategoryRepo;
+            _employeeRepo = employeeRepo;
+        }
         // GET: /api/vehiclemanagement
         [HttpGet("get-vehicles")]
         public IActionResult GetVehicles()

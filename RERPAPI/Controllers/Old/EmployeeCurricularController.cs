@@ -14,10 +14,10 @@ namespace RERPAPI.Controllers.Old
         private readonly EmployeeCurricularRepo _employeeCurricularRepo;
         private readonly EmployeeRepo _employeeRepo;
 
-        public EmployeeCurricularController()
+        public EmployeeCurricularController(EmployeeCurricularRepo employeeCurricularRepo, EmployeeRepo employeeRepo)
         {
-            _employeeCurricularRepo = new EmployeeCurricularRepo();
-            _employeeRepo = new EmployeeRepo();
+            _employeeCurricularRepo = employeeCurricularRepo;
+            _employeeRepo = employeeRepo;
         }
 
         [HttpGet("")]

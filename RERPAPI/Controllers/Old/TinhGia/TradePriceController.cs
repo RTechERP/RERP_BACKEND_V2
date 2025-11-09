@@ -13,11 +13,19 @@ namespace RERPAPI.Controllers.Old.TinhGia
     [ApiController]
     public class TradePriceController : ControllerBase
     {
-        TradePriceRepo _tradePriceRepo = new TradePriceRepo();
-        TradePriceDetailRepo _tradePriceDetailRepo = new TradePriceDetailRepo();
-        UnitCountRepo _unitCountRepo = new UnitCountRepo();
-        ProjectRepo _projectRepo = new ProjectRepo();
-        CustomerRepo _customerRepo = new CustomerRepo();
+        private readonly TradePriceRepo _tradePriceRepo;
+        private readonly TradePriceDetailRepo _tradePriceDetailRepo;
+        private readonly UnitCountRepo _unitCountRepo;
+        private readonly ProjectRepo _projectRepo;
+        private readonly CustomerRepo _customerRepo;
+        public TradePriceController(TradePriceRepo tradePriceRepo, TradePriceDetailRepo tradePriceDetailRepo, UnitCountRepo unitCountRepo, ProjectRepo projectRepo, CustomerRepo customerRepo)
+        {
+            _tradePriceRepo = tradePriceRepo;
+            _tradePriceDetailRepo = tradePriceDetailRepo;
+            _unitCountRepo = unitCountRepo;
+            _projectRepo = projectRepo;
+            _customerRepo = customerRepo;
+        }
 
         [HttpGet]
         public IActionResult Get(int employeeId, int saleAdminId, int projectId, int customerId, string keyword = "")

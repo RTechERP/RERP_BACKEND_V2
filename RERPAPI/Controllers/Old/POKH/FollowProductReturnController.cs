@@ -12,10 +12,15 @@ namespace RERPAPI.Controllers.Old.POKH
     [ApiController]
     public class FollowProductReturnController : ControllerBase
     {
-        UserRepo _userRepo = new UserRepo();
+        private readonly UserRepo _userRepo;
+
+        public FollowProductReturnController(UserRepo userRepo)
+        {
+            _userRepo = userRepo;
+        }
         // GET: api/<FollowProductReturnController>
         [HttpGet("get-data")]
-        public IActionResult LoadData( int customerId, int userId, int groupSaleId, DateTime dateStart, DateTime dateEnd, string keywords = "")
+        public IActionResult LoadData(int customerId, int userId, int groupSaleId, DateTime dateStart, DateTime dateEnd, string keywords = "")
         {
             try
             {

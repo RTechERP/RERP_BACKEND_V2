@@ -12,7 +12,11 @@ namespace RERPAPI.Controllers.Old
     [ApiKeyAuthorize]
     public class ProjectSolutionFileController : ControllerBase
     {
-        ProjectSolutionFileRepo _repo= new ProjectSolutionFileRepo();
+        private ProjectSolutionFileRepo _repo;
+        public ProjectSolutionFileController(ProjectSolutionFileRepo repo)
+        {
+            _repo = repo;
+        }
         [HttpGet("get-all")]
         public IActionResult GetAll(int projectSolutionID)
         {

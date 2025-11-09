@@ -11,7 +11,6 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class VisitFactoryDetailRepo : GenericRepo<VisitFactoryDetail>
     {
-        //public VisitFactoryDetailRepo(RTCContext context) : base(context) { }
         public VisitFactoryDetailRepo(CurrentUser currentUser) : base(currentUser)
         {
         }

@@ -1,5 +1,4 @@
-﻿using DocumentFormat.OpenXml.Office.CustomUI;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -13,8 +12,15 @@ namespace RERPAPI.Controllers.Old.VisionBase
     [ApiController]
     public class PlanWeekController : ControllerBase
     {
-        WeekPlanRepo _weekPlanRepo = new WeekPlanRepo();
-        DepartmentRepo _departmentRepo = new DepartmentRepo();
+        WeekPlanRepo _weekPlanRepo;
+        DepartmentRepo _departmentRepo;
+        public PlanWeekController(WeekPlanRepo weekPlanRepo,
+            DepartmentRepo departmentRepo)
+        {
+            _weekPlanRepo = weekPlanRepo;
+            _departmentRepo = departmentRepo;
+        }
+
 
         [HttpGet]
         public IActionResult Get(DateTime dateStart, DateTime dateEnd, int departmentId, int userId, int groupSaleId)
@@ -25,8 +31,8 @@ namespace RERPAPI.Controllers.Old.VisionBase
                                         new string[] { "@DateStart", "@DateEnd", "@Department", "@UserID", "@GroupSaleID" },
                                         new object[] { dateStart, dateEnd, departmentId, userId, groupSaleId });
                 var data = SQLHelper<dynamic>.GetListData(list, 0);
-                var data1 = SQLHelper<dynamic>.GetListData(list,1);
-                return Ok(ApiResponseFactory.Success(new { data, data1}, ""));
+                var data1 = SQLHelper<dynamic>.GetListData(list, 1);
+                return Ok(ApiResponseFactory.Success(new { data, data1 }, ""));
             }
             catch (Exception ex)
             {
@@ -128,8 +134,8 @@ namespace RERPAPI.Controllers.Old.VisionBase
 
                 if (!weekPlans.Any())
                     return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy kế hoạch để xoá!"));
-                    await _weekPlanRepo.DeleteRangeAsync(weekPlans);
-                
+                await _weekPlanRepo.DeleteRangeAsync(weekPlans);
+
 
                 return Ok(ApiResponseFactory.Success(null, "Xoá thành công!"));
             }

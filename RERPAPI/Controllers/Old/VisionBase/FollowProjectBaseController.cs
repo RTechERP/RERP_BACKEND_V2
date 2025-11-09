@@ -1,17 +1,11 @@
 ﻿using ClosedXML.Excel;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Newtonsoft.Json.Linq;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using System.Data;
 using System.Globalization;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace RERPAPI.Controllers.KhoBaseManager
 {
@@ -19,36 +13,59 @@ namespace RERPAPI.Controllers.KhoBaseManager
     [ApiController]
     public class FollowProjectBaseController : ControllerBase
     {
-        private readonly ProjectRepo _projectRepo = new ProjectRepo();
-        private readonly UserRepo _userRepo = new UserRepo();
-        private readonly CustomerRepo _customerRepo = new CustomerRepo();
-        private readonly FollowProjectBaseRepo _followProjectBaseRepo = new FollowProjectBaseRepo();
-        private readonly ProjectStatusLogRepo _projectStatusLogRepo = new ProjectStatusLogRepo();
-        private readonly FirmBaseRepo _firmBaseRepo = new FirmBaseRepo();
-        private readonly ProjectTypeBaseRepo _projectTypeBaseRepo = new ProjectTypeBaseRepo();
-        private readonly FollowProjectRepo _followProjectRepo = new FollowProjectRepo();
-        private readonly ProjectStatusRepo _projectStatusRepo = new ProjectStatusRepo();
+        private readonly ProjectRepo _projectRepo;
+        private readonly UserRepo _userRepo;
+        private readonly CustomerRepo _customerRepo;
+        private readonly FollowProjectBaseRepo _followProjectBaseRepo;
+        private readonly ProjectStatusLogRepo _projectStatusLogRepo;
+        private readonly FirmBaseRepo _firmBaseRepo;
+        private readonly ProjectTypeBaseRepo _projectTypeBaseRepo;
+        private readonly FollowProjectRepo _followProjectRepo;
+        private readonly ProjectStatusRepo _projectStatusRepo;
+        public FollowProjectBaseController(
+            ProjectRepo projectRepo,
+            UserRepo userRepo,
+            CustomerRepo customerRepo,
+            FollowProjectBaseRepo followProjectBaseRepo,
+            ProjectStatusLogRepo projectStatusLogRepo,
+            FirmBaseRepo firmBaseRepo,
+            ProjectTypeBaseRepo projectTypeBaseRepo,
+            FollowProjectRepo followProjectRepo,
+            ProjectStatusRepo projectStatusRepo
+            )
+        {
+            _projectRepo = projectRepo;
+            _userRepo = userRepo;
+            _customerRepo = customerRepo;
+            _followProjectBaseRepo = followProjectBaseRepo;
+            _projectStatusLogRepo = projectStatusLogRepo;
+            _firmBaseRepo = firmBaseRepo;
+            _projectTypeBaseRepo = projectTypeBaseRepo;
+            _followProjectRepo = followProjectRepo;
+            _projectStatusRepo = projectStatusRepo;
+        }
+
         // Danh sách follow project base
         [HttpGet("getfollowprojectbase")]
         public async Task<IActionResult> getfollowprojectbase([FromQuery] FollowProjectBaseFilterParam param)
         {
             try
             {
-            var data = SQLHelper<object>.ProcedureToList(
-            "spGetFollowProjectBase",
-                new string[]
-                {
+                var data = SQLHelper<object>.ProcedureToList(
+                "spGetFollowProjectBase",
+                    new string[]
+                    {
                     "@PageNumber", "@PageSize", "@DateStart", "@DateEnd",
                     "@FilterText", "@User", "@CustomerID", "@PM",
                     "@WarehouseID", "@GroupSaleID"
-                },
-                new object[]
-                {
+                    },
+                    new object[]
+                    {
                     param.page, param.size, param.dateStart, param.dateEnd,
                     param.filterText, param.user, param.customerID, param.pm,
                     param.warehouseID, param.groupSaleID
-                }
-            );
+                    }
+                );
                 return Ok(new
                 {
                     status = 1,
@@ -191,7 +208,7 @@ namespace RERPAPI.Controllers.KhoBaseManager
                         p.ProjectName,
                         ProjectFullName = p.ProjectCode + "_" + p.ProjectName
                     }).ToList();
-                return Ok(ApiResponseFactory.Success( data , ""));
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {

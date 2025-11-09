@@ -11,8 +11,14 @@ namespace RERPAPI.Controllers
     public class KPIEvaluationController : ControllerBase
 
     {
-        private readonly KPIEvaluationRepo _kpiEvaluationRepo = new KPIEvaluationRepo();
-        KPIEvaluationErrorRepo _kpiEvaluationErrorRepo = new KPIEvaluationErrorRepo();
+        private readonly KPIEvaluationRepo _kpiEvaluationRepo;
+        private readonly KPIEvaluationErrorRepo _kpiEvaluationErrorRepo;
+
+        public KPIEvaluationController(KPIEvaluationRepo kpiEvaluationRepo, KPIEvaluationErrorRepo kpiEvaluationErrorRepo)
+        {
+            _kpiEvaluationRepo = kpiEvaluationRepo;
+            _kpiEvaluationErrorRepo = kpiEvaluationErrorRepo;
+        }
         [HttpGet("get-kpievaluation")]
         public IActionResult GetKPIEvaluation(int departmentID)
         {

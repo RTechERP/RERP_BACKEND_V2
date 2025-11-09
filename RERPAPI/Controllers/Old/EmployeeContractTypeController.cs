@@ -8,13 +8,17 @@ namespace RERPAPI.Controllers.Old
     [Route("api/[controller]")]
     public class EmployeeContractTypeController : ControllerBase
     {
-        EmployeeContractTypeRepo employeeContractTypeRepo = new EmployeeContractTypeRepo();
+        private EmployeeContractTypeRepo _employeeContractTypeRepo;
+        public EmployeeContractTypeController(EmployeeContractTypeRepo employeeContractTypeRepo)
+        {
+            _employeeContractTypeRepo = employeeContractTypeRepo;
+        }
         [HttpGet]
         public IActionResult GetAll()
         {
             try
             {
-                var employeeContractTypes = employeeContractTypeRepo.GetAll();
+                var employeeContractTypes = _employeeContractTypeRepo.GetAll();
                 return Ok(new
                 {
                     status = 1,
@@ -37,7 +41,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                var employeeContractType = employeeContractTypeRepo.GetByID(id);
+                var employeeContractType = _employeeContractTypeRepo.GetByID(id);
                 return Ok(new
                 {
                     status = 1,
@@ -61,7 +65,7 @@ namespace RERPAPI.Controllers.Old
             try
             {
                 
-                List<EmployeeLoaiHDLD> employeeContractTypes = employeeContractTypeRepo.GetAll();
+                List<EmployeeLoaiHDLD> employeeContractTypes = _employeeContractTypeRepo.GetAll();
                 if (employeeContractTypes.Any(x => (x.Name == employeeContractType.Name || x.Code == employeeContractType.Code) && x.ID != employeeContractType.ID))
                 {
                     return BadRequest(new
@@ -73,12 +77,12 @@ namespace RERPAPI.Controllers.Old
                 if (employeeContractType.ID <= 0)
                 {
                     employeeContractType.CreatedDate = DateTime.Now;
-                    await employeeContractTypeRepo.CreateAsync(employeeContractType);
+                    await _employeeContractTypeRepo.CreateAsync(employeeContractType);
                 }
                 else
                 {
                     employeeContractType.UpdatedDate = DateTime.Now;
-                    await employeeContractTypeRepo.UpdateAsync(employeeContractType);
+                    await _employeeContractTypeRepo.UpdateAsync(employeeContractType);
                 }
                 return Ok(new
                 {

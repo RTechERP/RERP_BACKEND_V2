@@ -17,12 +17,21 @@ namespace RERPAPI.Controllers.Old
     [ApiKeyAuthorize]
     public class ProjectPartlistController : ControllerBase
     {
-        ProjectPartListRepo _projectPartlistRepo = new ProjectPartListRepo();
-        ProductSaleRepo _productSaleRepo = new ProductSaleRepo();
-        FirmRepo _firmRepo = new FirmRepo();
-        UnitCountKTRepo _unitCountRepo = new UnitCountKTRepo();
-        ProductRTCRepo _productRTCRepo = new ProductRTCRepo();
-        ProjectPartlistPriceRequestRepo _priceRequestRepo = new ProjectPartlistPriceRequestRepo();
+        ProductSaleRepo _productSaleRepo;
+        FirmRepo _firmRepo;
+        UnitCountKTRepo _unitCountRepo;
+        ProductRTCRepo _productRTCRepo;
+        ProjectPartlistPriceRequestRepo _priceRequestRepo;
+        private readonly ProjectPartListRepo _projectPartlistRepo;
+        public ProjectPartlistController(ProjectPartListRepo projectPartlistRepo, ProductSaleRepo productSaleRepo, FirmRepo firmRepo, UnitCountKTRepo unitCountRepo, ProductRTCRepo productRTCRepo, ProjectPartlistPriceRequestRepo priceRequestRepo)
+        {
+            _projectPartlistRepo = projectPartlistRepo;
+            _productSaleRepo = productSaleRepo;
+            _firmRepo = firmRepo;
+            _unitCountRepo = unitCountRepo;
+            _productRTCRepo = productRTCRepo;
+            _priceRequestRepo = priceRequestRepo;
+        }
         [HttpPost("get-all")]
         public IActionResult GetAll(ProjectPartlistParam param)
         {

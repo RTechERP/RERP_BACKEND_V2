@@ -11,11 +11,17 @@ namespace RERPAPI.Controllers.Old.ProjectManager
     [ApiController]
     public class ProjectWorkPropressController : ControllerBase
     {
-        #region Khai báo biến
-        ProjectRepo projectRepo = new ProjectRepo();
-        CustomerRepo customerRepo = new CustomerRepo();
-        #endregion
-
+        private readonly ProjectRepo projectRepo;
+        private readonly CustomerRepo customerRepo;
+    
+        public ProjectWorkPropressController(
+            ProjectRepo projectRepo,
+            CustomerRepo customerRepo
+        )
+        {
+            this.projectRepo = projectRepo;
+            this.customerRepo = customerRepo;
+        }
         #region Lấy danh sách tiến độ công việc
         [HttpGet("get-work-propress/{projectId}")]
         public async Task<IActionResult> getWorkPropress(int projectId)

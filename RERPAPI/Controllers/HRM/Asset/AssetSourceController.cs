@@ -12,8 +12,12 @@ namespace RERPAPI.Controllers.Old.Asset
     [RequiresPermission("N23,N1")]
     public class AssetSourceController : ControllerBase
     {
+        private readonly TSSourceAssetsRepo _tsSourceAssetRepo;
 
-        TSSourceAssetsRepo _tsSourceAssetRepo = new TSSourceAssetsRepo();
+        public AssetSourceController(TSSourceAssetsRepo tsSourceAssetRepo)
+        {
+            _tsSourceAssetRepo = tsSourceAssetRepo;
+        }
         [HttpGet("get-source-asset")]
         public IActionResult GetSourceAssets()
         {

@@ -10,9 +10,14 @@ namespace RERPAPI.Controllers.Old.TB
     [ApiController]
     public class ProductController : ControllerBase
     {
+        private readonly CategoriesRepo _categoriesRepo;
+        private readonly ProductsRepo _productsRepo;
 
-        CategoriesRepo _categoriesRepo = new CategoriesRepo();
-        ProductsRepo _productsRepo = new ProductsRepo();
+        public ProductController(CategoriesRepo categoriesRepo, ProductsRepo productsRepo)
+        {
+            _categoriesRepo = categoriesRepo;
+            _productsRepo = productsRepo;
+        }
         //API getall Lấy danh sách danh mục sản phẩm
         [HttpGet("get-all-category")]
         public IActionResult GetAll()

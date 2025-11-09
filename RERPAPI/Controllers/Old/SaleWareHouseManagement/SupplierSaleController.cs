@@ -11,7 +11,11 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     [ApiController]
     public class SupplierSaleController : ControllerBase
     {
-        SupplierSaleRepo _supplierSaleRepo=new SupplierSaleRepo();
+        private readonly SupplierSaleRepo _supplierSaleRepo;
+        public SupplierSaleController(SupplierSaleRepo supplierSaleRepo)
+        {
+            _supplierSaleRepo = supplierSaleRepo;
+        }   
         [HttpGet("")]
         public IActionResult getSupplierSale()
         {

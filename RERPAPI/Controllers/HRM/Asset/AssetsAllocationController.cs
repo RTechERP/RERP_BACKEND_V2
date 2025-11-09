@@ -16,12 +16,26 @@ namespace RERPAPI.Controllers.Old.Asset
     [ApiController]
     public class AssetsAllocationController : ControllerBase
     {
-        vUserGroupLinksRepo _vUserGroupLinksRepo = new vUserGroupLinksRepo();
+        private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
+        private readonly TSAssetManagementRepo _tsAssetManagementRepo;
+        private readonly TSAssetAllocationRepo _tSAssetAllocationRepo;
+        private readonly TSAssetAllocationDetailRepo _tSAssetAllocationDetailRepo;
+        private readonly TSAllocationEvictionAssetRepo _tSAllocationEvictionAssetRepo;
 
-        TSAssetManagementRepo _tsAssetManagementRepo = new TSAssetManagementRepo();
-        TSAssetAllocationRepo _tSAssetAllocationRepo = new TSAssetAllocationRepo();
-        TSAssetAllocationDetailRepo _tSAssetAllocationDetailRepo = new TSAssetAllocationDetailRepo();
-        TSAllocationEvictionAssetRepo tSAllocationEvictionAssetRepo = new TSAllocationEvictionAssetRepo();
+        public AssetsAllocationController(
+            vUserGroupLinksRepo vUserGroupLinksRepo,
+            TSAssetManagementRepo tsAssetManagementRepo,
+            TSAssetAllocationRepo tSAssetAllocationRepo,
+            TSAssetAllocationDetailRepo tSAssetAllocationDetailRepo,
+            TSAllocationEvictionAssetRepo tSAllocationEvictionAssetRepo
+        )
+        {
+            _vUserGroupLinksRepo = vUserGroupLinksRepo;
+            _tsAssetManagementRepo = tsAssetManagementRepo;
+            _tSAssetAllocationRepo = tSAssetAllocationRepo;
+            _tSAssetAllocationDetailRepo = tSAssetAllocationDetailRepo;
+            _tSAllocationEvictionAssetRepo = tSAllocationEvictionAssetRepo;
+        }
         [HttpPost("get-allocation")]
         
         public async Task<ActionResult> GetAssetAllocationnn([FromBody] AssetAllocationRequestParam request)
@@ -232,11 +246,10 @@ namespace RERPAPI.Controllers.Old.Asset
                 {
                     foreach (var item in allocations.tSAllocationEvictionAssets)
                     {
-
                         if (item.ID <= 0)
-                            await tSAllocationEvictionAssetRepo.CreateAsync(item);
+                            await _tSAllocationEvictionAssetRepo.CreateAsync(item);
                         else
-                            tSAllocationEvictionAssetRepo.UpdateAsync(item);
+                            _tSAllocationEvictionAssetRepo.UpdateAsync(item);
                     }
                 }
                 return Ok(new { status = 1 });

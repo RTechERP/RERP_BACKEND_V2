@@ -12,8 +12,12 @@ namespace RERPAPI.Controllers.Old.IssueSolution
     [ApiController]
     public class IssueCauseController : ControllerBase
     {
-        private readonly IssueCauseRepo _issueCauseRepo = new IssueCauseRepo();
+        private readonly IssueCauseRepo _issueCauseRepo;
 
+        public IssueCauseController(IssueCauseRepo issueCauseRepo)
+        {
+            _issueCauseRepo = issueCauseRepo;
+        }
 
         [HttpGet()]
         public IActionResult GetAllIssueCause()

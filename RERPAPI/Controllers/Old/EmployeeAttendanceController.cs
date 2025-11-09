@@ -10,15 +10,21 @@ namespace RERPAPI.Controllers
     [ApiController]
     public class EmployeeAttendanceController : ControllerBase
     {
-        EmployeeRepo _employeeRepo = new EmployeeRepo();
-        EmployeeAttendanceRepo _employeeAttendanceRepo = new EmployeeAttendanceRepo();
+        private readonly EmployeeRepo _employeeRepo;
+        private readonly EmployeeAttendanceRepo _employeeAttendanceRepo;
+        private readonly DepartmentRepo _departmentRepo;
+        public EmployeeAttendanceController(EmployeeRepo employeeRepo, EmployeeAttendanceRepo employeeAttendanceRepo, DepartmentRepo departmentRepo)
+        {
+            _employeeRepo = employeeRepo;
+            _employeeAttendanceRepo = employeeAttendanceRepo;
+            _departmentRepo = departmentRepo;
+        }
         [HttpGet("get-department")]
         public async Task<IActionResult> getDepartment()
         {
             try
             {
-                DepartmentRepo departmentRepo = new DepartmentRepo();
-                List<Department> departments = departmentRepo.GetAll().ToList();
+                List<Department> departments = _departmentRepo.GetAll().ToList();
                 return Ok(ApiResponseFactory.Success(departments, ""));
             }
             catch (Exception ex)

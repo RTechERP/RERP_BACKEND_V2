@@ -12,13 +12,23 @@ namespace RERPAPI.Controllers.Old.ProjectManager
     [ApiController]
     public class ProjectWorkTimelineController : ControllerBase
     {
-        #region Khai báo biến
-        ProjectRepo projectRepo = new ProjectRepo();
-        CustomerRepo customerRepo = new CustomerRepo();
-        DepartmentRepo departmentRepo = new DepartmentRepo();
-        UserTeamRepo userTeamRepo = new UserTeamRepo();
-        #endregion
-
+        private readonly ProjectRepo projectRepo;
+        private readonly CustomerRepo customerRepo;
+        private readonly DepartmentRepo departmentRepo;
+        private readonly UserTeamRepo userTeamRepo;
+    
+        public ProjectWorkTimelineController(
+            ProjectRepo projectRepo,
+            CustomerRepo customerRepo,
+            DepartmentRepo departmentRepo,
+            UserTeamRepo userTeamRepo
+        )
+        {
+            this.projectRepo = projectRepo;
+            this.customerRepo = customerRepo;
+            this.departmentRepo = departmentRepo;
+            this.userTeamRepo = userTeamRepo;
+        }
         #region Lấy danh sách tiến độ công việc
         [HttpGet("get-department")]
         public async Task<IActionResult> GetDepartment()

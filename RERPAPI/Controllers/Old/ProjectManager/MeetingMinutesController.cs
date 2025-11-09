@@ -14,14 +14,32 @@ namespace RERPAPI.Controllers.Duan.MeetingMinutes
 
     public class MeetingMinutesController : ControllerBase
     {
-       MeetingTypeRepo _meetingtype = new MeetingTypeRepo();
-       ProjectManagerRepo _projectmanager = new ProjectManagerRepo();
-        MeetingMinuteRepo __meetingMinutesRepo = new MeetingMinuteRepo();
-        MeetingMinutesDetailRepo _meetingMinutesDetailRepo = new MeetingMinutesDetailRepo();
-        MeetingMinutesAttendanceRepo _meetingMinutesAttendanceRepo = new MeetingMinutesAttendanceRepo();
-        ProjectHistoryProblemRepo _projectHistoryProblemRepo = new ProjectHistoryProblemRepo();
+       private readonly MeetingTypeRepo _meetingtype;
+    private readonly ProjectManagerRepo _projectmanager;
+    private readonly MeetingMinuteRepo __meetingMinutesRepo;
+    private readonly MeetingMinutesDetailRepo _meetingMinutesDetailRepo;
+    private readonly MeetingMinutesAttendanceRepo _meetingMinutesAttendanceRepo;
+    private readonly ProjectHistoryProblemRepo _projectHistoryProblemRepo;
+    private readonly MeetingMinutesFileRepo _meetingMinutesFileRepo;
 
-        MeetingMinutesFileRepo _meetingMinutesFileRepo = new MeetingMinutesFileRepo();
+    public MeetingMinutesController(
+        MeetingTypeRepo meetingtype,
+        ProjectManagerRepo projectmanager,
+        MeetingMinuteRepo meetingMinutesRepo,
+        MeetingMinutesDetailRepo meetingMinutesDetailRepo,
+        MeetingMinutesAttendanceRepo meetingMinutesAttendanceRepo,
+        ProjectHistoryProblemRepo projectHistoryProblemRepo,
+        MeetingMinutesFileRepo meetingMinutesFileRepo
+    )
+    {
+        _meetingtype = meetingtype;
+        _projectmanager = projectmanager;
+        __meetingMinutesRepo = meetingMinutesRepo;
+        _meetingMinutesDetailRepo = meetingMinutesDetailRepo;
+        _meetingMinutesAttendanceRepo = meetingMinutesAttendanceRepo;
+        _projectHistoryProblemRepo = projectHistoryProblemRepo;
+        _meetingMinutesFileRepo = meetingMinutesFileRepo;
+    }
 
         [HttpGet("get-meeting-type")]
         public IActionResult GetMeetingType() {

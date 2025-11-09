@@ -15,8 +15,16 @@ namespace RERPAPI.Controllers.HRM.Vehicle
     [ApiController]
     public class ProposeVehicleRepairController : ControllerBase
     {
-        ProposeVehicleRepairRepo _proposeVehicleRepairRepo = new ProposeVehicleRepairRepo();
-        ProposeVehicleRepairDetailRepo _proposeVehicleRepairDetailRepo = new ProposeVehicleRepairDetailRepo();
+        private readonly ProposeVehicleRepairRepo _proposeVehicleRepairRepo;
+        private readonly ProposeVehicleRepairDetailRepo _proposeVehicleRepairDetailRepo;
+
+        public ProposeVehicleRepairController(
+            ProposeVehicleRepairRepo proposeVehicleRepairRepo,
+            ProposeVehicleRepairDetailRepo proposeVehicleRepairDetailRepo)
+        {
+            _proposeVehicleRepairRepo = proposeVehicleRepairRepo;
+            _proposeVehicleRepairDetailRepo = proposeVehicleRepairDetailRepo;
+        }
         //Lấy danh sách sửa chữa, bảo dưỡng
         [HttpPost("get-propose-vehicles-repair")]
         public IActionResult GetProposeVehicleRepair([FromBody] VehicleRepairRequestParam request)

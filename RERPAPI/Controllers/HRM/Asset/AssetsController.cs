@@ -19,12 +19,29 @@ namespace RERPAPI.Controllers.Old.Asset
     [ApiController]
     public class AssetsController : ControllerBase
     {
-        TSLostReportAssetRepo _tsLostReportRepo = new TSLostReportAssetRepo();
-        TSAllocationEvictionAssetRepo _tSAllocationEvictionRepo = new TSAllocationEvictionAssetRepo();
-        TSReportBrokenAssetRepo _tsReportBrokenAssetRepo = new TSReportBrokenAssetRepo();
-        TSAssetManagementRepo _tsAssetManagementRepo = new TSAssetManagementRepo();
-        TSRepairAssetRepo _tSRepairAssetRepo = new TSRepairAssetRepo();
-        TSLiQuidationAssetRepo _tsLiQuidationAssetRepo = new TSLiQuidationAssetRepo();
+        private readonly TSLostReportAssetRepo _tsLostReportRepo;
+        private readonly TSAllocationEvictionAssetRepo _tSAllocationEvictionRepo;
+        private readonly TSReportBrokenAssetRepo _tsReportBrokenAssetRepo;
+        private readonly TSAssetManagementRepo _tsAssetManagementRepo;
+        private readonly TSRepairAssetRepo _tSRepairAssetRepo;
+        private readonly TSLiQuidationAssetRepo _tsLiQuidationAssetRepo;
+
+        public AssetsController(
+            TSLostReportAssetRepo tsLostReportRepo,
+            TSAllocationEvictionAssetRepo tSAllocationEvictionRepo,
+            TSReportBrokenAssetRepo tsReportBrokenAssetRepo,
+            TSAssetManagementRepo tsAssetManagementRepo,
+            TSRepairAssetRepo tSRepairAssetRepo,
+            TSLiQuidationAssetRepo tsLiQuidationAssetRepo
+        )
+        {
+            _tsLostReportRepo = tsLostReportRepo;
+            _tSAllocationEvictionRepo = tSAllocationEvictionRepo;
+            _tsReportBrokenAssetRepo = tsReportBrokenAssetRepo;
+            _tsAssetManagementRepo = tsAssetManagementRepo;
+            _tSRepairAssetRepo = tSRepairAssetRepo;
+            _tsLiQuidationAssetRepo = tsLiQuidationAssetRepo;
+        }
         [RequiresPermission("N2,N23,N1")]
         [HttpPost("get-asset")]
         public IActionResult GetListAssets([FromBody] AssetmanagementRequestParam request)

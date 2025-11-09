@@ -11,7 +11,12 @@ namespace RERPAPI.Controllers.Systems
     public class UserGroupController : ControllerBase
     {
 
-        UserGroupRepo _userGroupRepo = new UserGroupRepo();
+        UserGroupRepo _userGroupRepo;
+
+        public UserGroupController(UserGroupRepo userGroupRepo)
+        {
+            _userGroupRepo = userGroupRepo;
+        }
 
         [HttpGet("get-user-group")]
         public IActionResult UserGroupByFormAndFunctionCode(string functionCode)

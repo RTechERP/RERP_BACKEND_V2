@@ -19,8 +19,13 @@ namespace RERPAPI.Controllers.Old
     {
         #region Khai báo repository
 
-        private ProjectPartlistPurchaseRequestRepo _repo = new ProjectPartlistPurchaseRequestRepo();
-        private InventoryProjectRepo _inventoryProjectRepo = new InventoryProjectRepo();
+        private ProjectPartlistPurchaseRequestRepo _repo;
+        private InventoryProjectRepo _inventoryProjectRepo;
+        public ProjectPartlistPurchaseRequestController(ProjectPartlistPurchaseRequestRepo repo, InventoryProjectRepo inventoryProjectRepo)
+        {
+            _repo = repo;
+            _inventoryProjectRepo = inventoryProjectRepo;
+        }
         //private InventoryRepo _invRepo = new InventoryRepo();
 
         #endregion Khai báo repository

@@ -14,17 +14,32 @@ namespace RERPAPI.Controllers
     [ApiController]
     public class ModulaLocationController : ControllerBase
     {
-        ModulaLocationRepo locationRepo = new ModulaLocationRepo();
-        ModulaLocationDetailRepo detailRepo = new ModulaLocationDetailRepo();
-
-        BillImportDetailSerialNumberRepo importDetailSerialNumberRepo = new BillImportDetailSerialNumberRepo();
-        BillExportDetailSerialNumberRepo exportDetailSerialNumberRepo = new BillExportDetailSerialNumberRepo();
-        BillImportDetailSerialNumberModulaLocationRepo serialNumberImportModulaRepo = new BillImportDetailSerialNumberModulaLocationRepo();
-        BillExportDetailSerialNumberModulaLocationRepo serialNumberExportModulaRepo = new BillExportDetailSerialNumberModulaLocationRepo();
-
-
+        private readonly ModulaLocationRepo locationRepo;
+        private readonly ModulaLocationDetailRepo detailRepo;
+        private readonly BillImportDetailSerialNumberRepo importDetailSerialNumberRepo;
+        private readonly BillExportDetailSerialNumberRepo exportDetailSerialNumberRepo;
+        private readonly BillImportDetailSerialNumberModulaLocationRepo serialNumberImportModulaRepo;
+        private readonly BillExportDetailSerialNumberModulaLocationRepo serialNumberExportModulaRepo;
 
         private readonly PersistentTcpClientService _tcpClient;
+
+        public ModulaLocationController(
+            PersistentTcpClientService tcpClient,
+            ModulaLocationRepo locationRepo,
+            ModulaLocationDetailRepo detailRepo,
+            BillImportDetailSerialNumberRepo importDetailSerialNumberRepo,
+            BillExportDetailSerialNumberRepo exportDetailSerialNumberRepo,
+            BillImportDetailSerialNumberModulaLocationRepo serialNumberImportModulaRepo,
+            BillExportDetailSerialNumberModulaLocationRepo serialNumberExportModulaRepo)
+        {
+            _tcpClient = tcpClient;
+            this.locationRepo = locationRepo;
+            this.detailRepo = detailRepo;
+            this.importDetailSerialNumberRepo = importDetailSerialNumberRepo;
+            this.exportDetailSerialNumberRepo = exportDetailSerialNumberRepo;
+            this.serialNumberImportModulaRepo = serialNumberImportModulaRepo;
+            this.serialNumberExportModulaRepo = serialNumberExportModulaRepo;
+        }
 
         string _statusModula = "11|1001|STATUS\r";
         string _callModula = "11|8328|CALL|@|1\r";
@@ -358,7 +373,7 @@ namespace RERPAPI.Controllers
                         "-3" => "Vị trí đang bận.",
                         "-4" => "Khay đang bận.",
                         "-5" => "Vị trí bị vô hiệu hóa hoặc không có người dùng đăng nhập.",
-                        "-6" => "Máy không ở chế độ tự động.",
+                        "-6" => "Máy không ở chế động.",
                         _ => "Lỗi không xác định."
                     };
                     return BadRequest(ApiResponseFactory.Fail(null, errorMessage));
@@ -417,7 +432,7 @@ namespace RERPAPI.Controllers
                         "-1" => "Vị trí trống (không có khay để trả).",
                         "-2" => "Vị trí không hợp lệ.",
                         "-3" => "Vị trí đang bận (đang xử lý thao tác khác).",
-                        "-6" => "Máy không ở chế độ tự động.",
+                        "-6" => "Máy không ở chế động.",
                         "-100" => "Lỗi chung (kiểm tra log WMS).",
                         _ => "Lỗi không xác định."
                     };

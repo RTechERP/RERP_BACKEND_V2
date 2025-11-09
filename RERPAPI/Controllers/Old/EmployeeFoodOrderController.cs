@@ -10,7 +10,11 @@ namespace RERPAPI.Controllers.Old
     [Route("api/[controller]")]
     public class EmployeeFoodOrderController : ControllerBase
     {
-        EmployeeFoodOrderRepo employeeFoodOrderRepo = new EmployeeFoodOrderRepo();
+        private readonly EmployeeFoodOrderRepo _employeeFoodOrderRepo;
+        public EmployeeFoodOrderController(EmployeeFoodOrderRepo employeeFoodOrderRepo)
+        {
+            _employeeFoodOrderRepo = employeeFoodOrderRepo;
+        }
 
         [HttpGet("day-of-week")]
         public IActionResult GetDayOfWeek(int month, int year)
@@ -134,10 +138,10 @@ namespace RERPAPI.Controllers.Old
 
                if(foodOrder.ID <= 0)
                 {
-                    await employeeFoodOrderRepo.CreateAsync(foodOrder);
+                    await _employeeFoodOrderRepo.CreateAsync(foodOrder);
                 } else
                 {
-                    await employeeFoodOrderRepo.UpdateAsync(foodOrder);
+                    await _employeeFoodOrderRepo.UpdateAsync(foodOrder);
                 }
                 return Ok(new
                 {

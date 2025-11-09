@@ -13,10 +13,17 @@ namespace RERPAPI.Controllers.ProjectManager
     public class ProjectSynthesisDepartmentController : ControllerBase
     {
         #region Khai báo biến
-        ProjectRepo projectRepo = new ProjectRepo();
-        CustomerRepo customerRepo = new CustomerRepo();
-        DepartmentRepo departmentRepo = new DepartmentRepo();
-        UserTeamRepo userTeamRepo = new UserTeamRepo();
+        ProjectRepo projectRepo;
+        CustomerRepo customerRepo;
+        DepartmentRepo departmentRepo;
+        UserTeamRepo userTeamRepo;
+        public ProjectSynthesisDepartmentController(ProjectRepo projectRepo, CustomerRepo customerRepo, DepartmentRepo departmentRepo, UserTeamRepo userTeamRepo)
+        {
+            this.projectRepo = projectRepo;
+            this.customerRepo = customerRepo;
+            this.departmentRepo = departmentRepo;
+            this.userTeamRepo = userTeamRepo;
+        }
         #endregion
         #region Load  timeline hạng mục công việc
         [HttpGet("get-data")]

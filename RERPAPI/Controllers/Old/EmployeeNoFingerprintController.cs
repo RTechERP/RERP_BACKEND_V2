@@ -11,7 +11,13 @@ namespace RERPAPI.Controllers.Old
     [ApiController]
     public class EmployeeNoFingerprintController : ControllerBase
     {
-        private readonly EmployeeNoFingerprintRepo _employeeNoFingerprintRepo = new EmployeeNoFingerprintRepo();
+        private readonly EmployeeNoFingerprintRepo _employeeNoFingerprintRepo;
+        private readonly DepartmentRepo _departmentRepo;
+        public EmployeeNoFingerprintController(EmployeeNoFingerprintRepo employeeNoFingerprintRepo, DepartmentRepo departmentRepo)
+        {
+            _employeeNoFingerprintRepo = employeeNoFingerprintRepo;
+            _departmentRepo = departmentRepo;
+        }
 
         [HttpGet("get-employee-no-fingerprint")]
         public async Task<IActionResult> getEmployeeNoFingerprint(int pageNumber, int pageSize, DateTime dateStart, DateTime dateEnd, int departmentId, int idApprovedTP, int status, string? keyword)
@@ -114,9 +120,8 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                var departmentRepo = new DepartmentRepo();
 
-                var departments = departmentRepo.GetAll()
+                var departments = _departmentRepo.GetAll()
                     .Select(x => new
                     {
                         x.ID,

@@ -12,14 +12,34 @@ namespace RERPAPI.Controllers.Old.IssueSolution
     [ApiController]
     public class IssueLogSolutionController : ControllerBase
     {
-        private readonly IssueLogSolutionRepo _issueLogSolutionRepo = new IssueLogSolutionRepo();
-        private readonly IssueSolutionCauseLinkRepo _issueSolutionCauseLinkRepo = new IssueSolutionCauseLinkRepo();
-        private readonly IssueSolutionStatusLinkRepo _issueSolutionStatusLinkRepo = new IssueSolutionStatusLinkRepo();
-        private readonly IssueSolutionDocumentRepo _issueSolutionDocumentRepo = new IssueSolutionDocumentRepo();
-        private readonly CustomerRepo _customerRepo = new CustomerRepo();
-        private readonly ProjectRepo _projectRepo = new ProjectRepo();
-        private readonly IssueCauseRepo _issueCauseRepo = new IssueCauseRepo();
-        private readonly IssueSolutionStatusRepo _issueSolutionStatusRepo = new IssueSolutionStatusRepo();
+        private readonly IssueLogSolutionRepo _issueLogSolutionRepo;
+        private readonly IssueSolutionCauseLinkRepo _issueSolutionCauseLinkRepo;
+        private readonly IssueSolutionStatusLinkRepo _issueSolutionStatusLinkRepo;
+        private readonly IssueSolutionDocumentRepo _issueSolutionDocumentRepo;
+        private readonly CustomerRepo _customerRepo;
+        private readonly ProjectRepo _projectRepo;
+        private readonly IssueCauseRepo _issueCauseRepo;
+        private readonly IssueSolutionStatusRepo _issueSolutionStatusRepo;
+
+        public IssueLogSolutionController(
+            IssueLogSolutionRepo issueLogSolutionRepo,
+            IssueSolutionCauseLinkRepo issueSolutionCauseLinkRepo,
+            IssueSolutionStatusLinkRepo issueSolutionStatusLinkRepo,
+            IssueSolutionDocumentRepo issueSolutionDocumentRepo,
+            CustomerRepo customerRepo,
+            ProjectRepo projectRepo,
+            IssueCauseRepo issueCauseRepo,
+            IssueSolutionStatusRepo issueSolutionStatusRepo)
+        {
+            _issueLogSolutionRepo = issueLogSolutionRepo;
+            _issueSolutionCauseLinkRepo = issueSolutionCauseLinkRepo;
+            _issueSolutionStatusLinkRepo = issueSolutionStatusLinkRepo;
+            _issueSolutionDocumentRepo = issueSolutionDocumentRepo;
+            _customerRepo = customerRepo;
+            _projectRepo = projectRepo;
+            _issueCauseRepo = issueCauseRepo;
+            _issueSolutionStatusRepo = issueSolutionStatusRepo;
+        }
         List<List<dynamic>> listDocuments = SQLHelper<dynamic>.ProcedureToList("spGetDocumentIssue", new string[] { }, new object[] { });
 
         [HttpGet()]
