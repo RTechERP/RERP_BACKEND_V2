@@ -11,7 +11,7 @@ namespace RERPAPI.Model.Common
 {
     public static class ApiResponseFactory
     {
-        public static APIResponse Success(object? data, string? message)
+        public static APIResponse Success(object? data = null, string? message = "")
         {                                                                                                               
             return new APIResponse
             {

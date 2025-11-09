@@ -26,6 +26,11 @@ namespace RERPAPI.Model.DTO
 
         // Log thay đổi chi tiết PO
         public List<PONCCDetailLog> lstPONCCDetailLog { get; set; }
+
+        public bool? OrderQualityNotMet { get; set; }
+
+        public string? ReasonForFailure { get; set; }
+
     }
 
 }
