@@ -12,8 +12,16 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     [ApiController]
     public class HistoryBorrowSaleController : ControllerBase
     {
-        BillExportDetailRepo _billExportDetailRepo= new BillExportDetailRepo();
-        WarehouseRepo _wareHouseRepo = new WarehouseRepo();
+        private readonly BillExportDetailRepo _billExportDetailRepo;
+        private readonly WarehouseRepo _wareHouseRepo;
+
+        public HistoryBorrowSaleController(
+            BillExportDetailRepo billExportDetailRepo,
+            WarehouseRepo wareHouseRepo)
+        {
+            _billExportDetailRepo = billExportDetailRepo;
+            _wareHouseRepo = wareHouseRepo;
+        }
 
         [HttpPost("")]
 

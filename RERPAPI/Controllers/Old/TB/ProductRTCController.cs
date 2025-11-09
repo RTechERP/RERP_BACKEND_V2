@@ -16,10 +16,22 @@ namespace RERPAPI.Controllers.Old.TB
     {
 
         const int WAREHOUSEID = 1;
-        ProductGroupRTCRepo _productGroupRTCRepo = new ProductGroupRTCRepo();
-        ProductRTCRepo _productRTCRepo = new ProductRTCRepo();
-        ProductLocationRepo _productLocationRepo = new ProductLocationRepo();
-        ConfigSystemRepo config = new ConfigSystemRepo();
+        private readonly ProductGroupRTCRepo _productGroupRTCRepo;
+        private readonly ProductRTCRepo _productRTCRepo;
+        private readonly ProductLocationRepo _productLocationRepo;
+        private readonly ConfigSystemRepo config;
+
+        public ProductRTCController(
+            ProductGroupRTCRepo productGroupRTCRepo,
+            ProductRTCRepo productRTCRepo,
+            ProductLocationRepo productLocationRepo,
+            ConfigSystemRepo configSystemRepo)
+        {
+            _productGroupRTCRepo = productGroupRTCRepo;
+            _productRTCRepo = productRTCRepo;
+            _productLocationRepo = productLocationRepo;
+            config = configSystemRepo;
+        }
 
 
         [HttpPost("get-productRTC")]

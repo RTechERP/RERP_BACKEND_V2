@@ -1,4 +1,5 @@
-﻿using RERPAPI.Model.Entities;
+﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,10 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity.BBNV
 {
-    public class HandoverFinanceRepo: GenericRepo<HandoverFinance>
+    public class HandoverFinanceRepo : GenericRepo<HandoverFinance>
     {
+        public HandoverFinanceRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
     }
 }

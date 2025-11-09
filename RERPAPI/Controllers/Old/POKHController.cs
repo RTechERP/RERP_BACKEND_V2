@@ -10,7 +10,11 @@ namespace RERPAPI.Controllers.Old
     [ApiController]
     public class POKHController : ControllerBase
     {
-        POKHRepo _pokhRepo = new POKHRepo();
+        private readonly POKHRepo _pokhRepo;
+        public POKHController(POKHRepo pokhRepo)
+        {
+            _pokhRepo = pokhRepo;
+        }   
         #region Lấy tất cả POKH
         [HttpGet("get-all")]
         public IActionResult GetAll()

@@ -1,4 +1,5 @@
 ﻿using RERPAPI.Model.Context;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
@@ -11,7 +12,8 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class CustomerSpecializationRepo : GenericRepo<CustomerSpecialization>
     {
-       
-
+        public CustomerSpecializationRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
     }
 }

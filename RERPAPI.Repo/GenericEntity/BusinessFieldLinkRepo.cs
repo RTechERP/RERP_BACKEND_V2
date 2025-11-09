@@ -1,4 +1,5 @@
 ﻿using RERPAPI.Model.Context;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
@@ -11,9 +12,8 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class BusinessFieldLinkRepo : GenericRepo<BusinessFieldLink>
     {
-        public BusinessFieldLinkRepo() : base()
+        public BusinessFieldLinkRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
-    
     }
 }

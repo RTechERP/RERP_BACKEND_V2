@@ -13,11 +13,23 @@ namespace RERPAPI.Controllers.Old.Asset
     [ApiController]
     public class AssetsRecoveryController : ControllerBase
     {
-        TSAssetRecoveryRepo _tSAssetRecoveryRepo = new TSAssetRecoveryRepo();
-        TSAssetRecoveryDetailRepo _tSAssetRecoveryDetailRepo = new TSAssetRecoveryDetailRepo();
-        TSAssetManagementRepo _tsAssetManagementRepo = new TSAssetManagementRepo();
-        TSAllocationEvictionAssetRepo _tSAllocationEvictionAssetRepo = new TSAllocationEvictionAssetRepo();
+        private readonly TSAssetRecoveryRepo _tSAssetRecoveryRepo;
+        private readonly TSAssetRecoveryDetailRepo _tSAssetRecoveryDetailRepo;
+        private readonly TSAssetManagementRepo _tsAssetManagementRepo;
+        private readonly TSAllocationEvictionAssetRepo _tSAllocationEvictionAssetRepo;
 
+        public AssetsRecoveryController(
+            TSAssetRecoveryRepo tSAssetRecoveryRepo,
+            TSAssetRecoveryDetailRepo tSAssetRecoveryDetailRepo,
+            TSAssetManagementRepo tsAssetManagementRepo,
+            TSAllocationEvictionAssetRepo tSAllocationEvictionAssetRepo
+        )
+        {
+            _tSAssetRecoveryRepo = tSAssetRecoveryRepo;
+            _tSAssetRecoveryDetailRepo = tSAssetRecoveryDetailRepo;
+            _tsAssetManagementRepo = tsAssetManagementRepo;
+            _tSAllocationEvictionAssetRepo = tSAllocationEvictionAssetRepo;
+        }
         [HttpPost("get-asset-recovery")]
         public async Task<ActionResult> GetAssetsRecovery(AssetRecoveryRequestParam request)
         {

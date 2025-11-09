@@ -9,7 +9,12 @@ namespace RERPAPI.Controllers.HRM
     [ApiController]
     public class EmployeeController : ControllerBase
     {
-        EmployeeRepo _employeeRepo = new EmployeeRepo();
+        private readonly EmployeeRepo _employeeRepo;
+
+        public EmployeeController(EmployeeRepo employeeRepo)
+        {
+            _employeeRepo = employeeRepo;
+        }
 
         //[HttpGet("employees")]
         //[RequiresPermission("N42")]

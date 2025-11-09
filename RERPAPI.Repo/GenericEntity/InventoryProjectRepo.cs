@@ -1,4 +1,5 @@
-﻿using RERPAPI.Model.Entities;
+﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,9 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class InventoryProjectRepo:GenericRepo<InventoryProject>
     {
+        public InventoryProjectRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
         #region xử lý tồn kho dự án
         public async Task UpdateInventoryProject(BillImportDetail detail)
         {

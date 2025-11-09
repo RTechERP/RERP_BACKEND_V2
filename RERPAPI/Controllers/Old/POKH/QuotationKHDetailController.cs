@@ -11,16 +11,25 @@ namespace RERPAPI.Controllers.Old.POKH
     [ApiController]
     public class QuotationKHDetailController : ControllerBase
     {
-        //loadUser();
-        //loadCustomer(); // Dùng bên customerPart
-        //loadProject();  // Dùng bên pokh
-        //loadProduct();  // Dùng bên RID
-        //loadContact();
-        UserRepo _userRepo = new UserRepo();
-        CustomerRepo _customerRepo = new CustomerRepo();
-        CustomerContactRepo _customerContactRepo = new CustomerContactRepo();
-        QuotationKHRepo _quotationKHRepo = new QuotationKHRepo();
-        QuotationKHDetailRepo _quotationDetailKHRepo = new QuotationKHDetailRepo();
+        private readonly UserRepo _userRepo;
+        private readonly CustomerRepo _customerRepo;
+        private readonly CustomerContactRepo _customerContactRepo;
+        private readonly QuotationKHRepo _quotationKHRepo;
+        private readonly QuotationKHDetailRepo _quotationDetailKHRepo;
+
+        public QuotationKHDetailController(
+            UserRepo userRepo,
+            CustomerRepo customerRepo,
+            CustomerContactRepo customerContactRepo,
+            QuotationKHRepo quotationKHRepo,
+            QuotationKHDetailRepo quotationDetailKHRepo)
+        {
+            _userRepo = userRepo;
+            _customerRepo = customerRepo;
+            _customerContactRepo = customerContactRepo;
+            _quotationKHRepo = quotationKHRepo;
+            _quotationDetailKHRepo = quotationDetailKHRepo;
+        }
         [HttpGet("get-users")]
         public IActionResult GetUser()
         {

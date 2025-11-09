@@ -1,4 +1,5 @@
 using RERPAPI.Model.Context;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
@@ -10,8 +11,8 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class VisitFactoryDetailRepo : GenericRepo<VisitFactoryDetail>
     {
-        public VisitFactoryDetailRepo() : base() { }
-        
-        //public VisitFactoryDetailRepo(RTCContext context) : base(context) { }
+        public VisitFactoryDetailRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
     }
 }

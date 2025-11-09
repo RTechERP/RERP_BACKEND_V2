@@ -13,9 +13,19 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
     [ApiController]
     public class BillDocumentImportController : ControllerBase
     {
-        BillDocumentImportRepo _billDocumentImportRepo = new BillDocumentImportRepo();
-        BillImportRepo _billImportRepo = new BillImportRepo();
-        BillDocumentImportLogRepo _billDocumentImportLogRepo = new BillDocumentImportLogRepo();
+        private readonly BillDocumentImportRepo _billDocumentImportRepo;
+        private readonly BillImportRepo _billImportRepo;
+        private readonly BillDocumentImportLogRepo _billDocumentImportLogRepo;
+
+        public BillDocumentImportController(
+            BillDocumentImportRepo billDocumentImportRepo,
+            BillImportRepo billImportRepo,
+            BillDocumentImportLogRepo billDocumentImportLogRepo)
+        {
+            _billDocumentImportRepo = billDocumentImportRepo;
+            _billImportRepo = billImportRepo;
+            _billDocumentImportLogRepo = billDocumentImportLogRepo;
+        }
         [HttpGet("")]
         public IActionResult getData()
         {
