@@ -286,7 +286,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         [HttpPost("saveprojecttype")]
         public async Task<IActionResult> saveprojecttype([FromBody] ProjectTypeDTO prjType)
         {
-
+            
             try
             {
                 List<ProjectType> check = projectTypeRepo.GetAll(x => x.ProjectTypeCode == prjType.ProjectTypeCode && x.ID != prjType.ID && x.IsDeleted == false);
@@ -760,41 +760,6 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [HttpPost("saveemployeeprojecttype")]
-        public async Task<IActionResult> saveemployeeprojecttype(EmployeeProjectType employeeProjectType)
-        {
-            try
-            {
-                if (employeeProjectType.ID <= 0)
-                {
-                    await projectEmployeeProjectTypeRepo.CreateAsync(employeeProjectType);
-                }
-                else
-                {
-                    projectEmployeeProjectTypeRepo.Update(employeeProjectType);
-                }
-
-                //var objFromDb = projectEmployeeProjectTypeRepo.GetAll(c=>c.EmployeeID== employeeProjectType.EmployeeID&&c.ProjectTypeID==employeeProjectType.ProjectTypeID);
-                //// nếu không trùng leader và project thì tạo mới, else Isdeleted=true
-                //if (objFromDb.Count==0)
-                //{
-                //  var response =  await projectEmployeeProjectTypeRepo.CreateAsync(employeeProjectType);
-                //}
-                //else
-                //{
-                //    objFromDb.FirstOrDefault().IsDeleted = true;
-
-                //  var response =  await projectEmployeeProjectTypeRepo.UpdateAsync(objFromDb.FirstOrDefault());
-                //}
-
-                return Ok(ApiResponseFactory.Success(employeeProjectType, ""));
-
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
         [HttpGet("get-project-employee-filter/{departmentID}")]
         public async Task<IActionResult> getprojectemployeefilter(int departmentID)
         {
@@ -1174,23 +1139,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
             }
         }
 
-        // Lấy chi tiết tổng hợp nhân công
-        [HttpGet("get-project-worker-synthetic")]
-        public async Task<IActionResult> GetProjectWorkerSynthetic(int projectId, int prjWorkerTypeId, string? keyword)
-        {
-            try
-            {
-                var data = SQLHelper<object>.ProcedureToList("spGetProjectWokerSynthetic",
-                new string[] { "@ProjectID", "@ProjectWorkerTypeID", "@Keyword" },
-                new object[] { projectId, prjWorkerTypeId, keyword ?? "" });
-                var projectWorker = SQLHelper<object>.GetListData(data, 0);
-                return Ok(ApiResponseFactory.Success(projectWorker, ""));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
+      
 
         // Lấy chi tiết tổng hợp báo cáo công việc
         [HttpGet("get-project-work-report")]
@@ -1723,34 +1672,20 @@ namespace RERPAPI.Controllers.Old.ProjectManager
 
         // Lưu độ ưu tiên cá nhân
         [HttpPost("save-project-personal-priority")]
-        public async Task<IActionResult> SaveProjectPersonalPriority([FromBody] ProjectPersonalPriotityDTO projectPersonalPriotity)
+        public async Task<IActionResult> SaveProjectPersonalPriority([FromBody] ProjectPersonalPriotityDTO projectPP)
         {
             try
             {
-                if (projectPersonalPriotity.ProjectIDs.Count() > 0)
+                var existing = projectPersonalPriotityRepo.GetAll(x => x.ProjectID == projectPP.ProjectID && x.UserID == projectPP.UserID).FirstOrDefault();
+                if (existing != null)
                 {
-                    foreach (int id in projectPersonalPriotity.ProjectIDs)
-                    {
-                        var prjPersonal = projectPersonalPriotityRepo.GetAll()
-                    .Where(x => x.ProjectID == id && x.UserID == projectPersonalPriotity.UserID)
-                    .FirstOrDefault();
-
-                        ProjectPersonalPriotity model = prjPersonal == null ? new ProjectPersonalPriotity() : projectPersonalPriotityRepo.GetByID(prjPersonal.ID);
-                        model.ProjectID = id;
-                        model.UserID = projectPersonalPriotity.UserID;
-                        model.Priotity = projectPersonalPriotity.Priotity;
-                        if (model.ID > 0)
-                        {
-                            await projectPersonalPriotityRepo.UpdateAsync(model);
-                        }
-                        else
-                        {
-                            await projectPersonalPriotityRepo.CreateAsync(model);
-                        }
-                    }
+                    projectPP.ID = existing.ID;
+                    await projectPersonalPriotityRepo.UpdateAsync(projectPP);
                 }
-
-
+                else
+                {
+                    await projectPersonalPriotityRepo.CreateAsync(projectPP);
+                }
                 return Ok(ApiResponseFactory.Success(true, "Lưu dữ liệu thành công"));
             }
             catch (Exception ex)
@@ -2038,6 +1973,22 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
         //    }
         //}
+        [HttpGet("get-project-work-reports")]
+        public async Task<IActionResult> GetProjectWorkReports(int page, int size, int projectId, string? keyword)
+        {
+            try
+            {
+                var data = SQLHelper<object>.ProcedureToList("spGetDailyReportTechnical_New",
+                new string[] { "@ProjectID", "@FilterText", "@PageSize", "@PageNumber" },
+                new object[] { projectId, keyword ?? "", size, page });
+                var projectwork = SQLHelper<object>.GetListData(data, 0);
+                return Ok(ApiResponseFactory.Success(projectwork, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 
     #endregion

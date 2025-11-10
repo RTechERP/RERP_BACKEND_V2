@@ -296,6 +296,8 @@ builder.Services.AddScoped<DocumentExportRepo>();
 builder.Services.AddScoped<InventoryProjectExportRepo>();
 builder.Services.AddScoped<InvoiceLinkRepo>();
 builder.Services.AddScoped<SupplierSaleRepo>();
+builder.Services.AddScoped<SupplierSaleContactRepo>();
+builder.Services.AddScoped<ProjectFieldRepo>();
 
 // BillExportTechnicalRepo in RTCApi namespace (used by Old Technical controller)
 builder.Services.AddScoped<BillExportTechnicalRepo>();
@@ -450,11 +452,11 @@ app.UseStaticFiles();
 List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();
 foreach (var item in staticFiles)
 {
-    app.UseStaticFiles(new StaticFileOptions()
-    {
-        FileProvider = new PhysicalFileProvider($@"\\192.168.1.190\Software"),
-        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-    });
+    //app.UseStaticFiles(new StaticFileOptions()
+    //{
+    //    FileProvider = new PhysicalFileProvider($@"\\192.168.1.190\Software"),
+    //    RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+    //});
 
 
     //app.UseDirectoryBrowser(new DirectoryBrowserOptions
