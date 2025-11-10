@@ -13,13 +13,25 @@ namespace RERPAPI.Controllers.Old
     public class ProjectPartlistPriceRequestController : ControllerBase
     {
         #region Khai báo repository
-        ProjectRepo projectRepo = new ProjectRepo();
-        POKHRepo pOKHRepo = new POKHRepo();
-        ProjectPartlistPriceRequestRepo requestRepo = new ProjectPartlistPriceRequestRepo();
-        ProductSaleRepo productSaleRepo = new ProductSaleRepo();
-        CurrencyRepo currencyRepo = new CurrencyRepo();
-        SupplierSaleRepo supplierSaleRepo = new SupplierSaleRepo();
-        ProjectSolutionRepo projectSolutionRepo = new ProjectSolutionRepo();
+        ProjectRepo projectRepo;
+        POKHRepo pOKHRepo;
+        ProjectPartlistPriceRequestRepo requestRepo;
+        ProductSaleRepo productSaleRepo;
+        CurrencyRepo currencyRepo;
+        SupplierSaleRepo supplierSaleRepo;
+        ProjectSolutionRepo projectSolutionRepo;
+
+        public ProjectPartlistPriceRequestController(ProjectRepo projectRepo, POKHRepo pOKHRepo, ProjectPartlistPriceRequestRepo requestRepo, ProductSaleRepo productSaleRepo, CurrencyRepo currencyRepo, SupplierSaleRepo supplierSaleRepo, ProjectSolutionRepo projectSolutionRepo)
+        {
+            this.projectRepo = projectRepo;
+            this.pOKHRepo = pOKHRepo;
+            this.requestRepo = requestRepo;
+            this.productSaleRepo = productSaleRepo;
+            this.currencyRepo = currencyRepo;
+            this.supplierSaleRepo = supplierSaleRepo;
+            this.projectSolutionRepo = projectSolutionRepo;
+        }
+
         #endregion
         #region Lấy tất cả yêu cầu báo giá
         /// <summary>

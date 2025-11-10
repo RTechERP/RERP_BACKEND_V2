@@ -1,4 +1,5 @@
 ﻿using Microsoft.IdentityModel.Tokens;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,10 @@ namespace RERPAPI.Repo.GenericEntity.HRM.Vehicle
 {
     public class ProposeVehicleRepairRepo : GenericRepo<ProposeVehicleRepair>
     {
+        public ProposeVehicleRepairRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
+
         public bool Validate(ProposeVehicleRepair item, out string message)
         {
             message = "";

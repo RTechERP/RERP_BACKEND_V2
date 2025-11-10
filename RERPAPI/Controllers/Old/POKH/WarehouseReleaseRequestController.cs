@@ -11,10 +11,16 @@ namespace RERPAPI.Controllers.Old.POKH
     [ApiController]
     public class WarehouseReleaseRequestController : ControllerBase
     {
-        ProductGroupRepo _productGroupRepo = new ProductGroupRepo();
-        WarehouseRepo _warehouseRepo = new WarehouseRepo();
+        private readonly ProductGroupRepo _productGroupRepo;
+        private readonly WarehouseRepo _warehouseRepo;
+
+        public WarehouseReleaseRequestController(ProductGroupRepo productGroupRepo, WarehouseRepo warehouseRepo)
+        {
+            _productGroupRepo = productGroupRepo;
+            _warehouseRepo = warehouseRepo;
+        }
         [HttpGet("get-pokh-export-request")]
-        public IActionResult GetPOKHExportRequest( int warehouseId, int customerId, int projectId, int productGroupId, string keyword = "")
+        public IActionResult GetPOKHExportRequest(int warehouseId, int customerId, int projectId, int productGroupId, string keyword = "")
         {
             try
             {

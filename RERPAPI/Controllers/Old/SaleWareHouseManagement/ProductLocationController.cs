@@ -9,8 +9,11 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     [ApiController]
     public class ProductLocationController : ControllerBase
     {
-        LocationRepo _productLocationRepo = new LocationRepo();
-
+        private readonly LocationRepo _productLocationRepo;
+        public ProductLocationController(LocationRepo productLocationRepo)
+        {
+            _productLocationRepo = productLocationRepo;
+        }
         [HttpPost("get-product-locations")]
         public IActionResult getProductLocations()
         {

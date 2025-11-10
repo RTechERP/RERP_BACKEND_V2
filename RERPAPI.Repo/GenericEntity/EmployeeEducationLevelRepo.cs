@@ -1,4 +1,5 @@
-﻿using RERPAPI.Model.Entities;
+﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,8 +8,10 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class EmployeeEducationLevelRepo : GenericRepo<EmployeeEducationLevel> 
+    public class EmployeeEducationLevelRepo : GenericRepo<EmployeeEducationLevel>
     {
-        public EmployeeEducationLevelRepo() : base() { }
+        public EmployeeEducationLevelRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
     }
 }

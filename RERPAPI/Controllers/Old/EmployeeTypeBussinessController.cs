@@ -8,13 +8,18 @@ namespace RERPAPI.Controllers.Old
     [ApiController]
     public class EmployeeTypeBussinessController : ControllerBase
     {
-        EmployeeTypeBussinessRepo employeeTypeBussinessRepo = new EmployeeTypeBussinessRepo();
+        private readonly EmployeeTypeBussinessRepo _employeeTypeBussinessRepo;
+
+        public EmployeeTypeBussinessController(EmployeeTypeBussinessRepo employeeTypeBussinessRepo)
+        {
+            _employeeTypeBussinessRepo = employeeTypeBussinessRepo;
+        }
         [HttpGet]
         public IActionResult GetEmployeeTypeBussiness()
         {
             try
             {
-                var result = employeeTypeBussinessRepo.GetAll();
+                var result = _employeeTypeBussinessRepo.GetAll();
                 return Ok(new
                 {
                     status = 1,
@@ -38,15 +43,15 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                List<EmployeeTypeBussiness> listData = employeeTypeBussinessRepo.GetAll();
+                List<EmployeeTypeBussiness> listData = _employeeTypeBussinessRepo.GetAll();
 
                 if (employeeTypeBussiness.ID <= 0)
                 {
-                    await employeeTypeBussinessRepo.CreateAsync(employeeTypeBussiness);
+                    await _employeeTypeBussinessRepo.CreateAsync(employeeTypeBussiness);
                 }
                 else
                 {
-                    await employeeTypeBussinessRepo.UpdateAsync(employeeTypeBussiness);
+                    await _employeeTypeBussinessRepo.UpdateAsync(employeeTypeBussiness);
                 }
                 return Ok(new
                 {

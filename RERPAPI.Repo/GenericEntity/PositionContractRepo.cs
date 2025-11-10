@@ -1,4 +1,5 @@
-﻿using RERPAPI.Model.Entities;
+﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,9 +10,8 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class PositionContractRepo : GenericRepo<EmployeeChucVuHD>
     {
-        public PositionContractRepo() : base()
+        public PositionContractRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
-
     }
 }

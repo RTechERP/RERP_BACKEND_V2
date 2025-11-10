@@ -29,15 +29,37 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
     [ApiController]
     public class BillImportController : ControllerBase
     {
-        BillImportRepo _billImportRepo = new BillImportRepo();
-        BillImportLogRepo _billImportLogRepo = new BillImportLogRepo();
-        DocumentImportRepo _documentImportRepo = new DocumentImportRepo();
-        BillDocumentImportRepo _billDocumentImportRepo = new BillDocumentImportRepo();
-        BillImportDetailRepo _billImportDetailRepo = new BillImportDetailRepo();
-        InvoiceLinkRepo _invoiceLinkRepo = new InvoiceLinkRepo();
-        InventoryProjectRepo _inventoryProjectRepo = new InventoryProjectRepo();
-        InventoryRepo _inventoryRepo = new InventoryRepo();
-        BillImportDetailSerialNumberRepo _billImportDetailSerialNumberRepo = new BillImportDetailSerialNumberRepo();
+private readonly BillImportRepo _billImportRepo;
+        private readonly BillImportLogRepo _billImportLogRepo;
+        private readonly DocumentImportRepo _documentImportRepo;
+        private readonly BillDocumentImportRepo _billDocumentImportRepo;
+        private readonly BillImportDetailRepo _billImportDetailRepo;
+        private readonly InvoiceLinkRepo _invoiceLinkRepo;
+        private readonly InventoryProjectRepo _inventoryProjectRepo;
+        private readonly InventoryRepo _inventoryRepo;
+        private readonly BillImportDetailSerialNumberRepo _billImportDetailSerialNumberRepo;
+
+        public BillImportController(
+            BillImportRepo billImportRepo,
+            BillImportLogRepo billImportLogRepo,
+            DocumentImportRepo documentImportRepo,
+            BillDocumentImportRepo billDocumentImportRepo,
+            BillImportDetailRepo billImportDetailRepo,
+            InvoiceLinkRepo invoiceLinkRepo,
+            InventoryProjectRepo inventoryProjectRepo,
+            InventoryRepo inventoryRepo,
+            BillImportDetailSerialNumberRepo billImportDetailSerialNumberRepo)
+        {
+            _billImportRepo = billImportRepo;
+            _billImportLogRepo = billImportLogRepo;
+            _documentImportRepo = documentImportRepo;
+            _billDocumentImportRepo = billDocumentImportRepo;
+            _billImportDetailRepo = billImportDetailRepo;
+            _invoiceLinkRepo = invoiceLinkRepo;
+            _inventoryProjectRepo = inventoryProjectRepo;
+            _inventoryRepo = inventoryRepo;
+            _billImportDetailSerialNumberRepo = billImportDetailSerialNumberRepo;
+        }
         private List<InvoiceDTO> listInvoice = new List<InvoiceDTO>();
         /// <summary>
         /// lấy danh sách phiếu nhập

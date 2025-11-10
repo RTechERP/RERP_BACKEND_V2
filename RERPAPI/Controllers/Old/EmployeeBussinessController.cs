@@ -11,7 +11,11 @@ namespace RERPAPI.Controllers.Old
     [Route("api/[controller]")]
     public class EmployeeBussinessController : ControllerBase
     {
-        EmployeeBussinessRepo employeeBussinessRepo = new EmployeeBussinessRepo();
+        private EmployeeBussinessRepo _employeeBussinessRepo;
+        public EmployeeBussinessController(EmployeeBussinessRepo employeeBussinessRepo)
+        {
+            _employeeBussinessRepo = employeeBussinessRepo;
+        }   
         [HttpPost]
         public IActionResult getEmployeeBussiness(EmployeeBussinessParam param)
         {
@@ -47,10 +51,10 @@ namespace RERPAPI.Controllers.Old
             {
                 if(employeeBussiness.ID <= 0)
                 {
-                    employeeBussinessRepo.CreateAsync(employeeBussiness);
+                   await _employeeBussinessRepo.CreateAsync(employeeBussiness);
                 } else
                 {
-                    await employeeBussinessRepo.UpdateAsync(employeeBussiness);
+                    await _employeeBussinessRepo.UpdateAsync(employeeBussiness);
                 }
                 return Ok(new
                 {

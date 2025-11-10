@@ -18,22 +18,45 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     [ApiController]
     public class BillImportController : ControllerBase
     {
-        BillImportRepo _billImportRepo = new BillImportRepo();
-        BillImportLogRepo _billImportLogRepo = new BillImportLogRepo();
-        DocumentImportRepo _documentImportRepo = new DocumentImportRepo();
-        BillDocumentImportRepo _billDocumentImportRepo = new BillDocumentImportRepo();
-        BillImportDetailRepo _billImportDetailRepo = new BillImportDetailRepo();
-        InvoiceLinkRepo _invoiceLinkRepo = new InvoiceLinkRepo();
-        InventoryProjectRepo _inventoryProjectRepo = new InventoryProjectRepo();
-        InventoryRepo _inventoryRepo = new InventoryRepo();
-        BillImportDetailSerialNumberRepo _billImportDetailSerialNumberRepo = new BillImportDetailSerialNumberRepo();
+        private readonly BillImportRepo _billImportRepo;
+        private readonly BillImportLogRepo _billImportLogRepo;
+        private readonly DocumentImportRepo _documentImportRepo;
+        private readonly BillDocumentImportRepo _billDocumentImportRepo;
+        private readonly BillImportDetailRepo _billImportDetailRepo;
+        private readonly InvoiceLinkRepo _invoiceLinkRepo;
+        private readonly InventoryProjectRepo _inventoryProjectRepo;
+        private readonly InventoryRepo _inventoryRepo;
+        private readonly BillImportDetailSerialNumberRepo _billImportDetailSerialNumberRepo;
+
         private List<InvoiceDTO> listInvoice = new List<InvoiceDTO>();
+
+        public BillImportController(
+            BillImportRepo billImportRepo,
+            BillImportLogRepo billImportLogRepo,
+            DocumentImportRepo documentImportRepo,
+            BillDocumentImportRepo billDocumentImportRepo,
+            BillImportDetailRepo billImportDetailRepo,
+            InvoiceLinkRepo invoiceLinkRepo,
+            InventoryProjectRepo inventoryProjectRepo,
+            InventoryRepo inventoryRepo,
+            BillImportDetailSerialNumberRepo billImportDetailSerialNumberRepo)
+        {
+            _billImportRepo = billImportRepo;
+            _billImportLogRepo = billImportLogRepo;
+            _documentImportRepo = documentImportRepo;
+            _billDocumentImportRepo = billDocumentImportRepo;
+            _billImportDetailRepo = billImportDetailRepo;
+            _invoiceLinkRepo = invoiceLinkRepo;
+            _inventoryProjectRepo = inventoryProjectRepo;
+            _inventoryRepo = inventoryRepo;
+            _billImportDetailSerialNumberRepo = billImportDetailSerialNumberRepo;
+        }
         /// <summary>
         /// lấy danh sách phiếu nhập
         /// </summary>
         /// <param name="filter"></param>
         /// <returns></returns>
-        [HttpPost("")]
+        [HttpPost("get-all")]
         public IActionResult getBillImport([FromBody] BillImportParamRequest filter)
         {
             try
@@ -175,9 +198,9 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
                 // Tính lại tồn kho và tình hình đơn hàng 
                 SQLHelper<dynamic>.ExcuteProcedure("spCalculateImport_New", new string[] { "@ID", "@WarehouseID" }, new object[] { billImport.ID, billImport.WarehouseID });
-                SQLHelper<dynamic>.ExcuteProcedure("spUpdateTinhHinhDonHang",
-                         new string[] { "@BillImportID", "@IsApproved" },
-                         new object[] { billImport.ID, isapproved });
+                //SQLHelper<dynamic>.ExcuteProcedure("spUpdateTinhHinhDonHang",
+                //         new string[] { "@BillImportID", "@IsApproved" },
+                //         new object[] { billImport.ID, isapproved });
                 //ghi log
                 BillImportLog log = new BillImportLog()
                 {
@@ -244,12 +267,12 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             return (true, string.Empty);
         }
 
-        [HttpGet("get-bill-code")]
-        public ActionResult<string> getBillCode(int billType)
-        {
-            var newCode = _billImportRepo.GetBillCode(billType);
-            return Ok(new { data = newCode }); // <-- Đây là điểm quan trọng
-        }
+            [HttpGet("get-bill-code")]
+            public ActionResult<string> getBillCode(int billType)
+            {
+                var newCode = _billImportRepo.GetBillCode(billType);
+                return Ok(new { data = newCode }); // <-- Đây là điểm quan trọng
+            }
         //thêm sửa dữ liệu 
         [HttpPost("save-data")]
         public async Task<IActionResult> saveDataBillImport([FromBody] BillImportDTO dto)
@@ -257,7 +280,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             try
             {
                 // Perform validation
-                if(dto.billImport != null)
+                if (dto.billImport != null)
                 {
                     var (isValid, errorMessage) = await ValidateBillImport(dto);
                     if (!isValid)
@@ -269,7 +292,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         });
                     }
                 }
-              
+
 
                 //xóa phiếu nhập: update 02/11/25
                 if (dto.billImportDetail == null && dto.DeletedDetailIDs == null)

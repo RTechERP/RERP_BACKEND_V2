@@ -9,11 +9,11 @@ namespace RERPAPI.Controllers
     [ApiController]
     public class MeetingTypeController : ControllerBase
     {
-        private readonly MeetingTypeRepo meetingtypeRepo;
+        private readonly MeetingTypeRepo _meetingtypeRepo;
 
-        public MeetingTypeController()
+        public MeetingTypeController(MeetingTypeRepo meetingtypeRepo)
         {
-            meetingtypeRepo = new MeetingTypeRepo();
+            _meetingtypeRepo = meetingtypeRepo;
         }
 
         /// <summary>
@@ -24,7 +24,7 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                var meetingtypes = meetingtypeRepo.GetAll(p => p.IsDelete == false);
+                var meetingtypes = _meetingtypeRepo.GetAll(p => p.IsDelete == false);
                 return Ok(ApiResponseFactory.Success(meetingtypes, ""));
             }
             catch (Exception ex)
@@ -39,8 +39,8 @@ namespace RERPAPI.Controllers
             try
             {
 
-                if (meetingtype.ID <= 0) await meetingtypeRepo.CreateAsync(meetingtype);
-                else await meetingtypeRepo.UpdateAsync(meetingtype);
+                if (meetingtype.ID <= 0) await _meetingtypeRepo.CreateAsync(meetingtype);
+                else await _meetingtypeRepo.UpdateAsync(meetingtype);
                 return Ok(ApiResponseFactory.Success(meetingtype, "Cập nhật thành công!"));
             }
             catch (Exception ex)
@@ -56,7 +56,7 @@ namespace RERPAPI.Controllers
             {
                 bool check = false;
 
-                var meetingType = meetingtypeRepo.GetAll()
+                var meetingType = _meetingtypeRepo.GetAll()
                     .Where(x => x.ID != id &&
                                x.TypeCode.ToLower() == typecode.ToLower() &&
                                x.IsDelete == false);

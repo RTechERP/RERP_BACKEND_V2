@@ -8,13 +8,17 @@ namespace RERPAPI.Controllers.Old
     [Route("api/[controller]")]
     public class StatusWorkingProcessController : Controller
     {
-        StatusWorkingProcessRepo statusWorkingProcessRepo = new StatusWorkingProcessRepo();
+        private StatusWorkingProcessRepo _statusWorkingProcessRepo;
+        public StatusWorkingProcessController(StatusWorkingProcessRepo statusWorkingProcessRepo)
+        {
+            _statusWorkingProcessRepo = statusWorkingProcessRepo;
+        }
         [HttpGet]
         public IActionResult GetAll()
         {
             try
             {
-                var statusWorkingProcesses = statusWorkingProcessRepo.GetAll();
+                var statusWorkingProcesses = _statusWorkingProcessRepo.GetAll();
                 return Ok(new
                 {
                     status = 1,
@@ -36,7 +40,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                List<EmployeeStatus> statusWorkingProcesses = statusWorkingProcessRepo.GetAll().ToList();
+                List<EmployeeStatus> statusWorkingProcesses = _statusWorkingProcessRepo.GetAll();
                 if (statusWorkingProcesses.Any(x => (x.StatusName == statusWorkingProcess.StatusName || x.StatusCode == statusWorkingProcess.StatusCode) && x.ID != statusWorkingProcess.ID))
                 {
                     return BadRequest(new
@@ -48,11 +52,11 @@ namespace RERPAPI.Controllers.Old
 
                 if (statusWorkingProcess.ID <= 0)
                 {
-                    await statusWorkingProcessRepo.CreateAsync(statusWorkingProcess);
+                    await _statusWorkingProcessRepo.CreateAsync(statusWorkingProcess);
                 }
                 else
                 {
-                    await statusWorkingProcessRepo.UpdateAsync(statusWorkingProcess);
+                    await _statusWorkingProcessRepo.UpdateAsync(statusWorkingProcess);
                 }
                 return Ok(new
                 {

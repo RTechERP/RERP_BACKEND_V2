@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Model.Entities;
-using RERPAPI.Model.DTO;
-using RERPAPI.Repo.GenericEntity;
-using System.Linq;
-using System;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
+using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers
 {
@@ -12,10 +10,13 @@ namespace RERPAPI.Controllers
     [ApiController]
     public class VisitFactoryController : ControllerBase
     {
-        VisitFactoryRepo visitFactoryRepo = new VisitFactoryRepo();
-        VisitFactoryDetailRepo visitFactoryDetailRepo = new VisitFactoryDetailRepo();
-        //EmployeeRepo employeeRepo = new EmployeeRepo();
-        //EmployeeSendEmail
+        private readonly VisitFactoryRepo _visitFactoryRepo;
+        private readonly VisitFactoryDetailRepo _visitFactoryDetailRepo;
+        public VisitFactoryController(VisitFactoryRepo visitFactoryRepo, VisitFactoryDetailRepo visitFactoryDetailRepo)
+        {
+            _visitFactoryRepo = visitFactoryRepo;
+            _visitFactoryDetailRepo = visitFactoryDetailRepo;
+        }
 
 
         [HttpGet("getall")]
@@ -23,7 +24,7 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                List<VisitFactory> items = visitFactoryRepo.GetAll(x => !x.IsDeleted);
+                List<VisitFactory> items = _visitFactoryRepo.GetAll(x => !x.IsDeleted);
 
                 var data = SQLHelper<object>.ProcedureToList("spGetVisitFactory", new string[] { }, new object[] { });
                 //return Ok(new { status = 1, data =  });
@@ -41,13 +42,13 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                var item = visitFactoryRepo.GetByID(id);
+                var item = _visitFactoryRepo.GetByID(id);
                 if (item == null || item.ID <= 0) return Ok(new { status = 1, data = (VisitFactory?)null });
 
 
 
                 // Attach details (lọc bằng LINQ với kiểu tường minh)
-                item.VisitFactoryDetails = visitFactoryDetailRepo
+                item.VisitFactoryDetails = _visitFactoryDetailRepo
                     .GetAll()
                     .Where((VisitFactoryDetail d) => d.VisitFactoryID == id && !d.IsDeleted)
                     .ToList();
@@ -126,15 +127,15 @@ namespace RERPAPI.Controllers
                 bool isCreate = entity.ID <= 0;
                 if (isCreate)
                 {
-                    await visitFactoryRepo.CreateAsync(entity);
+                    await _visitFactoryRepo.CreateAsync(entity);
                 }
                 else
                 {
-                    entity = visitFactoryRepo.GetByID(entity.ID);
+                    entity = _visitFactoryRepo.GetByID(entity.ID);
                     entity.UpdatedBy = _currentUser.LoginName;
                     entity.UpdatedDate = DateTime.Now;
                     entity.IsReceive = request.IsReceive;
-                    await visitFactoryRepo.UpdateAsync(entity);
+                    await _visitFactoryRepo.UpdateAsync(entity);
                 }
 
                 // Upsert chi tiết nếu có gửi kèm
@@ -142,11 +143,11 @@ namespace RERPAPI.Controllers
                 if (entity.ID > 0 && details.Any())
                 {
                     // Xóa các detail không còn trong danh sách
-                    var existingDetails = visitFactoryDetailRepo.GetAll(x => x.VisitFactoryID == entity.ID && !x.IsDeleted);
+                    var existingDetails = _visitFactoryDetailRepo.GetAll(x => x.VisitFactoryID == entity.ID && !x.IsDeleted);
                     var toDelete = existingDetails.Where(ed => !details.Any(d => d.Id == ed.ID)).ToList();
                     foreach (var del in toDelete)
                     {
-                        visitFactoryDetailRepo.Delete(del.ID);
+                        _visitFactoryDetailRepo.Delete(del.ID);
                     }
 
                     // Upsert từng detail hiện tại
@@ -170,8 +171,8 @@ namespace RERPAPI.Controllers
                             IsDeleted = false
                         };
 
-                        if (d.Id <= 0) await visitFactoryDetailRepo.CreateAsync(detailEntity);
-                        else await visitFactoryDetailRepo.UpdateAsync(detailEntity);
+                        if (d.Id <= 0) await _visitFactoryDetailRepo.CreateAsync(detailEntity);
+                        else await _visitFactoryDetailRepo.UpdateAsync(detailEntity);
                     }
                 }
 
@@ -194,7 +195,7 @@ namespace RERPAPI.Controllers
                 //	_ = EmailHelper.SendAsync(recipients, subject, body);
                 //}
 
-                await visitFactoryRepo.SendEmail(entity);
+                await _visitFactoryRepo.SendEmail(entity);
 
                 // Convert Entity back to DTO for response
                 var responseDto = new VisitFactoryDTO
@@ -232,17 +233,17 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                var item = visitFactoryRepo.GetByID(id);
+                var item = _visitFactoryRepo.GetByID(id);
                 if (item == null || item.ID <= 0) return Ok(new { status = 1, message = "Not found" });
                 item.IsDeleted = true;
-                visitFactoryRepo.Update(item);
+                _visitFactoryRepo.Update(item);
 
                 // Xóa mềm toàn bộ detail liên quan
-                var relatedDetails = visitFactoryDetailRepo.GetAll(x => x.VisitFactoryID == id && !x.IsDeleted);
+                var relatedDetails = _visitFactoryDetailRepo.GetAll(x => x.VisitFactoryID == id && !x.IsDeleted);
                 foreach (var d in relatedDetails)
                 {
                     d.IsDeleted = true;
-                    visitFactoryDetailRepo.Update(d);
+                    _visitFactoryDetailRepo.Update(d);
                 }
                 return Ok(new { status = 1, message = "Deleted" });
             }
