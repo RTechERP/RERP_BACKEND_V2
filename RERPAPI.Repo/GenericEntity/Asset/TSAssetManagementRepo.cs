@@ -4,12 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Repo.GenericEntity.Asset
 {
     public class TSAssetManagementRepo:GenericRepo<TSAssetManagement>
     {
+        public TSAssetManagementRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
         public string GenerateAssetCode(DateTime? assetdate)
         {
             var date = assetdate.Value.Date;
@@ -34,6 +38,17 @@ namespace RERPAPI.Repo.GenericEntity.Asset
 
             return newCode;
         }
-
+        public bool Validate(TSAssetManagement item, out string message)
+        {
+            message = "";
+            bool exists = GetAll().Any(x => x.TSAssetCode == item.TSAssetCode && x.ID != item.ID && x.IsDeleted != true);
+            if (exists)
+            {
+                message = $"Mã tài sản {item.TSAssetCode} đã tồn tại";
+                return false;
+            }
+          
+            return true;
+        }
     }
 }

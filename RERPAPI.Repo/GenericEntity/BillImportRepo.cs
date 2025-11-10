@@ -1,15 +1,16 @@
-﻿using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Repo.GenericEntity
 {
     public class BillImportRepo : GenericRepo<BillImport>
     {
-        DocumentImportRepo _documentImportRepo = new DocumentImportRepo();
+        DocumentImportRepo _documentImportRepo;
+
+        public BillImportRepo(CurrentUser currentUser, DocumentImportRepo documentImportRepo) : base(currentUser)
+        {
+            _documentImportRepo = documentImportRepo;
+        }
         #region lấy mã phiếu nhập
         public string GetBillCode(int billtype)
         {

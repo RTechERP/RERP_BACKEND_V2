@@ -9,7 +9,12 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     [ApiController]
     public class LocationController : ControllerBase
     {
-        LocationRepo _locationRepo = new LocationRepo();
+        private readonly LocationRepo _locationRepo;
+
+        public LocationController(LocationRepo locationRepo)
+        {
+            _locationRepo = locationRepo;
+        }
 
         // hàm lấy vị trí cho productSale combobox nếu productGroupID=70 thì tìm theeo ID70 nếu khác thì tìm ID0
         [HttpGet("get-location-by-product-group")]

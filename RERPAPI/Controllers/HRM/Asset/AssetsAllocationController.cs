@@ -1,11 +1,14 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Model.Entities;
-using RERPAPI.Model.Common;
-using RERPAPI.Model.Param;
-using RERPAPI.Model.DTO.Asset;
-using RERPAPI.Repo.GenericEntity.Asset;
 using OfficeOpenXml;
+using RERPAPI.Attributes;
+using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
+using RERPAPI.Model.DTO.Asset;
+using RERPAPI.Model.Entities;
+using RERPAPI.Model.Param;
+using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.Asset;
 
 namespace RERPAPI.Controllers.Old.Asset
 {
@@ -13,19 +16,55 @@ namespace RERPAPI.Controllers.Old.Asset
     [ApiController]
     public class AssetsAllocationController : ControllerBase
     {
-        TSAssetManagementRepo _tsAssetManagementRepo = new TSAssetManagementRepo();
-        TSAssetAllocationRepo _tSAssetAllocationRepo = new TSAssetAllocationRepo();
-        TSAssetAllocationDetailRepo _tSAssetAllocationDetailRepo = new TSAssetAllocationDetailRepo();
-        TSAllocationEvictionAssetRepo tSAllocationEvictionAssetRepo = new TSAllocationEvictionAssetRepo();
+        private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
+        private readonly TSAssetManagementRepo _tsAssetManagementRepo;
+        private readonly TSAssetAllocationRepo _tSAssetAllocationRepo;
+        private readonly TSAssetAllocationDetailRepo _tSAssetAllocationDetailRepo;
+        private readonly TSAllocationEvictionAssetRepo _tSAllocationEvictionAssetRepo;
+
+        public AssetsAllocationController(
+            vUserGroupLinksRepo vUserGroupLinksRepo,
+            TSAssetManagementRepo tsAssetManagementRepo,
+            TSAssetAllocationRepo tSAssetAllocationRepo,
+            TSAssetAllocationDetailRepo tSAssetAllocationDetailRepo,
+            TSAllocationEvictionAssetRepo tSAllocationEvictionAssetRepo
+        )
+        {
+            _vUserGroupLinksRepo = vUserGroupLinksRepo;
+            _tsAssetManagementRepo = tsAssetManagementRepo;
+            _tSAssetAllocationRepo = tSAssetAllocationRepo;
+            _tSAssetAllocationDetailRepo = tSAssetAllocationDetailRepo;
+            _tSAllocationEvictionAssetRepo = tSAllocationEvictionAssetRepo;
+        }
         [HttpPost("get-allocation")]
+        
         public async Task<ActionResult> GetAssetAllocationnn([FromBody] AssetAllocationRequestParam request)
+
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var vUserHR = _vUserGroupLinksRepo
+      .GetAll()
+      .FirstOrDefault(x =>
+          (x.Code == "N23" || x.Code == "N1") &&
+          x.UserID == currentUser.ID);
+
+                int employeeID;
+                if (vUserHR != null)
+                {
+                    employeeID = request.EmployeeID.Value;
+                }
+                else
+                {
+                    employeeID = currentUser.EmployeeID;
+                }
                 var assetAllocation = SQLHelper<dynamic>.ProcedureToList(
                     "spGetTSAssetAllocation",
                     new string[] { "@DateStart", "@DateEnd", "@EmployeeID", "@Status", "@FilterText", "@PageSize", "@PageNumber" },
-                    new object[] { request.DateStart, request.DateEnd, request.EmployeeID, request.Status, request.FilterText ?? string.Empty, request.PageSize, request.PageNumber });
+                    new object[] { request.DateStart, request.DateEnd, employeeID, request.Status, request.FilterText ?? string.Empty, request.PageSize, request.PageNumber });
 
                 return Ok(new
                 {
@@ -95,7 +134,7 @@ namespace RERPAPI.Controllers.Old.Asset
 
             try
             {
-                ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+                ExcelPackage.License.SetNonCommercialOrganization("RTC Technology Viet Nam");
 
                 string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "BienBanBanGiao.xlsx");
                 if (!System.IO.File.Exists(templatePath))
@@ -163,7 +202,7 @@ namespace RERPAPI.Controllers.Old.Asset
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Lỗi khi xuất Excel: {ex.Message}");
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -172,15 +211,15 @@ namespace RERPAPI.Controllers.Old.Asset
         {
             try
             {
-                if(allocations == null){ return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." }); }
-                    if (allocations.tSAssetAllocation != null)
-                    {
-                        if (allocations.tSAssetAllocation.ID <= 0)
-                            await _tSAssetAllocationRepo.CreateAsync(allocations.tSAssetAllocation);
-                        else
-                            _tSAssetAllocationRepo.UpdateAsync( allocations.tSAssetAllocation);
-                    }
-                
+                if (allocations == null) { return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." }); }
+                if (allocations.tSAssetAllocation != null)
+                {
+                    if (allocations.tSAssetAllocation.ID <= 0)
+                        await _tSAssetAllocationRepo.CreateAsync(allocations.tSAssetAllocation);
+                    else
+                        _tSAssetAllocationRepo.UpdateAsync(allocations.tSAssetAllocation);
+                }
+
                 if (allocations.tSAssetAllocationDetails != null && allocations.tSAssetAllocationDetails.Any())
                 {
                     foreach (var item in allocations.tSAssetAllocationDetails)
@@ -196,37 +235,31 @@ namespace RERPAPI.Controllers.Old.Asset
                 {
                     foreach (var item in allocations.tSAssetManagements)
                     {
-                      
+
                         if (item.ID <= 0)
                             await _tsAssetManagementRepo.CreateAsync(item);
                         else
-                            _tsAssetManagementRepo.UpdateAsync( item);
+                            _tsAssetManagementRepo.UpdateAsync(item);
                     }
                 }
                 if (allocations.tSAllocationEvictionAssets != null && allocations.tSAllocationEvictionAssets.Any())
                 {
                     foreach (var item in allocations.tSAllocationEvictionAssets)
                     {
-
                         if (item.ID <= 0)
-                            await tSAllocationEvictionAssetRepo.CreateAsync(item);
+                            await _tSAllocationEvictionAssetRepo.CreateAsync(item);
                         else
-                            tSAllocationEvictionAssetRepo.UpdateAsync( item);
+                            _tSAllocationEvictionAssetRepo.UpdateAsync(item);
                     }
                 }
                 return Ok(new { status = 1 });
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-        
+
         }
-     
+
     }
 }

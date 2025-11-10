@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -10,7 +11,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
     [ApiController]
     public class FirmController : ControllerBase
     {
-        FirmRepo _firmRepo = new FirmRepo();
+        private readonly FirmRepo _firmRepo;
+        public FirmController(FirmRepo firmRepo)
+        {
+            _firmRepo = firmRepo;
+        }
         [HttpGet("")]
         public IActionResult getDataFirm()
         {
@@ -37,8 +42,6 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                 foreach (var dto in dtos)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy hãng"));
-                }
-
                 }
                 return Ok(new
                 {

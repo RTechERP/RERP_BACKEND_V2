@@ -8,13 +8,17 @@ namespace RERPAPI.Controllers.Old
     [ApiController]
     public class BusinessFieldController : ControllerBase
     {
-        BusinessFieldRepo businessFieldRepo = new BusinessFieldRepo();
+        private BusinessFieldRepo _businessFieldRepo;
+        public BusinessFieldController(BusinessFieldRepo businessFieldRepo)
+        {
+            _businessFieldRepo = businessFieldRepo;
+        }
         [HttpGet()]
         public IActionResult GetAll()
         {
             try
             {
-                List<BusinessField> businessFields = businessFieldRepo.GetAll();
+                List<BusinessField> businessFields = _businessFieldRepo.GetAll();
                 return Ok(new
                 {
                     status = 1,

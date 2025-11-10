@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using RERPAPI.Attributes;
+using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
@@ -18,32 +20,52 @@ namespace RERPAPI.Controllers
     [ApiController]
     public class HRHiringRequestController : ControllerBase
     {
-        private readonly HRHiringRequestRepo _hrHiringRequestRepo = new HRHiringRequestRepo();
-        private readonly HRHiringRequestEducationLinkRepo _hiringRequestEducationLinkRepo = new HRHiringRequestEducationLinkRepo();
-        private readonly HRHiringRequestExperienceLinkRepo _hiringRequestExperienceLinkRepo = new HRHiringRequestExperienceLinkRepo();
-        private readonly HRHiringRequestGenderLinkRepo _hiringRequestGenderLinkRepo = new HRHiringRequestGenderLinkRepo();
-        private readonly HRHiringRequestHealthLinkRepo _hiringRequestHealthLinkRepo = new HRHiringRequestHealthLinkRepo();
-        private readonly HRHiringRequestLanguageLinkRepo _hiringRequestLanguageLinkRepo = new HRHiringRequestLanguageLinkRepo();
-        private readonly HRHiringRequestComputerLevelLinkRepo _hiringRequestComputerLevelLinkRepo = new HRHiringRequestComputerLevelLinkRepo();
-        private readonly HRHiringRequestCommunicationLinkRepo _hiringRequestCommunicationLinkRepo = new HRHiringRequestCommunicationLinkRepo();
-        private readonly HRHiringRequestApproveLinkRepo _hiringRequestApproveLinkRepo = new HRHiringRequestApproveLinkRepo();
-        private readonly HRHiringAppearanceLinkRepo _hiringAppearanceLinkRepo = new HRHiringAppearanceLinkRepo();
+        private readonly HRHiringRequestRepo _hrHiringRequestRepo;
+        private readonly HRHiringRequestEducationLinkRepo _hiringRequestEducationLinkRepo;
+        private readonly HRHiringRequestExperienceLinkRepo _hiringRequestExperienceLinkRepo;
+        private readonly HRHiringRequestGenderLinkRepo _hiringRequestGenderLinkRepo;
+        private readonly HRHiringRequestHealthLinkRepo _hiringRequestHealthLinkRepo;
+        private readonly HRHiringRequestLanguageLinkRepo _hiringRequestLanguageLinkRepo;
+        private readonly HRHiringRequestComputerLevelLinkRepo _hiringRequestComputerLevelLinkRepo;
+        private readonly HRHiringRequestCommunicationLinkRepo _hiringRequestCommunicationLinkRepo;
+        private readonly HRHiringRequestApproveLinkRepo _hiringRequestApproveLinkRepo;
+        private readonly HRHiringAppearanceLinkRepo _hiringAppearanceLinkRepo;
 
-        private readonly DepartmentRepo _departmentRepo = new DepartmentRepo();
-        private readonly EmployeeRepo _employeeRepo = new EmployeeRepo();
-        private readonly EmployeeChucVuHDRepo _employeeChucVuHDRepo = new EmployeeChucVuHDRepo();
+        private readonly DepartmentRepo _departmentRepo;
+        private readonly EmployeeRepo _employeeRepo;
+        private readonly EmployeeChucVuHDRepo _employeeChucVuHDRepo;
 
-        //CurrentUser _currentUser = new CurrentUser();
-
-        //public HRHiringRequestController()
-        //{
-        //    var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-        //    _currentUser = ObjectMapper.GetCurrentUser(claims);
-        //}
-
+        public HRHiringRequestController(
+            HRHiringRequestRepo hrHiringRequestRepo,
+            HRHiringRequestEducationLinkRepo hiringRequestEducationLinkRepo,
+            HRHiringRequestExperienceLinkRepo hiringRequestExperienceLinkRepo,
+            HRHiringRequestGenderLinkRepo hiringRequestGenderLinkRepo,
+            HRHiringRequestHealthLinkRepo hiringRequestHealthLinkRepo,
+            HRHiringRequestLanguageLinkRepo hiringRequestLanguageLinkRepo,
+            HRHiringRequestComputerLevelLinkRepo hiringRequestComputerLevelLinkRepo,
+            HRHiringRequestCommunicationLinkRepo hiringRequestCommunicationLinkRepo,
+            HRHiringRequestApproveLinkRepo hiringRequestApproveLinkRepo,
+            HRHiringAppearanceLinkRepo hiringAppearanceLinkRepo,
+            DepartmentRepo departmentRepo,
+            EmployeeRepo employeeRepo,
+            EmployeeChucVuHDRepo employeeChucVuHDRepo)
+        {
+            _hrHiringRequestRepo = hrHiringRequestRepo ?? throw new ArgumentNullException(nameof(hrHiringRequestRepo));
+            _hiringRequestEducationLinkRepo = hiringRequestEducationLinkRepo ?? throw new ArgumentNullException(nameof(hiringRequestEducationLinkRepo));
+            _hiringRequestExperienceLinkRepo = hiringRequestExperienceLinkRepo ?? throw new ArgumentNullException(nameof(hiringRequestExperienceLinkRepo));
+            _hiringRequestGenderLinkRepo = hiringRequestGenderLinkRepo ?? throw new ArgumentNullException(nameof(hiringRequestGenderLinkRepo));
+            _hiringRequestHealthLinkRepo = hiringRequestHealthLinkRepo ?? throw new ArgumentNullException(nameof(hiringRequestHealthLinkRepo));
+            _hiringRequestLanguageLinkRepo = hiringRequestLanguageLinkRepo ?? throw new ArgumentNullException(nameof(hiringRequestLanguageLinkRepo));
+            _hiringRequestComputerLevelLinkRepo = hiringRequestComputerLevelLinkRepo ?? throw new ArgumentNullException(nameof(hiringRequestComputerLevelLinkRepo));
+            _hiringRequestCommunicationLinkRepo = hiringRequestCommunicationLinkRepo ?? throw new ArgumentNullException(nameof(hiringRequestCommunicationLinkRepo));
+            _hiringRequestApproveLinkRepo = hiringRequestApproveLinkRepo ?? throw new ArgumentNullException(nameof(hiringRequestApproveLinkRepo));
+            _hiringAppearanceLinkRepo = hiringAppearanceLinkRepo ?? throw new ArgumentNullException(nameof(hiringAppearanceLinkRepo));
+            _departmentRepo = departmentRepo ?? throw new ArgumentNullException(nameof(departmentRepo));
+            _employeeRepo = employeeRepo ?? throw new ArgumentNullException(nameof(employeeRepo));
+            _employeeChucVuHDRepo = employeeChucVuHDRepo ?? throw new ArgumentNullException(nameof(employeeChucVuHDRepo));
+        }
 
         [HttpPost("savedata")]
-        
         public async Task<IActionResult> SaveData([FromBody] HRHiringRequestDTO model)
         {
             try
@@ -351,15 +373,11 @@ namespace RERPAPI.Controllers
             }
         }
 
-
-
         [HttpGet("get-department")]
         public IActionResult GetDepartment()
         {
             try
             {
-                //var departmentRepo = new DepartmentRepo();
-
                 var departments = _departmentRepo.GetAll()
                     .Select(x => new
                     {
@@ -415,18 +433,14 @@ namespace RERPAPI.Controllers
         {
             try
             {
-
                 var dataSet = SQLHelper<object>.ProcedureToList("spGetEmployeeChucVu", new string[] { }, new object[] { });
 
-
                 var chucVuList = SQLHelper<object>.GetListData(dataSet, 1);
-
 
                 if (chucVuList == null || chucVuList.Count == 0)
                 {
                     return Ok(ApiResponseFactory.Success(new List<object>(), "Không có dữ liệu chức vụ"));
                 }
-
 
                 return Ok(ApiResponseFactory.Success(chucVuList, "Lấy danh sách chức vụ thành công"));
             }
@@ -452,8 +466,6 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                //Console.WriteLine($"GetData called with request: {System.Text.Json.JsonSerializer.Serialize(request)}");
-
                 if (request == null)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Request body is empty"));
@@ -478,18 +490,13 @@ namespace RERPAPI.Controllers
                     dateEnd = de;
                 }
 
-                //Console.WriteLine($"Parsed parameters: dateStart={dateStart}, dateEnd={dateEnd}, departmentID={departmentID}, keyword={keyword}, id={id}, chucVuHDID={chucVuHDID}");
-
-                // Business logic
                 if (id > 0)
                 {
-                    //Console.WriteLine($"Getting detail data for ID: {id}");
                     var detailData = GetHiringRequestDetailData(id);
                     return Ok(ApiResponseFactory.Success(detailData, "Lấy chi tiết thành công!"));
                 }
                 else
                 {
-                    Console.WriteLine("Getting list data using stored procedure");
                     var ds_formatted = dateStart.HasValue ? new DateTime(dateStart.Value.Year, dateStart.Value.Month, dateStart.Value.Day, 0, 0, 0) : (DateTime?)null;
                     var de_formatted = dateEnd.HasValue ? dateEnd.Value.Date.AddDays(1) : (DateTime?)null;
 
@@ -581,8 +588,6 @@ namespace RERPAPI.Controllers
                 resultSets.Add(genders);
                 Console.WriteLine($"Gender data: {genders.Count} items");
 
-
-
                 // 5. Appearance selections - SỬA: Đảm bảo trả về đúng structure
                 var appearances = _hiringAppearanceLinkRepo.GetAll()
                     .Where(x => x.HRHiringRequestID == id && x.IsDeleted != true)
@@ -590,8 +595,6 @@ namespace RERPAPI.Controllers
                     .ToList();
                 resultSets.Add(appearances);
                 Console.WriteLine($"Appearance data: {appearances.Count} items - {string.Join(", ", appearances.Select(a => a.value))}");
-
-                // ... language, computer code ...
 
                 // 6. Language data
                 var languages = _hiringRequestLanguageLinkRepo.GetAll()
@@ -637,13 +640,6 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                //Console.WriteLine($"Approve request: {System.Text.Json.JsonSerializer.Serialize(request)}");
-
-                //if (request == null || request.HiringRequestID <= 0)
-                //{
-                //    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy yêu cầu tuyển dụng"));
-                //}
-
                 // Kiểm tra hiring request có tồn tại không
                 var hiringRequest = _hrHiringRequestRepo.GetByID(request.HRHiringRequestID);
                 if (hiringRequest == null)
@@ -673,8 +669,6 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-        // In the ProcessApproval method, rename the inner variable 'stepName' to avoid CS0136
 
         private async Task<ApprovalResult> ProcessApproval(HRHiringRequestApproveLink request, List<HRHiringRequestApproveLink> currentApprovals)
         {
@@ -766,8 +760,6 @@ namespace RERPAPI.Controllers
                 existingApproval.DateApprove = request.IsApprove == 1 ? DateTime.Now : (DateTime?)null;
                 existingApproval.ReasonUnApprove = request.IsApprove == 1 ? "" : (request.ReasonUnApprove ?? "");
                 existingApproval.Note = request.Note ?? "";
-                //existingApproval.UpdatedDate = DateTime.Now;
-                //existingApproval.UpdatedBy = request.ApproverName ?? "SYSTEM";
 
                 _hiringRequestApproveLinkRepo.UpdateAsync(existingApproval);
             }
@@ -784,9 +776,6 @@ namespace RERPAPI.Controllers
                     DateApprove = request.IsApprove == 1 ? DateTime.Now : (DateTime?)null,
                     ReasonUnApprove = request.IsApprove == 1 ? "" : (request.ReasonUnApprove ?? ""),
                     Note = request.Note ?? "",
-                    //CreatedDate = DateTime.Now,
-                    //CreatedBy = request.ApproverName ?? "SYSTEM",
-                    //IsDeleted = false
                 };
 
                 await _hiringRequestApproveLinkRepo.CreateAsync(newApproval);
@@ -799,8 +788,6 @@ namespace RERPAPI.Controllers
                 foreach (var step in higherSteps)
                 {
                     step.IsDeleted = true;
-                    //step.UpdatedDate = DateTime.Now;
-                    //step.UpdatedBy = request.ApproverName ?? "SYSTEM";
                     await _hiringRequestApproveLinkRepo.UpdateAsync(step);
                 }
             }
@@ -817,67 +804,12 @@ namespace RERPAPI.Controllers
             };
         }
 
-        // Helper classes
-        //public class ApproveRequestDTO
-        //{
-        //    public int HiringRequestID { get; set; }
-        //    public int ApproveID { get; set; }
-        //    public int Step { get; set; }
-        //    public bool IsApprove { get; set; }
-        //    public string? ReasonUnApprove { get; set; }
-        //    public string? Note { get; set; }
-        //    public string? ApproverName { get; set; }
-        //}
-
         public class ApprovalResult
         {
             public bool Success { get; set; }
             public string Message { get; set; } = "";
         }
 
-        // API lấy trạng thái duyệt
-        //[HttpGet("get-approval-status/{hiringRequestId}")]
-        //public IActionResult GetApprovalStatus(int hiringRequestId)
-        //                    {
-        //    try
-        //    {
-        //        var approvals = _hiringRequestApproveLinkRepo.GetAll()
-        //            .Where(x => x.HRHiringRequestID == hiringRequestId && x.IsDeleted != true)
-        //            .OrderBy(x => x.Step)
-        //            .Select(x => new
-        //            {
-        //                x.Step,
-        //                x.StepName,
-        //                x.IsApprove,
-        //                x.DateApprove,
-        //                x.ReasonUnApprove,
-        //                x.Note,
-        //                x.CreatedBy,
-        //                x.CreatedDate
-        //            })
-        //            .ToList();
-
-        //        var currentStep = GetCurrentApprovalStep(_hiringRequestApproveLinkRepo.GetAll()
-        //            .Where(x => x.HRHiringRequestID == hiringRequestId && x.IsDeleted != true)
-        //            .ToList());
-
-        //        return Ok(ApiResponseFactory.Success(new
-        //        {
-        //            approvals,
-        //            currentStep,
-        //            canApproveTBP = currentStep == 0,
-        //            canApproveHCNS = currentStep == 1,
-        //            canApproveBGD = currentStep == 2,
-        //            canCancelTBP = currentStep >= 1,
-        //            canCancelHCNS = currentStep >= 2,
-        //            canCancelBGD = currentStep == 3
-        //        }, "Lấy trạng thái duyệt thành công"));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-        //    }
-        //}
         [HttpGet("get-approval-status/{hiringRequestId}")]
         public IActionResult GetApprovalStatus(int hiringRequestId)
         {

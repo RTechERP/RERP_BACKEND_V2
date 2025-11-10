@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -429,14 +429,25 @@ namespace RERPAPI.Controllers.CRM
         //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
         //    }
         //}
-        AddressStockRepo _addressStockRepo = new AddressStockRepo();
-        CustomerContactRepo _customerContactRepo = new CustomerContactRepo();
-        CustomerEmployeeRepo _customerEmployeeRepo = new CustomerEmployeeRepo();
-        EmployeeRepo _employeeRepo = new EmployeeRepo();
-        CustomerSpecializationRepo _customerSpecializationRepo = new CustomerSpecializationRepo();
-        BusinessFieldRepo _businessFieldRepo = new BusinessFieldRepo();
-        CustomerRepo _customerRepo = new CustomerRepo();
-        BusinessFieldLinkRepo _businessFieldLinkRepo = new BusinessFieldLinkRepo();
+        AddressStockRepo _addressStockRepo;
+        CustomerContactRepo _customerContactRepo;
+        CustomerEmployeeRepo _customerEmployeeRepo;
+        EmployeeRepo _employeeRepo;
+        CustomerSpecializationRepo _customerSpecializationRepo;
+        BusinessFieldRepo _businessFieldRepo;
+        CustomerRepo _customerRepo;
+        BusinessFieldLinkRepo _businessFieldLinkRepo;
+        public CustomerController(AddressStockRepo addressStockRepo, CustomerContactRepo customerContactRepo, CustomerEmployeeRepo customerEmployeeRepo, EmployeeRepo employeeRepo, CustomerSpecializationRepo customerSpecializationRepo, BusinessFieldRepo businessFieldRepo, CustomerRepo customerRepo, BusinessFieldLinkRepo businessFieldLinkRepo)
+        {
+            _addressStockRepo = addressStockRepo;
+            _customerContactRepo = customerContactRepo;
+            _customerEmployeeRepo = customerEmployeeRepo;
+            _employeeRepo = employeeRepo;
+            _customerSpecializationRepo = customerSpecializationRepo;
+            _businessFieldRepo = businessFieldRepo;
+            _customerRepo = customerRepo;
+            _businessFieldLinkRepo = businessFieldLinkRepo;
+        }
         private static string json = System.IO.File.ReadAllText(@"jsonProvinces.txt");
         private static List<Provinces> provinces = JsonConvert.DeserializeObject<List<Provinces>>(json);
         public class Provinces
@@ -447,7 +458,8 @@ namespace RERPAPI.Controllers.CRM
         }
 
         [HttpGet("get-data-by-procedure")]
-        [RequiresPermission("N1,N27,N53,N31,N69")]
+        [Authorize]
+        //[RequiresPermission("N1,N27,N53,N31,N69")]
         public IActionResult GetCustomer(int page, int size, int employeeId, int groupId, string? filterText = "")
         {
             try
@@ -764,14 +776,14 @@ namespace RERPAPI.Controllers.CRM
         {
             try
             {
-                foreach(int id in ids)
+                foreach (int id in ids)
                 {
                     Customer customer = _customerRepo.GetByID(id);
                     customer.UpdatedDate = DateTime.Now;
                     customer.IsDeleted = true;
                     await _customerRepo.UpdateAsync(customer);
 
-                }    
+                }
                 return Ok(ApiResponseFactory.Success("", "Xóa thành công"));
             }
             catch (Exception ex)

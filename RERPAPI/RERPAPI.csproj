@@ -12,7 +12,6 @@
     <Compile Remove="Controllers\Old\NewFolder1\**" />
     <Compile Remove="Controllers\Old\NewFolder2\**" />
     <Compile Remove="Controllers\Old\NewFolder\**" />
-    <Compile Remove="Controllers\Old\SaleWareHouseManagement\**" />
     <Compile Remove="Controllers\ProjectAGV\**" />
     <Compile Remove="Controllers\ProjectManager\**" />
     <Compile Remove="Controllers\SaleWareHouseManagement\**" />
@@ -22,7 +21,6 @@
     <Content Remove="Controllers\Old\NewFolder1\**" />
     <Content Remove="Controllers\Old\NewFolder2\**" />
     <Content Remove="Controllers\Old\NewFolder\**" />
-    <Content Remove="Controllers\Old\SaleWareHouseManagement\**" />
     <Content Remove="Controllers\ProjectAGV\**" />
     <Content Remove="Controllers\ProjectManager\**" />
     <Content Remove="Controllers\SaleWareHouseManagement\**" />
@@ -32,7 +30,6 @@
     <EmbeddedResource Remove="Controllers\Old\NewFolder1\**" />
     <EmbeddedResource Remove="Controllers\Old\NewFolder2\**" />
     <EmbeddedResource Remove="Controllers\Old\NewFolder\**" />
-    <EmbeddedResource Remove="Controllers\Old\SaleWareHouseManagement\**" />
     <EmbeddedResource Remove="Controllers\ProjectAGV\**" />
     <EmbeddedResource Remove="Controllers\ProjectManager\**" />
     <EmbeddedResource Remove="Controllers\SaleWareHouseManagement\**" />
@@ -42,7 +39,6 @@
     <None Remove="Controllers\Old\NewFolder1\**" />
     <None Remove="Controllers\Old\NewFolder2\**" />
     <None Remove="Controllers\Old\NewFolder\**" />
-    <None Remove="Controllers\Old\SaleWareHouseManagement\**" />
     <None Remove="Controllers\ProjectAGV\**" />
     <None Remove="Controllers\ProjectManager\**" />
     <None Remove="Controllers\SaleWareHouseManagement\**" />
@@ -60,7 +56,6 @@
     <Compile Remove="Controllers\Old\POKHController.cs" />
     <Compile Remove="Controllers\Old\POKH\POKHController.cs" />
     <Compile Remove="Controllers\Old\ProductRTCController.cs" />
-    <Compile Remove="Controllers\Old\SaleWareHouseManagement\ProductLocationController.cs" />
     <Compile Remove="Controllers\Old\TB\FirmController.cs" />
     <Compile Remove="Controllers\Old\VisionBase\CustomerController.cs" />
     <Compile Remove="Controllers\PONCCController.cs" />
@@ -69,19 +64,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="Controllers\Old\SaleWareHouseManagement\FirmController.cs" />
-    <Compile Include="Controllers\Old\SaleWareHouseManagement\LocationController.cs" />
-    <Compile Include="Controllers\Old\SaleWareHouseManagement\ProductGroupController.cs" />
-    <Compile Include="Controllers\Old\SaleWareHouseManagement\ProductLocationController.cs" />
-    <Compile Include="Controllers\Old\SaleWareHouseManagement\UnitCountController.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.105.0" />
     <PackageReference Include="DocX" Version="5.0.0" />
     <PackageReference Include="EPPlus" Version="8.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="QRCoder" Version="1.6.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />

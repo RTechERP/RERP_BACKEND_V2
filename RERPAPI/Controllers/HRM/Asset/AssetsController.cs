@@ -1,28 +1,48 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Model.Entities;
-using RERPAPI.Model.Common;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
-using System;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using Microsoft.EntityFrameworkCore;
-using RERPAPI.Model.Context;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using RERPAPI.Attributes;
+using RERPAPI.Model.Common;
+using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO.Asset;
+using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.Asset;
 using RERPAPI.Repo.GenericEntity.Asset;
+using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
+using System;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 namespace RERPAPI.Controllers.Old.Asset
 {
     [Route("api/[controller]")]
     [ApiController]
     public class AssetsController : ControllerBase
     {
-        TSLostReportAssetRepo _tsLostReportRepo = new TSLostReportAssetRepo();
-        TSAllocationEvictionAssetRepo _tSAllocationEvictionRepo = new TSAllocationEvictionAssetRepo();
-        TSReportBrokenAssetRepo _tsReportBrokenAssetRepo = new TSReportBrokenAssetRepo();
-        TSAssetManagementRepo _tsAssetManagementRepo = new TSAssetManagementRepo();
-        TSRepairAssetRepo _tSRepairAssetRepo = new TSRepairAssetRepo();
-        TSLiQuidationAssetRepo _tsLiQuidationAssetRepo = new TSLiQuidationAssetRepo();
+        private readonly TSLostReportAssetRepo _tsLostReportRepo;
+        private readonly TSAllocationEvictionAssetRepo _tSAllocationEvictionRepo;
+        private readonly TSReportBrokenAssetRepo _tsReportBrokenAssetRepo;
+        private readonly TSAssetManagementRepo _tsAssetManagementRepo;
+        private readonly TSRepairAssetRepo _tSRepairAssetRepo;
+        private readonly TSLiQuidationAssetRepo _tsLiQuidationAssetRepo;
+
+        public AssetsController(
+            TSLostReportAssetRepo tsLostReportRepo,
+            TSAllocationEvictionAssetRepo tSAllocationEvictionRepo,
+            TSReportBrokenAssetRepo tsReportBrokenAssetRepo,
+            TSAssetManagementRepo tsAssetManagementRepo,
+            TSRepairAssetRepo tSRepairAssetRepo,
+            TSLiQuidationAssetRepo tsLiQuidationAssetRepo
+        )
+        {
+            _tsLostReportRepo = tsLostReportRepo;
+            _tSAllocationEvictionRepo = tSAllocationEvictionRepo;
+            _tsReportBrokenAssetRepo = tsReportBrokenAssetRepo;
+            _tsAssetManagementRepo = tsAssetManagementRepo;
+            _tSRepairAssetRepo = tSRepairAssetRepo;
+            _tsLiQuidationAssetRepo = tsLiQuidationAssetRepo;
+        }
+        [RequiresPermission("N2,N23,N1")]
         [HttpPost("get-asset")]
         public IActionResult GetListAssets([FromBody] AssetmanagementRequestParam request)
         {
@@ -53,6 +73,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 });
             }
         }
+        [RequiresPermission("N2,N23,N1")]
         [HttpGet("get-allocation-detail")]
         public IActionResult GetAllocation(string? id)
         {
@@ -82,6 +103,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 });
             }
         }
+        [RequiresPermission("N2,N23,N1")]
         [HttpGet("get-repair")]
         public IActionResult GetLatestRepairByAssetManagementID([FromQuery] int assetManagementID)
         {
@@ -113,7 +135,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 });
             }
         }
-
+        [RequiresPermission("N2,N23,N1")]
         [HttpGet("get-asset-code")]
         public async Task<IActionResult> GenerateAssetCode([FromQuery] DateTime? assetDate)
         {
@@ -128,6 +150,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 data = newcode
             });
         }
+        [RequiresPermission("N2,N23,N1")]
         //check-productsale trong excel
         [HttpPost("check-asset-exist")]
         public async Task<IActionResult> CheckAssetExist([FromBody] List<TSAssetManagement> asset)
@@ -160,11 +183,13 @@ namespace RERPAPI.Controllers.Old.Asset
                 return BadRequest(new { message = ex.Message });
             }
         }
+     
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] AssetmanagementFullDTO asset)
         {
             try
             {
+
 
                 if (asset == null)
                 {
@@ -172,8 +197,16 @@ namespace RERPAPI.Controllers.Old.Asset
                 }
                 if (asset.tSAssetManagements != null && asset.tSAssetManagements.Any())
                 {
+
                     foreach (var item in asset.tSAssetManagements)
                     {
+                        if (item.IsDeleted == false || item.IsDeleted == null)
+                        {
+                            if (!_tsAssetManagementRepo.Validate(item, out string message))
+                            {
+                                return BadRequest(ApiResponseFactory.Fail(null, message));
+                            }
+                        }
                         if (item.ID <= 0)
                         {
                             item.StatusID = 1;
@@ -231,12 +264,8 @@ namespace RERPAPI.Controllers.Old.Asset
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new
-                {
-                    status = 0,
-                    message = "Lỗi xảy ra khi lưu dữ liệu.",
-                    detail = ex.Message.ToString(),
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+
             }
         }
     }

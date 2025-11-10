@@ -19,21 +19,50 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     [ApiController]
     public class BillExportController : ControllerBase
     {
-        ProductGroupRepo _productgroupRepo = new ProductGroupRepo();
+        private readonly ProductGroupRepo _productgroupRepo;
+        private readonly BillDocumentExportRepo _billdocumentexportRepo;
+        private readonly BillExportDetailRepo _billExportDetailRepo;
+        private readonly BillExportRepo _billexportRepo;
+        private readonly InventoryRepo _inventoryRepo;
+        private readonly InventoryProjectExportRepo _inventoryprojectexportRepo;
+        private readonly BillExportDetailSerialNumberRepo _billexportdetailserialnumberRepo;
+        private readonly DocumentExportRepo _documentexportRepo;
+        private readonly BillExportLogRepo _billexportlogRepo;
+        private readonly ProjectRepo _projectRepo;
+        private readonly HistoryDeleteBillRepo _historyDeleteBillRepo;
+        private readonly BillExportDetailSerialNumberRepo _billExportDetailSerialNumberRepo;
+        private readonly WarehouseRepo _warehouseRepo;
+        private readonly BillExportDetailSerialNumberRepo billExportDetailSerialNumberRepo;
 
-        BillDocumentExportRepo _billdocumentexportRepo = new BillDocumentExportRepo();
-        BillExportDetailRepo _billExportDetailRepo = new BillExportDetailRepo();
-        BillExportRepo _billexportRepo = new BillExportRepo();
-        InventoryRepo _inventoryRepo = new InventoryRepo();
-        InventoryProjectExportRepo _inventoryprojectexportRepo = new InventoryProjectExportRepo();
-        BillExportDetailSerialNumberRepo _billexportdetailserialnumberRepo = new BillExportDetailSerialNumberRepo();
-        DocumentExportRepo _documentexportRepo = new DocumentExportRepo();
-        BillExportLogRepo _billexportlogRepo = new BillExportLogRepo();
-        ProjectRepo _projectRepo = new ProjectRepo();
-        HistoryDeleteBillRepo _historyDeleteBillRepo = new HistoryDeleteBillRepo();
-        BillExportDetailSerialNumberRepo _billExportDetailSerialNumberRepo = new BillExportDetailSerialNumberRepo();
-        WarehouseRepo _warehouseRepo = new WarehouseRepo();
-        BillExportDetailSerialNumberRepo billExportDetailSerialNumberRepo = new BillExportDetailSerialNumberRepo();
+        public BillExportController(
+            ProductGroupRepo productgroupRepo,
+            BillDocumentExportRepo billdocumentexportRepo,
+            BillExportDetailRepo billExportDetailRepo,
+            BillExportRepo billexportRepo,
+            InventoryRepo inventoryRepo,
+            InventoryProjectExportRepo inventoryprojectexportRepo,
+            BillExportDetailSerialNumberRepo billExportDetailSerialNumberRepoInjected,
+            DocumentExportRepo documentexportRepo,
+            BillExportLogRepo billexportlogRepo,
+            ProjectRepo projectRepo,
+            HistoryDeleteBillRepo historyDeleteBillRepo,
+            WarehouseRepo warehouseRepo)
+        {
+            _productgroupRepo = productgroupRepo;
+            _billdocumentexportRepo = billdocumentexportRepo;
+            _billExportDetailRepo = billExportDetailRepo;
+            _billexportRepo = billexportRepo;
+            _inventoryRepo = inventoryRepo;
+            _inventoryprojectexportRepo = inventoryprojectexportRepo;
+            _billexportdetailserialnumberRepo = billExportDetailSerialNumberRepoInjected;
+            _documentexportRepo = documentexportRepo;
+            _billexportlogRepo = billexportlogRepo;
+            _projectRepo = projectRepo;
+            _historyDeleteBillRepo = historyDeleteBillRepo;
+            _billExportDetailSerialNumberRepo = billExportDetailSerialNumberRepoInjected;
+            _warehouseRepo = warehouseRepo;
+            billExportDetailSerialNumberRepo = billExportDetailSerialNumberRepoInjected;
+        }
         [HttpGet("get-all-project")]
         public IActionResult getAllProject()
         {
@@ -131,19 +160,18 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                        "spGetInventory", new string[] { "@ID", "@Find", "@WarehouseCode" },
                     new object[] { productGroupID, "", warehouseCode }
                    );
-                /* List<dynamic> billList = result[0]; // dữ liệu hóa đơn*/
-                int totalPage = 0;
+                ///* List<dynamic> billList = result[0]; // dữ liệu hóa đơn*/
+                //int totalPage = 0;
 
-                if (result.Count > 1 && result[1].Count > 0)
-                {
-                    totalPage = (int)result[1][0].TotalPage;
-                }
+                //if (result.Count > 1 && result[1].Count > 0)
+                //{
+                //    totalPage = (int)result[1][0].TotalPage;
+                //}
 
                 return Ok(new
                 {
                     status = 1,
                     data = SQLHelper<object>.GetListData(result, 0),
-                    totalPage
                 });
             }
             catch (Exception ex)
@@ -906,10 +934,11 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                  new string[] { "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@Status", "@KhoType", "@FilterText", "@WarehouseCode", "@IsDeleted" },
                     new object[] { filter.PageNumber, filter.PageSize, filter.DateStart, filter.DateEnd, filter.Status, filter.KhoType, filter.FilterText, filter.WarehouseCode, filter.IsDeleted }
                    );
+                var data = SQLHelper<dynamic>.GetListData(result, 0);
                 return Ok(new
                 {
                     status = 1,
-                    data = SQLHelper<object>.GetListData(result, 0)
+                    data = data
                 });
             }
             catch (Exception ex)

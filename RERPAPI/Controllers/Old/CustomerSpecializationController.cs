@@ -9,7 +9,11 @@ namespace RERPAPI.Controllers.Old
     [ApiController]
     public class CustomerSpecializationController : ControllerBase
     {
-        CustomerSpecializationRepo _customerSpecializationRepo = new CustomerSpecializationRepo();
+        private CustomerSpecializationRepo _customerSpecializationRepo;
+        public CustomerSpecializationController(CustomerSpecializationRepo customerSpecializationRepo)
+        {
+            _customerSpecializationRepo = customerSpecializationRepo;
+        }
         [HttpPost("save-data")]
         public async Task<IActionResult> Post(CustomerSpecialization model)
         {

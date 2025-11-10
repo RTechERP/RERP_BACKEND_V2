@@ -13,6 +13,10 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class ProjectPartlistPurchaseRequestRepo:GenericRepo<ProjectPartlistPurchaseRequest>
     {
+        public ProjectPartlistPurchaseRequestRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
+
         public bool Validate(List<ProjectPartlistPurchaseRequest> requests, out string message)
         {
             message = "";
