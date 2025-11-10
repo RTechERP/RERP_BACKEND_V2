@@ -85,5 +85,6 @@ public partial class TSAssetManagement
     public int? WindowActiveStatus { get; set; }
 
     public string? Model { get; set; }
+
     public bool? IsDeleted { get; set; }
 }
