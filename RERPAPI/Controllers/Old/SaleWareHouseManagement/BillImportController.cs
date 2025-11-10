@@ -56,7 +56,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         /// </summary>
         /// <param name="filter"></param>
         /// <returns></returns>
-        [HttpPost("")]
+        [HttpPost("get-all")]
         public IActionResult getBillImport([FromBody] BillImportParamRequest filter)
         {
             try
@@ -198,9 +198,9 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
                 // Tính lại tồn kho và tình hình đơn hàng 
                 SQLHelper<dynamic>.ExcuteProcedure("spCalculateImport_New", new string[] { "@ID", "@WarehouseID" }, new object[] { billImport.ID, billImport.WarehouseID });
-                SQLHelper<dynamic>.ExcuteProcedure("spUpdateTinhHinhDonHang",
-                         new string[] { "@BillImportID", "@IsApproved" },
-                         new object[] { billImport.ID, isapproved });
+                //SQLHelper<dynamic>.ExcuteProcedure("spUpdateTinhHinhDonHang",
+                //         new string[] { "@BillImportID", "@IsApproved" },
+                //         new object[] { billImport.ID, isapproved });
                 //ghi log
                 BillImportLog log = new BillImportLog()
                 {
@@ -267,12 +267,12 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             return (true, string.Empty);
         }
 
-        [HttpGet("get-bill-code")]
-        public ActionResult<string> getBillCode(int billType)
-        {
-            var newCode = _billImportRepo.GetBillCode(billType);
-            return Ok(new { data = newCode }); // <-- Đây là điểm quan trọng
-        }
+            [HttpGet("get-bill-code")]
+            public ActionResult<string> getBillCode(int billType)
+            {
+                var newCode = _billImportRepo.GetBillCode(billType);
+                return Ok(new { data = newCode }); // <-- Đây là điểm quan trọng
+            }
         //thêm sửa dữ liệu 
         [HttpPost("save-data")]
         public async Task<IActionResult> saveDataBillImport([FromBody] BillImportDTO dto)
@@ -280,7 +280,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             try
             {
                 // Perform validation
-                if(dto.billImport != null)
+                if (dto.billImport != null)
                 {
                     var (isValid, errorMessage) = await ValidateBillImport(dto);
                     if (!isValid)
@@ -292,7 +292,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         });
                     }
                 }
-              
+
 
                 //xóa phiếu nhập: update 02/11/25
                 if (dto.billImportDetail == null && dto.DeletedDetailIDs == null)

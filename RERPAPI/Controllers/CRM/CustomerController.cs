@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -458,7 +458,8 @@ namespace RERPAPI.Controllers.CRM
         }
 
         [HttpGet("get-data-by-procedure")]
-        [RequiresPermission("N1,N27,N53,N31,N69")]
+        [Authorize]
+        //[RequiresPermission("N1,N27,N53,N31,N69")]
         public IActionResult GetCustomer(int page, int size, int employeeId, int groupId, string? filterText = "")
         {
             try
