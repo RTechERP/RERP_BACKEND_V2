@@ -2,6 +2,7 @@
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
 
 namespace RERPAPI.Controllers
 {
