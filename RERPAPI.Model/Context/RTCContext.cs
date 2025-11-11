@@ -8359,14 +8359,11 @@ public partial class RTCContext : DbContext
 
         modelBuilder.Entity<RulePay>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("RulePay");
+            entity.ToTable("RulePay");
 
             entity.Property(e => e.Code).HasMaxLength(50);
             entity.Property(e => e.CreatedBy).HasMaxLength(50);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-            entity.Property(e => e.ID).ValueGeneratedOnAdd();
             entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
