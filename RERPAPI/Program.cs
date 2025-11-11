@@ -347,24 +347,24 @@ builder.Services.AddCors(options =>
 
 //Config FormOption
 
-builder.Services.Configure<IISServerOptions>(options =>
-{
-    options.MaxRequestBodySize = int.MaxValue;
-});
+//builder.Services.Configure<IISServerOptions>(options =>
+//{
+//    options.MaxRequestBodySize = int.MaxValue;
+//});
 
-builder.Services.Configure<FormOptions>(opt =>
-{
-    // Kích thước tối đa mỗi phần form (field/file) 
-    opt.MultipartBodyLengthLimit = Int32.MaxValue;
+//builder.Services.Configure<FormOptions>(opt =>
+//{
+//    // Kích thước tối đa mỗi phần form (field/file) 
+//    opt.MultipartBodyLengthLimit = Int32.MaxValue;
 
-    // Nếu file < 1 MB thì vẫn buffer hết trong RAM trước khi viết ra
-    opt.MemoryBufferThreshold = 1 * 1024 * 1024;
-    // (Tuỳ chọn) nếu có rất nhiều fields, tăng số fields tối đa
-    opt.ValueCountLimit = 1000;
+//    // Nếu file < 1 MB thì vẫn buffer hết trong RAM trước khi viết ra
+//    opt.MemoryBufferThreshold = 1 * 1024 * 1024;
+//    // (Tuỳ chọn) nếu có rất nhiều fields, tăng số fields tối đa
+//    opt.ValueCountLimit = 1000;
 
-    // (Tuỳ chọn) tăng độ dài tối đa tên key/value nếu cần
-    opt.ValueLengthLimit = 64 * 1024;
-});
+//    // (Tuỳ chọn) tăng độ dài tối đa tên key/value nếu cần
+//    opt.ValueLengthLimit = 64 * 1024;
+//});
 
 
 // Load JWT settings
@@ -464,16 +464,16 @@ foreach (var item in staticFiles)
 {
     app.UseStaticFiles(new StaticFileOptions()
     {
-        FileProvider = new PhysicalFileProvider($@"\\192.168.1.190\Software"),
+        FileProvider = new PhysicalFileProvider(item.PathFull),
         RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
     });
 
 
-    //app.UseDirectoryBrowser(new DirectoryBrowserOptions
-    //{
-    //    FileProvider = new PhysicalFileProvider(item.PathFull),
-    //    RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-    //});
+    app.UseDirectoryBrowser(new DirectoryBrowserOptions
+    {
+        FileProvider = new PhysicalFileProvider(item.PathFull),
+        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+    });
 }
 
 app.Run();
