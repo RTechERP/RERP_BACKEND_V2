@@ -1934,31 +1934,31 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
         //    }
         //}
-        //[HttpPost("saveemployeeprojecttype")]
-        //public async Task<IActionResult> saveemployeeprojecttype(List<EmployeeProjectType> employeeProjectType)
-        //{
-        //    try
-        //    {
-        //        foreach (var item in employeeProjectType)
-        //        {
-        //            if (item.ID <= 0)
-        //            {
-        //                await projectEmployeeProjectTypeRepo.CreateAsync(item);
-        //            }
-        //            else
-        //            {
-        //                projectEmployeeProjectTypeRepo.Update(item);
-        //            }
-        //        }
+        [HttpPost("saveemployeeprojecttype")]
+        public async Task<IActionResult> saveemployeeprojecttype(List<EmployeeProjectType> employeeProjectType)
+        {
+            try
+            {
+                foreach (var item in employeeProjectType)
+                {
+                    if (item.ID <= 0)
+                    {
+                        await projectEmployeeProjectTypeRepo.CreateAsync(item);
+                    }
+                    else
+                    {
+                        projectEmployeeProjectTypeRepo.Update(item);
+                    }
+                }
 
-        //        return Ok(ApiResponseFactory.Success(employeeProjectType, ""));
+                return Ok(ApiResponseFactory.Success(employeeProjectType, ""));
 
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-        //    }
-        //}
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         //[HttpGet("get-project-employee-filter/{departmentID}")]
         //public async Task<IActionResult> getprojectemployeefilter(int departmentID)
         //{
