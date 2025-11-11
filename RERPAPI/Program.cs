@@ -296,6 +296,8 @@ builder.Services.AddScoped<DocumentExportRepo>();
 builder.Services.AddScoped<InventoryProjectExportRepo>();
 builder.Services.AddScoped<InvoiceLinkRepo>();
 builder.Services.AddScoped<SupplierSaleRepo>();
+builder.Services.AddScoped<SupplierSaleContactRepo>();
+builder.Services.AddScoped<ProjectFieldRepo>();
 
 
 builder.Services.AddScoped<HRHiringRequestRepo>();
