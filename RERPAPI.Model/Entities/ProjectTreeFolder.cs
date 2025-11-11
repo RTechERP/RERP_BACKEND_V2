@@ -12,5 +12,6 @@ public partial class ProjectTreeFolder
     public int? ParentID { get; set; }
 
     public int? ProjectTypeID { get; set; }
+
     public bool? IsDeleted { get; set; }
 }

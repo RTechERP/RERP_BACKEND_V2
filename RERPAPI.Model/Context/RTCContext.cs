@@ -1793,6 +1793,7 @@ public partial class RTCContext : DbContext
                 .IsUnicode(false);
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
@@ -6409,6 +6410,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CustomerID).HasComment("Khách hàng");
             entity.Property(e => e.EU).HasMaxLength(255);
             entity.Property(e => e.EndUser).HasComment("Link id khách hàng");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.Note).HasComment("Ghi chú");
             entity.Property(e => e.PO).HasMaxLength(150);
             entity.Property(e => e.PODate).HasColumnType("datetime");
@@ -7089,12 +7091,14 @@ public partial class RTCContext : DbContext
             entity.ToTable("ProjectTreeFolder");
 
             entity.Property(e => e.FolderName).HasMaxLength(50);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
         });
 
         modelBuilder.Entity<ProjectType>(entity =>
         {
             entity.ToTable("ProjectType");
 
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.ProjectTypeCode).HasMaxLength(250);
             entity.Property(e => e.ProjectTypeName).HasMaxLength(250);
             entity.Property(e => e.RootFolder).HasMaxLength(550);
@@ -7541,6 +7545,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedBy).HasMaxLength(50);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.Explanation).HasMaxLength(150);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.POCode).HasMaxLength(150);
             entity.Property(e => e.QuotationCode).HasMaxLength(150);
             entity.Property(e => e.QuotationDate).HasColumnType("datetime");
