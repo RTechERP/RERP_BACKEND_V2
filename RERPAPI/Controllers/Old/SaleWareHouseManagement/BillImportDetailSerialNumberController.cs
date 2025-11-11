@@ -46,6 +46,14 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
                 foreach (var item in data)
                 {
+                    if (string.IsNullOrWhiteSpace(item.SerialNumberRTC)) continue;
+                    var serialRTC = _billImportDetailSerialNumberRepo.GetAll(x => x.SerialNumber == item.SerialNumberRTC.Trim());
+                    if (serialRTC.Count() > 0) return BadRequest(ApiResponseFactory.Fail(null, $"Số Serial Number [{item.SerialNumber}] đã tồn tại!", serialRTC));
+                }
+
+                foreach (var item in data)
+                {
+                    if (string.IsNullOrWhiteSpace(item.SerialNumberRTC)) continue;
                     if (item.ID > 0)
                     {
                         item.UpdatedBy = currentUser.LoginName;
