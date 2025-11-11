@@ -311,6 +311,8 @@ builder.Services.AddScoped<HRHiringRequestGenderLinkRepo>();
 builder.Services.AddScoped<HRHiringRequestHealthLinkRepo>();
 builder.Services.AddScoped<HRHiringRequestLanguageLinkRepo>();
 
+builder.Services.AddScoped<TaxCompanyRepo>();
+
 // BillExportTechnicalRepo in RTCApi namespace (used by Old Technical controller)
 builder.Services.AddScoped<BillExportTechnicalRepo>();
 

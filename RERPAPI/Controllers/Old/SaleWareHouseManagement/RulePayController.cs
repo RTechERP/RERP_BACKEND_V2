@@ -23,7 +23,7 @@ namespace RERPAPI.Controllers.PurchasingManagement
             try
             {
                 List<RulePay> data = _rulePayRepo.GetAll(
-                    //r => r.IsDeleted != true
+                    r => r.IsDeleted != true
                     );
                 return Ok(ApiResponseFactory.Success(data, "Lấy danh sách RulePay thành công."));
             }
@@ -68,7 +68,7 @@ namespace RERPAPI.Controllers.PurchasingManagement
                             var item = _rulePayRepo.GetByID(id);
                             if (item != null)
                             {
-                                //item.IsDeleted = true;
+                                item.IsDeleted = true;
                                 await _rulePayRepo.UpdateAsync(item);
                             }
                         }
