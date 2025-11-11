@@ -133,7 +133,7 @@ namespace RERPAPI.Controllers
                 //string key = _configuration.GetValue<string>("SessionKey") ?? "";
                 //CurrentUser currentUser = HttpContext.Session.GetObject<CurrentUser>(key);
 
-                return Ok(ApiResponseFactory.Success(currentUser, ""));
+                //return Ok(ApiResponseFactory.Success(currentUser, ""));
             }
             catch (Exception ex)
             {
