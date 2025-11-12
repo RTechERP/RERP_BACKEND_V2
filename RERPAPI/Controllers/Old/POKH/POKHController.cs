@@ -102,6 +102,8 @@ namespace RERPAPI.Controllers.Old.POKH
         {
             try
             {
+
+                filterText = filterText ?? string.Empty;
                 List<List<dynamic>> POKHs = SQLHelper<dynamic>.ProcedureToList("spGetPOKH",
                     new string[] { "@FilterText", "@PageNumber", "@PageSize", "@CustomerID", "@UserID", "@POType", "@Status", "@Group", "@StartDate", "@EndDate", "@WarehouseID", "@EmployeeTeamSaleID" },
                     new object[] { filterText, page, size, customerId, userId, POType, status, group, startDate, endDate, warehouseId, employeeTeamSaleId });
