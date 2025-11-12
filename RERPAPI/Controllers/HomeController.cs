@@ -129,7 +129,8 @@ namespace RERPAPI.Controllers
             try
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
                 //string key = _configuration.GetValue<string>("SessionKey") ?? "";
                 //CurrentUser currentUser = HttpContext.Session.GetObject<CurrentUser>(key);
 
