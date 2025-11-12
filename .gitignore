@@ -29,3 +29,4 @@ secrets.json
 .idea/
 *.sln.iml
 /RERPAPI/Templates
+/RERPAPI/Properties/PublishProfiles/IISProfile.pubxml
