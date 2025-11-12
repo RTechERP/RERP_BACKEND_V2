@@ -450,6 +450,7 @@ namespace RERPAPI.Controllers.CRM
         }
         private static string json = System.IO.File.ReadAllText(@"jsonProvinces.txt");
         private static List<Provinces> provinces = JsonConvert.DeserializeObject<List<Provinces>>(json);
+        private static List<dynamic> dataExport = new();
         public class Provinces
         {
             public int STT { get; set; }
@@ -469,7 +470,9 @@ namespace RERPAPI.Controllers.CRM
                     new object[] { page, size, filterText, employeeId, groupId });
                 var data = SQLHelper<dynamic>.GetListData(list, 0);
                 var data1 = SQLHelper<dynamic>.GetListData(list, 1);
-                return Ok(ApiResponseFactory.Success(new { data, data1 }, ""));
+                var data2 = SQLHelper<dynamic>.GetListData(list, 2);
+                dataExport = data2;
+                return Ok(ApiResponseFactory.Success(new { data, data1, data2 }, ""));
             }
             catch (Exception ex)
             {
@@ -785,6 +788,91 @@ namespace RERPAPI.Controllers.CRM
 
                 }
                 return Ok(ApiResponseFactory.Success("", "Xóa thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("export-excel")]
+        public IActionResult ExportDataToExcel()
+        {
+            var columnMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "CustomerName", "Tên khách hàng" },
+                { "Address", "Địa chỉ" },
+                { "Province", "Tỉnh" },
+                { "TypeName", "Loại hình" },
+                { "Name", "Ngành" },
+                { "ContactName", "Tên liên hệ" },
+                { "CustomerPart", "Chức vụ" },
+                { "ContactPhone", "ĐT" },
+                { "ContactEmail", "Email" },
+                { "FullName", "Sales" },
+                { "CustomerCode", "Mã khách hàng" },
+                { "CustomerShortName", "Tên ký hiệu" },
+            };
+
+            try
+            {
+                if (dataExport == null || !dataExport.Any())
+                    return BadRequest("Không có dữ liệu để xuất Excel");
+
+                using (var workbook = new ClosedXML.Excel.XLWorkbook())
+                {
+                    var worksheet = workbook.Worksheets.Add("Data2");
+
+                    // Lấy cột từ phần tử đầu tiên
+                    var firstRow = dataExport.First() as IDictionary<string, object>;
+                    int colIndex = 1;
+
+                    foreach (var key in firstRow.Keys)
+                    {
+                        string displayName = columnMap.ContainsKey(key) ? columnMap[key] : key;
+                        worksheet.Cell(1, colIndex).Value = displayName;
+                        worksheet.Cell(1, colIndex).Style.Font.Bold = true;
+                        worksheet.Cell(1, colIndex).Style.Alignment.Horizontal = ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
+                        worksheet.Cell(1, colIndex).Style.Alignment.Vertical = ClosedXML.Excel.XLAlignmentVerticalValues.Center;
+                        worksheet.Cell(1, colIndex).Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.LightGray;
+                        worksheet.Cell(1, colIndex).Style.Border.OutsideBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
+                        colIndex++;
+                    }
+
+                    // Ghi dữ liệu
+                    int rowIndex = 2;
+                    foreach (var row in dataExport)
+                    {
+                        var dict = row as IDictionary<string, object>;
+                        colIndex = 1;
+                        foreach (var value in dict.Values)
+                        {
+                            worksheet.Cell(rowIndex, colIndex).Value = value?.ToString();
+                            colIndex++;
+                        }
+                        rowIndex++;
+                    }
+
+                    worksheet.Columns().AdjustToContents(); 
+                    worksheet.Column(2).Width = 70; 
+                    worksheet.Column(3).Width = 70;
+                    worksheet.Column(7).Width = 30;
+                    worksheet.Column(8).Width = 30;
+                    worksheet.Column(9).Width = 30;
+                    worksheet.Column(10).Width = 30;
+                    worksheet.RangeUsed().Style.Border.OutsideBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
+                    worksheet.RangeUsed().Style.Border.InsideBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
+
+                    using (var stream = new MemoryStream())
+                    {
+                        workbook.SaveAs(stream);
+                        stream.Position = 0;
+                        string fileName = $"DanhSachKhachHang_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+                        return File(stream.ToArray(),
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            fileName);
+                    }
+                }
             }
             catch (Exception ex)
             {

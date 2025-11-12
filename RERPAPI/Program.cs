@@ -21,6 +21,7 @@ using RERPAPI.Repo.GenericEntity.Project;
 using RERPAPI.Repo.GenericEntity.Systems;
 using RERPAPI.Repo.GenericEntity.TB;
 using RERPAPI.Repo.GenericEntity.Technical;
+using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
 using RTCApi.Repo.GenericRepo;
 using System.Text;
 
@@ -312,6 +313,11 @@ builder.Services.AddScoped<HRHiringRequestHealthLinkRepo>();
 builder.Services.AddScoped<HRHiringRequestLanguageLinkRepo>();
 
 builder.Services.AddScoped<TaxCompanyRepo>();
+
+#region Kho AGV
+
+builder.Services.AddScoped<AGVProductRepo>();
+#endregion
 
 // BillExportTechnicalRepo in RTCApi namespace (used by Old Technical controller)
 builder.Services.AddScoped<BillExportTechnicalRepo>();
