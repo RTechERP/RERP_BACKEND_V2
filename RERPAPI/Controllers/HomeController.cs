@@ -107,7 +107,7 @@ namespace RERPAPI.Controllers
                 return Ok(new
                 {
                     access_token = tokenString,
-                    expires = token.ValidTo
+                    expires = token.ValidTo.AddHours(+7)
                 });
             }
             catch (Exception ex)
@@ -129,7 +129,8 @@ namespace RERPAPI.Controllers
             try
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
                 //string key = _configuration.GetValue<string>("SessionKey") ?? "";
                 //CurrentUser currentUser = HttpContext.Session.GetObject<CurrentUser>(key);
 
