@@ -38,16 +38,34 @@ namespace RERPAPI.Repo.GenericEntity.Asset
 
             return newCode;
         }
+        public int GetMaxSTT()
+        {
+            var data = GetAll();
+            if (!data.Any())
+                return 0;
+            return data.Max(x => x.STT)??0;
+        }
         public bool Validate(TSAssetManagement item, out string message)
         {
             message = "";
             bool exists = GetAll().Any(x => x.TSAssetCode == item.TSAssetCode && x.ID != item.ID && x.IsDeleted != true);
+            bool existSeri = GetAll().Any(x => x.Seri == item.Seri && x.ID != item.ID && x.IsDeleted != true);
+            bool existCodeNCC = GetAll().Any(x => x.TSCodeNCC == item.TSCodeNCC && x.ID != item.ID && x.IsDeleted != true);
             if (exists)
             {
                 message = $"Mã tài sản {item.TSAssetCode} đã tồn tại";
                 return false;
             }
-          
+            if (existSeri)
+            {
+                message = $"Mã SerialNumber đã tồn tại";
+                return false;
+            }
+            if (existCodeNCC)
+            {
+                message = $"Mã tài sản {item.TSCodeNCC} đã tồn tại";
+                return false;
+            }
             return true;
         }
     }

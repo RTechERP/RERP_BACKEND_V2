@@ -8,14 +8,21 @@ using RERPAPI.Repo.GenericEntity.Film;
 using System.Collections.Immutable;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace RERPAPI.Controllers.Film
+namespace RERPAPI.Controllers.HRM.Film
 {
     [Route("api/[controller]")]
     [ApiController]
     public class FilmManagementController : ControllerBase
     {
-        FilmManagementRepo _filmManagementRepo = new FilmManagementRepo();
-        FilmManagementDetailRepo _filmManagementDetailRepo = new FilmManagementDetailRepo();
+        FilmManagementRepo _filmManagementRepo;
+        FilmManagementDetailRepo _filmManagementDetailRepo;
+
+        public FilmManagementController(FilmManagementRepo filmManagementRepo, FilmManagementDetailRepo filmManagementDetailRepo)
+        {
+            _filmManagementRepo = filmManagementRepo;
+            _filmManagementDetailRepo = filmManagementDetailRepo;
+        }
+
         [HttpGet("get-film")]
         public IActionResult GetFilm([FromQuery] string? filterText, int Size, int Page)
         {

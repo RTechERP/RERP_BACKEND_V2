@@ -1,11 +1,15 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.Asset;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.Asset;
+using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Asset;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers.Old.Asset
 {
@@ -13,31 +17,46 @@ namespace RERPAPI.Controllers.Old.Asset
     [ApiController]
     public class AssetsRecoveryController : ControllerBase
     {
-        private readonly TSAssetRecoveryRepo _tSAssetRecoveryRepo;
-        private readonly TSAssetRecoveryDetailRepo _tSAssetRecoveryDetailRepo;
-        private readonly TSAssetManagementRepo _tsAssetManagementRepo;
-        private readonly TSAllocationEvictionAssetRepo _tSAllocationEvictionAssetRepo;
+        TSAssetRecoveryRepo _tSAssetRecoveryRepo;
+        TSAssetRecoveryDetailRepo _tSAssetRecoveryDetailRepo;
+        TSAssetManagementRepo _tsAssetManagementRepo;
+        TSAllocationEvictionAssetRepo _tSAllocationEvictionAssetRepo;
+        vUserGroupLinksRepo _vUserGroupLinksRepo;
+        private readonly RoleConfig _roleConfig;
 
-        public AssetsRecoveryController(
-            TSAssetRecoveryRepo tSAssetRecoveryRepo,
-            TSAssetRecoveryDetailRepo tSAssetRecoveryDetailRepo,
-            TSAssetManagementRepo tsAssetManagementRepo,
-            TSAllocationEvictionAssetRepo tSAllocationEvictionAssetRepo
-        )
+        public AssetsRecoveryController(TSAssetRecoveryRepo tSAssetRecoveryRepo, TSAssetRecoveryDetailRepo tSAssetRecoveryDetailRepo, TSAssetManagementRepo tSAssetManagementRepo, TSAllocationEvictionAssetRepo tSAllocationEvictionAssetRepo, vUserGroupLinksRepo vUserGroupLinksRepo)
         {
             _tSAssetRecoveryRepo = tSAssetRecoveryRepo;
-            _tSAssetRecoveryDetailRepo = tSAssetRecoveryDetailRepo;
-            _tsAssetManagementRepo = tsAssetManagementRepo;
             _tSAllocationEvictionAssetRepo = tSAllocationEvictionAssetRepo;
+            _tsAssetManagementRepo = tSAssetManagementRepo;
+            _tSAssetRecoveryDetailRepo = tSAssetRecoveryDetailRepo;
+            _vUserGroupLinksRepo = vUserGroupLinksRepo;
         }
+
         [HttpPost("get-asset-recovery")]
         public async Task<ActionResult> GetAssetsRecovery(AssetRecoveryRequestParam request)
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x =>
+                 (x.Code == "N23" || x.Code == "N1" || x.Code == "N67") &&
+                x.UserID == currentUser.ID);
+
+                int employeeID;
+                if (vUserHR != null)
+                {
+                    employeeID = request.EmployeeReturnID.Value;
+                }
+                else
+                {
+                    employeeID = currentUser.EmployeeID;
+                }
                 var assetRecovery = SQLHelper<dynamic>.ProcedureToList("spGetTSAssetRecovery",
                     new string[] { "@DateStart", "@DateEnd", "@EmployeeReturnID", "@EmployeeRecoveryID", "@Status", "@FilterText", "@PageSize", "@PageNumber" },
-                    new object[] { request.DateStart, request.DateEnd, request.EmployeeReturnID ?? 0, request.EmployeeRecoveryID ?? 0, request.Status ?? -1, request.Filtertext ?? "", request.PageSize, request.PageNumber, });
+                    new object[] { request.DateStart, request.DateEnd, employeeID, request.EmployeeRecoveryID ?? 0, request.Status ?? -1, request.Filtertext ?? "", request.PageSize, request.PageNumber, });
                 return Ok(new
                 {
                     status = 1,
@@ -48,12 +67,7 @@ namespace RERPAPI.Controllers.Old.Asset
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-asset-recovery-detail")]
@@ -77,13 +91,7 @@ namespace RERPAPI.Controllers.Old.Asset
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-recovery-code")]
@@ -127,12 +135,7 @@ namespace RERPAPI.Controllers.Old.Asset
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpPost("export-recovery-asset-report")]
@@ -145,7 +148,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 return BadRequest("Dữ liệu thu hồi không hợp lệ.");
             try
             {
-                ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+                ExcelPackage.License.SetNonCommercialOrganization("RTC Technology Viet Nam");
 
                 string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "BienBanBanGiao.xlsx");
                 if (!System.IO.File.Exists(templatePath))
@@ -182,7 +185,7 @@ namespace RERPAPI.Controllers.Old.Asset
                     ws.DeleteRow(20, 1);
 
                     // Ghi dữ liệu chi tiết từ dòng 21 trở đi
-                    int startRow = 20;
+                    int startRow = 19;
                     for (int i = 0; i < details.Count; i++)
                     {
                         var item = details[i];
@@ -209,10 +212,10 @@ namespace RERPAPI.Controllers.Old.Asset
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Lỗi khi xuất Excel: {ex.Message}");
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N23")]
 
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData2([FromBody] AssetRecoveryDTO asset)
@@ -231,7 +234,7 @@ namespace RERPAPI.Controllers.Old.Asset
                     }
                     else
                     {
-                        _tSAssetRecoveryRepo.UpdateAsync( asset.tSAssetRecovery);
+                        _tSAssetRecoveryRepo.UpdateAsync(asset.tSAssetRecovery);
                     }
                 }
                 if (asset.TSAssetRecoveryDetails != null && asset.TSAssetRecoveryDetails.Any())
@@ -242,7 +245,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tSAssetRecoveryDetailRepo.CreateAsync(item);
                         else
-                            _tSAssetRecoveryDetailRepo.UpdateAsync( item);
+                            _tSAssetRecoveryDetailRepo.UpdateAsync(item);
                     }
                 }
                 if (asset.tSAssetManagements != null && asset.tSAssetManagements.Any())
@@ -264,7 +267,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tSAllocationEvictionAssetRepo.CreateAsync(item);
                         else
-                            _tSAllocationEvictionAssetRepo.UpdateAsync( item);
+                            _tSAllocationEvictionAssetRepo.UpdateAsync(item);
                     }
                 }
                 return Ok(new
@@ -280,6 +283,138 @@ namespace RERPAPI.Controllers.Old.Asset
                     message = ex.Message,
                     error = ex.ToString()
                 });
+            }
+        }
+        [HttpPost("save-data-personal")]
+        public async Task<IActionResult> SaveDataPersonal([FromBody] AssetRecoveryDTO asset)
+        {
+            try
+            {
+                if (asset == null)
+                {
+                    return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." });
+                }
+                if (asset.tSAssetRecovery != null)
+                {
+                    if (asset.tSAssetRecovery.ID <= 0)
+                    {
+                        await _tSAssetRecoveryRepo.CreateAsync(asset.tSAssetRecovery);
+                    }
+                    else
+                    {
+                        _tSAssetRecoveryRepo.UpdateAsync(asset.tSAssetRecovery);
+                    }
+                }
+                if (asset.TSAssetRecoveryDetails != null && asset.TSAssetRecoveryDetails.Any())
+                {
+                    foreach (var item in asset.TSAssetRecoveryDetails)
+                    {
+                        item.TSAssetRecoveryID = asset.tSAssetRecovery.ID;
+                        if (item.ID <= 0)
+                            await _tSAssetRecoveryDetailRepo.CreateAsync(item);
+                        else
+                            _tSAssetRecoveryDetailRepo.UpdateAsync(item);
+                    }
+                }
+                if (asset.tSAssetManagements != null && asset.tSAssetManagements.Any())
+                {
+                    foreach (var item in asset.tSAssetManagements)
+                    {
+
+                        if (item.ID <= 0)
+                            await _tsAssetManagementRepo.CreateAsync(item);
+                        else
+                            _tsAssetManagementRepo.UpdateAsync(item);
+                    }
+                }
+                if (asset.tSAllocationEvictionAssets != null && asset.tSAllocationEvictionAssets.Any())
+                {
+                    foreach (var item in asset.tSAllocationEvictionAssets)
+                    {
+
+                        if (item.ID <= 0)
+                            await _tSAllocationEvictionAssetRepo.CreateAsync(item);
+                        else
+                            _tSAllocationEvictionAssetRepo.UpdateAsync(item);
+                    }
+                }
+                return Ok(new
+                {
+                    status = 1,
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
+        }
+        [RequiresPermission("N1,N67")]
+        [HttpPost("save-data-kt")]
+        public async Task<IActionResult> SaveDataKT([FromBody] AssetRecoveryDTO asset)
+        {
+            try
+            {
+                if (asset == null)
+                {
+                    return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." });
+                }
+                if (asset.tSAssetRecovery != null)
+                {
+                    if (asset.tSAssetRecovery.ID <= 0)
+                    {
+                        await _tSAssetRecoveryRepo.CreateAsync(asset.tSAssetRecovery);
+                    }
+                    else
+                    {
+                        _tSAssetRecoveryRepo.UpdateAsync(asset.tSAssetRecovery);
+                    }
+                }
+                if (asset.TSAssetRecoveryDetails != null && asset.TSAssetRecoveryDetails.Any())
+                {
+                    foreach (var item in asset.TSAssetRecoveryDetails)
+                    {
+                        item.TSAssetRecoveryID = asset.tSAssetRecovery.ID;
+                        if (item.ID <= 0)
+                            await _tSAssetRecoveryDetailRepo.CreateAsync(item);
+                        else
+                            _tSAssetRecoveryDetailRepo.UpdateAsync(item);
+                    }
+                }
+                if (asset.tSAssetManagements != null && asset.tSAssetManagements.Any())
+                {
+                    foreach (var item in asset.tSAssetManagements)
+                    {
+
+                        if (item.ID <= 0)
+                            await _tsAssetManagementRepo.CreateAsync(item);
+                        else
+                            _tsAssetManagementRepo.UpdateAsync(item);
+                    }
+                }
+                if (asset.tSAllocationEvictionAssets != null && asset.tSAllocationEvictionAssets.Any())
+                {
+                    foreach (var item in asset.tSAllocationEvictionAssets)
+                    {
+
+                        if (item.ID <= 0)
+                            await _tSAllocationEvictionAssetRepo.CreateAsync(item);
+                        else
+                            _tSAllocationEvictionAssetRepo.UpdateAsync(item);
+                    }
+                }
+                return Ok(new
+                {
+                    status = 1,
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }
