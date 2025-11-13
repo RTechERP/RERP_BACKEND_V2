@@ -12,6 +12,8 @@ public partial class RTCContext : DbContext
     {
     }
 
+    public virtual DbSet<AGVProduct> AGVProducts { get; set; }
+
     public virtual DbSet<AccountingBill> AccountingBills { get; set; }
 
     public virtual DbSet<AccountingBillApproved> AccountingBillApproveds { get; set; }
@@ -972,6 +974,47 @@ public partial class RTCContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<AGVProduct>(entity =>
+        {
+            entity.ToTable("AGVProduct", "agv");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.CurrentIntensityMax).HasMaxLength(150);
+            entity.Property(e => e.DataInterface).HasMaxLength(150);
+            entity.Property(e => e.FNo).HasMaxLength(150);
+            entity.Property(e => e.FirmID).HasComment("Hãng lấy từ bảng Firm");
+            entity.Property(e => e.FocalLength).HasMaxLength(150);
+            entity.Property(e => e.InputValue).HasMaxLength(150);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.LampColor).HasMaxLength(150);
+            entity.Property(e => e.LampPower).HasMaxLength(150);
+            entity.Property(e => e.LampType).HasMaxLength(150);
+            entity.Property(e => e.LampWattage).HasMaxLength(150);
+            entity.Property(e => e.LensMount).HasMaxLength(150);
+            entity.Property(e => e.MOD).HasMaxLength(150);
+            entity.Property(e => e.Magnification).HasMaxLength(150);
+            entity.Property(e => e.MonoColor).HasMaxLength(150);
+            entity.Property(e => e.Note).HasMaxLength(550);
+            entity.Property(e => e.OutputValue).HasMaxLength(150);
+            entity.Property(e => e.PixelSize).HasMaxLength(150);
+            entity.Property(e => e.ProductCode)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.ProductGroupRTCID).HasComment("Nhóm sản phẩm lấy từ bảng ProductGroupRTC");
+            entity.Property(e => e.ProductLocationID).HasComment("Vị trí sản phẩm lấy từ ProductLocation");
+            entity.Property(e => e.ProductName).HasMaxLength(550);
+            entity.Property(e => e.Resolution).HasMaxLength(150);
+            entity.Property(e => e.SensorSize).HasMaxLength(150);
+            entity.Property(e => e.SensorSizeMax).HasMaxLength(150);
+            entity.Property(e => e.ShutterMode).HasMaxLength(150);
+            entity.Property(e => e.Size).HasMaxLength(150);
+            entity.Property(e => e.UnitCountID).HasComment("Đơn vị tính lấy từ bảng UnitCount");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+            entity.Property(e => e.WD).HasMaxLength(150);
+        });
+
         modelBuilder.Entity<AccountingBill>(entity =>
         {
             entity.ToTable("AccountingBill");
@@ -8104,7 +8147,6 @@ public partial class RTCContext : DbContext
                 .HasMaxLength(150)
                 .IsUnicode(false);
             entity.Property(e => e.IsStock).HasDefaultValue(false);
-            entity.Property(e => e.Note).HasMaxLength(550);
             entity.Property(e => e.ProductByProject).HasMaxLength(550);
             entity.Property(e => e.Quantity).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.Specifications).HasMaxLength(550);
