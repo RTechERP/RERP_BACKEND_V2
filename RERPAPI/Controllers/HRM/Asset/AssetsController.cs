@@ -42,7 +42,7 @@ namespace RERPAPI.Controllers.Old.Asset
             _tSRepairAssetRepo = tSRepairAssetRepo;
             _tsLiQuidationAssetRepo = tsLiQuidationAssetRepo;
         }
-        [RequiresPermission("N2,N23,N1")]
+        [RequiresPermission("N2,N23,N1,N67")]
         [HttpPost("get-asset")]
         public IActionResult GetListAssets([FromBody] AssetmanagementRequestParam request)
         {

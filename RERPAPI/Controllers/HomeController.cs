@@ -214,7 +214,7 @@ namespace RERPAPI.Controllers
         /// Upload nhiều file cùng lúc
         /// </summary>
         [HttpPost("upload-multiple")]
-        [Authorize]
+        //[Authorize]
         [DisableRequestSizeLimit]
         public async Task<IActionResult> UploadMultipleFiles()
         {
@@ -285,8 +285,8 @@ namespace RERPAPI.Controllers
                         // Tạo tên file unique
                         var fileExtension = Path.GetExtension(file.FileName);
                         var originalFileName = Path.GetFileNameWithoutExtension(file.FileName);
-                        //var uniqueFileName = $"{originalFileName}_{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid().ToString("N")[..8]}{fileExtension}";originalFileName}_{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid().ToString("N")[..8]}{fileExtension}";
-                        var uniqueFileName = originalFileName;
+                        var uniqueFileName = $"{originalFileName}{fileExtension}";
+                        //var uniqueFileName = originalFileName;
                         var fullPath = Path.Combine(targetFolder, uniqueFileName);
 
                         // Lưu file
