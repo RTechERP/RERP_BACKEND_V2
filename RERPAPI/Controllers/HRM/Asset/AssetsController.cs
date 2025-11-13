@@ -42,7 +42,7 @@ namespace RERPAPI.Controllers.Old.Asset
             _tSRepairAssetRepo = tSRepairAssetRepo;
             _tsLiQuidationAssetRepo = tsLiQuidationAssetRepo;
         }
-        [RequiresPermission("N2,N23,N1")]
+        [RequiresPermission("N2,N23,N1,N67")]
         [HttpPost("get-asset")]
         public IActionResult GetListAssets([FromBody] AssetmanagementRequestParam request)
         {
@@ -51,14 +51,15 @@ namespace RERPAPI.Controllers.Old.Asset
                 var assets = SQLHelper<dynamic>.ProcedureToList("spLoadTSAssetManagement",
                     new string[] { "@FilterText", "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@Status", "@Department" },
                     new object[] { request.FilterText, request.PageNumber, request.PageSize, request.DateStart, request.DateEnd, request.Status, request.Department });
-
+                int maxSTT = _tsAssetManagementRepo.GetMaxSTT();
                 return Ok(new
                 {
                     status = 1,
                     data = new
                     {
                         assets = SQLHelper<dynamic>.GetListData(assets, 0),
-                        total = SQLHelper<dynamic>.GetListData(assets, 1)
+                        total = SQLHelper<dynamic>.GetListData(assets, 1),
+                        maxSTT
                     }
                 });
             }
@@ -73,7 +74,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 });
             }
         }
-        [RequiresPermission("N2,N23,N1")]
+
         [HttpGet("get-allocation-detail")]
         public IActionResult GetAllocation(string? id)
         {
@@ -103,7 +104,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 });
             }
         }
-        [RequiresPermission("N2,N23,N1")]
+
         [HttpGet("get-repair")]
         public IActionResult GetLatestRepairByAssetManagementID([FromQuery] int assetManagementID)
         {
@@ -135,7 +136,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 });
             }
         }
-        [RequiresPermission("N2,N23,N1")]
+
         [HttpGet("get-asset-code")]
         public async Task<IActionResult> GenerateAssetCode([FromQuery] DateTime? assetDate)
         {
@@ -150,7 +151,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 data = newcode
             });
         }
-        [RequiresPermission("N2,N23,N1")]
+
         //check-productsale trong excel
         [HttpPost("check-asset-exist")]
         public async Task<IActionResult> CheckAssetExist([FromBody] List<TSAssetManagement> asset)
@@ -183,7 +184,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 return BadRequest(new { message = ex.Message });
             }
         }
-     
+
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] AssetmanagementFullDTO asset)
         {
@@ -200,15 +201,17 @@ namespace RERPAPI.Controllers.Old.Asset
 
                     foreach (var item in asset.tSAssetManagements)
                     {
-                        if (item.IsDeleted == false || item.IsDeleted == null)
+                        if(item.IsDeleted!=true)
                         {
                             if (!_tsAssetManagementRepo.Validate(item, out string message))
                             {
                                 return BadRequest(ApiResponseFactory.Fail(null, message));
                             }
-                        }
+                        }    
+                       
                         if (item.ID <= 0)
                         {
+                         
                             item.StatusID = 1;
                             item.Status = "Chưa sử dụng";
 
@@ -216,7 +219,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         }
 
                         else
-                            _tsAssetManagementRepo.UpdateAsync(item);
+                            await _tsAssetManagementRepo.UpdateAsync(item);
                     }
                 }
                 if (asset.tSAllocationEvictionAssets != null && asset.tSAllocationEvictionAssets.Any())
@@ -226,7 +229,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tSAllocationEvictionRepo.CreateAsync(item);
                         else
-                            _tSAllocationEvictionRepo.UpdateAsync(item);
+                            await _tSAllocationEvictionRepo.UpdateAsync(item);
                     }
                 }
                 if (asset.tSLostReportAsset != null)
@@ -234,21 +237,21 @@ namespace RERPAPI.Controllers.Old.Asset
                     if (asset.tSLostReportAsset.ID <= 0)
                         await _tsLostReportRepo.CreateAsync(asset.tSLostReportAsset);
                     else
-                        _tsLostReportRepo.UpdateAsync(asset.tSLostReportAsset);
+                        await _tsLostReportRepo.UpdateAsync(asset.tSLostReportAsset);
                 }
                 if (asset.tSReportBrokenAsset != null)
                 {
                     if (asset.tSReportBrokenAsset.ID <= 0)
                         await _tsReportBrokenAssetRepo.CreateAsync(asset.tSReportBrokenAsset);
                     else
-                        _tsReportBrokenAssetRepo.UpdateAsync(asset.tSReportBrokenAsset);
+                        await _tsReportBrokenAssetRepo.UpdateAsync(asset.tSReportBrokenAsset);
                 }
                 if (asset.tSLiQuidationAsset != null)
                 {
                     if (asset.tSLiQuidationAsset.ID <= 0)
                         await _tsLiQuidationAssetRepo.CreateAsync(asset.tSLiQuidationAsset);
                     else
-                        _tsLiQuidationAssetRepo.UpdateAsync(asset.tSLiQuidationAsset);
+                        await _tsLiQuidationAssetRepo.UpdateAsync(asset.tSLiQuidationAsset);
                 }
                 if (asset.tSRepairAssets != null && asset.tSRepairAssets.Any())
                 {
@@ -257,7 +260,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tSRepairAssetRepo.CreateAsync(item);
                         else
-                            _tSRepairAssetRepo.UpdateAsync(item);
+                            await _tSRepairAssetRepo.UpdateAsync(item);
                     }
                 }
                 return Ok(new { status = 1, message = "Lưu dữ liệu thành công." });

@@ -16,28 +16,24 @@ namespace RERPAPI.Controllers.Old.Asset
     [ApiController]
     public class AssetsAllocationController : ControllerBase
     {
-        private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
-        private readonly TSAssetManagementRepo _tsAssetManagementRepo;
-        private readonly TSAssetAllocationRepo _tSAssetAllocationRepo;
-        private readonly TSAssetAllocationDetailRepo _tSAssetAllocationDetailRepo;
-        private readonly TSAllocationEvictionAssetRepo _tSAllocationEvictionAssetRepo;
+        vUserGroupLinksRepo _vUserGroupLinksRepo;
 
-        public AssetsAllocationController(
-            vUserGroupLinksRepo vUserGroupLinksRepo,
-            TSAssetManagementRepo tsAssetManagementRepo,
-            TSAssetAllocationRepo tSAssetAllocationRepo,
-            TSAssetAllocationDetailRepo tSAssetAllocationDetailRepo,
-            TSAllocationEvictionAssetRepo tSAllocationEvictionAssetRepo
-        )
+        TSAssetManagementRepo _tsAssetManagementRepo ;
+        TSAssetAllocationRepo _tSAssetAllocationRepo;
+        TSAssetAllocationDetailRepo _tSAssetAllocationDetailRepo;
+        TSAllocationEvictionAssetRepo _tSAllocationEvictionAssetRepo;
+
+        public AssetsAllocationController(TSAssetManagementRepo tSAssetManagementRepo, TSAssetAllocationRepo tSAssetAllocationRepo, TSAssetAllocationDetailRepo tSAssetAllocationDetailRepo, TSAllocationEvictionAssetRepo tSAllocationEvictionAssetRepo, vUserGroupLinksRepo vUserGroupLinksRepo )
         {
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
-            _tsAssetManagementRepo = tsAssetManagementRepo;
+            _tsAssetManagementRepo = tSAssetManagementRepo;
             _tSAssetAllocationRepo = tSAssetAllocationRepo;
             _tSAssetAllocationDetailRepo = tSAssetAllocationDetailRepo;
-            _tSAllocationEvictionAssetRepo = tSAllocationEvictionAssetRepo;
+          _tSAllocationEvictionAssetRepo = tSAllocationEvictionAssetRepo;
         }
+
         [HttpPost("get-allocation")]
-        
+
         public async Task<ActionResult> GetAssetAllocationnn([FromBody] AssetAllocationRequestParam request)
 
         {
@@ -49,7 +45,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 var vUserHR = _vUserGroupLinksRepo
       .GetAll()
       .FirstOrDefault(x =>
-          (x.Code == "N23" || x.Code == "N1") &&
+          (x.Code == "N23" || x.Code == "N1" || x.Code == "N67") &&
           x.UserID == currentUser.ID);
 
                 int employeeID;
@@ -205,7 +201,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N23,N1,N67")]
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] TSAssetAllocationFullDTO allocations)
         {
@@ -246,6 +242,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 {
                     foreach (var item in allocations.tSAllocationEvictionAssets)
                     {
+
                         if (item.ID <= 0)
                             await _tSAllocationEvictionAssetRepo.CreateAsync(item);
                         else
@@ -260,6 +257,121 @@ namespace RERPAPI.Controllers.Old.Asset
             }
 
         }
+
+        [HttpPost("save-appropve-personal")]
+        public async Task<IActionResult> SaveAppropvePersonal([FromBody] TSAssetAllocationFullDTO allocations)
+        {
+            try
+            {
+                if (allocations == null) { return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." }); }
+                if (allocations.tSAssetAllocation != null)
+                {
+                    if (allocations.tSAssetAllocation.ID <= 0)
+                        await _tSAssetAllocationRepo.CreateAsync(allocations.tSAssetAllocation);
+                    else
+                        _tSAssetAllocationRepo.UpdateAsync(allocations.tSAssetAllocation);
+                }
+
+                if (allocations.tSAssetAllocationDetails != null && allocations.tSAssetAllocationDetails.Any())
+                {
+                    foreach (var item in allocations.tSAssetAllocationDetails)
+                    {
+                        item.TSAssetAllocationID = allocations.tSAssetAllocation.ID;
+                        if (item.ID <= 0)
+                            await _tSAssetAllocationDetailRepo.CreateAsync(item);
+                        else
+                            _tSAssetAllocationDetailRepo.UpdateAsync(item);
+                    }
+                }
+                if (allocations.tSAssetManagements != null && allocations.tSAssetManagements.Any())
+                {
+                    foreach (var item in allocations.tSAssetManagements)
+                    {
+
+                        if (item.ID <= 0)
+                            await _tsAssetManagementRepo.CreateAsync(item);
+                        else
+                            _tsAssetManagementRepo.UpdateAsync(item);
+                    }
+                }
+                if (allocations.tSAllocationEvictionAssets != null && allocations.tSAllocationEvictionAssets.Any())
+                {
+                    foreach (var item in allocations.tSAllocationEvictionAssets)
+                    {
+
+                        if (item.ID <= 0)
+                            await _tSAllocationEvictionAssetRepo.CreateAsync(item);
+                        else
+                            _tSAllocationEvictionAssetRepo.UpdateAsync(item);
+                    }
+                }
+                return Ok(new { status = 1 });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+
+        }
+        [RequiresPermission("N67,N1")]
+        [HttpPost("save-appropve-kt")]
+        public async Task<IActionResult> SaveAppropveKT([FromBody] TSAssetAllocationFullDTO allocations)
+        {
+            try
+            {
+                if (allocations == null) { return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." }); }
+                if (allocations.tSAssetAllocation != null)
+                {
+                    if (allocations.tSAssetAllocation.ID <= 0)
+                        await _tSAssetAllocationRepo.CreateAsync(allocations.tSAssetAllocation);
+                    else
+                        _tSAssetAllocationRepo.UpdateAsync(allocations.tSAssetAllocation);
+                }
+
+                if (allocations.tSAssetAllocationDetails != null && allocations.tSAssetAllocationDetails.Any())
+                {
+                    foreach (var item in allocations.tSAssetAllocationDetails)
+                    {
+                        item.TSAssetAllocationID = allocations.tSAssetAllocation.ID;
+                        if (item.ID <= 0)
+                            await _tSAssetAllocationDetailRepo.CreateAsync(item);
+                        else
+                            _tSAssetAllocationDetailRepo.UpdateAsync(item);
+                    }
+                }
+                if (allocations.tSAssetManagements != null && allocations.tSAssetManagements.Any())
+                {
+                    foreach (var item in allocations.tSAssetManagements)
+                    {
+
+                        if (item.ID <= 0)
+                            await _tsAssetManagementRepo.CreateAsync(item);
+                        else
+                            _tsAssetManagementRepo.UpdateAsync(item);
+                    }
+                }
+                if (allocations.tSAllocationEvictionAssets != null && allocations.tSAllocationEvictionAssets.Any())
+                {
+                    foreach (var item in allocations.tSAllocationEvictionAssets)
+                    {
+
+                        if (item.ID <= 0)
+                            await _tSAllocationEvictionAssetRepo.CreateAsync(item);
+                        else
+                            _tSAllocationEvictionAssetRepo.UpdateAsync(item);
+                    }
+                }
+                return Ok(new { status = 1 });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+
+        }
+
+
+
 
     }
 }
