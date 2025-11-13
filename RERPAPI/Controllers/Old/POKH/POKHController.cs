@@ -139,7 +139,7 @@ namespace RERPAPI.Controllers.Old.POKH
         {
             try
             {
-                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetPOKHDetail", new string[] { "@ID", "@IDDetail" }, new object[] { id, idDetail });
+                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetPOKHDetail_New", new string[] { "@ID", "@IDDetail" }, new object[] { id, idDetail });
                 var data = SQLHelper<dynamic>.GetListData(list, 0);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
@@ -258,6 +258,17 @@ namespace RERPAPI.Controllers.Old.POKH
                     {
                         int idOld = item.ID;
                         int parentId = 0;
+
+                        if (item.IsDeleted == true && idOld > 0)
+                        {
+                            var existing = _pokhDetailRepo.GetByID(idOld);
+                            if (existing != null)
+                            {
+                                existing.IsDeleted = true;
+                                await _pokhDetailRepo.UpdateAsync(existing);
+                            }
+                            continue;
+                        }
 
                         if (item.ParentID.HasValue && parentIdMapping.ContainsKey(item.ParentID.Value))
                         {

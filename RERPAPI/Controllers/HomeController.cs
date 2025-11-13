@@ -107,7 +107,7 @@ namespace RERPAPI.Controllers
                 return Ok(new
                 {
                     access_token = tokenString,
-                    expires = token.ValidTo
+                    expires = token.ValidTo.AddHours(+7)
                 });
             }
             catch (Exception ex)
