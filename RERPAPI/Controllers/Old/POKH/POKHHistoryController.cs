@@ -39,7 +39,7 @@ namespace RERPAPI.Controllers.Old.POKH
             }
         }
         [HttpPost("save-data")]
-        public async Task<IActionResult> Save([FromBody] List<POKHHistory> pokhHistorys)
+        public async Task<IActionResult> Save(List<POKHHistory> pokhHistorys)
         {
             try
             {   

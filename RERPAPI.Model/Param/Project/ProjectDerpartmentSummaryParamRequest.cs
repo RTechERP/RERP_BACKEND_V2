@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Model.Param.Project
 {
-    public class ProjectNewParamRequest
+    public class ProjectDerpartmentSummaryParamRequest
     {
         public DateTime dateTimeS { get; set; }
         public DateTime dateTimeE { get; set; }

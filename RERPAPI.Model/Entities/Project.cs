@@ -91,4 +91,6 @@ public partial class Project
     /// 1: Dự án; 2: Thương mại; 3:Phim
     /// </summary>
     public int? TypeProject { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }
