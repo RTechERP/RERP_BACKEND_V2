@@ -148,6 +148,7 @@ namespace RERPAPI.Repo
                 }
 
                 // Lưu thay đổi vào cơ sở dữ liệu
+                db.Entry(entity).State = EntityState.Modified;
                 return db.SaveChanges();
             }
             catch (Exception ex)
@@ -232,7 +233,7 @@ namespace RERPAPI.Repo
                     // Gán giá trị cho thuộc tính (xử lý null)
                     property.SetValue(entity, field.Value == null ? null : field.Value);
                 }
-
+                db.Entry(entity).State = EntityState.Modified;
                 // Lưu thay đổi vào cơ sở dữ liệu
                 return await db.SaveChangesAsync();
             }
