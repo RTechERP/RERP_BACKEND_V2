@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RERPAPI.Model.DTO
+namespace RERPAPI.Model.Common
 {
     public class RoleConfig
     {
