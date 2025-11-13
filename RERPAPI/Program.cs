@@ -17,10 +17,12 @@ using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
 using RERPAPI.Repo.GenericEntity.Film;
 using RERPAPI.Repo.GenericEntity.HRM;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
+using RERPAPI.Repo.GenericEntity.MeetingMinutesRepo;
 using RERPAPI.Repo.GenericEntity.Project;
 using RERPAPI.Repo.GenericEntity.Systems;
 using RERPAPI.Repo.GenericEntity.TB;
 using RERPAPI.Repo.GenericEntity.Technical;
+using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
 using RTCApi.Repo.GenericRepo;
 using System.Text;
 
@@ -118,7 +120,7 @@ builder.Services.AddScoped<KPIEvaluationRepo>();
 builder.Services.AddScoped<LocationRepo>();
 builder.Services.AddScoped<LoginManagerRepo>();
 builder.Services.AddScoped<MainIndexRepo>();
-builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.MeetingMinutesFileRepo>();
+builder.Services.AddScoped<MeetingMinutesFileRepo>();
 builder.Services.AddScoped<MenuRepo>();
 builder.Services.AddScoped<ModulaLocationDetailRepo>();
 builder.Services.AddScoped<ModulaLocationRepo>();
@@ -212,7 +214,6 @@ builder.Services.AddScoped<ProjectItemProblemRepo>();
 builder.Services.AddScoped<VisitFactoryRepo>();
 builder.Services.AddScoped<VisitFactoryDetailRepo>();
 builder.Services.AddScoped<VisitGuestTypeRepo>();
-builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.MeetingTypeRepo>();
 
 builder.Services.AddScoped<FormAndFunctionRepo>();
 builder.Services.AddScoped<UserGroupRepo>();
@@ -275,8 +276,8 @@ builder.Services.AddScoped<HandoverWorkRepo>();
 builder.Services.AddScoped<MeetingMinuteRepo>();
 builder.Services.AddScoped<MeetingMinutesAttendanceRepo>();
 builder.Services.AddScoped<MeetingMinutesDetailRepo>();
-builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.MeetingMinutesFileRepo>();
-builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.MeetingTypeRepo>();
+builder.Services.AddScoped<MeetingMinutesFileRepo>();
+builder.Services.AddScoped<MeetingTypeRepo>();
 builder.Services.AddScoped<ProjectHistoryProblemRepo>();
 builder.Services.AddScoped<ProjectManagerRepo>();
 
@@ -303,6 +304,27 @@ builder.Services.AddScoped<DocumentExportRepo>();
 builder.Services.AddScoped<InventoryProjectExportRepo>();
 builder.Services.AddScoped<InvoiceLinkRepo>();
 builder.Services.AddScoped<SupplierSaleRepo>();
+builder.Services.AddScoped<SupplierSaleContactRepo>();
+builder.Services.AddScoped<ProjectFieldRepo>();
+
+
+builder.Services.AddScoped<HRHiringRequestRepo>();
+builder.Services.AddScoped<HRHiringAppearanceLinkRepo>();
+builder.Services.AddScoped<HRHiringRequestApproveLinkRepo>();
+builder.Services.AddScoped<HRHiringRequestCommunicationLinkRepo>();
+builder.Services.AddScoped<HRHiringRequestComputerLevelLinkRepo>();
+builder.Services.AddScoped<HRHiringRequestEducationLinkRepo>();
+builder.Services.AddScoped<HRHiringRequestExperienceLinkRepo>();
+builder.Services.AddScoped<HRHiringRequestGenderLinkRepo>();
+builder.Services.AddScoped<HRHiringRequestHealthLinkRepo>();
+builder.Services.AddScoped<HRHiringRequestLanguageLinkRepo>();
+
+builder.Services.AddScoped<TaxCompanyRepo>();
+
+#region Kho AGV
+
+builder.Services.AddScoped<AGVProductRepo>();
+#endregion
 
 // BillExportTechnicalRepo in RTCApi namespace (used by Old Technical controller)
 builder.Services.AddScoped<BillExportTechnicalRepo>();
@@ -342,24 +364,24 @@ builder.Services.AddCors(options =>
 
 //Config FormOption
 
-builder.Services.Configure<IISServerOptions>(options =>
-{
-    options.MaxRequestBodySize = int.MaxValue;
-});
+//builder.Services.Configure<IISServerOptions>(options =>
+//{
+//    options.MaxRequestBodySize = int.MaxValue;
+//});
 
-builder.Services.Configure<FormOptions>(opt =>
-{
-    // Kích thước tối đa mỗi phần form (field/file) 
-    opt.MultipartBodyLengthLimit = Int32.MaxValue;
+//builder.Services.Configure<FormOptions>(opt =>
+//{
+//    // Kích thước tối đa mỗi phần form (field/file) 
+//    opt.MultipartBodyLengthLimit = Int32.MaxValue;
 
-    // Nếu file < 1 MB thì vẫn buffer hết trong RAM trước khi viết ra
-    opt.MemoryBufferThreshold = 1 * 1024 * 1024;
-    // (Tuỳ chọn) nếu có rất nhiều fields, tăng số fields tối đa
-    opt.ValueCountLimit = 1000;
+//    // Nếu file < 1 MB thì vẫn buffer hết trong RAM trước khi viết ra
+//    opt.MemoryBufferThreshold = 1 * 1024 * 1024;
+//    // (Tuỳ chọn) nếu có rất nhiều fields, tăng số fields tối đa
+//    opt.ValueCountLimit = 1000;
 
-    // (Tuỳ chọn) tăng độ dài tối đa tên key/value nếu cần
-    opt.ValueLengthLimit = 64 * 1024;
-});
+//    // (Tuỳ chọn) tăng độ dài tối đa tên key/value nếu cần
+//    opt.ValueLengthLimit = 64 * 1024;
+//});
 
 
 // Load JWT settings
@@ -471,11 +493,11 @@ foreach (var item in staticFiles)
     //});
 
 
-    //app.UseDirectoryBrowser(new DirectoryBrowserOptions
-    //{
-    //    FileProvider = new PhysicalFileProvider(item.PathFull),
-    //    RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-    //});
+    app.UseDirectoryBrowser(new DirectoryBrowserOptions
+    {
+        FileProvider = new PhysicalFileProvider(item.PathFull),
+        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+    });
 }
 
 app.Run();

@@ -1,4 +1,6 @@
-﻿using RERPAPI.Attributes;
+﻿using Microsoft.AspNetCore.Authorization;
+using Newtonsoft.Json.Linq;
+using RERPAPI.Attributes;
 using RERPAPI.IRepo;
 using System.Security.Claims;
 
@@ -99,8 +101,13 @@ namespace RERPAPI.Middleware
 
             // 🔹 Check xem có gắn [RequiresPermission]
             var permissionAttributes = endpoint?.Metadata.GetOrderedMetadata<RequiresPermissionAttribute>();
-            if (permissionAttributes != null && permissionAttributes.Count > 0)
+            var authorizeAttribute = endpoint?.Metadata.GetOrderedMetadata<AuthorizeAttribute>();
+
+            //if (permissionAttributes != null && permissionAttributes.Count > 0)
+            if (authorizeAttribute != null && authorizeAttribute.Count > 0)
             {
+
+                //Check có token không
                 var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
@@ -109,29 +116,50 @@ namespace RERPAPI.Middleware
                     return;
                 }
 
+                //Check còn hạn không
+                long expClaims = Convert.ToInt64(context.User.Claims.FirstOrDefault(c => c.Type == "exp")?.Value);
+                DateTime expires = DateTimeOffset.FromUnixTimeSeconds(expClaims).UtcDateTime.AddHours(+7);
+                if (!(expires.Year >= DateTime.Now.Year &&
+                    expires.Month >= DateTime.Now.Month &&
+                    expires.Day >= DateTime.Now.Day &&
+                    expires.Hour >= DateTime.Now.Hour &&
+                    expires.Minute >= DateTime.Now.Minute))
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    await context.Response.WriteAsync("Expired");
+                    return;
+                }
+
+                //Check là admin không
                 var isAdminClaim = context.User.FindFirst("isadmin")?.Value; //NTA B update 041125
                 if(!string.IsNullOrEmpty(isAdminClaim) && bool.TryParse(isAdminClaim, out bool isAdmin) && isAdmin)
                 {
                     await _next(context);
                     return;
-                }    
+                }
 
-                foreach (var attr in permissionAttributes)
+
+                //Check có mã quyền không
+                if (permissionAttributes != null && permissionAttributes.Count > 0)
                 {
-                    var hasPermission = await permissionService.HasPermissionAsync(userId, attr.permission);
-                    if (!hasPermission)
+                    foreach (var attr in permissionAttributes)
                     {
-                        context.Response.StatusCode = StatusCodes.Status403Forbidden;
-                        await context.Response.WriteAsync("Access Denied");
-                        return;
+                        var hasPermission = await permissionService.HasPermissionAsync(userId, attr.permission);
+                        if (!hasPermission)
+                        {
+                            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                            await context.Response.WriteAsync("Access Denied");
+                            return;
+                        }
                     }
                 }
+                
 
                 await _next(context);
                 return;
             }
 
-            // 🔹 Nếu không có attribute → cho qua (API public)
+            //Nếu không yêu cầu Authorize
             await _next(context);
         }
     }

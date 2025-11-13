@@ -1,3 +1,4 @@
+using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,14 +7,8 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Model.DTO
 {
-    public class ProjectTreeFolderDTO
+    public class ProjectTreeFolderDTO:ProjectTreeFolder
     {
-        public int ID { get; set; }
 
-        public string? FolderName { get; set; }
-
-        public int? ParentID { get; set; }
-
-        public int? ProjectTypeID { get; set; }
     }
 }

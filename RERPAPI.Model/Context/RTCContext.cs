@@ -12,6 +12,8 @@ public partial class RTCContext : DbContext
     {
     }
 
+    public virtual DbSet<AGVProduct> AGVProducts { get; set; }
+
     public virtual DbSet<AccountingBill> AccountingBills { get; set; }
 
     public virtual DbSet<AccountingBillApproved> AccountingBillApproveds { get; set; }
@@ -972,6 +974,47 @@ public partial class RTCContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<AGVProduct>(entity =>
+        {
+            entity.ToTable("AGVProduct", "agv");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.CurrentIntensityMax).HasMaxLength(150);
+            entity.Property(e => e.DataInterface).HasMaxLength(150);
+            entity.Property(e => e.FNo).HasMaxLength(150);
+            entity.Property(e => e.FirmID).HasComment("Hãng lấy từ bảng Firm");
+            entity.Property(e => e.FocalLength).HasMaxLength(150);
+            entity.Property(e => e.InputValue).HasMaxLength(150);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.LampColor).HasMaxLength(150);
+            entity.Property(e => e.LampPower).HasMaxLength(150);
+            entity.Property(e => e.LampType).HasMaxLength(150);
+            entity.Property(e => e.LampWattage).HasMaxLength(150);
+            entity.Property(e => e.LensMount).HasMaxLength(150);
+            entity.Property(e => e.MOD).HasMaxLength(150);
+            entity.Property(e => e.Magnification).HasMaxLength(150);
+            entity.Property(e => e.MonoColor).HasMaxLength(150);
+            entity.Property(e => e.Note).HasMaxLength(550);
+            entity.Property(e => e.OutputValue).HasMaxLength(150);
+            entity.Property(e => e.PixelSize).HasMaxLength(150);
+            entity.Property(e => e.ProductCode)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.ProductGroupRTCID).HasComment("Nhóm sản phẩm lấy từ bảng ProductGroupRTC");
+            entity.Property(e => e.ProductLocationID).HasComment("Vị trí sản phẩm lấy từ ProductLocation");
+            entity.Property(e => e.ProductName).HasMaxLength(550);
+            entity.Property(e => e.Resolution).HasMaxLength(150);
+            entity.Property(e => e.SensorSize).HasMaxLength(150);
+            entity.Property(e => e.SensorSizeMax).HasMaxLength(150);
+            entity.Property(e => e.ShutterMode).HasMaxLength(150);
+            entity.Property(e => e.Size).HasMaxLength(150);
+            entity.Property(e => e.UnitCountID).HasComment("Đơn vị tính lấy từ bảng UnitCount");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+            entity.Property(e => e.WD).HasMaxLength(150);
+        });
+
         modelBuilder.Entity<AccountingBill>(entity =>
         {
             entity.ToTable("AccountingBill");
@@ -1095,7 +1138,6 @@ public partial class RTCContext : DbContext
             entity.ToTable("AddressStock");
 
             entity.Property(e => e.Address).HasMaxLength(550);
-            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
         });
 
         modelBuilder.Entity<AdminMarketing>(entity =>
@@ -1341,11 +1383,9 @@ public partial class RTCContext : DbContext
 
             entity.HasIndex(e => e.TradePriceDetailID, "Index_BillExportDetail_TradePriceDetailID");
 
-            entity.Property(e => e.BillExportDetail1)
-                .HasMaxLength(550)
-                .HasColumnName("BillExportDetail");
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.CustomerResponse).HasMaxLength(550);
             entity.Property(e => e.ExpectReturnDate).HasColumnType("datetime");
             entity.Property(e => e.GroupExport).HasMaxLength(350);
             entity.Property(e => e.InvoiceNumber).HasMaxLength(150);
@@ -1796,6 +1836,7 @@ public partial class RTCContext : DbContext
                 .IsUnicode(false);
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
@@ -2208,7 +2249,6 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CustomerPart).HasMaxLength(250);
             entity.Property(e => e.CustomerPosition).HasMaxLength(250);
             entity.Property(e => e.CustomerTeam).HasMaxLength(250);
-            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
         });
 
         modelBuilder.Entity<CustomerEmployee>(entity =>
@@ -2217,7 +2257,6 @@ public partial class RTCContext : DbContext
 
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
@@ -3249,7 +3288,6 @@ public partial class RTCContext : DbContext
 
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
@@ -3262,7 +3300,6 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.Email).HasMaxLength(150);
             entity.Property(e => e.FullName).HasMaxLength(550);
-            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.Telephone).HasMaxLength(150);
             entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
@@ -4795,7 +4832,6 @@ public partial class RTCContext : DbContext
 
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
@@ -4906,7 +4942,9 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.PositionCode).HasMaxLength(250);
             entity.Property(e => e.PositionName).HasMaxLength(250);
-            entity.Property(e => e.TypePosition).HasDefaultValue(1);
+            entity.Property(e => e.TypePosition)
+                .HasDefaultValue(1)
+                .HasComment("1: Kỹ thuật, Pro; 2: Admin; 3: Senior; 4: Phó phòng");
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
@@ -6415,6 +6453,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CustomerID).HasComment("Khách hàng");
             entity.Property(e => e.EU).HasMaxLength(255);
             entity.Property(e => e.EndUser).HasComment("Link id khách hàng");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.Note).HasComment("Ghi chú");
             entity.Property(e => e.PO).HasMaxLength(150);
             entity.Property(e => e.PODate).HasColumnType("datetime");
@@ -7095,12 +7134,14 @@ public partial class RTCContext : DbContext
             entity.ToTable("ProjectTreeFolder");
 
             entity.Property(e => e.FolderName).HasMaxLength(50);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
         });
 
         modelBuilder.Entity<ProjectType>(entity =>
         {
             entity.ToTable("ProjectType");
 
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.ProjectTypeCode).HasMaxLength(250);
             entity.Property(e => e.ProjectTypeName).HasMaxLength(250);
             entity.Property(e => e.RootFolder).HasMaxLength(550);
@@ -7547,6 +7588,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedBy).HasMaxLength(50);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.Explanation).HasMaxLength(150);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.POCode).HasMaxLength(150);
             entity.Property(e => e.QuotationCode).HasMaxLength(150);
             entity.Property(e => e.QuotationDate).HasColumnType("datetime");
@@ -8105,7 +8147,6 @@ public partial class RTCContext : DbContext
                 .HasMaxLength(150)
                 .IsUnicode(false);
             entity.Property(e => e.IsStock).HasDefaultValue(false);
-            entity.Property(e => e.Note).HasMaxLength(550);
             entity.Property(e => e.ProductByProject).HasMaxLength(550);
             entity.Property(e => e.Quantity).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.Specifications).HasMaxLength(550);
@@ -8360,14 +8401,11 @@ public partial class RTCContext : DbContext
 
         modelBuilder.Entity<RulePay>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("RulePay");
+            entity.ToTable("RulePay");
 
             entity.Property(e => e.Code).HasMaxLength(50);
             entity.Property(e => e.CreatedBy).HasMaxLength(50);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-            entity.Property(e => e.ID).ValueGeneratedOnAdd();
             entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });

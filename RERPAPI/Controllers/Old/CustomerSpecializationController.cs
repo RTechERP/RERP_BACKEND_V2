@@ -61,7 +61,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                var data = _customerSpecializationRepo.GetAll();
+                var data = _customerSpecializationRepo.GetAll().Where(x=>x.IsDeleted != true);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
