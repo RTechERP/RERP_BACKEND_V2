@@ -119,11 +119,10 @@ namespace RERPAPI.Middleware
                 //Check còn hạn không
                 long expClaims = Convert.ToInt64(context.User.Claims.FirstOrDefault(c => c.Type == "exp")?.Value);
                 DateTime expires = DateTimeOffset.FromUnixTimeSeconds(expClaims).UtcDateTime.AddHours(+7);
-                if (!(expires.Year >= DateTime.Now.Year &&
-                    expires.Month >= DateTime.Now.Month &&
-                    expires.Day >= DateTime.Now.Day &&
-                    expires.Hour >= DateTime.Now.Hour &&
-                    expires.Minute >= DateTime.Now.Minute))
+
+                expires = new DateTime(expires.Year, expires.Month, expires.Day, expires.Hour, expires.Minute, 0);
+                DateTime now = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, 0);
+                if (now > expires)
                 {
                     context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                     await context.Response.WriteAsync("Expired");
@@ -132,7 +131,7 @@ namespace RERPAPI.Middleware
 
                 //Check là admin không
                 var isAdminClaim = context.User.FindFirst("isadmin")?.Value; //NTA B update 041125
-                if(!string.IsNullOrEmpty(isAdminClaim) && bool.TryParse(isAdminClaim, out bool isAdmin) && isAdmin)
+                if (!string.IsNullOrEmpty(isAdminClaim) && bool.TryParse(isAdminClaim, out bool isAdmin) && isAdmin)
                 {
                     await _next(context);
                     return;
@@ -153,7 +152,7 @@ namespace RERPAPI.Middleware
                         }
                     }
                 }
-                
+
 
                 await _next(context);
                 return;
