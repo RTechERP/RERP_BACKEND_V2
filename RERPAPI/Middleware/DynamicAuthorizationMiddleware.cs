@@ -107,6 +107,7 @@ namespace RERPAPI.Middleware
             if (authorizeAttribute != null && authorizeAttribute.Count > 0)
             {
 
+                bool? isAuthen = context.User.Identity?.IsAuthenticated;
                 //Check có token không
                 var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
@@ -128,6 +129,10 @@ namespace RERPAPI.Middleware
                     await context.Response.WriteAsync("Expired");
                     return;
                 }
+
+
+
+                //var session = HttpContext.Session
 
                 //Check là admin không
                 var isAdminClaim = context.User.FindFirst("isadmin")?.Value; //NTA B update 041125
