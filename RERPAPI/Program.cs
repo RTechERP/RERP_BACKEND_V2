@@ -14,6 +14,7 @@ using RERPAPI.Repo.GenericEntity.AddNewBillExport;
 using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.BBNV;
 using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
+using RERPAPI.Repo.GenericEntity.Film;
 using RERPAPI.Repo.GenericEntity.HRM;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
 using RERPAPI.Repo.GenericEntity.MeetingMinutesRepo;
@@ -38,6 +39,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserPermissionService, UserPermissionService>();
 builder.Services.AddScoped<RTCContext>();
+builder.Services.AddScoped<RoleConfig>();
+
 builder.Services.AddScoped<EmployeeOnLeaveRepo>();
 builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.AddressStockRepo>();
 builder.Services.AddScoped<BillDocumentExportLogRepo>();
@@ -221,6 +224,10 @@ builder.Services.AddScoped<ProductsRepo>();
 
 
 builder.Services.AddScoped<TSAllocationAssetPersonalDetailRepo>();
+builder.Services.AddScoped<FilmManagementRepo>();
+
+builder.Services.AddScoped<FilmManagementDetailRepo>();
+
 builder.Services.AddScoped<TSAllocationAssetPersonalRepo>();
 builder.Services.AddScoped<TSAllocationEvictionAssetRepo>();
 builder.Services.AddScoped<TSAssetAllocationDetailRepo>();
@@ -417,7 +424,14 @@ builder.Services.AddRouting(options =>
     options.LowercaseUrls = true; // Chuyển tất cả URL thành chữ thường
 });
 
+var roleConfigSection = builder.Configuration.GetSection("RoleConfig");
 
+// Bind vào IOptions<RoleConfig>
+builder.Services.Configure<RoleConfig>(roleConfigSection);
+
+// Đăng ký singleton để inject trực tiếp RoleConfig
+builder.Services.AddSingleton(sp =>
+    sp.GetRequiredService<IOptions<RoleConfig>>().Value);
 builder.Services.Configure<ModulaConfig>(builder.Configuration.GetSection("ModulaConfig"));
 
 // Nếu bạn muốn inject trực tiếp:
