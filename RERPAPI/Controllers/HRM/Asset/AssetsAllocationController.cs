@@ -213,7 +213,7 @@ namespace RERPAPI.Controllers.Old.Asset
                     if (allocations.tSAssetAllocation.ID <= 0)
                         await _tSAssetAllocationRepo.CreateAsync(allocations.tSAssetAllocation);
                     else
-                        _tSAssetAllocationRepo.UpdateAsync(allocations.tSAssetAllocation);
+                        await _tSAssetAllocationRepo.UpdateAsync(allocations.tSAssetAllocation);
                 }
 
                 if (allocations.tSAssetAllocationDetails != null && allocations.tSAssetAllocationDetails.Any())
@@ -224,7 +224,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tSAssetAllocationDetailRepo.CreateAsync(item);
                         else
-                            _tSAssetAllocationDetailRepo.UpdateAsync(item);
+                            await _tSAssetAllocationDetailRepo.UpdateAsync(item);
                     }
                 }
                 if (allocations.tSAssetManagements != null && allocations.tSAssetManagements.Any())
@@ -235,7 +235,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tsAssetManagementRepo.CreateAsync(item);
                         else
-                            _tsAssetManagementRepo.UpdateAsync(item);
+                            await _tsAssetManagementRepo.UpdateAsync(item);
                     }
                 }
                 if (allocations.tSAllocationEvictionAssets != null && allocations.tSAllocationEvictionAssets.Any())
@@ -246,7 +246,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tSAllocationEvictionAssetRepo.CreateAsync(item);
                         else
-                            _tSAllocationEvictionAssetRepo.UpdateAsync(item);
+                            await _tSAllocationEvictionAssetRepo.UpdateAsync(item);
                     }
                 }
                 return Ok(new { status = 1 });
@@ -269,7 +269,7 @@ namespace RERPAPI.Controllers.Old.Asset
                     if (allocations.tSAssetAllocation.ID <= 0)
                         await _tSAssetAllocationRepo.CreateAsync(allocations.tSAssetAllocation);
                     else
-                        _tSAssetAllocationRepo.UpdateAsync(allocations.tSAssetAllocation);
+                        await _tSAssetAllocationRepo.UpdateAsync(allocations.tSAssetAllocation);
                 }
 
                 if (allocations.tSAssetAllocationDetails != null && allocations.tSAssetAllocationDetails.Any())
@@ -280,7 +280,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tSAssetAllocationDetailRepo.CreateAsync(item);
                         else
-                            _tSAssetAllocationDetailRepo.UpdateAsync(item);
+                            await _tSAssetAllocationDetailRepo.UpdateAsync(item);
                     }
                 }
                 if (allocations.tSAssetManagements != null && allocations.tSAssetManagements.Any())
@@ -291,7 +291,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tsAssetManagementRepo.CreateAsync(item);
                         else
-                            _tsAssetManagementRepo.UpdateAsync(item);
+                            await _tsAssetManagementRepo.UpdateAsync(item);
                     }
                 }
                 if (allocations.tSAllocationEvictionAssets != null && allocations.tSAllocationEvictionAssets.Any())
@@ -302,7 +302,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tSAllocationEvictionAssetRepo.CreateAsync(item);
                         else
-                            _tSAllocationEvictionAssetRepo.UpdateAsync(item);
+                            await _tSAllocationEvictionAssetRepo.UpdateAsync(item);
                     }
                 }
                 return Ok(new { status = 1 });
@@ -325,7 +325,7 @@ namespace RERPAPI.Controllers.Old.Asset
                     if (allocations.tSAssetAllocation.ID <= 0)
                         await _tSAssetAllocationRepo.CreateAsync(allocations.tSAssetAllocation);
                     else
-                        _tSAssetAllocationRepo.UpdateAsync(allocations.tSAssetAllocation);
+                        await _tSAssetAllocationRepo.UpdateAsync(allocations.tSAssetAllocation);
                 }
 
                 if (allocations.tSAssetAllocationDetails != null && allocations.tSAssetAllocationDetails.Any())
@@ -336,7 +336,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tSAssetAllocationDetailRepo.CreateAsync(item);
                         else
-                            _tSAssetAllocationDetailRepo.UpdateAsync(item);
+                            await _tSAssetAllocationDetailRepo.UpdateAsync(item);
                     }
                 }
                 if (allocations.tSAssetManagements != null && allocations.tSAssetManagements.Any())
@@ -347,7 +347,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tsAssetManagementRepo.CreateAsync(item);
                         else
-                            _tsAssetManagementRepo.UpdateAsync(item);
+                            await _tsAssetManagementRepo.UpdateAsync(item);
                     }
                 }
                 if (allocations.tSAllocationEvictionAssets != null && allocations.tSAllocationEvictionAssets.Any())
@@ -358,7 +358,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tSAllocationEvictionAssetRepo.CreateAsync(item);
                         else
-                            _tSAllocationEvictionAssetRepo.UpdateAsync(item);
+                            await _tSAllocationEvictionAssetRepo.UpdateAsync(item);
                     }
                 }
                 return Ok(new { status = 1 });
