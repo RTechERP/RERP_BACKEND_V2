@@ -125,7 +125,6 @@ namespace RERPAPI.Controllers
         [HttpGet("current-user")]
         public IActionResult GetCurrentUser()
         {
-
             try
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
@@ -209,7 +208,88 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi upload file: {ex.Message}"));
             }
         }
+        [HttpGet("download-by-key")]
+        [Authorize]
+        public IActionResult DownloadByKey(
+      [FromQuery] string key,
+      [FromQuery] string? subPath,
+      [FromQuery] string fileName)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(key))
+                    return BadRequest(ApiResponseFactory.Fail(null, "Key không được để trống!"));
 
+                if (string.IsNullOrWhiteSpace(fileName))
+                    return BadRequest(ApiResponseFactory.Fail(null, "FileName không được để trống!"));
+
+                // Lấy đường dẫn gốc theo key
+                var uploadPath = _configSystemRepo.GetUploadPathByKey(key);
+                if (string.IsNullOrWhiteSpace(uploadPath))
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: {key}"));
+
+                // Chuẩn hóa subPath giống UploadMultipleFiles
+                string targetFolder = uploadPath;
+                if (!string.IsNullOrWhiteSpace(subPath))
+                {
+                    var separator = Path.DirectorySeparatorChar;
+                    var segments = subPath
+                        .Replace('/', separator)
+                        .Replace('\\', separator)
+                        .Split(separator, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(seg =>
+                        {
+                            var invalidChars = Path.GetInvalidFileNameChars();
+                            var cleaned = new string(seg.Where(c => !invalidChars.Contains(c)).ToArray());
+                            cleaned = cleaned.Replace("..", "").Trim(); // chống leo thư mục
+                            return cleaned;
+                        })
+                        .Where(s => !string.IsNullOrWhiteSpace(s))
+                        .ToArray();
+
+                    if (segments.Length > 0)
+                        targetFolder = Path.Combine(uploadPath, Path.Combine(segments));
+                }
+
+                // Chuẩn hóa tên file
+                var safeFileName = new string(fileName.Where(c => !Path.GetInvalidFileNameChars().Contains(c)).ToArray())
+                    .Replace("..", "")
+                    .Trim();
+
+                var fullPath = Path.Combine(targetFolder, safeFileName);
+
+                // Đảm bảo đường dẫn nằm trong root uploadPath
+                var rootNormalized = Path.GetFullPath(uploadPath);
+                var fullNormalized = Path.GetFullPath(fullPath);
+                if (!fullNormalized.StartsWith(rootNormalized, StringComparison.OrdinalIgnoreCase))
+                    return BadRequest(ApiResponseFactory.Fail(null, "Đường dẫn không hợp lệ"));
+
+                // Nếu không tồn tại và tên file không có extension -> thử dò fileName.*
+                if (!System.IO.File.Exists(fullPath) && string.IsNullOrWhiteSpace(Path.GetExtension(safeFileName)))
+                {
+                    var match = Directory.GetFiles(targetFolder, safeFileName + ".*").FirstOrDefault();
+                    if (match != null)
+                        fullPath = match;
+                }
+
+                if (!System.IO.File.Exists(fullPath))
+                    return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy file"));
+
+                // Xác định content-type
+                var provider = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
+                if (!provider.TryGetContentType(fullPath, out var contentType))
+                    contentType = "application/octet-stream";
+
+                var stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                var downloadName = Path.GetFileName(fullPath);
+
+                return File(stream, contentType, downloadName);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi download file: {ex.Message}"));
+            }
+        }
         /// <summary>
         /// Upload nhiều file cùng lúc
         /// </summary>
