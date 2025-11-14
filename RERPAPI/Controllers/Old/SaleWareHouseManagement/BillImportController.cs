@@ -1,5 +1,6 @@
 ﻿using ClosedXML.Excel;
 using Microsoft.AspNetCore.Mvc;
+using OfficeOpenXml;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -897,22 +898,15 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         [HttpGet("export-excel-kt")]
         public IActionResult ExportExcelKT(int id)
         {
-            // Thêm CORS headers
-            Response.Headers.Add("Access-Control-Allow-Origin", "*");
-            Response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-            Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
-
             try
             {
                 if (id == 0)
-                {
                     return BadRequest(new { status = 0, message = "ID không hợp lệ" });
-                }
 
-                // 1. Lấy dữ liệu chi tiết phiếu nhập từ stored procedure
-                List<List<dynamic>> resultSets = SQLHelper<dynamic>.ProcedureToList(
+                // Lấy dữ liệu
+                var resultSets = SQLHelper<dynamic>.ProcedureToList(
                     "spGetBillImportDetail",
-                    new string[] { "@ID" },
+                    new[] { "@ID" },
                     new object[] { id }
                 );
 
@@ -921,109 +915,105 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     .ToList();
 
                 if (!detailList.Any())
-                {
                     return BadRequest(new { status = 0, message = "Không tìm thấy dữ liệu phiếu nhập" });
-                }
 
-                // 2. Lấy thông tin master từ record đầu tiên
-                var masterData = detailList[0];
                 BillImport billImport = _billImportRepo.GetByID(id);
                 string billImportCode = billImport.BillImportCode ?? "";
-                string warehouseName = masterData["WarehouseName"]?.ToString()?.Trim() ?? "";
+
+                string warehouseName = detailList[0]["WarehouseName"]?.ToString()?.Trim() ?? "";
                 string warehouseCode = warehouseName.Contains("HN") ? "HN" : "HCM";
 
-                string templateFileName = "FormNhapKho.xlsx";
-                string templatePath = Path.Combine(@"\\192.168.1.190\Software\Template\ExportExcel", templateFileName);
+                string templatePath = @"\\192.168.1.190\Software\Template\ExportExcel\FormNhapKho.xlsx";
+
                 if (!System.IO.File.Exists(templatePath))
-                {
-                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy file template: {templatePath}"));
-                }
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy file template."));
 
-                // 4. Tạo workbook từ template
-                using (var workbook = new XLWorkbook(templatePath))
-                {
-                    var worksheet = workbook.Worksheet(1);
+                // ĐỌC TEMPLATE – tránh lỗi closed stream
+                byte[] templateBytes = System.IO.File.ReadAllBytes(templatePath);
+                ExcelPackage.License.SetNonCommercialOrganization("RTC Technology Viet Nam");
 
-                    // 5. Thiết lập header nếu là kho HN
+                using (var package = new ExcelPackage(new MemoryStream(templateBytes)))
+                {
+                    var sheet = package.Workbook.Worksheets[0];
+
+                    // Nếu kho HN sửa header
                     if (warehouseCode == "HN")
-                    {
-                        worksheet.Cell(2, 14).Value = "Loại vật tư (*)";
-                    }
+                        sheet.Cells[2, 14].Value = "Loại vật tư (*)"; // Row 2, Column 14 (NPOI 13)
 
-                    int startRow = 3; // Dòng bắt đầu điền dữ liệu
+                    int startRow = 3;       // Excel row 3
+                    int currentRow = startRow;
 
+                    // EPPlus không có ShiftRows → ta chuyển thủ công
+                    int insertCount = detailList.Count;
+                    if (insertCount > 1)
+                        sheet.InsertRow(startRow, insertCount - 1, startRow);
+
+                    // Fill data
                     for (int i = detailList.Count - 1; i >= 0; i--)
                     {
                         var detail = detailList[i];
 
-                        // Điền STT
-                        worksheet.Cell(startRow, 1).Value = i + 1;
+                        // STT
+                        sheet.Cells[currentRow, 1].Value = i + 1;
 
-                        // Điền các thông tin chi tiết
-                        worksheet.Cell(startRow, 3).Value = detail["CreatDate"] != null
-                            ? Convert.ToDateTime(detail["CreatDate"]).ToString("dd/MM/yyyy")
-                            : "";
-                        worksheet.Cell(startRow, 6).Value = detail["CodeNCC"]?.ToString()?.Trim() ?? "";
-                        worksheet.Cell(startRow, 7).Value = detail["NameNCC"]?.ToString()?.Trim() ?? "";
-                        worksheet.Cell(startRow, 9).Value = detail["Note"]?.ToString()?.Trim() ?? "";
-                        worksheet.Cell(startRow, 12).Value = detail["ProductCode"]?.ToString()?.Trim() ?? "";
-                        worksheet.Cell(startRow, 13).Value = detail["ProductName"]?.ToString()?.Trim() ?? "";
+                        // Ngày
+                        DateTime? creatDate = detail["CreatDate"] != null
+                            ? Convert.ToDateTime(detail["CreatDate"])
+                            : null;
 
-                        // Column 14: Loại vật tư hoặc Kho (tùy theo WarehouseCode)
+                        sheet.Cells[currentRow, 3].Value = creatDate?.ToString("dd/MM/yyyy") ?? "";
+
+                        // Mã NCC
+                        sheet.Cells[currentRow, 6].Value = detail["CodeNCC"]?.ToString()?.Trim();
+
+                        // Tên NCC
+                        sheet.Cells[currentRow, 7].Value = detail["NameNCC"]?.ToString()?.Trim();
+
+                        // Ghi chú
+                        sheet.Cells[currentRow, 9].Value = detail["Note"]?.ToString()?.Trim();
+
+                        // Product
+                        sheet.Cells[currentRow, 12].Value = detail["ProductCode"]?.ToString()?.Trim();
+                        sheet.Cells[currentRow, 13].Value = detail["ProductName"]?.ToString()?.Trim();
+
+                        // Cột 14
                         if (warehouseCode == "HN")
-                        {
-                            worksheet.Cell(startRow, 14).Value = detail["ProductGroupName"]?.ToString()?.Trim() ?? "";
-                        }
+                            sheet.Cells[currentRow, 14].Value = detail["ProductGroupName"]?.ToString()?.Trim();
                         else
-                        {
-                            worksheet.Cell(startRow, 14).Value = detail["WarehouseName"]?.ToString()?.Trim() ?? "";
-                        }
+                            sheet.Cells[currentRow, 14].Value = detail["WarehouseName"]?.ToString()?.Trim();
 
-                        worksheet.Cell(startRow, 18).Value = detail["Unit"]?.ToString()?.Trim() ?? "";
-                        int qty = 0;
-                        if (detail["Qty"] != null)
-                        {
-                            int.TryParse(detail["Qty"].ToString(), out qty);
-                        }
+                        // Đơn vị
+                        sheet.Cells[currentRow, 18].Value = detail["Unit"]?.ToString()?.Trim();
 
-                        worksheet.Cell(startRow, 19).Value = qty;
+                        // Số lượng
+                        int qty = int.TryParse(detail["Qty"]?.ToString(), out int q1) ? q1 : 0;
+                        sheet.Cells[currentRow, 19].Value = qty;
 
-                        //worksheet.Cell(startRow, 19).Value = detail["Qty"] ?? 0;
-
-                        // Insert row phía trên nếu không phải item cuối
-                        if (i > 0)
-                        {
-                            worksheet.Row(startRow).InsertRowsAbove(1);
-                        }
+                        currentRow++;
                     }
 
-                    worksheet.Row(2).Delete();
-                    worksheet.Row(2).Delete();
+                    // XÓA 2 ROW TEMPLATE ban đầu
+                    sheet.DeleteRow(startRow - 1, 1);
 
-                    // 8. Auto-fit columns
-                    worksheet.Columns().AdjustToContents();
+                    // AutoFit
+                    sheet.Cells[sheet.Dimension.Address].AutoFitColumns();
 
-                    // 9. Lưu file và trả về
-                    using (var stream = new MemoryStream())
-                    {
-                        workbook.SaveAs(stream);
-                        stream.Position = 0;
+                    // TRẢ FILE
+                    byte[] fileBytes = package.GetAsByteArray();
+                    string fileName = $"{billImportCode}_{DateTime.Now:dd_MM_yyyy_HH_mm_ss}.xlsx";
 
-                        string timestamp = DateTime.Now.ToString("dd_MM_yyyy_HH_mm_ss");
-                        string fileName = $"{billImportCode}_{timestamp}.xls";
-
-                        return File(
-                            stream.ToArray(),
-                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                            fileName
-                        );
-                    }
+                    return File(
+                        fileBytes,
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        fileName
+                    );
                 }
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+
         }
     }
 }
