@@ -70,7 +70,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                         var firm = await _firmRepo.GetByIdAsync(id);
                         if (firm != null)
                         {
-                            firm.IsDeleted = true;
+                            firm.IsDelete = true;
                             await _firmRepo.UpdateAsync(firm);
                             successCount++;
                         }
