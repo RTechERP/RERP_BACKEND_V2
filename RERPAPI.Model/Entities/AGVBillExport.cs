@@ -61,4 +61,6 @@ public partial class AGVBillExport
     public int? BillDocumentExportType { get; set; }
 
     public int? ApproverID { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }

@@ -1,4 +1,5 @@
 ﻿using ClosedXML.Excel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -16,6 +17,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class BillImportController : ControllerBase
     {
         private readonly BillImportRepo _billImportRepo;

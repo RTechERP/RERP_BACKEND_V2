@@ -43,6 +43,13 @@ namespace RERPAPI.Controllers.Warehouse.AGV
         {
             try
             {
+
+                var validate = _agvProductRepo.Validate(product);
+                if (validate.status == 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, validate.message));
+                }
+
                 if (product.ID <= 0) await _agvProductRepo.CreateAsync(product);
                 else await _agvProductRepo.UpdateAsync(product);
 

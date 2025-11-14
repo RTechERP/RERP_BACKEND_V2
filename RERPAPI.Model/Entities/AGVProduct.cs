@@ -8,9 +8,9 @@ public partial class AGVProduct
     public int ID { get; set; }
 
     /// <summary>
-    /// Nhóm sản phẩm lấy từ bảng ProductGroupRTC
+    /// Nhóm sản phẩm lấy từ bảng AGVProductGroup
     /// </summary>
-    public int? ProductGroupRTCID { get; set; }
+    public int? AGVProductGroupID { get; set; }
 
     public string? ProductCode { get; set; }
 
@@ -27,9 +27,9 @@ public partial class AGVProduct
     public int? UnitCountID { get; set; }
 
     /// <summary>
-    /// Vị trí sản phẩm lấy từ ProductLocation
+    /// Vị trí sản phẩm lấy từ AGVProductLocation
     /// </summary>
-    public int? ProductLocationID { get; set; }
+    public int? AGVProductLocationID { get; set; }
 
     public string? Note { get; set; }
 
@@ -84,4 +84,48 @@ public partial class AGVProduct
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
+
+    /// <summary>
+    /// Hãng
+    /// </summary>
+    public string? Maker { get; set; }
+
+    /// <summary>
+    /// Số lượng tổng
+    /// </summary>
+    public decimal? Number { get; set; }
+
+    public string? AddressBox { get; set; }
+
+    /// <summary>
+    /// Trạng thái sản phẩm (1: hiện có, 0: không có)
+    /// </summary>
+    public bool? StatusProduct { get; set; }
+
+    public DateTime? CreateDate { get; set; }
+
+    public decimal? NumberInStore { get; set; }
+
+    public string? Serial { get; set; }
+
+    public string? SerialNumber { get; set; }
+
+    public string? PartNumber { get; set; }
+
+    public string? LocationImg { get; set; }
+
+    public string? AGVProductCode { get; set; }
+
+    public bool? BorrowCustomer { get; set; }
+
+    public int? SLKiemKe { get; set; }
+
+    public int? WarehouseID { get; set; }
+
+    /// <summary>
+    /// 1: Đang giặt
+    /// </summary>
+    public int? Status { get; set; }
+
+    public string? CodeHCM { get; set; }
 }
