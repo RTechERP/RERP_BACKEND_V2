@@ -13,11 +13,12 @@ namespace RERPAPI.Repo.GenericEntity
         {
             try
             {
-                var query = table.Where(f => f.FirmCode.ToUpper() == firmCode.ToUpper() && f.IsDelete != true);
+
+                var query = GetAll(f => (f.FirmCode ?? "").ToUpper() == firmCode.ToUpper() && f.IsDelete != true);
 
                 if (id.HasValue)
                 {
-                    query = query.Where(f => f.ID != id.Value);
+                    query = query.Where(f => f.ID != id.Value).ToList();
                 }
 
                 return query.Any();

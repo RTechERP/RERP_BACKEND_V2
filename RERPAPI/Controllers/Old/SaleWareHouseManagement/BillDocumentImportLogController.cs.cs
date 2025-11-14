@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 
 namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
@@ -9,7 +8,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     public class BillDocumentImportLogController : ControllerBase
     {
         [HttpGet("get-by-BdiID/")]
-        public IActionResult getDataByBillDocumentExportID(int bdiID, int dcocumentImportID )
+        public IActionResult getDataByBillDocumentExportID(int bdiID, int dcocumentImportID)
         {
             try
             {
@@ -17,20 +16,12 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                       "spGetBillDocumentImportLog", new string[] { "@billDocumentImportID", "@DocumentImportID" },
                    new object[] { bdiID, dcocumentImportID }
                   );
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<object>.GetListData(result, 0)
-                });
+                var data = SQLHelper<object>.GetListData(result, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(
-                    new
-                    {
-                        status = 0,
-                        error = ex.Message
-                    });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }
