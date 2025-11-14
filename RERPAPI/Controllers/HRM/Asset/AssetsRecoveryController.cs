@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿    using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using RERPAPI.Attributes;
@@ -234,7 +234,7 @@ namespace RERPAPI.Controllers.Old.Asset
                     }
                     else
                     {
-                        _tSAssetRecoveryRepo.UpdateAsync(asset.tSAssetRecovery);
+                        await _tSAssetRecoveryRepo.UpdateAsync(asset.tSAssetRecovery);
                     }
                 }
                 if (asset.TSAssetRecoveryDetails != null && asset.TSAssetRecoveryDetails.Any())
@@ -245,7 +245,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tSAssetRecoveryDetailRepo.CreateAsync(item);
                         else
-                            _tSAssetRecoveryDetailRepo.UpdateAsync(item);
+                            await _tSAssetRecoveryDetailRepo.UpdateAsync(item);
                     }
                 }
                 if (asset.tSAssetManagements != null && asset.tSAssetManagements.Any())
@@ -256,7 +256,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tsAssetManagementRepo.CreateAsync(item);
                         else
-                            _tsAssetManagementRepo.UpdateAsync(item);
+                            await _tsAssetManagementRepo.UpdateAsync(item);
                     }
                 }
                 if (asset.tSAllocationEvictionAssets != null && asset.tSAllocationEvictionAssets.Any())
@@ -267,7 +267,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tSAllocationEvictionAssetRepo.CreateAsync(item);
                         else
-                            _tSAllocationEvictionAssetRepo.UpdateAsync(item);
+                            await _tSAllocationEvictionAssetRepo.UpdateAsync(item);
                     }
                 }
                 return Ok(new
@@ -302,7 +302,7 @@ namespace RERPAPI.Controllers.Old.Asset
                     }
                     else
                     {
-                        _tSAssetRecoveryRepo.UpdateAsync(asset.tSAssetRecovery);
+                        await _tSAssetRecoveryRepo.UpdateAsync(asset.tSAssetRecovery);
                     }
                 }
                 if (asset.TSAssetRecoveryDetails != null && asset.TSAssetRecoveryDetails.Any())
@@ -313,7 +313,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tSAssetRecoveryDetailRepo.CreateAsync(item);
                         else
-                            _tSAssetRecoveryDetailRepo.UpdateAsync(item);
+                            await _tSAssetRecoveryDetailRepo.UpdateAsync(item);
                     }
                 }
                 if (asset.tSAssetManagements != null && asset.tSAssetManagements.Any())
@@ -324,7 +324,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tsAssetManagementRepo.CreateAsync(item);
                         else
-                            _tsAssetManagementRepo.UpdateAsync(item);
+                            await _tsAssetManagementRepo.UpdateAsync(item);
                     }
                 }
                 if (asset.tSAllocationEvictionAssets != null && asset.tSAllocationEvictionAssets.Any())
@@ -335,7 +335,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tSAllocationEvictionAssetRepo.CreateAsync(item);
                         else
-                            _tSAllocationEvictionAssetRepo.UpdateAsync(item);
+                            await _tSAllocationEvictionAssetRepo.UpdateAsync(item);
                     }
                 }
                 return Ok(new
@@ -371,7 +371,7 @@ namespace RERPAPI.Controllers.Old.Asset
                     }
                     else
                     {
-                        _tSAssetRecoveryRepo.UpdateAsync(asset.tSAssetRecovery);
+                        await _tSAssetRecoveryRepo.UpdateAsync(asset.tSAssetRecovery);
                     }
                 }
                 if (asset.TSAssetRecoveryDetails != null && asset.TSAssetRecoveryDetails.Any())
@@ -382,7 +382,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tSAssetRecoveryDetailRepo.CreateAsync(item);
                         else
-                            _tSAssetRecoveryDetailRepo.UpdateAsync(item);
+                            await _tSAssetRecoveryDetailRepo.UpdateAsync(item);
                     }
                 }
                 if (asset.tSAssetManagements != null && asset.tSAssetManagements.Any())
@@ -393,7 +393,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tsAssetManagementRepo.CreateAsync(item);
                         else
-                            _tsAssetManagementRepo.UpdateAsync(item);
+                            await _tsAssetManagementRepo.UpdateAsync(item);
                     }
                 }
                 if (asset.tSAllocationEvictionAssets != null && asset.tSAllocationEvictionAssets.Any())
@@ -404,7 +404,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tSAllocationEvictionAssetRepo.CreateAsync(item);
                         else
-                            _tSAllocationEvictionAssetRepo.UpdateAsync(item);
+                            await _tSAllocationEvictionAssetRepo.UpdateAsync(item);
                     }
                 }
                 return Ok(new
