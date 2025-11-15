@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.Asset;
 
@@ -9,15 +8,19 @@ namespace RERPAPI.Controllers.Old.Asset
     [ApiController]
     public class AssetsStatusController : ControllerBase
     {
+        private readonly TSStatusAssetRepo _tsStatusAssetRepo;
 
-        TSStatusAssetRepo _tsStatusAssetRepo = new TSStatusAssetRepo();
+        public AssetsStatusController(TSStatusAssetRepo tsStatusAssetRepo)
+        {
+            _tsStatusAssetRepo = tsStatusAssetRepo;
+        }
 
         [HttpGet("get-asset-status")]
         public IActionResult GetStatus()
         {
             try
             {
-                var tsStatusAssets = _tsStatusAssetRepo.GetAll().Where(x => x.IsDeleted == false).ToList();
+                var tsStatusAssets = _tsStatusAssetRepo.GetAll();
 
                 return Ok(new
                 {

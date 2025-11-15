@@ -1,4 +1,5 @@
-﻿using RERPAPI.Model.Entities;
+﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,10 @@ namespace RERPAPI.Repo.GenericEntity.HRM.Vehicle
 {
     public class VehicleRepairTypeRepo:GenericRepo<VehicleRepairType>
     {
+        public VehicleRepairTypeRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
+
         public bool Validate(VehicleRepairType item, out string message)
         {
             message = "";
@@ -16,6 +21,13 @@ namespace RERPAPI.Repo.GenericEntity.HRM.Vehicle
             if (!string.IsNullOrEmpty(item.RepairTypeName) == false)
             {
                 message = "Vui lòng nhập tên loại sửa chữa";
+                return false;
+            }
+            bool exists = GetAll().Any(x => x.RepairTypeCode == item.RepairTypeCode && x.ID != item.ID && x.IsDeleted != true);
+
+            if (exists)
+            {
+                message = "Mã loại sửa chữa đã tồn tại";
                 return false;
             }
             return true;

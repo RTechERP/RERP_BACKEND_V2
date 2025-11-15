@@ -13,8 +13,16 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
     [ApiController]
     public class DocumentImportPONCCController : ControllerBase
     {
-        DocumentImportPONCCRepo _documentRepo = new DocumentImportPONCCRepo();
-        BillDocumentImportLogRepo _billDocumentImportLogRepo = new BillDocumentImportLogRepo();  
+        private readonly DocumentImportPONCCRepo _documentRepo;
+        private readonly BillDocumentImportLogRepo _billDocumentImportLogRepo;
+
+        public DocumentImportPONCCController(
+            DocumentImportPONCCRepo documentRepo,
+            BillDocumentImportLogRepo billDocumentImportLogRepo)
+        {
+            _documentRepo = documentRepo;
+            _billDocumentImportLogRepo = billDocumentImportLogRepo;
+        }
 
         [HttpGet("get-by-BdiID/{bdiID}")]
         public IActionResult getDataByDocumentInportID (int bdiID)

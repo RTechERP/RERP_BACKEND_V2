@@ -15,10 +15,12 @@ namespace RERPAPI.Controllers.Old.POKH
     public class CustomerPartController : ControllerBase
     {
         private readonly RTCContext _context;
-        CustomerRepo _customerRepo = new CustomerRepo();
-        public CustomerPartController(RTCContext context)
+        private readonly CustomerRepo _customerRepo;
+
+        public CustomerPartController(RTCContext context, CustomerRepo customerRepo)
         {
             _context = context;
+            _customerRepo = customerRepo;
         }
         [HttpGet("get-part")]
         public IActionResult LoadPart(int id)

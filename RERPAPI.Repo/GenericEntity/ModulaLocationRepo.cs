@@ -1,18 +1,18 @@
 ﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.Technical;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
     public class ModulaLocationRepo : GenericRepo<ModulaLocation>
     {
 
-        BillImportTechDetailSerialRepo importDetailSerialNumberRepo = new BillImportTechDetailSerialRepo();
+        BillImportTechDetailSerialRepo importDetailSerialNumberRepo;
+
+        public ModulaLocationRepo(CurrentUser currentUser, BillImportTechDetailSerialRepo billImportTechDetailSerialRepo) : base(currentUser)
+        {
+            importDetailSerialNumberRepo = billImportTechDetailSerialRepo;
+        }
 
         public APIResponse CheckValidate(List<ModulaLocationDTO.SerialNumberModulaLocation> serialNumberModulaLocations)
         {

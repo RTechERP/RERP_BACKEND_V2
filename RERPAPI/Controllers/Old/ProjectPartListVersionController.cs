@@ -13,8 +13,13 @@ namespace RERPAPI.Controllers.Old
     [ApiKeyAuthorize]
     public class ProjectPartListVersionController : ControllerBase
     {
-        private ProjectPartlistVersionRepo _projectPartlistVersionRepo = new ProjectPartlistVersionRepo();
-        ProjectPartListRepo _projectPartListRepo = new ProjectPartListRepo();
+        private ProjectPartlistVersionRepo _projectPartlistVersionRepo;
+        private ProjectPartListRepo _projectPartListRepo;
+        public ProjectPartListVersionController(ProjectPartlistVersionRepo projectPartlistVersionRepo, ProjectPartListRepo projectPartListRepo)
+        {
+            _projectPartlistVersionRepo = projectPartlistVersionRepo;
+            _projectPartListRepo = projectPartListRepo;
+        }   
         [HttpGet("get-all")]
         public IActionResult GetAll(int projectSolutionId, bool isPO)
         {

@@ -1,5 +1,7 @@
 ﻿
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
+using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.Asset;
 
@@ -7,15 +9,23 @@ namespace RERPAPI.Controllers.Old.Asset
 {
     [Route("api/[controller]")]
     [ApiController]
+    [RequiresPermission("N23,N1")]
     public class AssetSourceController : ControllerBase
     {
+        private readonly TSSourceAssetsRepo _tsSourceAssetRepo;
 
-        TSSourceAssetsRepo _tsSourceAssetRepo = new TSSourceAssetsRepo();
+        public AssetSourceController(TSSourceAssetsRepo tsSourceAssetRepo)
+        {
+            _tsSourceAssetRepo = tsSourceAssetRepo;
+        }
         [HttpGet("get-source-asset")]
         public IActionResult GetSourceAssets()
-        {            try
+        {
+            try
             {
-                List<TSSourceAsset> tsSources = _tsSourceAssetRepo.GetAll();
+                List<TSSourceAsset> tsSources = _tsSourceAssetRepo.GetAll(
+                    x => x.IsDeleted != true
+                    ).OrderByDescending(x => x.CreatedDate).ToList();
                 return Ok(new
                 {
                     status = 1,
@@ -33,14 +43,28 @@ namespace RERPAPI.Controllers.Old.Asset
             }
 
         }
+        [RequiresPermission("N23,N1")]
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] TSSourceAsset sourceasset)
         {
             try
             {
-                if (sourceasset.ID <= 0) await _tsSourceAssetRepo.CreateAsync(sourceasset);
-                else _tsSourceAssetRepo.UpdateAsync( sourceasset);
+                if (sourceasset != null && sourceasset.IsDeleted != true
+                    )
+                {
+                    if (!_tsSourceAssetRepo.Validate(sourceasset, out string message))
+                        return BadRequest(ApiResponseFactory.Fail(null, message));
+                }
 
+                if (sourceasset.ID <= 0)
+                {
+
+                    await _tsSourceAssetRepo.CreateAsync(sourceasset);
+                }
+                else
+                {
+                    await _tsSourceAssetRepo.UpdateAsync(sourceasset);
+                }
                 return Ok(new
                 {
                     status = 1,
@@ -49,12 +73,7 @@ namespace RERPAPI.Controllers.Old.Asset
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

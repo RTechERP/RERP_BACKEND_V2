@@ -12,7 +12,12 @@ namespace RERPAPI.Controllers.Old
     public class HistoryProductRTCController : ControllerBase
     {
         private const int WAREHOUSE_ID = 1;
-        private HistoryProductRTCRepo _historyRepo = new HistoryProductRTCRepo();
+        private readonly HistoryProductRTCRepo _historyRepo;
+
+        public HistoryProductRTCController(HistoryProductRTCRepo historyRepo)
+        {
+            _historyRepo = historyRepo;
+        }
 
         [Authorize]
         [HttpGet("get-all")]
@@ -50,10 +55,42 @@ namespace RERPAPI.Controllers.Old
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
                 //_historyRepo.SetClaim(claims);
+
+
                 foreach (var item in historyProducts)
                 {
-                    if (currentUser.ID != item.PeopleID) continue;
-                    await _historyRepo.UpdateAsync(item);
+                    if (item.ID <= 0)
+                    {
+                        var historys = _historyRepo.GetAll(x => x.Status != 0 && 
+                                                                x.ProductRTCQRCodeID == item.ProductRTCQRCodeID && 
+                                                                x.IsDelete == false);
+                        if (historys.Count > 0)
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null, $"Sản phẩm có QR code [{item.ProductRTCQRCode}] đang được mượn.\n" +
+                                                                            $"Bạn không thể đăng ký mượn.",historys));
+                        }
+                    }
+                }
+
+                foreach (var item in historyProducts)
+                {
+                    if (item.ID > 0)
+                    {
+                        if (currentUser.ID != item.PeopleID) continue;
+
+                        item.UpdatedBy = currentUser.LoginName;
+                        await _historyRepo.UpdateAsync(item);
+                    }
+                    else
+                    {
+                        item.PeopleID = currentUser.ID;
+                        item.WarehouseID = WAREHOUSE_ID;
+                        item.Status = 7;
+                        item.AdminConfirm = false;
+                        item.CreatedBy = item.UpdatedBy= currentUser.LoginName;
+
+                        await _historyRepo.CreateAsync(item);
+                    }
                 }
 
                 return Ok(ApiResponseFactory.Success(historyProducts, ""));
@@ -63,5 +100,8 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+
+        
     }
 }

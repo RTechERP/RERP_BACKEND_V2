@@ -1,18 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
-using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
-using System.Dynamic;
-using System.Text.RegularExpressions;
-using ZXing;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 {
@@ -20,16 +11,28 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     [ApiController]
     public class ProductSaleController : ControllerBase
     {
-        ProductGroupRepo _productgroupRepo = new ProductGroupRepo();
-        ProductsSaleRepo _productsaleRepo = new ProductsSaleRepo();
-        InventoryRepo _inventoryRepo = new InventoryRepo();
-        FirmRepo _firmRepo = new FirmRepo();
+        private readonly ProductGroupRepo _productgroupRepo;
+        private readonly ProductsSaleRepo _productsaleRepo;
+        private readonly InventoryRepo _inventoryRepo;
+        private readonly FirmRepo _firmRepo;
+
+        public ProductSaleController(
+            ProductGroupRepo productgroupRepo,
+            ProductsSaleRepo productsaleRepo,
+            InventoryRepo inventoryRepo,
+            FirmRepo firmRepo)
+        {
+            _productgroupRepo = productgroupRepo;
+            _productsaleRepo = productsaleRepo;
+            _inventoryRepo = inventoryRepo;
+            _firmRepo = firmRepo;
+        }
         //api ngày 12/06/2025
 
         #region hàm lấy dữ liệu vật tư theo id, tên
 
         [HttpPost("")]
-        public IActionResult GetProductSale([FromBody] ProductSaleParamRequest filter )
+        public IActionResult GetProductSale([FromBody] ProductSaleParamRequest filter)
         {
             try
             {
@@ -124,7 +127,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     //TN.Binh update 19/10/25
                     if (!CheckProductCode(dto))
                     {
-                        return Ok(new {  status =0,message = $"Mã sản phẩm [{dto.ProductSale.ProductCode}] đã tồn tại trong nhóm !" });
+                        return BadRequest(new { status = 0, message = $"Mã sản phẩm [{dto.ProductSale.ProductCode}] đã tồn tại trong nhóm !" });
                     }
                     //end update 
                     if (dto.ProductSale.ID <= 0)
@@ -166,6 +169,88 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             }
         }
         #endregion
+        [HttpPost("save-data-excel")]
+        public async Task<IActionResult> SaveDataProductSaleExcel([FromBody] List<ProductsSaleDTO> dtos)
+        {
+            try
+            {
+                int successCount = 0;
+                int failCount = 0;
+                List<string> duplicateCodes = new();
+                List<string> errorMessages = new();
+
+                foreach (var dto in dtos)
+                {
+                    try
+                    {
+                        if (!CheckProductCode(dto))
+                        {
+                            duplicateCodes.Add(dto.ProductSale.ProductCode ?? "N/A");
+                            failCount++;
+                            continue; // Bỏ qua bản ghi trùng mã
+                        }
+
+                        if (dto.ProductSale.ID <= 0)
+                        {
+                            // ✅ Tạo mới
+                            if (string.IsNullOrWhiteSpace(dto.ProductSale.ProductNewCode))
+                            {
+                                dto.ProductSale.ProductNewCode = GenerateProductNewCode((int)dto.ProductSale.ProductGroupID);
+                            }
+
+                            dto.ProductSale.Import = dto.ProductSale.Export =
+                                dto.ProductSale.NumberInStoreCuoiKy = dto.ProductSale.NumberInStoreDauky;
+
+                            dto.ProductSale.SupplierName = "";
+                            dto.ProductSale.ItemType = "";
+
+                            await _productsaleRepo.CreateAsync(dto.ProductSale);
+                            int newId = dto.ProductSale.ID;
+
+                            dto.Inventory.ProductSaleID = newId;
+                            dto.Inventory.WarehouseID = 1;
+                            dto.Inventory.Export = 0;
+                            dto.Inventory.Import = 0;
+                            dto.Inventory.TotalQuantityFirst = 0;
+                            dto.Inventory.TotalQuantityLast = 0;
+                            dto.Inventory.MinQuantity = 0;
+                            dto.Inventory.IsStock = false;
+
+                            await _inventoryRepo.CreateAsync(dto.Inventory);
+
+                            successCount++;
+                        }
+                        else
+                        {
+                            // ✅ Cập nhật
+                            _productsaleRepo.Update(dto.ProductSale);
+                            successCount++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        failCount++;
+                        errorMessages.Add($"Lỗi khi xử lý mã [{dto.ProductSale?.ProductCode ?? "N/A"}]: {ex.Message}");
+                    }
+                }
+
+                string message = $"Lưu thành công {successCount} bản ghi, thất bại {failCount} bản ghi.";
+                if (duplicateCodes.Any())
+                    message += $" Các mã trùng bị bỏ qua: {string.Join(", ", duplicateCodes)}.";
+
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    successCount,
+                    failCount,
+                    duplicateCodes,
+                    errorMessages
+                }, message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
 
         //TN.Binh update 19/10/25
         #region check trùng mã sản phẩm khi thêm, sửa vật tư 
@@ -175,10 +260,11 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             var exists = _productsaleRepo.GetAll()
                 .Where(x => x.ProductCode == dto.ProductSale.ProductCode
                             && x.ProductGroupID == dto.ProductSale.ProductGroupID
-                            && x.ID != dto.ProductSale.ID).ToList();
-            if (exists.Count > 0)  check = false;
-            return check ;
+                            && x.ID != dto.ProductSale.ID && dto.ProductSale.IsDeleted == false).ToList();
+            if (exists.Count > 0) check = false;
+            return check;
         }
+
         //end update
         #endregion
 
@@ -200,11 +286,11 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         x.ID, // Thêm ID vào đây
                         x.ProductCode,
                         x.ProductName
-                       
+
                     })
                     .ToList();
-                return Ok(ApiResponseFactory.Success( new{existingProducts}, "kiểm tra code thành công!"));
-                
+                return Ok(ApiResponseFactory.Success(new { existingProducts }, "kiểm tra code thành công!"));
+
             }
             catch (Exception ex)
             {

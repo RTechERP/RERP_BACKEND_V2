@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
@@ -16,21 +15,27 @@ namespace RERPAPI.Controllers.Old
             public List<int> ListEmployeeID { get; set; }
         }
 
-        TeamRepo teamRepo = new TeamRepo();
-        UserTeamRepo userTeamRepo = new UserTeamRepo();
-        UserTeamLinkRepo userTeamLinkRepo = new UserTeamLinkRepo();
+        private readonly TeamRepo teamRepo;
+        private readonly UserTeamRepo _userTeamRepo;
+        private readonly UserTeamLinkRepo _userTeamLinkRepo;
+        public TeamController(UserTeamRepo userTeamRepo, UserTeamLinkRepo userTeamLinkRepo, TeamRepo teamRepo)
+        {
+            _userTeamRepo = userTeamRepo;
+            _userTeamLinkRepo = userTeamLinkRepo;
+            this.teamRepo = teamRepo;
+        }
 
         [HttpGet]
         public IActionResult GetAll()
         {
-            var teams = teamRepo.GetAll();
+            var teams = _userTeamRepo.GetAll();
             return Ok(teams);
         }
 
         [HttpGet("department/{departmentID}")]
         public IActionResult GetTeamByDepartmentID(int departmentID)
         {
-           try
+            try
             {
                 var teams = SQLHelper<object>.ProcedureToList("spGetTreeUserTeamData", new string[] { "@DepartmentID" }, new object[] { departmentID });
                 return Ok(new
@@ -38,7 +43,8 @@ namespace RERPAPI.Controllers.Old
                     status = 1,
                     data = SQLHelper<object>.GetListData(teams, 0)
                 });
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 return BadRequest(new
                 {
@@ -78,7 +84,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                List<UserTeam> userTeams = userTeamRepo.GetAll();
+                List<UserTeam> userTeams = _userTeamRepo.GetAll();
                 if (userTeams.Any(x => x.Name == userTeam.Name && x.ID != userTeam.ID))
                 {
                     return BadRequest(new
@@ -89,10 +95,11 @@ namespace RERPAPI.Controllers.Old
                 }
                 if (userTeam.ID <= 0)
                 {
-                    await userTeamRepo.CreateAsync(userTeam);
-                } else
+                    await _userTeamRepo.CreateAsync(userTeam);
+                }
+                else
                 {
-                    await userTeamRepo.UpdateAsync(userTeam);
+                    await _userTeamRepo.UpdateAsync(userTeam);
                 }
                 return Ok(new
                 {
@@ -117,7 +124,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                var team = userTeamRepo.GetByID(teamID);
+                var team = _userTeamRepo.GetByID(teamID);
                 if (team == null)
                 {
                     return NotFound(new
@@ -126,13 +133,14 @@ namespace RERPAPI.Controllers.Old
                         message = "Team không tồn tại"
                     });
                 }
-                userTeamRepo.Delete(team.ID);
+                _userTeamRepo.Delete(team.ID);
                 return Ok(new
                 {
                     status = 1,
                     message = "Xóa team thành công."
                 });
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 return BadRequest(new
                 {
@@ -141,7 +149,7 @@ namespace RERPAPI.Controllers.Old
                     error = ex.ToString()
                 });
             }
-            
+
         }
 
 
@@ -198,8 +206,8 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                var userTeamLink = userTeamLinkRepo.GetByID(userTeamLinkID);
-                userTeamLinkRepo.Delete(userTeamLink.ID);
+                var userTeamLink = _userTeamLinkRepo.GetByID(userTeamLinkID);
+                _userTeamLinkRepo.Delete(userTeamLink.ID);
                 return Ok(new
                 {
                     status = 1,

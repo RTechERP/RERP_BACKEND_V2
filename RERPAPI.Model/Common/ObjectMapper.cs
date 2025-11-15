@@ -47,8 +47,8 @@ namespace RERPAPI.Model.Common
                         {
                             Type t when t == typeof(string) => rawValue,
                             Type t when t == typeof(int) || t == typeof(int?) => int.TryParse(rawValue, out var i) ? i : 0,
-                            Type t when t == typeof(bool) || t == typeof(bool?) => int.TryParse(rawValue, out var b) ? b : false,
-                            Type t when t == typeof(DateTime) || t == typeof(DateTime?) => int.TryParse(rawValue, out var d) ? d : null,
+                            Type t when t == typeof(bool) || t == typeof(bool?) => bool.TryParse(rawValue, out var b) ? b : false,
+                            Type t when t == typeof(DateTime) || t == typeof(DateTime?) => DateTime.TryParse(rawValue, out var d) ? d : null,
                             _ => null
                         };
 

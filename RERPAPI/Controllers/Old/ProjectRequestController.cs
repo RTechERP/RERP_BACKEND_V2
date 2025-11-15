@@ -12,8 +12,13 @@ namespace RERPAPI.Controllers.Old
     [ApiKeyAuthorize]
     public class ProjectRequestController : ControllerBase
     {
-        ProjectRequestRepo _projectRequestRepo = new ProjectRequestRepo();
-        ProjectRepo _projectRepo = new ProjectRepo();
+        private ProjectRequestRepo _projectRequestRepo;
+        private ProjectRepo _projectRepo;
+        public ProjectRequestController(ProjectRequestRepo projectRequestRepo, ProjectRepo projectRepo)
+        {
+            _projectRequestRepo = projectRequestRepo;
+            _projectRepo = projectRepo;
+        }   
         [HttpGet("get-all")]
         public IActionResult GetAll(int projectID)
         {

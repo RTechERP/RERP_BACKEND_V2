@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Controllers\Film\**" />
     <Compile Remove="Controllers\OfficeSuppliesManagement\**" />
     <Compile Remove="Controllers\Old\NewFolder1\**" />
     <Compile Remove="Controllers\Old\NewFolder2\**" />
@@ -15,6 +16,7 @@
     <Compile Remove="Controllers\ProjectManager\**" />
     <Compile Remove="Controllers\SaleWareHouseManagement\**" />
     <Compile Remove="Controllers\V2\**" />
+    <Content Remove="Controllers\Film\**" />
     <Content Remove="Controllers\OfficeSuppliesManagement\**" />
     <Content Remove="Controllers\Old\NewFolder1\**" />
     <Content Remove="Controllers\Old\NewFolder2\**" />
@@ -23,6 +25,7 @@
     <Content Remove="Controllers\ProjectManager\**" />
     <Content Remove="Controllers\SaleWareHouseManagement\**" />
     <Content Remove="Controllers\V2\**" />
+    <EmbeddedResource Remove="Controllers\Film\**" />
     <EmbeddedResource Remove="Controllers\OfficeSuppliesManagement\**" />
     <EmbeddedResource Remove="Controllers\Old\NewFolder1\**" />
     <EmbeddedResource Remove="Controllers\Old\NewFolder2\**" />
@@ -31,6 +34,7 @@
     <EmbeddedResource Remove="Controllers\ProjectManager\**" />
     <EmbeddedResource Remove="Controllers\SaleWareHouseManagement\**" />
     <EmbeddedResource Remove="Controllers\V2\**" />
+    <None Remove="Controllers\Film\**" />
     <None Remove="Controllers\OfficeSuppliesManagement\**" />
     <None Remove="Controllers\Old\NewFolder1\**" />
     <None Remove="Controllers\Old\NewFolder2\**" />
@@ -42,15 +46,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Controllers\CustomerController.cs" />
+    <Compile Remove="Controllers\DepartmentController.cs" />
     <Compile Remove="Controllers\HistoryProductRTCController.cs" />
     <Compile Remove="Controllers\KPIEmployeeTeamController.cs" />
     <Compile Remove="Controllers\KPIEmployeeTeamLinkController.cs" />
     <Compile Remove="Controllers\MenuController.cs" />
     <Compile Remove="Controllers\ModulaLocationController.cs" />
     <Compile Remove="Controllers\Old\POKHController.cs" />
-    <Compile Remove="Controllers\Old\POKH\POKHController.cs" />
+    <Compile Remove="Controllers\Old\ProductRTCController.cs" />
     <Compile Remove="Controllers\Old\TB\FirmController.cs" />
+    <Compile Remove="Controllers\Old\VisionBase\CustomerController.cs" />
+    <Compile Remove="Controllers\PONCCController.cs" />
     <Compile Remove="Controllers\UsersController.cs" />
     <Compile Remove="Controllers\WareHouseController.cs" />
   </ItemGroup>
@@ -61,6 +67,10 @@
     <PackageReference Include="EPPlus" Version="8.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="QRCoder" Version="1.6.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
@@ -74,13 +84,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\CRM\" />
-    <Folder Include="Controllers\Warehouse\" />
+    <Folder Include="Controllers\Sale\" />
+    <Folder Include="Controllers\Purchase\" />
     <Folder Include="Controllers\Project\" />
     <Folder Include="Controllers\Sale\" />
     <Folder Include="Controllers\Purchase\" />
-    <Folder Include="Controllers\System\" />
     <Folder Include="Uploads\POKH\NB16111\" />
   </ItemGroup>
+
+	<ItemGroup>
+		<None Update="jsonProvinces.txt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
 
 </Project>

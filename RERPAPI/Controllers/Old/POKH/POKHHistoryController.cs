@@ -15,10 +15,15 @@ namespace RERPAPI.Controllers.Old.POKH
     [ApiController]
     public class POKHHistoryController : ControllerBase
     {
-        POKHHistoryRepo _pokhHistoryRepo = new POKHHistoryRepo();
+        private readonly POKHHistoryRepo _pokhHistoryRepo;
+
+        public POKHHistoryController(POKHHistoryRepo pokhHistoryRepo)
+        {
+            _pokhHistoryRepo = pokhHistoryRepo;
+        }
         // GET: api/<POKHistoryController>
         [HttpGet]
-        public IActionResult Get( DateTime startDate, DateTime endDate, string cusCode,string keywords = "")
+        public IActionResult Get(DateTime startDate, DateTime endDate, string cusCode, string keywords = "")
         {
             try
             {
@@ -34,7 +39,7 @@ namespace RERPAPI.Controllers.Old.POKH
             }
         }
         [HttpPost("save-data")]
-        public async Task<IActionResult> Save([FromBody] List<POKHHistory> pokhHistorys)
+        public async Task<IActionResult> Save(List<POKHHistory> pokhHistorys)
         {
             try
             {   

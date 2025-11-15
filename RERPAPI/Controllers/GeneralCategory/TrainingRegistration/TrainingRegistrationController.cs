@@ -11,13 +11,23 @@ namespace RERPAPI.Controllers.GeneralCategory.TrainingRegistration
     [ApiController]
     public class TrainingRegistrationController : ControllerBase
     {
-        private TrainingRegistrationRepo _trainingRegistrationRepo = new TrainingRegistrationRepo();
-        private TrainingRegistrationApprovedRepo _trainingRegistrationApprovedRepo = new TrainingRegistrationApprovedRepo();
-        private TrainingRegistrationApprovedFlowRepo _trainingRegistrationApprovedFlowRepo = new TrainingRegistrationApprovedFlowRepo();
-        private TrainingRegistrationFileRepo _trainingRegistrationFileRepo = new TrainingRegistrationFileRepo();
-        private TrainingRegistrationDetailRepo _trainingRegistrationDetailRepo = new TrainingRegistrationDetailRepo();
-        TrainingRegistrationCategoryRepo _trainingRegistrationCategoryRepo = new TrainingRegistrationCategoryRepo();
-        private EmployeeRepo _employeeRepo = new EmployeeRepo();
+        private TrainingRegistrationRepo _trainingRegistrationRepo;
+        private TrainingRegistrationApprovedRepo _trainingRegistrationApprovedRepo;
+        private TrainingRegistrationApprovedFlowRepo _trainingRegistrationApprovedFlowRepo;
+        private TrainingRegistrationFileRepo _trainingRegistrationFileRepo;
+        private TrainingRegistrationDetailRepo _trainingRegistrationDetailRepo;
+        TrainingRegistrationCategoryRepo _trainingRegistrationCategoryRepo;
+        private EmployeeRepo _employeeRepo;
+        public TrainingRegistrationController(TrainingRegistrationRepo trainingRegistrationRepo, TrainingRegistrationApprovedRepo trainingRegistrationApprovedRepo, TrainingRegistrationApprovedFlowRepo trainingRegistrationApprovedFlowRepo, TrainingRegistrationFileRepo trainingRegistrationFileRepo, TrainingRegistrationDetailRepo trainingRegistrationDetailRepo, TrainingRegistrationCategoryRepo trainingRegistrationCategoryRepo, EmployeeRepo employeeRepo)
+        {
+            _trainingRegistrationRepo = trainingRegistrationRepo;
+            _trainingRegistrationApprovedRepo = trainingRegistrationApprovedRepo;
+            _trainingRegistrationApprovedFlowRepo = trainingRegistrationApprovedFlowRepo;
+            _trainingRegistrationFileRepo = trainingRegistrationFileRepo;
+            _trainingRegistrationDetailRepo = trainingRegistrationDetailRepo;
+            _trainingRegistrationCategoryRepo = trainingRegistrationCategoryRepo;
+            _employeeRepo = employeeRepo;
+        }
 
         [HttpPost]
         public IActionResult GetAll(TrainingRegistrationParam param)
@@ -61,7 +71,7 @@ namespace RERPAPI.Controllers.GeneralCategory.TrainingRegistration
                 // Save Training registration data
                 if (model.ID <= 0)
                 {
-                    model.Code = _trainingRegistrationRepo.GetNewCode(model);
+                    //model.Code = _trainingRegistrationRepo.GetNewCode(model);
                     if (await _trainingRegistrationRepo.CreateAsync(model) > 0)
                         success = true;
 
@@ -82,7 +92,7 @@ namespace RERPAPI.Controllers.GeneralCategory.TrainingRegistration
                         int statusApproved = 0;
 
                         DateTime? dateApproved = null;
-                        
+
                         if (flow.STT == 1)
                         {
                             employeeApprovedId = model.EmployeeID ?? 0;
@@ -106,7 +116,7 @@ namespace RERPAPI.Controllers.GeneralCategory.TrainingRegistration
 
 
 
-                    
+
 
                     await _trainingRegistrationApprovedRepo.CreateRangeAsync(approvedList);
                     success = true;
@@ -184,6 +194,5 @@ namespace RERPAPI.Controllers.GeneralCategory.TrainingRegistration
                 });
             }
         }
-
     }
 }

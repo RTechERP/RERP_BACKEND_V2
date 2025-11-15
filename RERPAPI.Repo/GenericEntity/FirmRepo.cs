@@ -1,14 +1,32 @@
-﻿using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Repo.GenericEntity
 {
     public class FirmRepo : GenericRepo<Firm>
     {
+        public FirmRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
 
+        public bool CheckFirmCodeExists(string firmCode, int? id = null)
+        {
+            try
+            {
+
+                var query = GetAll(f => (f.FirmCode ?? "").ToUpper() == firmCode.ToUpper() && f.IsDelete != true);
+
+                if (id.HasValue)
+                {
+                    query = query.Where(f => f.ID != id.Value).ToList();
+                }
+
+                return query.Any();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi kiểm tra mã hãng: {ex.Message}", ex);
+            }
+        }
     }
 }

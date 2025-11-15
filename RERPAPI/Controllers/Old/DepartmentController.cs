@@ -1,11 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -13,7 +9,13 @@ namespace RERPAPI.Controllers.Old
     [ApiController]
     public class DepartmentController : ControllerBase
     {
-        DepartmentRepo _departmentRepo = new DepartmentRepo();
+        private DepartmentRepo _departmentRepo;
+        private EmployeeRepo _employeeRepo;
+        public DepartmentController(DepartmentRepo departmentRepo, EmployeeRepo employeeRepo)
+        {
+            _departmentRepo = departmentRepo;
+            _employeeRepo = employeeRepo;
+        }   
 
         [HttpGet("get-all")]
         public IActionResult GetAll()
@@ -38,7 +40,7 @@ namespace RERPAPI.Controllers.Old
             try
             {
                 var department = _departmentRepo.GetByID(id);
-                List<Employee> checkList = SQLHelper<Employee>.FindByAttribute("DepartmentID", id).ToList();
+                List<Employee> checkList = _employeeRepo.GetAll(x => x.DepartmentID == id);
                 if (checkList.Count > 0)
                 {
                     return BadRequest(new

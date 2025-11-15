@@ -1,14 +1,17 @@
-﻿using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class BillImportRepo:GenericRepo<BillImport>
+    public class BillImportRepo : GenericRepo<BillImport>
     {
+        DocumentImportRepo _documentImportRepo;
+
+        public BillImportRepo(CurrentUser currentUser, DocumentImportRepo documentImportRepo) : base(currentUser)
+        {
+            _documentImportRepo = documentImportRepo;
+        }
+        #region lấy mã phiếu nhập
         public string GetBillCode(int billtype)
         {
             string billCode = "";
@@ -50,5 +53,27 @@ namespace RERPAPI.Repo.GenericEntity
 
             return billCode;
         }
+        #endregion
+
+        #region lưu dữ liệu phiếu nhập
+        public async Task<int> SaveBillImport(BillImport billImport)
+        {
+            if (billImport == null) return 0;
+            if (billImport.ID > 0)
+            {
+                billImport.UpdatedDate = DateTime.Now;
+                await UpdateAsync(billImport);
+            }
+            else
+            {
+                billImport.CreatDate = DateTime.Now;
+                billImport.IsDeleted = false;
+                await CreateAsync(billImport);
+                await _documentImportRepo.NewDocumentImport(billImport.ID);
+            }
+            return billImport.ID;
+        }
+        #endregion
+
     }
 }

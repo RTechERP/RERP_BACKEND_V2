@@ -1,13 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System;
 using System.Diagnostics;
-using System.Net.WebSockets;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers.Old.ProjectManager
 {
@@ -16,11 +12,26 @@ namespace RERPAPI.Controllers.Old.ProjectManager
     public class ProjectSurveyController : ControllerBase
     {
         #region Khai báo biến
-        ProjectRepo projectRepo = new ProjectRepo();
-        CustomerRepo customerRepo = new CustomerRepo();
-        ProjectSurveyDetailRepo projectSurveyDetailRepo = new ProjectSurveyDetailRepo();
-        ProjectSurveyRepo projectSurveyRepo = new ProjectSurveyRepo();
-        ProjectSurveyFileRepo projectSurveyFileRepo = new ProjectSurveyFileRepo();
+private readonly ProjectRepo projectRepo;
+    private readonly CustomerRepo customerRepo;
+    private readonly ProjectSurveyDetailRepo projectSurveyDetailRepo;
+    private readonly ProjectSurveyRepo projectSurveyRepo;
+    private readonly ProjectSurveyFileRepo projectSurveyFileRepo;
+
+    public ProjectSurveyController(
+        ProjectRepo projectRepo,
+        CustomerRepo customerRepo,
+        ProjectSurveyDetailRepo projectSurveyDetailRepo,
+        ProjectSurveyRepo projectSurveyRepo,
+        ProjectSurveyFileRepo projectSurveyFileRepo
+    )
+    {
+        this.projectRepo = projectRepo;
+        this.customerRepo = customerRepo;
+        this.projectSurveyDetailRepo = projectSurveyDetailRepo;
+        this.projectSurveyRepo = projectSurveyRepo;
+        this.projectSurveyFileRepo = projectSurveyFileRepo;
+    }
         #endregion
 
         #region Lấy danh sách tiến độ công việc
@@ -34,7 +45,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 DateTime de = new DateTime(dateEnd.Year, dateEnd.Month, dateEnd.Day, 23, 59, 59);
                 var dt = SQLHelper<object>.ProcedureToList("spGetProjectSurvey",
                                                     new string[] { "@DateStart", "@DateEnd", "@ProjectID", "@EmployeeRequestID", "@EmployeeTechID", "@Keyword" },
-                                                    new object[] { ds, de, projectId, saleId, technicalId, "" });
+                                                    new object[] { ds, de, projectId, saleId, technicalId, keyword });
                 var data = SQLHelper<object>.GetListData(dt, 0);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
@@ -311,7 +322,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 model.IsDeleted = true;
                 model.UpdatedBy = ""; // Chưa có tên người đăng nhập
                 model.UpdatedDate = DateTime.Now;
-                await projectSurveyRepo.UpdateAsync( model);
+                await projectSurveyRepo.UpdateAsync(model);
 
                 return Ok(ApiResponseFactory.Success(1, ""));
             }

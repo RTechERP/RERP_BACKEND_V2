@@ -1,8 +1,5 @@
-﻿using DocumentFormat.OpenXml.Office2010.Excel;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
@@ -12,13 +9,24 @@ namespace RERPAPI.Controllers.Old
     [ApiController]
     public class CustomerSpecializationController : ControllerBase
     {
-        CustomerSpecializationRepo _customerSpecializationRepo = new CustomerSpecializationRepo();
-        [HttpPost]
+        private CustomerSpecializationRepo _customerSpecializationRepo;
+        public CustomerSpecializationController(CustomerSpecializationRepo customerSpecializationRepo)
+        {
+            _customerSpecializationRepo = customerSpecializationRepo;
+        }
+        [HttpPost("save-data")]
         public async Task<IActionResult> Post(CustomerSpecialization model)
         {
             try
             {
-                if(model.ID > 0)
+
+                //TN.Binh update 19/10/25
+                if (!CheckCustomerSpecializationCode(model))
+                {
+                    return Ok(new { status = 0, message = $"Mã ngành nghề [{model.Code}] đã tồn tại!" });
+                }
+                //end update 
+                if (model.ID > 0)
                 {
                     await _customerSpecializationRepo.UpdateAsync(model);
                 }
@@ -34,13 +42,26 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        // TN.Binh update 27/10/25 
+
+        #region check trùng mã code
+        private bool CheckCustomerSpecializationCode(CustomerSpecialization dto)
+        {
+            bool check = true;
+            var exists = _customerSpecializationRepo.GetAll(x => x.Code == dto.Code
+                            && x.ID != dto.ID && dto.IsDeleted !=true).ToList();
+            if (exists.Count > 0) check = false;
+            return check;
+        }
+        //end update
+        #endregion
 
         [HttpGet]
         public IActionResult Get()
         {
             try
             {
-                var data = _customerSpecializationRepo.GetAll().Where(x => x.IsDeleted != true);
+                var data = _customerSpecializationRepo.GetAll().Where(x=>x.IsDeleted != true);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
@@ -48,6 +69,32 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpGet("search")]
+        public IActionResult Search(string? keyword)
+        {
+            try
+            {
+                keyword = keyword?.Trim()?.ToLower() ?? "";
+
+                var query = _customerSpecializationRepo.GetAll()
+             .Where(x => x.IsDeleted != true);
+
+                if (!string.IsNullOrEmpty(keyword))
+                {
+                    query = query.Where(x =>
+                        (!string.IsNullOrEmpty(x.Code) && x.Code.ToLower().Contains(keyword)) ||
+                        (!string.IsNullOrEmpty(x.Name) && x.Name.ToLower().Contains(keyword))
+                    );
+                }
+
+                return Ok(ApiResponseFactory.Success(query, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
 
         [HttpGet("get-detail")]
         public IActionResult GetDetail(int id)
@@ -56,7 +103,7 @@ namespace RERPAPI.Controllers.Old
             {
                 var data = _customerSpecializationRepo.GetByID(id);
                 return Ok(ApiResponseFactory.Success(data, ""));
-       
+
 
             }
             catch (Exception ex)

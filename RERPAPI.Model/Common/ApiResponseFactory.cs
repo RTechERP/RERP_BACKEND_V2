@@ -5,12 +5,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Model.Common
 {
     public static class ApiResponseFactory
     {
-        public static APIResponse Success(object? data, string? message)
+        public static APIResponse Success(object? data = null, string? message = "")
         {                                                                                                               
             return new APIResponse
             {
@@ -20,13 +21,14 @@ namespace RERPAPI.Model.Common
             };
         }
 
-        public static APIResponse Fail(Exception? ex,string message)
+        public static APIResponse Fail(Exception? ex,string message, object? data = null)
         {
             return new APIResponse
             {
                 status = 0,
                 message = message,
-                error = ex?.ToString()
+                error = ex?.ToString(),
+                data = data
             };
         }
 

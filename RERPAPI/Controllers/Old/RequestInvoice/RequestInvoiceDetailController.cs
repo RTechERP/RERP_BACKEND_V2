@@ -3,8 +3,6 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System.Net.WebSockets;
-using System.Threading.Tasks;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -15,19 +13,26 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
     public class RequestInvoiceDetailController : ControllerBase
     {
         private readonly string _uploadPath;
-        RequestInvoiceRepo _requestInvoiceRepo = new RequestInvoiceRepo();
-        RequestInvoiceDetailRepo _requestInvoiceDetailRepo = new RequestInvoiceDetailRepo();
-        RequestInvoiceFileRepo _requestInvoiceFileRepo = new RequestInvoiceFileRepo();
-        EmployeeRepo _employeeRepo = new EmployeeRepo();
-        ProductSaleRepo _productSaleRepo = new ProductSaleRepo();
-        ProjectRepo _projectRepo = new ProjectRepo();
-        public RequestInvoiceDetailController(IWebHostEnvironment environment)
+        RequestInvoiceRepo _requestInvoiceRepo;
+        RequestInvoiceDetailRepo _requestInvoiceDetailRepo;
+        RequestInvoiceFileRepo _requestInvoiceFileRepo;
+        EmployeeRepo _employeeRepo;
+        ProductSaleRepo _productSaleRepo;
+        ProjectRepo _projectRepo;
+
+        public RequestInvoiceDetailController(IWebHostEnvironment environment, RequestInvoiceRepo requestInvoiceRepo, RequestInvoiceDetailRepo requestInvoiceDetailRepo, RequestInvoiceFileRepo requestInvoiceFileRepo, EmployeeRepo employeeRepo, ProductSaleRepo productSaleRepo, ProjectRepo projectRepo)
         {
-            _uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "RequestInvoice");
+            _uploadPath = Path.Combine(environment.ContentRootPath, "Uploads", "RequestInvoice");
             if (!Directory.Exists(_uploadPath))
             {
                 Directory.CreateDirectory(_uploadPath);
             }
+            _requestInvoiceRepo = requestInvoiceRepo;
+            _requestInvoiceDetailRepo = requestInvoiceDetailRepo;
+            _requestInvoiceFileRepo = requestInvoiceFileRepo;
+            _employeeRepo = employeeRepo;
+            _productSaleRepo = productSaleRepo;
+            _projectRepo = projectRepo;
         }
 
         [HttpGet("get-employee")]
@@ -54,14 +59,14 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }     
+            }
         }
         [HttpGet("get-project")]
         public IActionResult GetProject()
         {
             try
             {
-                var data = _projectRepo.GetAll().OrderByDescending(x=>x.CreatedDate).ToList();
+                var data = _projectRepo.GetAll().OrderByDescending(x => x.CreatedDate).ToList();
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
@@ -97,7 +102,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                         return Ok(ApiResponseFactory.Success($"YCXHD{date}{dem}", ""));
                     }
                 }
-                return Ok(ApiResponseFactory.Success(billCode,""));
+                return Ok(ApiResponseFactory.Success(billCode, ""));
             }
             catch (Exception ex)
             {
@@ -124,7 +129,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                     //    message = "Đã xóa thành công",
                     //    data = new { id = dto.RequestInvoices.ID }
                     //});
-                    return Ok(ApiResponseFactory.Success(new {id = dto.RequestInvoices.ID}, ""));
+                    return Ok(ApiResponseFactory.Success(new { id = dto.RequestInvoices.ID }, ""));
                 }
                 if (dto.RequestInvoices.CustomerID == null || dto.RequestInvoices.CustomerID <= 0)
                 {
@@ -180,7 +185,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                         var detailToDelete = _requestInvoiceDetailRepo.GetByID(item);
                         if (detailToDelete != null)
                         {
-                            detailToDelete.IsDeleted = true;
+                            //detailToDelete.IsDeleted = true;
                             //detailToDelete.UpdatedBy = User.Identity.Name; // Mở comment nếu có phân quyền người dùng
                             detailToDelete.UpdatedDate = DateTime.Now;
                             await _requestInvoiceDetailRepo.UpdateAsync(detailToDelete);
@@ -208,7 +213,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                 //    message = "Success",
                 //    data = new { id = dto.RequestInvoices.ID }
                 //});
-                return Ok(ApiResponseFactory.Success(new {id = dto.RequestInvoices.ID}, ""));
+                return Ok(ApiResponseFactory.Success(new { id = dto.RequestInvoices.ID }, ""));
             }
             catch (Exception ex)
             {
@@ -258,7 +263,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                             FileName = file.FileName,
                             OriginPath = pathUpload,
                             ServerPath = pathUpload,
-                            IsDeleted = false,
+                            //IsDeleted = false,
                             CreatedBy = User.Identity?.Name ?? "System",
                             CreatedDate = DateTime.Now,
                             UpdatedBy = User.Identity?.Name ?? "System",
@@ -298,7 +303,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                     var file = _requestInvoiceFileRepo.GetByID(fileId);
 
                     // Cập nhật database
-                    file.IsDeleted = true;
+                    //file.IsDeleted = true;
                     //file.UpdatedBy = User.Identity?.Name ?? "System";
                     //file.UpdatedDate = DateTime.UtcNow;
                     _requestInvoiceFileRepo.Update(file);

@@ -8,8 +8,10 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class MenuRepo:GenericRepo<Menu>
+    public class MenuRepo : GenericRepo<Menu>
     {
-
+        public MenuRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
     }
 }

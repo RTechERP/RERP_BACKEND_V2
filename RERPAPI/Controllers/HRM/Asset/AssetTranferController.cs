@@ -1,12 +1,15 @@
-﻿using System;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO.Asset;
-using RERPAPI.Model.Param.Asset;
-using RERPAPI.Repo.GenericEntity.Asset;
-using RERPAPI.Model.Entities;
 using OfficeOpenXml;
+using RERPAPI.Attributes;
+using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
+using RERPAPI.Model.DTO.Asset;
+using RERPAPI.Model.Entities;
+using RERPAPI.Model.Param.Asset;
+using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.Asset;
+using System;
 
 namespace RERPAPI.Controllers.Old.Asset
 {
@@ -14,20 +17,46 @@ namespace RERPAPI.Controllers.Old.Asset
     [ApiController]
     public class AssetTranferController : ControllerBase
     {
-        TSAssetTransferRepo _tSAssetTransferRepo = new TSAssetTransferRepo();
-        TSAllocationEvictionAssetRepo _tSAllocationEvictionRepo = new TSAllocationEvictionAssetRepo();
-        TSAssetManagementRepo _tsAssetManagementRepo = new TSAssetManagementRepo();
-        TSAssetTransferDetailRepo _tSAssetTransferDetailRepo = new TSAssetTransferDetailRepo();
-        TSTranferAsset tSTranferAsset = new TSTranferAsset();
-        TSTranferAssetDetail tranferAssetDetail = new TSTranferAssetDetail();
+        TSAssetTransferRepo _tSAssetTransferRepo;
+        TSAllocationEvictionAssetRepo _tSAllocationEvictionRepo;
+        TSAssetManagementRepo _tsAssetManagementRepo;
+        TSAssetTransferDetailRepo _tSAssetTransferDetailRepo;
+
+        vUserGroupLinksRepo _vUserGroupLinksRepo;
+         
+        public AssetTranferController(TSAssetTransferRepo tSAssetTransferRepo, TSAllocationEvictionAssetRepo tSAllocationEvictionAssetRepo, TSAssetManagementRepo TSAssetManagementRepo, TSAssetTransferDetailRepo tSAssetTransferDetailRepo, vUserGroupLinksRepo vUserGroupLinksRepo)
+        {
+            _tSAssetTransferRepo = tSAssetTransferRepo;
+            _tSAllocationEvictionRepo = tSAllocationEvictionAssetRepo;
+            _tsAssetManagementRepo = TSAssetManagementRepo;
+            _tSAssetTransferDetailRepo = tSAssetTransferDetailRepo;
+            _vUserGroupLinksRepo = vUserGroupLinksRepo;
+        }
+
         [HttpPost("get-asset-tranfer")]
         public IActionResult GetListAssetTransfer([FromBody] AssetTransferRequestParam request)
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x =>
+                 (x.Code == "N23" || x.Code == "N1" || x.Code == "N67") &&
+                x.UserID == currentUser.ID);
+
+                int employeeID;
+                if (vUserHR != null)
+                {
+                    employeeID = request.ReceiverID.Value;
+                }
+                else
+                {
+                    employeeID = currentUser.EmployeeID;
+                }
                 var assetTranfer = SQLHelper<dynamic>.ProcedureToList("spGetTranferAssetMaster",
                    new string[] { "@DateStart", "@DateEnd", "@IsApproved", "@DeliverID", "@ReceiverID", "TextFilter", "@PageSize", "@PageNumber" },
-                                            new object[] { request.DateStart, request.DateEnd, request.IsApproved, request.DeliverID, request.ReceiverID, request.TextFilter, request.PageSize, request.PageNumber });
+                                            new object[] { request.DateStart, request.DateEnd, request.IsApproved, request.DeliverID, employeeID, request.TextFilter, request.PageSize, request.PageNumber });
                 return Ok(new
                 {
                     status = 1,
@@ -38,13 +67,7 @@ namespace RERPAPI.Controllers.Old.Asset
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-asset-tranfer-detail")]
@@ -67,13 +90,7 @@ namespace RERPAPI.Controllers.Old.Asset
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-asset-tranfer-code")]
@@ -99,7 +116,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 return BadRequest("Dữ liệu bàn giao không hợp lệ.");
             try
             {
-                ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+                ExcelPackage.License.SetNonCommercialOrganization("RTC Technology Viet Nam");
                 string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "BienBanBanGiao.xlsx");
                 if (!System.IO.File.Exists(templatePath))
                     return NotFound("File mẫu không tồn tại.");
@@ -128,7 +145,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 //if (master.DateApprovedPersonalProperty.HasValue)
                 //    ws.Cells[32, 8].Value = master.DateApprovedPersonalProperty.Value.ToString("dd/MM/yyyy HH:mm");
 
-                int insertRow = 21;
+                int insertRow = 20;
                 int templateRow = 19;
 
                 for (int i = 0; i < details.Count; i++)
@@ -162,17 +179,12 @@ namespace RERPAPI.Controllers.Old.Asset
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new
-                {
-                    status = 0,
-                    message = "Lỗi khi xuất Excel.",
-                    error = ex.Message
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
 
-
+        [RequiresPermission("N1,N23")]
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] AssetTranferFullDTO assetTransfer)
         {
@@ -189,7 +201,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tsAssetManagementRepo.CreateAsync(item);
                         else
-                            _tsAssetManagementRepo.UpdateAsync( item);
+                            await _tsAssetManagementRepo.UpdateAsync(item);
                     }
                 }
                 if (assetTransfer.tSAllocationEvictionAssets != null && assetTransfer.tSAllocationEvictionAssets.Any())
@@ -199,7 +211,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tSAllocationEvictionRepo.CreateAsync(item);
                         else
-                            _tSAllocationEvictionRepo.UpdateAsync( item);
+                            await _tSAllocationEvictionRepo.UpdateAsync(item);
                     }
                 }
                 if (assetTransfer.tSTranferAsset != null)
@@ -207,7 +219,7 @@ namespace RERPAPI.Controllers.Old.Asset
                     if (assetTransfer.tSTranferAsset.ID <= 0)
                         await _tSAssetTransferRepo.CreateAsync(assetTransfer.tSTranferAsset);
                     else
-                        _tSAssetTransferRepo.UpdateAsync( assetTransfer.tSTranferAsset);
+                        await _tSAssetTransferRepo.UpdateAsync(assetTransfer.tSTranferAsset);
                 }
                 if (assetTransfer.tSTranferAssetDetails != null && assetTransfer.tSTranferAssetDetails.Any())
                 {
@@ -217,7 +229,7 @@ namespace RERPAPI.Controllers.Old.Asset
                         if (item.ID <= 0)
                             await _tSAssetTransferDetailRepo.CreateAsync(item);
                         else
-                            _tSAssetTransferDetailRepo.UpdateAsync( item);
+                            await _tSAssetTransferDetailRepo.UpdateAsync(item);
                     }
                 }
 
@@ -225,12 +237,118 @@ namespace RERPAPI.Controllers.Old.Asset
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpPost("save-data-personal")]
+        public async Task<IActionResult> SaveDataPersonal([FromBody] AssetTranferFullDTO assetTransfer)
+        {
+            try
+            {
+                if (assetTransfer == null)
                 {
-                    status = 0,
-                    message = "Lỗi xảy ra khi lưu dữ liệu.",
-                    detail = ex.Message.ToString(),
-                });
+                    return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." });
+                }
+                if (assetTransfer.tSAssetManagements != null && assetTransfer.tSAssetManagements.Any())
+                {
+                    foreach (var item in assetTransfer.tSAssetManagements)
+                    {
+                        if (item.ID <= 0)
+                            await _tsAssetManagementRepo.CreateAsync(item);
+                        else
+                            await _tsAssetManagementRepo.UpdateAsync(item);
+                    }
+                }
+                if (assetTransfer.tSAllocationEvictionAssets != null && assetTransfer.tSAllocationEvictionAssets.Any())
+                {
+                    foreach (var item in assetTransfer.tSAllocationEvictionAssets)
+                    {
+                        if (item.ID <= 0)
+                            await _tSAllocationEvictionRepo.CreateAsync(item);
+                        else
+                            await _tSAllocationEvictionRepo.UpdateAsync(item);
+                    }
+                }
+                if (assetTransfer.tSTranferAsset != null)
+                {
+                    if (assetTransfer.tSTranferAsset.ID <= 0)
+                        await _tSAssetTransferRepo.CreateAsync(assetTransfer.tSTranferAsset);
+                    else
+                        await _tSAssetTransferRepo.UpdateAsync(assetTransfer.tSTranferAsset);
+                }
+                if (assetTransfer.tSTranferAssetDetails != null && assetTransfer.tSTranferAssetDetails.Any())
+                {
+                    foreach (var item in assetTransfer.tSTranferAssetDetails)
+                    {
+                        item.TSTranferAssetID = assetTransfer.tSTranferAsset.ID;
+                        if (item.ID <= 0)
+                            await _tSAssetTransferDetailRepo.CreateAsync(item);
+                        else
+                            await _tSAssetTransferDetailRepo.UpdateAsync(item);
+                    }
+                }
+
+                return Ok(new { status = 1, message = "Lưu dữ liệu thành công." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [RequiresPermission("N1,N67")]
+        [HttpPost("save-data-kt")]
+        public async Task<IActionResult> SaveDataKT([FromBody] AssetTranferFullDTO assetTransfer)
+        {
+            try
+            {
+                if (assetTransfer == null)
+                {
+                    return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." });
+                }
+                if (assetTransfer.tSAssetManagements != null && assetTransfer.tSAssetManagements.Any())
+                {
+                    foreach (var item in assetTransfer.tSAssetManagements)
+                    {
+                        if (item.ID <= 0)
+                            await _tsAssetManagementRepo.CreateAsync(item);
+                        else
+                            await _tsAssetManagementRepo.UpdateAsync(item);
+                    }
+                }
+                if (assetTransfer.tSAllocationEvictionAssets != null && assetTransfer.tSAllocationEvictionAssets.Any())
+                {
+                    foreach (var item in assetTransfer.tSAllocationEvictionAssets)
+                    {
+                        if (item.ID <= 0)
+                            await _tSAllocationEvictionRepo.CreateAsync(item);
+                        else
+                            await _tSAllocationEvictionRepo.UpdateAsync(item);
+                    }
+                }
+                if (assetTransfer.tSTranferAsset != null)
+                {
+                    if (assetTransfer.tSTranferAsset.ID <= 0)
+                        await _tSAssetTransferRepo.CreateAsync(assetTransfer.tSTranferAsset);
+                    else
+                        await _tSAssetTransferRepo.UpdateAsync(assetTransfer.tSTranferAsset);
+                }
+                if (assetTransfer.tSTranferAssetDetails != null && assetTransfer.tSTranferAssetDetails.Any())
+                {
+                    foreach (var item in assetTransfer.tSTranferAssetDetails)
+                    {
+                        item.TSTranferAssetID = assetTransfer.tSTranferAsset.ID;
+                        if (item.ID <= 0)
+                            await _tSAssetTransferDetailRepo.CreateAsync(item);
+                        else
+                            await _tSAssetTransferDetailRepo.UpdateAsync(item);
+                    }
+                }
+
+                return Ok(new { status = 1, message = "Lưu dữ liệu thành công." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

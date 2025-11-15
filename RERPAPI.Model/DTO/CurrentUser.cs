@@ -27,5 +27,6 @@
         public int TeamOfUser { get; set; }
         public string Permissions { get; set; } = "";
         public string Name { get; set; } = "";
+        public string PasswordHash { get; set; } = "";
     }
 }

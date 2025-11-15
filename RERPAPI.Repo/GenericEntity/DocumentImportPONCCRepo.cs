@@ -1,4 +1,5 @@
-﻿using RERPAPI.Model.Entities;
+﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,10 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class DocumentImportPONCCRepo:GenericRepo<DocumentImportPONCC>
+    public class DocumentImportPONCCRepo : GenericRepo<DocumentImportPONCC>
     {
+        public DocumentImportPONCCRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
     }
 }

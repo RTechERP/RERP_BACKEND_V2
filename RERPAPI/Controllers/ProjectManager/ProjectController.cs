@@ -25,35 +25,112 @@ namespace RERPAPI.Controllers.Old.ProjectManager
     public class ProjectController : ControllerBase
     {
         #region Khai báo biến
-        ProjectRepo projectRepo = new ProjectRepo();
-        ProjectTreeFolderRepo projectTreeFolderRepo = new ProjectTreeFolderRepo();
-        CustomerRepo customerRepo = new CustomerRepo();
-        ProjectTypeRepo projectTypeRepo = new ProjectTypeRepo();
-        ProjectStatusRepo projectStatusRepo = new ProjectStatusRepo();
-        BusinessFieldRepo businessFieldRepo = new BusinessFieldRepo();
+        private readonly ProjectRepo projectRepo;
+        private readonly ProjectTreeFolderRepo projectTreeFolderRepo;
+        private readonly CustomerRepo customerRepo;
+        private readonly ProjectTypeRepo projectTypeRepo;
+        private readonly ProjectStatusRepo projectStatusRepo;
+        private readonly BusinessFieldRepo businessFieldRepo;
 
-        GroupFileRepo groupFileRepo = new GroupFileRepo();
-        FirmBaseRepo firmBaseRepo = new FirmBaseRepo();
-        ProjectTypeBaseRepo projectTypeBaseRepo = new ProjectTypeBaseRepo();
-        FollowProjectBaseRepo followProjectBaseRepo = new FollowProjectBaseRepo();
+        private readonly GroupFileRepo groupFileRepo;
+        private readonly FirmBaseRepo firmBaseRepo;
+        private readonly ProjectTypeBaseRepo projectTypeBaseRepo;
+        private readonly FollowProjectBaseRepo followProjectBaseRepo;
 
-        ProjectStatusLogRepo projectStatusLogRepo = new ProjectStatusLogRepo();
-        ProjectEmployeeRepo projectEmployeeRepo = new ProjectEmployeeRepo();
+        private readonly EmployeeProjectTypeRepo projectEmployeeProjectTypeRepo;
+        private readonly ProjectStatusLogRepo projectStatusLogRepo;
+        private readonly ProjectEmployeeRepo projectEmployeeRepo;
 
-        ProjectUserRepo projectUserRepo = new ProjectUserRepo();
-        ProjectTypeLinkRepo projectTypeLinkRepo = new ProjectTypeLinkRepo();
+        private readonly ProjectUserRepo projectUserRepo;
+        private readonly ProjectTypeLinkRepo projectTypeLinkRepo;
 
-        ProjectCostRepo projectCostRepo = new ProjectCostRepo();
-        ProjectPriorityLinkRepo projectPriorityLinkRepo = new ProjectPriorityLinkRepo();
+        private readonly ProjectCostRepo projectCostRepo;
+        private readonly ProjectPriorityLinkRepo projectPriorityLinkRepo;
 
-        ProjectCurrentSituationRepo projectCurrentSituationRepo = new ProjectCurrentSituationRepo();
+        private readonly ProjectCurrentSituationRepo projectCurrentSituationRepo;
 
-        ProjectPriorityRepo projectPriorityRepo = new ProjectPriorityRepo();
-        ProjectPersonalPriotityRepo projectPersonalPriotityRepo = new ProjectPersonalPriotityRepo();
-        ProjectWorkerTypeRepo projectWorkerTypeRepo = new ProjectWorkerTypeRepo();
-        DailyReportTechnicalRepo dailyReportTechnicalRepo = new DailyReportTechnicalRepo();
-        ProjectStatusDetailRepo projectStatusDetailRepo = new ProjectStatusDetailRepo();
+        private readonly ProjectPriorityRepo projectPriorityRepo;
+        private readonly ProjectPersonalPriotityRepo projectPersonalPriotityRepo;
+        private readonly ProjectWorkerTypeRepo projectWorkerTypeRepo;
+        private readonly DailyReportTechnicalRepo dailyReportTechnicalRepo;
+        private readonly ProjectStatusDetailRepo projectStatusDetailRepo;
+
+        private readonly EmployeeStatusRepo _employeeStatusRepo;
+        private readonly EmployeeCurricularRepo _employeeCurricularRepo;
+        private readonly EmployeeRepo _employeeRepo;
+        private readonly PositionInternalRepo _positionInternalRepo;
+        private readonly EmployeeWorkingProcessRepo _employeeWorkingProcessRepo;
+        private readonly UnitCountRepo _unitCountRepo;
         #endregion
+
+        public ProjectController(
+            ProjectRepo projectRepo,
+            ProjectTreeFolderRepo projectTreeFolderRepo,
+            CustomerRepo customerRepo,
+            ProjectTypeRepo projectTypeRepo,
+            ProjectStatusRepo projectStatusRepo,
+            BusinessFieldRepo businessFieldRepo,
+            GroupFileRepo groupFileRepo,
+            FirmBaseRepo firmBaseRepo,
+            ProjectTypeBaseRepo projectTypeBaseRepo,
+            FollowProjectBaseRepo followProjectBaseRepo,
+            EmployeeProjectTypeRepo projectEmployeeProjectTypeRepo,
+            ProjectStatusLogRepo projectStatusLogRepo,
+            ProjectEmployeeRepo projectEmployeeRepo,
+            ProjectUserRepo projectUserRepo,
+            ProjectTypeLinkRepo projectTypeLinkRepo,
+            ProjectCostRepo projectCostRepo,
+            ProjectPriorityLinkRepo projectPriorityLinkRepo,
+            ProjectCurrentSituationRepo projectCurrentSituationRepo,
+            ProjectPriorityRepo projectPriorityRepo,
+            ProjectPersonalPriotityRepo projectPersonalPriotityRepo,
+            ProjectWorkerTypeRepo projectWorkerTypeRepo,
+            DailyReportTechnicalRepo dailyReportTechnicalRepo,
+            ProjectStatusDetailRepo projectStatusDetailRepo,
+            EmployeeStatusRepo employeeStatusRepo,
+            EmployeeCurricularRepo employeeCurricularRepo,
+            EmployeeRepo employeeRepo,
+            PositionInternalRepo positionInternalRepo,
+            EmployeeWorkingProcessRepo employeeWorkingProcessRepo,
+            UnitCountRepo unitCountRepo)
+        {
+            this.projectRepo = projectRepo;
+            this.projectTreeFolderRepo = projectTreeFolderRepo;
+            this.customerRepo = customerRepo;
+            this.projectTypeRepo = projectTypeRepo;
+            this.projectStatusRepo = projectStatusRepo;
+            this.businessFieldRepo = businessFieldRepo;
+
+            this.groupFileRepo = groupFileRepo;
+            this.firmBaseRepo = firmBaseRepo;
+            this.projectTypeBaseRepo = projectTypeBaseRepo;
+            this.followProjectBaseRepo = followProjectBaseRepo;
+
+            this.projectEmployeeProjectTypeRepo = projectEmployeeProjectTypeRepo;
+            this.projectStatusLogRepo = projectStatusLogRepo;
+            this.projectEmployeeRepo = projectEmployeeRepo;
+
+            this.projectUserRepo = projectUserRepo;
+            this.projectTypeLinkRepo = projectTypeLinkRepo;
+
+            this.projectCostRepo = projectCostRepo;
+            this.projectPriorityLinkRepo = projectPriorityLinkRepo;
+
+            this.projectCurrentSituationRepo = projectCurrentSituationRepo;
+
+            this.projectPriorityRepo = projectPriorityRepo;
+            this.projectPersonalPriotityRepo = projectPersonalPriotityRepo;
+            this.projectWorkerTypeRepo = projectWorkerTypeRepo;
+            this.dailyReportTechnicalRepo = dailyReportTechnicalRepo;
+            this.projectStatusDetailRepo = projectStatusDetailRepo;
+
+            _employeeStatusRepo = employeeStatusRepo;
+            _employeeCurricularRepo = employeeCurricularRepo;
+            _employeeRepo = employeeRepo;
+            _positionInternalRepo = positionInternalRepo;
+            _employeeWorkingProcessRepo = employeeWorkingProcessRepo;
+            _unitCountRepo = unitCountRepo;
+        }
 
         #region Hàm dùng chung
 
@@ -1518,6 +1595,237 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        #region Employee Related Endpoints
+
+        // Get all employees
+        [HttpGet("get-employee")]
+        public async Task<IActionResult> GetEmployee()
+        {
+            try
+            {
+                var employees = _employeeRepo.GetAll()
+                    .Select(x => new { x.ID, x.Code, x.FullName })
+                    .ToList();
+                return Ok(ApiResponseFactory.Success(employees, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        // Get employee positions (ChucVu)
+        [HttpGet("get-employee-ChucVu")]
+        public async Task<IActionResult> GetEmployeeChucVu()
+        {
+            try
+            {
+                var positions = _positionInternalRepo.GetAll()
+                    .Select(x => new { x.ID, x.Code, x.Name })
+                    .ToList();
+                return Ok(ApiResponseFactory.Success(positions, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        // Save employee curricular
+        [HttpPost("save-employee-curricular")]
+        public async Task<IActionResult> SaveEmployeeCurricular([FromBody] EmployeeCurricular model)
+        {
+            try
+            {
+                if (model.ID > 0)
+                {
+                    // Update existing record
+                    var existing = _employeeCurricularRepo.GetByID(model.ID);
+                    if (existing != null)
+                    {
+                        existing.CurricularCode = model.CurricularCode;
+                        existing.CurricularName = model.CurricularName;
+                        existing.CurricularDay = model.CurricularDay;
+                        existing.CurricularMonth = model.CurricularMonth;
+                        existing.CurricularYear = model.CurricularYear;
+                        existing.EmployeeID = model.EmployeeID;
+                        existing.Note = model.Note;
+                        existing.UpdatedBy = model.UpdatedBy;
+                        existing.UpdatedDate = DateTime.Now;
+                        
+                        await _employeeCurricularRepo.UpdateAsync(existing);
+                    }
+                }
+                else
+                {
+                    // Check if record already exists
+                    var existingRecord = _employeeCurricularRepo.GetAll()
+                        .FirstOrDefault(x => x.EmployeeID == model.EmployeeID &&
+                                           x.CurricularDay == model.CurricularDay &&
+                                           x.CurricularMonth == model.CurricularMonth &&
+                                           x.CurricularYear == model.CurricularYear);
+
+                    if (existingRecord != null)
+                    {
+                        // Update existing record
+                        existingRecord.CurricularCode = model.CurricularCode;
+                        existingRecord.CurricularName = model.CurricularName;
+                        existingRecord.Note = model.Note;
+                        existingRecord.UpdatedBy = model.UpdatedBy;
+                        existingRecord.UpdatedDate = DateTime.Now;
+                        
+                        await _employeeCurricularRepo.UpdateAsync(existingRecord);
+                    }
+                    else
+                    {
+                        // Create new record
+                        model.CreatedDate = DateTime.Now;
+                        await _employeeCurricularRepo.CreateAsync(model);
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(true, "Lưu dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         #endregion
+        #endregion
+
+        [HttpGet]
+        [Route("getemployeestatus")]
+        public IActionResult GetEmployeeStatus()
+        {
+            try
+            {
+                var employeeStatuses = _employeeStatusRepo.GetAll()
+                    .Where(x => x.IsDeleted == false)
+                    .Select(x => new
+                    {
+                        ID = x.ID,
+                        StatusCode = x.StatusCode,
+                        StatusName = x.StatusName
+                    })
+                    .ToList();
+
+                return Ok(employeeStatuses);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        [Route("checkemployeestatus")]
+        public IActionResult CheckEmployeeStatus(string statusCode, int id)
+        {
+            try
+            {
+                var exists = _employeeStatusRepo.GetAll()
+                    .Any(x => x.StatusCode == statusCode && x.ID != id && x.IsDeleted == false);
+
+                return Ok(new { exists = exists });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        [Route("checkemployeecurricular")]
+        public IActionResult CheckEmployeeCurricular(int employeeID, string date)
+        {
+            try
+            {
+                var exists = _employeeCurricularRepo.GetAll()
+                    .Any(x => x.EmployeeID == employeeID && 
+                             $"{x.CurricularDay:D2}/{x.CurricularMonth:D2}/{x.CurricularYear}" == date);
+
+                return Ok(new { status = exists ? 1 : 0 });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        [Route("getworkingprocess")]
+        public IActionResult GetWorkingProcess([FromBody] dynamic request)
+        {
+            try
+            {
+                var result = SQLHelper<object>.ProcedureToList("spLoadEmployeeWorkingProcess",
+                    new string[] { "@EmployeeCode", "@EmployeeName", "@DepartmentID", "@FromDate", "@ToDate", "@PageIndex", "@PageSize" },
+                    new object[] { 
+                        request?.EmployeeCode?.ToString() ?? "",
+                        request?.EmployeeName?.ToString() ?? "",
+                        request?.DepartmentID ?? 0,
+                        request?.FromDate ?? DateTime.MinValue,
+                        request?.ToDate ?? DateTime.MaxValue,
+                        request?.PageIndex ?? 1,
+                        request?.PageSize ?? 10
+                    });
+
+                return Ok(ApiResponseFactory.Success(result, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost]
+        [Route("getemployeecurricular")]
+        public IActionResult GetEmployeeCurricular([FromBody] dynamic request)
+        {
+            try
+            {
+                var result = SQLHelper<object>.ProcedureToList("spGetEmployeeCurricular",
+                    new string[] { "@Month", "@Year", "@DepartmentID", "@EmployeeID" },
+                    new object[] { 
+                        request?.Month ?? 1,
+                        request?.Year ?? DateTime.Now.Year,
+                        request?.DepartmentID ?? 0,
+                        request?.EmployeeID ?? 0
+                    });
+
+                return Ok(ApiResponseFactory.Success(result, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet]
+        [Route("getunitcount")]
+        public IActionResult GetUnitCount()
+        {
+            try
+            {
+                var unitCounts = _unitCountRepo.GetAll()
+                    .Where(x => x.IsDeleted != true)
+                    .Select(x => new
+                    {
+                        ID = x.ID,
+                        UnitCode = x.UnitCode,
+                        UnitName = x.UnitName
+                    }).ToList();
+
+                return Ok(ApiResponseFactory.Success(unitCounts, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
     }
 }

@@ -1,19 +1,14 @@
 ﻿
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
-using RERPAPI.Model.DTO.Asset;
 using RERPAPI.Model.DTO.Project;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.Project;
-using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.Project;
-using System.Net.WebSockets;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers.Old.ProjectManager
 {
@@ -22,10 +17,20 @@ namespace RERPAPI.Controllers.Old.ProjectManager
     [ApiKeyAuthorize]
     public class ProjectItemController : ControllerBase
     {
-        ProjectItemProblemRepo _projectItemProblemRepo = new ProjectItemProblemRepo();
-        ProjectItemRepo _projectItemRepo = new ProjectItemRepo();
-        ProjectItemFileRepo _projectItemFileRepo = new ProjectItemFileRepo();
+        private readonly ProjectItemProblemRepo _projectItemProblemRepo;
+        private readonly ProjectItemRepo _projectItemRepo;
+        private readonly ProjectItemFileRepo _projectItemFileRepo;
 
+        public ProjectItemController(
+            ProjectItemProblemRepo projectItemProblemRepo,
+            ProjectItemRepo projectItemRepo,
+            ProjectItemFileRepo projectItemFileRepo
+        )
+        {
+            _projectItemProblemRepo = projectItemProblemRepo;
+            _projectItemRepo = projectItemRepo;
+            _projectItemFileRepo = projectItemFileRepo;
+        }
         //API lấy list hạng mục công việc 
         [ApiKeyAuthorize]
         [HttpPost("get-project-item")]

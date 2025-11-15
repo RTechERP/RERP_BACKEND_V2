@@ -1,12 +1,17 @@
-﻿using RERPAPI.Model.Entities;
-using System;
-using System.Linq.Expressions;
+﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Repo.GenericEntity
 {
     public class ProjectPartlistVersionRepo : GenericRepo<ProjectPartListVersion>
     {
-        private ProjectTypeRepo _projectTypeRepo = new ProjectTypeRepo();
+        private ProjectTypeRepo _projectTypeRepo;
+
+
+        public ProjectPartlistVersionRepo(CurrentUser currentUser, ProjectTypeRepo projectTypeRepo) : base(currentUser)
+        {
+            _projectTypeRepo = projectTypeRepo;
+        }
 
         public bool Validate(ProjectPartListVersion item, out string message)
         {
@@ -107,20 +112,20 @@ namespace RERPAPI.Repo.GenericEntity
         {
             message = "";
             ProjectPartListVersion oldVersion = GetByID(version.ID);
-            
-            if (version == null || oldVersion.ID<=0)
+
+            if (version == null || oldVersion.ID <= 0)
             {
                 message = "Không tìm thấy phiên bản.";
                 return false;
             }
-            
-            if (version.IsApproved==true && oldVersion.IsApproved == true)
+
+            if (version.IsApproved == true && oldVersion.IsApproved == true)
             {
                 message = "Phiên bản này đã được duyệt trước đó.";
                 return false;
             }
 
-            if (version.IsApproved==false && oldVersion.IsApproved == false)
+            if (version.IsApproved == false && oldVersion.IsApproved == false)
             {
                 message = "Phiên bản này chưa được duyệt để hủy.";
                 return false;

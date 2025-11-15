@@ -1,31 +1,37 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.AddNewBillExport;
-using System.Data;
-using System.Dynamic;
-using System.Linq.Expressions;
-using System.Text.Json;
 
 namespace RERPAPI.Controllers.Old
 {
     [Route("api/[controller]")]
     [ApiController]
-    [ApiKeyAuthorize]
+    //[ApiKeyAuthorize]
     public class ProjectPartlistPriceRequestController : ControllerBase
     {
         #region Khai báo repository
-        ProjectRepo projectRepo = new ProjectRepo();
-        POKHRepo pOKHRepo = new POKHRepo();
-        ProjectPartlistPriceRequestRepo requestRepo = new ProjectPartlistPriceRequestRepo();
-        ProductSaleRepo productSaleRepo = new ProductSaleRepo();
-        CurrencyRepo currencyRepo = new CurrencyRepo();
-        SupplierSaleRepo supplierSaleRepo = new SupplierSaleRepo();
-        ProjectSolutionRepo projectSolutionRepo = new ProjectSolutionRepo();
+        ProjectRepo projectRepo;
+        POKHRepo pOKHRepo;
+        ProjectPartlistPriceRequestRepo requestRepo;
+        ProductSaleRepo productSaleRepo;
+        CurrencyRepo currencyRepo;
+        SupplierSaleRepo supplierSaleRepo;
+        ProjectSolutionRepo projectSolutionRepo;
+
+        public ProjectPartlistPriceRequestController(ProjectRepo projectRepo, POKHRepo pOKHRepo, ProjectPartlistPriceRequestRepo requestRepo, ProductSaleRepo productSaleRepo, CurrencyRepo currencyRepo, SupplierSaleRepo supplierSaleRepo, ProjectSolutionRepo projectSolutionRepo)
+        {
+            this.projectRepo = projectRepo;
+            this.pOKHRepo = pOKHRepo;
+            this.requestRepo = requestRepo;
+            this.productSaleRepo = productSaleRepo;
+            this.currencyRepo = currencyRepo;
+            this.supplierSaleRepo = supplierSaleRepo;
+            this.projectSolutionRepo = projectSolutionRepo;
+        }
+
         #endregion
         #region Lấy tất cả yêu cầu báo giá
         /// <summary>
@@ -44,13 +50,13 @@ namespace RERPAPI.Controllers.Old
         /// <param name="size"></param>
         /// <returns></returns>
         [HttpGet("get-all-project-parList-price-request")]
-        public async Task<IActionResult> GetAll( DateTime dateStart,DateTime dateEnd,int statusRequest, int projectId,string? keyword,
-            int isDeleted,int projectTypeID, int poKHID,int isCommercialProduct = -1,int page = 1, int size = 25)
+        public async Task<IActionResult> GetAll(DateTime dateStart, DateTime dateEnd, int statusRequest, int projectId, string? keyword,
+            int isDeleted, int projectTypeID, int poKHID, int isCommercialProduct = -1, int page = 1, int size = 25)
         {
             if (projectTypeID < 0) isCommercialProduct = 1;
             else poKHID = 0;
 
-            
+
             List<List<dynamic>> dtPriceRequest = SQLHelper<dynamic>.ProcedureToList("spGetProjectPartlistPriceRequest_New",
                                                                           new string[] {
                                                                   "@DateStart", "@DateEnd", "@StatusRequest", "@ProjectID", "@Keyword", "@IsDeleted",
@@ -148,7 +154,7 @@ namespace RERPAPI.Controllers.Old
                             requestRepo.Create(item);
                         }
                     }
-                }                
+                }
 
                 return Ok(new { status = 1 });
             }
@@ -163,11 +169,43 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
+        // Lấy nhà cung cấp
         [HttpGet("get-supplier-sale")]
         public async Task<IActionResult> GetSupplierSale()
         {
-            List<SupplierSale> lst = supplierSaleRepo.GetAll().ToList();
-            return Ok(new { status = 0, data = lst });
+            try
+            {
+                var purchaseRequest = supplierSaleRepo.GetAll()
+                    .OrderBy(x => x.NgayUpdate)
+                    .Select(x => new
+                    {
+                        x.ID,
+                        x.CodeNCC
+                    })
+                    .ToList();
+                return Ok(ApiResponseFactory.Success(purchaseRequest, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-price-history-partlist")]
+        public async Task<IActionResult> GetPriceHistoryPartlist(int projectId, int supplierSaleId, int employeeRequestId, string? keyword)
+        {
+            try
+            {
+                var priceHistoryPartlist = SQLHelper<object>.ProcedureToList("spGetHistoryPricePartlist",
+                new string[] { "@Keyword", "@ProjectID", "@SupplierSaleID", "@EmployeeRequestID" },
+                new object[] { keyword ?? "", projectId, supplierSaleId, employeeRequestId });
+                var data = SQLHelper<object>.GetListData(priceHistoryPartlist, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
         }
 
         [HttpPost("download")]
@@ -177,8 +215,8 @@ namespace RERPAPI.Controllers.Old
             if (project == null || project.CreatedDate == null)
                 return BadRequest(new
                 {
-                    status=0, 
-                    message= "Không tim thấy dự án!"
+                    status = 0,
+                    message = "Không tim thấy dự án!"
                 });
 
             var solutions = SQLHelper<ProjectSolution>.ProcedureToList("spGetProjectSolutionByProjectPartListID",
@@ -212,12 +250,12 @@ namespace RERPAPI.Controllers.Old
             {
                 return BadRequest(new
                 {
-                    status=0,
-                    message=ex.Message,
-                    error=ex.ToString()
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
                 });
             }
         }
-       
+
     }
 }
