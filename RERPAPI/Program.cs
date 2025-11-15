@@ -37,6 +37,8 @@ builder.Services.AddSwaggerGen();
 
 
 builder.Services.AddHttpContextAccessor();
+
+#region Injection Repositories and Services
 builder.Services.AddScoped<IUserPermissionService, UserPermissionService>();
 builder.Services.AddScoped<RTCContext>();
 builder.Services.AddScoped<RoleConfig>();
@@ -328,6 +330,8 @@ builder.Services.AddScoped<AGVProductRepo>();
 
 // BillExportTechnicalRepo in RTCApi namespace (used by Old Technical controller)
 builder.Services.AddScoped<BillExportTechnicalRepo>();
+builder.Services.AddScoped<TaxCompanyRepo>();
+
 
 builder.Services.AddScoped<CurrentUser>(provider =>
 {
@@ -338,7 +342,7 @@ builder.Services.AddScoped<CurrentUser>(provider =>
     return currentUser;
 
 });
-
+#endregion
 //Config connect database
 Config.ConnectionString = builder.Configuration.GetValue<string>("ConnectionString") ?? "";
 builder.Services.AddDbContext<RTCContext>(o => o.UseSqlServer(Config.ConnectionString));
@@ -355,6 +359,7 @@ builder.Services.AddCors(options =>
         builder.AllowAnyOrigin()
                .AllowAnyMethod()
                .AllowAnyHeader();
+
     });
 });
 
@@ -465,8 +470,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 app.UseCors("MyCors");
-app.UseAuthorization();
 //app.UseAuthentication();
+app.UseAuthorization();
 app.UseSession();
 app.UseMiddleware<DynamicAuthorizationMiddleware>();
 
