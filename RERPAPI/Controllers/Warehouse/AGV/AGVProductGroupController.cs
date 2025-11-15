@@ -4,22 +4,21 @@ using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.Warehouse.AGV
 {
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class AGVProductController : ControllerBase
+    public class AGVProductGroupController : ControllerBase
     {
         private readonly IConfiguration _configuration;
-        private readonly AGVProductRepo _agvProductRepo;
+        private readonly AGVProductGroupRepo _groupRepo;
 
-        public AGVProductController(AGVProductRepo agvProductRepo,IConfiguration configuration)
+        public AGVProductGroupController(IConfiguration configuration, AGVProductGroupRepo groupRepo)
         {
             _configuration = configuration;
-            _agvProductRepo = agvProductRepo;
+            _groupRepo = groupRepo;
         }
 
 
@@ -28,8 +27,8 @@ namespace RERPAPI.Controllers.Warehouse.AGV
         {
             try
             {
-                var products = _agvProductRepo.GetAll(x => x.IsDeleted != true);
-                return Ok(ApiResponseFactory.Success(products, ""));
+                var groups = _groupRepo.GetAll(x => x.IsDeleted != true);
+                return Ok(ApiResponseFactory.Success(groups, ""));
             }
             catch (Exception ex)
             {
@@ -37,13 +36,14 @@ namespace RERPAPI.Controllers.Warehouse.AGV
             }
         }
 
+
         [HttpGet("{id}")]
         public IActionResult GetByID(int id)
         {
             try
             {
-                var product = _agvProductRepo.GetByID(id);
-                return Ok(ApiResponseFactory.Success(product, ""));
+                var group = _groupRepo.GetByID(id);
+                return Ok(ApiResponseFactory.Success(group, ""));
             }
             catch (Exception ex)
             {
@@ -53,25 +53,24 @@ namespace RERPAPI.Controllers.Warehouse.AGV
 
 
         [HttpPost("save-data")]
-        public async Task<IActionResult> SaveData([FromBody] AGVProduct product)
+        public async Task<IActionResult> SaveData([FromBody] AGVProductGroup group)
         {
             try
             {
-
-                var validate = _agvProductRepo.Validate(product);
+                var validate = _groupRepo.Validate(group);
                 if (validate.status == 0)
                 {
                     return BadRequest(validate);
                 }
 
-                if (product.ID <= 0) await _agvProductRepo.CreateAsync(product);
-                else await _agvProductRepo.UpdateAsync(product);
+                if (group.ID <= 0) await _groupRepo.CreateAsync(group);
+                else await _groupRepo.UpdateAsync(group);
 
-                return Ok(ApiResponseFactory.Success(product, "Cập nhật thành công!"));
+                return Ok(ApiResponseFactory.Success(group, "Cập nhật thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex,ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }
