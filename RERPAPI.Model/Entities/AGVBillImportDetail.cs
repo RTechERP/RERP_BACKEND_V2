@@ -15,9 +15,7 @@ public partial class AGVBillImportDetail
 
     public decimal? Quantity { get; set; }
 
-    public decimal? TotalQuantity { get; set; }
-
-    public decimal? Price { get; set; }
+    public decimal? UnitPrice { get; set; }
 
     public decimal? TotalPrice { get; set; }
 
@@ -27,29 +25,15 @@ public partial class AGVBillImportDetail
 
     public int? ProjectID { get; set; }
 
-    public string? ProjectCode { get; set; }
-
-    public string? ProjectName { get; set; }
-
     public string? SomeBill { get; set; }
 
-    public string? CreatedBy { get; set; }
-
-    public DateTime? CreatedDate { get; set; }
-
-    public string? UpdatedBy { get; set; }
-
-    public DateTime? UpdatedDate { get; set; }
+    public DateTime? DateSomeBill { get; set; }
 
     public string? Note { get; set; }
-
-    public string? InternalCode { get; set; }
 
     public int? AGVHistoryProductID { get; set; }
 
     public int? AGVProductQRCodeID { get; set; }
-
-    public int? WarehouseID { get; set; }
 
     public int? IsBorrowSupplier { get; set; }
 
@@ -63,10 +47,6 @@ public partial class AGVBillImportDetail
 
     public DateTime? DeadlineReturnNCC { get; set; }
 
-    public DateTime? DateSomeBill { get; set; }
-
-    public bool? IsDeleted { get; set; }
-
     public DateTime? DueDate { get; set; }
 
     public decimal? TaxReduction { get; set; }
@@ -74,4 +54,14 @@ public partial class AGVBillImportDetail
     public decimal? COFormE { get; set; }
 
     public int? DPO { get; set; }
+
+    public string? CreatedBy { get; set; }
+
+    public DateTime? CreatedDate { get; set; }
+
+    public string? UpdatedBy { get; set; }
+
+    public DateTime? UpdatedDate { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }

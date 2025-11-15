@@ -23,12 +23,31 @@ namespace RERPAPI.Controllers.Warehouse.AGV
         }
 
         [HttpGet()]
-        public IActionResult GetAll()
+        public IActionResult GetAll(int agvProductGroupID, int warehouseID, string? keyword)
         {
             try
             {
-                var groupLinks = _groupLinkRepo.GetAll(x => x.IsDeleted != true);
-                return Ok(ApiResponseFactory.Equals(groupLinks, ""));
+                keyword = keyword ?? "";
+                var datas = SQLHelper<object>.ProcedureToList("spGetAGVProductGroupLink",
+                    new string[] { "@AGVProductGroupID", "@WarehouseID", "@Keyword" },
+                    new object[] { agvProductGroupID, warehouseID, keyword });
+
+                var groupLinks = SQLHelper<object>.GetListData(datas, 0);
+                return Ok(ApiResponseFactory.Success(groupLinks, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("{id}")]
+        public IActionResult GetByID(int id)
+        {
+            try
+            {
+                var groupLink = _groupLinkRepo.GetByID(id);
+                return Ok(ApiResponseFactory.Success(groupLink, ""));
             }
             catch (Exception ex)
             {
@@ -37,15 +56,21 @@ namespace RERPAPI.Controllers.Warehouse.AGV
         }
 
         [HttpPost("save-data")]
-        public async Task<IActionResult> SaveData([FromBody] AGVProductGroupLink groupLink)
+        public async Task<IActionResult> SaveData([FromBody] List<AGVProductGroupLink> groupLinks)
         {
             try
             {
+                var validate = _groupLinkRepo.Validate(groupLinks);
+                if (validate.status == 0) return BadRequest(validate);
+                
 
-                if (groupLink.ID <= 0) await _groupLinkRepo.CreateAsync(groupLink);
-                else await _groupLinkRepo.UpdateAsync(groupLink);
+                foreach (var groupLink in groupLinks)
+                {
+                    if (groupLink.ID <= 0) await _groupLinkRepo.CreateAsync(groupLink);
+                    else await _groupLinkRepo.UpdateAsync(groupLink);
+                }
 
-                return Ok(ApiResponseFactory.Success(groupLink, "Cập nhật thành công!"));
+                return Ok(ApiResponseFactory.Success(groupLinks, "Cập nhật thành công!"));
             }
             catch (Exception ex)
             {
