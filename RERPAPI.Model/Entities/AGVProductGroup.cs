@@ -22,6 +22,4 @@ public partial class AGVProductGroup
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
-
-    public int? WarehouseID { get; set; }
 }
