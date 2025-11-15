@@ -6400,6 +6400,7 @@ public partial class RTCContext : DbContext
 
             entity.ToTable("PaymentOrderPO");
 
+            entity.Property(e => e.BillNumber).HasMaxLength(550);
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
