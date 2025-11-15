@@ -1,26 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.Context;
-using RERPAPI.Model.DTO;
-using RERPAPI.Model.DTO.Asset;
 using RERPAPI.Model.DTO.TB;
 using RERPAPI.Model.Entities;
-using RERPAPI.Model.Param;
-using RERPAPI.Model.Param.Asset;
 using RERPAPI.Model.Param.TB;
-using RERPAPI.Model.Param.Technical;
-using RERPAPI.Repo;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.Asset;
-using RERPAPI.Repo.GenericEntity.TB;
-using System;
-using System.Data;
 using System.Net.Mime;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 
 namespace RERPAPI.Controllers.Old.TB
@@ -29,10 +13,26 @@ namespace RERPAPI.Controllers.Old.TB
     [ApiController]
     public class ProductRTCController : ControllerBase
     {
-        ProductGroupRTCRepo _productGroupRTCRepo = new ProductGroupRTCRepo();
-        ProductRTCRepo _productRTCRepo = new ProductRTCRepo();
-        ProductLocationRepo _productLocationRepo = new ProductLocationRepo();
-        ConfigSystemRepo config = new ConfigSystemRepo();
+
+        const int WAREHOUSEID = 1;
+        private readonly ProductGroupRTCRepo _productGroupRTCRepo;
+        private readonly ProductRTCRepo _productRTCRepo;
+        private readonly ProductLocationRepo _productLocationRepo;
+        private readonly ConfigSystemRepo config;
+
+        public ProductRTCController(
+            ProductGroupRTCRepo productGroupRTCRepo,
+            ProductRTCRepo productRTCRepo,
+            ProductLocationRepo productLocationRepo,
+            ConfigSystemRepo configSystemRepo)
+        {
+            _productGroupRTCRepo = productGroupRTCRepo;
+            _productRTCRepo = productRTCRepo;
+            _productLocationRepo = productLocationRepo;
+            config = configSystemRepo;
+        }
+
+
         [HttpPost("get-productRTC")]
         public IActionResult GetListAssets([FromBody] ProductRTCRequetParam request)
         {
@@ -79,9 +79,9 @@ namespace RERPAPI.Controllers.Old.TB
             try
             {
                 List<ProductGroupRTC> productGroup = _productGroupRTCRepo
-                    .GetAll()
-                    .Where(x => x.IsDeleted == false)
-                    .ToList();
+                    .GetAll();
+                //.Where(x => x.IsDeleted == false)
+                //.ToList();
 
                 //return Ok(new
                 //{
@@ -188,13 +188,13 @@ namespace RERPAPI.Controllers.Old.TB
                 var dest = Path.Combine(req.path, req.file.FileName);
                 using var fs = System.IO.File.Create(dest);
                 req.file.CopyTo(fs);
-                return Ok(ApiResponseFactory.Success(null, "Upload thành công"));
+                return Ok(ApiResponseFactory.Success(req.file.FileName, "Upload thành công")); //TN.Binh update
             }
-            catch( Exception ex)
+            catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-          
+
         }
         [HttpGet("get-location")]
         public IActionResult GetLocation(int? warehouseID)
@@ -234,7 +234,7 @@ namespace RERPAPI.Controllers.Old.TB
         public IActionResult GetPreview([FromQuery] string full)
         {
             if (string.IsNullOrWhiteSpace(full)) return BadRequest("full required");
-            var con = config.GetAll(x=>x.KeyName== "PathPreview").FirstOrDefault()?? new ConfigSystem();
+            var con = config.GetAll(x => x.KeyName == "PathPreview").FirstOrDefault() ?? new ConfigSystem();
             string root = "";
             if (con.ID > 0)
             {
@@ -270,46 +270,275 @@ namespace RERPAPI.Controllers.Old.TB
 
             return File(System.IO.File.OpenRead(normalized), mime);
         }
-        [HttpPost("save-data")]
-        public async Task<IActionResult> SaveData([FromBody] ProductRTCFullDTO product)
+        [HttpPost("save-data-excel")]
+        public async Task<IActionResult> SaveDataExcel([FromBody] ProductRTCFullDTO product)
         {
             try
             {
-                if (product == null) { return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." }); }
+                if (product == null)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu trả về."));
+                }
+
+                int successCount = 0;
+                int failCount = 0;
+                List<string> skippedCodes = new();
+
+                // --- Lưu nhóm sản phẩm ---
                 if (product.productGroupRTC != null)
                 {
-                    
                     if (product.productGroupRTC.ID <= 0)
                         await _productGroupRTCRepo.CreateAsync(product.productGroupRTC);
                     else
                         await _productGroupRTCRepo.UpdateAsync(product.productGroupRTC);
                 }
+
+                // --- Lưu danh sách sản phẩm ---
                 if (product.productRTCs != null && product.productRTCs.Any())
                 {
                     foreach (var item in product.productRTCs)
                     {
+                        try
+                        {
+                            if (item.IsDelete != true)
+                            {
+                                // --- Kiểm tra trùng mã sản phẩm ---
+                                if (_productRTCRepo.checkExistProductCodeRTC(item))
+                                {
+                                    skippedCodes.Add(item.ProductCode ?? "N/A");
+                                    failCount++;
+                                    continue;
+                                }
 
-                        if (item.ID <= 0)
-                            await _productRTCRepo.CreateAsync(item);
-                        else
-                            await _productRTCRepo.UpdateAsync(item);
+                                // --- Kiểm tra trùng Serial ---
+                                if (_productRTCRepo.checkExistSerialRTC(item))
+                                {
+                                    skippedCodes.Add(item.SerialNumber ?? "Serial N/A");
+                                    failCount++;
+                                    continue;
+                                }
+
+                                // --- Kiểm tra trùng Partnumber ---
+                                if (_productRTCRepo.checkExistPartnumberRTC(item))
+                                {
+                                    skippedCodes.Add(item.PartNumber ?? "Partnumber N/A");
+                                    failCount++;
+                                    continue;
+                                }
+                                if (item.FirmID <= 0)
+                                {
+                                    continue;
+                                }
+                            }
+
+                            // --- Xử lý xóa ---
+                            if (item.IsDelete == true)
+                            {
+                                if (item.ID > 0)
+                                {
+                                    await _productRTCRepo.UpdateAsync(item);
+                                    successCount++;
+                                }
+                            }
+                            else
+                            {
+                                // --- Tạo mới hoặc cập nhật ---
+                                item.ProductCodeRTC = _productRTCRepo.generateProductCode();
+                                if (item.ID <= 0)
+                                    await _productRTCRepo.CreateAsync(item);
+                                else
+                                    await _productRTCRepo.UpdateAsync(item);
+
+                                successCount++;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // Có thể log chi tiết lỗi nếu cần
+                            failCount++;
+                        }
                     }
                 }
 
-                //return Ok(new { status = 1 });
-                return Ok(ApiResponseFactory.Success(null, ""));
+                string message = $"Lưu thành công {successCount} bản ghi, thất bại {failCount} bản ghi.";
+                if (skippedCodes.Any())
+                    message += $" Các mã, SerialNumber, PartNumber bị bỏ qua (trùng): {string.Join(", ", skippedCodes)}.";
+
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    successCount,
+                    failCount,
+                    skippedCodes
+                }, message));
             }
             catch (Exception ex)
             {
-                //return BadRequest(new
-                //{
-                //    status = 0,
-                //    message = ex.Message,
-                //    error = ex.ToString()
-                //});
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+        }
+        [HttpPost("save-data")]
+        public async Task<IActionResult> SaveData([FromBody] ProductRTCFullDTO product)
+        {
+            try
+            {
+                if (product == null)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu gửi lên không hợp lệ."));
+                }
 
+                foreach (var item in product.productRTCs)
+                {
+                    if (item.IsDelete != true)
+                    {
+                        if (_productRTCRepo.checkExistProductCodeRTC(item))
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null,
+                                $"Mã thiết bị [{item.ProductCode}] đã tồn tại trong hệ thống."));
+                        }
+
+                        if (_productRTCRepo.checkExistSerialRTC(item))
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null,
+                                $"Số serial [{item.SerialNumber}] đã tồn tại trong hệ thống."));
+                        }
+
+                        if (_productRTCRepo.checkExistPartnumberRTC(item))
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null,
+                                $"Partnumber [{item.PartNumber}] đã tồn tại trong hệ thống."));
+                        }
+                    }
+                }
+
+                // --- Lưu nhóm sản phẩm ---
+                if (product.productGroupRTC != null)
+                {
+                    if (product.productGroupRTC.ID <= 0)
+                        await _productGroupRTCRepo.CreateAsync(product.productGroupRTC);
+                    else
+                        await _productGroupRTCRepo.UpdateAsync(product.productGroupRTC);
+                }
+
+                // --- Lưu danh sách sản phẩm ---
+                if (product.productRTCs != null && product.productRTCs.Any())
+                {
+                    foreach (var item in product.productRTCs)
+                    {
+                        if (item.IsDelete == true)
+                        {
+                            if (item.ID > 0)
+                                await _productRTCRepo.UpdateAsync(item);
+                        }
+                        else
+                        {
+                            if (item.ID <= 0)
+                                await _productRTCRepo.CreateAsync(item);
+                            else
+                                await _productRTCRepo.UpdateAsync(item);
+                        }
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(null, "Lưu dữ liệu thành công."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
+        //[HttpPost("save-data")]
+        //public async Task<IActionResult> SaveData([FromBody] ProductRTCFullDTO product)
+        //{
+        //    try
+        //    {
+        //        if (product == null) { return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." }); }
+        //        foreach (var item in product.productRTCs)
+        //        {
+        //            if (item.IsDelete != true)
+        //            {
+        //                if (_productRTCRepo.checkExistProductCodeRTC(item))
+        //                {
+        //                    return BadRequest(ApiResponseFactory.Fail(null, $"Mã thiết bị [{item.ProductCode}] đã tồn tại trong hệ thống."));
+        //                }
+
+        //            }
+        //        }
+
+        //        if (product.productGroupRTC != null)
+        //        {
+
+        //            if (product.productGroupRTC.ID <= 0)
+        //                await _productGroupRTCRepo.CreateAsync(product.productGroupRTC);
+        //            else
+        //                await _productGroupRTCRepo.UpdateAsync(product.productGroupRTC);
+        //        }
+        //        if (product.productRTCs != null && product.productRTCs.Any())
+        //        {
+        //            //TN.Binh update logic xoa
+        //            foreach (var item in product.productRTCs)
+        //            {
+        //                if (item.IsDelete == true)
+        //                {
+        //                    if (item.ID > 0)
+        //                        await _productRTCRepo.UpdateAsync(item);
+        //                }
+        //                else
+        //                {
+        //                    if (item.ID <= 0)
+        //                        await _productRTCRepo.CreateAsync(item);
+        //                    else
+        //                        await _productRTCRepo.UpdateAsync(item);
+        //                }
+        //            }
+        //            //end
+        //        }
+
+        //        //return Ok(new { status = 1 });
+        //        return Ok(ApiResponseFactory.Success(null, ""));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        //return BadRequest(new
+        //        //{
+        //        //    status = 0,
+        //        //    message = ex.Message,
+        //        //    error = ex.ToString()
+        //        //});
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+
+        //}
+
+
+        [HttpGet("get-by-qrcode")]
+        public IActionResult GetProductByQrCode(string qrCode)
+        {
+            try
+            {
+                var datas = SQLHelper<object>.ProcedureToList("spGetProductRTCByQrCode",
+                                                                new string[] { "@ProductRTCQRCode", "@WarehouseID" },
+                                                                new object[] { qrCode, WAREHOUSEID });
+
+                var historys = SQLHelper<object>.GetListData(datas, 0);
+
+                if (historys.Count > 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Thiết bị có mã QR [{qrCode}] đang được mượn!", historys));
+                }
+                else
+                {
+                    var products = SQLHelper<object>.GetListData(datas, 1);
+                    return Ok(ApiResponseFactory.Success(products, $""));
+                }
+
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
         }
     }
 }

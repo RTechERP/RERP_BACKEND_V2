@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -10,16 +10,20 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     [ApiController]
     public class UnitCountController : ControllerBase
     {
-        UnitCountRepo _unitcountRepo = new UnitCountRepo();
+        private readonly UnitCountRepo _unitcountRepo;
 
-       
+        public UnitCountController(UnitCountRepo unitcountRepo)
+        {
+            _unitcountRepo = unitcountRepo;
+        }
+
         [HttpGet("")]
         public IActionResult getUnitCount()
         {
 
             try
             {
-                List<UnitCount> dataUnit = _unitcountRepo.GetAll();
+                List<UnitCount> dataUnit = _unitcountRepo.GetAll(x => x.IsDeleted != true);
                 return Ok(new
                 {
                     status = 1,
@@ -36,14 +40,19 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 });
             }
         }
-      
+
         [HttpPost("save-data")]
         public async Task<IActionResult> saveUnitCount([FromBody] List<UnitCountDTO> dtos)
         {
             try
             {
+                //TN.Binh update 19/10/25
                 foreach (var dto in dtos)
                 {
+                    if (!_unitcountRepo.ValidateCode(dto))
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, "Mã đơn vị tính đã có!"));
+                    }
                     if (dto.ID <= 0) await _unitcountRepo.CreateAsync(dto);
                     else await _unitcountRepo.UpdateAsync(dto);
                 }
@@ -64,6 +73,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 });
             }
         }
-      
+
     }
 }

@@ -8,13 +8,18 @@ namespace RERPAPI.Controllers.Old
     [Route("api/[controller]")]
     public class EmployeeTypeOverTimeController : Controller
     {
-        EmployeeTypeOverTimeRepo employeeTypeOverTimeRepo = new EmployeeTypeOverTimeRepo();
+        private readonly EmployeeTypeOverTimeRepo _employeeTypeOverTimeRepo;
+
+        public EmployeeTypeOverTimeController(EmployeeTypeOverTimeRepo employeeTypeOverTimeRepo)
+        {
+            _employeeTypeOverTimeRepo = employeeTypeOverTimeRepo;
+        }
         [HttpGet]
         public IActionResult GetAllEmployeeTypeOverTime()
         {
             try
             {
-                var employeeTypeOverTimes = employeeTypeOverTimeRepo.GetAll().Where(x => x.IsDeleted == false);
+                var employeeTypeOverTimes = _employeeTypeOverTimeRepo.GetAll();
                 return Ok(new
                 {
                     status = 1,
@@ -38,9 +43,11 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                List<EmployeeTypeOvertime> existingEmployeeTypeOverTimes = employeeTypeOverTimeRepo.GetAll();
+                List<EmployeeTypeOvertime> existingEmployeeTypeOverTimes = _employeeTypeOverTimeRepo.GetAll();
 
-                if(existingEmployeeTypeOverTimes.Any(x => (x.Type == employeeTypeOverTime.Type || x.TypeCode == employeeTypeOverTime.TypeCode) && x.ID != employeeTypeOverTime.ID && x.IsDeleted == false))
+                if (existingEmployeeTypeOverTimes.Any(x => (x.Type == employeeTypeOverTime.Type || x.TypeCode == employeeTypeOverTime.TypeCode) && x.ID != employeeTypeOverTime.ID
+                //&& x.IsDeleted == false
+                ))
                 {
                     return BadRequest(new
                     {
@@ -51,11 +58,11 @@ namespace RERPAPI.Controllers.Old
 
                 if (employeeTypeOverTime.ID <= 0)
                 {
-                    await employeeTypeOverTimeRepo.CreateAsync(employeeTypeOverTime);
+                    await _employeeTypeOverTimeRepo.CreateAsync(employeeTypeOverTime);
                 }
                 else
                 {
-                    await employeeTypeOverTimeRepo.UpdateAsync(employeeTypeOverTime);
+                    await _employeeTypeOverTimeRepo.UpdateAsync(employeeTypeOverTime);
                 }
 
                 return Ok(new

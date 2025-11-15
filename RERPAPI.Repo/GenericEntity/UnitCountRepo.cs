@@ -1,15 +1,22 @@
-﻿using RERPAPI.Model.Context;
+﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class UnitCountRepo:GenericRepo<UnitCount>
+    public class UnitCountRepo : GenericRepo<UnitCount>
     {
+        public UnitCountRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
+
+        public bool ValidateCode(UnitCount u)
+        {
+            var unitexxist = GetAll(x => x.UnitCode == u.UnitCode && x.IsDeleted == false && x.ID != u.ID);
+            if (unitexxist.Any())
+            {
+                return false;
+            }
+            return true;
+        }
     }
 }

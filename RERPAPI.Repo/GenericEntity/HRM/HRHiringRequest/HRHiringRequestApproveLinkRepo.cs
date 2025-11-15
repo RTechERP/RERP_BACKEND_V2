@@ -11,6 +11,10 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class HRHiringRequestApproveLinkRepo : GenericRepo<HRHiringRequestApproveLink>
     {
+        public HRHiringRequestApproveLinkRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
+
         public async Task CreateApprove(HRHiringRequest hrHiring,CurrentUser currentUser)
         {
             try

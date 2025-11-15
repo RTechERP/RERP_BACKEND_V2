@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
-using System;
-using RERPAPI.Model.DTO;
 
 namespace RERPAPI.Controllers.Old.HandoverMinutes
 {
@@ -12,11 +10,25 @@ namespace RERPAPI.Controllers.Old.HandoverMinutes
     [ApiController]
     public class HandoverMinutesDetailController : ControllerBase
     {
-        EmployeeRepo _employeeRepo = new EmployeeRepo();
-        HandoverMinutesRepo _handoverMinutesRepo = new HandoverMinutesRepo();
-        HandoverMinutesDetailRepo _handoverMinutesDetailRepo = new HandoverMinutesDetailRepo();
-        DepartmentRepo _departmentRepo = new DepartmentRepo();
-        POKHDetailRepo _pokhDetailRepo = new POKHDetailRepo();
+        private readonly EmployeeRepo _employeeRepo;
+        private readonly HandoverMinutesRepo _handoverMinutesRepo;
+        private readonly HandoverMinutesDetailRepo _handoverMinutesDetailRepo;
+        private readonly DepartmentRepo _departmentRepo;
+        private readonly POKHDetailRepo _pokhDetailRepo;
+
+        public HandoverMinutesDetailController(
+            EmployeeRepo employeeRepo,
+            HandoverMinutesRepo handoverMinutesRepo,
+            HandoverMinutesDetailRepo handoverMinutesDetailRepo,
+            DepartmentRepo departmentRepo,
+            POKHDetailRepo pokhDetailRepo)
+        {
+            _employeeRepo = employeeRepo;
+            _handoverMinutesRepo = handoverMinutesRepo;
+            _handoverMinutesDetailRepo = handoverMinutesDetailRepo;
+            _departmentRepo = departmentRepo;
+            _pokhDetailRepo = pokhDetailRepo;
+        }
 
         [HttpGet("get-employee")]
         public IActionResult GetEmployee()
@@ -30,7 +42,7 @@ namespace RERPAPI.Controllers.Old.HandoverMinutes
                     Employee = e,
                     Department = departments.FirstOrDefault(d => d.ID == e.DepartmentID)
                 });
-                return Ok(ApiResponseFactory.Success(result,""));
+                return Ok(ApiResponseFactory.Success(result, ""));
             }
             catch (Exception ex)
             {
@@ -103,21 +115,21 @@ namespace RERPAPI.Controllers.Old.HandoverMinutes
                     //model.CreatedBy = User.Idetity.Name; // Mở comment nếu có phân quyền người dùng
                     _handoverMinutesRepo.Create(model);
                 }
-                if(dto.DeletedDetailIds != null && dto.DeletedDetailIds.Count > 0)
+                if (dto.DeletedDetailIds != null && dto.DeletedDetailIds.Count > 0)
                 {
                     foreach (var item in dto.DeletedDetailIds)
-                    {   
+                    {
                         var detailToDelete = _handoverMinutesDetailRepo.GetByID(item);
-                        if(detailToDelete != null)
+                        if (detailToDelete != null)
                         {
-                            detailToDelete.IsDeleted = true;
+                            //detailToDelete.IsDeleted = true;
                             //detailToDelete.UpdatedBy = User.Identity.Name; // Mở comment nếu có phân quyền người dùng
                             detailToDelete.UpdatedDate = DateTime.Now;
                             await _handoverMinutesDetailRepo.UpdateAsync(detailToDelete);
                         }
                     }
                 }
-                if(dto.Details != null)
+                if (dto.Details != null)
                 {
                     for (int i = 0; i < dto.Details.Count; i++)
                     {
@@ -138,8 +150,8 @@ namespace RERPAPI.Controllers.Old.HandoverMinutes
                         detail.CreatedDate = DateTime.Now;
                         //detail.UpdatedBy = GetCurrentUserName(); // Mở comment nếu có phân quyền người dùng
                         detail.UpdatedDate = DateTime.Now;
-                        
-                        if(detail.ID > 0)
+
+                        if (detail.ID > 0)
                         {
                             await _handoverMinutesDetailRepo.UpdateAsync(detail);
                         }
@@ -148,8 +160,8 @@ namespace RERPAPI.Controllers.Old.HandoverMinutes
                             _handoverMinutesDetailRepo.Create(detail);
                         }
                     }
-                }    
-                return Ok(ApiResponseFactory.Success(null,"Biên bản bàn giao được lưu thành công"));
+                }
+                return Ok(ApiResponseFactory.Success(null, "Biên bản bàn giao được lưu thành công"));
             }
             catch (Exception ex)
             {

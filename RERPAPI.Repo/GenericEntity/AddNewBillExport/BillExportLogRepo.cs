@@ -1,4 +1,5 @@
-﻿using RERPAPI.Model.Entities;
+﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,5 +10,8 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
 {
     public class BillExportLogRepo:GenericRepo<BillExportLog>
     {
+        public BillExportLogRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
     }
 }

@@ -12,8 +12,14 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class BillImportDetailSerialNumberModulaLocationRepo : GenericRepo<BillImportDetailSerialNumberModulaLocation>
     {
-        BillImportTechDetailSerialRepo _importDetailSerialNumberRepo = new BillImportTechDetailSerialRepo();
-        ProductRTCQRCodeRepo _qrCodeRepo = new ProductRTCQRCodeRepo();
+        BillImportTechDetailSerialRepo _importDetailSerialNumberRepo;
+        ProductRTCQRCodeRepo _qrCodeRepo;
+        public BillImportDetailSerialNumberModulaLocationRepo(CurrentUser currentUser, BillImportTechDetailSerialRepo billImportTechDetailSerialRepo, ProductRTCQRCodeRepo productRTCQRCodeRepo) : base(currentUser)
+        {
+            _importDetailSerialNumberRepo = billImportTechDetailSerialRepo;
+            _qrCodeRepo = productRTCQRCodeRepo;
+        }
+
 
 
         const int WARE_HOUSE_ID = 1;

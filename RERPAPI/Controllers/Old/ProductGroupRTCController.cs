@@ -9,7 +9,11 @@ namespace RERPAPI.Controllers.Old
     [ApiController]
     public class ProductGroupRTCController : ControllerBase
     {
-        ProductGroupRTCRepo _productGroupRTCRepo = new ProductGroupRTCRepo();
+        private readonly ProductGroupRTCRepo _productGroupRTCRepo;
+        public ProductGroupRTCController(ProductGroupRTCRepo productGroupRTCRepo)
+        {
+            _productGroupRTCRepo = productGroupRTCRepo;
+        }
         [HttpGet("get-all")]
         public IActionResult GetAll()
         {

@@ -20,4 +20,6 @@ public partial class AGVBillExportLog
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }

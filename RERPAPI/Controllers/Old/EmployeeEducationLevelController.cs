@@ -9,7 +9,11 @@ namespace RERPAPI.Controllers.Old
     [Route("api/[controller]")]
     public class EmployeeEducationLevelController : ControllerBase
     {
-        EmployeeEducationLevelRepo employeeEducationLevelRepo = new EmployeeEducationLevelRepo();
+        private readonly EmployeeEducationLevelRepo _employeeEducationLevelRepo;
+        public EmployeeEducationLevelController(EmployeeEducationLevelRepo employeeEducationLevelRepo)
+        {
+            _employeeEducationLevelRepo = employeeEducationLevelRepo;
+        }
         [HttpGet("{id}")]
         public IActionResult GetEmployeeEducationLevelByEmployeeID(int id)
         {

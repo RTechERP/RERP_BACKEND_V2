@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -12,12 +13,23 @@ namespace RERPAPI.Controllers.Old.ProjectManager
     [ApiController]
     public class ProjectWorkItemTimelineController : ControllerBase
     {
-        #region Khai báo biến
-        ProjectRepo projectRepo = new ProjectRepo();
-        CustomerRepo customerRepo = new CustomerRepo();
-        DepartmentRepo departmentRepo = new DepartmentRepo();
-        UserTeamRepo userTeamRepo = new UserTeamRepo();
-        #endregion
+        private readonly ProjectRepo projectRepo;
+        private readonly CustomerRepo customerRepo;
+        private readonly DepartmentRepo departmentRepo;
+        private readonly UserTeamRepo userTeamRepo;
+    
+        public ProjectWorkItemTimelineController(
+            ProjectRepo projectRepo,
+            CustomerRepo customerRepo,
+            DepartmentRepo departmentRepo,
+            UserTeamRepo userTeamRepo
+        )
+        {
+            this.projectRepo = projectRepo;
+            this.customerRepo = customerRepo;
+            this.departmentRepo = departmentRepo;
+            this.userTeamRepo = userTeamRepo;
+        }
         #region Load  timeline hạng mục công việc
         [HttpGet("get-data")]
         public async Task<IActionResult> getData(DateTime dateStart, DateTime dateEnd, int departmentId, int userTeamId, int employeeId, int status)
@@ -49,5 +61,21 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         }
         #endregion
 
-    }
+        #region lấy danh sách team theo phòng ban
+        [HttpGet("get-user-team")]
+        public async Task<IActionResult> getUserTeam(int depID)
+        {
+            try
+            {
+                var data = userTeamRepo.GetAll(x => x.DepartmentID == depID);
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+            #endregion
+
+        }
 }

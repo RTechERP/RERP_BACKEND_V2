@@ -1,0 +1,17 @@
+﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes
+{
+    public class ProjectManagerRepo : GenericRepo<RERPAPI.Model.Entities.Project>
+    {
+        public ProjectManagerRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
+    }
+}

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.Asset;
 
@@ -10,14 +8,19 @@ namespace RERPAPI.Controllers.Old.Asset
     [ApiController]
     public class AssetsUnitController : ControllerBase
     {
-        UnitRepo _unitRepo = new UnitRepo();
+        private readonly UnitRepo _unitRepo;
+
+        public AssetsUnitController(UnitRepo unitRepo)
+        {
+            _unitRepo = unitRepo;
+        }
 
         [HttpGet("get-unit")]
         public IActionResult GetAll()
         {
             try
             {
-                var units = _unitRepo.GetAll().Where(x => x.IsDeleted == false).ToList();
+                var units = _unitRepo.GetAll();
 
                 return Ok(new
                 {

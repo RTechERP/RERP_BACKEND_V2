@@ -10,7 +10,11 @@ namespace RERPAPI.Controllers.Old
     [ApiController]
     public class ProductGroupController : ControllerBase
     {
-        ProductGroupRepo _productGroupRepo = new ProductGroupRepo();
+        private readonly ProductGroupRepo _productGroupRepo;
+        public ProductGroupController(ProductGroupRepo productGroupRepo)
+        {
+            _productGroupRepo = productGroupRepo;
+        }
         #region Lấy tất cả nhóm sản phẩm
         [HttpGet("get-all")]
         public IActionResult GetAll()

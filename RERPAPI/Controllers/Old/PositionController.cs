@@ -8,18 +8,23 @@ namespace RERPAPI.Controllers.Old
     [Route("api/[controller]")]
     public class PositionController : ControllerBase
     {
-        PositionContractRepo positionContractRepo = new PositionContractRepo();
-        PositionInternalRepo positionInternalRepo = new PositionInternalRepo();
+        private readonly PositionContractRepo positionContractRepo;
+        private readonly PositionInternalRepo positionInternalRepo;
+        public PositionController(PositionContractRepo positionContractRepo, PositionInternalRepo positionInternalRepo)
+        {
+            this.positionContractRepo = positionContractRepo;
+            this.positionInternalRepo = positionInternalRepo;
+        }
         [HttpGet("position-contract")]
         public IActionResult GetPositionContract()
         {
-            var result = positionContractRepo.GetAll().Where(x => x.IsDeleted == false).OrderBy(x => x.PriorityOrder);
+            var result = positionContractRepo.GetAll().OrderBy(x => x.PriorityOrder);
             return Ok(result);
         }
         [HttpGet("position-internal")]
         public IActionResult GetPositionInternal()
         {
-            var result = positionInternalRepo.GetAll().Where(x => x.IsDeleted == false).OrderBy(x => x.PriorityOrder);
+            var result = positionInternalRepo.GetAll().OrderBy(x => x.PriorityOrder);
             return Ok(result);
         }
 
@@ -29,8 +34,8 @@ namespace RERPAPI.Controllers.Old
             try
             {
                 List<EmployeeChucVuHD> employeeChucVuHDs = positionContractRepo.GetAll();
-               
-               
+
+
                 if (employeeChucVuHDs.Any(x => (x.Name == employeeChucVuHD.Name || x.Code == employeeChucVuHD.Code) && x.ID != employeeChucVuHD.ID))
                 {
                     return BadRequest(new
@@ -55,7 +60,8 @@ namespace RERPAPI.Controllers.Old
                     status = 1,
                     message = "Lưu thành công"
                 });
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 return BadRequest(new
                 {
@@ -73,7 +79,7 @@ namespace RERPAPI.Controllers.Old
             try
             {
                 List<EmployeeChucVu> employeeChucVus = positionInternalRepo.GetAll();
-                if (employeeChucVus.Any(x => (x.Name == employeeChucVu.Name || x.Code == employeeChucVu.Code) && x.ID != employeeChucVu.ID ))
+                if (employeeChucVus.Any(x => (x.Name == employeeChucVu.Name || x.Code == employeeChucVu.Code) && x.ID != employeeChucVu.ID))
                 {
                     return BadRequest(new
                     {
@@ -85,7 +91,7 @@ namespace RERPAPI.Controllers.Old
                 {
                     employeeChucVu.CreatedDate = DateTime.Now;
                     employeeChucVu.PriorityOrder = 0;
-                     await positionInternalRepo.CreateAsync(employeeChucVu);
+                    await positionInternalRepo.CreateAsync(employeeChucVu);
                 }
                 else
                 {

@@ -16,7 +16,12 @@ namespace RERPAPI.Controllers
     public class MenuController : ControllerBase
     {
         //Response _response = new Response();
-        MenuRepo _menuRepo = new MenuRepo();
+        private readonly MenuRepo _menuRepo;
+
+        public MenuController(MenuRepo menuRepo)
+        {
+            _menuRepo = menuRepo;
+        }
 
         //[RequiresPermission("N42")]
         [HttpGet("menus/{parentid}")]

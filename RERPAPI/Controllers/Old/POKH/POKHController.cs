@@ -20,16 +20,32 @@ namespace RERPAPI.Controllers.Old.POKH
     public class POKHController : ControllerBase
     {
         private readonly string _uploadPath;
-        POKHRepo _pokhRepo = new POKHRepo();
-        POKHDetailRepo _pokhDetailRepo = new POKHDetailRepo();
-        POKHDetailMoneyRepo _pokhDetailMoneyRepo = new POKHDetailMoneyRepo();
-        POKHFilesRepo _pokhFilesRepo = new POKHFilesRepo();
-        ProjectRepo _projectRepo = new ProjectRepo();
-        CurrencyRepo _currencyRepo = new CurrencyRepo();
-        ProductGroupRepo _productGroupRepo = new ProductGroupRepo();
+        private readonly POKHRepo _pokhRepo;
+        private readonly POKHDetailRepo _pokhDetailRepo;
+        private readonly POKHDetailMoneyRepo _pokhDetailMoneyRepo;
+        private readonly POKHFilesRepo _pokhFilesRepo;
+        private readonly ProjectRepo _projectRepo;
+        private readonly CurrencyRepo _currencyRepo;
+        private readonly ProductGroupRepo _productGroupRepo;
 
-        public POKHController(IWebHostEnvironment environment)
+        public POKHController(
+            IWebHostEnvironment environment,
+            POKHRepo pokhRepo,
+            POKHDetailRepo pokhDetailRepo,
+            POKHDetailMoneyRepo pokhDetailMoneyRepo,
+            POKHFilesRepo pokhFilesRepo,
+            ProjectRepo projectRepo,
+            CurrencyRepo currencyRepo,
+            ProductGroupRepo productGroupRepo)
         {
+            _pokhRepo = pokhRepo;
+            _pokhDetailRepo = pokhDetailRepo;
+            _pokhDetailMoneyRepo = pokhDetailMoneyRepo;
+            _pokhFilesRepo = pokhFilesRepo;
+            _projectRepo = projectRepo;
+            _currencyRepo = currencyRepo;
+            _productGroupRepo = productGroupRepo;
+
             _uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "POKH");
             if (!Directory.Exists(_uploadPath))
             {
@@ -86,6 +102,8 @@ namespace RERPAPI.Controllers.Old.POKH
         {
             try
             {
+
+                filterText = filterText ?? string.Empty;
                 List<List<dynamic>> POKHs = SQLHelper<dynamic>.ProcedureToList("spGetPOKH",
                     new string[] { "@FilterText", "@PageNumber", "@PageSize", "@CustomerID", "@UserID", "@POType", "@Status", "@Group", "@StartDate", "@EndDate", "@WarehouseID", "@EmployeeTeamSaleID" },
                     new object[] { filterText, page, size, customerId, userId, POType, status, group, startDate, endDate, warehouseId, employeeTeamSaleId });
@@ -197,7 +215,7 @@ namespace RERPAPI.Controllers.Old.POKH
         {
             try
             {
-                POKH pokh = _pokhRepo.GetByID(id);
+                RERPAPI.Model.Entities.POKH pokh = _pokhRepo.GetByID(id);
                 return Ok(ApiResponseFactory.Success(pokh, ""));
             }
             catch (Exception ex)
@@ -478,7 +496,7 @@ namespace RERPAPI.Controllers.Old.POKH
             try
             {
                 // 1. Tạo mới POKH (bỏ ID cũ)
-                var newPOKH = new POKH
+                var newPOKH = new RERPAPI.Model.Entities.POKH
                 {
                     Status = dto.POKH.Status,
                     POCode = dto.POKH.POCode,

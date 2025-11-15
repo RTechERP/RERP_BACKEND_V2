@@ -9,13 +9,17 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     [ApiController]
     public class WareHouseController : ControllerBase
     {
-        WarehouseRepo _warehouseRepo = new WarehouseRepo();
+        private readonly WarehouseRepo _warehouseRepo;
+        public WareHouseController(WarehouseRepo warehouseRepo)
+        {
+            _warehouseRepo = warehouseRepo;
+        }
         [HttpGet("")]
         public IActionResult getDataWH()
         {
             try
             {
-                List<Warehouse> warehouse = _warehouseRepo.GetAll();
+                List<RERPAPI.Model.Entities.Warehouse> warehouse = _warehouseRepo.GetAll();
                 return Ok(new
                 {
                     status = 1,
@@ -32,5 +36,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 });
             }
         }
+        
     }
 }

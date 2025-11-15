@@ -13,7 +13,11 @@ namespace RERPAPI.Controllers.Old
     [ApiKeyAuthorize]
     public class ProjectWorkerVersionController : ControllerBase
     {
-        ProjectWorkerVersionRepo _repo = new ProjectWorkerVersionRepo();
+        private ProjectWorkerVersionRepo _repo;
+        public ProjectWorkerVersionController(ProjectWorkerVersionRepo repo)
+        {
+            _repo = repo;
+        }   
 
         [HttpPost]
         public async Task<IActionResult> SaveData([FromBody] ProjectWorkerVersion request)

@@ -28,7 +28,11 @@ namespace RERPAPI.Controllers.Old.Technical.InventoryDemo
     [ApiController]
     public class InventoryDemoController : ControllerBase
     {
-        ProductRTCQRCodeRepo _productRTCQRCodeRepo = new ProductRTCQRCodeRepo();
+        private readonly ProductRTCQRCodeRepo _productRTCQRCodeRepo;
+        public InventoryDemoController(ProductRTCQRCodeRepo productRTCQRCodeRepo)
+        {
+            _productRTCQRCodeRepo = productRTCQRCodeRepo;
+        }
         [HttpPost("get-inventoryDemo")]
         public IActionResult GetInventoryDemo([FromBody] InventoryDemoRequestParam request)
         {
@@ -91,7 +95,7 @@ namespace RERPAPI.Controllers.Old.Technical.InventoryDemo
                 if (productRTCQRCode.ID <= 0) 
                     await _productRTCQRCodeRepo.CreateAsync(productRTCQRCode);
                 else 
-                    _productRTCQRCodeRepo.UpdateAsync( productRTCQRCode);
+                    await _productRTCQRCodeRepo.UpdateAsync( productRTCQRCode);
 
                 return Ok(new
                 {

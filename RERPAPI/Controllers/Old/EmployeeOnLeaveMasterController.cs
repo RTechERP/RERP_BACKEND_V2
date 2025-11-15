@@ -10,8 +10,13 @@ namespace RERPAPI.Controllers.Old
     [Route("api/[controller]")]
     public class EmployeeOnLeaveMasterController : ControllerBase
     {
-        EmployeeOnLeaveMasterRepo employeeOnLeaveMasterRepo = new EmployeeOnLeaveMasterRepo();
-        EmployeeRepo employeeRepo = new EmployeeRepo();
+        private readonly EmployeeOnLeaveMasterRepo _employeeOnLeaveMasterRepo;
+        private readonly EmployeeRepo _employeeRepo;
+        public EmployeeOnLeaveMasterController(EmployeeOnLeaveMasterRepo employeeOnLeaveMasterRepo, EmployeeRepo employeeRepo)
+        {
+            _employeeOnLeaveMasterRepo = employeeOnLeaveMasterRepo;
+            _employeeRepo = employeeRepo;
+        }       
 
         [HttpGet]
         public IActionResult GetAllEmployeeOnLeaveMaster()
@@ -57,10 +62,10 @@ namespace RERPAPI.Controllers.Old
                             message = "Nhân viên này đã tồn tại trong năm " + employeeOnLeaveMaster.YearOnleave + ", vui lòng kiểm tra lại",
                         });
                     }
-                    await employeeOnLeaveMasterRepo.CreateAsync(employeeOnLeaveMaster);
+                    await _employeeOnLeaveMasterRepo.CreateAsync(employeeOnLeaveMaster);
                 } else
                 {
-                    await employeeOnLeaveMasterRepo.UpdateAsync(employeeOnLeaveMaster);
+                    await _employeeOnLeaveMasterRepo.UpdateAsync(employeeOnLeaveMaster);
                 }
                 return Ok(new
                 {
@@ -97,7 +102,7 @@ namespace RERPAPI.Controllers.Old
 
 
                 // Kiểm tra trong database
-                var existingDayOff = employeeOnLeaveMasterRepo.GetAll()
+                var existingDayOff = _employeeOnLeaveMasterRepo.GetAll()
                     .Where(x => employeeIDList.Contains(x.EmployeeID) && yearOnLeaveList.Contains(x.YearOnleave))
                     .Select(x => new
                     {

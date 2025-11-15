@@ -8,8 +8,13 @@ namespace RERPAPI.Controllers.Old
     [ApiController]
     public class ProductSaleController : ControllerBase
     {
-        private ProductSaleRepo _productSaleRepo = new ProductSaleRepo();
-        private ProductGroupRepo _productGroupRepo = new ProductGroupRepo();
+        private readonly ProductSaleRepo _productSaleRepo;
+        private readonly ProductGroupRepo _productGroupRepo;
+        public ProductSaleController(ProductSaleRepo productSaleRepo, ProductGroupRepo productGroupRepo)
+        {
+            _productSaleRepo = productSaleRepo;
+            _productGroupRepo = productGroupRepo;
+        }
 
         [HttpGet("get-all")]
         public IActionResult GetProductSales()

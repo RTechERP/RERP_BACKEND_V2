@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
@@ -9,13 +8,17 @@ namespace RERPAPI.Controllers.Old
     [Route("api/[controller]")]
     public class BusinessFieldLinkController : ControllerBase
     {
-        BusinessFieldLinkRepo businessFieldLinkRepo = new BusinessFieldLinkRepo();
+        private BusinessFieldLinkRepo _businessFieldLinkRepo;
+        public BusinessFieldLinkController(BusinessFieldLinkRepo businessFieldLinkRepo)
+        {
+            _businessFieldLinkRepo = businessFieldLinkRepo;
+        }
         [HttpGet]
         public IActionResult GetAll()
         {
             try
             {
-                List<BusinessFieldLink> businessFieldLinks = businessFieldLinkRepo.GetAll();
+                List<BusinessFieldLink> businessFieldLinks = _businessFieldLinkRepo.GetAll();
                 return Ok(new
                 {
                     status = 1,
@@ -38,7 +41,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                var businessFieldLink = SQLHelper<BusinessFieldLink>.FindByAttribute("CustomerID", customerID);
+                var businessFieldLink = _businessFieldLinkRepo.GetAll(x => x.CustomerID == customerID);
                 if (businessFieldLink == null)
                 {
                     return NotFound(new

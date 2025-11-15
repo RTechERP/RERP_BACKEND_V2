@@ -1,4 +1,5 @@
 ﻿using RERPAPI.Model.Context;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
@@ -9,7 +10,10 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class EmployeeTeamSaleRepo:GenericRepo<EmployeeTeamSale>
+    public class EmployeeTeamSaleRepo : GenericRepo<EmployeeTeamSale>
     {
+        public EmployeeTeamSaleRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
     }
 }

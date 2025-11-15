@@ -1,13 +1,9 @@
 ﻿using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Office.CustomUI;
-using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System.Text;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -17,11 +13,19 @@ namespace RERPAPI.Controllers.Old.TinhGia
     [ApiController]
     public class TradePriceController : ControllerBase
     {
-        TradePriceRepo _tradePriceRepo = new TradePriceRepo();
-        TradePriceDetailRepo _tradePriceDetailRepo = new TradePriceDetailRepo();
-        UnitCountRepo _unitCountRepo = new UnitCountRepo();
-        ProjectRepo _projectRepo = new ProjectRepo();
-        CustomerRepo _customerRepo = new CustomerRepo();
+        private readonly TradePriceRepo _tradePriceRepo;
+        private readonly TradePriceDetailRepo _tradePriceDetailRepo;
+        private readonly UnitCountRepo _unitCountRepo;
+        private readonly ProjectRepo _projectRepo;
+        private readonly CustomerRepo _customerRepo;
+        public TradePriceController(TradePriceRepo tradePriceRepo, TradePriceDetailRepo tradePriceDetailRepo, UnitCountRepo unitCountRepo, ProjectRepo projectRepo, CustomerRepo customerRepo)
+        {
+            _tradePriceRepo = tradePriceRepo;
+            _tradePriceDetailRepo = tradePriceDetailRepo;
+            _unitCountRepo = unitCountRepo;
+            _projectRepo = projectRepo;
+            _customerRepo = customerRepo;
+        }
 
         [HttpGet]
         public IActionResult Get(int employeeId, int saleAdminId, int projectId, int customerId, string keyword = "")
@@ -42,7 +46,7 @@ namespace RERPAPI.Controllers.Old.TinhGia
             }
         }
         [HttpGet("get-details")]
-        public IActionResult GetDetails (int id)
+        public IActionResult GetDetails(int id)
         {
             try
             {
@@ -59,7 +63,7 @@ namespace RERPAPI.Controllers.Old.TinhGia
         }
 
         [HttpGet("get-unitcount")]
-        public  IActionResult GetUnitCount()
+        public IActionResult GetUnitCount()
         {
             try
             {
@@ -144,7 +148,7 @@ namespace RERPAPI.Controllers.Old.TinhGia
                         model.ProductCodeOrigin = item.ProductCodeOrigin;
                         model.CurrencyID = item.CurrencyID;
                         model.CurrencyRate = item.CurrencyRate;
-                        model.Margin = item.Margin; 
+                        model.Margin = item.Margin;
 
                         if (idOld > 0)
                         {
@@ -157,18 +161,18 @@ namespace RERPAPI.Controllers.Old.TinhGia
                         parentIdMapping.Add(item.ID, model.ID);
                     }
                 }
-                if(dto.deletedTradePriceDetails.Count > 0)
+                if (dto.deletedTradePriceDetails.Count > 0)
                 {
-                    foreach( var item in dto.deletedTradePriceDetails)
+                    foreach (var item in dto.deletedTradePriceDetails)
                     {
                         var itemDel = _tradePriceDetailRepo.GetByID(item);
-                        if(itemDel != null)
+                        if (itemDel != null)
                         {
-                            itemDel.IsDeleted = true;
+                            //itemDel.IsDeleted = true;
                             itemDel.UpdatedDate = DateTime.Now;
                             await _tradePriceDetailRepo.UpdateAsync(itemDel);
-                        }    
-                    }    
+                        }
+                    }
                 }
 
                 //return Ok(new
@@ -177,7 +181,7 @@ namespace RERPAPI.Controllers.Old.TinhGia
                 //    message = "Success",
                 //    data = new { id = dto.tradePrices.ID }
                 //});
-                return Ok(ApiResponseFactory.Success(new { id = dto.tradePrices.ID}, "Success"));
+                return Ok(ApiResponseFactory.Success(new { id = dto.tradePrices.ID }, "Success"));
             }
             catch (Exception ex)
             {
@@ -192,8 +196,8 @@ namespace RERPAPI.Controllers.Old.TinhGia
                 TradePrice tradePrice = _tradePriceRepo.GetByID(id);
                 Model.Entities.Project project = _projectRepo.GetByID(tradePrice.ProjectID ?? 0);
                 Customer customer = _customerRepo.GetByID(tradePrice.CustomerID ?? 0);
-             
-                List<List<dynamic>> data = SQLHelper<dynamic>.ProcedureToList("spGetTradePriceDetail", 
+
+                List<List<dynamic>> data = SQLHelper<dynamic>.ProcedureToList("spGetTradePriceDetail",
                     new string[] { "@TradePriceID" },
                     new object[] { id });
 
@@ -243,8 +247,8 @@ namespace RERPAPI.Controllers.Old.TinhGia
                         sheet.Cell(rowIdx, 9).Value = Convert.ToDecimal(rowData["UnitImportPriceUSD"] ?? 0);
                         sheet.Cell(rowIdx, 10).Value = Convert.ToDecimal(rowData["TotalImportPriceUSD"] ?? 0);
                         sheet.Cell(rowIdx, 11).Value = Convert.ToDecimal(rowData["UnitImportPriceVND"] ?? 0);
-                        sheet.Cell(rowIdx, 12).Value = Convert.ToDecimal(rowData["TotalImportPriceVND"] ?? 0)    ;
-                        sheet.Cell(rowIdx, 13).Value = Convert.ToDecimal(rowData["BankCharge"] ?? 0) ;
+                        sheet.Cell(rowIdx, 12).Value = Convert.ToDecimal(rowData["TotalImportPriceVND"] ?? 0);
+                        sheet.Cell(rowIdx, 13).Value = Convert.ToDecimal(rowData["BankCharge"] ?? 0);
                         sheet.Cell(rowIdx, 14).Value = Convert.ToDecimal(rowData["ProtectiveTariff"] ?? 0);
                         sheet.Cell(rowIdx, 15).Value = Convert.ToDecimal(rowData["ProtectiveTariffPerPcs"] ?? 0);
                         sheet.Cell(rowIdx, 16).Value = Convert.ToDecimal(rowData["TotalProtectiveTariff"] ?? 0);
