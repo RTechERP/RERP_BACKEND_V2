@@ -1,6 +1,4 @@
-﻿using DocumentFormat.OpenXml.Wordprocessing;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Param;
 
@@ -11,7 +9,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     public class HistoryImportExportController : ControllerBase
     {
         [HttpPost("")]
-
         public IActionResult getReport(HistoryImportExportParam filter)
         {
             try
@@ -24,12 +21,14 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
                     "spGetHistoryImportExport_New",
                     new string[] { "@PageNumber", "@PageSize", "@FilterText", "@DateStart", "@DateEnd", "@Status", "@WarehouseCode" },
-                    new object[] { filter.PageNumber, filter.PageSize, filter.FilterText, filter.DateStart,filter.DateEnd,filter.Status, filter.WareHouseCode }
+                    new object[] { filter.PageNumber, filter.PageSize, filter.FilterText, filter.DateStart, filter.DateEnd, filter.Status, filter.WareHouseCode }
                     );
+                var data = SQLHelper<dynamic>.GetListData(result, 0);
+
                 return Ok(new
                 {
                     status = 1,
-                    data = SQLHelper<object>.GetListData(result, 0)
+                    data = data
                 });
             }
             catch (Exception ex)

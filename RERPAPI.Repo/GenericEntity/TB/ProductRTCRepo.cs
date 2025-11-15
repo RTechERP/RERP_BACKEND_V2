@@ -1,20 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using RERPAPI.Model.DTO;
+﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using RERPAPI.Repo;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class ProductRTCRepo: GenericRepo<ProductRTC>
+    public class ProductRTCRepo : GenericRepo<ProductRTC>
     {
         public ProductRTCRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
-
+        public bool checkExistProductCodeRTC(ProductRTC model)
+        {
+            var exist = GetAll(x => x.ProductCode == model.ProductCode && x.ID != model.ID && x.IsDeleted != true).Any();
+            return exist;
+        }
+        public bool checkExistSerialRTC(ProductRTC model)
+        {
+            var exist = GetAll(x => x.SerialNumber == model.SerialNumber && x.ID != model.ID && x.IsDeleted != true).Any();
+            return exist;
+        }
+        public bool checkExistPartnumberRTC(ProductRTC model)
+        {
+            var exist = GetAll(x => x.PartNumber == model.SerialNumber && x.ID != model.ID && x.IsDeleted != true).Any();
+            return exist;
+        }
         public string generateProductCode()
         {
             string numberCodeDefault = "00000001";

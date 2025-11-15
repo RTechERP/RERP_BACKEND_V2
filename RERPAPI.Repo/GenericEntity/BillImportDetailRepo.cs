@@ -51,7 +51,15 @@ namespace RERPAPI.Repo.GenericEntity
                 // lưu serial number
                 await SaveSerialNumberForDetail(detail);
                 // xử lý tồn kho dự án
-                await _inventoryProjectRepo.UpdateInventoryProject(detail);
+
+                // Tồn kho dự án
+                var invProjectId = await _inventoryProjectRepo.UpdateInventoryProject(detail);
+                if (invProjectId > 0)
+                {
+                    detail.InventoryProjectID = invProjectId;
+                    await UpdateAsync(detail);
+                }
+
 
                 // xử lý liên kết hóa đơn
                 await _invoicelinkrepo.InvoiceLinkForBillImport(detail);
