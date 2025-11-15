@@ -41,6 +41,11 @@ namespace RERPAPI.Controllers.Warehouse.AGV
         {
             try
             {
+                var validate = _groupLinkRepo.Validate(groupLink);
+                if (validate.status == 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, validate.message));
+                }
 
                 if (groupLink.ID <= 0) await _groupLinkRepo.CreateAsync(groupLink);
                 else await _groupLinkRepo.UpdateAsync(groupLink);
