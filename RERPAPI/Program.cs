@@ -326,6 +326,10 @@ builder.Services.AddScoped<TaxCompanyRepo>();
 #region Kho AGV
 
 builder.Services.AddScoped<AGVProductRepo>();
+builder.Services.AddScoped<AGVProductGroupRepo>();
+builder.Services.AddScoped<AGVProductGroupLinkRepo>();
+builder.Services.AddScoped<AGVBillImportRepo>();
+builder.Services.AddScoped<AGVBillImportDetailRepo>();
 #endregion
 
 // BillExportTechnicalRepo in RTCApi namespace (used by Old Technical controller)

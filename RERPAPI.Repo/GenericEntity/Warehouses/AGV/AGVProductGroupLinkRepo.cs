@@ -16,31 +16,36 @@ namespace RERPAPI.Repo.GenericEntity.Warehouses.AGV
         }
 
 
-        public APIResponse Validate(AGVProductGroupLink groupLink)
+        public APIResponse Validate(List<AGVProductGroupLink> groupLinks)
         {
             try
             {
-                var response = ApiResponseFactory.Success(null, "");
-                if (groupLink.AGVProductID <= 0)
+                foreach (var groupLink in groupLinks)
                 {
-                    response = ApiResponseFactory.Fail(null, "Vui lòng chọn Mã sản phẩm!");
+                    if (groupLink.AGVProductID <= 0)
+                    {
+                        return ApiResponseFactory.Fail(null, "Vui lòng chọn Mã sản phẩm!");
+                    }
+
+                    if (groupLink.AGVProductGroupID <= 0)
+                    {
+                        return ApiResponseFactory.Fail(null, "Vui lòng chọn Loại sản phẩm!");
+                    }
+
+                    var dataGroupLinks = GetAll(x => x.AGVProductID == groupLink.AGVProductID &&
+                                                    x.AGVProductGroupID == groupLink.AGVProductGroupID &&
+                                                    x.WarehouseID == groupLink.WarehouseID &&
+                                                    x.IsDeleted != true &&
+                                                    x.ID != groupLink.ID);
+                    if (dataGroupLinks.Count() > 0)
+                    {
+                        return ApiResponseFactory.Fail(null, $"Sản phẩm [{groupLink.AGVProductID}] đã tồn tại trong Loại [{groupLink.AGVProductGroupID}] kho [{groupLink.WarehouseID}]. Vui lòng kiểm tra lại!");
+                    }
                 }
-
-                if (groupLink.AGVProductGroupID <= 0)
-                {
-                    response = ApiResponseFactory.Fail(null, "Vui lòng chọn Nhóm sản phẩm!");
-                }
-
-                var groupLinks = GetAll(x => x.AGVProductID  == groupLink.AGVProductID && x.AGVProductGroupID == groupLink.AGVProductGroupID &&
-                                                x.IsDeleted != true &&
-                                                x.ID != groupLink.ID);
-                if (groupLinks.Count() > 0)
-                {
-                    response = ApiResponseFactory.Fail(null, $"Mã sản phẩm [{groupLink.AGVProductID}] đã tồn tại trong nhóm thiết bị [{groupLink.AGVProductGroupID}]. Vui lòng kiểm tra lại!");
-                }
+                
 
 
-                return response;
+                return ApiResponseFactory.Success(null, "");
             }
             catch (Exception ex)
             {
