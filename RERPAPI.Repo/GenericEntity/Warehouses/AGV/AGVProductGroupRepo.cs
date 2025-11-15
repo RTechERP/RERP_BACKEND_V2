@@ -26,12 +26,12 @@ namespace RERPAPI.Repo.GenericEntity.Warehouses.AGV
                 }
                 else
                 {
-                    var products = GetAll(x => x.AGVProductGroupNo.Trim().ToLower() == group.AGVProductGroupNo.Trim().ToLower() &&
+                    var groups = GetAll(x => x.AGVProductGroupNo.Trim().ToLower() == group.AGVProductGroupNo.Trim().ToLower() &&
                                                 x.IsDeleted != true &&
                                                 x.ID != group.ID);
-                    if (products.Count() > 0)
+                    if (groups.Count() > 0)
                     {
-                        response = ApiResponseFactory.Fail(null, $"Mã loại [{group.AGVProductGroupNo}] đã tồn tại. Vui lòng kiểm tra lại!");
+                        response = ApiResponseFactory.Fail(null, $"Mã loại [{group.AGVProductGroupNo}] đã tồn tại. Vui lòng kiểm tra lại!", groups);
                     }
                 }
 
