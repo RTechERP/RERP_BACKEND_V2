@@ -320,6 +320,7 @@ builder.Services.AddScoped<HRHiringRequestExperienceLinkRepo>();
 builder.Services.AddScoped<HRHiringRequestGenderLinkRepo>();
 builder.Services.AddScoped<HRHiringRequestHealthLinkRepo>();
 builder.Services.AddScoped<HRHiringRequestLanguageLinkRepo>();
+builder.Services.AddScoped<ProjectWorkerRepo>();
 
 builder.Services.AddScoped<TaxCompanyRepo>();
 
