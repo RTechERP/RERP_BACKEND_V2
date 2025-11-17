@@ -27,6 +27,7 @@ namespace RERPAPI.Controllers.Old.POKH
         private readonly ProjectRepo _projectRepo;
         private readonly CurrencyRepo _currencyRepo;
         private readonly ProductGroupRepo _productGroupRepo;
+        private readonly ConfigSystemRepo _configSystemRepo;
 
         public POKHController(
             IWebHostEnvironment environment,
@@ -36,7 +37,8 @@ namespace RERPAPI.Controllers.Old.POKH
             POKHFilesRepo pokhFilesRepo,
             ProjectRepo projectRepo,
             CurrencyRepo currencyRepo,
-            ProductGroupRepo productGroupRepo)
+            ProductGroupRepo productGroupRepo,
+            ConfigSystemRepo configSystemRepo)
         {
             _pokhRepo = pokhRepo;
             _pokhDetailRepo = pokhDetailRepo;
@@ -45,6 +47,7 @@ namespace RERPAPI.Controllers.Old.POKH
             _projectRepo = projectRepo;
             _currencyRepo = currencyRepo;
             _productGroupRepo = productGroupRepo;
+            _configSystemRepo = configSystemRepo;
 
             _uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "POKH");
             if (!Directory.Exists(_uploadPath))
@@ -512,72 +515,171 @@ namespace RERPAPI.Controllers.Old.POKH
 
         #region Hàm xử lí File và lưu bảng POKHFile
         [HttpPost("upload")]
-        public async Task<IActionResult> Upload(int poKHID, [FromForm] List<IFormFile> files)
+        [DisableRequestSizeLimit]
+        public async Task<IActionResult> Upload(int poKHID)
         {
             try
             {
-                // Lấy thông tin POKH
+                var form = await Request.ReadFormAsync();
+                var key = form["key"].ToString();
+                var files = form.Files;
+
+                // Kiểm tra input
+                if (string.IsNullOrWhiteSpace(key))
+                    return BadRequest(ApiResponseFactory.Fail(null, "Key không được để trống!"));
+
+                if (files == null || files.Count == 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Danh sách file không được để trống!"));
+
                 var po = _pokhRepo.GetByID(poKHID);
                 if (po == null)
-                {
                     throw new Exception("POKH not found");
-                }
 
-                // Tạo thư mục local cho file
-                string pathPattern = $"NB{po.ID}";
-                string pathUpload = Path.Combine(_uploadPath, pathPattern);
+                var uploadPath = _configSystemRepo.GetUploadPathByKey(key);
+                if (string.IsNullOrWhiteSpace(uploadPath))
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: {key}"));
 
-                // Tạo thư mục nếu chưa tồn tại
-                if (!Directory.Exists(pathUpload))
+                var subPathRaw = form["subPath"].ToString()?.Trim() ?? "";
+                string targetFolder = uploadPath;
+                if (!string.IsNullOrWhiteSpace(subPathRaw))
                 {
-                    Directory.CreateDirectory(pathUpload);
+                    var separator = Path.DirectorySeparatorChar;
+                    var segments = subPathRaw
+                        .Replace('/', separator)
+                        .Replace('\\', separator)
+                        .Split(separator, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(seg =>
+                        {
+                            var invalidChars = Path.GetInvalidFileNameChars();
+                            var cleaned = new string(seg.Where(c => !invalidChars.Contains(c)).ToArray());
+                            cleaned = cleaned.Replace("..", "").Trim();
+                            return cleaned;
+                        })
+                        .Where(s => !string.IsNullOrWhiteSpace(s))
+                        .ToArray();
+
+                    if (segments.Length > 0)
+                        targetFolder = Path.Combine(uploadPath, Path.Combine(segments));
                 }
+                else
+                {
+                    targetFolder = Path.Combine(uploadPath, $"NB{po.ID}");
+                }
+
+                if (!Directory.Exists(targetFolder))
+                    Directory.CreateDirectory(targetFolder);
 
                 var processedFile = new List<POKHFile>();
 
-                // Lưu từng file vào thư mục local
                 foreach (var file in files)
                 {
-                    if (file.Length > 0)
+                    if (file.Length <= 0) continue;
+
+                    // Tạo tên file unique để tránh trùng lặp
+                    var fileExtension = Path.GetExtension(file.FileName);
+                    var originalFileName = Path.GetFileNameWithoutExtension(file.FileName);
+                    var uniqueFileName = $"{originalFileName}_{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid().ToString("N")[..8]}{fileExtension}";
+                    var fullPath = Path.Combine(targetFolder, uniqueFileName);
+
+                    // Lưu file trực tiếp vào targetFolder (không tạo file tạm khác)
+                    using (var stream = new FileStream(fullPath, FileMode.Create))
                     {
-                        string filePath = Path.Combine(pathUpload, file.FileName);
-
-                        using (var stream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await file.CopyToAsync(stream);
-                        }
-
-                        var filePO = new POKHFile
-                        {
-                            POKHID = po.ID,
-                            FileName = file.FileName,
-                            OriginPath = pathUpload,
-                            ServerPath = pathUpload,
-                            IsDeleted = false,
-                            CreatedBy = User.Identity?.Name ?? "System",
-                            CreatedDate = DateTime.Now,
-                            UpdatedBy = User.Identity?.Name ?? "System",
-                            UpdatedDate = DateTime.Now
-                        };
-
-                        await _pokhFilesRepo.CreateAsync(filePO);
-                        processedFile.Add(filePO);
+                        await file.CopyToAsync(stream);
                     }
+
+                    var filePO = new POKHFile
+                    {
+                        POKHID = po.ID,
+                        FileName = uniqueFileName,
+                        OriginPath = targetFolder,
+                        ServerPath = targetFolder,
+                        IsDeleted = false,
+                        CreatedBy = User.Identity?.Name ?? "System",
+                        CreatedDate = DateTime.Now,
+                        UpdatedBy = User.Identity?.Name ?? "System",
+                        UpdatedDate = DateTime.Now
+                    };
+
+                    await _pokhFilesRepo.CreateAsync(filePO);
+                    processedFile.Add(filePO);
                 }
 
-                //return Ok(new
-                //{
-                //    status = 1,
-                //    message = $"{processedFile.Count} tệp đã được tải lên thành công",
-                //    data = processedFile
-                //});
                 return Ok(ApiResponseFactory.Success(processedFile, $"{processedFile.Count} tệp đã được tải lên thành công"));
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi upload file: {ex.Message}"));
             }
         }
+
+        //#region Hàm xử lí File và lưu bảng POKHFile
+        //[HttpPost("upload")]
+        //public async Task<IActionResult> Upload(int poKHID, [FromForm] List<IFormFile> files)
+        //{
+        //    try
+        //    {
+        //        // Lấy thông tin POKH
+        //        var po = _pokhRepo.GetByID(poKHID);
+        //        if (po == null)
+        //        {
+        //            throw new Exception("POKH not found");
+        //        }
+
+        //        // Tạo thư mục local cho file
+        //        string pathPattern = $"NB{po.ID}";
+        //        string pathUpload = Path.Combine(_uploadPath, pathPattern);
+
+        //        // Tạo thư mục nếu chưa tồn tại
+        //        if (!Directory.Exists(pathUpload))
+        //        {
+        //            Directory.CreateDirectory(pathUpload);
+        //        }
+
+        //        var processedFile = new List<POKHFile>();
+
+        //        // Lưu từng file vào thư mục local
+        //        foreach (var file in files)
+        //        {
+        //            if (file.Length > 0)
+        //            {
+        //                string filePath = Path.Combine(pathUpload, file.FileName);
+
+        //                using (var stream = new FileStream(filePath, FileMode.Create))
+        //                {
+        //                    await file.CopyToAsync(stream);
+        //                }
+
+        //                var filePO = new POKHFile
+        //                {
+        //                    POKHID = po.ID,
+        //                    FileName = file.FileName,
+        //                    OriginPath = pathUpload,
+        //                    ServerPath = pathUpload,
+        //                    IsDeleted = false,
+        //                    CreatedBy = User.Identity?.Name ?? "System",
+        //                    CreatedDate = DateTime.Now,
+        //                    UpdatedBy = User.Identity?.Name ?? "System",
+        //                    UpdatedDate = DateTime.Now
+        //                };
+
+        //                await _pokhFilesRepo.CreateAsync(filePO);
+        //                processedFile.Add(filePO);
+        //            }
+        //        }
+
+        //        //return Ok(new
+        //        //{
+        //        //    status = 1,
+        //        //    message = $"{processedFile.Count} tệp đã được tải lên thành công",
+        //        //    data = processedFile
+        //        //});
+        //        return Ok(ApiResponseFactory.Success(processedFile, $"{processedFile.Count} tệp đã được tải lên thành công"));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
         [HttpPost("delete-file")]
         public IActionResult DeleteFile([FromBody] List<int> fileIds)
         {
