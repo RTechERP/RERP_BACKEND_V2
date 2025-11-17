@@ -147,5 +147,5 @@ public partial class ProjectPartlistPurchaseRequest
 
     public string? ParentProductCode { get; set; }
 
-    public bool? IsPurchase { get; set; }
+    //public bool? IsPurchase { get; set; }
 }

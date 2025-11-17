@@ -104,11 +104,11 @@ namespace RERPAPI.Repo.GenericEntity
                         return false;
                     }
                 }
-                else if (string.IsNullOrWhiteSpace(request.Note))
-                {
-                    message = $"Vui lòng nhập Ghi chú cho sản phẩm [{request.ProductCode}]!";
-                    return false;
-                }
+                //else if (string.IsNullOrWhiteSpace(request.Note))
+                //{
+                //    message = $"Vui lòng nhập Ghi chú cho sản phẩm [{request.ProductCode}]!";
+                //    return false;
+                //}
             }
 
             // 2. Validate duplicate (DuplicateID)

@@ -14,6 +14,7 @@ using RERPAPI.Repo.GenericEntity.AddNewBillExport;
 using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.BBNV;
 using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
+using RERPAPI.Repo.GenericEntity.Film;
 using RERPAPI.Repo.GenericEntity.HRM;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
 using RERPAPI.Repo.GenericEntity.MeetingMinutesRepo;
@@ -35,8 +36,12 @@ builder.Services.AddSwaggerGen();
 
 
 builder.Services.AddHttpContextAccessor();
+
+#region Injection Repositories and Services
 builder.Services.AddScoped<IUserPermissionService, UserPermissionService>();
 builder.Services.AddScoped<RTCContext>();
+builder.Services.AddScoped<RoleConfig>();
+
 builder.Services.AddScoped<EmployeeOnLeaveRepo>();
 builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.AddressStockRepo>();
 builder.Services.AddScoped<BillDocumentExportLogRepo>();
@@ -220,6 +225,10 @@ builder.Services.AddScoped<ProductsRepo>();
 
 
 builder.Services.AddScoped<TSAllocationAssetPersonalDetailRepo>();
+builder.Services.AddScoped<FilmManagementRepo>();
+
+builder.Services.AddScoped<FilmManagementDetailRepo>();
+
 builder.Services.AddScoped<TSAllocationAssetPersonalRepo>();
 builder.Services.AddScoped<TSAllocationEvictionAssetRepo>();
 builder.Services.AddScoped<TSAssetAllocationDetailRepo>();
@@ -313,8 +322,19 @@ builder.Services.AddScoped<HRHiringRequestLanguageLinkRepo>();
 
 builder.Services.AddScoped<TaxCompanyRepo>();
 
+#region Kho AGV
+
+builder.Services.AddScoped<AGVProductRepo>();
+builder.Services.AddScoped<AGVProductGroupRepo>();
+builder.Services.AddScoped<AGVProductGroupLinkRepo>();
+builder.Services.AddScoped<AGVBillImportRepo>();
+builder.Services.AddScoped<AGVBillImportDetailRepo>();
+#endregion
+
 // BillExportTechnicalRepo in RTCApi namespace (used by Old Technical controller)
 builder.Services.AddScoped<BillExportTechnicalRepo>();
+builder.Services.AddScoped<TaxCompanyRepo>();
+
 
 builder.Services.AddScoped<CurrentUser>(provider =>
 {
@@ -325,7 +345,7 @@ builder.Services.AddScoped<CurrentUser>(provider =>
     return currentUser;
 
 });
-
+#endregion
 //Config connect database
 Config.ConnectionString = builder.Configuration.GetValue<string>("ConnectionString") ?? "";
 builder.Services.AddDbContext<RTCContext>(o => o.UseSqlServer(Config.ConnectionString));
@@ -342,6 +362,7 @@ builder.Services.AddCors(options =>
         builder.AllowAnyOrigin()
                .AllowAnyMethod()
                .AllowAnyHeader();
+
     });
 });
 
@@ -411,7 +432,14 @@ builder.Services.AddRouting(options =>
     options.LowercaseUrls = true; // Chuyển tất cả URL thành chữ thường
 });
 
+var roleConfigSection = builder.Configuration.GetSection("RoleConfig");
 
+// Bind vào IOptions<RoleConfig>
+builder.Services.Configure<RoleConfig>(roleConfigSection);
+
+// Đăng ký singleton để inject trực tiếp RoleConfig
+builder.Services.AddSingleton(sp =>
+    sp.GetRequiredService<IOptions<RoleConfig>>().Value);
 builder.Services.Configure<ModulaConfig>(builder.Configuration.GetSection("ModulaConfig"));
 
 // Nếu bạn muốn inject trực tiếp:
@@ -445,8 +473,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 app.UseCors("MyCors");
-app.UseAuthorization();
 //app.UseAuthentication();
+app.UseAuthorization();
 app.UseSession();
 app.UseMiddleware<DynamicAuthorizationMiddleware>();
 
@@ -466,18 +494,18 @@ app.UseStaticFiles();
 List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();
 foreach (var item in staticFiles)
 {
-    app.UseStaticFiles(new StaticFileOptions()
-    {
-        FileProvider = new PhysicalFileProvider(item.PathFull),
-        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-    });
+    //app.UseStaticFiles(new StaticFileOptions()
+    //{
+    //    FileProvider = new PhysicalFileProvider(item.PathFull),
+    //    RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+    //});
 
 
-    app.UseDirectoryBrowser(new DirectoryBrowserOptions
-    {
-        FileProvider = new PhysicalFileProvider(item.PathFull),
-        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-    });
+    //app.UseDirectoryBrowser(new DirectoryBrowserOptions
+    //{
+    //    FileProvider = new PhysicalFileProvider(item.PathFull),
+    //    RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+    //});
 }
 
 app.Run();

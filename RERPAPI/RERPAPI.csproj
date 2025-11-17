@@ -46,7 +46,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Controllers\BaseController.cs" />
     <Compile Remove="Controllers\DepartmentController.cs" />
     <Compile Remove="Controllers\HistoryProductRTCController.cs" />
     <Compile Remove="Controllers\KPIEmployeeTeamController.cs" />
