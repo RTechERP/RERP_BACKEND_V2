@@ -9,6 +9,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Asset;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers.Old.Asset
 {
@@ -256,7 +257,7 @@ namespace RERPAPI.Controllers.Old.Asset
                             await _tSAllocationEvictionAssetRepo.UpdateAsync(item);
                     }
                 }
-                return Ok(new { status = 1 });
+                return Ok(ApiResponseFactory.Success(allocations, "Lưu dữ liệu thành công"));
             }
             catch (Exception ex)
             {
@@ -312,7 +313,7 @@ namespace RERPAPI.Controllers.Old.Asset
                             await _tSAllocationEvictionAssetRepo.UpdateAsync(item);
                     }
                 }
-                return Ok(new { status = 1 });
+                return Ok(ApiResponseFactory.Success(allocations, "Lưu dữ liệu thành công"));
             }
             catch (Exception ex)
             {
@@ -368,7 +369,7 @@ namespace RERPAPI.Controllers.Old.Asset
                             await _tSAllocationEvictionAssetRepo.UpdateAsync(item);
                     }
                 }
-                return Ok(new { status = 1 });
+                return Ok(ApiResponseFactory.Success(allocations, "Lưu dữ liệu thành công"));
             }
             catch (Exception ex)
             {
