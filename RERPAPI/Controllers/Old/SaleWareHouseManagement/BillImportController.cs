@@ -536,26 +536,9 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     //        _billImportDetailSerialNumberRepo.Update(serial);
                     //    }
                     //}
-                    // Xử lý tồn kho dự án
-                    if (detail.ProjectID > 0)
-                    {
-                        var inv = _inventoryProjectRepo.GetByID(detail.InventoryProjectID ?? 0);
-                        if (inv.ID > 0)
-                        {
-                            inv.Quantity += detail.Qty;
-                            await _inventoryProjectRepo.UpdateAsync(inv);
-                        }
-                        else
-                        {
-                            await _inventoryProjectRepo.CreateAsync(new InventoryProject
-                            {
-                                ProjectID = detail.ProjectID,
-                                ProductSaleID = detail.ProductID,
-                                Quantity = detail.Qty,
-                                CreatedDate = DateTime.Now
-                            });
-                        }
-                    }
+
+                    // PHASE 2: Xử lý InventoryProject (Kho Giữ) - Comprehensive logic from desktop C#
+                    await UpdateInventoryProject(detail, dto.billImport);
 
                     // Kiểm tra tồn kho
                     bool exists = inventoryList.Any(x => x.WarehouseID == dto.billImport.WarehouseID && x.ProductSaleID == detail.ProductID);
@@ -1016,6 +999,142 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
 
+        }
+        [HttpGet("get-bill-import-detail")]
+        public IActionResult GetdetailByIDS(List<int> bids)
+        {
+            try
+            {
+
+                string ids = string.Join(",", bids);
+                var data = SQLHelper<dynamic>.ProcedureToList("spGetBillImportDetail", ["@ID"], [ids]);
+                var dataDetail = SQLHelper<dynamic>.GetListData(data, 0);
+                return Ok(ApiResponseFactory.Success(dataDetail, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+
+            }
+        }
+
+        private async Task UpdateInventoryProject(BillImportDetailDTO detail, BillImport billImport)
+        {
+            if (detail.IsNotKeep == true)
+            {
+                if (detail.InventoryProjectID > 0)
+                {
+                    var existingInv = _inventoryProjectRepo.GetByID(detail.InventoryProjectID ?? 0);
+                    if (existingInv != null && existingInv.ID > 0)
+                    {
+                        existingInv.IsDeleted = true;
+                        existingInv.UpdatedBy = "system";
+                        existingInv.UpdatedDate = DateTime.Now;
+                        await _inventoryProjectRepo.UpdateAsync(existingInv);
+                    }
+                }
+                return;
+            }
+
+            if (billImport.BillTypeNew != 0) return;
+
+            if ((detail.ProjectID ?? 0) <= 0) return;
+
+            decimal quantityReal = detail.Qty ?? 0;
+            decimal quantityRequest = detail.QuantityRequestBuy ?? 0;
+            decimal quantityKeep = quantityReal;
+
+            if (quantityReal > 0 && quantityRequest > 0)
+            {
+                quantityKeep = Math.Min(quantityReal, quantityRequest);
+            }
+
+            if (detail.POKHDetailID.HasValue && detail.POKHDetailID > 0)
+            {
+                quantityKeep = await UpdateReturnQuantityLoan(detail.POKHDetailID.Value, quantityKeep);
+            }
+
+            var inventoryProject = _inventoryProjectRepo.GetByID(detail.InventoryProjectID ?? 0);
+
+            if (inventoryProject == null || inventoryProject.ID <= 0)
+            {
+                if (quantityKeep > 0)
+                {
+                    inventoryProject = new InventoryProject
+                    {
+                        ProjectID = detail.ProjectID,
+                        ProductSaleID = detail.ProductID,
+                        WarehouseID = billImport.WarehouseID,
+                        Quantity = quantityKeep,
+                        QuantityOrigin = quantityKeep,
+                        Note = detail.Note,
+                        POKHDetailID = detail.POKHDetailID,
+                        CustomerID = detail.CustomerID,
+                        EmployeeID = billImport.DeliverID,
+                        CreatedDate = DateTime.Now,
+                        CreatedBy = "system",
+                        IsDeleted = false
+                    };
+
+                    await _inventoryProjectRepo.CreateAsync(inventoryProject);
+                    detail.InventoryProjectID = inventoryProject.ID;
+                }
+            }
+            else
+            {
+                inventoryProject.ProjectID = detail.ProjectID;
+                inventoryProject.ProductSaleID = detail.ProductID;
+                inventoryProject.WarehouseID = billImport.WarehouseID;
+                inventoryProject.Quantity = quantityKeep;
+                inventoryProject.QuantityOrigin = quantityKeep;
+                inventoryProject.Note = detail.Note;
+                if (detail.POKHDetailID.HasValue && detail.POKHDetailID > 0)
+                {
+                    inventoryProject.POKHDetailID = detail.POKHDetailID;
+                }
+                if (detail.CustomerID.HasValue && detail.CustomerID > 0)
+                {
+                    inventoryProject.CustomerID = detail.CustomerID;
+                }
+                inventoryProject.EmployeeID = billImport.DeliverID;
+                inventoryProject.IsDeleted = quantityKeep <= 0;
+                inventoryProject.UpdatedDate = DateTime.Now;
+
+                await _inventoryProjectRepo.UpdateAsync(inventoryProject);
+                detail.InventoryProjectID = inventoryProject.ID;
+            }
+        }
+        private async Task<decimal> UpdateReturnQuantityLoan(int pokhDetailId, decimal quantityKeep)
+        {
+            if (pokhDetailId <= 0) return quantityKeep;
+
+            var inventoryProjects = _inventoryProjectRepo.GetAll(x =>
+                x.POKHDetailID == pokhDetailId &&
+                x.IsDeleted == false &&
+                x.ParentID > 0).ToList();
+
+            foreach (var item in inventoryProjects)
+            {
+                if (quantityKeep <= 0) continue;
+
+                var inventoryProjectParent = _inventoryProjectRepo.GetByID(item.ParentID ?? 0);
+                if (inventoryProjectParent == null || inventoryProjectParent.ID <= 0) continue;
+
+                decimal quantityLoan = (inventoryProjectParent.QuantityOrigin ?? 0) - (inventoryProjectParent.Quantity ?? 0);
+                if (quantityLoan <= 0) continue;
+
+                inventoryProjectParent.Quantity += Math.Min(quantityLoan, quantityKeep);
+                inventoryProjectParent.UpdatedBy = "system";
+                inventoryProjectParent.UpdatedDate = DateTime.Now;
+
+                await _inventoryProjectRepo.UpdateAsync(inventoryProjectParent);
+                quantityKeep -= quantityLoan;
+            }
+
+            decimal totalQuantityLoan = inventoryProjects.Sum(x => x.Quantity ?? 0);
+            quantityKeep -= totalQuantityLoan;
+
+            return quantityKeep;
         }
     }
 }

@@ -61,13 +61,13 @@ namespace RERPAPI.Controllers.Old
                 {
                     if (item.ID <= 0)
                     {
-                        var historys = _historyRepo.GetAll(x => x.Status != 0 && 
-                                                                x.ProductRTCQRCodeID == item.ProductRTCQRCodeID && 
+                        var historys = _historyRepo.GetAll(x => x.Status != 0 &&
+                                                                x.ProductRTCQRCodeID == item.ProductRTCQRCodeID &&
                                                                 x.IsDelete == false);
                         if (historys.Count > 0)
                         {
                             return BadRequest(ApiResponseFactory.Fail(null, $"Sản phẩm có QR code [{item.ProductRTCQRCode}] đang được mượn.\n" +
-                                                                            $"Bạn không thể đăng ký mượn.",historys));
+                                                                            $"Bạn không thể đăng ký mượn.", historys));
                         }
                     }
                 }
@@ -87,7 +87,7 @@ namespace RERPAPI.Controllers.Old
                         item.WarehouseID = WAREHOUSE_ID;
                         item.Status = 7;
                         item.AdminConfirm = false;
-                        item.CreatedBy = item.UpdatedBy= currentUser.LoginName;
+                        item.CreatedBy = item.UpdatedBy = currentUser.LoginName;
 
                         await _historyRepo.CreateAsync(item);
                     }
@@ -102,6 +102,6 @@ namespace RERPAPI.Controllers.Old
         }
 
 
-        
+
     }
 }
