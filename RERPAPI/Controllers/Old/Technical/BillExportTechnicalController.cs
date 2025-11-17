@@ -1,11 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.Technical;
-using RERPAPI.Repo.GenericEntity.Asset;
+using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Technical;
 using RTCApi.Repo.GenericRepo;
 
@@ -22,7 +21,7 @@ namespace RERPAPI.Controllers.Old.Technical
         private readonly InventoryDemoRepo _inventoryDemoRepo;
         private readonly HistoryProductRTCRepo _historyProductRTCRepo;
         private readonly ProductRTCQRCodeRepo _productRTCQRCodeRepo;
-        public BillExportTechnicalController(ProductRTCQRCodeRepo productRTCQRCodeRepo,BillExportTechnicalRepo billExportTechnicalRepo,BillExportDetailTechnicalRepo billExportDetailTechnicalRepo,BillExportTechDetailSerialRepo billExportTechDetailSerialRepo,HistoryDeleteBillRepo historyDeleteBillRepo,HistoryProductRTCRepo historyProductRTCRepo,InventoryDemoRepo inventoryDemoRepo)
+        public BillExportTechnicalController(ProductRTCQRCodeRepo productRTCQRCodeRepo, BillExportTechnicalRepo billExportTechnicalRepo, BillExportDetailTechnicalRepo billExportDetailTechnicalRepo, BillExportTechDetailSerialRepo billExportTechDetailSerialRepo, HistoryDeleteBillRepo historyDeleteBillRepo, HistoryProductRTCRepo historyProductRTCRepo, InventoryDemoRepo inventoryDemoRepo)
         {
             _productRTCQRCodeRepo = productRTCQRCodeRepo;
             _billExportTechnicalRepo = billExportTechnicalRepo;
@@ -34,7 +33,7 @@ namespace RERPAPI.Controllers.Old.Technical
         }
         [HttpPost("get-bill-export-technical")]
         public async Task<ActionResult> GetBillExportTechnical([FromBody] BillExportTechnicalRequestParam request)
-        {                 
+        {
             try
             {
                 var billExportTechnical = SQLHelper<dynamic>.ProcedureToList(
@@ -77,7 +76,8 @@ namespace RERPAPI.Controllers.Old.Technical
             {
                 var serial = _billExportTechDetailSerialRepo.GetByID(id);
                 return Ok(new
-                {                    status = 1,
+                {
+                    status = 1,
                     data = serial
                 });
             }
@@ -216,7 +216,7 @@ namespace RERPAPI.Controllers.Old.Technical
                     error = ex.ToString()
                 });
             }
-        }                                    
+        }
 
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] BillExportTechnicalFullDTO product)
@@ -233,7 +233,7 @@ namespace RERPAPI.Controllers.Old.Technical
                     if (product.historyDeleteBill.ID <= 0)
                         await _historyDeleteBillRepo.CreateAsync(product.historyDeleteBill);
                     else
-                        _historyDeleteBillRepo.UpdateAsync( product.historyDeleteBill);
+                        _historyDeleteBillRepo.UpdateAsync(product.historyDeleteBill);
                 }
 
                 // Lưu phiếu xuất
@@ -242,7 +242,7 @@ namespace RERPAPI.Controllers.Old.Technical
                     if (product.billExportTechnical.ID <= 0)
                         await _billExportTechnicalRepo.CreateAsync(product.billExportTechnical);
                     else
-                        _billExportTechnicalRepo.UpdateAsync( product.billExportTechnical);
+                        _billExportTechnicalRepo.UpdateAsync(product.billExportTechnical);
                 }
 
                 // Map STT -> ID sau khi insert chi tiết phiếu
@@ -269,7 +269,7 @@ namespace RERPAPI.Controllers.Old.Technical
                         }
                         else
                         {
-                            _billExportDetailTechnicalRepo.UpdateAsync( item);
+                            _billExportDetailTechnicalRepo.UpdateAsync(item);
 
                             if (product.billExportDetailTechnicals.Count == 1)
                                 singleDetailId = item.ID;
@@ -300,7 +300,7 @@ namespace RERPAPI.Controllers.Old.Technical
                         }
                         else
                         {
-                            _billExportTechDetailSerialRepo.UpdateAsync( item);
+                            _billExportTechDetailSerialRepo.UpdateAsync(item);
                         }
 
                         savedSerials.Add(item);
@@ -310,25 +310,25 @@ namespace RERPAPI.Controllers.Old.Technical
                 {
                     foreach (var item in product.inentoryDemos)
                     {
-                       
+
                         if (item.ID <= 0)
                             await _inventoryDemoRepo.CreateAsync(item);
                         else
                             _inventoryDemoRepo.UpdateAsync(item);
                     }
                 }
-                if(product.historyProductRTCs!=null&&product.historyProductRTCs.Any())
+                if (product.historyProductRTCs != null && product.historyProductRTCs.Any())
                 {
-                 
-                     foreach (var item in product.historyProductRTCs)
-                    { 
+
+                    foreach (var item in product.historyProductRTCs)
+                    {
                         if (item.ID <= 0)
                             await _historyProductRTCRepo.CreateAsync(item);
                         else
-                            _historyProductRTCRepo.UpdateAsync( item);
+                            _historyProductRTCRepo.UpdateAsync(item);
                     }
-                }    
-                
+                }
+
                 return Ok(new
                 {
                     status = 1,

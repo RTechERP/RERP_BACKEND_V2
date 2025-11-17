@@ -1,9 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using ZXing;
 
 namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 {
@@ -18,13 +16,13 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             _documentImportRepo = documentImportRepo;
         }
         [HttpGet("")]
-        public IActionResult getDocumentImportByPO(int poNCCId,int billImportID)
+        public IActionResult getDocumentImportByPO(int poNCCId, int billImportID)
         {
             try
             {
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
-                      "spGetAllDocumentImportByPONCCID", new string[] { "@PONCCID", "@BillImportID" },
-                new object[] { poNCCId, billImportID }
+                      "spGetAllDocumentImportPONCC", new string[] { "@BillImportID" },
+                new object[] { billImportID }
                   );
                 return Ok(new
                 {
@@ -64,6 +62,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     });
             }
         }
-       
+
     }
 }
