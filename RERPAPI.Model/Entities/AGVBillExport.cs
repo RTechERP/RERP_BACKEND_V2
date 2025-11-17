@@ -7,21 +7,22 @@ public partial class AGVBillExport
 {
     public int ID { get; set; }
 
-    public string? Code { get; set; }
+    public string? BillCode { get; set; }
 
     /// <summary>
     /// 0. Trả ,1. Cho mượn,2. Tặng / Bán,3. Mất,4. Bảo hành,5. Xuất dự án,6. Hỏng,7. Xuất kho
     /// </summary>
     public int? BillType { get; set; }
 
+    public DateTime? BillDate { get; set; }
+
     public int? CustomerID { get; set; }
-
-    public string? Receiver { get; set; }
-
-    public string? Deliver { get; set; }
 
     public string? Addres { get; set; }
 
+    /// <summary>
+    /// 1: duyệt; 0: hủy duyệt
+    /// </summary>
     public int? Status { get; set; }
 
     public string? WarehouseType { get; set; }
@@ -30,15 +31,15 @@ public partial class AGVBillExport
 
     public string? Image { get; set; }
 
-    public int? ReceiverID { get; set; }
+    /// <summary>
+    /// Người giao (EmployeeID)
+    /// </summary>
+    public int? EmployeeReceiverID { get; set; }
 
-    public int? DeliverID { get; set; }
-
-    public int? SupplierID { get; set; }
-
-    public string? CustomerName { get; set; }
-
-    public string? SupplierName { get; set; }
+    /// <summary>
+    /// Người nhận (EmployeeID)
+    /// </summary>
+    public int? EmployeeDeliverID { get; set; }
 
     public bool? CheckAddAGVHistoryProduct { get; set; }
 
@@ -48,6 +49,12 @@ public partial class AGVBillExport
 
     public int? WarehouseID { get; set; }
 
+    public int? SupplierSaleID { get; set; }
+
+    public int? BillDocumentExportType { get; set; }
+
+    public int? ApproverID { get; set; }
+
     public string? CreatedBy { get; set; }
 
     public DateTime? CreatedDate { get; set; }
@@ -55,12 +62,6 @@ public partial class AGVBillExport
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
-
-    public int? SupplierSaleID { get; set; }
-
-    public int? BillDocumentExportType { get; set; }
-
-    public int? ApproverID { get; set; }
 
     public bool? IsDeleted { get; set; }
 }

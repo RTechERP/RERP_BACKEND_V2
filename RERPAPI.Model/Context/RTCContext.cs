@@ -1067,20 +1067,22 @@ public partial class RTCContext : DbContext
             entity.ToTable("AGVBillExport", "agv");
 
             entity.Property(e => e.Addres).HasMaxLength(100);
-            entity.Property(e => e.BillType).HasComment("0. Trả ,1. Cho mượn,2. Tặng / Bán,3. Mất,4. Bảo hành,5. Xuất dự án,6. Hỏng,7. Xuất kho");
-            entity.Property(e => e.Code)
+            entity.Property(e => e.BillCode)
                 .HasMaxLength(100)
                 .IsUnicode(false);
+            entity.Property(e => e.BillDate).HasColumnType("datetime");
+            entity.Property(e => e.BillType).HasComment("0. Trả ,1. Cho mượn,2. Tặng / Bán,3. Mất,4. Bảo hành,5. Xuất dự án,6. Hỏng,7. Xuất kho");
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-            entity.Property(e => e.CustomerName).HasMaxLength(100);
-            entity.Property(e => e.Deliver).HasMaxLength(100);
+            entity.Property(e => e.EmployeeDeliverID).HasComment("Người nhận (EmployeeID)");
+            entity.Property(e => e.EmployeeReceiverID).HasComment("Người giao (EmployeeID)");
             entity.Property(e => e.ExpectedDate).HasColumnType("datetime");
             entity.Property(e => e.Image).HasMaxLength(100);
             entity.Property(e => e.Note).HasMaxLength(250);
             entity.Property(e => e.ProjectName).HasMaxLength(550);
-            entity.Property(e => e.Receiver).HasMaxLength(100);
-            entity.Property(e => e.SupplierName).HasMaxLength(550);
+            entity.Property(e => e.Status)
+                .HasDefaultValue(0)
+                .HasComment("1: duyệt; 0: hủy duyệt");
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
             entity.Property(e => e.WarehouseType).HasMaxLength(100);
@@ -1094,9 +1096,7 @@ public partial class RTCContext : DbContext
 
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-            entity.Property(e => e.Internalcode).HasMaxLength(100);
             entity.Property(e => e.Quantity).HasColumnType("decimal(18, 2)");
-            entity.Property(e => e.TotalQuantity).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.UnitName).HasMaxLength(100);
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
