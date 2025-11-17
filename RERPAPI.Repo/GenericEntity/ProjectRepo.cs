@@ -16,7 +16,6 @@ namespace RERPAPI.Repo.GenericEntity
         {
         }
 
-
         public bool ValidateAGV(RERPAPI.Model.Entities.Project e, out string message)
         {
             message = "";

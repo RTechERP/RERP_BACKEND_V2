@@ -320,6 +320,7 @@ builder.Services.AddScoped<HRHiringRequestExperienceLinkRepo>();
 builder.Services.AddScoped<HRHiringRequestGenderLinkRepo>();
 builder.Services.AddScoped<HRHiringRequestHealthLinkRepo>();
 builder.Services.AddScoped<HRHiringRequestLanguageLinkRepo>();
+builder.Services.AddScoped<ProjectWorkerRepo>();
 
 builder.Services.AddScoped<TaxCompanyRepo>();
 
@@ -491,18 +492,18 @@ app.UseStaticFiles();
 List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();
 foreach (var item in staticFiles)
 {
-    app.UseStaticFiles(new StaticFileOptions()
-    {
-        FileProvider = new PhysicalFileProvider(item.PathFull),
-        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-    });
+    //app.UseStaticFiles(new StaticFileOptions()
+    //{
+    //    FileProvider = new PhysicalFileProvider(item.PathFull),
+    //    RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+    //});
 
 
-    app.UseDirectoryBrowser(new DirectoryBrowserOptions
-    {
-        FileProvider = new PhysicalFileProvider(item.PathFull),
-        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-    });
+    //app.UseDirectoryBrowser(new DirectoryBrowserOptions
+    //{
+    //    FileProvider = new PhysicalFileProvider(item.PathFull),
+    //    RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+    //});
 }
 
 app.Run();

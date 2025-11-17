@@ -10,11 +10,10 @@ using System.Diagnostics.Metrics;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-namespace RERPAPI.Controllers.Old
+namespace RERPAPI.Controllers.Old.ProjectManager
 {
     [Route("api/[controller]")]
     [ApiController]
-    [ApiKeyAuthorize]
     public class ProjectPartlistController : ControllerBase
     {
         ProductSaleRepo _productSaleRepo;
@@ -160,7 +159,8 @@ namespace RERPAPI.Controllers.Old
                     //    await _projectPartlistRepo.UpdateFieldByAttributeAsync(x => x.ProductCode == request.ProductCode, myDictPartlist);
                     //    return Ok(ApiResponseFactory.Success(partlist, $"Đã {(request.IsApprovedTBPNewCode == true ? "duyệt mã mới" : "hủy duyệt mã mới")} thành công!"));
                     //}
-                    request.ParentID = _projectPartlistRepo.getParentID(request.TT, request.ProjectTypeID ?? 0, request.ProjectPartListVersionID ?? 0);
+
+                    request.ParentID = _projectPartlistRepo.getParentID(request.TT ??"", request.ProjectTypeID ?? 0, request.ProjectPartListVersionID ?? 0);
 
                     if (request.ID <= 0)
                     {
