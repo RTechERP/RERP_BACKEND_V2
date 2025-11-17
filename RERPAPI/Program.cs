@@ -330,6 +330,8 @@ builder.Services.AddScoped<AGVProductGroupRepo>();
 builder.Services.AddScoped<AGVProductGroupLinkRepo>();
 builder.Services.AddScoped<AGVBillImportRepo>();
 builder.Services.AddScoped<AGVBillImportDetailRepo>();
+builder.Services.AddScoped<AGVBillExportRepo>();
+builder.Services.AddScoped<AGVBillExportDetailRepo>();
 #endregion
 
 // BillExportTechnicalRepo in RTCApi namespace (used by Old Technical controller)
@@ -339,7 +341,6 @@ builder.Services.AddScoped<TaxCompanyRepo>();
 
 builder.Services.AddScoped<CurrentUser>(provider =>
 {
-
     var context = provider.GetRequiredService<IHttpContextAccessor>().HttpContext;
     var claims = context?.User.Claims.ToDictionary(x => x.Type, x => x.Value);
     CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
