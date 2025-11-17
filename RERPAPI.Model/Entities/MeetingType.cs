@@ -26,5 +26,5 @@ public partial class MeetingType
 
     public DateTime? UpdatedDate { get; set; }
 
-    public bool? IsDelete { get; set; }
+    public bool? IsDeleted { get; set; }
 }

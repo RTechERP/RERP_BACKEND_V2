@@ -52,6 +52,10 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         private readonly PositionInternalRepo _positionInternalRepo;
         private readonly EmployeeWorkingProcessRepo _employeeWorkingProcessRepo;
         private readonly UnitCountRepo _unitCountRepo;
+        private readonly EmployeeApproveRepo _employeeApproRepo;
+
+        //nhân công dự án
+        private readonly ProjectWorkerVersionRepo _projectWorkerVersionRepo;
 
         public ProjectController(
             ProjectRepo projectRepo,
@@ -82,7 +86,9 @@ namespace RERPAPI.Controllers.Old.ProjectManager
             EmployeeRepo employeeRepo,
             PositionInternalRepo positionInternalRepo,
             EmployeeWorkingProcessRepo employeeWorkingProcessRepo,
-            UnitCountRepo unitCountRepo
+            UnitCountRepo unitCountRepo,
+            EmployeeApproveRepo employeeApproveRepo,
+            ProjectWorkerVersionRepo projectWorkerVersionRepo
         )
         {
             this.projectRepo = projectRepo;
@@ -121,6 +127,8 @@ namespace RERPAPI.Controllers.Old.ProjectManager
             _positionInternalRepo = positionInternalRepo;
             _employeeWorkingProcessRepo = employeeWorkingProcessRepo;
             _unitCountRepo = unitCountRepo;
+            _employeeApproRepo = employeeApproveRepo;
+            _projectWorkerVersionRepo = projectWorkerVersionRepo;
         }
         #endregion
 
@@ -1989,7 +1997,68 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-    }
+        //leader dự án danh mục
+        [HttpGet("get-project-leader/{keyword?}")]
+        public async Task<IActionResult> GetProjectLeader(string? keyword)
+        {
+            try
+            {
+                var data = SQLHelper<object>.ProcedureToList(
+                    "spGetEmployeeApprove",
+                    new string[] { "@Type", "@keyword" },
+                    new object[] { 2, keyword ?? string.Empty }
+                );
 
-    #endregion
-}
+                return Ok(ApiResponseFactory.Success(
+                    SQLHelper<object>.GetListData(data, 0),
+                    "Lấy dữ liệu thành công"
+                ));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        //save leader dự án
+        [HttpPost("save-data-project-leader")]
+        public async Task<IActionResult> SaveDataProjectLeader(List<EmployeeApprove> empA)
+        {
+            try
+            { 
+                if(empA.Count() > 0)
+                {
+                    foreach (var item in empA)
+                    {
+                        var check = _employeeApproRepo.GetAll()
+                              .Where(x => x.EmployeeID == item.EmployeeID && x.Type == 2 && x.IsDeleted != true);
+                        if (check.Count() > 0)
+                        {
+                            item.ID = check.FirstOrDefault().ID; ;
+                           await _employeeApproRepo.UpdateAsync(item);
+                        }else
+                        {
+                            EmployeeApprove model = new EmployeeApprove();
+                            model.Code = item.Code;
+                            model.FullName = item.FullName;
+                            model.EmployeeID = item.EmployeeID;
+                            model.Type = 2;
+                            model.IsDeleted = false;
+                           await _employeeApproRepo.CreateAsync(model);
+                        }                        
+                    }
+                }
+
+
+                return Ok(ApiResponseFactory.Success(true, "Lưu dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+
+            }
+        }
+
+        }
+
+        #endregion
+    }
