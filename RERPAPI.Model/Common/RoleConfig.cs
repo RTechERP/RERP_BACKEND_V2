@@ -10,8 +10,8 @@ namespace RERPAPI.Model.Common
     {
         public List<int> TBPEmployeeIds { get; set; } = new();
         public List<string> PBPPositionCodes { get; set; } = new();
-        public List<int> userAllsOfficeSupply { get; set; } = new();
-        public List<int> departmentIDs { get; set; } = new();
+        public List<int> UserAllsOfficeSupply { get; set; } = new();
+        public List<int> DepartmentIDs { get; set; } = new();
     }
 
 }

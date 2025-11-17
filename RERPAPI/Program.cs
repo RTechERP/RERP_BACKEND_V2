@@ -13,6 +13,7 @@ using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
 using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.BBNV;
+using RERPAPI.Repo.GenericEntity.DocumentManager;
 using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
 using RERPAPI.Repo.GenericEntity.Film;
 using RERPAPI.Repo.GenericEntity.HRM;
@@ -51,6 +52,8 @@ builder.Services.AddScoped<BillDocumentImportRepo>();
 builder.Services.AddScoped<BillExportDetailSerialNumberModulaLocationRepo>();
 builder.Services.AddScoped<BillExportDetailSerialNumberRepo>();
 builder.Services.AddScoped<BillExportDetailTechnicalRepo>();
+builder.Services.AddScoped<VehicleBookingManagementRepo>();
+builder.Services.AddScoped<VehicleBookingFileRepo>();
 builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.BillExportTechDetailSerialRepo>();
 builder.Services.AddScoped<BillImportDetailRepo>();
 builder.Services.AddScoped<BillImportDetailSerialNumberModulaLocationRepo>();
@@ -68,6 +71,9 @@ builder.Services.AddScoped<CustomerPartsRepo>();
 builder.Services.AddScoped<CustomerRepo>();
 builder.Services.AddScoped<CustomerSpecializationRepo>();
 builder.Services.AddScoped<DailyReportTechnicalRepo>();
+builder.Services.AddScoped<DocumentTypeRepo>();
+builder.Services.AddScoped<DocumentRepo>();
+builder.Services.AddScoped<DocumentFileRepo>();
 builder.Services.AddScoped<DepartmentRepo>();
 builder.Services.AddScoped<DocumentImportPONCCRepo>();
 builder.Services.AddScoped<DocumentImportRepo>();
@@ -497,7 +503,7 @@ foreach (var item in staticFiles)
 {
     app.UseStaticFiles(new StaticFileOptions()
     {
-        FileProvider = new PhysicalFileProvider(item.PathFull),
+        FileProvider = new PhysicalFileProvider($@"\\192.168.1.190\Software"),
         RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
     });
 

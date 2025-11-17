@@ -144,11 +144,12 @@ namespace RERPAPI.Controllers.Old.Asset
                 return BadRequest("AssetDate is required.");
 
             var newcode = _tsAssetManagementRepo.GenerateAssetCode(assetDate);
-
+            int maxSTT = _tsAssetManagementRepo.GetMaxSTT();
             return Ok(new
             {
                 status = 1,
-                data = newcode
+                data = newcode,
+                maxSTT
             });
         }
 
@@ -201,17 +202,17 @@ namespace RERPAPI.Controllers.Old.Asset
 
                     foreach (var item in asset.tSAssetManagements)
                     {
-                        if(item.IsDeleted!=true)
+                        if (item.IsDeleted != true)
                         {
                             if (!_tsAssetManagementRepo.Validate(item, out string message))
                             {
                                 return BadRequest(ApiResponseFactory.Fail(null, message));
                             }
-                        }    
-                       
+                        }
+
                         if (item.ID <= 0)
                         {
-                         
+
                             item.StatusID = 1;
                             item.Status = "Chưa sử dụng";
 
