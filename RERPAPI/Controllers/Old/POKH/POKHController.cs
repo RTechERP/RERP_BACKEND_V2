@@ -242,6 +242,12 @@ namespace RERPAPI.Controllers.Old.POKH
         {
             try
             {
+                var errors = ValidatePOKH(dto);
+                if (errors.Any())
+                {
+                    return Ok(ApiResponseFactory.Fail(null, "Dữ liệu không hợp lệ", new { Errors = errors }));
+                }
+
                 if (dto.POKH.ID <= 0)
                 {
                     await _pokhRepo.CreateAsync(dto.POKH);
@@ -360,6 +366,116 @@ namespace RERPAPI.Controllers.Old.POKH
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        private List<string> ValidatePOKH(POKHDTO dto)
+        {
+            List<string> errors = new List<string>();
+
+            // =======================
+            // Validate POKH Main
+            // =======================
+            var p = dto.POKH;
+
+            if (p == null)
+            {
+                errors.Add("POKH không được để trống");
+                return errors;
+            }
+             
+            if (p.POCode.Length > 100)
+                errors.Add("POCode không được vượt quá 200 ký tự");
+
+            if (p.UserName?.Length > 200)
+                errors.Add("UserName không được vượt quá 200 ký tự");
+
+            if (p.BillCode?.Length > 200)
+                errors.Add("BillCode không được vượt quá 200 ký tự");
+
+            if (p.PONumber?.Length > 200)
+                errors.Add("PONumber không được vượt quá 200 ký tự");
+
+            if (p.Note?.Length > 500)
+                errors.Add("Ghi chú không được vượt quá 500 ký tự");
+
+
+            // =======================
+            // Validate POKH Details
+            // =======================
+            //if (dto.POKHDetails != null)
+            //{
+            //    int row = 1;
+            //    foreach (var d in dto.POKHDetails)
+            //    {
+            //        if (d.IsDeleted == true)
+            //        {
+            //            row++;
+            //            continue;
+            //        }
+
+            //        if (!d.ProductID.HasValue || d.ProductID <= 0)
+            //            errors.Add($"Dòng {row}: ProductID là bắt buộc");
+
+            //        if (string.IsNullOrWhiteSpace(d.GuestCode) == false && d.GuestCode.Length > 100)
+            //            errors.Add($"Dòng {row}: GuestCode vượt quá 100 ký tự");
+
+            //        if (string.IsNullOrWhiteSpace(d.FilmSize) == false && d.FilmSize.Length > 200)
+            //            errors.Add($"Dòng {row}: FilmSize vượt quá 200 ký tự");
+
+            //        if (d.Qty.HasValue && d.Qty < 0)
+            //            errors.Add($"Dòng {row}: Qty không được âm");
+
+            //        if (d.UnitPrice.HasValue && d.UnitPrice < 0)
+            //            errors.Add($"Dòng {row}: UnitPrice không được âm");
+
+            //        if (d.VAT.HasValue && (d.VAT < 0 || d.VAT > 100))
+            //            errors.Add($"Dòng {row}: VAT phải từ 0–100%");
+
+            //        if (!string.IsNullOrWhiteSpace(d.BillNumber) && d.BillNumber.Length > 100)
+            //            errors.Add($"Dòng {row}: BillNumber vượt quá 100 ký tự");
+
+            //        if (!string.IsNullOrWhiteSpace(d.Note) && d.Note.Length > 500)
+            //            errors.Add($"Dòng {row}: Note vượt quá 500 ký tự");
+
+            //        row++;
+            //    }
+            //}
+
+
+            // =======================
+            // Validate POKH Detail Money
+            // =======================
+            //if (dto.POKHDetailsMoney != null)
+            //{
+            //    int rowM = 1;
+            //    foreach (var m in dto.POKHDetailsMoney)
+            //    {
+            //        if (m.IsDeleted == true)
+            //        {
+            //            rowM++;
+            //            continue;
+            //        }
+
+            //        if (!m.UserID.HasValue || m.UserID <= 0)
+            //            errors.Add($"Tiền Row {rowM}: UserID là bắt buộc");
+
+            //        if (m.PercentUser.HasValue && (m.PercentUser < 0 || m.PercentUser > 100))
+            //            errors.Add($"Tiền Row {rowM}: PercentUser phải từ 0–100");
+
+            //        if (m.ReceiveMoney.HasValue && m.ReceiveMoney < 0)
+            //            errors.Add($"Tiền Row {rowM}: ReceiveMoney không được âm");
+
+            //        if (m.STT.HasValue && m.STT < 0)
+            //            errors.Add($"Tiền Row {rowM}: STT không hợp lệ");
+
+            //        if (m.RowHandle.HasValue && m.RowHandle < 0)
+            //            errors.Add($"Tiền Row {rowM}: RowHandle không hợp lệ");
+
+            //        rowM++;
+            //    }
+            //}
+
+            return errors;
+        }
+
         #endregion
         //Tạo POCode
         [HttpGet("generate-POcode")]

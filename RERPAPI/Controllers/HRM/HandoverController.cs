@@ -710,7 +710,7 @@ namespace RERPAPI.Controllers
 
                 if (handoverList == null || !handoverList.Any() || !handoverList[0].Any())
                 {
-                    throw new Exception("Không có dữ liệu từ spGetAllHandoverMinutes");
+                    throw new Exception("Không có dữ liệu từ spGetHandover");
                 }
 
                 var handoverData = SQLHelper<dynamic>.GetListData(handoverList, 0).FirstOrDefault(h => h.ID == id);

@@ -17,13 +17,13 @@ namespace RERPAPI.Controllers.Old.Asset
             _typeAssetRepo = typeAssetRepo;
         }
         [RequiresPermission("N23,N1")]
-        [HttpGet("get-asset-type")]
+       [HttpGet("get-asset-type")]
         public IActionResult GetAssetType()
         {
             try
             {
 
-                var tsAssets = _typeAssetRepo.GetAll().Where(x => x.IsDeleted !=true).OrderByDescending(x => x.CreatedDate).ToList();
+                var tsAssets = _typeAssetRepo.  GetAll(x => x.IsDeleted != true).OrderByDescending(x => x.CreatedDate).ToList();
                 return Ok(new
                 {
                     status = 1,

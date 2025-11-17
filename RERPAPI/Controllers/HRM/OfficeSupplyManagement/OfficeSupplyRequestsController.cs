@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
@@ -7,6 +8,7 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
 {
@@ -16,28 +18,25 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
     {
         private readonly OfficeSupplyRequestsRepo officesupplyrequests;
         private readonly DepartmentRepo _departmentRepo;
-
-        public OfficeSupplyRequestsController(
+        private readonly RoleConfig _roleConfig;
+        public OfficeSupplyRequestsController(RoleConfig roleConfig,
             OfficeSupplyRequestsRepo officesupplyrequests,
             DepartmentRepo departmentRepo)
         {
             this.officesupplyrequests = officesupplyrequests;
             _departmentRepo = departmentRepo;
+            _roleConfig = roleConfig;
         }
-       
-        #region getdatadepartment cần bỏ
+
+
         [HttpGet("get-data-department")]
         public IActionResult GetdataDepartment()
         {
             try
             {
                 //List<Department> departmentList = SQLHelper<Department>.FindAll().OrderBy(x => x.STT).ToList();
-                List<Department> departmentList = _departmentRepo.GetAll().OrderBy(x => x.STT).ToList();
-                return Ok(new
-                {
-                    status = 1,
-                    data = departmentList
-                });
+                List<Model.Entities.Department> departmentList = _departmentRepo.GetAll().OrderBy(x => x.STT).ToList();
+                return Ok(ApiResponseFactory.Success(departmentList, ""));
             }
             catch (Exception ex)
             {
@@ -49,7 +48,6 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
                 });
             }
         }
-        #endregion
 
         /// <summary>
         /// hàm lấy dữ liệu danh sách đăng ký VPP
@@ -59,18 +57,68 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
         /// <param id phòng ban đăng ký="departmentID"></param>
         /// <param tháng="monthInput"></param>
         /// <returns></returns>
-     
+
         [HttpGet("get-office-supply-request")]
-        public IActionResult getOfficeSupplyRequests(string? keyword, int? employeeID, int? departmentID, DateTime? monthInput)
+        public IActionResult GetOfficeSupplyRequests(
+        string? keyword,
+        int? employeeID,
+        int? departmentID,
+        DateTime? monthInput)
         {
             try
             {
+                // Lấy currentUser từ claims
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                keyword ??= string.Empty;
+                DateTime month = monthInput ?? new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+
+                // Xác định quyền giống rule cũ
+                bool isPowerUser =
+                    (_roleConfig.userAllsOfficeSupply?.Contains(currentUser.EmployeeID) ?? false) ||
+                    (_roleConfig.TBPEmployeeIds?.Contains(currentUser.EmployeeID) ?? false) ||
+                    (_roleConfig.PBPPositionCodes?.Contains(currentUser.PositionCode) ?? false) ||
+                    currentUser.IsAdmin==true; // nếu có cờ IsAdmin
+
+                int effectiveDepartmentId;
+                int effectiveEmployeeId;
+
+                if (isPowerUser)
+                {
+
+                    effectiveDepartmentId =   currentUser.DepartmentID; // 0 = all trong SP
+                    effectiveEmployeeId = employeeID ?? 0;     // 0 = all trong SP
+
+                    //// Nếu muốn giới hạn dept giống WinForms (vd: chỉ 9,10 + phòng ban của nó)
+                    //if (_roleConfig.departmentIDs != null && _roleConfig.departmentIDs.Any())
+                    //{
+                    //    if (effectiveDepartmentId != 0 &&
+                    //        !_roleConfig.departmentIDs.Contains(effectiveDepartmentId) &&
+                    //        effectiveDepartmentId != currentUser.DepartmentID)
+                    //    {
+                    //        // nếu truyền dept lạ, ép về phòng ban của nó
+                    //        effectiveDepartmentId = currentUser.DepartmentID;
+                    //    }
+                    //}
+                }
+                else
+                {
+                    // Nhân viên thường:
+                    // - Dept: cố định theo phòng ban
+                    // - Chỉ xem được phiếu do nó đăng ký
+                    effectiveDepartmentId = currentUser.DepartmentID;
+                    effectiveEmployeeId = currentUser.EmployeeID;
+                }
+
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
                     "spGetOfficeSupplyRequests",
                     new string[] { "@KeyWord", "@MonthInput", "@EmployeeID", "@DepartmentID" },
-                   new object[] { keyword, monthInput, employeeID, departmentID }  // đảm bảo không null
+                    new object[] { keyword, month, effectiveEmployeeId, effectiveDepartmentId }
                 );
-                List<dynamic> rs = result[0]; 
+
+                List<dynamic> rs = result.Count > 0 ? result[0] : new List<dynamic>();
+
                 return Ok(new
                 {
                     status = 1,
@@ -93,7 +141,7 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
         /// </summary>
         /// <param officesupplyrequestsID="id"></param>
         /// <returns></returns>
-        
+
         [HttpGet("get-office-supply-request-detail")]
         public IActionResult GetOfficeSupplyRequestsDetail(int officeSupplyRequestsID)
         {
@@ -122,7 +170,7 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
                 });
             }
         }
-      
+
         [HttpPost("admin-approved")]
         public async Task<IActionResult> adminApproved([FromBody] List<int> ids)
         {
@@ -176,7 +224,7 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
                         item.IsAdminApproved = false;
                         item.DateAdminApproved = DateTime.Now;
                     }
-                    officesupplyrequests.Update( item);
+                    officesupplyrequests.Update(item);
                 }
                 return Ok(new
                 {

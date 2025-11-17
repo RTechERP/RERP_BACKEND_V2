@@ -3,15 +3,15 @@ using System.Collections.Generic;
 
 namespace RERPAPI.Model.Entities;
 
-public partial class AGVBillImportLog
+public partial class AGVProductGroupLink
 {
     public int ID { get; set; }
 
-    public int? AGVBillImportID { get; set; }
+    public int? AGVProductID { get; set; }
 
-    public bool? StatusBill { get; set; }
+    public int? AGVProductGroupID { get; set; }
 
-    public DateTime? DateStatus { get; set; }
+    public int? WarehouseID { get; set; }
 
     public string? CreatedBy { get; set; }
 

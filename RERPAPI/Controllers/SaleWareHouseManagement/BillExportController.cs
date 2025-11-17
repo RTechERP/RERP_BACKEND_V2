@@ -316,8 +316,47 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                     _billexportRepo.Update(dto.billExport);
                     billExportId = dto.billExport.ID;
                 }
-                //chi tiết phiếu xuất
-                foreach (var detail in  dto.billExportDetail)
+                // Xử lý xóa detail trước khi thêm/cập nhật
+                if (dto.DeletedDetailIDs != null && dto.DeletedDetailIDs.Any())
+                {
+                    foreach (var id in dto.DeletedDetailIDs)
+                    {
+                        var item = _billExportDetailRepo.GetByID(id);
+                        if (item != null)
+                        {
+                            item.IsDeleted = true;
+                            item.UpdatedDate = DateTime.Now;
+                            _billExportDetailRepo.Update(item);
+                        }
+                    }
+                }
+
+                // Tạo inventory cho các sản phẩm chưa có (atomic - trước khi xử lý detail)
+                var uniqueProductIds = dto.billExportDetail.Select(d => d.ProductID).Distinct().ToList();
+                foreach (var productId in uniqueProductIds)
+                {
+                    bool exists = inventoryList.Any(x =>
+                        x.WarehouseID == dto.billExport.WarehouseID &&
+                        x.ProductSaleID == productId);
+
+                    if (!exists)
+                    {
+                        Inventory inventory = new Inventory
+                        {
+                            WarehouseID = dto.billExport.WarehouseID,
+                            ProductSaleID = productId,
+                            TotalQuantityFirst = 0,
+                            TotalQuantityLast = 0,
+                            Import = 0,
+                            Export = 0
+                        };
+                        await _inventoryRepo.CreateAsync(inventory);
+                        inventoryList.Add(inventory);
+                    }
+                }
+
+                // Chi tiết phiếu xuất
+                foreach (var detail in dto.billExportDetail)
                 {
                     detail.BillID = billExportId;
 
@@ -326,7 +365,6 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                     {
                         detail.IsDeleted = false;
                         await _billExportDetailRepo.CreateAsync(detail);
-                        int billExportDetailID = detail.ID;
                     }
                     else
                     {
@@ -334,120 +372,37 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                         var existingDetail = _billExportDetailRepo.GetByID(detail.ID);
                         if (existingDetail != null)
                         {
-                                _billExportDetailRepo.Update(detail);
-                        }
-                    }
-                    //serial
-                    // Update serial với BillExportDetailID
-                    if (detail.SerialNumber != null && detail.SerialNumber.Any())
-                    {
-                        // Lấy serial từ SerialNumbers, kiểm tra CreatedDate gần nhất để tránh xung đột
-                        var serialIds = detail.SerialNumber
-                                .Split(',', StringSplitOptions.RemoveEmptyEntries) // tách theo dấu phẩy
-                                .Select(x => int.Parse(x.Trim())) // chuyển sang int
-                                .ToList();
-                        var serials = _billExportDetailSerialNumberRepo.GetAll()
-                            .Where(s => serialIds.Contains(s.ID) &&
-                                        s.IsDeleted != true &&
-                                        s.BillExportDetailID == null)            
-                            .ToList();
-
-                        if (detail.Qty.HasValue && serials.Count != (int)detail.Qty)
-                        {
-                            return BadRequest(new { 
-                                status = 0,
-                                message = $"Số serial ({serials.Count}) không khớp Qty ({detail.Qty})" 
-                            });
-                        }
-                        // Update SerialNumber nếu chưa có
-                        if (string.IsNullOrEmpty(detail.SerialNumber))
-                        {
-                            detail.SerialNumber = serials.Any() ? string.Join(",", serials.Select(s => s.SerialNumber)) : null;
                             _billExportDetailRepo.Update(detail);
                         }
-
-                        // Cập nhật BillExportDetailID
-                        foreach (var serial in serials)
-                        {
-                            //.BillExportDetailID = detail.ID;
-                            serial.UpdatedDate = DateTime.Now;
-                            _billExportDetailSerialNumberRepo.Update(serial);
-                        }
-                    }
-
-
-                    if (dto.DeletedDetailIDs != null && dto.DeletedDetailIDs.Any())
-                    {
-                        foreach (var id in dto.DeletedDetailIDs)
-                        {
-                            var item = _billExportDetailRepo.GetByID(id);
-                            if (item != null)
-                            {
-                                item.IsDeleted = true;
-                                item.UpdatedDate = DateTime.Now;
-                                _billExportDetailRepo.Update(item);
-
-                            }
-                        }
-                        for (int j = 0; j < dto.DeletedDetailIDs.Count; j++)
-                        {
-                            var bxSn = _billExportDetailSerialNumberRepo.GetAll().Where(p => p.BillExportDetailID == dto.DeletedDetailIDs[j]).FirstOrDefault();
-                            if (bxSn != null)
-                            {
-                                bxSn.IsDeleted = true;
-                                bxSn.UpdatedDate = DateTime.Now;
-                                _billExportDetailSerialNumberRepo.Update(bxSn);
-                            }
-
-
-                        }
-                    }
-
-                    // Kiểm tra tồn kho
-                    bool exists = inventoryList.Any(x =>
-                        x.WarehouseID == dto.billExport.WarehouseID &&
-                        x.ProductSaleID == detail.ProductID);
-                    if (!exists)
-                    {
-                        Inventory inventory = new Inventory
-                        {
-                            WarehouseID = dto.billExport.WarehouseID,
-                            ProductSaleID = detail.ProductID,
-                            TotalQuantityFirst = 0,
-                            TotalQuantityLast = 0,
-                            Import = 0,
-                            Export = 0
-                        };
-                        await _inventoryRepo.CreateAsync(inventory);
                     }
 
                     // ====== XỬ LÝ LIÊN KẾT DỰ ÁN ======
-                    var oldProjects = _inventoryprojectexportRepo.GetAll()
-                        .Where(x => x.BillExportDetailID == detail.ID && x.InventoryProjectID == 0)
-                        .ToList();
-
-                    /*     var newProjectIds = detail.InventoryProjectIDs ?? new List<int>();*/
-
-                    // 1. Xóa mềm các dự án không còn
-                    foreach (var old in oldProjects)
+                    if (detail.ID > 0)
                     {
-                        old.IsDeleted = true;
-                        await _inventoryprojectexportRepo.UpdateAsync(old);
-                    }
+                        var oldProjects = _inventoryprojectexportRepo.GetAll()
+                            .Where(x => x.BillExportDetailID == detail.ID && x.InventoryProjectID == 0)
+                            .ToList();
 
-                    // 2. Thêm mới nếu chưa có
-
-                    bool existsInOld = oldProjects.Any(x => x.InventoryProjectID == 0 && x.IsDeleted == false);
-                    if (!existsInOld)
-                    {
-                        InventoryProjectExport projectExport = new InventoryProjectExport
+                        // 1. Xóa mềm các dự án không còn
+                        foreach (var old in oldProjects)
                         {
-                            BillExportDetailID = detail.ID,
-                            InventoryProjectID = 0,
-                            UpdatedDate = DateTime.Now,
-                            IsDeleted = false
-                        };
-                        await _inventoryprojectexportRepo.CreateAsync(projectExport);
+                            old.IsDeleted = true;
+                            await _inventoryprojectexportRepo.UpdateAsync(old);
+                        }
+
+                        // 2. Thêm mới nếu chưa có
+                        bool existsInOld = oldProjects.Any(x => x.InventoryProjectID == 0 && x.IsDeleted == false);
+                        if (!existsInOld)
+                        {
+                            InventoryProjectExport projectExport = new InventoryProjectExport
+                            {
+                                BillExportDetailID = detail.ID,
+                                InventoryProjectID = 0,
+                                UpdatedDate = DateTime.Now,
+                                IsDeleted = false
+                            };
+                            await _inventoryprojectexportRepo.CreateAsync(projectExport);
+                        }
                     }
                 }
 
