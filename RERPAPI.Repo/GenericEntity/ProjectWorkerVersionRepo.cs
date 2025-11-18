@@ -61,11 +61,7 @@ namespace RERPAPI.Repo.GenericEntity
                 message = "Vui lòng nhập Trạng thái";
                 return false;
             }
-            if (string.IsNullOrEmpty(item.DescriptionVersion))
-            {
-                message = "Vui lòng nhập Mô tả";
-                return false;
-            }
+
             if (item.ID > 0)
             {
                 var exist = GetAll().Any(x => x.Code == item.Code && x.ProjectSolutionID == item.ProjectSolutionID && x.ProjectTypeID == item.ProjectTypeID && x.StatusVersion == item.StatusVersion && x.ID != item.ID && x.IsDeleted == false);

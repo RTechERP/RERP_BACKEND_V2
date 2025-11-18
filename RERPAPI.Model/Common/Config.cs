@@ -33,8 +33,11 @@
         {
             get
             {
-                var raw = Environment.GetEnvironmentVariable("VISIT_FACTORY_NOTIFY") ?? string.Empty;
-                return raw.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                string connectionString = @"Data Source=DESKTOP-ME2R5GM;Initial Catalog=RTC;Integrated Security=True;Encrypt=True;Trust Server Certificate=True";
+                //string connectionString = @"Data Source=192.168.1.2,9000;Initial Catalog=RTC;User ID=sa;Password=1;Trust Server Certificate=True";
+
+                if (_isPublish == 1) connectionString = @"";
+                return connectionString;
             }
         }
     }

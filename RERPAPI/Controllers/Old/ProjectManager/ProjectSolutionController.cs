@@ -1,24 +1,78 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
+using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using System.Threading.Tasks;
-
-namespace RERPAPI.Controllers.Old
+namespace RERPAPI.Controllers.Old.ProjectManager
 {
     [Route("api/[controller]")]
     [ApiController]
-    [ApiKeyAuthorize]
     public class ProjectSolutionController : ControllerBase
     {
         private ProjectSolutionRepo _projectSolutionRepo;
-        public ProjectSolutionController(ProjectSolutionRepo projectSolutionRepo)
+        private readonly IConfiguration _configuration;
+        private readonly ProjectRepo _projectRepo;
+        private readonly ProjectRequestRepo _projectRequestRepo;
+        private readonly ProjectSolutionFileRepo _projectSolutionFilRepo;
+        public ProjectSolutionController(
+            ProjectSolutionRepo projectSolutionRepo,
+            IConfiguration configuration,
+            ProjectRepo projectRepo, 
+            ProjectRequestRepo projectRequestRepo,
+            ProjectSolutionFileRepo projectSolutionFilRepo)
         {
             _projectSolutionRepo = projectSolutionRepo;
-        }   
+            _configuration = configuration;
+            _projectRepo = projectRepo;
+            _projectRequestRepo = projectRequestRepo;
+            _projectSolutionFilRepo = projectSolutionFilRepo;
+        }
+        [HttpGet("get-all-project")]
+        public async Task<IActionResult> GetAllProject()
+        {
+            try
+            {
+                List<RERPAPI.Model.Entities.Project> dtProject = _projectRepo.GetAll(x => x.IsDeleted == false).OrderByDescending(x => x.ID).ToList();
+                return Ok(ApiResponseFactory.Success(dtProject, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-all-project-request")]
+        public async Task<IActionResult> GetAllProjectRequest(int projectID)
+        {
+            try
+            {
+                List<RERPAPI.Model.Entities.ProjectRequest> dtProject = _projectRequestRepo.GetAll(x => x.IsDeleted == false && x.ProjectID == projectID).OrderByDescending(x => x.STT).ToList();
+                return Ok(ApiResponseFactory.Success(dtProject, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
 
+        [HttpGet("get-project-request")]
+        public async Task<IActionResult> GetProjectRequest(int projectID)
+        {
+            try
+            {
+                var dtProjectRequest = SQLHelper<object>.ProcedureToList("spGetProjectRequest",
+                    new string[] { "@ProjectID" },
+                    new object[] { projectID });
+                var projectRequest = dtProjectRequest?.FirstOrDefault();
+                return Ok(ApiResponseFactory.Success(projectRequest, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [HttpGet("get-all")]
         public async Task<IActionResult> GetAll(int projectID)
         {
@@ -67,13 +121,13 @@ namespace RERPAPI.Controllers.Old
         //        return BadRequest(ApiResponseFactory.Fail(ex, "Lỗi khi lưu giải pháp"));
         //    }
         //}
-        [HttpPost("save-data")]
+        [HttpPost("save-data-solution")]
         public async Task<IActionResult> SaveData([FromBody] ProjectSolutionDTO request)
         {
             try
             {
                 string message = "";
-
+                int projectSolutionID = 0;
 
                 // XỬ LÝ DUYỆT (NẾU CÓ THÔNG TIN DUYỆT)
                 if (request.ApproveStatus.HasValue && request.IsApproveAction.HasValue)
@@ -81,8 +135,8 @@ namespace RERPAPI.Controllers.Old
                     if (!_projectSolutionRepo.ValidateApprove(request.ID, request.IsApproveAction.Value, request.ApproveStatus.Value, out message))
                         return BadRequest(ApiResponseFactory.Fail(null, message));
 
-                    var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                    var currentUser = ObjectMapper.GetCurrentUser(claims);
+                    string key = _configuration.GetValue<string>("SessionKey") ?? "";
+                    CurrentUser currentUser = HttpContext.Session.GetObject<CurrentUser>(key);
                     var solution = await _projectSolutionRepo.GetByIDAsync(request.ID);
 
                     //if (solution == null) return NotFound();
@@ -106,14 +160,43 @@ namespace RERPAPI.Controllers.Old
                 // XỬ LÝ LƯU DỮ LIỆU THÔNG THƯỜNG
                 if (request.ID > 0)
                 {
-                    await _projectSolutionRepo.UpdateAsync(request);
-                    return Ok(ApiResponseFactory.Success(request, "Cập nhật thành công"));
+                     await _projectSolutionRepo.UpdateAsync(request);
+                    projectSolutionID = request.ID;
                 }
                 else
                 {
-                    await _projectSolutionRepo.CreateAsync(request);
-                    return Ok(ApiResponseFactory.Success(request, "Tạo mới thành công"));
+                     await _projectSolutionRepo.CreateAsync(request);
+                    projectSolutionID = request.ID;
                 }
+
+                ///lohic them file
+                if (request.projectSolutionFile?.Count > 0)
+                {
+                    foreach (var item in request.projectSolutionFile)
+                    {
+                        if (item.ID > 0)
+                        {
+
+                            await _projectSolutionFilRepo.UpdateAsync(item);
+                        }
+                        else
+                        {
+                            item.ProjectSolutionID = projectSolutionID;
+                            await _projectSolutionFilRepo.CreateAsync(item);
+                        }
+                    }
+                }
+                if(request.deletedFileID?.Count > 0)
+                {
+                    foreach(var item in request.deletedFileID)
+                    {
+                        var data = _projectSolutionFilRepo.GetByID(item);
+                        data.IsDeleted = true;
+                        await _projectSolutionFilRepo.UpdateAsync(data);
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(request, "Lưu dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
@@ -133,6 +216,7 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, "Lỗi khi lấy mã giải pháp"));
             }
         }
+      
         //[HttpPost("approve")]
         //public async Task<IActionResult> ApproveSolution(int id, bool isApproved, int status)
         //{
