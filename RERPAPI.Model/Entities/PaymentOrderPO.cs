@@ -20,4 +20,6 @@ public partial class PaymentOrderPO
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
+
+    public string? BillNumber { get; set; }
 }

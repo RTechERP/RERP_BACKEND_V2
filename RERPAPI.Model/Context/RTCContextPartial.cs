@@ -40,7 +40,6 @@ namespace RERPAPI.Model.Context
                     if (createdBy != null && createdBy.CanWrite) createdBy.SetValue(item.Entity,loginName);
                     if (createdDate != null && createdDate.CanWrite) createdDate.SetValue(item.Entity, DateTime.Now);
                     if (updatedBy != null && updatedBy.CanWrite) updatedBy.SetValue(item.Entity,loginName);
-                    //if (name != null && name.CanWrite) name.SetValue(item.Entity, loginName);
                     if (updatedDate != null && updatedDate.CanWrite) updatedDate.SetValue(item.Entity, DateTime.Now);
                     if (isDeleted != null && isDeleted.CanWrite) isDeleted.SetValue(item.Entity, false);
                 }
@@ -78,7 +77,6 @@ namespace RERPAPI.Model.Context
                     if (createdBy != null && createdBy.CanWrite) createdBy.SetValue(item.Entity, loginName);
                     if (createdDate != null && createdDate.CanWrite) createdDate.SetValue(item.Entity, DateTime.Now);
                     if (updatedBy != null && updatedBy.CanWrite) updatedBy.SetValue(item.Entity, loginName);
-                    //if (name != null && name.CanWrite) name.SetValue(item.Entity, loginName);
                     if (updatedDate != null && updatedDate.CanWrite) updatedDate.SetValue(item.Entity, DateTime.Now);
                     if (isDeleted != null && isDeleted.CanWrite) isDeleted.SetValue(item.Entity, false);
                 }
@@ -123,7 +121,7 @@ namespace RERPAPI.Model.Context
             }
 
 
-          //  ActivityLogs.AddRange(logs);
+            ActivityLogs.AddRange(logs);
         }
 
         private string GetDetails(EntityEntry entry)

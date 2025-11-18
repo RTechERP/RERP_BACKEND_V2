@@ -1,5 +1,6 @@
 ﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
+using RERPAPI.Repo.GenericEntity.Technical;
 
 namespace RERPAPI.Repo.GenericEntity
 {

@@ -17,7 +17,7 @@ namespace RERPAPI.Model.DTO.Asset
         public string TSAssetName { get; set; }
         public string TSCodeNCC { get; set; }
         public string UnitName { get; set; }
-        public string TinhTrang { get; set; }
+        public string Status { get; set; }
     }
 
 }

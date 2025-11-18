@@ -7,8 +7,9 @@ namespace RERPAPI.Repo.GenericEntity
     {
         public FirmRepo(CurrentUser currentUser) : base(currentUser)
         {
+            FirmRepo FirmRepo;
         }
-
+        FirmRepo FirmRepo1;
         public bool CheckFirmCodeExists(string firmCode, int? id = null)
         {
             try

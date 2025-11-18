@@ -9,7 +9,7 @@ using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Repo.GenericEntity.Asset
 {
-    public class TSAssetManagementRepo:GenericRepo<TSAssetManagement>
+    public class TSAssetManagementRepo : GenericRepo<TSAssetManagement>
     {
         public TSAssetManagementRepo(CurrentUser currentUser) : base(currentUser)
         {
@@ -18,20 +18,23 @@ namespace RERPAPI.Repo.GenericEntity.Asset
         {
             var date = assetdate.Value.Date;
 
+            // Chỉ lọc theo format code, không dùng CreatedDate
+            string baseCode = $"TS{date:ddMMyyyy}";
+
             var latestCode = table
-                .Where(x => x.CreatedDate.HasValue && x.CreatedDate.Value.Date == date &&
-                            !string.IsNullOrEmpty(x.TSAssetCode))
-                .OrderByDescending(x => x.ID)
+                .Where(x => !string.IsNullOrEmpty(x.TSAssetCode) &&
+                            x.TSAssetCode.StartsWith(baseCode))
+                .OrderByDescending(x => x.TSAssetCode)
                 .Select(x => x.TSAssetCode)
                 .FirstOrDefault();
 
-            string baseCode = $"TS{date:ddMMyyyy}";
             string numberPart = "00000";
 
             if (!string.IsNullOrEmpty(latestCode) && latestCode.Length >= baseCode.Length + 5)
             {
                 numberPart = latestCode.Substring(latestCode.Length - 5);
-            }       
+            }
+
             int nextNumber = int.TryParse(numberPart, out int num) ? num + 1 : 1;
             string numberStr = nextNumber.ToString("D5");
             string newCode = $"{baseCode}{numberStr}";
@@ -43,25 +46,22 @@ namespace RERPAPI.Repo.GenericEntity.Asset
             var data = GetAll();
             if (!data.Any())
                 return 0;
-            return data.Max(x => x.STT)??0;
+            return data.Max(x => x.STT) ?? 0;
         }
         public bool Validate(TSAssetManagement item, out string message)
         {
             message = "";
+            
             bool exists = GetAll().Any(x => x.TSAssetCode == item.TSAssetCode && x.ID != item.ID && x.IsDeleted != true);
             bool existSeri = GetAll().Any(x => x.Seri == item.Seri && x.ID != item.ID && x.IsDeleted != true);
             bool existCodeNCC = GetAll().Any(x => x.TSCodeNCC == item.TSCodeNCC && x.ID != item.ID && x.IsDeleted != true);
-            if (exists)
+          
+            if (existSeri && !string.IsNullOrWhiteSpace(item.Seri))
             {
-                message = $"Mã tài sản {item.TSAssetCode} đã tồn tại";
+                message = $"Mã SerialNumber {item.Seri} đã tồn tại";
                 return false;
             }
-            if (existSeri)
-            {
-                message = $"Mã SerialNumber đã tồn tại";
-                return false;
-            }
-            if (existCodeNCC)
+            if (existCodeNCC && !string.IsNullOrWhiteSpace(item.TSCodeNCC))
             {
                 message = $"Mã tài sản {item.TSCodeNCC} đã tồn tại";
                 return false;
