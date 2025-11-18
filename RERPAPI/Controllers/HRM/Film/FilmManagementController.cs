@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO.Asset;
 using RERPAPI.Model.DTO.Film;
+using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.Film;
 using System.Collections.Immutable;
@@ -22,7 +24,7 @@ namespace RERPAPI.Controllers.HRM.Film
             _filmManagementRepo = filmManagementRepo;
             _filmManagementDetailRepo = filmManagementDetailRepo;
         }
-
+        [RequiresPermission("N1,N44")]
         [HttpGet("get-film")]
         public IActionResult GetFilm([FromQuery] string? filterText, int Size, int Page)
         {
@@ -41,6 +43,7 @@ namespace RERPAPI.Controllers.HRM.Film
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [RequiresPermission("N1,N44")]
         [HttpGet("get-film-detail")]
         public IActionResult GetFilmDetail(string filmManagementID)
         {
@@ -57,6 +60,7 @@ namespace RERPAPI.Controllers.HRM.Film
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [RequiresPermission("N1,N44")]
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] FilmMangementDTO dto)
         {
@@ -68,13 +72,18 @@ namespace RERPAPI.Controllers.HRM.Film
                     return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu gửi lên không hợp lệ"));
                 }
 
+                if (dto.filmManagement != null && dto.filmManagement.IsDeleted != true)
+                {
+                    if (!_filmManagementRepo.Validate(dto.filmManagement, out string message))
+                        return BadRequest(ApiResponseFactory.Fail(null, message));
+                }
                 if (dto.filmManagement != null )
                 {
                    
                         if (dto.filmManagement.ID <= 0)
                             await _filmManagementRepo.CreateAsync(dto.filmManagement);
                         else
-                            _filmManagementRepo.Update(dto.filmManagement);
+                        await _filmManagementRepo.UpdateAsync(dto.filmManagement);
                    
                 }
                 if (dto.filmManagementDetails != null && dto.filmManagementDetails.Any())
@@ -85,7 +94,7 @@ namespace RERPAPI.Controllers.HRM.Film
                         if (item.ID <= 0)
                             await _filmManagementDetailRepo.CreateAsync(item);
                         else
-                            _filmManagementDetailRepo.Update(item);
+                            await _filmManagementDetailRepo.UpdateAsync(item);
                     }
                 }
                 return Ok(ApiResponseFactory.Success(null, "Lưu dữ liệu thành công"));

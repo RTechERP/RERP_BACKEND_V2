@@ -23,14 +23,16 @@ namespace RERPAPI.Controllers.Old.Asset
         TSAllocationEvictionAssetRepo _tSAllocationEvictionAssetRepo;
         vUserGroupLinksRepo _vUserGroupLinksRepo;
         private readonly RoleConfig _roleConfig;
-
-        public AssetsRecoveryController(TSAssetRecoveryRepo tSAssetRecoveryRepo, TSAssetRecoveryDetailRepo tSAssetRecoveryDetailRepo, TSAssetManagementRepo tSAssetManagementRepo, TSAllocationEvictionAssetRepo tSAllocationEvictionAssetRepo, vUserGroupLinksRepo vUserGroupLinksRepo)
+        private IConfiguration _configuration;
+        public AssetsRecoveryController(TSAssetRecoveryRepo tSAssetRecoveryRepo, TSAssetRecoveryDetailRepo tSAssetRecoveryDetailRepo, TSAssetManagementRepo tSAssetManagementRepo, TSAllocationEvictionAssetRepo tSAllocationEvictionAssetRepo, vUserGroupLinksRepo vUserGroupLinksRepo, IConfiguration configuration)
         {
             _tSAssetRecoveryRepo = tSAssetRecoveryRepo;
             _tSAllocationEvictionAssetRepo = tSAllocationEvictionAssetRepo;
             _tsAssetManagementRepo = tSAssetManagementRepo;
             _tSAssetRecoveryDetailRepo = tSAssetRecoveryDetailRepo;
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
+            _configuration = configuration;
+
         }
 
         [HttpPost("get-asset-recovery")]
@@ -150,9 +152,14 @@ namespace RERPAPI.Controllers.Old.Asset
             {
                 ExcelPackage.License.SetNonCommercialOrganization("RTC Technology Viet Nam");
 
-                string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "BienBanBanGiao.xlsx");
+
+                var templateFolder = _configuration.GetValue<string>("PathTemplate");
+
+                if (string.IsNullOrWhiteSpace(templateFolder))
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy đường dẫn thư mục {templateFolder} trên sever!!"));
+                string templatePath = Path.Combine(templateFolder, "ExportExcel", "BienBanBanGiao.xlsx");
                 if (!System.IO.File.Exists(templatePath))
-                    return NotFound("Không tìm thấy file mẫu.");
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy File mẫu!"));
 
                 var fileName = $"PhieuThuHoi_{master.Code}.xlsx";
                 var exportPath = Path.Combine(Path.GetTempPath(), fileName);
@@ -185,7 +192,7 @@ namespace RERPAPI.Controllers.Old.Asset
                     ws.DeleteRow(20, 1);
 
                     // Ghi dữ liệu chi tiết từ dòng 21 trở đi
-                    int startRow = 19;
+                    int startRow = 20;
                     for (int i = 0; i < details.Count; i++)
                     {
                         var item = details[i];
@@ -193,12 +200,12 @@ namespace RERPAPI.Controllers.Old.Asset
 
                         ws.InsertRow(row, 1);
                         ws.Cells[row, 1].Value = i + 1;
-                        ws.Cells[row, 2].Value = item.TSCodeNCC;
-                        ws.Cells[row, 3].Value = item.TSAssetName;
-                        ws.Cells[row, 5].Value = item.UnitName;
+                        ws.Cells[row, 2].Value = item.TSCodeNCC ?? "";
+                        ws.Cells[row, 3].Value = item.TSAssetName ?? "";
+                        ws.Cells[row, 5].Value = item.UnitName ?? "";
                         ws.Cells[row, 6].Value = item.Quantity;
-                        ws.Cells[row, 7].Value = item.TinhTrang;
-                        ws.Cells[row, 8].Value = item.Note;
+                        ws.Cells[row, 7].Value = item.Status ?? "";
+                        ws.Cells[row, 8].Value = item.Note ?? "";
                     }
 
                     // Lưu file tạm rồi trả về

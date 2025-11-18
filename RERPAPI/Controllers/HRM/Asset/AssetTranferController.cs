@@ -21,16 +21,17 @@ namespace RERPAPI.Controllers.Old.Asset
         TSAllocationEvictionAssetRepo _tSAllocationEvictionRepo;
         TSAssetManagementRepo _tsAssetManagementRepo;
         TSAssetTransferDetailRepo _tSAssetTransferDetailRepo;
-
+        private IConfiguration _configuration;
         vUserGroupLinksRepo _vUserGroupLinksRepo;
          
-        public AssetTranferController(TSAssetTransferRepo tSAssetTransferRepo, TSAllocationEvictionAssetRepo tSAllocationEvictionAssetRepo, TSAssetManagementRepo TSAssetManagementRepo, TSAssetTransferDetailRepo tSAssetTransferDetailRepo, vUserGroupLinksRepo vUserGroupLinksRepo)
+        public AssetTranferController(TSAssetTransferRepo tSAssetTransferRepo, TSAllocationEvictionAssetRepo tSAllocationEvictionAssetRepo, TSAssetManagementRepo TSAssetManagementRepo, TSAssetTransferDetailRepo tSAssetTransferDetailRepo, vUserGroupLinksRepo vUserGroupLinksRepo, IConfiguration configuration)
         {
             _tSAssetTransferRepo = tSAssetTransferRepo;
             _tSAllocationEvictionRepo = tSAllocationEvictionAssetRepo;
             _tsAssetManagementRepo = TSAssetManagementRepo;
             _tSAssetTransferDetailRepo = tSAssetTransferDetailRepo;
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
+            _configuration = configuration;
         }
 
         [HttpPost("get-asset-tranfer")]
@@ -117,10 +118,13 @@ namespace RERPAPI.Controllers.Old.Asset
             try
             {
                 ExcelPackage.License.SetNonCommercialOrganization("RTC Technology Viet Nam");
-                string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "BienBanBanGiao.xlsx");
-                if (!System.IO.File.Exists(templatePath))
-                    return NotFound("File mẫu không tồn tại.");
+                var templateFolder = _configuration.GetValue<string>("PathTemplate");
 
+                if (string.IsNullOrWhiteSpace(templateFolder))
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy đường dẫn thư mục {templateFolder} trên sever!!"));
+                string templatePath = Path.Combine(templateFolder, "ExportExcel", "BienBanBanGiao.xlsx");
+                if (!System.IO.File.Exists(templatePath))
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy File mẫu!"));
                 string fileName = $"BBBG_{master.CodeReport}_{DateTime.Now:ddMMyyyy}.xlsx";
                 using var package = new ExcelPackage(new FileInfo(templatePath));
                 var ws = package.Workbook.Worksheets[0];
@@ -145,28 +149,25 @@ namespace RERPAPI.Controllers.Old.Asset
                 //if (master.DateApprovedPersonalProperty.HasValue)
                 //    ws.Cells[32, 8].Value = master.DateApprovedPersonalProperty.Value.ToString("dd/MM/yyyy HH:mm");
 
-                int insertRow = 20;
-                int templateRow = 19;
+                ws.DeleteRow(20, 1);
 
+                // Ghi dữ liệu chi tiết từ dòng 21 trở đi
+                int startRow = 20;
                 for (int i = 0; i < details.Count; i++)
                 {
-                    var row = details[i];
-                    ws.InsertRow(insertRow, 1);
-                    for (int col = 1; col <= 8; col++)
-                    {
-                        ws.Cells[insertRow, col].StyleID = ws.Cells[templateRow, col].StyleID;
-                    }
-                    ws.Cells[insertRow, 1].Value = i + 1;
-                    ws.Cells[insertRow, 2].Value = row.TSCodeNCC;
-                    ws.Cells[insertRow, 3].Value = row.TSAssetName;
-                    ws.Cells[insertRow, 5].Value = row.UnitName;
-                    ws.Cells[insertRow, 6].Value = row.Quantity;
-                    ws.Cells[insertRow, 7].Value = row.Status;
-                    ws.Cells[insertRow, 8].Value = row.Note;
+                    var item = details[i];
+                    int row = startRow + i;
 
-                    insertRow++;
+                    ws.InsertRow(row, 1);
+                    ws.Cells[row, 1].Value = i + 1;
+                    ws.Cells[row, 2].Value = item.TSCodeNCC ?? "";
+                    ws.Cells[row, 3].Value = item.TSAssetName ?? "";
+                    ws.Cells[row, 5].Value = item.UnitName ?? "";
+                    ws.Cells[row, 6].Value = item.Quantity;
+                    ws.Cells[row, 7].Value = item.Status ?? "";
+                    ws.Cells[row, 8].Value = item.Note ?? "";
                 }
-                ws.DeleteRow(insertRow);
+
 
 
 

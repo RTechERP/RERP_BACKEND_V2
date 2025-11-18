@@ -14,4 +14,5 @@ public partial class DocumentFile
     public int? DocumentID { get; set; }
 
     public string? FileNameOrigin { get; set; }
+    public bool? IsDeleted { get; set; }
 }

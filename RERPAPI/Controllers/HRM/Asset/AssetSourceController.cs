@@ -49,8 +49,7 @@ namespace RERPAPI.Controllers.Old.Asset
         {
             try
             {
-                if (sourceasset != null && sourceasset.IsDeleted != true
-                    )
+                if (sourceasset != null && sourceasset.IsDeleted != true)
                 {
                     if (!_tsSourceAssetRepo.Validate(sourceasset, out string message))
                         return BadRequest(ApiResponseFactory.Fail(null, message));
