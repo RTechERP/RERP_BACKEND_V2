@@ -62,4 +62,5 @@ namespace RERPAPI.Repo.GenericEntity.Technical
 
             }
         }
+    }
 }
