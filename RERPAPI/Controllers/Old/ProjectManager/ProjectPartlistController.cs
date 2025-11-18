@@ -223,5 +223,40 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         //    }
 
         //}
+        [HttpPost("approvedTBP")]
+        public async Task<IActionResult> AppprovedTBP([FromBody] ApprovedTBPRequest request)
+        {
+            try
+            {
+                string messageError;
+
+                foreach (var item in request.ProjectPartListID)
+                {
+                    var pjPL = _projectPartlistRepo.GetByID(item);
+                    if (pjPL == null)
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy danh mục vật tư"));
+                    }
+
+                    if (!_projectPartlistRepo.ValidateApproveTBP(pjPL, request.Approved, out messageError))
+                    {
+                        return Ok(new
+                        {
+                            status = 2,
+                            message = messageError
+                        });
+                    }
+
+                    pjPL.IsApprovedTBP = request.Approved;
+                    await _projectPartlistRepo.UpdateAsync(pjPL);
+                }
+
+                return Ok(ApiResponseFactory.Success(null, "Duyệt thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi:{ex.Message}"));
+            }
+        }
     }
 }

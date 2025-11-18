@@ -284,12 +284,12 @@ namespace RERPAPI.Repo.GenericEntity
             //        return false;
             //    }
             //}
-            string errorsMessage = string.Empty;
+           /* string errorsMessage = string.Empty;
             if (!ValidateProduct(partlist, out errorsMessage))
             {
                 message = errorsMessage;
                 return false;
-            }
+            }*/
             return true;
         }
         public bool ValidateProduct(ProjectPartList partlist, out string message)
