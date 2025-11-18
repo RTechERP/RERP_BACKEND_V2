@@ -10,4 +10,6 @@ public partial class DocumentType
     public string? Name { get; set; }
 
     public string? Code { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }

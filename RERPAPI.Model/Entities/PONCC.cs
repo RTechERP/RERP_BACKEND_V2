@@ -136,6 +136,9 @@ public partial class PONCC
 
     public bool? IsDeleted { get; set; }
 
+    /// <summary>
+    /// 0: PO Thương mại; 1: PO mượn
+    /// </summary>
     public int? POType { get; set; }
 
     public string? ShippingPoint { get; set; }
