@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http.Features;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -13,6 +12,7 @@ using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
 using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.BBNV;
+using RERPAPI.Repo.GenericEntity.DocumentManager;
 using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
 using RERPAPI.Repo.GenericEntity.Film;
 using RERPAPI.Repo.GenericEntity.HRM;
@@ -22,6 +22,7 @@ using RERPAPI.Repo.GenericEntity.Project;
 using RERPAPI.Repo.GenericEntity.Systems;
 using RERPAPI.Repo.GenericEntity.TB;
 using RERPAPI.Repo.GenericEntity.Technical;
+using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
 using RTCApi.Repo.GenericRepo;
 using System.Text;
 
@@ -50,7 +51,9 @@ builder.Services.AddScoped<BillDocumentImportRepo>();
 builder.Services.AddScoped<BillExportDetailSerialNumberModulaLocationRepo>();
 builder.Services.AddScoped<BillExportDetailSerialNumberRepo>();
 builder.Services.AddScoped<BillExportDetailTechnicalRepo>();
-builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.BillExportTechDetailSerialRepo>();
+builder.Services.AddScoped<VehicleBookingManagementRepo>();
+builder.Services.AddScoped<VehicleBookingFileRepo>();
+builder.Services.AddScoped<BillExportTechDetailSerialRepo>();
 builder.Services.AddScoped<BillImportDetailRepo>();
 builder.Services.AddScoped<BillImportDetailSerialNumberModulaLocationRepo>();
 builder.Services.AddScoped<BillImportDetailSerialNumberRepo>();
@@ -67,6 +70,9 @@ builder.Services.AddScoped<CustomerPartsRepo>();
 builder.Services.AddScoped<CustomerRepo>();
 builder.Services.AddScoped<CustomerSpecializationRepo>();
 builder.Services.AddScoped<DailyReportTechnicalRepo>();
+builder.Services.AddScoped<DocumentTypeRepo>();
+builder.Services.AddScoped<DocumentRepo>();
+builder.Services.AddScoped<DocumentFileRepo>();
 builder.Services.AddScoped<DepartmentRepo>();
 builder.Services.AddScoped<DocumentImportPONCCRepo>();
 builder.Services.AddScoped<DocumentImportRepo>();
@@ -104,7 +110,7 @@ builder.Services.AddScoped<FollowProjectRepo>();
 builder.Services.AddScoped<GroupFileRepo>();
 builder.Services.AddScoped<GroupSaleRepo>();
 builder.Services.AddScoped<HistoryDeleteBillRepo>();
-builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.HistoryProductRTCRepo>();
+builder.Services.AddScoped<HistoryProductRTCRepo>();
 builder.Services.AddScoped<HolidayRepo>();
 builder.Services.AddScoped<InventoryProjectRepo>();
 builder.Services.AddScoped<InventoryRepo>();
@@ -284,14 +290,11 @@ builder.Services.AddScoped<ProjectManagerRepo>();
 
 builder.Services.AddScoped<BillExportDetailSerialNumberRepo>();
 builder.Services.AddScoped<BillExportDetailTechnicalRepo>();
-builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.BillExportTechDetailSerialRepo>();
 builder.Services.AddScoped<BillExportTechnicalRepo>();
 builder.Services.AddScoped<BillImportDetailSerialNumberRepo>();
 builder.Services.AddScoped<BillImportTechnicalDetailRepo>();
 builder.Services.AddScoped<BillImportTechDetailSerialRepo>();
 builder.Services.AddScoped<BillImportTechnicalRepo>();
-builder.Services.AddScoped<HistoryDeleteBillRepo>();
-builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.HistoryProductRTCRepo>();
 builder.Services.AddScoped<InventoryDemoRepo>();
 builder.Services.AddScoped<KPIEvaluationErrorRepo>();
 builder.Services.AddScoped<ProductRTCQRCodeRepo>();
@@ -329,6 +332,8 @@ builder.Services.AddScoped<AGVProductGroupRepo>();
 builder.Services.AddScoped<AGVProductGroupLinkRepo>();
 builder.Services.AddScoped<AGVBillImportRepo>();
 builder.Services.AddScoped<AGVBillImportDetailRepo>();
+builder.Services.AddScoped<AGVBillExportRepo>();
+builder.Services.AddScoped<AGVBillExportDetailRepo>();
 #endregion
 
 // BillExportTechnicalRepo in RTCApi namespace (used by Old Technical controller)
@@ -338,7 +343,6 @@ builder.Services.AddScoped<TaxCompanyRepo>();
 
 builder.Services.AddScoped<CurrentUser>(provider =>
 {
-
     var context = provider.GetRequiredService<IHttpContextAccessor>().HttpContext;
     var claims = context?.User.Claims.ToDictionary(x => x.Type, x => x.Value);
     CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
@@ -494,18 +498,18 @@ app.UseStaticFiles();
 List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();
 foreach (var item in staticFiles)
 {
-    //app.UseStaticFiles(new StaticFileOptions()
-    //{
-    //    FileProvider = new PhysicalFileProvider(item.PathFull),
-    //    RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-    //});
+    app.UseStaticFiles(new StaticFileOptions()
+    {
+        FileProvider = new PhysicalFileProvider($@"\\192.168.1.190\Software"),
+        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+    });
 
 
-    //app.UseDirectoryBrowser(new DirectoryBrowserOptions
-    //{
-    //    FileProvider = new PhysicalFileProvider(item.PathFull),
-    //    RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-    //});
+    app.UseDirectoryBrowser(new DirectoryBrowserOptions
+    {
+        FileProvider = new PhysicalFileProvider(item.PathFull),
+        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+    });
 }
 
 app.Run();

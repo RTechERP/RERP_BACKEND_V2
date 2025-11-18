@@ -21,7 +21,13 @@ public partial class AGVBillExportDetail
 
     public decimal? Quantity { get; set; }
 
-    public decimal? TotalQuantity { get; set; }
+    public string? Note { get; set; }
+
+    public int? AGVHistoryProductID { get; set; }
+
+    public int? AGVProductQRCodeID { get; set; }
+
+    public int? AGVBillImportDetailID { get; set; }
 
     public string? CreatedBy { get; set; }
 
@@ -30,18 +36,6 @@ public partial class AGVBillExportDetail
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
-
-    public string? Note { get; set; }
-
-    public string? Internalcode { get; set; }
-
-    public int? AGVHistoryProductID { get; set; }
-
-    public int? AGVProductQRCodeID { get; set; }
-
-    public int? WarehouseID { get; set; }
-
-    public int? AGVBillImportDetailID { get; set; }
 
     public bool IsDeleted { get; set; }
 }

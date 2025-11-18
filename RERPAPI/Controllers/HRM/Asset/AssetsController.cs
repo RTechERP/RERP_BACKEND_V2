@@ -144,11 +144,12 @@ namespace RERPAPI.Controllers.Old.Asset
                 return BadRequest("AssetDate is required.");
 
             var newcode = _tsAssetManagementRepo.GenerateAssetCode(assetDate);
-
+            int maxSTT = _tsAssetManagementRepo.GetMaxSTT();
             return Ok(new
             {
                 status = 1,
-                data = newcode
+                data = newcode,
+                maxSTT
             });
         }
 
@@ -185,91 +186,91 @@ namespace RERPAPI.Controllers.Old.Asset
             }
         }
 
-        [HttpPost("save-data")]
-        public async Task<IActionResult> SaveData([FromBody] AssetmanagementFullDTO asset)
-        {
-            try
+            [HttpPost("save-data")]
+            public async Task<IActionResult> SaveData([FromBody] AssetmanagementFullDTO asset)
             {
-
-
-                if (asset == null)
-                {
-                    return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." });
-                }
-                if (asset.tSAssetManagements != null && asset.tSAssetManagements.Any())
+                try
                 {
 
-                    foreach (var item in asset.tSAssetManagements)
+
+                    if (asset == null)
                     {
-                        if(item.IsDeleted!=true)
+                        return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." });
+                    }
+                    if (asset.tSAssetManagements != null && asset.tSAssetManagements.Any())
+                    {
+
+                        foreach (var item in asset.tSAssetManagements)
                         {
-                            if (!_tsAssetManagementRepo.Validate(item, out string message))
+                            if (item.IsDeleted != true)
                             {
-                                return BadRequest(ApiResponseFactory.Fail(null, message));
+                                if (!_tsAssetManagementRepo.Validate(item, out string message))
+                                {
+                                    return BadRequest(ApiResponseFactory.Fail(null, message));
+                                }
                             }
-                        }    
-                       
-                        if (item.ID <= 0)
-                        {
-                         
-                            item.StatusID = 1;
-                            item.Status = "Chưa sử dụng";
 
-                            await _tsAssetManagementRepo.CreateAsync(item);
+                            if (item.ID <= 0)
+                            {
+
+                                item.StatusID = 1;
+                                item.Status = "Chưa sử dụng";
+
+                                await _tsAssetManagementRepo.CreateAsync(item);
+                            }
+
+                            else
+                                await _tsAssetManagementRepo.UpdateAsync(item);
                         }
-
-                        else
-                            await _tsAssetManagementRepo.UpdateAsync(item);
                     }
-                }
-                if (asset.tSAllocationEvictionAssets != null && asset.tSAllocationEvictionAssets.Any())
-                {
-                    foreach (var item in asset.tSAllocationEvictionAssets)
+                    if (asset.tSAllocationEvictionAssets != null && asset.tSAllocationEvictionAssets.Any())
                     {
-                        if (item.ID <= 0)
-                            await _tSAllocationEvictionRepo.CreateAsync(item);
-                        else
-                            await _tSAllocationEvictionRepo.UpdateAsync(item);
+                        foreach (var item in asset.tSAllocationEvictionAssets)
+                        {
+                            if (item.ID <= 0)
+                                await _tSAllocationEvictionRepo.CreateAsync(item);
+                            else
+                                await _tSAllocationEvictionRepo.UpdateAsync(item);
+                        }
                     }
-                }
-                if (asset.tSLostReportAsset != null)
-                {
-                    if (asset.tSLostReportAsset.ID <= 0)
-                        await _tsLostReportRepo.CreateAsync(asset.tSLostReportAsset);
-                    else
-                        await _tsLostReportRepo.UpdateAsync(asset.tSLostReportAsset);
-                }
-                if (asset.tSReportBrokenAsset != null)
-                {
-                    if (asset.tSReportBrokenAsset.ID <= 0)
-                        await _tsReportBrokenAssetRepo.CreateAsync(asset.tSReportBrokenAsset);
-                    else
-                        await _tsReportBrokenAssetRepo.UpdateAsync(asset.tSReportBrokenAsset);
-                }
-                if (asset.tSLiQuidationAsset != null)
-                {
-                    if (asset.tSLiQuidationAsset.ID <= 0)
-                        await _tsLiQuidationAssetRepo.CreateAsync(asset.tSLiQuidationAsset);
-                    else
-                        await _tsLiQuidationAssetRepo.UpdateAsync(asset.tSLiQuidationAsset);
-                }
-                if (asset.tSRepairAssets != null && asset.tSRepairAssets.Any())
-                {
-                    foreach (var item in asset.tSRepairAssets)
+                    if (asset.tSLostReportAsset != null)
                     {
-                        if (item.ID <= 0)
-                            await _tSRepairAssetRepo.CreateAsync(item);
+                        if (asset.tSLostReportAsset.ID <= 0)
+                            await _tsLostReportRepo.CreateAsync(asset.tSLostReportAsset);
                         else
-                            await _tSRepairAssetRepo.UpdateAsync(item);
+                            await _tsLostReportRepo.UpdateAsync(asset.tSLostReportAsset);
                     }
+                    if (asset.tSReportBrokenAsset != null)
+                    {
+                        if (asset.tSReportBrokenAsset.ID <= 0)
+                            await _tsReportBrokenAssetRepo.CreateAsync(asset.tSReportBrokenAsset);
+                        else
+                            await _tsReportBrokenAssetRepo.UpdateAsync(asset.tSReportBrokenAsset);
+                    }
+                    if (asset.tSLiQuidationAsset != null)
+                    {
+                        if (asset.tSLiQuidationAsset.ID <= 0)
+                            await _tsLiQuidationAssetRepo.CreateAsync(asset.tSLiQuidationAsset);
+                        else
+                            await _tsLiQuidationAssetRepo.UpdateAsync(asset.tSLiQuidationAsset);
+                    }
+                    if (asset.tSRepairAssets != null && asset.tSRepairAssets.Any())
+                    {
+                        foreach (var item in asset.tSRepairAssets)
+                        {
+                            if (item.ID <= 0)
+                                await _tSRepairAssetRepo.CreateAsync(item);
+                            else
+                                await _tSRepairAssetRepo.UpdateAsync(item);
+                        }
+                    }
+                    return Ok(ApiResponseFactory.Success(asset, "Lưu dữ liệu thành công"));
                 }
-                return Ok(new { status = 1, message = "Lưu dữ liệu thành công." });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+                catch (Exception ex)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
 
+                }
             }
-        }
     }
 }
