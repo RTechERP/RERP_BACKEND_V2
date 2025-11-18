@@ -6,11 +6,10 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using System.Linq.Expressions;
 
-namespace RERPAPI.Controllers.Old
+namespace RERPAPI.Controllers.Old.ProjectManager
 {
     [Route("api/[controller]")]
     [ApiController]
-    [ApiKeyAuthorize]
     public class ProjectPartListVersionController : ControllerBase
     {
         private ProjectPartlistVersionRepo _projectPartlistVersionRepo;
@@ -107,14 +106,15 @@ namespace RERPAPI.Controllers.Old
 
                     var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                     var currentUser = ObjectMapper.GetCurrentUser(claims);
-
-
                     request.ApprovedID = currentUser?.EmployeeID;
                     await _projectPartlistVersionRepo.UpdateAsync(request);
                     request = _projectPartlistVersionRepo.GetByID(request.ID);
                 }
                 else
                 {
+                    request.IsApproved = false;
+                    request.ApprovedID = 0;
+                    request.ReasonDeleted = "";
                     await _projectPartlistVersionRepo.CreateAsync(request);
                 }
 

@@ -9,6 +9,9 @@ public partial class HistoryMoneyPO
 
     public int? Number { get; set; }
 
+    /// <summary>
+    /// Tổng tiền sau VAT
+    /// </summary>
     public decimal? Money { get; set; }
 
     public DateTime? MoneyDate { get; set; }
@@ -25,6 +28,9 @@ public partial class HistoryMoneyPO
 
     public string? BankName { get; set; }
 
+    /// <summary>
+    ///  Tổng tiền trước VAT
+    /// </summary>
     public decimal? MoneyVAT { get; set; }
 
     public decimal? VAT { get; set; }

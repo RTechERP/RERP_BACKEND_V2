@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http.Features;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -13,6 +12,7 @@ using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
 using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.BBNV;
+using RERPAPI.Repo.GenericEntity.DocumentManager;
 using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
 using RERPAPI.Repo.GenericEntity.Film;
 using RERPAPI.Repo.GenericEntity.HRM;
@@ -51,7 +51,9 @@ builder.Services.AddScoped<BillDocumentImportRepo>();
 builder.Services.AddScoped<BillExportDetailSerialNumberModulaLocationRepo>();
 builder.Services.AddScoped<BillExportDetailSerialNumberRepo>();
 builder.Services.AddScoped<BillExportDetailTechnicalRepo>();
-builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.BillExportTechDetailSerialRepo>();
+builder.Services.AddScoped<VehicleBookingManagementRepo>();
+builder.Services.AddScoped<VehicleBookingFileRepo>();
+builder.Services.AddScoped<BillExportTechDetailSerialRepo>();
 builder.Services.AddScoped<BillImportDetailRepo>();
 builder.Services.AddScoped<BillImportDetailSerialNumberModulaLocationRepo>();
 builder.Services.AddScoped<BillImportDetailSerialNumberRepo>();
@@ -68,6 +70,9 @@ builder.Services.AddScoped<CustomerPartsRepo>();
 builder.Services.AddScoped<CustomerRepo>();
 builder.Services.AddScoped<CustomerSpecializationRepo>();
 builder.Services.AddScoped<DailyReportTechnicalRepo>();
+builder.Services.AddScoped<DocumentTypeRepo>();
+builder.Services.AddScoped<DocumentRepo>();
+builder.Services.AddScoped<DocumentFileRepo>();
 builder.Services.AddScoped<DepartmentRepo>();
 builder.Services.AddScoped<DocumentImportPONCCRepo>();
 builder.Services.AddScoped<DocumentImportRepo>();
@@ -105,7 +110,7 @@ builder.Services.AddScoped<FollowProjectRepo>();
 builder.Services.AddScoped<GroupFileRepo>();
 builder.Services.AddScoped<GroupSaleRepo>();
 builder.Services.AddScoped<HistoryDeleteBillRepo>();
-builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.HistoryProductRTCRepo>();
+builder.Services.AddScoped<HistoryProductRTCRepo>();
 builder.Services.AddScoped<HolidayRepo>();
 builder.Services.AddScoped<InventoryProjectRepo>();
 builder.Services.AddScoped<InventoryRepo>();
@@ -285,14 +290,11 @@ builder.Services.AddScoped<ProjectManagerRepo>();
 
 builder.Services.AddScoped<BillExportDetailSerialNumberRepo>();
 builder.Services.AddScoped<BillExportDetailTechnicalRepo>();
-builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.BillExportTechDetailSerialRepo>();
 builder.Services.AddScoped<BillExportTechnicalRepo>();
 builder.Services.AddScoped<BillImportDetailSerialNumberRepo>();
 builder.Services.AddScoped<BillImportTechnicalDetailRepo>();
 builder.Services.AddScoped<BillImportTechDetailSerialRepo>();
 builder.Services.AddScoped<BillImportTechnicalRepo>();
-builder.Services.AddScoped<HistoryDeleteBillRepo>();
-builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.HistoryProductRTCRepo>();
 builder.Services.AddScoped<InventoryDemoRepo>();
 builder.Services.AddScoped<KPIEvaluationErrorRepo>();
 builder.Services.AddScoped<ProductRTCQRCodeRepo>();
@@ -320,6 +322,7 @@ builder.Services.AddScoped<HRHiringRequestExperienceLinkRepo>();
 builder.Services.AddScoped<HRHiringRequestGenderLinkRepo>();
 builder.Services.AddScoped<HRHiringRequestHealthLinkRepo>();
 builder.Services.AddScoped<HRHiringRequestLanguageLinkRepo>();
+builder.Services.AddScoped<ProjectWorkerRepo>();
 
 builder.Services.AddScoped<TaxCompanyRepo>();
 
@@ -498,16 +501,16 @@ foreach (var item in staticFiles)
 {
     app.UseStaticFiles(new StaticFileOptions()
     {
-        FileProvider = new PhysicalFileProvider(item.PathFull),
+        FileProvider = new PhysicalFileProvider($@"\\192.168.1.190\Software"),
         RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
     });
 
 
-    app.UseDirectoryBrowser(new DirectoryBrowserOptions
-    {
-        FileProvider = new PhysicalFileProvider(item.PathFull),
-        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-    });
+    //app.UseDirectoryBrowser(new DirectoryBrowserOptions
+    //{
+    //    FileProvider = new PhysicalFileProvider(item.PathFull),
+    //    RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+    //});
 }
 
 app.Run();

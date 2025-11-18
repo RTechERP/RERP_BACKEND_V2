@@ -4711,10 +4711,14 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.InvoiceNo).HasMaxLength(50);
-            entity.Property(e => e.Money).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.Money)
+                .HasComment("Tổng tiền sau VAT")
+                .HasColumnType("decimal(18, 2)");
             entity.Property(e => e.MoneyDate).HasColumnType("datetime");
             entity.Property(e => e.MoneyNotPaid).HasColumnType("decimal(18, 0)");
-            entity.Property(e => e.MoneyVAT).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.MoneyVAT)
+                .HasComment(" Tổng tiền trước VAT")
+                .HasColumnType("decimal(18, 2)");
             entity.Property(e => e.Note).HasMaxLength(250);
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
@@ -4869,6 +4873,8 @@ public partial class RTCContext : DbContext
 
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.EmployeeStock).HasComment("Người nhập số lượng tồn tối thiểu yêu cầu (Lưu ID của Employee)");
+            entity.Property(e => e.Note).HasMaxLength(550);
             entity.Property(e => e.Quantity).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
@@ -5908,7 +5914,9 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.POCode)
                 .HasMaxLength(250)
                 .HasComment("mã PO");
-            entity.Property(e => e.POType).HasDefaultValue(0);
+            entity.Property(e => e.POType)
+                .HasDefaultValue(0)
+                .HasComment("0: PO Thương mại; 1: PO mượn");
             entity.Property(e => e.Phone).HasMaxLength(150);
             entity.Property(e => e.ReasonForFailure).HasComment("Ngày tới hạn");
             entity.Property(e => e.ReceivedDatePO)
@@ -5978,6 +5986,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.PriceHistory).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.PriceSale).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.ProductCodeOfSupplier).HasMaxLength(500);
+            entity.Property(e => e.ProductType).HasComment("0: Phi mậu dịch; 1: Hàng thương mại; 2: Tạp nhập tái xuất");
             entity.Property(e => e.ProfitRate).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.QtyReal).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.QtyRequest).HasColumnType("decimal(18, 2)");
@@ -7260,10 +7269,13 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.OriginQuantity).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.ParentProductCode).HasMaxLength(550);
             entity.Property(e => e.ProductCode).HasMaxLength(550);
+            entity.Property(e => e.ProjectPartlistPurchaseRequestTypeID).HasComment("1: Mua dự án; 2: Kỹ thuật đã mua; 3: Mua demo; 4: Mượn demo;5: Hàng thương mại; 6: Hàng HR; 7: Hàng Marketing");
             entity.Property(e => e.Quantity).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.StatusRequest).HasComment("1:Y/c mua hàng;2:Huỷ Y/c mua; 3: Đã đặt hàng; 4: Đang về; 5:Đã về; 6:Không đặt hàng");
             entity.Property(e => e.TargetPrice).HasColumnType("decimal(18, 2)");
-            entity.Property(e => e.TicketType).HasDefaultValue(0);
+            entity.Property(e => e.TicketType)
+                .HasDefaultValue(0)
+                .HasComment(" 0: yêu cầu mua; 1: Yêu cầu mượn");
             entity.Property(e => e.TotaMoneyVAT).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.TotalImportPrice).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.TotalPrice).HasColumnType("decimal(18, 2)");
@@ -9116,6 +9128,9 @@ public partial class RTCContext : DbContext
 
             entity.Property(e => e.CreatedBy).HasMaxLength(50);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasComment(" 1:đã xóa;0:chưa xóa");
+            entity.Property(e => e.LastEmployeeID).HasComment("Người sử dụng gần nhất lấy từ bảng Employee");
+            entity.Property(e => e.LastTSStatusAssetID).HasComment("Lấy từ bảng TSStatusAsset");
             entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });

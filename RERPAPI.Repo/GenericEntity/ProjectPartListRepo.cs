@@ -233,7 +233,9 @@ namespace RERPAPI.Repo.GenericEntity
                 message = "Vui lòng chọn vật tư!";
                 return false;
             }
-            ProjectPartListVersion version = _versionRepo.GetByID(partlist.ProjectPartListVersionID ?? 0);
+            ProjectPartList partlistexist = GetByID(partlist.ID);
+
+            ProjectPartListVersion version = _versionRepo.GetByID(partlistexist.ProjectPartListVersionID ?? 0);
             if (version.IsActive == false || version.IsActive == null)
             {
                 message = $"Vui lòng chọn sử dụng phiên bản [{version.Code}] trước!";
@@ -250,44 +252,44 @@ namespace RERPAPI.Repo.GenericEntity
                 return false;
             }
             //validate product sale
-            List<ProductSale> prdSale = _productSaleRepo.GetAll(x => x.ProductCode == partlist.ProductCode && x.IsDeleted == false);
-            if (prdSale.Count <= 0)
-            {
-                message = $"Không thể duyệt tích xanh vì sản phẩm [{partlist.ProductCode}] không có trong kho sale!";
-                return false;
-            }
-            var fixedProduct = prdSale.FirstOrDefault(x => (x.IsFix ?? true));
-            if (fixedProduct != null)
-            {
-                List<string> errors = new List<string>();
-                string productNameConvert = UnicodeConverterService.ConvertUnicode((fixedProduct.ProductName ?? "").ToLower(), 1);
-                string makerConvert = UnicodeConverterService.ConvertUnicode((fixedProduct.Maker ?? "").ToLower(), 1);
-                string unitConvert = UnicodeConverterService.ConvertUnicode((fixedProduct.Unit ?? "").ToLower(), 1);
-                if (productNameConvert != UnicodeConverterService.ConvertUnicode((partlist.GroupMaterial ?? "").ToLower(), 1))
-                {
-                    errors.Add($"\nMã sản phẩm (tích xanh: [{fixedProduct.ProductName}], hiện tại: [{partlist.GroupMaterial}])");
-                    return false;
-                }
-                if (makerConvert != UnicodeConverterService.ConvertUnicode((partlist.Manufacturer ?? "").ToLower(), 1))
-                {
-                    errors.Add($"\nNhà sản xuất (tích xanh: [{fixedProduct.Maker}], hiện tại: [{partlist.Manufacturer}])");
-                }
-                if (unitConvert != UnicodeConverterService.ConvertUnicode((partlist.Unit ?? "").ToLower(), 1))
-                {
-                    errors.Add($"\nĐơn vị (tích xanh: [{fixedProduct.Unit}], hiện tại: [{partlist.Unit}])");
-                }
-                if (errors.Any())
-                {
-                    message = $"Sản phẩm có mã [{partlist.ProductCode}] đã có tích xanh.\nCác trường không khớp: {string.Join(" ", errors)}. \nVui lòng kiểm tra lại.";
-                    return false;
-                }
-            }
-            string errorsMessage = string.Empty;
+            //List<ProductSale> prdSale = _productSaleRepo.GetAll(x => x.ProductCode == partlist.ProductCode && x.IsDeleted == false);
+            //if (prdSale.Count <= 0)
+            //{
+            //    message = $"Không thể duyệt tích xanh vì sản phẩm [{partlist.ProductCode}] không có trong kho sale!";
+            //    return false;
+            //}
+            //var fixedProduct = prdSale.FirstOrDefault(x => (x.IsFix ?? true));
+            //if (fixedProduct != null)
+            //{
+            //    List<string> errors = new List<string>();
+            //    string productNameConvert = UnicodeConverterService.ConvertUnicode((fixedProduct.ProductName ?? "").ToLower(), 1);
+            //    string makerConvert = UnicodeConverterService.ConvertUnicode((fixedProduct.Maker ?? "").ToLower(), 1);
+            //    string unitConvert = UnicodeConverterService.ConvertUnicode((fixedProduct.Unit ?? "").ToLower(), 1);
+            //    if (productNameConvert != UnicodeConverterService.ConvertUnicode((partlist.GroupMaterial ?? "").ToLower(), 1))
+            //    {
+            //        errors.Add($"\nMã sản phẩm (tích xanh: [{fixedProduct.ProductName}], hiện tại: [{partlist.GroupMaterial}])");
+            //        return false;
+            //    }
+            //    if (makerConvert != UnicodeConverterService.ConvertUnicode((partlist.Manufacturer ?? "").ToLower(), 1))
+            //    {
+            //        errors.Add($"\nNhà sản xuất (tích xanh: [{fixedProduct.Maker}], hiện tại: [{partlist.Manufacturer}])");
+            //    }
+            //    if (unitConvert != UnicodeConverterService.ConvertUnicode((partlist.Unit ?? "").ToLower(), 1))
+            //    {
+            //        errors.Add($"\nĐơn vị (tích xanh: [{fixedProduct.Unit}], hiện tại: [{partlist.Unit}])");
+            //    }
+            //    if (errors.Any())
+            //    {
+            //        message = $"Sản phẩm có mã [{partlist.ProductCode}] đã có tích xanh.\nCác trường không khớp: {string.Join(" ", errors)}. \nVui lòng kiểm tra lại.";
+            //        return false;
+            //    }
+            //}
+           /* string errorsMessage = string.Empty;
             if (!ValidateProduct(partlist, out errorsMessage))
             {
                 message = errorsMessage;
                 return false;
-            }
+            }*/
             return true;
         }
         public bool ValidateProduct(ProjectPartList partlist, out string message)
