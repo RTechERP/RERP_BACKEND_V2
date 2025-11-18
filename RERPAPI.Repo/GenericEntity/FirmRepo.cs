@@ -16,7 +16,6 @@ namespace RERPAPI.Repo.GenericEntity
             {
 
                 var query = GetAll(f => (f.FirmCode ?? "").ToUpper() == firmCode.ToUpper() && f.IsDelete != true);
-                var query = GetAll(f => f.FirmCode.ToUpper() == firmCode.ToUpper() && f.IsDelete != true);
 
                 if (id.HasValue)
                 {
