@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Param;
@@ -11,7 +12,9 @@ namespace RERPAPI.Controllers.HRM.DailyReportHR
     [ApiController]
     public class DailyReportHrController : ControllerBase
     {
+
         [HttpPost("get-daily-report-hr")]
+        [RequiresPermission("N42,N2,N1")]
         public IActionResult GetDailyReportHr([FromBody] DailyReportHrRequestParam request)
         {
             try

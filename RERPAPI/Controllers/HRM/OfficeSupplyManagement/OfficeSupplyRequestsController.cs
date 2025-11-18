@@ -76,7 +76,7 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
 
                 // Xác định quyền giống rule cũ
                 bool isPowerUser =
-                    (_roleConfig.userAllsOfficeSupply?.Contains(currentUser.EmployeeID) ?? false) ||
+                    (_roleConfig.UserAllsOfficeSupply?.Contains(currentUser.EmployeeID) ?? false) ||
                     (_roleConfig.TBPEmployeeIds?.Contains(currentUser.EmployeeID) ?? false) ||
                     (_roleConfig.PBPPositionCodes?.Contains(currentUser.PositionCode) ?? false) ||
                     currentUser.IsAdmin==true; // nếu có cờ IsAdmin
@@ -91,10 +91,10 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
                     effectiveEmployeeId = employeeID ?? 0;     // 0 = all trong SP
 
                     //// Nếu muốn giới hạn dept giống WinForms (vd: chỉ 9,10 + phòng ban của nó)
-                    //if (_roleConfig.departmentIDs != null && _roleConfig.departmentIDs.Any())
+                    //if (_roleConfig.DepartmentIDs != null && _roleConfig.DepartmentIDs.Any())
                     //{
                     //    if (effectiveDepartmentId != 0 &&
-                    //        !_roleConfig.departmentIDs.Contains(effectiveDepartmentId) &&
+                    //        !_roleConfig.DepartmentIDs.Contains(effectiveDepartmentId) &&
                     //        effectiveDepartmentId != currentUser.DepartmentID)
                     //    {
                     //        // nếu truyền dept lạ, ép về phòng ban của nó

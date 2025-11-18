@@ -19,6 +19,9 @@ public partial class InventoryStock
 
     public DateTime? UpdatedDate { get; set; }
 
+    /// <summary>
+    /// Người nhập số lượng tồn tối thiểu yêu cầu (Lưu ID của Employee)
+    /// </summary>
     public int? EmployeeStock { get; set; }
 
     public int? ProductSaleID { get; set; }
@@ -30,4 +33,6 @@ public partial class InventoryStock
     public int? EmployeeIDRequest { get; set; }
 
     public bool? IsDeleted { get; set; }
+
+    public string? Note { get; set; }
 }
