@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
 
 namespace RERPAPI.Controllers
@@ -48,7 +49,7 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                var data = _vehicleCategoryRepo.GetAll().FindAll(x => !(bool)x.IsDelete).ToList();
+                var data = _vehicleCategoryRepo.GetAll(x=>x.IsDelete!=true).ToList();
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
@@ -96,10 +97,15 @@ namespace RERPAPI.Controllers
         }
         // POST: api/vehiclemanagement
         [HttpPost("save-vehicle")]
-        public async Task<IActionResult> SaveDataAsync([FromBody] VehicleManagement vehicle)
+        public async Task<IActionResult> SaveVehicle([FromBody] VehicleManagement vehicle)
         {
             try
             {
+                if (vehicle != null && vehicle.IsDeleted != true)
+                {
+                    if (!_vehicleManagementRepo.Validate(vehicle, out string message))
+                        return BadRequest(ApiResponseFactory.Fail(null, message));
+                }
                 if (vehicle.ID > 0)
                 {
                     await _vehicleManagementRepo.UpdateAsync(vehicle);
@@ -122,6 +128,11 @@ namespace RERPAPI.Controllers
         {
             try
             {
+                if (vehicleCategory != null && vehicleCategory.IsDelete != true)
+                {
+                    if (!_vehicleCategoryRepo.Validate(vehicleCategory, out string message))
+                        return BadRequest(ApiResponseFactory.Fail(null, message));
+                }
                 if (vehicleCategory.ID > 0)
                 {
                     await _vehicleCategoryRepo.UpdateAsync(vehicleCategory);
