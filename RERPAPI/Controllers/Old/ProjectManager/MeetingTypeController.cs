@@ -24,7 +24,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         {
             try
             {
-                var meetingtypes = _meetingTypeRepo.GetAll(p => p.IsDeleted == false);
+                var meetingtypes = _meetingTypeRepo.GetAll(p => p.IsDelete == false);
                 return Ok(ApiResponseFactory.Success(meetingtypes, "Lấy dữ liệu thành công "));
             }
             catch (Exception ex)
@@ -59,7 +59,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 var meetingType = _meetingTypeRepo.GetAll()
                     .Where(x => x.ID != id &&
                                x.TypeCode.ToLower() == typecode.ToLower() &&
-                               x.IsDeleted == false);
+                               x.IsDelete == false);
 
                 if (meetingType.Count() > 0) check = true;
 
@@ -79,7 +79,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 foreach (var dto in data)
                 {
                     string message = "";
-                    if (dto.IsDeleted != true)
+                    if (dto.IsDelete != true)
                     {
                         if (!_meetingTypeRepo.Validate(dto, out message))
                         {

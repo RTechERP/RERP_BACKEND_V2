@@ -15,7 +15,7 @@ namespace RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes
         }
         public bool Validate(MeetingType entity, out string message)
         {
-            if(entity.IsDeleted == true)
+            if(entity.IsDelete == true)
             {
                 message = "Trường hợp xóa!";
                 return true;
@@ -43,7 +43,7 @@ namespace RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes
         {
             try
             {
-                var query = GetAll(f => f.TypeCode.ToUpper() == typeCode.ToUpper() && f.IsDeleted != true);
+                var query = GetAll(f => f.TypeCode.ToUpper() == typeCode.ToUpper() && f.IsDelete != true);
                 if (id.HasValue)
                 {
                     query = query.Where(f => f.ID != id.Value).ToList();
