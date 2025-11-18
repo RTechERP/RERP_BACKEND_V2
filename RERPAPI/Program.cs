@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http.Features;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -54,7 +53,7 @@ builder.Services.AddScoped<BillExportDetailSerialNumberRepo>();
 builder.Services.AddScoped<BillExportDetailTechnicalRepo>();
 builder.Services.AddScoped<VehicleBookingManagementRepo>();
 builder.Services.AddScoped<VehicleBookingFileRepo>();
-builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.BillExportTechDetailSerialRepo>();
+builder.Services.AddScoped<BillExportTechDetailSerialRepo>();
 builder.Services.AddScoped<BillImportDetailRepo>();
 builder.Services.AddScoped<BillImportDetailSerialNumberModulaLocationRepo>();
 builder.Services.AddScoped<BillImportDetailSerialNumberRepo>();
@@ -111,7 +110,7 @@ builder.Services.AddScoped<FollowProjectRepo>();
 builder.Services.AddScoped<GroupFileRepo>();
 builder.Services.AddScoped<GroupSaleRepo>();
 builder.Services.AddScoped<HistoryDeleteBillRepo>();
-builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.HistoryProductRTCRepo>();
+builder.Services.AddScoped<HistoryProductRTCRepo>();
 builder.Services.AddScoped<HolidayRepo>();
 builder.Services.AddScoped<InventoryProjectRepo>();
 builder.Services.AddScoped<InventoryRepo>();
@@ -291,14 +290,11 @@ builder.Services.AddScoped<ProjectManagerRepo>();
 
 builder.Services.AddScoped<BillExportDetailSerialNumberRepo>();
 builder.Services.AddScoped<BillExportDetailTechnicalRepo>();
-builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.BillExportTechDetailSerialRepo>();
 builder.Services.AddScoped<BillExportTechnicalRepo>();
 builder.Services.AddScoped<BillImportDetailSerialNumberRepo>();
 builder.Services.AddScoped<BillImportTechnicalDetailRepo>();
 builder.Services.AddScoped<BillImportTechDetailSerialRepo>();
 builder.Services.AddScoped<BillImportTechnicalRepo>();
-builder.Services.AddScoped<HistoryDeleteBillRepo>();
-builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.HistoryProductRTCRepo>();
 builder.Services.AddScoped<InventoryDemoRepo>();
 builder.Services.AddScoped<KPIEvaluationErrorRepo>();
 builder.Services.AddScoped<ProductRTCQRCodeRepo>();
@@ -336,6 +332,8 @@ builder.Services.AddScoped<AGVProductGroupRepo>();
 builder.Services.AddScoped<AGVProductGroupLinkRepo>();
 builder.Services.AddScoped<AGVBillImportRepo>();
 builder.Services.AddScoped<AGVBillImportDetailRepo>();
+builder.Services.AddScoped<AGVBillExportRepo>();
+builder.Services.AddScoped<AGVBillExportDetailRepo>();
 #endregion
 
 // BillExportTechnicalRepo in RTCApi namespace (used by Old Technical controller)
@@ -345,7 +343,6 @@ builder.Services.AddScoped<TaxCompanyRepo>();
 
 builder.Services.AddScoped<CurrentUser>(provider =>
 {
-
     var context = provider.GetRequiredService<IHttpContextAccessor>().HttpContext;
     var claims = context?.User.Claims.ToDictionary(x => x.Type, x => x.Value);
     CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
