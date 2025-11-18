@@ -29,4 +29,6 @@ public partial class KPIPosition
     public int? TypePosition { get; set; }
 
     public int? KPISessionID { get; set; }
+
+    public int? KPIPositionTypeID { get; set; }
 }

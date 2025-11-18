@@ -21,5 +21,5 @@ public partial class ProductGroupRTC
 
     public int? WarehouseID { get; set; }
 
-    public bool? IsDeleted { get; set; }
+    public bool IsDeleted { get; set; }
 }

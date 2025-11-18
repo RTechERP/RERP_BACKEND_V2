@@ -29,5 +29,6 @@ public partial class EmployeeApprove
     public int? UsersID { get; set; }
 
     public bool? IsPassed { get; set; }
+
     public bool? IsDeleted { get; set; }
 }
