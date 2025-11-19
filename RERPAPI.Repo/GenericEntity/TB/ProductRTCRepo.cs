@@ -10,17 +10,17 @@ namespace RERPAPI.Repo.GenericEntity
         }
         public bool checkExistProductCodeRTC(ProductRTC model)
         {
-            var exist = GetAll(x => x.ProductCode == model.ProductCode && x.ID != model.ID && x.IsDelete != true).Any();
+            var exist = GetAll(x => x.ProductCode == model.ProductCode && x.ID != model.ID && x.IsDeleted != true).Any();
             return exist;
         }
         public bool checkExistSerialRTC(ProductRTC model)
         {
-            var exist = GetAll(x => x.SerialNumber == model.SerialNumber && x.ID != model.ID && x.IsDelete != true).Any();
+            var exist = GetAll(x => x.SerialNumber == model.SerialNumber && x.ID != model.ID && x.IsDeleted != true).Any();
             return exist;
         }
         public bool checkExistPartnumberRTC(ProductRTC model)
         {
-            var exist = GetAll(x => x.PartNumber == model.SerialNumber && x.ID != model.ID && x.IsDelete != true).Any();
+            var exist = GetAll(x => x.PartNumber == model.SerialNumber && x.ID != model.ID && x.IsDeleted != true).Any();
             return exist;
         }
         public string generateProductCode()
