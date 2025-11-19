@@ -42,15 +42,16 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        // TN.Binh update 27/10/25 
+        // TN.Binh update 27/10/25 r    
 
         #region check trùng mã code
         private bool CheckCustomerSpecializationCode(CustomerSpecialization dto)
         {
             bool check = true;
+            //dto.IsDeleted = false;
             var exists = _customerSpecializationRepo.GetAll(x => x.Code == dto.Code
-                            && x.ID != dto.ID && dto.IsDeleted !=true).ToList();
-            if (exists.Count > 0) check = false;
+                            && x.ID != dto.ID && x.IsDeleted == false).ToList();
+            if (exists.Count > 0) check = false;    
             return check;
         }
         //end update
