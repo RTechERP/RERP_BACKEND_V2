@@ -72,8 +72,8 @@ namespace RERPAPI.Controllers.Old
                         message = "Chưa có thông tin nhân viên"
                     });
                 }
-                User user = new User();
-                Employee employee = new Employee();
+                User user = loginManagerRepo.GetAll(x => x.LoginName.ToLower() == loginInfo.LoginName.ToLower() && x.Status != 1).FirstOrDefault();
+                Employee employee = employeeRepo.GetAll(x=> x.Code.ToLower() == loginInfo.Code && x.FullName.ToLower() == loginInfo.FullName.ToLower()).FirstOrDefault();
 
 
                 if (loginInfo.Status)
@@ -106,7 +106,7 @@ namespace RERPAPI.Controllers.Old
                 user.TeamID = loginInfo.TeamID;
 
                 // Update or insert records
-                if (loginInfo.UserID > 0)
+                if (loginInfo.UserID > 0 && user.ID > 0 && employee.ID > 0)
                 {
                     await loginManagerRepo.UpdateAsync(user);
                     await employeeRepo.UpdateAsync(employee);

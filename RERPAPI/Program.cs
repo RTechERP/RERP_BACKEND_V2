@@ -325,9 +325,11 @@ builder.Services.AddScoped<HRHiringRequestLanguageLinkRepo>();
 builder.Services.AddScoped<ProjectWorkerRepo>();
 
 builder.Services.AddScoped<TaxCompanyRepo>();
+
 builder.Services.AddScoped<EmployeePayrollRepo>();
 builder.Services.AddScoped<EmployeePayrollDetailRepo>();
 builder.Services.AddScoped<EmployeePayrollBonusDeuctionRepo>();
+
 #region Kho AGV
 
 builder.Services.AddScoped<AGVProductRepo>();
@@ -337,8 +339,6 @@ builder.Services.AddScoped<AGVBillImportRepo>();
 builder.Services.AddScoped<AGVBillImportDetailRepo>();
 builder.Services.AddScoped<AGVBillExportRepo>();
 builder.Services.AddScoped<AGVBillExportDetailRepo>();
-builder.Services.AddScoped<AGVInventoryDemoRepo>();
-builder.Services.AddScoped<AGVHistoryProductRepo>();
 #endregion
 
 // BillExportTechnicalRepo in RTCApi namespace (used by Old Technical controller)

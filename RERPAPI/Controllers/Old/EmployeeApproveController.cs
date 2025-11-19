@@ -34,7 +34,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                List<EmployeeApprove> employeeApprovals = _employeeApproveRepo.GetAll();
+                List<EmployeeApprove> employeeApprovals = _employeeApproveRepo.GetAll(x=> x.IsPassed == true);
                 //return Ok(new
                 //{
                 //    status = 1,
@@ -90,7 +90,7 @@ namespace RERPAPI.Controllers.Old
                         //    message = $"Nhân viên với ID {employeeID} đã có trong danh sách người duyệt"
                         //});
 
-                        return BadRequest(ApiResponseFactory.Fail(null, $"Nhân viên với ID {employeeID} đã có trong danh sách người duyệt"));
+                        return BadRequest(ApiResponseFactory.Fail(null, $"Nhân viên đã có trong danh sách người duyệt"));
                     }
 
                     var employee = _employeeRepo.GetByID(employeeID);
@@ -110,6 +110,7 @@ namespace RERPAPI.Controllers.Old
                         EmployeeID = employeeID,
                         Code = employee.Code,
                         FullName = employee.FullName,
+                        IsPassed = true,
                         Type = 1
                     };
                     employeeApproves.Add(employeeApprove);

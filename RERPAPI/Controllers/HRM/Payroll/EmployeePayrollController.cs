@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -8,7 +7,6 @@ using ZXing;
 
 namespace RERPAPI.Controllers.Old
 {
-    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class EmployeePayrollController : Controller
