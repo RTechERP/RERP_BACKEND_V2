@@ -130,7 +130,7 @@ public partial class VehicleBookingManagement
     /// <summary>
     /// Loại phương tiện (1: Oto, xe máy....; 2: Máy bay)
     /// </summary>
-    public int VehicleType { get; set; }
+    public int? VehicleType { get; set; }
 
     public DateTime? StartTimeActual { get; set; }
 }
