@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -6,6 +8,7 @@ using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.Old
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class LoginManagerController : ControllerBase
@@ -18,6 +21,7 @@ namespace RERPAPI.Controllers.Old
             this.employeeRepo = employeeRepo;
         }
         [HttpGet("{id}")]
+        [RequiresPermission("N1,N2,N60")]
         public IActionResult GetLoginInfo(int id)
         {
             try
@@ -50,7 +54,9 @@ namespace RERPAPI.Controllers.Old
                 });
             }
         }
+
         [HttpPost]
+        [RequiresPermission("N1,N2,N60")]
         public async Task<IActionResult> AddLoginInfo([FromBody] LoginInfoDTO loginInfo)
         {
             try

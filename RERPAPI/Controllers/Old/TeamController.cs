@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -26,6 +27,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet]
+        [RequiresPermission("N26,N40,N1")]
         public IActionResult GetAll()
         {
             var teams = _userTeamRepo.GetAll();
@@ -51,6 +53,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet("user-team")]
+        [RequiresPermission("N26,N40,N1")]
         public IActionResult GetUserTeam(int teamID, int departmentID)
         {
             try
@@ -70,6 +73,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost]
+        [RequiresPermission("N26,N40,N1")]
         public async Task<IActionResult> SaveData([FromBody] UserTeam userTeam)
         {
             try
@@ -96,6 +100,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpDelete("{teamID}")]
+        [RequiresPermission("N26,N40,N1")]
         public async Task<IActionResult> DeleteTeam(int teamID)
         {
             try
@@ -123,6 +128,7 @@ namespace RERPAPI.Controllers.Old
 
 
         [HttpPost("add-employee")]
+        [RequiresPermission("N26,N40,N1")]
         public async Task<IActionResult> AddEmployeeToTeam([FromBody] AddEmployeeToTeamRequest request)
         {
             try
@@ -146,11 +152,7 @@ namespace RERPAPI.Controllers.Old
 
                 // Kiểm tra kết quả (tùy thuộc vào stored procedure trả về)
                 // Giả sử stored procedure không trả về dữ liệu, chỉ thực hiện insert
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Thêm nhân viên vào team thành công."
-                });
+                return Ok(ApiResponseFactory.Success("", "Thêm nhân viên vào team thành công."));
             }
             catch (Exception ex)
             {
@@ -159,17 +161,14 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpDelete("remove-employee")]
+        [RequiresPermission("N26,N40,N1")]
         public async Task<IActionResult> RemoveEmployeeFromTeam(int userTeamLinkID)
         {
             try
             {
                 var userTeamLink = _userTeamLinkRepo.GetByID(userTeamLinkID);
                 _userTeamLinkRepo.Delete(userTeamLink.ID);
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Xóa nhân viên khỏi team thành công."
-                });
+                return Ok(ApiResponseFactory.Success("", "Xóa nhân viên khỏi team thành công."));
             }
             catch (Exception ex)
             {
@@ -183,11 +182,7 @@ namespace RERPAPI.Controllers.Old
             try
             {
                 var employees = SQLHelper<dynamic>.ProcedureToList("spGetEmployeeByDepartmentID_New", new string[] { "@DepartmentID", "@UserTeam" }, new object[] { departmentID, userTeamID });
-                return Ok(new
-                {
-                    status = 1,
-                    data = employees[0]
-                });
+                return Ok(ApiResponseFactory.Success(employees[0], ""));
             }
             catch (Exception ex)
             {

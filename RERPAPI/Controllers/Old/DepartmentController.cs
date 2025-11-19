@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -18,7 +19,8 @@ namespace RERPAPI.Controllers.Old
         }   
 
         [HttpGet("get-all")]
-        public async Task<IActionResult> GetAll()
+        [RequiresPermission("N2,N1")]
+        public IActionResult GetAll()
         {
             try
             {
@@ -33,7 +35,8 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet("deleted")]
-        public async Task<IActionResult> DeleteDepartment(int id)
+        [RequiresPermission("N2,N1")]
+        public IActionResult DeleteDepartment(int id)
         {
             try
             {
@@ -60,6 +63,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost("save")]
+        [RequiresPermission("N2,N1")]
         public async Task<IActionResult> savedepartment([FromBody] Department obj)
         {
             try
