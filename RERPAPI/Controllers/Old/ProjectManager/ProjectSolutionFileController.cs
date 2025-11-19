@@ -5,11 +5,10 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
-namespace RERPAPI.Controllers.Old
+namespace RERPAPI.Controllers.Old.ProjectManager
 {
     [Route("api/[controller]")]
     [ApiController]
-    [ApiKeyAuthorize]
     public class ProjectSolutionFileController : ControllerBase
     {
         private ProjectSolutionFileRepo _repo;
