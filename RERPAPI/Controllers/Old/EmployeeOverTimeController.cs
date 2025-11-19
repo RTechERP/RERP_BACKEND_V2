@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -7,6 +8,7 @@ using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.Old
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class EmployeeOverTimeController : ControllerBase
