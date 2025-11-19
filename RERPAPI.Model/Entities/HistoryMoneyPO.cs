@@ -29,7 +29,7 @@ public partial class HistoryMoneyPO
     public string? BankName { get; set; }
 
     /// <summary>
-    /// Tổng tiền trước VAT
+    ///  Tổng tiền trước VAT
     /// </summary>
     public decimal? MoneyVAT { get; set; }
 
@@ -43,6 +43,8 @@ public partial class HistoryMoneyPO
 
     public bool? IsMergePO { get; set; }
 
+    public decimal? MoneyNotPaid { get; set; }
+
     public bool? IsDeleted { get; set; }
 
     public string? CreatedBy { get; set; }
@@ -53,5 +55,5 @@ public partial class HistoryMoneyPO
 
     public DateTime? UpdatedDate { get; set; }
 
-    public decimal? MoneyNotPaid { get; set; }
+    public bool? IsDelivered { get; set; }
 }

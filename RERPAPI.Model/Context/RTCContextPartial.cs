@@ -43,6 +43,7 @@ namespace RERPAPI.Model.Context
                     //if (name != null && name.CanWrite) name.SetValue(item.Entity, loginName);
                     if (updatedDate != null && updatedDate.CanWrite) updatedDate.SetValue(item.Entity, DateTime.Now);
                     if (isDeleted != null && isDeleted.CanWrite) isDeleted.SetValue(item.Entity, false);
+                    if (isDelete != null && isDelete.CanWrite) isDelete.SetValue(item.Entity, false);
                 }
 
                 if (item.State == EntityState.Modified)
@@ -71,7 +72,7 @@ namespace RERPAPI.Model.Context
                 var updatedBy = type.GetProperty("UpdatedBy");
                 var updatedDate = type.GetProperty("UpdatedDate");
                 var isDeleted = type.GetProperty("IsDeleted");
-                //var name = type.GetProperty("Name");
+                var isDelete = type.GetProperty("IsDelete");
 
                 if (item.State == EntityState.Added) //Thêm mới
                 {
@@ -81,6 +82,7 @@ namespace RERPAPI.Model.Context
                     //if (name != null && name.CanWrite) name.SetValue(item.Entity, loginName);
                     if (updatedDate != null && updatedDate.CanWrite) updatedDate.SetValue(item.Entity, DateTime.Now);
                     if (isDeleted != null && isDeleted.CanWrite) isDeleted.SetValue(item.Entity, false);
+                    if (isDelete != null && isDelete.CanWrite) isDelete.SetValue(item.Entity, false);
                 }
 
                 if (item.State == EntityState.Modified)

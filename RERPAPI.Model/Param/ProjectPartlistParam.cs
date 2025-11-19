@@ -10,7 +10,7 @@ namespace RERPAPI.Model.Param
     {
         public int ProjectID { get; set; }
         public int PartlistTypeID { get; set; }
-        public bool IsDeleted { get; set; }
+        public int IsDeleted { get; set; }
         public string? Keywords { get; set; }
         public int IsApprovedTBP { get; set; }
         public int IsApprovedPurchase { get; set; }
