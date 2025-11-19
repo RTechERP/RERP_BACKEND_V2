@@ -1,12 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.HRM
 {
-    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class EmployeeController : ControllerBase
@@ -44,7 +42,7 @@ namespace RERPAPI.Controllers.HRM
 
 
         [HttpGet("employees")]
-        //[RequiresPermission("N42")]==================keyword
+        //[RequiresPermission("N42")]====keyword
         public IActionResult GetEmployee(int? status, int? departmentid, string? keyword)
         {
             try

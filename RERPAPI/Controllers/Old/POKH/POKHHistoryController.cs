@@ -23,7 +23,7 @@ namespace RERPAPI.Controllers.Old.POKH
         }
         // GET: api/<POKHistoryController>
         [HttpGet]
-        public IActionResult Get(DateTime startDate, DateTime endDate, string cusCode = "", string keywords = "")
+        public IActionResult Get(DateTime startDate, DateTime endDate, string cusCode, string keywords = "")
         {
             try
             {
