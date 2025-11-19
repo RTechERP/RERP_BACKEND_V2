@@ -14,15 +14,18 @@ namespace RERPAPI.Controllers.Warehouse.AGV
     [Authorize]
     public class AGVBillImportController : ControllerBase
     {
+        const int WAREHOUSEID = 1;
         private readonly IConfiguration _configuration;
         private readonly AGVBillImportRepo _billImportRepo;
         private readonly AGVBillImportDetailRepo _detailRepo;
+        private readonly AGVInventoryDemoRepo _inventoryRepo;
 
-        public AGVBillImportController(IConfiguration configuration, AGVBillImportRepo billImportRepo, AGVBillImportDetailRepo detailRepo)
+        public AGVBillImportController(IConfiguration configuration, AGVBillImportRepo billImportRepo, AGVBillImportDetailRepo detailRepo, AGVInventoryDemoRepo inventoryRepo)
         {
             _configuration = configuration;
             _billImportRepo = billImportRepo;
             _detailRepo = detailRepo;
+            _inventoryRepo = inventoryRepo;
         }
 
         [HttpGet()]
@@ -64,7 +67,7 @@ namespace RERPAPI.Controllers.Warehouse.AGV
 
                 if (billImport.ID <= 0)
                 {
-
+                    billImport.WarehouseID = WAREHOUSEID;
                     billImport.BillCode = _billImportRepo.GetBillCode(Convert.ToInt32(billImport.BillType));
                     await _billImportRepo.CreateAsync(billImport);
                 }
@@ -78,6 +81,18 @@ namespace RERPAPI.Controllers.Warehouse.AGV
                         await _detailRepo.CreateAsync(item);
                     }
                     else await _detailRepo.UpdateAsync(item);
+
+
+                    var inventorys = _inventoryRepo.GetAll(x => x.AGVProductID == item.AGVProductID &&
+                                                             x.WarehouseID == billImport.WarehouseID &&
+                                                             x.IsDeleted != true);
+
+                    if (inventorys.Count() > 0) continue;
+                    AGVInventoryDemo inventory = new AGVInventoryDemo();
+                    inventory.AGVProductID = item.AGVProductID;
+                    inventory.WarehouseID = billImport.WarehouseID;
+
+                    await _inventoryRepo.CreateAsync(inventory);
                 }
 
 
