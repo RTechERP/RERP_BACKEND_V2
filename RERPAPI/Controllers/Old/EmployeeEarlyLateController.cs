@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
@@ -7,6 +9,7 @@ using System.ComponentModel;
 
 namespace RERPAPI.Controllers.Old
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class EmployeeEarlyLateController : Controller
@@ -17,6 +20,7 @@ namespace RERPAPI.Controllers.Old
             _employeeEarlyLateRepo = employeeEarlyLateRepo;
         }
         [HttpPost]
+        [RequiresPermission("N2,N1")]
         public IActionResult GetEmployeeEarlyLate(EmployeeEarlyLateParam param)
         {
             try
@@ -42,6 +46,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost("save-data")]
+        [RequiresPermission("N2,N1")]
         public async Task<IActionResult> SaveEmployeeEarlyLate([FromBody] EmployeeEarlyLate employeeEarlyLate)
         {
             try

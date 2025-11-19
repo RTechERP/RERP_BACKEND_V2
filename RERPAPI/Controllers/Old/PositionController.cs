@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -17,12 +18,14 @@ namespace RERPAPI.Controllers.Old
             this.positionInternalRepo = positionInternalRepo;
         }
         [HttpGet("position-contract")]
+        [RequiresPermission("N2,N1")]
         public IActionResult GetPositionContract()
         {
             var result = positionContractRepo.GetAll(x => x.IsDeleted != true).OrderBy(x => x.PriorityOrder);
             return Ok(result);
         }
         [HttpGet("position-internal")]
+        [RequiresPermission("N2,N1")]
         public IActionResult GetPositionInternal()
         {
             var result = positionInternalRepo.GetAll(x => x.IsDeleted != true).OrderBy(x => x.PriorityOrder);
@@ -30,6 +33,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost("position-contract")]
+        [RequiresPermission("N2,N1")]
         public async Task<IActionResult> SavePositionContract([FromBody] EmployeeChucVuHD employeeChucVuHD)
         {
             try
@@ -83,6 +87,7 @@ namespace RERPAPI.Controllers.Old
 
 
         [HttpPost("position-internal")]
+        [RequiresPermission("N2,N1")]
         public async Task<IActionResult> SavePositionInternal([FromBody] EmployeeChucVu employeeChucVu)
         {
             try
@@ -127,6 +132,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost("change-status-position-contract")]
+        [RequiresPermission("N2,N1")]
         public async Task<IActionResult> changeStatusPositionContract([FromBody] List<EmployeeChucVuHD> employeeChucVuHDs)
         {
             try
@@ -145,6 +151,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost("change-status-position-internal")]
+        [RequiresPermission("N2,N1")]
         public async Task<IActionResult> changeStatusPositionInternal([FromBody] List<EmployeeChucVu> employeeChucVus)
         {
             try

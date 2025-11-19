@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.Old
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class HolidayController : ControllerBase
@@ -18,6 +21,7 @@ namespace RERPAPI.Controllers.Old
 
 
         [HttpGet]
+        [RequiresPermission("N1,N2")]
         public IActionResult GetHoliday(int month, int year)
         {
             try
@@ -43,6 +47,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost]
+        [RequiresPermission("N1,N2")]
         public async Task<IActionResult> SaveHoliday([FromBody] Holiday holiday)
         {
             try
@@ -62,7 +67,9 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
+
         [HttpPost("delete-holiday")]
+        [RequiresPermission("N1,N2")]
         public async Task<IActionResult> DeleteHoliday([FromBody] int holidayId)
         {
             try

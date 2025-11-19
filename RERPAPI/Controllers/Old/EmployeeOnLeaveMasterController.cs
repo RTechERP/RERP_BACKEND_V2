@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -6,6 +8,7 @@ using static RERPAPI.Controllers.Old.EmployeeController;
 
 namespace RERPAPI.Controllers.Old
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class EmployeeOnLeaveMasterController : ControllerBase
@@ -19,6 +22,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet]
+        [RequiresPermission("N2,N1")]
         public IActionResult GetAllEmployeeOnLeaveMaster()
         {
             try
@@ -35,6 +39,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost]
+        [RequiresPermission("N2,N1")]
         public async Task<IActionResult> SaveEmployeeOnLeaveMaster([FromBody] EmployeeOnLeaveMaster employeeOnLeaveMaster)
         {
             try
@@ -73,6 +78,7 @@ namespace RERPAPI.Controllers.Old
 
 
         [HttpPost("check-exist")]
+        [RequiresPermission("N2,N1")]
         public async Task<IActionResult> CheckExist([FromBody] List<EmployeeOnLeaveMasterCheck> check)
         {
             try

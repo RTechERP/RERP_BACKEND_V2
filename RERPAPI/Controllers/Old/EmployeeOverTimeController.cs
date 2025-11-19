@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -7,6 +9,7 @@ using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.Old
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class EmployeeOverTimeController : ControllerBase
@@ -20,6 +23,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost]
+        [RequiresPermission("N2,N1")]
         public IActionResult GetEmployeeOverTime([FromBody] EmployeeOverTimeParam param)
         {
             try
@@ -47,6 +51,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost("save-data")]
+        [RequiresPermission("N2,N1")]
         public async Task<IActionResult> SaveEmployeeOverTime([FromBody] EmployeeOverTimeDTO request)
         {
             try
@@ -142,6 +147,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet("detail")]
+        [RequiresPermission("N2,N1")]
         public IActionResult GetEmployeeOverTimeDetail(int employeeId, DateTime dateRegister)
         {
             try
@@ -177,6 +183,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost("summary")]
+        [RequiresPermission("N2,N1")]
         public IActionResult GetEmployeeOverTimeByMonth(EmployeeOverTimeByMonthParam param)
         {
             try

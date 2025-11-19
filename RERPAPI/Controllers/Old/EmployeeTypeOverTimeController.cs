@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.Old
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class EmployeeTypeOverTimeController : Controller
@@ -16,6 +19,7 @@ namespace RERPAPI.Controllers.Old
             _employeeTypeOverTimeRepo = employeeTypeOverTimeRepo;
         }
         [HttpGet]
+        [RequiresPermission("N2,N1")]
         public IActionResult GetAllEmployeeTypeOverTime()
         {
             try
@@ -40,6 +44,7 @@ namespace RERPAPI.Controllers.Old
 
 
         [HttpPost]
+        [RequiresPermission("N2,N1")]
         public async Task<IActionResult> SaveEmployeeTypeOverTime([FromBody] EmployeeTypeOvertime employeeTypeOverTime)
         {
             try

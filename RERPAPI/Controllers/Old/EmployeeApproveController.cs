@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.Old
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
 
@@ -30,6 +33,7 @@ namespace RERPAPI.Controllers.Old
 
 
         [HttpGet]
+        [RequiresPermission("N1")]
         public async Task<IActionResult> GetEmployeeApprove()
         {
             try
@@ -62,6 +66,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost]
+        [RequiresPermission("N1")]
         public async Task<IActionResult> AddEmployeeApprove([FromBody] AddEmployeeApproveRequest request)
         {
             try
@@ -144,6 +149,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpDelete("{id}")]
+        [RequiresPermission("N1")]
         public async Task<IActionResult> DeleteEmployeeApprove(int id)
         {
             try

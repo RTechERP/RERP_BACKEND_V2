@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
@@ -7,6 +9,7 @@ using ZXing;
 
 namespace RERPAPI.Controllers.Old
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class EmployeeFoodOrderController : ControllerBase
@@ -18,6 +21,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet("day-of-week")]
+        [RequiresPermission("N2,N23,N34,N1,N52,N80")]
         public IActionResult GetDayOfWeek(int month, int year)
         {
             try
@@ -35,6 +39,7 @@ namespace RERPAPI.Controllers.Old
 
 
         [HttpPost]
+        [RequiresPermission("N2,N23,N34,N1,N80")]
         public IActionResult GetEmployeeFoodOrder(EmployeeFoodOrderParam param)
         {
             try
@@ -55,6 +60,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost("food-order")]
+        [RequiresPermission("N2,N23,N34,N1,N80")]
         public IActionResult GetEmployeeFoodOrderByMonth(EmployeeFoodOrderByMonthParam param)
         {
             try
@@ -72,6 +78,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost("report-order")]
+        [RequiresPermission("N2,N23,N34,N1,N80")]
         public IActionResult GetReportFoodOrderByMonth(EmployeeFoodOrderByMonthParam param)
         {
             try
@@ -90,6 +97,7 @@ namespace RERPAPI.Controllers.Old
 
 
         [HttpPost("save-data")]
+        [RequiresPermission("N2,N23,N34,N1,N80")]
         public async Task<IActionResult> SaveEmployeeFoodOrder([FromBody] EmployeeFoodOrder foodOrder)
         {
             try
