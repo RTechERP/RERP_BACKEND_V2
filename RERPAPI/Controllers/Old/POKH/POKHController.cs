@@ -49,11 +49,11 @@ namespace RERPAPI.Controllers.Old.POKH
             _productGroupRepo = productGroupRepo;
             _configSystemRepo = configSystemRepo;
 
-            _uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "POKH");
-            if (!Directory.Exists(_uploadPath))
-            {
-                Directory.CreateDirectory(_uploadPath);
-            }
+            //_uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "POKH");
+            //if (!Directory.Exists(_uploadPath))
+            //{
+            //    Directory.CreateDirectory(_uploadPath);
+            //}
         }
         #region Các hàm get dữ liệu
         [HttpGet("get-product")]
@@ -245,6 +245,36 @@ namespace RERPAPI.Controllers.Old.POKH
         {
             try
             {
+                // Nếu request chỉ gửi flag (duyệt/hủy duyệt hoặc xóa po) mà không có detail thì bỏ qua ValidatePOKH
+                bool isFlagOnlyAction = dto?.POKH != null
+                    && dto.POKH.ID > 0
+                    && (dto.POKHDetails == null || dto.POKHDetails.Count == 0)
+                    && (dto.POKHDetailsMoney == null || dto.POKHDetailsMoney.Count == 0)
+                    && (dto.POKH.IsApproved.HasValue || dto.POKH.IsDeleted.HasValue);
+
+                if (isFlagOnlyAction)
+                {
+                    var existingPO = _pokhRepo.GetByID(dto.POKH.ID);
+                    if (existingPO == null)
+                        return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy POKH để cập nhật"));
+
+                    if (dto.POKH.IsApproved.HasValue)
+                        existingPO.IsApproved = dto.POKH.IsApproved;
+
+                    if (dto.POKH.IsDeleted.HasValue)
+                        existingPO.IsDeleted = dto.POKH.IsDeleted;
+
+                    existingPO.UpdatedDate = DateTime.Now;
+                    await _pokhRepo.UpdateAsync(existingPO);
+
+                    var msgs = new List<string>();
+                    if (dto.POKH.IsApproved.HasValue)
+                        msgs.Add(dto.POKH.IsApproved.Value ? "Duyệt POKH thành công" : "Hủy duyệt POKH thành công");
+                    if (dto.POKH.IsDeleted.HasValue)
+                        msgs.Add("Xóa POKH thành công");
+
+                    return Ok(ApiResponseFactory.Success(new { id = existingPO.ID }, string.Join(" - ", msgs)));
+                }
                 var errors = ValidatePOKH(dto);
                 if (errors.Any())
                 {
