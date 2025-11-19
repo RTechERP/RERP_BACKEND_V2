@@ -325,7 +325,9 @@ builder.Services.AddScoped<HRHiringRequestLanguageLinkRepo>();
 builder.Services.AddScoped<ProjectWorkerRepo>();
 
 builder.Services.AddScoped<TaxCompanyRepo>();
-
+builder.Services.AddScoped<EmployeePayrollRepo>();
+builder.Services.AddScoped<EmployeePayrollDetailRepo>();
+builder.Services.AddScoped<EmployeePayrollBonusDeuctionRepo>();
 #region Kho AGV
 
 builder.Services.AddScoped<AGVProductRepo>();
