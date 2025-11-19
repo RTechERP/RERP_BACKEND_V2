@@ -32,6 +32,4 @@ public partial class Department
     public string? PId { get; set; }
 
     public int? STT { get; set; }
-
-    public bool? IsDeleted { get; set; }
 }
