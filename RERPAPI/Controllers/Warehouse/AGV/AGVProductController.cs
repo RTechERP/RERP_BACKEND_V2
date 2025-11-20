@@ -37,6 +37,20 @@ namespace RERPAPI.Controllers.Warehouse.AGV
             }
         }
 
+        [HttpGet("{id}")]
+        public IActionResult GetByID(int id)
+        {
+            try
+            {
+                var product = _agvProductRepo.GetByID(id);
+                return Ok(ApiResponseFactory.Success(product, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
 
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] AGVProduct product)
@@ -47,7 +61,7 @@ namespace RERPAPI.Controllers.Warehouse.AGV
                 var validate = _agvProductRepo.Validate(product);
                 if (validate.status == 0)
                 {
-                    return BadRequest(ApiResponseFactory.Fail(null, validate.message));
+                    return BadRequest(validate);
                 }
 
                 if (product.ID <= 0) await _agvProductRepo.CreateAsync(product);

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -26,6 +27,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet]
+        [RequiresPermission("N26,N40,N1")]
         public IActionResult GetAll()
         {
             var teams = _userTeamRepo.GetAll();
@@ -46,16 +48,12 @@ namespace RERPAPI.Controllers.Old
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         [HttpGet("user-team")]
+        [RequiresPermission("N26,N40,N1")]
         public IActionResult GetUserTeam(int teamID, int departmentID)
         {
             try
@@ -69,17 +67,13 @@ namespace RERPAPI.Controllers.Old
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
 
         }
 
         [HttpPost]
+        [RequiresPermission("N26,N40,N1")]
         public async Task<IActionResult> SaveData([FromBody] UserTeam userTeam)
         {
             try
@@ -87,11 +81,7 @@ namespace RERPAPI.Controllers.Old
                 List<UserTeam> userTeams = _userTeamRepo.GetAll();
                 if (userTeams.Any(x => x.Name == userTeam.Name && x.ID != userTeam.ID))
                 {
-                    return BadRequest(new
-                    {
-                        status = 0,
-                        message = "Tên team đã tồn tại"
-                    });
+                    return BadRequest(ApiResponseFactory.Fail(null, "Tên team đã tồn tại"));
                 }
                 if (userTeam.ID <= 0)
                 {
@@ -101,79 +91,56 @@ namespace RERPAPI.Controllers.Old
                 {
                     await _userTeamRepo.UpdateAsync(userTeam);
                 }
-                return Ok(new
-                {
-                    status = 1,
-                    data = userTeam,
-                    message = "Cập nhật thành công"
-                });
+                return Ok(ApiResponseFactory.Success("", "Cập nhật thành công"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         [HttpDelete("{teamID}")]
-        public IActionResult DeleteTeam(int teamID)
+        [RequiresPermission("N26,N40,N1")]
+        public async Task<IActionResult> DeleteTeam(int teamID)
         {
             try
             {
+                if(teamID <= 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không được xóa team cha cao nhất!"));
+                }
+
                 var team = _userTeamRepo.GetByID(teamID);
                 if (team == null)
                 {
-                    return NotFound(new
-                    {
-                        status = 0,
-                        message = "Team không tồn tại"
-                    });
+                    return BadRequest(ApiResponseFactory.Fail(null, "Team không tồn tại"));
                 }
-                _userTeamRepo.Delete(team.ID);
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Xóa team thành công."
-                });
+                team.IsDeleted = true;
+                await _userTeamRepo.UpdateAsync(team);
+                return Ok(ApiResponseFactory.Success("", "Xóa team thành công."));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
 
         }
 
 
         [HttpPost("add-employee")]
+        [RequiresPermission("N26,N40,N1")]
         public async Task<IActionResult> AddEmployeeToTeam([FromBody] AddEmployeeToTeamRequest request)
         {
             try
             {
                 if (request == null || request.ListEmployeeID == null || !request.ListEmployeeID.Any())
                 {
-                    return BadRequest(new
-                    {
-                        status = 0,
-                        message = "Danh sách ID nhân viên không hợp lệ hoặc rỗng."
-                    });
+                    return BadRequest(ApiResponseFactory.Fail(null, "Danh sách ID nhân viên không hợp lệ hoặc rỗng."));
                 }
 
                 if (request.TeamID <= 0)
                 {
-                    return BadRequest(new
-                    {
-                        status = 0,
-                        message = "ID team không hợp lệ."
-                    });
+                    return BadRequest(ApiResponseFactory.Fail(null, "ID team không hợp lệ."));
                 }
 
                 string lstID = string.Join(";", request.ListEmployeeID);
@@ -185,42 +152,27 @@ namespace RERPAPI.Controllers.Old
 
                 // Kiểm tra kết quả (tùy thuộc vào stored procedure trả về)
                 // Giả sử stored procedure không trả về dữ liệu, chỉ thực hiện insert
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Thêm nhân viên vào team thành công."
-                });
+                return Ok(ApiResponseFactory.Success("", "Thêm nhân viên vào team thành công."));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new
-                {
-                    status = 0,
-                    message = "Đã xảy ra lỗi khi thêm nhân viên vào team."
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         [HttpDelete("remove-employee")]
+        [RequiresPermission("N26,N40,N1")]
         public async Task<IActionResult> RemoveEmployeeFromTeam(int userTeamLinkID)
         {
             try
             {
                 var userTeamLink = _userTeamLinkRepo.GetByID(userTeamLinkID);
                 _userTeamLinkRepo.Delete(userTeamLink.ID);
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Xóa nhân viên khỏi team thành công."
-                });
+                return Ok(ApiResponseFactory.Success("", "Xóa nhân viên khỏi team thành công."));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new
-                {
-                    status = 0,
-                    message = "Đã xảy ra lỗi khi xóa nhân viên khỏi team."
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -230,20 +182,11 @@ namespace RERPAPI.Controllers.Old
             try
             {
                 var employees = SQLHelper<dynamic>.ProcedureToList("spGetEmployeeByDepartmentID_New", new string[] { "@DepartmentID", "@UserTeam" }, new object[] { departmentID, userTeamID });
-                return Ok(new
-                {
-                    status = 1,
-                    data = employees[0]
-                });
+                return Ok(ApiResponseFactory.Success(employees[0], ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

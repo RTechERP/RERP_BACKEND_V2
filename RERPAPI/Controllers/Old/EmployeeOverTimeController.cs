@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -7,6 +9,7 @@ using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.Old
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class EmployeeOverTimeController : ControllerBase
@@ -20,12 +23,15 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost]
+        [RequiresPermission("N2,N1")]
         public IActionResult GetEmployeeOverTime([FromBody] EmployeeOverTimeParam param)
         {
             try
             {
+                var dateStart = param.dateStart.Date; // 00:00:00
+                var dateEnd = param.dateEnd.Date.AddDays(1).AddSeconds(-1);
                 var arrParamName = new string[] { "@FilterText", "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@DepartmentID", "@IDApprovedTP", "@Status" };
-                var arrParamValue = new object[] { param.keyWord ?? "", param.pageNumber, param.pageSize, param.dateStart, param.dateEnd, param.departmentId, param.idApprovedTp, param.status };
+                var arrParamValue = new object[] { param.keyWord ?? "", param.pageNumber, param.pageSize, dateStart, dateEnd, param.departmentId, param.idApprovedTp, param.status };
                 var employeeOverTime = SQLHelper<object>.ProcedureToList("spGetEmployeeOvertime", arrParamName, arrParamValue);
                 return Ok(new
                 {
@@ -45,6 +51,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost("save-data")]
+        [RequiresPermission("N2,N1")]
         public async Task<IActionResult> SaveEmployeeOverTime([FromBody] EmployeeOverTimeDTO request)
         {
             try
@@ -72,6 +79,7 @@ namespace RERPAPI.Controllers.Old
                     employeeOverTime.IsApproved = employeeOvertime.IsApproved;
                     employeeOverTime.IsApprovedHR = employeeOvertime.IsApprovedHR;
                     employeeOverTime.IsApprovedBGD = employeeOvertime?.IsApprovedBGD;
+                    employeeOverTime.IsDeleted = employeeOvertime.IsDeleted;
                     employeeOverTime.IsProblem = false;
                     //employeeOverTime.IsDeleted = employeeOvertime.IsDeleted;
 
@@ -139,6 +147,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet("detail")]
+        [RequiresPermission("N2,N1")]
         public IActionResult GetEmployeeOverTimeDetail(int employeeId, DateTime dateRegister)
         {
             try
@@ -174,6 +183,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost("summary")]
+        [RequiresPermission("N2,N1")]
         public IActionResult GetEmployeeOverTimeByMonth(EmployeeOverTimeByMonthParam param)
         {
             try
