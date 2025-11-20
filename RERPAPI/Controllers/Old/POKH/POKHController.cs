@@ -608,7 +608,7 @@ namespace RERPAPI.Controllers.Old.POKH
                     // Tạo tên file unique để tránh trùng lặp
                     var fileExtension = Path.GetExtension(file.FileName);
                     var originalFileName = Path.GetFileNameWithoutExtension(file.FileName);
-                    var uniqueFileName = $"{originalFileName}_{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid().ToString("N")[..8]}{fileExtension}";
+                    var uniqueFileName = $"{originalFileName}{fileExtension}";
                     var fullPath = Path.Combine(targetFolder, uniqueFileName);
 
                     // Lưu file trực tiếp vào targetFolder (không tạo file tạm khác)
