@@ -66,7 +66,7 @@ namespace RERPAPI.Controllers.Old
             try
             {
                 var foodOrders = SQLHelper<object>.ProcedureToList("spGetEmployeeFoodOrderByMonth", new string[] { "@Month", "@Year", "@DepartmentID", "@EmployeeID", "@Keyword", "@Location" },
-                                       new object[] { param.month, param.year, param.departmentId, param.employeeId, param.keyWord ?? "", param.location });
+                                       new object[] { param.month, param.year, param.departmentId, param.employeeId, param.keyword ?? "", param.location });
 
                 var result = SQLHelper<object>.GetListData(foodOrders, 0);
                 return Ok(ApiResponseFactory.Success(result, ""));
@@ -84,7 +84,7 @@ namespace RERPAPI.Controllers.Old
             try
             {
                 var foodOrders = SQLHelper<object>.ProcedureToList("spGetEmployeeFoodOrderByMonth", new string[] { "@Month", "@Year", "@DepartmentID", "@EmployeeID", "@Keyword" },
-                                       new object[] { param.month, param.year, param.departmentId, param.employeeId, param.keyWord ?? "" });
+                                       new object[] { param.month, param.year, param.departmentId, param.employeeId, param.keyword ?? "" });
 
                 var result = SQLHelper<object>.GetListData(foodOrders, 1);
                 return Ok(ApiResponseFactory.Success(result, ""));
