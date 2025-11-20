@@ -1,14 +1,16 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.Old
 {
-    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
+    [RequiresPermission("N2,N1")]
     public class EmployeePayrollBonusDeuctionController : Controller
     {
         EmployeePayrollBonusDeuctionRepo _employeePayrollBonusDeuctionRepo;
