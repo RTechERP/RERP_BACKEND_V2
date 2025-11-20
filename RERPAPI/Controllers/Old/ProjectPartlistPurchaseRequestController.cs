@@ -16,15 +16,15 @@ namespace RERPAPI.Controllers.Old
 
         private ProjectPartlistPurchaseRequestRepo _repo;
         private InventoryProjectRepo _inventoryProjectRepo;
-        ProjectPartlistPurchaseRequestTypeRepo _typeRepo;
+        //private ProjectPartlistPurchaseRequestTypeRepo _typeRepo;
         ProjectRepo _projectRepo;
         POKHRepo _pokhRepo;
 
-        public ProjectPartlistPurchaseRequestController(ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo, InventoryProjectRepo inventoryProjectRepo, ProjectPartlistPurchaseRequestTypeRepo projectPartlistPurchaseRequestTypeRepo, ProjectRepo projectRepo, POKHRepo pOKHRepo)
+        public ProjectPartlistPurchaseRequestController(ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo, InventoryProjectRepo inventoryProjectRepo, ProjectRepo projectRepo, POKHRepo pOKHRepo)
         {
             _repo = projectPartlistPurchaseRequestRepo;
             _inventoryProjectRepo = inventoryProjectRepo;
-            _typeRepo = projectPartlistPurchaseRequestTypeRepo;
+            //_typeRepo = projectPartlistPurchaseRequestTypeRepo;
             _projectRepo = projectRepo;
             _pokhRepo = pOKHRepo;
         }
@@ -484,28 +484,28 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
-        [HttpGet("request-types")]
-        public IActionResult GetRequestTypes()
-        {
-            try
-            {
-                var types = _typeRepo.GetAll()
-                    .Select(t => new
-                    {
-                        t.ID,
-                        t.RequestTypeName,
-                        t.RequestTypeCode
-                    })
-                    .OrderBy(t => t.ID)
-                    .ToList();
+        //[HttpGet("request-types")]
+        //public IActionResult GetRequestTypes()
+        //{
+        //    try
+        //    {
+        //        var types = _typeRepo.GetAll()
+        //            .Select(t => new
+        //            {
+        //                t.ID,
+        //                t.RequestTypeName,
+        //                t.RequestTypeCode
+        //            })
+        //            .OrderBy(t => t.ID)
+        //            .ToList();
 
-                return Ok(ApiResponseFactory.Success(types, null));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
+        //        return Ok(ApiResponseFactory.Success(types, null));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
 
         [HttpPost("validate-duplicate")]
         public IActionResult ValidateDuplicate([FromBody] List<int> ids)

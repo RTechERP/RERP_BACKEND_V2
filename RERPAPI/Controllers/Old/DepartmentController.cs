@@ -24,7 +24,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                List<Department> departments = _departmentRepo.GetAll(x => x.IsDeleted != true).OrderBy(x => x.STT).ToList();
+                List<Department> departments = _departmentRepo.GetAll().OrderBy(x => x.STT).ToList();
                 return Ok(ApiResponseFactory.Success(departments, ""));
             }
             catch (Exception ex)
@@ -41,7 +41,7 @@ namespace RERPAPI.Controllers.Old
             try
             {
                 Department? department = _departmentRepo.GetByID(id);
-                if (department == null || department.IsDeleted == true)
+                if (department == null )
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Phòng ban không tồn tại"));
                 }
@@ -50,7 +50,6 @@ namespace RERPAPI.Controllers.Old
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Phòng ban đã được sử dụng, không thể xóa"));
                 }
-                department.IsDeleted = true;
                 _departmentRepo.Update(department);
                 return Ok(ApiResponseFactory.Success(null, "Xóa phòng ban thành công"));
 

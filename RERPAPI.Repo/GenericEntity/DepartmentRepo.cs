@@ -18,7 +18,7 @@ namespace RERPAPI.Repo.GenericEntity
         {
             message = "";
 
-            bool exists = GetAll().Any(x => x.Code.ToLower().Trim() == item.Code.ToLower().Trim() && x.ID != item.ID && x.IsDeleted != true);
+            bool exists = GetAll().Any(x => x.Code.ToLower().Trim() == item.Code.ToLower().Trim() && x.ID != item.ID);
             if (exists)
             {
                 message = "Phòng ban đã tồn tại";
