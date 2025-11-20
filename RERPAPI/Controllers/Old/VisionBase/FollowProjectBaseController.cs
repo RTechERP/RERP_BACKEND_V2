@@ -505,180 +505,150 @@ namespace RERPAPI.Controllers.KhoBaseManager
 
         [HttpGet("exportfollowprojectbase")]
         public IActionResult ExportFollowProjectBase(
-                                                    int followProjectBaseID = 0,
-                                                    int projectID = 0,
-                                                    int userID = 0,
-                                                    int customerID = 0,
-                                                    int pm = 0,
-                                                    int warehouseID = 1,
-                                                    string filterText = "",
-                                                    string fileNameElement = "")
+                                            int followProjectBaseID = 0,
+                                            int projectID = 0,
+                                            int userID = 0,
+                                            int customerID = 0,
+                                            int pm = 0,
+                                            int warehouseID = 1,
+                                            string filterText = "",
+                                            string fileNameElement = "")
         {
             try
             {
-                // 1. Lấy dữ liệu từ stored procedure với SQLHelper
+                // 1. Load dữ liệu từ Stored Procedure
                 List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetFollowProjectBaseExport",
                     new string[] { "@FollowProjectBaseID", "@ProjectID", "@UserID", "@CustomerID", "@PM", "@WarehouseID", "@FilterText" },
                     new object[] { followProjectBaseID, projectID, userID, customerID, pm, warehouseID, filterText });
 
-                // Lấy result set đầu tiên (dữ liệu chính)
                 var data = SQLHelper<dynamic>.GetListData(list, 0);
 
-                // Nếu cần result set thứ 2 (ví dụ: data Sale/PM)
-                // var data1 = SQLHelper<dynamic>.GetListData(list, 1);
-
                 if (data == null || data.Count == 0)
-                {
                     return BadRequest(new { message = "Không có dữ liệu để xuất!" });
-                }
 
-                // 2. Tạo workbook với ClosedXML
-                using (var workbook = new XLWorkbook())
+                // 2. Lấy template
+                string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "TemplateFollowProjectBase.xlsx");
+
+                if (!System.IO.File.Exists(templatePath))
+                    return BadRequest(new { message = "Không tìm thấy file template!" });
+
+                using (var workbook = new XLWorkbook(templatePath))
                 {
-                    var worksheet = workbook.Worksheets.Add("Follow Dự Án");
+                    var ws = workbook.Worksheet(1);
 
-                    // 3. Thêm header
-                    var headers = new string[]
-                    {
-                        "Mã dự án", "Tên dự án", "Sale phụ trách", "PM", "Đối tác(KH)", "End User",
-                        "Trạng thái", "Ngày bắt đầu", "Loại dự án", "Hãng",
-                        "Khả năng có PO",
-                        "Dự Kiến: Ngày lên PA", "Dự Kiến: Ngày báo giá", "Dự Kiến: Ngày PO", "Dự Kiến: Ngày kết thúc",
-                        "Thực tế: Ngày lên PA", "Thực tế: Ngày báo giá", "Thực tế: Ngày PO", "Thực tế: Ngày kết thúc",
-                        "Tổng báo giá chưa VAT", "Người phụ trách chính", "Ghi chú",
-                        "Sale: Ngày đã làm", "Sale: Việc đã làm", "Sale: Ngày sẽ làm", "Sale: Việc sẽ làm",
-                        "PM: Ngày đã làm", "PM: Việc đã làm", "PM: Ngày sẽ làm", "PM: Việc sẽ làm"
-                    };
+                    int row = 3;  
 
-                    // Style cho header
-                    for (int i = 0; i < headers.Length; i++)
-                    {
-                        var cell = worksheet.Cell(1, i + 1);
-                        cell.Value = headers[i];
-                        cell.Style.Font.Bold = true;
-                        cell.Style.Fill.BackgroundColor = XLColor.LightGray;
-                        cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                        cell.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-                        cell.Style.Alignment.WrapText = true;
-
-                    }
-                    worksheet.Row(1).AdjustToContents();
-
-                    // 4. Thêm dữ liệu - QUAN TRỌNG: Dùng dynamic thay vì DataRow
-                    int row = 2;
                     foreach (dynamic item in data)
                     {
-                        worksheet.Cell(row, 1).Value = GetDynamicValue(item, "ProjectCode");
-                        worksheet.Cell(row, 2).Value = GetDynamicValue(item, "ProjectName");
-                        worksheet.Cell(row, 3).Value = GetDynamicValue(item, "FullName");
-                        worksheet.Cell(row, 4).Value = GetDynamicValue(item, "ProjectManager");
-                        worksheet.Cell(row, 5).Value = GetDynamicValue(item, "CustomerName");
-                        worksheet.Cell(row, 6).Value = GetDynamicValue(item, "EndUser");
-                        worksheet.Cell(row, 7).Value = GetDynamicValue(item, "ProjectStatusName");
+                        // ==== COPY STYLE TỪ TEMPLATE ====
+                        int templateRow = 4;
 
-                        // Ngày bắt đầu
-                        SetDateCellDynamic(worksheet, row, 8, item, "ProjectStartDate");
+                        for (int col = 1; col <= 32; col++)
+                        {
+                            var templateCell = ws.Cell(templateRow, col);
+                            var cell = ws.Cell(row, col);
 
-                        worksheet.Cell(row, 9).Value = GetDynamicValue(item, "ProjectTypeName");
-                        worksheet.Cell(row, 10).Value = GetDynamicValue(item, "FirmName");
-                        worksheet.Cell(row, 11).Value = GetDynamicValue(item, "PossibilityPO");
+                            cell.Style = templateCell.Style;
 
-                        // Dự kiến (Expected)
-                        SetDateCellDynamic(worksheet, row, 12, item, "ExpectedPlanDate");
-                        SetDateCellDynamic(worksheet, row, 13, item, "ExpectedQuotationDate");
-                        SetDateCellDynamic(worksheet, row, 14, item, "ExpectedPODate");
-                        SetDateCellDynamic(worksheet, row, 15, item, "ExpectedProjectEndDate");
+                            cell.Style.Border.TopBorder = templateCell.Style.Border.TopBorder;
+                            cell.Style.Border.BottomBorder = templateCell.Style.Border.BottomBorder;
+                            cell.Style.Border.LeftBorder = templateCell.Style.Border.LeftBorder;
+                            cell.Style.Border.RightBorder = templateCell.Style.Border.RightBorder;
 
-                        // Thực tế (Reality)
-                        SetDateCellDynamic(worksheet, row, 16, item, "RealityPlanDate");
-                        SetDateCellDynamic(worksheet, row, 17, item, "RealityQuotationDate");
-                        SetDateCellDynamic(worksheet, row, 18, item, "RealityPODate");
-                        SetDateCellDynamic(worksheet, row, 19, item, "RealityProjectEndDate");
+                            cell.Style.Alignment = templateCell.Style.Alignment;
+                            cell.Style.Font = templateCell.Style.Font;
+                        }
+                        // =================================
+
+                        ws.Cell(row, 1).Value = GetDynamicValue(item, "ProjectCode");
+                        ws.Cell(row, 2).Value = GetDynamicValue(item, "ProjectName");
+                        ws.Cell(row, 3).Value = GetDynamicValue(item, "FullName");
+                        ws.Cell(row, 4).Value = GetDynamicValue(item, "ProjectManager");
+                        ws.Cell(row, 5).Value = GetDynamicValue(item, "CustomerName");
+                        ws.Cell(row, 6).Value = GetDynamicValue(item, "EndUser");
+                        ws.Cell(row, 7).Value = GetDynamicValue(item, "ProjectStatusName");
+
+                        SetDateCellDynamic(ws, row, 8, item, "ProjectStartDate");
+
+                        ws.Cell(row, 9).Value = GetDynamicValue(item, "ProjectTypeName");
+                        ws.Cell(row, 10).Value = GetDynamicValue(item, "FirmName");
+                        ws.Cell(row, 11).Value = GetDynamicValue(item, "LastImplementationDate");
+                        ws.Cell(row, 12).Value = GetDynamicValue(item, "NextImplementationDate");
+                        ws.Cell(row, 13).Value = GetDynamicValue(item, "PossibilityPO");
+
+                        // Dự kiến
+                        SetDateCellDynamic(ws, row, 14, item, "ExpectedPlanDate");
+                        SetDateCellDynamic(ws, row, 15, item, "ExpectedQuotationDate");
+                        SetDateCellDynamic(ws, row, 16, item, "ExpectedPODate");
+                        SetDateCellDynamic(ws, row, 17, item, "ExpectedProjectEndDate");
+
+                        // Thực tế
+                        SetDateCellDynamic(ws, row, 18, item, "RealityPlanDate");
+                        SetDateCellDynamic(ws, row, 19, item, "RealityQuotationDate");
+                        SetDateCellDynamic(ws, row, 20, item, "RealityPODate");
+                        SetDateCellDynamic(ws, row, 21, item, "RealityProjectEndDate");
 
                         // Follow dự án
-                        SetNumericCellDynamic(worksheet, row, 20, item, "TotalWithoutVAT");
-                        worksheet.Cell(row, 21).Value = GetDynamicValue(item, "ProjectContactName");
-                        worksheet.Cell(row, 22).Value = GetDynamicValue(item, "Note");
-                        worksheet.Cell(row, 22).Style.Alignment.WrapText = true;
+                        SetNumericCellDynamic(ws, row, 22, item, "TotalWithoutVAT");
+                        ws.Cell(row, 23).Value = GetDynamicValue(item, "ProjectContactName");
+                        ws.Cell(row, 24).Value = GetDynamicValue(item, "Note");
 
-                        // Sale báo cáo
-                        SetDateCellDynamic(worksheet, row, 23, item, "ImplementationDateSale");
-                        worksheet.Cell(row, 24).Value = GetDynamicValue(item, "WorkDoneSale");
-                        worksheet.Cell(row, 24).Style.Alignment.WrapText = true;
-                        SetDateCellDynamic(worksheet, row, 25, item, "ExpectedDateSale");
-                        worksheet.Cell(row, 26).Value = GetDynamicValue(item, "WorkWillDoSale");
-                        worksheet.Cell(row, 26).Style.Alignment.WrapText = true;
+                        // SALE
+                        SetDateCellDynamic(ws, row, 25, item, "ImplementationDateSale");
+                        ws.Cell(row, 26).Value = GetDynamicValue(item, "WorkDoneSale");
+                        SetDateCellDynamic(ws, row, 27, item, "ExpectedDateSale");
+                        ws.Cell(row, 28).Value = GetDynamicValue(item, "WorkWillDoSale");
 
-                        // PM báo cáo
-                        SetDateCellDynamic(worksheet, row, 27, item, "ImplementationDatePM");
-                        worksheet.Cell(row, 28).Value = GetDynamicValue(item, "WorkDonePM");
-                        worksheet.Cell(row, 28).Style.Alignment.WrapText = true;
-                        SetDateCellDynamic(worksheet, row, 29, item, "ExpectedDatePM");
-                        worksheet.Cell(row, 30).Value = GetDynamicValue(item, "WorkWillDoPM");
-                        worksheet.Cell(row, 30).Style.Alignment.WrapText = true;
+                        // PM
+                        SetDateCellDynamic(ws, row, 29, item, "ImplementationDatePM");
+                        ws.Cell(row, 30).Value = GetDynamicValue(item, "WorkDonePM");
+                        SetDateCellDynamic(ws, row, 31, item, "ExpectedDatePM");
+                        ws.Cell(row, 32).Value = GetDynamicValue(item, "WorkWillDoPM");
 
                         row++;
                     }
+                    // ==== MERGE
 
-                    // === GROUP VÀ MERGE THEO MÃ DỰ ÁN ===
+                    int startDataRow = 3;
 
-                    // Các cột cần merge (theo thứ tự cột bạn tạo header)
-                    int[] mergeCols = { 1, 2, 11, 20, 21, 22 };
+                    // Các cột được merge
+                    int[] mergeCols = {
+                                            1,  // ProjectCode
+                                            2,  // ProjectName
+                                            13, // PossibilityPO
+                                            22, // TotalWithoutVAT
+                                            23, // ProjectContactName
+                                            24  // Note
+                                        };
 
-                    // Nhóm dữ liệu theo mã dự án
-                    var groups = data
-                        .GroupBy(x => GetDynamicValue(x, "ProjectCode"))
-                        .ToList();
+                    var groups = data.GroupBy(x => GetDynamicValue(x, "ProjectCode")).ToList();
 
-                    // Dòng bắt đầu dữ liệu (bỏ qua header)
-                    int currentRow = 2;
+                    int pointerRow = startDataRow;
 
                     foreach (var group in groups)
                     {
-                        int groupStart = currentRow;
-                        int groupCount = group.Count();
-                        int groupEnd = groupStart + groupCount - 1;
+                        int groupStart = pointerRow;
+                        int groupEnd = groupStart + group.Count() - 1;
 
-                        // Với mỗi cột cần merge
-                        foreach (int colIndex in mergeCols)
+                        if (group.Count() > 1)
                         {
-                            var range = worksheet.Range(groupStart, colIndex, groupEnd, colIndex);
-                            if (groupCount > 1)
+                            foreach (int col in mergeCols)
                             {
+                                var range = ws.Range(groupStart, col, groupEnd, col);
                                 range.Merge();
                                 range.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
                                 range.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                             }
                         }
 
-                        // Di chuyển row pointer sang nhóm kế tiếp
-                        currentRow += groupCount;
+                        pointerRow += group.Count();
                     }
 
-
-                    // 5. Format columns
-                    worksheet.Columns().AdjustToContents();
-                    foreach (var column in worksheet.Columns())
-                    {
-                        if (column.Width > 50) column.Width = 50;
-                        if (column.Width < 10) column.Width = 10;
-                    }
-
-                    // 6. Freeze header row
-                    worksheet.SheetView.FreezeRows(1);
-
-                    // 7. Add AutoFilter
-                    worksheet.RangeUsed().SetAutoFilter();
-
-                    // 8. Tạo tên file
                     string fileName = $"FollowProject_{fileNameElement}_{DateTime.Now:ddMMyy}.xlsx";
 
-                    // 9. Save to stream và return
                     using (var stream = new MemoryStream())
                     {
                         workbook.SaveAs(stream);
-                        stream.Position = 0;
-
                         return File(stream.ToArray(),
                             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                             fileName);
@@ -687,11 +657,9 @@ namespace RERPAPI.Controllers.KhoBaseManager
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Lỗi xuất Excel: " + ex.Message, stack = ex.StackTrace });
+                return StatusCode(500, new { message = "Lỗi xuất file: " + ex.Message, stack = ex.StackTrace });
             }
         }
-
-        // ===== HELPER METHODS - Thêm vào controller =====
 
         /// <summary>
         /// Lấy giá trị từ dynamic object

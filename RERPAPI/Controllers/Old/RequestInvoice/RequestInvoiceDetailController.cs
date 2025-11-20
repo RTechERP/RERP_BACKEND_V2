@@ -22,11 +22,11 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
 
         public RequestInvoiceDetailController(IWebHostEnvironment environment, RequestInvoiceRepo requestInvoiceRepo, RequestInvoiceDetailRepo requestInvoiceDetailRepo, RequestInvoiceFileRepo requestInvoiceFileRepo, EmployeeRepo employeeRepo, ProductSaleRepo productSaleRepo, ProjectRepo projectRepo)
         {
-            _uploadPath = Path.Combine(environment.ContentRootPath, "Uploads", "RequestInvoice");
-            if (!Directory.Exists(_uploadPath))
-            {
-                Directory.CreateDirectory(_uploadPath);
-            }
+            //_uploadPath = Path.Combine(environment.ContentRootPath, "Uploads", "RequestInvoice");
+            //if (!Directory.Exists(_uploadPath))
+            //{
+            //    Directory.CreateDirectory(_uploadPath);
+            //}
             _requestInvoiceRepo = requestInvoiceRepo;
             _requestInvoiceDetailRepo = requestInvoiceDetailRepo;
             _requestInvoiceFileRepo = requestInvoiceFileRepo;
