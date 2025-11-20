@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -7,6 +9,7 @@ using Xceed.Words.NET;
 
 namespace RERPAPI.Controllers.Old
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class EmployeeContractController : ControllerBase
@@ -47,6 +50,7 @@ namespace RERPAPI.Controllers.Old
 
 
         [HttpGet]
+        [RequiresPermission("N1,N2,N60")]
         public IActionResult GetEmployeeContract(int employeeID, int? employeeContractTypeID, string? filterText)
         {
             try
@@ -77,6 +81,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet("{id}")]
+        [RequiresPermission("N1,N2,N60")]
         public IActionResult GetEmployeeContractByID(int id)
         {
             try
@@ -103,7 +108,9 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
+
         [HttpPost]
+        [RequiresPermission("N1,N2,N60")]
         public async Task<IActionResult> SaveEmployeeContract([FromBody] EmployeeContract employeeContract)
         {
             try
@@ -134,7 +141,9 @@ namespace RERPAPI.Controllers.Old
         }
 
 
+
         [HttpGet("{id}/print-contract")]
+        [RequiresPermission("N1,N2,N60")]
         public async Task<IActionResult> PrintContractEmployee(int id)
         {
             try
@@ -176,6 +185,7 @@ namespace RERPAPI.Controllers.Old
 
 
         [HttpPost("generate")]
+        [RequiresPermission("N1,N2,N60")]
         public IActionResult GenerateContract([FromBody] ContractDTO data)
         {
             try

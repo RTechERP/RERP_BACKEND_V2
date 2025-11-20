@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.Old
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class HolidayController : ControllerBase
@@ -14,10 +17,11 @@ namespace RERPAPI.Controllers.Old
         public HolidayController(HolidayRepo holidayRepo)
         {
             _holidayRepo = holidayRepo;
-        }   
+        }
 
 
         [HttpGet]
+        [RequiresPermission("N1,N2")]
         public IActionResult GetHoliday(int month, int year)
         {
             try
@@ -25,11 +29,7 @@ namespace RERPAPI.Controllers.Old
                 var holidays = SQLHelper<object>.ProcedureToList("spGetHoliday",
                                                                 new string[] { "@Month", "@Year" },
                                                                 new object[] { month, year });
-                //return Ok(new
-                //{
-                //    status = 1,
-                //    data = SQLHelper<object>.GetListData(holidays, 0)
-                //});
+
                 var data = new
                 {
                     holidays = SQLHelper<object>.GetListData(holidays, 0),
@@ -42,41 +42,12 @@ namespace RERPAPI.Controllers.Old
             }
             catch (Exception ex)
             {
-                //return BadRequest(new
-                //{
-                //    status = 0,
-                //    message = ex.Message,
-                //    error = ex.ToString()
-                //});
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        //[HttpGet("schedule-work")]
-        //public IActionResult GetEmployeeScheduleWork(int month, int year)
-        //{
-        //    try
-        //    {
-        //        var dtScheduleWork = SQLHelper<object>.ProcedureToList("spGetEmployeeScheduleWorkByDate",
-        //                                                   new string[] {  "@Year" , "@Month"},
-        //                                                        new object[] { year, month });
-        //        return Ok(new
-        //        {
-        //            status = 1,
-        //            data = SQLHelper<object>.GetListData(dtScheduleWork, 0)
-        //        });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(new
-        //        {
-        //            status = 0,
-        //            message = ex.Message,
-        //            error = ex.ToString()
-        //        });
-        //    }
-        //}
 
         [HttpPost]
+        [RequiresPermission("N1,N2")]
         public async Task<IActionResult> SaveHoliday([FromBody] Holiday holiday)
         {
             try
@@ -84,38 +55,32 @@ namespace RERPAPI.Controllers.Old
                 var existingHoliday = _holidayRepo.GetAll(
                     x => x.HolidayYear == holiday.HolidayYear && x.HolidayDay == holiday.HolidayDay && x.HolidayMonth == holiday.HolidayMonth && x.ID != holiday.ID);
 
-                if (existingHoliday.Any())
-                {
-                    return BadRequest(new
-                    {
-                        status = 0,
-                        message = "Ngày nghỉ này đã có. Vui lòng chọn ngày khác!"
-                    });
-                }
-
-                if (holiday.ID <= 0)
-                {
-                    await _holidayRepo.CreateAsync(holiday);
-                }
-                else
-                {
-                    await _holidayRepo.UpdateAsync(holiday);
-                }
-                return Ok(new
-                {
-                    status = 1,
-                    data = holiday,
-                    message = "Lưu thành công"
-                });
+                if (existingHoliday.Any()) return BadRequest(ApiResponseFactory.Fail(null, "Ngày nghỉ này đã có. Vui lòng chọn ngày khác!"));
+                holiday.HolidayName = holiday.HolidayName.Trim();
+                if (holiday.ID <= 0) await _holidayRepo.CreateAsync(holiday);
+                else await _holidayRepo.UpdateAsync(holiday);
+                return Ok(ApiResponseFactory.Success(holiday, "Lưu thành công"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
+        [HttpPost("delete-holiday")]
+        [RequiresPermission("N1,N2")]
+        public async Task<IActionResult> DeleteHoliday([FromBody] int holidayId)
+        {
+            try
+            {
+                if(holidayId <= 0) return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy ID xóa phòng ban!"));
+                await _holidayRepo.DeleteAsync(holidayId);
+                return Ok(ApiResponseFactory.Success(null, "Đã xóa ngày nghỉ!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
