@@ -13,5 +13,36 @@ namespace RERPAPI.Repo.GenericEntity
         public DepartmentRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
+
+        public bool Validate(Department item, out string message)
+        {
+            message = "";
+
+            bool exists = GetAll().Any(x => x.Code.ToLower().Trim() == item.Code.ToLower().Trim() && x.ID != item.ID && x.IsDeleted != true);
+            if (exists)
+            {
+                message = "Phòng ban đã tồn tại";
+                return false;
+            }
+
+            if (String.IsNullOrWhiteSpace(item.Code))
+            {
+                message = "Mã phòng ban không được để trống";
+                return false;
+            }
+            if (String.IsNullOrWhiteSpace(item.Name))
+            {
+                message = "Tên phòng ban không được để trống";
+                return false;
+            }
+            if (item.HeadofDepartment <= 0)
+            {
+                message = "Vui Lòng chọn trưởng phòng";
+                return false;
+            }
+
+
+            return true;
+        }
     }
 }

@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.Old
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
 
@@ -30,11 +33,12 @@ namespace RERPAPI.Controllers.Old
 
 
         [HttpGet]
+        [RequiresPermission("N1")]
         public async Task<IActionResult> GetEmployeeApprove()
         {
             try
             {
-                List<EmployeeApprove> employeeApprovals = _employeeApproveRepo.GetAll();
+                List<EmployeeApprove> employeeApprovals = _employeeApproveRepo.GetAll(x=> x.IsPassed == true);
                 //return Ok(new
                 //{
                 //    status = 1,
@@ -62,6 +66,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost]
+        [RequiresPermission("N1")]
         public async Task<IActionResult> AddEmployeeApprove([FromBody] AddEmployeeApproveRequest request)
         {
             try
@@ -90,7 +95,7 @@ namespace RERPAPI.Controllers.Old
                         //    message = $"Nhân viên với ID {employeeID} đã có trong danh sách người duyệt"
                         //});
 
-                        return BadRequest(ApiResponseFactory.Fail(null, $"Nhân viên với ID {employeeID} đã có trong danh sách người duyệt"));
+                        return BadRequest(ApiResponseFactory.Fail(null, $"Nhân viên đã có trong danh sách người duyệt"));
                     }
 
                     var employee = _employeeRepo.GetByID(employeeID);
@@ -110,6 +115,7 @@ namespace RERPAPI.Controllers.Old
                         EmployeeID = employeeID,
                         Code = employee.Code,
                         FullName = employee.FullName,
+                        IsPassed = true,
                         Type = 1
                     };
                     employeeApproves.Add(employeeApprove);
@@ -143,6 +149,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpDelete("{id}")]
+        [RequiresPermission("N1")]
         public async Task<IActionResult> DeleteEmployeeApprove(int id)
         {
             try

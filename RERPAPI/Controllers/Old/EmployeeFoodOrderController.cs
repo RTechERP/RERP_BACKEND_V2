@@ -1,11 +1,15 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
+using ZXing;
 
 namespace RERPAPI.Controllers.Old
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class EmployeeFoodOrderController : ControllerBase
@@ -17,6 +21,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet("day-of-week")]
+        [RequiresPermission("N2,N23,N34,N1,N52,N80")]
         public IActionResult GetDayOfWeek(int month, int year)
         {
             try
@@ -24,76 +29,56 @@ namespace RERPAPI.Controllers.Old
                 var dt = SQLHelper<object>.ProcedureToList("spGetDayOfWeek", new string[] { "@Month", "@Year" }, new object[] { month, year });
                 var result = SQLHelper<object>.GetListData(dt, 0);
 
-                return Ok(new
-                {
-                    status = 1,
-                    data = result
-                });
+                return Ok(ApiResponseFactory.Success(result, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
 
         [HttpPost]
+        [RequiresPermission("N2,N23,N34,N1,N80")]
         public IActionResult GetEmployeeFoodOrder(EmployeeFoodOrderParam param)
         {
             try
             {
+                DateTime dateStart = param.dateStart.Date;
+                DateTime dateEnd = param.dateStart.Date.AddDays(1).AddTicks(-1);
                 var foodOrders = SQLHelper<object>.ProcedureToList("spGetFoodOrder", new string[] { "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@Keyword", "@EmployeeID" },
-                    new object[] {param.pageNumber , param.pageSize, param.dateStart, param.dateEnd, param.keyWord, param.employeeId });
+                    new object[] { param.pageNumber, param.pageSize, dateStart, dateEnd, param.keyWord, param.employeeId });
 
                 var result = SQLHelper<object>.GetListData(foodOrders, 0);
 
-                return Ok(new
-                {
-                    status = 1,
-                    data = result
-                });
-            } catch (Exception ex)
+                return Ok(ApiResponseFactory.Success(result, ""));
+            }
+            catch (Exception ex)
             {
-                return BadRequest(new
-                {   
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         [HttpPost("food-order")]
+        [RequiresPermission("N2,N23,N34,N1,N80")]
         public IActionResult GetEmployeeFoodOrderByMonth(EmployeeFoodOrderByMonthParam param)
         {
             try
             {
-                var foodOrders = SQLHelper<object>.ProcedureToList("spGetEmployeeFoodOrderByMonth", new string[] { "@Month", "@Year", "@DepartmentID", "@EmployeeID", "@Keyword" },
-                                       new object[] { param.month, param.year, param.departmentId, param.employeeId, param.keyWord ?? ""});
+                var foodOrders = SQLHelper<object>.ProcedureToList("spGetEmployeeFoodOrderByMonth", new string[] { "@Month", "@Year", "@DepartmentID", "@EmployeeID", "@Keyword", "@Location" },
+                                       new object[] { param.month, param.year, param.departmentId, param.employeeId, param.keyWord ?? "", param.location });
 
                 var result = SQLHelper<object>.GetListData(foodOrders, 0);
-                return Ok(new
-                {
-                    status = 1,
-                    data = result
-                });
-            } catch (Exception ex)
+                return Ok(ApiResponseFactory.Success(result, ""));
+            }
+            catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         [HttpPost("report-order")]
+        [RequiresPermission("N2,N23,N34,N1,N80")]
         public IActionResult GetReportFoodOrderByMonth(EmployeeFoodOrderByMonthParam param)
         {
             try
@@ -102,62 +87,41 @@ namespace RERPAPI.Controllers.Old
                                        new object[] { param.month, param.year, param.departmentId, param.employeeId, param.keyWord ?? "" });
 
                 var result = SQLHelper<object>.GetListData(foodOrders, 1);
-                return Ok(new
-                {
-                    status = 1,
-                    data = result
-                });
+                return Ok(ApiResponseFactory.Success(result, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
 
         [HttpPost("save-data")]
+        [RequiresPermission("N2,N23,N34,N1,N80")]
         public async Task<IActionResult> SaveEmployeeFoodOrder([FromBody] EmployeeFoodOrder foodOrder)
         {
             try
             {
-                //var checkOrder = SQLHelper<object>.ProcedureToList("spGetEmployeeFoodOrderByDate", new string[] { "@Date", "@EmployeeID", "@ID" }, new object[] { foodOrder.DateOrder, foodOrder.EmployeeID, foodOrder.ID });
-                //if (checkOrder != null && checkOrder.Count > 0)
-                //{
-                //    return BadRequest(new
-                //    {
-                //        status = 0,
-                //        message = "Nhân viên đã đặt cơm ngày " + foodOrder.DateOrder
-                //    });
-                //}
+                var checkExist = _employeeFoodOrderRepo
+                .GetAll(x => x.EmployeeID == foodOrder.EmployeeID
+                          && x.DateOrder.Value.Date == foodOrder.DateOrder.Value.Date 
+                          && x.IsApproved != true 
+                          && x.IsDeleted != true)
+                .FirstOrDefault();
 
-
-               if(foodOrder.ID <= 0)
+                if(checkExist != null)
                 {
-                    await _employeeFoodOrderRepo.CreateAsync(foodOrder);
-                } else
-                {
-                    await _employeeFoodOrderRepo.UpdateAsync(foodOrder);
+                    foodOrder.ID = checkExist.ID;
+                    foodOrder.Quantity = foodOrder.Quantity + checkExist.Quantity;
                 }
-                return Ok(new
-                {
-                    status = 1,
-                    data = foodOrder,
-                    message = "Lưu thành công"
-                });
+
+                if (foodOrder.ID <= 0) await _employeeFoodOrderRepo.CreateAsync(foodOrder);
+                else await _employeeFoodOrderRepo.UpdateAsync(foodOrder);
+                return Ok(ApiResponseFactory.Success(foodOrder, "Lưu thành công"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }
