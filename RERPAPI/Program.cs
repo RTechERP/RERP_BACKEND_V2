@@ -112,6 +112,7 @@ builder.Services.AddScoped<GroupSaleRepo>();
 builder.Services.AddScoped<HistoryDeleteBillRepo>();
 builder.Services.AddScoped<HistoryProductRTCRepo>();
 builder.Services.AddScoped<HolidayRepo>();
+builder.Services.AddScoped<HistoryMoneyPORepo>();
 builder.Services.AddScoped<InventoryProjectRepo>();
 builder.Services.AddScoped<InventoryRepo>();
 builder.Services.AddScoped<IssueCauseRepo>();
