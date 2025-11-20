@@ -13,6 +13,11 @@ namespace RERPAPI.Repo.GenericEntity
             _projectTypeRepo = projectTypeRepo;
         }
 
+
+        public ProjectPartlistVersionRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
+
         public bool Validate(ProjectPartListVersion item, out string message)
         {
             message = "";

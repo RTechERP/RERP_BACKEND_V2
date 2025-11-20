@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.Old
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class EmployeeTeamController : Controller
@@ -41,6 +44,7 @@ namespace RERPAPI.Controllers.Old
 
 
         [HttpPost]
+        [RequiresPermission("N1,N2,N60")]
         public async Task<IActionResult> SaveEmployeeTeam([FromBody] EmployeeTeam employeeTeam)
         {
             try
