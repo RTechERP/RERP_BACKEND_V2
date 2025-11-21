@@ -47,6 +47,7 @@ builder.Services.AddScoped<EmployeeOnLeaveRepo>();
 builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.AddressStockRepo>();
 builder.Services.AddScoped<BillDocumentExportLogRepo>();
 builder.Services.AddScoped<BillDocumentImportLogRepo>();
+builder.Services.AddScoped<EmployeeNightShiftRepo>();
 builder.Services.AddScoped<BillDocumentImportRepo>();
 builder.Services.AddScoped<BillExportDetailSerialNumberModulaLocationRepo>();
 builder.Services.AddScoped<BillExportDetailSerialNumberRepo>();
@@ -506,7 +507,7 @@ foreach (var item in staticFiles)
 {
     app.UseStaticFiles(new StaticFileOptions()
     {
-        FileProvider = new PhysicalFileProvider($@"\\192.168.1.190\Software"),
+        FileProvider = new PhysicalFileProvider(item.PathFull),
         RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
     });
 

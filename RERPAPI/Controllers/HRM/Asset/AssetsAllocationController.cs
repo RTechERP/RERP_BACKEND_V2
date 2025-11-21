@@ -176,7 +176,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 ws.Cells[14, 3].Value = master.Possition;
                 ws.Cells[15, 3].Value = master.Department;
                 ws.Cells[17, 3].Value = master.Note;
-
+              
                 ws.Cells[32, 1].Value = master.CreatedDate?.ToString("dd/MM/yyyy HH:mm") ?? "";
                 ws.Cells[32, 8].Value = master.DateApprovedPersonalProperty?.ToString("dd/MM/yyyy HH:mm") ?? "";
 

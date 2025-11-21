@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DocumentFormat.OpenXml.Drawing;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
+using RERPAPI.Model.Param.HRM;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
 using System.Data;
@@ -22,54 +24,24 @@ namespace RERPAPI.Controllers
 
 
 
-        [HttpGet("getwfh")]
-        public IActionResult GetWFH(
-          [FromQuery] int page,
-          [FromQuery] int size,
-          [FromQuery] int year,
-          [FromQuery] int month,
-          [FromQuery] string keyword = "",
-          [FromQuery] int departmentId = 0,
-          [FromQuery] int idApprovedTP = 0,
-          [FromQuery] int status = -1)
+        [HttpPost("get-wfh")]
+        public IActionResult GetWFH([FromBody] EmployeeWFHRequestParam  request)
         {
             try
             {
                 // Gọi stored procedure
                 var dt = SQLHelper<EmployeeWFHDTO>.ProcedureToList("spGetWFH",
                     new string[] { "@PageNumber", "@PageSize", "@Year", "@Month", "@Keyword", "@DepartmentID", "@IDApprovedTP", "@Status" },
-                    new object[] { page, size, year, month, keyword, departmentId, idApprovedTP, status });
-
+                    new object[] { request.Page, request.Size, request.Year, request.Month, request.Keyword, request.DepartmentId, request.IdApprovedTP, request.Status });
                 // Dữ liệu trang hiện tại
                 var data = SQLHelper<EmployeeWFHDTO>.GetListData(dt, 0);
-
                 // Tổng số trang
-                int totalPage = 0;
-                var totalPageTable = SQLHelper<object>.GetListData(dt, 1);
-                if (totalPageTable.Count > 0)
-                {
-                    dynamic row = totalPageTable[0];
-                    totalPage = row.TotalPage;
-                }
-
-                // Trả kết quả JSON
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Lấy danh sách WFH thành công",
-
-                    data = data,
-                    totalPage = totalPage
-                });
+                var totalPage = SQLHelper<object>.GetListData(dt, 1);
+                return Ok(ApiResponseFactory.Success(new { data, totalPage }, "Lấy dữ lệu thành công"));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new
-                {
-                    status = 0,
-                    message = "Lỗi khi lấy danh sách WFH",
-                    error = ex.Message
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -110,11 +82,50 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpPost("savedata")]
+        [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] EmployeeWFH employeeWFH)
         {
             try
             {
+
+                if (!_employeeWFHRepo.Validate(employeeWFH, out string message))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, message));
+                }
+                if (employeeWFH.ID <= 0) await _employeeWFHRepo.CreateAsync(employeeWFH);
+                else await _employeeWFHRepo.UpdateAsync(employeeWFH);
+                return Ok(ApiResponseFactory.Success(employeeWFH, "Cập nhật thành công!"));
+            }
+            catch (Exception ex)
+            {
+
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpPost("save-approve-hr")]
+        public async Task<IActionResult> SaveApproveHR([FromBody] EmployeeWFH employeeWFH)
+        {
+            try
+            {
+
+             
+                if (employeeWFH.ID <= 0) await _employeeWFHRepo.CreateAsync(employeeWFH);
+                else await _employeeWFHRepo.UpdateAsync(employeeWFH);
+                return Ok(ApiResponseFactory.Success(employeeWFH, "Cập nhật thành công!"));
+            }
+            catch (Exception ex)
+            {
+
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("save-approve-tbp")]
+        public async Task<IActionResult> SaveApproveTBP([FromBody] EmployeeWFH employeeWFH)
+            {
+            try
+            {
+
 
                 if (employeeWFH.ID <= 0) await _employeeWFHRepo.CreateAsync(employeeWFH);
                 else await _employeeWFHRepo.UpdateAsync(employeeWFH);
@@ -199,7 +210,6 @@ namespace RERPAPI.Controllers
                                 x.DateWFH.Value.Date == dateWFH.Date &&
                                 x.TimeWFH == timeWFH
                                 //&& x.IsDelete == false
-
                                 );
 
                 if (existWFH.Any())
@@ -215,12 +225,7 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = "Lỗi kiểm tra trùng WFH",
-                    error = ex.Message
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
