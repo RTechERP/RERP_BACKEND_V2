@@ -2,17 +2,17 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Data.SqlClient;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
+using RERPAPI.Model.Param;
+using RERPAPI.Repo;
 using RERPAPI.Repo.GenericEntity;
 using System;
-using System.Data;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
-using RERPAPI.Model.Entities;
-using RERPAPI.Model.DTO;
-using RERPAPI.Repo;
-
-using RERPAPI.Model.Param;
 
 
 namespace RERPAPI.Controllers.HRM.Employee
@@ -29,7 +29,7 @@ namespace RERPAPI.Controllers.HRM.Employee
             _employeeNoFingerprintRepo = employeeNoFingerprintRepo;
             _departmentRepo = departmentRepo;
         }
-
+        [RequiresPermission("N1,N2")]
         [HttpGet("get-employee-no-fingerprint")]
         public IActionResult GetEmployeeNoFingerprint(int pageNumber, int pageSize, DateTime dateStart, DateTime dateEnd, int departmentId, int idApprovedTP, int status, string? keyword)
         {
@@ -65,7 +65,7 @@ namespace RERPAPI.Controllers.HRM.Employee
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2")]
         [HttpGet("get-employee-approver")]
         public IActionResult GetEmployeesWithApprovers()
         {
@@ -112,7 +112,7 @@ namespace RERPAPI.Controllers.HRM.Employee
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2")]
         [HttpPost("savedata")]
         public async Task<IActionResult> SaveData([FromBody] EmployeeNoFingerprint employeeNoFingerprint)
         {
@@ -129,7 +129,7 @@ namespace RERPAPI.Controllers.HRM.Employee
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2")]
         [HttpGet("get-department")]
         public IActionResult GetDepartment()
         {
@@ -156,7 +156,7 @@ namespace RERPAPI.Controllers.HRM.Employee
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2")]
 
         [HttpGet("check-duplicate-enf/{id}/{employeeId}/{dayWork}/{type}")]
         public IActionResult CheckDuplicateENF(int id, int employeeId, string dayWork, int type)
