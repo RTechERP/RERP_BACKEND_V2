@@ -12,7 +12,7 @@ using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.HRM;
 
-namespace RERPAPI.Controllers.HRM.Employee
+namespace RERPAPI.Controllers.HRM.Employees
 {
     [Route("api/[controller]")]
     [ApiController]
