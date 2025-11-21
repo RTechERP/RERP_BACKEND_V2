@@ -15,7 +15,7 @@ using System.Data;
 using System.Linq;
 
 
-namespace RERPAPI.Controllers.HRM.Employee
+namespace RERPAPI.Controllers.HRM.Employees
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -180,8 +180,7 @@ namespace RERPAPI.Controllers.HRM.Employee
                                 x.EmployeeID == employeeId &&
                                 x.DayWork.HasValue &&
                                 x.DayWork.Value.Date == dayWorkDate.Date &&
-                                x.Type == type &&
-                                x.IsDelete == false);
+                                x.Type == type);
 
                 if (existENF.Any())
                 {
