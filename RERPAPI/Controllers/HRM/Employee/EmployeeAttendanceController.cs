@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -19,13 +20,14 @@ namespace RERPAPI.Controllers
             _employeeAttendanceRepo = employeeAttendanceRepo;
             _departmentRepo = departmentRepo;
         }
+        [RequiresPermission("N1,N2")]
         [HttpGet("get-department")]
-        public async Task<IActionResult> getDepartment()
+        public IActionResult getDepartment()
         {
             try
             {
                 List<Department> departments = _departmentRepo.GetAll().ToList();
-                return Ok(ApiResponseFactory.Success(departments, ""));
+                return Ok(ApiResponseFactory.Success(departments, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
             {
@@ -33,23 +35,10 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpGet("get-employee/{status}")]
-        public async Task<IActionResult> getEmployee(int status)
-        {
-            try
-            {
-                var employees = SQLHelper<object>.ProcedureToList("spGetEmployee", new string[] { "@Status" }, new object[] { status });
-                var data = SQLHelper<object>.GetListData(employees, 0);
-                return Ok(ApiResponseFactory.Success(data, ""));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
 
+        [RequiresPermission("N1,N2")]
         [HttpGet("get-employee-attendance")]
-        public async Task<IActionResult> getEmployeeAttendance(int departmentID, int employeeID, string? findText, DateTime dateStart, DateTime dateEnd)
+        public IActionResult GetEmployeeAttendance(int departmentID, int employeeID, string? findText, DateTime dateStart, DateTime dateEnd)
         {
             try
             {
@@ -67,8 +56,9 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [RequiresPermission("N1,N2")]
         [HttpPost("import-excel")]
-        public IActionResult ImportExcel([FromBody] ImportAttendancePayload payload)
+        public async Task<IActionResult> ImportExcel([FromBody] ImportAttendancePayload payload)
         {
             if (payload == null)
                 return BadRequest(ApiResponseFactory.Fail(null, "Payload không được null."));
@@ -79,44 +69,64 @@ namespace RERPAPI.Controllers
 
             try
             {
+                // Khoảng ngày chấm công (00:00 -> 23:59:59) – dùng cho bước xoá & update
                 DateTime ds = payload.DateStart.Date;
                 DateTime de = payload.DateEnd.Date.AddDays(1).AddSeconds(-1);
 
-                // Lấy danh sách nhân viên trong phòng ban (để tránh query lại mỗi dòng)
-                var employees = _employeeRepo
-                    .GetAll(x => payload.DepartmentId == 0 || x.DepartmentID == payload.DepartmentId)
-                    .ToDictionary(x => x.Code, x => x);
+                int created = 0, updated = 0;
+                var errors = new List<ImportError>();
 
-                // Nếu bật overwrite thì xóa trước
+
+                var employees = _employeeRepo
+      .GetAll()
+      .Where(e => !string.IsNullOrWhiteSpace(e.Code))
+      .GroupBy(e => e.Code!)
+      .ToDictionary(
+          g => g.Key!,
+          g => g.First()
+      );
+
                 if (payload.Overwrite)
                 {
-                    var empIds = employees.Values
+                    var employeesInDept = _employeeRepo
+                        .GetAll(x => payload.DepartmentId == 0 || x.DepartmentID == payload.DepartmentId)
                         .Where(e => !string.IsNullOrEmpty(e.IDChamCongMoi))
+                        .ToList();
+
+                    var empIds = employeesInDept
                         .Select(e => e.IDChamCongMoi)
                         .ToList();
 
-                    var existingToDelete = _employeeAttendanceRepo.GetAll(ea =>
-                        ea.AttendanceDate >= ds && ea.AttendanceDate <= de &&
-                        empIds.Contains(ea.IDChamCongMoi)
-                    );
+                    if (empIds.Any())
+                    {
+                        var existingToDelete = _employeeAttendanceRepo.GetAll(ea =>
+                            ea.AttendanceDate >= ds &&
+                            ea.AttendanceDate <= de &&
+                            empIds.Contains(ea.IDChamCongMoi)
+                        ).ToList();
 
-                    if (existingToDelete.Any())
-                        _employeeAttendanceRepo.DeleteRange(existingToDelete);
+                        if (existingToDelete.Any())
+                        {
+                            _employeeAttendanceRepo.DeleteRange(existingToDelete);
+                        }
+                    }
                 }
 
-                int created = 0, updated = 0;
-                var newList = new List<EmployeeAttendance>();
-                var errors = new List<ImportError>();
+                // 3) Nếu không overwrite, load danh sách bản ghi hiện có để UPDATE (option thêm của Web, WinForm không có)
+                List<EmployeeAttendance> existingRecords = null;
+                if (!payload.Overwrite)
+                {
+                    existingRecords = _employeeAttendanceRepo.GetAll(ea =>
+                        ea.AttendanceDate >= ds && ea.AttendanceDate <= de
+                    ).ToList();
+                }
 
-                // Tập hợp trước các bản ghi chấm công hiện có để cập nhật nhanh
-                var existingRecords = _employeeAttendanceRepo.GetAll(ea =>
-                    ea.AttendanceDate >= ds && ea.AttendanceDate <= de
-                ).ToList();
-
+                // 4) Xử lý từng dòng payload (giống backgroundWorker1_DoWork)
                 foreach (var row in payload.Rows)
                 {
                     try
                     {
+                        // Bỏ các key kỹ thuật (__rowId, ...)
                         var filtered = row
                             .Where(kvp => !kvp.Key.StartsWith("__"))
                             .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
@@ -128,50 +138,29 @@ namespace RERPAPI.Controllers
                         string sOut = GetString(filtered, "Giờ ra", "CheckOut", "Out");
                         string dayWeek = GetString(filtered, "Thứ", "DayOfWeek", "Day");
 
+                        // Thiếu dữ liệu bắt buộc
                         if (string.IsNullOrWhiteSpace(code) || !date.HasValue)
                             throw new Exception("Thiếu 'Mã nhân viên' hoặc 'Ngày'.");
 
-                        if (date.Value < ds || date.Value > de)
-                            continue;
+                        // WinForm: không lọc ngày trong vòng for → bỏ check date-range ở đây
 
+                        // Không tìm thấy nhân viên theo Code
                         if (!employees.TryGetValue(code, out var emp))
                             throw new Exception($"Không tìm thấy nhân viên Code='{code}'.");
 
                         if (string.IsNullOrWhiteSpace(emp.IDChamCongMoi))
                             throw new Exception($"Nhân viên Code='{code}' không có IDChamCongMoi.");
 
+                        // Ghép giờ vào/ra với ngày
                         DateTime? inDt = ParseTimeOnDate(date.Value, sIn);
                         DateTime? outDt = ParseTimeOnDate(date.Value, sOut);
+
+                        // Tính công, đi muộn / về sớm, ăn trưa... theo nghiệp vụ cũ
                         var comp = ComputeAttendance(emp.DepartmentID ?? 0, date.Value, inDt, outDt);
 
-                        var existing = existingRecords.FirstOrDefault(x =>
-                            x.IDChamCongMoi == emp.IDChamCongMoi &&
-                            x.AttendanceDate == date.Value
-                        );
-
-                        if (existing != null)
+                        if (payload.Overwrite)
                         {
-                            // UPDATE
-                            existing.STT = stt;
-                            existing.DayWeek = dayWeek ?? "";
-                            existing.CheckIn = inDt?.ToString("HH:mm");
-                            existing.CheckOut = outDt?.ToString("HH:mm");
-                            existing.CheckInDate = inDt;
-                            existing.CheckOutDate = outDt;
-                            existing.IsLate = comp.IsLate;
-                            existing.TimeLate = comp.TimeLate;
-                            existing.IsEarly = comp.IsEarly;
-                            existing.TimeEarly = comp.TimeEarly;
-                            existing.TotalHour = comp.TotalHour;
-                            existing.TotalDay = comp.TotalDay;
-                            existing.IsLunch = comp.IsLunch;
-                            existing.UpdatedDate = DateTime.Now;
-
-                            updated++;
-                        }
-                        else
-                        {
-                            // INSERT
+                            // OVERWRITE: luôn INSERT mới (giống WinForm – đã xóa trước đó)
                             var newRecord = new EmployeeAttendance
                             {
                                 STT = stt,
@@ -194,8 +183,65 @@ namespace RERPAPI.Controllers
                                 UpdatedDate = DateTime.Now
                             };
 
-                            newList.Add(newRecord);
+                            await _employeeAttendanceRepo.CreateAsync(newRecord);
                             created++;
+                        }
+                        else
+                        {
+                            // MODE mở rộng của Web:
+                            // Nếu đã có AttendanceDate + IDChamCongMoi thì UPDATE, nếu chưa có thì INSERT
+                            var existing = existingRecords?.FirstOrDefault(x =>
+                                x.IDChamCongMoi == emp.IDChamCongMoi &&
+                                x.AttendanceDate == date.Value
+                            );
+
+                            if (existing != null)
+                            {
+                                existing.STT = stt;
+                                existing.DayWeek = dayWeek ?? "";
+                                existing.CheckIn = inDt?.ToString("HH:mm");
+                                existing.CheckOut = outDt?.ToString("HH:mm");
+                                existing.CheckInDate = inDt;
+                                existing.CheckOutDate = outDt;
+                                existing.IsLate = comp.IsLate;
+                                existing.TimeLate = comp.TimeLate;
+                                existing.IsEarly = comp.IsEarly;
+                                existing.TimeEarly = comp.TimeEarly;
+                                existing.TotalHour = comp.TotalHour;
+                                existing.TotalDay = comp.TotalDay;
+                                existing.IsLunch = comp.IsLunch;
+                                existing.UpdatedDate = DateTime.Now;
+
+                                await _employeeAttendanceRepo.UpdateAsync(existing);
+                                updated++;
+                            }
+                            else
+                            {
+                                var newRecord = new EmployeeAttendance
+                                {
+                                    STT = stt,
+                                    IDChamCongMoi = emp.IDChamCongMoi,
+                                    AttendanceDate = date.Value,
+                                    DayWeek = dayWeek ?? "",
+                                    Interval = "(00:00:00-23:59:00)",
+                                    CheckIn = inDt?.ToString("HH:mm"),
+                                    CheckOut = outDt?.ToString("HH:mm"),
+                                    CheckInDate = inDt,
+                                    CheckOutDate = outDt,
+                                    IsLate = comp.IsLate,
+                                    TimeLate = comp.TimeLate,
+                                    IsEarly = comp.IsEarly,
+                                    TimeEarly = comp.TimeEarly,
+                                    TotalHour = comp.TotalHour,
+                                    TotalDay = comp.TotalDay,
+                                    IsLunch = comp.IsLunch,
+                                    CreatedDate = DateTime.Now,
+                                    UpdatedDate = DateTime.Now
+                                };
+
+                                await _employeeAttendanceRepo.CreateAsync(newRecord);
+                                created++;
+                            }
                         }
                     }
                     catch (Exception exRow)
@@ -207,11 +253,6 @@ namespace RERPAPI.Controllers
                         });
                     }
                 }
-
-                // Ghi tất cả thay đổi cùng lúc
-                if (newList.Any())
-                    _employeeAttendanceRepo.CreateRange(newList);
-
 
                 var result = new ImportResult
                 {

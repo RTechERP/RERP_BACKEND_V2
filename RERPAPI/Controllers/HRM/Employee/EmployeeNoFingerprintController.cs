@@ -1,26 +1,37 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.Data.SqlClient;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
+using RERPAPI.Model.Param;
+using RERPAPI.Repo;
 using RERPAPI.Repo.GenericEntity;
+using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 
 
-namespace RERPAPI.Controllers.Old
+namespace RERPAPI.Controllers.HRM.Employee
 {
     [Route("api/[controller]")]
     [ApiController]
     public class EmployeeNoFingerprintController : ControllerBase
     {
-        private readonly EmployeeNoFingerprintRepo _employeeNoFingerprintRepo;
-        private readonly DepartmentRepo _departmentRepo;
+        EmployeeNoFingerprintRepo _employeeNoFingerprintRepo;
+        DepartmentRepo _departmentRepo;
+
         public EmployeeNoFingerprintController(EmployeeNoFingerprintRepo employeeNoFingerprintRepo, DepartmentRepo departmentRepo)
         {
             _employeeNoFingerprintRepo = employeeNoFingerprintRepo;
             _departmentRepo = departmentRepo;
         }
-
+        [RequiresPermission("N1,N2")]
         [HttpGet("get-employee-no-fingerprint")]
-        public async Task<IActionResult> getEmployeeNoFingerprint(int pageNumber, int pageSize, DateTime dateStart, DateTime dateEnd, int departmentId, int idApprovedTP, int status, string? keyword)
+        public IActionResult GetEmployeeNoFingerprint(int pageNumber, int pageSize, DateTime dateStart, DateTime dateEnd, int departmentId, int idApprovedTP, int status, string? keyword)
         {
             try
             {
@@ -40,7 +51,6 @@ namespace RERPAPI.Controllers.Old
                     totalPage = row.TotalPage;
                 }
 
-                // Trả kết quả JSON
                 return Ok(new
                 {
                     status = 1,
@@ -55,7 +65,7 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2")]
         [HttpGet("get-employee-approver")]
         public IActionResult GetEmployeesWithApprovers()
         {
@@ -85,11 +95,16 @@ namespace RERPAPI.Controllers.Old
                                                          }).ToList();
 
                 // Trả về kết quả
-                return Ok(ApiResponseFactory.Success(new
+                return Ok(new
                 {
-                    employees,
-                    approvers
-                }, "Cập nhật thành công!"));
+                    status = 1,
+                    message = "Lấy danh sách nhân viên và người phê duyệt thành công",
+                    data = new
+                    {
+                        employees,
+                        approvers
+                    },
+                });
             }
             catch (Exception ex)
 
@@ -97,7 +112,7 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2")]
         [HttpPost("savedata")]
         public async Task<IActionResult> SaveData([FromBody] EmployeeNoFingerprint employeeNoFingerprint)
         {
@@ -114,12 +129,13 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2")]
         [HttpGet("get-department")]
         public IActionResult GetDepartment()
         {
             try
             {
+               
 
                 var departments = _departmentRepo.GetAll()
                     .Select(x => new
@@ -129,14 +145,18 @@ namespace RERPAPI.Controllers.Old
                         x.Name
                     }).ToList();
 
-                return Ok(ApiResponseFactory.Success(departments, ""));
+                return Ok(new
+                {
+                    status = 1,
+                    data = departments
+                });
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2")]
 
         [HttpGet("check-duplicate-enf/{id}/{employeeId}/{dayWork}/{type}")]
         public IActionResult CheckDuplicateENF(int id, int employeeId, string dayWork, int type)
@@ -160,9 +180,8 @@ namespace RERPAPI.Controllers.Old
                                 x.EmployeeID == employeeId &&
                                 x.DayWork.HasValue &&
                                 x.DayWork.Value.Date == dayWorkDate.Date &&
-                                x.Type == type
-                                //&& x.IsDelete == false
-                                );
+                                x.Type == type &&
+                                x.IsDelete == false);
 
                 if (existENF.Any())
                 {

@@ -185,8 +185,7 @@ namespace RERPAPI.Controllers.Old.Asset
 
                     ws.Cells[17, 3].Value = master.Note;
 
-                    //ws.Cells[32, 1].Value = master.CreatedDate?.ToString("dd/MM/yyyy HH:mm") ?? "";
-                    //ws.Cells[32, 8].Value = master.DateApprovedPersonalProperty?.ToString("dd/MM/yyyy HH:mm") ?? "";
+                 
 
                     // Xoá dòng template sẵn (dòng 20 + 21)
                     ws.DeleteRow(20, 1);
@@ -207,7 +206,10 @@ namespace RERPAPI.Controllers.Old.Asset
                         ws.Cells[row, 7].Value = item.Status ?? "";
                         ws.Cells[row, 8].Value = item.Note ?? "";
                     }
-
+                        //ws.Cells[27, 1].Value = master.EmployeeReturnName ?? "";
+                        //ws.Cells[27, 8].Value = master.EmployeeRecoveryName?? "";
+                        //ws.Cells[28, 1].Value = master.DateApprovedPersonalProperty?.ToString("dd/MM/yyyy HH:mm") ?? "";
+                        //ws.Cells[28, 8].Value = master.DateApprovedHR?.ToString("dd/MM/yyyy HH:mm") ?? "";
                     // Lưu file tạm rồi trả về
                     var outStream = new MemoryStream();
                     package.SaveAs(outStream);
