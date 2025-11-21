@@ -1,11 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using ZXing;
 
 namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 {
@@ -22,37 +19,61 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpGet("")]
-        public IActionResult getProductGroup(bool isvisible = true, string warehousecode="")
+        public IActionResult getProductGroup(bool isvisible = true, string warehousecode = "")
         {
             try
             {
                 //update 17/07/25 them truong hop warehousecode=HCM
-                List<ProductGroup> data;
-                List<int> excludedIds = new List<int> { 73, 74, 75, 76, 77 };
+                //List<ProductGroup> data;
+                //List<int> excludedIds = new List<int> { 73, 74, 75, 76, 77 };
 
-                if (warehousecode == "HN")
-                {
-                    data = _productgroupRepo.GetAll()
-                        .Where(p => p.IsVisible == isvisible || !isvisible)
-                        .OrderByDescending(p => p.IsVisible)
-                        .ThenBy(p => p.ID)                  
-                        .ToList();
-                }
-                else
-                {
-                    data = _productgroupRepo.GetAll()
-                        .Where(p => (p.IsVisible == isvisible || !isvisible) && !excludedIds.Contains(p.ID))
-                        .OrderByDescending(p => p.IsVisible)
-                        .ThenBy(p => p.ID)
-                        .ToList();
-                }
+                //if (warehousecode == "HN")
+                //{
+                //    data = _productgroupRepo.GetAll(p => p.IsVisible == isvisible || !isvisible)
+                //        .OrderByDescending(p => p.IsVisible)
+                //        .ThenBy(p => p.ID)
+                //        .ToList();
+                //}
+                //else
+                //{
+                //    data = _productgroupRepo.GetAll(p => (p.IsVisible == isvisible || !isvisible)
+                //    && !excludedIds.Contains(p.ID)
+                //    )
+                //        .OrderByDescending(p => p.IsVisible)
+                //        .ThenBy(p => p.ID)
+                //        .ToList();
+                //}
 
-
+                var dt = SQLHelper<dynamic>.ProcedureToList("spGetProductGroups", ["@Isvisible", "@WarehouseCode"], [isvisible, warehousecode]);
+                var data = SQLHelper<ProductGroup>.GetListData(dt, 0);
                 return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-all")]
+        public IActionResult GetAll()
+        {
+            try
+            {
+                List<ProductGroup> productGroups = _productgroupRepo.GetAll(x => x.IsVisible == true);
+
+                return Ok(new
+                {
+                    status = 1,
+                    data = productGroups
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
             }
         }
         [HttpGet("{id}")]
@@ -69,7 +90,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             }
         }
         //update 14/06 fix khi xoa tu them 1 ban ghi bang productsalewarehouse
-      
+
         [HttpPost("save-data")]
         public async Task<IActionResult> saveProductGroup([FromBody] ProductGoupDTO dto)
         {
@@ -125,8 +146,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         private bool CheckProductGroupCode(ProductGoupDTO dto)
         {
             bool check = true;
-            var exists = _productgroupRepo.GetAll()
-                .Where(x => x.ProductGroupID == dto.Productgroup.ProductGroupID
+            var exists = _productgroupRepo.GetAll(x => x.ProductGroupID == dto.Productgroup.ProductGroupID
                             && x.ID != dto.Productgroup.ID).ToList();
             if (exists.Count > 0) check = false;
             return check;

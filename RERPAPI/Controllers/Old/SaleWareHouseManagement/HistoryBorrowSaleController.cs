@@ -27,7 +27,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
         public IActionResult getReport(HistoryBorrowParam filter)
         {
-            var rs = _wareHouseRepo.GetAll().Where(x => x.WarehouseCode == "HN").FirstOrDefault();
+            var rs = _wareHouseRepo.GetAll(x => x.WarehouseCode == "HN").FirstOrDefault();
             try
             {
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(

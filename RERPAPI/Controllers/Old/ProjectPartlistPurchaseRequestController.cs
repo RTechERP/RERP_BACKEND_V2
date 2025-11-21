@@ -16,15 +16,16 @@ namespace RERPAPI.Controllers.Old
 
         private ProjectPartlistPurchaseRequestRepo _repo;
         private InventoryProjectRepo _inventoryProjectRepo;
-        //private ProjectPartlistPurchaseRequestTypeRepo _typeRepo;
+        ProjectPartlistPurchaseRequestTypeRepo _typeRepo;
         ProjectRepo _projectRepo;
         POKHRepo _pokhRepo;
+        //private InventoryRepo _invRepo = new InventoryRepo();
 
-        public ProjectPartlistPurchaseRequestController(ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo, InventoryProjectRepo inventoryProjectRepo, ProjectRepo projectRepo, POKHRepo pOKHRepo)
+        public ProjectPartlistPurchaseRequestController(ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo, InventoryProjectRepo inventoryProjectRepo, ProjectPartlistPurchaseRequestTypeRepo projectPartlistPurchaseRequestTypeRepo, ProjectRepo projectRepo, POKHRepo pOKHRepo)
         {
             _repo = projectPartlistPurchaseRequestRepo;
             _inventoryProjectRepo = inventoryProjectRepo;
-            //_typeRepo = projectPartlistPurchaseRequestTypeRepo;
+            _typeRepo = projectPartlistPurchaseRequestTypeRepo;
             _projectRepo = projectRepo;
             _pokhRepo = pOKHRepo;
         }
