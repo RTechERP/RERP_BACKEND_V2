@@ -15,44 +15,15 @@ namespace RERPAPI.Controllers.Old
     [Authorize]
     public class SupplierSaleController : ControllerBase
     {
-        SupplierRepo _supplierRepo;
-        SupplierSaleContactRepo _supplierSaleContactRepo;
         SupplierSaleRepo _supplierSaleRepo;
-        RulePayRepo _rulePayRepo;
-        TaxCompanyRepo _taxCompanyRepo;
         EmployeeRepo _employeeRepo;
-        DepartmentRepo _departmentRepo;
-        DocumentFileRepo _documentFileRepo;
-        DocumentTypeRepo _documentTypeRepo;
-        DocumentRepo _documentRepo;
-        ConfigSystemRepo _configSystemRepo;
-
-
         public SupplierSaleController(
-            SupplierRepo supplierRepo,
-            SupplierSaleContactRepo supplierSaleContactRepo,
             SupplierSaleRepo supplierSaleRepo,
-            RulePayRepo rulePayRepo,
-            TaxCompanyRepo taxCompanyRepo,
-            EmployeeRepo employeeRepo,
-            DepartmentRepo departmentRepo,
-            DocumentFileRepo documentFileRepo,
-            DocumentTypeRepo documentTypeRepo,
-            DocumentRepo documentRepo,
-            ConfigSystemRepo configSystemRepo
+            EmployeeRepo employeeRepo
         )
         {
-            _supplierRepo = supplierRepo;
-            _supplierSaleContactRepo = supplierSaleContactRepo;
             _supplierSaleRepo = supplierSaleRepo;
-            _rulePayRepo = rulePayRepo;
-            _taxCompanyRepo = taxCompanyRepo;
             _employeeRepo = employeeRepo;
-            _departmentRepo = departmentRepo;
-            _documentFileRepo = documentFileRepo;
-            _documentTypeRepo = documentTypeRepo;
-            _documentRepo = documentRepo;
-            _configSystemRepo = configSystemRepo;
         }
         #region Get
         // Danh sách supplier
@@ -81,16 +52,14 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
-        [HttpGet("supplier-sale-contact")]
-        [RequiresPermission("N27,N33,N52,N53,N35,N1")]
-        public async Task<IActionResult> getSupplierSaleContact(int supplierID)
+        
+
+        [HttpGet("supplier-sale-by-id")]
+        public async Task<IActionResult> getsalesupplierbyid(int supplierID)
         {
             try
             {
-                var data = _supplierSaleContactRepo.GetAll()
-                    .Where(c => c.SupplierID == supplierID)
-                    .OrderByDescending(c => c.ID);
-
+                var data = _supplierSaleRepo.GetAll().FirstOrDefault(c => c.ID == supplierID);
                 return Ok(ApiResponseFactory.Success(data, null));
             }
             catch (Exception ex)
@@ -100,9 +69,9 @@ namespace RERPAPI.Controllers.Old
         }
 
         
-
-
         #endregion
+
+
         #region Method Post
         [HttpPost("supplier-sale")]
         [RequiresPermission("N27,N33,N35,N1")]
@@ -151,30 +120,6 @@ namespace RERPAPI.Controllers.Old
                 }
 
                 return Ok(ApiResponseFactory.Success(supplierSale.ID, "Lưu thành công"));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-
-        }
-
-        [HttpPost("supplier-sale-contact")]
-        [RequiresPermission("N27,N33,N35,N1")]
-        public async Task<IActionResult> savesuppliersalecontact([FromBody] SupplierSaleContact supplierSaleContact)
-        {
-            try
-            {
-                if (supplierSaleContact.ID <= 0)
-                {
-                    await _supplierSaleContactRepo.CreateAsync(supplierSaleContact);
-                }
-                else
-                {
-                    _supplierSaleContactRepo.Update(supplierSaleContact);
-                }
-
-                return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
             }
             catch (Exception ex)
             {
