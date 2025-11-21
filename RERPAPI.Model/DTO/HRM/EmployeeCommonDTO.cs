@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Model.DTO.HRM
 {
-    public class EmployeeDTO
+    public class EmployeeCommonDTO
     {
         public int ID { get; set; }
         public int UserID { get; set; }
@@ -14,7 +14,7 @@ namespace RERPAPI.Model.DTO.HRM
         public int Status { get; set; }
         public int ChucVuHDID { get; set; }
         public int ChuVuID { get; set; }
-        public int STT { get; set; }
+        public Int64 STT { get; set; }
         public string Code { get; set; } = string.Empty;
         public string IDChamCongMoi { get; set; } = string.Empty;
         public string FullName { get; set; } = string.Empty;
