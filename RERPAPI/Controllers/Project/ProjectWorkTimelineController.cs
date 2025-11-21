@@ -7,7 +7,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using System.Data;
 
-namespace RERPAPI.Controllers.Old.ProjectManager
+namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -17,7 +17,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         private readonly CustomerRepo customerRepo;
         private readonly DepartmentRepo departmentRepo;
         private readonly UserTeamRepo userTeamRepo;
-    
+
         public ProjectWorkItemTimelineController(
             ProjectRepo projectRepo,
             CustomerRepo customerRepo,
@@ -75,7 +75,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-            #endregion
+        #endregion
 
-        }
+    }
 }

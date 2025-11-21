@@ -1,11 +1,12 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 
-namespace RERPAPI.Controllers.Old.ProjectManager
+namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -116,13 +117,14 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         }
         //save nhân công
         [HttpPost("save-project-worker")]
+      
         public async Task<IActionResult> SaveProjectWorker([FromBody] List<ProjectWorker> data)
         {
             try
             {
                 foreach (var pw in data)
                 {
-                    if (pw.IsDeleted != true && pw.TT != null )
+                    if (pw.IsDeleted != true && pw.TT != null)
                     {
                         if (projectWorkerRepo.checkTTExists(pw.TT, pw.ParentID, pw.ID, pw.ProjectWorkerVersionID ?? 0))
                         {
@@ -134,7 +136,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
 
                         }
                     }
-                        int parentId = projectWorkerRepo.FindParentIdByTT(pw.TT, pw.ProjectWorkerVersionID ?? 0);
+                    int parentId = projectWorkerRepo.FindParentIdByTT(pw.TT, pw.ProjectWorkerVersionID ?? 0);
                     if (pw.ID > 0)
                     {
                         //pw.UpdatedBy = CurrentUser.UserName;
@@ -149,7 +151,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                         await projectWorkerRepo.CreateAsync(pw);
                         //pw.CreatedBy = CurrentUser.UserName
                     }
-                }  
+                }
                 return Ok(ApiResponseFactory.Success(null, "Lưu dữ liệu thành công"));
             }
             catch (Exception ex)

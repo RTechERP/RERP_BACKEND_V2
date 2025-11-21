@@ -6,7 +6,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using System.Data;
 
-namespace RERPAPI.Controllers.Old.ProjectManager
+namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -16,7 +16,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         private readonly CustomerRepo customerRepo;
         private readonly DepartmentRepo departmentRepo;
         private readonly UserTeamRepo userTeamRepo;
-    
+
         public ProjectWorkTimelineController(
             ProjectRepo projectRepo,
             CustomerRepo customerRepo,

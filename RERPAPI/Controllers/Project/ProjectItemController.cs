@@ -17,7 +17,7 @@ using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Project;
 using System.Collections.Immutable;
 
-namespace RERPAPI.Controllers.Old.ProjectManager
+namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -88,10 +88,10 @@ namespace RERPAPI.Controllers.Old.ProjectManager
             {
                 // var user = GetCurrentUser();
                 var idMap = new Dictionary<int, int>();
-                var project = _projectRepo.GetAll(x=>x.ID == req.ProjectID).FirstOrDefault();
+                var project = _projectRepo.GetAll(x => x.ID == req.ProjectID).FirstOrDefault();
                 if (project == null) return Ok(new
                 {
-                    status=2,
+                    status = 2,
                     message = "Không tìm thấy mã dự án!"
                 });
 
@@ -104,7 +104,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 // Validate
                 /* var validation = Validate(creates.Concat(updates).ToList(), user);
                  if (!validation.IsValid) return BadRequest(Fail(validation.Message));*/
-                if(req.DeletedIdsprojectItem != null && req.DeletedIdsprojectItem.Count > 0)
+                if (req.DeletedIdsprojectItem != null && req.DeletedIdsprojectItem.Count > 0)
                 {
                     foreach (var id in req.DeletedIdsprojectItem)
                     {
@@ -116,11 +116,11 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                         }
                     }
                 }
-                foreach (var data in req.projectItem.Where(x => x.IsDeleted ==false))
+                foreach (var data in req.projectItem.Where(x => x.IsDeleted == false))
                 {
                     if (!_projectItemRepo.Validate(data, out string message))
                     {
-                        return Ok(new { status = 3, message = message });
+                        return Ok(new { status = 3, message });
                     }
                 }
                 foreach (var data in req.projectItem)
@@ -274,7 +274,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 List<ProjectItemFile> rs = _projectItemFileRepo.GetAll(x => x.ProjectItemID == projectItem && x.IsDeleted == false);
                 return Ok(ApiResponseFactory.Success(rs, "Lay du lieu file thanh cong"));
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
@@ -334,7 +334,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 {
                     return Ok(new { status = 2, message = "Bạn không có quyền sửa cho hạng mục này!" });
                 }
-                if(dto.ID > 0)
+                if (dto.ID > 0)
                 {
                     await _projectItemProblemRepo.UpdateAsync(dto);
                 }

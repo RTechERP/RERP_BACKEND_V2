@@ -6,7 +6,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using System.Data;
 
-namespace RERPAPI.Controllers.Old.ProjectManager
+namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]

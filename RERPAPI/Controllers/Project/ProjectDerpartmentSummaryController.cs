@@ -6,7 +6,7 @@ using RERPAPI.Model.Param.Project;
 using RERPAPI.Repo.GenericEntity;
 using ZXing;
 
-namespace RERPAPI.Controllers.Old.ProjectManager // tổng hợp phòng ban
+namespace RERPAPI.Controllers.Project // tổng hợp phòng ban
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -90,8 +90,8 @@ namespace RERPAPI.Controllers.Old.ProjectManager // tổng hợp phòng ban
 
         //lấy dữ liệu loại nhân công 
         [HttpGet("get-worker-type")]
-        public async Task<IActionResult> GetWorkerType() 
-        {             
+        public async Task<IActionResult> GetWorkerType()
+        {
             try
             {
                 var result = _projectWorkerTypeRepo.GetAll();

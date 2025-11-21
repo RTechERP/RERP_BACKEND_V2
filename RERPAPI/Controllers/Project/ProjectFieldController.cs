@@ -4,7 +4,7 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
-namespace RERPAPI.Controllers.Old.ProjectManager
+namespace RERPAPI.Controllers.Project
 {
 
     [Route("api/[controller]")]
@@ -36,14 +36,14 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         {
             try
             {
-               
-                if(dto == null || dto.Count == 0)
+
+                if (dto == null || dto.Count == 0)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu gửi lên không hợp lệ"));
                 }
                 foreach (var item in dto)
                 {
-                    if(item.IsDeleted == false)
+                    if (item.IsDeleted == false)
                     {
                         var checkcode = _projectFieldRepo.GetAll(x => x.Code == item.Code && x.ID != item.ID && x.IsDeleted == false);
                         if (checkcode.Count > 0)

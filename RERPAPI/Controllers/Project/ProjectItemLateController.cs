@@ -9,7 +9,7 @@ using System.Data;
 using System.Net.WebSockets;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace RERPAPI.Controllers.Old.ProjectManager
+namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -25,7 +25,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 dateEnd = new DateTime(dateEnd.Year, dateEnd.Month, dateEnd.Day, 23, 59, 59);
                 var data = SQLHelper<object>.ProcedureToList("spGetProjectItemLate",
                 new string[] { "@FilterText", "@UserID", "@ProjectID", "@DepartmentID", "@StartDate", "@EndDate" },
-                new object[] { keyword ?? "", userId, projectId, departmentId, dateStart, dateEnd});
+                new object[] { keyword ?? "", userId, projectId, departmentId, dateStart, dateEnd });
 
                 var dt = SQLHelper<object>.GetListData(data, 0);
                 return Ok(ApiResponseFactory.Success(dt, ""));

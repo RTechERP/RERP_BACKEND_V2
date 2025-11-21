@@ -4,7 +4,7 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
 
-namespace RERPAPI.Controllers.Old.ProjectManager
+namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -39,7 +39,11 @@ namespace RERPAPI.Controllers.Old.ProjectManager
             try
             {
 
-                if (meetingtype.ID <= 0) await _meetingTypeRepo.CreateAsync(meetingtype);
+                if (meetingtype.ID <= 0)
+                {
+                    meetingtype.IsDelete = false;
+                    await _meetingTypeRepo.CreateAsync(meetingtype);
+                }
                 else await _meetingTypeRepo.UpdateAsync(meetingtype);
                 return Ok(ApiResponseFactory.Success(meetingtype, "Cập nhật thành công!"));
             }
@@ -90,7 +94,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                             return Ok(new { status = 2, message = $"Mã loại cuộc họp '{dto.TypeCode}' đã tồn tại!" });
                         }
                     }
-                        if (dto.ID > 0)
+                    if (dto.ID > 0)
                     {
                         await _meetingTypeRepo.UpdateAsync(dto);
                     }

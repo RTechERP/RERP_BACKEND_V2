@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 
-namespace RERPAPI.Controllers
+namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -88,7 +88,7 @@ namespace RERPAPI.Controllers
                 );
 
                 object chartData = null;
-                
+
                 switch (chartType.ToLower())
                 {
                     case "monthly-nopo":

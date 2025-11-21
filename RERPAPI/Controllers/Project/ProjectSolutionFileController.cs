@@ -5,7 +5,7 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
-namespace RERPAPI.Controllers.Old.ProjectManager
+namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -21,13 +21,13 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         {
             try
             {
-                List<ProjectSolutionFile> dtAll  = _repo.GetAll(x => x.ProjectSolutionID == projectSolutionID );
+                List<ProjectSolutionFile> dtAll = _repo.GetAll(x => x.ProjectSolutionID == projectSolutionID);
                 return Ok(ApiResponseFactory.Success(dtAll, ""));
-                
+
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex,ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

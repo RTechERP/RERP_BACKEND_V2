@@ -6,7 +6,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using System.Data;
 
-namespace RERPAPI.Controllers.Old.ProjectManager
+namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -276,7 +276,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 List<ProjectTreeFolder> data = projectTreeFolderRepo.GetAll(x => x.ParentID == prjFolder.ID);
                 if (data != null)
                 {
-                    foreach(var item in data)
+                    foreach (var item in data)
                     {
                         item.IsDeleted = true;
                         await projectTreeFolderRepo.UpdateAsync(item);
@@ -294,7 +294,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         [HttpPost("saveprojecttype")]
         public async Task<IActionResult> saveprojecttype([FromBody] ProjectTypeDTO prjType)
         {
-            
+
             try
             {
                 List<ProjectType> check = projectTypeRepo.GetAll(x => x.ProjectTypeCode == prjType.ProjectTypeCode && x.ID != prjType.ID && x.IsDeleted == false);
@@ -303,7 +303,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                     return Ok(new
                     {
                         status = 2,
-                        message ="Mã kiểu dự án đã tồn tại"
+                        message = "Mã kiểu dự án đã tồn tại"
                     });
                 }
                 if (prjType.ID > 0)
@@ -1147,7 +1147,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
             }
         }
 
-      
+
 
         // Lấy chi tiết tổng hợp báo cáo công việc
         [HttpGet("get-project-work-report")]
@@ -1216,7 +1216,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         {
             try
             {
-                var projectTpye = projectTypeRepo.GetAll(x=>x.IsDeleted ==false);
+                var projectTpye = projectTypeRepo.GetAll(x => x.IsDeleted == false);
                 return Ok(ApiResponseFactory.Success(projectTpye, ""));
             }
             catch (Exception ex)
@@ -2024,8 +2024,8 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         public async Task<IActionResult> SaveDataProjectLeader(List<EmployeeApprove> empA)
         {
             try
-            { 
-                if(empA.Count() > 0)
+            {
+                if (empA.Count() > 0)
                 {
                     foreach (var item in empA)
                     {
@@ -2034,8 +2034,9 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                         if (check.Count() > 0)
                         {
                             item.ID = check.FirstOrDefault().ID; ;
-                           await _employeeApproRepo.UpdateAsync(item);
-                        }else
+                            await _employeeApproRepo.UpdateAsync(item);
+                        }
+                        else
                         {
                             EmployeeApprove model = new EmployeeApprove();
                             model.Code = item.Code;
@@ -2043,8 +2044,8 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                             model.EmployeeID = item.EmployeeID;
                             model.Type = 2;
                             model.IsDeleted = false;
-                           await _employeeApproRepo.CreateAsync(model);
-                        }                        
+                            await _employeeApproRepo.CreateAsync(model);
+                        }
                     }
                 }
 
@@ -2058,7 +2059,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
             }
         }
 
-        }
-
-        #endregion
     }
+
+    #endregion
+}

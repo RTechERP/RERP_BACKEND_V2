@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 
-namespace RERPAPI.Controllers.Old.ProjectManager
+namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -9,7 +9,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
     {
         #region Load partList vật tư
         [HttpGet("get-data")]
-        public async Task<IActionResult> getData(int pageNumber, int pageSize, DateTime dateStart, DateTime dateEnd,int projectId, string? keyword)
+        public async Task<IActionResult> getData(int pageNumber, int pageSize, DateTime dateStart, DateTime dateEnd, int projectId, string? keyword)
         {
             try
             {
