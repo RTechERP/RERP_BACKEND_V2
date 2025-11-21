@@ -39,7 +39,7 @@ namespace RERPAPI.Controllers.Old.POKH
 
         [HttpGet("load-product-data")]
         [Authorize]
-        public IActionResult LoadProductData(string filterText)
+        public IActionResult LoadProductData(string filterText = "")
         {
             try
             {
