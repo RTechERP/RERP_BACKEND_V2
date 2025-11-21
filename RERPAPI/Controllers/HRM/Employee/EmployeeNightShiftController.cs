@@ -26,6 +26,7 @@ namespace RERPAPI.Controllers.HRM.Employee
             _employeeNightShiftRepo = employeeNightShiftRepo;
 
         }
+        [RequiresPermission("N1,N2")]
         [HttpPost("get-employee-night-shift")]
         public ActionResult GetEmployeeNightShift([FromBody] EmployeeNightShiftRequestParam request)
 
@@ -46,7 +47,7 @@ namespace RERPAPI.Controllers.HRM.Employee
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2")]
         [HttpPost("get-employee-night-shift-summary")]
         public ActionResult GetEmployeeNightShiftSummary([FromBody] EmployeeNightShiftSummaryRequestParam request)
 
@@ -67,7 +68,7 @@ namespace RERPAPI.Controllers.HRM.Employee
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2")]
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] List<EmployeeNighShift> nightShifts)
         {
@@ -97,6 +98,7 @@ namespace RERPAPI.Controllers.HRM.Employee
             }
 
         }
+        [RequiresPermission("N1,N2")]
         [HttpPost("save-approve-hr")]
         public async Task<IActionResult> SaveApproveHr([FromBody] List<EmployeeNighShift> nightShifts)
         {
@@ -122,6 +124,7 @@ namespace RERPAPI.Controllers.HRM.Employee
             }
 
         }
+        [RequiresPermission("N1,N2")]
         [HttpPost("save-approve-tbp")]
         public async Task<IActionResult> SaveApproveTBP([FromBody] List<EmployeeNighShift> nightShifts)
         {

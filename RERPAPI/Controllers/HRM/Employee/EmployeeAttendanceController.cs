@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -19,6 +20,7 @@ namespace RERPAPI.Controllers
             _employeeAttendanceRepo = employeeAttendanceRepo;
             _departmentRepo = departmentRepo;
         }
+        [RequiresPermission("N1,N2")]
         [HttpGet("get-department")]
         public IActionResult getDepartment()
         {
@@ -34,7 +36,7 @@ namespace RERPAPI.Controllers
         }
 
 
-
+        [RequiresPermission("N1,N2")]
         [HttpGet("get-employee-attendance")]
         public IActionResult GetEmployeeAttendance(int departmentID, int employeeID, string? findText, DateTime dateStart, DateTime dateEnd)
         {
@@ -54,6 +56,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [RequiresPermission("N1,N2")]
         [HttpPost("import-excel")]
         public async Task<IActionResult> ImportExcel([FromBody] ImportAttendancePayload payload)
         {

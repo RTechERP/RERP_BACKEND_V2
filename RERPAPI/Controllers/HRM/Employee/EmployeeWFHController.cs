@@ -1,5 +1,6 @@
 ﻿using DocumentFormat.OpenXml.Drawing;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -23,7 +24,7 @@ namespace RERPAPI.Controllers
         }
 
 
-
+        [RequiresPermission("N1,N2")]
         [HttpPost("get-wfh")]
         public IActionResult GetWFH([FromBody] EmployeeWFHRequestParam  request)
         {
@@ -45,7 +46,7 @@ namespace RERPAPI.Controllers
             }
         }
 
-
+        [RequiresPermission("N1,N2")]
         [HttpGet("wfh-detail/{id}")]
         public IActionResult GetWFHDetail(int id)
         {
@@ -64,7 +65,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2")]
         [HttpGet("get-department")]
         public IActionResult GetDepartment()
         {
@@ -81,7 +82,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2")]
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] EmployeeWFH employeeWFH)
         {
@@ -102,6 +103,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [RequiresPermission("N1,N2")]
         [HttpPost("save-approve-hr")]
         public async Task<IActionResult> SaveApproveHR([FromBody] EmployeeWFH employeeWFH)
         {
