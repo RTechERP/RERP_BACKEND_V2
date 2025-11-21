@@ -62,7 +62,7 @@ namespace RERPAPI.Controllers.Warehouse.AGV
             {
                 var validate = _groupLinkRepo.Validate(groupLinks);
                 if (validate.status == 0) return BadRequest(validate);
-
+                
 
                 foreach (var groupLink in groupLinks)
                 {

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -42,7 +43,6 @@ namespace RERPAPI.Controllers.HRM
 
 
         [HttpGet("employees")]
-        //[RequiresPermission("N42")]==================keyword
         public IActionResult GetEmployee(int? status, int? departmentid, string? keyword)
         {
             try
@@ -64,7 +64,7 @@ namespace RERPAPI.Controllers.HRM
         }
 
         [HttpGet("employees/{id}")]
-        //[RequiresPermission("N42")]
+        [RequiresPermission("N42")]
         public IActionResult GetByID(int id)
         {
             try
@@ -79,6 +79,7 @@ namespace RERPAPI.Controllers.HRM
         }
 
         [HttpPost("savedata")]
+        [RequiresPermission("N1,N2,N60")]
         public async Task<IActionResult> SaveEmployee([FromBody] Employee employee)
         {
             try

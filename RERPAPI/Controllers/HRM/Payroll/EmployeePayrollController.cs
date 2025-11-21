@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -7,6 +9,7 @@ using ZXing;
 
 namespace RERPAPI.Controllers.Old
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class EmployeePayrollController : Controller
@@ -32,6 +35,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet("employee-payroll")]
+        [RequiresPermission("N2,N1,N52")]
         public async Task<IActionResult> getemployeepayroll(int year, string? keyWord, int page, int size)
         {
             try
@@ -55,6 +59,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet("employee-payroll-by-id")]
+        [RequiresPermission("N2,N1")]
         public async Task<IActionResult> getemployeepayrollbyid(int ID)
         {
             try
@@ -69,6 +74,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet("check-exist-employee-payroll")]
+        [RequiresPermission("N2,N1")]
         public async Task<IActionResult> getcheckexistemployeepayroll(int id, int month, int year)
         {
             try
@@ -84,6 +90,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet("employee-payroll-delete-id")]
+        [RequiresPermission("N2,N1")]
         public async Task<IActionResult> employeepayrolldeleteid(int ID)
         {
             try
@@ -100,6 +107,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet("approved-employee-payroll")]
+        [RequiresPermission("N2,N1")]
         public async Task<IActionResult> approvedemployeepayroll(int ID, bool Status)
         {
             try
@@ -116,6 +124,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost("save-employee-payroll")]
+        [RequiresPermission("N2,N1")]
         public async Task<IActionResult> saveemployeepayroll([FromBody] EmployeePayroll obj)
         {
             try

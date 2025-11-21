@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -6,6 +8,7 @@ using static RERPAPI.Controllers.Old.EmployeeController;
 
 namespace RERPAPI.Controllers.Old
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class EmployeeOnLeaveMasterController : ControllerBase
@@ -16,70 +19,52 @@ namespace RERPAPI.Controllers.Old
         {
             _employeeOnLeaveMasterRepo = employeeOnLeaveMasterRepo;
             _employeeRepo = employeeRepo;
-        }       
+        }
 
         [HttpGet]
+        [RequiresPermission("N2,N1")]
         public IActionResult GetAllEmployeeOnLeaveMaster()
         {
             try
             {
                 var employeeOnLeaveMasters = SQLHelper<object>.ProcedureToList("spGetEmployeeOnLeaveMaster", new string[] { },
                                        new object[] { });
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<object>.GetListData(employeeOnLeaveMasters, 0)
-                });
+                var data = SQLHelper<object>.GetListData(employeeOnLeaveMasters, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         [HttpPost]
-        public async Task<IActionResult> SaveEmployeeOnLeaveMaster([FromBody]EmployeeOnLeaveMaster employeeOnLeaveMaster)
+        [RequiresPermission("N2,N1")]
+        public async Task<IActionResult> SaveEmployeeOnLeaveMaster([FromBody] EmployeeOnLeaveMaster employeeOnLeaveMaster)
         {
             try
             {
 
-                if(employeeOnLeaveMaster.ID <= 0)
+                if (employeeOnLeaveMaster.ID <= 0)
                 {
                     var employee = SQLHelper<object>.ProcedureToList("spGetCheckDeclareDayOff", new string[] { "@EmployeeID", "ID", "@Year" },
                                                               new object[] { employeeOnLeaveMaster.EmployeeID, employeeOnLeaveMaster.ID, employeeOnLeaveMaster.YearOnleave });
                     var result = SQLHelper<object>.GetListData(employee, 0);
 
-                    if(result.Count > 0)
+                    if (result.Count > 0)
                     {
-                           return BadRequest(new
-                           {
-                            status = 0,
-                            message = "Nhân viên này đã tồn tại trong năm " + employeeOnLeaveMaster.YearOnleave + ", vui lòng kiểm tra lại",
-                        });
+                        return Ok(ApiResponseFactory.Success(null, ""));
                     }
                     await _employeeOnLeaveMasterRepo.CreateAsync(employeeOnLeaveMaster);
-                } else
-                {
-                    await _employeeOnLeaveMasterRepo.UpdateAsync(employeeOnLeaveMaster);
+
                 }
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Lưu thành công"
-                }); ;
-            } catch(Exception ex)
+                else await _employeeOnLeaveMasterRepo.UpdateAsync(employeeOnLeaveMaster);
+
+                return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
+            }
+            catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -93,6 +78,7 @@ namespace RERPAPI.Controllers.Old
 
 
         [HttpPost("check-exist")]
+        [RequiresPermission("N2,N1")]
         public async Task<IActionResult> CheckExist([FromBody] List<EmployeeOnLeaveMasterCheck> check)
         {
             try
@@ -112,17 +98,11 @@ namespace RERPAPI.Controllers.Old
                     })
                     .ToList();
 
-                return Ok(new
-                {
-                    data = new
-                    {
-                        existingDayOff
-                    }
-                });
+                return Ok(ApiResponseFactory.Success(existingDayOff, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 

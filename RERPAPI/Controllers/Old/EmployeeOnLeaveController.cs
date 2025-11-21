@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
@@ -6,6 +8,7 @@ using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.Old
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class EmployeeOnLeaveController : ControllerBase
@@ -16,57 +19,45 @@ namespace RERPAPI.Controllers.Old
         {
             _employeeOnLeaveRepo = employeeOnLeaveRepo;
             _employeeRepo = employeeRepo;
-        }   
+        }
 
         [HttpPost]
+        [RequiresPermission("N2,N1")]
         public IActionResult GetAllEmployeeOnLeave(EmployeeOnLeaveParam param)
         {
             try
             {
                 var employeeOnLeaves = SQLHelper<object>.ProcedureToList("spGetDayOff", new string[] { "@PageNumber", "@PageSize", "@Keyword", "@Month", "@Year", "@IDApprovedTP", "@Status", "@DepartmentID" },
                     new object[] { param.pageNumber, param.pageSize, param.keyWord, param.month, param.year, param.IDApprovedTP, param.status, param.departmentId });
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<object>.GetListData(employeeOnLeaves, 0)
-                });
+
+                var data = SQLHelper<object>.GetListData(employeeOnLeaves, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         [HttpGet]
+        [RequiresPermission("N2,N1")]
         public IActionResult GetSummaryEmployeeOnLeave(int month, int year, string? keyWord)
         {
             try
             {
                 var summary = SQLHelper<object>.ProcedureToList("spGetEmployeeOnleaveByMonth", new string[] { "@Month", "@Year", "@KeyWord" },
                                        new object[] { month, year, keyWord ?? "" });
-                return Ok(new
-                {
-                    status = 1,
-                    data = SQLHelper<object>.GetListData(summary, 0)
-                });
+                var data = SQLHelper<object>.GetListData(summary, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         [HttpPost("save-data")]
+        [RequiresPermission("N2,N1")]
         public async Task<IActionResult> SaveEmployeeOnLeave(EmployeeOnLeave employeeOnLeave)
         {
             try
@@ -86,38 +77,29 @@ namespace RERPAPI.Controllers.Old
                         && x.ID != employeeOnLeave.ID
                         && x.StartDate.HasValue
                         && employeeOnLeave.StartDate.HasValue
-                        && x.StartDate.Value.Date == employeeOnLeave.StartDate.Value.Date);
+                        && x.StartDate.Value.Date == employeeOnLeave.StartDate.Value.Date 
+                        && x.DeleteFlag != true);
 
                 if (existingLeaves.Any())
-                        {
-                            return BadRequest(new
-                            {
-                                status = 0,
-                                message = "Nhân viên đã đăng ký nghỉ ngày " + employeeOnLeave.StartDate.Value.ToString("dd/MM/yyyy") + ". Vui lòng chọn ngày khác.",
-                            });
-                        }
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Nhân viên đã đăng ký nghỉ ngày " 
+                        + employeeOnLeave.StartDate.Value.ToString("dd/MM/yyyy") 
+                        + ". Vui lòng chọn ngày khác."));
+                }
 
                 if (employeeOnLeave.ID <= 0)
                 {
                     await _employeeOnLeaveRepo.CreateAsync(employeeOnLeave);
-                } else
+                }
+                else
                 {
                     await _employeeOnLeaveRepo.UpdateAsync(employeeOnLeave);
                 }
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Lưu thành công"
-                }); ;
+                return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }
