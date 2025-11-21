@@ -331,7 +331,6 @@ builder.Services.AddScoped<EmployeePayrollDetailRepo>();
 builder.Services.AddScoped<EmployeePayrollBonusDeuctionRepo>();
 
 #region Kho AGV
-
 builder.Services.AddScoped<AGVProductRepo>();
 builder.Services.AddScoped<AGVProductGroupRepo>();
 builder.Services.AddScoped<AGVProductGroupLinkRepo>();

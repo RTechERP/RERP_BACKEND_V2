@@ -100,11 +100,11 @@ namespace RERPAPI.Controllers.Old.VisionBase
                     weekPlan.CreatedBy = item.CreatedBy;
                     weekPlan.UpdatedDate = DateTime.Now;
                     weekPlan.UpdatedBy = item.UpdatedBy;
-                    if (string.IsNullOrWhiteSpace(weekPlan.ContentPlan) && string.IsNullOrWhiteSpace(weekPlan.Result) && weekPlan.ID > 0)
+                    if (string.IsNullOrWhiteSpace(weekPlan.ContentPlan) && string.IsNullOrWhiteSpace(weekPlan.Result))
                     {
                         await _weekPlanRepo.DeleteAsync(weekPlan.ID);
                     }
-                    if (!string.IsNullOrWhiteSpace(weekPlan.ContentPlan) || !string.IsNullOrWhiteSpace(weekPlan.Result))
+                    else
                     {
                         if (weekPlan.ID > 0)
                         {
@@ -116,6 +116,7 @@ namespace RERPAPI.Controllers.Old.VisionBase
 
                         }
                     }
+
                 }
                 return Ok(ApiResponseFactory.Success(null, "Lưu thành công!"));
             }

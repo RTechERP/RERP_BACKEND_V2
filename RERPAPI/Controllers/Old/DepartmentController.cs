@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -18,13 +19,12 @@ namespace RERPAPI.Controllers.Old
         }   
 
         [HttpGet("get-all")]
+        [RequiresPermission("N2,N1")]
         public IActionResult GetAll()
         {
-
             try
             {
                 List<Department> departments = _departmentRepo.GetAll().OrderBy(x => x.STT).ToList();
-
                 return Ok(ApiResponseFactory.Success(departments, ""));
             }
             catch (Exception ex)
@@ -34,48 +34,55 @@ namespace RERPAPI.Controllers.Old
 
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("deleted")]
+        [RequiresPermission("N2,N1")]
         public IActionResult DeleteDepartment(int id)
         {
             try
             {
-                var department = _departmentRepo.GetByID(id);
-                List<Employee> checkList = _employeeRepo.GetAll(x => x.DepartmentID == id);
-                if (checkList.Count > 0)
+                Department? department = _departmentRepo.GetByID(id);
+                if (department == null )
                 {
-                    return BadRequest(new
-                    {
-                        status = 0,
-                        message = "Phòng ban này đang được sử dụng nên không thể xóa được!\'"
-                    });
+                    return BadRequest(ApiResponseFactory.Fail(null, "Phòng ban không tồn tại"));
                 }
-                if (department != null)
+                bool isUsed = _employeeRepo.GetAll(x => x.DepartmentID == id).Any();
+                if (isUsed)
                 {
-                    _departmentRepo.Delete(department.ID);
-                    return Ok(new
-                    {
-                        status = 1,
-                        message = "Xóa phòng ban thành công."
-                    });
+                    return BadRequest(ApiResponseFactory.Fail(null, "Phòng ban đã được sử dụng, không thể xóa"));
                 }
-                else
-                {
-                    return NotFound(new
-                    {
-                        status = 0,
-                        message = "Phòng ban không tồn tại"
-                    });
-                }
+                _departmentRepo.Update(department);
+                return Ok(ApiResponseFactory.Success(null, "Xóa phòng ban thành công"));
+
+
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+        }
+
+        [HttpPost("save")]
+        [RequiresPermission("N2,N1")]
+        public async Task<IActionResult> savedepartment([FromBody] Department obj)
+        {
+            try
+            {
+                if(!_departmentRepo.Validate(obj, out String error))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, error));
+                }
+                obj.Code = obj.Code.Trim();
+                obj.Name = obj.Name.Trim();
+                if (obj.ID <= 0) await _departmentRepo.CreateAsync(obj);
+                else _departmentRepo.Update(obj);
+
+                return Ok(ApiResponseFactory.Success(null, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+
         }
 
     }

@@ -14,6 +14,10 @@ namespace RERPAPI.Repo.GenericEntity
             importDetailSerialNumberRepo = billImportTechDetailSerialRepo;
         }
 
+        public ModulaLocationRepo(CurrentUser currentUser) : base(currentUser)
+        {
+        }
+
         public APIResponse CheckValidate(List<ModulaLocationDTO.SerialNumberModulaLocation> serialNumberModulaLocations)
         {
 

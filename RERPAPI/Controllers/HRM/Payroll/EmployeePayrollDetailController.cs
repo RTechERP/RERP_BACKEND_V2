@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.Old
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class EmployeePayrollDetailController : ControllerBase
@@ -21,6 +24,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet("employee-payroll-detail")]
+        [RequiresPermission("N2,N1,N52")]
         public async Task<IActionResult> getemployeepayrolldetail(int? year, int? month, int departmentID, int employeeID, string? keyword)
         {
             try
@@ -52,6 +56,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet("employee-payroll-detail-by-id")]
+        [RequiresPermission("N2,N1,N52")]
         public async Task<IActionResult> getemployeepayrolldetailbyid(int ID)
         {
             try
@@ -66,7 +71,9 @@ namespace RERPAPI.Controllers.Old
         }
 
 
+
         [HttpGet("update-employee-payroll-detail")]
+        [RequiresPermission("N2,N1,N52")]
         public async Task<IActionResult> getupdateemployeepayrolldetail(int payrollID, int year, int month, int employeeID, string loginName, int type)
         {
             try
@@ -91,6 +98,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost("publish-employee-payroll")]
+        [RequiresPermission("N2,N1,N52")]
         public async Task<IActionResult> publishemployeepayroll(bool isPublish, int[] listID)
         {
             try
@@ -116,6 +124,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost("import-excel-payroll-report")]
+        [RequiresPermission("N2,N1,N52")]
         public IActionResult importexcelpayrollreport([FromBody] List<Dictionary<string, object>> payrollreport, [FromQuery] int PayrollID)
         {
             try
@@ -266,6 +275,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost("save-employee-payroll-detail")]
+        [RequiresPermission("N2,N1,N52")]
         public async Task<IActionResult> saveemployeepayrolldetail([FromBody] EmployeePayrollDetail obj)
         {
             try

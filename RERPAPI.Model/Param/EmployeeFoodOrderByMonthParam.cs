@@ -12,6 +12,7 @@ namespace RERPAPI.Model.Param
         public int year { get; set; }
         public int employeeId { get; set; }
         public int departmentId { get; set; }
-        public string? keyWord { get; set; }
+        public string? keyword { get; set; }
+        public int location { get; set; }
     }
 }
