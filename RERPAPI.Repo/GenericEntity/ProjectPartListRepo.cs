@@ -319,40 +319,76 @@ namespace RERPAPI.Repo.GenericEntity
         public bool ValidateProduct(ProjectPartList partlist, out string message)
         {
             message = string.Empty;
-            List<ProductSale> prdSale = _productSaleRepo.GetAll(x => (x.ProductCode ?? "").Trim() == (partlist.ProductCode ?? "").Trim() && x.IsDeleted == false);
-            if (prdSale.Count <= 0)
+
+            string productCode = (partlist.ProductCode ?? "").Trim();
+
+            // 1. Lấy bản ghi sale theo ProductCode
+            var prdSale = _productSaleRepo.GetAll(x =>
+                (x.ProductCode ?? "").Trim() == productCode &&
+                x.IsDeleted != true
+            );
+
+            if (prdSale == null || prdSale.Count == 0)
             {
-                message = $"Không thể duyệt tích xanh vì sản phẩm [{partlist.ProductCode}] không có trong kho sale!";
+                message = $"Không thể duyệt tích xanh vì sản phẩm [{productCode}] không có trong kho sale!";
                 return false;
             }
-            var fixedProduct = prdSale.FirstOrDefault(x => (x.IsFix ?? true));
-            if (fixedProduct != null)
+
+            // 2. Tìm bản ghi đã FIX
+            var fixedProduct = prdSale.FirstOrDefault(x => x.IsFix == true);
+            if (fixedProduct == null)
             {
-                List<string> errors = new List<string>();
-                string productNameConvert = UnicodeConverterService.ConvertUnicode((fixedProduct.ProductName ?? "").ToLower(), 1);
-                string makerConvert = UnicodeConverterService.ConvertUnicode((fixedProduct.Maker ?? "").ToLower(), 1);
-                string unitConvert = UnicodeConverterService.ConvertUnicode((fixedProduct.Unit ?? "").ToLower(), 1);
-                if (productNameConvert != UnicodeConverterService.ConvertUnicode((partlist.GroupMaterial ?? "").ToLower(), 1))
-                {
-                    errors.Add($"\nMã sản phẩm (tích xanh: [{fixedProduct.ProductName}], hiện tại: [{partlist.GroupMaterial}])");
-                    return false;
-                }
-                if (makerConvert != UnicodeConverterService.ConvertUnicode((partlist.Manufacturer ?? "").ToLower(), 1))
-                {
-                    errors.Add($"\nNhà sản xuất (tích xanh: [{fixedProduct.Maker}], hiện tại: [{partlist.Manufacturer}])");
-                }
-                if (unitConvert != UnicodeConverterService.ConvertUnicode((partlist.Unit ?? "").ToLower(), 1))
-                {
-                    errors.Add($"\nĐơn vị (tích xanh: [{fixedProduct.Unit}], hiện tại: [{partlist.Unit}])");
-                }
-                if (errors.Any())
-                {
-                    message = $"Sản phẩm có mã [{partlist.ProductCode}] đã có tích xanh.\nCác trường không khớp: {string.Join(" ", errors)}. \nVui lòng kiểm tra lại.";
-                    return false;
-                }
+                // Nếu chưa Fix thì OK
+                return true;
+            }
+
+            // 3. So sánh dữ liệu
+            List<string> errors = new List<string>();
+
+            string fixedName = Normalize(fixedProduct.ProductName);
+            string fixedMaker = Normalize(fixedProduct.Maker);
+            string fixedUnit = Normalize(fixedProduct.Unit);
+
+            string currentName = Normalize(partlist.GroupMaterial);
+            string currentMaker = Normalize(partlist.Manufacturer);
+            string currentUnit = Normalize(partlist.Unit);
+
+            // Product Name
+            if (fixedName != currentName)
+            {
+                errors.Add($"\nMã sản phẩm (tích xanh: [{fixedProduct.ProductName}], hiện tại: [{partlist.GroupMaterial}])");
+            }
+
+            // Maker
+            if (fixedMaker != currentMaker)
+            {
+                errors.Add($"\nNhà sản xuất (tích xanh: [{fixedProduct.Maker}], hiện tại: [{partlist.Manufacturer}])");
+            }
+
+            // Unit
+            if (fixedUnit != currentUnit)
+            {
+                errors.Add($"\nĐơn vị (tích xanh: [{fixedProduct.Unit}], hiện tại: [{partlist.Unit}])");
+            }
+
+            // 4. Nếu có lỗi -> trả message
+            if (errors.Count > 0)
+            {
+                message =
+                    $"Sản phẩm có mã [{productCode}] đã được tích xanh.\n" +
+                    $"Các trường không khớp:{string.Join("", errors)}\n" +
+                    $"Vui lòng kiểm tra lại.";
+                return false;
             }
 
             return true;
+        }
+
+        // Helper Normalize
+        private string Normalize(string value)
+        {
+            value = (value ?? "").Trim().ToLower();
+            return UnicodeConverterService.ConvertUnicode(value, 1);
         }
         public bool ValidateApprovePurchase(ProjectPartList partlist, bool isApproved, out string message)
         {
@@ -673,7 +709,182 @@ namespace RERPAPI.Repo.GenericEntity
             return true;
         }
         #endregion
+        public class PartlistValidateResult
+        {
+            public bool IsValid { get; set; }
+            public string Message { get; set; } = "";
+
+            // Chuyển dtError → List<PartlistDiffDto>
+            public List<PartlistDiffDTO> Diffs { get; set; } = new();
+        }
         Regex regex = new Regex(@"^-?[\d\.]+$");
+
+        /// <summary>
+        /// Chuyển tiếng Việt sang không dấu (tương đương TextUtils.ConvertUnicode(..., 1))
+        /// </summary>
+        public static string ConvertUnicode(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return string.Empty;
+
+            string normalized = input.Normalize(NormalizationForm.FormD);
+            StringBuilder sb = new StringBuilder();
+
+            foreach (char c in normalized)
+            {
+                UnicodeCategory uc = CharUnicodeInfo.GetUnicodeCategory(c);
+                if (uc != UnicodeCategory.NonSpacingMark)
+                {
+                    sb.Append(c);
+                }
+            }
+
+            string result = sb.ToString().Normalize(NormalizationForm.FormC);
+
+            // Xử lý đ, Đ
+            result = result.Replace("đ", "d").Replace("Đ", "D");
+
+            return result;
+        }
+        public PartlistValidateResult Validate2(PartlistImportRequestDTO request)
+        {
+            var result = new PartlistValidateResult
+            {
+                IsValid = true
+            };
+
+            string pattern = @"^[^àáảãạâầấẩẫậăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵÀÁẢÃẠÂẦẤẨẪẬĂẰẮẲẴẶÈÉẺẼẸÊỀẾỂỄỆÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴ]+$";
+            Regex regex = new Regex(pattern);
+            Regex regexStt = new Regex(@"^-?[\d\.]+$");
+
+            List<string> listSTT = new();
+            List<string> listSttAll = new();
+
+            // 1. Thu thập STT
+            foreach (var item in request.Items)
+            {
+                if (string.IsNullOrEmpty(item.TT)) continue;
+
+                listSttAll.Add(item.TT);
+
+                if (!item.TT.Contains(".")) continue;
+                if (!regexStt.IsMatch(item.TT)) continue;
+
+                var root = item.TT[..item.TT.LastIndexOf(".")];
+
+                if (!listSTT.Contains(root))
+                    listSTT.Add(root);
+            }
+
+            // 2. Validate từng dòng
+            foreach (var item in request.Items)
+            {
+                string stt = item.TT;
+                string groupMaterial = item.GroupMaterial;
+                string productCode = item.ProductCode;
+                string manufacturer = item.Manufacturer;
+
+                decimal qtyMin = (decimal)(item.QtyMin ?? 0);
+                decimal qtyFull = (decimal)(item.QtyFull ?? 0);
+                string unit = item.Unit;
+
+                if (string.IsNullOrEmpty(stt)) continue;
+                if (!regexStt.IsMatch(stt)) continue;
+
+                // Check STT duplicate
+                if (listSttAll.Count(x => x == stt) > 1)
+                {
+                    return Fail(result, $"TT [{stt}] đã tồn tại.\nVui lòng kiểm tra lại!");
+                }
+
+                bool isLeaf = !listSTT.Contains(stt); // Leaf node
+
+                // ============= RULE WINFORMS: Vật tư phát sinh phải có lý do =============
+                if (request.IsProblem == true && isLeaf)
+                {
+                    if (string.IsNullOrWhiteSpace(item.ReasonProblem))
+                    {
+                        return Fail(result, $"Vật tư phát sinh có số thứ tự [{stt}] phải có Lý do phát sinh!");
+                    }
+                }
+
+                // Validate dòng leaf
+                if (isLeaf)
+                {
+                    if (string.IsNullOrWhiteSpace(productCode))
+                        return Fail(result, $"Vui lòng nhập Mã thiết bị!.\n(TT: {stt})");
+
+                    if (!regex.IsMatch(productCode))
+                        return Fail(result, $"Mã thiết bị không được chứa ký tự tiếng Việt!.\n(TT: {stt})");
+
+                    if (string.IsNullOrWhiteSpace(groupMaterial))
+                        return Fail(result, $"Vui lòng nhập Tên thiết bị!.\n(TT: {stt})");
+
+                    if (string.IsNullOrWhiteSpace(manufacturer))
+                        return Fail(result, $"Vui lòng nhập Hãng!.\n(TT: {stt})");
+
+                    if (qtyMin <= 0)
+                        return Fail(result, $"Vui lòng nhập Số lượng / 1 máy (Phải > 0)!.\n(TT: {stt})");
+
+                    if (qtyFull <= 0)
+                        return Fail(result, $"Vui lòng nhập Số lượng tổng (Phải > 0)!.\n(TT: {stt})");
+
+                    // 5. Check với Stock (IsFix = true)
+                    var fixedProduct = _productSaleRepo
+                        .GetAll(x => x.ProductCode == productCode && x.IsFix == true && x.IsDeleted == false)
+                        .FirstOrDefault();
+
+                    if (fixedProduct != null)
+                    {
+                        string excelGroup = ConvertUnicode(groupMaterial.ToLower());
+                        string excelManufacturer = ConvertUnicode(manufacturer.ToLower());
+                        string excelUnit = ConvertUnicode(unit.ToLower());
+
+                        string stockGroup = ConvertUnicode(fixedProduct.ProductName.ToLower());
+                        string stockManufacturer = ConvertUnicode(fixedProduct.Maker.ToLower());
+                        string stockUnit = ConvertUnicode(fixedProduct.Unit.ToLower());
+
+                        if (excelGroup != stockGroup ||
+                            excelManufacturer != stockManufacturer ||
+                            excelUnit != stockUnit)
+                        {
+                            // Thêm vào DIFF LIST
+                            result.Diffs.Add(new PartlistDiffDTO
+                            {
+                                ProductSaleId = fixedProduct.ID,
+                                ProductCode = productCode,
+
+                                GroupMaterialPartlist = groupMaterial,
+                                GroupMaterialStock = fixedProduct.ProductName,
+
+                                ManufacturerPartlist = manufacturer,
+                                ManufacturerStock = fixedProduct.Maker,
+
+                                UnitPartlist = unit,
+                                UnitStock = fixedProduct.Unit,
+
+                                IsFix = fixedProduct.IsFix ?? true
+                            });
+                        }
+                    }
+                }
+            }
+
+            if (result.Diffs.Any())
+            {
+                result.IsValid = false;
+                result.Message = "Có sự khác nhau giữa Partlist và dữ liệu tích xanh trong kho.";
+            }
+
+            return result;
+        }
+
+        private PartlistValidateResult Fail(PartlistValidateResult res, string msg)
+        {
+            res.IsValid = false;
+            res.Message = msg;
+            return res;
+        }
         public bool Validate1(PartlistImportRequestDTO request, out string message)
         {
             message = string.Empty;
@@ -705,152 +916,9 @@ namespace RERPAPI.Repo.GenericEntity
             }
             return true;
         }
-            /// <summary>
-            /// Chuyển tiếng Việt sang không dấu (tương đương TextUtils.ConvertUnicode(..., 1))
-            /// </summary>
-            public static string ConvertUnicode(string input)
-            {
-                if (string.IsNullOrWhiteSpace(input))
-                    return string.Empty;
-
-                string normalized = input.Normalize(NormalizationForm.FormD);
-                StringBuilder sb = new StringBuilder();
-
-                foreach (char c in normalized)
-                {
-                    UnicodeCategory uc = CharUnicodeInfo.GetUnicodeCategory(c);
-                    if (uc != UnicodeCategory.NonSpacingMark)
-                    {
-                        sb.Append(c);
-                    }
-                }
-
-                string result = sb.ToString().Normalize(NormalizationForm.FormC);
-
-                // Xử lý đ, Đ
-                result = result.Replace("đ", "d").Replace("Đ", "D");
-
-                return result;
-            }
-            public bool Validate2(PartlistImportRequestDTO request, out string message)
+        public bool ValidateIsFix(ProjectPartlistDTO request, out string message)
         {
             message = string.Empty;
-            string pattern = @"^[^àáảãạâầấẩẫậăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵÀÁẢÃẠÂẦẤẨẪẬĂẰẮẲẴẶÈÉẺẼẸÊỀẾỂỄỆÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴ]+$";
-            Regex regex = new Regex(pattern);
-            Regex regexStt = new Regex(@"^-?[\d\.]+$");
-            List<string> listSTT = new List<string>();
-            List<string> listSttAll = new List<string>();
-            foreach (var item in request.Items)
-            {
-
-                if (string.IsNullOrEmpty(item.TT)) continue;
-
-                listSttAll.Add(item.TT);
-
-                if (!item.TT.Contains(".")) continue;
-
-                if (!regexStt.IsMatch(item.TT)) continue;
-
-                item.TT = item.TT.Substring(0, item.TT.LastIndexOf("."));
-                if (listSTT.Contains(item.TT)) continue;
-                listSTT.Add(item.TT);
-            }
-
-            //dtError
-            //
-
-            foreach (var item in request.Items)
-            {
-                string stt = item.TT;
-                string groupMaterial = item.GroupMaterial;
-                string productCode = item.ProductCode;
-                string manufactuner = item.Manufacturer;
-                decimal qtyMin = (decimal)item.QtyMin;
-                decimal qtyFull = (decimal)item.QtyFull;
-                string unit = item.Unit;
-                if (string.IsNullOrEmpty(stt)) continue;
-                if (!regexStt.IsMatch(stt)) continue;
-                var stts = listSttAll.Where(x => x.Equals(stt)).ToList();
-                if (stts.Count() > 1)
-                {
-                    message = $"TT [{stt}] đã tồn tại.\nVui lòng kiểm tra lại!";
-                    return false;
-                }
-
-                if (!listSTT.Contains(stt))
-                {
-                    if (string.IsNullOrWhiteSpace(productCode))
-                    {
-                        message = $"Vui lòng nhập Mã thiết bị!.\n(TT: {stt})";
-                        return false;
-                    }
-                    else
-                    {
-                        bool isCheck = regex.IsMatch(productCode);
-                        if (!isCheck)
-                        {
-                            message = $"Mã thiết bị không được chứa ký tự tiếng Việt.\nVui lòng kiểm tra lại!.\n(TT: {stt})";
-                            return false;
-                        }
-                    }
-
-
-                    if (string.IsNullOrWhiteSpace(groupMaterial))
-                    {
-                        message = $"Vui lòng nhập Tên thiết bị!.\n(TT: {stt})";
-                        return false;
-                    }
-
-                    if (string.IsNullOrWhiteSpace(manufactuner))
-                    {
-                        message = $"Vui lòng nhập Hãng!.\n(TT: {stt})";
-                        return false;
-                    }
-
-                    if (qtyMin <= 0)
-                    {
-                        message = $"Vui lòng nhập Số lượng / 1 máy (Phải  > 0)!.\n(TT: {stt})";
-                        return false;
-                    }
-
-                    if (qtyFull <= 0)
-                    {
-                        message = $"Vui lòng nhập Số lượng tổng (Phải  > 0)!.\n(TT: {stt})";
-                        return false;
-                    }
-                    var fixedProduct = _productSaleRepo.GetAll(x => x.ProductCode == item.ProductCode && x.IsFix == true && x.IsDeleted == false).FirstOrDefault();
-
-                    if (fixedProduct != null)
-                    {
-                        string excelGroup = ConvertUnicode(groupMaterial.ToLower());
-                        string excelManufacturer = ConvertUnicode(manufactuner.ToLower());
-                        string excelUnit = ConvertUnicode(unit.ToLower());
-
-                        string stockGroup = ConvertUnicode(fixedProduct.ProductName.ToLower());
-                        string stockManufacturer = ConvertUnicode(fixedProduct.Maker.ToLower());
-                        string stockUnit = ConvertUnicode(fixedProduct.Unit.ToLower());
-
-                        if (excelGroup != stockGroup ||
-                            excelManufacturer != stockManufacturer ||
-                            excelUnit != stockUnit)
-                        {
-                            message =
-                                $"Thông tin không khớp với dữ liệu tích xanh trong kho!\n" +
-                                $"(TT: {stt})\n" +
-                                $"Tên thiết bị Excel: {groupMaterial}\n" +
-                                $"Tên thiết bị Stock: {fixedProduct.ProductName}\n" +
-                                $"Hãng Excel: {manufactuner}\n" +
-                                $"Hãng Stock: {fixedProduct.Maker}\n" +
-                                $"Đơn vị Excel: {unit}\n" +
-                                $"Đơn vị Stock: {fixedProduct.Unit}";
-
-                            return false;
-                        }
-                    }
-                }
-
-
-            }
 
             return true;
         }
