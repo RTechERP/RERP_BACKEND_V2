@@ -1,10 +1,5 @@
 ﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
@@ -12,6 +7,20 @@ namespace RERPAPI.Repo.GenericEntity
     {
         public ProjectPartlistPriceRequestRepo(CurrentUser currentUser) : base(currentUser)
         {
+        }
+        public async Task SaveData(List<ProjectPartlistPriceRequest> lst)
+        {
+            foreach (var item in lst)
+            {
+                if (item.ID > 0)
+                {
+                    await UpdateAsync(item);
+                }
+                else
+                {
+                    await CreateAsync(item);
+                }
+            }
         }
     }
 }

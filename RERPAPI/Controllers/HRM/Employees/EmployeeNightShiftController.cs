@@ -1,15 +1,9 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
-using RERPAPI.Model.DTO.Asset;
 using RERPAPI.Model.Entities;
-using RERPAPI.Model.Param;
 using RERPAPI.Model.Param.HRM;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.HRM;
 
 namespace RERPAPI.Controllers.HRM.Employees
@@ -57,10 +51,10 @@ namespace RERPAPI.Controllers.HRM.Employees
                 var data = SQLHelper<dynamic>.ProcedureToList
                 ("spGetEmployeeNightShiftByMonth"
                 , new string[] { "@Month", "@Year", "@DepartmentID", "@EmployeeID", "@Keyword" }
-                , new object[] { request.Month, request.Year, request.DepartmentID, request.EmployeeID, request.KeyWord??""});
+                , new object[] { request.Month, request.Year, request.DepartmentID, request.EmployeeID, request.KeyWord ?? "" });
 
                 var nightShiftdata = SQLHelper<object>.GetListData(data, 0);
-           
+
                 return Ok(ApiResponseFactory.Success(nightShiftdata, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
@@ -109,7 +103,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 {
                     foreach (var item in nightShifts)
                     {
-                     
+
                         if (item.ID <= 0)
                             await _employeeNightShiftRepo.CreateAsync(item);
                         else
@@ -133,7 +127,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 if (nightShifts == null) { return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." }); }
                 if (nightShifts != null && nightShifts.Any())
                 {
-                    foreach (var item in nightShifts)   
+                    foreach (var item in nightShifts)
                     {
 
                         if (item.ID <= 0)

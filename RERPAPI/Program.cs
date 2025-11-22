@@ -328,6 +328,11 @@ builder.Services.AddScoped<ProjectWorkerRepo>();
 builder.Services.AddScoped<ProjectRequestFileRepo>();
 
 builder.Services.AddScoped<TaxCompanyRepo>();
+builder.Services.AddScoped<ProjectPartlistPurchaseRequestTypeRepo>();
+builder.Services.AddScoped<ProjectPartlistPriceRequestTypeRepo>();
+builder.Services.AddScoped<ProjectPartlistPriceRequestNoteRepo>();
+#endregion
+#region Kho AGV
 
 builder.Services.AddScoped<EmployeePayrollRepo>();
 builder.Services.AddScoped<EmployeePayrollDetailRepo>();
@@ -518,11 +523,11 @@ foreach (var item in staticFiles)
     });
 */
 
-    //app.UseDirectoryBrowser(new DirectoryBrowserOptions
-    //{
-    //    FileProvider = new PhysicalFileProvider(item.PathFull),
-    //    RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-    //});
+    app.UseDirectoryBrowser(new DirectoryBrowserOptions
+    {
+        FileProvider = new PhysicalFileProvider(item.PathFull),
+        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+    });
 }
 
 app.Run();

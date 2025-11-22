@@ -1,18 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Routing;
-using Microsoft.Data.SqlClient;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using RERPAPI.Model.Param;
-using RERPAPI.Repo;
 using RERPAPI.Repo.GenericEntity;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 
 
 namespace RERPAPI.Controllers.HRM.Employees
@@ -135,7 +126,7 @@ namespace RERPAPI.Controllers.HRM.Employees
         {
             try
             {
-               
+
 
                 var departments = _departmentRepo.GetAll()
                     .Select(x => new
@@ -180,7 +171,9 @@ namespace RERPAPI.Controllers.HRM.Employees
                                 x.EmployeeID == employeeId &&
                                 x.DayWork.HasValue &&
                                 x.DayWork.Value.Date == dayWorkDate.Date &&
-                                x.Type == type);
+                                x.Type == type
+                                //&& x.IsDelete == false
+                                );
 
                 if (existENF.Any())
                 {

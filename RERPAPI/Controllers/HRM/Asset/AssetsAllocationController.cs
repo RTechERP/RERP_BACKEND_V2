@@ -1,11 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.Asset;
-using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Asset;
@@ -19,7 +17,7 @@ namespace RERPAPI.Controllers.Old.Asset
     {
         vUserGroupLinksRepo _vUserGroupLinksRepo;
 
-        TSAssetManagementRepo _tsAssetManagementRepo ;
+        TSAssetManagementRepo _tsAssetManagementRepo;
         TSAssetAllocationRepo _tSAssetAllocationRepo;
         TSAssetAllocationDetailRepo _tSAssetAllocationDetailRepo;
         TSAllocationEvictionAssetRepo _tSAllocationEvictionAssetRepo;
