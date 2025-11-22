@@ -6,7 +6,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using System.Linq.Expressions;
 
-namespace RERPAPI.Controllers.Old
+namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -17,7 +17,7 @@ namespace RERPAPI.Controllers.Old
         public ProjectWorkerVersionController(ProjectWorkerVersionRepo repo)
         {
             _repo = repo;
-        }   
+        }
 
         [HttpPost]
         public async Task<IActionResult> SaveData([FromBody] ProjectWorkerVersion request)
@@ -29,7 +29,7 @@ namespace RERPAPI.Controllers.Old
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, message));
                 }
-                if ( request.ID > 0)
+                if (request.ID > 0)
                 {
                     await _repo.UpdateAsync(request);
                 }
@@ -38,8 +38,8 @@ namespace RERPAPI.Controllers.Old
                     await _repo.CreateAsync(request);
                 }
 
-             
-                return Ok(ApiResponseFactory.Success(request,""));
+
+                return Ok(ApiResponseFactory.Success(request, ""));
             }
             catch (Exception ex)
             {

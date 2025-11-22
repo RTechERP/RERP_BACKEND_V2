@@ -6,7 +6,7 @@ using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using System.Data;
 
-namespace RERPAPI.Controllers.Old
+namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -54,7 +54,7 @@ namespace RERPAPI.Controllers.Old
 
                 return Ok(new
                 {
-                    data = data,
+                    data,
                 });
             }
             catch (Exception ex)
@@ -69,13 +69,13 @@ namespace RERPAPI.Controllers.Old
         [HttpGet("get-all-project")]
         public IActionResult GetAllProject()
         {
-            List<RERPAPI.Model.Entities.Project> lstProjects = _projectRepo.GetAll();
+            List<Model.Entities.Project> lstProjects = _projectRepo.GetAll();
             return Ok(ApiResponseFactory.Success(lstProjects, ""));
         }
         [HttpGet("get-po-code")]
         public IActionResult GetPOCode()
         {
-            List<RERPAPI.Model.Entities.POKH> lstPos = _pokhRepo.GetAll();
+            List<POKH> lstPos = _pokhRepo.GetAll();
             return Ok(ApiResponseFactory.Success(lstPos, ""));
 
         }

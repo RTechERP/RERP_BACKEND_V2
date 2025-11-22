@@ -5,8 +5,9 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.Project;
 using System.Threading.Tasks;
-namespace RERPAPI.Controllers.Old.ProjectManager
+namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -17,25 +18,28 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         private readonly ProjectRepo _projectRepo;
         private readonly ProjectRequestRepo _projectRequestRepo;
         private readonly ProjectSolutionFileRepo _projectSolutionFilRepo;
+        private readonly ProjectRequestFileRepo _projectRequestFileRepo;
         public ProjectSolutionController(
             ProjectSolutionRepo projectSolutionRepo,
             IConfiguration configuration,
-            ProjectRepo projectRepo, 
+            ProjectRepo projectRepo,
             ProjectRequestRepo projectRequestRepo,
-            ProjectSolutionFileRepo projectSolutionFilRepo)
+            ProjectSolutionFileRepo projectSolutionFilRepo,
+            ProjectRequestFileRepo projectRequestFileRepo)
         {
             _projectSolutionRepo = projectSolutionRepo;
             _configuration = configuration;
             _projectRepo = projectRepo;
             _projectRequestRepo = projectRequestRepo;
             _projectSolutionFilRepo = projectSolutionFilRepo;
+            _projectRequestFileRepo = projectRequestFileRepo;
         }
         [HttpGet("get-all-project")]
         public async Task<IActionResult> GetAllProject()
         {
             try
             {
-                List<RERPAPI.Model.Entities.Project> dtProject = _projectRepo.GetAll(x => x.IsDeleted == false).OrderByDescending(x => x.ID).ToList();
+                List<Model.Entities.Project> dtProject = _projectRepo.GetAll(x => x.IsDeleted == false).OrderByDescending(x => x.ID).ToList();
                 return Ok(ApiResponseFactory.Success(dtProject, ""));
             }
             catch (Exception ex)
@@ -48,7 +52,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         {
             try
             {
-                List<RERPAPI.Model.Entities.ProjectRequest> dtProject = _projectRequestRepo.GetAll(x => x.IsDeleted == false && x.ProjectID == projectID).OrderByDescending(x => x.STT).ToList();
+                List<ProjectRequest> dtProject = _projectRequestRepo.GetAll(x => x.IsDeleted == false && x.ProjectID == projectID).OrderByDescending(x => x.STT).ToList();
                 return Ok(ApiResponseFactory.Success(dtProject, ""));
             }
             catch (Exception ex)
@@ -73,6 +77,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-all")]
         public async Task<IActionResult> GetAll(int projectID)
         {
@@ -82,11 +87,11 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                     new string[] { "@ProjectID" },
                     new object[] { projectID });
                 var projectSolutions = dtProjectSolutions?.FirstOrDefault();
-                return Ok(ApiResponseFactory.Success(projectSolutions,""));
+                return Ok(ApiResponseFactory.Success(projectSolutions, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex,ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -122,6 +127,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         //    }
         //}
         [HttpPost("save-data-solution")]
+        [RequiresPermission("N13,N1,,N27,N63")]
         public async Task<IActionResult> SaveData([FromBody] ProjectSolutionDTO request)
         {
             try
@@ -160,12 +166,12 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 // XỬ LÝ LƯU DỮ LIỆU THÔNG THƯỜNG
                 if (request.ID > 0)
                 {
-                     await _projectSolutionRepo.UpdateAsync(request);
+                    await _projectSolutionRepo.UpdateAsync(request);
                     projectSolutionID = request.ID;
                 }
                 else
                 {
-                     await _projectSolutionRepo.CreateAsync(request);
+                    await _projectSolutionRepo.CreateAsync(request);
                     projectSolutionID = request.ID;
                 }
 
@@ -186,9 +192,9 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                         }
                     }
                 }
-                if(request.deletedFileID?.Count > 0)
+                if (request.deletedFileID?.Count > 0)
                 {
-                    foreach(var item in request.deletedFileID)
+                    foreach (var item in request.deletedFileID)
                     {
                         var data = _projectSolutionFilRepo.GetByID(item);
                         data.IsDeleted = true;
@@ -216,7 +222,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
                 return BadRequest(ApiResponseFactory.Fail(ex, "Lỗi khi lấy mã giải pháp"));
             }
         }
-      
+
         //[HttpPost("approve")]
         //public async Task<IActionResult> ApproveSolution(int id, bool isApproved, int status)
         //{
@@ -248,5 +254,125 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         //   await _projectSolutionRepo.UpdateAsync(solution);
         //    return Ok(ApiResponseFactory.Success(solution, "Duyệt thành công"));
         //}
+
+        #region dành cho yêu cầu - gaiir pháp
+        [HttpGet("get-project-request2")]
+        public async Task<IActionResult> GetProjectRequest2(int projectID, string? keyword)
+        {
+            try
+            {
+                var dtProjectRequest = SQLHelper<object>.ProcedureToList("spGetProjectRequest",
+                    new string[] { "@ProjectID", "@Keyword" },
+                    new object[] { projectID, keyword ?? "" });
+                var projectRequest = dtProjectRequest?.FirstOrDefault();
+                return Ok(ApiResponseFactory.Success(projectRequest, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-project-solution")]
+        public async Task<IActionResult> GetSolution(int projectID, int projectRequestID)
+        {
+            try
+            {
+                var dtProjectSolutions = SQLHelper<object>.ProcedureToList("spGetProjectSolution",
+                    new string[] { "@ProjectID", "ProjectRequestID" },
+                    new object[] { projectID, projectRequestID });
+                var projectSolutions = dtProjectSolutions?.FirstOrDefault();
+                return Ok(ApiResponseFactory.Success(projectSolutions, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-solution-file")]
+        public async Task<IActionResult> GetSolutionFile(int projectSolutionID)
+        {
+            try
+            {
+                List<ProjectSolutionFile> lstFile = _projectSolutionFilRepo.GetAll(x => x.ProjectSolutionID == projectSolutionID && x.IsDeleted == false);
+                return Ok(ApiResponseFactory.Success(lstFile, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-request-file")]
+        public async Task<IActionResult> GetRequestFile(int projectRequestID)
+        {
+            try
+            {
+                var lstFile = _projectRequestFileRepo.GetAll(x => x.ProjectRequestID == projectRequestID && x.IsDeleted == false);
+                return Ok(ApiResponseFactory.Success(lstFile, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpPost("save-request")]
+        [RequiresPermission("N13,N1,N63")]
+        public async Task<IActionResult> SaveDataRequest([FromBody] ProjectRequestDTO request)
+        {
+            try
+            {
+                string message = "";
+                int projectRequestID = 0;
+
+                if (!_projectRequestRepo.Validate(request, out message))
+                {
+                    return Ok(new { status = 2, message });
+                }
+                // XỬ LÝ LƯU DỮ LIỆU THÔNG THƯỜNG
+                if (request.ID > 0)
+                {
+                    await _projectRequestRepo.UpdateAsync(request);
+                    projectRequestID = request.ID;
+                }
+                else
+                {
+                    await _projectRequestRepo.CreateAsync(request);
+                    projectRequestID = request.ID;
+                }
+
+                ///lohic them file
+                if (request.projectRequestFile?.Count > 0)
+                {
+                    foreach (var item in request.projectRequestFile)
+                    {
+                        if (item.ID > 0)
+                        {
+
+                            await _projectRequestFileRepo.UpdateAsync(item);
+                        }
+                        else
+                        {
+                            item.ProjectRequestID = projectRequestID;
+                            await _projectRequestFileRepo.CreateAsync(item);
+                        }
+                    }
+                }
+                if (request.deletedFileID?.Count > 0)
+                {
+                    foreach (var item in request.deletedFileID)
+                    {
+                        var data = _projectRequestFileRepo.GetByID(item);
+                        data.IsDeleted = true;
+                        await _projectRequestFileRepo.UpdateAsync(data);
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(request, "Lưu dữ liệu thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, "Lỗi khi xử lý dữ liệu"));
+            }
+        }
+        #endregion
     }
 }

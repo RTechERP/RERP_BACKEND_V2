@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 
-namespace RERPAPI.Controllers.Old.ProjectManager
+namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -44,13 +44,13 @@ namespace RERPAPI.Controllers.Old.ProjectManager
 
         //load người phụ trách 
         [HttpGet("get-user")]
-        public async Task< IActionResult> GetUser()
+        public async Task<IActionResult> GetUser()
         {
             try
             {
                 var projectItem = SQLHelper<dynamic>.ProcedureToList("spGetUserProjectItem",
                     new[] { "ProjectID" },
-                    new object[] { 0});
+                    new object[] { 0 });
                 var rows = SQLHelper<dynamic>.GetListData(projectItem, 0);
                 return Ok(ApiResponseFactory.Success(rows, "Lấy dữ liệu thành công"));
             }
@@ -66,7 +66,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
             try
             {
                 var projectItem = SQLHelper<dynamic>.ProcedureToList("spGetProjectTypeChildren",
-                    new string [] {  },
+                    new string[] { },
                     new object[] { });
                 var rows = SQLHelper<dynamic>.GetListData(projectItem, 0);
                 return Ok(ApiResponseFactory.Success(rows, ""));
@@ -83,7 +83,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
             try
             {
                 var projectItem = SQLHelper<dynamic>.ProcedureToList("spGetEmployeeRequestProjectItem",
-                    new string [] { },
+                    new string[] { },
                     new object[] { });
                 var rows = SQLHelper<dynamic>.GetListData(projectItem, 0);
                 return Ok(ApiResponseFactory.Success(rows, ""));

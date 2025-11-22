@@ -7,42 +7,43 @@ using RERPAPI.Model.Param.Duan.MeetingMinutes;
 using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
 using RERPAPI.Repo.GenericEntity.MeetingMinutesRepo;
 
-namespace RERPAPI.Controllers.Duan.MeetingMinutes
+namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
 
     public class MeetingMinutesController : ControllerBase
     {
-       private readonly MeetingTypeRepo _meetingtype;
-    private readonly ProjectManagerRepo _projectmanager;
-    private readonly MeetingMinuteRepo __meetingMinutesRepo;
-    private readonly MeetingMinutesDetailRepo _meetingMinutesDetailRepo;
-    private readonly MeetingMinutesAttendanceRepo _meetingMinutesAttendanceRepo;
-    private readonly ProjectHistoryProblemRepo _projectHistoryProblemRepo;
-    private readonly MeetingMinutesFileRepo _meetingMinutesFileRepo;
+        private readonly MeetingTypeRepo _meetingtype;
+        private readonly ProjectManagerRepo _projectmanager;
+        private readonly MeetingMinuteRepo __meetingMinutesRepo;
+        private readonly MeetingMinutesDetailRepo _meetingMinutesDetailRepo;
+        private readonly MeetingMinutesAttendanceRepo _meetingMinutesAttendanceRepo;
+        private readonly ProjectHistoryProblemRepo _projectHistoryProblemRepo;
+        private readonly MeetingMinutesFileRepo _meetingMinutesFileRepo;
 
-    public MeetingMinutesController(
-        MeetingTypeRepo meetingtype,
-        ProjectManagerRepo projectmanager,
-        MeetingMinuteRepo meetingMinutesRepo,
-        MeetingMinutesDetailRepo meetingMinutesDetailRepo,
-        MeetingMinutesAttendanceRepo meetingMinutesAttendanceRepo,
-        ProjectHistoryProblemRepo projectHistoryProblemRepo,
-        MeetingMinutesFileRepo meetingMinutesFileRepo
-    )
-    {
-        _meetingtype = meetingtype;
-        _projectmanager = projectmanager;
-        __meetingMinutesRepo = meetingMinutesRepo;
-        _meetingMinutesDetailRepo = meetingMinutesDetailRepo;
-        _meetingMinutesAttendanceRepo = meetingMinutesAttendanceRepo;
-        _projectHistoryProblemRepo = projectHistoryProblemRepo;
-        _meetingMinutesFileRepo = meetingMinutesFileRepo;
-    }
+        public MeetingMinutesController(
+            MeetingTypeRepo meetingtype,
+            ProjectManagerRepo projectmanager,
+            MeetingMinuteRepo meetingMinutesRepo,
+            MeetingMinutesDetailRepo meetingMinutesDetailRepo,
+            MeetingMinutesAttendanceRepo meetingMinutesAttendanceRepo,
+            ProjectHistoryProblemRepo projectHistoryProblemRepo,
+            MeetingMinutesFileRepo meetingMinutesFileRepo
+        )
+        {
+            _meetingtype = meetingtype;
+            _projectmanager = projectmanager;
+            __meetingMinutesRepo = meetingMinutesRepo;
+            _meetingMinutesDetailRepo = meetingMinutesDetailRepo;
+            _meetingMinutesAttendanceRepo = meetingMinutesAttendanceRepo;
+            _projectHistoryProblemRepo = projectHistoryProblemRepo;
+            _meetingMinutesFileRepo = meetingMinutesFileRepo;
+        }
 
         [HttpGet("get-meeting-type")]
-        public IActionResult GetMeetingType() {
+        public IActionResult GetMeetingType()
+        {
             try
             {
                 var meetingtype = _meetingtype.GetAll();
@@ -52,7 +53,8 @@ namespace RERPAPI.Controllers.Duan.MeetingMinutes
                     data = meetingtype
                 });
             }
-            catch (Exception ex) { 
+            catch (Exception ex)
+            {
                 return BadRequest(new
                 {
                     status = 0,
@@ -99,7 +101,7 @@ namespace RERPAPI.Controllers.Duan.MeetingMinutes
             try
             {
                 var groups = _meetingtype.GetAll()
-                    .GroupBy(mt => mt.GroupID) 
+                    .GroupBy(mt => mt.GroupID)
                     .Select(g => new
                     {
                         GroupID = g.Key,
@@ -144,7 +146,7 @@ namespace RERPAPI.Controllers.Duan.MeetingMinutes
                     {
                         asset = SQLHelper<dynamic>.GetListData(employee, 0),
                         total = SQLHelper<dynamic>.GetListData(employee, 1)
-                    } 
+                    }
 
                 });
             }
@@ -255,7 +257,7 @@ namespace RERPAPI.Controllers.Duan.MeetingMinutes
                 var employeeAttendance = SQLHelper<dynamic>.GetListData(allResults, 1);    // nội dung 
                 var customerAttendance = SQLHelper<dynamic>.GetListData(allResults, 3);    // Khách hàng tham dự
 
-                   //nội dung nhân viên 
+                //nội dung nhân viên 
                 var empContent = SQLHelper<dynamic>.GetListData(allResults, 1);
                 //nội dung khách hàng
                 var cusContent = SQLHelper<dynamic>.GetListData(allResults, 0);
@@ -419,9 +421,9 @@ namespace RERPAPI.Controllers.Duan.MeetingMinutes
                             await _meetingMinutesFileRepo.UpdateAsync(item);
                     }
                 }
-                 if(dto.DeletedFile != null && dto.DeletedFile.Any())
+                if (dto.DeletedFile != null && dto.DeletedFile.Any())
                 {
-                    foreach(var item in dto.DeletedFile)
+                    foreach (var item in dto.DeletedFile)
                     {
                         var rs = _meetingMinutesFileRepo.GetByID(item);
                         rs.IsDeleted = true;
@@ -429,12 +431,12 @@ namespace RERPAPI.Controllers.Duan.MeetingMinutes
                     }
                 }
 
-                    return Ok(new
-                    {
-                        status = 1,
-                        message = "Lưu thành công",
-                        id = meetingMinutesID
-                    });
+                return Ok(new
+                {
+                    status = 1,
+                    message = "Lưu thành công",
+                    id = meetingMinutesID
+                });
             }
             catch (Exception ex)
             {
@@ -517,10 +519,10 @@ namespace RERPAPI.Controllers.Duan.MeetingMinutes
             try
             {
                 //Check trùng mã cuộc họp trong cùng một GroupID
-               var existed = _meetingtype.GetAll()
-                   .Any(x => x.TypeCode == meetingtype.TypeCode
-                          && x.GroupID == meetingtype.GroupID   // check trong cùng nhóm
-                          && x.ID != meetingtype.ID);           // loại trừ khi update
+                var existed = _meetingtype.GetAll()
+                    .Any(x => x.TypeCode == meetingtype.TypeCode
+                           && x.GroupID == meetingtype.GroupID   // check trong cùng nhóm
+                           && x.ID != meetingtype.ID);           // loại trừ khi update
 
                 if (existed)
                 {

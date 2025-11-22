@@ -5,7 +5,7 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
-namespace RERPAPI.Controllers.Old
+namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -18,7 +18,7 @@ namespace RERPAPI.Controllers.Old
         {
             _projectRequestRepo = projectRequestRepo;
             _projectRepo = projectRepo;
-        }   
+        }
         [HttpGet("get-all")]
         public IActionResult GetAll(int projectID)
         {

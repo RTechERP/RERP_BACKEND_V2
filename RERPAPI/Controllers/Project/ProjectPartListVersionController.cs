@@ -6,7 +6,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using System.Linq.Expressions;
 
-namespace RERPAPI.Controllers.Old.ProjectManager
+namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -18,7 +18,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         {
             _projectPartlistVersionRepo = projectPartlistVersionRepo;
             _projectPartListRepo = projectPartListRepo;
-        }   
+        }
         [HttpGet("get-all")]
         public IActionResult GetAll(int projectSolutionId, bool isPO)
         {
@@ -40,7 +40,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex,ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         //[HttpPost("save-data")]
@@ -91,7 +91,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
         {
             try
             {
-                 string message = "";
+                string message = "";
                 if (!_projectPartlistVersionRepo.Validate(request, out message))
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, message));

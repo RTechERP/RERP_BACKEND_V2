@@ -5,7 +5,7 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
-namespace RERPAPI.Controllers.Old.ProjectManager
+namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -13,7 +13,7 @@ namespace RERPAPI.Controllers.Old.ProjectManager
     {
         private readonly ProjectRepo projectRepo;
         private readonly CustomerRepo customerRepo;
-    
+
         public ProjectWorkPropressController(
             ProjectRepo projectRepo,
             CustomerRepo customerRepo
@@ -30,10 +30,10 @@ namespace RERPAPI.Controllers.Old.ProjectManager
             {
                 string customerCode = "";
                 var dt = SQLHelper<object>.ProcedureToList("[spGetTienDoCongViec]", new string[] { "@ProjectID" }, new object[] { projectId });
-                if(projectId > 0)
+                if (projectId > 0)
                 {
                     int customerId = projectRepo.GetByID(projectId).CustomerID;
-                    if(customerId > 0)
+                    if (customerId > 0)
                     {
                         customerCode = customerRepo.GetByID(customerId).CustomerCode;
                     }

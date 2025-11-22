@@ -5,33 +5,33 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using System.Diagnostics;
 
-namespace RERPAPI.Controllers.Old.ProjectManager
+namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
     public class ProjectSurveyController : ControllerBase
     {
         #region Khai báo biến
-private readonly ProjectRepo projectRepo;
-    private readonly CustomerRepo customerRepo;
-    private readonly ProjectSurveyDetailRepo projectSurveyDetailRepo;
-    private readonly ProjectSurveyRepo projectSurveyRepo;
-    private readonly ProjectSurveyFileRepo projectSurveyFileRepo;
+        private readonly ProjectRepo projectRepo;
+        private readonly CustomerRepo customerRepo;
+        private readonly ProjectSurveyDetailRepo projectSurveyDetailRepo;
+        private readonly ProjectSurveyRepo projectSurveyRepo;
+        private readonly ProjectSurveyFileRepo projectSurveyFileRepo;
 
-    public ProjectSurveyController(
-        ProjectRepo projectRepo,
-        CustomerRepo customerRepo,
-        ProjectSurveyDetailRepo projectSurveyDetailRepo,
-        ProjectSurveyRepo projectSurveyRepo,
-        ProjectSurveyFileRepo projectSurveyFileRepo
-    )
-    {
-        this.projectRepo = projectRepo;
-        this.customerRepo = customerRepo;
-        this.projectSurveyDetailRepo = projectSurveyDetailRepo;
-        this.projectSurveyRepo = projectSurveyRepo;
-        this.projectSurveyFileRepo = projectSurveyFileRepo;
-    }
+        public ProjectSurveyController(
+            ProjectRepo projectRepo,
+            CustomerRepo customerRepo,
+            ProjectSurveyDetailRepo projectSurveyDetailRepo,
+            ProjectSurveyRepo projectSurveyRepo,
+            ProjectSurveyFileRepo projectSurveyFileRepo
+        )
+        {
+            this.projectRepo = projectRepo;
+            this.customerRepo = customerRepo;
+            this.projectSurveyDetailRepo = projectSurveyDetailRepo;
+            this.projectSurveyRepo = projectSurveyRepo;
+            this.projectSurveyFileRepo = projectSurveyFileRepo;
+        }
         #endregion
 
         #region Lấy danh sách tiến độ công việc
@@ -131,7 +131,7 @@ private readonly ProjectRepo projectRepo;
         {
             try
             {
-                var data = projectSurveyFileRepo.GetAll().Where(x => x.ProjectSurveyID == projectSurveyId);
+                var data = projectSurveyFileRepo.GetAll().Where(x => x.ProjectSurveyID == projectSurveyId && x.IsDeleted == false);
 
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
@@ -162,14 +162,17 @@ private readonly ProjectRepo projectRepo;
         {
             try
             {
+                int projectSurvey = 0;
                 ProjectSurvey model = projectSurveyDTO.projectSurvey;
                 if (projectSurveyDTO.projectSurvey.ID > 0)
                 {
                     await projectSurveyRepo.UpdateAsync(model);
+                    projectSurvey = model.ID;
                 }
                 else
                 {
                     projectSurveyRepo.Create(model);
+                    projectSurvey = model.ID;
                 }
 
                 if (projectSurveyDTO.projectSurveyDetails.Count() > 0)
@@ -189,17 +192,31 @@ private readonly ProjectRepo projectRepo;
                         }
                     }
                 }
+                //logic them file 
+                if (projectSurveyDTO.projectSurveyFiles.Count() > 0)
+                {
+                    foreach (var item in projectSurveyDTO.projectSurveyFiles)
+                    {
+                        if (item.ID > 0)
+                        {
+                            await projectSurveyFileRepo.UpdateAsync(item);
+                        }
+                        else
+                        {
+                            item.ProjectSurveyID = projectSurvey;
+                            await projectSurveyFileRepo.CreateAsync(item);
+                        }
+                    }
+
+                }
 
                 if (projectSurveyDTO.deletedFiles.Count() > 0)
                 {
-                    // Mở comment khi chạy chính thức do không kết nối với sever
-                    var url = $"http://14.232.152.154:8083/api/Home/removefile?path=";
-                    var client = new HttpClient();
                     foreach (var item in projectSurveyDTO.deletedFiles)
                     {
-                        {
-                            projectSurveyFileRepo.Delete(item);
-                        }
+                        var data = projectSurveyFileRepo.GetByID(item);
+                        data.IsDeleted = true;
+                        projectSurveyFileRepo.UpdateAsync(data);
                     }
                 }
 
@@ -318,7 +335,14 @@ private readonly ProjectRepo projectRepo;
         {
             try
             {
+                string messageError;
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
                 ProjectSurvey model = projectSurveyRepo.GetByID(projectSurveyId);
+                if (!projectSurveyRepo.ValidateDeleted(model, currentUser, out messageError))
+                {
+                    return Ok(new { status = 2, message = messageError });
+                }
                 model.IsDeleted = true;
                 model.UpdatedBy = ""; // Chưa có tên người đăng nhập
                 model.UpdatedDate = DateTime.Now;
@@ -457,26 +481,27 @@ private readonly ProjectRepo projectRepo;
                 {
                     ProjectSurveyFile fileModel = new ProjectSurveyFile();
                     fileModel.ProjectSurveyDetailID = projectSurveyDetailId;
-                    fileModel.FileName = file.Name;
+                    fileModel.FileName = file.FileName;
                     fileModel.OriginPath = "";
                     fileModel.ServerPath = pathPattern;
+                    projectSurveyFileRepo.Create(fileModel);
 
-                    if (file.Length < 0) continue;
+                    /*      if (file.Length < 0) continue;
 
-                    var fileStream = new FileStream(file.Name, FileMode.Open);
-                    byte[] bytes = new byte[file.Length];
-                    fileStream.Read(bytes, 0, (int)file.Length);
-                    var byteArrayContent = new ByteArrayContent(bytes);
+                        *//*  var fileStream = new FileStream(file.Name, FileMode.Open);
+                          byte[] bytes = new byte[file.Length];
+                          fileStream.Read(bytes, 0, (int)file.Length);
+                          var byteArrayContent = new ByteArrayContent(bytes);
 
-                    MultipartFormDataContent content = new MultipartFormDataContent();
-                    content.Add(byteArrayContent, "file", file.Name);
+                          MultipartFormDataContent content = new MultipartFormDataContent();
+                          content.Add(byteArrayContent, "file", file.Name);
 
-                    var url = $"http://14.232.152.154:8083/api/Home/uploadfile?path={pathPattern}";
-                    var rs = await client.PostAsync(url, content);
-                    if (rs.StatusCode == System.Net.HttpStatusCode.OK)
-                    {
-                        projectSurveyFileRepo.Create(fileModel);
-                    }
+                          var url = $"http://14.232.152.154:8083/api/Home/uploadfile?path={pathPattern}";
+                          var rs = await client.PostAsync(url, content);*//*
+                          if (rs.StatusCode == System.Net.HttpStatusCode.OK)
+                          {
+                              projectSurveyFileRepo.Create(fileModel);
+                          }*/
                 }
 
                 return Ok(ApiResponseFactory.Success(1, ""));
