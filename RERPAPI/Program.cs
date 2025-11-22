@@ -335,7 +335,6 @@ builder.Services.AddScoped<EmployeePayrollBonusDeuctionRepo>();
 
 #region Yêu cần mua hàng
 builder.Services.AddScoped<SupplierRepo>();
-builder.Services.AddScoped<ProjectPartlistPurchaseRequestTypeRepo>();
 builder.Services.AddScoped<ProjectTypeAssignRepo>();
 #endregion
 #region Kho AGV

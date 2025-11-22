@@ -24,4 +24,6 @@ public partial class ProjectSurveyFile
     public DateTime? UpdatedDate { get; set; }
 
     public int? ProjectSurveyDetailID { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }
