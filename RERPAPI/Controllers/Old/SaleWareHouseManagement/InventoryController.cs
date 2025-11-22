@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
@@ -12,9 +11,11 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     public class InventoryController : ControllerBase
     {
         private readonly InventoryRepo _inventoryRepo;
-        public InventoryController(InventoryRepo inventoryRepo)
+        private readonly WarehouseRepo _warehouseRepo;
+        public InventoryController(InventoryRepo inventoryRepo, WarehouseRepo warehouseRepo)
         {
             _inventoryRepo = inventoryRepo;
+            _warehouseRepo = warehouseRepo;
         }
         [HttpPost("get-inventory")]
         public IActionResult getInventory(InventoryPram filter)
@@ -115,6 +116,33 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     status = 0,
                     error = ex.Message
                 });
+            }
+        }
+        [HttpGet("get-chi-tiet-san-pham-sale")]
+        public IActionResult GetHistoryImportExportProductSale(int productSaleID, string warehouseCode)
+        {
+            try
+            {
+                RERPAPI.Model.Entities.Warehouse warehouse = _warehouseRepo.GetAll(x => x.WarehouseCode.Trim().ToUpper() == warehouseCode).FirstOrDefault() ?? new RERPAPI.Model.Entities.Warehouse();
+
+
+                var data = SQLHelper<dynamic>.ProcedureToList("spGetHistoryImportExportInventory", ["@ProductSaleID", "@WarehouseCode"], [productSaleID, warehouseCode]);
+
+                var dataHold = SQLHelper<dynamic>.ProcedureToList("spGetInventoryProject", ["@ProjectID", "@EmployeeID", "@ProductSaleID", "@Keyword", "@WarehouseID"], [0, 0, productSaleID, "", warehouse.ID]);
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    dtProduct = SQLHelper<dynamic>.GetListData(data, 0),
+                    dtImport = SQLHelper<dynamic>.GetListData(data, 1),
+                    dtExport = SQLHelper<dynamic>.GetListData(data, 2),
+                    dtRequestImport = SQLHelper<dynamic>.GetListData(data, 4),
+                    dtRequestExport = SQLHelper<dynamic>.GetListData(data, 5),
+                    dtHold = SQLHelper<dynamic>.GetListData(dataHold, 0),
+                    dtCbProduct = SQLHelper<dynamic>.GetListData(data, 3),
+                }, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

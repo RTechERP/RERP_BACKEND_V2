@@ -9,5 +9,6 @@ namespace RERPAPI.Model.DTO
         public int? POKHDetailID { get; set; }
         public int? CustomerID { get; set; }
         public decimal? QuantityRequestBuy { get; set; }
+        public List<POKHItemDTO> POKHList { get; set; } = new();
     }
 }
