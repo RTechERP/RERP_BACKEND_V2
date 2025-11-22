@@ -36,6 +36,15 @@ namespace RERPAPI.Controllers.Project
                 }
                 else
                 {
+                    if(item.StatusVersion == 2)
+                    {
+                        var check = _projectWorkerVersionRepo.GetAll(x => x.ProjectSolutionID == item.ProjectSolutionID && x.StatusVersion == 2 && x.IsDeleted == false && x.ProjectTypeID == item.ProjectTypeID);
+                        if (check.Count > 0)
+                        {
+                            return Ok(new { status = 2, message = $"Danh mục vừa chọn đã có phiên bản Po" });
+                        }
+                    }
+
                     await _projectWorkerVersionRepo.CreateAsync(item);
                 }
                 return Ok(ApiResponseFactory.Success(item, "Lưu thành công"));

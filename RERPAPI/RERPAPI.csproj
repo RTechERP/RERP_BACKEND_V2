@@ -86,10 +86,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Controllers\Old\ProjectManager\" />
     <Folder Include="Controllers\SaleWareHouseManagement\" />
     <Folder Include="Controllers\Sale\" />
     <Folder Include="Controllers\Purchase\" />
-    <Folder Include="Controllers\Project\" />
     <Folder Include="Controllers\Sale\" />
     <Folder Include="Controllers\Purchase\" />
     <Folder Include="Uploads\POKH\NB16111\" />
