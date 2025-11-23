@@ -53,6 +53,7 @@
     <Compile Remove="Controllers\MenuController.cs" />
     <Compile Remove="Controllers\ModulaLocationController.cs" />
     <Compile Remove="Controllers\Old\POKHController.cs" />
+    <Compile Remove="Controllers\Old\ProductGroupController.cs" />
     <Compile Remove="Controllers\Old\ProductRTCController.cs" />
     <Compile Remove="Controllers\Old\TB\FirmController.cs" />
     <Compile Remove="Controllers\Old\VisionBase\CustomerController.cs" />
@@ -85,10 +86,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Controllers\Old\ProjectManager\" />
     <Folder Include="Controllers\SaleWareHouseManagement\" />
     <Folder Include="Controllers\Sale\" />
     <Folder Include="Controllers\Purchase\" />
-    <Folder Include="Controllers\Project\" />
     <Folder Include="Controllers\Sale\" />
     <Folder Include="Controllers\Purchase\" />
     <Folder Include="Uploads\POKH\NB16111\" />
