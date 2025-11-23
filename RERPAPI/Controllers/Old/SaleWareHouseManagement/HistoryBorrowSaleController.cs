@@ -1,7 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
@@ -33,7 +31,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
                     "spGetHistoryBorrowSale",
                     new string[] { "@PageNumber", "@PageSize", "@DateBegin", "@DateEnd", "@ProductGroupID", "@ReturnStatus", "@FilterText", "@WareHouseID", "@EmployeeID" },
-                    new object[] { filter.PageNumber, filter.PageSize, filter.DateStart, filter.DateEnd, filter .ProductGroupID, filter.Status -1 , filter.FilterText, rs.ID, filter.EmployeeID }
+                    new object[] { filter.PageNumber, filter.PageSize, filter.DateStart, filter.DateEnd, filter.ProductGroupID, filter.Status - 1, filter.FilterText, rs.ID, filter.EmployeeID }
                     );
                 return Ok(new
                 {
@@ -101,5 +99,32 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 });
             }
         }
+        [HttpGet("get-summary-return")]
+        public IActionResult GetSummaryReturn(int exportID)
+        {
+            try
+            {
+                var dt = SQLHelper<dynamic>.ProcedureToList(
+               "spGetReturnDetailSummaryByExportDetailID",
+               new[] { "@ExportDetailID" },
+               new object[] { exportID }
+           );
+
+                var data = SQLHelper<dynamic>.GetListData(dt, 0);
+
+                int index = 1;
+                foreach (var item in data)
+                {
+                    item.No = index++;  
+                }
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
     }
 }
