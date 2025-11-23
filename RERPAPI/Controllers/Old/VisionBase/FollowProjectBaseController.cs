@@ -264,7 +264,7 @@ namespace RERPAPI.Controllers.KhoBaseManager
                 });
             }
             catch (Exception ex)
-            {
+            { 
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
@@ -790,13 +790,15 @@ namespace RERPAPI.Controllers.KhoBaseManager
                     string ProjectCode = row.GetString("Mã dự án");
                     string ProjectName = row.GetString("Tên dự án");
                     string FullName = row.GetString("Sale phụ trách");
-                    //string ProjectManager = row.GetString("PM");
+                    string ProjectManager = row.GetString("PM");
                     string CustomerName = row.GetString("Đối tác(KH)");
                     string EndUser = row.GetString("End User");
                     string ProjectStatusName = row.GetString("Trạng thái");
                     DateTime? ProjectStartDate = row.GetNullableDate("Ngày bắt đầu");
                     string ProjectTypeName = row.GetString("Loại dự án");
                     string FirmName = row.GetString("Hãng");
+                    DateTime? LastImplementationDate = row.GetNullableDate("Ngày thực hiện gần nhất");
+                    DateTime? ExpectedImplementationDate = row.GetNullableDate("Ngày dự kiến thực hiện");
                     string PossibilityPO = row.GetString("Khả năng có PO");
                     DateTime? ExpectedPlanDate = row.GetNullableDate("Ngày lên phương án");
                     DateTime? ExpectedQuotationDate = row.GetNullableDate("Ngày báo giá");
@@ -879,20 +881,20 @@ namespace RERPAPI.Controllers.KhoBaseManager
                 skipped = errors.Count,
                 errors
             });
+            //}
+            //private static int getIDFromDb(string dataBase, string columnName, string value, int result)
+            //{
+            //    //int result;
+            //    var dt = SQLHelper<object>.Select($"Select * From {dataBase} Where {columnName.Trim()} = N'{value.Trim()}' ");
+            //    if (dt.Count > 0)
+            //    {
+            //        result = int.Parse(((Dictionary<string, object>)dt[0]).GetString("ID"));
+            //    }
+            //    return result;
+
+            //}
+
         }
-        //private static int getIDFromDb(string dataBase, string columnName, string value, int result)
-        //{
-        //    //int result;
-        //    var dt = SQLHelper<object>.Select($"Select * From {dataBase} Where {columnName.Trim()} = N'{value.Trim()}' ");
-        //    if (dt.Count > 0)
-        //    {
-        //        result = int.Parse(((Dictionary<string, object>)dt[0]).GetString("ID"));
-        //    }
-        //    return result;
-
-        //}
-
-    }
 }
 static class ImportExtensions
 {
