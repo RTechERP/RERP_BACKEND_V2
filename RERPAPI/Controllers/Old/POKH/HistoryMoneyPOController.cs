@@ -11,6 +11,7 @@ namespace RERPAPI.Controllers.Old.POKH
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class HistoryMoneyPOController : ControllerBase
     {
         HistoryMoneyPORepo _historyMoneyPORepo;

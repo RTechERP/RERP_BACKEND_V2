@@ -139,4 +139,6 @@ public partial class FollowProjectBase
     public DateTime? UpdatedDate { get; set; }
 
     public int? WarehouseID { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }
