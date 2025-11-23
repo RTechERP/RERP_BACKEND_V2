@@ -61,7 +61,7 @@ namespace RERPAPI.Controllers.HRM
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -76,7 +76,7 @@ namespace RERPAPI.Controllers.HRM
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -86,23 +86,18 @@ namespace RERPAPI.Controllers.HRM
         {
             try
             {
+                if(!_employeeRepo.Validate(employee, out string message))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, message));
+                }
                 if (employee.ID <= 0) await _employeeRepo.CreateAsync(employee);
                 else await _employeeRepo.UpdateAsync(employee);
 
-                return Ok(new
-                {
-                    status = 1,
-                    data = employee
-                });
+                return Ok(ApiResponseFactory.Success(employee, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

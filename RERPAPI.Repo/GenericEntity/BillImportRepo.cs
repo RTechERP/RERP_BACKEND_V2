@@ -30,7 +30,7 @@ namespace RERPAPI.Repo.GenericEntity
             //                                .OrderByDescending(x => x.ID)
             //                                .FirstOrDefault() ?? new BillImport();
             //string code = billDate.ToString("yyMMdd");
-            List<BillImport> billImports = GetAll().Where(x => (x.BillImportCode ?? "").Contains(billDate.ToString("yyMMdd"))).ToList();
+            List<BillImport> billImports = GetAll(x => (x.BillImportCode ?? "").Contains(billDate.ToString("yyMMdd"))).ToList();
 
             var listCode = billImports.Select(x => new
             {

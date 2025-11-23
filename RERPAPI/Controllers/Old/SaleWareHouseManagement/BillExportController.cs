@@ -602,7 +602,20 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [HttpGet("BillImportID/{billIDs}")]
+        public IActionResult GetdetailByIDS(string billIDs)
+        {
+            try
+            {
+                var data = SQLHelper<dynamic>.ProcedureToList("spGetBillImportDetail", ["@ID"], [billIDs]);
+                var dataDetail = SQLHelper<dynamic>.GetListData(data, 0);
+                return Ok(ApiResponseFactory.Success(dataDetail, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [HttpGet("export-excel")]
         public IActionResult ExportExcel(int id, int type)
         {
