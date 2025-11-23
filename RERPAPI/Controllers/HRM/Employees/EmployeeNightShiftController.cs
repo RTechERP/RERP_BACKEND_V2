@@ -10,6 +10,7 @@ namespace RERPAPI.Controllers.HRM.Employees
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class EmployeeNightShiftController : ControllerBase
     {
         vUserGroupLinksRepo _vUserGroupLinksRepo;

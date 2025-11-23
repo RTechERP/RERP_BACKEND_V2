@@ -1,11 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
-namespace RERPAPI.Controllers.Old
+namespace RERPAPI.Controllers.HRM.Employees
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -19,8 +20,8 @@ namespace RERPAPI.Controllers.Old
             _employeeCurricularRepo = employeeCurricularRepo;
             _employeeRepo = employeeRepo;
         }
-
-        [HttpGet("")]
+        [RequiresPermission("N1,N2")]
+        [HttpGet("get-employee-curricular")]
         public IActionResult GetEmployeeCurricular(int month = 0, int year = 0, int departmentId = 0, int employeeId = 0)
         {
             try
@@ -40,71 +41,22 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-        [HttpPost("save")]
-        public async Task<IActionResult> SaveEmployeeCurricular([FromBody] EmployeeCurricularDTO model)
+        [RequiresPermission("N1,N2")]
+        [HttpPost("save-data")]
+        public async Task<IActionResult> SaveEmployeeCurricular([FromBody] EmployeeCurricular model)
         {
             try
             {
                 if (model.ID > 0)
                 {
-                    // Update existing record
-                    var existing = _employeeCurricularRepo.GetByID(model.ID);
-                    if (existing != null)
-                    {
-                        existing.CurricularCode = model.CurricularCode;
-                        existing.CurricularName = model.CurricularName;
-                        existing.CurricularDay = model.CurricularDay;
-                        existing.CurricularMonth = model.CurricularMonth;
-                        existing.CurricularYear = model.CurricularYear;
-                        existing.EmployeeID = model.EmployeeID;
-                        existing.Note = model.Note;
-                        existing.UpdatedBy = model.UpdatedBy;
-                        existing.UpdatedDate = DateTime.Now;
-
-                        await _employeeCurricularRepo.UpdateAsync(existing);
-                    }
+                   
+                        await _employeeCurricularRepo.UpdateAsync(model);   
                 }
                 else
-                {
-                    // Check if record already exists
-                    var existingRecord = _employeeCurricularRepo.GetAll()
-                        .FirstOrDefault(x => x.EmployeeID == model.EmployeeID &&
-                                           x.CurricularDay == model.CurricularDay &&
-                                           x.CurricularMonth == model.CurricularMonth &&
-                                           x.CurricularYear == model.CurricularYear);
-
-                    if (existingRecord != null)
-                    {
-                        // Update existing record
-                        existingRecord.CurricularCode = model.CurricularCode;
-                        existingRecord.CurricularName = model.CurricularName;
-                        existingRecord.Note = model.Note;
-                        existingRecord.UpdatedBy = model.UpdatedBy;
-                        existingRecord.UpdatedDate = DateTime.Now;
-
-                        await _employeeCurricularRepo.UpdateAsync(existingRecord);
-                    }
-                    else
-                    {
-                        // Create new record
-                        var newRecord = new EmployeeCurricular
-                        {
-                            CurricularCode = model.CurricularCode,
-                            CurricularName = model.CurricularName,
-                            CurricularDay = model.CurricularDay,
-                            CurricularMonth = model.CurricularMonth,
-                            CurricularYear = model.CurricularYear,
-                            EmployeeID = model.EmployeeID,
-                            Note = model.Note,
-                            CreatedBy = model.CreatedBy,
-                            CreatedDate = DateTime.Now
-                        };
-
-                        await _employeeCurricularRepo.CreateAsync(newRecord);
-                    }
+                {  
+                        await _employeeCurricularRepo.CreateAsync(model);
+                    
                 }
-
                 return Ok(ApiResponseFactory.Success(null, "Lưu dữ liệu thành công!"));
             }
             catch (Exception ex)
@@ -112,7 +64,7 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2")]
         [HttpGet("check")]
         public IActionResult CheckEmployeeCurricular(int employeeId, int curricularDay, int curricularMonth, int curricularYear)
         {
@@ -138,12 +90,14 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2")]
         [HttpPost("import-excel")]
         public async Task<IActionResult> ImportFromExcel(IFormFile file, string sheetName = "")
         {
+
             try
             {
+                ExcelPackage.License.SetNonCommercialOrganization("RTC Technology Viet Nam");
                 if (file == null || file.Length == 0)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng chọn file Excel!"));
@@ -266,7 +220,7 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2")]
         [HttpGet("get-excel-sheets")]
         public async Task<IActionResult> GetExcelSheets(IFormFile file)
         {
@@ -299,24 +253,6 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteEmployeeCurricular(int id)
-        {
-            try
-            {
-                var record = _employeeCurricularRepo.GetByID(id);
-                if (record == null)
-                {
-                    return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu!"));
-                }
-
-                await _employeeCurricularRepo.DeleteAsync(id);
-                return Ok(ApiResponseFactory.Success(null, "Xóa dữ liệu thành công!"));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
+       
     }
 }

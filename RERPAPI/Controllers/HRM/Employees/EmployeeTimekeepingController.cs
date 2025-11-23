@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
-namespace RERPAPI.Controllers
+namespace RERPAPI.Controllers.HRM.Employees
 {
     [Route("api/[controller]")]
     [ApiController]
+   
     public class EmployeeTimekeepingController : ControllerBase
     {
         private readonly EmployeeChamCongMasterRepo _employeeChamCongMaster;
@@ -25,32 +27,28 @@ namespace RERPAPI.Controllers
             _departmentRepo = departmentRepo;
             _employeeRepo = employeeRepo;
         }
+        [RequiresPermission("N1,N2")]
         [HttpGet("get-employee-timekeeping")]
-        public async Task<IActionResult> GetEmployeeTimekeeping(int year, string? keyword)
+        public IActionResult GetEmployeeTimekeeping(int year, string? keyword)
         {
 
             try
             {
-
-
                 var dt = SQLHelper<object>.ProcedureToList("spGetEmployeeChamCongMaster",
                     new string[] { "@Year", "@Keyword" },
                     new object[] { year, keyword ?? "" });
 
-                return Ok(new
-                {
-                    status = 1,
-                    data = dt,
-                });
+              
+                return Ok(ApiResponseFactory.Success(dt, "Lấy dữ lệu thành công"));
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2")]
         [HttpGet("get-employee-timekeeping/{id}")]
-        public async Task<IActionResult> GetEmployeeTimekeepingID(int id)
+        public IActionResult GetEmployeeTimekeepingID(int id)
         {
             try
             {
@@ -68,6 +66,7 @@ namespace RERPAPI.Controllers
 
 
         }
+        [RequiresPermission("N1,N2")]
 
         [HttpPost("savedata")]
         public async Task<IActionResult> SaveData([FromBody] EmployeeChamCongMaster employeeTimekeeping)
@@ -85,9 +84,9 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2")]
         [HttpGet("check-duplicate-employeetimekeeping/{id}/{month}/{year}")]
-        public async Task<IActionResult> CheckDuplicateEmployeeTimekeeping(int id, int month, int year)
+        public IActionResult CheckDuplicateEmployeeTimekeeping(int id, int month, int year)
         {
             try
             {
@@ -109,7 +108,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2")]
         [HttpGet("get-department")]
         public IActionResult GetDepartment()
         {
@@ -126,7 +125,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2")]
         [HttpGet("get-employee")]
         public IActionResult GetEmployee()
         {
@@ -143,7 +142,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2")]
         [HttpGet("get-timekeeping-data")]
         public IActionResult GetTimekeepingData(
             int employeeId = 0,
@@ -216,7 +215,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2")]
         [HttpGet("get-timekeeping-detail-data")]
         public IActionResult GetTimekeepingDetailData(
             int employeeId = 0,
@@ -247,7 +246,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2")]
         [HttpPost("update-all")]
         public IActionResult UpdateAll(
             [FromQuery] int masterId,
@@ -278,7 +277,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2")]
         [HttpPost("update-one")]
         public IActionResult UpdateOne(
             [FromQuery] int masterId,
@@ -300,7 +299,7 @@ namespace RERPAPI.Controllers
                 //    new object[] { masterId, employeeId }
                 //);
                 var existDetails = _employeeChamCongDetail.GetAll(x => x.MasterID == masterId && x.EmployeeID == employeeId && x.IsDeleted == false);
-                foreach (var detail in existDetails)
+                foreach (var detail in existDetails)    
                 {
                     detail.IsDeleted = true;
                     _employeeChamCongDetail.Update(detail);
