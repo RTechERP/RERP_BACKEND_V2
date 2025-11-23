@@ -1,25 +1,27 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
-namespace RERPAPI.Controllers.Old
+namespace RERPAPI.Controllers.HRM.Employees
 {
-    [ApiController]
     [Route("api/[controller]")]
-    public class EmployeeVehicleBussinessController : Controller
+    [ApiController]
+    public class EmployeeTypeBussinessController : ControllerBase
     {
-        private readonly EmployeeVehicleBussinessRepo _employeeVehicleBussinessRepo;
+        private readonly EmployeeTypeBussinessRepo _employeeTypeBussinessRepo;
 
-        public EmployeeVehicleBussinessController(EmployeeVehicleBussinessRepo employeeVehicleBussinessRepo)
+        public EmployeeTypeBussinessController(EmployeeTypeBussinessRepo employeeTypeBussinessRepo)
         {
-            _employeeVehicleBussinessRepo = employeeVehicleBussinessRepo;
+            _employeeTypeBussinessRepo = employeeTypeBussinessRepo;
         }
+        [RequiresPermission("N1,N2")]
         [HttpGet]
-        public IActionResult GetEmployeeVehicleBussiness()
+        public IActionResult GetEmployeeTypeBussiness()
         {
             try
             {
-                var result = _employeeVehicleBussinessRepo.GetAll();
+                var result = _employeeTypeBussinessRepo.GetAll();
                 return Ok(new
                 {
                     status = 1,
@@ -35,31 +37,28 @@ namespace RERPAPI.Controllers.Old
                     error = ex.ToString()
                 });
             }
-
         }
 
-
-
-
+        [RequiresPermission("N1,N2")]
         [HttpPost]
-        public async Task<IActionResult> SaveEmployeeVehicleBussiness([FromBody] EmployeeVehicleBussiness employeeVehicleBussiness)
+        public async Task<IActionResult> SaveEmployeeTypeBussiness([FromBody] EmployeeTypeBussiness employeeTypeBussiness)
         {
             try
             {
-                List<EmployeeVehicleBussiness> listData = _employeeVehicleBussinessRepo.GetAll();
+                List<EmployeeTypeBussiness> listData = _employeeTypeBussinessRepo.GetAll();
 
-                if (employeeVehicleBussiness.ID <= 0)
+                if (employeeTypeBussiness.ID <= 0)
                 {
-                    await _employeeVehicleBussinessRepo.CreateAsync(employeeVehicleBussiness);
+                    await _employeeTypeBussinessRepo.CreateAsync(employeeTypeBussiness);
                 }
                 else
                 {
-                    await _employeeVehicleBussinessRepo.UpdateAsync(employeeVehicleBussiness);
+                    await _employeeTypeBussinessRepo.UpdateAsync(employeeTypeBussiness);
                 }
                 return Ok(new
                 {
                     status = 1,
-                    data = employeeVehicleBussiness,
+                    data = employeeTypeBussiness,
                     message = "Lưu thành công"
                 });
             }

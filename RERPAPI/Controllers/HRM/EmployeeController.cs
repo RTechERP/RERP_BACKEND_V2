@@ -71,7 +71,7 @@ namespace RERPAPI.Controllers.HRM
         {
             try
             {
-                Employee employee = _employeeRepo.GetByID(id);
+                RERPAPI.Model.Entities.Employee employee = _employeeRepo.GetByID(id);
                 return Ok(ApiResponseFactory.Success(employee, ""));
             }
             catch (Exception ex)
@@ -81,8 +81,7 @@ namespace RERPAPI.Controllers.HRM
         }
 
         [HttpPost("savedata")]
-        [RequiresPermission("N1,N2,N60")]
-        public async Task<IActionResult> SaveEmployee([FromBody] Employee employee)
+        public async Task<IActionResult> SaveEmployee([FromBody] RERPAPI.Model.Entities.Employee employee)
         {
             try
             {
