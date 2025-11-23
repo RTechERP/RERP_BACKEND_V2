@@ -14,6 +14,7 @@ namespace RERPAPI.Controllers.Project
     {
         private ProjectPartlistVersionRepo _projectPartlistVersionRepo;
         private ProjectPartListRepo _projectPartListRepo;
+
         public ProjectPartListVersionController(ProjectPartlistVersionRepo projectPartlistVersionRepo, ProjectPartListRepo projectPartListRepo)
         {
             _projectPartlistVersionRepo = projectPartlistVersionRepo;
@@ -86,63 +87,24 @@ namespace RERPAPI.Controllers.Project
         //        return BadRequest(ApiResponseFactory.Fail(ex, "Lỗi khi lưu phiên bản danh sách phần"));
         //    }
         //}
-        [HttpPost("save-data")]
-        public async Task<IActionResult> SaveData([FromBody] ProjectPartListVersion request)
+      
+    [HttpGet("get-cbb-version")]
+        public IActionResult GetCBBVersion(int projectSolutionId)
         {
             try
             {
-                string message = "";
-                if (!_projectPartlistVersionRepo.Validate(request, out message))
-                {
-                    return BadRequest(ApiResponseFactory.Fail(null, message));
-                }
-
-                if (request.ID > 0)
-                {
-                    if (!_projectPartlistVersionRepo.ValidateApprove(request, out message))
-                    {
-                        return BadRequest(ApiResponseFactory.Fail(null, message));
-                    }
-
-                    var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                    var currentUser = ObjectMapper.GetCurrentUser(claims);
-                    request.ApprovedID = currentUser?.EmployeeID;
-                    await _projectPartlistVersionRepo.UpdateAsync(request);
-                    request = _projectPartlistVersionRepo.GetByID(request.ID);
-                }
-                else
-                {
-                    request.IsApproved = false;
-                    request.ApprovedID = 0;
-                    request.ReasonDeleted = "";
-                    await _projectPartlistVersionRepo.CreateAsync(request);
-                }
-
-                if (request.IsActive == false)
-                {
-                    var myDict = new Dictionary<Expression<Func<ProjectPartList, object>>, object>
-                        {
-                            { x => x.IsApprovedTBP, false },
-                            { x => x.IsApprovedPurchase, false }
-                        };
-                    await _projectPartListRepo.UpdateFieldByAttributeAsync(x => x.ProjectPartListVersionID == request.ID, myDict);
-                }
-
-                if (request.IsDeleted == true)
-                {
-                    var myDict = new Dictionary<Expression<Func<ProjectPartList, object>>, object>
-                        {
-                            { x => x.IsDeleted, true },
-                            { x => x.ReasonDeleted, request.ReasonDeleted}
-                        };
-                    await _projectPartListRepo.UpdateFieldByAttributeAsync(x => x.ProjectPartListVersionID == request.ID, myDict);
-                }
-
-                return Ok(ApiResponseFactory.Success(request, ""));
+                var projectPartListVersions = SQLHelper<dynamic>.ProcedureToList(
+                    "spGetProjectPartListVersion",
+                    new string[] { "@ProjectSolutionID" },
+                    new object[] { projectSolutionId});
+                return Ok(ApiResponseFactory.Success(
+                    SQLHelper<object>.GetListData(projectPartListVersions, 0),
+                    ""
+                ));
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex, "Lỗi khi lưu phiên bản "));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }
