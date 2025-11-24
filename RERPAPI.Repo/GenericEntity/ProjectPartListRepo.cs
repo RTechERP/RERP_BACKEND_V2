@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using RERPAPI.Model.Param;
 using System.Globalization;
 using System.Text;
+
 namespace RERPAPI.Repo.GenericEntity
 {
     public class ProjectPartListRepo : GenericRepo<ProjectPartList>
@@ -188,6 +189,15 @@ namespace RERPAPI.Repo.GenericEntity
                     return false;
                 }
 
+            }
+            if(!string.IsNullOrWhiteSpace(item.SpecialCode))
+            {
+                var specialCode = GetAll(x => x.SpecialCode == item.SpecialCode && x.ID == item.ID && x.IsDeleted != true);
+                if (specialCode.Count > 0)
+                {
+                    message = $"Mã đặc biệt [{item.SpecialCode}] đã tồn tại .\nVui lòng kiểm tra lại!";
+                    return false;
+                }
             }
             List<ProjectPartList> listChilds = GetAll(x => x.IsDeleted != true && x.ParentID == item.ParentID);
             if (listChilds.Count < 0)
@@ -922,5 +932,7 @@ namespace RERPAPI.Repo.GenericEntity
 
             return true;
         }
-    }
+      
+}
+
 }
