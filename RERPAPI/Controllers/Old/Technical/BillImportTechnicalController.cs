@@ -1,14 +1,8 @@
-﻿using System.Diagnostics.Metrics;
-using System.Drawing.Imaging;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
-using OfficeOpenXml.Drawing;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
-using RERPAPI.Model.DTO.TB;
 using RERPAPI.Model.Entities;
-using RERPAPI.Model.Param;
 using RERPAPI.Model.Param.Technical;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Technical;
@@ -25,7 +19,7 @@ namespace RERPAPI.Controllers.Old.Technical
         private readonly BillImportTechnicalDetailRepo _billImportTechnicalDetailRepo;
         private readonly BillImportTechDetailSerialRepo _billImportTechDetailSerialRepo;
         private readonly RulePayRepo _rulePayRepo;
-        public BillImportTechnicalController(HistoryDeleteBillRepo historyDeleteBillRepo,BillImportTechnicalRepo billImportTechnicalRepo,BillImportTechnicalDetailRepo billImportTechnicalDetailRepo,BillImportTechDetailSerialRepo billImportTechDetailSerialRepo,RulePayRepo rulePayRepo)
+        public BillImportTechnicalController(HistoryDeleteBillRepo historyDeleteBillRepo, BillImportTechnicalRepo billImportTechnicalRepo, BillImportTechnicalDetailRepo billImportTechnicalDetailRepo, BillImportTechDetailSerialRepo billImportTechDetailSerialRepo, RulePayRepo rulePayRepo)
         {
             _historyDeleteBillRepo = historyDeleteBillRepo;
             _billImportTechnicalRepo = billImportTechnicalRepo;
@@ -61,14 +55,14 @@ namespace RERPAPI.Controllers.Old.Technical
         {
             try
             {
-                List<BillImportTechnical> masterBillImports = _billImportTechnicalRepo.GetAll(x=>x.BillCode== billCode);
+                List<BillImportTechnical> masterBillImports = _billImportTechnicalRepo.GetAll(x => x.BillCode == billCode);
                 var importID = masterBillImports[0].ID;
                 var billDetail = SQLHelper<dynamic>.ProcedureToList("spGetBillImportDetailTechnical", new string[] { "@ID" }, new object[] { importID });
                 return Ok(new
                 {
                     status = 1,
                     master = masterBillImports,
-                    detail= SQLHelper<dynamic>.GetListData(billDetail, 0),
+                    detail = SQLHelper<dynamic>.GetListData(billDetail, 0),
                 });
             }
 
@@ -129,7 +123,7 @@ namespace RERPAPI.Controllers.Old.Technical
                     status = 0,
                     message = ex.Message,
                     error = ex.ToString()
-                });                                                   
+                });
             }
         }
         [HttpGet("get-bill-import-technical-detail")]
@@ -164,6 +158,20 @@ namespace RERPAPI.Controllers.Old.Technical
                 status = 1,
                 data = billCode
             });
+        }
+        [HttpGet("get-user")]
+        public IActionResult GetUser()
+        {
+            try
+            {
+                var dt = SQLHelper<dynamic>.ProcedureToList("spGetUsersHistoryProductRTC", ["@UserID"], [0]);
+                var data = SQLHelper<dynamic>.GetListData(dt, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+            }
         }
         [HttpGet("get-document-bill-import")]
         public IActionResult GetDocumentBillImport(int poNCCId, int billImportID)
@@ -282,7 +290,8 @@ namespace RERPAPI.Controllers.Old.Technical
                 if (master == null || details == null || details.Count == 0)
                     return BadRequest("Dữ liệu phiếu nhập kỹ thuật không hợp lệ.");
 
-                ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+                //ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+                ExcelPackage.License.SetNonCommercialOrganization("RTC Technology Viet Nam");
                 string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "BillImportTechnicalNew.xlsx");
 
                 if (!System.IO.File.Exists(templatePath))
@@ -390,14 +399,14 @@ namespace RERPAPI.Controllers.Old.Technical
                 {
                     return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." });
                 }
-                
+
                 // Lưu lịch sử xóa nếu có
                 if (product.historyDeleteBill != null)
                 {
                     if (product.historyDeleteBill.ID <= 0)
                         await _historyDeleteBillRepo.CreateAsync(product.historyDeleteBill);
                     else
-                        _historyDeleteBillRepo.UpdateAsync( product.historyDeleteBill);
+                        _historyDeleteBillRepo.UpdateAsync(product.historyDeleteBill);
                 }
 
                 // Lưu phiếu nhập
@@ -406,7 +415,7 @@ namespace RERPAPI.Controllers.Old.Technical
                     if (product.billImportTechnical.ID <= 0)
                         await _billImportTechnicalRepo.CreateAsync(product.billImportTechnical);
                     else
-                        _billImportTechnicalRepo.UpdateAsync( product.billImportTechnical);
+                        _billImportTechnicalRepo.UpdateAsync(product.billImportTechnical);
                 }
 
                 // Map STT -> ID sau khi insert chi tiết phiếu
@@ -421,7 +430,7 @@ namespace RERPAPI.Controllers.Old.Technical
 
                         if (item.ID <= 0)
                         {
-                            await _billImportTechnicalDetailRepo.CreateAsync(item);     
+                            await _billImportTechnicalDetailRepo.CreateAsync(item);
 
                             if (product.billImportDetailTechnicals.Count == 1)
                                 singleDetailId = item.ID;

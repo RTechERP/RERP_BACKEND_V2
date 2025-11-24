@@ -1,16 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
-using RERPAPI.Model.Context;
-using RERPAPI.Model.DTO;
+﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
 {
-    public class BillExportRepo: GenericRepo<BillExport>
+    public class BillExportRepo : GenericRepo<BillExport>
     {
         public BillExportRepo(CurrentUser currentUser) : base(currentUser)
         {
@@ -39,7 +32,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
             //                                        (x.CreatedDate ?? DateTime.MinValue).Day == billDate.Day);
 
             //string code = preCode + billDate.ToString("yyMMdd");
-            List<BillExport> billExports = GetAll().Where(x => (x.Code ?? "").Contains(billDate.ToString("yyMMdd"))).ToList(); //Lee Min Khoi 16/07/2024
+            List<BillExport> billExports = GetAll(x => (x.Code ?? "").Contains(billDate.ToString("yyMMdd"))); //Lee Min Khoi 16/07/2024
 
             var listCode = billExports.Select(x => new
             {
