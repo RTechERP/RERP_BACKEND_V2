@@ -727,8 +727,8 @@ namespace RERPAPI.Controllers.Project
                     {
                         success = false,
                         message = result.Message,
-                        diffs = result.Diffs,
-                        needConfirm = result.Diffs.Any()
+                        //diffs = result.Diffs,
+                        //needConfirm = result.Diffs.Any()
                     });
                 }
 
@@ -737,7 +737,7 @@ namespace RERPAPI.Controllers.Project
                     success = true,
                     message = "Dữ liệu hợp lệ!",
                     needConfirm = false,
-                    diffs = new List<PartlistDiffDTO>()
+                    //diffs = new List<PartlistDiffDTO>()
                 });
             }
             catch (Exception ex)
@@ -753,21 +753,21 @@ namespace RERPAPI.Controllers.Project
                 //-------------------------------------------------------------------
                 // 1. ÁP DỤNG DIFF
                 //-------------------------------------------------------------------
-                if (request.Diffs != null && request.Diffs.Any())
-                {
-                    foreach (var diff in request.Diffs)
-                    {
-                        var row = request.Items.FirstOrDefault(x => x.ProductCode == diff.ProductCode);
-                        if (row == null) continue;
+                //if (request.Diffs != null && request.Diffs.Any())
+                //{
+                //    foreach (var diff in request.Diffs)
+                //    {
+                //        var row = request.Items.FirstOrDefault(x => x.ProductCode == diff.ProductCode);
+                //        if (row == null) continue;
 
-                        if (diff.Choose == "Stock")
-                        {
-                            row.GroupMaterial = diff.GroupMaterialStock;
-                            row.Manufacturer = diff.ManufacturerStock;
-                            row.Unit = diff.UnitStock;
-                        }
-                    }
-                }
+                //        if (diff.Choose == "Stock")
+                //        {
+                //            row.GroupMaterial = diff.GroupMaterialStock;
+                //            row.Manufacturer = diff.ManufacturerStock;
+                //            row.Unit = diff.UnitStock;
+                //        }
+                //    }
+                //}
 
                 //-------------------------------------------------------------------
                 // 2. UPDATE STOCK (NẾU CHECKISSTOCK = TRUE)

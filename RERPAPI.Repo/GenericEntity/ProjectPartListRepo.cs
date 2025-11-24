@@ -715,7 +715,7 @@ namespace RERPAPI.Repo.GenericEntity
             public string Message { get; set; } = "";
 
             // Chuyển dtError → List<PartlistDiffDto>
-            public List<PartlistDiffDTO> Diffs { get; set; } = new();
+            //public List<PartlistDiffDTO> Diffs { get; set; } = new();
         }
         Regex regex = new Regex(@"^-?[\d\.]+$");
 
@@ -849,32 +849,32 @@ namespace RERPAPI.Repo.GenericEntity
                             excelUnit != stockUnit)
                         {
                             // Thêm vào DIFF LIST
-                            result.Diffs.Add(new PartlistDiffDTO
-                            {
-                                ProductSaleId = fixedProduct.ID,
-                                ProductCode = productCode,
+                            //result.Diffs.Add(new PartlistDiffDTO
+                            //{
+                            //    ProductSaleId = fixedProduct.ID,
+                            //    ProductCode = productCode,
 
-                                GroupMaterialPartlist = groupMaterial,
-                                GroupMaterialStock = fixedProduct.ProductName,
+                            //    GroupMaterialPartlist = groupMaterial,
+                            //    GroupMaterialStock = fixedProduct.ProductName,
 
-                                ManufacturerPartlist = manufacturer,
-                                ManufacturerStock = fixedProduct.Maker,
+                            //    ManufacturerPartlist = manufacturer,
+                            //    ManufacturerStock = fixedProduct.Maker,
 
-                                UnitPartlist = unit,
-                                UnitStock = fixedProduct.Unit,
+                            //    UnitPartlist = unit,
+                            //    UnitStock = fixedProduct.Unit,
 
-                                IsFix = fixedProduct.IsFix ?? true
-                            });
+                            //    IsFix = fixedProduct.IsFix ?? true
+                            //});
                         }
                     }
                 }
             }
 
-            if (result.Diffs.Any())
-            {
-                result.IsValid = false;
-                result.Message = "Có sự khác nhau giữa Partlist và dữ liệu tích xanh trong kho.";
-            }
+            //if (result.Diffs.Any())
+            //{
+            //    result.IsValid = false;
+            //    result.Message = "Có sự khác nhau giữa Partlist và dữ liệu tích xanh trong kho.";
+            //}
 
             return result;
         }
