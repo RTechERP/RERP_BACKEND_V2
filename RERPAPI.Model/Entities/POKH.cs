@@ -135,4 +135,6 @@ public partial class POKH
     public decimal? TotalMoneyDiscount { get; set; }
 
     public bool? IsDeleted { get; set; }
+
+    public decimal? MoneyDiscount { get; set; }
 }
