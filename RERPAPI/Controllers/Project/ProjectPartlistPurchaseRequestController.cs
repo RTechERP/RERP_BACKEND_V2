@@ -1,42 +1,217 @@
+using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Office2010.Excel;
+using DocumentFormat.OpenXml.Wordprocessing;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using NPOI.SS.Formula.Functions;
+using NPOI.Util;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using System.Data;
+using System.Data.Entity.Migrations.Model;
+using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.Project
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class ProjectPartlistPurchaseRequestController : ControllerBase
     {
         #region Khai báo repository
 
-        private ProjectPartlistPurchaseRequestRepo _repo;
-        private InventoryProjectRepo _inventoryProjectRepo;
+        ProjectPartlistPurchaseRequestRepo _repo;
+        InventoryProjectRepo _inventoryProjectRepo;
         ProjectPartlistPurchaseRequestTypeRepo _typeRepo;
         ProjectRepo _projectRepo;
         POKHRepo _pokhRepo;
-        //private InventoryRepo _invRepo = new InventoryRepo();
+        FirmRepo _firmRepo;
+        ProductSaleRepo _productSaleRepo;
+        RequestInvoiceRepo _requestInvoiceRepo;
+        POKHDetailRepo _pOKHDetailRepo;
+        WarehouseRepo _warehouseRepo;
 
-        public ProjectPartlistPurchaseRequestController(ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo, InventoryProjectRepo inventoryProjectRepo, ProjectPartlistPurchaseRequestTypeRepo projectPartlistPurchaseRequestTypeRepo, ProjectRepo projectRepo, POKHRepo pOKHRepo)
+        public ProjectPartlistPurchaseRequestController(
+            ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo,
+            InventoryProjectRepo inventoryProjectRepo,
+            ProjectRepo projectRepo,
+            POKHRepo pOKHRepo,
+            FirmRepo firmRepo,
+            ProjectPartlistPurchaseRequestTypeRepo projectPartlistPurchaseRequestTypeRepo,
+            ProductSaleRepo productSaleRepo,
+            RequestInvoiceRepo requestInvoiceRepo,
+            POKHDetailRepo pOKHDetailRepo,
+            WarehouseRepo warehouseRepo
+            )
         {
             _repo = projectPartlistPurchaseRequestRepo;
             _inventoryProjectRepo = inventoryProjectRepo;
             _typeRepo = projectPartlistPurchaseRequestTypeRepo;
             _projectRepo = projectRepo;
             _pokhRepo = pOKHRepo;
+            _firmRepo = firmRepo;
+            _productSaleRepo = productSaleRepo;
+            _requestInvoiceRepo = requestInvoiceRepo;
+            _pOKHDetailRepo = pOKHDetailRepo;
+            _warehouseRepo = warehouseRepo;
         }
 
         #endregion Khai báo repository
 
+        [HttpGet("get-all-project")]
+        public IActionResult GetAllProject()
+        {
+            try
+            {
+                var lstProjects = _projectRepo.GetAll();
+                return Ok(ApiResponseFactory.Success(lstProjects, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+
+        }
+
+        [HttpGet("request-types")]
+        public IActionResult GetRequestTypes()
+        {
+            try
+            {
+                var types = _typeRepo.GetAll()
+                    .Select(t => new
+                    {
+                        t.ID,
+                        t.RequestTypeName,
+                        t.RequestTypeCode
+                    })
+                    .OrderBy(t => t.ID)
+                    .ToList();
+
+                return Ok(ApiResponseFactory.Success(types, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-po-code")]
+        public IActionResult GetPOCode()
+        {
+            try
+            {
+                var lstPos = _pokhRepo.GetAll();
+                return Ok(ApiResponseFactory.Success(lstPos, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("warehouse")]
+        public IActionResult GetWarehouse()
+        {
+            try
+            {
+                var warehouses = _warehouseRepo.GetAll();
+                return Ok(ApiResponseFactory.Success(warehouses, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-product-sale")]
+        public IActionResult getProductPartlist(int productSaleId)
+        {
+            try
+            {
+                decimal historyPrice = 0;
+                var productSale = _productSaleRepo.GetByID(productSaleId);
+                if (!string.IsNullOrWhiteSpace(productSale.ProductCode))
+                {
+                    var dt = SQLHelper<dynamic>.ProcedureToList("spGetHistoryPricePartlist",
+                        new string[] { "@ProductSaleID" },
+                        new object[] { productSaleId });
+
+                    var data = SQLHelper<dynamic>.GetListData(dt, 0);
+
+                    var dataHistoryPrice = data.Where(x => x.ProductCode == productSale.ProductCode).FirstOrDefault();
+
+                    decimal lastHistoryPrice = dataHistoryPrice != null ? Convert.ToDecimal(dataHistoryPrice.UnitPrice) : 0;
+                    historyPrice = lastHistoryPrice;
+                }
+
+                var result = new
+                {
+                    ProductName = productSale.ProductName,
+                    Maker = productSale.Maker,
+                    Unit = productSale.Unit,
+                    ProductGroupID = productSale.ProductGroupID,
+                    HistoryPrice = historyPrice
+                };
+
+                return Ok(ApiResponseFactory.Success(result, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("history-product-partlist")]
+        public IActionResult historyProductPartlist(string? keyword)
+        {
+            try
+            {
+                var dt = SQLHelper<dynamic>.ProcedureToList("spGetHistoryPricePartlist"
+                    , new string[] { "@Keyword" }, new object[] { keyword });
+
+                var data = SQLHelper<dynamic>.GetListData(dt, 0);
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-by-id")]
+        [RequiresPermission("N58,N35,N1")]
+        public IActionResult GetByID(int id)
+        {
+            try
+            {
+                ProjectPartlistPurchaseRequest purchaseRequest = _repo.GetByID(id);
+                return Ok(ApiResponseFactory.Success(purchaseRequest, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+
+        }
+
         [HttpPost("get-all")]
+        [RequiresPermission("N58,N35,N1")]
         public IActionResult GetAll([FromBody] ProjectPartlistPurchaseRequestParam filter)
         {
             try
             {
+                DateTime dateStart = filter.DateStart.Date;
+                DateTime dateEnd = filter.DateEnd.Date
+                                    .AddHours(23)
+                                    .AddMinutes(59)
+                                    .AddSeconds(59);
                 var dt = SQLHelper<dynamic>.ProcedureToList("spGetProjectPartlistPurchaseRequest_New_Khanh",
                     new string[] {
                 "@DateStart", "@DateEnd", "@StatusRequest", "@ProjectID", "@Keyword",
@@ -53,110 +228,7 @@ namespace RERPAPI.Controllers.Project
 
                 var data = SQLHelper<dynamic>.GetListData(dt, 0);
 
-                return Ok(new
-                {
-                    data,
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message
-                });
-            }
-        }
-        [HttpGet("get-all-project")]
-        public IActionResult GetAllProject()
-        {
-            List<Model.Entities.Project> lstProjects = _projectRepo.GetAll();
-            return Ok(ApiResponseFactory.Success(lstProjects, ""));
-        }
-        [HttpGet("get-po-code")]
-        public IActionResult GetPOCode()
-        {
-            List<POKH> lstPos = _pokhRepo.GetAll();
-            return Ok(ApiResponseFactory.Success(lstPos, ""));
-
-        }
-        //[HttpPost("save-data")]
-        //public async Task<IActionResult> SaveData([FromBody] List<ProjectPartlistPurchaseRequest> data)
-        //{
-        //    try
-        //    {
-        //        foreach (var item in data)
-        //        {
-        //            if (item.ID <= 0)
-        //            {
-        //                await _repo.CreateAsync(item);
-        //            }
-        //            else
-        //            {
-        //                _repo.UpdateFieldsByID(item.ID, item);
-        //            }
-        //        }
-
-        //        return Ok(new { status = 1, message = "Lưu dữ liệu thành công" });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //          return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-        //    }
-        //}
-        [HttpGet("get-by-id/{id}")]
-        public IActionResult GetByID(int id)
-        {
-            ProjectPartlistPurchaseRequest purchaseRequest = _repo.GetByID(id);
-            return Ok(new
-            {
-                status = 1,
-                data = purchaseRequest
-            });
-        }
-
-        [HttpPost("check-order")]
-        public IActionResult CheckOrder([FromBody] List<ProjectPartlistPurchaseRequest> data)
-        {
-            try
-            {
-                if (data == null || data.Count == 0)
-                {
-                    return BadRequest(new { status = 0, message = "Dữ liệu không hợp lệ" });
-                }
-
-                foreach (var item in data)
-                {
-                    try
-                    {
-                        int id = item.ID;
-                        int employeeId = item.EmployeeIDRequestApproved ?? 0;
-
-                        if (id <= 0 || employeeId <= 0) continue;
-
-                        var existingRequest = _repo.GetByID(id);
-                        if (existingRequest == null) continue;
-
-                        // Chỉ cho phép cập nhật nếu chưa ai check hoặc mình là người đã check
-                        if (existingRequest.EmployeeIDRequestApproved != 0 &&
-                            existingRequest.EmployeeIDRequestApproved != employeeId)
-                        {
-                            continue;
-                        }
-
-                        // Toggle trạng thái: nếu đang là 0 thì gán employeeId, nếu đang là mình thì gán lại 0
-                        existingRequest.EmployeeIDRequestApproved =
-                            existingRequest.EmployeeIDRequestApproved == 0 ? employeeId : 0;
-
-                        _repo.Update(existingRequest);
-                    }
-                    catch
-                    {
-                        continue;
-                    }
-                }
-
-                return Ok(new { status = 1, message = "Đã xử lý xong danh sách check." });
+                return Ok(ApiResponseFactory.Success(data, null));
             }
             catch (Exception ex)
             {
@@ -164,39 +236,30 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-        [HttpPost("cancel-request")]
-        public IActionResult CancelRequest([FromBody] List<ProjectPartlistPurchaseRequest> data)
+        [HttpPost("check-order")]
+        [RequiresPermission("N35,N1")]
+        public async Task<IActionResult> CheckOrder([FromBody] List<int> listIds, bool status)
         {
             try
             {
-                if (data == null || data.Count == 0)
-                {
-                    return BadRequest(new { status = 0, message = "Dữ liệu không hợp lệ" });
-                }
-
-                foreach (var item in data)
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                if (listIds == null || listIds.Count == 0) return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu không hợp lệ"));
+                string statusText = status ? "check" : "hủy check";
+                List<ProjectPartlistPurchaseRequest> projectPartlistPurchaseRequests = new List<ProjectPartlistPurchaseRequest>();
+                foreach (var id in listIds)
                 {
                     try
                     {
-                        int id = item.ID;
-
                         if (id <= 0) continue;
 
                         var existingRequest = _repo.GetByID(id);
                         if (existingRequest == null) continue;
 
-                        existingRequest.IsDeleted = item.IsDeleted;
-
-                        _repo.Update(existingRequest);
-                        if (item.InventoryProjectID > 0)
-                        {
-                            InventoryProject inven = new InventoryProject
-                            {
-                                ID = item.InventoryProjectID ?? 0,
-                                IsDeleted = true
-                            };
-                            _inventoryProjectRepo.Update(inven);
-                        }
+                        if (existingRequest.EmployeeIDRequestApproved > 0
+                            && existingRequest.EmployeeIDRequestApproved != currentUser.EmployeeID
+                            && !currentUser.IsAdmin) continue;
+                        projectPartlistPurchaseRequests.Add(existingRequest);
                     }
                     catch
                     {
@@ -204,7 +267,16 @@ namespace RERPAPI.Controllers.Project
                     }
                 }
 
-                return Ok(new { status = 1, message = "Đã xử lý xong danh sách xoá." });
+                if (projectPartlistPurchaseRequests.Count() <= 0) return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu không hợp lệ"));
+                int employeeId = status ? currentUser.EmployeeID : 0;
+
+                foreach (var item in projectPartlistPurchaseRequests)
+                {
+                    item.EmployeeIDRequestApproved = employeeId;
+                    await _repo.UpdateAsync(item);
+                }
+
+                return Ok(ApiResponseFactory.Success(null, $"Đã xử lý xong danh sách {statusText}"));
             }
             catch (Exception ex)
             {
@@ -213,382 +285,445 @@ namespace RERPAPI.Controllers.Project
         }
 
         [HttpPost("request-approved")]
-        public IActionResult RequestApproved([FromBody] List<ProjectPartlistPurchaseRequest> data)
+        [RequiresPermission("N35,N1")]
+        public async Task<IActionResult> RequestApproved([FromBody] List<ProjectPartlistPurchaseRequestDTO> data, bool status)
+        {
+            try
+            {
+                string textStatus = status ? "Y/C duyệt" : "hủy Y/C duyệt";
+                if (!_repo.ValidateRequestApproved(data, out string message))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, message));
+                }
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                List<ProjectPartlistPurchaseRequestDTO> projectPartlistPurchaseRequests = new List<ProjectPartlistPurchaseRequestDTO>();
+                foreach (ProjectPartlistPurchaseRequestDTO item in data)
+                {
+                    if (item.ID <= 0) continue;
+                    var existingRequest = _repo.GetByID(item.ID);
+                    if (existingRequest == null) continue;
+
+                    if (existingRequest.EmployeeIDRequestApproved != currentUser.EmployeeID
+                        && !currentUser.IsAdmin) continue;
+                    projectPartlistPurchaseRequests.Add(item);
+                }
+                if (projectPartlistPurchaseRequests.Count() <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu không hợp lệ"));
+
+                foreach (ProjectPartlistPurchaseRequestDTO item in data)
+                {
+                    _repo.UpdateData(item);
+                    item.IsRequestApproved = status;
+                    item.EmployeeIDRequestApproved = currentUser.EmployeeID;
+
+                    await _repo.UpdateAsync(item);
+                }
+
+
+                return Ok(ApiResponseFactory.Success(null, $"Đã cập nhật trạng thái {textStatus} thành công."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("complete-request-buy")]
+        [RequiresPermission("N35,N1")]
+        public async Task<IActionResult> CompleteRequest([FromBody] List<ProjectPartlistPurchaseRequestDTO> data, int status)
+        {
+            try
+            {
+                string textStatus = status == 7 ? "hoàn thành" : "hủy hoàn thành";
+                if (!_repo.ValidateRequestApproved(data, out string message))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, message));
+                }
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                List<ProjectPartlistPurchaseRequestDTO> projectPartlistPurchaseRequests = new List<ProjectPartlistPurchaseRequestDTO>();
+                foreach (ProjectPartlistPurchaseRequestDTO item in data)
+                {
+                    if (item.ID <= 0) continue;
+                    var existingRequest = _repo.GetByID(item.ID);
+                    if (existingRequest == null) continue;
+
+                    if (existingRequest.EmployeeIDRequestApproved != currentUser.EmployeeID
+                        && !currentUser.IsAdmin) continue;
+                    projectPartlistPurchaseRequests.Add(item);
+                }
+
+                foreach (ProjectPartlistPurchaseRequestDTO item in data)
+                {
+                    _repo.UpdateData(item);
+                    item.StatusRequest = status;
+                    item.EmployeeIDRequestApproved = currentUser.EmployeeID;
+
+                    await _repo.UpdateAsync(item);
+                }
+
+
+                return Ok(ApiResponseFactory.Success(null, $"Đã cập nhật trạng thái {textStatus} thành công."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("approved")]
+        [RequiresPermission("N58,N1")]
+        public async Task<IActionResult> Approved([FromBody] List<ProjectPartlistPurchaseRequestDTO> data, bool status, bool type)
+        {
+            try
+            {
+                string textStatus = status ? "duyệt" : "hủy duyệt";
+                if (data.Count() <= 0) return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu không hợp lệ"));
+
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                List<ProjectPartlistPurchaseRequestDTO> projectPartlistPurchaseRequests = new List<ProjectPartlistPurchaseRequestDTO>();
+                foreach (ProjectPartlistPurchaseRequestDTO item in data)
+                {
+                    if (item.ID <= 0) continue;
+                    if (item.ProductSaleID <= 0 && status && item.ProductNewCode == null)
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, $"Vui lòng tạo Mã nội bộ cho sản phẩm [{item.ProductCode}].\nChọn Loại kho sau đó chọn Lưu thay đổi để tạo Mã nội bộ!"));
+                    }
+                    projectPartlistPurchaseRequests.Add(item);
+                }
+
+                foreach (ProjectPartlistPurchaseRequestDTO item in data)
+                {
+                    if (item.ProjectPartlistPurchaseRequestTypeID == 3 || item.ProjectPartlistPurchaseRequestTypeID == 7)
+                    {
+                        _repo.UpdateData(item);
+                    }
+
+                    if (type)
+                    {
+                        item.IsApprovedTBP = status;
+                        item.DateApprovedTBP = DateTime.Now;
+                    }
+                    else
+                    {
+                        item.IsApprovedBGD = status;
+                        item.DateApprovedBGD = DateTime.Now;
+                        item.ApprovedBGD = currentUser.EmployeeID;
+                    }
+
+                    await _repo.UpdateAsync(item);
+                }
+
+                return Ok(ApiResponseFactory.Success(null, $"Đã cập nhật trạng thái {textStatus} thành công."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("save-data")]
+        [RequiresPermission("N35,N1")]
+        public async Task<IActionResult> SaveData([FromBody] List<ProjectPartlistPurchaseRequestDTO> data)
+        {
+            try
+            {
+                if (data.Count() <= 0) return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu không hợp lệ"));
+
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                if (!_repo.validateManufacturer(data, out string message))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, message));
+                }
+
+                if (!_repo.ValidateUpdateData(data, out string mes))
+                    return BadRequest(ApiResponseFactory.Fail(null, mes));
+
+                var firms = _firmRepo.GetAll(x => x.FirmType == 1 && x.IsDelete != true);
+
+                foreach (var item in data)
+                {
+                    if ((item.EmployeeIDRequestApproved != currentUser.EmployeeID && !currentUser.IsAdmin)
+                        || (item.ProductGroupID <= 0 && item.ProductGroupRTCID <= 0)
+                    )
+                    {
+                        _repo.UpdateData(item);
+                        await _repo.UpdateAsync(item);
+                        continue;
+                    }
+
+                    int productSaleId = 0;
+
+                    ProductSale productSale = _productSaleRepo.GetAll(x =>
+                    x.ProductGroupID == item.ProductGroupID &&
+                    x.ProductCode.ToLower() == item.ProductCode.ToLower() &&
+                    x.IsDeleted != true
+                    ).FirstOrDefault();
+
+                    productSale = productSale ?? new ProductSale();
+                    productSaleId = productSale.ID;
+                    if (productSale.ID <= 0)
+                    {
+                        productSale.ProductCode = item.ProductCode;
+                        productSale.ProductName = item.ProductName;
+                        productSale.Unit = item.UnitName;
+                        productSale.ProductGroupID = item.ProductGroupID;
+                        productSale.ProductNewCode = _repo.GenerateProductNewCode(Convert.ToInt32(item.ProductGroupID));
+                        string maker = item.Manufacturer;
+
+                        Firm firm = _firmRepo.GetAll(x =>
+                                    x.FirmName.Trim().ToLower() == maker.Trim().ToLower())
+                                    .FirstOrDefault() ?? new Firm();
+
+                        productSale.Maker = maker;
+                        productSale.FirmID = firm.ID;
+                        productSaleId = await _productSaleRepo.CreateAsync(productSale);
+                    }
+
+                    item.ProductSaleID = productSaleId;
+                    item.ProductNewCode = productSale.ProductNewCode;
+
+
+
+                    if (item.ProjectPartListID > 0)
+                    {
+                        var pokhDetails = _pOKHDetailRepo.GetAll(x => x.ProjectPartListID == item.ProjectPartListID);
+                        if (pokhDetails.Count() > 0)
+                        {
+                            foreach (var detail in pokhDetails)
+                            {
+                                detail.ProductID = productSaleId;
+                                await _pOKHDetailRepo.UpdateAsync(detail);
+                            }
+                        }
+
+                    }
+
+                    _repo.UpdateData(item);
+                    await _repo.UpdateAsync(item);
+                }
+
+                return Ok(ApiResponseFactory.Success(null, $"Đã lưu dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("deleted-request")]
+        [RequiresPermission("N35,N1")]
+        public async Task<IActionResult> DeletedRequest([FromBody] List<ProjectPartlistPurchaseRequestDTO> data, bool isPurchaseRequestDemo)
         {
             try
             {
                 if (data == null || data.Count == 0)
                 {
-                    return BadRequest(new { status = 0, message = "Dữ liệu không hợp lệ." });
+                    return BadRequest(new { status = 0, message = "Dữ liệu không hợp lệ" });
+                }
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                if (!currentUser.IsAdmin)
+                {
+                    if (!_repo.validateDeleted(data, isPurchaseRequestDemo, out string message))
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, message));
+                    }
                 }
 
+                List<int> inventoryProjects = new List<int>();
                 foreach (var item in data)
                 {
-                    try
-                    {
-                        if (item.ID <= 0) continue;
+                    if (item.ID <= 0) continue;
+                    item.IsDeleted = true;
+                    await _repo.UpdateAsync(item);
 
-                        //item.UpdatedDate = DateTime.Now;
-                        //item.UpdatedBy = Global.LoginName;
 
-                        _repo.Update(item);
-                    }
-                    catch
+                    int inventoryProjectID = Convert.ToInt32(item.InventoryProjectID);
+                    if (inventoryProjectID > 0 && !inventoryProjects.Contains(inventoryProjectID))
+                        inventoryProjects.Add(inventoryProjectID);
+                }
+
+                if (inventoryProjects.Count > 0)
+                {
+                    foreach (int item in inventoryProjects)
                     {
-                        continue; // Bỏ qua lỗi từng dòng, không dừng toàn bộ
-                        //return BadRequest(new { status = 0, message = "Lỗi khi cập nhật yêu cầu duyệt." });
+                        var inventoryProject = _inventoryProjectRepo.GetByID(item);
+                        inventoryProject.IsDeleted = true;
+                        await _inventoryProjectRepo.UpdateAsync(inventoryProject);
                     }
                 }
 
-                return Ok(new { status = 1, message = "Đã cập nhật trạng thái yêu cầu duyệt thành công." });
+                return Ok(new { status = 1, message = "Đã xử lý xong danh sách xoá." });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { status = 0, message = $"Lỗi xử lý: {ex.Message}" });
+                return BadRequest(new { status = 0, message = ex.Message });
             }
         }
 
-        [HttpPost("complete-request-buy")]
-        public IActionResult CompleteRequest([FromBody] List<ProjectPartlistPurchaseRequest> data)
+        [HttpPost("save-data-detail")]
+        [RequiresPermission("N35,N1")]
+        public async Task<IActionResult> SaveDataDetail([FromBody] ProjectPartlistPurchaseRequestDTO requestBought)
         {
-            if (data == null || data.Count == 0)
-                return BadRequest(new { status = 0, message = "Danh sách không hợp lệ!" });
-
-            foreach (var item in data)
+            try
             {
-                try
+                if (!_repo.ValidateSaveDataDetail(requestBought, out string message))
                 {
-                    if (item.ID <= 0) continue;
-                    _repo.Update(item);
+                    return BadRequest(ApiResponseFactory.Fail(null, message));
                 }
-                catch
+
+                if ((bool)requestBought.IsTechBought)
                 {
-                    continue;
+                    var requestBoughts = _repo.GetAll(x => x.ProjectPartListID == requestBought.ProjectPartListID);
+                    if (requestBoughts.Count > 0)
+                    {
+                        foreach (var item in requestBoughts)
+                        {
+                            item.IsDeleted = true;
+                            await _repo.UpdateAsync(item);
+                        }
+                    }
                 }
+
+                if (requestBought.ID <= 0)
+                {
+                    await _repo.CreateAsync(requestBought);
+                    await _repo.SendMail(requestBought);
+                }
+                else
+                {
+                    await _repo.UpdateAsync(requestBought);
+                }
+
+                return Ok(ApiResponseFactory.Success(null, $"Đã lưu dữ liệu thành công"));
             }
-
-            return Ok(new { status = 1, message = "Cập nhật trạng thái hoàn thành thành công!" });
-        }
-
-        [HttpPost("approve")]
-        public IActionResult Approve([FromBody] List<ProjectPartlistPurchaseRequest> requests, int employeeID)
-        {
-            if (requests == null || requests.Count == 0)
-                return BadRequest(new { status = 0, message = "Danh sách yêu cầu không hợp lệ!" });
-
-            foreach (var item in requests)
+            catch (Exception ex)
             {
-                try
-                {
-                    if (item.ID <= 0) continue;
-
-                    var now = DateTime.Now;
-
-                    // Cập nhật trực tiếp các trường
-                    //item.UpdatedDate = now;
-                    //item.UpdatedBy = Global.LoginName;
-
-                    // Nếu có BGĐ duyệt thì gán luôn người duyệt
-                    if (item.IsApprovedBGD == true || item.IsApprovedBGD == false)
-                    {
-                        item.ApprovedBGD = item.ApprovedBGD ?? employeeID;
-                        item.DateApprovedBGD = now;
-                    }
-
-                    // Nếu có TBP duyệt thì gán ngày duyệt
-                    if (item.IsApprovedTBP == true || item.IsApprovedTBP == false)
-                    {
-                        item.DateApprovedTBP = now;
-                    }
-
-                    _repo.Update(item);
-                }
-                catch
-                {
-                    continue; // Bỏ qua dòng lỗi
-                }
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
-            return Ok(new { status = 1, message = "Cập nhật duyệt thành công!" });
         }
 
-        [HttpPost("save-data")]
-        public IActionResult SaveData([FromBody] List<ProjectPartlistPurchaseRequest> data)
+        [HttpPost("update-product-import")]
+        [RequiresPermission("N35,N1")]
+        public async Task<IActionResult> UpdateProductImport([FromBody] List<ProjectPartlistPurchaseRequestDTO> data)
         {
-            if (data == null || data.Count == 0)
+            try
+            {
+                if (data.Count() <= 0) return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu không hợp lệ"));
+                foreach (var item in data) await _repo.UpdateAsync(item);
+                return Ok(ApiResponseFactory.Success(null, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("duplicate")]
+        [RequiresPermission("N35,N1")]
+        public async Task<IActionResult> Duplicate(List<ProjectPartlistPurchaseRequestDTO> data)
+        {
+            if (data == null || data.Count() <= 0)
                 return BadRequest(new { status = 0, message = "Dữ liệu không hợp lệ." });
 
-            foreach (var item in data)
+            try
             {
-                try
+                foreach (var item in data)
                 {
                     if (item.ID <= 0) continue;
+                    ProjectPartlistPurchaseRequest duplicate = item;
+                    duplicate.ID = 0;
+                    duplicate.Quantity = 0;
+                    if (item.DuplicateID > 0)
+                    {
+                        duplicate.DuplicateID = item.DuplicateID;
+                        duplicate.OriginQuantity = item.OriginQuantity;
+                    }
+                    else
+                    {
+                        duplicate.DuplicateID = item.ID;
+                        duplicate.OriginQuantity = item.Quantity;
+                    }
+                    await _repo.CreateAsync(duplicate);
+                    var newId = duplicate.ID;
 
-                    //item.UpdatedDate = DateTime.Now;
-                    //item.UpdatedBy = item.UpdatedBy ?? "System";
-
-                    // Cập nhật nhiều field cùng lúc
-                    _repo.Update(item);
+                    if (item.DuplicateID <= 0)
+                    {
+                        item.DuplicateID = newId;
+                        item.OriginQuantity = duplicate.OriginQuantity;
+                        await _repo.UpdateAsync(item);
+                    }
                 }
-                catch
-                {
-                    continue;
-                }
+                return Ok(ApiResponseFactory.Success(null, ""));
             }
-            return Ok(new { status = 1, message = "Cập nhật thành công." });
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
         }
 
         [HttpPost("keep-product")]
-        public IActionResult KeepProduct([FromBody] List<ProductHoldDTO> data)
+        [RequiresPermission("N35,N1")]
+        public async Task<IActionResult> KeepProduct([FromBody] List<ProjectPartlistPurchaseRequestDTO> data)
         {
-            if (data == null || data.Count == 0)
-                return BadRequest(new { status = 0, message = "Danh sách sản phẩm không hợp lệ!" });
-
-            foreach (var item in data)
+            try
             {
-                try
-                {
-                    if (item.ProjectParlistPurchaseRequestID.Count <= 0 || item.ProductSaleID <= 0 || item.ProjectID <= 0) continue;
+                if (data == null || data.Count == 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Danh sách sản phẩm không hợp lệ!"));
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
 
-                    // Check tồn kho
+                foreach (var item in data)
+                {
+                    if (item.ID <= 0 || item.ProductSaleID <= 0
+                        || (item.EmployeeIDRequestApproved != currentUser.EmployeeID && !currentUser.IsAdmin))
+                        continue;
 
                     var dt = SQLHelper<dynamic>.ProcedureToList("spGetInventory", new[] { "@ProductSaleID" }, new object[] { item.ProductSaleID });
                     var inventoryData = SQLHelper<dynamic>.GetListData(dt, 0);
                     var quantity = inventoryData[0]?.TotalQuantityLast;
                     if (quantity == null || Convert.ToDecimal(quantity) <= 0)
                     {
-                        return BadRequest(new
-                        {
-                            status = 0,
-                            message = "Số lượng tồn cuối kì phải lớn hơn 0!"
-                        });
+                        return BadRequest(ApiResponseFactory.Fail(null, $"Số lượng giữ sản phẩm [{item.ProductName}] cần lớn hơn 0!"));
                     }
-                    ;
 
-                    // Tạo hoặc cập nhật InventoryProject
                     var inventoryProject = item.ID > 0
                         ? _inventoryProjectRepo.GetByID(item.ID)
                         : new InventoryProject();
 
                     inventoryProject.ProjectID = item.ProjectID;
                     inventoryProject.ProductSaleID = item.ProductSaleID;
-                    inventoryProject.EmployeeID = item.EmployeeID;
+                    inventoryProject.EmployeeID = item.EmployeeIDRequestApproved;
                     inventoryProject.WarehouseID = 1;
                     inventoryProject.Quantity = item.Quantity;
+                    inventoryProject.CustomerID = item.CustomerID;
+                    inventoryProject.POKHDetailID = item.POKHDetailID;
 
                     if (inventoryProject.ID > 0)
-                        _inventoryProjectRepo.Update(inventoryProject);
+                        await _inventoryProjectRepo.UpdateAsync(inventoryProject);
                     else
-                        _inventoryProjectRepo.Create(inventoryProject);
+                        await _inventoryProjectRepo.CreateAsync(inventoryProject);
 
-                    // Gán lại ID giữ hàng và update trực tiếp
-                    foreach (var purchaseRequestID in item.ProjectParlistPurchaseRequestID)
-                    {
-                        if (purchaseRequestID <= 0) continue;
-                        ProjectPartlistPurchaseRequest itemPR = _repo.GetByID(purchaseRequestID);
-                        itemPR.InventoryProjectID = inventoryProject.ID;
-                        _repo.Update(itemPR);
-                    }
-                    //itemPR.UpdatedDate = DateTime.Now;
-                    //itemPR.UpdatedBy = item.UpdatedBy ?? "system";
-                }
-                catch (Exception ex)
-                {
-                    return BadRequest(new { status = 0, message = $"Lỗi khi cập nhật giữ hàng:{ex.Message}", error = ex.ToString() });
-                }
-            }
-
-            return Ok(new { status = 1, message = "Đã cập nhật giữ hàng thành công." });
-        }
-        [HttpPost("duplicate")]
-        public IActionResult Duplicate([FromBody] ProjectPartlistPurchaseRequest row)
-        {
-            if (row == null || row.ID <= 0)
-                return BadRequest(new { status = 0, message = "Dữ liệu không hợp lệ." });
-
-            try
-            {
-                var original = _repo.GetByID(row.ID);
-                if (original == null)
-                    return BadRequest(new { status = 0, message = "Không tìm thấy bản gốc." });
-
-                var duplicate = new ProjectPartlistPurchaseRequest
-                {
-                    // Copy tất cả field
-                    ProjectPartListID = original.ProjectPartListID,
-                    ProductCode = original.ProductCode,
-                    ProductName = original.ProductName,
-                    Quantity = 0,
-                    UnitName = original.UnitName,
-                    ProductGroupID = original.ProductGroupID,
-                    StatusRequest = original.StatusRequest,
-                    DateRequest = original.DateRequest,
-                    DateReturnExpected = original.DateReturnExpected,
-                    UnitMoney = original.UnitMoney,
-                    CurrencyID = original.CurrencyID,
-                    CurrencyRate = original.CurrencyRate,
-                    UnitPrice = original.UnitPrice,
-                    HistoryPrice = original.HistoryPrice,
-                    TotalPrice = 0,
-                    TotalPriceExchange = 0,
-                    TotaMoneyVAT = 0,
-                    LeadTime = original.LeadTime,
-                    Note = original.Note,
-                    ReasonCancel = original.ReasonCancel,
-                    DateReturnActual = original.DateReturnActual,
-                    DateReceive = original.DateReceive,
-                    IsImport = original.IsImport,
-                    UnitFactoryExportPrice = original.UnitFactoryExportPrice,
-                    ProjectPartlistPurchaseRequestTypeID = original.ProjectPartlistPurchaseRequestTypeID,
-                    SupplierSaleID = original.SupplierSaleID,
-                    IsApprovedTBP = original.IsApprovedTBP,
-                    ApprovedTBP = original.ApprovedTBP,
-                    DateApprovedTBP = original.DateApprovedTBP,
-                    ApprovedBGD = original.ApprovedBGD,
-                    DateApprovedBGD = original.DateApprovedBGD,
-                    ProductSaleID = original.ProductSaleID,
-                    UnitImportPrice = original.UnitImportPrice,
-                    TotalImportPrice = original.TotalImportPrice,
-                    IsCommercialProduct = original.IsCommercialProduct,
-                    IsDeleted = original.IsDeleted,
-                    JobRequirementID = original.JobRequirementID,
-                    InventoryProjectID = original.InventoryProjectID,
-                };
-
-                // Xử lý DuplicateID
-                if (row.DuplicateID > 0)
-                {
-                    duplicate.DuplicateID = row.DuplicateID;
-                    duplicate.OriginQuantity = row.OriginQuantity;
-                }
-                else
-                {
-                    duplicate.DuplicateID = original.ID;
-                    duplicate.OriginQuantity = original.Quantity;
-                }
-                _repo.Create(duplicate);
-                var newId = duplicate.ID;
-
-                // Cập nhật bản gốc nếu cần
-                if (row.DuplicateID <= 0)
-                {
-                    original.DuplicateID = newId;
-                    original.OriginQuantity = original.Quantity;
-                    _repo.Update(original);
+                    item.InventoryProjectID = inventoryProject.ID;
+                    await _repo.UpdateAsync(item);
                 }
 
-                return Ok(new { status = 1, newId });
+                return Ok(ApiResponseFactory.Success(null, "Đã cập nhật giữ hàng thành công."));
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+
         }
 
-        //[HttpGet("request-types")]
-        //public IActionResult GetRequestTypes()
-        //{
-        //    try
-        //    {
-        //        var types = _typeRepo.GetAll()
-        //            .Select(t => new
-        //            {
-        //                t.ID,
-        //                t.RequestTypeName,
-        //                t.RequestTypeCode
-        //            })
-        //            .OrderBy(t => t.ID)
-        //            .ToList();
 
-        //        return Ok(ApiResponseFactory.Success(types, null));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-        //    }
-        //}
-
-        [HttpPost("validate-duplicate")]
-        public IActionResult ValidateDuplicate([FromBody] List<int> ids)
-        {
-            if (ids == null || !ids.Any())
-                return Ok(new { status = 1, message = "Không có dữ liệu để kiểm tra." });
-
-            try
-            {
-                // Dùng Dictionary để gom nhóm nhanh
-                var duplicateGroups = new Dictionary<int, List<ProjectPartlistPurchaseRequest>>();
-
-                // Lặp từng ID → Lấy từng dòng
-                foreach (var id in ids)
-                {
-                    var request = _repo.GetByID(id);
-                    if (request == null || request.DuplicateID <= 0) continue;
-
-                    if (!duplicateGroups.ContainsKey(request.DuplicateID ?? 0))
-                        duplicateGroups[request.DuplicateID ?? 0] = new List<ProjectPartlistPurchaseRequest>();
-
-                    duplicateGroups[request.DuplicateID ?? 0].Add(request);
-                }
-
-                // Kiểm tra từng nhóm
-                var errors = new List<object>();
-
-                foreach (var group in duplicateGroups)
-                {
-                    var duplicateID = group.Key;
-                    var items = group.Value;
-
-                    // Lấy OriginQuantity từ bản gốc (ID == DuplicateID)
-                    var original = items.FirstOrDefault(x => x.ID == duplicateID);
-                    var originQuantity = original?.OriginQuantity ?? 0;
-
-                    // Tính tổng Quantity
-                    var totalQuantity = items.Sum(x => x.Quantity ?? 0);
-
-                    if (Math.Abs(totalQuantity - originQuantity) > 0.0001m) // Tránh lỗi float
-                    {
-                        errors.Add(new
-                        {
-                            DuplicateID = duplicateID,
-                            OriginQuantity = originQuantity,
-                            TotalQuantity = totalQuantity,
-                            Message = $"DuplicateID {duplicateID}: Tổng SL = {totalQuantity}, phải = {originQuantity}",
-                            ProductCodes = string.Join(", ", items.Select(x => x.ProductCode).Where(pc => !string.IsNullOrEmpty(pc)))
-                        });
-                    }
-                }
-
-                if (!errors.Any())
-                    return Ok(new { status = 1, message = "Tất cả DuplicateID đều hợp lệ." });
-
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = "Có lỗi DuplicateID: Tổng số lượng không khớp với OriginQuantity.",
-                    errors
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        [HttpPost("unTech-bought")]
-        public async Task<IActionResult> UnTechBought(int id)
-        {
-            try
-            {
-                var data = _repo.GetAll(x=>x.ProjectPartListID == id).FirstOrDefault();
-                data.IsDeleted = true;
-                await _repo.UpdateAsync(data);
-                return Ok(ApiResponseFactory.Success(null, "Hủy mua thành công"));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
     }
 }

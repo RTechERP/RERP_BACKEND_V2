@@ -27,6 +27,21 @@ namespace RERPAPI.Controllers.Old
         }
         #region Get
         // Danh sách supplier
+        [HttpGet("list-supplier-sale")]
+        public async Task<IActionResult> getAll()
+        {
+            try
+            {
+                var supplierSale = _supplierSaleRepo.GetAll().OrderByDescending(x => x.ID);
+                return Ok(ApiResponseFactory.Success(supplierSale, null));
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpGet("supplier-sale")]
         [RequiresPermission("N27,N33,N35,N1,N36")]
         public async Task<IActionResult> getSupplierSale(string? keyword, int page, int size)
