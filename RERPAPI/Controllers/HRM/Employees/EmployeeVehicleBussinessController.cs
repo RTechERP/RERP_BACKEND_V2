@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -6,6 +7,7 @@ using RERPAPI.Repo.GenericEntity;
 namespace RERPAPI.Controllers.HRM.Employees
 {
     [ApiController]
+    [Authorize]
     [Route("api/[controller]")]
     public class EmployeeVehicleBussinessController : Controller
     {
