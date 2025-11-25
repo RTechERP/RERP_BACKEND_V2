@@ -44,51 +44,51 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        //[HttpPost("save-data")]
-        //public async Task<IActionResult> SaveData([FromBody] ProjectPartListVersion request)
-        //{
-        //    try
-        //    {
-        //        string message = "";
-        //        if (!_projectPartlistVersionRepo.Validate(request, out message))
-        //        {
-        //            return BadRequest(ApiResponseFactory.Fail(null, message));
-        //        }
-        //        if (request.ID > 0)
-        //        {
-        //            await _projectPartlistVersionRepo.UpdateAsync(request);
-        //        }
-        //        else
-        //        {
-        //            await _projectPartlistVersionRepo.CreateAsync(request);
-        //        }
-        //        if (request.IsActive == false)
-        //        {
-        //            var myDict = new Dictionary<Expression<Func<ProjectPartList, object>>, object>
-        //                    {
-        //                        { x => x.IsApprovedTBP, 0 },
-        //                        { x => x.IsApprovedPurchase, 0 }
-        //                    };
-        //          await _projectPartListRepo.UpdateFieldByAttributeAsync(x => x.ProjectPartListVersionID == request.ID, myDict);
-        //        }
-        //        if(request.IsDeleted==true)
-        //        {
-        //            var myDict = new Dictionary<Expression<Func<ProjectPartList, object>>, object>
-        //                    {
-        //                        { x => x.IsDeleted, 1 },
-        //                        { x => x.ReasonDeleted, request.ReasonDeleted}
-        //                    };
-        //            await _projectPartListRepo.UpdateFieldByAttributeAsync(x => x.ProjectPartListVersionID == request.ID, myDict);
-        //        }
-        //        return Ok(ApiResponseFactory.Success(request,""));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ApiResponseFactory.Fail(ex, "Lỗi khi lưu phiên bản danh sách phần"));
-        //    }
-        //}
-      
-    [HttpGet("get-cbb-version")]
+        [HttpPost("save-data")]
+        public async Task<IActionResult> SaveData([FromBody] ProjectPartListVersion request)
+        {
+            try
+            {
+                string message = "";
+                if (!_projectPartlistVersionRepo.Validate(request, out message))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, message));
+                }
+                if (request.ID > 0)
+                {
+                    await _projectPartlistVersionRepo.UpdateAsync(request);
+                }
+                else
+                {
+                    await _projectPartlistVersionRepo.CreateAsync(request);
+                }
+                if (request.IsActive == false)
+                {
+                    var myDict = new Dictionary<Expression<Func<ProjectPartList, object>>, object>
+                            {
+                                { x => x.IsApprovedTBP, 0 },
+                                { x => x.IsApprovedPurchase, 0 }
+                            };
+                    await _projectPartListRepo.UpdateFieldByAttributeAsync(x => x.ProjectPartListVersionID == request.ID, myDict);
+                }
+                if (request.IsDeleted == true)
+                {
+                    var myDict = new Dictionary<Expression<Func<ProjectPartList, object>>, object>
+                            {
+                                { x => x.IsDeleted, 1 },
+                                { x => x.ReasonDeleted, request.ReasonDeleted}
+                            };
+                    await _projectPartListRepo.UpdateFieldByAttributeAsync(x => x.ProjectPartListVersionID == request.ID, myDict);
+                }
+                return Ok(ApiResponseFactory.Success(request, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, "Lỗi khi lưu phiên bản danh sách phần"));
+            }
+        }
+
+        [HttpGet("get-cbb-version")]
         public IActionResult GetCBBVersion(int projectSolutionId)
         {
             try
@@ -96,7 +96,7 @@ namespace RERPAPI.Controllers.Project
                 var projectPartListVersions = SQLHelper<dynamic>.ProcedureToList(
                     "spGetProjectPartListVersion",
                     new string[] { "@ProjectSolutionID" },
-                    new object[] { projectSolutionId});
+                    new object[] { projectSolutionId });
                 return Ok(ApiResponseFactory.Success(
                     SQLHelper<object>.GetListData(projectPartListVersions, 0),
                     ""
@@ -107,5 +107,8 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        //xóa partlisst
+       
     }
+
 }
