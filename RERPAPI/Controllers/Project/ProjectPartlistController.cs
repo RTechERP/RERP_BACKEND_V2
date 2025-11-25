@@ -1,7 +1,10 @@
 ﻿using DocumentFormat.OpenXml.Office.CustomUI;
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using Microsoft.AspNetCore.Mvc;
 using NPOI.HSSF.Record.Chart;
+using NPOI.SS.Formula.Functions;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Finance.Implementations;
+using Org.BouncyCastle.Asn1.Pkcs;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -9,10 +12,13 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo;
 using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.AddNewBillExport;
 using System.Diagnostics.Metrics;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using ZXing;
 using ZXing.OneD.RSS;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.Project
 {
@@ -28,8 +34,11 @@ namespace RERPAPI.Controllers.Project
         ProjectPartlistVersionRepo _partlistVersionRepo;
         ProjectPartlistPurchaseRequestRepo _partlistPurchaseRequestRepo;
         private readonly ProjectPartListRepo _projectPartlistRepo;
+        private readonly WarehouseRepo _warehouseRepo;
+        private readonly BillExportRepo _billExportRepo;
+        private readonly ProductGroupRepo _productGroupRepo;
         UnitCountKTRepo _unitCountKTRepo;
-        public ProjectPartlistController(ProjectPartListRepo projectPartlistRepo, ProductSaleRepo productSaleRepo, FirmRepo firmRepo, UnitCountKTRepo unitCountRepo, ProductRTCRepo productRTCRepo, ProjectPartlistPriceRequestRepo priceRequestRepo, ProjectPartlistVersionRepo partlistVersionRepo, ProjectPartlistPurchaseRequestRepo partlistPurchaseRequestRepo, UnitCountKTRepo unitCountKTRepo)
+        public ProjectPartlistController(ProjectPartListRepo projectPartlistRepo, ProductSaleRepo productSaleRepo, FirmRepo firmRepo, UnitCountKTRepo unitCountRepo, ProductRTCRepo productRTCRepo, ProjectPartlistPriceRequestRepo priceRequestRepo, ProjectPartlistVersionRepo partlistVersionRepo, ProjectPartlistPurchaseRequestRepo partlistPurchaseRequestRepo, UnitCountKTRepo unitCountKTRepo, WarehouseRepo warehouseRepo, BillExportRepo billExportRepo, ProductGroupRepo productGroupRepo)
         {
             _projectPartlistRepo = projectPartlistRepo;
             _productSaleRepo = productSaleRepo;
@@ -40,6 +49,9 @@ namespace RERPAPI.Controllers.Project
             _partlistVersionRepo = partlistVersionRepo;
             _partlistPurchaseRequestRepo = partlistPurchaseRequestRepo;
             _unitCountKTRepo = unitCountKTRepo;
+            _warehouseRepo = warehouseRepo;
+            _billExportRepo = billExportRepo;
+            _productGroupRepo = productGroupRepo;
         }
         [HttpPost("get-all")]
         public IActionResult GetAll(ProjectPartlistParam param)
@@ -76,163 +88,6 @@ namespace RERPAPI.Controllers.Project
             int stt = _projectPartlistRepo.getSTT(versionID);
             return Ok(ApiResponseFactory.Success(stt, ""));
         }
-        /*[HttpPost("save-data")]
-        public async Task<IActionResult> SaveData([FromBody] List<ProjectPartList> lstRequest)
-        {
-            try
-            {
-                foreach (var request in lstRequest)
-                {
-                    string message = string.Empty;
-
-                    // validate cơ bản
-                    if (!_projectPartlistRepo.Validate(request, out message))
-                    {
-                        return BadRequest(ApiResponseFactory.Fail(null, message));
-                    }
-                    //ProjectPartList oldPartlist = _projectPartlistRepo.GetByID(request.ID);
-                    //if (request.is == false && oldPartlist.IsApprovedPurchase==true)
-                    //{
-                    //    var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                    //    var currentUser = ObjectMapper.GetCurrentUser(claims);
-                    //    ProjectPartlistPriceRequest priceRequestExist = _priceRequestRepo.GetAll(x=>x.ProjectPartListID == request.ID && x.IsDeleted == false).FirstOrDefault() ?? new ProjectPartlistPriceRequest();
-                    //    if(priceRequestExist.EmployeeID != currentUser.EmployeeID)
-                    //    {
-                    //        return BadRequest(ApiResponseFactory.Fail(null, "Bạn không thể huỷ Y/c mua hafb của người khác!"));
-                    //    }
-                    //}
-                    // Trường hợp duyệt TBP
-                    //if (request.Mode == 1)
-                    //{
-                    //    if (!_projectPartlistRepo.ValidateApproveTBP(request, request.IsApprovedTBP ?? false, out message))
-                    //    {
-                    //        return BadRequest(ApiResponseFactory.Fail(null, message));
-                    //    }
-
-                    //    // Cập nhật duyệt TBP
-                    //    ProjectPartList partlist = _projectPartlistRepo.GetByID(request.ID);
-                    //    partlist.IsApprovedTBP = request.IsApprovedTBP;
-                    //    await _projectPartlistRepo.UpdateAsync(partlist);
-
-                    //    return Ok(ApiResponseFactory.Success(partlist, $"Đã {(request.IsApprovedTBP == true ? "duyệt" : "hủy duyệt")} thành công!"));
-                    //}
-
-                    //// Trường hợp duyệt NewCode
-                    //if (request.Mode == 2)
-                    //{
-                    //    List<Firm> firms = _firmRepo.GetAll(x => x.FirmType == 1 && x.IsDelete == false);
-                    //    List<Firm> firmDemos = _firmRepo.GetAll(x => x.FirmType == 2 && x.IsDelete == false);
-                    //    if (!_projectPartlistRepo.ValidateProduct(request, out message))
-                    //    {
-                    //        return BadRequest(ApiResponseFactory.Fail(null, message));
-                    //    }
-                    //    var productSales = _productSaleRepo.GetAll(x => x.IsDeleted == false
-                    //                                                && x.ProductCode == request.ProductCode
-                    //                                                && x.IsFix == true)
-                    //                                        .FirstOrDefault() ?? new ProductSale();
-                    //    if (productSales.IsFix == true) continue;//Nếu mã hàng đã được tích xanh
-                    //    ProjectPartList partlist = _projectPartlistRepo.GetByID(request.ID);
-                    //    partlist.IsApprovedTBPNewCode = request.IsApprovedTBPNewCode;
-                    //    partlist.DateApprovedNewCode = DateTime.Now;
-                    //    await _projectPartlistRepo.UpdateAsync(partlist);
-                    //    Firm firm = firms.FirstOrDefault(x => x.FirmName.ToUpper().Trim() == request.Manufacturer.ToUpper().Trim() && x.FirmType == 2) ?? new Firm();
-                    //    Firm firmDemo = firmDemos.FirstOrDefault(x => x.FirmName.ToUpper().Trim() == request.Manufacturer.ToUpper().Trim() && x.FirmType == 2) ?? new Firm();
-                    //    var myDict = new Dictionary<Expression<Func<ProductSale, object>>, object>
-                    //    {
-                    //        { x => x.FirmID, firm.ID },
-                    //        { x => x.Unit, request.Unit},
-                    //        { x => x.ProductName, request.GroupMaterial},
-                    //        { x => x.Maker, request.Manufacturer},
-                    //    };
-                    //    await _productSaleRepo.UpdateFieldByAttributeAsync(x => x.ProductCode == request.ProductCode, myDict);
-                    //    UnitCountKT unitcount = _unitCountRepo.GetAll(x => x.UnitCountName.ToUpper().Trim() == request.Unit.ToUpper().Trim()).FirstOrDefault() ?? new UnitCountKT();
-                    //    var myDicDemo = new Dictionary<Expression<Func<ProductRTC, object>>, object>
-                    //    {
-                    //        { x => x.FirmID, firmDemo.ID },
-                    //        //{ x => x.Unit, unitcount.UnitCountName},
-                    //        { x => x.ProductName, request.GroupMaterial},
-                    //        { x => x.Maker, request.Manufacturer},
-                    //    };
-                    //    await _productRTCRepo.UpdateFieldByAttributeAsync(x => x.ProductCode == request.ProductCode, myDicDemo);
-                    //    var myDictPriceRequest = new Dictionary<Expression<Func<ProjectPartlistPriceRequest, object>>, object>
-                    //    {
-                    //        { x => x.ProductName, request.GroupMaterial },
-                    //        { x => x.Maker, request.Manufacturer },
-                    //    };
-                    //    await _priceRequestRepo.UpdateFieldByAttributeAsync(x => x.ProductCode == request.ProductCode, myDictPriceRequest);
-                    //    var myDictPartlist = new Dictionary<Expression<Func<ProjectPartList, object>>, object>
-                    //    {
-                    //        { x => x.Unit, request.Unit },
-                    //        { x => x.GroupMaterial, request.GroupMaterial },
-                    //        { x => x.Manufacturer, request.Manufacturer },
-                    //    };
-                    //    await _projectPartlistRepo.UpdateFieldByAttributeAsync(x => x.ProductCode == request.ProductCode, myDictPartlist);
-                    //    return Ok(ApiResponseFactory.Success(partlist, $"Đã {(request.IsApprovedTBPNewCode == true ? "duyệt mã mới" : "hủy duyệt mã mới")} thành công!"));
-                    //}
-
-                    request.ParentID = _projectPartlistRepo.getParentID(request.TT ?? "", request.ProjectTypeID ?? 0, request.ProjectPartListVersionID ?? 0);
-
-                    if (request.ID <= 0)
-                    {
-                        request.IsApprovedPurchase = false;
-                        request.IsApprovedTBP = false;
-                        await _projectPartlistRepo.CreateAsync(request);
-                    }
-                    else
-                    {
-                        ProjectPartList partlistProblem = _projectPartlistRepo.GetByID(request.ID);
-                        if (request.IsProblem == true && partlistProblem.IsProblem == false)
-                        {
-                            request.IsApprovedPurchase = false;
-                            request.IsApprovedTBP = false;
-                            request.StatusPriceRequest = 0;
-                            request.DatePriceRequest = null;
-                            request.DeadlinePriceRequest = null;
-                            request.IsApprovedPurchase = false;
-                            request.RequestDate = null;
-                            request.ExpectedReturnDate = null;
-                            request.Status = 2;
-                            request.ID = 0;
-                            await _projectPartlistRepo.CreateAsync(request);
-                        }
-                        else
-                        {
-                            await _projectPartlistRepo.UpdateAsync(request);
-                        }
-                    }
-                }
-                return Ok(ApiResponseFactory.Success(lstRequest, "Lưu dữ liệu thành công!"));
-
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi:{ex.Message}"));
-            }
-        }
-*/
-        //public async Task<IActionResult> UpdateRequestQuote(ProjectPartList oldPartlist, ProjectPartList newPartlist)
-        //{
-        //    var resultCompare = DeepEquals.DeepEqual(oldPartlist, newPartlist);
-        //    bool equal = (bool)resultCompare.GetType().GetProperty("equal").GetValue(resultCompare);
-        //    if (!equal)
-        //    {
-        //        List<string> propertys = (List<string>)resultCompare.GetType().GetProperty("property").GetValue(resultCompare);
-
-        //        propertys = propertys.Where(p => !p.Contains("TT")).ToList();
-
-        //        if (propertys.Count <= 0) return BadRequest(ApiResponseFactory.Fail(null, "không tìm thấy property của class này!"));
-        //    }
-        //    List<ProjectPartlistPriceRequest> listQuotes = _priceRequestRepo.GetAll(x => x.ProjectPartListID == oldPartlist.ID && x.IsDeleted == false).ToList();
-        //    if (listQuotes.Count > 0)
-        //    {
-        //        var myDictPriceRequest = new Dictionary<Expression<Func<ProjectPartlistPriceRequest, object>>, object>
-        //            {
-        //                { x => x.IsDeleted, 1},
-        //            };
-        //        await _priceRequestRepo.UpdateFieldByAttributeAsync(x => x.ProjectPartListID == oldPartlist.ID, myDictPriceRequest);
-        //    }
-
-        //}
         [HttpPost("approvedTBP")]
         public async Task<IActionResult> AppprovedTBP([FromBody] ApprovedTBPRequest request)
         {
@@ -591,88 +446,289 @@ namespace RERPAPI.Controllers.Project
         [HttpPost("approved-fix")]
         public async Task<IActionResult> ApprovedIsFix([FromBody] List<ProjectPartlistDTO> request, bool isFix)
         {
-                try
+            try
+            {
+                string approvedText = isFix ? "duyệt" : "hủy duyệt";
+                string messageErr;
+
+                // ===============================
+                // 1. Validate: giống WinForm
+                // ===============================
+
+                foreach (var item in request)
                 {
-                    string approvedText = isFix ? "duyệt" : "hủy duyệt";
-                    string messageErr;
+                    if (!item.IsLeaf) continue;
 
-                    // ===============================
-                    // 1. Validate: giống WinForm
-                    // ===============================
-
-                    foreach (var item in request)
+                    // Kiểm tra bị xóa
+                    if (item.IsDeleted == true)
                     {
-                        if (!item.IsLeaf) continue;
-
-                        // Kiểm tra bị xóa
-                        if (item.IsDeleted == true)
-                        {
-                            return Ok(new { status = 2, message = "Không thể duyệt vì vật tư đã bị xóa!" });
-                        }
-
-                        // Kiểm tra ValidateProduct (logic đã chuẩn)
-                        if (!_projectPartlistRepo.ValidateProduct(item, out messageErr))
-                        {
-                            return Ok(new { status = 2, message = messageErr });
-                        }
+                        return Ok(new { status = 2, message = "Không thể duyệt vì vật tư đã bị xóa!" });
                     }
 
-
-                   
-                
-                    // preload Firm
-                    var firms = _firmRepo.GetAll(x => x.FirmType == 1).ToList();
-                    var firmDemos = _firmRepo.GetAll(x => x.FirmType == 2).ToList();
-
-
-                    foreach (var item in request)
+                    // Kiểm tra ValidateProduct (logic đã chuẩn)
+                    if (!_projectPartlistRepo.ValidateProduct(item, out messageErr))
                     {
-                        if (!item.IsLeaf) continue;
-
-                        // Skip mã mới khi DUYỆT
-                        if (item.IsNewCode == true && isFix == true)
-                            continue;
-
-                        var productSale = _productSaleRepo.GetAll().FirstOrDefault(x => x.ProductCode == item.ProductCode);
-                        if (productSale == null) continue; 
-
-                        // Tìm Firm theo WinForm
-                        var firm = firmDemos
-                            .FirstOrDefault(x => x.FirmName.ToUpper().Trim() == (item.Manufacturer ?? "").ToUpper().Trim())
-                            ?? new Firm();
-
-                        if (isFix)
-                        {
-                            // Giống WinForm UpdateProductSale
-                            productSale.ProductName = item.GroupMaterial;
-                            productSale.Maker = item.Manufacturer;
-                            productSale.Unit = item.Unit;
-                            productSale.IsFix = true;
-                            productSale.FirmID = firm.ID;
-                        }
-                        else
-                        {
-                            productSale.IsFix = false;
-                        }                
-                        await _productSaleRepo.UpdateAsync(productSale);
+                        return Ok(new { status = 2, message = messageErr });
                     }
-
-                   
-                  
-
-                    return Ok(ApiResponseFactory.Success(null,
-                        $"{approvedText} tích xanh thành công!"));
                 }
-                catch (Exception ex)
+
+
+
+
+                // preload Firm
+                var firms = _firmRepo.GetAll(x => x.FirmType == 1).ToList();
+                var firmDemos = _firmRepo.GetAll(x => x.FirmType == 2).ToList();
+
+
+                foreach (var item in request)
                 {
-                  
-                    return BadRequest(ApiResponseFactory.Fail(ex,
-                        $"Lỗi: {ex.Message}"));
+                    if (!item.IsLeaf) continue;
+
+                    // Skip mã mới khi DUYỆT
+                    if (item.IsNewCode == true && isFix == true)
+                        continue;
+
+                    var productSale = _productSaleRepo.GetAll().FirstOrDefault(x => x.ProductCode == item.ProductCode);
+                    if (productSale == null) continue;
+
+                    // Tìm Firm theo WinForm
+                    var firm = firmDemos
+                        .FirstOrDefault(x => x.FirmName.ToUpper().Trim() == (item.Manufacturer ?? "").ToUpper().Trim())
+                        ?? new Firm();
+
+                    if (isFix)
+                    {
+                        // Giống WinForm UpdateProductSale
+                        productSale.ProductName = item.GroupMaterial;
+                        productSale.Maker = item.Manufacturer;
+                        productSale.Unit = item.Unit;
+                        productSale.IsFix = true;
+                        productSale.FirmID = firm.ID;
+                    }
+                    else
+                    {
+                        productSale.IsFix = false;
+                    }
+                    await _productSaleRepo.UpdateAsync(productSale);
                 }
-            
+
+
+
+
+                return Ok(ApiResponseFactory.Success(null,
+                    $"{approvedText} tích xanh thành công!"));
+            }
+            catch (Exception ex)
+            {
+
+                return BadRequest(ApiResponseFactory.Fail(ex,
+                    $"Lỗi: {ex.Message}"));
+            }
+
         }
+        //end
+        //get gợi ý cho tên thiết bị và hãng sản xuất 
+        [HttpGet("get-suggestion-name-maker")]
+        public async Task<IActionResult> GetSuggestionNameMaker()
+        {
+            try
+            {
+                var dt = SQLHelper<dynamic>.ProcedureToList("spGetProjectPartlistSuggest",
+                                                   new string[] { },
+                                                   new object[] { });
+                var data = SQLHelper<dynamic>.GetListData(dt, 0);
 
+                var result = new
+                {
+                    ProductNames = data.Select(x => x.ProductName).Distinct().ToList(),
+                    Makers = data.Select(x => x.Maker).Distinct().ToList(),
+                };
 
+                return Ok(ApiResponseFactory.Success(result, " lấy dữ liệu thành công!")); // Sửa message động
+            }
+            catch (Exception ex) { return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi: {ex.Message}")); }
+
+        }
+        //end
+        [HttpGet("get-partlist-by-id")]
+        public async Task<IActionResult> GetPartListByID(int partlistID)
+        {
+            try
+            {
+                var result = _projectPartlistRepo.GetByID(partlistID);
+                return Ok(ApiResponseFactory.Success(result, " lấy dữ liệu thành công!")); // Sửa message động
+            }
+            catch (Exception ex) { return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi: {ex.Message}")); }
+
+        }
+        [HttpPost("save-projectpartlist")]
+        public async Task<IActionResult> SaveDataAsync(ProjectPartList partList)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                // 1. Trim string fields
+                partList.TT = partList.TT?.Trim();
+                partList.ProductCode = partList.ProductCode?.Trim();
+                partList.SpecialCode = partList.SpecialCode?.Trim();
+                partList.GroupMaterial = partList.GroupMaterial?.Trim();
+                partList.Manufacturer = partList.Manufacturer?.Trim();
+                partList.Model = partList.Model?.Trim();
+                partList.Unit = partList.Unit?.Trim();
+                partList.ReasonProblem = partList.ReasonProblem?.Trim();
+                partList.Note = partList.Note?.Trim();
+
+                // 2. Validate
+                if (!_projectPartlistRepo.Validate(partList, out string message))
+                    return BadRequest(ApiResponseFactory.Fail(null, message));
+
+                // 3. Get ProjectTypeID from Version
+                var version = _partlistVersionRepo.GetByID(partList.ProjectPartListVersionID ?? 0);
+                if (version == null || version.ID <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy phiên bản!"));
+                partList.ProjectTypeID = version.ProjectTypeID;
+
+                // 4. Calculate ParentID & STT
+                partList.ParentID = _projectPartlistRepo.GetParentID(partList.TT, partList.ProjectTypeID ?? 0, partList.ProjectPartListVersionID ?? 0);
+                if (partList.STT == null || partList.STT <= 0)
+                    partList.STT = _projectPartlistRepo.getSTT(partList.ProjectPartListVersionID ?? 0);
+
+                // 5. INSERT or UPDATE
+                if (partList.ID <= 0)
+                {
+                    // INSERT
+                    partList.IsApprovedPurchase = false;
+                    partList.IsApprovedTBP = false;
+                    await _projectPartlistRepo.CreateAsync(partList);
+                }
+                else
+                {
+                    // UPDATE
+                    var partlistOld = _projectPartlistRepo.GetByID(partList.ID);
+                    if (partlistOld == null) return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu!"));
+               
+                    // Nếu chuyển sang IsProblem = true → INSERT new record
+                    if (partList.IsProblem == true && partlistOld.IsProblem != true)
+                    {
+                        partList.ID = 0;
+                        partList.IsApprovedPurchase = false;
+                        partList.IsApprovedTBP = false;
+                        partList.StatusPriceRequest = 0;
+                        partList.DatePriceRequest = null;
+                        partList.DeadlinePriceRequest = null;
+                        partList.RequestDate = null;
+                        partList.ExpectedReturnDate = null;
+                        partList.Status = 2;
+                        await _projectPartlistRepo.CreateAsync(partList);
+                    }
+                    else
+                    {
+                        await _projectPartlistRepo.UpdateAsync(partList);
+                        await UpdateRequestQuoteAsync(partList, partlistOld, currentUser);
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(null, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, "Lỗi khi lưu phiên bản danh sách phần"));
+            }
+        }
+        private async Task UpdateRequestQuoteAsync(
+     ProjectPartList partListNew,
+     ProjectPartList partListOld,
+     CurrentUser currentUser)
+        {
+            // Check if important fields changed
+            bool hasChanges = partListNew.ProductCode != partListOld.ProductCode ||
+                            partListNew.GroupMaterial != partListOld.GroupMaterial ||
+                            partListNew.Manufacturer != partListOld.Manufacturer ||
+                            partListNew.Model != partListOld.Model ||
+                            partListNew.QtyMin != partListOld.QtyMin ||
+                            partListNew.QtyFull != partListOld.QtyFull ||
+                            partListNew.Unit != partListOld.Unit ||
+                            partListNew.SpecialCode != partListOld.SpecialCode ||
+                            partListNew.ReasonProblem != partListOld.ReasonProblem ||
+                            partListNew.Note != partListOld.Note;
+
+            if (!hasChanges) return;
+
+            // Get existing price requests
+            var listQuotes = _priceRequestRepo.GetAll(x =>
+                x.ProjectPartListID == partListNew.ID &&
+                x.IsDeleted != true
+            );
+
+            if (!listQuotes.Any()) return;
+            if (!partListNew.DeadlinePriceRequest.HasValue || !partListNew.DatePriceRequest.HasValue) return;
+
+            // Mark old quotes as deleted
+            foreach (var quote in listQuotes)
+            {
+                quote.IsDeleted = true;
+                await _priceRequestRepo.UpdateAsync(quote);
+            }
+
+            // Calculate new deadline
+            DateTime now = DateTime.Now;
+            partListNew.StatusPriceRequest = 1;
+
+            // Lưu DatePriceRequest cũ để tính toán
+            DateTime oldDateRequest = partListNew.DatePriceRequest.Value;
+            DateTime oldDeadline = partListNew.DeadlinePriceRequest.Value;
+
+            // Set DatePriceRequest mới
+            partListNew.DatePriceRequest = now;
+
+            // Tính số ngày đã trôi qua từ deadline cũ đến hiện tại
+            double totalDay = (now.Date - oldDeadline.Date).TotalDays;
+
+            // Tính số ngày ban đầu giữa DateRequest và Deadline
+            double totalDayOld = (oldDeadline.Date - oldDateRequest.Date).TotalDays;
+
+            // Nếu đã quá deadline, cộng thêm số ngày quá hạn + số ngày ban đầu
+            if (totalDay > 0)
+            {
+                partListNew.DeadlinePriceRequest = oldDeadline.AddDays(totalDay + totalDayOld);
+            }
+            else
+            {
+                // Chưa quá hạn, giữ nguyên khoảng cách ban đầu từ ngày hiện tại
+                partListNew.DeadlinePriceRequest = now.Date.AddDays(totalDayOld);
+            }
+
+            // Add 1 day if after 15:30
+            if (now.TimeOfDay > new TimeSpan(15, 30, 0))
+            {
+                partListNew.DeadlinePriceRequest = partListNew.DeadlinePriceRequest.Value.AddDays(1);
+            }
+
+            // Handle weekend
+            if (partListNew.DeadlinePriceRequest.Value.DayOfWeek == DayOfWeek.Saturday)
+            {
+                partListNew.DeadlinePriceRequest = partListNew.DeadlinePriceRequest.Value.AddDays(2);
+            }
+            else if (partListNew.DeadlinePriceRequest.Value.DayOfWeek == DayOfWeek.Sunday)
+            {
+                partListNew.DeadlinePriceRequest = partListNew.DeadlinePriceRequest.Value.AddDays(1);
+            }
+            await _projectPartlistRepo.UpdateAsync(partListNew);
+
+            // Create new price request
+            await _priceRequestRepo.CreateAsync(new ProjectPartlistPriceRequest
+            {
+                ProjectPartListID = partListNew.ID,
+                EmployeeID = currentUser.EmployeeID,
+                ProductCode = partListNew.ProductCode,
+                ProductName = partListNew.GroupMaterial,
+                StatusRequest = 1,
+                DateRequest = now,
+                Deadline = partListNew.DeadlinePriceRequest,
+                Quantity = partListNew.QtyFull,
+            });
+        }
         private ProjectPartList BuildProjectPartListEntity(
     ProjectPartlistImportRowDto item, PartlistImportRequestDTO request, int parentID)
         {
@@ -727,8 +783,8 @@ namespace RERPAPI.Controllers.Project
                     {
                         success = false,
                         message = result.Message,
-                        diffs = result.Diffs,
-                        needConfirm = result.Diffs.Any()
+                        //diffs = result.Diffs,
+                        //needConfirm = result.Diffs.Any()
                     });
                 }
 
@@ -737,7 +793,7 @@ namespace RERPAPI.Controllers.Project
                     success = true,
                     message = "Dữ liệu hợp lệ!",
                     needConfirm = false,
-                    diffs = new List<PartlistDiffDTO>()
+                    //diffs = new List<PartlistDiffDTO>()
                 });
             }
             catch (Exception ex)
@@ -750,9 +806,6 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                //-------------------------------------------------------------------
-                // 1. ÁP DỤNG DIFF
-                //-------------------------------------------------------------------
                 if (request.Diffs != null && request.Diffs.Any())
                 {
                     foreach (var diff in request.Diffs)
@@ -777,7 +830,7 @@ namespace RERPAPI.Controllers.Project
                     foreach (var item in request.Items)
                     {
                         var fixedProduct = _productSaleRepo
-                            .GetAll(x => x.ProductCode == item.ProductCode && x.IsFix==true && x.IsDeleted==false)
+                            .GetAll(x => x.ProductCode == item.ProductCode && x.IsFix == true && x.IsDeleted == false)
                             .FirstOrDefault();
 
                         // CHỈ UPDATE KHI KHÔNG PHẢI FIXED
@@ -839,7 +892,7 @@ namespace RERPAPI.Controllers.Project
                             x.ProjectPartListVersionID == request.ProjectPartListVersionID &&
                             x.ProductCode == item.ProductCode &&
                             x.TT == item.TT &&
-                            x.IsDeleted==false)
+                            x.IsDeleted == false)
                         .FirstOrDefault();
 
                     //-------------------------------------------------------------------
@@ -887,6 +940,279 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
+        [HttpPost("delete-partlist")]
+        public async Task<IActionResult> DeletePartList([FromBody] List<ProjectPartList> listItem)
+        {
+            try
+            {
+                foreach (var item in listItem)
+                {
+                    if (item.IsApprovedPurchase == true)
+                    {
+                        return Ok(new { status = 2, message = $"Vật tư TT {item.TT} đã được yêu cầu mua hàng. Vui lòng hủy yêu cầu mua trước" });
+                    }
+                    if (item.IsApprovedTBP == true)
+                    {
+                        return Ok(new { status = 2, message = $"Vật tư TT {item.TT} đã được TBP duyệt. Vui lòng hủy duyệt trước" });
+                    }
+                    item.IsDeleted = true;
+                    await _projectPartlistRepo.UpdateAsync(item);
+                }
+                return Ok(ApiResponseFactory.Success(null, "Đã xóa thành công! "));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        // yêu cầu xuất kho
+        [HttpPost("request-export")]
+        public async Task<IActionResult> RequestExport([FromBody] RequestExportRequestDTO request)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                // Validate warehouse
+                var warehouse = _warehouseRepo.GetAll(x => x.WarehouseCode == request.WarehouseCode).FirstOrDefault();
+                if (warehouse == null || warehouse.ID <= 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy kho!"));
+                }
+
+                // Validate list items
+                if (request.ListItem == null || request.ListItem.Count <= 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng chọn sản phẩm muốn yêu cầu xuất kho!"));
+                }
+
+                // Validate lần 1: Thu thập sản phẩm không đủ số lượng (productNewCodes)
+                List<string> productNewCodes = new List<string>();
+                foreach (var item in request.ListItem)
+                {
+                    if (!_projectPartlistRepo.ValidateKeep(item, warehouse.ID, out string productNewCode))
+                    {
+                        if (!string.IsNullOrWhiteSpace(productNewCode) && !productNewCodes.Contains(productNewCode))
+                        {
+                            productNewCodes.Add(productNewCode);
+                        }
+                    }
+                }
+
+                // Validate lần 2: Lấy danh sách ID hợp lệ
+                List<int> validIds = new List<int>();
+                foreach (var item in request.ListItem)
+                {
+                    if (!_projectPartlistRepo.ValidateKeep(item, warehouse.ID, out string productNewCode))
+                    {
+                        continue;
+                    }
+
+                    if (item.ID > 0)
+                    {
+                        validIds.Add(item.ID);
+                    }
+                }
+
+                if (validIds.Count <= 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không có sản phẩm hợp lệ để xuất kho!"));
+                }
+
+                // Warning message nếu có sản phẩm không đủ số lượng
+                string warningMessage = "";
+                if (productNewCodes.Count > 0)
+                {
+                    warningMessage = $"Các sản phẩm có mã nội bộ [{string.Join(";", productNewCodes)}] sẽ không được yêu cầu xuất kho vì không đủ số lượng!";
+                }
+
+                // Gọi stored procedure
+                string idText = string.Join(",", validIds);
+                var ds = SQLHelper<dynamic>.ProcedureToList("spGetProjectPartListByID_RequestExport",
+                    new[] { "@ID" }, new object[] { idText });
+
+                // Lấy data từ table đầu tiên
+                var data = SQLHelper<dynamic>.GetListData(ds, 0);
+
+                if (data == null || data.Count == 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu sản phẩm!"));
+                }
+
+                // Group theo ProductGroupID (giống distinctValues trong winform)
+                var distinctGroups = data
+                    .Select(x => (IDictionary<string, object>)x)
+                    .Where(x => x.ContainsKey("ProductGroupID"))
+                    .GroupBy(x => Convert.ToInt32(x["ProductGroupID"]))
+                    .ToList();
+
+                List<BillExportDataDTO> billsData = new List<BillExportDataDTO>();
+
+                // Loop qua từng ProductGroupID
+                for (int j = 0; j < distinctGroups.Count; j++)
+                {
+                    var group = distinctGroups[j];
+                    int productGroupID = group.Key;
+                    var groupDetails = group.ToList();
+
+                    if (groupDetails.Count == 0) continue;
+
+                    // Lấy row đầu tiên để lấy thông tin chung
+                    var firstDetail = (IDictionary<string, object>)groupDetails[0];
+
+                    // Lấy product group warehouse info
+                    var dtGroupWarehouse = SQLHelper<dynamic>.ProcedureToList("spGetProductGroupWarehouse",
+                        new[] { "@WarehouseID", "@ProductGroupID" },
+                        new object[] { warehouse.ID, productGroupID });
+                    var groupWarehouseList = SQLHelper<dynamic>.GetListData(dtGroupWarehouse, 0);
+
+                    int senderID = 0;
+                    int senderEmployeeID = 0;
+                    if (groupWarehouseList != null && groupWarehouseList.Count > 0)
+                    {
+                        var groupWarehouseDict = (IDictionary<string, object>)groupWarehouseList[0];
+                        senderID = groupWarehouseDict.ContainsKey("UserID") ? Convert.ToInt32(groupWarehouseDict["UserID"]) : 0;
+                        senderEmployeeID = groupWarehouseDict.ContainsKey("EmployeeID") ? Convert.ToInt32(groupWarehouseDict["EmployeeID"]) : 0;
+                    }
+
+                    // Tạo bill object
+                    BillExportRQPDTO billDTO = new BillExportRQPDTO
+                    {
+                        Code = _billExportRepo.GetBillCode(1),
+                        Status = 6,
+                        SenderID = senderID,
+                        SenderEmployeeID = senderEmployeeID,
+                        UserID = currentUser.ID,
+                        WarehouseID = warehouse.ID,
+                        RequestDate = DateTime.Now,
+                        CustomerID = firstDetail.ContainsKey("CustomerID") ? Convert.ToInt32(firstDetail["CustomerID"]) : 0,
+                        Address = firstDetail.ContainsKey("Address") ? firstDetail["Address"]?.ToString() : "",
+                        KhoTypeID = productGroupID,
+                        GroupID = productGroupID.ToString(),
+                        WarehouseCode = warehouse.WarehouseCode,
+                        IsPOKH = true
+                    };
+
+                    // Lấy tên ProductGroup
+                    var productGroup =  _productGroupRepo.GetByID(productGroupID);
+                    if (productGroup != null)
+                    {
+                        billDTO.WarehouseType = productGroup.ProductGroupName;
+                    }
+
+                    // Tạo detail list
+                    List<BillExportDetailRQPDTO> detailList = new List<BillExportDetailRQPDTO>();
+
+                    for (int i = 0; i < groupDetails.Count; i++)
+                    {
+                        var detailDict = (IDictionary<string, object>)groupDetails[i];
+                        int detailID = Convert.ToInt32(detailDict["ID"]);
+
+                        // Tìm item tương ứng trong request.ListItem (giống TreeListNode)
+                        var itemNode = request.ListItem.FirstOrDefault(x => x.ID == detailID);
+                        if (itemNode == null) continue;
+
+                        // Lấy các giá trị số lượng
+                        decimal remainQuantity = itemNode.RemainQuantity;
+                        decimal quantityReturn = itemNode.QuantityReturn;
+                        decimal qtyFull = itemNode.QtyFull;
+
+                        // Nếu đã xuất hết rồi thì bỏ qua
+                        if (remainQuantity <= 0)
+                            continue;
+
+                        // Nếu số lượng trả <= 0 thì bỏ qua luôn
+                        if (quantityReturn <= 0)
+                            continue;
+
+                        // Tính số lượng cần xuất (logic mới từ winform)
+                        decimal qtyToExport = (quantityReturn >= qtyFull)
+                            ? remainQuantity
+                            : Math.Min(remainQuantity, quantityReturn);
+
+                        BillExportDetailRQPDTO detailDTO = new BillExportDetailRQPDTO
+                        {
+                            STT = i + 1,
+                            ChildID = i + 1,
+                            ParentID = 0,
+
+                            // Từ SP (dataRowDetail)
+                            ProductID = detailDict.ContainsKey("ProductSaleID") ? Convert.ToInt32(detailDict["ProductSaleID"]) : 0,
+                            ProductCode = detailDict.ContainsKey("ProductCode") ? detailDict["ProductCode"]?.ToString() : "",
+                            ProductFullName = detailDict.ContainsKey("GroupMaterial") ? detailDict["GroupMaterial"]?.ToString() : "",
+                            ProjectID = detailDict.ContainsKey("ProjectID") ? Convert.ToInt32(detailDict["ProjectID"]) : 0,
+                            ProjectName = detailDict.ContainsKey("ProjectName") ? detailDict["ProjectName"]?.ToString() : "",
+                            Note = detailDict.ContainsKey("Note") ? detailDict["Note"]?.ToString() : "",
+                            TotalQty = detailDict.ContainsKey("QtyFull") ? Convert.ToDecimal(detailDict["QtyFull"]) : 0,
+                            ProjectPartListID = detailID,
+
+                            // Từ itemNode (giống node.GetValue)
+                            ProductNewCode = itemNode.ProductNewCode,
+                            ProductName = itemNode.GroupMaterial,
+                            Unit = itemNode.Unit,
+                            ProjectCodeText = itemNode.ProjectCode,
+                            ProjectCodeExport = itemNode.ProjectCode,
+
+                            // Số lượng - SỬ DỤNG qtyToExport thay vì remainQuantity
+                            Qty = qtyToExport,
+
+                            SerialNumber = ""
+                        };
+
+                        detailList.Add(detailDTO);
+                    }
+
+                    // Chỉ thêm nếu có detail (giống if (dtDetail.Rows.Count <= 0) continue)
+                    if (detailList.Count > 0)
+                    {
+                        billsData.Add(new BillExportDataDTO
+                        {
+                            Bill = billDTO,
+                            Details = detailList
+                        });
+                    }
+                }
+
+                // Trả về data cho FE
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    Bills = billsData,
+                    Warning = warningMessage,
+                    TotalBills = billsData.Count,            
+                }, "Đã lấy dữ liệu thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        //lịch sử giá + sản phẩm trong kho 
+        [HttpPost("history-partlist")]
+        public async Task<IActionResult> HistoryPartList([FromBody] HistoryPartListRequestParam request)
+        {
+            try
+            {
+                var data = SQLHelper<dynamic>.ProcedureToList(
+                    "spGetProductInventoryByKeyword",
+                    ["@Keyword", "@ProductCode"],
+                    [request.keyword ?? "", request.productCode]
+                );
+
+                var dt = SQLHelper<dynamic>.ProcedureToList(
+                    "spGetHistoryPricePartlist_Khanh",
+                    ["@Keyword", "@ProductCode"],
+                    [request.keyword ?? "", request.productCode]
+                );
+
+                return Ok(ApiResponseFactory.Success(new { data, dt }, "Đã xử lý thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 
 }

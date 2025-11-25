@@ -21,7 +21,7 @@ namespace RERPAPI.Controllers.Old
 
 
         [HttpGet]
-        [RequiresPermission("N1,N2")]
+        //[RequiresPermission("N1,N2")]
         public IActionResult GetHoliday(int month, int year)
         {
             try

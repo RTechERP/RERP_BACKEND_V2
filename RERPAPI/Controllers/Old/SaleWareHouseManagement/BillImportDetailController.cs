@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.Entities;
+using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 {
@@ -8,6 +9,12 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     [ApiController]
     public class BillImportDetailController : ControllerBase
     {
+        private readonly BillImportDetailRepo _billImportdetailRepo;
+        public BillImportDetailController(BillImportDetailRepo billImportDetailRepo)
+        {
+            _billImportdetailRepo = billImportDetailRepo;
+        }
+
         [HttpGet("BillImportID/{billImportID}")]
         public IActionResult getBillExportDetailByBillID(int billImportID)
         {
@@ -34,6 +41,24 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     message = ex.Message,
                     error = ex.ToString()
                 });
+            }
+        }
+        [HttpPost("save-data")]
+        public async Task<IActionResult> SaveData(List<BillImportDetail> details)
+        {
+            try
+            {
+                if (details.Count < 0) return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu trả về!"));
+                foreach (BillImportDetail detail in details)
+                {
+                    if (detail.ID > 0) await _billImportdetailRepo.UpdateAsync(detail);
+                    else await _billImportdetailRepo.CreateAsync(detail);
+                }
+                return Ok(ApiResponseFactory.Success(details, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

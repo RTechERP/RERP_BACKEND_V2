@@ -264,7 +264,7 @@ namespace RERPAPI.Controllers.KhoBaseManager
                 });
             }
             catch (Exception ex)
-            { 
+            {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
@@ -524,19 +524,21 @@ namespace RERPAPI.Controllers.KhoBaseManager
                 var data = SQLHelper<dynamic>.GetListData(list, 0);
 
                 if (data == null || data.Count == 0)
-                    return BadRequest(new { message = "Không có dữ liệu để xuất!" });
+                    return BadRequest(ApiResponseFactory.Fail(null,"Không có dữ liệu để xuất"));
 
                 // 2. Lấy template
-                string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "TemplateFollowProjectBase.xlsx");
+                //string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "TemplateFollowProjectBase.xlsx");
+                string templatePath = @"\\192.168.1.190\Software\Template\ExportExcel\TemplateFollowProjectBase.xlsx";
+
 
                 if (!System.IO.File.Exists(templatePath))
-                    return BadRequest(new { message = "Không tìm thấy file template!" });
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy file template"));
 
                 using (var workbook = new XLWorkbook(templatePath))
                 {
                     var ws = workbook.Worksheet(1);
 
-                    int row = 3;  
+                    int row = 3;
 
                     foreach (dynamic item in data)
                     {
@@ -657,7 +659,7 @@ namespace RERPAPI.Controllers.KhoBaseManager
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Lỗi xuất file: " + ex.Message, stack = ex.StackTrace });
+                return BadRequest(ApiResponseFactory.Fail(null, "Lỗi xuất file: " + ex.Message ));
             }
         }
 
@@ -895,50 +897,80 @@ namespace RERPAPI.Controllers.KhoBaseManager
             //}
 
         }
-}
-static class ImportExtensions
-{
-    public static string GetString(this Dictionary<string, object> row, string key)
-    {
-        if (row == null)
-            return null;
-        if (!row.TryGetValue(key, out var val) || val == null)
-            return null;
-        var s = val.ToString()?.Trim();
-        return string.IsNullOrEmpty(s) ? null : s;
-    }
-
-    public static DateTime? GetNullableDate(this Dictionary<string, object> row, string key)
-    {
-        if (row == null)
-            return null;
-        if (!row.TryGetValue(key, out var val) || val == null)
-            return null;
-
-        var str = val.ToString();
-
-        // ISO string
-        if (DateTime.TryParse(str, CultureInfo.InvariantCulture,
-            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var iso))
-            return iso;
-
-        // dd/MM/yyyy
-        if (DateTime.TryParseExact(str, new[] { "dd/MM/yyyy", "d/M/yyyy" },
-            CultureInfo.InvariantCulture, DateTimeStyles.None, out var dmy))
-            return dmy;
-
-        // yyyy-MM-dd
-        if (DateTime.TryParseExact(str, "yyyy-MM-dd",
-            CultureInfo.InvariantCulture, DateTimeStyles.None, out var ymd))
-            return ymd;
-
-        // Excel serial number
-        if (double.TryParse(str, NumberStyles.Any, CultureInfo.InvariantCulture, out var serial))
+        [HttpGet("download-template-followprojectbase")]
+        public IActionResult DownloadTemplateFollowProjectBase()
         {
-            var epoch = new DateTime(1899, 12, 30);
-            return epoch.AddDays(serial);
+            try
+            {
+                string templatePath = @"\\192.168.1.190\Software\Template\ExportExcel\TemplateFollowProjectBase.xlsx";
+
+                if (!System.IO.File.Exists(templatePath))
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy file template trên server"));
+
+                // Đọc file từ ổ mạng
+                byte[] fileBytes = System.IO.File.ReadAllBytes(templatePath);
+
+                string fileName = "TemplateFollowProjectBase.xlsx";
+
+                return File(
+                    fileBytes,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    fileName
+                );
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(null, "Lỗi tải template: " + ex.Message));
+            }
         }
 
-        return null;
+    }
+
+
+    static class ImportExtensions
+    {
+        public static string GetString(this Dictionary<string, object> row, string key)
+        {
+            if (row == null)
+                return null;
+            if (!row.TryGetValue(key, out var val) || val == null)
+                return null;
+            var s = val.ToString()?.Trim();
+            return string.IsNullOrEmpty(s) ? null : s;
+        }
+
+        public static DateTime? GetNullableDate(this Dictionary<string, object> row, string key)
+        {
+            if (row == null)
+                return null;
+            if (!row.TryGetValue(key, out var val) || val == null)
+                return null;
+
+            var str = val.ToString();
+
+            // ISO string
+            if (DateTime.TryParse(str, CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var iso))
+                return iso;
+
+            // dd/MM/yyyy
+            if (DateTime.TryParseExact(str, new[] { "dd/MM/yyyy", "d/M/yyyy" },
+                CultureInfo.InvariantCulture, DateTimeStyles.None, out var dmy))
+                return dmy;
+
+            // yyyy-MM-dd
+            if (DateTime.TryParseExact(str, "yyyy-MM-dd",
+                CultureInfo.InvariantCulture, DateTimeStyles.None, out var ymd))
+                return ymd;
+
+            // Excel serial number
+            if (double.TryParse(str, NumberStyles.Any, CultureInfo.InvariantCulture, out var serial))
+            {
+                var epoch = new DateTime(1899, 12, 30);
+                return epoch.AddDays(serial);
+            }
+
+            return null;
+        }
     }
 }

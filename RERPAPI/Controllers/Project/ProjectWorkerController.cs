@@ -55,6 +55,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        
         //load phiên bản po
         [HttpGet("get-version-po/{projectSolutionId}")]
         public async Task<IActionResult> GetVersionPO(int projectSolutionId)

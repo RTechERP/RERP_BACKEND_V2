@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using RERPAPI.Model.Param;
 using System.Globalization;
 using System.Text;
+
 namespace RERPAPI.Repo.GenericEntity
 {
     public class ProjectPartListRepo : GenericRepo<ProjectPartList>
@@ -188,6 +189,15 @@ namespace RERPAPI.Repo.GenericEntity
                     return false;
                 }
 
+            }
+            if (!string.IsNullOrWhiteSpace(item.SpecialCode))
+            {
+                var specialCode = GetAll(x => x.SpecialCode == item.SpecialCode && x.ID == item.ID && x.IsDeleted != true);
+                if (specialCode.Count > 0)
+                {
+                    message = $"Mã đặc biệt [{item.SpecialCode}] đã tồn tại .\nVui lòng kiểm tra lại!";
+                    return false;
+                }
             }
             List<ProjectPartList> listChilds = GetAll(x => x.IsDeleted != true && x.ParentID == item.ParentID);
             if (listChilds.Count < 0)
@@ -715,7 +725,7 @@ namespace RERPAPI.Repo.GenericEntity
             public string Message { get; set; } = "";
 
             // Chuyển dtError → List<PartlistDiffDto>
-            public List<PartlistDiffDTO> Diffs { get; set; } = new();
+            //public List<PartlistDiffDTO> Diffs { get; set; } = new();
         }
         Regex regex = new Regex(@"^-?[\d\.]+$");
 
@@ -849,32 +859,32 @@ namespace RERPAPI.Repo.GenericEntity
                             excelUnit != stockUnit)
                         {
                             // Thêm vào DIFF LIST
-                            result.Diffs.Add(new PartlistDiffDTO
-                            {
-                                ProductSaleId = fixedProduct.ID,
-                                ProductCode = productCode,
+                            //result.Diffs.Add(new PartlistDiffDTO
+                            //{
+                            //    ProductSaleId = fixedProduct.ID,
+                            //    ProductCode = productCode,
 
-                                GroupMaterialPartlist = groupMaterial,
-                                GroupMaterialStock = fixedProduct.ProductName,
+                            //    GroupMaterialPartlist = groupMaterial,
+                            //    GroupMaterialStock = fixedProduct.ProductName,
 
-                                ManufacturerPartlist = manufacturer,
-                                ManufacturerStock = fixedProduct.Maker,
+                            //    ManufacturerPartlist = manufacturer,
+                            //    ManufacturerStock = fixedProduct.Maker,
 
-                                UnitPartlist = unit,
-                                UnitStock = fixedProduct.Unit,
+                            //    UnitPartlist = unit,
+                            //    UnitStock = fixedProduct.Unit,
 
-                                IsFix = fixedProduct.IsFix ?? true
-                            });
+                            //    IsFix = fixedProduct.IsFix ?? true
+                            //});
                         }
                     }
                 }
             }
 
-            if (result.Diffs.Any())
-            {
-                result.IsValid = false;
-                result.Message = "Có sự khác nhau giữa Partlist và dữ liệu tích xanh trong kho.";
-            }
+            //if (result.Diffs.Any())
+            //{
+            //    result.IsValid = false;
+            //    result.Message = "Có sự khác nhau giữa Partlist và dữ liệu tích xanh trong kho.";
+            //}
 
             return result;
         }
@@ -922,5 +932,60 @@ namespace RERPAPI.Repo.GenericEntity
 
             return true;
         }
+
+        string[] unitNames = new string[] { "m", "mét" };
+        public bool ValidateKeep(ProjectPartListExportDTO partList , int wareHouseID, out string productNewCode)
+        {
+            productNewCode = string.Empty;
+            if (partList == null) return false;
+            string unitName = partList.Unit;
+            if (unitNames.Contains(unitName.Trim().ToLower())) return true;
+
+            int billExportDetailID = 0;
+            int productID = partList.ProductID ;
+            int projectID = partList.ProjectID ;
+            //int pokhDetailID = 0;
+            decimal remainQuantity = partList.RemainQuantity;
+            decimal quantityReturn = partList.QuantityReturn ;
+            decimal qtyFull = partList.QtyFull ;
+
+            if (remainQuantity <= 0) return false;
+            if (quantityReturn <= 0) return false;
+
+            decimal totalQty = (quantityReturn >= qtyFull) ? remainQuantity : Math.Min(remainQuantity, quantityReturn);
+            int pokhDetailID = 0;
+            
+            string productCode = partList.ProductNewCode ?? "";
+            string projectCode = partList.ProjectCode ?? " ";
+          
+
+            // Lấy tồn kho theo sp, project, POKH
+            var ds = SQLHelper<dynamic>.ProcedureToList("spGetInventoryProjectImportExport",
+                new string[] { "@WarehouseID", "@ProductID", "@ProjectID", "@POKHDetailID", "@BillExportDetailID" },
+                new object[] { wareHouseID, productID,projectID,pokhDetailID, billExportDetailID });
+
+            var inventoryProjects = ds[0];
+            var dtImport = ds[1];
+            var dtExport = ds[2];
+            var dtStock = ds[3];
+
+            decimal totalQuantityKeep = inventoryProjects.Count > 0 ? Convert.ToDecimal(inventoryProjects[0].TotalQuantity) : 0; 
+            decimal totalQuantityLast = dtStock.Count > 0 ? Convert.ToDecimal(dtStock[0].TotalQuantityLast) : 0;
+            decimal totalImport = dtImport.Count > 0 ? Convert.ToDecimal(dtImport[0].TotalImport) : 0;
+            decimal totalExport = dtExport.Count > 0 ? Convert.ToDecimal(dtExport[0].TotalExport) : 0;
+
+            decimal totalQuantityRemain = Math.Max(totalImport - totalExport, 0);
+
+            decimal totalStock = Math.Max(totalQuantityKeep, 0) + totalQuantityRemain + Math.Max(totalQuantityLast, 0);
+            if(totalQty > totalStock)
+            {
+                productNewCode = productCode;
+                return false;
+            }
+
+            return true;
+        }
+
     }
+
 }

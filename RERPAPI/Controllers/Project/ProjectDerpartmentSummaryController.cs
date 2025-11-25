@@ -5,6 +5,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.Project;
 using RERPAPI.Repo.GenericEntity;
 using ZXing;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.Project // tổng hợp phòng ban
 {
@@ -79,8 +80,12 @@ namespace RERPAPI.Controllers.Project // tổng hợp phòng ban
         {
             try
             {
-                var result = _projectRepo.GetAll(x => x.IsDeleted == false);
-                return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu thành công!"));
+                var data = SQLHelper<object>.ProcedureToList("spGetProject_ALL",
+                new string[] {  },
+                new object[] { });
+                //var result = _projectRepo.GetAll(x => x.IsDeleted == false);
+
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data,0), "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
