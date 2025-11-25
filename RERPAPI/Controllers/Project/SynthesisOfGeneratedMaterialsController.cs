@@ -20,7 +20,8 @@ namespace RERPAPI.Controllers.Project
                    , new object[] { pageSize, pageNumber, ds, de, keyword ?? "", projectId });
                 // Lấy từng bảng trong DataSet
                 var dt = SQLHelper<object>.GetListData(data, 0);
-                return Ok(ApiResponseFactory.Success(dt, ""));
+                var totalpage = SQLHelper<object>.GetListData(data, 1);
+                return Ok(ApiResponseFactory.Success(new {dt, totalpage}, ""));
             }
             catch (Exception ex)
             {

@@ -24,6 +24,6 @@ namespace RERPAPI.Model.DTO
         /// Danh sách diff (những dòng có sai khác Stock)
         /// FE sẽ thêm trường Choose = "Excel" hoặc "Stock"
         /// </summary>
-        //public List<PartlistDiffDTO>? Diffs { get; set; } = new();
+        public List<PartlistDiffDTO>? Diffs { get; set; } = new();
     }
 }

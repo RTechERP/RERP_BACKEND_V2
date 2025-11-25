@@ -210,6 +210,7 @@ builder.Services.AddScoped<UserTeamRepo>();
 builder.Services.AddScoped<WarehouseRepo>();
 builder.Services.AddScoped<WeekPlanRepo>();
 builder.Services.AddScoped<vUserGroupLinksRepo>();
+builder.Services.AddScoped<NotifyRepo>();  
 
 // Project sub-namespace repos
 builder.Services.AddScoped<ProjectItemFileRepo>();
