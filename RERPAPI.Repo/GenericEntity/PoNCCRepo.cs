@@ -1,6 +1,7 @@
 ﻿using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
+using System.Data;
 using System.Text.RegularExpressions;
 
 namespace RERPAPI.Repo.GenericEntity
@@ -267,6 +268,56 @@ namespace RERPAPI.Repo.GenericEntity
             code += sttText;
 
             return code;
+        }
+        public async Task UpdateTinhHinhDonHang(BillImportApprovedDTO lstModels, bool isapproved)
+        {
+            int PONCCID = 0;
+            if (lstModels.billImportDetails.Count <= 0) return;
+            foreach (var item in lstModels.billImportDetails)
+            {
+                int PONCCDetailID = item.PONCCDetailID ?? 0;
+                if (PONCCDetailID <= 0) return;
+                PONCCDetail model = _pONCCDetailRepo.GetByID(PONCCDetailID);
+                if (isapproved)
+                {
+                    model.QtyReal = model.QtyReal + item.Qty;
+                    model.Soluongcon = model.QtyRequest - model.QtyReal;
+                }
+                else
+                {
+                    model.QtyReal = model.QtyReal - item.Qty;
+                    model.Soluongcon = model.QtyRequest - model.QtyReal;
+                }
+                model.Status = model.Soluongcon == 0 ? 1 : 0;
+                PONCCID = model.PONCCID ?? 0;
+                await _pONCCDetailRepo.UpdateAsync(model);
+                List<PONCCDetail> pONCCDetails = _pONCCDetailRepo.GetAll(x => x.PONCCID == PONCCID);
+                if (pONCCDetails.Count <= 0) return;
+                PONCC pONCC = GetByID(PONCCID);//Đang tiến hành 0//Hoàn thành 1//Huỷ 2
+                if (CheckPONCCDetaila(pONCCDetails))
+                {
+                    if (pONCC.Status == 0)
+                    {
+                        pONCC.Status = 1;
+                    }
+                }
+                else
+                {
+                    pONCC.Status = pONCC.Status == 1 ? 0 : pONCC.Status_Old;
+                }
+                await UpdateAsync(pONCC);
+            }
+        }
+        private bool CheckPONCCDetaila(List<PONCCDetail> dt)
+        {
+            int dem = 0;
+            for (int i = 0; i < dt.Count; i++)
+            {
+                dem = dt[i].Soluongcon == 0 ? dem + 1 : dem;
+
+            }
+            if (dem == dt.Count) return true;
+            return false;
         }
     }
 }

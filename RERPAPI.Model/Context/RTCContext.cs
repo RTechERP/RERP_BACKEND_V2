@@ -7318,11 +7318,7 @@ public partial class RTCContext : DbContext
 
         modelBuilder.Entity<ProjectPersonalPriotity>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("ProjectPersonalPriotity");
-
-            entity.Property(e => e.ID).ValueGeneratedOnAdd();
+            entity.ToTable("ProjectPersonalPriotity");
         });
 
         modelBuilder.Entity<ProjectPriority>(entity =>

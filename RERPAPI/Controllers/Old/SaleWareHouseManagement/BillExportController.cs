@@ -275,8 +275,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
                 if ((dto.billExportDetail == null || !dto.billExportDetail.Any()) && (dto.DeletedDetailIDs == null || !dto.DeletedDetailIDs.Any()))
                 {
-                    // Trường hợp chỉ xóa phiếu
-                    dto.billExport.UpdatedDate = DateTime.Now;
                     _billexportRepo.Update(dto.billExport);
                     return Ok(new { status = 1, message = $"Đã xóa thành công phiếu {dto.billExport.Code}" });
                 }
@@ -337,10 +335,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         });
                     }
                 }
-
-                // 4. Tạo / Cập nhật phiếu xuất
                 int billExportId;
-                if (dto.billExport.ID <= 0) // Thêm mới
+                if (dto.billExport.ID <= 0) 
                 {
                     dto.billExport.IsMerge = false;
                     dto.billExport.UnApprove = 0;
@@ -350,7 +346,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 }
                 else // Cập nhật
                 {
-                    dto.billExport.UpdatedDate = DateTime.Now;
                     _billexportRepo.Update(dto.billExport);
                     billExportId = dto.billExport.ID;
                 }
@@ -391,8 +386,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                             foreach (var existing in existingRecords)
                             {
                                 existing.IsDeleted = true;
-                                existing.UpdatedBy = dto.billExport.UpdatedBy;
-                                existing.UpdatedDate = DateTime.Now;
                                 await _inventoryprojectexportRepo.UpdateAsync(existing);
                             }
 
@@ -412,9 +405,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                                     BillExportDetailID = detail.ID,
                                     InventoryProjectID = inventoryProjectID,
                                     Quantity = quantity,
-                                    CreatedDate = DateTime.Now,
-                                    UpdatedDate = DateTime.Now,
-                                    CreatedBy = dto.billExport.CreatedBy,
                                     IsDeleted = false
                                 };
 

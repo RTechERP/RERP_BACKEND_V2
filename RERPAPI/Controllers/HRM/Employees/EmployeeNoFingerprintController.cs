@@ -2,6 +2,7 @@
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
+using RERPAPI.Model.Param.HRM;
 using RERPAPI.Repo.GenericEntity;
 using System.Data;
 
@@ -10,6 +11,8 @@ namespace RERPAPI.Controllers.HRM.Employees
 {
     [Route("api/[controller]")]
     [ApiController]
+
+
     public class EmployeeNoFingerprintController : ControllerBase
     {
         EmployeeNoFingerprintRepo _employeeNoFingerprintRepo;
@@ -21,35 +24,20 @@ namespace RERPAPI.Controllers.HRM.Employees
             _departmentRepo = departmentRepo;
         }
         [RequiresPermission("N1,N2")]
-        [HttpGet("get-employee-no-fingerprint")]
-        public IActionResult GetEmployeeNoFingerprint(int pageNumber, int pageSize, DateTime dateStart, DateTime dateEnd, int departmentId, int idApprovedTP, int status, string? keyword)
+        [HttpPost("get-employee-no-fingerprint")]
+        public IActionResult GetEmployeeNoFingerprint([FromBody] EmployeeNoFingerPrintRequestParam request)
         {
             try
             {
-                DateTime ds = new DateTime(dateStart.Year, dateStart.Month, dateStart.Day, 0, 0, 0);
-                DateTime de = new DateTime(dateEnd.Year, dateEnd.Month, dateEnd.Day, 23, 59, 59);
+                DateTime ds = new DateTime(request.DateStart.Year, request.DateStart.Month, request.DateStart.Day, 0, 0, 0);
+                DateTime de = new DateTime(request.DateEnd.Year, request.DateEnd.Month, request.DateEnd.Day, 23, 59, 59);
                 var dt = SQLHelper<object>.ProcedureToList("spGetEmployeeNoFingerprint",
                                                    new string[] { "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@DepartmentID", "@IDApprovedTP", "@Status", @"Keyword" },
-                                                   new object[] { pageNumber, pageSize, ds, de, departmentId, idApprovedTP, status, keyword ?? "" });
-                // Lấy từng bảng trong DataSet
+                                                   new object[] { request.Page ?? 1, request.Size ?? 50, ds, de, request.DepartmentID ?? 0, request.IDApprovedTP, request.Status, request.KeyWord ?? "" });
                 var data = SQLHelper<object>.GetListData(dt, 0);
-                // Tổng số trang
-                int totalPage = 0;
-                var totalPageTable = SQLHelper<object>.GetListData(dt, 1);
-                if (totalPageTable.Count > 0)
-                {
-                    dynamic row = totalPageTable[0];
-                    totalPage = row.TotalPage;
-                }
+                var totalPage = SQLHelper<object>.GetListData(dt, 1);
 
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Lấy danh sách WFH thành công",
-
-                    data,
-                    totalPage
-                });
+                return Ok(ApiResponseFactory.Success(new { data, totalPage }, "Lấy dữ lệu thành công"));
             }
             catch (Exception ex)
             {
@@ -110,8 +98,10 @@ namespace RERPAPI.Controllers.HRM.Employees
             try
             {
 
-                if (employeeNoFingerprint.ID <= 0) await _employeeNoFingerprintRepo.CreateAsync(employeeNoFingerprint);
-                else await _employeeNoFingerprintRepo.UpdateAsync(employeeNoFingerprint);
+                if (employeeNoFingerprint.ID <= 0)
+                    await _employeeNoFingerprintRepo.CreateAsync(employeeNoFingerprint);
+                else
+                    await _employeeNoFingerprintRepo.UpdateAsync(employeeNoFingerprint);
                 return Ok(ApiResponseFactory.Success(employeeNoFingerprint, "Cập nhật thành công!"));
             }
             catch (Exception ex)

@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using RERPAPI.Model.Param;
 using System.Globalization;
 using System.Text;
+
 namespace RERPAPI.Repo.GenericEntity
 {
     public class ProjectPartListRepo : GenericRepo<ProjectPartList>
@@ -188,6 +189,15 @@ namespace RERPAPI.Repo.GenericEntity
                     return false;
                 }
 
+            }
+            if(!string.IsNullOrWhiteSpace(item.SpecialCode))
+            {
+                var specialCode = GetAll(x => x.SpecialCode == item.SpecialCode && x.ID == item.ID && x.IsDeleted != true);
+                if (specialCode.Count > 0)
+                {
+                    message = $"Mã đặc biệt [{item.SpecialCode}] đã tồn tại .\nVui lòng kiểm tra lại!";
+                    return false;
+                }
             }
             List<ProjectPartList> listChilds = GetAll(x => x.IsDeleted != true && x.ParentID == item.ParentID);
             if (listChilds.Count < 0)
@@ -715,7 +725,7 @@ namespace RERPAPI.Repo.GenericEntity
             public string Message { get; set; } = "";
 
             // Chuyển dtError → List<PartlistDiffDto>
-            public List<PartlistDiffDTO> Diffs { get; set; } = new();
+            //public List<PartlistDiffDTO> Diffs { get; set; } = new();
         }
         Regex regex = new Regex(@"^-?[\d\.]+$");
 
@@ -849,32 +859,32 @@ namespace RERPAPI.Repo.GenericEntity
                             excelUnit != stockUnit)
                         {
                             // Thêm vào DIFF LIST
-                            result.Diffs.Add(new PartlistDiffDTO
-                            {
-                                ProductSaleId = fixedProduct.ID,
-                                ProductCode = productCode,
+                            //result.Diffs.Add(new PartlistDiffDTO
+                            //{
+                            //    ProductSaleId = fixedProduct.ID,
+                            //    ProductCode = productCode,
 
-                                GroupMaterialPartlist = groupMaterial,
-                                GroupMaterialStock = fixedProduct.ProductName,
+                            //    GroupMaterialPartlist = groupMaterial,
+                            //    GroupMaterialStock = fixedProduct.ProductName,
 
-                                ManufacturerPartlist = manufacturer,
-                                ManufacturerStock = fixedProduct.Maker,
+                            //    ManufacturerPartlist = manufacturer,
+                            //    ManufacturerStock = fixedProduct.Maker,
 
-                                UnitPartlist = unit,
-                                UnitStock = fixedProduct.Unit,
+                            //    UnitPartlist = unit,
+                            //    UnitStock = fixedProduct.Unit,
 
-                                IsFix = fixedProduct.IsFix ?? true
-                            });
+                            //    IsFix = fixedProduct.IsFix ?? true
+                            //});
                         }
                     }
                 }
             }
 
-            if (result.Diffs.Any())
-            {
-                result.IsValid = false;
-                result.Message = "Có sự khác nhau giữa Partlist và dữ liệu tích xanh trong kho.";
-            }
+            //if (result.Diffs.Any())
+            //{
+            //    result.IsValid = false;
+            //    result.Message = "Có sự khác nhau giữa Partlist và dữ liệu tích xanh trong kho.";
+            //}
 
             return result;
         }
@@ -922,5 +932,7 @@ namespace RERPAPI.Repo.GenericEntity
 
             return true;
         }
-    }
+      
+}
+
 }
