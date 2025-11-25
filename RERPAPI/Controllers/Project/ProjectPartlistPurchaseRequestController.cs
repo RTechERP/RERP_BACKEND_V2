@@ -574,5 +574,21 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        [HttpPost("unTech-bought")]
+        public async Task<IActionResult> UnTechBought(int id)
+        {
+            try
+            {
+                var data = _repo.GetAll(x=>x.ProjectPartListID == id).FirstOrDefault();
+                data.IsDeleted = true;
+                await _repo.UpdateAsync(data);
+                return Ok(ApiResponseFactory.Success(null, "Hủy mua thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 }
