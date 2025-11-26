@@ -16,7 +16,7 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize] 
     public class OfficeSupplyRequestsController : ControllerBase
     {
         private readonly OfficeSupplyRequestsRepo officesupplyrequests;
