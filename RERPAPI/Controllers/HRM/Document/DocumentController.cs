@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using OfficeOpenXml;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.Document;
@@ -29,9 +30,11 @@ namespace RERPAPI.Controllers.DocumentManager
         DocumentFileRepo _documentfile;
 
         DepartmentRepo _tsDepartment;
+        private IConfiguration _configuration;
 
-        public DocumentController(DocumentTypeRepo documenttype, DocumentRepo document, DocumentFileRepo documentfile, DepartmentRepo tsDepartment)
+        public DocumentController(DocumentTypeRepo documenttype, DocumentRepo document, DocumentFileRepo documentfile, DepartmentRepo tsDepartment, IConfiguration configuration) 
         {
+            _configuration = configuration;
             _documenttype = documenttype;
             _document = document;
             _documentfile = documentfile;
@@ -334,11 +337,17 @@ namespace RERPAPI.Controllers.DocumentManager
                 }
 
                 // Bước 3: Đường dẫn template
-                string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "VBPhatHanh.xlsx");
+                ExcelPackage.License.SetNonCommercialOrganization("rtc");
+
+                //string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "BienBanBanGiao.xlsx");
+
+                var templateFolder = _configuration.GetValue<string>("PathTemplate");
+
+                if (string.IsNullOrWhiteSpace(templateFolder))
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy đường dẫn thư mục {templateFolder} trên sever!!"));
+                string templatePath = Path.Combine(templateFolder, "ExportExcel", "VBPhatHanh.xlsx");
                 if (!System.IO.File.Exists(templatePath))
-                {
-                    return BadRequest("Không tìm thấy file mẫu Excel.");
-                }
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy File mẫu!"));
 
                 // Bước 4: Mở template và điền dữ liệu với ClosedXML
                 using (var workbook = new XLWorkbook(templatePath))

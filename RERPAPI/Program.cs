@@ -15,6 +15,7 @@ using RERPAPI.Repo.GenericEntity.BBNV;
 using RERPAPI.Repo.GenericEntity.DocumentManager;
 using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
 using RERPAPI.Repo.GenericEntity.Film;
+using RERPAPI.Repo.GenericEntity.GeneralCatetogy.JobRequirements;
 using RERPAPI.Repo.GenericEntity.HRM;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
 using RERPAPI.Repo.GenericEntity.MeetingMinutesRepo;
@@ -64,6 +65,7 @@ builder.Services.AddScoped<BillImportTechDetailSerialRepo>();
 builder.Services.AddScoped<BusinessFieldLinkRepo>();
 builder.Services.AddScoped<BusinessFieldRepo>();
 builder.Services.AddScoped<ConfigSystemRepo>();
+builder.Services.AddScoped<OfficeSupplyRequestsDetailRepo>();
 builder.Services.AddScoped<CurrencyRepo>();
 builder.Services.AddScoped<CustomerContactRepo>();
 builder.Services.AddScoped<CustomerEmployeeRepo>();
@@ -333,12 +335,12 @@ builder.Services.AddScoped<ProjectPartlistPurchaseRequestTypeRepo>();
 builder.Services.AddScoped<ProjectPartlistPriceRequestTypeRepo>();
 builder.Services.AddScoped<ProjectPartlistPriceRequestNoteRepo>();
 #endregion
-#region Kho AGV
+#region EmployeePayroll
 
 builder.Services.AddScoped<EmployeePayrollRepo>();
 builder.Services.AddScoped<EmployeePayrollDetailRepo>();
 builder.Services.AddScoped<EmployeePayrollBonusDeuctionRepo>();
-
+#endregion
 #region Yêu cần mua hàng
 builder.Services.AddScoped<SupplierRepo>();
 builder.Services.AddScoped<ProjectTypeAssignRepo>();
@@ -355,6 +357,11 @@ builder.Services.AddScoped<AGVInventoryDemoRepo>();
 builder.Services.AddScoped<AGVHistoryProductRepo>();
 #endregion
 
+
+#region YCCV
+builder.Services.AddScoped<JobRequirementRepo>();
+builder.Services.AddScoped<JobRequirementDetailRepo>();
+#endregion
 // BillExportTechnicalRepo in RTCApi namespace (used by Old Technical controller)
 builder.Services.AddScoped<BillExportTechnicalRepo>();
 builder.Services.AddScoped<TaxCompanyRepo>();
@@ -368,7 +375,10 @@ builder.Services.AddScoped<CurrentUser>(provider =>
     return currentUser;
 
 });
-#endregion
+
+
+
+
 //Config connect database
 Config.ConnectionString = builder.Configuration.GetValue<string>("ConnectionString") ?? "";
 builder.Services.AddDbContext<RTCContext>(o => o.UseSqlServer(Config.ConnectionString));
