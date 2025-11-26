@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 
@@ -6,6 +7,7 @@ namespace RERPAPI.Controllers.HRM.Employees
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class EmployeeSyntheticController : ControllerBase
     {
 

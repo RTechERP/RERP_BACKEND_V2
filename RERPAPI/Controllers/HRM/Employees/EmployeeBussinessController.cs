@@ -1,50 +1,55 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
+using RERPAPI.Model.DTO.Asset;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Model.Param.HRM;
 using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.Asset;
 using System;
 
 namespace RERPAPI.Controllers.HRM.Employees
+{
+    [ApiController]
+    [Authorize]
+    [Route("api/[controller]")]
+    public class EmployeeBussinessController : ControllerBase
     {
-        [ApiController]
-        [Route("api/[controller]")]
-        public class EmployeeBussinessController : ControllerBase
+        private EmployeeBussinessRepo _employeeBussinessRepo;
+        public EmployeeBussinessController(EmployeeBussinessRepo employeeBussinessRepo)
         {
-            private EmployeeBussinessRepo _employeeBussinessRepo;
-            public EmployeeBussinessController(EmployeeBussinessRepo employeeBussinessRepo)
-            {
-                _employeeBussinessRepo = employeeBussinessRepo;
-            }
+            _employeeBussinessRepo = employeeBussinessRepo;
+        }
         [RequiresPermission("N1,N2")]
         [HttpPost]
-            public IActionResult getEmployeeBussiness(EmployeeBussinessParam param)
+        public IActionResult getEmployeeBussiness(EmployeeBussinessParam param)
+        {
+            try
             {
-                try
+                var arrParamName = new string[] { "@PageNumber", "@PageSize", "@StartDate", "@EndDate", "@Keyword", "@DepartmentID", "@IDApprovedTP", "@Status" };
+                var arrParamValue = new object[] { param.pageNumber, param.pageSize, param.dateStart, param.dateEnd, param.keyWord, param.departmentId, param.idApprovedTp, param.status };
+                var employeeBussiness = SQLHelper<object>.ProcedureToList("spGetEmployeeBussiness", arrParamName, arrParamValue);
+
+                var result = SQLHelper<object>.GetListData(employeeBussiness, 0);
+
+                return Ok(new
                 {
-                    var arrParamName = new string[] { "@PageNumber", "@PageSize", "@StartDate", "@EndDate", "@Keyword", "@DepartmentID", "@IDApprovedTP", "@Status" };
-                    var arrParamValue = new object[] { param.pageNumber, param.pageSize, param.dateStart, param.dateEnd, param.keyWord, param.departmentId, param.idApprovedTp, param.status };
-                    var employeeBussiness = SQLHelper<object>.ProcedureToList("spGetEmployeeBussiness", arrParamName, arrParamValue);
+                    status = 1,
+                    data = result
+                });
 
-                    var result = SQLHelper<object>.GetListData(employeeBussiness, 0);
-
-                    return Ok(new
-                    {
-                        status = 1,
-                        data = result
-                    });
-
-                }
-                catch (Exception ex)
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
                 {
-                    return BadRequest(new
-                    {
-                        status = 0,
-                        message = ex.Message,
-                        error = ex.ToString()
-                    });
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
             }
         }
         [RequiresPermission("N1,N2")]
@@ -69,133 +74,136 @@ namespace RERPAPI.Controllers.HRM.Employees
         }
         [RequiresPermission("N1,N2")]
         [HttpGet("detail")]
-            public IActionResult GetEmployeeBussinessDetail(int employeeId, DateTime dayBussiness)
+        public IActionResult GetEmployeeBussinessDetail(int employeeId, DateTime dayBussiness)
+        {
+            try
             {
-                try
-                {
-                    var arrParamName = new string[] { "@EmployeeID", "@DayBussiness" };
-                    var arrParamValue = new object[] { employeeId, dayBussiness };
-                    var employeeBussiness = SQLHelper<object>.ProcedureToList("spGetEmployeeBussinessDetail", arrParamName, arrParamValue);
+                var arrParamName = new string[] { "@EmployeeID", "@DayBussiness" };
+                var arrParamValue = new object[] { employeeId, dayBussiness };
+                var employeeBussiness = SQLHelper<object>.ProcedureToList("spGetEmployeeBussinessDetail", arrParamName, arrParamValue);
 
-                    var result = SQLHelper<object>.GetListData(employeeBussiness, 0);
-                    return Ok(ApiResponseFactory.Success(result, ""));
-                }
-                catch (Exception ex)
-                {
-                    return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-                }
+                var result = SQLHelper<object>.GetListData(employeeBussiness, 0);
+                return Ok(ApiResponseFactory.Success(result, ""));
             }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [RequiresPermission("N1,N2")]
         [HttpGet("deleted")]
-            public async Task<IActionResult> deleteEmployeeBussiness([FromQuery] List<int> listID)
+        public async Task<IActionResult> deleteEmployeeBussiness([FromQuery] List<int> listID)
+        {
+            try
             {
-                try
+                if (listID.Count() > 0)
                 {
-                    if (listID.Count() > 0)
+                    foreach (var id in listID)
                     {
-                        foreach (var id in listID)
-                        {
-                            var employeeBussiness = _employeeBussinessRepo.GetByID(id);
-                            if (employeeBussiness != null) await _employeeBussinessRepo.DeleteAsync(id);
+                        var employeeBussiness = _employeeBussinessRepo.GetByID(id);
+                        if (employeeBussiness != null) await _employeeBussinessRepo.DeleteAsync(id);
 
-                        }
                     }
-                    return Ok(ApiResponseFactory.Success(null, ""));
                 }
-                catch (Exception ex)
-                {
-                    return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-                }
+                return Ok(ApiResponseFactory.Success(null, ""));
             }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
 
 
         [RequiresPermission("N1,N2")]
 
         [HttpPost("save-data")]
-            public async Task<IActionResult> saveEmployeeBussiness([FromBody] List<EmployeeBussiness> employeeBussiness)
+        public async Task<IActionResult> saveEmployeeBussiness([FromBody] List<EmployeeBussiness> employeeBussiness)
+        {
+            try
             {
-                try
+                if (employeeBussiness.Count() > 0)
                 {
-                        if (employeeBussiness.Count() > 0)
-                    {   
-                        foreach (EmployeeBussiness item in employeeBussiness)
-                        {
-                            if (item.ID <= 0)
-                            {
-                                item.IsApproved = false;
-                                item.IsApprovedBGD = false;
-                                item.IsApprovedHR = false;
-                                await _employeeBussinessRepo.CreateAsync(item);
-                            }
-                            else await _employeeBussinessRepo.UpdateAsync(item);
-                        }
-                    }
-
-
-                    return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
-                }
-                catch (Exception ex)
-                {
-                    return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-                }
-            }
-        [RequiresPermission("N1")]
-        [HttpPost("save-approve-tbp")]
-            public async Task<IActionResult> SaveApproveTBP([FromBody] List<EmployeeBussiness> employeeBussiness)
-            {
-                try
-                {
-                    if (employeeBussiness.Count() > 0)
+                    foreach (EmployeeBussiness item in employeeBussiness)
                     {
-                        foreach (EmployeeBussiness item in employeeBussiness)
+                        if (item.ID <= 0)
                         {
-                            if (item.ID <= 0)
-                            {
-                                item.IsApproved = false;
-                                item.IsApprovedBGD = false;
-                                item.IsApprovedHR = false;
-                                await _employeeBussinessRepo.CreateAsync(item);
-                            }
-                            else await _employeeBussinessRepo.UpdateAsync(item);
+                            item.IsApproved = false;
+                            item.IsApprovedBGD = false;
+                            item.IsApprovedHR = false;
+                            await _employeeBussinessRepo.CreateAsync(item);
                         }
+                        else await _employeeBussinessRepo.UpdateAsync(item);
                     }
+                }
 
 
-                    return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
-                }
-                catch (Exception ex)
-                {
-                    return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-                }
+                return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
             }
-        [RequiresPermission("N1,N2")]
-        [HttpPost("save-approve-hr")]
-            public async Task<IActionResult> SaveApproveHR([FromBody] List<EmployeeBussiness> employeeBussiness)
+            catch (Exception ex)
             {
-                try
-                {
-                    if (employeeBussiness.Count() > 0)
-                    {
-                        foreach (EmployeeBussiness item in employeeBussiness)
-                        {
-                            if (item.ID <= 0)
-                            {
-                                item.IsApproved = false;
-                                item.IsApprovedBGD = false;
-                                item.IsApprovedHR = false;
-                                await _employeeBussinessRepo.CreateAsync(item);
-                            }
-                            else await _employeeBussinessRepo.UpdateAsync(item);
-                        }
-                    }
-
-
-                    return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
-                }
-                catch (Exception ex)
-                {
-                    return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-                }
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [RequiresPermission("N1")]
+        [HttpPost("save-approve-tbp")]
+        public async Task<IActionResult> SaveApproveTBP([FromBody] List<EmployeeBussiness> employeeBussiness)
+        {
+            try
+            {
+                if (employeeBussiness.Count() > 0)
+                {
+                    foreach (EmployeeBussiness item in employeeBussiness)
+                    {
+                        if (item.ID <= 0)
+                        {
+                            item.IsApproved = false;
+                            item.IsApprovedBGD = false;
+                            item.IsApprovedHR = false;
+                            await _employeeBussinessRepo.CreateAsync(item);
+                        }
+                        else await _employeeBussinessRepo.UpdateAsync(item);
+                    }
+                }
+
+
+                return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [RequiresPermission("N1,N2")]
+        [HttpPost("save-approve-hr")]
+        public async Task<IActionResult> SaveApproveHR([FromBody] List<EmployeeBussiness> employeeBussiness)
+        {
+            try
+            {
+                if (employeeBussiness.Count() > 0)
+                {
+                    foreach (EmployeeBussiness item in employeeBussiness)
+                    {
+                        if (item.ID <= 0)
+                        {
+                            item.IsApproved = false;
+                            item.IsApprovedBGD = false;
+                            item.IsApprovedHR = false;
+                            await _employeeBussinessRepo.CreateAsync(item);
+                        }
+                        else await _employeeBussinessRepo.UpdateAsync(item);
+                    }
+                }
+
+
+                return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        
+      
     }
+
+}
