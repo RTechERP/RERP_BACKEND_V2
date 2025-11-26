@@ -65,6 +65,7 @@ builder.Services.AddScoped<BillImportTechDetailSerialRepo>();
 builder.Services.AddScoped<BusinessFieldLinkRepo>();
 builder.Services.AddScoped<BusinessFieldRepo>();
 builder.Services.AddScoped<ConfigSystemRepo>();
+builder.Services.AddScoped<OfficeSupplyRequestsDetailRepo>();
 builder.Services.AddScoped<CurrencyRepo>();
 builder.Services.AddScoped<CustomerContactRepo>();
 builder.Services.AddScoped<CustomerEmployeeRepo>();
