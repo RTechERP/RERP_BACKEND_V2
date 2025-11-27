@@ -35,9 +35,9 @@ namespace RERPAPI.Repo.GenericEntity.Technical
                     WarehouseID = WAREHOUSE_ID,
                     ProductRTCQRCode = item.SerialNumber,
                     ProductLocationID = 0,
-
                     CreatedBy = item.CreatedBy,
                     UpdatedBy = item.CreatedBy,
+                    IsDelete = false,
                 };
 
                 await CreateAsync(historyProductRTC);
@@ -55,7 +55,10 @@ namespace RERPAPI.Repo.GenericEntity.Technical
                     await UpdateAsync(historyProductRTC);
                 }
 
+
             }
+
         }
+
     }
 }

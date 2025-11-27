@@ -19,7 +19,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         public IActionResult getDataCbbAddressStock(int customerID) {
             try
             {
-                List<AddressStock> result = _addressStockRepo.GetAll().Where(x=>x.CustomerID==customerID).ToList();
+                List<AddressStock> result = _addressStockRepo.GetAll(x=>x.CustomerID==customerID);
                 return Ok(new
                 {
                     status = 1,

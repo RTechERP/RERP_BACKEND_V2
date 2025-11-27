@@ -329,6 +329,24 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpPost("approve-document-import")]
+        public IActionResult ApproveDocumentImport([FromBody] List<BillImportApproveDocumentDTO> models, [FromQuery] bool status)
+        {
+            if (models == null || models.Count == 0)
+            {
+                return BadRequest(ApiResponseFactory.Fail(null, "Danh sách phiếu truyền rỗng!"));
+            }
+
+            string message;
+            bool result = _billImportRepo.ApproveDocument(models, status, out message);
+
+            if (!result)
+            {
+                return BadRequest(ApiResponseFactory.Fail(null, message));
+            }
+
+            return Ok(ApiResponseFactory.Success(models, message));
+        }
 
         ///// <summary>
         ///// duyệt,hủy duyệt phiếu nhập
@@ -810,6 +828,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                  new string[] { "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@Status", "@KhoType", "@FilterText", "@WarehouseCode", "@IsDeleted" },
                     new object[] { filter.PageNumber, filter.PageSize, filter.DateStart, filter.DateEnd, filter.Status, filter.KhoType, filter.FilterText, filter.WarehouseCode, filter.IsDeleted }
                    );
+
                 return Ok(new
                 {
                     status = 1,
