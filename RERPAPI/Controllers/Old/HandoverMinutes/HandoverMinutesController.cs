@@ -1,5 +1,6 @@
 ﻿using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Bibliography;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
@@ -12,6 +13,7 @@ namespace RERPAPI.Controllers.Old.HandoverMinutes
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class HandoverMinutesController : ControllerBase
     {
         private readonly HandoverMinutesRepo _handoverMinutesRepo;

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -13,6 +14,7 @@ namespace RERPAPI.Controllers.Old.POKH
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ViewPOKHController : ControllerBase
     {
         private readonly GroupSaleRepo _groupSaleRepo;

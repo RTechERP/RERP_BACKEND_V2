@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -10,6 +11,7 @@ namespace RERPAPI.Controllers.Old.VisionBase
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class PlanWeekController : ControllerBase
     {
         WeekPlanRepo _weekPlanRepo;

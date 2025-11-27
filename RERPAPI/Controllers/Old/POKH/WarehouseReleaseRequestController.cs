@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -11,6 +12,7 @@ namespace RERPAPI.Controllers.Old.POKH
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class WarehouseReleaseRequestController : ControllerBase
     {
         private readonly ProductGroupRepo _productGroupRepo;
