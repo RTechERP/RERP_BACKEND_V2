@@ -370,6 +370,8 @@ builder.Services.AddScoped<JobRequirementDetailRepo>();
 // BillExportTechnicalRepo in RTCApi namespace (used by Old Technical controller)
 builder.Services.AddScoped<BillExportTechnicalRepo>();
 builder.Services.AddScoped<TaxCompanyRepo>();
+builder.Services.AddScoped<HistoryErrorRepo>();
+builder.Services.AddScoped<HistoryProductRTCLogRepo>();
 
 
 builder.Services.AddScoped<CurrentUser>(provider =>

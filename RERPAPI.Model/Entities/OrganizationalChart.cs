@@ -31,4 +31,6 @@ public partial class OrganizationalChart
     public string? CreatedBy { get; set; }
 
     public string? UpdatedBy { get; set; }
+
+    public int? STT { get; set; }
 }
