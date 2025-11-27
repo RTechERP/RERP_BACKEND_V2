@@ -21,14 +21,16 @@ namespace RERPAPI.Controllers.Old.POKH
         private readonly EmployeeTeamSaleRepo _employeeTeamSaleRepo;
         private readonly EmployeeRepo _employeeRepo;
         private readonly POKHDetailRepo _pokhDetailRepo;
-
+        private readonly RequestInvoiceDetailRepo _requestInvoiceDetailRepo;
         public ViewPOKHController(
             GroupSaleRepo groupSaleRepo,
             MainIndexRepo mainIndexRepo,
             CustomerRepo customerViewPOKHRepo,
             EmployeeTeamSaleRepo employeeTeamSaleRepo,
             EmployeeRepo employeeRepo,
-            POKHDetailRepo pokhDetailRepo)
+            POKHDetailRepo pokhDetailRepo,
+            RequestInvoiceDetailRepo requestInvoiceDetailRepo
+            )
         {
             _groupSaleRepo = groupSaleRepo;
             _mainIndexRepo = mainIndexRepo;
@@ -36,6 +38,7 @@ namespace RERPAPI.Controllers.Old.POKH
             _employeeTeamSaleRepo = employeeTeamSaleRepo;
             _employeeRepo = employeeRepo;
             _pokhDetailRepo = pokhDetailRepo;
+            _requestInvoiceDetailRepo = requestInvoiceDetailRepo;
         }
         [HttpGet("get-viewpokh")]
         public IActionResult Get(DateTime dateTimeS, DateTime dateTimeE, int employeeTeamSaleID, int userID, int poType, int status, int customerID,int warehouseId, string keyword = "")
@@ -124,13 +127,21 @@ namespace RERPAPI.Controllers.Old.POKH
             }
         }
         [HttpPost("save-data")]
-        public IActionResult SavePOKHDetail([FromBody] List<POKHDetail> model)
+        public IActionResult SavePOKHDetail(SaveViewPOKHDTO dto)
         {
             try
             {
-                foreach (var item in model)
+                foreach (var item in dto.pokhDetails)
                 {
                     _pokhDetailRepo.Update(item);
+                }
+
+                if (dto.requestInvoiceDetails != null)
+                {
+                    foreach (var inv in dto.requestInvoiceDetails)
+                    {
+                        _requestInvoiceDetailRepo.Update(inv);
+                    }
                 }
                 return Ok(ApiResponseFactory.Success(null, ""));
             }

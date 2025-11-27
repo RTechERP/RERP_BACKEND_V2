@@ -6,10 +6,11 @@ namespace RERPAPI.Repo.GenericEntity
     public class BillImportRepo : GenericRepo<BillImport>
     {
         DocumentImportRepo _documentImportRepo;
-
+        CurrentUser _currentUser;
         public BillImportRepo(CurrentUser currentUser, DocumentImportRepo documentImportRepo) : base(currentUser)
         {
             _documentImportRepo = documentImportRepo;
+            _currentUser = currentUser;
         }
         #region lấy mã phiếu nhập
         public string GetBillCode(int billtype)
@@ -74,6 +75,58 @@ namespace RERPAPI.Repo.GenericEntity
             return billImport.ID;
         }
         #endregion
+        public bool ApproveDocument(List<BillImportApproveDocumentDTO> models, bool status, out string message)
+        {
+            message = "";
+            if (models == null || models.Count <= 0)
+            {
+                message = "Vui lòng chọn phiếu muốn cập nhật trạng thái!";
+                return false;
+            }
+
+            int total = models.Count;
+            int updated = 0;
+            int skipped = 0;
+
+            foreach (var model in models)
+            {
+                if (model.ID <= 0)
+                {
+                    skipped++;
+                    continue;
+                }
+
+                // Chỉ user nhận chứng từ hoặc admin mới được duyệt
+                if (model.DoccumentReceiverID != _currentUser.ID && !_currentUser.IsAdmin)
+                {
+                    skipped++;
+                    continue;
+                }
+
+                try
+                {
+                    model.StatusDocumentImport = status;
+                    model.UpdatedBy = _currentUser.LoginName;
+                    model.UpdatedDate = DateTime.Now;
+
+                    Update(model);
+                    updated++;
+                }
+                catch (Exception ex)
+                {
+                    skipped++;
+                }
+            }
+
+            if (updated == 0)
+            {
+                message = "Không có phiếu nào được cập nhật!";
+                return false;
+            }
+
+            message = $"Cập nhật thành công {updated}/{total} phiếu. Bỏ qua {skipped} phiếu không hợp lệ hoặc không có quyền!";
+            return true;
+        }
 
     }
 }

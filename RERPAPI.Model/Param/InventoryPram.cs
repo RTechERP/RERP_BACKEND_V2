@@ -1,11 +1,4 @@
-﻿using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.Param
+﻿namespace RERPAPI.Model.Param
 {
     public class InventoryPram
     {
@@ -14,5 +7,7 @@ namespace RERPAPI.Model.Param
         public string Find { get; set; }
         public string WarehouseCode { get; set; }
         public bool IsStock { get; set; }
+        public int PageSize { get; set; }
+        public int PageNumber { get; set; }
     }
 }
