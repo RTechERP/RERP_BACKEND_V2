@@ -33,4 +33,6 @@ public partial class ProductRTCQRCode
     public int? WarehouseID { get; set; }
 
     public int? ModulaLocationDetailID { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }
