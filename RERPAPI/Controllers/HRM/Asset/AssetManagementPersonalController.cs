@@ -33,9 +33,18 @@ namespace RERPAPI.Controllers.Old.Asset
         TSTypeAssetPersonalRepo _typeAssetPersonalRepo;
         vUserGroupLinksRepo _vUserGroupLinksRepo;
 
-        public AssetManagementPersonalController()
+        public AssetManagementPersonalController(TSAllocationAssetPersonalRepo tSAllocationAssetPersonalRepo, TSAllocationAssetPersonalDetailRepo tSAssetAllocationDetailRepo, TSRecoveryAssetPersonalDetailRepo tSRecoveryAssetPersonalDetailRepo, TSRecoveryAssetPersonalRepo tSRecoveryAssetPersonalRepo, TSAssetManagementPersonalRepo tSAssetManagementPersonalRepo, TSTypeAssetPersonalRepo typeAssetPersonalRepo, vUserGroupLinksRepo vUserGroupLinksRepo)
         {
+            _tSAllocationAssetPersonalRepo = tSAllocationAssetPersonalRepo;
+            _tSAssetAllocationDetailRepo = tSAssetAllocationDetailRepo;
+            _tSRecoveryAssetPersonalDetailRepo = tSRecoveryAssetPersonalDetailRepo;
+            _tSRecoveryAssetPersonalRepo = tSRecoveryAssetPersonalRepo;
+            _tSAssetManagementPersonalRepo = tSAssetManagementPersonalRepo;
+            _typeAssetPersonalRepo = typeAssetPersonalRepo;
+            _vUserGroupLinksRepo = vUserGroupLinksRepo;
         }
+
+
 
         //Lấy danh sách loại tài sản
         [RequiresPermission("N23,N52,N1,N67,N36")]

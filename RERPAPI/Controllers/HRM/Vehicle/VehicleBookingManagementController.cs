@@ -131,7 +131,7 @@
                             item.CreatdDate = first.CreatedDate;
                             item.FileName = first.FileName;
                             var createDate = first.CreatedDate.Value.ToString("dd.MM.yyyy");
-                            string url = $"http://14.232.152.154:8083/api/datxe/DANGKYDATXENGAY{createDate}/{first.FileName}";
+                            string url = $"http://192.168.1.190/api/Common/HCNS/datxe/DANGKYDATXENGAY{createDate}/{first.FileName}";
                             item.urlImage = url;
                             var timeRecive = item.TimeNeedPresent.Value.ToString("dd/MM/yyyyy HH:mm");
                             string title = $"Người nhận:[{item.ReceiverName}] - Thời gian nhận:[{timeRecive}]";
@@ -152,7 +152,7 @@
                             foreach (var fi in fileImage.Skip(1))
                             {
                                 var createDateNew = fi.CreatedDate.Value.ToString("dd.MM.yyyy");
-                                string urlMew = $"http://14.232.152.154:8083/api/datxe/DANGKYDATXENGAY{createDateNew}/{fi.FileName}";
+                                string urlMew = $"http://192.168.1.190/api/datxe/DANGKYDATXENGAY{createDateNew}/{fi.FileName}";
                                 vehicleBookingFileImageDTO.Add(new VehicleBookingFileImageDTO
                                 {
                                     ID = item.ID,                 

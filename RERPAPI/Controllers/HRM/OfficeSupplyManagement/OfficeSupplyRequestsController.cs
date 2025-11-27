@@ -1,4 +1,5 @@
 ﻿using DocumentFormat.OpenXml.Bibliography;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
@@ -8,24 +9,30 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.Asset;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize] 
     public class OfficeSupplyRequestsController : ControllerBase
     {
         private readonly OfficeSupplyRequestsRepo officesupplyrequests;
+        OfficeSupplyRequestsDetailRepo _officeSupplyRequestsDetailRepo;
+
         private readonly DepartmentRepo _departmentRepo;
         private readonly RoleConfig _roleConfig;
         public OfficeSupplyRequestsController(RoleConfig roleConfig,
             OfficeSupplyRequestsRepo officesupplyrequests,
+            OfficeSupplyRequestsDetailRepo officeSupplyRequestsDetailRepo,
             DepartmentRepo departmentRepo)
         {
             this.officesupplyrequests = officesupplyrequests;
             _departmentRepo = departmentRepo;
             _roleConfig = roleConfig;
+            _officeSupplyRequestsDetailRepo = officeSupplyRequestsDetailRepo;
         }
 
 
@@ -89,18 +96,6 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
 
                     effectiveDepartmentId =   currentUser.DepartmentID; // 0 = all trong SP
                     effectiveEmployeeId = employeeID ?? 0;     // 0 = all trong SP
-
-                    //// Nếu muốn giới hạn dept giống WinForms (vd: chỉ 9,10 + phòng ban của nó)
-                    //if (_roleConfig.DepartmentIDs != null && _roleConfig.DepartmentIDs.Any())
-                    //{
-                    //    if (effectiveDepartmentId != 0 &&
-                    //        !_roleConfig.DepartmentIDs.Contains(effectiveDepartmentId) &&
-                    //        effectiveDepartmentId != currentUser.DepartmentID)
-                    //    {
-                    //        // nếu truyền dept lạ, ép về phòng ban của nó
-                    //        effectiveDepartmentId = currentUser.DepartmentID;
-                    //    }
-                    //}
                 }
                 else
                 {
@@ -348,8 +343,40 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
                 });
             }
         }
+        [RequiresPermission("N2,N34,N1,N54,N72")]
+        [HttpPost("save-data")]
+        public async Task<IActionResult> SaveData([FromBody] OfficeSupplyRequestDTO dto)
+            {
+            try
+            {
+                if (dto == null) { return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." }); }
+                if (dto.officeSupplyRequest != null)
+                {
+                    if (dto.officeSupplyRequest.ID <= 0)
+                        await officesupplyrequests.CreateAsync(dto.officeSupplyRequest);
+                    else
+                        await officesupplyrequests.UpdateAsync(dto.officeSupplyRequest);
+                }
 
+                if (dto.officeSupplyRequestsDetails != null && dto.officeSupplyRequestsDetails.Any())
+                {
+                    foreach (var item in dto.officeSupplyRequestsDetails)
+                    {
+                        item.OfficeSupplyRequestsID = dto.officeSupplyRequest.ID;
+                        if (item.ID <= 0)
+                            await _officeSupplyRequestsDetailRepo.CreateAsync(item);
+                        else
+                            await _officeSupplyRequestsDetailRepo.UpdateAsync(item);
+                    }
+                }
+                return Ok(ApiResponseFactory.Success(dto, "Lưu dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
 
+        }
 
     }
 }

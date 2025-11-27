@@ -268,7 +268,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         {
             try
             {
-                // 1. Validate cơ bản
+                // 1. Validate cơ bảnget-inventory-project
                 var (isValid, errorMessage) = await ValidateBillExport(dto);
                 if (!isValid)
                     return BadRequest(new { status = 0, message = errorMessage });
@@ -336,7 +336,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     }
                 }
                 int billExportId;
-                if (dto.billExport.ID <= 0) 
+                if (dto.billExport.ID <= 0)
                 {
                     dto.billExport.IsMerge = false;
                     dto.billExport.UnApprove = 0;
@@ -499,67 +499,10 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         [HttpGet("get-bill-code")]
         public ActionResult<string> LoadBillNumber(int billTypeId, int? billId = null, int? currentStatus = null, string currentCode = null)
         {
-            string billCode = string.Empty;
-            string date = DateTime.Now.ToString("yyMMdd");
-
-            if (billId.HasValue && billId.Value > 0 && !string.IsNullOrEmpty(currentCode) && currentStatus.HasValue)
-            {
-                string newPrefix = GetPrefix(billTypeId);
-                string oldPrefix = GetPrefix(currentStatus.Value);
-                billCode = currentCode.Replace(oldPrefix, newPrefix);
-                return Ok(new { data = billCode });
-            }
-
-            string prefix = GetPrefix(billTypeId);
-            int serial = 1;
-
-            while (true)
-            {
-                string nextSerial = serial.ToString().PadLeft(3, '0');
-                string candidateCode = prefix + date + nextSerial;
-
-                // Kiểm tra trùng mã trong DB
-                bool exists = _billexportRepo.GetAll().Any(x => x.Code == candidateCode && x.IsDeleted == false);
-                if (!exists)
-                {
-                    billCode = candidateCode;
-                    break;
-                }
-
-                serial++; // nếu trùng, tăng tiếp
-            }
+            string billCode = _billexportRepo.GetBillCode(billTypeId);
 
             return Ok(new { data = billCode });
         }
-
-        // Xác định tiền tố mã phiếu dựa vào trạng thái
-        private string GetPrefix(int billType)
-        {
-            return billType switch
-            {
-                0 => "PM",
-                3 => "PCT",
-                4 => "PMNB",
-                5 => "PXM",
-                _ => "PXK",
-            };
-        }
-
-        // Truy vấn CSDL để lấy mã phiếu gần nhất trong ngày
-        private string GetLastBillCodeToday()
-        {
-            // TODO: Bạn có thể thay đoạn này bằng truy vấn CSDL thật bằng Dapper/EF
-            /*
-            string sql = @"SELECT TOP 1 Code 
-                           FROM BillExport 
-                           WHERE DAY(CreatedDate) = @day 
-                             AND MONTH(CreatedDate) = @month 
-                             AND YEAR(CreatedDate) = @year 
-                           ORDER BY ID DESC";
-            */
-            return ""; // giả lập chưa có mã nào trong ngày
-        }
-
         #endregion
         //đã xuất kho 
         [HttpPost("shipped-out")]

@@ -115,7 +115,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 int index = 1;
                 foreach (var item in data)
                 {
-                    item.No = index++;  
+                    item.No = index++;
                 }
 
                 return Ok(ApiResponseFactory.Success(data, ""));

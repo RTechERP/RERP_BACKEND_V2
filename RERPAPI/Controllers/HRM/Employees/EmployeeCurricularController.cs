@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using RERPAPI.Attributes;
@@ -10,6 +11,7 @@ namespace RERPAPI.Controllers.HRM.Employees
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class EmployeeCurricularController : ControllerBase
     {
         private readonly EmployeeCurricularRepo _employeeCurricularRepo;

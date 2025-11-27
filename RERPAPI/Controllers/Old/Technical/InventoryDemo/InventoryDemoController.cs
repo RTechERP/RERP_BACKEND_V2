@@ -1,24 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Model.Entities;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
-using System;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using Microsoft.EntityFrameworkCore;
-using RERPAPI.Model.Context;
-using Microsoft.AspNetCore.Http.HttpResults;
-using RERPAPI.Model.DTO;
-using RERPAPI.Model.Param;
-using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo;
-using RERPAPI.Model.Param.Asset;
-using RERPAPI.Model.Param.TB;
-using RERPAPI.Repo.GenericEntity.TB;
-using RERPAPI.Model.DTO.Asset;
-using RERPAPI.Repo.GenericEntity.Asset;
-using RERPAPI.Model.DTO.TB;
-using System.Data;
+using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.Technical;
 using RERPAPI.Repo.GenericEntity.Technical;
 
@@ -40,13 +22,13 @@ namespace RERPAPI.Controllers.Old.Technical.InventoryDemo
             {
                 var products = SQLHelper<dynamic>.ProcedureToList("spGetInventoryDemo",
                     new string[] { "@ProductGroupID", "@Keyword", "@CheckAll", "@WarehouseID", "@ProductRTCID" },
-                    new object[] { request.ProductGroupID, request.Keyword, request.CheckAll, request.WarehouseID , request.ProductRTCID });
+                    new object[] { request.ProductGroupID, request.Keyword, request.CheckAll, request.WarehouseID, request.ProductRTCID });
 
                 return Ok(new
                 {
                     status = 1,
                     products = SQLHelper<dynamic>.GetListData(products, 0),
-                   TotalPage = SQLHelper<dynamic>.GetListData(products, 1)
+                    TotalPage = SQLHelper<dynamic>.GetListData(products, 1)
                 });
             }
             catch (Exception ex)
@@ -67,7 +49,7 @@ namespace RERPAPI.Controllers.Old.Technical.InventoryDemo
             {
                 var products = SQLHelper<dynamic>.ProcedureToList("spGetInventoryBorrowSupplierDemo",
                     new string[] { "@SupplierDemoID", "@WarehouseID", "@DateStart", "@DateEnd", "@FilterText", "@PageNumber", "@PageSize" },
-                    new object[] { request.SupplierDemoID, request.WarehouseID, request.DateStart, request.DateEnd, request.FilterText, request.Page,request.Size });
+                    new object[] { request.SupplierDemoID, request.WarehouseID, request.DateStart, request.DateEnd, request.FilterText, request.Page, request.Size });
 
                 return Ok(new
                 {
@@ -92,10 +74,10 @@ namespace RERPAPI.Controllers.Old.Technical.InventoryDemo
         {
             try
             {
-                if (productRTCQRCode.ID <= 0) 
+                if (productRTCQRCode.ID <= 0)
                     await _productRTCQRCodeRepo.CreateAsync(productRTCQRCode);
-                else 
-                    await _productRTCQRCodeRepo.UpdateAsync( productRTCQRCode);
+                else
+                    await _productRTCQRCodeRepo.UpdateAsync(productRTCQRCode);
 
                 return Ok(new
                 {

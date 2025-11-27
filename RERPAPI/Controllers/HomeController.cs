@@ -63,8 +63,6 @@ namespace RERPAPI.Controllers
 
                 if (hasUsers.Count <= 0 || hasUsers[0].ID <= 0)
                 {
-                    //_response.status = 0;
-                    //_response.message = "Sai tên đăng nhập hoặc mật khẩu!";
                     return Unauthorized(ApiResponseFactory.Fail(null, "Sai tên đăng nhập hoặc mật khẩu!"));
                 }
 
@@ -112,9 +110,78 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-                //_response.status = 0;
-                //_response.message = ex.Message;
-                //_response.error = ex.ToString();
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
+        [ApiKeyAuthorize]
+        [HttpPost("loginiden")]
+        public IActionResult LoginIdentificaion([FromBody] User user)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(user.LoginName))
+                {
+                    return Unauthorized(ApiResponseFactory.Fail(null, "Vui lòng nhập Tên đăng nhập!"));
+                }
+
+                //1. Check user
+                string loginName = user.LoginName ?? "";
+                string apiKey = _configuration.GetValue<string>("ApiKey") ?? "";
+
+                var login = SQLHelper<object>.ProcedureToList("spLogin", new string[] { "@LoginName", "@APIKey" }, new object[] { loginName, apiKey });
+                var hasUsers = SQLHelper<object>.GetListData(login, 0);
+
+                if (hasUsers.Count <= 0 || hasUsers[0].ID <= 0)
+                {
+                    return Unauthorized(ApiResponseFactory.Fail(null, "Sai tên đăng nhập hoặc mật khẩu!"));
+                }
+
+                var hasUser = SQLHelper<object>.GetListData(login, 0)[0];
+
+                //2. Tạo Claims
+                var claims = new List<Claim>()
+                {
+                    new Claim(JwtRegisteredClaimNames.Sub,hasUser.ID.ToString()),
+                    new Claim(JwtRegisteredClaimNames.UniqueName,hasUser.LoginName ?? ""),
+                };
+
+                var dictionary = (IDictionary<string, object>)hasUser;
+                foreach (var item in dictionary)
+                {
+                    //if (item.Key.ToLower() == "passwordhash") continue;
+
+                    var claim = new Claim(item.Key.ToLower(), item.Value?.ToString() ?? "");
+                    claims.Add(claim);
+                }
+
+
+                //3. Tạo token
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
+                var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+                var token = new JwtSecurityToken(
+                    issuer: _jwtSettings.Issuer,
+                    audience: _jwtSettings.Audience,
+                    claims: claims.ToArray(),
+                    expires: DateTime.UtcNow.AddMinutes(_jwtSettings.ExpireMinutes),
+                    signingCredentials: creds
+                );
+
+                var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+
+                //4.Lưu session trên server
+                HttpContext.Session.SetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey"), ObjectMapper.GetCurrentUser(claims.ToDictionary(x => x.Type, x => x.Value)));
+
+                return Ok(new
+                {
+                    access_token = tokenString,
+                    expires = token.ValidTo.AddHours(+7)
+                });
+            }
+            catch (Exception ex)
+            {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
@@ -134,7 +201,7 @@ namespace RERPAPI.Controllers
                 //string key = _configuration.GetValue<string>("SessionKey") ?? "";
                 //CurrentUser currentUser = HttpContext.Session.GetObject<CurrentUser>(key);
 
-                return Ok(ApiResponseFactory.Success(currentUser, ""));
+                //return Ok(ApiResponseFactory.Success(currentUser, ""));
             }
             catch (Exception ex)
             {
