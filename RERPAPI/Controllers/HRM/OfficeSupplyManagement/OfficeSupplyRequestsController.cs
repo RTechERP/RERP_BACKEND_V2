@@ -9,6 +9,7 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.AddNewBillExport;
 using RERPAPI.Repo.GenericEntity.Asset;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -349,9 +350,13 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
             {
             try
             {
+             
                 if (dto == null) { return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." }); }
+               
                 if (dto.officeSupplyRequest != null)
                 {
+                    var validate = officesupplyrequests.Validate(dto.officeSupplyRequest);
+                    if (validate.status == 0) return BadRequest(validate);  
                     if (dto.officeSupplyRequest.ID <= 0)
                         await officesupplyrequests.CreateAsync(dto.officeSupplyRequest);
                     else

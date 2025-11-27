@@ -1,6 +1,7 @@
 ﻿using DocumentFormat.OpenXml.Office.CustomUI;
 using DocumentFormat.OpenXml.Office2010.Excel;
 using DocumentFormat.OpenXml.Wordprocessing;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
@@ -13,6 +14,7 @@ namespace RERPAPI.Controllers.Old.POKH
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class POKHHistoryController : ControllerBase
     {
         private readonly POKHHistoryRepo _pokhHistoryRepo;

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Repo.GenericEntity;
 
@@ -8,6 +9,7 @@ namespace RERPAPI.Controllers.Old.POKH
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class QuotationKHController : ControllerBase
     {
         private readonly QuotationKHDetailRepo _quotationDetailKHRepo;

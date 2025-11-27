@@ -22,6 +22,7 @@ namespace RERPAPI.Controllers.Old.POKH
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class POKHController : ControllerBase
     {
         private readonly string _uploadPath;
