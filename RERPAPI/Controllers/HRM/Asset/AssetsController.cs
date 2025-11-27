@@ -241,8 +241,9 @@ namespace RERPAPI.Controllers.Old.Asset
                         }
                         string productCode = item.Model ?? "";
                         var codeExist = _productsaleRepo.GetAll(x => x.ProductCode == productCode&&x.ProductGroupID==groupID).FirstOrDefault();
-                        codeExist.ProductNewCode = GenerateProductNewCode(groupID);
+                     
                         codeExist = codeExist == null ? new ProductSale() : codeExist;
+                        codeExist.ProductNewCode = GenerateProductNewCode(groupID);
                         codeExist.SupplierName = "";
                         codeExist.ProductGroupID = groupID;
                         codeExist.ProductCode = item.Model;
