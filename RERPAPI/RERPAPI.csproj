@@ -11,7 +11,6 @@
     <Compile Remove="Controllers\OfficeSuppliesManagement\**" />
     <Compile Remove="Controllers\Old\NewFolder1\**" />
     <Compile Remove="Controllers\Old\NewFolder2\**" />
-    <Compile Remove="Controllers\Old\NewFolder\**" />
     <Compile Remove="Controllers\ProjectAGV\**" />
     <Compile Remove="Controllers\ProjectManager\**" />
     <Compile Remove="Controllers\SaleWareHouseManagement\**" />
@@ -20,7 +19,6 @@
     <Content Remove="Controllers\OfficeSuppliesManagement\**" />
     <Content Remove="Controllers\Old\NewFolder1\**" />
     <Content Remove="Controllers\Old\NewFolder2\**" />
-    <Content Remove="Controllers\Old\NewFolder\**" />
     <Content Remove="Controllers\ProjectAGV\**" />
     <Content Remove="Controllers\ProjectManager\**" />
     <Content Remove="Controllers\SaleWareHouseManagement\**" />
@@ -29,7 +27,6 @@
     <EmbeddedResource Remove="Controllers\OfficeSuppliesManagement\**" />
     <EmbeddedResource Remove="Controllers\Old\NewFolder1\**" />
     <EmbeddedResource Remove="Controllers\Old\NewFolder2\**" />
-    <EmbeddedResource Remove="Controllers\Old\NewFolder\**" />
     <EmbeddedResource Remove="Controllers\ProjectAGV\**" />
     <EmbeddedResource Remove="Controllers\ProjectManager\**" />
     <EmbeddedResource Remove="Controllers\SaleWareHouseManagement\**" />
@@ -38,7 +35,6 @@
     <None Remove="Controllers\OfficeSuppliesManagement\**" />
     <None Remove="Controllers\Old\NewFolder1\**" />
     <None Remove="Controllers\Old\NewFolder2\**" />
-    <None Remove="Controllers\Old\NewFolder\**" />
     <None Remove="Controllers\ProjectAGV\**" />
     <None Remove="Controllers\ProjectManager\**" />
     <None Remove="Controllers\SaleWareHouseManagement\**" />
