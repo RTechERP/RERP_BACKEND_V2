@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using NPOI.HSSF.Record.Chart;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -812,7 +813,10 @@ namespace RERPAPI.Controllers.Project
                 {
                     foreach (int id in idArray)
                     {
-                        projectRepo.Delete(id);
+                        var item = projectRepo.GetByID(id);
+                        item.IsDeleted = true;
+                        await projectRepo.UpdateAsync(item);
+
                     }
                 }
                 return Ok(ApiResponseFactory.Success(null, "Xóa dự án thành công"));
@@ -824,24 +828,28 @@ namespace RERPAPI.Controllers.Project
         }
 
         [HttpGet("check-project-code")]
-        //[ApiKeyAuthorize]
         public async Task<IActionResult> CheckProjectCode(int id, string projectCode)
         {
             try
             {
-                List<Model.Entities.Project> projects = new List<Model.Entities.Project>();
+                projectCode = projectCode?.Trim().ToLower();
+
+                // Lấy toàn bộ dự án có mã trùng
+                var query = projectRepo.GetAll()
+                            .Where(x => x.ProjectCode.ToLower() == projectCode && x.IsDeleted != true);
+
+                // Nếu đang update, bỏ qua chính nó
                 if (id > 0)
                 {
-                    var check = projectRepo.GetAll(x => x.ProjectCode == projectCode);
-                    projects = projectRepo.GetAll(x => x.ProjectCode == projectCode && x.ID != id);
-                }
-                else
-                {
-                    projects = projectRepo.GetAll().Where(x => x.ProjectCode.Contains(projectCode)).ToList();
+                    query = query.Where(x => x.ID != id && x.IsDeleted !=true);
                 }
 
+                bool isExists = query.Any();
 
-                return Ok(ApiResponseFactory.Success(projects.Count() > 0 ? 0 : 1, ""));
+                return Ok(ApiResponseFactory.Success(
+                    isExists ? 0 : 1,   // hoặc trả true/false cho rõ ràng hơn
+                    isExists ? "Project code already exists." : "Project code is available."
+                ));
             }
             catch (Exception ex)
             {
@@ -1123,7 +1131,7 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                var prjPriority = projectPriorityRepo.GetAll();
+                var prjPriority = projectPriorityRepo.GetAll(x=>x.IsDeleted != true);
 
                 List<int> checks = new List<int>();
                 if (projectId != 0)
@@ -1666,7 +1674,9 @@ namespace RERPAPI.Controllers.Project
                 {
                     if (id > 0)
                     {
-                        projectPriorityRepo.Delete(id);
+                        var item = projectPriorityRepo.GetByID(id);
+                        item.IsDeleted = true;
+                        await projectPriorityRepo.UpdateAsync(item);
                     }
                 }
                 return Ok(ApiResponseFactory.Success(true, "Xóa mức độ ưu tiên thành công"));
