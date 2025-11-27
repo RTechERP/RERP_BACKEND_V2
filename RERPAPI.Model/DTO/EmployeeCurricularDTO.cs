@@ -30,6 +30,6 @@ namespace RERPAPI.Model.DTO
         public string? UpdatedBy { get; set; }
 
         public string? Note { get; set; }
-        public bool isDelete { get; set; }
+        public bool? IsDeleted { get; set; }
     }
 }

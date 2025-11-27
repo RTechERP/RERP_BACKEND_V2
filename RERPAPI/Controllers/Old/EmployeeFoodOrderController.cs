@@ -44,8 +44,8 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                DateTime dateStart = param.dateStart.Date;
-                DateTime dateEnd = param.dateStart.Date.AddDays(1).AddTicks(-1);
+                DateTime dateStart = param.dateStart.Date;                     
+                DateTime dateEnd = param.dateEnd.Date.AddDays(1).AddTicks(-1);
                 var foodOrders = SQLHelper<object>.ProcedureToList("spGetFoodOrder", new string[] { "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@Keyword", "@EmployeeID" },
                     new object[] { param.pageNumber, param.pageSize, dateStart, dateEnd, param.keyWord, param.employeeId });
 

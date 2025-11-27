@@ -29,10 +29,15 @@ namespace RERPAPI.Repo.GenericEntity
                 message = "Vui lòng chọn Mã yêu cầu";
                 return false;
             }
+            if (string.IsNullOrEmpty(request.ContentRequest.Trim()))
+            {
+                message = "Vui lòng nhập nội dung";
+                return false;
+            }
             var oldRequest = GetAll(x => x.ID != request.ID && x.CodeRequest == request.CodeRequest && x.ProjectID == request.ProjectID && x.IsDeleted == false);
             if (oldRequest.Count > 0)
             {
-                message = $"Yêu cầu công việc có mã[{request.CodeRequest}] đã tồn tại!";
+                message = $"Mã yêu cầu [{request.CodeRequest}] đã tồn tại!";
                 return false;
             }
             return true;

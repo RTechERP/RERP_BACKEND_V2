@@ -11,6 +11,7 @@ namespace RERPAPI.Controllers.Old.POKH
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class HistoryMoneyPOController : ControllerBase
     {
         HistoryMoneyPORepo _historyMoneyPORepo;
@@ -39,7 +40,7 @@ namespace RERPAPI.Controllers.Old.POKH
 
         [HttpGet("load-product-data")]
         [Authorize]
-        public IActionResult LoadProductData(string filterText)
+        public IActionResult LoadProductData(string filterText = "")
         {
             try
             {

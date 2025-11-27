@@ -5751,6 +5751,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.IsBill)
                 .HasDefaultValue(false)
                 .HasComment(" Tình trạng hoá đơn: 0: Chưa có hoá đơn, 1: Đã có hoá đơn");
+            entity.Property(e => e.MoneyDiscount).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.Note).HasMaxLength(250);
             entity.Property(e => e.POCode).HasMaxLength(250);
             entity.Property(e => e.PONumber).HasMaxLength(250);
@@ -7318,11 +7319,7 @@ public partial class RTCContext : DbContext
 
         modelBuilder.Entity<ProjectPersonalPriotity>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("ProjectPersonalPriotity");
-
-            entity.Property(e => e.ID).ValueGeneratedOnAdd();
+            entity.ToTable("ProjectPersonalPriotity");
         });
 
         modelBuilder.Entity<ProjectPriority>(entity =>

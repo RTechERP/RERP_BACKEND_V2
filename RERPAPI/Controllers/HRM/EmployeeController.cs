@@ -61,7 +61,7 @@ namespace RERPAPI.Controllers.HRM
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -71,38 +71,32 @@ namespace RERPAPI.Controllers.HRM
         {
             try
             {
-                Employee employee = _employeeRepo.GetByID(id);
+                RERPAPI.Model.Entities.Employee employee = _employeeRepo.GetByID(id);
                 return Ok(ApiResponseFactory.Success(employee, ""));
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         [HttpPost("savedata")]
-        [RequiresPermission("N1,N2,N60")]
-        public async Task<IActionResult> SaveEmployee([FromBody] Employee employee)
+        public async Task<IActionResult> SaveEmployee([FromBody] RERPAPI.Model.Entities.Employee employee)
         {
             try
             {
+                if(!_employeeRepo.Validate(employee, out string message))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, message));
+                }
                 if (employee.ID <= 0) await _employeeRepo.CreateAsync(employee);
                 else await _employeeRepo.UpdateAsync(employee);
 
-                return Ok(new
-                {
-                    status = 1,
-                    data = employee
-                });
+                return Ok(ApiResponseFactory.Success(employee, ""));
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

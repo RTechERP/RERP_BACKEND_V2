@@ -1,7 +1,10 @@
 ﻿using DocumentFormat.OpenXml.VariantTypes;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
+using OfficeOpenXml.ConditionalFormatting.Contracts;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
@@ -10,6 +13,8 @@ using RERPAPI.Repo.GenericEntity;
 using System.Data;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.AspNetCore.StaticFiles;
+
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -57,6 +62,7 @@ namespace RERPAPI.Controllers.Old.POKH
         }
         #region Các hàm get dữ liệu
         [HttpGet("get-product")]
+
         public IActionResult loadProduct()
         {
             try
@@ -73,6 +79,8 @@ namespace RERPAPI.Controllers.Old.POKH
             }
         }
         [HttpGet("get-pokh-kpi-detail")]
+        [RequiresPermission("N27,N36,N1")]
+
         public IActionResult loadPOKHKpiDetail(int id)
         {
             try
@@ -101,6 +109,8 @@ namespace RERPAPI.Controllers.Old.POKH
             }
         }
         [HttpGet("get-pokh")]
+        [RequiresPermission("N27,N36,N1,N31")]
+
         public IActionResult GetPOKH(string? filterText, int page, int size, int customerId, int userId, int POType, int status, int group, DateTime startDate, DateTime endDate, int warehouseId, int employeeTeamSaleId)
         {
             try
@@ -241,6 +251,8 @@ namespace RERPAPI.Controllers.Old.POKH
         /// - Duyệt qua danh sách POKHDetailsMoney để xử lý tạo/cập nhật thông tin.
         /// </remarks>
         [HttpPost("handle")]
+        [RequiresPermission("N27,N36,N1,N31")]
+
         public async Task<IActionResult> Handle([FromBody] POKHDTO dto)
         {
             try
@@ -546,6 +558,8 @@ namespace RERPAPI.Controllers.Old.POKH
         #region Hàm xử lí File và lưu bảng POKHFile
         [HttpPost("upload")]
         [DisableRequestSizeLimit]
+        [RequiresPermission("N27,N36,N1,N31")]
+
         public async Task<IActionResult> Upload(int poKHID)
         {
             try
@@ -711,6 +725,8 @@ namespace RERPAPI.Controllers.Old.POKH
         //    }
         //}
         [HttpPost("delete-file")]
+        [RequiresPermission("N27,N36,N1,N31")]
+
         public IActionResult DeleteFile([FromBody] List<int> fileIds)
         {
             if (fileIds == null || !fileIds.Any())
@@ -750,6 +766,8 @@ namespace RERPAPI.Controllers.Old.POKH
         }
         #endregion
         [HttpPost("copy-dto")]
+        [RequiresPermission("N27,N36,N1,N31")]
+
         public async Task<IActionResult> CopyFromDTO([FromBody] POKHDTO dto)
         {
             try
@@ -877,6 +895,42 @@ namespace RERPAPI.Controllers.Old.POKH
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
+        [HttpGet("download-file")]
+        [RequiresPermission("N27,N36,N1,N31")]
+        public IActionResult DownloadFile(int fileId)
+        {
+            try
+            {
+                // Lấy file record từ DB
+                var file = _pokhFilesRepo.GetByID(fileId);
+
+                if (file.IsDeleted == true)
+                    return BadRequest(ApiResponseFactory.Fail(null, "File không tồn tại hoặc đã bị xoá"));
+
+                // Ghép thành đường dẫn đầy đủ từ ServerPath
+                var fullPath = Path.Combine(file.ServerPath, file.FileName);
+
+                // Kiểm tra file tồn tại
+                if (!System.IO.File.Exists(fullPath))
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy file trên server"));
+
+                // Detect content-type
+                var provider = new FileExtensionContentTypeProvider();
+                if (!provider.TryGetContentType(fullPath, out string contentType))
+                {
+                    contentType = "application/octet-stream";
+                }
+
+                // Trả file về trình duyệt -> tự tải xuống
+                return PhysicalFile(fullPath, contentType, file.FileName);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi tải file: {ex.Message}"));
             }
         }
     }

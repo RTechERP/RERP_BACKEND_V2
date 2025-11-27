@@ -38,16 +38,18 @@ namespace RERPAPI.Controllers.Old.POKH
             _pokhDetailRepo = pokhDetailRepo;
         }
         [HttpGet("get-viewpokh")]
-        public IActionResult Get(DateTime dateTimeS, DateTime dateTimeE, int employeeTeamSaleID, int userID, int poType, int status, int customerID, string keyword = "")
+        public IActionResult Get(DateTime dateTimeS, DateTime dateTimeE, int employeeTeamSaleID, int userID, int poType, int status, int customerID,int warehouseId, string keyword = "")
         {
             try
             {
                 List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetViewPOKHDetail", 
-                         new string[] { "@DateStart", "@DateEnd", "@EmployeeTeamSaleID", "@UserID", "@POType", "@Status", "@CustomerID", "@Keyword" }, 
-                         new object[] { dateTimeS , dateTimeE , employeeTeamSaleID, userID, poType, status, customerID, keyword });
+                         new string[] { "@DateStart", "@DateEnd", "@EmployeeTeamSaleID", "@UserID", "@POType", "@Status", "@CustomerID", "@Keyword", "@WarehouseID" }, 
+                         new object[] { dateTimeS , dateTimeE , employeeTeamSaleID, userID, poType, status, customerID, keyword, warehouseId });
                 var data = SQLHelper<dynamic>.GetListData(list, 0);
+                var dataExport = SQLHelper<dynamic>.GetListData(list, 1);
+                var dataInvoice = SQLHelper<dynamic>.GetListData(list, 2);
 
-                return Ok(ApiResponseFactory.Success(data, ""));
+                return Ok(ApiResponseFactory.Success(new { data, dataExport, dataInvoice}, ""));
             }
             catch (Exception ex)
             {

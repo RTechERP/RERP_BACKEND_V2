@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -10,6 +11,7 @@ namespace RERPAPI.Controllers.CRM
 {
     [Route("api/[controller]")]
     [ApiController]
+    
     public class CustomerController : ControllerBase
     {
         //CustomerRepo customerRepo = new CustomerRepo();
@@ -460,7 +462,7 @@ namespace RERPAPI.Controllers.CRM
 
         [HttpGet("get-data-by-procedure")]
         [Authorize]
-        //[RequiresPermission("N1,N27,N53,N31,N69")]
+        [RequiresPermission("N1,N27,N53,N31,N69")]
         public IActionResult GetCustomer(int page, int size, int employeeId, int groupId, string? filterText = "")
         {
             try
@@ -481,6 +483,7 @@ namespace RERPAPI.Controllers.CRM
         }
 
         [HttpGet("get-details")]
+        [Authorize]
         public IActionResult GetContactAndAddress(int customerId)
         {
             try
@@ -505,6 +508,7 @@ namespace RERPAPI.Controllers.CRM
             }
         }
         [HttpGet("get-customer-specialization")]
+        [Authorize]
         public IActionResult GetCustomerSpecialization()
         {
             try
@@ -518,6 +522,7 @@ namespace RERPAPI.Controllers.CRM
             }
         }
         [HttpGet("get-business-field")]
+        [Authorize]
         public IActionResult GetBusinessField()
         {
             try
@@ -531,6 +536,7 @@ namespace RERPAPI.Controllers.CRM
             }
         }
         [HttpGet("get-provinces")]
+        [Authorize]
         public IActionResult GetProvinces()
         {
             try
@@ -544,6 +550,7 @@ namespace RERPAPI.Controllers.CRM
             }
         }
         [HttpGet("get-detail")]
+        [Authorize]
         public IActionResult GetDetail(int id)
         {
             try
@@ -586,6 +593,7 @@ namespace RERPAPI.Controllers.CRM
             }
         }
         [HttpPost("save-data")]
+        [Authorize]
         public async Task<IActionResult> Save(InsertCustomerDTO dto)
         {
             try
@@ -775,6 +783,7 @@ namespace RERPAPI.Controllers.CRM
         }
 
         [HttpPost("delete-multiple")]
+        [Authorize]
         public async Task<IActionResult> DeleteMultiple(List<int> ids)
         {
             try
@@ -796,6 +805,7 @@ namespace RERPAPI.Controllers.CRM
         }
 
         [HttpGet("export-excel")]
+        [Authorize]
         public IActionResult ExportDataToExcel()
         {
             var columnMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
