@@ -19,6 +19,7 @@ namespace RERPAPI.Model.DTO
         public DateTime? DeadlinePur { get; set; }
         public int? SupplierSaleQuoteID { get; set; }
         public int? UnitPriceQuote { get; set; }
+        public int? UnitPriceHistory { get; set; }
 
     }
 }
