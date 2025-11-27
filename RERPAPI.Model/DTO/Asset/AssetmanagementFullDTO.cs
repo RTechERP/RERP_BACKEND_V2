@@ -15,5 +15,6 @@ namespace RERPAPI.Model.DTO.Asset
         public TSLostReportAsset? tSLostReportAsset { get; set; }
         public TSReportBrokenAsset? tSReportBrokenAsset { get; set; }
         public List<TSAllocationEvictionAsset>? tSAllocationEvictionAssets { get; set; }
+        public List<ProductSale>? productSale { get; set; }
     }
 }
