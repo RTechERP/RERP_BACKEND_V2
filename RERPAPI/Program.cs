@@ -339,6 +339,7 @@ builder.Services.AddScoped<TaxCompanyRepo>();
 builder.Services.AddScoped<ProjectPartlistPurchaseRequestTypeRepo>();
 builder.Services.AddScoped<ProjectPartlistPriceRequestTypeRepo>();
 builder.Services.AddScoped<ProjectPartlistPriceRequestNoteRepo>();
+builder.Services.AddScoped<InventoryStockRepo>();
 #endregion
 #region EmployeePayroll
 

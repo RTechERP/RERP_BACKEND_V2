@@ -22,6 +22,6 @@ namespace RERPAPI.Model.DTO
         public string UnitStock { get; set; } = string.Empty;
 
         public bool IsFix { get; set; }
-        public string Choose { get; set; } = "Excel"; // "Excel" | "Stock"
+        public string Choose { get; set; } = "Stock"; // "Excel" | "Stock"
     }
 }
