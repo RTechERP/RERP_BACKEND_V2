@@ -22,4 +22,9 @@ public partial class ProductGroupRTC
     public int? WarehouseID { get; set; }
 
     public bool IsDeleted { get; set; }
+
+    /// <summary>
+    /// 1: KHo demo; 2: Kho AGV
+    /// </summary>
+    public int? WarehouseType { get; set; }
 }
