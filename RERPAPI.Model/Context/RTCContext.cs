@@ -6519,6 +6519,7 @@ public partial class RTCContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false)
                 .HasComment("Mã nhóm thiết bị");
+            entity.Property(e => e.WarehouseType).HasComment("1: KHo demo; 2: Kho AGV");
         });
 
         modelBuilder.Entity<ProductGroupWarehouse>(entity =>
