@@ -19,6 +19,7 @@ namespace RERPAPI.Model.DTO
         public string GroupMaterial { get; set; }        // Tên sản phẩm
         public string Unit { get; set; }                 // Đơn vị tính
         public string ProjectCode { get; set; }          // Mã dự án
+        public string TT { get; set; }
 
         // Các field khác nếu cần cho ValidateKeep
         public int ProductID { get; set; }

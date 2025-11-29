@@ -20,11 +20,11 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
             _requestInvoiceRepo = requestInvoiceRepo;
         }
         [HttpGet]
-        public IActionResult Get(DateTime dateStart, DateTime dateEnd, string keyWords = "")
+        public IActionResult Get(DateTime dateStart, DateTime dateEnd, int warehouseId, string keyWords = "")
         {
             try
             {
-                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetRequestInvoice", new string[] { "@DateStart", "@DateEnd", "@Keywords" }, new object[] { dateStart, dateEnd, keyWords });
+                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetRequestInvoice", new string[] { "@DateStart", "@DateEnd", "@Keywords", "@WarehouseID" }, new object[] { dateStart, dateEnd, keyWords, warehouseId });
                 var data = SQLHelper<dynamic>.GetListData(list, 0);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using NPOI.HSSF.Record.Chart;
 using RERPAPI.Model.Common;
@@ -11,6 +12,7 @@ namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
 
     // [ApiKeyAuthorize]
     public class ProjectController : ControllerBase
@@ -502,6 +504,8 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
                 int[] typeCheck = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
                 List<int> projectTypeIDs = projectTypeRepo.GetAll().Select(x => x.ID).ToList();
 
@@ -536,7 +540,7 @@ namespace RERPAPI.Controllers.Project
                     new object[] {
                         size, page, dateTimeS, dateTimeE, keyword ?? "", customerID, saleID, projectType, leaderID,
                         userTechID, pmID, typeCheck[0] ,typeCheck[1] ,typeCheck[2] ,typeCheck[3] ,typeCheck[4] ,typeCheck[5]
-                        ,typeCheck[6] ,typeCheck[7] ,typeCheck[8], globalUserID, bussinessFieldID, projectStatus
+                        ,typeCheck[6] ,typeCheck[7] ,typeCheck[8], currentUser.ID, bussinessFieldID, projectStatus
                     });
 
                 //var projects = SQLHelper<object>.ProcedureToList("spGetProject",
@@ -1545,12 +1549,15 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
+
                 if (prjTypeLink.ProjectID > 0)
                 {
+                    //update trạng thái dự án 
                     Model.Entities.Project project = projectRepo.GetByID(prjTypeLink.ProjectID);
                     project.ProjectStatus = prjTypeLink.ProjectStatus;
                     projectRepo.Update(project);
 
+                    //update leader kiểu dự án
                     if (prjTypeLink.prjTypeLinks.Count() > 0)
                     {
                         foreach (var item in prjTypeLink.prjTypeLinks)
@@ -1565,6 +1572,7 @@ namespace RERPAPI.Controllers.Project
                         }
                     }
 
+                    //update hiện trạng dự án
                     if (!string.IsNullOrWhiteSpace(prjTypeLink.Situlator))
                     {
                         ProjectCurrentSituation situation = new ProjectCurrentSituation();
@@ -1574,6 +1582,32 @@ namespace RERPAPI.Controllers.Project
                         situation.ContentSituation = prjTypeLink.Situlator;
                         projectCurrentSituationRepo.Create(situation);
                     }
+                    ////thêm dữ liệu vào bảng người tham gia 
+                    //foreach (var item in prjTypeLink.prjTypeLinks)
+                    //{
+                    //    ProjectEmployee model = new ProjectEmployee();
+                    //    var projectEmployee = projectEmployeeRepo.GetAll(x => x.ProjectID == prjTypeLink.ProjectID && x.EmployeeID == item.LeaderID && x.ProjectTypeID == item.projectTypeID && x.IsDeleted != true);
+                    //    if (item.LeaderID > 0) continue; 
+                    //    if (projectEmployee.Count > 0)
+                    //    {
+                    //        model = projectEmployee.FirstOrDefault();
+                    //    }
+                    //    model.EmployeeID = item.LeaderID;
+                    //    model.IsLeader = true;
+                    //    model.ProjectID = prjTypeLink.ProjectID;
+                    //    model.ProjectTypeID = item.projectTypeID;
+
+                    //    if (model.ID > 0)
+                    //    {
+                    //        await projectEmployeeRepo.UpdateAsync(model);
+                    //    }
+                    //    else
+                    //    {
+                    //        var list = projectEmployeeRepo.GetAll(x => x.ProjectID == prjTypeLink.ProjectID && x.IsDeleted != true);
+                    //        model.STT = list.Count + 1;
+                    //        await projectEmployeeRepo.CreateAsync(model);
+                    //    }
+                    //}
                 }
 
                 return Ok(ApiResponseFactory.Success(true, "Lưu Leader dự án thành công"));
@@ -2025,6 +2059,23 @@ namespace RERPAPI.Controllers.Project
                 ));
             }
             catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-project-id")]
+        public async Task<IActionResult> GetDataByID(int id)
+        {
+            try
+            {
+                var data = projectRepo.GetByID(id);
+                return Ok(ApiResponseFactory.Success(
+                  data,
+                   "Lấy dữ liệu thành công"
+               ));
+
+            }
+            catch(Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
