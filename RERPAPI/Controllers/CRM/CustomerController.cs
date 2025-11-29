@@ -11,7 +11,7 @@ namespace RERPAPI.Controllers.CRM
 {
     [Route("api/[controller]")]
     [ApiController]
-    
+    [Authorize]
     public class CustomerController : ControllerBase
     {
         //CustomerRepo customerRepo = new CustomerRepo();
