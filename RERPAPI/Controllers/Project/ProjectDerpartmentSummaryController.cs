@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
@@ -11,6 +12,7 @@ namespace RERPAPI.Controllers.Project // tổng hợp phòng ban
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ProjectDerpartmentSummaryController : ControllerBase
     {
         private readonly ProjectRepo _projectRepo;
@@ -27,6 +29,8 @@ namespace RERPAPI.Controllers.Project // tổng hợp phòng ban
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
                 var result = SQLHelper<object>.ProcedureToList("spGetProjectNew",
                     new string[] {
                         "@DateStart", "@DateEnd", "@DepartmentID", "@UserTeamID", "@UserID", "@ProjectTypeID", "@Keyword"

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
@@ -11,6 +12,7 @@ namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ProjectSolutionController : ControllerBase
     {
         private ProjectSolutionRepo _projectSolutionRepo;

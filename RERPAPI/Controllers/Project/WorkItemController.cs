@@ -1,4 +1,5 @@
 ﻿using Azure.Core;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
@@ -7,6 +8,7 @@ namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class WorkItemController : ControllerBase
     {
         //[HttpGet("get-all/{projectID}")]

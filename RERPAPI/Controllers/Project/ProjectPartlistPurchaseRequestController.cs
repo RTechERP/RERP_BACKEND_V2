@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -10,6 +11,7 @@ namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ProjectPartlistPurchaseRequestController : ControllerBase
     {
         #region Khai báo repository

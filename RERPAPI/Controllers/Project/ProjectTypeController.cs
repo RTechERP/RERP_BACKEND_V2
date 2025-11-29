@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
@@ -6,6 +7,7 @@ namespace RERPAPI.Controllers.Project
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class ProjectTypeController : ControllerBase
     {
         private ProjectTypeRepo _projectTypeRepo;
