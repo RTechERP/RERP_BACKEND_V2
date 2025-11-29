@@ -12,6 +12,8 @@ namespace RERPAPI.Repo.GenericEntity
     {
         public ProjectSurveyDetailRepo(CurrentUser currentUser) : base(currentUser)
         {
+
         }
-    }
+
+}
 }

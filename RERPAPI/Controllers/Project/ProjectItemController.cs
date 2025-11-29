@@ -21,6 +21,7 @@ namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ProjectItemController : ControllerBase
     {
         private readonly ProjectItemProblemRepo _projectItemProblemRepo;

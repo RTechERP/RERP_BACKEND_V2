@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -10,6 +11,7 @@ namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ProjectPartListVersionController : ControllerBase
     {
         private ProjectPartlistVersionRepo _projectPartlistVersionRepo;
@@ -66,8 +68,8 @@ namespace RERPAPI.Controllers.Project
                 {
                     var myDict = new Dictionary<Expression<Func<ProjectPartList, object>>, object>
                             {
-                                { x => x.IsApprovedTBP, 0 },
-                                { x => x.IsApprovedPurchase, 0 }
+                                { x => x.IsApprovedTBP, false },
+                                { x => x.IsApprovedPurchase, false }
                             };
                     await _projectPartListRepo.UpdateFieldByAttributeAsync(x => x.ProjectPartListVersionID == request.ID, myDict);
                 }
@@ -75,7 +77,7 @@ namespace RERPAPI.Controllers.Project
                 {
                     var myDict = new Dictionary<Expression<Func<ProjectPartList, object>>, object>
                             {
-                                { x => x.IsDeleted, 1 },
+                                { x => x.IsDeleted, true },
                                 { x => x.ReasonDeleted, request.ReasonDeleted}
                             };
                     await _projectPartListRepo.UpdateFieldByAttributeAsync(x => x.ProjectPartListVersionID == request.ID, myDict);

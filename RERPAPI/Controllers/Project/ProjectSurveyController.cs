@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -9,6 +10,7 @@ namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ProjectSurveyController : ControllerBase
     {
         #region Khai báo biến
@@ -61,6 +63,7 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
+             
                 if (ids.Count() > 0)
                 {
                     foreach (int id in ids)
@@ -86,7 +89,17 @@ namespace RERPAPI.Controllers.Project
         [HttpGet("approved-request")]
         public async Task<IActionResult> approvedRequest(int id, bool status, int employeeID, DateTime dateSurvey, string? reasonCancel, string updatedBy, int surveySession)
         {
-            try
+
+                 string statusname= status ? "duyệt" : "hủy";
+                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                 var currentUser = ObjectMapper.GetCurrentUser(claims);
+                 var data = projectSurveyDetailRepo.GetByID(id);
+
+            if (currentUser.EmployeeID != data.LeaderID)
+            {
+                return BadRequest(ApiResponseFactory.Fail(null, $"Bạn không phải Leader dự án!Không thể {statusname}"));
+            }
+                try
             {
                 ProjectSurveyDetail model = projectSurveyDetailRepo.GetByID(id);
                 model.Status = status ? 1 : 0;
@@ -107,7 +120,7 @@ namespace RERPAPI.Controllers.Project
             }
         }
         #endregion
-        #region Load dữ liệu chi tiết leader duyệt khảo sát
+                #region Load dữ liệu chi tiết leader duyệt khảo sát
         [HttpGet("get-tb-detail")]
         public async Task<IActionResult> gettbdetail(int projectSurveyId, int projectId)
         {
