@@ -1,4 +1,5 @@
 ﻿using ClosedXML.Excel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -11,6 +12,7 @@ namespace RERPAPI.Controllers.KhoBaseManager
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class FollowProjectBaseController : ControllerBase
     {
         private readonly ProjectRepo _projectRepo;

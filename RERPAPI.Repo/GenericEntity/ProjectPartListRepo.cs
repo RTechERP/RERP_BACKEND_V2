@@ -32,6 +32,24 @@ namespace RERPAPI.Repo.GenericEntity
             int stt = listPartList.Count <= 0 ? 1 : listPartList.Max(a => a.STT ?? 0) + 1;
             return stt;
         }
+        public int GetParentIdImport(string tt, int versionID, bool isProblem, int projectTypeID)
+        {
+            int parentId = 0;
+            if (!tt.Contains(".")) return parentId;
+            string parentTt = tt.Substring(0, tt.LastIndexOf(".")).Trim();
+            int isProblemValue = isProblem ? 1 : 0;
+
+            ProjectPartList parent = GetAll(x => x.TT == parentTt
+                                             && x.ProjectPartListVersionID == versionID
+                                             && x.IsProblem == isProblem
+                                             && x.ProjectTypeID == projectTypeID
+                                            && x.IsDeleted != true).FirstOrDefault();
+            if (parent != null && parent.ID > 0)
+            {
+                parentId = parent.ID;
+            }
+            return parentId;
+        }
         public int GetParentID(string tt, int projectTypeId, int versionId)
         {
             if (string.IsNullOrWhiteSpace(tt))
@@ -192,7 +210,7 @@ namespace RERPAPI.Repo.GenericEntity
             }
             if (!string.IsNullOrWhiteSpace(item.SpecialCode))
             {
-                var specialCode = GetAll(x => x.SpecialCode == item.SpecialCode && x.ID == item.ID && x.IsDeleted != true);
+                var specialCode = GetAll(x => x.SpecialCode == item.SpecialCode && x.ID != item.ID && x.IsDeleted != true);
                 if (specialCode.Count > 0)
                 {
                     message = $"Mã đặc biệt [{item.SpecialCode}] đã tồn tại .\nVui lòng kiểm tra lại!";
@@ -233,29 +251,30 @@ namespace RERPAPI.Repo.GenericEntity
             //{
 
             //}
-            var productSale = _productSaleRepo.GetAll(x => x.IsDeleted != true && x.ProductCode == item.ProductCode).FirstOrDefault();
-            if (productSale != null && productSale.ID > 0 && productSale.IsFix == true)
-            {
-                List<string> errors = new List<string>();
-                if (UnicodeConverterService.ConvertUnicode((item.GroupMaterial ?? "").ToLower(), 1) != UnicodeConverterService.ConvertUnicode((productSale.ProductName ?? "").ToLower(), 1))
-                {
-                    errors.Add($"\nTên thiết bị (tích xanh: [{productSale.ProductName}], hiện tại: [{item.GroupMaterial}])");
-                }
-                if (UnicodeConverterService.ConvertUnicode((item.Manufacturer ?? "").ToLower(), 1) != UnicodeConverterService.ConvertUnicode((productSale.Maker ?? "").ToLower(), 1))
-                {
-                    errors.Add($"\nHãng sản xuất (tích xanh: [{productSale.Maker}], hiện tại: [{item.Manufacturer}])");
-                }
-                if (UnicodeConverterService.ConvertUnicode((item.Unit ?? "").ToLower(), 1) != UnicodeConverterService.ConvertUnicode((productSale.Unit ?? "").ToLower(), 1))
-                {
-                    errors.Add($"\nĐơn vị (tích xanh: [{productSale.Unit}], hiện tại: [{item.Unit}])");
-                }
-                if (errors.Any())
-                {
-                    message = $"Mã thiết bị {item.ProductCode} đã có TÍCH XANH.\n" +
-                        $"Các trường không khớp:\n {string.Join("\n", errors)}\n\n";
-                    return false;
-                }
-            }
+            //đã tách riêng logic này
+            /*   var productSale = _productSaleRepo.GetAll(x => x.IsDeleted != true && x.ProductCode == item.ProductCode).FirstOrDefault();
+               if (productSale != null && productSale.ID > 0 && productSale.IsFix == true)
+               {
+                   List<string> errors = new List<string>();
+                   if (UnicodeConverterService.ConvertUnicode((item.GroupMaterial ?? "").ToLower(), 1) != UnicodeConverterService.ConvertUnicode((productSale.ProductName ?? "").ToLower(), 1))
+                   {
+                       errors.Add($"\nTên thiết bị (tích xanh: [{productSale.ProductName}], hiện tại: [{item.GroupMaterial}])");
+                   }
+                   if (UnicodeConverterService.ConvertUnicode((item.Manufacturer ?? "").ToLower(), 1) != UnicodeConverterService.ConvertUnicode((productSale.Maker ?? "").ToLower(), 1))
+                   {
+                       errors.Add($"\nHãng sản xuất (tích xanh: [{productSale.Maker}], hiện tại: [{item.Manufacturer}])");
+                   }
+                   if (UnicodeConverterService.ConvertUnicode((item.Unit ?? "").ToLower(), 1) != UnicodeConverterService.ConvertUnicode((productSale.Unit ?? "").ToLower(), 1))
+                   {
+                       errors.Add($"\nĐơn vị (tích xanh: [{productSale.Unit}], hiện tại: [{item.Unit}])");
+                   }
+                   if (errors.Any())
+                   {
+                       message = $"Mã thiết bị {item.ProductCode} đã có TÍCH XANH.\n" +
+                           $"Các trường không khớp:\n {string.Join("\n", errors)}\n\n";
+                       return false;
+                   }
+               }*/
             return true;
         }
         public bool ValidateApproveTBP(ProjectPartList partlist, bool isApproved, out string message)
@@ -495,6 +514,7 @@ namespace RERPAPI.Repo.GenericEntity
                 request.Quantity = item.QtyFull;
                 request.UnitPrice = item.PriceOrder;
                 request.TotalPrice = item.TotalPriceOrder;
+                request.ProjectPartlistPurchaseRequestTypeID = 1; // yêu câu mua hàng dự án
 
                 UnitCount unit = _unitCountRepo.GetAll(x => x.UnitName == item.Unit.Trim()).FirstOrDefault();
                 if (unit != null)
@@ -725,7 +745,8 @@ namespace RERPAPI.Repo.GenericEntity
             public string Message { get; set; } = "";
 
             // Chuyển dtError → List<PartlistDiffDto>
-            //public List<PartlistDiffDTO> Diffs { get; set; } = new();
+            public List<PartlistDiffDTO> Diffs { get; set; } = new();
+
         }
         Regex regex = new Regex(@"^-?[\d\.]+$");
 
@@ -760,7 +781,8 @@ namespace RERPAPI.Repo.GenericEntity
         {
             var result = new PartlistValidateResult
             {
-                IsValid = true
+                IsValid = true,
+                Diffs = new List<PartlistDiffDTO>()
             };
 
             string pattern = @"^[^àáảãạâầấẩẫậăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵÀÁẢÃẠÂẦẤẨẪẬĂẰẮẲẴẶÈÉẺẼẸÊỀẾỂỄỆÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴ]+$";
@@ -858,23 +880,23 @@ namespace RERPAPI.Repo.GenericEntity
                             excelManufacturer != stockManufacturer ||
                             excelUnit != stockUnit)
                         {
-                            // Thêm vào DIFF LIST
-                            //result.Diffs.Add(new PartlistDiffDTO
-                            //{
-                            //    ProductSaleId = fixedProduct.ID,
-                            //    ProductCode = productCode,
+                            //Thêm vào DIFF LIST
+                            result.Diffs.Add(new PartlistDiffDTO
+                            {
+                                ProductSaleId = fixedProduct.ID,
+                                ProductCode = productCode,
 
-                            //    GroupMaterialPartlist = groupMaterial,
-                            //    GroupMaterialStock = fixedProduct.ProductName,
+                                GroupMaterialPartlist = groupMaterial,
+                                GroupMaterialStock = fixedProduct.ProductName,
 
-                            //    ManufacturerPartlist = manufacturer,
-                            //    ManufacturerStock = fixedProduct.Maker,
+                                ManufacturerPartlist = manufacturer,
+                                ManufacturerStock = fixedProduct.Maker,
 
-                            //    UnitPartlist = unit,
-                            //    UnitStock = fixedProduct.Unit,
+                                UnitPartlist = unit,
+                                UnitStock = fixedProduct.Unit,
 
-                            //    IsFix = fixedProduct.IsFix ?? true
-                            //});
+                                IsFix = fixedProduct.IsFix ?? true
+                            });
                         }
                     }
                 }
@@ -926,6 +948,53 @@ namespace RERPAPI.Repo.GenericEntity
             }
             return true;
         }
+        public bool ValidateFixProduct(ProjectPartList item, out string message)
+        {
+            message = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(item.ProductCode))
+                return true; // không có mã → không so tích xanh
+
+            var fixedProduct = _productSaleRepo.GetAll(x =>
+                x.IsDeleted != true &&
+                x.ProductCode == item.ProductCode &&
+                x.IsFix == true
+            ).FirstOrDefault();
+
+            if (fixedProduct == null)
+                return true; // không có tích xanh → hợp lệ
+
+            // Chuẩn hóa để so
+            string nameStock = Normalize(fixedProduct.ProductName);
+            string makerStock = Normalize(fixedProduct.Maker);
+            string unitStock = Normalize(fixedProduct.Unit);
+
+            string namePL = Normalize(item.GroupMaterial);
+            string makerPL = Normalize(item.Manufacturer);
+            string unitPL = Normalize(item.Unit);
+
+            List<string> errors = new List<string>();
+
+            if (nameStock != namePL)
+                errors.Add($"\nTên thiết bị (tích xanh: [{fixedProduct.ProductName}], hiện tại: [{item.GroupMaterial}])");
+
+            if (makerStock != makerPL)
+                errors.Add($"\nHãng sản xuất (tích xanh: [{fixedProduct.Maker}], hiện tại: [{item.Manufacturer}])");
+
+            if (unitStock != unitPL)
+                errors.Add($"\nĐơn vị (tích xanh: [{fixedProduct.Unit}], hiện tại: [{item.Unit}])");
+
+            if (errors.Count > 0)
+            {
+                message =
+                    $"Mã thiết bị [{item.ProductCode}] đã có TÍCH XANH.\n" +
+                    $"Các trường không khớp:\n {string.Join("", errors)}\n" +
+                    $"Vui lòng kiểm tra lại!";
+                return false;
+            }
+
+            return true;
+        }
         public bool ValidateIsFix(ProjectPartlistDTO request, out string message)
         {
             message = string.Empty;
@@ -934,7 +1003,7 @@ namespace RERPAPI.Repo.GenericEntity
         }
 
         string[] unitNames = new string[] { "m", "mét" };
-        public bool ValidateKeep(ProjectPartListExportDTO partList , int wareHouseID, out string productNewCode)
+        public bool ValidateKeep(ProjectPartListExportDTO partList, int wareHouseID, out string productNewCode)
         {
             productNewCode = string.Empty;
             if (partList == null) return false;
@@ -942,34 +1011,43 @@ namespace RERPAPI.Repo.GenericEntity
             if (unitNames.Contains(unitName.Trim().ToLower())) return true;
 
             int billExportDetailID = 0;
-            int productID = partList.ProductID ;
-            int projectID = partList.ProjectID ;
+            int productID = partList.ProductID;
+            int projectID = partList.ProjectID;
             //int pokhDetailID = 0;
             decimal remainQuantity = partList.RemainQuantity;
-            decimal quantityReturn = partList.QuantityReturn ;
-            decimal qtyFull = partList.QtyFull ;
+            decimal quantityReturn = partList.QuantityReturn;
+            decimal qtyFull = partList.QtyFull;
 
-            if (remainQuantity <= 0) return false;
-            if (quantityReturn <= 0) return false;
+            if (remainQuantity <= 0)
+            {
+                productNewCode = partList.TT;
+                return false;
+            }
+            if (quantityReturn <= 0)
+            {
+                productNewCode = partList.TT;
+                return false;
+            }
+
 
             decimal totalQty = (quantityReturn >= qtyFull) ? remainQuantity : Math.Min(remainQuantity, quantityReturn);
             int pokhDetailID = 0;
-            
-            string productCode = partList.ProductNewCode ?? "";
+
+            string tt = partList.TT ?? "";
             string projectCode = partList.ProjectCode ?? " ";
-          
+
 
             // Lấy tồn kho theo sp, project, POKH
             var ds = SQLHelper<dynamic>.ProcedureToList("spGetInventoryProjectImportExport",
                 new string[] { "@WarehouseID", "@ProductID", "@ProjectID", "@POKHDetailID", "@BillExportDetailID" },
-                new object[] { wareHouseID, productID,projectID,pokhDetailID, billExportDetailID });
+                new object[] { wareHouseID, productID, projectID, pokhDetailID, billExportDetailID });
 
             var inventoryProjects = ds[0];
             var dtImport = ds[1];
             var dtExport = ds[2];
             var dtStock = ds[3];
 
-            decimal totalQuantityKeep = inventoryProjects.Count > 0 ? Convert.ToDecimal(inventoryProjects[0].TotalQuantity) : 0; 
+            decimal totalQuantityKeep = inventoryProjects.Count > 0 ? Convert.ToDecimal(inventoryProjects[0].TotalQuantity) : 0;
             decimal totalQuantityLast = dtStock.Count > 0 ? Convert.ToDecimal(dtStock[0].TotalQuantityLast) : 0;
             decimal totalImport = dtImport.Count > 0 ? Convert.ToDecimal(dtImport[0].TotalImport) : 0;
             decimal totalExport = dtExport.Count > 0 ? Convert.ToDecimal(dtExport[0].TotalExport) : 0;
@@ -977,15 +1055,34 @@ namespace RERPAPI.Repo.GenericEntity
             decimal totalQuantityRemain = Math.Max(totalImport - totalExport, 0);
 
             decimal totalStock = Math.Max(totalQuantityKeep, 0) + totalQuantityRemain + Math.Max(totalQuantityLast, 0);
-            if(totalQty > totalStock)
+            if (totalQty > totalStock)
             {
-                productNewCode = productCode;
+                productNewCode = tt;
                 return false;
             }
 
             return true;
         }
+        public int GetParentIDAdditionalPO(string tt, int versionId,bool isProblem)
+        {
+            int parentId = 0;
+            if (!tt.Contains(".")) return parentId;
 
-    }
+            string parentTt = tt.Substring(0, tt.LastIndexOf(".")).Trim();
+            int isProblemValue = isProblem ? 1 : 0;
 
+            var exp1 = new Expression("TT", parentTt);
+            var exp2 = new Expression("ProjectPartListVersionID", versionId);
+            var exp3 = new Expression("IsDeleted", 1, "<>");
+            var exp4 = new Expression("IsProblem", isProblemValue);
+            ProjectPartList parent = GetAll(x =>x.TT == parentTt && x.ProjectPartListVersionID == versionId && x.IsDeleted != true && x.IsProblem == isProblem).FirstOrDefault() ?? new ProjectPartList();
+            if (parent != null && parent.ID > 0)
+            {
+                parentId = parent.ID;
+            }
+            return parentId;
+        }
+      
+
+}
 }

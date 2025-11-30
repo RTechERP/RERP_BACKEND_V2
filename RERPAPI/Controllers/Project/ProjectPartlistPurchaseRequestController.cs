@@ -1,6 +1,3 @@
-using DocumentFormat.OpenXml.Bibliography;
-using DocumentFormat.OpenXml.Office2010.Excel;
-using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -21,6 +18,7 @@ namespace RERPAPI.Controllers.Project
     [Authorize]
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ProjectPartlistPurchaseRequestController : ControllerBase
     {
         #region Khai báo repository

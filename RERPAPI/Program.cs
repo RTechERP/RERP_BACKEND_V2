@@ -7,6 +7,7 @@ using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
 using RERPAPI.Repo;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
@@ -53,6 +54,7 @@ builder.Services.AddScoped<BillDocumentImportRepo>();
 builder.Services.AddScoped<BillExportDetailSerialNumberModulaLocationRepo>();
 builder.Services.AddScoped<BillExportDetailSerialNumberRepo>();
 builder.Services.AddScoped<BillExportDetailTechnicalRepo>();
+builder.Services.AddScoped<BonusRuleIndexRepo>();
 builder.Services.AddScoped<VehicleBookingManagementRepo>();
 builder.Services.AddScoped<VehicleBookingFileRepo>();
 builder.Services.AddScoped<BillExportTechDetailSerialRepo>();
@@ -112,6 +114,7 @@ builder.Services.AddScoped<FollowProjectBaseRepo>();
 builder.Services.AddScoped<FollowProjectRepo>();
 builder.Services.AddScoped<GroupFileRepo>();
 builder.Services.AddScoped<GroupSaleRepo>();
+builder.Services.AddScoped<GroupSalesUserRepo>();
 builder.Services.AddScoped<HistoryDeleteBillRepo>();
 builder.Services.AddScoped<HistoryProductRTCRepo>();
 builder.Services.AddScoped<HolidayRepo>();
@@ -189,12 +192,17 @@ builder.Services.AddScoped<ProvinceRepo>();
 builder.Services.AddScoped<QuotationKHDetailRepo>();
 builder.Services.AddScoped<QuotationKHRepo>();
 builder.Services.AddScoped<RequestInvoiceDetailRepo>();
+builder.Services.AddScoped<RequestInvoiceStatusRepo>();
+builder.Services.AddScoped<RequestInvoiceStatusLinkRepo>();
 builder.Services.AddScoped<RequestInvoiceFileRepo>();
 builder.Services.AddScoped<RequestInvoiceRepo>();
 builder.Services.AddScoped<RulePayRepo>();
 builder.Services.AddScoped<StatusWorkingProcessRepo>();
 builder.Services.AddScoped<SupplierSaleContactRepo>();
 builder.Services.AddScoped<SupplierSaleRepo>();
+builder.Services.AddScoped<SaleUserTypeRepo>();
+builder.Services.AddScoped<SalesPerformanceRankingRepo>();
+builder.Services.AddScoped<StatusRequestInvoiceLinkRepo>();
 builder.Services.AddScoped<TeamRepo>();
 builder.Services.AddScoped<TradePriceDetailRepo>();
 builder.Services.AddScoped<TradePriceRepo>();
@@ -334,6 +342,7 @@ builder.Services.AddScoped<TaxCompanyRepo>();
 builder.Services.AddScoped<ProjectPartlistPurchaseRequestTypeRepo>();
 builder.Services.AddScoped<ProjectPartlistPriceRequestTypeRepo>();
 builder.Services.AddScoped<ProjectPartlistPriceRequestNoteRepo>();
+builder.Services.AddScoped<InventoryStockRepo>();
 #endregion
 #region EmployeePayroll
 
@@ -365,6 +374,8 @@ builder.Services.AddScoped<JobRequirementDetailRepo>();
 // BillExportTechnicalRepo in RTCApi namespace (used by Old Technical controller)
 builder.Services.AddScoped<BillExportTechnicalRepo>();
 builder.Services.AddScoped<TaxCompanyRepo>();
+builder.Services.AddScoped<HistoryErrorRepo>();
+builder.Services.AddScoped<HistoryProductRTCLogRepo>();
 
 
 builder.Services.AddScoped<CurrentUser>(provider =>

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Model.DTO
 {
-    public class ProjectPartlistDTO:ProjectPartList
+    public class ProjectPartlistDTO : ProjectPartList
     {
         /*public int? Mode { get; set; }//1:ApproveTBP; 2:ApproveNewCode*/
         public bool IsLeaf { get; set; }
@@ -18,7 +18,10 @@ namespace RERPAPI.Model.DTO
         // yc mua
         public DateTime? DeadlinePur { get; set; }
         public int? SupplierSaleQuoteID { get; set; }
-        public int? UnitPriceQuote { get; set; }
+        public decimal? UnitPriceQuote { get; set; }
+        public int? UnitPriceHistory { get; set; }
+
+
 
     }
 }
