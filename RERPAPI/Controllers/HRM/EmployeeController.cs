@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
+using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
@@ -14,38 +15,20 @@ namespace RERPAPI.Controllers.HRM
     [Authorize]
     public class EmployeeController : ControllerBase
     {
+        private readonly IConfiguration _configuration;
         private readonly EmployeeRepo _employeeRepo;
         vUserGroupLinksRepo _vUserGroupLinksRepo;
+        private CurrentUser _currentUser;
 
-        public EmployeeController(EmployeeRepo employeeRepo, vUserGroupLinksRepo vUserGroupLinksRepo)
+        public EmployeeController(IConfiguration configuration, EmployeeRepo employeeRepo, vUserGroupLinksRepo vUserGroupLinksRepo, CurrentUser currentUser)
         {
+            _configuration = configuration;
             _employeeRepo = employeeRepo;
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
+            _currentUser = currentUser;
         }
 
-        //[HttpGet("employees")]
-        //[RequiresPermission("N42")]
-        //public IActionResult GetAll()
-        //{
-        //    try
-        //    {
-        //        List<Employee> employees = employeeRepo.GetAll();
-        //        return Ok(new
-        //        {
-        //            status = 1,
-        //            data = employees
-        //        });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return Ok(new
-        //        {
-        //            status = 0,
-        //            message = ex.Message,
-        //            error = ex.ToString()
-        //        });
-        //    }
-        //}
+
 
 
         [HttpGet("employees")]
@@ -53,14 +36,19 @@ namespace RERPAPI.Controllers.HRM
         {
             try
             {
+                CurrentUser currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey"));
+                bool isUserHR = _currentUser.Permissions
+           .Split(',', StringSplitOptions.RemoveEmptyEntries)
+           .Select(x => x.Trim())
+           .Any(x => x == "N1" || x == "N2" || x == "N60");
                 departmentid = departmentid ?? 0;
                 keyword = string.IsNullOrWhiteSpace(keyword) ? "" : keyword;
                 status = status ?? 0;
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                //var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 object data;
-                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
-                var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x =>(x.Code == "N1" || x.Code == "N2" || x.Code == "N60") &&x.UserID == currentUser.ID);
-                if (vUserHR == null)
+                //CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                //var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x =>(x.Code == "N1" || x.Code == "N2" || x.Code == "N60") &&x.UserID == currentUser.ID);
+                if (!isUserHR)
                 {
                      data = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
                                                  new string[] { "@Status", "@DepartmentID", "@Keyword" },
@@ -86,14 +74,19 @@ namespace RERPAPI.Controllers.HRM
         {
             try
             {
+                _currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey"));
+                bool isUserHR = _currentUser.Permissions
+           .Split(',', StringSplitOptions.RemoveEmptyEntries)
+           .Select(x => x.Trim())
+           .Any(x => x == "N1" || x == "N2" || x == "N60");
                 departmentid = departmentid ?? 0;
                 keyword = string.IsNullOrWhiteSpace(keyword) ? "" : keyword;
                 status = status ?? 0;
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                //var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 object data;
-                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
-                var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x => (x.Code == "N1" || x.Code == "N2" || x.Code == "N60") && x.UserID == currentUser.ID);
-                if (vUserHR == null)
+                //CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                //var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x =>(x.Code == "N1" || x.Code == "N2" || x.Code == "N60") &&x.UserID == currentUser.ID);
+                if (!isUserHR)
                 {
                     data = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
                                                 new string[] { "@Status", "@DepartmentID", "@Keyword" },

@@ -135,9 +135,10 @@ namespace RERPAPI.Controllers.HRM.Employees
         {
             try
             {
-                var employees = _employeeRepo.GetAll()
-                    .Select(x => new { x.ID, x.Code, x.FullName })
-                    .ToList();
+               
+                var employees = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
+                                                new string[] { "@Status" },
+                                                new object[] { 0 });
 
                 return Ok(new { status = 1, data = employees });
             }
