@@ -27,30 +27,7 @@ namespace RERPAPI.Controllers.HRM
             _configuration = configuration;
         }
 
-        //[HttpGet("employees")]
-        //[RequiresPermission("N42")]
-        //public IActionResult GetAll()
-        //{
-        //    try
-        //    {
-        //        List<Employee> employees = employeeRepo.GetAll();
-        //        return Ok(new
-        //        {
-        //            status = 1,
-        //            data = employees
-        //        });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return Ok(new
-        //        {
-        //            status = 0,
-        //            message = ex.Message,
-        //            error = ex.ToString()
-        //        });
-        //    }
-        //}
-
+  
 
         [HttpGet("employees")]
         public IActionResult GetEmployee(int? status, int? departmentid, string? keyword)
