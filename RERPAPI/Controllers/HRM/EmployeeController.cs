@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
+using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
@@ -13,10 +15,12 @@ namespace RERPAPI.Controllers.HRM
     public class EmployeeController : ControllerBase
     {
         private readonly EmployeeRepo _employeeRepo;
+        vUserGroupLinksRepo _vUserGroupLinksRepo;
 
-        public EmployeeController(EmployeeRepo employeeRepo)
+        public EmployeeController(EmployeeRepo employeeRepo, vUserGroupLinksRepo vUserGroupLinksRepo)
         {
             _employeeRepo = employeeRepo;
+            _vUserGroupLinksRepo = vUserGroupLinksRepo;
         }
 
         //[HttpGet("employees")]
@@ -49,14 +53,59 @@ namespace RERPAPI.Controllers.HRM
         {
             try
             {
-                status = status ?? 0;
                 departmentid = departmentid ?? 0;
                 keyword = string.IsNullOrWhiteSpace(keyword) ? "" : keyword;
-                var employees = SQLHelper<object>.ProcedureToList("spGetEmployee",
-                                                new string[] { "@Status", "@DepartmentID", "@Keyword" },
-                                                new object[] { status, departmentid, keyword });
-                var data = SQLHelper<object>.GetListData(employees, 0);
+                status = status ?? 0;
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                object data;
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x =>(x.Code == "N1" || x.Code == "N2" || x.Code == "N60") &&x.UserID == currentUser.ID);
+                if (vUserHR == null)
+                {
+                     data = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
+                                                 new string[] { "@Status", "@DepartmentID", "@Keyword" },
+                                                 new object[] { status, departmentid, keyword ?? "" });
+                }
+                else
+                {
+                    var employee = SQLHelper<object>.ProcedureToList("spGetEmployee",
+                                               new string[] { "@Status", "@DepartmentID", "@Keyword" },
+                                               new object[] { status, departmentid, keyword });
+                      data = SQLHelper<object>.GetListData(employee, 0);
+                }    
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
 
+        [HttpGet("")]
+        public IActionResult GetEmployees(int? status, int? departmentid, string? keyword)
+        {
+            try
+            {
+                departmentid = departmentid ?? 0;
+                keyword = string.IsNullOrWhiteSpace(keyword) ? "" : keyword;
+                status = status ?? 0;
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                object data;
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x => (x.Code == "N1" || x.Code == "N2" || x.Code == "N60") && x.UserID == currentUser.ID);
+                if (vUserHR == null)
+                {
+                    data = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
+                                                new string[] { "@Status", "@DepartmentID", "@Keyword" },
+                                                new object[] { status, departmentid, keyword ?? "" });
+                }
+                else
+                {
+                    var employee = SQLHelper<object>.ProcedureToList("spGetEmployee",
+                                               new string[] { "@Status", "@DepartmentID", "@Keyword" },
+                                               new object[] { status, departmentid, keyword });
+                    data = SQLHelper<object>.GetListData(employee, 0);
+                }
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
