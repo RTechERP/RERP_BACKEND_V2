@@ -1,12 +1,15 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using NPOI.HSSF.Record.Chart;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
+using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using System.Data;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.Project
 {
@@ -778,8 +781,8 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                var employees = SQLHelper<object>.ProcedureToList("spGetEmployee", new string[] { "@DepartmentID", "@Status" }, new object[] { departmentID, 0 });
-                var data = SQLHelper<object>.GetListData(employees, 0);
+                var data = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee", new string[] { "@DepartmentID", "@Status" }, new object[] { departmentID, 0 });
+               
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
@@ -1199,9 +1202,11 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                var employees = SQLHelper<object>.ProcedureToList("spGetEmployee", new string[] { "@Status" }, new object[] { status });
-                var employee = SQLHelper<object>.GetListData(employees, 0);
-                return Ok(ApiResponseFactory.Success(employee, ""));
+          
+                var employees = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
+                                                new string[] { "@Status" },
+                                                new object[] { status });
+                return Ok(ApiResponseFactory.Success(employees, ""));
             }
             catch (Exception ex)
             {

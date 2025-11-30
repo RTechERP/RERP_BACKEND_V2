@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO.HRM;
 
 namespace RERPAPI.Controllers.Project
 {
@@ -101,10 +102,11 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                var projectItem = SQLHelper<dynamic>.ProcedureToList("spGetEmployee",
-                    new[] { "@Status" },
-                    new object[] { 0 });
-                var rows = SQLHelper<dynamic>.GetListData(projectItem, 0);
+
+   var rows = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
+                                   new string[] { "@Status"},
+                                   new object[] {0 });
+          
                 return Ok(ApiResponseFactory.Success(rows, ""));
             }
             catch (Exception ex)

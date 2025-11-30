@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
+using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.Project
 {
@@ -126,8 +129,11 @@ namespace RERPAPI.Controllers.Project
         [HttpGet("get-all-employee")]
         public async Task<IActionResult> GetAllEmployee()
         {
-            var dtEmployee = SQLHelper<dynamic>.ProcedureToList("spGetEmployee", new string[] { "@Status" }, new object[] { 0 });
-            return Ok(new { status = 1, data = new { dtEmployee = dtEmployee[0] } });
+         
+            var employees = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
+                                            new string[] { "@Status" },
+                                            new object[] {0});
+            return Ok(new { status = 1, data = new { dtEmployee = employees } });
         }
         [HttpGet("get-po-code")]
         public async Task<IActionResult> GetPoCode()
@@ -815,28 +821,28 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [HttpPost("save-request-note")]
-        public async Task<IActionResult> SaveDataPriceRequestNote([FromBody] List<ProjectPartlistPriceRequestNote> notes)
-        {
-            try
+            [HttpPost("save-request-note")]
+            public async Task<IActionResult> SaveDataPriceRequestNote([FromBody] List<ProjectPartlistPriceRequestNote> notes)
             {
-                foreach (var note in notes)
+                try
                 {
-                    if (note.ID > 0)
+                    foreach (var note in notes)
                     {
-                        await projectPartlistPriceRequestNoteRepo.UpdateAsync(note);
+                        if (note.ID > 0)
+                        {
+                            await projectPartlistPriceRequestNoteRepo.UpdateAsync(note);
+                        }
+                        else
+                        {
+                            await projectPartlistPriceRequestNoteRepo.CreateAsync(note);
+                        }
                     }
-                    else
-                    {
-                        await projectPartlistPriceRequestNoteRepo.CreateAsync(note);
-                    }
+                    return Ok(ApiResponseFactory.Success(notes, "Lưu ghi chú thành công!"));
                 }
-                return Ok(ApiResponseFactory.Success(notes, "Lưu ghi chú thành công!"));
+                catch (Exception ex)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+                }
             }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
     }
 }

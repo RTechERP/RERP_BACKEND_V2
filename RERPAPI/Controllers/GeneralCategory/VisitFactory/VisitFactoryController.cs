@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
+using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
@@ -258,13 +259,11 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                var resultLists = SQLHelper<dynamic>.ProcedureToList(
-                    "spGetEmployee",
-                    new string[] { "@Status", "@DepartmentID", "@Keyword", "@ID" },
-                    new object[] { status, departmentId, keyword ?? "", id }
-                );
-
-                var employeeList = SQLHelper<dynamic>.GetListData(resultLists, 0);
+        
+                var employeeList = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
+                                                new string[] { "@Status", "@DepartmentID", "@Keyword" },
+                                                new object[] { status, departmentId, keyword ?? "" });
+             
 
                 return Ok(ApiResponseFactory.Success(employeeList, "Lấy danh sách Employee thành công."));
             }

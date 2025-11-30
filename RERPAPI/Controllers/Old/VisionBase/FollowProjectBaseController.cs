@@ -1,12 +1,15 @@
 ﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
+using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using System.Data;
 using System.Globalization;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.KhoBaseManager
 {
@@ -380,13 +383,14 @@ namespace RERPAPI.Controllers.KhoBaseManager
         {
             try
             {
-                var data = SQLHelper<object>.ProcedureToList("spGetEmployee",
-                                                    new string[] { "@Status" },
-                                                    new object[] { status });
+           
+                var employees = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
+                                                new string[] { "@Status" },
+                                                new object[] { 0});
                 return Ok(new
                 {
                     status = 1,
-                    data = SQLHelper<object>.GetListData(data, 0)
+                    data = employees
                 });
             }
             catch (Exception ex)
