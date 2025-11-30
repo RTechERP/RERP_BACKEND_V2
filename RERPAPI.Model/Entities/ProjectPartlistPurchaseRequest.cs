@@ -154,4 +154,11 @@ public partial class ProjectPartlistPurchaseRequest
     public string? ParentProductCode { get; set; }
 
     public bool? IsPurchase { get; set; }
+
+    public int? WarehouseID { get; set; }
+
+    /// <summary>
+    /// Đợi ghép sau
+    /// </summary>
+    public bool? IsPaidLater { get; set; }
 }

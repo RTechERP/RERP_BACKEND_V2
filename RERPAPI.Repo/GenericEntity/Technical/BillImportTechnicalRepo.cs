@@ -1,7 +1,7 @@
 ﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo;
-
+using RERPAPI.Repo.GenericEntity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,8 +12,12 @@ namespace RTCApi.Repo.GenericRepo
 {
     public class BillImportTechnicalRepo : GenericRepo<BillImportTechnical>
     {
-        public BillImportTechnicalRepo(CurrentUser currentUser) : base(currentUser)
+        BillImportTechnicalLogRepo _BillImportTechnicalLog;
+        CurrentUser _currentUser;
+        public BillImportTechnicalRepo(CurrentUser currentUser, BillImportTechnicalLogRepo billImportTechnicalLogRepo) : base(currentUser)
         {
+            _BillImportTechnicalLog= billImportTechnicalLogRepo ;
+            _currentUser = currentUser ;
         }
 
         public string GetBillCode(int billtype)
@@ -53,6 +57,27 @@ namespace RTCApi.Repo.GenericRepo
             billCode = $"{preCode}{billDate.ToString("yyMMdd")}{numberCodeText}";
 
             return billCode;
+        }
+        public async Task UpdateStatusAsync(BillImportTechnical bill, bool status)
+        {
+            // 1. Cập nhật thông tin phiếu
+            bill.Status = status;
+            bill.UpdatedBy = _currentUser.LoginName;
+            bill.UpdatedDate = DateTime.Now;
+
+            // Entity Framework sẽ tự track bill vì chúng ta đã Get nó ra trước đó, 
+            // hoặc bạn có thể gọi Update rõ ràng:
+           await UpdateAsync(bill);
+
+            // 2. Ghi Log
+            var log = new BillImportTechnicalLog
+            {
+                BillImportTechnicalID = bill.ID,
+                StatusBill = status, // true hoặc false tùy tham số truyền vào
+                DateStatus = DateTime.Now,
+            };
+
+            await _BillImportTechnicalLog.CreateAsync(log);
         }
     }
 }

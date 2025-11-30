@@ -45,7 +45,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         {
             try
             {
-                List<DocumentImport> result = _documentImportRepo.GetAll().Where(p => !p.IsDeleted.GetValueOrDefault()).ToList();
+                List<DocumentImport> result = _documentImportRepo.GetAll(p => p.IsDeleted == false || p.IsDeleted == null);
                 return Ok(new
                 {
                     status = 1,
