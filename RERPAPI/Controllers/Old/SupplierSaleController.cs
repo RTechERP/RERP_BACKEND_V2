@@ -32,7 +32,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                var supplierSale = _supplierSaleRepo.GetAll().OrderByDescending(x => x.ID);
+                var supplierSale = _supplierSaleRepo.GetAll().OrderByDescending(x => x.UpdatedDate);
                 return Ok(ApiResponseFactory.Success(supplierSale, null));
 
             }
