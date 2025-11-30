@@ -324,7 +324,7 @@ namespace RERPAPI.Controllers.Project
             {
                 try
                 {
-                    if (item.ID <= 0) continue;
+                    if (item.ID <= 0) _repo.Create(item);
 
                     //item.UpdatedDate = DateTime.Now;
                     //item.UpdatedBy = item.UpdatedBy ?? "System";
@@ -332,9 +332,9 @@ namespace RERPAPI.Controllers.Project
                     // Cập nhật nhiều field cùng lúc
                     _repo.Update(item);
                 }
-                catch
+                catch(Exception ex)
                 {
-                    continue;
+                    return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
                 }
             }
             return Ok(new { status = 1, message = "Cập nhật thành công." });

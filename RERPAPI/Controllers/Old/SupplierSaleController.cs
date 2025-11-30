@@ -51,8 +51,24 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpGet("get-supplier-sale")]
+        //[RequiresPermission("N27,N33,N35,N1,N36")]
+        public async Task<IActionResult> GetSupplierSale()
+        {
+            try
+            {
+                var saleSupplier = _supplierSaleRepo.GetAll(x => x.IsDeleted == false || x.IsDeleted == null);
 
-        
+                
+                return Ok(ApiResponseFactory.Success(saleSupplier, null));
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
 
         [HttpGet("supplier-sale-by-id")]
         public async Task<IActionResult> getsalesupplierbyid(int supplierID)

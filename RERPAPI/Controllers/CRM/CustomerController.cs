@@ -459,9 +459,33 @@ namespace RERPAPI.Controllers.CRM
             public string Name { get; set; }
             public string Code { get; set; }
         }
+        [HttpGet("get-customers")]
+        public IActionResult GetAll()
+        {
+            try
+            {
+                List<Customer> customers = _customerRepo.GetAll(x=>x.IsDeleted==false || x.IsDeleted ==null);
+                //return Ok(new
+                //{
+                //    status = 1,
+                //    data = customers
+                //});
 
+                return Ok(ApiResponseFactory.Success(customers, ""));
+            }
+            catch (Exception ex)
+            {
+                //return BadRequest(new
+                //{
+                //    status = 0,
+                //    message = ex.Message,
+                //    error = ex.ToString()
+                //});
+
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [HttpGet("get-data-by-procedure")]
-        [Authorize]
         [RequiresPermission("N1,N27,N53,N31,N69")]
         public IActionResult GetCustomer(int page, int size, int employeeId, int groupId, string? filterText = "")
         {
