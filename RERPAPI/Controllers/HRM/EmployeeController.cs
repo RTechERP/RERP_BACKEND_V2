@@ -76,9 +76,9 @@ namespace RERPAPI.Controllers.HRM
             {
                 _currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey"));
                 bool isUserHR = _currentUser.Permissions
-           .Split(',', StringSplitOptions.RemoveEmptyEntries)
-           .Select(x => x.Trim())
-           .Any(x => x == "N1" || x == "N2" || x == "N60");
+                                            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                            .Select(x => x.Trim())
+                                            .Any(x => x == "N1" || x == "N2" || x == "N60");
                 departmentid = departmentid ?? 0;
                 keyword = string.IsNullOrWhiteSpace(keyword) ? "" : keyword;
                 status = status ?? 0;

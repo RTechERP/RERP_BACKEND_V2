@@ -49,6 +49,7 @@
     <Compile Remove="Controllers\MenuController.cs" />
     <Compile Remove="Controllers\ModulaLocationController.cs" />
     <Compile Remove="Controllers\Old\EmployeeBussinessController.cs" />
+    <Compile Remove="Controllers\Old\EmployeeController.cs" />
     <Compile Remove="Controllers\Old\POKHController.cs" />
     <Compile Remove="Controllers\Old\ProductGroupController.cs" />
     <Compile Remove="Controllers\Old\ProductRTCController.cs" />
