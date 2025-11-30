@@ -481,14 +481,6 @@ namespace RERPAPI.Controllers.Project
                                                                 new string[] { "@ProjectTypeID" },
                                                                 new object[] { projectTypeId });
                 var lstPath = SQLHelper<object>.GetListData(dt, 0).Where(x => x.ParentID == 0).FirstOrDefault();
-
-                if (string.IsNullOrWhiteSpace(lstPath.FolderName)) return BadRequest();
-
-                string pathPattern = $@"\\192.168.1.190\duan\Projects\{prj.CreatedDate.Value.Year}\{prj.ProjectCode}\{lstPath.FolderName}\KetQuaKhaoSat";
-
-
-                var client = new HttpClient();
-
                 List<ProjectSurveyFile> listFiles = new List<ProjectSurveyFile>();
                 foreach (var file in files)
                 {
@@ -496,7 +488,7 @@ namespace RERPAPI.Controllers.Project
                     fileModel.ProjectSurveyDetailID = projectSurveyDetailId;
                     fileModel.FileName = file.FileName;
                     fileModel.OriginPath = "";
-                    fileModel.ServerPath = pathPattern;
+                    fileModel.ServerPath = "";
                     projectSurveyFileRepo.Create(fileModel);
 
                     /*      if (file.Length < 0) continue;
@@ -516,8 +508,45 @@ namespace RERPAPI.Controllers.Project
                               projectSurveyFileRepo.Create(fileModel);
                           }*/
                 }
+                if (lstPath != null)
+                {
+                    if (string.IsNullOrWhiteSpace(lstPath.FolderName)) return BadRequest(ApiResponseFactory.Fail(null,"Lỗi"));
 
-                return Ok(ApiResponseFactory.Success(1, ""));
+                    string pathPattern = $@"\\192.168.1.190\duan\Projects\{prj.CreatedDate.Value.Year}\{prj.ProjectCode}\{lstPath.FolderName}\KetQuaKhaoSat";
+
+
+                    var client = new HttpClient();
+
+                   /* List<ProjectSurveyFile> listFiles = new List<ProjectSurveyFile>();
+                    foreach (var file in files)
+                    {
+                        ProjectSurveyFile fileModel = new ProjectSurveyFile();
+                        fileModel.ProjectSurveyDetailID = projectSurveyDetailId;
+                        fileModel.FileName = file.FileName;
+                        fileModel.OriginPath = "";
+                        fileModel.ServerPath = pathPattern;
+                        projectSurveyFileRepo.Create(fileModel);
+
+                        *//*      if (file.Length < 0) continue;
+
+                            *//*  var fileStream = new FileStream(file.Name, FileMode.Open);
+                              byte[] bytes = new byte[file.Length];
+                              fileStream.Read(bytes, 0, (int)file.Length);
+                              var byteArrayContent = new ByteArrayContent(bytes);
+
+                              MultipartFormDataContent content = new MultipartFormDataContent();
+                              content.Add(byteArrayContent, "file", file.Name);
+
+                              var url = $"http://14.232.152.154:8083/api/Home/uploadfile?path={pathPattern}";
+                              var rs = await client.PostAsync(url, content);*//*
+                              if (rs.StatusCode == System.Net.HttpStatusCode.OK)
+                              {
+                                  projectSurveyFileRepo.Create(fileModel);
+                              }*//*
+                    }*/
+                }
+
+                    return Ok(ApiResponseFactory.Success(1, "Cập nhật kết quả khảo sát thành công"));
 
             }
             catch (Exception ex)
