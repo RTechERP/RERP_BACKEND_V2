@@ -85,4 +85,6 @@ public partial class EmployeeBussiness
     public int? ApprovedBGDID { get; set; }
 
     public DateTime? DateApprovedBGD { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }
