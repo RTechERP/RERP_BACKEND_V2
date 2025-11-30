@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
@@ -8,6 +9,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class InventoryController : ControllerBase
     {
         private readonly InventoryRepo _inventoryRepo;
@@ -45,7 +47,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         //    }
         //}
         [HttpPost("get-inventory-pagination")]
-
         public IActionResult GetInventory(InventoryPram filter)
         {
             try

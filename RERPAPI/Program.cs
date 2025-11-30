@@ -7,7 +7,6 @@ using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
-using RERPAPI.Model.Entities;
 using RERPAPI.Repo;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
@@ -220,7 +219,7 @@ builder.Services.AddScoped<UserTeamRepo>();
 builder.Services.AddScoped<WarehouseRepo>();
 builder.Services.AddScoped<WeekPlanRepo>();
 builder.Services.AddScoped<vUserGroupLinksRepo>();
-builder.Services.AddScoped<NotifyRepo>();  
+builder.Services.AddScoped<NotifyRepo>();
 
 // Project sub-namespace repos
 builder.Services.AddScoped<ProjectItemFileRepo>();
@@ -371,11 +370,14 @@ builder.Services.AddScoped<AGVHistoryProductRepo>();
 builder.Services.AddScoped<JobRequirementRepo>();
 builder.Services.AddScoped<JobRequirementDetailRepo>();
 #endregion
-// BillExportTechnicalRepo in RTCApi namespace (used by Old Technical controller)
 builder.Services.AddScoped<BillExportTechnicalRepo>();
 builder.Services.AddScoped<TaxCompanyRepo>();
 builder.Services.AddScoped<HistoryErrorRepo>();
 builder.Services.AddScoped<HistoryProductRTCLogRepo>();
+builder.Services.AddScoped<BillImportTechnicalLogRepo>();
+builder.Services.AddScoped<BillDocumentImportTechnicalRepo>();
+builder.Services.AddScoped<BillDocumentImportTechnicalLogRepo>();
+builder.Services.AddScoped<BillExportTechnicalLogRepo>();
 
 
 builder.Services.AddScoped<CurrentUser>(provider =>

@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -9,8 +8,9 @@ namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     //[ApiKeyAuthorize]
+    //[Authorize]
     public class ProjectPartlistPriceRequestController : ControllerBase
     {
         #region Khai báo repository
@@ -24,8 +24,10 @@ namespace RERPAPI.Controllers.Project
         EmployeeSendEmailRepo employeeSendEmailRepo;
         ProjectPartlistPriceRequestTypeRepo projectPartlistPriceRequestTypeRepo;
         ProjectPartlistPriceRequestNoteRepo projectPartlistPriceRequestNoteRepo;
+        ProjectPartlistPurchaseRequestRepo _projectPartlistPurchaseRequestRepo;
+        UnitCountRepo _unitCountRepo;
 
-        public ProjectPartlistPriceRequestController(ProjectRepo projectRepo, POKHRepo pOKHRepo, ProjectPartlistPriceRequestRepo requestRepo, ProductSaleRepo productSaleRepo, CurrencyRepo currencyRepo, SupplierSaleRepo supplierSaleRepo, ProjectSolutionRepo projectSolutionRepo, EmployeeSendEmailRepo employeeSendEmailRepo, ProjectPartlistPriceRequestTypeRepo projectPartlistPriceRequestTypeRepo, ProjectPartlistPriceRequestNoteRepo projectPartlistPriceRequestNoteRepo)
+        public ProjectPartlistPriceRequestController(ProjectRepo projectRepo, POKHRepo pOKHRepo, ProjectPartlistPriceRequestRepo requestRepo, ProductSaleRepo productSaleRepo, CurrencyRepo currencyRepo, SupplierSaleRepo supplierSaleRepo, ProjectSolutionRepo projectSolutionRepo, EmployeeSendEmailRepo employeeSendEmailRepo, ProjectPartlistPriceRequestTypeRepo projectPartlistPriceRequestTypeRepo, ProjectPartlistPriceRequestNoteRepo projectPartlistPriceRequestNoteRepo, ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo, UnitCountRepo unitCountRepo)
         {
             this.projectRepo = projectRepo;
             this.pOKHRepo = pOKHRepo;
@@ -37,6 +39,8 @@ namespace RERPAPI.Controllers.Project
             this.employeeSendEmailRepo = employeeSendEmailRepo;
             this.projectPartlistPriceRequestTypeRepo = projectPartlistPriceRequestTypeRepo;
             this.projectPartlistPriceRequestNoteRepo = projectPartlistPriceRequestNoteRepo;
+            _projectPartlistPurchaseRequestRepo = projectPartlistPurchaseRequestRepo;
+            _unitCountRepo = unitCountRepo;
         }
 
         #endregion
@@ -254,32 +258,77 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
+        //[HttpPost("download")]
+        //public async Task<IActionResult> DownloadFile([FromBody] DownloadProjectPartlistPriceRequestDTO request)
+        //{
+        //    var project = projectRepo.GetByID(request.ProjectId);
+        //    if (project == null || project.CreatedDate == null)
+        //        return BadRequest(new
+        //        {
+        //            status = 0,
+        //            message = "Không tim thấy dự án!"
+        //        });
+
+        //    var solutions = SQLHelper<ProjectSolution>.ProcedureToList("spGetProjectSolutionByProjectPartListID",
+        //                                                    new string[] { "@ProjectPartListID" }, new object[] { request.PartListId });
+
+        //    if (solutions.Count <= 0)
+        //        return BadRequest(new
+        //        {
+        //            status = 0,
+        //            message = "Không tìm thấy giải pháp dự án!"
+        //        });
+        //    var solution = SQLHelper<dynamic>.GetListData(solutions, 0).FirstOrDefault();
+        //    var year = project.CreatedDate.Value.Year;
+        //    var pathPattern = $"{year}/{project.ProjectCode.Trim()}/THIETKE.Co/{solution?.CodeSolution.Trim()}/2D/GC/DH";
+        //    var fileName = $"{request.ProductCode}.pdf";
+        //    //sửa
+        //    var fileUrl = $"http://113.190.234.64/:8081/api/project/{pathPattern}/{fileName}";
+
+        //    try
+        //    {
+        //        using var httpClient = new HttpClient();
+        //        var response = await httpClient.GetAsync(fileUrl);
+
+        //        if (!response.IsSuccessStatusCode)
+        //            return NotFound($"Không tìm thấy file: {fileUrl}");
+
+        //        var stream = await response.Content.ReadAsStreamAsync();
+        //        return File(stream, "application/pdf", fileName);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(new
+        //        {
+        //            status = 0,
+        //            message = ex.Message,
+        //            error = ex.ToString()
+        //        });
+        //    }
+        //}
         [HttpPost("download")]
         public async Task<IActionResult> DownloadFile([FromBody] DownloadProjectPartlistPriceRequestDTO request)
         {
             var project = projectRepo.GetByID(request.ProjectId);
             if (project == null || project.CreatedDate == null)
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = "Không tim thấy dự án!"
-                });
+                return BadRequest(new { status = 0, message = "Không tìm thấy dự án!" });
 
-            var solutions = SQLHelper<ProjectSolution>.ProcedureToList("spGetProjectSolutionByProjectPartListID",
-                                                            new string[] { "@ProjectPartListID" }, new object[] { request.PartListId });
+            var solutions = SQLHelper<ProjectSolution>.ProcedureToList(
+                "spGetProjectSolutionByProjectPartListID",
+                new[] { "@ProjectPartListID" }, new object[] { request.PartListId });
 
             if (solutions.Count <= 0)
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = "Không tìm thấy giải pháp dự án!"
-                });
+                return BadRequest(new { status = 0, message = "Không tìm thấy giải pháp dự án!" });
+
             var solution = SQLHelper<dynamic>.GetListData(solutions, 0).FirstOrDefault();
             var year = project.CreatedDate.Value.Year;
+
             var pathPattern = $"{year}/{project.ProjectCode.Trim()}/THIETKE.Co/{solution?.CodeSolution.Trim()}/2D/GC/DH";
             var fileName = $"{request.ProductCode}.pdf";
-            //sửa
-            var fileUrl = $"http://113.190.234.64/:8081/api/project/{pathPattern}/{fileName}";
+
+            // Lấy base URL real-time
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+            var fileUrl = $"{baseUrl}/api/share/duan/{pathPattern}/{fileName}";
 
             try
             {
@@ -287,21 +336,17 @@ namespace RERPAPI.Controllers.Project
                 var response = await httpClient.GetAsync(fileUrl);
 
                 if (!response.IsSuccessStatusCode)
-                    return NotFound($"Không tìm thấy file: {fileUrl}");
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy file: {fileUrl}"));
 
                 var stream = await response.Content.ReadAsStreamAsync();
                 return File(stream, "application/pdf", fileName);
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(new { status = 0, message = ex.Message, error = ex.ToString() });
             }
         }
+
         [HttpPost("check-price")]
         public async Task<IActionResult> CheckPrice(List<ProjectPartlistPriceRequest> lst)
         {
@@ -524,17 +569,127 @@ namespace RERPAPI.Controllers.Project
                 });
             }
         }
+        [HttpPost("request-buy")]
+        public async Task<IActionResult> RequestBuy([FromBody] RequestBuyDTO request)
+        {
+            try
+            {
+                if (request == null || request.Products == null || !request.Products.Any())
+                    return BadRequest(ApiResponseFactory.Fail(null, "Danh sách sản phẩm không được để trống."));
+
+                // Validate deadline
+                DateTime deadline = request.Deadline.Date;
+                DateTime now = DateTime.Now;
+                double timeSpan = (deadline - now.Date).TotalDays + 1;
+
+                if (now.Hour < 15 && timeSpan < 2)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Deadline tối thiểu là 2 ngày từ ngày hiện tại!"));
+                if (now.Hour >= 15 && timeSpan < 3)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Yêu cầu từ sau 15h nên ngày Deadline tối thiểu là 2 ngày tính từ ngày hôm sau!"));
+
+                if (deadline.DayOfWeek == DayOfWeek.Saturday || deadline.DayOfWeek == DayOfWeek.Sunday)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Deadline phải là ngày làm việc (T2 - T6)!"));
+
+                int weekendCount = 0;
+                for (int i = 0; i < timeSpan; i++)
+                {
+                    var d = now.Date.AddDays(i);
+                    if (d.DayOfWeek == DayOfWeek.Saturday || d.DayOfWeek == DayOfWeek.Sunday)
+                        weekendCount++;
+                }
+
+                var confirmWeekend = weekendCount > 0 ? true : false; // bạn có thể thêm cảnh báo nếu cần
+
+                var resultSuccess = new List<string>();
+                var resultFail = new List<string>();
+
+                foreach (var item in request.Products)
+                {
+                    try
+                    {
+                        // Kiểm tra xem sản phẩm đã tồn tại trong DB chưa
+                        var existingRequests = _projectPartlistPurchaseRequestRepo
+                            .GetAll(r => r.JobRequirementID == request.JobRequirementID
+                                            && r.ProductCode == item.ProductCode
+                                            && r.IsDeleted == false);
+
+                        ProjectPartlistPurchaseRequest requestModel = existingRequests.FirstOrDefault() ?? new ProjectPartlistPurchaseRequest();
+
+                        // Nếu đã approved thì bỏ qua
+                        if (requestModel.EmployeeApproveID > 0)
+                        {
+                            resultFail.Add($"{item.ProductCode} đã được duyệt, không thể yêu cầu mua.");
+                            continue;
+                        }
+
+                        // Map thông tin
+                        requestModel.JobRequirementID = request.IsVPP ? 999999 : request.JobRequirementID;
+                        requestModel.EmployeeID = request.EmployeeID;
+                        requestModel.ProductCode = item.ProductCode;
+                        requestModel.ProductName = item.ProductName;
+                        requestModel.StatusRequest = 1;
+                        requestModel.DateRequest = DateTime.Now;
+                        requestModel.DateReturnExpected = deadline;
+                        requestModel.Quantity = item.Quantity;
+                        requestModel.NoteHR = item.NoteHR;
+                        requestModel.ProjectPartlistPurchaseRequestTypeID = request.ProjectPartlistPriceRequestTypeID;
+
+                        // Gán ProductSale & Unit
+                        var productSale = productSaleRepo.GetAll(p =>
+                            p.ProductCode == item.ProductCode &&
+                            p.ProductGroupID == (request.IsVPP ? 80 : (request.JobRequirementID > 0 ? 77 : 0)) &&
+                            p.IsDeleted == false);
+                        var productSaleModel = productSale.FirstOrDefault() ?? new ProductSale();
+                        requestModel.ProductSaleID = productSaleModel.ID;
+                        requestModel.ProductGroupID = productSaleModel.ProductGroupID;
+
+                        var unit = _unitCountRepo.GetAll(u => u.UnitName == item.UnitName.Trim());
+                        requestModel.UnitCountID = unit.FirstOrDefault()?.ID;
+                        requestModel.UnitName = item.UnitName;
+
+                        // Insert hoặc Update
+                        if (requestModel.ID <= 0 || request.ProjectPartlistPriceRequestTypeID == 7)
+                        {
+                            var inserted = await _projectPartlistPurchaseRequestRepo.CreateAsync(requestModel);
+                            if (inserted != null)
+                                resultSuccess.Add(item.ProductCode);
+                            else
+                                resultFail.Add(item.ProductCode);
+                        }
+                        else
+                        {
+                            await _projectPartlistPurchaseRequestRepo.UpdateAsync(requestModel);
+                            resultSuccess.Add(item.ProductCode);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        resultFail.Add($"{item.ProductCode}: {ex.Message}");
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    Success = resultSuccess,
+                    Fail = resultFail
+                }, "Yêu cầu mua đã xử lý xong."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, "Có lỗi xảy ra khi xử lý yêu cầu mua."));
+            }
+        }
 
         /// <summary>
         /// Gửi email thông báo từ chối báo giá
         /// </summary>
-        private async Task SendUnPriceEmail(List<dynamic> listDataMail, string reason, int employeeIDUnPrice)
+        private async Task SendUnPriceEmail(List<ProductMailInfo> listDataMail, string reason, int employeeIDUnPrice)
         {
             try
             {
                 // Nhóm theo người yêu cầu (FullName hoặc EmployeeID)
                 var grouped = listDataMail
-                    .GroupBy(d => d.EmployeeID ?? 0)
+                    .GroupBy(d => d.EmployeeID)
                     .Where(g => g.Key > 0)
                     .ToList();
 
@@ -544,8 +699,8 @@ namespace RERPAPI.Controllers.Project
 
                     // Lấy thông tin người nhận từ stored procedure
                     var receiverData = SQLHelper<dynamic>.ProcedureToList("spGetEmployee",
-                        new string[] { "@ID" },
-                        new object[] { employeeID });
+                        new string[] { "@Status", "@ID" },
+                        new object[] { 0, employeeID });
 
                     if (receiverData == null || receiverData.Count == 0) continue;
 
@@ -579,7 +734,7 @@ namespace RERPAPI.Controllers.Project
                                 <td>{item.ProductName ?? ""}</td>
                                 <td>{item.Manufacturer ?? ""}</td>
                                 <td>{item.UnitCount ?? ""}</td>
-                                <td>{item.Quantity ?? 0}</td>
+                                <td>{item.Quantity}</td>
                                 <td>{(item.DateRequest != null ? Convert.ToDateTime(item.DateRequest).ToString("dd/MM/yyyy") : "")}</td>
                                 <td>{(item.Deadline != null ? Convert.ToDateTime(item.Deadline).ToString("dd/MM/yyyy") : "")}</td>
                             </tr>");
@@ -614,23 +769,7 @@ namespace RERPAPI.Controllers.Project
                     sendEmail.Receiver = employeeID;
                     sendEmail.DateSend = DateTime.Now;
                     employeeSendEmailRepo.Create(sendEmail);
-                    // Hoặc sử dụng SQL trực tiếp
 
-
-                    //SQLHelper<dynamic>.ExcuteSQL(
-                    //    @"INSERT INTO EmployeeSendEmail (Subject, EmailTo, EmailCC, Body, StatusSend, EmployeeID, Receiver, DateSend)
-                    //      VALUES (@Subject, @EmailTo, @EmailCC, @Body, @StatusSend, @EmployeeID, @Receiver, @DateSend)",
-                    //    new Dictionary<string, object>
-                    //    {
-                    //        { "@Subject", $"[THÔNG BÁO] TỪ CHỐI BÁO GIÁ - {DateTime.Now:dd/MM/yyyy}" },
-                    //        { "@EmailTo", receiver.EmailCongTy ?? receiver.EmailCaNhan ?? "" },
-                    //        { "@EmailCC", "" },
-                    //        { "@Body", emailBody },
-                    //        { "@StatusSend", 1 },
-                    //        { "@EmployeeID", employeeIDUnPrice },
-                    //        { "@Receiver", employeeID },
-                    //        { "@DateSend", DateTime.Now }
-                    //    });
                 }
             }
             catch (Exception ex)
