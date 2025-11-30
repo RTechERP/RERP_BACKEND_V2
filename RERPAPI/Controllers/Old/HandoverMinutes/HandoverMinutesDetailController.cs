@@ -1,9 +1,12 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
+using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.Old.HandoverMinutes
 {
@@ -37,8 +40,11 @@ namespace RERPAPI.Controllers.Old.HandoverMinutes
         {
             try
             {
-                List<Employee> employees = _employeeRepo.GetAll().Where(x => x.FullName != "").ToList();
-                List<Department> departments = _departmentRepo.GetAll().ToList();
+                
+                List<Model.Entities.Department> departments = _departmentRepo.GetAll().ToList();
+                var employees = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
+                                new string[] { "@Keyword" },
+                                new object[] {  "" });
                 var result = employees.Select(e => new
                 {
                     Employee = e,
