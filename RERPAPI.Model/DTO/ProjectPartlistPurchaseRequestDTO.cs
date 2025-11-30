@@ -15,5 +15,6 @@ namespace RERPAPI.Model.DTO
         public string? ProductNewCode { get; set; }
         public string? UpdatedName { get; set; }
         public bool IsMarketing { get; set; }
+        
     }
 }

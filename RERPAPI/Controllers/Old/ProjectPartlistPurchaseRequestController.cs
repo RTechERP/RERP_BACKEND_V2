@@ -35,6 +35,8 @@ namespace RERPAPI.Controllers.Old
         RequestInvoiceRepo _requestInvoiceRepo;
         POKHDetailRepo _pOKHDetailRepo;
         WarehouseRepo _warehouseRepo;
+        ProductGroupRTCRepo _productGroupRTCRepo;
+        List<PathStaticFile> _pathStaticFiles;
 
         public ProjectPartlistPurchaseRequestController(
             ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo,
@@ -46,7 +48,9 @@ namespace RERPAPI.Controllers.Old
             ProductSaleRepo productSaleRepo,
             RequestInvoiceRepo requestInvoiceRepo,
             POKHDetailRepo pOKHDetailRepo,
-            WarehouseRepo warehouseRepo
+            WarehouseRepo warehouseRepo,
+            ProductGroupRTCRepo productGroupRTCRepo,
+            IConfiguration configuration
             )
         {
             _repo = projectPartlistPurchaseRequestRepo;
@@ -59,6 +63,8 @@ namespace RERPAPI.Controllers.Old
             _requestInvoiceRepo = requestInvoiceRepo;
             _pOKHDetailRepo = pOKHDetailRepo;
             _warehouseRepo = warehouseRepo;
+            _productGroupRTCRepo = productGroupRTCRepo;
+            _pathStaticFiles = configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();
         }
 
         #endregion Khai báo repository
@@ -160,6 +166,23 @@ namespace RERPAPI.Controllers.Old
                 };
 
                 return Ok(ApiResponseFactory.Success(result, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("product-group_rtc")]
+        public IActionResult getProductGrouprtc(int productSaleId)
+        {
+            try
+            {
+                var data = _productGroupRTCRepo.GetAll(x => x.WarehouseID == 1
+                && x.ProductGroupNo.Trim().ToLower() != "dbh"
+                && x.ProductGroupNo.Trim().ToLower() != "dbh");
+
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {
@@ -310,7 +333,7 @@ namespace RERPAPI.Controllers.Old
                     projectPartlistPurchaseRequests.Add(item);
                 }
                 if (projectPartlistPurchaseRequests.Count() <= 0)
-                    return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu không hợp lệ"));
+                    return Ok(ApiResponseFactory.Success(null, $"Đã cập nhật trạng thái {textStatus} thành công."));
 
                 foreach (ProjectPartlistPurchaseRequestDTO item in data)
                 {
@@ -344,7 +367,6 @@ namespace RERPAPI.Controllers.Old
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
 
-                List<ProjectPartlistPurchaseRequestDTO> projectPartlistPurchaseRequests = new List<ProjectPartlistPurchaseRequestDTO>();
                 foreach (ProjectPartlistPurchaseRequestDTO item in data)
                 {
                     if (item.ID <= 0) continue;
@@ -353,11 +375,7 @@ namespace RERPAPI.Controllers.Old
 
                     if (existingRequest.EmployeeIDRequestApproved != currentUser.EmployeeID
                         && !currentUser.IsAdmin) continue;
-                    projectPartlistPurchaseRequests.Add(item);
-                }
 
-                foreach (ProjectPartlistPurchaseRequestDTO item in data)
-                {
                     _repo.UpdateData(item);
                     item.StatusRequest = status;
                     item.EmployeeIDRequestApproved = currentUser.EmployeeID;
@@ -399,6 +417,11 @@ namespace RERPAPI.Controllers.Old
 
                 foreach (ProjectPartlistPurchaseRequestDTO item in data)
                 {
+                    var existingRequest = _repo.GetByID(item.ID);
+                    if (existingRequest == null) continue;
+
+                    if (existingRequest.EmployeeIDRequestApproved != currentUser.EmployeeID
+                        && !currentUser.IsAdmin) continue;
                     if (item.ProjectPartlistPurchaseRequestTypeID == 3 || item.ProjectPartlistPurchaseRequestTypeID == 7)
                     {
                         _repo.UpdateData(item);
@@ -449,16 +472,20 @@ namespace RERPAPI.Controllers.Old
 
                 foreach (var item in data)
                 {
-                    if ((item.EmployeeIDRequestApproved != currentUser.EmployeeID && !currentUser.IsAdmin)
-                        || (item.ProductGroupID <= 0 && item.ProductGroupRTCID <= 0)
+                    ProjectPartlistPurchaseRequest prjPartList = _repo.GetByID(item.ID);
+                    if ((prjPartList.EmployeeIDRequestApproved != currentUser.EmployeeID && !currentUser.IsAdmin)
                     )
+                    {
+                        continue;
+                    }
+
+                    if((item.ProductGroupID <= 0 && item.ProductGroupRTCID <= 0))
                     {
                         _repo.UpdateData(item);
                         await _repo.UpdateAsync(item);
                         continue;
                     }
 
-                    int productSaleId = 0;
 
                     ProductSale productSale = _productSaleRepo.GetAll(x =>
                     x.ProductGroupID == item.ProductGroupID &&
@@ -467,7 +494,6 @@ namespace RERPAPI.Controllers.Old
                     ).FirstOrDefault();
 
                     productSale = productSale ?? new ProductSale();
-                    productSaleId = productSale.ID;
                     if (productSale.ID <= 0)
                     {
                         productSale.ProductCode = item.ProductCode;
@@ -483,13 +509,11 @@ namespace RERPAPI.Controllers.Old
 
                         productSale.Maker = maker;
                         productSale.FirmID = firm.ID;
-                        productSaleId = await _productSaleRepo.CreateAsync(productSale);
+                        await _productSaleRepo.CreateAsync(productSale);
                     }
 
-                    item.ProductSaleID = productSaleId;
-                    item.ProductNewCode = productSale.ProductNewCode;
-
-
+                    item.ProductSaleID = productSale.ID;
+                    //item.ProductNewCode = productSale.ProductNewCode;
 
                     if (item.ProjectPartListID > 0)
                     {
@@ -498,7 +522,7 @@ namespace RERPAPI.Controllers.Old
                         {
                             foreach (var detail in pokhDetails)
                             {
-                                detail.ProductID = productSaleId;
+                                detail.ProductID = productSale.ID;
                                 await _pOKHDetailRepo.UpdateAsync(detail);
                             }
                         }
@@ -541,6 +565,13 @@ namespace RERPAPI.Controllers.Old
                 foreach (var item in data)
                 {
                     if (item.ID <= 0) continue;
+                    var existingRequest = _repo.GetByID(item.ID);
+                    if (existingRequest == null) continue;
+
+                    if (existingRequest.EmployeeIDRequestApproved != currentUser.EmployeeID
+                        && !currentUser.IsAdmin) continue;
+
+                    if (item.ID <= 0) continue;
                     item.IsDeleted = true;
                     await _repo.UpdateAsync(item);
 
@@ -574,10 +605,19 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
                 if (!_repo.ValidateSaveDataDetail(requestBought, out string message))
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, message));
                 }
+
+                if (requestBought.ID <= 0) return BadRequest(ApiResponseFactory.Fail(null, "Lỗi dữ liệu không có ID"));
+                var existingRequest = _repo.GetByID(requestBought.ID);
+                if (existingRequest == null) return BadRequest(ApiResponseFactory.Fail(null, "Lỗi dữ liệu không tìm thấy")); ;
+
+                if (existingRequest.EmployeeIDRequestApproved != currentUser.EmployeeID
+                    && !currentUser.IsAdmin) return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền sửa của nhân viên khác!")); ;
 
                 if ((bool)requestBought.IsTechBought)
                 {
@@ -617,8 +657,20 @@ namespace RERPAPI.Controllers.Old
             try
             {
                 if (data.Count() <= 0) return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu không hợp lệ"));
-                foreach (var item in data) await _repo.UpdateAsync(item);
-                return Ok(ApiResponseFactory.Success(null, ""));
+                string import = (bool)data[0].IsImport ? "cập nhật hàng nhập khẩu" : "hủy hàng nhập khẩu";
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                foreach (var item in data)
+                {
+                    if (item.ID <= 0) continue;
+                    var existingRequest = _repo.GetByID(item.ID);
+                    if (existingRequest == null) continue;
+
+                    if (existingRequest.EmployeeIDRequestApproved != currentUser.EmployeeID
+                        && !currentUser.IsAdmin) continue;
+                    await _repo.UpdateAsync(item);
+                }
+                return Ok(ApiResponseFactory.Success(null, $"Đã {import} "));
             }
             catch (Exception ex)
             {
@@ -633,35 +685,43 @@ namespace RERPAPI.Controllers.Old
             if (data == null || data.Count() <= 0)
                 return BadRequest(new { status = 0, message = "Dữ liệu không hợp lệ." });
 
+            var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+            var currentUser = ObjectMapper.GetCurrentUser(claims);
             try
             {
                 foreach (var item in data)
                 {
                     if (item.ID <= 0) continue;
-                    ProjectPartlistPurchaseRequest duplicate = item;
+                    var existingRequest = _repo.GetByID(item.ID);
+                    if (existingRequest == null) continue;
+
+                    if (existingRequest.EmployeeIDRequestApproved != currentUser.EmployeeID
+                        && !currentUser.IsAdmin) continue;
+
+                    ProjectPartlistPurchaseRequest duplicate = existingRequest.Copy();
                     duplicate.ID = 0;
                     duplicate.Quantity = 0;
-                    if (item.DuplicateID > 0)
+                    if (existingRequest.DuplicateID > 0)
                     {
-                        duplicate.DuplicateID = item.DuplicateID;
-                        duplicate.OriginQuantity = item.OriginQuantity;
+                        duplicate.DuplicateID = existingRequest.DuplicateID;
+                        duplicate.OriginQuantity = existingRequest.OriginQuantity;
                     }
                     else
                     {
-                        duplicate.DuplicateID = item.ID;
-                        duplicate.OriginQuantity = item.Quantity;
+                        duplicate.DuplicateID = existingRequest.ID;
+                        duplicate.OriginQuantity = existingRequest.Quantity;
                     }
                     await _repo.CreateAsync(duplicate);
-                    var newId = duplicate.ID;
+                    var newId = duplicate.DuplicateID;
 
-                    if (item.DuplicateID <= 0)
+                    if (existingRequest.DuplicateID <= 0)
                     {
-                        item.DuplicateID = newId;
-                        item.OriginQuantity = duplicate.OriginQuantity;
-                        await _repo.UpdateAsync(item);
+                        existingRequest.DuplicateID = newId;
+                        existingRequest.OriginQuantity = duplicate.OriginQuantity;
+                        await _repo.UpdateAsync(existingRequest);
                     }
                 }
-                return Ok(ApiResponseFactory.Success(null, ""));
+                return Ok(ApiResponseFactory.Success(null, "Đã tạo bản ghi mới cho sản phẩm được chọn!"));
             }
             catch (Exception ex)
             {
@@ -682,8 +742,9 @@ namespace RERPAPI.Controllers.Old
 
                 foreach (var item in data)
                 {
+                    ProjectPartlistPurchaseRequest prjPartList = _repo.GetByID(item.ID);
                     if (item.ID <= 0 || item.ProductSaleID <= 0
-                        || (item.EmployeeIDRequestApproved != currentUser.EmployeeID && !currentUser.IsAdmin))
+                        || (prjPartList.EmployeeIDRequestApproved != currentUser.EmployeeID && !currentUser.IsAdmin))
                         continue;
 
                     var dt = SQLHelper<dynamic>.ProcedureToList("spGetInventory", new[] { "@ProductSaleID" }, new object[] { item.ProductSaleID });
@@ -722,6 +783,85 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
 
+        }
+
+        [HttpPost("download-file-list")]
+        [RequiresPermission("N35,N1")]
+        public IActionResult DownloadFileList([FromBody] List<ProjectPartlistPurchaseRequestDTO> data)
+        {
+            try
+            {
+                var existingFiles = new List<(string FilePath, string FileName)>();
+
+                foreach (var item in data)
+                {
+                    // Lấy project
+                    var project = _projectRepo.GetByID((int)item.ProjectID);
+                    if (project == null || !project.CreatedDate.HasValue)
+                        continue;
+
+                    // Lấy solution
+                    var solution = SQLHelper<object>
+                        .ProcedureToList("spGetProjectSolutionByProjectPartListID",
+                                         new[] { "@ProjectPartListID" },
+                                         new object[] { item.ProjectPartListID });
+                    if (solution.Count() > 0) continue;
+                    var dt = SQLHelper<object>.GetListData(solution, 0)[0];
+                    if (dt == null || string.IsNullOrEmpty(dt.CodeSolution))
+                        continue;
+
+                    // Build path
+                    string pathPattern =
+                        $"{project.CreatedDate.Value.Year}/{project.ProjectCode.Trim()}/" +
+                        $"THIETKE.Co/{dt.CodeSolution.Trim()}/2D/GC/DH";
+
+                    var pathStaticFile = _pathStaticFiles
+                        .FirstOrDefault(p => p.PathName.ToLower() == "project");
+
+                    string fullPath = pathStaticFile != null
+                        ? Path.Combine(pathStaticFile.PathFull, pathPattern)
+                        : pathPattern;
+
+                    string filePath = Path.Combine(fullPath, $"{item.ProductCode}.pdf");
+
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        existingFiles.Add((filePath, $"{item.ProductCode}.pdf"));
+                    }
+                }
+
+                if (existingFiles.Count == 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không có file nào tồn tại để tải xuống."));
+                }
+
+                using (var ms = new MemoryStream())
+                {
+                    using (var zip = new System.IO.Compression.ZipArchive(ms,
+                        System.IO.Compression.ZipArchiveMode.Create, true))
+                    {
+                        foreach (var file in existingFiles)
+                        {
+                            var entry = zip.CreateEntry(file.FileName,
+                                System.IO.Compression.CompressionLevel.Fastest);
+
+                            using (var entryStream = entry.Open())
+                            using (var fs = System.IO.File.OpenRead(file.FilePath))
+                            {
+                                fs.CopyTo(entryStream);
+                            }
+                        }
+                    }
+
+                    ms.Position = 0;
+
+                    return File(ms.ToArray(), "application/zip", "DownloadFiles.zip");
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
         }
 
 

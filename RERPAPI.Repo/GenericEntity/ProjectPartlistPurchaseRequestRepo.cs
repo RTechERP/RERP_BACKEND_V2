@@ -96,31 +96,49 @@ namespace RERPAPI.Repo.GenericEntity
         public bool ValidateUpdateData(List<ProjectPartlistPurchaseRequestDTO> requests, out string message)
         {
             message = "";
-            if (requests.Count <= 0 || requests == null) { message = "Dữ liệu không hợp lệ"; return false; }
-            var dict = new Dictionary<int, (decimal origin, decimal total)>(requests.Count / 2);
-            foreach (ProjectPartlistPurchaseRequest request in requests)
+            if (requests == null || requests.Count <= 0)
+            {
+                message = "Dữ liệu không hợp lệ.";
+                return false;
+            }
+
+            // Lưu origin, total và productCode đầu tiên (hoặc gom hết cũng được)
+            var dict = new Dictionary<int, (decimal origin, decimal total, string productCode)>();
+
+            foreach (var request in requests)
             {
                 int duplicateID = Convert.ToInt32(request.DuplicateID);
                 if (duplicateID <= 0) continue;
 
                 decimal quantity = request.Quantity == null ? 0 : Convert.ToDecimal(request.Quantity);
                 decimal originQuantity = request.OriginQuantity == null ? 0 : Convert.ToDecimal(request.OriginQuantity);
+                string productCode = request.ProductCode ?? "(Không có ProductCode)";
 
                 if (!dict.TryGetValue(duplicateID, out var item))
-                    dict[duplicateID] = (originQuantity, quantity);
+                {
+                    dict[duplicateID] = (originQuantity, quantity, productCode);
+                }
                 else
-                    dict[duplicateID] = (item.origin, item.total + quantity);
+                {
+                    item.total += quantity;
+                    dict[duplicateID] = (item.origin, item.total, item.productCode); // giữ productCode đầu tiên
+                }
             }
 
+            // Kiểm tra lỗi
             var invalid = dict.FirstOrDefault(kv => kv.Value.origin != kv.Value.total);
+
             if (invalid.Key != 0)
             {
-                message = $"Tổng Quantity ({invalid.Value.total}) cho DuplicateID {invalid.Key} không khớp với OriginQuantity ({invalid.Value.origin})!";
+                message =
+                    $"Tổng số lượng sản phẩm [{invalid.Value.productCode}] ({invalid.Value.total}) không khớp với số lượng ban đầu ({invalid.Value.origin})!";
+
                 return false;
             }
 
             return true;
         }
+
 
         public bool validateManufacturer(List<ProjectPartlistPurchaseRequestDTO> requests, out string message)
         {
@@ -220,30 +238,45 @@ namespace RERPAPI.Repo.GenericEntity
 
         public string GenerateProductNewCode(int productGroupId)
         {
-            // Bước 1: Lấy mã nhóm sản phẩm từ ID
-            var productGroup = _productgroupRepo.GetByID(productGroupId);
-            if (productGroup == null || string.IsNullOrWhiteSpace(productGroup.ProductGroupID))
-                return string.Empty;
+            string newCodeRTC = "";
+            if (productGroupId <= 0) return newCodeRTC;
 
-            string productGroupCode = productGroup.ProductGroupID.Trim();
+            var ds = SQLHelper<object>.ProcedureToList("spLoadNewCodeRTC", new string[] { "@Group" }, new object[] { productGroupId });
+            var ds0 = SQLHelper<object>.GetListData(ds, 0);
+            var ds1 = SQLHelper<object>.GetListData(ds, 1);
+            string code = "";
+            string codeRTC = ds1.Count() > 0 ? ds1[0].ProductGroupID : "";
 
-            // Bước 2: Lấy danh sách sản phẩm thuộc nhóm này
-            var listProducts = _productSaleRepo.GetAll()
-                .Where(x => x.ProductGroupID == productGroupId &&
-                            !string.IsNullOrWhiteSpace(x.ProductNewCode) &&
-                            x.ProductNewCode.StartsWith(productGroupCode))
-                .ToList();
-
-            // Bước 3: Tính STT cao nhất đang dùng
-            var listNewCodes = listProducts.Select(x => new
+            if (ds0.Count() == 0)
             {
-                STT = int.TryParse(x.ProductNewCode.Substring(productGroupCode.Length), out int num) ? num : 0
-            });
+                newCodeRTC = codeRTC + "000000001";
+            }
+            else
+            {
+                if (!codeRTC.Contains("HCM"))
+                {
+                    code = (string)(ds0[0].ProductNewCode).Replace(codeRTC, "");
+                    int stt = Convert.ToInt32(code) + 1;
+                    for (int i = 0; codeRTC.Length < (9 - stt.ToString().Length); i++)
+                    {
+                        codeRTC = codeRTC + "0";
+                    }
+                    newCodeRTC = codeRTC + stt.ToString();
+                }
+                else
+                {
+                    code = (string)(ds0[0].ProductNewCode).Replace(codeRTC, "");
+                    int stt = Convert.ToInt32(code) + 1;
+                    string indexString = Convert.ToString(stt);
+                    for (int i = 0; indexString.Length < code.Length; i++)
+                    {
+                        indexString = "0" + indexString;
+                    }
+                    newCodeRTC = codeRTC + indexString.ToString();
+                }
+            }
 
-            int nextSTT = listNewCodes.Any() ? listNewCodes.Max(x => x.STT) + 1 : 1;
-            string numberCodeText = nextSTT.ToString().PadLeft(9 - productGroupCode.Length, '0');
-
-            return productGroupCode + numberCodeText;
+            return newCodeRTC;
         }
 
         public bool ValidateSaveDataDetail(ProjectPartlistPurchaseRequestDTO request, out string message)
