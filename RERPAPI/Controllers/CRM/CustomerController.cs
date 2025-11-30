@@ -23,32 +23,7 @@ namespace RERPAPI.Controllers.CRM
         //EmployeeRepo employeeRepo = new EmployeeRepo();
 
 
-        //[HttpGet("get-customers")]
-        //public IActionResult GetAll()
-        //{
-        //    try
-        //    {
-        //        List<Customer> customers = customerRepo.GetAll();
-        //        //return Ok(new
-        //        //{
-        //        //    status = 1,
-        //        //    data = customers
-        //        //});
-
-        //        return Ok(ApiResponseFactory.Success(customers, ""));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        //return BadRequest(new
-        //        //{
-        //        //    status = 0,
-        //        //    message = ex.Message,
-        //        //    error = ex.ToString()
-        //        //});
-
-        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-        //    }
-        //}
+        
 
         //[HttpGet("{id}")]
         //public IActionResult GetCustomerByID(int id)
@@ -471,20 +446,22 @@ namespace RERPAPI.Controllers.CRM
                 //    data = customers
                 //});
 
+        [HttpGet("get-customers")]
+        public IActionResult GetAll()
+        {
+            try
+            {
+                List<Customer> customers = _customerRepo.GetAll();
+
                 return Ok(ApiResponseFactory.Success(customers, ""));
             }
             catch (Exception ex)
             {
-                //return BadRequest(new
-                //{
-                //    status = 0,
-                //    message = ex.Message,
-                //    error = ex.ToString()
-                //});
 
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-data-by-procedure")]
         [RequiresPermission("N1,N27,N53,N31,N69")]
         public IActionResult GetCustomer(int page, int size, int employeeId, int groupId, string? filterText = "")
