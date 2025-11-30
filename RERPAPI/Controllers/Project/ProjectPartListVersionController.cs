@@ -82,7 +82,7 @@ namespace RERPAPI.Controllers.Project
                             };
                     await _projectPartListRepo.UpdateFieldByAttributeAsync(x => x.ProjectPartListVersionID == request.ID, myDict);
                 }
-                return Ok(ApiResponseFactory.Success(request, ""));
+                return Ok(ApiResponseFactory.Success(request, "Cập nhật dữ liệu thành công"));
             }
             catch (Exception ex)
             {
