@@ -73,7 +73,7 @@ namespace RERPAPI.Controllers.Project
             int projectPartlistPriceRequestTypeID = -1;
 
 
-            List<List<dynamic>> dtPriceRequest = SQLHelper<dynamic>.ProcedureToList("spGetProjectPartlistPriceRequest_New_Nhat",
+            List<List<dynamic>> dtPriceRequest = SQLHelper<dynamic>.ProcedureToList("spGetProjectPartlistPriceRequest_New",
                                                                           new string[] {
                                                                   "@DateStart", "@DateEnd", "@StatusRequest", "@ProjectID", "@Keyword", "@IsDeleted",
                                                                   "@ProjectTypeID", "@IsCommercialProduct","@IsJobRequirement","@ProjectPartlistPriceRequestTypeID", "@POKHID", "@PageNumber", "@PageSize"

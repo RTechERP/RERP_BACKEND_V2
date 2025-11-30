@@ -11,6 +11,9 @@ public partial class AGVBillImport
 
     public DateTime? BillDate { get; set; }
 
+    /// <summary>
+    /// 1: Duyệt; 0: Chờ duyệt
+    /// </summary>
     public bool? Status { get; set; }
 
     /// <summary>

@@ -53,8 +53,13 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             {
 
                 if (filter.checkAll == true) filter.productGroupID = 0;
+                //List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
+                //       "spGetInventory_Pagination", new string[] { "@ID", "@Find", "@WarehouseCode", "@IsStock", "@PageSize", "@PageNumber" },
+                //    new object[] { filter.productGroupID, filter.Find, filter.WarehouseCode, filter.IsStock == false ? 0 : 1, filter.PageSize, filter.PageNumber }
+                //   );
+                
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
-                       "spGetInventory_Pagination", new string[] { "@ID", "@Find", "@WarehouseCode", "@IsStock", "@PageSize", "@PageNumber" },
+                       "spGetInventory", new string[] { "@ID", "@Find", "@WarehouseCode", "@IsStock", "@PageSize", "@PageNumber" },
                     new object[] { filter.productGroupID, filter.Find, filter.WarehouseCode, filter.IsStock == false ? 0 : 1, filter.PageSize, filter.PageNumber }
                    );
                 return Ok(new

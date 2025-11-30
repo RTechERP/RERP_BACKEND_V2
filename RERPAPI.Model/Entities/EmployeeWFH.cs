@@ -58,6 +58,4 @@ public partial class EmployeeWFH
     public DateTime? DateApprovedBGD { get; set; }
 
     public string? EvaluateResults { get; set; }
-
-    public bool? IsDeleted { get; set; }
 }

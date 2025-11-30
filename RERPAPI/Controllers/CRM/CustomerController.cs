@@ -434,12 +434,12 @@ namespace RERPAPI.Controllers.CRM
             public string Name { get; set; }
             public string Code { get; set; }
         }
-        [HttpGet("get-customers")]
-        public IActionResult GetAll()
-        {
-            try
-            {
-                List<Customer> customers = _customerRepo.GetAll(x=>x.IsDeleted==false || x.IsDeleted ==null);
+        //[HttpGet("get-customers")]
+        //public IActionResult GetAll()
+        //{
+        //    try
+        //    {
+        //        List<Customer> customers = _customerRepo.GetAll(x=>x.IsDeleted==false || x.IsDeleted ==null);
                 //return Ok(new
                 //{
                 //    status = 1,

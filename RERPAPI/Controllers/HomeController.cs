@@ -465,6 +465,7 @@ namespace RERPAPI.Controllers
             }
         }
 
+        [Authorize]
         [HttpGet("employee-onleave-and-wfh")]
         public IActionResult GetEmployeeOnleaveAndWFHByDate()
         {

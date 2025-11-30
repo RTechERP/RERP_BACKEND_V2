@@ -42,6 +42,4 @@ public partial class EmployeeNoFingerprint
     public string? ReasonDeciline { get; set; }
 
     public string? ReasonHREdit { get; set; }
-
-    public bool? IsDeleted { get; set; }
 }

@@ -30,6 +30,4 @@ public partial class OfficeSupplyRequestsDetail
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
-
-    public bool? IsDeleted { get; set; }
 }
