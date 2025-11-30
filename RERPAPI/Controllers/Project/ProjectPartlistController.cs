@@ -1028,7 +1028,7 @@ namespace RERPAPI.Controllers.Project
                 return Ok(ApiResponseFactory.Success(new
                 {
                     DiffData = diffData
-                }, "Import thành công"));
+                }, "Nhập dữ liệu excel thành công"));
             }
             catch (Exception ex)
             {

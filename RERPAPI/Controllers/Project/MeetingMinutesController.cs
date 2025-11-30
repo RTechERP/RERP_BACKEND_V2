@@ -1,12 +1,15 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
+using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.Duan.MeetingMinutes;
 
 using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
 using RERPAPI.Repo.GenericEntity.MeetingMinutesRepo;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.Project
 {
@@ -138,16 +141,17 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                var employee = SQLHelper<dynamic>.ProcedureToList("spGetEmployee",
-                    new string[] { "@Status" },
-                    new object[] { employeerequest.Status });
+             
+                var employees = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
+                                                new string[] { "@Status" },
+                                                new object[] { 0});
                 return Ok(new
                 {
                     status = 1,
                     data = new
                     {
-                        asset = SQLHelper<dynamic>.GetListData(employee, 0),
-                        total = SQLHelper<dynamic>.GetListData(employee, 1)
+                        asset = employees,
+                     
                     }
 
                 });

@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 namespace RERPAPI.Controllers.HRM.Employees
 {
     [Route("api/[controller]")]
@@ -132,9 +135,10 @@ namespace RERPAPI.Controllers.HRM.Employees
         {
             try
             {
-                var employees = _employeeRepo.GetAll()
-                    .Select(x => new { x.ID, x.Code, x.FullName })
-                    .ToList();
+               
+                var employees = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
+                                                new string[] { "@Status" },
+                                                new object[] { 0 });
 
                 return Ok(new { status = 1, data = employees });
             }
