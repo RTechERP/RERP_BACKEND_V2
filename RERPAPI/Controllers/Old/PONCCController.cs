@@ -165,20 +165,10 @@ namespace RERPAPI.Controllers.Old
                 var data = SQLHelper<dynamic>.GetListData(dt, 0);
                 var dtRef = SQLHelper<dynamic>.GetListData(dt, 1);
 
-                List<PONCCDetail> listAllPONCCDetails = _pONCCDetailRepo.GetAll();
-                foreach (var item in listAllPONCCDetails)
-                {
-                    listAllID.Add(item.PONCCID + "_" + item.ID);
-                    checkList.Add(false);
-                }
-
-
                 var result = new
                 {
                     data = data,
                     dtRef = dtRef ?? [],
-                    listAllID = listAllID,
-                    checkList = checkList
                 };
 
                 return Ok(ApiResponseFactory.Success(result, null));
@@ -239,12 +229,8 @@ namespace RERPAPI.Controllers.Old
                 List<int> listDemoPonccId = new List<int>();
                 if (listSale.Count() > 0)
                 {
-                    var filteredRowsSale = data
-                        .Where(x => x.SupplierSaleID != null && x.ProductGroupID != null)        
-                        .Distinct()                                                       
-                        .ToList();
 
-                    foreach (var item in filteredRowsSale)
+                    foreach (var item in listSale)
                     {
                         BillImport bill = new BillImport();
 
@@ -298,12 +284,8 @@ namespace RERPAPI.Controllers.Old
                 }
                 if (listDemo.Count() > 0)
                 {
-                    var filteredRowsDemo = data
-                        .Where(x => x.SupplierSaleID != null)
-                        .Distinct()
-                        .ToList();
 
-                    foreach (var item in filteredRowsDemo)
+                    foreach (var item in listDemo)
                     {
                         int supplierSaleID = Convert.ToInt32(item.SupplierSaleID);
                         var dtDetails = data.Where(x => 
