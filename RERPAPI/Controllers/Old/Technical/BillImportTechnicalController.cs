@@ -19,13 +19,25 @@ namespace RERPAPI.Controllers.Old.Technical
         private readonly BillImportTechnicalDetailRepo _billImportTechnicalDetailRepo;
         private readonly BillImportTechDetailSerialRepo _billImportTechDetailSerialRepo;
         private readonly RulePayRepo _rulePayRepo;
-        public BillImportTechnicalController(HistoryDeleteBillRepo historyDeleteBillRepo, BillImportTechnicalRepo billImportTechnicalRepo, BillImportTechnicalDetailRepo billImportTechnicalDetailRepo, BillImportTechDetailSerialRepo billImportTechDetailSerialRepo, RulePayRepo rulePayRepo)
+        private readonly IConfiguration _configuration;
+        private readonly BillImportTechnicalLogRepo _billImportTechnicalLogRepo;
+        private readonly BillDocumentImportTechnicalRepo _billDocumentImportTechnicalRepo;
+        private readonly BillDocumentImportTechnicalLogRepo _billDocumentImportTechnicalLogRepo;
+        private readonly InventoryDemoRepo _inventoryDemoRepo;
+        private readonly PONCCRepo _pONCCRepo;
+        public BillImportTechnicalController(HistoryDeleteBillRepo historyDeleteBillRepo, BillImportTechnicalRepo billImportTechnicalRepo, BillImportTechnicalDetailRepo billImportTechnicalDetailRepo, BillImportTechDetailSerialRepo billImportTechDetailSerialRepo, RulePayRepo rulePayRepo, IConfiguration configuration, BillImportTechnicalLogRepo billImportTechnicalLogRepo, BillDocumentImportTechnicalRepo billDocumentImportTechnicalRepo, BillDocumentImportTechnicalLogRepo billDocumentImportTechnicalLogRepo, InventoryDemoRepo inventoryDemoRepo, PONCCRepo pONCCRepo)
         {
             _historyDeleteBillRepo = historyDeleteBillRepo;
             _billImportTechnicalRepo = billImportTechnicalRepo;
             _billImportTechnicalDetailRepo = billImportTechnicalDetailRepo;
             _billImportTechDetailSerialRepo = billImportTechDetailSerialRepo;
             _rulePayRepo = rulePayRepo;
+            _configuration = configuration;
+            _billImportTechnicalLogRepo = billImportTechnicalLogRepo;
+            _billDocumentImportTechnicalRepo = billDocumentImportTechnicalRepo;
+            _billDocumentImportTechnicalLogRepo = billDocumentImportTechnicalLogRepo;
+            _inventoryDemoRepo = inventoryDemoRepo;
+            _pONCCRepo = pONCCRepo;
         }
         [HttpGet("get-rulepay")]
         public IActionResult GetRulepay()
@@ -42,12 +54,7 @@ namespace RERPAPI.Controllers.Old.Technical
 
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-bill-import-by-code")]
@@ -68,12 +75,7 @@ namespace RERPAPI.Controllers.Old.Technical
 
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-serialbyID")]
@@ -90,12 +92,7 @@ namespace RERPAPI.Controllers.Old.Technical
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpPost("get-bill-import-technical")]
@@ -103,10 +100,14 @@ namespace RERPAPI.Controllers.Old.Technical
         {
             try
             {
+                // Chuẩn hóa thời gian
+                DateTime? dateStart = request.DateStart?.Date; // 00:00:00
+                DateTime? dateEnd = request.DateEnd?.Date.AddDays(1).AddSeconds(-1); // 23:59:59
+
                 var billImportTechnical = SQLHelper<dynamic>.ProcedureToList(
                     "spGetBillImportTechnical",
                     new string[] { "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@Status", "@FilterText", "@WarehouseID" },
-                    new object[] { request.Page, request.Size, request.DateStart, request.DateEnd, request.Status, request.FilterText, request.WarehouseID });
+                    new object[] { request.Page, request.Size, dateStart, dateEnd, request.Status, request.FilterText, request.WarehouseID });
 
                 return Ok(new
                 {
@@ -118,14 +119,10 @@ namespace RERPAPI.Controllers.Old.Technical
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-bill-import-technical-detail")]
         public IActionResult GetbillImportTechnicalDetail(string? ID)
         {
@@ -141,12 +138,7 @@ namespace RERPAPI.Controllers.Old.Technical
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [HttpGet("get-bill-code")]
@@ -159,6 +151,49 @@ namespace RERPAPI.Controllers.Old.Technical
                 data = billCode
             });
         }
+        [HttpGet("load-product")]
+        public IActionResult LoadProduct([FromQuery] int status, [FromQuery] int warehouseID)
+        {
+            try
+            {
+                List<List<object>> dtProduct;
+
+                if (status == 1)
+                {
+                    dtProduct = SQLHelper<dynamic>.ProcedureToList(
+                        "spGetProductRTC",
+                        new string[] { "@ProductGroupID", "@Keyword", "@CheckAll", "@WarehouseID" },
+                        new object[] { 0, "", 1, warehouseID }
+                    );
+                }
+                else if (warehouseID == 1)
+                {
+                    dtProduct = SQLHelper<dynamic>.ProcedureToList(
+                        "spGetProductRTCQRCode",
+                        new string[] { "@WarehouseID" },
+                        new object[] { warehouseID }
+                    );
+                }
+                else
+                {
+                    dtProduct = SQLHelper<dynamic>.ProcedureToList(
+                        "spGetInventoryDemo",
+                        new string[] { "@ProductGroupID", "@Keyword", "@CheckAll", "@WarehouseID" },
+                        new object[] { 0, "", 0, warehouseID }
+                    );
+                }
+
+                var data = SQLHelper<dynamic>.GetListData(dtProduct, 0);
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return Ok(ApiResponseFactory.Fail(null, "Error: " + ex.Message));
+            }
+        }
+
+
         [HttpGet("get-user")]
         public IActionResult GetUser()
         {
@@ -174,11 +209,11 @@ namespace RERPAPI.Controllers.Old.Technical
             }
         }
         [HttpGet("get-document-bill-import")]
-        public IActionResult GetDocumentBillImport(int poNCCId, int billImportID)
+        public IActionResult GetDocumentBillImport(int billImportID)
         {
             try
             {
-                var document = SQLHelper<dynamic>.ProcedureToList("spGetAllDocumentImportByPONCCID", new string[] { "@PONCCID", "@BillImportID" }, new object[] { poNCCId, billImportID });
+                var document = SQLHelper<dynamic>.ProcedureToList("spGetAllDocumentImportPONCCTechnical", new string[] { "@BillImportTechnicalID" }, new object[] { billImportID });
                 return Ok(new
                 {
                     status = 1,
@@ -188,97 +223,10 @@ namespace RERPAPI.Controllers.Old.Technical
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
-        //[HttpPost("save-data")]
-        //public async Task<IActionResult> SaveData([FromBody] BillimporttechnicalFullDTO product)
-        //{
-        //    try
-        //    {
-        //        if (product == null)
-        //        {
-        //            return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." });
-        //        }
-
-        //        if (product.historyDeleteBill != null)
-        //        {
-        //            if (product.historyDeleteBill.ID <= 0)
-        //                await _historyDeleteBillRepo.CreateAsync(product.historyDeleteBill);
-        //            else
-        //                _historyDeleteBillRepo.UpdateFieldsByID(product.historyDeleteBill.ID, product.historyDeleteBill);
-        //        }
-
-        //        if (product.billImportTechnical != null)
-        //        {
-        //            if (product.billImportTechnical.ID <= 0)
-        //                await _billImportTechnicalRepo.CreateAsync(product.billImportTechnical);
-        //            else
-        //                _billImportTechnicalRepo.UpdateFieldsByID(product.billImportTechnical.ID, product.billImportTechnical);
-        //        }
-
-        //        if (product.billImportDetailTechnicals != null && product.billImportDetailTechnicals.Any())
-        //        {
-        //            foreach (var item in product.billImportDetailTechnicals)
-        //            {
-        //                item.BillImportTechID = product.billImportTechnical.ID;
-
-        //                if (item.ID <= 0)
-        //                {
-        //                    await _billImportTechnicalDetailRepo.CreateAsync(item);
-        //                    string serial = "10,11,12,13";
-        //                    string[] data = serial.Split(',');
-        //                    foreach(string i in data)
-        //                    {
-        //                        BillImportTechDetailSerial model = _billImportTechDetailSerialRepo.GetByID(int.Parse(i));
-
-        //                    }
-        //                }
-        //                else
-        //                    _billImportTechnicalDetailRepo.UpdateFieldsByID(item.ID, item);
-        //            }
-        //        }
-        //        List<BillImportTechDetailSerial> savedSerials = new();
-
-        //        if (product.billImportTechDetailSerials != null && product.billImportTechDetailSerials.Any())
-        //        {
-        //            foreach (var item in product.billImportTechDetailSerials)
-        //            {
-        //                if (item.ID <= 0)
-        //                {
-
-        //                    var id = await _billImportTechDetailSerialRepo.CreateAsync(item);
-        //                }
-        //                else
-        //                {
-        //                    _billImportTechDetailSerialRepo.UpdateFieldsByID(item.ID, item);
-        //                }
-        //                savedSerials.Add(item);
-        //            }
-        //        }
-
-        //        return Ok(new
-        //        {
-        //            status = 1,
-        //            data = savedSerials 
-        //        });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(new
-        //        {
-        //            status = 0,
-        //            message = ex.Message,
-        //            error = ex.ToString()
-        //        });
-        //    }
-        //}
         [HttpPost("export-bill-import-technical")]
         public IActionResult ExportBillImportTechnical([FromBody] BillExportTechnicallExcelFullDTO dto)
         {
@@ -288,20 +236,20 @@ namespace RERPAPI.Controllers.Old.Technical
                 var details = dto.Details;
 
                 if (master == null || details == null || details.Count == 0)
-                    return BadRequest("Dữ liệu phiếu nhập kỹ thuật không hợp lệ.");
+                    return BadRequest("Dữ liệu phiếu nhập Demo không hợp lệ.");
 
-                //ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
                 ExcelPackage.License.SetNonCommercialOrganization("RTC Technology Viet Nam");
-                string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "BillImportTechnicalNew.xlsx");
-
+                //string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "BillImportTechnicalNew.xlsx");
+                string path = _configuration.GetValue<string>("PathTemplate") ?? "";
+                if (string.IsNullOrWhiteSpace(path)) return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy đường dẫn thư mục {path} trên server!"));
+                string templatePath = Path.Combine(path, "ExportExcel", "BillImportTechnicalNew.xlsx");
                 if (!System.IO.File.Exists(templatePath))
-                    return NotFound("File mẫu không tồn tại.");
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy File mẫu!"));
 
                 string fileName = $"PNKT_{master.Code}_{DateTime.Now:ddMMyyyy_HHmmss}.xlsx";
                 using var package = new ExcelPackage(new FileInfo(templatePath));
                 var ws = package.Workbook.Worksheets[0];
 
-                // --- DỮ LIỆU MASTER ---
                 DateTime createDate = master.CreatedDate ?? DateTime.Now;
                 string locationDate = $"Hà Nội, Ngày {createDate.Day} tháng {createDate.Month} năm {createDate.Year}";
                 string supplier = master.SupplierName?.Trim() ?? "";
@@ -320,30 +268,7 @@ namespace RERPAPI.Controllers.Old.Technical
                 ws.Cells[35, 5].Value = deliver;
                 ws.Cells[35, 10].Value = receiver;
 
-                // --- CHÈN ẢNH NẾU CÓ ---
-                //if (!string.IsNullOrEmpty(master.Image) && System.IO.File.Exists(master.Image))
-                //{
-                //    var image = Image.FromFile(master.Image);
-                //    var picture = ws.Drawings.AddPicture("DeviceImage", image);
-                //    picture.SetPosition(26, 100, 1, 100); // chỉnh vị trí nếu cần
-                //    picture.SetSize(200, 100);
-                //}
 
-                //// --- CHÈN QR CODE ---
-                //using (var qrGen = new QRCodeGenerator())
-                //using (var qrData = qrGen.CreateQrCode(master.Code, QRCodeGenerator.ECCLevel.Q))
-                //using (var qrCode = new QRCode(qrData))
-                //using (var qrBitmap = qrCode.GetGraphic(20))
-                //using (var qrStream = new MemoryStream())
-                //{
-                //    qrBitmap.Save(qrStream, ImageFormat.Png);
-                //    qrStream.Position = 0;
-                //    var qrPicture = ws.Drawings.AddPicture("QRCode", qrStream, ePictureType.Png);
-                //    qrPicture.SetPosition(0, 0, 6, 0); // chỉnh vị trí nếu cần
-                //    qrPicture.SetSize(90, 90);
-                //}
-
-                // --- DỮ LIỆU CHI TIẾT ---
                 int insertRow = 24;
                 int templateRow = 23;
 
@@ -381,12 +306,7 @@ namespace RERPAPI.Controllers.Old.Technical
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new
-                {
-                    status = 0,
-                    message = "Lỗi khi xuất phiếu nhập kỹ thuật.",
-                    error = ex.Message
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -406,7 +326,7 @@ namespace RERPAPI.Controllers.Old.Technical
                     if (product.historyDeleteBill.ID <= 0)
                         await _historyDeleteBillRepo.CreateAsync(product.historyDeleteBill);
                     else
-                        _historyDeleteBillRepo.UpdateAsync(product.historyDeleteBill);
+                        await _historyDeleteBillRepo.UpdateAsync(product.historyDeleteBill);
                 }
 
                 // Lưu phiếu nhập
@@ -415,7 +335,7 @@ namespace RERPAPI.Controllers.Old.Technical
                     if (product.billImportTechnical.ID <= 0)
                         await _billImportTechnicalRepo.CreateAsync(product.billImportTechnical);
                     else
-                        _billImportTechnicalRepo.UpdateAsync(product.billImportTechnical);
+                        await _billImportTechnicalRepo.UpdateAsync(product.billImportTechnical);
                 }
 
                 // Map STT -> ID sau khi insert chi tiết phiếu
@@ -442,10 +362,17 @@ namespace RERPAPI.Controllers.Old.Technical
                         }
                         else
                         {
-                            _billImportTechnicalDetailRepo.UpdateAsync(item);
+                            await _billImportTechnicalDetailRepo.UpdateAsync(item);
 
                             if (product.billImportDetailTechnicals.Count == 1)
                                 singleDetailId = item.ID;
+                        }
+                        var exist = _inventoryDemoRepo.GetAll(x => x.ProductRTCID == item.ProductID && x.WarehouseID == item.WarehouseID).FirstOrDefault() ?? new Model.Entities.InventoryDemo();
+                        if (exist.ID <= 0)
+                        {
+                            exist.ProductRTCID = item.ProductID;
+                            exist.WarehouseID = item.WarehouseID;
+                            await _inventoryDemoRepo.CreateAsync(exist);
                         }
                     }
                 }
@@ -478,7 +405,46 @@ namespace RERPAPI.Controllers.Old.Technical
                         savedSerials.Add(item);
                     }
                 }
+                // Lưu documents (PONCC)
+                List<BillDocumentImportTechnical> savedDocuments = new();
+                if (product.documentImportPONCCs != null && product.documentImportPONCCs.Any())
+                {
+                    foreach (var document in product.documentImportPONCCs)
+                    {
+                        document.BillImportTechnicalID = product.billImportTechnical.ID;
+                        document.UpdatedDate = DateTime.Now;
+                        // document.UpdatedBy = User.Identity.Name; // hoặc lấy từ claims/context
 
+                        if (document.ID <= 0)
+                        {
+                            await _billDocumentImportTechnicalRepo.CreateAsync(document);
+                        }
+                        else
+                        {
+                            _billDocumentImportTechnicalRepo.UpdateAsync(document);
+                        }
+
+                        // Tạo log cho document
+                        var log = new BillDocumentImportTechnicalLog
+                        {
+                            BillDocumentImportTechnicalID = document.ID,
+                            Status = document.Status,
+                            LogDate = DateTime.Now, // hoặc document.DateReceive nếu có
+                            Note = $"LÝ DO HUỶ: {document.ReasonCancel}\nGHI CHÚ: {document.Note}",
+                            DocumentImportID = document.DocumentImportID
+                        };
+
+                        await _billDocumentImportTechnicalLogRepo.CreateAsync(log);
+                        savedDocuments.Add(document);
+                    }
+
+                }
+                if (product.PonccID > 0)
+                {
+                    PONCC po = _pONCCRepo.GetByID(product.PonccID ?? 0);
+                    po.Status = 5;
+                    await _pONCCRepo.UpdateAsync(po);
+                }
                 return Ok(new
                 {
                     status = 1,
@@ -487,14 +453,113 @@ namespace RERPAPI.Controllers.Old.Technical
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpPost("approve")]
+        public async Task<IActionResult> Approved([FromBody] List<BillImportTechnical> bills)
+        {
+            if (bills == null || bills.Count == 0)
+            {
+                return BadRequest(ApiResponseFactory.Fail(null, "Danh sách phiếu cần duyệt trống."));
+            }
 
+            var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+            var currentUserInfo = ObjectMapper.GetCurrentUser(claims);
+            int currentUserId = currentUserInfo.EmployeeID;
+
+            int successCount = 0;
+
+            try
+            {
+                foreach (var item in bills)
+                {
+                    var billInDb = await _billImportTechnicalRepo.GetByIDAsync(item.ID);
+
+                    if (billInDb == null) continue;
+
+                    if (billInDb.Status == true) continue;
+
+                    if (!currentUserInfo.IsAdmin && billInDb.ApproverID != currentUserId) continue;
+
+                    await _billImportTechnicalRepo.UpdateStatusAsync(billInDb, true);
+
+                    successCount++;
+                }
+
+                var result = new
+                {
+                    SuccessCount = successCount,
+                    TotalProcessed = bills.Count
+                };
+
+                if (successCount == 0)
+                {
+                    return Ok(ApiResponseFactory.Fail(null, "Không có phiếu nào được duyệt.", result));
+                }
+
+                return Ok(ApiResponseFactory.Success(result, $"Duyệt thành công {successCount}/{bills.Count} phiếu!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpPost("unapprove")]
+        public async Task<IActionResult> Unapprove([FromBody] List<BillImportTechnical> bills)
+        {
+            if (bills == null || bills.Count == 0)
+            {
+                return BadRequest(ApiResponseFactory.Fail(null, "Danh sách phiếu cần hủy duyệt trống."));
+            }
+
+            var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+            var currentUserInfo = ObjectMapper.GetCurrentUser(claims);
+            int currentUserId = currentUserInfo.EmployeeID;
+
+            int successCount = 0;
+
+            try
+            {
+                foreach (var item in bills)
+                {
+                    var billInDb = await _billImportTechnicalRepo.GetByIDAsync(item.ID);
+
+                    if (billInDb == null)
+                    {
+                        continue;
+                    }
+                    if (billInDb.Status != true)
+                    {
+                        continue;
+                    }
+                    if (!currentUserInfo.IsAdmin && billInDb.ApproverID != currentUserId)
+                    {
+                        continue;
+                    }
+
+                    await _billImportTechnicalRepo.UpdateStatusAsync(billInDb, false);
+
+                    successCount++;
+                }
+
+                var result = new
+                {
+                    SuccessCount = successCount,
+                    TotalProcessed = bills.Count,
+                };
+
+                if (successCount == 0)
+                {
+                    return Ok(ApiResponseFactory.Fail(null, "Không có phiếu nào được hủy duyệt."));
+                }
+
+                return Ok(ApiResponseFactory.Success(result, $"Hủy duyệt thành công {successCount}/{bills.Count} phiếu!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 }

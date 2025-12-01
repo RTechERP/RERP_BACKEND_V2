@@ -26,6 +26,4 @@ public partial class TSAssetAllocationDetail
     public string? UpdatedBy { get; set; }
 
     public int? EmployeeID { get; set; }
-
-    public bool? IsDeleted { get; set; }
 }

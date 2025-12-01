@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
+using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -40,7 +43,10 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
         {
             try
             {
-                var data = _employeeRepo.GetAll().Where(x => x.Status == 0 && x.FullName != "").ToList();
+          
+                var data = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
+                                                new string[] {"@Status" },
+                                                new object[] {0 });
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)

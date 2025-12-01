@@ -13,5 +13,7 @@ namespace RERPAPI.Model.DTO
         public HistoryDeleteBill? historyDeleteBill { get; set; }
         public List<BillImportDetailTechnical>? billImportDetailTechnicals { get; set; }
         public List<BillImportTechDetailSerial>? billImportTechDetailSerials { get; set; }
+        public List<BillDocumentImportTechnical>? documentImportPONCCs { get; set; }
+        public int? PonccID { get; set; }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using ClosedXML.Excel;
 using Microsoft.AspNetCore.Mvc;
+using OfficeOpenXml;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -40,6 +41,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         private readonly Repo.GenericEntity.AddressStockRepo _addressStockRepo;
         private readonly SupplierSaleRepo _supplierSaleRepo;
         private readonly UserRepo _userRepo;
+        private readonly IConfiguration _configuration;
 
 
         public BillExportController(
@@ -54,7 +56,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             BillExportLogRepo billexportlogRepo,
             ProjectRepo projectRepo,
             HistoryDeleteBillRepo historyDeleteBillRepo,
-            WarehouseRepo warehouseRepo, InventoryProjectRepo inventoryProjectRepo, ProductSaleRepo productSaleRepo, Repo.GenericEntity.AddressStockRepo addressStockRepo, CustomerRepo customerRepo, SupplierSaleRepo supplierSaleRepo, UserRepo userRepo)
+            WarehouseRepo warehouseRepo, InventoryProjectRepo inventoryProjectRepo, ProductSaleRepo productSaleRepo, Repo.GenericEntity.AddressStockRepo addressStockRepo, CustomerRepo customerRepo, SupplierSaleRepo supplierSaleRepo, UserRepo userRepo, IConfiguration configuration)
         {
             _productgroupRepo = productgroupRepo;
             _billdocumentexportRepo = billdocumentexportRepo;
@@ -76,6 +78,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             _customerRepo = customerRepo;
             _supplierSaleRepo = supplierSaleRepo;
             _userRepo = userRepo;
+            _configuration = configuration;
         }
         [HttpGet("get-all-project")]
         public IActionResult getAllProject()
@@ -107,11 +110,15 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                    );
                 /* List<dynamic> billList = result[0]; // dữ liệu hóa đơn*/
                 int totalPage = 0;
-
-                if (result.Count > 1 && result[1].Count > 0)
+                if (result.Count > 0)
                 {
-                    totalPage = (int)result[1][0].TotalPage;
+                    if (result[0].Count > 0)
+                    {
+                        totalPage = result[0][0].TotalPage;
+                    }
                 }
+
+
 
                 return Ok(new
                 {
@@ -575,8 +582,10 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu master"));
                 }
+                var path = _configuration.GetValue<string>("PathTemplate");
+                if (path == null) return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy đường dẫn server để lấy mẫu xuất!"));
 
-                string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "PhieuXuatSALE.xlsx");
+                string templatePath = Path.Combine(path, "ExportExcel", "PhieuXuatSale.xlsx");
                 if (!System.IO.File.Exists(templatePath))
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy file mẫu Excel"));
@@ -1095,6 +1104,151 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     status = 1,
                     data = warehouse
                 });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("excel-kt")]
+        public IActionResult ExportExcelKT(int id, string warehouseCode)
+        {
+            try
+            {
+                // Validate warehouseCode
+                if (string.IsNullOrEmpty(warehouseCode))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng truyền mã kho (warehouseCode)"));
+                }
+
+                // Lấy dữ liệu từ stored procedure
+                List<List<dynamic>> resultSets = SQLHelper<dynamic>.ProcedureToList(
+                    "spGetExportExcel",
+                    new string[] { "@ID" },
+                    new object[] { id }
+                );
+
+                if (resultSets == null || resultSets.Count == 0 || resultSets[0].Count == 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu từ spGetExportExcel"));
+                }
+
+                var allData = resultSets[0];
+
+                if (allData.Count == 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu"));
+                }
+
+                // Lấy đường dẫn template
+                var path = _configuration.GetValue<string>("PathTemplate");
+                if (path == null)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy đường dẫn server để lấy mẫu xuất!"));
+                }
+
+                string templatePath = Path.Combine(path, "ExportExcel", "FormXuatKho.xlsx");
+                if (!System.IO.File.Exists(templatePath))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy file mẫu Excel"));
+                }
+
+                // Set license context cho EPPlus
+                ExcelPackage.License.SetNonCommercialOrganization("RTC Technology VietNam");
+
+                using (var package = new ExcelPackage(new FileInfo(templatePath)))
+                {
+                    var worksheet = package.Workbook.Worksheets[0]; // Sheet đầu tiên
+
+                    var firstRow = allData.FirstOrDefault();
+                    string phieuCode = firstRow?.Code?.ToString() ?? "Unknown";
+
+                    if (warehouseCode.ToUpper() == "HN")
+                    {
+                        worksheet.Cells[2, 14].Value = "Loại vật tư (*)";
+                    }
+
+                    int startRow = 3;
+                    int dataCount = allData.Count;
+
+                    if (dataCount > 1)
+                    {
+                        worksheet.InsertRow(startRow + 1, dataCount - 1, startRow);
+                    }
+
+                    int currentRow = startRow + dataCount - 1;
+                    for (int i = dataCount - 1; i >= 0; i--)
+                    {
+                        var item = allData[i] as IDictionary<string, object>;
+                        if (item == null) continue;
+
+                        worksheet.Cells[currentRow, 1].Value = i + 1; // STT
+                        worksheet.Cells[currentRow, 3].Value = item.ContainsKey("CreatDate")
+                            ? item["CreatDate"]?.ToString() ?? ""
+                            : "";
+                        worksheet.Cells[currentRow, 8].Value = item.ContainsKey("CustomerCode")
+                            ? item["CustomerCode"]?.ToString() ?? ""
+                            : "";
+                        worksheet.Cells[currentRow, 9].Value = item.ContainsKey("CustomerName")
+                            ? item["CustomerName"]?.ToString() ?? ""
+                            : "";
+                        worksheet.Cells[currentRow, 12].Value = item.ContainsKey("Note")
+                            ? item["Note"]?.ToString() ?? ""
+                            : "";
+                        worksheet.Cells[currentRow, 13].Value = item.ContainsKey("FullName")
+                            ? item["FullName"]?.ToString() ?? ""
+                            : "";
+
+                        // Cột 14: Loại vật tư hoặc Kho
+                        if (warehouseCode.ToUpper() == "HN")
+                        {
+                            worksheet.Cells[currentRow, 14].Value = item.ContainsKey("ProductGroupName")
+                                ? item["ProductGroupName"]?.ToString() ?? ""
+                                : "";
+                        }
+                        else
+                        {
+                            worksheet.Cells[currentRow, 14].Value = item.ContainsKey("WarehouseName")
+                                ? item["WarehouseName"]?.ToString() ?? ""
+                                : "";
+                        }
+
+                        worksheet.Cells[currentRow, 24].Value = item.ContainsKey("ProductCode")
+                            ? item["ProductCode"]?.ToString() ?? ""
+                            : "";
+                        worksheet.Cells[currentRow, 25].Value = item.ContainsKey("ProductName")
+                            ? item["ProductName"]?.ToString() ?? ""
+                            : "";
+                        worksheet.Cells[currentRow, 31].Value = item.ContainsKey("Unit")
+                            ? item["Unit"]?.ToString() ?? ""
+                            : "";
+                        worksheet.Cells[currentRow, 32].Value = item.ContainsKey("Qty")
+                            ? Convert.ToDecimal(item["Qty"] ?? 0)
+                            : 0;
+
+                        currentRow--;
+                    }
+
+                    // Xóa 2 dòng đầu
+                    worksheet.DeleteRow(2);
+                    //worksheet.DeleteRow(1);
+
+                    // Auto-fit columns
+                    worksheet.Cells.AutoFitColumns();
+
+                    using (var stream = new MemoryStream())
+                    {
+                        package.SaveAs(stream);
+                        stream.Position = 0;
+
+                        string fileName = $"{phieuCode}_{DateTime.Now:dd_MM_yyyy_HH_mm_ss}.xlsx";
+                        return File(
+                            stream.ToArray(),
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            fileName
+                        );
+                    }
+                }
             }
             catch (Exception ex)
             {

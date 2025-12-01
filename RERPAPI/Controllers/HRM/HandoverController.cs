@@ -1,5 +1,6 @@
 ﻿using Azure.Core;
 using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -8,6 +9,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.Handover;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.BBNV;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers
 {
@@ -255,16 +257,17 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                var employee = SQLHelper<dynamic>.ProcedureToList("spGetEmployee",
-                    new string[] { "@Status" },
-                    new object[] { employeerequest.Status });
+              
+                var employees = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
+                                                new string[] { "@Status"},
+                                                new object[] { 0 });
                 return Ok(new
                 {
                     status = 1,
                     data = new
                     {
-                        asset = SQLHelper<dynamic>.GetListData(employee, 0),
-                        total = SQLHelper<dynamic>.GetListData(employee, 1)
+                        asset = employees
+                     
                     }
 
                 });
@@ -286,14 +289,15 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                var getEmployees = SQLHelper<dynamic>.ProcedureToList("spGetEmployee",
-                    new string[] { "@Status" },
-                    new object[] { 0 });
+             
+                var employees = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
+                                                new string[] { "@Status" },
+                                                new object[] {0 });
 
                 return Ok(new
                 {
                     status = 1,
-                    data = SQLHelper<dynamic>.GetListData(getEmployees, 0),
+                    data = employees,
 
                 });
             }
