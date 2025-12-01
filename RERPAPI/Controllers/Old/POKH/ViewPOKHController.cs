@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
+using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using System;
@@ -66,7 +68,9 @@ namespace RERPAPI.Controllers.Old.POKH
         {
             try
             {
-                List<Employee> list = _employeeRepo.GetAll().Where(x => x.UserID != 0).ToList();
+                var list = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
+                                 new string[] { "@Keyword" },
+                                 new object[] { "" });
                 return Ok(ApiResponseFactory.Success(list, ""));
             }
             catch (Exception ex)
