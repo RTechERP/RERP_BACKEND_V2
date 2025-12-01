@@ -782,7 +782,7 @@ namespace RERPAPI.Controllers.Project
             try
             {
                 var data = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee", new string[] { "@DepartmentID", "@Status" }, new object[] { departmentID, 0 });
-               
+
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
@@ -848,7 +848,7 @@ namespace RERPAPI.Controllers.Project
                 // Nếu đang update, bỏ qua chính nó
                 if (id > 0)
                 {
-                    query = query.Where(x => x.ID != id && x.IsDeleted !=true);
+                    query = query.Where(x => x.ID != id && x.IsDeleted != true);
                 }
 
                 bool isExists = query.Any();
@@ -1138,7 +1138,7 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                var prjPriority = projectPriorityRepo.GetAll(x=>x.IsDeleted != true);
+                var prjPriority = projectPriorityRepo.GetAll(x => x.IsDeleted != true);
 
                 List<int> checks = new List<int>();
                 if (projectId != 0)
@@ -1202,7 +1202,7 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-          
+
                 var employees = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
                                                 new string[] { "@Status" },
                                                 new object[] { status });
@@ -1590,11 +1590,11 @@ namespace RERPAPI.Controllers.Project
                     // Thêm dữ liệu vào bảng người tham gia
                     foreach (var item in prjTypeLink.prjTypeLinks)
                     {
-             
+
                         if (item.LeaderID <= 0)
                             continue;
 
-                        int projectTypeID = item.ID; 
+                        int projectTypeID = item.ID;
 
                         // Kiểm tra xem người này đã tồn tại trong ProjectEmployee chưa
                         var projectEmployee = projectEmployeeRepo.GetAll(
@@ -2096,7 +2096,7 @@ namespace RERPAPI.Controllers.Project
                ));
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
@@ -2132,7 +2132,7 @@ namespace RERPAPI.Controllers.Project
                 }
 
 
-                return Ok(ApiResponseFactory.Success(true, "Lưu dữ liệu thành công"));
+                return Ok(ApiResponseFactory.Success(true, ""));
             }
             catch (Exception ex)
             {
@@ -2140,6 +2140,43 @@ namespace RERPAPI.Controllers.Project
 
             }
         }
+
+        #region cây thư mục 
+        [HttpGet("open/{projectId}")]
+        public IActionResult OpenProjectFolder(int projectId)
+        {
+            try
+            {
+                var project = projectRepo.GetByID(projectId);
+                if (project == null)
+                    return NotFound(ApiResponseFactory.Fail(null,"Không tìm thấy dự án"));
+
+                int year = project.CreatedDate.Value.Year;
+
+                string basePath = Path.Combine(
+                    @"\\192.168.1.190\duan",
+                    "projects",
+                    year.ToString(),
+                    project.ProjectCode
+                );
+
+                // KIỂM TRA THƯ MỤC CÓ TỒN TẠI KHÔNG
+                if (!Directory.Exists(basePath))
+                {
+                    return Ok(ApiResponseFactory.Fail(null,"Thư mục dự án chưa tồn tại trên server"));
+                }
+
+                // Nếu có tồn tại thì trả URL để FE mở
+                string url = $"/api/share/duan/projects/{year}/{project.ProjectCode}";
+
+                return Ok(ApiResponseFactory.Success(url, "Lấy đường dẫn thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex,ex.Message));
+            }
+        }
+        #endregion
 
     }
 

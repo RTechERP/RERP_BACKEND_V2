@@ -27,12 +27,12 @@ namespace RERPAPI.Controllers
         }
 
         [HttpGet("get-product-history")]
-        public async Task<IActionResult> GetProductHistory(DateTime dateStart, DateTime dateEnd, string? keyWords, int warehouseID, int userID, string status, int page, int size, int isDeleted)
+        public async Task<IActionResult> GetProductHistory(DateTime dateStart, DateTime dateEnd, string? keyWords, int warehouseID, int userID, string status, int page, int size, int isDeleted, int warehouseType)
         {
             try
             {
 
-                var productHistory = SQLHelper<object>.ProcedureToList("spGetHistoryProduct_New", new string[] { "@DateStart", "@DateEnd", "@Keyword", "@WarehouseID", "@UserID", "@Status", "@PageNumber", "@PageSize", "@IsDeleted" }, new object[] { dateStart, dateEnd, keyWords ?? "", warehouseID, userID, status, page, size, isDeleted });
+                var productHistory = SQLHelper<object>.ProcedureToList("spGetHistoryProduct_New", new string[] { "@DateStart", "@DateEnd", "@Keyword", "@WarehouseID", "@UserID", "@Status", "@PageNumber", "@PageSize", "@IsDeleted", "@WarehouseType" }, new object[] { dateStart, dateEnd, keyWords ?? "", warehouseID, userID, status, page, size, isDeleted, warehouseType });
                 var data = SQLHelper<object>.GetListData(productHistory, 0);
 
                 return Ok(ApiResponseFactory.Success(data, ""));
@@ -86,11 +86,11 @@ namespace RERPAPI.Controllers
 
 
         [HttpGet("get-productrtc-detail")]
-        public async Task<IActionResult> GetProductrtcDetail(int ProductGroupID, string? Keyword, int CheckAll, string? Filter, int WarehouseID)
+        public async Task<IActionResult> GetProductrtcDetail(int ProductGroupID, string? Keyword, int CheckAll, string? Filter, int WarehouseID, int WarehouseType)
         {
             try
             {
-                var data = SQLHelper<object>.ProcedureToList("spGetProductRTC_Detail", new string[] { "@ProductGroupID", "@Keyword", "@CheckAll", "@Filter", "@WarehouseID" }, new object[] { ProductGroupID, Keyword ?? "", CheckAll, Filter ?? "", WarehouseID });
+                var data = SQLHelper<object>.ProcedureToList("spGetProductRTC_Detail", new string[] { "@ProductGroupID", "@Keyword", "@CheckAll", "@Filter", "@WarehouseID", "@WarehouseType" }, new object[] { ProductGroupID, Keyword ?? "", CheckAll, Filter ?? "", WarehouseID, WarehouseType });
                 var dt = SQLHelper<object>.GetListData(data, 0);
                 return Ok(ApiResponseFactory.Success(dt, ""))
                 ;
