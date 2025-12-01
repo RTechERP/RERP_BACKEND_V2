@@ -19,6 +19,8 @@ namespace RERPAPI.Controllers.Old.TB
         private readonly ProductRTCRepo _productRTCRepo;
         private readonly ProductLocationRepo _productLocationRepo;
         private readonly ConfigSystemRepo config;
+        private readonly FirmRepo _firmRepo;
+        private readonly LocationRepo _locationRepo;
 
         public ProductRTCController(
             ProductGroupRTCRepo productGroupRTCRepo,
@@ -325,24 +327,24 @@ namespace RERPAPI.Controllers.Old.TB
                                 //    failCount++;
                                 //    continue;
                                 //}
-                                if (item.FirmID <= 0)
-                                {
-                                    continue;
-                                }
                             }
 
-                            // --- Xử lý xóa ---
-                            if (item.IsDelete == true)
-                            {
-                                if (item.ID > 0)
-                                {
-                                    await _productRTCRepo.UpdateAsync(item);
-                                    successCount++;
-                                }
-                            }
+                            //// --- Xử lý xóa ---
+                            //if (item.IsDelete == true)
+                            //{
+                            //    if (item.ID > 0)
+                            //    {
+                            //        await _productRTCRepo.UpdateAsync(item);
+                            //        successCount++;
+                            //    }
+                            //}
                             else
                             {
-                                // --- Tạo mới hoặc cập nhật ---
+                                var firm = _firmRepo.GetAll(x => x.FirmType == 2 && (x.FirmName ?? "").ToUpper().Trim() == (item.Maker ?? "").ToUpper().Trim() && x.IsDelete == false).FirstOrDefault();
+                                if (firm != null) item.FirmID = firm.ID;
+                                var location = _locationRepo.GetAll(x => (x.LocationName ?? "").Trim().ToUpper() == (item.AddressBox ?? "").Trim().ToUpper() && x.IsDeleted == false).FirstOrDefault();
+                                if (location != null) item.ProductLocationID = location.ID;
+
                                 item.ProductCodeRTC = _productRTCRepo.generateProductCode();
                                 if (item.ID <= 0)
                                     await _productRTCRepo.CreateAsync(item);
