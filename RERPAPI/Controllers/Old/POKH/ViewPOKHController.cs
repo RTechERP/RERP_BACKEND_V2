@@ -68,9 +68,14 @@ namespace RERPAPI.Controllers.Old.POKH
         {
             try
             {
-                var list = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
-                                 new string[] { "@Keyword" },
-                                 new object[] { "" });
+                List<EmployeeViewPOKHDTO> list = _employeeRepo.GetAll()
+                    .Where(x => x.UserID != 0)
+                    .Select(x => new EmployeeViewPOKHDTO
+                    {
+                        ID = x.ID,
+                        FullName = x.FullName,
+                    })
+                    .ToList();
                 return Ok(ApiResponseFactory.Success(list, ""));
             }
             catch (Exception ex)
