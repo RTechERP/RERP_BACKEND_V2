@@ -15,9 +15,21 @@ namespace RERPAPI.Repo.GenericEntity
         private BillImportDetailRepo _repoBillImport;
         private PONCCDetailLogRepo _repoDetailLog;
         private SupplierSaleRepo _supplierSaleRepo;
+        private ProjectPartlistPurchaseRequestRepo _prjPartListRepo;
+        CurrentUser _currentUser;
 
-        public PONCCRepo(CurrentUser currentUser, PONCCDetailRepo pONCCDetailRepo, PONCCRulePayRepo pONCCRulePayRepo, DocumentImportPONCCRepo documentImportPONCCRepo, PONCCDetailRequestBuyRepo pONCCDetailRequestBuyRepo, BillImportDetailRepo billImportDetailRepo, PONCCDetailLogRepo pONCCDetailLogRepo, SupplierSaleRepo supplierSaleRepo) : base(currentUser)
+        public PONCCRepo(CurrentUser currentUser,
+            PONCCDetailRepo pONCCDetailRepo,
+            PONCCRulePayRepo pONCCRulePayRepo,
+            DocumentImportPONCCRepo documentImportPONCCRepo,
+            PONCCDetailRequestBuyRepo pONCCDetailRequestBuyRepo,
+            BillImportDetailRepo billImportDetailRepo,
+            PONCCDetailLogRepo pONCCDetailLogRepo,
+            ProjectPartlistPurchaseRequestRepo prjPartListRepo,
+            SupplierSaleRepo supplierSaleRepo) : base(currentUser)
         {
+
+            _currentUser = currentUser;
             _pONCCDetailRepo = pONCCDetailRepo;
             _repoRulePay = pONCCRulePayRepo;
             _repoDocImport = documentImportPONCCRepo;
@@ -25,176 +37,197 @@ namespace RERPAPI.Repo.GenericEntity
             _repoBillImport = billImportDetailRepo;
             _repoDetailLog = pONCCDetailLogRepo;
             _supplierSaleRepo = supplierSaleRepo;
+            _prjPartListRepo = prjPartListRepo;
         }
 
         public PONCCRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
 
-        public bool Validate(PONCCDTO pONCCDTO, out string errorMessage)
+        public bool Validate(PONCCDTO pONCCDTO, out string message)
         {
-            string message = "";
+            message = "";
             string pattern = @"^[a-zA-Z0-9_-]+$";
             Regex regex = new Regex(pattern);
+            PONCC model = pONCCDTO.poncc;
+            var lstPONCCDetail = pONCCDTO.lstPONCCDetail;
 
-            // Kiểm tra mã PO
-            if (string.IsNullOrEmpty(pONCCDTO.POCode?.Trim()))
+            #region validate cho poncc bao gôm rulepayId
+            if (model.ID > 0)
+            {
+                if (!(model.Status == 0 || model.Status == 5) && !(_currentUser.EmployeeID == 178 || _currentUser.IsAdmin))
+                {
+                    var oldStatus = model.Status == 0 ? "Đang tiến hành" : "Đã Y/c nhập kho";
+                    message = $"Trạng thái PONCC [{oldStatus}]! Không được sửa";
+                    return false;
+                }
+            }
+
+            if (model?.SupplierSaleID <= 0)
+            {
+                message = "Vui lòng chọn nhà cung cấp!";
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(model.POCode?.Trim()))
             {
                 message = "Vui lòng nhập Mã PO NCC";
-                errorMessage = message;
                 return false;
             }
             else
             {
-                bool isCheck = regex.IsMatch(pONCCDTO.POCode.Trim());
+                bool isCheck = regex.IsMatch(model.POCode.Trim());
                 if (!isCheck)
                 {
                     message = "Mã PO NCC chỉ chứa chữ cái tiếng Anh và số!";
-                    errorMessage = message;
                     return false;
                 }
             }
 
             // Kiểm tra số đơn hàng
-            if (string.IsNullOrEmpty(pONCCDTO.BillCode?.Trim()))
+            if (string.IsNullOrEmpty(model.BillCode?.Trim()))
             {
                 message = "Vui lòng nhập Số đơn hàng";
-                errorMessage = message;
                 return false;
             }
             else
             {
-                bool isCheck = regex.IsMatch(pONCCDTO.BillCode.Trim());
+                bool isCheck = regex.IsMatch(model.BillCode.Trim());
                 if (!isCheck)
                 {
                     message = "Số đơn hàng chỉ chứa chữ cái tiếng Anh và số!";
-                    errorMessage = message;
                     return false;
                 }
             }
 
-            // Kiểm tra trùng mã PO và số đơn hàng
-            var existingPO = GetAll(p => p.POCode == pONCCDTO.POCode.Trim() && p.ID != pONCCDTO.ID && p.IsDeleted != true).FirstOrDefault();
+            var existingPO = GetAll(p => p.POCode == model.POCode.Trim() && p.ID != model.ID && p.IsDeleted != true).FirstOrDefault();
             if (existingPO != null)
             {
-                message = $"Mã PO NCC [{pONCCDTO.POCode.Trim()}] đã tồn tại!";
-                errorMessage = message;
+                message = $"Mã PO NCC [{model.POCode.Trim()}] đã tồn tại!";
                 return false;
             }
 
-            var existingBill = GetAll(p => p.BillCode == pONCCDTO.BillCode.Trim() && p.ID != pONCCDTO.ID && p.IsDeleted != true && p.POType == pONCCDTO.POType).FirstOrDefault();
+            var existingBill = GetAll(p => p.BillCode == model.BillCode.Trim() && p.ID != model.ID && p.IsDeleted != true && p.POType == model.POType).FirstOrDefault();
             if (existingBill != null)
             {
-                message = $"Số đơn hàng [{pONCCDTO.BillCode.Trim()}] đã tồn tại!";
-                errorMessage = message;
+                message = $"Số đơn hàng [{model.BillCode.Trim()}] đã tồn tại!";
                 return false;
             }
 
-            // Kiểm tra nhân viên mua hàng
-            if (pONCCDTO.EmployeeID <= 0)
+            if (model.EmployeeID <= 0)
             {
                 message = "Vui lòng nhập NV mua hàng";
-                errorMessage = message;
                 return false;
             }
 
-            // Kiểm tra điều khoản thanh toán
-            if (pONCCDTO.lstPONCCRulePay == null || pONCCDTO.lstPONCCRulePay.Count == 0)
+            if (pONCCDTO.RulePayID <= 0)
             {
-                message = "Vui lòng chọn điều khoản thanh toán";
-                errorMessage = message;
+                message = "Vui lòng chọn điều khoản thanh toán!";
                 return false;
             }
 
             // Kiểm tra công ty
-            if (pONCCDTO.Company <= 0)
+            if (model.Company <= 0)
             {
                 message = "Vui lòng nhập Công ty";
-                errorMessage = message;
                 return false;
             }
 
             // Kiểm tra ngày đơn hàng
-            if (!pONCCDTO.RequestDate.HasValue)
+            if (!model.RequestDate.HasValue)
             {
                 message = "Vui lòng nhập Ngày đơn hàng";
-                errorMessage = message;
                 return false;
             }
 
             // Kiểm tra tổng tiền PO
-            if (pONCCDTO.TotalMoneyPO <= 0)
+            if (model.TotalMoneyPO <= 0)
             {
-                message = "Vui lòng nhập Tổng tiền PO";
-                errorMessage = message;
+                message = "Tổng tiền PO cần lớn hơn 0. Vui lòng chọn hoặc chỉnh sửa tổng tiền sản phẩm mua!";
                 return false;
             }
 
             // Kiểm tra loại tiền
-            if (pONCCDTO.CurrencyID <= 0)
+            if (model.CurrencyID <= 0)
             {
                 message = "Vui lòng nhập Loại tiền";
-                errorMessage = message;
                 return false;
             }
 
             // Kiểm tra ngày giao hàng
-            if (!pONCCDTO.DeliveryDate.HasValue)
+            if (!model.DeliveryDate.HasValue)
             {
                 message = "Vui lòng nhập Ngày giao hàng";
-                errorMessage = message;
                 return false;
             }
+            #endregion
 
-            // Kiểm tra chi tiết PO
-            if (pONCCDTO.lstPONCCDetail != null && pONCCDTO.lstPONCCDetail.Count > 0)
+            if (pONCCDTO.lstPrjPartlistPurchaseRequest.Count() > 0)
             {
-                foreach (var detail in pONCCDTO.lstPONCCDetail)
+                if ((bool)pONCCDTO.IsCheckTotalMoneyPO)
                 {
-                    if (detail.QtyRequest <= 0)
+                    decimal totalPrice = (decimal)pONCCDTO.poncc.TotalMoneyPO;
+                    decimal totalPriceRequest = pONCCDTO.lstPrjPartlistPurchaseRequest.Sum(x =>
+                    (Convert.ToDecimal(x.Quantity) * Convert.ToDecimal(x.UnitPrice)));
+
+                    if (totalPrice > totalPriceRequest)
                     {
-                        message = $"Số lượng phải lớn hơn 0 (dòng {detail.STT})";
-                        errorMessage = message;
+                        message = $@"Tổng Thành tiền không được lớn hơn tổng Thành tiền duyệt mua ({totalPriceRequest.ToString("n2")}). 
+                                Vui lòng kiểm tra lại!";
                         return false;
+                    }
+                }
+                else
+                {
+                    foreach (var item in lstPONCCDetail)
+                    {
+                        int purchaseRequestId = Convert.ToInt32(item.ProjectPartlistPurchaseRequestID);
+                        ProjectPartlistPurchaseRequest purchaseRequest = _prjPartListRepo.GetByID(purchaseRequestId);
+                        if (purchaseRequest == null || purchaseRequest.ID <= 0) continue;
+
+                        decimal unitPrice = Convert.ToDecimal(item.UnitPrice);
+                        int stt = Convert.ToInt32(item.STT);
+
+                        if (unitPrice > purchaseRequest.UnitPrice)
+                        {
+                            message = $"Đơn giá mua không được lớn hơn đơn giá duyệt mua.\nVui lòng kiểm tra lại (Stt: {stt})";
+                            return false;
+                        }
                     }
                 }
             }
 
-            // Kiểm tra lý do không đạt chất lượng
-            if (pONCCDTO.OrderQualityNotMet == true && string.IsNullOrWhiteSpace(pONCCDTO.ReasonForFailure))
-            {
-                message = "Vui lòng nhập lý do không đạt chất lượng!";
-                errorMessage = message;
-                return false;
-            }
+            //check lại sau 
+            //if (chkOrderQualityNotMet.Checked && string.IsNullOrWhiteSpace(txtReasonForFailure.Text))
+            //{
+            //    MessageBox.Show($"Vui lòng nhập lý do không đạt chất lượng!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+            //    return false;
+            //}
 
-            errorMessage = message;
             return true;
         }
 
-        public bool ValidateApproved(PONCC poncc, out string errorMessage)
+        public bool ValidateApproved(PONCC poncc, out string message)
         {
-            string message = "";
+            message = "";
 
             if (poncc == null || poncc.ID <= 0)
             {
                 message = "Không tìm thấy thông tin PO!";
-                errorMessage = message;
+
                 return false;
             }
-
-            errorMessage = message;
             return true;
         }
 
-        public bool ValidateDelete(PONCC poncc, out string errorMessage)
+        public bool ValidateDelete(PONCC poncc, out string message)
         {
-            string message = "";
+            message = "";
 
             if (poncc == null || poncc.ID <= 0)
             {
                 message = "Không tìm thấy thông tin PO!";
-                errorMessage = message;
+
                 return false;
             }
 
@@ -202,11 +235,11 @@ namespace RERPAPI.Repo.GenericEntity
             if (poncc.IsApproved == true)
             {
                 message = "PO đã được duyệt, không thể xóa!";
-                errorMessage = message;
+
                 return false;
             }
 
-            errorMessage = message;
+
             return true;
         }
 
