@@ -75,13 +75,12 @@ namespace RERPAPI.Controllers.Old.TB
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [HttpGet("get-productRTC-group")]
-        public IActionResult GetAll()
+        [HttpGet("get-productRTC-group/{warehouseType}")]
+        public IActionResult GetAll(int warehouseType = 1)
         {
             try
             {
-                List<ProductGroupRTC> productGroup = _productGroupRTCRepo
-                    .GetAll();
+                List<ProductGroupRTC> productGroup = _productGroupRTCRepo.GetAll(x => x.WarehouseType == warehouseType);
                 //.Where(x => x.IsDeleted == false)
                 //.ToList();
 
