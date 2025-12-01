@@ -2143,23 +2143,37 @@ namespace RERPAPI.Controllers.Project
 
         #region cây thư mục 
         [HttpGet("open/{projectId}")]
-        public IActionResult OpenProjectFolder(int projectID)
+        public IActionResult OpenProjectFolder(int projectId)
         {
             try
             {
-                var project = projectRepo.GetByID(projectID);
+                var project = projectRepo.GetByID(projectId);
                 if (project == null)
-                    return NotFound(new { success = false, message = "Không tìm thấy dự án" });
+                    return NotFound(ApiResponseFactory.Fail(null,"Không tìm thấy dự án"));
 
                 int year = project.CreatedDate.Value.Year;
 
-                string url = $"/api/share/software/duan/projects/{year}/{project.ProjectCode}";
+                string basePath = Path.Combine(
+                    @"\\192.168.1.190\duan",
+                    "projects",
+                    year.ToString(),
+                    project.ProjectCode
+                );
 
-                return Ok(ApiResponseFactory.Success(url, "Lấy đường dẫn"));
+                // KIỂM TRA THƯ MỤC CÓ TỒN TẠI KHÔNG
+                if (!Directory.Exists(basePath))
+                {
+                    return Ok(ApiResponseFactory.Fail(null,"Thư mục dự án chưa tồn tại trên server"));
+                }
+
+                // Nếu có tồn tại thì trả URL để FE mở
+                string url = $"/api/share/duan/projects/{year}/{project.ProjectCode}";
+
+                return Ok(ApiResponseFactory.Success(url, "Lấy đường dẫn thành công"));
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex,ex.Message));
             }
         }
         #endregion
