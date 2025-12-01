@@ -1,4 +1,5 @@
 ﻿using DocumentFormat.OpenXml.Office.CustomUI;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
@@ -9,13 +10,14 @@ namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ProjectCurrentSituationController : ControllerBase
     {
         private readonly ProjectCurrentSituationRepo _projectCurrentSituationRepo;
         public ProjectCurrentSituationController(
           ProjectCurrentSituationRepo projectCurrentSituation)
         {
-             _projectCurrentSituationRepo=projectCurrentSituation;
+            _projectCurrentSituationRepo = projectCurrentSituation;
         }
 
         [HttpGet("get-data")]
@@ -25,7 +27,7 @@ namespace RERPAPI.Controllers.Project
             {
                 var projectCurrentSituation = SQLHelper<object>.ProcedureToList("spGetProjectCurrentSituation",
                     new string[] { "@ProjectID" }, new object[] { projectID });
-                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(projectCurrentSituation,0), "Lấy dữu liệu thành công"));
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(projectCurrentSituation, 0), "Lấy dữu liệu thành công"));
             }
             catch (Exception ex)
             {
@@ -60,5 +62,20 @@ namespace RERPAPI.Controllers.Project
 
         }
 
+        [HttpGet("get-data-by-projectID")]
+        public async Task<IActionResult> GetDataByprojectID(int projectID)
+        {
+            var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+            var currentUser = ObjectMapper.GetCurrentUser(claims);
+            try
+            {
+                var data = _projectCurrentSituationRepo.GetAll(x=>x.ProjectID == projectID && x.EmployeeID == currentUser.EmployeeID).OrderByDescending(x=>x.DateSituation).FirstOrDefault();
+                return Ok(ApiResponseFactory.Success(data, "Lấy dữu liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 }

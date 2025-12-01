@@ -1,5 +1,7 @@
+using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
@@ -51,10 +53,10 @@ namespace RERPAPI.Controllers.Old
                 status = status ?? 0;
                 departmentid = departmentid ?? 0;
                 keyword = string.IsNullOrWhiteSpace(keyword) ? "" : keyword;
-                var employees = SQLHelper<object>.ProcedureToList("spGetEmployee",
+                var data = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
                                                 new string[] { "@Status", "@DepartmentID", "@Keyword" },
-                                                new object[] { status, departmentid, keyword });
-                var data = SQLHelper<object>.GetListData(employees, 0);
+                                                new object[] { status, departmentid, keyword ?? "" });
+              
 
                 return Ok(ApiResponseFactory.Success(data, ""));
 
@@ -64,6 +66,28 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        //[HttpGet("")]
+        ////[RequiresPermission("N42")]
+        //public IActionResult GetEmployee(int? status, int? departmentid, string? keyword)
+        //{
+        //    try
+        //    {
+        //        status = status ?? 0;
+        //        departmentid = departmentid ?? 0;
+        //        keyword = string.IsNullOrWhiteSpace(keyword) ? "" : keyword;
+        //        var data = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
+        //                                        new string[] { "@Status", "@DepartmentID", "@Keyword" },
+        //                                        new object[] { status, departmentid, keyword ?? "" });
+
+
+        //        return Ok(ApiResponseFactory.Success(data, ""));
+
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
         [HttpGet("get-employees")]
         //[RequiresPermission("N42")]
         public IActionResult GetEmployees(int? status)

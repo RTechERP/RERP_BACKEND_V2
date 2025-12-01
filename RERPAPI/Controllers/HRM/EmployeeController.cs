@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
+using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
+using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
@@ -12,51 +15,79 @@ namespace RERPAPI.Controllers.HRM
     [Authorize]
     public class EmployeeController : ControllerBase
     {
+        private readonly IConfiguration _configuration;
         private readonly EmployeeRepo _employeeRepo;
+        vUserGroupLinksRepo _vUserGroupLinksRepo;
+        private CurrentUser _currentUser;
 
-        public EmployeeController(EmployeeRepo employeeRepo)
+        public EmployeeController(EmployeeRepo employeeRepo, vUserGroupLinksRepo vUserGroupLinksRepo, IConfiguration configuration)
         {
             _employeeRepo = employeeRepo;
+            _vUserGroupLinksRepo = vUserGroupLinksRepo;
+            _configuration = configuration;
         }
 
-        //[HttpGet("employees")]
-        //[RequiresPermission("N42")]
-        //public IActionResult GetAll()
-        //{
-        //    try
-        //    {
-        //        List<Employee> employees = employeeRepo.GetAll();
-        //        return Ok(new
-        //        {
-        //            status = 1,
-        //            data = employees
-        //        });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return Ok(new
-        //        {
-        //            status = 0,
-        //            message = ex.Message,
-        //            error = ex.ToString()
-        //        });
-        //    }
-        //}
-
+  
 
         [HttpGet("employees")]
         public IActionResult GetEmployee(int? status, int? departmentid, string? keyword)
         {
             try
             {
-                status = status ?? 0;
+               
                 departmentid = departmentid ?? 0;
                 keyword = string.IsNullOrWhiteSpace(keyword) ? "" : keyword;
-                var employees = SQLHelper<object>.ProcedureToList("spGetEmployee",
-                                                new string[] { "@Status", "@DepartmentID", "@Keyword" },
-                                                new object[] { status, departmentid, keyword });
-                var data = SQLHelper<object>.GetListData(employees, 0);
+                status = status ?? 0;
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                object data;
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x =>(x.Code == "N1" || x.Code == "N2" || x.Code == "N60") &&x.UserID == currentUser.ID);
+                if (vUserHR == null)
+                {
+                     data = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
+                                                 new string[] { "@Status", "@DepartmentID", "@Keyword" },
+                                                 new object[] { status, departmentid, keyword ?? "" });
+                }
+                else
+                {
+                    var employee = SQLHelper<object>.ProcedureToList("spGetEmployee",
+                                               new string[] { "@Status", "@DepartmentID", "@Keyword" },
+                                               new object[] { status, departmentid, keyword });
+                      data = SQLHelper<object>.GetListData(employee, 0);
+                }    
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
 
+        [HttpGet("")]
+        public IActionResult GetEmployees(int? status, int? departmentid, string? keyword)
+        {
+            try
+            {
+                departmentid = departmentid ?? 0;
+                keyword = string.IsNullOrWhiteSpace(keyword) ? "" : keyword;
+                status = status ?? 0;
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                object data;
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x => (x.Code == "N1" || x.Code == "N2" || x.Code == "N60") && x.UserID == currentUser.ID);
+                if (vUserHR == null)
+                {
+                    data = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
+                                                new string[] { "@Status", "@DepartmentID", "@Keyword" },
+                                                new object[] { status, departmentid, keyword ?? "" });
+                }
+                else
+                {
+                    var employee = SQLHelper<object>.ProcedureToList("spGetEmployee",
+                                               new string[] { "@Status", "@DepartmentID", "@Keyword" },
+                                               new object[] { status, departmentid, keyword });
+                    data = SQLHelper<object>.GetListData(employee, 0);
+                }
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)

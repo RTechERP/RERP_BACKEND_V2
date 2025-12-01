@@ -4,7 +4,7 @@ using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using static RERPAPI.Controllers.Old.EmployeeController;
+using static RERPAPI.Controllers.HRM.EmployeeController;
 
 namespace RERPAPI.Controllers.Old
 {

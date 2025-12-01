@@ -1,16 +1,21 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using NPOI.HSSF.Record.Chart;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
+using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using System.Data;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
 
     // [ApiKeyAuthorize]
     public class ProjectController : ControllerBase
@@ -502,6 +507,8 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
                 int[] typeCheck = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
                 List<int> projectTypeIDs = projectTypeRepo.GetAll().Select(x => x.ID).ToList();
 
@@ -536,7 +543,7 @@ namespace RERPAPI.Controllers.Project
                     new object[] {
                         size, page, dateTimeS, dateTimeE, keyword ?? "", customerID, saleID, projectType, leaderID,
                         userTechID, pmID, typeCheck[0] ,typeCheck[1] ,typeCheck[2] ,typeCheck[3] ,typeCheck[4] ,typeCheck[5]
-                        ,typeCheck[6] ,typeCheck[7] ,typeCheck[8], globalUserID, bussinessFieldID, projectStatus
+                        ,typeCheck[6] ,typeCheck[7] ,typeCheck[8], currentUser.ID, bussinessFieldID, projectStatus
                     });
 
                 //var projects = SQLHelper<object>.ProcedureToList("spGetProject",
@@ -774,8 +781,8 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                var employees = SQLHelper<object>.ProcedureToList("spGetEmployee", new string[] { "@DepartmentID", "@Status" }, new object[] { departmentID, 0 });
-                var data = SQLHelper<object>.GetListData(employees, 0);
+                var data = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee", new string[] { "@DepartmentID", "@Status" }, new object[] { departmentID, 0 });
+               
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
@@ -1195,9 +1202,11 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                var employees = SQLHelper<object>.ProcedureToList("spGetEmployee", new string[] { "@Status" }, new object[] { status });
-                var employee = SQLHelper<object>.GetListData(employees, 0);
-                return Ok(ApiResponseFactory.Success(employee, ""));
+          
+                var employees = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
+                                                new string[] { "@Status" },
+                                                new object[] { status });
+                return Ok(ApiResponseFactory.Success(employees, ""));
             }
             catch (Exception ex)
             {
@@ -1545,12 +1554,15 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
+
                 if (prjTypeLink.ProjectID > 0)
                 {
+                    //update trạng thái dự án 
                     Model.Entities.Project project = projectRepo.GetByID(prjTypeLink.ProjectID);
                     project.ProjectStatus = prjTypeLink.ProjectStatus;
                     projectRepo.Update(project);
 
+                    //update leader kiểu dự án
                     if (prjTypeLink.prjTypeLinks.Count() > 0)
                     {
                         foreach (var item in prjTypeLink.prjTypeLinks)
@@ -1565,6 +1577,7 @@ namespace RERPAPI.Controllers.Project
                         }
                     }
 
+                    //update hiện trạng dự án
                     if (!string.IsNullOrWhiteSpace(prjTypeLink.Situlator))
                     {
                         ProjectCurrentSituation situation = new ProjectCurrentSituation();
@@ -1573,6 +1586,48 @@ namespace RERPAPI.Controllers.Project
                         situation.DateSituation = DateTime.Now;
                         situation.ContentSituation = prjTypeLink.Situlator;
                         projectCurrentSituationRepo.Create(situation);
+                    }
+                    // Thêm dữ liệu vào bảng người tham gia
+                    foreach (var item in prjTypeLink.prjTypeLinks)
+                    {
+             
+                        if (item.LeaderID <= 0)
+                            continue;
+
+                        int projectTypeID = item.ID; 
+
+                        // Kiểm tra xem người này đã tồn tại trong ProjectEmployee chưa
+                        var projectEmployee = projectEmployeeRepo.GetAll(
+                            x => x.ProjectID == prjTypeLink.ProjectID
+                            && x.EmployeeID == item.LeaderID
+                            && x.ProjectTypeID == projectTypeID
+                            && x.IsDeleted != true
+                        ).FirstOrDefault();
+
+                        ProjectEmployee model = projectEmployee ?? new ProjectEmployee();
+
+                        // Gán dữ liệu
+                        model.ProjectID = prjTypeLink.ProjectID;
+                        model.EmployeeID = item.LeaderID;
+                        model.ProjectTypeID = projectTypeID;
+                        model.IsLeader = true;
+
+                        // update hoặc insert
+                        if (model.ID > 0)
+                        {
+                            await projectEmployeeRepo.UpdateAsync(model);
+                        }
+                        else
+                        {
+                            var count = projectEmployeeRepo.GetAll(
+                                x => x.ProjectID == prjTypeLink.ProjectID
+                                && x.IsDeleted != true
+                            ).Count();
+
+                            model.STT = count + 1;
+
+                            await projectEmployeeRepo.CreateAsync(model);
+                        }
                     }
                 }
 
@@ -2025,6 +2080,23 @@ namespace RERPAPI.Controllers.Project
                 ));
             }
             catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-project-id")]
+        public async Task<IActionResult> GetDataByID(int id)
+        {
+            try
+            {
+                var data = projectRepo.GetByID(id);
+                return Ok(ApiResponseFactory.Success(
+                  data,
+                   "Lấy dữ liệu thành công"
+               ));
+
+            }
+            catch(Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
@@ -8,6 +9,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class InventoryController : ControllerBase
     {
         private readonly InventoryRepo _inventoryRepo;
@@ -45,15 +47,19 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         //    }
         //}
         [HttpPost("get-inventory-pagination")]
-
         public IActionResult GetInventory(InventoryPram filter)
         {
             try
             {
 
                 if (filter.checkAll == true) filter.productGroupID = 0;
+                //List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
+                //       "spGetInventory_Pagination", new string[] { "@ID", "@Find", "@WarehouseCode", "@IsStock", "@PageSize", "@PageNumber" },
+                //    new object[] { filter.productGroupID, filter.Find, filter.WarehouseCode, filter.IsStock == false ? 0 : 1, filter.PageSize, filter.PageNumber }
+                //   );
+                
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
-                       "spGetInventory_Pagination", new string[] { "@ID", "@Find", "@WarehouseCode", "@IsStock", "@PageSize", "@PageNumber" },
+                       "spGetInventory", new string[] { "@ID", "@Find", "@WarehouseCode", "@IsStock", "@PageSize", "@PageNumber" },
                     new object[] { filter.productGroupID, filter.Find, filter.WarehouseCode, filter.IsStock == false ? 0 : 1, filter.PageSize, filter.PageNumber }
                    );
                 return Ok(new

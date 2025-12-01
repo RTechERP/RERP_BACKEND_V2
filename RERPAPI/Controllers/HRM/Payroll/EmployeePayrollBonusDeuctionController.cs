@@ -10,7 +10,7 @@ namespace RERPAPI.Controllers.Old
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    [RequiresPermission("N2,N1")]
+    
     public class EmployeePayrollBonusDeuctionController : Controller
     {
         EmployeePayrollBonusDeuctionRepo _employeePayrollBonusDeuctionRepo;
@@ -21,6 +21,7 @@ namespace RERPAPI.Controllers.Old
             _employeeRepo = employeeRepo;
         }
         [HttpGet("employee-payroll-bonus-deduction")]
+        [RequiresPermission("N2,N1")]
         public async Task<IActionResult> getemployeepayrollbonusdeduction(int? year, int? month, int page, int size, int departmentID, int employeeID, string? keyword)
         {
             try
@@ -46,6 +47,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet("employee-payroll-bonus-deduction-delete-id")]
+        [RequiresPermission("N2,N1")]
         public async Task<IActionResult> employeepayrollbonusdeductiondeleteid(int ID)
         {
             try
@@ -62,6 +64,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet("check-employee-payroll-bonus-deduction")]
+        [RequiresPermission("N2,N1")]
         public async Task<IActionResult> checkemployeepayrollbonusdeduction(int? year, int? month, int? employeeId)
         {
             try
@@ -78,6 +81,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost("save-employee-payroll-bonus-deduction")]
+        [RequiresPermission("N2,N1")]
         public async Task<IActionResult> saveemployeepayrollbonusdeuction([FromBody] EmployeePayrollBonusDeuction obj)
         {
             try
@@ -100,6 +104,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost("import-excel-payroll-bonusde-duction")]
+        [RequiresPermission("N2,N1")]
         public IActionResult importexcelpayrollbonusdeduction([FromBody] List<Dictionary<string, object>> payrollbonusdeduction, [FromQuery] int month, int year)
         {
             try

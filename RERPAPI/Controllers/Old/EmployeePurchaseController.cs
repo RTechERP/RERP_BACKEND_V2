@@ -1,7 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers
 {
@@ -63,15 +66,15 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                var employees = SQLHelper<object>.ProcedureToList("spGetEmployee",
-                                                new string[] { "@Status" },
-                                                new object[] { 0 });
-
+            
+                var employees = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
+                                                new string[] { "@Status"},
+                                                new object[] {0 });
 
                 return Ok(new
                 {
                     status = 1,
-                    data = SQLHelper<object>.GetListData(employees, 0)
+                    data = employees
                 });
 
             }
