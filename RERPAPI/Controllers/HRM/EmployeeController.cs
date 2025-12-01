@@ -130,35 +130,5 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-        [HttpGet("get-employees")]
-        public IActionResult GetEmployees(int? status)
-        {
-            try
-            {
-                status = status ?? 0;
-
-                var employees = SQLHelper<object>.ProcedureToList(
-                    "spGetEmployee",
-                    new string[] { "@Status" },
-                    new object[] { status }
-                );
-
-                var list = SQLHelper<object>.GetListData(employees, 0)
-                    .Select(x => new EmployeeViewPOKHDTO
-                    {
-                        ID = Convert.ToInt32(x.GetType().GetProperty("ID")?.GetValue(x, null)),
-                        FullName = x.GetType().GetProperty("FullName")?.GetValue(x, null)?.ToString()
-                    })
-                    .ToList();
-
-                return Ok(ApiResponseFactory.Success(list, ""));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
     }
 }

@@ -26,12 +26,14 @@ namespace RERPAPI.Controllers.Old.TB
             ProductGroupRTCRepo productGroupRTCRepo,
             ProductRTCRepo productRTCRepo,
             ProductLocationRepo productLocationRepo,
-            ConfigSystemRepo configSystemRepo)
+            ConfigSystemRepo configSystemRepo, FirmRepo firmRepo, LocationRepo locationRepo)
         {
             _productGroupRTCRepo = productGroupRTCRepo;
             _productRTCRepo = productRTCRepo;
             _productLocationRepo = productLocationRepo;
             config = configSystemRepo;
+            _firmRepo = firmRepo;
+            _locationRepo = locationRepo;
         }
 
 
