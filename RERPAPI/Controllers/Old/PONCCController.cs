@@ -11,6 +11,7 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
+using RERPAPI.Model.Param.HRM.VehicleManagement;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.DocumentManager;
 using System.Threading.Tasks;
@@ -21,7 +22,7 @@ namespace RERPAPI.Controllers.Old
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+ 
     public class PONCCController : ControllerBase
     {
         PONCCRepo _pONCCRepo;
@@ -499,6 +500,29 @@ namespace RERPAPI.Controllers.Old
             catch (Exception ex)
             {
                 BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        #endregion
+        #region Lương Update lấy tổng hợp PO NCC
+        //Lấy danh tổng hợp PO NCC
+        [HttpPost("get-po-ncc-summary")]
+        public IActionResult GetPONCCSummary([FromBody] PONCCSummaryRequestParam request)
+        {
+            try
+            {
+                var firstDay = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+                var lastDay = firstDay.AddMonths(1).AddDays(-1);
+                string procedureName = "sp_GetAllPONCC";
+                string[] paramNames = new string[] { "@FilterText", "@DateStart", "@DateEnd", "@SupplierID", "@Status", "@EmployeeID" };
+                object[] paramValues = new object[] { request.FilterText, request.DateStart ?? firstDay, request.DateEnd ?? lastDay, request.SupplierID , request.Status, request.EmployeeID};
+                var data = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
+                var propose = SQLHelper<object>.GetListData(data, 0);
+             
+                return Ok(ApiResponseFactory.Success(propose, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         #endregion

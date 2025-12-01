@@ -4,6 +4,7 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.Project;
 using System.Diagnostics;
 
 namespace RERPAPI.Controllers.Project
@@ -456,7 +457,7 @@ namespace RERPAPI.Controllers.Project
 
         #endregion
         #region Lưu nội dung kết quả khảo sát dự án
-        [HttpPost("save-project-survey-result")]
+        [HttpPost("save-project-survey-results")]
         public async Task<IActionResult> saveprojectsurveyresult([FromForm] int projectSurveyId, [FromForm] int projectId, [FromForm] int projectSurveyDetailId, [FromForm] string result,
             [FromForm] int projectTypeId, [FromForm] List<IFormFile> files)
         {
@@ -562,7 +563,46 @@ namespace RERPAPI.Controllers.Project
         }
         #endregion
 
+        [HttpPost("save-project-survey-result")]
+        public async Task<IActionResult> saveprojectsurveyresult2([FromBody] ProjectSurveyResultDTO request)
+        {
+            try
+            {
+                ProjectSurveyDetail modelDetail = projectSurveyDetailRepo.GetByID(request.projectSurveyDetailId);
+                modelDetail.Result = request.result;
+                await projectSurveyDetailRepo.UpdateAsync(modelDetail);
+                if (request.file?.Count > 0)
+                {
+                    foreach (var item in request.file)
+                    {
+                        if (item.ID > 0)
+                        {
 
+                            await projectSurveyFileRepo.UpdateAsync(item);
+                        }
+                        else
+                        {
+                            item.ProjectSurveyDetailID = request.projectSurveyDetailId;
+                            await projectSurveyFileRepo.CreateAsync(item);
+                        }
+                    }
+                }
+                if (request.deletedFileID?.Count > 0)
+                {
+                    foreach (var item in request.deletedFileID)
+                    {
+                        var data = projectSurveyFileRepo.GetByID(item);
+                        data.IsDeleted = true;
+                        await projectSurveyFileRepo.UpdateAsync(data);
+                    }
+                }
+                return Ok(ApiResponseFactory.Success(1, "Cập nhật kết quả khảo sát thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
 
     }
 }

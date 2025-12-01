@@ -73,13 +73,12 @@ namespace RERPAPI.Controllers.Old.TB
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [HttpGet("get-productRTC-group")]
-        public IActionResult GetAll()
+        [HttpGet("get-productRTC-group/{warehouseType}")]
+        public IActionResult GetAll(int warehouseType = 1)
         {
             try
             {
-                List<ProductGroupRTC> productGroup = _productGroupRTCRepo
-                    .GetAll();
+                List<ProductGroupRTC> productGroup = _productGroupRTCRepo.GetAll(x => x.WarehouseType == warehouseType);
                 //.Where(x => x.IsDeleted == false)
                 //.ToList();
 
@@ -305,26 +304,26 @@ namespace RERPAPI.Controllers.Old.TB
                                 // --- Kiểm tra trùng mã sản phẩm ---
                                 if (_productRTCRepo.checkExistProductCodeRTC(item))
                                 {
-                                    skippedCodes.Add(item.ProductCode ?? "N/A");
+                                    skippedCodes.Add("Mã sản phẩm:" + item.ProductCode ?? "N/A");
                                     failCount++;
                                     continue;
                                 }
 
-                                // --- Kiểm tra trùng Serial ---
-                                if (_productRTCRepo.checkExistSerialRTC(item))
-                                {
-                                    skippedCodes.Add(item.SerialNumber ?? "Serial N/A");
-                                    failCount++;
-                                    continue;
-                                }
+                                //// --- Kiểm tra trùng Serial ---
+                                //if (_productRTCRepo.checkExistSerialRTC(item))
+                                //{
+                                //    skippedCodes.Add("SerialNumber:" + item.SerialNumber ?? "Serial N/A");
+                                //    failCount++;
+                                //    continue;
+                                //}
 
-                                // --- Kiểm tra trùng Partnumber ---
-                                if (_productRTCRepo.checkExistPartnumberRTC(item))
-                                {
-                                    skippedCodes.Add(item.PartNumber ?? "Partnumber N/A");
-                                    failCount++;
-                                    continue;
-                                }
+                                //// --- Kiểm tra trùng Partnumber ---
+                                //if (_productRTCRepo.checkExistPartnumberRTC(item))
+                                //{
+                                //    skippedCodes.Add("PartNumber:" + item.PartNumber ?? "Partnumber N/A");
+                                //    failCount++;
+                                //    continue;
+                                //}
                                 if (item.FirmID <= 0)
                                 {
                                     continue;
@@ -362,7 +361,9 @@ namespace RERPAPI.Controllers.Old.TB
 
                 string message = $"Lưu thành công {successCount} bản ghi, thất bại {failCount} bản ghi.";
                 if (skippedCodes.Any())
-                    message += $" Các mã, SerialNumber, PartNumber bị bỏ qua (trùng): {string.Join(", ", skippedCodes)}.";
+                    message += $" Các Mã sản phẩm" +
+                        //$", SerialNumber, PartNumber" +
+                        $" bị bỏ qua (trùng): {string.Join(", ", skippedCodes)}.";
 
                 return Ok(ApiResponseFactory.Success(new
                 {
