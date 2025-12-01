@@ -1,4 +1,5 @@
 ﻿using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using RERPAPI.Model.Common;
@@ -11,13 +12,16 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class RequestInvoiceController : ControllerBase
     {
         private readonly RequestInvoiceRepo _requestInvoiceRepo;
+        private readonly POKHFilesRepo _pokhFileRepo;
 
-        public RequestInvoiceController(RequestInvoiceRepo requestInvoiceRepo)
+        public RequestInvoiceController(RequestInvoiceRepo requestInvoiceRepo, POKHFilesRepo pokhFileRepo)
         {
             _requestInvoiceRepo = requestInvoiceRepo;
+            _pokhFileRepo = pokhFileRepo;
         }
         [HttpGet]
         public IActionResult Get(DateTime dateStart, DateTime dateEnd, int warehouseId, string keyWords = "")
@@ -46,6 +50,35 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                     status = 1,
                     data = details, files
                 });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-request-invoice-by-id")]
+        public IActionResult GetRequestInvoiceByID(int id)
+        {
+            try
+            {
+                var data = _requestInvoiceRepo.GetByID(id);
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
+        [HttpGet("get-pokh-file")]
+        public IActionResult GetPOKHFile(int pokhId)
+        {
+            try
+            {
+                var data = _pokhFileRepo.GetAll(x=>x.POKHID == pokhId);
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {
