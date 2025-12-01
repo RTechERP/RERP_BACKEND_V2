@@ -94,7 +94,8 @@ namespace RERPAPI.Controllers.Old
                     {
                         t.ID,
                         t.RequestTypeName,
-                        t.RequestTypeCode
+                        t.RequestTypeCode,
+                        t.IsIgnoreBGD
                     })
                     .OrderBy(t => t.ID)
                     .ToList();
@@ -816,7 +817,7 @@ namespace RERPAPI.Controllers.Old
                         $"THIETKE.Co/{dt.CodeSolution.Trim()}/2D/GC/DH";
 
                     var pathStaticFile = _pathStaticFiles
-                        .FirstOrDefault(p => p.PathName.ToLower() == "project");
+                        .FirstOrDefault(p => p.PathName.ToLower() == "software");
 
                     string fullPath = pathStaticFile != null
                         ? Path.Combine(pathStaticFile.PathFull, pathPattern)
@@ -864,6 +865,23 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
+        [HttpPost("validate-add-poncc")]
+        [RequiresPermission("N35,N1")]
+        public async Task<IActionResult> ValidateAddPoncc([FromBody] List<ProjectPartlistPurchaseRequestDTO> data)
+        {
+            try
+            {
+                if (!_repo.ValidateRequestApproved(data, out string message))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, message));
+                }
 
+                return Ok(ApiResponseFactory.Success(null, $""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 }

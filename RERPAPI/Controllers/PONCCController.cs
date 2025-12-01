@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
@@ -11,6 +12,7 @@ namespace RERPAPI.Controllers
     [ApiController]
     public class PONCCController : ControllerBase
     {
+        private readonly RTCContext _context;
         PONCCRepo _ponccRepo;
         PONCCDetailRepo _ponccDetailRepo;
         PONCCRulePayRepo _ponccRulePayRepo;
@@ -20,8 +22,18 @@ namespace RERPAPI.Controllers
         PONCCDetailLogRepo _detailLogRepo;
         SupplierSaleRepo _supplierSaleRepo;
 
-        public PONCCController(PONCCRepo ponccRepo, PONCCDetailRepo ponccDetailRepo, PONCCRulePayRepo ponccRulePayRepo, DocumentImportPONCCRepo documentImportRepo, PONCCDetailRequestBuyRepo detailRequestBuyRepo, BillImportDetailRepo billImportDetailRepo, PONCCDetailLogRepo detailLogRepo, SupplierSaleRepo supplierSaleRepo)
+        public PONCCController(
+            RTCContext context,
+            PONCCRepo ponccRepo, 
+            PONCCDetailRepo ponccDetailRepo, 
+            PONCCRulePayRepo ponccRulePayRepo, 
+            DocumentImportPONCCRepo documentImportRepo, 
+            PONCCDetailRequestBuyRepo detailRequestBuyRepo, 
+            BillImportDetailRepo billImportDetailRepo, 
+            PONCCDetailLogRepo detailLogRepo, 
+            SupplierSaleRepo supplierSaleRepo)
         {
+            _context = context;
             _ponccRepo = ponccRepo;
             _ponccDetailRepo = ponccDetailRepo;
             _ponccRulePayRepo = ponccRulePayRepo;
@@ -40,8 +52,8 @@ namespace RERPAPI.Controllers
             {
                 var dt = SQLHelper<dynamic>.ProcedureToList("spGetPONCC_Khanh", ["@FilterText", "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@SupplierID", "@Status", "@EmployeeID"], [param.Keywords, param.Page, param.Size, param.DateStart, param.DateEnd, param.SupplierSaleID, param.Status, param.EmployeeID]);
                 var dtAll = SQLHelper<dynamic>.GetListData(dt, 0);
-                var dtCommercial = dtAll.Select(x => x.POType == 0).ToList();
-                var dtPOBorrow = dtAll.Select(x => x.POType == 1).ToList();
+                var dtCommercial = dtAll.Where(x => x.POType == 0).ToList();
+                var dtPOBorrow = dtAll.Where(x => x.POType == 1).ToList();
                 int totalPage = dt[1][0].TotalPage;
                 return Ok(ApiResponseFactory.Success(new
                 {
