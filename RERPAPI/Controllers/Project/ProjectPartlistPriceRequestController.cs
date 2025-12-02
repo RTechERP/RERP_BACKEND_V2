@@ -1,11 +1,9 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.Project
 {
@@ -64,31 +62,27 @@ namespace RERPAPI.Controllers.Project
         /// <param name="size"></param>
         /// <returns></returns>
         [HttpGet("get-all-project-parList-price-request")]
-        public async Task<IActionResult> GetAll(DateTime dateStart, DateTime dateEnd, int statusRequest, int projectId, string? keyword,
-            int isDeleted, int projectTypeID, int poKHID, int isCommercialProduct = -1, int page = 1, int size = 25)
+        public async Task<IActionResult> GetAll(DateTime dateStart, DateTime dateEnd, int statusRequest, int projectId, string? keyword, int employeeID,
+            int isDeleted, int projectTypeID, int poKHID, int isJobRequirement = -1, int projectPartlistPriceRequestTypeID = -1, int isCommercialProduct = -1, int page = 1, int size = 25)
         {
-            if (projectTypeID < 0) isCommercialProduct = 1;
-            else poKHID = 0;
-            int isJobRequirement = -1;
-            int projectPartlistPriceRequestTypeID = -1;
+            keyword = string.IsNullOrWhiteSpace(keyword) ? null : keyword.Trim();
 
-
-            if (projectTypeID == 3)
-            {
-                isJobRequirement = 1;
-            }
-
-
-            List<List<dynamic>> dtPriceRequest = SQLHelper<dynamic>.ProcedureToList("spGetProjectPartlistPriceRequest_New",
-                                                                          new string[] {
-                                                                  "@DateStart", "@DateEnd", "@StatusRequest", "@ProjectID", "@Keyword", "@IsDeleted",
-                                                                  "@ProjectTypeID", "@IsCommercialProduct","@IsJobRequirement","@ProjectPartlistPriceRequestTypeID", "@POKHID", "@PageNumber", "@PageSize"
-                                                                          },
-                                                                          new object[] {
-                                                                  dateStart, dateEnd, statusRequest, projectId, keyword, isDeleted,
-                                                                  projectTypeID, isCommercialProduct,isJobRequirement,projectPartlistPriceRequestTypeID, poKHID, page, size
-                                                                          }
-                                                                        );
+            List<List<dynamic>> dtPriceRequest = SQLHelper<dynamic>.ProcedureToList(
+                //"spGetProjectPartlistPriceRequest_New_Nhat",
+                "spGetProjectPartlistPriceRequest_New",
+                new string[] {
+                    "@DateStart", "@DateEnd", "@StatusRequest", "@ProjectID", "@Keyword", "@IsDeleted",
+                    "@ProjectTypeID", "@IsCommercialProduct", "@IsJobRequirement",
+                    "@ProjectPartlistPriceRequestTypeID", "@POKHID",
+                    "@PageNumber", "@PageSize", "@EmployeeID"
+                },
+                new object[] {
+                    dateStart, dateEnd, statusRequest, projectId, keyword, isDeleted,
+                    projectTypeID, isCommercialProduct, isJobRequirement,
+                    projectPartlistPriceRequestTypeID, poKHID,
+                    page, size, employeeID
+                }
+            );
 
             var data = SQLHelper<dynamic>.GetListData(dtPriceRequest, 0);
             int totalPages = 1;
@@ -106,6 +100,30 @@ namespace RERPAPI.Controllers.Project
                     totalPages
                 }
             });
+        }
+        [HttpGet("get-partlist")]
+        public IActionResult GetProjectPartlists(DateTime dateStart, DateTime dateEnd, int statusRequest, int projectId, string? keyword,
+            int isDeleted, int projectTypeID, int poKHID, int isCommercialProduct = -1)
+        {
+            try
+            {
+                if (projectTypeID < 0) isCommercialProduct = 1;
+                else poKHID = 0;
+                int isJobRequirement = -1;
+                int projectPartlistPriceRequestTypeID = -1;
+                var dt = SQLHelper<dynamic>.ProcedureToList("spGetProjectPartlistPriceRequest_New",
+                                                                              new string[] {
+                                                                  "@DateStart", "@DateEnd", "@StatusRequest", "@ProjectID", "@Keyword", "@IsDeleted",
+                                                                  "@ProjectTypeID", "@IsCommercialProduct","@IsJobRequirement","@ProjectPartlistPriceRequestTypeID", "@POKHID" }, new object[] { dateStart, dateEnd, statusRequest, projectId, keyword, isDeleted, projectTypeID, isCommercialProduct, isJobRequirement, projectPartlistPriceRequestTypeID, poKHID });
+
+
+                var data = SQLHelper<dynamic>.GetListData(dt, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
         }
         #endregion
         [HttpGet("get-type")]
@@ -135,10 +153,10 @@ namespace RERPAPI.Controllers.Project
         [HttpGet("get-all-employee")]
         public async Task<IActionResult> GetAllEmployee()
         {
-         
+
             var employees = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
                                             new string[] { "@Status" },
-                                            new object[] {0});
+                                            new object[] { 0 });
             return Ok(new { status = 1, data = new { dtEmployee = employees } });
         }
         [HttpGet("get-po-code")]
@@ -827,28 +845,28 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-            [HttpPost("save-request-note")]
-            public async Task<IActionResult> SaveDataPriceRequestNote([FromBody] List<ProjectPartlistPriceRequestNote> notes)
+        [HttpPost("save-request-note")]
+        public async Task<IActionResult> SaveDataPriceRequestNote([FromBody] List<ProjectPartlistPriceRequestNote> notes)
+        {
+            try
             {
-                try
+                foreach (var note in notes)
                 {
-                    foreach (var note in notes)
+                    if (note.ID > 0)
                     {
-                        if (note.ID > 0)
-                        {
-                            await projectPartlistPriceRequestNoteRepo.UpdateAsync(note);
-                        }
-                        else
-                        {
-                            await projectPartlistPriceRequestNoteRepo.CreateAsync(note);
-                        }
+                        await projectPartlistPriceRequestNoteRepo.UpdateAsync(note);
                     }
-                    return Ok(ApiResponseFactory.Success(notes, "Lưu ghi chú thành công!"));
+                    else
+                    {
+                        await projectPartlistPriceRequestNoteRepo.CreateAsync(note);
+                    }
                 }
-                catch (Exception ex)
-                {
-                    return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-                }
+                return Ok(ApiResponseFactory.Success(notes, "Lưu ghi chú thành công!"));
             }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 }

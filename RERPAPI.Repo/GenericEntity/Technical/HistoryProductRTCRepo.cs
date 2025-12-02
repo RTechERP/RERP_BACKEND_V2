@@ -17,7 +17,7 @@ namespace RERPAPI.Repo.GenericEntity.Technical
             HistoryProductRTC historyProductRTC = GetByID(item.HistoryProductRTCID);
             if (historyProductRTC.ID <= 0 && item.Status == 7)
             {
-                ProductRTCQRCode qrCode = _productRTCQRCodeRepo.GetAll().FirstOrDefault(x => x.ProductQRCode == productQRCode.Trim()) ?? new ProductRTCQRCode();
+                ProductRTCQRCode qrCode = _productRTCQRCodeRepo.GetAll(x => x.ProductQRCode == productQRCode.Trim()).FirstOrDefault() ?? new ProductRTCQRCode();
                 historyProductRTC = new HistoryProductRTC()
                 {
                     ProductRTCID = item.ProductRTCID, //Nhập từ web

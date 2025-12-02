@@ -8,5 +8,6 @@ namespace RERPAPI.Model.DTO
         public List<BillImportDetailDTO>? billImportDetail { get; set; }
         public List<int>? DeletedDetailIDs { get; set; }
         public List<DocumentImportPONCC>? billDocumentImports { get; set; }
+        public int? pONCCID { get; set; }
     }
 }
