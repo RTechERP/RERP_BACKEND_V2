@@ -202,22 +202,27 @@ namespace RERPAPI.Controllers.Old
 
                 var toDelete = new List<dynamic>();
 
-                foreach (var row in data)
-                {
-                    if (!listDetailId.Contains(Convert.ToInt32(row.ID)))
-                    {
-                        data.Remove(row);
-                    }
-                }
+                //foreach (var row in data)
+                //{
+                //    if (!listDetailId.Contains(Convert.ToInt32(row.ID)))
+                //    {
+                //        data.Remove(row);
+                //    }
+                //}
+                data = data
+                    .Where(x => listDetailId.Contains(Convert.ToInt32(x.ID)))
+                    .ToList();
 
                 var listSale = data
                         .Where(row => row.SupplierSaleID != null && row.ProductGroupID != null)
-                        .Distinct()
+                        .GroupBy(x => new { x.SupplierSaleID, x.ProductGroupID })
+                        .Select(g => g.First())
                         .ToList();
 
                 var listDemo = data
                         .Where(row => row.SupplierSaleID != null && row.ProductGroupRTCID != null)
-                        .Distinct()
+                        .GroupBy(x => new { x.SupplierSaleID, x.ProductGroupRTCID })
+                        .Select(g => g.First())
                         .ToList();
 
                 List<BillImport> billImports = new List<BillImport>();
