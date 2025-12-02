@@ -8537,13 +8537,10 @@ public partial class RTCContext : DbContext
 
         modelBuilder.Entity<RequestInvoiceStatus>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("RequestInvoiceStatus");
+            entity.ToTable("RequestInvoiceStatus");
 
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-            entity.Property(e => e.ID).ValueGeneratedOnAdd();
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.StatusCode).HasMaxLength(225);
             entity.Property(e => e.StatusName).HasMaxLength(225);
@@ -8553,14 +8550,11 @@ public partial class RTCContext : DbContext
 
         modelBuilder.Entity<RequestInvoiceStatusLink>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("RequestInvoiceStatusLink");
+            entity.ToTable("RequestInvoiceStatusLink");
 
             entity.Property(e => e.AmendReason).HasMaxLength(500);
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-            entity.Property(e => e.ID).ValueGeneratedOnAdd();
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
