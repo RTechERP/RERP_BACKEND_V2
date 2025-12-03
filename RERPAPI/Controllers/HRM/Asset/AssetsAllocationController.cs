@@ -130,8 +130,8 @@ namespace RERPAPI.Controllers.Old.Asset
 
             try
             {
-                ExcelPackage.License.SetNonCommercialOrganization("");
-
+                ExcelPackage.License.SetNonCommercialOrganization("RTC");
+                    
                 //string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "BienBanBanGiao.xlsx");
 
                 var templateFolder = _configuration.GetValue<string>("PathTemplate");
