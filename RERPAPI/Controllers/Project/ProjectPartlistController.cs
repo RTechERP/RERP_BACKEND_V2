@@ -1159,7 +1159,7 @@ namespace RERPAPI.Controllers.Project
 
                 if (validIds.Count <= 0)
                 {
-                    return BadRequest(ApiResponseFactory.Fail(null, $"Các sản phẩm TT [{string.Join("; ", productNewCodes)}] sẽ không được yêu cầu xuất kho vì không đủ số lượng!"));
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Các sản phẩm TT [{string.Join(";  ", productNewCodes)}] sẽ không được yêu cầu xuất kho vì không đủ số lượng!"));
                 }
 
                 // Warning message nếu có sản phẩm không đủ số lượng
