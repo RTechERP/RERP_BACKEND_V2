@@ -871,7 +871,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                if (!_repo.ValidateRequestApproved(data, out string message))
+                if (!_repo.ValidateAddPoncc(data, out string message))
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, message));
                 }

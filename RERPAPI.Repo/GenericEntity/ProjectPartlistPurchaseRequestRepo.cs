@@ -93,6 +93,72 @@ namespace RERPAPI.Repo.GenericEntity
             return true;
         }
 
+        public bool ValidateAddPoncc(List<ProjectPartlistPurchaseRequestDTO> requests, out string message)
+        {
+            message = "";
+
+            if (requests == null || requests.Count <= 0)
+            {
+                message = "Dữ liệu không hợp lệ";
+                return false;
+            }
+
+            foreach (var request in requests)
+            {
+                if (request.ID <= 0)
+                    continue;
+
+                bool isTBPApproved = (bool)request.IsApprovedTBP;
+                int isBorrowProduct = request.TicketType ?? 0;
+
+                bool invalidRTC = request.ProductRTCID == null || request.ProductRTCID <= 0;
+                bool invalidSale = request.ProductSaleID == null || request.ProductSaleID <= 0;
+
+                if (invalidRTC && invalidSale)
+                {
+                    message = $"Vui lòng tạo Mã nội bộ cho sản phẩm [{request.ProductCode}].";
+                    return false;
+                }
+
+                if (request.CurrencyID == null || request.CurrencyID <= 0)
+                {
+                    message = $"Vui lòng chọn loại tiền tệ cho sản phẩm [{request.ProductCode}]!";
+                    return false;
+                }
+
+                if (!string.IsNullOrWhiteSpace(request.ParentProductCode))
+                {
+                    if (request.SupplierSaleID == null || request.SupplierSaleID <= 0)
+                    {
+                        message = $"Vui lòng nhập Nhà cung cấp cho sản phẩm con [{request.ProductCode}]!";
+                        return false;
+                    }
+
+                    continue;
+                }
+                if (request.SupplierSaleID == null || request.SupplierSaleID <= 0)
+                {
+                    message = $"Vui lòng nhập Nhà cung cấp cho sản phẩm [{request.ProductCode}]!";
+                    return false;
+                }
+
+                if (isBorrowProduct == 0 && (request.UnitPrice == null || request.UnitPrice <= 0))
+                {
+                    message = $"Vui lòng nhập Đơn giá cho sản phẩm [{request.ProductCode}]!";
+                    return false;
+                }
+
+                if (isBorrowProduct == 1 && !isTBPApproved)
+                {
+                    message = "Sản phẩm chưa được TBP duyệt!";
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+
         public bool ValidateUpdateData(List<ProjectPartlistPurchaseRequestDTO> requests, out string message)
         {
             message = "";
