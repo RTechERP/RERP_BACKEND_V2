@@ -23,8 +23,8 @@ namespace RERPAPI.Controllers.Old.Technical.InventoryDemo
             try
             {
                 var products = SQLHelper<dynamic>.ProcedureToList("spGetInventoryDemo",
-                    new string[] { "@ProductGroupID", "@Keyword", "@CheckAll", "@WarehouseID", "@ProductRTCID" },
-                    new object[] { request.ProductGroupID, request.Keyword, request.CheckAll, request.WarehouseID, request.ProductRTCID });
+                    new string[] { "@ProductGroupID", "@Keyword", "@CheckAll", "@WarehouseID", "@ProductRTCID", "@WarehouseType" },
+                    new object[] { request.ProductGroupID, request.Keyword, request.CheckAll, request.WarehouseID, request.ProductRTCID, request.WarehouseType });
 
                 return Ok(new
                 {
@@ -50,8 +50,8 @@ namespace RERPAPI.Controllers.Old.Technical.InventoryDemo
             try
             {
                 var products = SQLHelper<dynamic>.ProcedureToList("spGetInventoryBorrowSupplierDemo",
-                    new string[] { "@SupplierDemoID", "@WarehouseID", "@DateStart", "@DateEnd", "@FilterText", "@PageNumber", "@PageSize" },
-                    new object[] { request.SupplierDemoID, request.WarehouseID, request.DateStart, request.DateEnd, request.FilterText, request.Page, request.Size });
+                    new string[] { "@SupplierDemoID", "@WarehouseID", "@DateStart", "@DateEnd", "@FilterText", "@PageNumber", "@PageSize", "@WarehouseType" },
+                    new object[] { request.SupplierDemoID, request.WarehouseID, request.DateStart, request.DateEnd, request.FilterText, request.Page, request.Size, request.WarehouseType });
 
                 return Ok(new
                 {
