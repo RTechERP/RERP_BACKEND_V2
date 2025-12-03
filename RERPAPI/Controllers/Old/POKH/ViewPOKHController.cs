@@ -69,8 +69,23 @@ namespace RERPAPI.Controllers.Old.POKH
             try
             {
                 var list = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
-                                 new string[] { "@Keyword" },
-                                 new object[] { "" });
+                                 new string[] { "@Keyword", "@Status" },
+                                 new object[] { "", 0 });
+                return Ok(ApiResponseFactory.Success(list, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-employee-by-teamsale")]
+        public IActionResult LoadEmployeeByTeamSale(int teamId)
+        {
+            try
+            {
+                var list = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployeeByTeamSale",
+                                 new string[] { "@EmployeeTeamSaleID" },
+                                 new object[] { teamId });
                 return Ok(ApiResponseFactory.Success(list, ""));
             }
             catch (Exception ex)

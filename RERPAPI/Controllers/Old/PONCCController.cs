@@ -151,6 +151,37 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
+        [HttpGet("warehouse-code")]
+        public IActionResult GetWarehouse(int warehouseId)
+        {
+            try
+            {
+                var warehouse = _warehouseRepo.GetByID(warehouseId);
+                string wareHouseCode = warehouse != null ? warehouse.WarehouseCode : "";
+                return Ok(ApiResponseFactory.Success(wareHouseCode, null));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+
+        }
+
+        [HttpGet("bill-import-tech")]
+        public IActionResult GetBillImportTech(int billimportTechId)
+        {
+            try
+            {
+                var billimportTech = _billImportTechnicalRepo.GetByID(billimportTechId);
+                return Ok(ApiResponseFactory.Success(billimportTech, null));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+
+        }
+
 
         [HttpGet("data-detail")]
         [RequiresPermission("N35,N33,N1")]

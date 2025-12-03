@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.Param.Technical
+﻿namespace RERPAPI.Model.Param.Technical
 {
     public class GetInventoryBorrowSupplierDemoRequestParam
     {
@@ -15,5 +9,6 @@ namespace RERPAPI.Model.Param.Technical
         public string? FilterText { get; set; }
         public int? Page { get; set; }
         public int? Size { get; set; }
+        public int? WarehouseType { get; set; }
     }
 }

@@ -603,7 +603,17 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                             new string[] { "@PONCCDetailID" },
                             new object[] { poNCCDetailID });
                     }
+                    if (dto.pONCCID != null && dto.pONCCID > 0)
+                    {
+                        PONCC po = _pONCCRepo.GetByID(dto.pONCCID ?? 0);
+
+                        po.Status = 5;
+                        await _pONCCRepo.UpdateAsync(po);
+
+
+                    }
                     await UpdateDocumentImport(billImportId, dto.billDocumentImports);
+
                 }
 
                 return Ok(ApiResponseFactory.Success(dtos, "Cập nhật dữ liệu thành công!"));
