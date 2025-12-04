@@ -9975,6 +9975,7 @@ public partial class RTCContext : DbContext
                 .IsUnicode(false);
             entity.Property(e => e.SpecificDestinationAddress).HasMaxLength(500);
             entity.Property(e => e.StartTimeActual).HasColumnType("datetime");
+            entity.Property(e => e.Status).HasComment("1: Chờ xếp; 2: Đã xếp; 3: Hủy xếp; 4: Chủ động phương tiện");
             entity.Property(e => e.TimeNeedPresent).HasColumnType("datetime");
             entity.Property(e => e.TimeReturn).HasColumnType("datetime");
             entity.Property(e => e.UpdatedBy)
