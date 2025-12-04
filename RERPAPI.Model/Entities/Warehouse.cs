@@ -10,4 +10,5 @@ public partial class Warehouse
     public string? WarehouseCode { get; set; }
 
     public string? WarehouseName { get; set; }
+    public bool? IsDeleted { get; set; }
 }
