@@ -24,4 +24,6 @@ public partial class ProjectHistoryProblemDetail
     public DateTime? UpdatedDate { get; set; }
 
     public string? UpdatedBy { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }

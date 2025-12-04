@@ -38,4 +38,6 @@ public partial class ProjectHistoryProblem
     public DateTime? UpdatedDate { get; set; }
 
     public int? EmployeeID { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }
