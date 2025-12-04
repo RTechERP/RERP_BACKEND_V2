@@ -85,7 +85,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
         {
             try
             {
-                var data = _projectRepo.GetAll().OrderByDescending(x => x.CreatedDate).ToList();
+                var data = _projectRepo.GetAll(x => x.IsDeleted != true).OrderByDescending(x => x.CreatedDate).ToList();
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
