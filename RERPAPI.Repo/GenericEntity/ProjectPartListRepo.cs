@@ -1014,16 +1014,16 @@ namespace RERPAPI.Repo.GenericEntity
             int productID = partList.ProductID;
             int projectID = partList.ProjectID;
             //int pokhDetailID = 0;
-            decimal remainQuantity = partList.RemainQuantity;
-            decimal quantityReturn = partList.QuantityReturn;
-            decimal qtyFull = partList.QtyFull;
+            decimal remainQuantity = partList.RemainQuantity; // số lượng còn lại
+            decimal quantityReturn = partList.QuantityReturn; // số lượng đã về 
+            decimal qtyFull = partList.QtyFull; // số lượng yêu cầu - sl tổng
 
-            if (remainQuantity <= 0)
+            if (remainQuantity <= 0) // nếu còn lại = 0 thì không thể xuất
             {
                 productNewCode = partList.TT;
                 return false;
             }
-            if (quantityReturn <= 0)
+            if (quantityReturn <= 0)  // số lượng đã về = 0 thì hnagf chưa về không có gì để xuất
             {
                 productNewCode = partList.TT;
                 return false;

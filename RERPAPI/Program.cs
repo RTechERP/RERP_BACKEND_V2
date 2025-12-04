@@ -298,6 +298,7 @@ builder.Services.AddScoped<MeetingMinutesDetailRepo>();
 builder.Services.AddScoped<MeetingMinutesFileRepo>();
 builder.Services.AddScoped<MeetingTypeRepo>();
 builder.Services.AddScoped<ProjectHistoryProblemRepo>();
+builder.Services.AddScoped<ProjectHistoryProblemDetailRepo>();
 builder.Services.AddScoped<ProjectManagerRepo>();
 
 builder.Services.AddScoped<BillExportDetailSerialNumberRepo>();
