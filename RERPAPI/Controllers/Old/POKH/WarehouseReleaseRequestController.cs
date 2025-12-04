@@ -142,5 +142,148 @@ namespace RERPAPI.Controllers.Old.POKH
             }
         }
 
+        [HttpPost("validate-keep-new")]
+        public IActionResult ValidateKeepNew([FromBody] ValidateKeepNewDTO request)
+        {
+            try
+            {
+                var unitNames = new string[] { "m", "mét" };
+
+                // Sắp xếp items theo QuantityRequestExport tăng dần
+                var sortedItems = request.Items
+                    .OrderBy(x => x.QuantityRequestExport)
+                    .ToList();
+
+                //Tính tổng QuantityRequestExport cho mỗi ProductID 
+                Dictionary<int, decimal> productRequestedTotals = new Dictionary<int, decimal>();
+                foreach (var item in sortedItems)
+                {
+                    string unitName = (item.UnitName ?? "").Trim().ToLower();
+                    if (unitNames.Contains(unitName)) continue; // bỏ qua unitNames m/mét
+
+                    int productID = item.ProductID;
+                    if (productID <= 0) continue;
+
+                    if (productRequestedTotals.ContainsKey(productID))
+                        productRequestedTotals[productID] += item.QuantityRequestExport;
+                    else
+                        productRequestedTotals[productID] = item.QuantityRequestExport;
+                }
+
+                // Validate từng item theo thứ tự đã sắp xếp 
+                Dictionary<int, decimal> totalQuantityRequest = new Dictionary<int, decimal>();
+                Dictionary<int, decimal> totalQuantityStock = new Dictionary<int, decimal>();
+                Dictionary<int, decimal> productRemainingStock = new Dictionary<int, decimal>();
+
+                List<int> validSelected = new List<int>();
+                List<string> invalidCodes = new List<string>();
+
+                foreach (var item in sortedItems)
+                {
+                    string unitName = (item.UnitName ?? "").Trim().ToLower();
+                    int productID = item.ProductID;
+                    decimal qtyReq = item.QuantityRequestExport;
+
+                    // Xử lý m/mét auto hợpleej
+                    if (unitNames.Contains(unitName))
+                    {
+                        validSelected.Add(item.POKHDetailID);
+                        continue;
+                    }
+
+                    if (productID <= 0) continue;
+
+                    // Cộng dồn totalQuantityRequest
+                    if (totalQuantityRequest.ContainsKey(productID))
+                        totalQuantityRequest[productID] += qtyReq;
+                    else
+                        totalQuantityRequest[productID] = qtyReq;
+
+                    var list = SQLHelper<dynamic>.ProcedureToList(
+                        "spGetInventoryProjectImportExport",
+                        new[] { "@WarehouseID", "@ProductID", "@ProjectID", "@POKHDetailID", "@BillExportDetailID" },
+                        new object[] { request.WarehouseID, productID, 0, item.POKHDetailID, 0 });
+
+                    var inv = SQLHelper<dynamic>.GetListData(list, 0);
+                    var imp = SQLHelper<dynamic>.GetListData(list, 1);
+                    var exp = SQLHelper<dynamic>.GetListData(list, 2);
+                    var stk = SQLHelper<dynamic>.GetListData(list, 3);
+
+                    decimal totalQuantityKeep = inv.Count == 0 ? 0 : Convert.ToDecimal(inv[0].TotalQuantity);
+                    totalQuantityKeep = Math.Max(totalQuantityKeep, 0);
+
+                    decimal totalQuantityLast = stk.Count == 0 ? 0 : Convert.ToDecimal(stk[0].TotalQuantityLast);
+                    totalQuantityLast = Math.Max(totalQuantityLast, 0);
+
+                    decimal totalImport = imp.Count == 0 ? 0 : Convert.ToDecimal(imp[0].TotalImport);
+                    totalImport = Math.Max(totalImport, 0);
+
+                    decimal totalExport = exp.Count == 0 ? 0 : Convert.ToDecimal(exp[0].TotalExport);
+                    totalExport = Math.Max(totalExport, 0);
+
+                    decimal quantityRemain = totalImport - totalExport;
+                    decimal quantityStock = Math.Max(totalQuantityKeep + quantityRemain + totalQuantityLast, 0);
+
+                    // Cộng dồn totalQuantityStock
+                    if (totalQuantityStock.ContainsKey(productID))
+                        totalQuantityStock[productID] += quantityStock;
+                    else
+                        totalQuantityStock[productID] = quantityStock;
+
+                    // Kiểm tra diffKeys 
+                    var diffKeys = totalQuantityRequest.Keys
+                        .Intersect(totalQuantityStock.Keys)
+                        .Where(k => totalQuantityRequest[k] > totalQuantityStock[k]);
+
+                    if (diffKeys.Count() > 0)
+                    {
+                        if (qtyReq > quantityStock)
+                        {
+                            // Invalid
+                            if (!string.IsNullOrWhiteSpace(item.ProductNewCode))
+                                invalidCodes.Add(item.ProductNewCode);
+                        }
+                        else
+                        {
+                            // Valid
+                            validSelected.Add(item.POKHDetailID);
+                            if (!productRemainingStock.ContainsKey(productID))
+                                productRemainingStock[productID] = quantityStock;
+                            productRemainingStock[productID] -= qtyReq;
+                        }
+                    }
+                    else
+                    {
+                        // Không có diffKeys tự động hợp lệ
+                        validSelected.Add(item.POKHDetailID);
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    ValidSelected = validSelected.Distinct().ToList(),
+                    InvalidProductCodes = invalidCodes.Distinct().ToList()
+                }, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        public class ValidateKeepNewDTO
+        {
+            public int WarehouseID { get; set; }
+            public List<ValidateItemDTO> Items { get; set; } = new List<ValidateItemDTO>();
+        }
+
+        public class ValidateItemDTO
+        {
+            public int ProductID { get; set; }
+            public int POKHDetailID { get; set; }
+            public string UnitName { get; set; }
+            public decimal QuantityRequestExport { get; set; }
+            public string ProductNewCode { get; set; }
+        }
     }
 }
