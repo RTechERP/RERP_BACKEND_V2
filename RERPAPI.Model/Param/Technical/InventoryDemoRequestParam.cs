@@ -13,6 +13,7 @@ namespace RERPAPI.Model.Param.Technical
         public int? CheckAll { get; set; }
         public int? WarehouseID { get; set; }
         public int? ProductRTCID { get; set; }
+        public int? WarehouseType { get; set; }
 
     }
 }

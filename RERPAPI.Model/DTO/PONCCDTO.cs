@@ -11,7 +11,6 @@ namespace RERPAPI.Model.DTO
     {
         public int? RulePayID { get; set; }
         public bool? IsCheckTotalMoneyPO { get; set; }
-        public bool? OrderQualityNotMet { get; set; }
         public PONCC poncc { get; set; }
         public List<PONCCDetailDTO> lstPONCCDetail { get; set; }
         public List<ProjectPartlistPurchaseRequestDTO> lstPrjPartlistPurchaseRequest { get; set; }

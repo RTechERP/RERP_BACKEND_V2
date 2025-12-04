@@ -198,11 +198,11 @@ namespace RERPAPI.Repo.GenericEntity
             }
 
             //check lại sau 
-            //if (chkOrderQualityNotMet.Checked && string.IsNullOrWhiteSpace(txtReasonForFailure.Text))
-            //{
-            //    MessageBox.Show($"Vui lòng nhập lý do không đạt chất lượng!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Stop);
-            //    return false;
-            //}
+            if ((bool)model.OrderQualityNotMet && string.IsNullOrWhiteSpace(model.ReasonForFailure))
+            {
+                message = $"Vui lòng nhập lý do không đạt chất lượng!";
+                return false;
+            }
 
             return true;
         }

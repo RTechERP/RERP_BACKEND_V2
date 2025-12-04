@@ -2149,8 +2149,7 @@ namespace RERPAPI.Controllers.Project
             {
                 var project = projectRepo.GetByID(projectId);
                 if (project == null)
-                    return NotFound(ApiResponseFactory.Fail(null,"Không tìm thấy dự án"));
-
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dự án"));
                 int year = project.CreatedDate.Value.Year;
 
                 string basePath = Path.Combine(
