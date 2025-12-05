@@ -11,10 +11,10 @@ namespace RERPAPI.Model.DTO
     {
         public int? RulePayID { get; set; }
         public bool? IsCheckTotalMoneyPO { get; set; }
-        public PONCC poncc { get; set; }
-        public List<PONCCDetailDTO> lstPONCCDetail { get; set; }
-        public List<ProjectPartlistPurchaseRequestDTO> lstPrjPartlistPurchaseRequest { get; set; }
-        public List<int> lstBillImportId { get; set; }
+        public PONCC poncc { get; set; } = new PONCC();
+        public List<PONCCDetailDTO> lstPONCCDetail { get; set; } = new List<PONCCDetailDTO>();
+        public List<ProjectPartlistPurchaseRequestDTO> lstPrjPartlistPurchaseRequest { get; set; } = new List<ProjectPartlistPurchaseRequestDTO>();
+        public List<int> lstBillImportId { get; set; } = new List<int>();
     }
 
 }

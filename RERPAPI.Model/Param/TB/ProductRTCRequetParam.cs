@@ -17,5 +17,6 @@ namespace RERPAPI.Model.Param.TB
 
         public int Page { get; set; } = 10000;
         public int Size { get; set; } = 1;
+        public int WarehouseType { get; set; } = 1;
     }
 }
