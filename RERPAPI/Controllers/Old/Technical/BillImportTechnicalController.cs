@@ -152,7 +152,7 @@ namespace RERPAPI.Controllers.Old.Technical
             });
         }
         [HttpGet("load-product")]
-        public IActionResult LoadProduct([FromQuery] int status, [FromQuery] int warehouseID)
+        public IActionResult LoadProduct([FromQuery] int status, [FromQuery] int warehouseID, int warehouseType)
         {
             try
             {
@@ -162,8 +162,8 @@ namespace RERPAPI.Controllers.Old.Technical
                 {
                     dtProduct = SQLHelper<dynamic>.ProcedureToList(
                         "spGetProductRTC",
-                        new string[] { "@ProductGroupID", "@Keyword", "@CheckAll", "@WarehouseID" },
-                        new object[] { 0, "", 1, warehouseID }
+                        new string[] { "@ProductGroupID", "@Keyword", "@CheckAll", "@WarehouseID", "@WarehouseType" },
+                        new object[] { 0, "", 1, warehouseID,warehouseType }
                     );
                 }
                 else if (warehouseID == 1)
