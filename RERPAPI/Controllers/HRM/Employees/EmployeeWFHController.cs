@@ -5,6 +5,7 @@ using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
+using RERPAPI.Model.Param;
 using RERPAPI.Model.Param.HRM;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
@@ -47,7 +48,23 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpPost("get-wfh-person")]
+        public IActionResult GetWFHPerson([FromBody] EmployeeOnLeavePersonParam request)
+        {
+            try
+            {
+                var employeelate = SQLHelper<object>.ProcedureToList("spGetWFH_New", new string[] { "@PageNumber", "@PageSize", "@Keyword", "@StartDate", "@EndDate", "@IDApprovedTP", "@Status", "@DepartmentID" },
+               new object[] { request.Page, request.Size, request.Keyword ?? "", request.DateStart, request.DateEnd, request.IDApprovedTP, request.Status, request.DepartmentID });
 
+                var data = SQLHelper<object>.GetListData(employeelate, 0);
+                var TotalPages = SQLHelper<object>.GetListData(employeelate, 1);
+                return Ok(ApiResponseFactory.Success(new { data, TotalPages }, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [RequiresPermission("N1,N2")]
         [HttpGet("wfh-detail/{id}")]
         public IActionResult GetWFHDetail(int id)
