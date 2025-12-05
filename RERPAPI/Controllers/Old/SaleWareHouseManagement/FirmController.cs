@@ -16,11 +16,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             _firmRepo = firmRepo;
         }
         [HttpGet("")]
-        public IActionResult getDataFirm()
+        public IActionResult getDataFirm(int firmType = 1)
         {
             try
             {
-                List<Firm> dataFirm = _firmRepo.GetAll(x => x.IsDelete != true);
+                List<Firm> dataFirm = _firmRepo.GetAll(x => x.IsDelete != true && x.FirmType == firmType);
                 return Ok(ApiResponseFactory.Success(dataFirm, "Lấy dữ liệu hãng thành công!"));
             }
             catch (Exception ex)

@@ -200,11 +200,12 @@ namespace RERPAPI.Controllers.Old.TB
 
         }
         [HttpGet("get-location")]
-        public IActionResult GetLocation(int? warehouseID)
+        public IActionResult GetLocation(int? warehouseID,int locationType)
         {
             try
             {
-                var location = _productLocationRepo.GetAll(x => x.WarehouseID == warehouseID);
+                var location = _productLocationRepo.GetAll(x => x.IsDeleted != true && 
+                                                                x.WarehouseID == warehouseID);
                 return Ok(ApiResponseFactory.Success(new { location }, ""));
             }
             catch (Exception ex)
