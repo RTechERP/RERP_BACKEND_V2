@@ -1,6 +1,8 @@
 ﻿using ClosedXML.Excel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -19,6 +21,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class BillExportController : ControllerBase
     {
         private readonly ProductGroupRepo _productgroupRepo;
@@ -94,6 +97,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             }
         }
         [HttpPost("")]
+        [RequiresPermission("N27,N29,N50,N1,N36,N52,N35,N33,N34,N69")]
         public IActionResult getBillExport([FromBody] BillExportParamRequest filter)
         {
             try
@@ -271,6 +275,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             return Ok(ApiResponseFactory.Success(details, "Đã tính lại TotalQty thành công"));
         }
         [HttpPost("save-data")]
+        [RequiresPermission("N27,N1,N33,N34,N69")]
         public async Task<IActionResult> SaveDataBillExport([FromBody] BillExportDTO dto)
         {
             try
@@ -443,6 +448,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             }
         }
         [HttpPost("delete-bill-export")]
+        [RequiresPermission("N27,N1,N33,N34,N69")]
         public async Task<IActionResult> deleteBillExport([FromBody] BillExport billExport)
         {
             try
@@ -473,7 +479,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpPost("approved")]
-
+        [RequiresPermission("N11,N50,N1,N18")]
         public async Task<IActionResult> Approved([FromBody] BillExport billExport, bool isapproved)
         {
             try
@@ -504,6 +510,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
         #region
         [HttpGet("get-bill-code")]
+
         public ActionResult<string> LoadBillNumber(int billTypeId, int? billId = null, int? currentStatus = null, string currentCode = null)
         {
             string billCode = _billexportRepo.GetBillCode(billTypeId);
@@ -543,6 +550,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             }
         }
         [HttpGet("BillImportID/{billIDs}")]
+
         public IActionResult GetdetailByIDS(string billIDs)
         {
             try
