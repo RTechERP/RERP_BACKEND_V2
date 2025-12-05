@@ -16,5 +16,6 @@ namespace RERPAPI.Model.Param
         public int year { get; set; }
         public int IDApprovedTP { get; set; }
         public int status { get; set; }
+        
     }
 }

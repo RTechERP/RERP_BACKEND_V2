@@ -111,7 +111,7 @@ namespace RERPAPI.Controllers.HRM
             }
         }
 
-        [HttpPost("savedata")]
+        [HttpPost("save-data")]
         public async Task<IActionResult> SaveEmployee([FromBody] RERPAPI.Model.Entities.Employee employee)
         {
             try
