@@ -16,5 +16,6 @@ namespace RERPAPI.Model.Param.Technical
         public string? Status { get; set; }
         public string? FilterText { get; set; }
         public int? WarehouseID { get; set; }
+        public bool BillType { get; set; } = false;
     }
 }

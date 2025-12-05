@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO.TB;
 using RERPAPI.Model.Entities;
@@ -11,6 +12,7 @@ namespace RERPAPI.Controllers.Old.TB
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ProductRTCController : ControllerBase
     {
 
@@ -38,15 +40,13 @@ namespace RERPAPI.Controllers.Old.TB
 
 
         [HttpPost("get-productRTC")]
-        public IActionResult GetListAssets([FromBody] ProductRTCRequetParam request)
+        public IActionResult GetAll([FromBody] ProductRTCRequetParam request)
         {
             try
             {
                 var products = SQLHelper<dynamic>.ProcedureToList("spGetProductRTC",
-                new string[] { "@ProductGroupID", "@Keyword", "@CheckAll", "@WarehouseID", "@ProductRTCID", "@ProductGroupNo", "@PageNumber", "@PageSize" },
-                new object[] { request.ProductGroupID, request.Keyword, request.CheckAll, request.WarehouseID, request.ProductRTCID, request.ProductGroupNo, request.Page, request.Size });
-
-
+                new string[] { "@ProductGroupID", "@Keyword", "@CheckAll", "@WarehouseID", "@ProductRTCID", "@ProductGroupNo", "@PageNumber", "@PageSize" , "@WarehouseType" },
+                new object[] { request.ProductGroupID, request.Keyword, request.CheckAll, request.WarehouseID, request.ProductRTCID, request.ProductGroupNo, request.Page, request.Size ,request.WarehouseType});
 
                 var data = new
                 {
@@ -214,12 +214,12 @@ namespace RERPAPI.Controllers.Old.TB
         }
 
         [HttpGet("get-product-code")]
-        public IActionResult GenerateProductCode()
+        public IActionResult GenerateProductCode(int productGroupID)
         {
 
             try
             {
-                string newCode = _productRTCRepo.generateProductCode();
+                string newCode = _productRTCRepo.generateProductCode(productGroupID);
                 //return Ok(new
                 //{
                 //    status = 1,
@@ -346,7 +346,7 @@ namespace RERPAPI.Controllers.Old.TB
                                 var location = _locationRepo.GetAll(x => (x.LocationName ?? "").Trim().ToUpper() == (item.AddressBox ?? "").Trim().ToUpper() && x.IsDeleted == false).FirstOrDefault();
                                 if (location != null) item.ProductLocationID = location.ID;
 
-                                item.ProductCodeRTC = _productRTCRepo.generateProductCode();
+                                item.ProductCodeRTC = _productRTCRepo.generateProductCode(Convert.ToInt32(item.ProductGroupRTCID));
                                 if (item.ID <= 0)
                                     await _productRTCRepo.CreateAsync(item);
                                 else

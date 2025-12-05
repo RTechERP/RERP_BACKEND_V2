@@ -68,4 +68,9 @@ public partial class BillExportTechnical
     public int? BillDocumentExportType { get; set; }
 
     public int? ApproverID { get; set; }
+
+    /// <summary>
+    /// 1: Kho Demo; 2: Kho AGV
+    /// </summary>
+    public int? WarehouseTypeBill { get; set; }
 }
