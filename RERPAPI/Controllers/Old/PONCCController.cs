@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
 using NPOI.SS.Formula.Functions;
+using OfficeOpenXml.Style.XmlAccess;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -26,7 +27,8 @@ namespace RERPAPI.Controllers.Old
 {
     [Route("api/[controller]")]
     [ApiController]
- 
+    [Authorize]
+
     public class PONCCController : ControllerBase
     {
         PONCCRepo _pONCCRepo;
@@ -40,7 +42,9 @@ namespace RERPAPI.Controllers.Old
         WarehouseRepo _warehouseRepo;
         BillImportRepo _billImportRepo;
         BillImportTechnicalRepo _billImportTechnicalRepo;
-        
+        private readonly TaxCompanyRepo _taxCompanyRepo;
+        private readonly EmployeePurchaseRepo _employeePurchaseRepo;
+
         public PONCCController(
             PONCCRepo pONCCRepo
             , ProductGroupRepo productGroupRepo
@@ -52,7 +56,7 @@ namespace RERPAPI.Controllers.Old
             , PONCCDetailRequestBuyRepo pONCCDetailRequestBuyRepo
             , WarehouseRepo warehouseRepo
             , BillImportRepo billImportRepo
-            , BillImportTechnicalRepo billImportTechRepo
+            , BillImportTechnicalRepo billImportTechRepo, TaxCompanyRepo taxCompanyRepo, EmployeePurchaseRepo employeePurchaseRepo
             )
         {
             _pONCCRepo = pONCCRepo;
@@ -66,6 +70,8 @@ namespace RERPAPI.Controllers.Old
             _warehouseRepo = warehouseRepo;
             _billImportRepo = billImportRepo;
             _billImportTechnicalRepo = billImportTechRepo;
+            _taxCompanyRepo = taxCompanyRepo;
+            _employeePurchaseRepo = employeePurchaseRepo;
 
         }
 
@@ -273,7 +279,7 @@ namespace RERPAPI.Controllers.Old
                         int supplierSaleID = Convert.ToInt32(item.SupplierSaleID);
                         int productGroupID = Convert.ToInt32(item.ProductGroupID);
 
-                        var dtDetails = data.Where(x=> x.SupplierSaleID == supplierSaleID && x.ProductGroupID == productGroupID).ToList();
+                        var dtDetails = data.Where(x => x.SupplierSaleID == supplierSaleID && x.ProductGroupID == productGroupID).ToList();
                         if (dtDetails.Count() <= 0) continue;
                         else
                         {
@@ -324,9 +330,9 @@ namespace RERPAPI.Controllers.Old
                     foreach (var item in listDemo)
                     {
                         int supplierSaleID = Convert.ToInt32(item.SupplierSaleID);
-                        var dtDetails = data.Where(x => 
-                        x.SupplierSaleID == supplierSaleID && 
-                        x.ProductRTCID != null && 
+                        var dtDetails = data.Where(x =>
+                        x.SupplierSaleID == supplierSaleID &&
+                        x.ProductRTCID != null &&
                         x.ProductRTCID != 0).ToList();
 
                         if (dtDetails.Count() <= 0) continue;
@@ -354,7 +360,7 @@ namespace RERPAPI.Controllers.Old
                         bill.DateRequestImport = DateTime.Now;
                         bill.CreatedDate = DateTime.Now;
                         bill.CreatedBy = currentUser.LoginName;
-                        bill.ApproverID = 54; 
+                        bill.ApproverID = 54;
 
                         bill.WarehouseType = "Demo";
 
@@ -384,7 +390,7 @@ namespace RERPAPI.Controllers.Old
 
         }
 
-        
+
 
 
         [HttpGet("deleted-poncc-detail")]
@@ -804,10 +810,10 @@ namespace RERPAPI.Controllers.Old
                 var lastDay = firstDay.AddMonths(1).AddDays(-1);
                 string procedureName = "sp_GetAllPONCC";
                 string[] paramNames = new string[] { "@FilterText", "@DateStart", "@DateEnd", "@SupplierID", "@Status", "@EmployeeID" };
-                object[] paramValues = new object[] { request.FilterText, request.DateStart ?? firstDay, request.DateEnd ?? lastDay, request.SupplierID , request.Status, request.EmployeeID};
+                object[] paramValues = new object[] { request.FilterText, request.DateStart ?? firstDay, request.DateEnd ?? lastDay, request.SupplierID, request.Status, request.EmployeeID };
                 var data = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
                 var propose = SQLHelper<object>.GetListData(data, 0);
-             
+
                 return Ok(ApiResponseFactory.Success(propose, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
@@ -816,5 +822,89 @@ namespace RERPAPI.Controllers.Old
             }
         }
         #endregion
+
+
+        [HttpGet("printpo")]
+        public IActionResult PrintPO(int id, bool isMerge)
+        {
+            try
+            {
+                var dataPO = SQLHelper<object>.ProcedureToList("spGetPONCCByID", new string[] { "@ID" }, new object[] { id });
+                var po = SQLHelper<object>.GetListData(dataPO, 0)[0];
+                string companyText = po.CompanyText.ToUpper().Trim();
+                var taxCompany = _taxCompanyRepo.GetAll(x => x.Code.ToUpper().Trim() == companyText).FirstOrDefault() ?? new TaxCompany();
+
+                int employeeID = Convert.ToInt32(po.EmployeeID);
+
+                var employeePurchase = _employeePurchaseRepo.GetAll(x => x.EmployeeID == employeeID && x.TaxCompayID == taxCompany.ID).FirstOrDefault() ?? new EmployeePurchase();
+                po.Purchaser = $"{_pONCCRepo.ConvertVietnameseToEnglish(po.FullName)} - Phone: {_pONCCRepo.ConvertPhoneNumberVietnamese(employeePurchase.Telephone ??"")} - Email: {employeePurchase.Email}";
+                po.TotalAmountText = _pONCCRepo.ConvertNumberToTextEnglish(Convert.ToDecimal(po.TotalMoneyPO), po.CurrencyText);
+                var poDetails = SQLHelper<PONCCDetailDTO>.ProcedureToListModel("spGetPONCCDetail", new string[] { "@PONCCID" }, new object[] { id });
+                poDetails = poDetails.Where(x => x.IsPurchase == false).ToList();
+                if (isMerge)
+                {
+                    bool isHCNS = poDetails.Any(x => x.ProductGroupID == 77);
+                    if (isHCNS)
+                    {
+                        poDetails = poDetails.GroupBy(item => new { item.ProductCodeOfSupplier, item.UnitPrice })
+                                            .Select(cl => new PONCCDetailDTO
+                                            {
+                                                STT = cl.First().Status,
+                                                ProductCodeOfSupplier = cl.First().ProductCodeOfSupplier,
+                                                Unit = cl.First().Unit,
+                                                UnitName = cl.First().UnitName,
+                                                QtyRequest = cl.Sum(q => q.QtyRequest),
+                                                UnitPrice = cl.First().UnitPrice,
+                                                ThanhTien = cl.Sum(q => q.ThanhTien),
+                                                VAT = cl.First().VAT,
+                                                VATMoney = cl.Sum(q => q.VATMoney),
+                                                Discount = cl.Sum(q => q.Discount),
+                                                TotalPrice = cl.Sum(q => q.TotalPrice),
+                                            })
+                                            .Select((item, index) =>
+                                            {
+                                                item.STT = index + 1;
+                                                return item;
+                                            }).ToList();
+                    }
+                    else
+                    {
+                        poDetails = poDetails.GroupBy(item => new { item.ProductCode, item.UnitPrice.Value, item.ProductCodeOfSupplier })
+                                                                            .Select(cl => new PONCCDetailDTO
+                                                                            {
+                                                                                STT = cl.First().Status,
+                                                                                ProductCodeOfSupplier = cl.First().ProductCodeOfSupplier,
+                                                                                Unit = cl.First().Unit,
+                                                                                UnitName = cl.First().UnitName,
+                                                                                QtyRequest = cl.Sum(q => q.QtyRequest),
+                                                                                UnitPrice = cl.First().UnitPrice,
+                                                                                ThanhTien = cl.Sum(q => q.ThanhTien),
+                                                                                VAT = cl.First().VAT,
+                                                                                VATMoney = cl.Sum(q => q.VATMoney),
+                                                                                Discount = cl.Sum(q => q.Discount),
+                                                                                TotalPrice = cl.Sum(q => q.TotalPrice),
+                                                                            })
+                                                                            .Select((item, index) =>
+                                                                            {
+                                                                                item.STT = index + 1;
+                                                                                return item;
+                                                                            }).ToList();
+
+                    }
+                }
+                var data = new
+                {
+                    po = po,
+                    taxCompany = taxCompany,
+                    poDetails = poDetails
+                };
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 }

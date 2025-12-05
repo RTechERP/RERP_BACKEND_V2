@@ -188,7 +188,7 @@ namespace RERPAPI.Controllers
 
 
         [Authorize]
-        [ApiKeyAuthorize]
+        //[ApiKeyAuthorize]
         [HttpGet("current-user")]
         public IActionResult GetCurrentUser()
         {
@@ -434,8 +434,8 @@ namespace RERPAPI.Controllers
                         var fileExtension = Path.GetExtension(file.FileName);
                         var originalFileName = Path.GetFileNameWithoutExtension(file.FileName);
                         var uniqueFileName = $"{originalFileName}{fileExtension}";
-                    
-                    
+
+
                         //var uniqueFileName = originalFileName;
                         var fullPath = Path.Combine(targetFolder, uniqueFileName);
 

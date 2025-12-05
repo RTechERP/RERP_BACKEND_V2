@@ -2,6 +2,7 @@
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using System.Data;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace RERPAPI.Repo.GenericEntity
@@ -17,6 +18,18 @@ namespace RERPAPI.Repo.GenericEntity
         private SupplierSaleRepo _supplierSaleRepo;
         private ProjectPartlistPurchaseRequestRepo _prjPartListRepo;
         CurrentUser _currentUser;
+
+        private static string[] ones = { "", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen" };
+        private static string[] tens = { "", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety" };
+        private static string[] thousandsGroups = { "", " thousand", " million", " billion" };
+
+        private static List<UnitCurrency> UNIT_CURRENCY = new List<UnitCurrency>() {
+            new UnitCurrency{Name = "VND", Description = new { nameenglish = "Vietnamese dong", unitenglish = "dong", namevietnamese = "đồng", unitvietnamese = "đồng"} },
+            new UnitCurrency{Name = "USD", Description = new { nameenglish = "Dollars", unitenglish = "cent", namevietnamese = "đô", unitvietnamese = "cent"} },
+            new UnitCurrency{Name = "EUR", Description = new { nameenglish = "Euro", unitenglish = "cent", namevietnamese = "euro", unitvietnamese = "cent"} },
+            new UnitCurrency{Name = "RMB", Description = new { nameenglish = "Renminbi", unitenglish = "bad", namevietnamese = "nhân dân tệ", unitvietnamese = "bad"} },
+            new UnitCurrency{Name = "JPY", Description = new { nameenglish = "Japanese yen", unitenglish = "sen", namevietnamese = "yên", unitvietnamese = "sen"} },
+        };
 
         public PONCCRepo(CurrentUser currentUser,
             PONCCDetailRepo pONCCDetailRepo,
@@ -352,5 +365,122 @@ namespace RERPAPI.Repo.GenericEntity
             if (dem == dt.Count) return true;
             return false;
         }
+
+
+
+        public string ConvertVietnameseToEnglish(string s)
+        {
+            if (string.IsNullOrWhiteSpace(s)) return "";
+            Regex regex = new Regex("\\p{IsCombiningDiacriticalMarks}+");
+            string temp = s.Normalize(NormalizationForm.FormD);
+            return regex.Replace(temp, String.Empty).Replace('\u0111', 'd').Replace('\u0110', 'D');
+        }
+
+        public string ConvertPhoneNumberVietnamese(string phoneNumber)
+        {
+            if (string.IsNullOrWhiteSpace(phoneNumber)) return "";
+            List<string> listPhoneNumber = new List<string>();
+            string[] phoneNumbers = phoneNumber.Split('\n');
+            foreach (string number in phoneNumbers)
+            {
+                if (string.IsNullOrEmpty(number.Trim())) continue;
+                string phone = "(+84) " + number.Substring(1);
+                listPhoneNumber.Add(phone);
+            }
+
+            return string.Join("\n", listPhoneNumber);
+        }
+
+        public string ConvertNumberToTextEnglish(decimal number, string currencyType)
+        {
+
+            if (number == 0) return "zero";
+
+            string words = "";
+
+            if (number < 0)
+            {
+                words += "minus ";
+                number = Math.Abs(number);
+            }
+
+            // Split the number into integer and decimal parts
+            long intPart = (long)number;
+            int decimalPart = (int)((number - intPart) * 100);
+
+            int thousandsCount = 0;
+
+            // Convert integer part to words
+            while (intPart > 0)
+            {
+                if (intPart % 1000 != 0)
+                {
+                    words = ConvertToWordsUnder1000((int)(intPart % 1000)) + thousandsGroups[thousandsCount] + " " + words;
+                }
+                intPart /= 1000;
+                thousandsCount++;
+            }
+
+            var currencyUnit = UNIT_CURRENCY.FirstOrDefault(x => x.Name.ToLower().Trim() == currencyType.ToLower().Trim());
+            string unit = "";
+            string minUnit = "";
+            if (currencyUnit != null)
+            {
+                var descriptionCurrency = currencyUnit.Description.GetType();
+                if (currencyType == "RMB" & decimalPart > 0)
+                {
+                    minUnit = Convert.ToString(descriptionCurrency.GetProperty("nameenglish").GetValue(currencyUnit.Description));
+                }
+                else if (currencyType == "RMB" & decimalPart <= 0)
+                {
+                    unit = Convert.ToString(descriptionCurrency.GetProperty("nameenglish").GetValue(currencyUnit.Description));
+                }
+                else
+                {
+                    unit = Convert.ToString(descriptionCurrency.GetProperty("nameenglish").GetValue(currencyUnit.Description));
+                    minUnit = Convert.ToString(descriptionCurrency.GetProperty("unitenglish").GetValue(currencyUnit.Description));
+                }
+            }
+            words += unit + (decimalPart > 0 ? " " : ".");
+
+            // Convert decimal part to words
+            if (decimalPart > 0)
+            {
+                string joinText = currencyType == "RMB" ? "point " : "and ";
+                words += joinText + ConvertToWordsUnder1000(decimalPart) + $" {minUnit}.";
+            }
+            words = words[0].ToString().ToUpper() + words.Substring(1);
+            return words;
+        }
+
+        private static string ConvertToWordsUnder1000(int number)
+        {
+            string words = "";
+
+            if (number >= 100)
+            {
+                words += ones[number / 100] + " hundred";
+                number %= 100;
+            }
+
+            if (number >= 20)
+            {
+                words += ((words != "") ? " " : "") + tens[number / 10];
+                number %= 10;
+            }
+
+            if (number > 0)
+            {
+                words += ((words != "") ? " " : "") + ones[number];
+            }
+
+            return words;
+        }
+    }
+
+    public class UnitCurrency
+    {
+        public string Name { get; set; } = string.Empty;
+        public object Description { get; set; } = string.Empty;
     }
 }
