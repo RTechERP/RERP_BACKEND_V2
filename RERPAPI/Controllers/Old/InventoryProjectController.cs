@@ -7,6 +7,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.HRM.VehicleManagement;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Asset;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -23,7 +24,23 @@ namespace RERPAPI.Controllers.Old
             _inventoryProjecRepo = inventoryProjecRepo;
         }
 
-
+        [HttpGet("get-inventory-by-product")]
+        public IActionResult GetInventoryByProduct(string keyword="")
+        {
+            try
+            {
+                string procedureName = "spGetProductInventoryByKeyword";
+                string[] paramNames = new string[] { "@Keyword" };
+                object[] paramValues = new object[] { keyword??"" };
+                var data = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
+                var inventory = SQLHelper<object>.GetListData(data, 0);
+                return Ok(ApiResponseFactory.Success(inventory, "Lấy dữ liệu thành công")); 
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
 
         //Lấy danh sách hàng nhả giữ
         [HttpPost("get-inventory-project")]

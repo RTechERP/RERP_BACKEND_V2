@@ -451,22 +451,31 @@ namespace RERPAPI.Controllers.Old.Technical
                 {
                     return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." });
                 }
-                // Lưu lịch sử xóa
-                if (product.historyDeleteBill != null)
-                {
-                    if (product.historyDeleteBill.ID <= 0)
-                        await _historyDeleteBillRepo.CreateAsync(product.historyDeleteBill);
-                    else
-                        _historyDeleteBillRepo.UpdateAsync(product.historyDeleteBill);
-                }
-
+                //// Lưu lịch sử xóa
+                //if (product.historyDeleteBill != null)
+                //{
+                //    if (product.historyDeleteBill.ID <= 0)
+                //        await _historyDeleteBillRepo.CreateAsync(product.historyDeleteBill);
+                //    else
+                //        await _historyDeleteBillRepo.UpdateAsync(product.historyDeleteBill);
+                //})
                 // Lưu phiếu xuất
                 if (product.billExportTechnical != null)
                 {
+                    product.billExportTechnical.CheckAddHistoryProductRTC = product.billExportTechnical.BillType == 1;
                     if (product.billExportTechnical.ID <= 0)
                         await _billExportTechnicalRepo.CreateAsync(product.billExportTechnical);
                     else
-                        _billExportTechnicalRepo.UpdateAsync(product.billExportTechnical);
+                    {
+                        var history = _historyProductRTCRepo.GetAll(x => x.BillExportTechnicalID == product.billExportTechnical.ID).FirstOrDefault();
+                        if (history != null)
+                        {
+                            history.IsDelete = true;
+                            _historyProductRTCRepo.Update(history);
+                        }
+
+                        await _billExportTechnicalRepo.UpdateAsync(product.billExportTechnical);
+                    }
                 }
 
                 Dictionary<int, int> sttToDetailIdMap = new();
@@ -492,10 +501,72 @@ namespace RERPAPI.Controllers.Old.Technical
                         }
                         else
                         {
-                            _billExportDetailTechnicalRepo.UpdateAsync(item);
+                            await _billExportDetailTechnicalRepo.UpdateAsync(item);
 
                             if (product.billExportDetailTechnicals.Count == 1)
                                 singleDetailId = item.ID;
+                        }
+                        var inventorydemo = _inventoryDemoRepo.GetAll(x => x.ProductRTCID == item.ProductID && (x.WarehouseID == item.WarehouseID || x.WarehouseID == product.billExportTechnical.WarehouseID)).FirstOrDefault() ?? new Model.Entities.InventoryDemo();
+                        inventorydemo.ProductRTCID = item.ProductID;
+                        inventorydemo.WarehouseID = product.billExportTechnical.WarehouseID;
+
+                        if (inventorydemo.ID <= 0) await _inventoryDemoRepo.CreateAsync(inventorydemo);
+                        else await _inventoryDemoRepo.UpdateAsync(inventorydemo);
+
+
+                        if (product.billExportTechnical.CheckAddHistoryProductRTC == true)
+                        {
+
+                            var dt = SQLHelper<dynamic>.ProcedureToList("spGetBillExportTechDetailSerial", new string[] { "@BillExportTechDetailID", "@WarehouseID" }, new object[] { item.ID, product.billExportTechnical.WarehouseID ?? 1 });
+                            var data = SQLHelper<dynamic>.GetListData(dt, 0);
+                            if (data.Count > 0)
+                            {
+                                foreach (var d in data)
+                                {
+                                    string serial = d.SerialNumber ?? "";
+                                    HistoryProductRTC historyProduct = _historyProductRTCRepo.GetAll(x => x.ProductRTCID == item.ProductID && (x.WarehouseID == item.WarehouseID || x.WarehouseID == product.billExportTechnical.WarehouseID) && x.ProductRTCQRCode == serial).FirstOrDefault() ?? new HistoryProductRTC();
+                                    if (historyProduct.Status == 0) continue;
+                                    historyProduct.ProductRTCQRCode = serial;
+                                    historyProduct.ProductRTCID = item.ProductID;
+                                    historyProduct.DateBorrow = product.billExportTechnical.CreatedDate;
+                                    historyProduct.DateReturnExpected = product.billExportTechnical.ExpectedDate;
+                                    historyProduct.PeopleID = product.billExportTechnical.ReceiverID;
+                                    historyProduct.Note = "Phiếu xuất" + product.billExportTechnical.Code + (string.IsNullOrWhiteSpace(item.Note) ? "" : ":\n" + item.Note);
+                                    historyProduct.Project = product.billExportTechnical.ProjectName;
+                                    historyProduct.NumberBorrow = 1;
+                                    historyProduct.Status = 1;
+                                    historyProduct.BillExportTechnicalID = product.billExportTechnical.ID;
+                                    historyProduct.WarehouseID = product.billExportTechnical.WarehouseID;
+                                    historyProduct.IsDelete = false;
+                                    if (historyProduct.ID <= 0) await _historyProductRTCRepo.CreateAsync(historyProduct);
+                                    else await _historyProductRTCRepo.UpdateAsync(historyProduct);
+                                }
+
+                            }
+                            else
+                            {
+                                HistoryProductRTC oHistoryModel = new HistoryProductRTC();
+                                var his = _historyProductRTCRepo.GetAll(x => x.ProductRTCID == item.ProductID && (x.WarehouseID == item.WarehouseID || x.WarehouseID == product.billExportTechnical.WarehouseID)).FirstOrDefault() ?? new HistoryProductRTC();
+                                if (his != null)
+                                {
+                                    oHistoryModel = his;
+                                    if (oHistoryModel.Status == 0) continue;
+                                }
+                                oHistoryModel.ProductRTCQRCodeID = 0;
+                                oHistoryModel.ProductRTCID = item.ProductID;
+                                oHistoryModel.DateBorrow = product.billExportTechnical.CreatedDate;
+                                oHistoryModel.DateReturnExpected = product.billExportTechnical.ExpectedDate;
+                                oHistoryModel.PeopleID = product.billExportTechnical.ReceiverID;
+                                oHistoryModel.Note = "Phiếu xuất" + product.billExportTechnical.Code + (string.IsNullOrWhiteSpace(item.Note) ? "" : ":\n" + item.Note);
+                                oHistoryModel.Project = product.billExportTechnical.ProjectName;
+                                oHistoryModel.Status = 1;
+                                oHistoryModel.BillExportTechnicalID = product.billExportTechnical.ID; ;
+                                oHistoryModel.NumberBorrow = item.Quantity;
+                                oHistoryModel.WarehouseID = product.billExportTechnical.WarehouseID;
+                                oHistoryModel.IsDelete = false;
+                                if (oHistoryModel.ID < -0) await _historyProductRTCRepo.CreateAsync(oHistoryModel);
+                                else await _historyProductRTCRepo.UpdateAsync(oHistoryModel);
+                            }
                         }
                     }
                 }
@@ -523,43 +594,48 @@ namespace RERPAPI.Controllers.Old.Technical
                         }
                         else
                         {
-                            _billExportTechDetailSerialRepo.UpdateAsync(item);
+                            await _billExportTechDetailSerialRepo.UpdateAsync(item);
                         }
 
                         savedSerials.Add(item);
+
+
+                        SQLHelper<dynamic>.ExcuteProcedure("spUpdateStatusProductRTCQRCode", new string[] { "@ProductRTCQRCode", "@Status" }, new object[] { item.SerialNumber, 3 });
+
                     }
                 }
-                if (product.inentoryDemos != null && product.inentoryDemos.Any())
-                {
-                    foreach (var item in product.inentoryDemos)
-                    {
+                //if (product.inentoryDemos != null && product.inentoryDemos.Any())
+                //{
+                //    foreach (var item in product.inentoryDemos)
+                //    {
 
-                        if (item.ID <= 0)
-                            await _inventoryDemoRepo.CreateAsync(item);
-                        else
-                            _inventoryDemoRepo.UpdateAsync(item);
-                    }
-                }
-                if (product.historyProductRTCs != null && product.historyProductRTCs.Any())
-                {
+                //        if (item.ID <= 0)
+                //            await _inventoryDemoRepo.CreateAsync(item);
+                //        else
+                //            await _inventoryDemoRepo.UpdateAsync(item);
+                //    }
+                //}
 
-                    foreach (var item in product.historyProductRTCs)
-                    {
-                        item.BillExportTechnicalID = product.billExportTechnical.ID;
-                        if (item.ID <= 0)
-                        {
-                            await _historyProductRTCRepo.CreateAsync(item);
-                        }
+                //if (product.historyProductRTCs != null && product.historyProductRTCs.Any())
+                //{
 
-                        else
-                            _historyProductRTCRepo.UpdateAsync(item);
-                    }
-                }
+                //    foreach (var item in product.historyProductRTCs)
+                //    {
+                //        item.BillExportTechnicalID = product.billExportTechnical.ID;
+                //        if (item.ID <= 0)
+                //        {
+                //            await _historyProductRTCRepo.CreateAsync(item);
+                //        }
+
+                //        else
+                //            await _historyProductRTCRepo.UpdateAsync(item);
+                //    }
+                //}
 
                 return Ok(new
                 {
                     status = 1,
-                    data = savedSerials
+                    data = product
                 });
             }
             catch (Exception ex)

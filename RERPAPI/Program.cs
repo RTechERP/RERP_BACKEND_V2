@@ -74,6 +74,7 @@ builder.Services.AddScoped<CustomerPartsRepo>();
 builder.Services.AddScoped<CustomerRepo>();
 builder.Services.AddScoped<CustomerSpecializationRepo>();
 builder.Services.AddScoped<DailyReportTechnicalRepo>();
+builder.Services.AddScoped<DailyReportSaleRepo>();
 builder.Services.AddScoped<DocumentTypeRepo>();
 builder.Services.AddScoped<DocumentRepo>();
 builder.Services.AddScoped<DocumentFileRepo>();
