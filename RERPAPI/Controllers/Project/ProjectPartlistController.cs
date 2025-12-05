@@ -135,6 +135,7 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
+                bool checkThreeMonth = false;
                 string messageError;
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
@@ -157,17 +158,31 @@ namespace RERPAPI.Controllers.Project
                                                            .OrderByDescending(x => x.StatusRequest)
                                                            .FirstOrDefault();
 
-                    if (existingRequest != null && existingRequest.StatusRequest > 0)
+                    if (existingRequest != null && existingRequest.StatusRequest > 0 )
                     {
-                        return Ok(new { status = 2, message = $"Vật tư Stt [{item.STT}] đã được Y/c báo giá.\nVui lòng kiểm tra lại!" });
+                        // Tạo mốc thời gian 3 tháng trước
+                        var threeMonthsAgo = DateTime.Now.AddMonths(-3);
+
+                        // Nếu chưa có ngày báo giá hoặc ngày báo giá đã quá 3 tháng
+                        if (existingRequest.DatePriceQuote == null || existingRequest.DatePriceQuote > threeMonthsAgo)
+                        {
+                            checkThreeMonth = true;
+                            return Ok(new
+                            {
+                                status = 2,
+                                message = $"Vật tư Stt [{item.STT}] đã được yêu cầu báo giá.\nVui lòng kiểm tra lại!"
+                            });
+                        }
                     }
                 }
 
                 // ===== LOOP 2: XỬ LÝ =====
                 foreach (var item in request)
                 {
+                    // Tạo mốc thời gian 3 tháng trước
+                    var threeMonthsAgo = DateTime.Now.AddMonths(-3);
                     if (item.ID <= 0) continue;
-                    if (item.StatusPriceRequest > 0) continue;
+                    if (item.StatusPriceRequest > 0 && (item.DatePriceQuote ==null || item.DatePriceQuote >threeMonthsAgo)) continue;
 
                     // Cập nhật ProjectPartList (cả cha và con)
                     var partList = _projectPartlistRepo.GetByID(item.ID);
@@ -187,7 +202,7 @@ namespace RERPAPI.Controllers.Project
                         EmployeeID = currentUser.EmployeeID,
                         ProductCode = item.ProductCode,
                         ProductName = item.GroupMaterial,
-                        StatusRequest = item.StatusPriceRequest + 1,
+                        StatusRequest = checkThreeMonth ? item.StatusPriceRequest + 1 : 1,
                         DateRequest = DateTime.Now,
                         Deadline = item.DeadlinePriceRequest,
                         Quantity = item.QtyFull,
@@ -346,6 +361,16 @@ namespace RERPAPI.Controllers.Project
                     if (isApproved == true && item.IsApprovedPurchase == true)
                     {
                         return BadRequest(ApiResponseFactory.Fail(null, $"Vật tư thứ tự [{item.TT}] đã được Y/c mua.\nVui lòng kiểm tra lại!"));
+                    }
+                    if(isApproved == true && item.DatePriceQuote == null)
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, $"Vật tư thứ tự [{item.TT}] chưa được báo giá.\nVui lòng kiểm tra lại!"));
+                    }
+                    // Tạo mốc thời gian 3 tháng trước
+                    var threeMonthsAgo = DateTime.Now.AddMonths(-3);
+                    if (isApproved == true && item.DatePriceQuote < threeMonthsAgo)
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, $"Vật tư thứ tự [{item.TT}] đã được báo giá từ hơn 3 tháng trước!\nVui lòng yêu cầu báo giá lại!"));
                     }
                 }
 
@@ -591,10 +616,6 @@ namespace RERPAPI.Controllers.Project
                     }
                     await _productSaleRepo.UpdateAsync(productSale);
                 }
-
-
-
-
                 return Ok(ApiResponseFactory.Success(null,
                     $"{approvedText} tích xanh thành công!"));
             }
