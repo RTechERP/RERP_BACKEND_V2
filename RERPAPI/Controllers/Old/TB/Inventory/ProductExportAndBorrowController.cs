@@ -39,9 +39,13 @@ namespace RERPAPI.Controllers.Old.TB.Inventory
             }
         }
         [HttpGet("get-borrow-report")]
-        public IActionResult GetBorrowReport(int warehouseID)
+        public IActionResult GetBorrowReport(int warehouseID,int warehouseType)
         {
-            var dt = SQLHelper<dynamic>.ProcedureToList("spGetRecentTimeAndNumberUse", new string[] { "@WarehouseID" }, new object[] { warehouseID });
+            
+            var dt = SQLHelper<dynamic>.ProcedureToList("spGetRecentTimeAndNumberUse", 
+                new string[] { "@WarehouseID", "@WarehouseType" }, 
+                new object[] { warehouseID ,warehouseType});
+
             var data = SQLHelper<dynamic>.GetListData(dt, 0);
             return Ok(ApiResponseFactory.Success(data, ""));
         }

@@ -18,5 +18,6 @@ namespace RERPAPI.Model.Param.Technical
         public int? WarehouseID { get; set; }
         public int? BillType { get; set; }
         public int? ReceiverID { get; set; }
+        public int WarehouseType { get; set; } = 1;
     }
 }

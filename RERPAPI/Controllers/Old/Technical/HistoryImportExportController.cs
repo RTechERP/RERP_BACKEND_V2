@@ -16,8 +16,8 @@ namespace RERPAPI.Controllers.Old.Technical
             {
                 var billTechnical = SQLHelper<dynamic>.ProcedureToList(
                     "spGetExportImportTechnical",
-                   new string[] { "@PageNumber", "@PageSize", "@FilterText", "@DateStart", "@DateEnd", "@Status", "@WarehouseID", "@BillType", "@ReceiverID" },
-                    new object[] { request.Page, request.Size, request.FilterText, request.DateStart, request.DateEnd, request.Status, request.WarehouseID ,request.BillType, request.ReceiverID});
+                    new string[] { "@PageNumber", "@PageSize", "@FilterText", "@DateStart", "@DateEnd", "@Status", "@WarehouseID", "@BillType", "@ReceiverID", "@WarehouseType" },
+                    new object[] { request.Page, request.Size, request.FilterText, request.DateStart, request.DateEnd, request.Status, request.WarehouseID ,request.BillType, request.ReceiverID,request.WarehouseType});
 
                 return Ok(new
                 {

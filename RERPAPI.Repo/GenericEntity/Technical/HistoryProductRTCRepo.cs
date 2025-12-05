@@ -15,7 +15,8 @@ namespace RERPAPI.Repo.GenericEntity.Technical
         {
             string productQRCode = item.SerialNumber ?? "";
             HistoryProductRTC historyProductRTC = GetByID(item.HistoryProductRTCID);
-            if (historyProductRTC.ID <= 0 && item.Status == 7)
+            //if (historyProductRTC.ID <= 0 && item.Status == 7)
+            if (historyProductRTC.ID <= 0)
             {
                 ProductRTCQRCode qrCode = _productRTCQRCodeRepo.GetAll(x => x.ProductQRCode == productQRCode.Trim()).FirstOrDefault() ?? new ProductRTCQRCode();
                 historyProductRTC = new HistoryProductRTC()
