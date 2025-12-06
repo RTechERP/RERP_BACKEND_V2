@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -16,6 +17,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             _documentImportRepo = documentImportRepo;
         }
         [HttpGet("")]
+        [RequiresPermission("N52,N36,N1,N34")]
         public IActionResult getDocumentImportByPO(int poNCCId, int billImportID)
         {
             try

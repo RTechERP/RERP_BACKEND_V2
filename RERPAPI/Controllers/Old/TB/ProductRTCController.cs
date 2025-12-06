@@ -45,8 +45,8 @@ namespace RERPAPI.Controllers.Old.TB
             try
             {
                 var products = SQLHelper<dynamic>.ProcedureToList("spGetProductRTC",
-                new string[] { "@ProductGroupID", "@Keyword", "@CheckAll", "@WarehouseID", "@ProductRTCID", "@ProductGroupNo", "@PageNumber", "@PageSize" , "@WarehouseType" },
-                new object[] { request.ProductGroupID, request.Keyword, request.CheckAll, request.WarehouseID, request.ProductRTCID, request.ProductGroupNo, request.Page, request.Size ,request.WarehouseType});
+                new string[] { "@ProductGroupID", "@Keyword", "@CheckAll", "@WarehouseID", "@ProductRTCID", "@ProductGroupNo", "@PageNumber", "@PageSize", "@WarehouseType" },
+                new object[] { request.ProductGroupID, request.Keyword, request.CheckAll, request.WarehouseID, request.ProductRTCID, request.ProductGroupNo, request.Page, request.Size, request.WarehouseType });
 
                 var data = new
                 {
@@ -200,11 +200,11 @@ namespace RERPAPI.Controllers.Old.TB
 
         }
         [HttpGet("get-location")]
-        public IActionResult GetLocation(int? warehouseID,int locationType)
+        public IActionResult GetLocation(int? warehouseID, int locationType)
         {
             try
             {
-                var location = _productLocationRepo.GetAll(x => x.IsDeleted != true && 
+                var location = _productLocationRepo.GetAll(x => x.IsDeleted != true &&
                                                                 x.WarehouseID == warehouseID);
                 return Ok(ApiResponseFactory.Success(new { location }, ""));
             }
@@ -438,7 +438,10 @@ namespace RERPAPI.Controllers.Old.TB
                         else
                         {
                             if (item.ID <= 0)
+                            {
+                                item.ProductCodeRTC = _productRTCRepo.generateProductCode(item.ProductGroupRTCID ?? 0);
                                 await _productRTCRepo.CreateAsync(item);
+                            }
                             else
                                 await _productRTCRepo.UpdateAsync(item);
                         }

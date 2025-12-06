@@ -41,7 +41,7 @@ namespace RERPAPI.Controllers.Old
             }
         }
         [HttpPost("get-employee-onleave-person")]
-        [RequiresPermission("")]
+      
         public IActionResult GetEmployeeOnLeavePerson(EmployeeOnLeavePersonParam request)
         {
             try

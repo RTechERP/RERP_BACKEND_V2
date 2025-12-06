@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -72,6 +73,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         /// <param name="filter"></param>
         /// <returns></returns>
         [HttpPost("get-all")]
+        [RequiresPermission("N27,N29,N50,N1,N36,N52,N35,N33,N34,N69")]
         public IActionResult getBillImport([FromBody] BillImportParamRequest filter)
         {
             try
@@ -237,6 +239,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         /// <param name="isapproved">Trạng thái duyệt</param>
         /// <returns></returns>
         [HttpPost("approved")]
+        [RequiresPermission("N11,N50,N1,N18")]
         public async Task<IActionResult> Approved([FromBody] List<BillImportApprovedDTO> billImports, bool isapproved)
         {
             try
@@ -457,12 +460,14 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
 
         [HttpGet("get-bill-code")]
+        [RequiresPermission("N27,N29,N50,N1,N36,N52,N35,N33,N34,N69")]
         public ActionResult<string> getBillCode(int billType)
         {
             var newCode = _billImportRepo.GetBillCode(billType);
             return Ok(new { data = newCode }); // <-- Đây là điểm quan trọng
         }
         [HttpPost("save-data")]
+        [RequiresPermission("N27,N1,N33,N34,N69")]
         public async Task<IActionResult> saveDataBillImport([FromBody] List<BillImportDTO> dtos)
         {
 

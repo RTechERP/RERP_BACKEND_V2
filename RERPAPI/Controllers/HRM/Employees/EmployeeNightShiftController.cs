@@ -43,6 +43,26 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpPost("get-employee-night-shift-person")]
+        public ActionResult GetEmployeeNightShiftPerson([FromBody] EmployeeNightShiftRequestParam request)
+
+        {
+            try
+            {
+                var data = SQLHelper<dynamic>.ProcedureToList(
+                    "spGetEmployeeNightShift",
+                    new string[] { "@EmployeeID", "@DateStart", "@DateEnd", "@IsApproved", "@DepartmentID", "@Keyword", "@PageNumber", "PageSize" },
+                    new object[] { 0, request.DateStart, request.DateEnd, request.IsApproved, request.DepartmentID ?? 0, request.KeyWord ?? "", request.Page ?? 1, request.Size ?? 50 });
+
+                var nightShiftdata = SQLHelper<object>.GetListData(data, 0);
+                var TotalPage = SQLHelper<object>.GetListData(data, 2);
+                return Ok(ApiResponseFactory.Success(new { nightShiftdata, TotalPage }, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [RequiresPermission("N1,N2")]
         [HttpPost("get-employee-night-shift-summary")]
         public ActionResult GetEmployeeNightShiftSummary([FromBody] EmployeeNightShiftSummaryRequestParam request)
