@@ -34,7 +34,7 @@ namespace RERPAPI.Controllers.Old.POKH
         private readonly CurrencyRepo _currencyRepo;
         private readonly ProductGroupRepo _productGroupRepo;
         private readonly ConfigSystemRepo _configSystemRepo;
-
+        private readonly ProductSaleRepo _productSaleRepo;
         public POKHController(
             IWebHostEnvironment environment,
             POKHRepo pokhRepo,
@@ -44,7 +44,8 @@ namespace RERPAPI.Controllers.Old.POKH
             ProjectRepo projectRepo,
             CurrencyRepo currencyRepo,
             ProductGroupRepo productGroupRepo,
-            ConfigSystemRepo configSystemRepo)
+            ConfigSystemRepo configSystemRepo,
+            ProductSaleRepo productSaleRepo)
         {
             _pokhRepo = pokhRepo;
             _pokhDetailRepo = pokhDetailRepo;
@@ -54,6 +55,7 @@ namespace RERPAPI.Controllers.Old.POKH
             _currencyRepo = currencyRepo;
             _productGroupRepo = productGroupRepo;
             _configSystemRepo = configSystemRepo;
+            _productSaleRepo = productSaleRepo;
 
             //_uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "POKH");
             //if (!Directory.Exists(_uploadPath))
@@ -933,6 +935,237 @@ namespace RERPAPI.Controllers.Old.POKH
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi tải file: {ex.Message}"));
             }
+        }
+
+        [HttpPost("import-excel-detail")]
+        
+        public IActionResult ImportExcelDetail([FromBody] dynamic request)
+        {
+            try
+            {
+                int pokhId = (int)request.pokhId;
+                var excelData = ((IEnumerable<dynamic>)request.excelData).ToList();
+
+                var result = new List<object>();
+                var ttToIdMap = new Dictionary<string, int>();
+                int tempId = 0;
+
+                foreach (var row in excelData)
+                {
+                    tempId--;
+                    string tt = row.TT?.ToString()?.Trim() ?? "";
+
+                    // Xác định ParentID từ TT
+                    int parentId = 0;
+                    if (!string.IsNullOrEmpty(tt) && tt.Contains("."))
+                    {
+                        string parentTT = tt.Substring(0, tt.LastIndexOf("."));
+                        if (ttToIdMap.TryGetValue(parentTT, out int pId))
+                            parentId = pId;
+                    }
+
+                    ttToIdMap[tt] = tempId;
+
+                    // Tính toán
+                    decimal qty = Convert.ToDecimal(row.Qty ?? 0);
+                    decimal unitPrice = Convert.ToDecimal(row.UnitPrice ?? 0);
+                    decimal intoMoney = qty * unitPrice;
+
+                    result.Add(new
+                    {
+                        ID = tempId,
+                        STT = row.STT ?? 0,
+                        TT = tt,
+                        ProductNewCode = row.ProductNewCode ?? "",
+                        ProductCode = row.ProductCode ?? "",
+                        ProductName = row.ProductName ?? "",
+                        GuestCode = row.GuestCode ?? "",
+                        Maker = row.Maker ?? "",
+                        Unit = row.Unit ?? "",
+                        Qty = qty,
+                        UnitPrice = unitPrice,
+                        IntoMoney = intoMoney,
+                        VAT = 0,
+                        TotalPriceIncludeVAT = intoMoney,
+                        ParentID = parentId,
+                        Spec = row.Spec ?? ""
+                    });
+                }
+
+                return Ok(ApiResponseFactory.Success(result, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        //[HttpPost("check-productsale")]
+        //public IActionResult CheckProductSaleExist(
+        //    string ProductNewCode,
+        //    string ProductGroupName,
+        //    string ProductCode,
+        //    string ProductName)
+        //{
+        //    try
+        //    {
+        //        // 1. Kiểm tra ProductGroupName có tồn tại không
+        //        var productGroup = _productGroupRepo.GetAll()
+        //            .FirstOrDefault(pg => pg.ProductGroupName == ProductGroupName);
+
+        //        if (productGroup == null)
+        //        {
+        //            return Ok(ApiResponseFactory.Fail(null, $"Tên nhóm [{ProductGroupName}] không tồn tại vui lòng kiểm tra lại dữ liệu!"));
+        //        }
+
+        //        int productGroupID = productGroup.ID;
+
+        //        // 2. Tìm ProductSale theo ProductNewCode, ProductGroupID, ProductCode
+
+        //        var existingProductSale = _productSaleRepo.GetAll(x => x.ProductNewCode == ProductNewCode && x.ProductGroupID == productGroupID && x.ProductCode == ProductCode).FirstOrDefault();
+
+        //        int productSaleID = 0;
+
+        //        if (existingProductSale != null)
+        //        {
+        //            productSaleID = existingProductSale.ID;
+        //        }
+        //        else
+        //        {
+        //            // 3. Tạo mới ProductSale nếu chưa có
+        //            var newProductSale = new ProductSale
+        //            {
+        //                ProductCode = ProductCode ?? "",
+        //                ProductName = ProductName ?? "",
+        //                ProductNewCode = ProductNewCode ?? "",
+        //                ProductGroupID = productGroupID
+        //            };
+
+        //            _productSaleRepo.Create(newProductSale);
+        //            productSaleID = newProductSale.ID;
+        //        }
+
+        //        // 4. Trả về ProductID
+        //        return Ok(ApiResponseFactory.Success(new { ProductID = productSaleID }, ""));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
+
+        [HttpPost("check-productsale")]
+        public IActionResult CheckProductSaleExist([FromBody] CheckProductSaleRequest request)
+        {
+            try
+            {
+                if (request == null || request.ExcelData == null || request.ExcelData.Count == 0)
+                {
+                    return Ok(ApiResponseFactory.Fail(null, "Dữ liệu Excel không hợp lệ!"));
+                }
+
+                var result = new List<CheckProductSaleResponse>();
+                var nameGroup = new HashSet<string>();
+                var valuePG = new Dictionary<int, string>();
+
+                foreach (var row in request.ExcelData)
+                {
+                    int rowIndex = row.RowIndex;
+                    string productNewCode = row.ProductNewCode ?? "";
+                    string productGroupName = row.ProductGroupName ?? "";
+                    string productCode = row.ProductCode ?? "";
+                    string productName = row.ProductName ?? "";
+
+                    // 1. Kiểm tra ProductGroupName có tồn tại không
+                    if (!string.IsNullOrEmpty(productGroupName) && !nameGroup.Contains(productGroupName))
+                    {
+                        var productGroup = _productGroupRepo.GetAll()
+                            .FirstOrDefault(pg => pg.ProductGroupName == productGroupName);
+
+                        if (productGroup == null)
+                        {
+                            return Ok(ApiResponseFactory.Fail(null, $"Tên nhóm [{productGroupName}] không tồn tại vui lòng kiểm tra lại dữ liệu! (Dòng {rowIndex + 1})"));
+                        }
+
+                        valuePG[productGroup.ID] = productGroupName;
+                        nameGroup.Add(productGroupName);
+                    }
+
+                    // 2. Tìm ProductGroupID từ ProductGroupName
+                    int? productGroupID = null;
+                    if (!string.IsNullOrEmpty(productGroupName) && valuePG.Count > 0)
+                    {
+                        var pg = valuePG.FirstOrDefault(x => x.Value == productGroupName);
+                        if (pg.Key > 0)
+                        {
+                            productGroupID = pg.Key;
+                        }
+                    }
+
+                    // 3. Tìm ProductSale theo ProductNewCode, ProductGroupID, ProductCode
+                    int productSaleID = 0;
+
+                    if (productGroupID.HasValue && !string.IsNullOrEmpty(productCode))
+                    {
+                        var existingProductSale = _productSaleRepo.GetAll(
+                            x => x.ProductNewCode == productNewCode &&
+                                 x.ProductGroupID == productGroupID.Value &&
+                                 x.ProductCode == productCode
+                        ).FirstOrDefault();
+
+                        if (existingProductSale != null)
+                        {
+                            productSaleID = existingProductSale.ID;
+                        }
+                        else
+                        {
+                            // 4. Tạo mới ProductSale nếu chưa có
+                            var newProductSale = new ProductSale
+                            {
+                                ProductCode = productCode,
+                                ProductName = productName,
+                                ProductNewCode = productNewCode,
+                                ProductGroupID = productGroupID.Value
+                            };
+
+                            _productSaleRepo.Create(newProductSale);
+                            productSaleID = newProductSale.ID;
+                        }
+                    }
+
+                    result.Add(new CheckProductSaleResponse
+                    {
+                        RowIndex = rowIndex,
+                        ProductID = productSaleID
+                    });
+                }
+
+                return Ok(ApiResponseFactory.Success(result, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        public class CheckProductSaleRequest
+        {
+            public List<ExcelDataRowDto> ExcelData { get; set; }
+        }
+
+        public class ExcelDataRowDto
+        {
+            public int RowIndex { get; set; }
+            public string ProductNewCode { get; set; }
+            public string ProductGroupName { get; set; }
+            public string ProductCode { get; set; }
+            public string ProductName { get; set; }
+        }
+
+        public class CheckProductSaleResponse
+        {
+            public int RowIndex { get; set; }
+            public int ProductID { get; set; }
         }
     }
 }
