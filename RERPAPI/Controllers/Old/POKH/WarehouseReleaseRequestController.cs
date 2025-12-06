@@ -204,21 +204,21 @@ namespace RERPAPI.Controllers.Old.POKH
                         new[] { "@WarehouseID", "@ProductID", "@ProjectID", "@POKHDetailID", "@BillExportDetailID" },
                         new object[] { request.WarehouseID, productID, 0, item.POKHDetailID, 0 });
 
-                    var inv = SQLHelper<dynamic>.GetListData(list, 0);
-                    var imp = SQLHelper<dynamic>.GetListData(list, 1);
-                    var exp = SQLHelper<dynamic>.GetListData(list, 2);
-                    var stk = SQLHelper<dynamic>.GetListData(list, 3);
+                    var inventoryProjects = SQLHelper<dynamic>.GetListData(list, 0);
+                    var dtImport = SQLHelper<dynamic>.GetListData(list, 1);
+                    var dtExport = SQLHelper<dynamic>.GetListData(list, 2);
+                    var dtStock = SQLHelper<dynamic>.GetListData(list, 3);
 
-                    decimal totalQuantityKeep = inv.Count == 0 ? 0 : Convert.ToDecimal(inv[0].TotalQuantity);
+                    decimal totalQuantityKeep = inventoryProjects.Count == 0 ? 0 : Convert.ToDecimal(inventoryProjects[0].TotalQuantity);
                     totalQuantityKeep = Math.Max(totalQuantityKeep, 0);
 
-                    decimal totalQuantityLast = stk.Count == 0 ? 0 : Convert.ToDecimal(stk[0].TotalQuantityLast);
+                    decimal totalQuantityLast = dtStock.Count == 0 ? 0 : Convert.ToDecimal(dtStock[0].TotalQuantityLast);
                     totalQuantityLast = Math.Max(totalQuantityLast, 0);
 
-                    decimal totalImport = imp.Count == 0 ? 0 : Convert.ToDecimal(imp[0].TotalImport);
+                    decimal totalImport = dtImport.Count == 0 ? 0 : Convert.ToDecimal(dtImport[0].TotalImport);
                     totalImport = Math.Max(totalImport, 0);
 
-                    decimal totalExport = exp.Count == 0 ? 0 : Convert.ToDecimal(exp[0].TotalExport);
+                    decimal totalExport = dtExport.Count == 0 ? 0 : Convert.ToDecimal(dtExport[0].TotalExport);
                     totalExport = Math.Max(totalExport, 0);
 
                     decimal quantityRemain = totalImport - totalExport;
