@@ -414,7 +414,8 @@ namespace RERPAPI.Controllers.CRM
         BusinessFieldRepo _businessFieldRepo;
         CustomerRepo _customerRepo;
         BusinessFieldLinkRepo _businessFieldLinkRepo;
-        public CustomerController(AddressStockRepo addressStockRepo, CustomerContactRepo customerContactRepo, CustomerEmployeeRepo customerEmployeeRepo, EmployeeRepo employeeRepo, CustomerSpecializationRepo customerSpecializationRepo, BusinessFieldRepo businessFieldRepo, CustomerRepo customerRepo, BusinessFieldLinkRepo businessFieldLinkRepo)
+        vUserGroupLinksRepo _vUserGroupLinksRepo;
+        public CustomerController(AddressStockRepo addressStockRepo, CustomerContactRepo customerContactRepo, CustomerEmployeeRepo customerEmployeeRepo, EmployeeRepo employeeRepo, CustomerSpecializationRepo customerSpecializationRepo, BusinessFieldRepo businessFieldRepo, CustomerRepo customerRepo, BusinessFieldLinkRepo businessFieldLinkRepo, vUserGroupLinksRepo vUserGroupLinksRepo)
         {
             _addressStockRepo = addressStockRepo;
             _customerContactRepo = customerContactRepo;
@@ -424,6 +425,7 @@ namespace RERPAPI.Controllers.CRM
             _businessFieldRepo = businessFieldRepo;
             _customerRepo = customerRepo;
             _businessFieldLinkRepo = businessFieldLinkRepo;
+            _vUserGroupLinksRepo = vUserGroupLinksRepo;
         }
         private static string json = System.IO.File.ReadAllText(@"jsonProvinces.txt");
         private static List<Provinces> provinces = JsonConvert.DeserializeObject<List<Provinces>>(json);
@@ -463,7 +465,7 @@ namespace RERPAPI.Controllers.CRM
         }
 
         [HttpGet("get-data-by-procedure")]
-        [RequiresPermission("N1,N27,N53,N31,N69")]
+        //[RequiresPermission("N1,N27,N53,N31,N69")]
         public IActionResult GetCustomer(int page, int size, int employeeId, int groupId, string? filterText = "")
         {
             try
@@ -471,7 +473,24 @@ namespace RERPAPI.Controllers.CRM
                 List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetCustomer",
                     new string[] { "@PageNumber", "@PageSize", "@FilterText", "@EmployeeID", "@GroupID" },
                     new object[] { page, size, filterText, employeeId, groupId });
-                var data = SQLHelper<dynamic>.GetListData(list, 0);
+
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                object data;
+                 data = SQLHelper<dynamic>.GetListData(list, 0);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                var vUser = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x => (x.Code == "N1" || x.Code == "N27" || x.Code == "N53"|| x.Code == "N31" || x.Code == "N69") && x.UserID == currentUser.ID);
+
+                if(vUser == null)
+                {
+                    data = ((List<dynamic>)data).Select(x => new
+                      {
+                          ID = x.ID,
+                          CustomerName = x.CustomerName,
+                          CustomerCode = x.CustomerCode,
+                          CustomerShortName = x.CustomerShortName,
+                          Address = x.Address
+                      }).ToList<dynamic>();
+                }
                 var data1 = SQLHelper<dynamic>.GetListData(list, 1);
                 var data2 = SQLHelper<dynamic>.GetListData(list, 2);
                 dataExport = data2;
