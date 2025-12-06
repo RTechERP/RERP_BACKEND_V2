@@ -8,19 +8,18 @@ namespace RERPAPI.Repo.GenericEntity
         public ProjectPartlistPriceRequestRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
-        public async Task SaveData(List<ProjectPartlistPriceRequest> lst)
+        public async Task SaveData(ProjectPartlistPriceRequest item)
         {
-            foreach (var item in lst)
+
+            if (item.ID > 0)
             {
-                if (item.ID > 0)
-                {
-                    await UpdateAsync(item);
-                }
-                else
-                {
-                    await CreateAsync(item);
-                }
+                await UpdateAsync(item);
             }
+            else
+            {
+                await CreateAsync(item);
+            }
+
         }
     }
 }

@@ -45,6 +45,26 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpPost("get-employee-no-fingerprint-person")]
+        public IActionResult GetEmployeeNoFingerprintPerson([FromBody] EmployeeNoFingerPrintRequestParam request)
+        {
+            try
+            {
+                DateTime ds = new DateTime(request.DateStart.Year, request.DateStart.Month, request.DateStart.Day, 0, 0, 0);
+                DateTime de = new DateTime(request.DateEnd.Year, request.DateEnd.Month, request.DateEnd.Day, 23, 59, 59);
+                var dt = SQLHelper<object>.ProcedureToList("spGetEmployeeNoFingerprint",
+                                                   new string[] { "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@DepartmentID", "@IDApprovedTP", "@Status", @"Keyword" },
+                                                   new object[] { request.Page ?? 1, request.Size ?? 50, ds, de, request.DepartmentID ?? 0, request.IDApprovedTP, request.Status, request.KeyWord ?? "" });
+                var data = SQLHelper<object>.GetListData(dt, 0);
+                var totalPage = SQLHelper<object>.GetListData(dt, 1);
+
+                return Ok(ApiResponseFactory.Success(new { data, totalPage }, "Lấy dữ lệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [RequiresPermission("N1,N2")]
         [HttpGet("get-employee-approver")]
         public IActionResult GetEmployeesWithApprovers()

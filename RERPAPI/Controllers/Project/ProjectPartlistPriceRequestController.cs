@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
@@ -11,7 +12,7 @@ namespace RERPAPI.Controllers.Project
     [ApiController]
     //[Authorize]
     //[ApiKeyAuthorize]
-    //[Authorize]
+    [Authorize]
     public class ProjectPartlistPriceRequestController : ControllerBase
     {
         #region Khai báo repository
@@ -66,10 +67,12 @@ namespace RERPAPI.Controllers.Project
             int isDeleted, int projectTypeID, int poKHID, int isJobRequirement = -1, int projectPartlistPriceRequestTypeID = -1, int isCommercialProduct = -1, int page = 1, int size = 25)
         {
             keyword = string.IsNullOrWhiteSpace(keyword) ? null : keyword.Trim();
+            dateEnd = dateEnd.Date.AddDays(1).AddMilliseconds(-3);
+            dateStart = dateStart.Date;
 
             List<List<dynamic>> dtPriceRequest = SQLHelper<dynamic>.ProcedureToList(
-                //"spGetProjectPartlistPriceRequest_New_Nhat",
-                "spGetProjectPartlistPriceRequest_New",
+                "spGetProjectPartlistPriceRequest_New_Nhat",
+                //"spGetProjectPartlistPriceRequest_New",
                 new string[] {
                     "@DateStart", "@DateEnd", "@StatusRequest", "@ProjectID", "@Keyword", "@IsDeleted",
                     "@ProjectTypeID", "@IsCommercialProduct", "@IsJobRequirement",
@@ -101,30 +104,147 @@ namespace RERPAPI.Controllers.Project
                 }
             });
         }
-        [HttpGet("get-partlist")]
-        public IActionResult GetProjectPartlists(DateTime dateStart, DateTime dateEnd, int statusRequest, int projectId, string? keyword,
-            int isDeleted, int projectTypeID, int poKHID, int isCommercialProduct = -1)
-        {
-            try
-            {
-                if (projectTypeID < 0) isCommercialProduct = 1;
-                else poKHID = 0;
-                int isJobRequirement = -1;
-                int projectPartlistPriceRequestTypeID = -1;
-                var dt = SQLHelper<dynamic>.ProcedureToList("spGetProjectPartlistPriceRequest_New",
-                                                                              new string[] {
-                                                                  "@DateStart", "@DateEnd", "@StatusRequest", "@ProjectID", "@Keyword", "@IsDeleted",
-                                                                  "@ProjectTypeID", "@IsCommercialProduct","@IsJobRequirement","@ProjectPartlistPriceRequestTypeID", "@POKHID" }, new object[] { dateStart, dateEnd, statusRequest, projectId, keyword, isDeleted, projectTypeID, isCommercialProduct, isJobRequirement, projectPartlistPriceRequestTypeID, poKHID });
+        //[HttpGet("get-partlist")]
+        //public IActionResult GetProjectPartlists(
+        //    DateTime dateStart,
+        //    DateTime dateEnd,
+        //    int statusRequest,
+        //    int projectId,
+        //    string? keyword,
+        //    int isDeleted,
+        //    int poKHID = 0,
+        //    int jobRequirementID = 0,
+        //    bool isVPP = false,
+        //    int projectPartlistPriceRequestTypeID = 0,
+        //    int employeeID = 0)
+        //{
+        //    try
+        //    {
+        //        // Lấy danh sách các ProjectType được assign cho employee
+        //        int projectTypeIdHR = 0;
+        //        if (jobRequirementID > 0 || isVPP)
+        //            projectTypeIdHR = -2; // HCNS
 
+        //        var dtTypeResults = SQLHelper<dynamic>.ProcedureToList(
+        //            "spGetProjectTypeAssignByEmployeeID",
+        //            new string[] { "@EmployeeID", "@ProjectTypeID" },
+        //            new object[] { employeeID, projectTypeIdHR }
+        //        );
 
-                var data = SQLHelper<dynamic>.GetListData(dt, 0);
-                return Ok(ApiResponseFactory.Success(data, ""));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
+        //        if (dtTypeResults == null || dtTypeResults.Count == 0 || dtTypeResults[0].Count == 0)
+        //        {
+        //            return Ok(ApiResponseFactory.Success(new { tabs = new List<object>() }, "No project types assigned"));
+        //        }
+
+        //        var projectTypes = dtTypeResults[0]; // Lấy table đầu tiên
+
+        //        // Khởi tạo response
+        //        var tabsData = new List<object>();
+
+        //        foreach (var projectType in projectTypes)
+        //        {
+        //            var ptDict = (IDictionary<string, object>)projectType;
+
+        //            int projectTypeID = Convert.ToInt32(ptDict["ProjectTypeID"]);
+        //            string typeCode = ptDict["ProjectTypeCode"]?.ToString() ?? "";
+        //            string typeName = ptDict["ProjectTypeName"]?.ToString() ?? "";
+
+        //            // Xác định các tham số cho mỗi tab theo logic WinForm
+        //            int isCommercialProduct = -1;
+        //            int isJobRequirement = -1;
+        //            int effectiveProjectTypeID = projectTypeID;
+        //            int effectivePOKHID = 0;
+        //            int effectiveProjectPartlistPriceRequestTypeID = -1;
+        //            int effectiveEmployeeID = 0;
+        //            bool isVisible = true;
+
+        //            // Logic xử lý theo từng loại ProjectType
+        //            if (projectTypeID == -1)
+        //            {
+        //                // VTN
+        //                isCommercialProduct = 1;
+        //            }
+        //            else if (projectTypeID == -2)
+        //            {
+        //                // HCNS
+        //                effectiveProjectTypeID = -1;
+        //                isJobRequirement = 1;
+        //            }
+        //            else if (projectTypeID == -3)
+        //            {
+        //                // Hàng MKT
+        //                effectiveProjectPartlistPriceRequestTypeID = 4;
+        //                isCommercialProduct = 0;
+        //            }
+        //            else if (projectTypeID == 0)
+        //            {
+        //                isCommercialProduct = 0;
+        //                isJobRequirement = 0;
+        //            }
+
+        //            // Override isJobRequirement nếu có jobRequirementID hoặc isVPP
+        //            if (jobRequirementID > 0 || isVPP)
+        //                isJobRequirement = 1;
+
+        //            // Xác định tab visibility
+        //            if (poKHID > 0 && projectTypeID != -1)
+        //            {
+        //                isVisible = false;
+        //            }
+
+        //            if (projectPartlistPriceRequestTypeID == 3 && projectTypeID != -2)
+        //            {
+        //                isVisible = false;
+        //            }
+
+        //            if (projectPartlistPriceRequestTypeID == 4 && projectTypeID != -3)
+        //            {
+        //                isVisible = false;
+        //            }
+
+        //            // Nếu tab không visible thì skip
+        //            if (!isVisible) continue;
+
+        //            // Load data cho tab này
+        //            var dtPriceRequestResults = SQLHelper<dynamic>.ProcedureToList(
+        //                "spGetProjectPartlistPriceRequest_New",
+        //                new string[] {
+        //            "@DateStart", "@DateEnd", "@StatusRequest", "@ProjectID", "@Keyword",
+        //            "@IsDeleted", "@ProjectTypeID", "@IsCommercialProduct", "@POKHID",
+        //            "@IsJobRequirement", "@ProjectPartlistPriceRequestTypeID", "@EmployeeID"
+        //                },
+        //                new object[] {
+        //            dateStart, dateEnd, statusRequest, projectId, keyword, isDeleted,
+        //            effectiveProjectTypeID, isCommercialProduct, effectivePOKHID,
+        //            isJobRequirement, effectiveProjectPartlistPriceRequestTypeID, effectiveEmployeeID
+        //                }
+        //            );
+
+        //            var tabData = dtPriceRequestResults != null && dtPriceRequestResults.Count > 0
+        //                ? dtPriceRequestResults[0]
+        //                : new List<dynamic>();
+
+        //            // Thêm thông tin tab
+        //            tabsData.Add(new
+        //            {
+        //                tabName = typeName,
+        //                tabCode = typeCode,
+        //                projectTypeID = projectTypeID,
+        //                isJobRequirementTab = typeCode == "IsJobRequirement",
+        //                columnCaptionOverrides = typeCode == "IsJobRequirement"
+        //                    ? new { projectFullName = "Mã YCCV", projectCode = "Mã YCCV" }
+        //                    : null,
+        //                data = tabData
+        //            });
+        //        }
+
+        //        return Ok(ApiResponseFactory.Success(new { tabs = tabsData }, ""));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
         #endregion
         [HttpGet("get-type")]
         public async Task<IActionResult> GetAllTypebyEmployeeID(int employeeID, int projectTypeID)
@@ -246,8 +366,7 @@ namespace RERPAPI.Controllers.Project
                     .Select(x => new
                     {
                         x.ID,
-                        x.CodeNCC
-                        ,
+                        x.CodeNCC,
                         x.NameNCC
                     })
                     .ToList();
@@ -339,41 +458,35 @@ namespace RERPAPI.Controllers.Project
         [HttpPost("download")]
         public async Task<IActionResult> DownloadFile([FromBody] DownloadProjectPartlistPriceRequestDTO request)
         {
-            var project = projectRepo.GetByID(request.ProjectId);
-            if (project == null || project.CreatedDate == null)
-                return BadRequest(new { status = 0, message = "Không tìm thấy dự án!" });
-
-            var solutions = SQLHelper<ProjectSolution>.ProcedureToList(
-                "spGetProjectSolutionByProjectPartListID",
-                new[] { "@ProjectPartListID" }, new object[] { request.PartListId });
-
-            if (solutions.Count <= 0)
-                return BadRequest(new { status = 0, message = "Không tìm thấy giải pháp dự án!" });
-
-            var solution = SQLHelper<dynamic>.GetListData(solutions, 0).FirstOrDefault();
-            var year = project.CreatedDate.Value.Year;
-
-            var pathPattern = $"{year}/{project.ProjectCode.Trim()}/THIETKE.Co/{solution?.CodeSolution.Trim()}/2D/GC/DH";
-            var fileName = $"{request.ProductCode}.pdf";
-
-            // Lấy base URL real-time
-            var baseUrl = $"{Request.Scheme}://{Request.Host}";
-            var fileUrl = $"{baseUrl}/api/share/duan/{pathPattern}/{fileName}";
-
             try
             {
-                using var httpClient = new HttpClient();
-                var response = await httpClient.GetAsync(fileUrl);
+                var project = projectRepo.GetByID(request.ProjectId);
+                if (project == null || project.CreatedDate == null)
+                    return BadRequest(new { status = 0, message = "Không tìm thấy dự án!" });
 
-                if (!response.IsSuccessStatusCode)
-                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy file: {fileUrl}"));
+                var solutions = SQLHelper<ProjectSolution>.ProcedureToList(
+                    "spGetProjectSolutionByProjectPartListID",
+                    new[] { "@ProjectPartListID" }, new object[] { request.PartListId });
 
-                var stream = await response.Content.ReadAsStreamAsync();
-                return File(stream, "application/pdf", fileName);
+                if (solutions.Count <= 0)
+                    return BadRequest(new { status = 0, message = "Không tìm thấy giải pháp dự án!" });
+
+                var solution = SQLHelper<dynamic>.GetListData(solutions, 0).FirstOrDefault();
+                var year = project.CreatedDate.Value.Year;
+
+                var pathPattern = $"{year}/{project.ProjectCode.Trim()}/THIETKE.Co/{solution?.CodeSolution.Trim()}/2D/GC/DH";
+                var fileName = $"{request.ProductCode}.pdf";
+
+                // Lấy base URL real-time
+                var baseUrl = $"{Request.Scheme}://{Request.Host}";
+                //var fileUrl = $"{baseUrl}/api/share/duan/{pathPattern}/{fileName}";
+                var fileUrl = $"{baseUrl}/api/share/software/duan/Projects/{pathPattern}/{fileName}";
+
+                return Ok(ApiResponseFactory.Success(fileUrl, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(new { status = 0, message = ex.Message, error = ex.ToString() });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -386,30 +499,19 @@ namespace RERPAPI.Controllers.Project
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Không có yêu cầu nào để check giá!"));
                 }
-                await requestRepo.SaveData(lst);
 
-
-
-                return Ok(ApiResponseFactory.Success(lst, "Check giá thành công!"));
-
-
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-        [HttpPost("complete-price-request")]
-        public async Task<IActionResult> CompletePriceRequest(List<ProjectPartlistPriceRequest> lst)
-        {
-            try
-            {
-                if (lst == null || lst.Count == 0)
+                foreach (var item in lst)
                 {
-                    return BadRequest(ApiResponseFactory.Fail(null, "Không có yêu cầu nào để hoàn thành!"));
+
+                    var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                    var currentUser = ObjectMapper.GetCurrentUser(claims);
+                    if (currentUser.EmployeeID != item.QuoteEmployeeID && item.QuoteEmployeeID > 0) continue;
+                    item.QuoteEmployeeID = item.IsCheckPrice == false ? 0 : item.EmployeeID;
+                    item.UpdatedBy = currentUser.LoginName;
+                    await requestRepo.SaveData(item);
+
                 }
-                await requestRepo.SaveData(lst);
-                return Ok(ApiResponseFactory.Success(lst, "Hoàn thành yêu cầu báo giá thành công!"));
+                return Ok(ApiResponseFactory.Success(lst, "Cập nhật dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
@@ -425,7 +527,11 @@ namespace RERPAPI.Controllers.Project
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Không có yêu cầu nào để hủy!"));
                 }
-                await requestRepo.SaveData(lst);
+                foreach (var item in lst)
+                {
+                    await requestRepo.SaveData(item);
+
+                }
                 return Ok(ApiResponseFactory.Success(lst, "Hủy yêu cầu báo giá thành công!"));
             }
             catch (Exception ex)
@@ -435,17 +541,11 @@ namespace RERPAPI.Controllers.Project
         }
         #region Update Price Request Status (Từ chối / Hủy từ chối báo giá)
 
-        /// <summary>
-        /// Cập nhật trạng thái yêu cầu báo giá (Từ chối hoặc Hủy từ chối)
-        /// </summary>
-        /// <param name="request">Danh sách model yêu cầu báo giá cần cập nhật kèm dữ liệu gửi mail</param>
-        /// <returns>Kết quả cập nhật</returns>
         [HttpPost("update-price-request-status")]
         public async Task<IActionResult> UpdatePriceRequestStatus([FromBody] UpdatePriceRequestStatusRequestDTO request)
         {
             try
             {
-                // Validate input
                 if (request == null || request.ListModel == null || !request.ListModel.Any())
                 {
                     return BadRequest(new
@@ -455,23 +555,23 @@ namespace RERPAPI.Controllers.Project
                     });
                 }
 
-                // Lấy thông tin từ item đầu tiên để validate
                 var firstItem = request.ListModel.First();
                 var newStatus = firstItem.StatusRequest ?? 0;
                 var reasonUnPrice = firstItem.ReasonUnPrice ?? string.Empty;
 
-                // Validate StatusRequest (chỉ cho phép 1: Hủy từ chối hoặc 3: Từ chối, 5: Từ chối)
-                if (newStatus != 1 && newStatus != 3 && newStatus != 5)
+                // --- VALIDATE TRẠNG THÁI ---
+                // Chỉ chấp nhận 1 = Hủy từ chối, 5 = Từ chối
+                if (newStatus != 1 && newStatus != 5)
                 {
                     return BadRequest(new
                     {
                         status = 0,
-                        message = "Trạng thái không hợp lệ! (1: Hủy từ chối, 3/5: Từ chối)"
+                        message = "Trạng thái không hợp lệ! (1: Hủy từ chối, 5: Từ chối)"
                     });
                 }
 
-                // Nếu là từ chối (status = 3 hoặc 5), bắt buộc phải có lý do
-                if ((newStatus == 3 || newStatus == 5) && string.IsNullOrWhiteSpace(reasonUnPrice))
+                // Nếu là từ chối (status = 5) → bắt buộc phải nhập lý do
+                if (newStatus == 5 && string.IsNullOrWhiteSpace(reasonUnPrice))
                 {
                     return BadRequest(new
                     {
@@ -483,7 +583,6 @@ namespace RERPAPI.Controllers.Project
                 var validIDs = new List<int>();
                 var invalidProducts = new List<string>();
 
-                // Validate từng record trong database
                 foreach (var item in request.ListModel)
                 {
                     var id = item.ID;
@@ -501,28 +600,34 @@ namespace RERPAPI.Controllers.Project
                         continue;
                     }
 
-                    // Validate cho trường hợp Từ chối (status = 3 hoặc 5)
-                    if (newStatus == 3 || newStatus == 5)
+                    // --- VALIDATE NGHIỆP VỤ---
+
+                    if (newStatus == 5) // TỪ CHỐI
                     {
-                        // Không cho phép từ chối lại nếu đã bị từ chối
-                        if (priceRequest.StatusRequest == 3 || priceRequest.StatusRequest == 5)
+                        // Không cho từ chối lại khi đã từ chối
+                        if (priceRequest.StatusRequest == 5)
                         {
                             invalidProducts.Add($"[{priceRequest.ProductCode}] đã bị từ chối trước đó");
                             continue;
                         }
 
-                        // Không cho phép từ chối nếu đã báo giá (status = 2)
+                        // Không thể từ chối nếu đã báo giá
                         if (priceRequest.StatusRequest == 2)
                         {
                             invalidProducts.Add($"[{priceRequest.ProductCode}] đã ở trạng thái Đã báo giá, không thể từ chối");
                             continue;
                         }
+
+                        // Không thể từ chối nếu đã hoàn thành
+                        if (priceRequest.StatusRequest == 3)
+                        {
+                            invalidProducts.Add($"[{priceRequest.ProductCode}] đã hoàn thành, không thể từ chối");
+                            continue;
+                        }
                     }
-                    // Validate cho trường hợp Hủy từ chối (status = 1)
-                    else if (newStatus == 1)
+                    else if (newStatus == 1) // HỦY TỪ CHỐI
                     {
-                        // Chỉ cho phép hủy nếu đang ở trạng thái Từ chối (status = 3 hoặc 5)
-                        if (priceRequest.StatusRequest != 3 && priceRequest.StatusRequest != 5)
+                        if (priceRequest.StatusRequest != 5)
                         {
                             invalidProducts.Add($"[{priceRequest.ProductCode}] chưa bị từ chối");
                             continue;
@@ -532,7 +637,6 @@ namespace RERPAPI.Controllers.Project
                     validIDs.Add(id);
                 }
 
-                // Nếu không có ID hợp lệ nào
                 if (!validIDs.Any())
                 {
                     return BadRequest(new
@@ -543,17 +647,14 @@ namespace RERPAPI.Controllers.Project
                     });
                 }
 
-                // Thực hiện cập nhật
                 var updateCount = 0;
                 foreach (var item in request.ListModel)
                 {
-                    var id = item.ID;
-                    if (!validIDs.Contains(id)) continue;
+                    if (!validIDs.Contains(item.ID)) continue;
 
-                    var priceRequest = requestRepo.GetByID(id);
+                    var priceRequest = requestRepo.GetByID(item.ID);
                     if (priceRequest == null) continue;
 
-                    // Cập nhật các trường từ model
                     priceRequest.StatusRequest = item.StatusRequest;
                     priceRequest.UpdatedBy = item.UpdatedBy;
                     priceRequest.UpdatedDate = DateTime.Now;
@@ -564,21 +665,24 @@ namespace RERPAPI.Controllers.Project
                     updateCount++;
                 }
 
-                // Gửi email nếu là trường hợp Từ chối (status = 3 hoặc 5)
-                if ((newStatus == 3 || newStatus == 5) && request.ListDataMail != null && request.ListDataMail.Any())
+                // Gửi email nếu là từ chối
+                if (newStatus == 5 && request.ListDataMail != null && request.ListDataMail.Any())
                 {
                     try
                     {
-                        await SendUnPriceEmail(request.ListDataMail, reasonUnPrice, firstItem.EmployeeIDUnPrice ?? 0);
+                        await SendUnPriceEmail(
+                            request.ListDataMail,
+                            reasonUnPrice,
+                            firstItem.EmployeeIDUnPrice ?? 0
+                        );
                     }
                     catch (Exception emailEx)
                     {
-                        // Log lỗi gửi email nhưng vẫn trả về success
-                        Console.WriteLine($"Lỗi gửi email: {emailEx.Message}");
+                        Console.WriteLine("Lỗi gửi email: " + emailEx.Message);
                     }
                 }
 
-                var actionName = (newStatus == 3 || newStatus == 5) ? "Từ chối báo giá" : "Hủy từ chối báo giá";
+                var actionName = (newStatus == 5) ? "Từ chối báo giá" : "Hủy từ chối báo giá";
 
                 return Ok(new
                 {
@@ -599,6 +703,7 @@ namespace RERPAPI.Controllers.Project
                 });
             }
         }
+
         [HttpPost("request-buy")]
         public async Task<IActionResult> RequestBuy([FromBody] RequestBuyDTO request)
         {
@@ -811,23 +916,6 @@ namespace RERPAPI.Controllers.Project
         }
 
         #endregion
-        [HttpPost("reject-price-request")]
-        public async Task<IActionResult> RejectPriceRequest(List<ProjectPartlistPriceRequest> lst)
-        {
-            try
-            {
-                if (lst == null || lst.Count == 0)
-                {
-                    return BadRequest(ApiResponseFactory.Fail(null, "Không có yêu cầu nào để từ chối!"));
-                }
-                await requestRepo.SaveData(lst);
-                return Ok(ApiResponseFactory.Success(lst, "Từ chối báo giá thành công!"));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
         [HttpPost("quote-price")]
         public async Task<IActionResult> QuotePriceRequest(List<ProjectPartlistPriceRequest> lst)
         {
@@ -835,16 +923,55 @@ namespace RERPAPI.Controllers.Project
             {
                 if (lst == null || lst.Count == 0)
                 {
-                    return BadRequest(ApiResponseFactory.Fail(null, "Không có yêu cầu nào để từ chối!"));
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không có yêu cầu nào để cập nhật!"));
                 }
-                await requestRepo.SaveData(lst);
-                return Ok(ApiResponseFactory.Success(lst, "Từ chối báo giá thành công!"));
+
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                bool isAdmin = currentUser.IsAdmin;
+
+                foreach (var item in lst)
+                {
+                    ProjectPartlistPriceRequest request = requestRepo.GetByID(item.ID);
+                    if (request == null) continue;
+
+                    if (request.QuoteEmployeeID != currentUser.EmployeeID && !isAdmin)
+                        continue;
+
+                    int oldStatus = request.StatusRequest ?? 0;
+                    int newStatus = item.StatusRequest ?? oldStatus;
+
+                    if (oldStatus == newStatus)
+                        continue;
+
+                    request.StatusRequest = newStatus;
+
+                    request.UpdatedDate = DateTime.Now;
+                    request.UpdatedBy = currentUser.LoginName;
+
+                    if (!isAdmin)
+                        request.QuoteEmployeeID = currentUser.EmployeeID;
+
+                    if (newStatus == 1) // Hủy báo giá
+                    {
+                        request.DatePriceQuote = null;
+                    }
+                    else if (newStatus == 2) // Báo giá
+                    {
+                        request.DatePriceQuote = DateTime.Now;
+                    }
+                    await requestRepo.SaveData(request);
+                }
+
+                return Ok(ApiResponseFactory.Success(lst, "Cập nhật trạng thái báo giá thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.InnerException?.Message ?? ex.Message));
             }
         }
+
         [HttpPost("save-request-note")]
         public async Task<IActionResult> SaveDataPriceRequestNote([FromBody] List<ProjectPartlistPriceRequestNote> notes)
         {

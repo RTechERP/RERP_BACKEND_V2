@@ -1849,6 +1849,9 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
             entity.Property(e => e.WarehouseType).HasMaxLength(100);
+            entity.Property(e => e.WarehouseTypeBill)
+                .HasDefaultValue(1)
+                .HasComment("1: Kho Demo; 2: Kho AGV");
         });
 
         modelBuilder.Entity<BillExportTechnicalLog>(entity =>
@@ -2104,6 +2107,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.BillCode)
                 .HasMaxLength(100)
                 .IsUnicode(false);
+            entity.Property(e => e.BillType).HasComment("0: Kho Demo; 1: Kho AGV");
             entity.Property(e => e.CreatDate).HasColumnType("datetime");
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
@@ -9975,6 +9979,7 @@ public partial class RTCContext : DbContext
                 .IsUnicode(false);
             entity.Property(e => e.SpecificDestinationAddress).HasMaxLength(500);
             entity.Property(e => e.StartTimeActual).HasColumnType("datetime");
+            entity.Property(e => e.Status).HasComment("1: Chờ xếp; 2: Đã xếp; 3: Hủy xếp; 4: Chủ động phương tiện");
             entity.Property(e => e.TimeNeedPresent).HasColumnType("datetime");
             entity.Property(e => e.TimeReturn).HasColumnType("datetime");
             entity.Property(e => e.UpdatedBy)

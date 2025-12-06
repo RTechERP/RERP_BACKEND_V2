@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using NPOI.HSSF.Record.Chart;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
@@ -38,7 +40,24 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpPost("get-employee-onleave-person")]
+      
+        public IActionResult GetEmployeeOnLeavePerson(EmployeeOnLeavePersonParam request)
+        {
+            try
+            {
+                var employeeOnLeaves = SQLHelper<object>.ProcedureToList("spGetDayOff_New", new string[] { "@PageNumber", "@PageSize", "@Keyword", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DepartmentID" },
+               new object[] {request.Page , request.Size,request.Keyword??"", request.DateStart, request.DateEnd, request.IDApprovedTP, request.Status, request.DepartmentID });
 
+                var data = SQLHelper<object>.GetListData(employeeOnLeaves, 0);
+                var TotalPages = SQLHelper<object>.GetListData(employeeOnLeaves, 1);
+                return Ok(ApiResponseFactory.Success(new {data, TotalPages}, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [HttpGet]
         [RequiresPermission("N2,N1")]
         public IActionResult GetSummaryEmployeeOnLeave(int month, int year, string? keyWord)

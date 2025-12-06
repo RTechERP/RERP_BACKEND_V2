@@ -5,8 +5,10 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class ProductRTCRepo : GenericRepo<ProductRTC>
     {
-        public ProductRTCRepo(CurrentUser currentUser) : base(currentUser)
+        ProductGroupRTCRepo _groupRTCRepo;
+        public ProductRTCRepo(CurrentUser currentUser, ProductGroupRTCRepo groupRTCRepo) : base(currentUser)
         {
+            _groupRTCRepo = groupRTCRepo;
         }
         public bool checkExistProductCodeRTC(ProductRTC model)
         {
@@ -23,14 +25,18 @@ namespace RERPAPI.Repo.GenericEntity
             var exist = GetAll(x => x.PartNumber == model.SerialNumber && x.ID != model.ID && x.IsDelete != true).Any();
             return exist;
         }
-        public string generateProductCode()
+        public string generateProductCode(int productGroupID)
         {
             string numberCodeDefault = "00000001";
             string productCodeRTC = "Z";
 
+
+            var group = _groupRTCRepo.GetByID(productGroupID);
+            if (group.WarehouseType == 2) productCodeRTC = "A";
+
             // Lấy tất cả mã sản phẩm có tiền tố "Z"
             var listProductCodes = table
-                .Where(x => !string.IsNullOrWhiteSpace(x.ProductCodeRTC) && x.ProductCodeRTC.StartsWith("Z"))
+                .Where(x => !string.IsNullOrWhiteSpace(x.ProductCodeRTC) && x.ProductCodeRTC.StartsWith(productCodeRTC))
                 .Select(x => x.ProductCodeRTC)
                 .ToList();
 

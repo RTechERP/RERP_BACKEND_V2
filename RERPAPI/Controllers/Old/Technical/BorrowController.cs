@@ -32,7 +32,9 @@ namespace RERPAPI.Controllers
             try
             {
 
-                var productHistory = SQLHelper<object>.ProcedureToList("spGetHistoryProduct_New", new string[] { "@DateStart", "@DateEnd", "@Keyword", "@WarehouseID", "@UserID", "@Status", "@PageNumber", "@PageSize", "@IsDeleted", "@WarehouseType" }, new object[] { dateStart, dateEnd, keyWords ?? "", warehouseID, userID, status, page, size, isDeleted, warehouseType });
+                var productHistory = SQLHelper<object>.ProcedureToList("spGetHistoryProduct_New", 
+                    new string[] { "@DateStart", "@DateEnd", "@Keyword", "@WarehouseID", "@UserID", "@Status", "@PageNumber", "@PageSize", "@IsDeleted", "@WarehouseType" }, 
+                    new object[] { dateStart, dateEnd, keyWords ?? "", warehouseID, userID, status, page, size, isDeleted, warehouseType });
                 var data = SQLHelper<object>.GetListData(productHistory, 0);
 
                 return Ok(ApiResponseFactory.Success(data, ""));
@@ -90,7 +92,9 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                var data = SQLHelper<object>.ProcedureToList("spGetProductRTC_Detail", new string[] { "@ProductGroupID", "@Keyword", "@CheckAll", "@Filter", "@WarehouseID", "@WarehouseType" }, new object[] { ProductGroupID, Keyword ?? "", CheckAll, Filter ?? "", WarehouseID, WarehouseType });
+                var data = SQLHelper<object>.ProcedureToList("spGetProductRTC_Detail", 
+                    new string[] { "@ProductGroupID", "@Keyword", "@CheckAll", "@Filter", "@WarehouseID", "@WarehouseType" }, 
+                    new object[] { ProductGroupID, Keyword ?? "", CheckAll, Filter ?? "", WarehouseID, WarehouseType });
                 var dt = SQLHelper<object>.GetListData(data, 0);
                 return Ok(ApiResponseFactory.Success(dt, ""))
                 ;

@@ -5,6 +5,7 @@ using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.AddNewBillExport;
 using RERPAPI.Repo.GenericEntity.Asset;
 
 namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
@@ -20,7 +21,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             _warehouseRepo = warehouseRepo;
         }
         [HttpGet("")]
-        public IActionResult getWearHourse()
+        public IActionResult GetWareHouse()
         {
             try
             {
@@ -49,8 +50,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             {
                 if (warehouse != null && warehouse.IsDeleted != true)
                 {
-                    if (!_warehouseRepo.Validate(warehouse, out string message))
-                        return BadRequest(ApiResponseFactory.Fail(null, message));
+                    var validate = _warehouseRepo.Validate(warehouse);
+                    if (validate.status == 0) return BadRequest(validate);
                 }
                
                 if (warehouse.ID > 0)
