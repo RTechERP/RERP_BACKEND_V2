@@ -63,6 +63,7 @@ namespace RERPAPI.Controllers.Project
         //nhân công dự án
         private readonly ProjectWorkerVersionRepo _projectWorkerVersionRepo;
 
+
         public ProjectController(
             ProjectRepo projectRepo,
             ProjectTreeFolderRepo projectTreeFolderRepo,
@@ -1131,6 +1132,35 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpGet("get-project-modal2")]
+        public async Task<IActionResult> GetProjectModal2(int? dateS, int? dateE)
+        {
+            try
+            {
+                var query = projectRepo.GetAll();
+
+                // Nếu truyền dateS và dateE → lọc theo năm
+                if (dateS.HasValue && dateE.HasValue)
+                {
+                    query = projectRepo.GetAll(x =>
+                        x.CreatedDate.HasValue &&
+                        x.CreatedDate.Value.Year >= dateS.Value &&
+                        x.CreatedDate.Value.Year <= dateE.Value
+                    );
+                }
+
+                var prjs = query
+                    .OrderByDescending(x => x.CreatedDate)
+                    .ToList();
+
+                return Ok(ApiResponseFactory.Success(prjs, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
 
         // Lấy danh sách ưu tiên dự án
         [HttpGet("get-project-priority-modal")]
@@ -2142,14 +2172,48 @@ namespace RERPAPI.Controllers.Project
         }
 
         #region cây thư mục 
-        [HttpGet("open/{projectId}")]
-        public IActionResult OpenProjectFolder(int projectId)
+        /*   [HttpGet("open/{projectId}")]
+           public IActionResult OpenProjectFolder(int projectId)
+           {
+               try
+               {
+                   var project = projectRepo.GetByID(projectId);
+                   if (project == null)
+                       return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dự án"));
+                   int year = project.CreatedDate.Value.Year;
+
+                   string basePath = Path.Combine(
+                       @"\\192.168.1.190\duan",
+                       "projects",
+                       year.ToString(),
+                       project.ProjectCode
+                   );
+
+                   // KIỂM TRA THƯ MỤC CÓ TỒN TẠI KHÔNG
+                   if (!Directory.Exists(basePath))
+                   {
+                       return Ok(ApiResponseFactory.Fail(null, "Thư mục dự án chưa tồn tại trên server"));
+                   }
+
+                   // Nếu có tồn tại thì trả URL để FE mở
+                   string url = $"/api/share/duan/projects/{year}/{project.ProjectCode}";
+
+                   return Ok(ApiResponseFactory.Success(url, "Lấy đường dẫn thành công"));
+               }
+               catch (Exception ex)
+               {
+                   return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+               }
+           }*/
+        [HttpPost("create-tree")]
+        public IActionResult CreateProjectTree([FromBody] CreateTreeRequestDTO request)
         {
             try
             {
-                var project = projectRepo.GetByID(projectId);
+                var project = projectRepo.GetByID(request.ProjectId);
                 if (project == null)
                     return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dự án"));
+
                 int year = project.CreatedDate.Value.Year;
 
                 string basePath = Path.Combine(
@@ -2159,20 +2223,96 @@ namespace RERPAPI.Controllers.Project
                     project.ProjectCode
                 );
 
-                // KIỂM TRA THƯ MỤC CÓ TỒN TẠI KHÔNG
-                if (!Directory.Exists(basePath))
+                Directory.CreateDirectory(basePath);
+
+                foreach (var typeId in request.SelectedProjectTypeIds)
                 {
-                    return Ok(ApiResponseFactory.Fail(null,"Thư mục dự án chưa tồn tại trên server"));
+                    List<ProjectTreeFolder> rows = SQLHelper<ProjectTreeFolder>.ProcedureToListModel(
+                        "sp_GetProjectTypeTreeFolder",
+                        new[] { "@ProjectTypeID" },
+                        new object[] { typeId }
+                    );
+
+                    if (rows == null || rows.Count == 0)
+                        continue;
+
+                    // Sử dụng hàm CreateFolderFromModel đã viết
+                    CreateFolderFromModel(rows, basePath);
                 }
 
-                // Nếu có tồn tại thì trả URL để FE mở
+                CreateCommonFolders(basePath);
+
                 string url = $"/api/share/duan/projects/{year}/{project.ProjectCode}";
 
-                return Ok(ApiResponseFactory.Success(url, "Lấy đường dẫn thành công"));
+                return Ok(ApiResponseFactory.Success(url, "Tạo cây thư mục thành công"));
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex,ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
+        private void CreateFolderFromModel(List<ProjectTreeFolder> rows, string basePath)
+        {
+            // Lấy các thư mục gốc
+            var roots = rows.Where(x => x.ParentID == 0 || x.ParentID == null);
+
+            foreach (var root in roots)
+            {
+                string rootFolder = Path.Combine(basePath, root.FolderName ?? "");
+                Directory.CreateDirectory(rootFolder);
+
+                // Đệ quy tạo thư mục con
+                CreateChildFolders(rows, root.ID, rootFolder);
+            }
+        }
+
+        private void CreateChildFolders(List<ProjectTreeFolder> rows, int parentId, string parentPath)
+        {
+            var childs = rows.Where(x => x.ParentID == parentId);
+
+            foreach (var child in childs)
+            {
+                string folder = Path.Combine(parentPath, child.FolderName ?? "");
+                Directory.CreateDirectory(folder);
+
+                CreateChildFolders(rows, child.ID, folder);
+            }
+        }
+        private void CreateCommonFolders(string basePath)
+        {
+            try
+            {
+                // Tạo thư mục DanhMucVatTu
+                string dmvtPath = Path.Combine(basePath, "DanhMucVatTu");
+                Directory.CreateDirectory(dmvtPath);
+
+                // Tạo thư mục TaiLieuChung
+                string tlcRoot = Path.Combine(basePath, "TaiLieuChung");
+                Directory.CreateDirectory(tlcRoot);
+
+                // Lấy danh sách folder con có ParentID = 20
+                var listParent = projectTreeFolderRepo.GetAll(x => x.ParentID == 20);
+
+                foreach (var parent in listParent)
+                {
+                    string parentFolder = Path.Combine(tlcRoot, parent.FolderName);
+                    Directory.CreateDirectory(parentFolder);
+
+                    // Lấy sub-folder của parent
+                    var listChild = projectTreeFolderRepo.GetAll(x => x.ParentID == parent.ID);
+
+                    foreach (var child in listChild)
+                    {
+                        string childFolder = Path.Combine(parentFolder, child.FolderName);
+                        Directory.CreateDirectory(childFolder);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi tạo thư mục TaiLieuChung/DanhMucVatTu: {ex.Message}");
             }
         }
         #endregion
