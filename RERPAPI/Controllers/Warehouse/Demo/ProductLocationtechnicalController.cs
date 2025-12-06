@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -7,6 +9,7 @@ namespace RERPAPI.Controllers.Warehouse.Demo
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ProductLocationtechnicalController : ControllerBase
     {
         private readonly ProductLocationRepo _productLocationRepo;
@@ -17,6 +20,7 @@ namespace RERPAPI.Controllers.Warehouse.Demo
         }
 
         [HttpGet("get-all")]
+        [RequiresPermission("N26")]
         public IActionResult GetAll(int warehouseID)
         {
             try
@@ -37,6 +41,7 @@ namespace RERPAPI.Controllers.Warehouse.Demo
             return Ok(ApiResponseFactory.Success(stt, ""));
         }
         [HttpPost("save-data")]
+        [RequiresPermission("N26,N1,N34,N80")]
         public async Task<IActionResult> SaveData(ProductLocation p)
         {
             try
@@ -69,7 +74,7 @@ namespace RERPAPI.Controllers.Warehouse.Demo
                 var data = await _productLocationRepo.GetByIDAsync(id);
                 if (data == null)
                 {
-                    return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu"));
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu"));
                 }
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
@@ -80,6 +85,7 @@ namespace RERPAPI.Controllers.Warehouse.Demo
         }
 
         [HttpPost("delete-data")]
+        [RequiresPermission("N26,N1,N34,N80")]
         public async Task<IActionResult> DeleteData([FromBody] List<int> ids)
         {
             try
@@ -89,7 +95,7 @@ namespace RERPAPI.Controllers.Warehouse.Demo
                     var item = await _productLocationRepo.GetByIDAsync(id);
                     if (item == null)
                     {
-                        return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu"));
+                        return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu"));
                     }
 
                     bool isInUse = _productLocationRepo.CheckLocationInUse(id);
