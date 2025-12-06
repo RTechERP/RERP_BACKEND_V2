@@ -14,7 +14,7 @@ using System;
 namespace RERPAPI.Controllers.HRM.Employees
 {
     [ApiController]
-    [Authorize]
+
     [Route("api/[controller]")]
     public class EmployeeBussinessController : ControllerBase
     {
@@ -52,7 +52,44 @@ namespace RERPAPI.Controllers.HRM.Employees
                 });
             }
         }
-        [RequiresPermission("N1,N2")]
+
+        [HttpPost("get-employee-bussiness-person")]
+        public IActionResult GetEmployeeBussinessPerson(EmployeeBussinessParam param)
+        {
+            try
+            {
+                var arrParamName = new string[] { "@PageNumber", "@PageSize", "@StartDate", "@EndDate", "@Keyword", "@DepartmentID", "@IDApprovedTP", "@Status" };
+                var arrParamValue = new object[] { param.pageNumber, param.pageSize, param.dateStart, param.dateEnd, param.keyWord, param.departmentId, param.idApprovedTp, param.status };
+                var employeeBussiness = SQLHelper<object>.ProcedureToList("spGetEmployeeBussiness", arrParamName, arrParamValue);
+
+                var result = SQLHelper<object>.GetListData(employeeBussiness, 0);
+               // var TotalPage = SQLHelper<object>.GetListData(employeeBussiness, 1);
+                var summary = result
+        .GroupBy(x => (string)x.FullName)
+        .Select(g => new
+        {
+            FullName = g.Key,
+            TotalCost = g.Sum(r =>
+            {
+                object costObj = r.Cost;
+
+                if (costObj == null || costObj == DBNull.Value)
+                    return 0m;
+
+                return (decimal)costObj;
+            })
+        })
+        .ToList();
+                return Ok(ApiResponseFactory.Success(new { result, summary }, "Lấy dữ liệu thành công"));
+
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [RequiresPermission("N1,N2")]   
         [HttpPost("get-work-management")]
         public IActionResult GetWorkManagement([FromBody] EmployeeNightShiftSummaryRequestParam request)
         {
@@ -202,8 +239,8 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        
-      
+
+
     }
 
 }
