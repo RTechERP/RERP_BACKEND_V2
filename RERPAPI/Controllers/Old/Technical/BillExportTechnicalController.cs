@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -38,6 +39,7 @@ namespace RERPAPI.Controllers.Old.Technical
             _billExportTechnicalLogRepo = billExportTechnicalLogRepo;
         }
         [HttpPost("get-bill-export-technical")]
+        [RequiresPermission("N19,N18,N26,N36,N29,N50,N54,N1")]
         public ActionResult GetBillExportTechnical([FromBody] BillExportTechnicalRequestParam request)
         {
             try
@@ -443,6 +445,7 @@ namespace RERPAPI.Controllers.Old.Technical
             }
         }
         [HttpPost("save-data")]
+        [RequiresPermission("N26,N1,N73,N80")]
         public async Task<IActionResult> SaveData([FromBody] BillExportTechnicalFullDTO product)
         {
             try
@@ -645,6 +648,7 @@ namespace RERPAPI.Controllers.Old.Technical
         }
         [HttpPost("approve-bill")]
         // [Authorize] // Bắt buộc phải có Token
+        [RequiresPermission("N18,N19,N50,N52,N1,N80")]
         public async Task<IActionResult> ApproveBill([FromBody] ApproveBillDTO req)
         {
             try
