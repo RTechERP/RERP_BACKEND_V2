@@ -9,6 +9,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using System.Data;
 using System.Globalization;
+using System.Linq;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.KhoBaseManager
@@ -157,16 +158,16 @@ namespace RERPAPI.Controllers.KhoBaseManager
             try
             {
                 var data = SQLHelper<object>.ProcedureToList(
-            "spGetEmployeeManager",
-            new string[]
-            {
-                "@group", "@teamID"
-            },
-            new object[]
-            {
-                groupID, teamID
-            }
-        );
+                    "spGetEmployeeManager",
+                    new string[]
+                    {
+                        "@group", "@teamID"
+                    },
+                    new object[]
+                    {
+                        groupID, teamID
+                    }
+                );
                 return Ok(new
                 {
                     status = 1,
@@ -178,6 +179,46 @@ namespace RERPAPI.Controllers.KhoBaseManager
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        [HttpGet("get-user-sale")]
+        public async Task<IActionResult> GetUserSale(int userId, bool isAdmin, int isAdminSale)
+        {
+            try
+            {
+
+                var list = SQLHelper<dynamic>.ProcedureToList(
+                    "spGetEmployeeManager",
+                    new[] { "@UserID" },
+                    new object[] { userId }
+                );
+
+                var data = SQLHelper<dynamic>.GetListData(list, 0);
+
+                int result = 0;
+
+                if (isAdmin || isAdminSale == 0)
+                {
+                    result = 1;
+                }
+                else if (data != null && data.Any())
+                {
+                    if (data.Any(x => $"{x.SaleUserTypeCode}" == "LeadG"))
+                        result = 1;
+                    else if (data.Any(x => $"{x.SaleUserTypeCode}" == "PM"))
+                        result = 2;
+                    else if (data.Any(x => $"{x.SaleUserTypeCode}" == "Sta"))
+                        result = 3;
+                }
+
+                return Ok(ApiResponseFactory.Success(result, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
         // Danh sách PM 
         [HttpGet("getpm")]
         public async Task<IActionResult> getpm()
@@ -386,7 +427,7 @@ namespace RERPAPI.Controllers.KhoBaseManager
            
                 var employees = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
                                                 new string[] { "@Status" },
-                                                new object[] { 0});
+                                                new object[] { status});
                 return Ok(new
                 {
                     status = 1,
