@@ -463,6 +463,8 @@ builder.Services.AddAuthentication("Bearer")
                 });
 builder.Services.AddAuthentication();
 
+//Get list static file
+builder.Services.Configure<List<PathStaticFile>>(builder.Configuration.GetSection("PathStaticFiles"));
 
 //Config session
 builder.Services.AddSession(opt =>
@@ -540,6 +542,9 @@ app.Use(async (context, next) =>
 
 app.UseStaticFiles();
 List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();
+
+
+
 foreach (var item in staticFiles)
 {
     app.UseStaticFiles(new StaticFileOptions()
