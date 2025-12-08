@@ -456,7 +456,20 @@ namespace RERPAPI.Controllers.Old.TB
             }
         }
 
+        [HttpGet("get-by-id")]
+        public IActionResult GetByID(int productRtcId)
+        {
+            try
+            {
+                var rs = _productRTCRepo.GetByID(productRtcId);
+                return Ok(ApiResponseFactory.Success(rs, ""));
 
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         //[HttpPost("save-data")]
         //public async Task<IActionResult> SaveData([FromBody] ProductRTCFullDTO product)
         //{
