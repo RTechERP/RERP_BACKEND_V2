@@ -17,6 +17,7 @@ using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
 using System.Data;
 using System.Diagnostics.Metrics;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -576,10 +577,6 @@ namespace RERPAPI.Controllers.Project
                         return Ok(new { status = 2, message = messageErr });
                     }
                 }
-
-
-
-
                 // preload Firm
                 var firms = _firmRepo.GetAll(x => x.FirmType == 1).ToList();
                 var firmDemos = _firmRepo.GetAll(x => x.FirmType == 2).ToList();
@@ -593,28 +590,31 @@ namespace RERPAPI.Controllers.Project
                     if (item.IsNewCode == true && isFix == true)
                         continue;
 
-                    var productSale = _productSaleRepo.GetAll().FirstOrDefault(x => x.ProductCode == item.ProductCode);
+                    var productSale = _productSaleRepo.GetAll(x => x.ProductCode == item.ProductCode);
                     if (productSale == null) continue;
 
                     // Tìm Firm theo WinForm
-                    var firm = firmDemos
-                        .FirstOrDefault(x => x.FirmName.ToUpper().Trim() == (item.Manufacturer ?? "").ToUpper().Trim())
+                    var firm = firms
+                        .FirstOrDefault(x => x.FirmName.ToUpper().Trim() == (item.Manufacturer ?? "").ToUpper().Trim() && x.FirmType ==2)
                         ?? new Firm();
+                    foreach (var product in productSale)
+                    {
 
-                    if (isFix)
-                    {
-                        // Giống WinForm UpdateProductSale
-                        productSale.ProductName = item.GroupMaterial;
-                        productSale.Maker = item.Manufacturer;
-                        productSale.Unit = item.Unit;
-                        productSale.IsFix = true;
-                        productSale.FirmID = firm.ID;
+                        if (isFix)
+                        {
+                            // Giống WinForm UpdateProductSale
+                            product.ProductName = item.GroupMaterial;
+                            product.Maker = item.Manufacturer;
+                            product.Unit = item.Unit;
+                            product.IsFix = true;
+                            product.FirmID = firm.ID;
+                        }
+                        else
+                        {
+                            product.IsFix = false;
+                        }
+                        await _productSaleRepo.UpdateAsync(product);
                     }
-                    else
-                    {
-                        productSale.IsFix = false;
-                    }
-                    await _productSaleRepo.UpdateAsync(productSale);
                 }
                 return Ok(ApiResponseFactory.Success(null,
                     $"{approvedText} tích xanh thành công!"));
