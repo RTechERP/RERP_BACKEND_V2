@@ -112,6 +112,8 @@ namespace RERPAPI.Controllers.Old.POKH
                         ProductCode = i.ProductCode,
                         ProductName = i.ProductName,
                         Quantity = i.Quantity,
+                        Maker = i.Maker,
+                        Unit = i.Unit,
                         StatusRequest = 1,
                         IsCommercialProduct = true,
                         POKHDetailID = i.POKHDetailID
