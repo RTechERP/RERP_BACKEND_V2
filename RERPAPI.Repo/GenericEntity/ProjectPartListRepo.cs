@@ -791,6 +791,7 @@ namespace RERPAPI.Repo.GenericEntity
 
             List<string> listSTT = new();
             List<string> listSttAll = new();
+            List<string> listSPCode = new();
 
             // 1. Thu thập STT
             foreach (var item in request.Items)
@@ -798,6 +799,11 @@ namespace RERPAPI.Repo.GenericEntity
                 if (string.IsNullOrEmpty(item.TT)) continue;
 
                 listSttAll.Add(item.TT);
+
+                if (!string.IsNullOrWhiteSpace(item.SpecialCode))
+                {
+                    listSPCode.Add(item.SpecialCode.Trim().ToLower());
+                }
 
                 if (!item.TT.Contains(".")) continue;
                 if (!regexStt.IsMatch(item.TT)) continue;
@@ -815,6 +821,7 @@ namespace RERPAPI.Repo.GenericEntity
                 string groupMaterial = item.GroupMaterial;
                 string productCode = item.ProductCode;
                 string manufacturer = item.Manufacturer;
+                string specialCode = item.SpecialCode;
 
                 decimal qtyMin = (decimal)(item.QtyMin ?? 0);
                 decimal qtyFull = (decimal)(item.QtyFull ?? 0);
@@ -860,6 +867,19 @@ namespace RERPAPI.Repo.GenericEntity
 
                     if (qtyFull <= 0)
                         return Fail(result, $"Vui lòng nhập Số lượng tổng (Phải > 0)!.\n(TT: {stt})");
+
+                    // Check SpecialCode duplicate
+                    if (!string.IsNullOrWhiteSpace(specialCode))
+                    {
+                        string normalized = specialCode.Trim().ToLower();
+
+                        if (listSPCode.Count(x => x == normalized) > 1)
+                        {
+                            return Fail(result, $"Mã đặc biệt [{specialCode}] đã tồn tại\n(TT: {stt}).\nVui lòng kiểm tra lại!");
+                        }
+                    }
+
+
 
                     // 5. Check với Stock (IsFix = true)
                     var fixedProduct = _productSaleRepo

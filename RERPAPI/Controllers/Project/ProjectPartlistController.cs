@@ -158,7 +158,7 @@ namespace RERPAPI.Controllers.Project
                                                            .OrderByDescending(x => x.StatusRequest)
                                                            .FirstOrDefault();
 
-                    if (existingRequest != null && existingRequest.StatusRequest > 0 )
+                    if (existingRequest != null && existingRequest.StatusRequest > 0)
                     {
                         // Tạo mốc thời gian 3 tháng trước
                         var threeMonthsAgo = DateTime.Now.AddMonths(-3);
@@ -182,7 +182,7 @@ namespace RERPAPI.Controllers.Project
                     // Tạo mốc thời gian 3 tháng trước
                     var threeMonthsAgo = DateTime.Now.AddMonths(-3);
                     if (item.ID <= 0) continue;
-                    if (item.StatusPriceRequest > 0 && (item.DatePriceQuote ==null || item.DatePriceQuote >threeMonthsAgo)) continue;
+                    if (item.StatusPriceRequest > 0 && (item.DatePriceQuote == null || item.DatePriceQuote > threeMonthsAgo)) continue;
 
                     // Cập nhật ProjectPartList (cả cha và con)
                     var partList = _projectPartlistRepo.GetByID(item.ID);
@@ -362,7 +362,7 @@ namespace RERPAPI.Controllers.Project
                     {
                         return BadRequest(ApiResponseFactory.Fail(null, $"Vật tư thứ tự [{item.TT}] đã được Y/c mua.\nVui lòng kiểm tra lại!"));
                     }
-                    if(isApproved == true && item.DatePriceQuote == null)
+                    if (isApproved == true && item.DatePriceQuote == null)
                     {
                         return BadRequest(ApiResponseFactory.Fail(null, $"Vật tư thứ tự [{item.TT}] chưa được báo giá.\nVui lòng kiểm tra lại!"));
                     }
@@ -742,7 +742,7 @@ namespace RERPAPI.Controllers.Project
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex, "Lỗi khi lưu phiên bản danh sách phần"));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         private async Task UpdateRequestQuoteAsync(
@@ -985,6 +985,7 @@ namespace RERPAPI.Controllers.Project
                     entity.ProductCode = item.ProductCode;
                     entity.OrderCode = item.OrderCode;
                     entity.Manufacturer = item.Manufacturer;
+                    entity.SpecialCode = item.SpecialCode; //TN.Binh update
                     entity.Model = item.Model;
                     entity.QtyMin = item.QtyMin;
                     entity.QtyFull = item.QtyFull;
@@ -1376,7 +1377,7 @@ namespace RERPAPI.Controllers.Project
                 // 1. SORT THEO TT để đảm bảo cha được insert trước con
                 // ----------------------------------------------------
                 lstItem = lstItem
-                    .OrderBy(x =>x.ID)
+                    .OrderBy(x => x.ID)
                     .ToList();
 
                 bool hasInsert = false;
@@ -1537,6 +1538,44 @@ namespace RERPAPI.Controllers.Project
                     await UpdateAdditionPartListPO(newVersion.ID, versionModel.ID, request.ListItem, request.projectID, request.ReasonProblem);
                 }
                 return Ok(ApiResponseFactory.Success(null, "Đã xử lý thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("update-special-code")]
+        public async Task<IActionResult> UpdateSpecialCode(int partlistId, string specialCode)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(specialCode))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Mã đặc biệt không được để trống!"));
+                }
+
+                specialCode = specialCode.Trim();
+
+                var partlistData = _projectPartlistRepo.GetByID(partlistId);
+                if (partlistData == null)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy partList. Vui lòng kiểm tra lại!"));
+                }
+
+                var existsData = _projectPartlistRepo.GetAll(
+                    x => x.SpecialCode.Trim().ToLower() == specialCode.ToLower()
+                         && x.ID != partlistId);
+
+                if (existsData.Count > 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Mã đặc biệt [{specialCode}] đã tồn tại."));
+                }
+
+                partlistData.SpecialCode = specialCode;
+                await _projectPartlistRepo.UpdateAsync(partlistData);
+
+                return Ok(ApiResponseFactory.Success(null, "Cập nhật mã đặc biệt thành công. Vui lòng load lại trang!"));
             }
             catch (Exception ex)
             {
