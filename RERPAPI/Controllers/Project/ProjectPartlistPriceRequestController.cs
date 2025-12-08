@@ -506,7 +506,7 @@ namespace RERPAPI.Controllers.Project
                     var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                     var currentUser = ObjectMapper.GetCurrentUser(claims);
                     if (currentUser.EmployeeID != item.QuoteEmployeeID && item.QuoteEmployeeID > 0) continue;
-                    item.QuoteEmployeeID = item.IsCheckPrice == false ? 0 : item.EmployeeID;
+                    item.QuoteEmployeeID = item.IsCheckPrice == false ? 0 : item.QuoteEmployeeID;
                     item.UpdatedBy = currentUser.LoginName;
                     await requestRepo.SaveData(item);
 

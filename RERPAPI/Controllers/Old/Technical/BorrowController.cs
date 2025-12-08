@@ -32,8 +32,8 @@ namespace RERPAPI.Controllers
             try
             {
 
-                var productHistory = SQLHelper<object>.ProcedureToList("spGetHistoryProduct_New", 
-                    new string[] { "@DateStart", "@DateEnd", "@Keyword", "@WarehouseID", "@UserID", "@Status", "@PageNumber", "@PageSize", "@IsDeleted", "@WarehouseType" }, 
+                var productHistory = SQLHelper<object>.ProcedureToList("spGetHistoryProduct_New",
+                    new string[] { "@DateStart", "@DateEnd", "@Keyword", "@WarehouseID", "@UserID", "@Status", "@PageNumber", "@PageSize", "@IsDeleted", "@WarehouseType" },
                     new object[] { dateStart, dateEnd, keyWords ?? "", warehouseID, userID, status, page, size, isDeleted, warehouseType });
                 var data = SQLHelper<object>.GetListData(productHistory, 0);
 
@@ -92,8 +92,8 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                var data = SQLHelper<object>.ProcedureToList("spGetProductRTC_Detail", 
-                    new string[] { "@ProductGroupID", "@Keyword", "@CheckAll", "@Filter", "@WarehouseID", "@WarehouseType" }, 
+                var data = SQLHelper<object>.ProcedureToList("spGetProductRTC_Detail",
+                    new string[] { "@ProductGroupID", "@Keyword", "@CheckAll", "@Filter", "@WarehouseID", "@WarehouseType" },
                     new object[] { ProductGroupID, Keyword ?? "", CheckAll, Filter ?? "", WarehouseID, WarehouseType });
                 var dt = SQLHelper<object>.GetListData(data, 0);
                 return Ok(ApiResponseFactory.Success(dt, ""))
@@ -327,32 +327,90 @@ namespace RERPAPI.Controllers
         public sealed class ReturnProductRtcRequest
         {
             public int HistoryId { get; set; }
+            public int ModulaLocationDetailID { get; set; }
             public bool IsAdmin { get; set; }
         }
 
+        //[HttpPost("return-productrtc")]
+        //public IActionResult ReturnProductRtc([FromBody] ReturnProductRtcRequest req)
+        //{
+        //    if (req == null || req.IsAdmin != true)
+        //        return BadRequest(ApiResponseFactory.Fail(null, "Chỉ có admin mới có quyền truy cập vào chức năng này!"));
+
+        //    if (req.HistoryId <= 0)
+        //        return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu truyền vào không đúng, vui lòng thử lại!"));
+
+        //    var history = historyProductRTCRepo.GetByID(req.HistoryId);
+        //    if (history == null)
+        //        return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy lịch sử mượn!"));
+
+        //    try
+        //    {
+        //        if (req.IsAdmin)
+        //        {
+        //            history.Status = 0;
+        //            history.DateReturn = DateTime.Now;
+        //            history.AdminConfirm = true;
+        //            historyProductRTCRepo.Update(history);
+
+        //            // Cập nhật trạng thái QR
+        //            SQLHelper<object>.ExcuteProcedure(
+        //                "spUpdateStatusProductRTCQRCode",
+        //                new[] { "@ProductRTCQRCodeID", "@Status" },
+        //                new object[] { history.ProductRTCQRCodeID, 1 }
+        //            );
+        //        }
+        //        else
+        //        {
+        //            history.Status = 4;
+        //            historyProductRTCRepo.Update(history);
+        //        }
+
+        //        return Ok(new { status = 1, data = new { id = history.ID } });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
         [HttpPost("return-productrtc")]
         public IActionResult ReturnProductRtc([FromBody] ReturnProductRtcRequest req)
         {
-            if (req == null || req.IsAdmin != true)
-                return BadRequest(ApiResponseFactory.Fail(null, "Chỉ có admin mới có quyền truy cập vào chức năng này!"));
+            if (req == null)
+                return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu truyền vào!"));
 
             if (req.HistoryId <= 0)
-                return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu truyền vào không đúng, vui lòng thử lại!"));
+                return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu truyền vào!"));
 
             var history = historyProductRTCRepo.GetByID(req.HistoryId);
             if (history == null)
                 return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy lịch sử mượn!"));
 
+            // Status phải được phép trả
+            if (history.Status != 1 && history.Status != 4 && history.Status != 7)
+                return BadRequest(ApiResponseFactory.Fail(null, "Trạng thái hiện tại không cho phép trả sản phẩm!"));
+
+            // Nếu là admin → cần check thêm điều kiện như WinForms
+            if (req.IsAdmin)
+            {
+                if (req.ModulaLocationDetailID > 0 && history.StatusPerson <= 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null,
+                        "Nhân viên chưa hoàn thành thao tác trả hàng. Bạn không thể duyệt trả!"));
+                }
+            }
+
             try
             {
                 if (req.IsAdmin)
                 {
+                    // Admin duyệt trả
                     history.Status = 0;
                     history.DateReturn = DateTime.Now;
                     history.AdminConfirm = true;
                     historyProductRTCRepo.Update(history);
 
-                    // Cập nhật trạng thái QR
+                    // Update QR
                     SQLHelper<object>.ExcuteProcedure(
                         "spUpdateStatusProductRTCQRCode",
                         new[] { "@ProductRTCQRCodeID", "@Status" },
@@ -361,6 +419,7 @@ namespace RERPAPI.Controllers
                 }
                 else
                 {
+                    // USER TRẢ → Status = 4
                     history.Status = 4;
                     historyProductRTCRepo.Update(history);
                 }
@@ -372,6 +431,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("approve-borrowing")]
         public IActionResult ApproveBorrowing([FromBody] ReturnProductRtcRequest req)
         {
