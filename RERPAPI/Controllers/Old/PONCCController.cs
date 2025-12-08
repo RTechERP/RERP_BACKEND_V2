@@ -846,6 +846,7 @@ namespace RERPAPI.Controllers.Old
                 var employeePurchase = _employeePurchaseRepo.GetAll(x => x.EmployeeID == employeeID && x.TaxCompayID == taxCompany.ID).FirstOrDefault() ?? new EmployeePurchase();
                 po.Purchaser = $"{_pONCCRepo.ConvertVietnameseToEnglish(po.FullName)} - Phone: {_pONCCRepo.ConvertPhoneNumberVietnamese(employeePurchase.Telephone ??"")} - Email: {employeePurchase.Email}";
                 po.TotalAmountText = _pONCCRepo.ConvertNumberToTextEnglish(Convert.ToDecimal(po.TotalMoneyPO), po.CurrencyText);
+                po.TotalMoneyText = _pONCCRepo.ConvertNumberToTextVietNamese(Convert.ToDecimal(po.TotalMoneyPO), po.CurrencyText);
 
 
                 PathStaticFile pathStaticFile = _pathStaticFiles.Where(x => x.PathName == "Purchases").FirstOrDefault() ?? new PathStaticFile();
@@ -920,6 +921,7 @@ namespace RERPAPI.Controllers.Old
                 {
                     po = po,
                     taxCompany = taxCompany,
+                    employeePurchase = employeePurchase,
                     poDetails = poDetails
                 };
 
