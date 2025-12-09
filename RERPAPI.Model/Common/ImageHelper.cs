@@ -18,7 +18,7 @@ namespace RERPAPI.Model.Common
             }
 			catch (Exception ex)
 			{
-                throw new Exception(ex.Message);
+                return "";
 			}
         }
 
