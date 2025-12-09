@@ -17,11 +17,13 @@ namespace RERPAPI.Controllers.Old
     {
         ProjectRepo _projectRepo;
         InventoryProjectRepo _inventoryProjecRepo;
+        WarehouseRepo _wareHouseRepo;
 
-        public InventoryProjectController(ProjectRepo projectRepo, InventoryProjectRepo inventoryProjecRepo)
+        public InventoryProjectController(ProjectRepo projectRepo, InventoryProjectRepo inventoryProjecRepo, WarehouseRepo wareHouseRepo)
         {
             _projectRepo = projectRepo;
             _inventoryProjecRepo = inventoryProjecRepo;
+            _wareHouseRepo = wareHouseRepo;
         }
 
         [HttpGet("get-inventory-by-product")]
@@ -41,7 +43,19 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [HttpGet("get-warehouse-by-name")]
+        public IActionResult GetWareHouseByName(string wareHouseName = "")
+        {
+            try
+            {
+                var wareHouse = _wareHouseRepo.GetAll(x => x.WarehouseName == wareHouseName);
+                return Ok(ApiResponseFactory.Success(wareHouse, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         //Lấy danh sách hàng nhả giữ
         [HttpPost("get-inventory-project")]
         public IActionResult GetInventoryProject([FromBody] InventoryProjectRequestParam request)
