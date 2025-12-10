@@ -5,10 +5,12 @@ using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
 using NPOI.SS.Formula.Functions;
 using OfficeOpenXml.Style.XmlAccess;
 using RERPAPI.Attributes;
+using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -31,6 +33,7 @@ namespace RERPAPI.Controllers.Old
 
     public class PONCCController : ControllerBase
     {
+        private readonly List<PathStaticFile> _pathStaticFiles;
         PONCCRepo _pONCCRepo;
         ProductGroupRepo _productGroupRepo;
         ProjectRepo _projectRepo;
@@ -46,6 +49,7 @@ namespace RERPAPI.Controllers.Old
         private readonly EmployeePurchaseRepo _employeePurchaseRepo;
 
         public PONCCController(
+            IOptions<List<PathStaticFile>> pathStaticFiles,
             PONCCRepo pONCCRepo
             , ProductGroupRepo productGroupRepo
             , ProjectRepo projectRepo
@@ -59,6 +63,7 @@ namespace RERPAPI.Controllers.Old
             , BillImportTechnicalRepo billImportTechRepo, TaxCompanyRepo taxCompanyRepo, EmployeePurchaseRepo employeePurchaseRepo
             )
         {
+            _pathStaticFiles = pathStaticFiles.Value;
             _pONCCRepo = pONCCRepo;
             _productGroupRepo = productGroupRepo;
             _projectRepo = projectRepo;
@@ -827,18 +832,38 @@ namespace RERPAPI.Controllers.Old
         [HttpGet("printpo")]
         public IActionResult PrintPO(int id, bool isMerge)
         {
+            string message = "";
             try
             {
+                //get thông tin master
                 var dataPO = SQLHelper<object>.ProcedureToList("spGetPONCCByID", new string[] { "@ID" }, new object[] { id });
                 var po = SQLHelper<object>.GetListData(dataPO, 0)[0];
                 string companyText = po.CompanyText.ToUpper().Trim();
                 var taxCompany = _taxCompanyRepo.GetAll(x => x.Code.ToUpper().Trim() == companyText).FirstOrDefault() ?? new TaxCompany();
 
-                int employeeID = Convert.ToInt32(po.EmployeeID);
+                int employeeID = TextUtils.ToInt32(po.EmployeeID);
 
                 var employeePurchase = _employeePurchaseRepo.GetAll(x => x.EmployeeID == employeeID && x.TaxCompayID == taxCompany.ID).FirstOrDefault() ?? new EmployeePurchase();
                 po.Purchaser = $"{_pONCCRepo.ConvertVietnameseToEnglish(po.FullName)} - Phone: {_pONCCRepo.ConvertPhoneNumberVietnamese(employeePurchase.Telephone ??"")} - Email: {employeePurchase.Email}";
                 po.TotalAmountText = _pONCCRepo.ConvertNumberToTextEnglish(Convert.ToDecimal(po.TotalMoneyPO), po.CurrencyText);
+                po.TotalMoneyText = _pONCCRepo.ConvertNumberToTextVietNamese(Convert.ToDecimal(po.TotalMoneyPO), po.CurrencyText);
+
+
+                PathStaticFile pathStaticFile = _pathStaticFiles.Where(x => x.PathName == "Purchases").FirstOrDefault() ?? new PathStaticFile();
+                if (!Path.Exists(pathStaticFile.PathFull))
+                {
+                    message = $"Thư mục ảnh chữ ký không tồn tại!\n{pathStaticFile.PathName}: {pathStaticFile.PathFull}";
+                }
+
+                string pathImage = Path.Combine(pathStaticFile.PathFull, @"2. quy trình. quy định chung\1. quy trình mua hàng\phần mềm misa\ảnh import misa\signnonback");
+                string picPrepared = Path.Combine(pathImage, $@"{po.Code.Trim()}.png");
+                string picDirector = Path.Combine(pathImage, $"seal{companyText.ToUpper()}.png");
+
+
+                po.PicPrepared = ImageHelper.ImageToBase64(picPrepared);
+                po.PicDirector = ImageHelper.ImageToBase64(picDirector);
+
+                //get danh sách chi tiết sản phẩm
                 var poDetails = SQLHelper<PONCCDetailDTO>.ProcedureToListModel("spGetPONCCDetail", new string[] { "@PONCCID" }, new object[] { id });
                 poDetails = poDetails.Where(x => x.IsPurchase == false).ToList();
                 if (isMerge)
@@ -896,10 +921,11 @@ namespace RERPAPI.Controllers.Old
                 {
                     po = po,
                     taxCompany = taxCompany,
+                    employeePurchase = employeePurchase,
                     poDetails = poDetails
                 };
 
-                return Ok(ApiResponseFactory.Success(data, ""));
+                return Ok(ApiResponseFactory.Success(data, message));
             }
             catch (Exception ex)
             {

@@ -13,7 +13,7 @@ namespace RERPAPI.Controllers.GeneralCategory
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class JobRequirementController : ControllerBase
     {
         private readonly IConfiguration _configuration;
@@ -65,12 +65,14 @@ namespace RERPAPI.Controllers.GeneralCategory
                 var details = SQLHelper<object>.GetListData(data, 0);
                 var approves = SQLHelper<object>.GetListData(data, 1);
                 var files = SQLHelper<object>.GetListData(data, 2);
+                var detailsCategory = SQLHelper<object>.GetListData(data, 4);
 
                 return Ok(ApiResponseFactory.Success(new
                 {
                     details,
                     approves,
-                    files
+                    files,
+                    detailsCategory
                 }, ""));
             }
             catch (Exception ex)

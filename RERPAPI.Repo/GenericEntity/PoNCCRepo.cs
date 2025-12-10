@@ -19,11 +19,15 @@ namespace RERPAPI.Repo.GenericEntity
         private ProjectPartlistPurchaseRequestRepo _prjPartListRepo;
         CurrentUser _currentUser;
 
-        private static string[] ones = { "", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen" };
-        private static string[] tens = { "", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety" };
-        private static string[] thousandsGroups = { "", " thousand", " million", " billion" };
+        private string[] ones = { "", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen" };
+        private string[] tens = { "", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety" };
+        private string[] thousandsGroups = { "", " thousand", " million", " billion" };
 
-        private static List<UnitCurrency> UNIT_CURRENCY = new List<UnitCurrency>() {
+        private readonly string[] ChuSo = { "không", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín" };
+        private readonly string[] UNITS = { "", "nghìn", "triệu", "tỉ" };
+        private readonly string[] DIGITS = { "không", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín" };
+
+        private List<UnitCurrency> UNIT_CURRENCY = new List<UnitCurrency>() {
             new UnitCurrency{Name = "VND", Description = new { nameenglish = "Vietnamese dong", unitenglish = "dong", namevietnamese = "đồng", unitvietnamese = "đồng"} },
             new UnitCurrency{Name = "USD", Description = new { nameenglish = "Dollars", unitenglish = "cent", namevietnamese = "đô", unitvietnamese = "cent"} },
             new UnitCurrency{Name = "EUR", Description = new { nameenglish = "Euro", unitenglish = "cent", namevietnamese = "euro", unitvietnamese = "cent"} },
@@ -181,7 +185,7 @@ namespace RERPAPI.Repo.GenericEntity
                 {
                     decimal totalPrice = (decimal)pONCCDTO.poncc.TotalMoneyPO;
                     decimal totalPriceRequest = pONCCDTO.lstPrjPartlistPurchaseRequest.Sum(x =>
-                    (Convert.ToDecimal(x.Quantity) * Convert.ToDecimal(x.UnitPrice)));
+                    (TextUtils.ToDecimal(x.Quantity) * TextUtils.ToDecimal(x.UnitPrice)));
 
                     if (totalPrice > totalPriceRequest)
                     {
@@ -194,12 +198,12 @@ namespace RERPAPI.Repo.GenericEntity
                 {
                     foreach (var item in lstPONCCDetail)
                     {
-                        int purchaseRequestId = Convert.ToInt32(item.ProjectPartlistPurchaseRequestID);
+                        int purchaseRequestId = TextUtils.ToInt32(item.ProjectPartlistPurchaseRequestID);
                         ProjectPartlistPurchaseRequest purchaseRequest = _prjPartListRepo.GetByID(purchaseRequestId);
                         if (purchaseRequest == null || purchaseRequest.ID <= 0) continue;
 
-                        decimal unitPrice = Convert.ToDecimal(item.UnitPrice);
-                        int stt = Convert.ToInt32(item.STT);
+                        decimal unitPrice = TextUtils.ToDecimal(item.UnitPrice);
+                        int stt = TextUtils.ToInt32(item.STT);
 
                         if (unitPrice > purchaseRequest.UnitPrice)
                         {
@@ -278,7 +282,7 @@ namespace RERPAPI.Repo.GenericEntity
                 int stt = 1;
                 if (!string.IsNullOrEmpty(currentCode.Trim()))
                 {
-                    stt = Convert.ToInt32(currentCode.Substring(code.Length));
+                    stt = TextUtils.ToInt32(currentCode.Substring(code.Length));
                     stt++;
                 }
 
@@ -301,7 +305,7 @@ namespace RERPAPI.Repo.GenericEntity
                 {
                     ID = x.ID,
                     BillCode = x.BillCode,
-                    STT = Convert.ToInt32(x.BillCode.Substring(code.Length))
+                    STT = TextUtils.ToInt32(x.BillCode.Substring(code.Length))
                 }).ToList();
             int stt = listPO.Count <= 0 ? 0 : listPO.Max(x => x.STT);
             stt++;
@@ -410,7 +414,7 @@ namespace RERPAPI.Repo.GenericEntity
 
             int thousandsCount = 0;
 
-            // Convert integer part to words
+            // TextUtils integer part to words
             while (intPart > 0)
             {
                 if (intPart % 1000 != 0)
@@ -429,21 +433,21 @@ namespace RERPAPI.Repo.GenericEntity
                 var descriptionCurrency = currencyUnit.Description.GetType();
                 if (currencyType == "RMB" & decimalPart > 0)
                 {
-                    minUnit = Convert.ToString(descriptionCurrency.GetProperty("nameenglish").GetValue(currencyUnit.Description));
+                    minUnit = TextUtils.ToString(descriptionCurrency.GetProperty("nameenglish").GetValue(currencyUnit.Description));
                 }
                 else if (currencyType == "RMB" & decimalPart <= 0)
                 {
-                    unit = Convert.ToString(descriptionCurrency.GetProperty("nameenglish").GetValue(currencyUnit.Description));
+                    unit = TextUtils.ToString(descriptionCurrency.GetProperty("nameenglish").GetValue(currencyUnit.Description));
                 }
                 else
                 {
-                    unit = Convert.ToString(descriptionCurrency.GetProperty("nameenglish").GetValue(currencyUnit.Description));
-                    minUnit = Convert.ToString(descriptionCurrency.GetProperty("unitenglish").GetValue(currencyUnit.Description));
+                    unit = TextUtils.ToString(descriptionCurrency.GetProperty("nameenglish").GetValue(currencyUnit.Description));
+                    minUnit = TextUtils.ToString(descriptionCurrency.GetProperty("unitenglish").GetValue(currencyUnit.Description));
                 }
             }
-            words += unit + (decimalPart > 0 ? " " : ".");
+            words += unit + (decimalPart > 0 ? " " : ",");
 
-            // Convert decimal part to words
+            // TextUtils decimal part to words
             if (decimalPart > 0)
             {
                 string joinText = currencyType == "RMB" ? "point " : "and ";
@@ -453,7 +457,7 @@ namespace RERPAPI.Repo.GenericEntity
             return words;
         }
 
-        private static string ConvertToWordsUnder1000(int number)
+        private string ConvertToWordsUnder1000(int number)
         {
             string words = "";
 
@@ -476,6 +480,257 @@ namespace RERPAPI.Repo.GenericEntity
 
             return words;
         }
+
+
+        #region Đọc số tiền bằng chữ tiếng việt
+        public string ConvertNumberToTextVietNamese(decimal num, string currencyType)
+        {
+            try
+            {
+                string numberText = num.ToString();
+                string numberMoneyText = "";
+                if (!string.IsNullOrEmpty(numberText.Trim()))
+                {
+                    string decimalPart = "";
+                    List<string> number = new List<string>();
+                    if (numberText.Contains(','))
+                    {
+                        string intergerPart = numberText.Substring(0, numberText.LastIndexOf(','));
+                        decimalPart = numberText.Substring(numberText.LastIndexOf(',') + 1);
+                        string separator = numberText.Substring(numberText.LastIndexOf(','), 1);
+
+                        if (decimalPart == "00")
+                        {
+                            number.Add(intergerPart);
+                        }
+                        else
+                        {
+                            number.AddRange(new[] { intergerPart, separator, decimalPart });
+                        }
+                    }
+                    else
+                    {
+                        number.Add(numberText);
+                    }
+
+                    //string currenyName = "";
+                    //string currenyUnit = "";
+                    var currencyUnit = UNIT_CURRENCY.FirstOrDefault(x => x.Name == currencyType);
+                    string currenyName = "";
+                    string currenyUnit = "";
+                    if (currencyUnit != null)
+                    {
+                        var descriptionCurrency = currencyUnit.Description.GetType();
+                        if (currencyType == "RMB" & decimalPart != "00")
+                        {
+                            currenyUnit = TextUtils.ToString(descriptionCurrency.GetProperty("namevietnamese").GetValue(currencyUnit.Description));
+                        }
+                        else if (currencyType == "RMB" & decimalPart == "00")
+                        {
+                            currenyName = TextUtils.ToString(descriptionCurrency.GetProperty("namevietnamese").GetValue(currencyUnit.Description));
+                        }
+                        else
+                        {
+                            currenyName = TextUtils.ToString(descriptionCurrency.GetProperty("namevietnamese").GetValue(currencyUnit.Description));
+                            currenyUnit = TextUtils.ToString(descriptionCurrency.GetProperty("unitvietnamese").GetValue(currencyUnit.Description));
+                        }
+
+                        //var descriptionCurrency = currencyUnit.Description.GetType();
+                        //currenyName = TextUtils.ToString(descriptionCurrency.GetProperty("namevietnamese").GetValue(currencyUnit.Description));
+                        //currenyUnit = TextUtils.ToString(descriptionCurrency.GetProperty("unitvietnamese").GetValue(currencyUnit.Description));
+                    }
+
+                    List<string> output = new List<string>();
+                    for (int i = 0; i < number.Count; i++)
+                    {
+                        if (i == 0)
+                        {
+                            string numtotext = number[i].Trim();
+                            output.Add(ConvertNumberToText(number[i]).Trim());
+                            //output.Add("đồng");
+                            if (!string.IsNullOrEmpty(currenyName))
+                            {
+                                output.Add(currenyName);
+                            }
+                        }
+                        else if (i == 1)
+                        {
+                            output.Add(currencyType == "RMB" ? "phẩy" : "và");
+                        }
+                        else
+                        {
+                            if (i == 2)
+                            {
+                                var digits = number[i].ToCharArray();
+                                List<string> decimalWords = new List<string>();
+                                foreach (var d in digits)
+                                {
+                                    //decimalWords.Add(ConvertDigitToText(d));
+
+                                    var dd = TextUtils.ToInt64(d);
+                                }
+                                //decimalWords.Add(DocSo(TextUtils.ToInt64(number[i])));
+                                decimalWords.Add(DocSoTu1Den99(TextUtils.ToInt32(number[i])));
+                                //for (int j = 0; j < digits.Count(); j++)
+                                //{
+                                //    decimalWords.Add(ConvertDigitToText(digits[j], j));
+                                //    if (digits[0] != '0' && decimalWords.Count() > 0) decimalWords[0] += "mươi";
+                                //}
+                                output.Add(string.Join(" ", decimalWords).Trim());
+                            }
+                            else
+                            {
+                                string numtotext = number[i].Trim();
+                                output.Add(ConvertNumberToText(number[i]).Trim());
+                            }
+
+                            if (!string.IsNullOrEmpty(currenyUnit))
+                            {
+                                output.Add(currenyUnit);
+                            }
+                        }
+                    }
+
+                    //if (number.Count == 1) output.Add("chẵn");
+
+                    numberMoneyText = string.Join(" ", output);
+                    if (!string.IsNullOrEmpty(numberMoneyText))
+                    {
+                        numberMoneyText = numberMoneyText[0].ToString().ToUpper() + numberMoneyText.Substring(1);
+                    }
+                }
+
+                return numberMoneyText + ".";
+            }
+            catch (Exception ex)
+            {
+                return "";
+            }
+        }
+
+        public string ConvertNumberToText(string num)
+        {
+            try
+            {
+                var needZeroCount = num.Length % 3;
+                if (needZeroCount != 0)
+                    needZeroCount = 3 - needZeroCount;
+
+                num = new string('0', needZeroCount) + num;
+
+                var output = new List<string>();
+                for (var i = 0; i < num.Length / 3; i++)
+                {
+                    int a = TextUtils.ToInt32(num.Substring(i * 3, 1));
+                    int b = TextUtils.ToInt32(num.Substring(i * 3 + 1, 1));
+                    int c = TextUtils.ToInt32(num.Substring(i * 3 + 2, 1));
+
+                    bool isFirstGroup = i == 0 || (a == 0 && b == 0 && c == 0);
+                    output.AddRange(ReadThree(a, b, c, !isFirstGroup));
+
+                    if (a != 0 || b != 0 || c != 0)
+                    {
+                        var unit = UNITS[num.Length / 3 - 1 - i];
+                        if (unit != "")
+                            output.Add(unit);
+                    }
+                }
+
+                return string.Join(" ", output);
+            }
+            catch (Exception ex)
+            {
+                return "";
+            }
+        }
+
+        private List<string> ReadTwo(int b, int c, bool hasHundred)
+        {
+            var output = new List<string>();
+
+            switch (b)
+            {
+                case 0:
+                    if (hasHundred && c == 0)
+                        break;
+                    if (hasHundred)
+                        output.Add("lẻ");
+                    if (c != 0)
+                        output.Add(DIGITS[c]);
+                    break;
+
+                case 1:
+                    output.Add("mười");
+                    if (c == 5)
+                        output.Add("lăm");
+                    else if (c != 0)
+                        output.Add(DIGITS[c]);
+                    break;
+
+                default:
+                    output.Add(DIGITS[b]);
+                    output.Add("mươi");
+                    if (c == 1)
+                        output.Add("mốt");
+                    else if (c == 5)
+                        output.Add("lăm");
+                    else if (c != 0)
+                        output.Add(DIGITS[c]);
+                    break;
+            }
+
+            return output;
+        }
+
+        private List<string> ReadThree(int a, int b, int c, bool readZeroHundred)
+        {
+            var output = new List<string>();
+
+            if (a != 0 || readZeroHundred)
+                output.AddRange(new[] { DIGITS[a], "trăm" });
+
+            output.AddRange(ReadTwo(b, c, a != 0 || readZeroHundred));
+            return output;
+        }
+
+        public string DocSoTu1Den99(int so)
+        {
+            //if (so < 0 || so > 99)
+            //    throw new ArgumentOutOfRangeException(nameof(so), "Chỉ hỗ trợ từ 0 đến 99.");
+
+            if (so < 10)
+                return ChuSo[so];
+
+            int chuc = so / 10;
+            int donvi = so % 10;
+
+            string kq = "";
+
+            if (chuc == 1)
+            {
+                kq = "mười";
+                if (donvi == 1)
+                    kq += " một";
+                else if (donvi == 5)
+                    kq += " lăm";
+                else if (donvi > 0)
+                    kq += " " + ChuSo[donvi];
+            }
+            else
+            {
+                kq = ChuSo[chuc] + " mươi";
+
+                if (donvi == 1)
+                    kq += " mốt";
+                else if (donvi == 5)
+                    kq += " lăm";
+                else if (donvi > 0)
+                    kq += " " + ChuSo[donvi];
+            }
+
+            return kq.Trim();
+        }
+        #endregion
     }
 
     public class UnitCurrency
