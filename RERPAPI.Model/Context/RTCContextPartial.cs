@@ -42,8 +42,28 @@ namespace RERPAPI.Model.Context
                     if (updatedBy != null && updatedBy.CanWrite) updatedBy.SetValue(item.Entity,loginName);
                     //if (name != null && name.CanWrite) name.SetValue(item.Entity, loginName);
                     if (updatedDate != null && updatedDate.CanWrite) updatedDate.SetValue(item.Entity, DateTime.Now);
-                    if (isDeleted != null && isDeleted.CanWrite) isDeleted.SetValue(item.Entity, false);
-                    if (isDelete != null && isDelete.CanWrite) isDelete.SetValue(item.Entity, false);
+                    //if (isDeleted != null && isDeleted.CanWrite) isDeleted.SetValue(item.Entity, false);
+                    //if (isDelete != null && isDelete.CanWrite) isDelete.SetValue(item.Entity, false);
+                    if (isDeleted != null && isDeleted.CanWrite)
+                    {
+                        var propType = isDeleted.PropertyType;
+
+                        if (propType == typeof(bool) || propType == typeof(bool?))
+                            isDeleted.SetValue(item.Entity, false);
+                        else if (propType == typeof(int) || propType == typeof(int?))
+                            isDeleted.SetValue(item.Entity, 0);
+                    }
+
+                    if (isDelete != null && isDelete.CanWrite)
+                    {
+                        var propType = isDelete.PropertyType;
+
+                        if (propType == typeof(bool) || propType == typeof(bool?))
+                            isDelete.SetValue(item.Entity, false);
+                        else if (propType == typeof(int) || propType == typeof(int?))
+                            isDelete.SetValue(item.Entity, 0);
+                    }
+
                 }
 
                 if (item.State == EntityState.Modified)
