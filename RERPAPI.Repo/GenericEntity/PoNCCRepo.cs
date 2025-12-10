@@ -445,7 +445,7 @@ namespace RERPAPI.Repo.GenericEntity
                     minUnit = TextUtils.ToString(descriptionCurrency.GetProperty("unitenglish").GetValue(currencyUnit.Description));
                 }
             }
-            words += unit + (decimalPart > 0 ? " " : ".");
+            words += unit + (decimalPart > 0 ? " " : ",");
 
             // TextUtils decimal part to words
             if (decimalPart > 0)
@@ -485,147 +485,163 @@ namespace RERPAPI.Repo.GenericEntity
         #region Đọc số tiền bằng chữ tiếng việt
         public string ConvertNumberToTextVietNamese(decimal num, string currencyType)
         {
-            string numberText = num.ToString();
-            string numberMoneyText = "";
-            if (!string.IsNullOrEmpty(numberText.Trim()))
+            try
             {
-                string decimalPart = "";
-                List<string> number = new List<string>();
-                if (numberText.Contains('.'))
+                string numberText = num.ToString();
+                string numberMoneyText = "";
+                if (!string.IsNullOrEmpty(numberText.Trim()))
                 {
-                    string intergerPart = numberText.Substring(0, numberText.LastIndexOf('.'));
-                    decimalPart = numberText.Substring(numberText.LastIndexOf('.') + 1);
-                    string separator = numberText.Substring(numberText.LastIndexOf('.'), 1);
+                    string decimalPart = "";
+                    List<string> number = new List<string>();
+                    if (numberText.Contains(','))
+                    {
+                        string intergerPart = numberText.Substring(0, numberText.LastIndexOf(','));
+                        decimalPart = numberText.Substring(numberText.LastIndexOf(',') + 1);
+                        string separator = numberText.Substring(numberText.LastIndexOf(','), 1);
 
-                    if (decimalPart == "00")
-                    {
-                        number.Add(intergerPart);
-                    }
-                    else
-                    {
-                        number.AddRange(new[] { intergerPart, separator, decimalPart });
-                    }
-                }
-                else
-                {
-                    number.Add(numberText);
-                }
-
-                //string currenyName = "";
-                //string currenyUnit = "";
-                var currencyUnit = UNIT_CURRENCY.FirstOrDefault(x => x.Name == currencyType);
-                string currenyName = "";
-                string currenyUnit = "";
-                if (currencyUnit != null)
-                {
-                    var descriptionCurrency = currencyUnit.Description.GetType();
-                    if (currencyType == "RMB" & decimalPart != "00")
-                    {
-                        currenyUnit = TextUtils.ToString(descriptionCurrency.GetProperty("namevietnamese").GetValue(currencyUnit.Description));
-                    }
-                    else if (currencyType == "RMB" & decimalPart == "00")
-                    {
-                        currenyName = TextUtils.ToString(descriptionCurrency.GetProperty("namevietnamese").GetValue(currencyUnit.Description));
-                    }
-                    else
-                    {
-                        currenyName = TextUtils.ToString(descriptionCurrency.GetProperty("namevietnamese").GetValue(currencyUnit.Description));
-                        currenyUnit = TextUtils.ToString(descriptionCurrency.GetProperty("unitvietnamese").GetValue(currencyUnit.Description));
-                    }
-
-                    //var descriptionCurrency = currencyUnit.Description.GetType();
-                    //currenyName = TextUtils.ToString(descriptionCurrency.GetProperty("namevietnamese").GetValue(currencyUnit.Description));
-                    //currenyUnit = TextUtils.ToString(descriptionCurrency.GetProperty("unitvietnamese").GetValue(currencyUnit.Description));
-                }
-
-                List<string> output = new List<string>();
-                for (int i = 0; i < number.Count; i++)
-                {
-                    if (i == 0)
-                    {
-                        output.Add(ConvertNumberToText(number[i]).Trim());
-                        //output.Add("đồng");
-                        if (!string.IsNullOrEmpty(currenyName))
+                        if (decimalPart == "00")
                         {
-                            output.Add(currenyName);
-                        }
-                    }
-                    else if (i == 1)
-                    {
-                        output.Add(currencyType == "RMB" ? "phẩy" : "và");
-                    }
-                    else
-                    {
-                        if (i == 2)
-                        {
-                            var digits = number[i].ToCharArray();
-                            List<string> decimalWords = new List<string>();
-                            foreach (var d in digits)
-                            {
-                                //decimalWords.Add(ConvertDigitToText(d));
-
-                                var dd = TextUtils.ToInt64(d);
-                            }
-                            //decimalWords.Add(DocSo(TextUtils.ToInt64(number[i])));
-                            decimalWords.Add(DocSoTu1Den99(TextUtils.ToInt32(number[i])));
-                            //for (int j = 0; j < digits.Count(); j++)
-                            //{
-                            //    decimalWords.Add(ConvertDigitToText(digits[j], j));
-                            //    if (digits[0] != '0' && decimalWords.Count() > 0) decimalWords[0] += "mươi";
-                            //}
-                            output.Add(string.Join(" ", decimalWords).Trim());
+                            number.Add(intergerPart);
                         }
                         else
                         {
-                            output.Add(ConvertNumberToText(number[i]).Trim());
+                            number.AddRange(new[] { intergerPart, separator, decimalPart });
+                        }
+                    }
+                    else
+                    {
+                        number.Add(numberText);
+                    }
+
+                    //string currenyName = "";
+                    //string currenyUnit = "";
+                    var currencyUnit = UNIT_CURRENCY.FirstOrDefault(x => x.Name == currencyType);
+                    string currenyName = "";
+                    string currenyUnit = "";
+                    if (currencyUnit != null)
+                    {
+                        var descriptionCurrency = currencyUnit.Description.GetType();
+                        if (currencyType == "RMB" & decimalPart != "00")
+                        {
+                            currenyUnit = TextUtils.ToString(descriptionCurrency.GetProperty("namevietnamese").GetValue(currencyUnit.Description));
+                        }
+                        else if (currencyType == "RMB" & decimalPart == "00")
+                        {
+                            currenyName = TextUtils.ToString(descriptionCurrency.GetProperty("namevietnamese").GetValue(currencyUnit.Description));
+                        }
+                        else
+                        {
+                            currenyName = TextUtils.ToString(descriptionCurrency.GetProperty("namevietnamese").GetValue(currencyUnit.Description));
+                            currenyUnit = TextUtils.ToString(descriptionCurrency.GetProperty("unitvietnamese").GetValue(currencyUnit.Description));
                         }
 
-                        if (!string.IsNullOrEmpty(currenyUnit))
+                        //var descriptionCurrency = currencyUnit.Description.GetType();
+                        //currenyName = TextUtils.ToString(descriptionCurrency.GetProperty("namevietnamese").GetValue(currencyUnit.Description));
+                        //currenyUnit = TextUtils.ToString(descriptionCurrency.GetProperty("unitvietnamese").GetValue(currencyUnit.Description));
+                    }
+
+                    List<string> output = new List<string>();
+                    for (int i = 0; i < number.Count; i++)
+                    {
+                        if (i == 0)
                         {
-                            output.Add(currenyUnit);
+                            string numtotext = number[i].Trim();
+                            output.Add(ConvertNumberToText(number[i]).Trim());
+                            //output.Add("đồng");
+                            if (!string.IsNullOrEmpty(currenyName))
+                            {
+                                output.Add(currenyName);
+                            }
                         }
+                        else if (i == 1)
+                        {
+                            output.Add(currencyType == "RMB" ? "phẩy" : "và");
+                        }
+                        else
+                        {
+                            if (i == 2)
+                            {
+                                var digits = number[i].ToCharArray();
+                                List<string> decimalWords = new List<string>();
+                                foreach (var d in digits)
+                                {
+                                    //decimalWords.Add(ConvertDigitToText(d));
+
+                                    var dd = TextUtils.ToInt64(d);
+                                }
+                                //decimalWords.Add(DocSo(TextUtils.ToInt64(number[i])));
+                                decimalWords.Add(DocSoTu1Den99(TextUtils.ToInt32(number[i])));
+                                //for (int j = 0; j < digits.Count(); j++)
+                                //{
+                                //    decimalWords.Add(ConvertDigitToText(digits[j], j));
+                                //    if (digits[0] != '0' && decimalWords.Count() > 0) decimalWords[0] += "mươi";
+                                //}
+                                output.Add(string.Join(" ", decimalWords).Trim());
+                            }
+                            else
+                            {
+                                string numtotext = number[i].Trim();
+                                output.Add(ConvertNumberToText(number[i]).Trim());
+                            }
+
+                            if (!string.IsNullOrEmpty(currenyUnit))
+                            {
+                                output.Add(currenyUnit);
+                            }
+                        }
+                    }
+
+                    //if (number.Count == 1) output.Add("chẵn");
+
+                    numberMoneyText = string.Join(" ", output);
+                    if (!string.IsNullOrEmpty(numberMoneyText))
+                    {
+                        numberMoneyText = numberMoneyText[0].ToString().ToUpper() + numberMoneyText.Substring(1);
                     }
                 }
 
-                //if (number.Count == 1) output.Add("chẵn");
-
-                numberMoneyText = string.Join(" ", output);
-                if (!string.IsNullOrEmpty(numberMoneyText))
-                {
-                    numberMoneyText = numberMoneyText[0].ToString().ToUpper() + numberMoneyText.Substring(1);
-                }
+                return numberMoneyText + ".";
             }
-
-            return numberMoneyText + ".";
+            catch (Exception ex)
+            {
+                return "";
+            }
         }
 
         public string ConvertNumberToText(string num)
         {
-            var needZeroCount = num.Length % 3;
-            if (needZeroCount != 0)
-                needZeroCount = 3 - needZeroCount;
-
-            num = new string('0', needZeroCount) + num;
-
-            var output = new List<string>();
-            for (var i = 0; i < num.Length / 3; i++)
+            try
             {
-                int a = TextUtils.ToInt32(num.Substring(i * 3, 1));
-                int b = TextUtils.ToInt32(num.Substring(i * 3 + 1, 1));
-                int c = TextUtils.ToInt32(num.Substring(i * 3 + 2, 1));
+                var needZeroCount = num.Length % 3;
+                if (needZeroCount != 0)
+                    needZeroCount = 3 - needZeroCount;
 
-                bool isFirstGroup = i == 0 || (a == 0 && b == 0 && c == 0);
-                output.AddRange(ReadThree(a, b, c, !isFirstGroup));
+                num = new string('0', needZeroCount) + num;
 
-                if (a != 0 || b != 0 || c != 0)
+                var output = new List<string>();
+                for (var i = 0; i < num.Length / 3; i++)
                 {
-                    var unit = UNITS[num.Length / 3 - 1 - i];
-                    if (unit != "")
-                        output.Add(unit);
-                }
-            }
+                    int a = TextUtils.ToInt32(num.Substring(i * 3, 1));
+                    int b = TextUtils.ToInt32(num.Substring(i * 3 + 1, 1));
+                    int c = TextUtils.ToInt32(num.Substring(i * 3 + 2, 1));
 
-            return string.Join(" ", output);
+                    bool isFirstGroup = i == 0 || (a == 0 && b == 0 && c == 0);
+                    output.AddRange(ReadThree(a, b, c, !isFirstGroup));
+
+                    if (a != 0 || b != 0 || c != 0)
+                    {
+                        var unit = UNITS[num.Length / 3 - 1 - i];
+                        if (unit != "")
+                            output.Add(unit);
+                    }
+                }
+
+                return string.Join(" ", output);
+            }
+            catch (Exception ex)
+            {
+                return "";
+            }
         }
 
         private List<string> ReadTwo(int b, int c, bool hasHundred)

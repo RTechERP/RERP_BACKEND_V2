@@ -841,7 +841,7 @@ namespace RERPAPI.Controllers.Old
                 string companyText = po.CompanyText.ToUpper().Trim();
                 var taxCompany = _taxCompanyRepo.GetAll(x => x.Code.ToUpper().Trim() == companyText).FirstOrDefault() ?? new TaxCompany();
 
-                int employeeID = Convert.ToInt32(po.EmployeeID);
+                int employeeID = TextUtils.ToInt32(po.EmployeeID);
 
                 var employeePurchase = _employeePurchaseRepo.GetAll(x => x.EmployeeID == employeeID && x.TaxCompayID == taxCompany.ID).FirstOrDefault() ?? new EmployeePurchase();
                 po.Purchaser = $"{_pONCCRepo.ConvertVietnameseToEnglish(po.FullName)} - Phone: {_pONCCRepo.ConvertPhoneNumberVietnamese(employeePurchase.Telephone ??"")} - Email: {employeePurchase.Email}";
