@@ -4,11 +4,13 @@ using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.Asset;
+using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Model.Param.HRM;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Asset;
+using RERPAPI.Repo.GenericEntity.HRM;
 using System;
 
 namespace RERPAPI.Controllers.HRM.Employees
@@ -19,9 +21,11 @@ namespace RERPAPI.Controllers.HRM.Employees
     public class EmployeeBussinessController : ControllerBase
     {
         private EmployeeBussinessRepo _employeeBussinessRepo;
-        public EmployeeBussinessController(EmployeeBussinessRepo employeeBussinessRepo)
+        EmployeeBussinessFileRepo _employeeBussinessFileRepo;
+        public EmployeeBussinessController(EmployeeBussinessRepo employeeBussinessRepo, EmployeeBussinessFileRepo employeeBussinessFileRepo)
         {
             _employeeBussinessRepo = employeeBussinessRepo;
+            _employeeBussinessFileRepo = employeeBussinessFileRepo;
         }
         [RequiresPermission("N1,N2")]
         [HttpPost]
@@ -52,7 +56,39 @@ namespace RERPAPI.Controllers.HRM.Employees
                 });
             }
         }
+    
+        [HttpPost("get-employee-bussinesss-person")]
+        public IActionResult GetEmployeeBussinessPerson(EmployeeBussinessInWebRequestParam param)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                var firstDay = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+                var lastDay = firstDay.AddMonths(1).AddDays(-1);
+                var arrParamName = new string[] { "@DateStart", "@DateEnd", "@Keyword", "@EmployeeID", "@IsApproved", "@Type", "@VehicleID", "@NotCheckIn" };
+                var arrParamValue = new object[] { param.DateStart ?? firstDay, param.DateEnd ?? lastDay, param.Keyword ?? "",currentUser.EmployeeID, param.IsApproved ?? 0, param.Type??0, param.VehicleID??0, param.NotCheckIn??-1};
+                var employeeBussiness = SQLHelper<object>.ProcedureToList("spGetEmployeeBussinessInWeb", arrParamName, arrParamValue);
 
+                var result = SQLHelper<object>.GetListData(employeeBussiness, 0);
+
+                return Ok(new
+                {
+                    status = 1,
+                    data = result
+                });
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
+        }
         [HttpPost("get-employee-bussiness-person")]
         public IActionResult GetEmployeeBussinessPerson(EmployeeBussinessParam param)
         {
@@ -63,7 +99,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 var employeeBussiness = SQLHelper<object>.ProcedureToList("spGetEmployeeBussiness", arrParamName, arrParamValue);
 
                 var result = SQLHelper<object>.GetListData(employeeBussiness, 0);
-               // var TotalPage = SQLHelper<object>.GetListData(employeeBussiness, 1);
+                // var TotalPage = SQLHelper<object>.GetListData(employeeBussiness, 1);
                 var summary = result
         .GroupBy(x => (string)x.FullName)
         .Select(g => new
@@ -89,7 +125,8 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [RequiresPermission("N1,N2")]   
+
+        [RequiresPermission("N1,N2")]
         [HttpPost("get-work-management")]
         public IActionResult GetWorkManagement([FromBody] EmployeeNightShiftSummaryRequestParam request)
         {
@@ -240,7 +277,70 @@ namespace RERPAPI.Controllers.HRM.Employees
             }
         }
 
+        [HttpPost("save-data-employee")]
+        public async Task<IActionResult> SaveDataEmployee([FromBody] EmployeeBussinessDTO dto)
+                {
+            try
+            {
+                if (dto == null) { return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." }); }
+                if (dto.employeeBussiness != null)
+                {
+                    if (dto.employeeBussiness.ID <= 0)
+                        await _employeeBussinessRepo.CreateAsync(dto.employeeBussiness);
+                    else
+                        await _employeeBussinessRepo.UpdateAsync(dto.employeeBussiness);
+                }
+                if (dto.employeeBussinessFiles != null)
+                {
+                    if (dto.employeeBussinessFiles.ID <= 0)
+                    {
+                        dto.employeeBussinessFiles.EmployeeBussinessID = dto.employeeBussiness.ID;
+                        await _employeeBussinessFileRepo.CreateAsync(dto.employeeBussinessFiles);
+                    }    
+                    else
+                        await _employeeBussinessFileRepo.UpdateAsync(dto.employeeBussinessFiles);
+                }
 
+                return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+       
+            [HttpPost("save-file")]
+            public async Task<IActionResult> SaveFile([FromBody] EmployeeBussinessFile employeeBussinessFile)
+            {
+                try
+                {
+                    if (employeeBussinessFile.ID <= 0)
+                    {
+                 
+                        await _employeeBussinessFileRepo.CreateAsync(employeeBussinessFile);
+                    }
+                    else await _employeeBussinessFileRepo.UpdateAsync(employeeBussinessFile);
+                    return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+                }
+            }
+       
+        [HttpGet("get-file-by-id")]
+        public IActionResult GetFileByID(int bussinessID)
+        {
+            try
+            {
+                var file = _employeeBussinessFileRepo.GetAll(x => x.EmployeeBussinessID == bussinessID&&x.IsDeleted!=true);
+                return Ok(ApiResponseFactory.Success(file, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 
 }
