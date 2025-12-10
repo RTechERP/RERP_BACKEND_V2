@@ -388,15 +388,15 @@ namespace RERPAPI.Controllers.Project
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Không có yêu cầu nào để check giá!"));
                 }
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
 
                 foreach (var item in lst)
                 {
-
-                    var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                    var currentUser = ObjectMapper.GetCurrentUser(claims);
+                    var exist = requestRepo.GetByID(item.ID);
                     if (currentUser.EmployeeID != item.QuoteEmployeeID && item.QuoteEmployeeID > 0) continue;
                     item.QuoteEmployeeID = item.IsCheckPrice == false ? 0 : item.QuoteEmployeeID;
-                    item.UpdatedBy = currentUser.LoginName;
+                    item.UpdatedDate = exist.UpdatedDate;
                     await requestRepo.SaveData(item);
 
                 }

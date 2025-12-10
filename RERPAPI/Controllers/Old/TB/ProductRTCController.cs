@@ -302,12 +302,12 @@ namespace RERPAPI.Controllers.Old.TB
                                 failCount++;
                                 continue;
                             }
-                            if (!string.IsNullOrEmpty(item.ProductGroupName))
+                            if (!string.IsNullOrEmpty(item.ProductGroupName) || !string.IsNullOrEmpty(item.ProductGroupNo))
                             {
-                                var productGroup = _productGroupRTCRepo.GetAll(x => x.ProductGroupName.Trim().ToUpper() == item.ProductGroupName.Trim().ToUpper() && x.WarehouseType == item.WarehouseType).FirstOrDefault() ?? new ProductGroupRTC()
+                                var productGroup = _productGroupRTCRepo.GetAll(x => (x.ProductGroupName.Trim().ToUpper() == item.ProductGroupName.Trim().ToUpper() || x.ProductGroupNo.Trim().ToUpper() == item.ProductGroupNo.Trim().ToUpper()) && x.WarehouseType == item.WarehouseType).FirstOrDefault() ?? new ProductGroupRTC()
                                 {
                                     ID = 0,
-                                    ProductGroupNo = _productGroupRTCRepo.GenerateCode(item.WarehouseType),
+                                    ProductGroupNo = item.ProductGroupNo,
                                     ProductGroupName = item.ProductGroupName,
                                     WarehouseType = item.WarehouseType,
                                     WarehouseID = item.WarehouseID,

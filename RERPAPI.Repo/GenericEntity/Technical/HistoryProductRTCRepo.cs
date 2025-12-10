@@ -7,9 +7,11 @@ namespace RERPAPI.Repo.GenericEntity.Technical
     {
         const int WAREHOUSE_ID = 1;
         private readonly ProductRTCQRCodeRepo _productRTCQRCodeRepo;
+        CurrentUser _currentUser;
         public HistoryProductRTCRepo(CurrentUser currentUser, ProductRTCQRCodeRepo productRTCQRCodeRepo) : base(currentUser)
         {
             _productRTCQRCodeRepo = productRTCQRCodeRepo;
+            _currentUser = currentUser;
         }
         public async Task SaveDataAsync(ModulaLocationDTO.SerialNumberModulaLocation item)
         {
