@@ -224,6 +224,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<Department> Departments { get; set; }
 
+    public virtual DbSet<DepartmentRequired> DepartmentRequireds { get; set; }
+
     public virtual DbSet<Document> Documents { get; set; }
 
     public virtual DbSet<DocumentExport> DocumentExports { get; set; }
@@ -399,6 +401,8 @@ public partial class RTCContext : DbContext
     public virtual DbSet<GroupSale> GroupSales { get; set; }
 
     public virtual DbSet<GroupSalesUser> GroupSalesUsers { get; set; }
+
+    public virtual DbSet<HCNSProposal> HCNSProposals { get; set; }
 
     public virtual DbSet<HRHiringAppearanceLink> HRHiringAppearanceLinks { get; set; }
 
@@ -2746,6 +2750,24 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
+        modelBuilder.Entity<DepartmentRequired>(entity =>
+        {
+            entity.ToTable("DepartmentRequired");
+
+            entity.Property(e => e.CompletionDate).HasColumnType("datetime");
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.Quantity).HasMaxLength(50);
+            entity.Property(e => e.Reason).HasMaxLength(500);
+            entity.Property(e => e.RequestContent).HasMaxLength(500);
+            entity.Property(e => e.RequestDate).HasColumnType("datetime");
+            entity.Property(e => e.Unit).HasMaxLength(500);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
         modelBuilder.Entity<Document>(entity =>
         {
             entity.ToTable("Document");
@@ -4392,6 +4414,23 @@ public partial class RTCContext : DbContext
             entity.ToTable("GroupSalesUser");
 
             entity.Property(e => e.Note).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<HCNSProposal>(entity =>
+        {
+            entity.Property(e => e.ApprovalDate).HasColumnType("datetime");
+            entity.Property(e => e.Contact).HasMaxLength(500);
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.DisapprovalReason).HasMaxLength(500);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.Note).HasMaxLength(500);
+            entity.Property(e => e.ProductName).HasMaxLength(500);
+            entity.Property(e => e.Supplier).HasMaxLength(500);
+            entity.Property(e => e.TotalAmount).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.UnitPrice).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<HRHiringAppearanceLink>(entity =>

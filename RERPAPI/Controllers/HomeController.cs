@@ -8,12 +8,14 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
+using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Mime;
 using System.Security.Claims;
 using System.Text;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers
 {
@@ -675,5 +677,32 @@ namespace RERPAPI.Controllers
         //        return BadRequest(ApiResponseFactory.Fail(ex,ex.Message));
         //    }
         //}
+        //API Lấy danh sách bản ghi để duyệt TBP duyệt
+        [HttpPost("get-approve-by-approve-tp")]
+
+        public ActionResult GetApproveByApproveTP([FromBody] ApproveByApproveTPRequestParam request)
+
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                bool isBGD = currentUser.DepartmentID == 1 && currentUser.EmployeeID != 54;
+                var firstDay = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+                var lastDay = firstDay.AddMonths(1).AddDays(-1);
+                var approve = SQLHelper<dynamic>.ProcedureToList(
+                    "spGetApprovedByApprovedTP",
+                    new string[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID" },
+                    new object[] { request.FilterText??"", request.DateStart?? firstDay, request.DateEnd?? lastDay, request.IDApprovedTP??0, request.Status??0 , request.DeleteFlag ?? 0, request.EmployeeID ?? 0,request.TType ?? 0, request.StatusHR ?? 0, request.StatusBGD ?? 0, isBGD,    request.UserTeamID ?? 0 });
+
+                var listData = SQLHelper<dynamic>.GetListData(approve, 0);
+                return Ok(ApiResponseFactory.Success(listData, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 }
+    
