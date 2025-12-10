@@ -22,6 +22,7 @@
     <Compile Remove="GenericEntity\GeneralCatetogy\MeetingTypeRepo.cs" />
     <Compile Remove="GenericEntity\HistoryDeleteBillRepo.cs" />
     <Compile Remove="GenericEntity\HistoryProductRTCRepo.cs" />
+    <Compile Remove="GenericEntity\HRM\DepartmentRequire\DepartmentRequiredApprovalsRepo.cs" />
     <Compile Remove="GenericEntity\MeetingMinutesFileRepo.cs" />
     <Compile Remove="GenericEntity\ProductRTCQRCodeRepo.cs" />
     <Compile Remove="GenericEntity\ProductRTCRepo.cs" />

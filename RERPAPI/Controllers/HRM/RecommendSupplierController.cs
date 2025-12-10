@@ -21,17 +21,17 @@ namespace RERPAPI.Controllers.HRM
 
         DepartmentRequiredRepo _departmentrequired;
 
-        DepartmentRequiredApprovalsRepo _departmentrequiredapprovals;
+        //DepartmentRequiredApprovalsRepo _departmentrequiredapprovals;
 
         HCNSProposalsRepo _hcnsproposals;
 
         private IConfiguration _configuration;
 
-        public RecommendSupplierController(JobRequirementRepo jobRepo, DepartmentRequiredRepo departmentrequired, DepartmentRequiredApprovalsRepo departmentrequiredapprovals, HCNSProposalsRepo hcnsproposals, IConfiguration configuration)
+        public RecommendSupplierController(JobRequirementRepo jobRepo, DepartmentRequiredRepo departmentrequired, HCNSProposalsRepo hcnsproposals, IConfiguration configuration)
         {
             _jobRepo = jobRepo;
             _departmentrequired = departmentrequired;
-            _departmentrequiredapprovals = departmentrequiredapprovals;
+            //_departmentrequiredapprovals = departmentrequiredapprovals;
             _hcnsproposals = hcnsproposals;
             _configuration = configuration;
         }

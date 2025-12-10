@@ -44,10 +44,11 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                DateTime dateStart = param.dateStart.Date;                     
-                DateTime dateEnd = param.dateEnd.Date.AddDays(1).AddTicks(-1);
-                var foodOrders = SQLHelper<object>.ProcedureToList("spGetFoodOrder", new string[] { "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@Keyword", "@EmployeeID" },
-                    new object[] { param.pageNumber, param.pageSize, dateStart, dateEnd, param.keyWord, param.employeeId });
+                param.dateStart = param.dateStart.Date;
+                param.dateEnd = param.dateEnd.Date.AddDays(1).AddSeconds(-1);
+                var foodOrders = SQLHelper<object>.ProcedureToList("spGetFoodOrder", 
+                    new string[] { "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@Keyword", "@EmployeeID" },
+                    new object[] { param.pageNumber, param.pageSize, param.dateStart, param.dateEnd, param.keyWord, param.employeeId });
 
                 var result = SQLHelper<object>.GetListData(foodOrders, 0);
 
