@@ -170,16 +170,16 @@ namespace RERPAPI.Controllers.Old.Technical
                 {
                     dtProduct = SQLHelper<dynamic>.ProcedureToList(
                         "spGetProductRTCQRCode",
-                        new string[] { "@WarehouseID" },
-                        new object[] { warehouseID }
+                        new string[] { "@WarehouseID", "@WarehouseType" },
+                        new object[] { warehouseID, warehouseType }
                     );
                 }
                 else
                 {
                     dtProduct = SQLHelper<dynamic>.ProcedureToList(
                         "spGetInventoryDemo",
-                        new string[] { "@ProductGroupID", "@Keyword", "@CheckAll", "@WarehouseID" },
-                        new object[] { 0, "", 0, warehouseID }
+                        new string[] { "@ProductGroupID", "@Keyword", "@CheckAll", "@WarehouseID", "@WarehouseType" },
+                        new object[] { 0, "", 0, warehouseID, warehouseType }
                     );
                 }
 
@@ -344,7 +344,10 @@ namespace RERPAPI.Controllers.Old.Technical
                         return Ok(ApiResponseFactory.Success(lst, "Cập nhật dữ liệu thành công!"));
                     }
                     if (product.billImportTechnical.ID <= 0)
+                    {
+                        product.billImportTechnical.IsDeleted = false;
                         await _billImportTechnicalRepo.CreateAsync(product.billImportTechnical);
+                    }
                     else
                         await _billImportTechnicalRepo.UpdateAsync(product.billImportTechnical);
                 }
