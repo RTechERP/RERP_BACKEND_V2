@@ -480,6 +480,16 @@ namespace RERPAPI.Controllers.Old.Technical
                 // Lưu phiếu xuất
                 if (product.billExportTechnical != null)
                 {
+                    if (product.billExportTechnical.IsDeleted == true)
+                    {
+                        await _billExportTechnicalRepo.UpdateAsync(product.billExportTechnical);
+                        List<BillExportDetailTechnical> lst = _billExportDetailTechnicalRepo.GetAll(x => x.BillExportTechID == product.billExportTechnical.ID);
+                        foreach (var item in lst)
+                        {
+                            item.IsDeleted == true;
+                            await _billExportDetailTechnicalRepo.UpdateAsync(item);
+                        }
+                    }
                     product.billExportTechnical.CheckAddHistoryProductRTC = product.billExportTechnical.BillType == 1;
                     if (product.billExportTechnical.ID <= 0)
                         await _billExportTechnicalRepo.CreateAsync(product.billExportTechnical);
@@ -582,7 +592,7 @@ namespace RERPAPI.Controllers.Old.Technical
                                 oHistoryModel.NumberBorrow = item.Quantity;
                                 oHistoryModel.WarehouseID = product.billExportTechnical.WarehouseID;
                                 oHistoryModel.IsDelete = false;
-                                if (oHistoryModel.ID < -0) await _historyProductRTCRepo.CreateAsync(oHistoryModel);
+                                if (oHistoryModel.ID <= 0) await _historyProductRTCRepo.CreateAsync(oHistoryModel);
                                 else await _historyProductRTCRepo.UpdateAsync(oHistoryModel);
                             }
                         }
