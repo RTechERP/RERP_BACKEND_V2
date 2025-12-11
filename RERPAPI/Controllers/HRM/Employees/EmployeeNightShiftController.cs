@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.HRM;
 using RERPAPI.Repo.GenericEntity;
@@ -22,17 +23,35 @@ namespace RERPAPI.Controllers.HRM.Employees
             _employeeNightShiftRepo = employeeNightShiftRepo;
 
         }
-        [RequiresPermission("N1,N2")]
+        //[RequiresPermission("N1,N2")]
         [HttpPost("get-employee-night-shift")]
         public ActionResult GetEmployeeNightShift([FromBody] EmployeeNightShiftRequestParam request)
 
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var vUserHR = _vUserGroupLinksRepo
+                              .GetAll()
+                              .FirstOrDefault(x =>
+                              (x.Code == "N1" || x.Code == "N2") &&
+                              x.UserID == currentUser.ID);
+
+                int employeeID;
+                if (vUserHR != null)
+                {
+                    employeeID = request.EmployeeID;
+                }
+                else
+                {
+                    employeeID = currentUser.EmployeeID;
+                }
                 var data = SQLHelper<dynamic>.ProcedureToList(
                     "spGetEmployeeNightShift",
                     new string[] { "@EmployeeID", "@DateStart", "@DateEnd", "@IsApproved", "@DepartmentID", "@Keyword", "@PageNumber", "PageSize" },
-                    new object[] { 0, request.DateStart, request.DateEnd, request.IsApproved, request.DepartmentID ?? 0, request.KeyWord ?? "", request.Page ?? 1, request.Size ?? 50 });
+                    new object[] { employeeID, request.DateStart, request.DateEnd, request.IsApproved, request.DepartmentID ?? 0, request.KeyWord ?? "", request.Page ?? 1, request.Size ?? 50 });
 
                 var nightShiftdata = SQLHelper<object>.GetListData(data, 0);
                 var TotalPage = SQLHelper<object>.GetListData(data, 2);
@@ -63,17 +82,35 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [RequiresPermission("N1,N2")]
+        //[RequiresPermission("N1,N2")]
         [HttpPost("get-employee-night-shift-summary")]
         public ActionResult GetEmployeeNightShiftSummary([FromBody] EmployeeNightShiftSummaryRequestParam request)
 
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var vUserHR = _vUserGroupLinksRepo
+                              .GetAll()
+                              .FirstOrDefault(x =>
+                              (x.Code == "N1" || x.Code == "N2") &&
+                              x.UserID == currentUser.ID);
+
+                int employeeID;
+                if (vUserHR != null)
+                {
+                    employeeID = request.EmployeeID;
+                }
+                else
+                {
+                    employeeID = currentUser.EmployeeID;
+                }
                 var data = SQLHelper<dynamic>.ProcedureToList
                 ("spGetEmployeeNightShiftByMonth"
                 , new string[] { "@Month", "@Year", "@DepartmentID", "@EmployeeID", "@Keyword" }
-                , new object[] { request.Month, request.Year, request.DepartmentID, request.EmployeeID, request.KeyWord ?? "" });
+                , new object[] { request.Month, request.Year, request.DepartmentID, employeeID, request.KeyWord ?? "" });
 
                 var nightShiftdata = SQLHelper<object>.GetListData(data, 0);
 
@@ -84,7 +121,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [RequiresPermission("N1,N2")]
+        //[RequiresPermission("N1,N2")]
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] List<EmployeeNighShift> nightShifts)
         {
