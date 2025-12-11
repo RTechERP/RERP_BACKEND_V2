@@ -8,6 +8,21 @@ namespace RERPAPI.Model.Common
 {
     public static class TextUtils
     {
+
+        public static DateTime MinDate { get
+            {
+                return new DateTime(1900, 1, 1, 0, 0, 0);
+            }
+        }
+
+        public static DateTime MaxDate
+        {
+            get
+            {
+                return new DateTime(9999, 1, 1, 0, 0, 0);
+            }
+        }
+
         public static string ToString(object x)
         {
             try
@@ -118,5 +133,6 @@ namespace RERPAPI.Model.Common
                 return false;
             }
         }
+
     }
 }

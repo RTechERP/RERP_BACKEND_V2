@@ -347,8 +347,6 @@ namespace RERPAPI.Repo
                 var entities = await table.Where(predicate).ToListAsync();
                 if (!entities.Any()) return 0;
 
-
-
                 //public void SetClaim(Dictionary<string, string> claim)
                 //{
                 //    db.Claim = claim;
