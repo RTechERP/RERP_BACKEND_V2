@@ -16,11 +16,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
             _firmRepo = firmRepo;
         }
         [HttpGet("")]
-        public IActionResult getDataFirm(int firmType = 1)
+        public IActionResult getDataFirm(int firmType)
         {
             try
             {
-                List<Firm> dataFirm = _firmRepo.GetAll(x => x.IsDelete != true && x.FirmType == firmType);
+                List<Firm> dataFirm = _firmRepo.GetAll(x => x.IsDelete != true && (x.FirmType == firmType || firmType == 0));
                 return Ok(ApiResponseFactory.Success(dataFirm, "Lấy dữ liệu hãng thành công!"));
             }
             catch (Exception ex)
@@ -28,7 +28,12 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [HttpGet("get-firm-code")]
+        public IActionResult GetFirmCode(int firmType = 2)
+        {
+            string firmcode = _firmRepo.GenerateCode(firmType);
+            return Ok(ApiResponseFactory.Success(firmcode, ""));
+        }
         [HttpGet("check-code")]
         public IActionResult CheckFirmCodeExists([FromQuery] string firmCode, [FromQuery] int? id = null)
         {
@@ -114,7 +119,11 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                 }
 
                 if (firmData.ID <= 0)
+                {
+
+                    firmData.FirmCode = _firmRepo.GenerateCode(firmData.FirmType ?? 0);
                     await _firmRepo.CreateAsync(firmData);
+                }
                 else
                     await _firmRepo.UpdateAsync(firmData);
 
