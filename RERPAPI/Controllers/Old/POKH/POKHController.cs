@@ -143,7 +143,11 @@ namespace RERPAPI.Controllers.Old.POKH
                 List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetEmployeeManager",
                     new string[] { "@group", "@UserID", "@TeamID" },
                     new object[] { group, userId, teamId });
-                return Ok(ApiResponseFactory.Success(list, ""));
+                var dataOld = SQLHelper<dynamic>.GetListData(list, 0);
+                var dataNew = SQLHelper<dynamic>.GetListData(list, 3);
+                dataNew.AddRange(dataOld);
+                var result = dataNew;
+                return Ok(ApiResponseFactory.Success(new {list, result}, ""));
             }
             catch (Exception ex)
             {
@@ -800,6 +804,10 @@ namespace RERPAPI.Controllers.Old.POKH
                     CurrencyID = dto.POKH.CurrencyID,
                     Year = dto.POKH.Year,
                     Month = dto.POKH.Month,
+                    Discount = dto.POKH.Discount,
+                    TotalMoneyDiscount = dto.POKH.TotalMoneyDiscount,
+                    AccountType = dto.POKH.AccountType,
+                    MoneyDiscount = dto.POKH.MoneyDiscount,
                     IsDeleted = false,
                     CreatedDate = DateTime.Now
                 };
