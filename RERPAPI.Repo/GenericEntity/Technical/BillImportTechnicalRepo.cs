@@ -2,11 +2,6 @@
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo;
 using RERPAPI.Repo.GenericEntity;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RTCApi.Repo.GenericRepo
 {
@@ -16,8 +11,8 @@ namespace RTCApi.Repo.GenericRepo
         CurrentUser _currentUser;
         public BillImportTechnicalRepo(CurrentUser currentUser, BillImportTechnicalLogRepo billImportTechnicalLogRepo) : base(currentUser)
         {
-            _BillImportTechnicalLog= billImportTechnicalLogRepo ;
-            _currentUser = currentUser ;
+            _BillImportTechnicalLog = billImportTechnicalLogRepo;
+            _currentUser = currentUser;
         }
 
         public string GetBillCode(int billtype)
@@ -35,7 +30,7 @@ namespace RTCApi.Repo.GenericRepo
             //                                .OrderByDescending(x => x.ID)
             //                                .FirstOrDefault() ?? new BillImportTechnical();
             //string code = preCode + billDate.ToString("yyMMdd");
-            List<BillImportTechnical> billImports = GetAll().Where(x => (x.BillCode ?? "").Contains(billDate.ToString("yyMMdd"))).ToList();
+            List<BillImportTechnical> billImports = GetAll(x => x.IsDeleted == false).Where(x => (x.BillCode ?? "").Contains(billDate.ToString("yyMMdd"))).ToList();
 
             var listCode = billImports.Select(x => new
             {
@@ -67,7 +62,7 @@ namespace RTCApi.Repo.GenericRepo
 
             // Entity Framework sẽ tự track bill vì chúng ta đã Get nó ra trước đó, 
             // hoặc bạn có thể gọi Update rõ ràng:
-           await UpdateAsync(bill);
+            await UpdateAsync(bill);
 
             // 2. Ghi Log
             var log = new BillImportTechnicalLog
