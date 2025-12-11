@@ -486,7 +486,7 @@ namespace RERPAPI.Controllers.Old.Technical
                         List<BillExportDetailTechnical> lst = _billExportDetailTechnicalRepo.GetAll(x => x.BillExportTechID == product.billExportTechnical.ID);
                         foreach (var item in lst)
                         {
-                            item.IsDeleted == true;
+                            item.IsDeleted = true;
                             await _billExportDetailTechnicalRepo.UpdateAsync(item);
                         }
                         return Ok(ApiResponseFactory.Success(product, "Xóa dữ liệu thành công"));
