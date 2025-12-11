@@ -381,6 +381,7 @@ builder.Services.AddScoped<JobRequirementDetailRepo>();
 builder.Services.AddScoped<DepartmentRequiredRepo>();
 builder.Services.AddScoped<HCNSProposalsRepo>();
 #endregion
+
 builder.Services.AddScoped<BillExportTechnicalRepo>();
 builder.Services.AddScoped<TaxCompanyRepo>();
 builder.Services.AddScoped<HistoryErrorRepo>();
@@ -389,6 +390,10 @@ builder.Services.AddScoped<BillImportTechnicalLogRepo>();
 builder.Services.AddScoped<BillDocumentImportTechnicalRepo>();
 builder.Services.AddScoped<BillDocumentImportTechnicalLogRepo>();
 builder.Services.AddScoped<BillExportTechnicalLogRepo>();
+
+
+builder.Services.AddScoped<WorkPlanRepo>();
+builder.Services.AddScoped<WorkPlanDetailRepo>();
 
 
 builder.Services.AddScoped<CurrentUser>(provider =>
@@ -552,22 +557,20 @@ app.Use(async (context, next) =>
 app.UseStaticFiles();
 List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();
 
-
-
 foreach (var item in staticFiles)
 {
-    //app.UseStaticFiles(new StaticFileOptions()
-    //{
-    //    FileProvider = new PhysicalFileProvider(item.PathFull),
-    //    RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-    //});
+    app.UseStaticFiles(new StaticFileOptions()
+    {
+        FileProvider = new PhysicalFileProvider(item.PathFull),
+        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+    });
 
 
-    //app.UseDirectoryBrowser(new DirectoryBrowserOptions
-    //{
-    //    FileProvider = new PhysicalFileProvider(item.PathFull),
-    //    RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-    //});
+    app.UseDirectoryBrowser(new DirectoryBrowserOptions
+    {
+        FileProvider = new PhysicalFileProvider(item.PathFull),
+        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+    });
 }
 
 app.Run();

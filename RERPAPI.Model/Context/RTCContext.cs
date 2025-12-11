@@ -10327,6 +10327,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.EndDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.Location).HasMaxLength(150);
             entity.Property(e => e.StartDate).HasColumnType("datetime");
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
@@ -10340,6 +10341,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.DateDay).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.Location).HasMaxLength(550);
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
