@@ -52,6 +52,7 @@ builder.Services.AddScoped<BillDocumentExportLogRepo>();
 builder.Services.AddScoped<BillDocumentImportLogRepo>();
 builder.Services.AddScoped<EmployeeNightShiftRepo>();
 builder.Services.AddScoped<BillDocumentImportRepo>();
+builder.Services.AddScoped<EmployeeBussinessFileRepo>();
 builder.Services.AddScoped<BillExportDetailSerialNumberModulaLocationRepo>();
 builder.Services.AddScoped<BillExportDetailSerialNumberRepo>();
 builder.Services.AddScoped<BillExportDetailTechnicalRepo>();
