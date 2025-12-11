@@ -42,4 +42,6 @@ public partial class BillExportDetailTechnical
     public int? WarehouseID { get; set; }
 
     public int? BillImportDetailTechnicalID { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }

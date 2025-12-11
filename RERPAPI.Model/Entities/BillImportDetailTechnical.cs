@@ -72,4 +72,6 @@ public partial class BillImportDetailTechnical
     public DateTime? DueDate { get; set; }
 
     public int? DPO { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }
