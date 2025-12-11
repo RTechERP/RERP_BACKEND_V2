@@ -37,7 +37,6 @@ namespace RERPAPI.Controllers.Old.Technical.InventoryDemo
             {
                 return Ok(new
                 {
-
                     status = 0,
                     message = ex.Message,
                     error = ex.ToString()

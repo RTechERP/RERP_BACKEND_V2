@@ -93,12 +93,27 @@ namespace RERPAPI.Controllers.Old.Technical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpGet("get-bill-export-by-id")]
+        public IActionResult GetBillExportByCode(int id)
+        {
+            try
+            {
+                var billxport = _billExportTechnicalRepo.GetByID(id);
+                return Ok(ApiResponseFactory.Success(billxport, ""));
+            }
+
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [HttpGet("get-bill-export-by-code")]
         public IActionResult GetBillExportByCode(string billCode)
         {
             try
             {
                 List<BillExportTechnical> masterBillImports = _billExportTechnicalRepo.GetAll(x => x.Code == billCode);
+                if (masterBillImports.Count <= 0) return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy phiếu xuất có mã {billCode}!"));
                 var importID = masterBillImports[0].ID;
                 var billDetail = SQLHelper<dynamic>.ProcedureToList("spGetBillExportTechDetail_New", new string[] { "@ID" }, new object[] { importID });
                 return Ok(new
