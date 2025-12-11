@@ -1803,6 +1803,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.Internalcode).HasMaxLength(100);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.Quantity).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.TotalQuantity).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.UnitName).HasMaxLength(100);
@@ -2025,6 +2026,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.DeadlineReturnNCC).HasColumnType("datetime");
             entity.Property(e => e.DueDate).HasColumnType("datetime");
             entity.Property(e => e.InternalCode).HasMaxLength(100);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.Price).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.ProjectCode).HasMaxLength(100);
             entity.Property(e => e.ProjectName).HasMaxLength(100);

@@ -107,7 +107,7 @@ namespace RERPAPI.Controllers.Old.Technical
                 var billImportTechnical = SQLHelper<dynamic>.ProcedureToList(
                     "spGetBillImportTechnical",
                     new string[] { "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@Status", "@FilterText", "@WarehouseID", "@BillType" },
-                    new object[] { request.Page, request.Size, dateStart, dateEnd, request.Status, request.FilterText, request.WarehouseID,request.BillType  });
+                    new object[] { request.Page, request.Size, dateStart, dateEnd, request.Status, request.FilterText, request.WarehouseID, request.BillType });
 
                 return Ok(new
                 {
@@ -163,7 +163,7 @@ namespace RERPAPI.Controllers.Old.Technical
                     dtProduct = SQLHelper<dynamic>.ProcedureToList(
                         "spGetProductRTC",
                         new string[] { "@ProductGroupID", "@Keyword", "@CheckAll", "@WarehouseID", "@WarehouseType" },
-                        new object[] { 0, "", 1, warehouseID,warehouseType }
+                        new object[] { 0, "", 1, warehouseID, warehouseType }
                     );
                 }
                 else if (warehouseID == 1)
@@ -332,6 +332,17 @@ namespace RERPAPI.Controllers.Old.Technical
                 // Lưu phiếu nhập
                 if (product.billImportTechnical != null)
                 {
+                    if (product.billImportTechnical.IsDeleted == true)
+                    {
+                        _billImportTechnicalRepo.Update(product.billImportTechnical);
+                        var lst = _billImportTechnicalDetailRepo.GetAll(x => x.BillImportTechID == product.billImportTechnical.ID && x.IsDeleted == false);
+                        foreach (var item in lst)
+                        {
+                            item.IsDeleted = true;
+                            await _billImportTechnicalDetailRepo.UpdateAsync(item);
+                        }
+                        return Ok(ApiResponseFactory.Success(lst, "Cập nhật dữ liệu thành công!"));
+                    }
                     if (product.billImportTechnical.ID <= 0)
                         await _billImportTechnicalRepo.CreateAsync(product.billImportTechnical);
                     else
