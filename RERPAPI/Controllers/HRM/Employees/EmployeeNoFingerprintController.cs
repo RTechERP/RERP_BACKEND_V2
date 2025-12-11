@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.HRM;
 using RERPAPI.Repo.GenericEntity;
@@ -18,23 +19,45 @@ namespace RERPAPI.Controllers.HRM.Employees
     {
         EmployeeNoFingerprintRepo _employeeNoFingerprintRepo;
         DepartmentRepo _departmentRepo;
+        private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
 
-        public EmployeeNoFingerprintController(EmployeeNoFingerprintRepo employeeNoFingerprintRepo, DepartmentRepo departmentRepo)
+        public EmployeeNoFingerprintController(EmployeeNoFingerprintRepo employeeNoFingerprintRepo, DepartmentRepo departmentRepo, vUserGroupLinksRepo vUserGroupLinksRepo)
         {
             _employeeNoFingerprintRepo = employeeNoFingerprintRepo;
             _departmentRepo = departmentRepo;
+            _vUserGroupLinksRepo = vUserGroupLinksRepo;
         }
-        [RequiresPermission("N1,N2")]
+
+
+        //[RequiresPermission("N1,N2")]
         [HttpPost("get-employee-no-fingerprint")]
         public IActionResult GetEmployeeNoFingerprint([FromBody] EmployeeNoFingerPrintRequestParam request)
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var vUserHR = _vUserGroupLinksRepo
+      .GetAll()
+      .FirstOrDefault(x =>
+          ( x.Code == "N1" || x.Code == "N2") &&
+          x.UserID == currentUser.ID);
+
+                int employeeID;
+                if (vUserHR != null)
+                {
+                    employeeID = request.EmployeeID ?? 0;
+                }
+                else
+                {
+                    employeeID = currentUser.EmployeeID;
+                }
                 DateTime ds = new DateTime(request.DateStart.Year, request.DateStart.Month, request.DateStart.Day, 0, 0, 0);
                 DateTime de = new DateTime(request.DateEnd.Year, request.DateEnd.Month, request.DateEnd.Day, 23, 59, 59);
                 var dt = SQLHelper<object>.ProcedureToList("spGetEmployeeNoFingerprint",
-                                                   new string[] { "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@DepartmentID", "@IDApprovedTP", "@Status", @"Keyword" },
-                                                   new object[] { request.Page ?? 1, request.Size ?? 50, ds, de, request.DepartmentID ?? 0, request.IDApprovedTP, request.Status, request.KeyWord ?? "" });
+                                                   new string[] { "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID" ,"@IDApprovedTP", "@Status", @"Keyword" },
+                                                   new object[] { request.Page ?? 1, request.Size ?? 50, ds, de, request.DepartmentID ?? 0, employeeID, request.IDApprovedTP, request.Status, request.KeyWord ?? "" });
                 var data = SQLHelper<object>.GetListData(dt, 0);
                 var totalPage = SQLHelper<object>.GetListData(dt, 1);
 
@@ -50,11 +73,29 @@ namespace RERPAPI.Controllers.HRM.Employees
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var vUserHR = _vUserGroupLinksRepo
+      .GetAll()
+      .FirstOrDefault(x =>
+          (x.Code == "N1" || x.Code == "N2") &&
+          x.UserID == currentUser.ID);
+
+                int employeeID;
+                if (vUserHR != null)
+                {
+                    employeeID = request.EmployeeID ?? 0;
+                }
+                else
+                {
+                    employeeID = currentUser.EmployeeID;
+                }
                 DateTime ds = new DateTime(request.DateStart.Year, request.DateStart.Month, request.DateStart.Day, 0, 0, 0);
                 DateTime de = new DateTime(request.DateEnd.Year, request.DateEnd.Month, request.DateEnd.Day, 23, 59, 59);
                 var dt = SQLHelper<object>.ProcedureToList("spGetEmployeeNoFingerprint",
-                                                   new string[] { "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@DepartmentID", "@IDApprovedTP", "@Status", @"Keyword" },
-                                                   new object[] { request.Page ?? 1, request.Size ?? 50, ds, de, request.DepartmentID ?? 0, request.IDApprovedTP, request.Status, request.KeyWord ?? "" });
+                                                   new string[] { "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@IDApprovedTP", "@Status", @"Keyword" },
+                                                   new object[] { request.Page ?? 1, request.Size ?? 50, ds, de, request.DepartmentID ?? 0, employeeID, request.IDApprovedTP, request.Status, request.KeyWord ?? "" });
                 var data = SQLHelper<object>.GetListData(dt, 0);
                 var totalPage = SQLHelper<object>.GetListData(dt, 1);
 
@@ -65,7 +106,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [RequiresPermission("N1,N2")]
+        //[RequiresPermission("N1,N2")]
         [HttpGet("get-employee-approver")]
         public IActionResult GetEmployeesWithApprovers()
         {
@@ -112,7 +153,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [RequiresPermission("N1,N2")]
+        //[RequiresPermission("N1,N2")]
         [HttpPost("savedata")]
         public async Task<IActionResult> SaveData([FromBody] EmployeeNoFingerprint employeeNoFingerprint)
         {
@@ -131,7 +172,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [RequiresPermission("N1,N2")]
+        //[RequiresPermission("N1,N2")]
         [HttpGet("get-department")]
         public IActionResult GetDepartment()
         {
@@ -158,7 +199,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [RequiresPermission("N1,N2")]
+        //[RequiresPermission("N1,N2")]
 
         [HttpGet("check-duplicate-enf/{id}/{employeeId}/{dayWork}/{type}")]
         public IActionResult CheckDuplicateENF(int id, int employeeId, string dayWork, int type)
