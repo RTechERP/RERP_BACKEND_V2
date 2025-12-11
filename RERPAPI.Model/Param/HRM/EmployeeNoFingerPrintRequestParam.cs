@@ -14,6 +14,7 @@ namespace RERPAPI.Model.Param.HRM
         public int IDApprovedTP { get; set; }
         public string? KeyWord { get; set; }
         public int? DepartmentID { get; set; }
+        public int? EmployeeID { get; set; }
         public int? Page { get; set; }
         public int? Size { get; set; }
     }

@@ -138,8 +138,9 @@ namespace RERPAPI.Controllers.Old.POKH
         {
             try
             {
-                List<int> ids = new List<int> { 8, 9, 10, 11, 12, 13 };
-                var list = _mainIndexRepo.GetAll().Where(x => ids.Contains(x.ID)).ToList();
+                //List<int> ids = new List<int> { 8, 9, 10, 11, 12, 13 };
+                //var list = _mainIndexRepo.GetAll().Where(x => ids.Contains(x.ID)).ToList();
+                var list = _mainIndexRepo.GetAll().ToList();
                 return Ok(ApiResponseFactory.Success(list, ""));
             }
             catch (Exception ex)

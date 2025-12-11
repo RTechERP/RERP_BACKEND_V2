@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
@@ -15,13 +16,16 @@ namespace RERPAPI.Controllers.Old
     public class EmployeeFoodOrderController : ControllerBase
     {
         private readonly EmployeeFoodOrderRepo _employeeFoodOrderRepo;
-        public EmployeeFoodOrderController(EmployeeFoodOrderRepo employeeFoodOrderRepo)
+        private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
+
+        public EmployeeFoodOrderController(EmployeeFoodOrderRepo employeeFoodOrderRepo, vUserGroupLinksRepo vUserGroupLinksRepo)
         {
             _employeeFoodOrderRepo = employeeFoodOrderRepo;
+            _vUserGroupLinksRepo = vUserGroupLinksRepo;
         }
 
         [HttpGet("day-of-week")]
-        [RequiresPermission("N2,N23,N34,N1,N52,N80")]
+        //[RequiresPermission("N2,N23,N34,N1,N52,N80")]
         public IActionResult GetDayOfWeek(int month, int year)
         {
             try
@@ -39,16 +43,33 @@ namespace RERPAPI.Controllers.Old
 
 
         [HttpPost]
-        [RequiresPermission("N2,N23,N34,N1,N80")]
+        //[RequiresPermission("N2,N23,N34,N1,N80")]
         public IActionResult GetEmployeeFoodOrder(EmployeeFoodOrderParam param)
         {
             try
             {
-                param.dateStart = param.dateStart.Date;
-                param.dateEnd = param.dateEnd.Date.AddDays(1).AddSeconds(-1);
-                var foodOrders = SQLHelper<object>.ProcedureToList("spGetFoodOrder", 
-                    new string[] { "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@Keyword", "@EmployeeID" },
-                    new object[] { param.pageNumber, param.pageSize, param.dateStart, param.dateEnd, param.keyWord, param.employeeId });
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var vUserHR = _vUserGroupLinksRepo
+      .GetAll()
+      .FirstOrDefault(x =>
+          (x.Code == "N23" || x.Code == "N1" || x.Code == "N2" || x.Code == "N34" || x.Code == "N80") &&
+          x.UserID == currentUser.ID);
+
+                int employeeID;
+                if (vUserHR != null)
+                {
+                    employeeID = param.employeeId;
+                }
+                else
+                {
+                    employeeID = currentUser.EmployeeID;
+                }
+                DateTime dateStart = param.dateStart.Date;                     
+                DateTime dateEnd = param.dateEnd.Date.AddDays(1).AddTicks(-1);
+                var foodOrders = SQLHelper<object>.ProcedureToList("spGetFoodOrder", new string[] { "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@Keyword", "@EmployeeID" },
+                    new object[] { param.pageNumber, param.pageSize, dateStart, dateEnd, param.keyWord, employeeID });
 
                 var result = SQLHelper<object>.GetListData(foodOrders, 0);
 
@@ -61,13 +82,31 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost("food-order")]
-        [RequiresPermission("N2,N23,N34,N1,N80")]
+        //[RequiresPermission("N2,N23,N34,N1,N80")]
         public IActionResult GetEmployeeFoodOrderByMonth(EmployeeFoodOrderByMonthParam param)
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var vUserHR = _vUserGroupLinksRepo
+      .GetAll()
+      .FirstOrDefault(x =>
+          (x.Code == "N23" || x.Code == "N1" || x.Code == "N2" || x.Code == "N34" || x.Code == "N80") &&
+          x.UserID == currentUser.ID);
+
+                int employeeID;
+                if (vUserHR != null)
+                {
+                    employeeID = param.employeeId;
+                }
+                else
+                {
+                    employeeID = currentUser.EmployeeID;
+                }
                 var foodOrders = SQLHelper<object>.ProcedureToList("spGetEmployeeFoodOrderByMonth", new string[] { "@Month", "@Year", "@DepartmentID", "@EmployeeID", "@Keyword", "@Location" },
-                                       new object[] { param.month, param.year, param.departmentId, param.employeeId, param.keyword ?? "", param.location });
+                                       new object[] { param.month, param.year, param.departmentId, employeeID, param.keyword ?? "", param.location });
 
                 var result = SQLHelper<object>.GetListData(foodOrders, 0);
                 return Ok(ApiResponseFactory.Success(result, ""));
@@ -79,13 +118,31 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost("report-order")]
-        [RequiresPermission("N2,N23,N34,N1,N80")]
+        //[RequiresPermission("N2,N23,N34,N1,N80")]
         public IActionResult GetReportFoodOrderByMonth(EmployeeFoodOrderByMonthParam param)
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var vUserHR = _vUserGroupLinksRepo
+      .GetAll()
+      .FirstOrDefault(x =>
+          (x.Code == "N23" || x.Code == "N1" || x.Code == "N2" || x.Code == "N34" || x.Code == "N80") &&
+          x.UserID == currentUser.ID);
+
+                int employeeID;
+                if (vUserHR != null)
+                {
+                    employeeID = param.employeeId;
+                }
+                else
+                {
+                    employeeID = currentUser.EmployeeID;
+                }
                 var foodOrders = SQLHelper<object>.ProcedureToList("spGetEmployeeFoodOrderByMonth", new string[] { "@Month", "@Year", "@DepartmentID", "@EmployeeID", "@Keyword" },
-                                       new object[] { param.month, param.year, param.departmentId, param.employeeId, param.keyword ?? "" });
+                                       new object[] { param.month, param.year, param.departmentId, employeeID, param.keyword ?? "" });
 
                 var result = SQLHelper<object>.GetListData(foodOrders, 1);
                 return Ok(ApiResponseFactory.Success(result, ""));
@@ -98,11 +155,45 @@ namespace RERPAPI.Controllers.Old
 
 
         [HttpPost("save-data")]
-        [RequiresPermission("N2,N23,N34,N1,N80")]
+        //[RequiresPermission("N2,N23,N34,N1,N80")]
         public async Task<IActionResult> SaveEmployeeFoodOrder([FromBody] EmployeeFoodOrder foodOrder)
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                // Các quyền được phép thao tác theo EmployeeID tùy ý
+                string[] allowCodes = new[] { "N23", "N1", "N2", "N34", "N80" };
+
+                // Kiểm tra user có thuộc nhóm quyền HR hay không
+                var vUserHR = _vUserGroupLinksRepo
+                    .GetAll()
+                    .FirstOrDefault(x =>
+          (x.Code == "N23" || x.Code == "N1" || x.Code == "N2" || x.Code == "N34" || x.Code == "N80") &&
+          x.UserID == currentUser.ID);
+
+                int employeeID;
+
+                if (vUserHR != null)
+                {
+                    employeeID = foodOrder.EmployeeID.Value;
+                }
+                else
+                {
+                    employeeID = currentUser.EmployeeID;
+                }
+                var now = DateTime.Now;
+                var today10AM = new DateTime(now.Year, now.Month, now.Day, 10, 0, 0);
+
+                if (vUserHR == null && now > today10AM)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null,
+                        "Bạn chỉ có thể đặt cơm trước 10h sáng hằng ngày."));
+                }
+
+                // Gán lại cho foodOrder
+                foodOrder.EmployeeID = employeeID;
                 var checkExist = _employeeFoodOrderRepo
                 .GetAll(x => x.EmployeeID == foodOrder.EmployeeID
                           && x.DateOrder.Value.Date == foodOrder.DateOrder.Value.Date 

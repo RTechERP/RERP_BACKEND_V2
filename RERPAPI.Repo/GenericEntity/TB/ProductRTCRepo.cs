@@ -1,4 +1,5 @@
-﻿using RERPAPI.Model.DTO;
+﻿using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Repo.GenericEntity
@@ -10,10 +11,11 @@ namespace RERPAPI.Repo.GenericEntity
         {
             _groupRTCRepo = groupRTCRepo;
         }
-        public bool checkExistProductCodeRTC(ProductRTC model)
+        public bool checkExistProductCodeRTC(ProductRTC model, int warehouseType)
         {
-            var exist = GetAll(x => x.ProductCode == model.ProductCode && x.ID != model.ID && x.IsDelete != true).Any();
-            return exist;
+            var dt = SQLHelper<object>.ProcedureToList("spCheckCodeExistRTC", ["@ProductCode", "@ID", "@WarehouseType"], [model.ProductCode ?? "", model.ID, warehouseType]);
+            var exist = SQLHelper<dynamic>.GetListData(dt, 0);
+            return exist[0].IsExist;
         }
         public bool checkExistSerialRTC(ProductRTC model)
         {

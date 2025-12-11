@@ -67,7 +67,7 @@ namespace RERPAPI.Controllers.Project
             int isDeleted, int projectTypeID, int poKHID, int isJobRequirement = -1, int projectPartlistPriceRequestTypeID = -1, int isCommercialProduct = -1, int page = 1, int size = 25)
         {
             keyword = string.IsNullOrWhiteSpace(keyword) ? null : keyword.Trim();
-            dateEnd = dateEnd.Date.AddDays(1).AddMilliseconds(-3);
+            dateEnd = dateEnd.Date.AddDays(1).AddSeconds(-1);
             dateStart = dateStart.Date;
 
             List<List<dynamic>> dtPriceRequest = SQLHelper<dynamic>.ProcedureToList(
@@ -104,147 +104,36 @@ namespace RERPAPI.Controllers.Project
                 }
             });
         }
-        //[HttpGet("get-partlist")]
-        //public IActionResult GetProjectPartlists(
-        //    DateTime dateStart,
-        //    DateTime dateEnd,
-        //    int statusRequest,
-        //    int projectId,
-        //    string? keyword,
-        //    int isDeleted,
-        //    int poKHID = 0,
-        //    int jobRequirementID = 0,
-        //    bool isVPP = false,
-        //    int projectPartlistPriceRequestTypeID = 0,
-        //    int employeeID = 0)
-        //{
-        //    try
-        //    {
-        //        // Lấy danh sách các ProjectType được assign cho employee
-        //        int projectTypeIdHR = 0;
-        //        if (jobRequirementID > 0 || isVPP)
-        //            projectTypeIdHR = -2; // HCNS
+        [HttpGet("get-partlist")]
+        public IActionResult GetProjectPartlists(
+           DateTime dateStart, DateTime dateEnd, int statusRequest, int projectId, string? keyword, int employeeID,
+            int isDeleted, int projectTypeID, int poKHID, int isJobRequirement = -1, int projectPartlistPriceRequestTypeID = -1, int isCommercialProduct = -1)
+        {
+            try
+            {
 
-        //        var dtTypeResults = SQLHelper<dynamic>.ProcedureToList(
-        //            "spGetProjectTypeAssignByEmployeeID",
-        //            new string[] { "@EmployeeID", "@ProjectTypeID" },
-        //            new object[] { employeeID, projectTypeIdHR }
-        //        );
+                var dtPriceRequestResults = SQLHelper<dynamic>.ProcedureToList(
+                    "spGetProjectPartlistPriceRequest_New",
+                    new string[] {
+                    "@DateStart", "@DateEnd", "@StatusRequest", "@ProjectID", "@Keyword",
+                    "@IsDeleted", "@ProjectTypeID", "@IsCommercialProduct", "@POKHID",
+                    "@IsJobRequirement", "@ProjectPartlistPriceRequestTypeID", "@EmployeeID"
+                    },
+                    new object[] {
+                    dateStart, dateEnd, statusRequest, projectId, keyword, isDeleted,
+                    projectTypeID, isCommercialProduct, poKHID,
+                    isJobRequirement, projectPartlistPriceRequestTypeID, employeeID
+                    }
+                );
 
-        //        if (dtTypeResults == null || dtTypeResults.Count == 0 || dtTypeResults[0].Count == 0)
-        //        {
-        //            return Ok(ApiResponseFactory.Success(new { tabs = new List<object>() }, "No project types assigned"));
-        //        }
-
-        //        var projectTypes = dtTypeResults[0]; // Lấy table đầu tiên
-
-        //        // Khởi tạo response
-        //        var tabsData = new List<object>();
-
-        //        foreach (var projectType in projectTypes)
-        //        {
-        //            var ptDict = (IDictionary<string, object>)projectType;
-
-        //            int projectTypeID = Convert.ToInt32(ptDict["ProjectTypeID"]);
-        //            string typeCode = ptDict["ProjectTypeCode"]?.ToString() ?? "";
-        //            string typeName = ptDict["ProjectTypeName"]?.ToString() ?? "";
-
-        //            // Xác định các tham số cho mỗi tab theo logic WinForm
-        //            int isCommercialProduct = -1;
-        //            int isJobRequirement = -1;
-        //            int effectiveProjectTypeID = projectTypeID;
-        //            int effectivePOKHID = 0;
-        //            int effectiveProjectPartlistPriceRequestTypeID = -1;
-        //            int effectiveEmployeeID = 0;
-        //            bool isVisible = true;
-
-        //            // Logic xử lý theo từng loại ProjectType
-        //            if (projectTypeID == -1)
-        //            {
-        //                // VTN
-        //                isCommercialProduct = 1;
-        //            }
-        //            else if (projectTypeID == -2)
-        //            {
-        //                // HCNS
-        //                effectiveProjectTypeID = -1;
-        //                isJobRequirement = 1;
-        //            }
-        //            else if (projectTypeID == -3)
-        //            {
-        //                // Hàng MKT
-        //                effectiveProjectPartlistPriceRequestTypeID = 4;
-        //                isCommercialProduct = 0;
-        //            }
-        //            else if (projectTypeID == 0)
-        //            {
-        //                isCommercialProduct = 0;
-        //                isJobRequirement = 0;
-        //            }
-
-        //            // Override isJobRequirement nếu có jobRequirementID hoặc isVPP
-        //            if (jobRequirementID > 0 || isVPP)
-        //                isJobRequirement = 1;
-
-        //            // Xác định tab visibility
-        //            if (poKHID > 0 && projectTypeID != -1)
-        //            {
-        //                isVisible = false;
-        //            }
-
-        //            if (projectPartlistPriceRequestTypeID == 3 && projectTypeID != -2)
-        //            {
-        //                isVisible = false;
-        //            }
-
-        //            if (projectPartlistPriceRequestTypeID == 4 && projectTypeID != -3)
-        //            {
-        //                isVisible = false;
-        //            }
-
-        //            // Nếu tab không visible thì skip
-        //            if (!isVisible) continue;
-
-        //            // Load data cho tab này
-        //            var dtPriceRequestResults = SQLHelper<dynamic>.ProcedureToList(
-        //                "spGetProjectPartlistPriceRequest_New",
-        //                new string[] {
-        //            "@DateStart", "@DateEnd", "@StatusRequest", "@ProjectID", "@Keyword",
-        //            "@IsDeleted", "@ProjectTypeID", "@IsCommercialProduct", "@POKHID",
-        //            "@IsJobRequirement", "@ProjectPartlistPriceRequestTypeID", "@EmployeeID"
-        //                },
-        //                new object[] {
-        //            dateStart, dateEnd, statusRequest, projectId, keyword, isDeleted,
-        //            effectiveProjectTypeID, isCommercialProduct, effectivePOKHID,
-        //            isJobRequirement, effectiveProjectPartlistPriceRequestTypeID, effectiveEmployeeID
-        //                }
-        //            );
-
-        //            var tabData = dtPriceRequestResults != null && dtPriceRequestResults.Count > 0
-        //                ? dtPriceRequestResults[0]
-        //                : new List<dynamic>();
-
-        //            // Thêm thông tin tab
-        //            tabsData.Add(new
-        //            {
-        //                tabName = typeName,
-        //                tabCode = typeCode,
-        //                projectTypeID = projectTypeID,
-        //                isJobRequirementTab = typeCode == "IsJobRequirement",
-        //                columnCaptionOverrides = typeCode == "IsJobRequirement"
-        //                    ? new { projectFullName = "Mã YCCV", projectCode = "Mã YCCV" }
-        //                    : null,
-        //                data = tabData
-        //            });
-        //        }
-
-        //        return Ok(ApiResponseFactory.Success(new { tabs = tabsData }, ""));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-        //    }
-        //}
+                var dt = SQLHelper<dynamic>.GetListData(dtPriceRequestResults, 0);
+                return Ok(ApiResponseFactory.Success(dt, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         #endregion
         [HttpGet("get-type")]
         public async Task<IActionResult> GetAllTypebyEmployeeID(int employeeID, int projectTypeID)
@@ -499,15 +388,15 @@ namespace RERPAPI.Controllers.Project
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Không có yêu cầu nào để check giá!"));
                 }
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
 
                 foreach (var item in lst)
                 {
-
-                    var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                    var currentUser = ObjectMapper.GetCurrentUser(claims);
+                    var exist = requestRepo.GetByID(item.ID);
                     if (currentUser.EmployeeID != item.QuoteEmployeeID && item.QuoteEmployeeID > 0) continue;
                     item.QuoteEmployeeID = item.IsCheckPrice == false ? 0 : item.QuoteEmployeeID;
-                    item.UpdatedBy = currentUser.LoginName;
+                    item.UpdatedDate = exist.UpdatedDate;
                     await requestRepo.SaveData(item);
 
                 }
