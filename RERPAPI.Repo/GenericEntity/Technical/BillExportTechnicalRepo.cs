@@ -22,7 +22,7 @@ namespace RTCApi.Repo.GenericRepo
 
             string preCode = "PXKD";
        
-            List<BillExportTechnical> billExports = GetAll().Where(x => (x.Code ?? "").Contains(billDate.ToString("yyMMdd"))).ToList();
+            List<BillExportTechnical> billExports = GetAll(a => a.IsDeleted==false).Where(x => (x.Code ?? "").Contains(billDate.ToString("yyMMdd"))).ToList();
 
             var listCode = billExports.Select(x => new
             {
