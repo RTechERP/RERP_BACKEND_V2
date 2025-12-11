@@ -489,6 +489,7 @@ namespace RERPAPI.Controllers.Old.Technical
                             item.IsDeleted == true;
                             await _billExportDetailTechnicalRepo.UpdateAsync(item);
                         }
+                        return Ok(ApiResponseFactory.Success(product, "Xóa dữ liệu thành công"));
                     }
                     product.billExportTechnical.CheckAddHistoryProductRTC = product.billExportTechnical.BillType == 1;
                     if (product.billExportTechnical.ID <= 0)
