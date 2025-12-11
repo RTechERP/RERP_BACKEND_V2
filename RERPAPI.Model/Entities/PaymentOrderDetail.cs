@@ -42,4 +42,6 @@ public partial class PaymentOrderDetail
     public decimal? TotalPaymentAmount { get; set; }
 
     public decimal? PaymentPercentage { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }

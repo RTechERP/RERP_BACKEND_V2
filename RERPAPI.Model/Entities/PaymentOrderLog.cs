@@ -61,4 +61,6 @@ public partial class PaymentOrderLog
     /// Lý do HR yc bổ sung file
     /// </summary>
     public string? ReasonRequestAppendFileHR { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }

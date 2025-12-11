@@ -620,6 +620,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<PaymentOrder> PaymentOrders { get; set; }
 
+    public virtual DbSet<PaymentOrderApproveFollow> PaymentOrderApproveFollows { get; set; }
+
     public virtual DbSet<PaymentOrderCustomer> PaymentOrderCustomers { get; set; }
 
     public virtual DbSet<PaymentOrderDetail> PaymentOrderDetails { get; set; }
@@ -6318,6 +6320,27 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
+        modelBuilder.Entity<PaymentOrderApproveFollow>(entity =>
+        {
+            entity.ToTable("PaymentOrderApproveFollow");
+
+            entity.Property(e => e.ApproverID).HasComment("EmployeeID người duyệt mặc định");
+            entity.Property(e => e.Code)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.FollowType).HasComment("1: mặc định; 2: Bỏ qua hr; 3: đề nghị đặc biệt");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.StepName).HasMaxLength(550);
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
         modelBuilder.Entity<PaymentOrderCustomer>(entity =>
         {
             entity.ToTable("PaymentOrderCustomer");
@@ -6350,6 +6373,7 @@ public partial class RTCContext : DbContext
 
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.PaymentPercentage).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.Quantity).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.STT)
@@ -6390,6 +6414,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.FileName).HasMaxLength(550);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
@@ -6401,6 +6426,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.FileName).HasMaxLength(550);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
@@ -6425,6 +6451,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.EmployeeApproveActualID).HasComment("Người duyệt thực tế");
             entity.Property(e => e.EmployeeID).HasComment("Người được chỉ định duyệt");
             entity.Property(e => e.IsApproved).HasComment("0:Chờ duyêt; 1:Đã duyệt; 2:Không duyệt");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.IsRequestAppendFileAC).HasComment("Kế toán yc bổ sung (1: Yc bổ sung file)");
             entity.Property(e => e.IsRequestAppendFileHR).HasComment("HR yc bổ sung (1: Yc bổ sung file)");
             entity.Property(e => e.ReasonRequestAppendFileAC)
@@ -6443,6 +6470,7 @@ public partial class RTCContext : DbContext
 
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });

@@ -44,7 +44,7 @@ namespace RERPAPI.Model.Common
         /// </summary>
         /// <param name="x">giá trị cần chuyển</param>
         /// <returns></returns>
-        public static int ToInt32(object x)
+        public static int ToInt32(object? x)
         {
             try
             {
