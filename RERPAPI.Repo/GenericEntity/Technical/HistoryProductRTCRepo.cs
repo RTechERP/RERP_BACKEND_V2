@@ -27,9 +27,8 @@ namespace RERPAPI.Repo.GenericEntity.Technical
                     DateBorrow = DateTime.Now,
                     DateReturnExpected = item.DateReturnExpected, //Nhập từ web
                     PeopleID = item.PeopleID,
-                    Project = item.Project,//Nhập từ web
-                    //DateReturn = null,
-                    Note = item.Note,//Nhập từ web
+                    Project = item.Project,
+                    Note = item.Note,
                     Status = item.Status,
                     NumberBorrow = item.Quantity,
                     AdminConfirm = false,
