@@ -37,8 +37,9 @@ namespace RERPAPI.Repo.GenericEntity.Technical
                     WarehouseID = WAREHOUSE_ID,
                     ProductRTCQRCode = item.SerialNumber,
                     ProductLocationID = 0,
-                    CreatedBy = item.CreatedBy,
-                    UpdatedBy = item.CreatedBy,
+                    CreatedBy = _currentUser.LoginName,
+                    UpdatedBy = _currentUser.LoginName,
+                    CreatedDate = DateTime.Now,
                     IsDelete = false,
                 };
 

@@ -437,16 +437,16 @@ namespace RERPAPI.Controllers.Old.Technical
                 {
                     dtProduct = SQLHelper<dynamic>.ProcedureToList(
                         "spGetProductRTCQRCode",
-                        new string[] { "@WarehouseID" },
-                        new object[] { warehouseID }
+                        new string[] { "@WarehouseID", "@WarehouseType" },
+                        new object[] { warehouseID, warehouseType }
                     );
                 }
                 else
                 {
                     dtProduct = SQLHelper<dynamic>.ProcedureToList(
                         "spGetInventoryDemo",
-                        new string[] { "@ProductGroupID", "@Keyword", "@CheckAll", "@WarehouseID" },
-                        new object[] { 0, "", 0, warehouseID }
+                        new string[] { "@ProductGroupID", "@Keyword", "@CheckAll", "@WarehouseID", "@WarehouseType" },
+                        new object[] { 0, "", 0, warehouseID, warehouseType }
                     );
                 }
 
