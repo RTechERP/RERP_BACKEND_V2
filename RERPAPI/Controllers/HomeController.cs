@@ -804,16 +804,10 @@ namespace RERPAPI.Controllers
                     SQLHelper<object>.ExcuteProcedure(
                   "spUpdateTableByFieldNameAndID",
                   new[] { "@TableName", "@FieldName", "@ID", "@ValueUpdatedDate", "@ValueDecilineApprove", "@EvaluateResults" },
-                  new object[] { item.TableName, item.FieldName, item.Id, item.ValueUpdatedDate, item.ValueDecilineApprove ?? "", item.EvaluateResults }
-              );
+                  new object[] { item.TableName, item.FieldName, item.Id, item.ValueUpdatedDate, item.ValueDecilineApprove ?? "", item.EvaluateResults });
 
                 }
-                return Ok(ApiResponseFactory.Success(
- notProcessed,
- notProcessed.Count == 0
-     ? "Duyệt thành công."
-     : $"Duyệt thành công, bỏ qua {notProcessed.Count} bản ghi."
-));
+                return Ok(ApiResponseFactory.Success(notProcessed,notProcessed.Count == 0? "Duyệt thành công.": $"Duyệt thành công, bỏ qua {notProcessed.Count} bản ghi."));
             }
             catch (Exception ex)
             {
@@ -855,12 +849,7 @@ namespace RERPAPI.Controllers
 
                 }
 
-                return Ok(ApiResponseFactory.Success(
-    notProcessed,
-    notProcessed.Count == 0
-        ? "Duyệt thành công."
-        : $"Duyệt thành công, bỏ qua {notProcessed.Count} bản ghi."
-));
+                return Ok(ApiResponseFactory.Success(notProcessed,notProcessed.Count == 0? "Duyệt thành công.": $"Duyệt thành công, bỏ qua {notProcessed.Count} bản ghi."));
             }
             catch (Exception ex)
             {
@@ -904,12 +893,7 @@ namespace RERPAPI.Controllers
 
                 }
 
-                return Ok(ApiResponseFactory.Success(
-         notProcessed,
-         notProcessed.Count == 0
-             ? "Duyệt thành công."
-             : $"Duyệt thành công, bỏ qua {notProcessed.Count} bản ghi."
-     ));
+                return Ok(ApiResponseFactory.Success(notProcessed, notProcessed.Count == 0? "Duyệt thành công.": $"Duyệt thành công, bỏ qua {notProcessed.Count} bản ghi."));
             }
             catch (Exception ex)
             {
