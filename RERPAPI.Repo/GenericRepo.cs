@@ -147,6 +147,14 @@ namespace RERPAPI.Repo
                     property.SetValue(entity, field.Value == null ? null : field.Value);
                 }
 
+                //Gán lại giá trị updatedDate = null để sử lý khi SaveChangesAsync
+                var updatedDate = entity.GetType().GetProperty("UpdatedDate");
+                var updatedDateValue = fieldValues.ContainsKey("UpdatedDate") ? fieldValues["UpdatedDate"] : null;
+                if (updatedDateValue == null) //trường UpdatedDate có value thì thôi
+                {
+                    if (updatedDate != null) updatedDate.SetValue(entity, null);
+                }
+
                 // Lưu thay đổi vào cơ sở dữ liệu
                 db.Entry(entity).State = EntityState.Modified;
                 return db.SaveChanges();
@@ -233,6 +241,15 @@ namespace RERPAPI.Repo
                     // Gán giá trị cho thuộc tính (xử lý null)
                     property.SetValue(entity, field.Value == null ? null : field.Value);
                 }
+
+                //Gán lại giá trị updatedDate = null để sử lý khi SaveChangesAsync
+                var updatedDate = entity.GetType().GetProperty("UpdatedDate");
+                var updatedDateValue = fieldValues.ContainsKey("UpdatedDate") ? fieldValues["UpdatedDate"] : null;
+                if (updatedDateValue == null) //trường UpdatedDate có value thì thôi
+                {
+                    if (updatedDate != null) updatedDate.SetValue(entity, null);
+                }
+
                 db.Entry(entity).State = EntityState.Modified;
                 // Lưu thay đổi vào cơ sở dữ liệu
                 return await db.SaveChangesAsync();
