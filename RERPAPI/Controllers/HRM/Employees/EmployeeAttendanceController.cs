@@ -22,7 +22,7 @@ namespace RERPAPI.Controllers
             _employeeAttendanceRepo = employeeAttendanceRepo;
             _departmentRepo = departmentRepo;
         }
-        [RequiresPermission("N1,N2")]
+        //[RequiresPermission("N1,N2")]
         [HttpGet("get-department")]
         public IActionResult getDepartment()
         {

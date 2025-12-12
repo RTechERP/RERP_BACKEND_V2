@@ -19,24 +19,43 @@ namespace RERPAPI.Controllers
     {
         private readonly EmployeeWFHRepo _employeeWFHRepo;
         private readonly DepartmentRepo _departmentRepo;
+        private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
 
-        public EmployeeWFHController(EmployeeWFHRepo employeeWFHRepo, DepartmentRepo departmentRepo)
+        public EmployeeWFHController(EmployeeWFHRepo employeeWFHRepo, DepartmentRepo departmentRepo, vUserGroupLinksRepo vUserGroupLinksRepo)
         {
             _employeeWFHRepo = employeeWFHRepo;
             _departmentRepo = departmentRepo;
+            _vUserGroupLinksRepo = vUserGroupLinksRepo;
         }
 
-
-        [RequiresPermission("N1,N2")]
+        //[RequiresPermission("N1,N2")]
         [HttpPost("get-wfh")]
         public IActionResult GetWFH([FromBody] EmployeeWFHRequestParam  request)
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var vUserHR = _vUserGroupLinksRepo
+                              .GetAll()
+                              .FirstOrDefault(x =>
+                               (x.Code == "N1" || x.Code == "N2") &&
+                               x.UserID == currentUser.ID);
+
+                int employeeID;
+                if (vUserHR != null)
+                {
+                    employeeID = request.EmployeeId;
+                }
+                else
+                {
+                    employeeID = currentUser.EmployeeID;
+                }
                 // Gọi stored procedure
                 var dt = SQLHelper<EmployeeWFHDTO>.ProcedureToList("spGetWFH",
-                    new string[] { "@PageNumber", "@PageSize", "@Year", "@Month", "@Keyword", "@DepartmentID", "@IDApprovedTP", "@Status" },
-                    new object[] { request.Page, request.Size, request.Year, request.Month, request.Keyword, request.DepartmentId, request.IdApprovedTP, request.Status });
+                    new string[] { "@PageNumber", "@PageSize", "@Year", "@Month", "@Keyword", "@DepartmentID", "@EmployeeID", "@IDApprovedTP", "@Status" },
+                    new object[] { request.Page, request.Size, request.Year, request.Month, request.Keyword, request.DepartmentId, employeeID, request.IdApprovedTP, request.Status });
                 // Dữ liệu trang hiện tại
                 var data = SQLHelper<EmployeeWFHDTO>.GetListData(dt, 0);
                 // Tổng số trang
@@ -65,7 +84,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [RequiresPermission("N1,N2")]
+        //[RequiresPermission("N1,N2")]
         [HttpGet("wfh-detail/{id}")]
         public IActionResult GetWFHDetail(int id)
         {
@@ -84,7 +103,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [RequiresPermission("N1,N2")]
+        //[RequiresPermission("N1,N2")]
         [HttpGet("get-department")]
         public IActionResult GetDepartment()
         {
@@ -101,7 +120,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [RequiresPermission("N1,N2")]
+        //[RequiresPermission("N1,N2")]
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] EmployeeWFH employeeWFH)
         {
