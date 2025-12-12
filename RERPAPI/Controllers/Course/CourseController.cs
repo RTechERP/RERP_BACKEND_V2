@@ -4,6 +4,8 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.DTO;
 using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Model.Entities;
+using System.Security.Claims;
 
 namespace RERPAPI.Controllers.Course
 {
@@ -40,7 +42,7 @@ namespace RERPAPI.Controllers.Course
             }
         }
         [HttpGet("get-course-summary")]
-        public IActionResult GetCourseSummary( int? departmentid, int? employeeID)
+        public IActionResult GetCourseSummary(int? departmentid, int? employeeID)
         {
             try
             {
@@ -52,7 +54,59 @@ namespace RERPAPI.Controllers.Course
                                                 new string[] { "@DepartmentID", "@Status", "@EmployeeID" },
                                                 new object[] { departmentid, -1, employeeID,
                 });
-             
+
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0), ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("load-danhmuc")]
+        public async Task<IActionResult> GetDanhMuc()
+        {
+            try
+            {
+                var data = SQLHelper<object>.ProcedureToList("spGetCourseCatalog",
+                                              new string[] { },
+                                              new object[] { });
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0), ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        //lấy danh sách khóa học
+        [HttpGet("load-dataCourse")]
+        public async Task<IActionResult> LoadDataCourse(int courseCatalogID)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                var data = SQLHelper<object>.ProcedureToList("spGetCourseNew",
+                                              new string[] { "@CourseCatalogID", "@UserID", "@Status" },
+                                              new object[] { courseCatalogID, currentUser.ID, -1 });
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0), ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        //lấy danh sách bài học
+        [HttpGet("load-dataLesson")]
+        public async Task<IActionResult> LoadDataLesson(int courseID)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                var data = SQLHelper<object>.ProcedureToList("spGetLesson",
+                                              new string[] { "@CourseID" },
+                                              new object[] { courseID});
                 return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data,0), ""));
             }
             catch (Exception ex)
@@ -60,5 +114,6 @@ namespace RERPAPI.Controllers.Course
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
     }
 }

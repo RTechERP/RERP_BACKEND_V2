@@ -391,6 +391,9 @@ builder.Services.AddScoped<BillDocumentImportTechnicalRepo>();
 builder.Services.AddScoped<BillDocumentImportTechnicalLogRepo>();
 builder.Services.AddScoped<BillExportTechnicalLogRepo>();
 
+#region khóa học 
+builder.Services.AddScoped<CoureTypeRepo>();
+#endregion
 
 builder.Services.AddScoped<WorkPlanRepo>();
 builder.Services.AddScoped<WorkPlanDetailRepo>();

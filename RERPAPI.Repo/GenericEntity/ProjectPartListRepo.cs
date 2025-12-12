@@ -304,6 +304,7 @@ namespace RERPAPI.Repo.GenericEntity
                 message = $"Không thể {isAprrovedText} vì vật tư thứ tự [{partlist.STT}] đã được Yêu cầu mua!";
                 return false;
             }
+            
             //validate product sale
             //List<ProductSale> prdSale = _productSaleRepo.GetAll(x => x.ProductCode == partlist.ProductCode && x.IsDeleted == false);
             //if (prdSale.Count <= 0)
@@ -345,7 +346,7 @@ namespace RERPAPI.Repo.GenericEntity
              }*/
             return true;
         }
-        public bool ValidateProduct(ProjectPartList partlist, out string message)
+        public bool ValidateProduct(ProjectPartList partlist, out string message, bool isFix)
         {
             message = string.Empty;
 
@@ -356,59 +357,65 @@ namespace RERPAPI.Repo.GenericEntity
                 (x.ProductCode ?? "").Trim() == productCode &&
                 x.IsDeleted != true
             );
-
-            if (prdSale == null || prdSale.Count == 0)
+            if (isFix == true)
             {
-                message = $"Không thể duyệt tích xanh vì sản phẩm [{productCode}] không có trong kho sale!";
-                return false;
+                if (prdSale == null || prdSale.Count == 0)
+                {
+                    message = $"Không thể duyệt tích xanh vì sản phẩm [{productCode}] không có trong kho sale!";
+                    return false;
+                }
+            }
+           if(isFix == true)
+            {
+                // 2. Tìm bản ghi đã FIX
+                var fixedProduct = prdSale.FirstOrDefault(x => x.IsFix == true);
+                if (fixedProduct == null)
+                {
+                    // Nếu chưa Fix thì OK
+                    return true;
+                }
+
+                // 3. So sánh dữ liệu
+                List<string> errors = new List<string>();
+
+                string fixedName = Normalize(fixedProduct.ProductName);
+                string fixedMaker = Normalize(fixedProduct.Maker);
+                string fixedUnit = Normalize(fixedProduct.Unit);
+
+                string currentName = Normalize(partlist.GroupMaterial);
+                string currentMaker = Normalize(partlist.Manufacturer);
+                string currentUnit = Normalize(partlist.Unit);
+
+                // Product Name
+                if (fixedName != currentName)
+                {
+                    errors.Add($"\nMã sản phẩm (tích xanh: [{fixedProduct.ProductName}], hiện tại: [{partlist.GroupMaterial}])");
+                }
+
+                // Maker
+                if (fixedMaker != currentMaker)
+                {
+                    errors.Add($"\nNhà sản xuất (tích xanh: [{fixedProduct.Maker}], hiện tại: [{partlist.Manufacturer}])");
+                }
+
+                // Unit
+                if (fixedUnit != currentUnit)
+                {
+                    errors.Add($"\nĐơn vị (tích xanh: [{fixedProduct.Unit}], hiện tại: [{partlist.Unit}])");
+                }
+
+                // 4. Nếu có lỗi -> trả message
+                if (errors.Count > 0)
+                {
+                    message =
+                        $"Sản phẩm có mã [{productCode}] đã được tích xanh.\n" +
+                        $"Các trường không khớp:{string.Join("", errors)}\n" +
+                        $"Vui lòng kiểm tra lại.";
+                    return false;
+                }
             }
 
-            // 2. Tìm bản ghi đã FIX
-            var fixedProduct = prdSale.FirstOrDefault(x => x.IsFix == true);
-            if (fixedProduct == null)
-            {
-                // Nếu chưa Fix thì OK
-                return true;
-            }
-
-            // 3. So sánh dữ liệu
-            List<string> errors = new List<string>();
-
-            string fixedName = Normalize(fixedProduct.ProductName);
-            string fixedMaker = Normalize(fixedProduct.Maker);
-            string fixedUnit = Normalize(fixedProduct.Unit);
-
-            string currentName = Normalize(partlist.GroupMaterial);
-            string currentMaker = Normalize(partlist.Manufacturer);
-            string currentUnit = Normalize(partlist.Unit);
-
-            // Product Name
-            if (fixedName != currentName)
-            {
-                errors.Add($"\nMã sản phẩm (tích xanh: [{fixedProduct.ProductName}], hiện tại: [{partlist.GroupMaterial}])");
-            }
-
-            // Maker
-            if (fixedMaker != currentMaker)
-            {
-                errors.Add($"\nNhà sản xuất (tích xanh: [{fixedProduct.Maker}], hiện tại: [{partlist.Manufacturer}])");
-            }
-
-            // Unit
-            if (fixedUnit != currentUnit)
-            {
-                errors.Add($"\nĐơn vị (tích xanh: [{fixedProduct.Unit}], hiện tại: [{partlist.Unit}])");
-            }
-
-            // 4. Nếu có lỗi -> trả message
-            if (errors.Count > 0)
-            {
-                message =
-                    $"Sản phẩm có mã [{productCode}] đã được tích xanh.\n" +
-                    $"Các trường không khớp:{string.Join("", errors)}\n" +
-                    $"Vui lòng kiểm tra lại.";
-                return false;
-            }
+           
 
             return true;
         }
