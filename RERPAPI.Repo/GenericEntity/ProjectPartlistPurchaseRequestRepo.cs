@@ -1,16 +1,8 @@
-﻿using Azure.Core;
-using RERPAPI.Model.Common;
+﻿using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Repo.GenericEntity
 {
@@ -19,14 +11,20 @@ namespace RERPAPI.Repo.GenericEntity
         CurrentUser _currentUser;
         ProductGroupRepo _productgroupRepo;
         ProductSaleRepo _productSaleRepo;
+        ProductRTCRepo _productRTCRepo;
         EmployeeRepo _employeeRepo;
         EmployeeSendEmailRepo _employeeSendEmailRepo;
+        UnitCountKTRepo _unitCountKTRepo;
+        FirmRepo _firmRepo;
         public ProjectPartlistPurchaseRequestRepo(
             CurrentUser currentUser,
             ProductGroupRepo productgroupRepo,
             ProductSaleRepo productSaleRepo,
             EmployeeRepo employeeRepo,
-            EmployeeSendEmailRepo employeeSendEmailRepo
+            EmployeeSendEmailRepo employeeSendEmailRepo,
+            ProductRTCRepo productRTCRepo,
+            UnitCountKTRepo unitCountKTRepo,
+            FirmRepo firmRepo
         ) : base(currentUser)
         {
             _currentUser = currentUser;
@@ -34,6 +32,9 @@ namespace RERPAPI.Repo.GenericEntity
             _productSaleRepo = productSaleRepo;
             _employeeRepo = employeeRepo;
             _employeeSendEmailRepo = employeeSendEmailRepo;
+            _productRTCRepo = productRTCRepo;
+            _unitCountKTRepo = unitCountKTRepo;
+            _firmRepo = firmRepo;
         }
 
         public bool ValidateKeepProduct(List<ProductHoldDTO> requests, out string message)
@@ -443,6 +444,56 @@ namespace RERPAPI.Repo.GenericEntity
             sendEmail.Receiver = requestBuy.JobRequirementApprovedTBPID;
 
             await _employeeSendEmailRepo.CreateAsync(sendEmail);
+        }
+        public string GetProductCodeRTC()
+        {
+            string numberCodeDefault = "00000001";
+            string productCodeRTC = "Z";
+            var listProducts = _productRTCRepo.GetAll(x => x.IsDelete == false);
+            var listproductCodeRTCs = listProducts.Select(x => new
+            {
+                ProductCodeRTC = x.ProductCodeRTC,
+                STT = string.IsNullOrWhiteSpace(x.ProductCodeRTC) ? 0 : Convert.ToInt32(x.ProductCodeRTC.Substring(1))
+            }).ToList();
+
+            int numberCode = listproductCodeRTCs.Count <= 0 ? 0 : listproductCodeRTCs.Max(x => x.STT);
+            string numberCodeText = (++numberCode).ToString();
+
+            while (numberCodeText.Length < numberCodeDefault.Length)
+            {
+                numberCodeText = "0" + numberCodeText;
+            }
+            productCodeRTC += numberCodeText;
+
+            return productCodeRTC;
+        }
+        public async Task CreateProduct(List<ProjectPartlistPurchaseRequestDTO> data)
+        {
+            foreach (var item in data)
+            {
+                if (item.ID <= 0) continue;
+                ProjectPartlistPurchaseRequest request = GetByID(item.ID);
+                if (request.EmployeeIDRequestApproved != _currentUser.EmployeeID && !_currentUser.IsAdmin) continue;
+                if (item.ProductGroupRTCID <= 0 && item.ProductGroupID <= 0) continue;
+                ProductRTC productRTC = _productRTCRepo.GetAll(x => x.ProductCode.Trim().ToLower() == item.ProductCode.Trim().ToLower() && x.IsDelete == false).FirstOrDefault() ?? new ProductRTC();
+                productRTC.ProductCode = item.ProductCode.Trim();
+                productRTC.ProductName = item.ProductName.Trim();
+                UnitCountKT unitCountKT = _unitCountKTRepo.GetAll(x => x.UnitCountName.Trim().ToLower() == item.UnitName.Trim().ToLower()).FirstOrDefault() ?? new UnitCountKT();
+                Firm firm = _firmRepo.GetAll(x => x.FirmCode.Trim().ToLower() == item.Manufacturer.Trim().ToLower() && x.FirmType == 2).FirstOrDefault() ?? new Firm();
+                productRTC.UnitCountID = unitCountKT.ID;
+                productRTC.ProductGroupRTCID = item.ProductGroupRTCID;
+                productRTC.Maker = firm.FirmName;
+                productRTC.FirmID = firm.ID;
+                productRTC.CreateDate = DateTime.Now;
+
+                if (productRTC.ID <= 0)
+                {
+                    productRTC.ProductCodeRTC = GetProductCodeRTC();
+                    await _productRTCRepo.CreateAsync(productRTC);
+                }
+                item.ProductRTCID = productRTC.ID;
+                await UpdateAsync(item);
+            }
         }
     }
 }
