@@ -883,5 +883,19 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpPost("create-product")]
+        public async Task<IActionResult> CreateProduct(List<ProjectPartlistPurchaseRequestDTO> data)
+        {
+            if (data == null || data.Count <= 0) return BadRequest(ApiResponseFactory.Fail(null,"Không có dữ liệu truyền về để cập nhật!"));
+            try
+            {
+               await _repo.CreateProduct(data);
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 }
