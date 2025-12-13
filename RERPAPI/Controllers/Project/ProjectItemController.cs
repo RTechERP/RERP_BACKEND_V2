@@ -179,6 +179,7 @@ namespace RERPAPI.Controllers.Project
                         item.EmployeeRequestName = data.EmployeeRequestName;
                         item.ItemLate = 0;
                         item.Code = data.Code;
+                        item.IsApproved = data.IsApproved;
                         _projectItemRepo.CalculateDays(item);
                         if (item.ActualEndDate.HasValue) item.IsApproved = 2;
                         await _projectItemRepo.CreateAsync(item);
@@ -215,6 +216,7 @@ namespace RERPAPI.Controllers.Project
                         item.EmployeeRequestName = data.EmployeeRequestName;
                         item.ItemLate = 0;
                         item.Code = data.Code;
+                        item.IsApproved = data.IsApproved;
                         if (item.ActualEndDate.HasValue && item.IsApproved < 2)
                             item.IsApproved = 2;
                         await _projectItemRepo.UpdateAsync(item);
