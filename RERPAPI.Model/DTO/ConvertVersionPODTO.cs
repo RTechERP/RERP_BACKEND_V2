@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Model.DTO
 {
-    public class EmployeeOverTimeDTO
+    public class ConvertVersionPODTO: ProjectPartListVersion
     {
-        public List<EmployeeOvertime> EmployeeOvertimes { get; set; }
-        public EmployeeOvertimeFile? employeeOvertimeFile { get; set; }
+       public string ProjectTypeName { get; set; }
+        
     }
 }

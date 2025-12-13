@@ -19,7 +19,7 @@ namespace RERPAPI.Controllers.Old
             _employeeTypeOverTimeRepo = employeeTypeOverTimeRepo;
         }
         [HttpGet]
-        [RequiresPermission("N2,N1")]
+        
         public IActionResult GetAllEmployeeTypeOverTime()
         {
             try

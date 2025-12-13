@@ -66,6 +66,7 @@ builder.Services.AddScoped<BillImportDetailSerialNumberModulaLocationRepo>();
 builder.Services.AddScoped<BillImportDetailSerialNumberRepo>();
 builder.Services.AddScoped<BillImportLogRepo>();
 builder.Services.AddScoped<BillImportRepo>();
+builder.Services.AddScoped<EmployeeOvertimeFileRepo>();
 builder.Services.AddScoped<BillImportTechDetailSerialRepo>();
 builder.Services.AddScoped<BusinessFieldLinkRepo>();
 builder.Services.AddScoped<BusinessFieldRepo>();
@@ -392,6 +393,11 @@ builder.Services.AddScoped<BillDocumentImportTechnicalRepo>();
 builder.Services.AddScoped<BillDocumentImportTechnicalLogRepo>();
 builder.Services.AddScoped<BillExportTechnicalLogRepo>();
 builder.Services.AddScoped<RegisterContractRepo>();
+
+
+#region khóa học 
+builder.Services.AddScoped<CoureTypeRepo>();
+#endregion
 
 #region Kế hoạch tuần
 builder.Services.AddScoped<WorkPlanRepo>();
