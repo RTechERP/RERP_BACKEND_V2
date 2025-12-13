@@ -3,9 +3,13 @@ using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
+using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
+using RERPAPI.Model.Param.HRM;
 using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.HRM;
+using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -16,10 +20,12 @@ namespace RERPAPI.Controllers.Old
     {
         private readonly EmployeeOverTimeRepo _employeeOverTimeRepo;
         private readonly EmployeeTypeOverTimeRepo _employeeTypeOvertimeRepo;
-        public EmployeeOverTimeController(EmployeeOverTimeRepo employeeOverTimeRepo, EmployeeTypeOverTimeRepo employeeTypeOvertimeRepo)
+        EmployeeOvertimeFileRepo _employeeOvertimeFileRepo;
+        public EmployeeOverTimeController(EmployeeOverTimeRepo employeeOverTimeRepo, EmployeeTypeOverTimeRepo employeeTypeOvertimeRepo, EmployeeOvertimeFileRepo employeeOvertimeFileRepo)
         {
             _employeeOverTimeRepo = employeeOverTimeRepo;
             _employeeTypeOvertimeRepo = employeeTypeOvertimeRepo;
+            _employeeOvertimeFileRepo = employeeOvertimeFileRepo;
         }
 
         [HttpPost]
@@ -192,6 +198,27 @@ namespace RERPAPI.Controllers.Old
                                        new object[] { param.month, param.year, param.departmentId, param.employeeId, param.keyWord ?? "" });
 
                 var result = SQLHelper<object>.GetListData(overTimes, 0);
+                return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpPost("get-over-time-by-employee")]
+
+        public IActionResult GetOverTimeByEmployee(OverTimeByEmployeeRequestParam param)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                var firstDay = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+                var lastDay = firstDay.AddMonths(1).AddDays(-1);
+                var overTimes = SQLHelper<object>.ProcedureToList("spGetEmployeeOvertimeInWeb", new string[] { "@DateStart", "@DateEnd", "@Keyword", "@EmployeeID", "@IsApproved", "@Type" },
+                                       new object[] { param.DateStart ?? firstDay, param.DateEnd ?? lastDay, param.KeyWord ?? "", currentUser.EmployeeID, param.IsApprove ?? 0, param.Type ?? 0 });
+
+                var result = SQLHelper<object>.GetListData(overTimes, 0);
                 return Ok(new
                 {
                     status = 1,
@@ -206,6 +233,62 @@ namespace RERPAPI.Controllers.Old
                     message = ex.Message,
                     error = ex.ToString()
                 });
+            }
+        }
+        [HttpPost("save-data-employee")]
+        public async Task<IActionResult> SaveDataEmployee([FromBody] EmployeeOverTimeDTO dto)
+        {
+            try
+            {
+                if (dto == null) { return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." }); }
+                foreach (var item in dto.EmployeeOvertimes)
+                {
+                    if (item.ID <= 0)
+                    {
+                        
+                        await _employeeOverTimeRepo.CreateAsync(item);
+                        dto.employeeOvertimeFile.EmployeeOvertimeID = item.ID;
+                    }
+                    else
+                    {
+                        await _employeeOverTimeRepo.UpdateAsync(item);
+                    }
+                  
+
+                }
+                if (dto.employeeOvertimeFile != null)
+                {
+                    if (dto.employeeOvertimeFile.ID <= 0)
+                    {
+
+                        await _employeeOvertimeFileRepo.CreateAsync(dto.employeeOvertimeFile);
+                    }
+                    else
+                        await _employeeOvertimeFileRepo.UpdateAsync(dto.employeeOvertimeFile);
+                }
+
+                return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-by-id")]
+
+        public IActionResult GetByID(int ID)
+        {
+            try
+            {
+                var employeeOverTime = _employeeOverTimeRepo.GetByID(ID);
+                var overTimeFile = _employeeOvertimeFileRepo.GetAll(x => x.EmployeeOvertimeID == ID && x.IsDeleted != true).FirstOrDefault();
+
+
+                return Ok(ApiResponseFactory.Success(new { employeeOverTime, overTimeFile }, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 

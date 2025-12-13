@@ -65,6 +65,7 @@ builder.Services.AddScoped<BillImportDetailSerialNumberModulaLocationRepo>();
 builder.Services.AddScoped<BillImportDetailSerialNumberRepo>();
 builder.Services.AddScoped<BillImportLogRepo>();
 builder.Services.AddScoped<BillImportRepo>();
+builder.Services.AddScoped<EmployeeOvertimeFileRepo>();
 builder.Services.AddScoped<BillImportTechDetailSerialRepo>();
 builder.Services.AddScoped<BusinessFieldLinkRepo>();
 builder.Services.AddScoped<BusinessFieldRepo>();

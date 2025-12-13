@@ -62,6 +62,22 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpPost("get-project-item-over-time")]
+        public IActionResult GetProjectItemOverTime(ProjectItemRequestParam request)
+        {
+            try
+            {
+                var projectItem = SQLHelper<dynamic>.ProcedureToList("spGetProjectItem",
+                    new[] { "@ProjectID", "@UserID", "@Keyword", "@Status" },
+                    new object[] {  request.ProjectID       , request.UserID, request.Keyword, request.Status });
+                var rows = SQLHelper<dynamic>.GetListData(projectItem, 0);
+                return Ok(ApiResponseFactory.Success(rows, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         //Hàm lấy mã hạng mục công việc
         [ApiKeyAuthorize]
         [HttpGet("get-project-item-code")]
