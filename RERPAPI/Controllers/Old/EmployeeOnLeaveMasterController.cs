@@ -22,7 +22,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet]
-        [RequiresPermission("N2,N1")]
+        //[RequiresPermission("N2,N1")]
         public IActionResult GetAllEmployeeOnLeaveMaster()
         {
             try

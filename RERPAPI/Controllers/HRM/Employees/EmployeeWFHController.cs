@@ -84,6 +84,26 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        [HttpPost("list-summary-employee-work-form-home")]
+
+        public IActionResult ListSummaryEmployeeOnleavePerson(EmployeeWorkFormHomeSummaryParam request)
+        {
+            try
+            {
+                var employeeWFHSummary = SQLHelper<object>.ProcedureToList("spGetEmployeeOnLeaveInWeb", new string[] { "@Keyword", "@DateStart", "@DateEnd", "@IsApproved", "@TimeWFH", "@DepartmentID", "@EmployeeID" },
+               new object[] { request.Keyword ?? "", request.DateStart, request.DateEnd, request.IsApproved, request.TimeWFH, request.DepartmentID ?? 0, request.EmployeeID ?? 0 });
+
+                var data = SQLHelper<object>.GetListData(employeeWFHSummary, 0);
+                var TotalPages = SQLHelper<object>.GetListData(employeeWFHSummary, 1);
+                return Ok(ApiResponseFactory.Success(new { data, TotalPages }, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         //[RequiresPermission("N1,N2")]
         [HttpGet("wfh-detail/{id}")]
         public IActionResult GetWFHDetail(int id)

@@ -56,6 +56,25 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
+        [HttpPost("list-summary-employee-over-time")]
+
+        public IActionResult ListSummaryEmployeeOnleavePerson(EmployeeOverTimeSummaryParam request)
+        {
+            try
+            {
+                var employeeOverTimeSummary = SQLHelper<object>.ProcedureToList("spGetEmployeeOnLeaveInWeb", new string[] { "@Keyword", "@DateStart", "@DateEnd", "@IsApproved", "@Type", "@DepartmentID", "@EmployeeID" },
+               new object[] { request.Keyword ?? "", request.DateStart, request.DateEnd, request.IsApproved, request.Type, request.DepartmentID ?? 0, request.EmployeeID ?? 0 });
+
+                var data = SQLHelper<object>.GetListData(employeeOverTimeSummary, 0);
+                var TotalPages = SQLHelper<object>.GetListData(employeeOverTimeSummary, 1);
+                return Ok(ApiResponseFactory.Success(new { data, TotalPages }, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpPost("save-data")]
         [RequiresPermission("N2,N1")]
         public async Task<IActionResult> SaveEmployeeOverTime([FromBody] EmployeeOverTimeDTO request)

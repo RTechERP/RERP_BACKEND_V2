@@ -126,6 +126,25 @@ namespace RERPAPI.Controllers.HRM.Employees
             }
         }
 
+        [HttpPost("list-summary-employee-bussiness")]
+
+        public IActionResult ListSummaryEmployeeOnleavePerson(EmployeeBussinessSummaryParam request)
+        {
+            try
+            {
+                var employeeOnLeaveSummary = SQLHelper<object>.ProcedureToList("spGetEmployeeOnLeaveInWeb", new string[] { "@Keyword", "@DateStart", "@DateEnd", "@IsApproved", "@Type", "@DepartmentID", "@EmployeeID", "VehicleID", "NotCheckIn" },
+               new object[] { request.Keyword ?? "", request.DateStart, request.DateEnd, request.IsApproved, request.Type, request.DepartmentID ?? 0, request.EmployeeID ?? 0, request.VehicleID, request.NotCheckIn });
+
+                var data = SQLHelper<object>.GetListData(employeeOnLeaveSummary, 0);
+                var TotalPages = SQLHelper<object>.GetListData(employeeOnLeaveSummary, 1);
+                return Ok(ApiResponseFactory.Success(new { data, TotalPages }, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [RequiresPermission("N1,N2")]
         [HttpPost("get-work-management")]
         public IActionResult GetWorkManagement([FromBody] EmployeeNightShiftSummaryRequestParam request)

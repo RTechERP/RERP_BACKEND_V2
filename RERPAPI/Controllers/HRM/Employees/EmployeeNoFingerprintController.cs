@@ -4,6 +4,7 @@ using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
+using RERPAPI.Model.Param;
 using RERPAPI.Model.Param.HRM;
 using RERPAPI.Repo.GenericEntity;
 using System.Data;
@@ -153,6 +154,26 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        [HttpPost("list-summary-employee-no-finger")]
+
+        public IActionResult ListSummaryEmployeeOnleavePerson(EmployeeNoFingerSummaryParam request)
+        {
+            try
+            {
+                var employeeOnLeaveSummary = SQLHelper<object>.ProcedureToList("spGetEmployeeOnLeaveInWeb", new string[] { "@Keyword", "@DateStart", "@DateEnd", "@IsApproved", "@DepartmentID", "@EmployeeID" },
+               new object[] { request.Keyword ?? "", request.DateStart, request.DateEnd, request.IsApproved, request.DepartmentID ?? 0, request.EmployeeID ?? 0});
+
+                var data = SQLHelper<object>.GetListData(employeeOnLeaveSummary, 0);
+                var TotalPages = SQLHelper<object>.GetListData(employeeOnLeaveSummary, 1);
+                return Ok(ApiResponseFactory.Success(new { data, TotalPages }, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         //[RequiresPermission("N1,N2")]
         [HttpPost("savedata")]
         public async Task<IActionResult> SaveData([FromBody] EmployeeNoFingerprint employeeNoFingerprint)

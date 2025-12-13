@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using NPOI.HSSF.Record.Chart;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
@@ -17,20 +18,41 @@ namespace RERPAPI.Controllers.Old
     {
         private readonly EmployeeOnLeaveRepo _employeeOnLeaveRepo;
         private readonly EmployeeRepo _employeeRepo;
-        public EmployeeOnLeaveController(EmployeeOnLeaveRepo employeeOnLeaveRepo, EmployeeRepo employeeRepo)
+        private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
+
+        public EmployeeOnLeaveController(EmployeeOnLeaveRepo employeeOnLeaveRepo, EmployeeRepo employeeRepo, vUserGroupLinksRepo vUserGroupLinksRepo)
         {
             _employeeOnLeaveRepo = employeeOnLeaveRepo;
             _employeeRepo = employeeRepo;
+            _vUserGroupLinksRepo = vUserGroupLinksRepo;
         }
 
         [HttpPost]
-        [RequiresPermission("N2,N1")]
+        //[RequiresPermission("N2,N1")]
         public IActionResult GetAllEmployeeOnLeave(EmployeeOnLeaveParam param)
         {
             try
             {
-                var employeeOnLeaves = SQLHelper<object>.ProcedureToList("spGetDayOff", new string[] { "@PageNumber", "@PageSize", "@Keyword", "@Month", "@Year", "@IDApprovedTP", "@Status", "@DepartmentID" },
-                    new object[] { param.pageNumber, param.pageSize, param.keyWord, param.month, param.year, param.IDApprovedTP, param.status, param.departmentId });
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var vUserHR = _vUserGroupLinksRepo
+                              .GetAll()
+                              .FirstOrDefault(x =>
+                               (x.Code == "N1" || x.Code == "N2") &&
+                               x.UserID == currentUser.ID);
+
+                int employeeID;
+                if (vUserHR != null)
+                {
+                    employeeID = param.employeeId;
+                }
+                else
+                {
+                    employeeID = currentUser.EmployeeID;
+                }
+                var employeeOnLeaves = SQLHelper<object>.ProcedureToList("spGetDayOff", new string[] { "@PageNumber", "@PageSize", "@Keyword", "@Month", "@Year", "@IDApprovedTP", "@Status", "@DepartmentID", "@EmployeeID" },
+                    new object[] { param.pageNumber, param.pageSize, param.keyWord, param.month, param.year, param.IDApprovedTP, param.status, param.departmentId, employeeID });
 
                 var data = SQLHelper<object>.GetListData(employeeOnLeaves, 0);
                 return Ok(ApiResponseFactory.Success(data, ""));
@@ -47,7 +69,7 @@ namespace RERPAPI.Controllers.Old
             try
             {
                 var employeeOnLeaves = SQLHelper<object>.ProcedureToList("spGetDayOff_New", new string[] { "@PageNumber", "@PageSize", "@Keyword", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DepartmentID" },
-               new object[] {request.Page , request.Size,request.Keyword??"", request.DateStart, request.DateEnd, request.IDApprovedTP, request.Status, request.DepartmentID });
+               new object[] {request.Page , request.Size,request.Keyword??"", request.DateStart, request.DateEnd, request.IDApprovedTP, request.Status, request.DepartmentID ?? 0 });
 
                 var data = SQLHelper<object>.GetListData(employeeOnLeaves, 0);
                 var TotalPages = SQLHelper<object>.GetListData(employeeOnLeaves, 1);
@@ -58,8 +80,65 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        [HttpPost("list-summary-employee-on-leave")]
+
+        public IActionResult ListSummaryEmployeeOnleave(EmployeeOnleaveSummaryParam request)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var vUserHR = _vUserGroupLinksRepo
+                              .GetAll()
+                              .FirstOrDefault(x =>
+                               (x.Code == "N1" || x.Code == "N2") &&
+                               x.UserID == currentUser.ID);
+
+                int employeeID;
+                if (vUserHR != null)
+                {
+                    employeeID = request.EmployeeID ?? 0;
+                }
+                else
+                {
+                    employeeID = currentUser.EmployeeID;
+                }
+                var employeeOnLeaveSummary = SQLHelper<object>.ProcedureToList("spGetEmployeeOnLeaveInWeb", new string[] { "@Keyword", "@DateStart", "@DateEnd", "@IsApproved", "@Type", "@DepartmentID", "@EmployeeID" },
+               new object[] { request.Keyword ?? "", request.DateStart, request.DateEnd, request.IsApproved, request.Type, request.DepartmentID ?? 0, employeeID });
+
+                var data = SQLHelper<object>.GetListData(employeeOnLeaveSummary, 1);
+                var TotalPages = SQLHelper<object>.GetListData(employeeOnLeaveSummary, 1);
+                return Ok(ApiResponseFactory.Success(new { data, TotalPages }, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("list-summary-employee-on-leave-person")]
+
+        public IActionResult ListSummaryEmployeeOnleavePerson(EmployeeOnleaveSummaryParam request)
+        {
+            try
+            {
+                var employeeOnLeaveSummary = SQLHelper<object>.ProcedureToList("spGetEmployeeOnLeaveInWeb", new string[] { "@Keyword", "@DateStart", "@DateEnd", "@IsApproved", "@Type", "@DepartmentID", "@EmployeeID" },
+               new object[] { request.Keyword ?? "", request.DateStart, request.DateEnd, request.IsApproved, request.Type, request.DepartmentID ?? 0, request.EmployeeID ?? 0 });
+
+                var data = SQLHelper<object>.GetListData(employeeOnLeaveSummary, 0);
+                var TotalPages = SQLHelper<object>.GetListData(employeeOnLeaveSummary, 1);
+                return Ok(ApiResponseFactory.Success(new { data, TotalPages }, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpGet]
-        [RequiresPermission("N2,N1")]
+        //[RequiresPermission("N2,N1")]
         public IActionResult GetSummaryEmployeeOnLeave(int month, int year, string? keyWord)
         {
             try
@@ -76,7 +155,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost("save-data")]
-        [RequiresPermission("N2,N1")]
+        //[RequiresPermission("N2,N1")]
         public async Task<IActionResult> SaveEmployeeOnLeave(EmployeeOnLeave employeeOnLeave)
         {
             try

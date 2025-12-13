@@ -11,6 +11,7 @@ namespace RERPAPI.Model.Param
         public int pageNumber { get; set; } = 1;
         public int pageSize { get; set; } = 1000000;
         public string keyWord { get; set; }
+        public int employeeId { get; set; }
         public int departmentId { get; set; } 
         public int month { get; set; }
         public int year { get; set; }
