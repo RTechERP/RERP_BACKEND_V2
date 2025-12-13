@@ -391,6 +391,7 @@ builder.Services.AddScoped<BillImportTechnicalLogRepo>();
 builder.Services.AddScoped<BillDocumentImportTechnicalRepo>();
 builder.Services.AddScoped<BillDocumentImportTechnicalLogRepo>();
 builder.Services.AddScoped<BillExportTechnicalLogRepo>();
+builder.Services.AddScoped<RegisterContractRepo>();
 
 #region Kế hoạch tuần
 builder.Services.AddScoped<WorkPlanRepo>();
@@ -404,6 +405,8 @@ builder.Services.AddScoped<PaymentOrderLogRepo>();
 builder.Services.AddScoped<PaymentOrderApproveFollowRepo>();
 builder.Services.AddScoped<PaymentOrderTypeRepo>();
 builder.Services.AddScoped<PaymentOrderFileRepo>();
+builder.Services.AddScoped<PaymentOrderFileBankSlipRepo>();
+builder.Services.AddScoped<PaymentOrderTypeRepo>();
 #endregion
 
 

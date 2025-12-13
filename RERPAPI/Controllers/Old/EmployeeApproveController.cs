@@ -33,7 +33,7 @@ namespace RERPAPI.Controllers.Old
 
 
         [HttpGet]
-        [RequiresPermission("N1")]
+        //[RequiresPermission("N1")]
         public async Task<IActionResult> GetEmployeeApprove()
         {
             try

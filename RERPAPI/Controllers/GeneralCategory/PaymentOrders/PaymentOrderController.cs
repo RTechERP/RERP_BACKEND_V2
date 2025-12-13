@@ -22,12 +22,20 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         private readonly IConfiguration _configuration;
         private CurrentUser _currentUser;
 
+        private readonly ConfigSystemRepo _configSystemRepo;
         private readonly PaymentOrderRepo _paymentRepo;
         private readonly PaymentOrderDetailRepo _detailRepo;
         private readonly PaymentOrderLogRepo _logRepo;
         private readonly PaymentOrderFileRepo _fileRepo;
         private readonly PaymentOrderFileBankSlipRepo _fileBankSlipRepo;
-        private readonly ConfigSystemRepo _configSystemRepo;
+
+        private readonly PaymentOrderTypeRepo _orderTypeRepo;
+        private readonly EmployeeApprovedRepo _approvedRepo;
+        private readonly SupplierSaleRepo _supplierSaleRepo;
+        private readonly PONCCRepo _poNccRepo;
+        private readonly RegisterContractRepo _registerContractRepo;
+        private readonly ProjectRepo _projectRepo;
+
 
         public PaymentOrderController(IConfiguration configuration, CurrentUser currentUser,
             PaymentOrderRepo paymentRepo,
@@ -35,7 +43,15 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             PaymentOrderLogRepo logRepo,
             ConfigSystemRepo configSystemRepo,
             PaymentOrderFileRepo fileRepo,
-            PaymentOrderFileBankSlipRepo fileBankSlipRepo)
+            PaymentOrderFileBankSlipRepo fileBankSlipRepo,
+
+            PaymentOrderTypeRepo orderTypeRepo,
+            EmployeeApprovedRepo approvedRepo,
+            SupplierSaleRepo supplierSaleRepo,
+            PONCCRepo poNcc,
+            RegisterContractRepo registerContractRepo,
+            ProjectRepo projectRepo
+            )
         {
             _configuration = configuration;
             _currentUser = currentUser;
@@ -45,6 +61,13 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             _configSystemRepo = configSystemRepo;
             _fileRepo = fileRepo;
             _fileBankSlipRepo = fileBankSlipRepo;
+
+            _orderTypeRepo = orderTypeRepo;
+            _approvedRepo = approvedRepo;
+            _supplierSaleRepo = supplierSaleRepo;
+            _poNccRepo = poNcc;
+            _registerContractRepo = registerContractRepo;
+            _projectRepo = projectRepo;
         }
 
 
@@ -89,7 +112,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     details,
                     files,
                     fileBankSlips
-                },""));
+                }, ""));
             }
             catch (Exception ex)
             {
@@ -218,6 +241,46 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 }
 
                 return Ok(ApiResponseFactory.Success(payment.PaymentOrderFiles, "Cập nhật thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
+        [HttpGet("get-data-combo")]
+        public IActionResult GetDataCombo()
+        {
+            try
+            {
+                _currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
+
+                var paymentOrderTypes = _orderTypeRepo.GetAll(x => x.IsDelete != true && x.IsSpecialOrder != true);
+                var approvedTBPs = _approvedRepo.GetAll(x => x.Type == 3 && x.IsDeleted != true);
+
+                DateTime updateDateSupplier = new DateTime(2024, 04, 04);
+                var supplierSales = _supplierSaleRepo.GetAll(x => x.UpdatedDate.Value.Date >= updateDateSupplier && x.IsDeleted != true)
+                                                    .Select(x => new
+                                                    {
+                                                        ID = x.ID,
+                                                        NameNCC = string.IsNullOrEmpty(x.MaSoThue ?? "".Trim()) ? x.NameNCC : $"{x.MaSoThue} - {x.NameNCC}",
+                                                    }).OrderByDescending(x => x.ID).ToList();
+                var poNCCs = _poNccRepo.GetAll(x => x.IsDeleted != true);
+                var registerContracts = _registerContractRepo.GetAll(x => x.EmployeeID == _currentUser.EmployeeID && x.IsDeleted != true);
+                var projects = _projectRepo.GetAll(x => x.IsDeleted != true);
+
+                var data = new
+                {
+                    paymentOrderTypes,
+                    approvedTBPs,
+                    supplierSales,
+                    poNCCs,
+                    registerContracts,
+                    projects
+                };
+
+                return Ok(ApiResponseFactory.Success(data));
             }
             catch (Exception ex)
             {
