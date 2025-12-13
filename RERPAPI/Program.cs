@@ -17,6 +17,7 @@ using RERPAPI.Repo.GenericEntity.DocumentManager;
 using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
 using RERPAPI.Repo.GenericEntity.Film;
 using RERPAPI.Repo.GenericEntity.GeneralCatetogy.JobRequirements;
+using RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders;
 using RERPAPI.Repo.GenericEntity.HRM;
 using RERPAPI.Repo.GenericEntity.HRM.DepartmentRequire;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
@@ -391,13 +392,27 @@ builder.Services.AddScoped<BillImportTechnicalLogRepo>();
 builder.Services.AddScoped<BillDocumentImportTechnicalRepo>();
 builder.Services.AddScoped<BillDocumentImportTechnicalLogRepo>();
 builder.Services.AddScoped<BillExportTechnicalLogRepo>();
+builder.Services.AddScoped<RegisterContractRepo>();
 
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();
 #endregion
 
+#region Kế hoạch tuần
 builder.Services.AddScoped<WorkPlanRepo>();
 builder.Services.AddScoped<WorkPlanDetailRepo>();
+#endregion
+
+#region Đề nghị thanh toán
+builder.Services.AddScoped<PaymentOrderRepo>();
+builder.Services.AddScoped<PaymentOrderDetailRepo>();
+builder.Services.AddScoped<PaymentOrderLogRepo>();
+builder.Services.AddScoped<PaymentOrderApproveFollowRepo>();
+builder.Services.AddScoped<PaymentOrderTypeRepo>();
+builder.Services.AddScoped<PaymentOrderFileRepo>();
+builder.Services.AddScoped<PaymentOrderFileBankSlipRepo>();
+builder.Services.AddScoped<PaymentOrderTypeRepo>();
+#endregion
 
 
 builder.Services.AddScoped<CurrentUser>(provider =>
