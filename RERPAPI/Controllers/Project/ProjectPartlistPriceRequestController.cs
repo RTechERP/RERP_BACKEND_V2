@@ -428,6 +428,21 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpPost("send-mail")]
+        public async Task<IActionResult> SendMail(List<MailItemPriceRequestDTO> data)
+        {
+            try
+            {
+                await requestRepo.SendMail(data);
+                return Ok(ApiResponseFactory.Success(data));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+
+        }
+
         #region Update Price Request Status (Từ chối / Hủy từ chối báo giá)
 
         [HttpPost("update-price-request-status")]
@@ -836,9 +851,6 @@ namespace RERPAPI.Controllers.Project
 
                     request.StatusRequest = newStatus;
 
-                    request.UpdatedDate = DateTime.Now;
-                    request.UpdatedBy = currentUser.LoginName;
-
                     if (!isAdmin)
                         request.QuoteEmployeeID = currentUser.EmployeeID;
 
@@ -850,14 +862,20 @@ namespace RERPAPI.Controllers.Project
                     {
                         request.DatePriceQuote = DateTime.Now;
                     }
-                    await requestRepo.SaveData(request);
+                    item.StatusRequest = request.StatusRequest;
+                    item.DatePriceQuote = request.DatePriceQuote;
+                    item.ID = request.ID;
+                    item.UpdatedDate = request.UpdatedDate;
+                    item.UpdatedBy = request.UpdatedBy;
+                    item.QuoteEmployeeID = request.QuoteEmployeeID;
+                    await requestRepo.SaveData(item);
                 }
 
                 return Ok(ApiResponseFactory.Success(lst, "Cập nhật trạng thái báo giá thành công!"));
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.InnerException?.Message ?? ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -884,5 +902,6 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
     }
 }
