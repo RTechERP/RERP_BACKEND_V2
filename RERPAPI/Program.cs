@@ -16,6 +16,7 @@ using RERPAPI.Repo.GenericEntity.BBNV;
 using RERPAPI.Repo.GenericEntity.DocumentManager;
 using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
 using RERPAPI.Repo.GenericEntity.Film;
+using RERPAPI.Repo.GenericEntity.GeneralCatetogy;
 using RERPAPI.Repo.GenericEntity.GeneralCatetogy.JobRequirements;
 using RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders;
 using RERPAPI.Repo.GenericEntity.HRM;
@@ -390,13 +391,14 @@ builder.Services.AddScoped<AGVHistoryProductRepo>();
 #region YCCV
 builder.Services.AddScoped<JobRequirementRepo>();
 builder.Services.AddScoped<JobRequirementDetailRepo>();
-builder.Services.AddScoped<JobRequirementApprovedRepo>();
+//builder.Services.AddScoped<JobRequirementApprovedRepo>();
 //builder.Services.AddScoped<DepartmentRequiredApprovalsRepo>();
 builder.Services.AddScoped<DepartmentRequiredRepo>();
 builder.Services.AddScoped<HCNSProposalsRepo>();
 #endregion
 
 builder.Services.AddScoped<BillExportTechnicalRepo>();
+builder.Services.AddScoped<EmployeeBussinessVehicleRepo>();
 builder.Services.AddScoped<TaxCompanyRepo>();
 builder.Services.AddScoped<HistoryErrorRepo>();
 builder.Services.AddScoped<HistoryProductRTCLogRepo>();
