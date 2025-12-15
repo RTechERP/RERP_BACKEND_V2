@@ -333,7 +333,7 @@ namespace RERPAPI.Controllers.Old.POKH
                             parentId = parentIdMapping[item.ParentID.Value];
                         }
 
-                        POKHDetail model = idOld > 0 ? _pokhDetailRepo.GetByID(idOld) : new POKHDetail();
+                        POKHDetail model = idOld > 0 ? _pokhDetailRepo.GetByID(idOld) ?? new POKHDetail() : new POKHDetail();
                         // gán id và gán parent id
                         model.POKHID = dto.POKH.ID;
                         model.ParentID = parentId;
@@ -361,10 +361,11 @@ namespace RERPAPI.Controllers.Old.POKH
                         model.ActualDeliveryDate = item.ActualDeliveryDate;
                         model.RecivedMoneyDate = item.RecivedMoneyDate;
                         model.Note = item.Note;
+                        model.ProjectPartListID = item.ProjectPartListID;
                         model.IsDeleted = item.IsDeleted;
 
 
-                        if (idOld > 0)
+                        if (model.ID > 0)
                         {
                             await _pokhDetailRepo.UpdateAsync(model);
                         }
