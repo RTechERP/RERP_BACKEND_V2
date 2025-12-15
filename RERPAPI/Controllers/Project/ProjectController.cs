@@ -10,6 +10,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using System.Data;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
+using static QRCoder.PayloadGenerator;
 
 namespace RERPAPI.Controllers.Project
 {
@@ -2316,6 +2317,41 @@ namespace RERPAPI.Controllers.Project
             }
         }
         #endregion
+        //update status 
+        [HttpPost("update-status")]
+        public async Task<IActionResult> UpdateStatus(int projectID, int projectStatusID, DateTime dateLog) 
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var project = projectRepo.GetByID(projectID);
+                project.ProjectStatus = projectStatusID;
+                await projectRepo.UpdateAsync(project);
+
+                var updateStatus = SQLHelper<object>.ProcedureToList("spUpdateProjectStatus",
+                                                    new string[] { "@ProjectID", "@ProjectStatusID" },
+                                                    new object[] { projectID, project.ProjectStatus });
+                //update lịch sử trạng thái 
+                ProjectStatusLog statusLog = new ProjectStatusLog()
+                {
+                    ProjectID = project.ID,
+                    ProjectStatusID = project.ProjectStatus,
+                    EmployeeID = currentUser.EmployeeID,
+                    DateLog = dateLog,
+                };
+                await projectStatusLogRepo.CreateAsync(statusLog);
+
+
+                return Ok(ApiResponseFactory.Success(null, "Cập nhật trạng thái thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+
+            }
+        }
 
     }
 
