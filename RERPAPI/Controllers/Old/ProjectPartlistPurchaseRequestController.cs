@@ -217,7 +217,40 @@ namespace RERPAPI.Controllers.Old
             }
 
         }
+        [HttpPost("get-all-demo")]
+        //[RequiresPermission("N58,N35,N1")]
+        public IActionResult GetAllDemo([FromBody] ProjectPartlistPurchaseRequestParam filter)
+        {
+            try
+            {
+                DateTime dateStart = filter.DateStart.Date;
+                DateTime dateEnd = filter.DateEnd.Date
+                                    .AddHours(23)
+                                    .AddMinutes(59)
+                                    .AddSeconds(59);
+                var dt = SQLHelper<dynamic>.ProcedureToList("spGetProjectPartlistPurchaseRequest_New_Khanh",
+                    new string[] {
+                "@DateStart", "@DateEnd", "@StatusRequest", "@ProjectID", "@Keyword",
+                "@SupplierSaleID", "@IsApprovedTBP", "@IsApprovedBGD", "@IsCommercialProduct",
+                "@POKHID", "@ProductRTCID", "@IsDeleted", "@IsTechBought", "@IsJobRequirement","@EmployeeID"
 
+                    },
+                    new object[] {
+                filter.DateStart, filter.DateEnd, filter.StatusRequest, filter.ProjectID, filter.Keyword,
+                filter.SupplierSaleID, filter.IsApprovedTBP, filter.IsApprovedBGD, filter.IsCommercialProduct,
+                filter.POKHID, filter.ProductRTCID, filter.IsDeleted, filter.IsTechBought, filter.IsJobRequirement,
+                filter.EmployeeID
+                    });
+
+                var data = SQLHelper<dynamic>.GetListData(dt, 0);
+
+                return Ok(ApiResponseFactory.Success(data, null));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [HttpPost("get-all")]
         [RequiresPermission("N58,N35,N1")]
         public IActionResult GetAll([FromBody] ProjectPartlistPurchaseRequestParam filter)

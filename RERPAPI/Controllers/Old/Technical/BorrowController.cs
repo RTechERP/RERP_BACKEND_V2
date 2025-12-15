@@ -31,7 +31,7 @@ namespace RERPAPI.Controllers
         {
             try
             {
-
+                dateEnd = dateEnd.Date.AddDays(1).AddSeconds(-1);
                 var productHistory = SQLHelper<object>.ProcedureToList("spGetHistoryProduct_New",
                     new string[] { "@DateStart", "@DateEnd", "@Keyword", "@WarehouseID", "@UserID", "@Status", "@PageNumber", "@PageSize", "@IsDeleted", "@WarehouseType" },
                     new object[] { dateStart, dateEnd, keyWords ?? "", warehouseID, userID, status, page, size, isDeleted, warehouseType });
