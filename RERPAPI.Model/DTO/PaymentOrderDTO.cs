@@ -11,7 +11,7 @@ namespace RERPAPI.Model.DTO
     {
         public int ApprovedTBPID { get; set; }
         public int ApprovedBGDID { get; set; }
-        public List<PaymentOrderDetail> PaymentOrderDetails { get; set; } = new List<PaymentOrderDetail>();
+        public List<PaymentOrderDetailDTO> PaymentOrderDetails { get; set; } = new List<PaymentOrderDetailDTO>();
         public string PaymentOrderFiles { get; set; } = string.Empty;
         public List<PaymentOrderLog> PaymentOrderLogs { get; set; } = new List<PaymentOrderLog>();
     }

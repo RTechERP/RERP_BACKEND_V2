@@ -134,6 +134,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 //}
 
                 payment.EmployeeID = _currentUser.EmployeeID;
+                payment.IsUrgent = payment.DatePayment.HasValue;
                 if (payment.ID <= 0)
                 {
                     payment.Code = _paymentRepo.GetCode(payment);

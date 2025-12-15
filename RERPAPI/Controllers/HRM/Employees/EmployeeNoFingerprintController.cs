@@ -40,10 +40,10 @@ namespace RERPAPI.Controllers.HRM.Employees
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
 
                 var vUserHR = _vUserGroupLinksRepo
-      .GetAll()
-      .FirstOrDefault(x =>
-          ( x.Code == "N1" || x.Code == "N2") &&
-          x.UserID == currentUser.ID);
+                                          .GetAll()
+                                          .FirstOrDefault(x =>
+                                              (x.Code == "N1" || x.Code == "N2") &&
+                                              x.UserID == currentUser.ID);
 
                 int employeeID;
                 if (vUserHR != null)
@@ -57,7 +57,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 DateTime ds = new DateTime(request.DateStart.Year, request.DateStart.Month, request.DateStart.Day, 0, 0, 0);
                 DateTime de = new DateTime(request.DateEnd.Year, request.DateEnd.Month, request.DateEnd.Day, 23, 59, 59);
                 var dt = SQLHelper<object>.ProcedureToList("spGetEmployeeNoFingerprint",
-                                                   new string[] { "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID" ,"@IDApprovedTP", "@Status", @"Keyword" },
+                                                   new string[] { "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@IDApprovedTP", "@Status", @"Keyword" },
                                                    new object[] { request.Page ?? 1, request.Size ?? 50, ds, de, request.DepartmentID ?? 0, employeeID, request.IDApprovedTP, request.Status, request.KeyWord ?? "" });
                 var data = SQLHelper<object>.GetListData(dt, 0);
                 var totalPage = SQLHelper<object>.GetListData(dt, 1);
@@ -162,7 +162,7 @@ namespace RERPAPI.Controllers.HRM.Employees
             try
             {
                 var employeeOnLeaveSummary = SQLHelper<object>.ProcedureToList("spGetEmployeeOnLeaveInWeb", new string[] { "@Keyword", "@DateStart", "@DateEnd", "@IsApproved", "@DepartmentID", "@EmployeeID" },
-               new object[] { request.Keyword ?? "", request.DateStart, request.DateEnd, request.IsApproved, request.DepartmentID ?? 0, request.EmployeeID ?? 0});
+               new object[] { request.Keyword ?? "", request.DateStart, request.DateEnd, request.IsApproved, request.DepartmentID ?? 0, request.EmployeeID ?? 0 });
 
                 var data = SQLHelper<object>.GetListData(employeeOnLeaveSummary, 0);
                 var TotalPages = SQLHelper<object>.GetListData(employeeOnLeaveSummary, 1);

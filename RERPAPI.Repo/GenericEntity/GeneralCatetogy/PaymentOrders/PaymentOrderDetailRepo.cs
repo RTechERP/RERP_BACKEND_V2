@@ -30,10 +30,32 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                 //Insert lại 1 list mới
                 if (payment.IsDelete == false)
                 {
-                    return await CreateRangeAsync(details);
-                }
+                    payment.PaymentOrderDetails.ForEach(x =>
+                    {
+                        x.PaymentOrderID = payment.ID;
+                        x.ParentID = x.ParentID ?? 0;
+                    });
+                    //return await CreateRangeAsync(payment.PaymentOrderDetails);
 
-                return await CreateRangeAsync(payment.PaymentOrderDetails);
+                    var parents = payment.PaymentOrderDetails.Where(x => x.ParentID == 0).ToList();
+                    foreach (var item in parents)
+                    {
+                        //item.PaymentOrderID = payment.ID;
+                        //item.ParentID = item.ParentID ?? 0;
+                        await CreateAsync(item);
+
+                        var childrens = payment.PaymentOrderDetails.Where(x => x.ParentID == item._id).ToList();
+                        foreach (var child in childrens)
+                        {
+                            //child.PaymentOrderID = payment.ID;
+                            child.ParentID = item.ID;
+
+                            await CreateAsync(child);
+                        }
+                    }
+                }
+                return await CreateRangeAsync(details);
+
             }
             catch (Exception ex)
             {
