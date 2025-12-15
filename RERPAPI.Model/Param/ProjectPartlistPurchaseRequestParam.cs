@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.Param
+﻿namespace RERPAPI.Model.Param
 {
     public class ProjectPartlistPurchaseRequestParam
     {
@@ -25,7 +19,6 @@ namespace RERPAPI.Model.Param
         public int IsDeleted { get; set; }
         public int IsTechBought { get; set; }
         public int IsJobRequirement { get; set; }
-        public int Page { get; set; }
-        public int Size { get; set; }
+        public int? EmployeeID { get; set; }
     }
 }
