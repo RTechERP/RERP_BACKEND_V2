@@ -59,7 +59,110 @@ namespace RERPAPI.Repo.GenericEntity
             }
             return true;
         }
+        public bool Validate(ProjectPartlistPurchaseRequest model, out string message)
+        {
+            message = "";
 
+            if (model == null)
+            {
+                message = "Dữ liệu yêu cầu không hợp lệ.";
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(model.ProductName))
+            {
+                message = "Vui lòng nhập Tên sản phẩm.";
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(model.ProductCode))
+            {
+                message = "Vui lòng nhập Mã sản phẩm.";
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(model.Maker))
+            {
+                message = "Vui lòng nhập Hãng.";
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(model.UnitName))
+            {
+                message = "Vui lòng nhập Đơn vị.";
+                return false;
+            }
+
+            if (model.ProductGroupRTCID == null || model.ProductGroupRTCID <= 0)
+            {
+                message = "Vui lòng chọn Loại kho.";
+                return false;
+            }
+
+            if (model.Quantity == null || model.Quantity <= 0)
+            {
+                message = "Số lượng phải lớn hơn 0.";
+                return false;
+            }
+
+            // ===== Validate theo TicketType =====
+            // 0: mua | 1: mượn
+            if (model.TicketType == 1)
+            {
+                if (model.EmployeeApproveID == null || model.EmployeeApproveID <= 0)
+                {
+                    message = "Vui lòng chọn Trưởng bộ phận duyệt.";
+                    return false;
+                }
+
+                if (model.SupplierSaleID == null || model.SupplierSaleID <= 0)
+                {
+                    message = "Vui lòng chọn Nhà cung cấp.";
+                    return false;
+                }
+            }
+
+            // ===== Validate Deadline =====
+            if (model.IsTechBought != true)
+            {
+                if (model.DateReturnExpected == null)
+                {
+                    message = "Vui lòng nhập Deadline.";
+                    return false;
+                }
+
+                DateTime deadline = model.DateReturnExpected.Value.Date;
+                DateTime now = DateTime.Now.Date;
+
+                int days = (deadline - now).Days + 1;
+
+                if (DateTime.Now.Hour < 15)
+                {
+                    if (days < 2)
+                    {
+                        message = "Deadline tối thiểu là 2 ngày từ ngày hiện tại.";
+                        return false;
+                    }
+                }
+                else
+                {
+                    if (days < 3)
+                    {
+                        message = "Yêu cầu sau 15h, deadline phải tối thiểu 2 ngày làm việc.";
+                        return false;
+                    }
+                }
+
+                if (deadline.DayOfWeek == DayOfWeek.Saturday ||
+                    deadline.DayOfWeek == DayOfWeek.Sunday)
+                {
+                    message = "Deadline phải là ngày làm việc (Thứ 2 - Thứ 6).";
+                    return false;
+                }
+            }
+
+            return true;
+        }
         public bool ValidateRequestApproved(List<ProjectPartlistPurchaseRequestDTO> requests, out string message)
         {
             message = "";
