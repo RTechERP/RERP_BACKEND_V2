@@ -12,6 +12,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
+using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Mime;
 using System.Security.Claims;
@@ -807,7 +808,7 @@ namespace RERPAPI.Controllers
                   new object[] { item.TableName, item.FieldName, item.Id, item.ValueUpdatedDate, item.ValueDecilineApprove ?? "", item.EvaluateResults });
 
                 }
-                return Ok(ApiResponseFactory.Success(notProcessed,notProcessed.Count == 0? "Duyệt thành công.": $"Duyệt thành công, bỏ qua {notProcessed.Count} bản ghi."));
+                return Ok(ApiResponseFactory.Success(notProcessed, notProcessed.Count == 0 ? "Duyệt thành công." : $"Duyệt thành công, bỏ qua {notProcessed.Count} bản ghi."));
             }
             catch (Exception ex)
             {
@@ -849,7 +850,7 @@ namespace RERPAPI.Controllers
 
                 }
 
-                return Ok(ApiResponseFactory.Success(notProcessed,notProcessed.Count == 0? "Duyệt thành công.": $"Duyệt thành công, bỏ qua {notProcessed.Count} bản ghi."));
+                return Ok(ApiResponseFactory.Success(notProcessed, notProcessed.Count == 0 ? "Duyệt thành công." : $"Duyệt thành công, bỏ qua {notProcessed.Count} bản ghi."));
             }
             catch (Exception ex)
             {
@@ -893,12 +894,160 @@ namespace RERPAPI.Controllers
 
                 }
 
-                return Ok(ApiResponseFactory.Success(notProcessed, notProcessed.Count == 0? "Duyệt thành công.": $"Duyệt thành công, bỏ qua {notProcessed.Count} bản ghi."));
+                return Ok(ApiResponseFactory.Success(notProcessed, notProcessed.Count == 0 ? "Duyệt thành công." : $"Duyệt thành công, bỏ qua {notProcessed.Count} bản ghi."));
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+            [HttpGet("get-personal-synthetic-by-month")]
+            public IActionResult GetPersonalSyntheticByMonth(int year, int month)
+            {
+                try
+                {
+                 
+                    var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                    var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+      
+                    DateTime dateStart = new DateTime(year, month, 1, 0, 0, 0);
+                    DateTime dateEnd = dateStart.AddMonths(1).AddSeconds(-1);
+
+                    var listSummary = SQLHelper<object>.ProcedureToList("spGetPersonalSyntheticByMonth",
+                        new string[] { "@Year", "@Month", "@EmployeeID" },
+                        new object[] { year, month, currentUser.EmployeeID });
+
+                    var payrollData = SQLHelper<object>.ProcedureToList("spGetEmployeePayrollDetail",
+                        new string[] { "@Year", "@Month", "@DepartmentID", "@EmployeeID", "@Keyword", "@IsPublish", "@IsAll" },
+                        new object[] { year, month, currentUser.DepartmentID, currentUser.EmployeeID, "", 1, 0 });
+
+                    var payroll = payrollData != null ? payrollData.FirstOrDefault() : null;
+                    var rawFingerData = SQLHelper<dynamic>.ProcedureToList("spGetEmployeeAttendance",
+                        new string[] { "@DepartmentID", "@EmployeeID", "@FindText", "@DateStart", "@DateEnd" },
+                        new object[] { currentUser.DepartmentID, currentUser.EmployeeID, "", dateStart, dateEnd });
+
+
+                    var listFingerDetails = SQLHelper<object>.GetListData(rawFingerData, 0);
+
+                    var summaryFinger = SQLHelper<object>.GetListData(rawFingerData, 1).FirstOrDefault();
+
+                    var fingers = new
+                    {
+
+                        data = summaryFinger,
+                        details = listFingerDetails
+                    };
+                    var rawChamCongData = SQLHelper<dynamic>.ProcedureToList("spGetChamCongNew",
+                        new string[] { "@Month", "@Year", "@EmployeeID" },
+                        new object[] { month, year, currentUser.EmployeeID });
+
+
+                    var chamcongInfo = SQLHelper<object>.GetListData(rawChamCongData, 0).FirstOrDefault();
+                    var dynamicListTable1 = SQLHelper<dynamic>.GetListData(rawChamCongData, 1);
+                    var rowChamCongChiTiet = dynamicListTable1 != null ? dynamicListTable1.FirstOrDefault() : null;
+                    var dynamicListTable2 = SQLHelper<dynamic>.GetListData(rawChamCongData, 2);
+                    var rowTotalWork = dynamicListTable2 != null ? dynamicListTable2.FirstOrDefault() : null;
+                    IDictionary<string, object>     dictChamCong = null;
+                    if (rowChamCongChiTiet != null)
+                    {
+
+                        if (rowChamCongChiTiet is IDictionary<string, object>)
+                            dictChamCong = (IDictionary<string, object>)rowChamCongChiTiet;
+                        else
+                        {
+                            var json = Newtonsoft.Json.JsonConvert.SerializeObject(rowChamCongChiTiet);
+                            dictChamCong = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
+                        }
+                    }
+                    int totalWorkDay = 0;
+                    if (rowTotalWork != null)
+                    {
+                        IDictionary<string, object> dictTotal = null;
+                        if (rowTotalWork is IDictionary<string, object>) dictTotal = (IDictionary<string, object>)rowTotalWork;
+                        else dictTotal = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(Newtonsoft.Json.JsonConvert.SerializeObject(rowTotalWork));
+
+                        if (dictTotal != null && dictTotal.ContainsKey("TotalWorkDay"))
+                            totalWorkDay = TextUtils.ToInt32(dictTotal["TotalWorkDay"]);
+                    }
+
+
+                    var listHeaderChamCong = new List<object>();
+                    var listDates = Enumerable.Range(1, DateTime.DaysInMonth(year, month))
+                                              .Select(day => new DateTime(year, month, day))
+                                              .ToList();
+
+                    foreach (var item in listDates)
+                    {
+                        string key = $"D{item.Day}";
+                        string rawValue = "";
+                        if (dictChamCong != null && dictChamCong.ContainsKey(key))
+                        {
+                            rawValue = TextUtils.ToString(dictChamCong[key]);
+                        }
+                        var parts = rawValue.Split(';');
+                        string textShow = parts.Length > 0 ? parts[0] : "";
+                        int statusWork = parts.Length > 1 ? TextUtils.ToInt32(parts[1]) : 0;
+
+                        listHeaderChamCong.Add(new
+                        {
+                            fieldname = key,
+                            text = $"{item.Day}<br />{textShow}",
+                            statuswork = statusWork,
+                        });
+                    }
+                    var listChamcongDetail = new List<object>();
+                    DateTime firstDateInMonth = new DateTime(year, month, 1);
+                    DateTime lastDateInMonth = firstDateInMonth.AddMonths(1).AddDays(-1);
+                    DateTime dateValue = firstDateInMonth.AddDays(-(int)firstDateInMonth.DayOfWeek + (int)DayOfWeek.Monday);
+
+                    for (int i = 0; i < (7 * 6); i++) 
+                    {
+                        DateTime currentDate = dateValue.AddDays(i);
+                        bool isValidDay = (currentDate >= firstDateInMonth && currentDate <= lastDateInMonth);
+
+                        string key = $"D{currentDate.Day}";
+                        string rawValue = "";
+                        if (isValidDay && dictChamCong != null && dictChamCong.ContainsKey(key))
+                        {
+                            rawValue = TextUtils.ToString(dictChamCong[key]);
+                        }
+
+                        var parts = rawValue.Split(';');
+                        int statusWork = parts.Length > 1 ? TextUtils.ToInt32(parts[1]) : 0;
+
+                        listChamcongDetail.Add(new
+                        {
+                            value = currentDate,
+                            fieldname = isValidDay ? key : "",
+                            text = currentDate.Day,
+                            disabled = !isValidDay,
+                            statuswork = statusWork
+                        });
+                    }
+
+                    var listChamcong = new
+                    {
+                        header = listHeaderChamCong,
+                        data = chamcongInfo,
+                        totalworkday = totalWorkDay,
+                        detail = listChamcongDetail
+                    };
+                    var result = new
+                    {
+                        listSummary = listSummary,
+                        fingers = fingers,
+                        payroll = payroll,
+                        listChamcong = listChamcong
+                    };
+
+                    return Ok(ApiResponseFactory.Success(result));
+                }
+                catch (Exception ex)
+                {
+
+                    return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+                }
+            }
     }
 }
