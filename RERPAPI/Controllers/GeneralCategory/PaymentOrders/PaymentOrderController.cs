@@ -92,7 +92,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             }
         }
 
-        [HttpPost("/{id}")]
+        [HttpGet("{id}")]
         public IActionResult GetByD(int id)
         {
             try
@@ -282,6 +282,79 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 };
 
                 return Ok(ApiResponseFactory.Success(data));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("appoved-tbp")]
+        public async Task<IActionResult> ApprovedTBP([FromBody] List<PaymentOrderDTO> payment)
+        {
+            try
+            {
+                var reponse = await _logRepo.Appoved(payment);
+                if (reponse == 1)
+                {
+                    return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+                }
+                else
+                {
+                    return Ok(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("appoved-hr")]
+        public IActionResult ApprovedHR([FromBody] List<PaymentOrderDTO> payment)
+        {
+            try
+            {
+                return Ok(ApiResponseFactory.Success(_logRepo.Appoved(payment), "Cập nhật thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("appoved-kttt")]
+        public IActionResult ApprovedKTTT([FromBody] List<PaymentOrderDTO> payment)
+        {
+            try
+            {
+                return Ok(ApiResponseFactory.Success(_logRepo.Appoved(payment), "Cập nhật thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("appoved-ktt")]
+        public IActionResult ApprovedKTT([FromBody] List<PaymentOrderDTO> payment)
+        {
+            try
+            {
+                return Ok(ApiResponseFactory.Success(_logRepo.Appoved(payment), "Cập nhật thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("appoved-bgd")]
+        public IActionResult ApprovedBGD([FromBody] List<PaymentOrderDTO> payment)
+        {
+            try
+            {
+                return Ok(ApiResponseFactory.Success(_logRepo.Appoved(payment), "Cập nhật thành công!"));
             }
             catch (Exception ex)
             {

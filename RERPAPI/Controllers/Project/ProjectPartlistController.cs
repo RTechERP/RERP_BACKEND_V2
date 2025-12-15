@@ -67,7 +67,7 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                var dt = SQLHelper<dynamic>.ProcedureToList("spGetProjectPartList_Khanh222", new string[] { "@ProjectID", "@PartListTypeID", "@IsDeleted", "@Keyword", "@IsApprovedTBP", "@IsApprovedPurchase", "@ProjectPartListVersionID" }, new object[] { param.ProjectID, param.PartlistTypeID, param.IsDeleted, param.Keywords, param.IsApprovedTBP, param.IsApprovedPurchase, param.ProjectPartListVersionID });
+                var dt = SQLHelper<dynamic>.ProcedureToList("spGetProjectPartList_Khanh", new string[] { "@ProjectID", "@PartListTypeID", "@IsDeleted", "@Keyword", "@IsApprovedTBP", "@IsApprovedPurchase", "@ProjectPartListVersionID" }, new object[] { param.ProjectID, param.PartlistTypeID, param.IsDeleted, param.Keywords, param.IsApprovedTBP, param.IsApprovedPurchase, param.ProjectPartListVersionID });
 
                 return Ok(ApiResponseFactory.Success(
                     SQLHelper<object>.GetListData(dt, 0),
@@ -396,7 +396,7 @@ namespace RERPAPI.Controllers.Project
                     if (version == null) version = new ProjectPartListVersion();
 
                     var dt = SQLHelper<dynamic>.ProcedureToList(
-                        "spGetProjectPartList_Khanh222",
+                        "spGetProjectPartList_Khanh",
                         new string[] { "@ProjectID", "@PartListTypeID", "@IsDeleted", "@Keyword", "@IsApprovedTBP", "@IsApprovedPurchase", "@ProjectPartListVersionID" },
                         new object[] { projectID, projectTypeID, 0, " ", -1, -1, version.ID }
                     );
@@ -1386,7 +1386,7 @@ namespace RERPAPI.Controllers.Project
             {
                 // Lấy danh sách Partlist version cũ
                 var data = SQLHelper<object>.ProcedureToList(
-                    "spGetProjectPartList_Khanh222",
+                    "spGetProjectPartList_Khanh",
                     new[] { "@ProjectID", "@PartListTypeID", "@IsDeleted", "@Keyword",
                         "@IsApprovedTBP", "@IsApprovedPurchase", "@ProjectPartListVersionID" },
                     new object[] { projectID, 0, -1, "", -1, -1, oldVersionID }
@@ -1651,7 +1651,7 @@ namespace RERPAPI.Controllers.Project
             try
             {
                 List<ProjectPartlistDTO> listPartlists = SQLHelper<ProjectPartlistDTO>.ProcedureToListModel(
-                        "spGetProjectPartList_Khanh222",
+                        "spGetProjectPartList_Khanh",
                         new string[] { "@ProjectID", "@PartListTypeID", "@IsDeleted", "@Keyword", "@IsApprovedTBP", "@IsApprovedPurchase", "@ProjectPartListVersionID" },
                         new object[] { projectID, 0, -1, " ", -1, -1, oldVersionID }
                     );
