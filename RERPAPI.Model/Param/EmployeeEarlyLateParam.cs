@@ -14,6 +14,7 @@ namespace RERPAPI.Model.Param
         public int month { get; set; }
         public int year { get; set; }
         public int departmentId { get; set; }
+        public int employeeId { get; set; }
         public int idApprovedTp { get; set; }
         public int status { get; set; }
     }

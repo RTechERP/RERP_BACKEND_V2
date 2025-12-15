@@ -390,6 +390,7 @@ builder.Services.AddScoped<AGVHistoryProductRepo>();
 #region YCCV
 builder.Services.AddScoped<JobRequirementRepo>();
 builder.Services.AddScoped<JobRequirementDetailRepo>();
+builder.Services.AddScoped<JobRequirementApprovedRepo>();
 //builder.Services.AddScoped<DepartmentRequiredApprovalsRepo>();
 builder.Services.AddScoped<DepartmentRequiredRepo>();
 builder.Services.AddScoped<HCNSProposalsRepo>();
@@ -589,18 +590,18 @@ List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticF
 
 foreach (var item in staticFiles)
 {
-    app.UseStaticFiles(new StaticFileOptions()
-    {
-        FileProvider = new PhysicalFileProvider(item.PathFull),
-        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-    });
+    //app.UseStaticFiles(new StaticFileOptions()
+    //{
+    //    FileProvider = new PhysicalFileProvider(item.PathFull),
+    //    RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+    //});
 
 
-    app.UseDirectoryBrowser(new DirectoryBrowserOptions
-    {
-        FileProvider = new PhysicalFileProvider(item.PathFull),
-        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-    });
+    //app.UseDirectoryBrowser(new DirectoryBrowserOptions
+    //{
+    //    FileProvider = new PhysicalFileProvider(item.PathFull),
+    //    RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+    //});
 }
 
 app.Run();
