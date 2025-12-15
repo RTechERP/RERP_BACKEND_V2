@@ -1,4 +1,5 @@
 ﻿using DocumentFormat.OpenXml.Office2010.Excel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -14,7 +15,7 @@ namespace RERPAPI.Controllers.HRM
 {
     [Route("api/[controller]")]
     [ApiController]
-
+    [Authorize]
     public class RecommendSupplierController : ControllerBase
     {
         JobRequirementRepo _jobRepo;

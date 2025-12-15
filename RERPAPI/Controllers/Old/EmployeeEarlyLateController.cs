@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
@@ -15,18 +16,40 @@ namespace RERPAPI.Controllers.Old
     public class EmployeeEarlyLateController : Controller
     {
         private readonly EmployeeEarlyLateRepo _employeeEarlyLateRepo;
-        public EmployeeEarlyLateController(EmployeeEarlyLateRepo employeeEarlyLateRepo)
+        private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
+
+        public EmployeeEarlyLateController(EmployeeEarlyLateRepo employeeEarlyLateRepo, vUserGroupLinksRepo vUserGroupLinksRepo)
         {
             _employeeEarlyLateRepo = employeeEarlyLateRepo;
+            _vUserGroupLinksRepo = vUserGroupLinksRepo;
         }
+
         [HttpPost]
-        [RequiresPermission("N2,N1")]
+        //[RequiresPermission("N2,N1")]
         public IActionResult GetEmployeeEarlyLate(EmployeeEarlyLateParam param)
         {
             try
             {
-                var arrParamName = new string[] { "@FilterText", "@PageNumber", "@PageSize", "@Month", "@Year", "@DepartmentID", "@IDApprovedTP", "@Status" };
-                var arrParamValue = new object[] { param.keyWord ?? "", param.pageNumber, param.pageSize, param.month, param.year, param.departmentId, param.idApprovedTp, param.status};
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var vUserHR = _vUserGroupLinksRepo
+                              .GetAll()
+                              .FirstOrDefault(x =>
+                               (x.Code == "N1" || x.Code == "N2") &&
+                               x.UserID == currentUser.ID);
+
+                int employeeID;
+                if (vUserHR != null)
+                {
+                    employeeID = param.employeeId;
+                }
+                else
+                {
+                    employeeID = currentUser.EmployeeID;
+                }
+                var arrParamName = new string[] { "@FilterText", "@PageNumber", "@PageSize", "@Month", "@Year", "@DepartmentID", "@EmployeeID", "@IDApprovedTP", "@Status" };
+                var arrParamValue = new object[] { param.keyWord ?? "", param.pageNumber, param.pageSize, param.month, param.year, param.departmentId, employeeID, param.idApprovedTp, param.status};
                 var employeeEarlyLate = SQLHelper<object>.ProcedureToList("spGetEmployeeEarlyLate", arrParamName, arrParamValue);
                 return Ok(new {
                     data = SQLHelper<object>.GetListData(employeeEarlyLate, 0),
@@ -62,8 +85,28 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        [HttpPost("list-summary-employee-early-late")]
+
+        public IActionResult ListSummaryEmployeeOnleavePerson(EmployeeEarlyLateSummaryParam request)
+        {
+            try
+            {
+                var employeeEarlyLateSummary = SQLHelper<object>.ProcedureToList("spGetEmployeeOnLeaveInWeb", new string[] { "@Keyword", "@DateStart", "@DateEnd", "@IsApproved", "@Type", "@DepartmentID", "@EmployeeID" },
+               new object[] { request.Keyword ?? "", request.DateStart, request.DateEnd, request.IsApproved, request.Type, request.DepartmentID ?? 0, request.EmployeeID ?? 0 });
+
+                var data = SQLHelper<object>.GetListData(employeeEarlyLateSummary, 0);
+                var TotalPages = SQLHelper<object>.GetListData(employeeEarlyLateSummary, 1);
+                return Ok(ApiResponseFactory.Success(new { data, TotalPages }, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpPost("save-data")]
-        [RequiresPermission("N2,N1")]
+        //[RequiresPermission("N2,N1")]
         public async Task<IActionResult> SaveEmployeeEarlyLate([FromBody] EmployeeEarlyLate employeeEarlyLate)
         {
             try

@@ -379,6 +379,7 @@ builder.Services.AddScoped<AGVHistoryProductRepo>();
 #region YCCV
 builder.Services.AddScoped<JobRequirementRepo>();
 builder.Services.AddScoped<JobRequirementDetailRepo>();
+//builder.Services.AddScoped<JobRequirementApprovedRepo>();
 //builder.Services.AddScoped<DepartmentRequiredApprovalsRepo>();
 builder.Services.AddScoped<DepartmentRequiredRepo>();
 builder.Services.AddScoped<HCNSProposalsRepo>();
