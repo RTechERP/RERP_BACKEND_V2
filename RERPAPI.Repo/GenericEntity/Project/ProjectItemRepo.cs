@@ -60,50 +60,50 @@ namespace RERPAPI.Repo.GenericEntity.Project
             {
                 if (item.TypeProjectItem <= 0)
                 {
-                    message = "Vui lòng chọn kiểu dự án";
+                    message = $"Hạng mục [{item.Code}]: Vui lòng chọn kiểu dự án";
                     return false;
                 }
                 if (item.EmployeeIDRequest <= 0)
                 {
-                    message = "Vui lòng chọn người giao việc";
+                    message = $"Hạng mục [{item.Code}]: Vui lòng chọn người giao việc";
                     return false;
                 }
             }
             if (string.IsNullOrEmpty(item.Mission))
             {
-                message = "Vui lòng nhập công việc";
+                message = $"Hạng mục [{item.Code}]: Vui lòng nhập công việc";
                 return false;
             }
             if (item.UserID <= 0)
             {
-                message = "Vui lòng nhập người phụ trách";
+                message = $"Hạng mục [{item.Code}]: Vui lòng nhập người phụ trách";
                 return false;
             }
             if (!item.PlanStartDate.HasValue)
             {
-                message = "Vui lòng nhập ngày bắt đầu";
+                message = $"Hạng mục [{item.Code}]: Vui lòng nhập ngày bắt đầu";
                 return false;
             }
             if (!item.PlanEndDate.HasValue)
             {
-                message = "Vui lòng nhập ngày kết thúc";
+                message = $"Hạng mục [{item.Code}]: Vui lòng nhập ngày kết thúc";
                 return false;
             }
             if (item.Status == 2)
             {
                 if (!item.ActualStartDate.HasValue)
                 {
-                    message = "Vui lòng nhập ngày bắt đầu thực tế";
+                    message = $"Hạng mục [{item.Code}]: Vui lòng nhập ngày bắt đầu thực tế";
                     return false;
                 }
                 if (!item.ActualEndDate.HasValue)
                 {
-                    message = "Vui lòng nhập ngày kết thúc thực tế";
+                    message = $"Hạng mục [{item.Code}]: Vui lòng nhập ngày kết thúc thực tế";
                     return false;
                 }
                 if (item.ActualStartDate > item.ActualEndDate)
                 {
-                    message = "Ngày kết thúc phải lớn hơn ngày thực tế";
+                    message = $"Hạng mục [{item.Code}]: Ngày kết thúc phải lớn hơn ngày thực tế";
                     return false;
                 }
             }
@@ -116,39 +116,39 @@ namespace RERPAPI.Repo.GenericEntity.Project
             {
                 if (item.TypeProjectItem <= 0)
                 {
-                    message = "Vui lòng chọn kiểu dự án";
+                    message = $"Hạng mục [{item.Code}]: Vui lòng chọn kiểu dự án";
                     return false;
                 }
                 if (item.EmployeeIDRequest <= 0)
                 {
-                    message = "Vui lòng chọn người giao việc";
+                    message = $"Hạng mục [{item.Code}]: Vui lòng chọn người giao việc";
                     return false;
                 }
             }
 
             if (item.ProjectID <= 0 || item.ProjectID == null)
             {
-                message = "Vui lòng chọn dự án";
+                message = $"Hạng mục [{item.Code}]: Vui lòng chọn dự án";
                 return false;
             }
             if (string.IsNullOrEmpty(item.Mission))
             {
-                message = "Vui lòng nhập công việc";
+                message = $"Hạng mục [{item.Code}]: Vui lòng nhập công việc";
                 return false;
             }
             if (item.UserID <= 0)
             {
-                message = "Vui lòng nhập người phụ trách";
+                message = $"Hạng mục [{item.Code}]: Vui lòng nhập người phụ trách";
                 return false;
             }
             if (!item.PlanStartDate.HasValue)
             {
-                message = "Vui lòng nhập ngày bắt đầu";
+                message = $"Hạng mục [{item.Code}]: Vui lòng nhập ngày bắt đầu";
                 return false;
             }
             if (!item.PlanEndDate.HasValue)
             {
-                message = "Vui lòng nhập ngày kết thúc";
+                message = $"Hạng mục [{item.Code}]: Vui lòng nhập ngày kết thúc";
                 return false;
             }
             if (item.Status == 2)
@@ -156,12 +156,12 @@ namespace RERPAPI.Repo.GenericEntity.Project
 
                 if (!item.ActualEndDate.HasValue)
                 {
-                    message = "Vui lòng nhập ngày kết thúc thực tế";
+                    message = $"Hạng mục [{item.Code}]: Vui lòng nhập ngày kết thúc thực tế";
                     return false;
                 }
                 if (item.ActualStartDate > item.ActualEndDate)
                 {
-                    message = "Ngày kết thúc phải lớn hơn ngày thực tế";
+                    message = $"Hạng mục [{item.Code}]: Ngày kết thúc phải lớn hơn ngày thực tế";
                     return false;
                 }
             }
