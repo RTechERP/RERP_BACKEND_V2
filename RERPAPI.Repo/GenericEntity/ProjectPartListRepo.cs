@@ -498,7 +498,7 @@ namespace RERPAPI.Repo.GenericEntity
             return true;
         }
         //y/c mua 
-        public async void UpdatePurchaseRequest(List<ProjectPartList> listPartlists)
+        public async void UpdatePurchaseRequest(List<ProjectPartList> listPartlists, int employeeIDCurrent)
         {
             foreach (var item in listPartlists)
             {
@@ -509,7 +509,7 @@ namespace RERPAPI.Repo.GenericEntity
                 request = request == null ? new ProjectPartlistPurchaseRequest() : request;
 
                 request.ProjectPartListID = item.ID;
-                request.EmployeeID = item.EmployeeID;
+                request.EmployeeID = employeeIDCurrent;
                 request.ProductCode = item.ProductCode;
                 request.ProductName = item.GroupMaterial;
                 request.StatusRequest = item.Status;

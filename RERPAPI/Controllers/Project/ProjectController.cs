@@ -1361,6 +1361,7 @@ namespace RERPAPI.Controllers.Project
                 project.Priotity = prj.project.Priotity;
                 project.TypeProject = prj.project.TypeProject;
                 project.BusinessFieldID = 0;
+                project.ProjectShortName = "";
                 project.UpdatedDate = DateTime.Now;
 
 
