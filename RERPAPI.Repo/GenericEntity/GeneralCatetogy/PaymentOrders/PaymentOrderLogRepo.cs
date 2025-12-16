@@ -14,13 +14,13 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
         CurrentUser _currentUser;
         PaymentOrderApproveFollowRepo _followRepo;
         PaymentOrderTypeRepo _typeRepo;
-        PaymentOrderRepo _paymentOrderRepo;
-        public PaymentOrderLogRepo(CurrentUser currentUser, PaymentOrderApproveFollowRepo followRepo, PaymentOrderTypeRepo typeRepo, PaymentOrderRepo paymentOrderRepo) : base(currentUser)
+        //PaymentOrderRepo _paymentOrderRepo;
+        public PaymentOrderLogRepo(CurrentUser currentUser, PaymentOrderApproveFollowRepo followRepo, PaymentOrderTypeRepo typeRepo) : base(currentUser)
         {
             _currentUser = currentUser;
             _followRepo = followRepo;
             _typeRepo = typeRepo;
-            _paymentOrderRepo = paymentOrderRepo;
+            //_paymentOrderRepo = paymentOrderRepo;
         }
 
 
@@ -249,9 +249,9 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
 
                             if (item.Action.ButtonActionName == "btnUpdateDocument")
                             {
-                                var paymentOrder = _paymentOrderRepo.GetByID(item.ID);
-                                paymentOrder.AccountingNote += item.AccountingNote + "\n";
-                                await _paymentOrderRepo.UpdateAsync(paymentOrder);
+                                //var paymentOrder = _paymentOrderRepo.GetByID(item.ID);
+                                //paymentOrder.AccountingNote += item.AccountingNote + "\n";
+                                //await _paymentOrderRepo.UpdateAsync(paymentOrder);
                             }
 
                             log.DateApproved = DateTime.Now;
