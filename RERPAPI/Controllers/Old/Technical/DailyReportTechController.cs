@@ -205,16 +205,40 @@ namespace RERPAPI.Controllers.Old.Technical
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 int userId = currentUser.ID;
                 DailyReportTechnical data = _dailyReportTechnicalRepo.GetByID(dailyReportID);
-                if(data.ID > 0 && data.UserReport == userId)
+                if (data.ID > 0 && data.UserReport == userId)
                 {
                     data.DeleteFlag = 1;
                     await _dailyReportTechnicalRepo.UpdateAsync(data);
                 }
                 else
                 {
-                    return BadRequest(ApiResponseFactory.Fail(null,"Bạn không thể xóa báo cáo của người khác"));
+                    return BadRequest(ApiResponseFactory.Fail(null, "Bạn không thể xóa báo cáo của người khác"));
                 }
                 return Ok(ApiResponseFactory.Success(null, "Đã xóa báo cáo thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("get-for-copy")]
+        public IActionResult GetForCopy([FromBody] DailyReportTechParam request)
+        {
+            try
+            {
+
+                var keyword = (request.keyword ?? string.Empty).Trim();
+
+                var dataTech = SQLHelper<object>.ProcedureToList(
+                     "spGetDailyReportTechnicalForCopy",
+                    new string[] { "@DateStart", "@DateEnd", "@TeamID", "@Keyword", "@UserID", "@DepartmentID" },
+                    new object[] { request.dateStart ?? DateTime.Now, request.dateEnd ?? DateTime.Now, request.teamID, keyword, request.userID, request.departmentID }
+                );
+                var technical = SQLHelper<object>.GetListData(dataTech, 0);
+                return Ok(ApiResponseFactory.Success(technical,
+                    "Lấy dữ liệu thành công"
+                ));
             }
             catch (Exception ex)
             {
