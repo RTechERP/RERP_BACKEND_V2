@@ -429,6 +429,9 @@ builder.Services.AddScoped<PaymentOrderFileBankSlipRepo>();
 builder.Services.AddScoped<PaymentOrderTypeRepo>();
 #endregion
 
+builder.Services.AddScoped<PhasedAllocationPersonRepo>();
+builder.Services.AddScoped<PhasedAllocationPersonDetailRepo>();
+
 
 builder.Services.AddScoped<CurrentUser>(provider =>
 {

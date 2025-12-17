@@ -646,6 +646,10 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<PercentMainIndexUser> PercentMainIndexUsers { get; set; }
 
+    public virtual DbSet<PhasedAllocationPerson> PhasedAllocationPeople { get; set; }
+
+    public virtual DbSet<PhasedAllocationPersonDetail> PhasedAllocationPersonDetails { get; set; }
+
     public virtual DbSet<PriceCheck> PriceChecks { get; set; }
 
     public virtual DbSet<ProductFilm> ProductFilms { get; set; }
@@ -6538,6 +6542,36 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.PercentIndex).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<PhasedAllocationPerson>(entity =>
+        {
+            entity.ToTable("PhasedAllocationPerson");
+
+            entity.Property(e => e.Code)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.ContentAllocation).HasMaxLength(550);
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.StatusAllocation).HasComment("0: Chưa hoàn thành; 1: Đã hoàn thành");
+            entity.Property(e => e.TypeAllocation).HasComment("1: Quà; 2: Tài sản cá nhân");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<PhasedAllocationPersonDetail>(entity =>
+        {
+            entity.ToTable("PhasedAllocationPersonDetail");
+
+            entity.Property(e => e.ContentReceive).HasMaxLength(550);
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.DateReceive).HasColumnType("datetime");
+            entity.Property(e => e.StatusReceive).HasComment("0: Chưa nhận; 1: Đã nhận");
+            entity.Property(e => e.UnitName).HasMaxLength(50);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
