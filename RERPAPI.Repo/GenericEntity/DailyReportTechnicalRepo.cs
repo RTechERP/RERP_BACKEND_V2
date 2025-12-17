@@ -152,6 +152,14 @@ namespace RERPAPI.Repo.GenericEntity
                     : $"{projectPrefix}: Vui lòng nhập Nội dung công việc!";
                 return false;
             }
+            //kiểm tra nơi làm việc 
+            if(string.IsNullOrEmpty(data.Location)) 
+            {
+                message = string.IsNullOrEmpty(projectPrefix)
+                  ? "Vui lòng chọn nơi làm việc!"
+                  : $"{projectPrefix}: Vui lòng chọn nơi làm việc!";
+                return false;
+            }
 
             // Kiểm tra Kết quả
             if (string.IsNullOrWhiteSpace(data.Results))
