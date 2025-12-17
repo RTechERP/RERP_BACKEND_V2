@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
@@ -8,6 +9,7 @@ namespace RERPAPI.Controllers.Course
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class CourseTypeController : ControllerBase
     {
         CoureTypeRepo _coureTypeRepo;

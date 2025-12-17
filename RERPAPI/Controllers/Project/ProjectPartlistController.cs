@@ -1,5 +1,6 @@
 ﻿using DocumentFormat.OpenXml.Drawing.Charts;
 using DocumentFormat.OpenXml.Office.CustomUI;
+using DocumentFormat.OpenXml.Office2010.CustomUI;
 using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Authorization;
@@ -710,9 +711,15 @@ namespace RERPAPI.Controllers.Project
                 {
                     if (!_projectPartlistRepo.ValidateFixProduct(partList, out string fixMessage))
                     {
-                        return Ok(ApiResponseFactory.Fail(null, fixMessage));
+                        var fixedProduct = _productSaleRepo.GetAll(x =>
+                                            x.IsDeleted != true &&
+                                            x.ProductCode == partList.ProductCode &&
+                                            x.IsFix == true
+                                            ).FirstOrDefault() ;
+                        return Ok(ApiResponseFactory.Fail(null, fixMessage,fixedProduct));
                     }
                 }
+
                 // 3. Get ProjectTypeID from Version
                 var version = _partlistVersionRepo.GetByID(partList.ProjectPartListVersionID ?? 0);
                 if (version == null || version.ID <= 0)
@@ -1650,13 +1657,13 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                List<ProjectPartlistDTO> listPartlists = SQLHelper<ProjectPartlistDTO>.ProcedureToListModel(
+                List<ConvertPartListPODTO> listPartlists = SQLHelper<ConvertPartListPODTO>.ProcedureToListModel(
                         "spGetProjectPartList_Khanh",
                         new string[] { "@ProjectID", "@PartListTypeID", "@IsDeleted", "@Keyword", "@IsApprovedTBP", "@IsApprovedPurchase", "@ProjectPartListVersionID" },
                         new object[] { projectID, 0, -1, " ", -1, -1, oldVersionID }
                     );
                 Regex regex = new Regex(@"^-?[\d\.]+$");
-                foreach (ProjectPartlistDTO item in listPartlists)
+                foreach (ConvertPartListPODTO item in listPartlists)
                 {
                     string stt = item.TT;
 
@@ -1682,7 +1689,7 @@ namespace RERPAPI.Controllers.Project
                     partList.QtyMin = item.QtyMin;
                     partList.QtyFull = item.QtyFull;
                     partList.Unit = item.Unit;
-                    partList.Price = item.Price;//<= 0 ? item.UnitPriceQuote : item.Price;
+                    partList.Price = item.Price.HasValue? Convert.ToDecimal(item.Price.Value): 0m; ;//<= 0 ? item.UnitPriceQuote : item.Price;
                     partList.Amount = item.Amount;// partList.Price * partList.QtyFull;
                     partList.LeadTime = item.LeadTime; // tien do
                     partList.NCC = item.NCC;
