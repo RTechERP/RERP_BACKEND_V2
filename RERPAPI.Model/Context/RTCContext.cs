@@ -2730,6 +2730,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.DeleteFlag).HasDefaultValue(0);
+            entity.Property(e => e.Location).HasMaxLength(550);
             entity.Property(e => e.TotalHourOT).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.TotalHours).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);

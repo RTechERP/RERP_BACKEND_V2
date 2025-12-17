@@ -33,4 +33,6 @@ public partial class BookingRoom
     public DateTime? UpdatedDate { get; set; }
 
     public int? DepartmentID { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }
