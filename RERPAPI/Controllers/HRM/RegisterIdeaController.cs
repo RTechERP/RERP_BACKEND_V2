@@ -27,7 +27,8 @@ namespace RERPAPI.Controllers.HRM
         private readonly RegisterIdeaScoreRepo _registerIdeaScoreRepo;
         private readonly CourseCatalogRepo _courseCatalogRepo;
         private readonly CurrentUser _currentUser;
-        public RegisterIdeaController(RegisterIdeaRepo registerIdeaRepo, RegisterIdeaTypeRepo registerIdeaTypeRepo, EmployeeRepo employeeRepo, DepartmentRepo departmentRepo, RegisterIdeaDetailRepo registerideadetailRepo, RegisterIdeaFileRepo registerideafileRepo, RegisterIdeaScoreRepo registerideascoreRepo, CourseCatalogRepo courseCatalogRepo, CurrentUser currentUser)
+        private readonly ConfigSystemRepo _configSystemRepo;
+        public RegisterIdeaController(RegisterIdeaRepo registerIdeaRepo, RegisterIdeaTypeRepo registerIdeaTypeRepo, EmployeeRepo employeeRepo, DepartmentRepo departmentRepo, RegisterIdeaDetailRepo registerideadetailRepo, RegisterIdeaFileRepo registerideafileRepo, RegisterIdeaScoreRepo registerideascoreRepo, CourseCatalogRepo courseCatalogRepo, CurrentUser currentUser, ConfigSystemRepo configSystemRepo)
         {
             _registerIdeaRepo = registerIdeaRepo;
             _registerIdeaTypeRepo = registerIdeaTypeRepo;
@@ -38,6 +39,7 @@ namespace RERPAPI.Controllers.HRM
             _registerIdeaScoreRepo = registerideascoreRepo;
             _courseCatalogRepo = courseCatalogRepo;
             _currentUser = currentUser;
+            _configSystemRepo = configSystemRepo;
         }
 
         [HttpGet("get-course-catalog")]
@@ -445,91 +447,210 @@ namespace RERPAPI.Controllers.HRM
             }
         }
 
+        //[HttpPost("upload-file")]
+        //public async Task<IActionResult> UploadFileRegisterIdea(
+        //    int registerId,
+        //    int employeeId,
+        //    [FromForm] List<IFormFile> files)
+        //{
+        //    try
+        //    {
+        //        // Check tồn tại ý tưởng
+        //        var registerIdea = _registerIdeaRepo.GetByID(registerId);
+        //        if (registerIdea == null)
+        //            return BadRequest(ApiResponseFactory.Fail(null, "Không tồn tại ý tưởng!"));
+
+        //        // Check quyền upload
+        //        if (registerIdea.EmployeeID != employeeId)
+        //            return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền upload file cho ý tưởng này"));
+
+        //        // Lấy loại đề tài để tạo đường dẫn
+        //        string code = "";
+        //        string nameDepartment = "";
+
+        //        var catalog = _courseCatalogRepo.GetByID(registerIdea.RegisterIdeaTypeID ?? 0);
+        //        if (catalog != null)
+        //        {
+        //            code = catalog.Code;
+        //            var dept = _courseCatalogRepo.GetByID(catalog.DepartmentID ?? 0);
+        //            nameDepartment = dept?.Name ?? "";
+        //        }
+
+        //        // Tạo path upload
+        //        string pathServer = @"\\192.168.1.190\duan\Tip Trick\";
+        //        string pathPattern = $"{registerIdea.DateRegister.Value.Year}\\P {nameDepartment}\\{code}";
+        //        string pathUpload = Path.Combine(pathServer, pathPattern);
+
+        //        if (!Directory.Exists(pathUpload))
+        //            Directory.CreateDirectory(pathUpload);
+
+        //        foreach (var file in files)
+        //        {
+        //            if (file.Length <= 0)
+        //                continue;
+
+        //            // Check không upload trùng file
+        //            var exists = _registerIdeaFileRepo.GetAll()
+        //                .Any(x => x.FileName == file.FileName && x.RegisterIdeaID == registerId);
+
+        //            if (exists)
+        //                continue;
+
+        //            using var http = new HttpClient();
+        //            using var form = new MultipartFormDataContent();
+
+        //            using var stream = file.OpenReadStream();
+        //            byte[] bytes = new byte[file.Length];
+        //            await stream.ReadAsync(bytes, 0, (int)file.Length);
+
+        //            form.Add(new ByteArrayContent(bytes), "file", file.FileName);
+
+        //            string remoteApi = $"http://113.190.234.64:8083/api/Home/uploadfile?path={pathUpload}";
+
+        //            var result = await http.PostAsync(remoteApi, form);
+
+        //            if (result.StatusCode == HttpStatusCode.OK)
+        //            {
+        //                var saved = new RegisterIdeaFile
+        //                {
+        //                    RegisterIdeaID = registerId,
+        //                    FileName = file.FileName,
+        //                    ServerPath = pathUpload,
+        //                    OriginPath = "",
+        //                    CreatedDate = DateTime.Now,
+        //                    UpdatedDate = DateTime.Now,
+        //                };
+
+        //                await _registerIdeaFileRepo.CreateAsync(saved);
+        //            }
+        //        }
+
+        //        return Ok(ApiResponseFactory.Success(null, "Upload file thành công"));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
+
         [HttpPost("upload-file")]
-        public async Task<IActionResult> UploadFileRegisterIdea(
-            int registerId,
-            int employeeId,
-            [FromForm] List<IFormFile> files)
+        [DisableRequestSizeLimit]
+        public async Task<IActionResult> UploadFileRegisterIdea(int registerId, int employeeId)
         {
             try
             {
+                var form = await Request.ReadFormAsync();
+                var key = form["key"].ToString();
+                var files = form.Files;
+
+                // Validate input
+                if (registerId <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "RegisterId không hợp lệ"));
+
+                if (employeeId <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "EmployeeId không hợp lệ"));
+
+                if (string.IsNullOrWhiteSpace(key))
+                    return BadRequest(ApiResponseFactory.Fail(null, "Key không được để trống"));
+
+                if (files == null || files.Count == 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Danh sách file không được để trống"));
+
                 // Check tồn tại ý tưởng
                 var registerIdea = _registerIdeaRepo.GetByID(registerId);
                 if (registerIdea == null)
-                    return BadRequest(ApiResponseFactory.Fail(null, "Không tồn tại ý tưởng!"));
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tồn tại ý tưởng"));
 
                 // Check quyền upload
                 if (registerIdea.EmployeeID != employeeId)
                     return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền upload file cho ý tưởng này"));
 
-                // Lấy loại đề tài để tạo đường dẫn
-                string code = "";
-                string nameDepartment = "";
+                // Lấy path upload từ config (GIỐNG POKH)
+                var uploadPath = _configSystemRepo.GetUploadPathByKey(key);
+                if (string.IsNullOrWhiteSpace(uploadPath))
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: {key}"));
 
-                var catalog = _courseCatalogRepo.GetByID(registerIdea.RegisterIdeaTypeID ?? 0);
-                if (catalog != null)
+                // Xử lý subPath (nếu có)
+                var subPathRaw = form["subPath"].ToString()?.Trim() ?? "";
+                string targetFolder = uploadPath;
+
+                if (!string.IsNullOrWhiteSpace(subPathRaw))
                 {
-                    code = catalog.Code;
-                    var dept = _courseCatalogRepo.GetByID(catalog.DepartmentID ?? 0);
-                    nameDepartment = dept?.Name ?? "";
+                    var separator = Path.DirectorySeparatorChar;
+                    var segments = subPathRaw
+                        .Replace('/', separator)
+                        .Replace('\\', separator)
+                        .Split(separator, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(seg =>
+                        {
+                            var invalidChars = Path.GetInvalidFileNameChars();
+                            var cleaned = new string(seg.Where(c => !invalidChars.Contains(c)).ToArray());
+                            cleaned = cleaned.Replace("..", "").Trim();
+                            return cleaned;
+                        })
+                        .Where(s => !string.IsNullOrWhiteSpace(s))
+                        .ToArray();
+
+                    if (segments.Length > 0)
+                        targetFolder = Path.Combine(uploadPath, Path.Combine(segments));
+                }
+                else
+                {
+                    // Folder mặc định giống NB{ID} của POKH
+                    targetFolder = Path.Combine(uploadPath, $"RI{registerIdea.ID}");
                 }
 
-                // Tạo path upload
-                string pathServer = @"\\192.168.1.190\duan\Tip Trick\";
-                string pathPattern = $"{registerIdea.DateRegister.Value.Year}\\P {nameDepartment}\\{code}";
-                string pathUpload = Path.Combine(pathServer, pathPattern);
+                if (!Directory.Exists(targetFolder))
+                    Directory.CreateDirectory(targetFolder);
 
-                if (!Directory.Exists(pathUpload))
-                    Directory.CreateDirectory(pathUpload);
+                var processedFiles = new List<RegisterIdeaFile>();
 
                 foreach (var file in files)
                 {
                     if (file.Length <= 0)
                         continue;
 
-                    // Check không upload trùng file
-                    var exists = _registerIdeaFileRepo.GetAll()
-                        .Any(x => x.FileName == file.FileName && x.RegisterIdeaID == registerId);
+                    // Không cho upload trùng file
+                    bool exists = _registerIdeaFileRepo.GetAll()
+                        .Any(x => x.RegisterIdeaID == registerId && x.FileName == file.FileName);
 
                     if (exists)
                         continue;
 
-                    using var http = new HttpClient();
-                    using var form = new MultipartFormDataContent();
+                    var fileExtension = Path.GetExtension(file.FileName);
+                    var originalName = Path.GetFileNameWithoutExtension(file.FileName);
+                    var uniqueFileName = $"{originalName}{fileExtension}";
+                    var fullPath = Path.Combine(targetFolder, uniqueFileName);
 
-                    using var stream = file.OpenReadStream();
-                    byte[] bytes = new byte[file.Length];
-                    await stream.ReadAsync(bytes, 0, (int)file.Length);
-
-                    form.Add(new ByteArrayContent(bytes), "file", file.FileName);
-
-                    string remoteApi = $"http://113.190.234.64:8083/api/Home/uploadfile?path={pathUpload}";
-
-                    var result = await http.PostAsync(remoteApi, form);
-
-                    if (result.StatusCode == HttpStatusCode.OK)
+                    // Lưu file trực tiếp (GIỐNG POKH)
+                    using (var stream = new FileStream(fullPath, FileMode.Create))
                     {
-                        var saved = new RegisterIdeaFile
-                        {
-                            RegisterIdeaID = registerId,
-                            FileName = file.FileName,
-                            ServerPath = pathUpload,
-                            OriginPath = "",
-                            CreatedDate = DateTime.Now,
-                            UpdatedDate = DateTime.Now,
-                        };
-
-                        await _registerIdeaFileRepo.CreateAsync(saved);
+                        await file.CopyToAsync(stream);
                     }
+
+                    var fileEntity = new RegisterIdeaFile
+                    {
+                        RegisterIdeaID = registerId,
+                        FileName = uniqueFileName,
+                        OriginPath = targetFolder,
+                        ServerPath = targetFolder,
+                    };
+
+                    await _registerIdeaFileRepo.CreateAsync(fileEntity);
+                    processedFiles.Add(fileEntity);
                 }
 
-                return Ok(ApiResponseFactory.Success(null, "Upload file thành công"));
+                return Ok(ApiResponseFactory.Success(
+                    processedFiles,
+                    $"{processedFiles.Count} file đã được upload thành công"
+                ));
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi upload file: {ex.Message}"));
             }
         }
+
 
 
     }
