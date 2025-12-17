@@ -178,7 +178,17 @@ namespace RERPAPI.Controllers.Old
                         && employeeOnLeave.StartDate.HasValue
                         && x.StartDate.Value.Date == employeeOnLeave.StartDate.Value.Date 
                         && x.DeleteFlag != true);
-
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                var vUserHR = _vUserGroupLinksRepo
+                           .GetAll()
+                           .FirstOrDefault(x =>
+                            (x.Code == "N1" || x.Code == "N2") &&
+                            x.UserID == currentUser.ID);
+                if(employeeOnLeave.ID>0 && vUserHR==null && currentUser.EmployeeID != employeeOnLeave.EmployeeID)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Bạn không thể sửa phiếu của người khác"));
+                }    
                 if (existingLeaves.Any())
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Nhân viên đã đăng ký nghỉ ngày " 

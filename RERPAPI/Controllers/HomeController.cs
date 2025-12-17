@@ -17,6 +17,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Net.Mime;
 using System.Security.Claims;
 using System.Text;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 using static RERPAPI.Model.DTO.ApproveTPDTO;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -723,8 +724,7 @@ namespace RERPAPI.Controllers
             if ((item.IsCancelRegister ?? 0) > 0)
                 return $"Nhân viên [{item.FullName}] đã đăng ký hủy, không thể duyệt / hủy duyệt.";
 
-            if (isApproved && (item.IsApprovedTP ?? false))
-                return $"Nhân viên [{item.FullName}] đã được TBP duyệt.";
+         
 
             if (!isApproved && !(item.IsApprovedTP ?? false))
                 return $"Nhân viên [{item.FullName}] chưa được TBP duyệt, không thể hủy duyệt.";
@@ -743,9 +743,7 @@ namespace RERPAPI.Controllers
             if (!(item.IsApprovedHR ?? false))
                 return $"Nhân viên [{item.FullName}] chưa được HR duyệt, BGD không thể duyệt / hủy duyệt.";
 
-            if (isApproved && (item.IsApprovedBGD ?? false))
-                return $"Nhân viên [{item.FullName}] đã được BGĐ duyệt.";
-
+       
             if (!isApproved && !(item.IsApprovedBGD ?? false))
                 return $"Nhân viên [{item.FullName}] chưa được BGĐ duyệt, không thể hủy duyệt.";
 
@@ -783,7 +781,7 @@ namespace RERPAPI.Controllers
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Danh sách phê duyệt không được để trống!"));
                 }
-
+                
                 var notProcessed = new List<NotProcessedApprovalItem>();
 
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
@@ -804,8 +802,8 @@ namespace RERPAPI.Controllers
                     }
                     SQLHelper<object>.ExcuteProcedure(
                   "spUpdateTableByFieldNameAndID",
-                  new[] { "@TableName", "@FieldName", "@ID", "@ValueUpdatedDate", "@ValueDecilineApprove", "@EvaluateResults" },
-                  new object[] { item.TableName, item.FieldName, item.Id, item.ValueUpdatedDate, item.ValueDecilineApprove ?? "", item.EvaluateResults });
+                  new[] { "@TableName", "@FieldName","@Value", "@ID", "@ValueUpdatedDate", "@ValueDecilineApprove", "@EvaluateResults" },
+                  new object[] { item.TableName, item.FieldName,item.IsApprovedTP, item.Id, item.ValueUpdatedDate, item.ValueDecilineApprove ?? "", item.EvaluateResults });
 
                 }
                 return Ok(ApiResponseFactory.Success(notProcessed, notProcessed.Count == 0 ? "Duyệt thành công." : $"Duyệt thành công, bỏ qua {notProcessed.Count} bản ghi."));
@@ -844,8 +842,8 @@ namespace RERPAPI.Controllers
                     }
                     SQLHelper<object>.ExcuteProcedure(
                "spUpdateTableByFieldNameAndID",
-               new[] { "@TableName", "@FieldName", "@ID", "@ValueUpdatedDate", "@ValueDecilineApprove", "@EvaluateResults" },
-               new object[] { item.TableName, item.FieldName, item.Id, item.ValueUpdatedDate, item.ValueDecilineApprove ?? "", item.EvaluateResults }
+               new[] { "@TableName", "@FieldName", "@Value", "@ID", "@ValueUpdatedDate", "@ValueDecilineApprove", "@EvaluateResults" },
+               new object[] { item.TableName, item.FieldName, item.IsApprovedBGD, item.Id, item.ValueUpdatedDate, item.ValueDecilineApprove ?? "", item.EvaluateResults }
            );
 
                 }
@@ -854,7 +852,7 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message)); 
             }
         }
         [HttpPost("approve-senior")]
@@ -921,8 +919,7 @@ namespace RERPAPI.Controllers
                     var payrollData = SQLHelper<object>.ProcedureToList("spGetEmployeePayrollDetail",
                         new string[] { "@Year", "@Month", "@DepartmentID", "@EmployeeID", "@Keyword", "@IsPublish", "@IsAll" },
                         new object[] { year, month, currentUser.DepartmentID, currentUser.EmployeeID, "", 1, 0 });
-
-                    var payroll = payrollData != null ? payrollData.FirstOrDefault() : null;
+                var payroll = SQLHelper<object>.GetListData(payrollData, 0); 
                     var rawFingerData = SQLHelper<dynamic>.ProcedureToList("spGetEmployeeAttendance",
                         new string[] { "@DepartmentID", "@EmployeeID", "@FindText", "@DateStart", "@DateEnd" },
                         new object[] { currentUser.DepartmentID, currentUser.EmployeeID, "", dateStart, dateEnd });
@@ -1049,5 +1046,44 @@ namespace RERPAPI.Controllers
                     return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
                 }
             }
+        [HttpGet("get-user-team")]
+        public IActionResult GetUserTeam()
+        {
+            try
+            {
+                int currentYear = DateTime.Now.Year;
+                int currentQuarter = (DateTime.Now.Month - 1) / 3 + 1;
+                var team = SQLHelper<object>.ProcedureToList("spGetALLKPIEmployeeTeam" , 
+                                                new string[] { "@YearValue", "@QuarterValue", "@DepartmentID" },
+                                                new object[] { currentYear, currentQuarter, 0 });
+                var data = SQLHelper<object>.GetListData(team, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+          
+        }
+        [HttpGet("get-user-team-link-by-leader-id")]
+        public IActionResult GetUserTeamLinkByLeaderID()
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+              
+                var team = SQLHelper<object>.ProcedureToList("spGetUserTeamLinkByLeaderID",
+                                                new string[] { "@LeaderID"},
+                                                new object[] { currentUser.EmployeeID });
+                var data = SQLHelper<object>.GetListData(team, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+
+        }
     }
 }
