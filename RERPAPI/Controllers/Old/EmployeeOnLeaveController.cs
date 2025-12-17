@@ -30,7 +30,7 @@ namespace RERPAPI.Controllers.Old
         [HttpPost]
         //[RequiresPermission("N2,N1")]
         public IActionResult GetAllEmployeeOnLeave(EmployeeOnLeaveParam param)
-        {
+            {
             try
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
@@ -48,7 +48,7 @@ namespace RERPAPI.Controllers.Old
                     employeeID = param.employeeId;
                 }
                 else
-                {
+                {   
                     employeeID = currentUser.EmployeeID;
                 }
                 var employeeOnLeaves = SQLHelper<object>.ProcedureToList("spGetDayOff", 
@@ -106,8 +106,8 @@ namespace RERPAPI.Controllers.Old
                 {
                     employeeID = currentUser.EmployeeID;
                 }
-                var employeeOnLeaveSummary = SQLHelper<object>.ProcedureToList("spGetEmployeeOnLeaveInWeb", new string[] { "@Keyword", "@DateStart", "@DateEnd", "@IsApproved", "@Type", "@DepartmentID", "@EmployeeID" },
-               new object[] { request.Keyword ?? "", request.DateStart, request.DateEnd, request.IsApproved, request.Type, request.DepartmentID ?? 0, employeeID });
+                var employeeOnLeaveSummary = SQLHelper<object>.ProcedureToList("spGetEmployeeOnLeaveInWeb", new string[] { "@DateStart", "@EmployeeID" },
+               new object[] { request.DateStart, employeeID });
 
                 var data = SQLHelper<object>.GetListData(employeeOnLeaveSummary, 1);
                 var TotalPages = SQLHelper<object>.GetListData(employeeOnLeaveSummary, 1);

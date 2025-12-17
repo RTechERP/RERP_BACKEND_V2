@@ -407,6 +407,7 @@ builder.Services.AddScoped<BillDocumentImportTechnicalRepo>();
 builder.Services.AddScoped<BillDocumentImportTechnicalLogRepo>();
 builder.Services.AddScoped<BillExportTechnicalLogRepo>();
 builder.Services.AddScoped<RegisterContractRepo>();
+builder.Services.AddScoped<BookingRoomRepo>();
 
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();
