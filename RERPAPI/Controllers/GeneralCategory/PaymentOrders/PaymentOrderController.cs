@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using DocumentFormat.OpenXml.Drawing.Charts;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -9,6 +10,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders;
+using System.Diagnostics;
 using System.Numerics;
 using System.Threading.Tasks;
 
@@ -92,7 +94,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             }
         }
 
-        [HttpPost("/{id}")]
+        [HttpGet("{id}")]
         public IActionResult GetByD(int id)
         {
             try
@@ -134,6 +136,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 //}
 
                 payment.EmployeeID = _currentUser.EmployeeID;
+                payment.IsUrgent = payment.DatePayment.HasValue;
                 if (payment.ID <= 0)
                 {
                     payment.Code = _paymentRepo.GetCode(payment);
@@ -156,91 +159,55 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         }
 
         [HttpPost("upload-file")]
-        public async Task<IActionResult> UploadFile([FromForm] PaymentOrderDTO payment)
+        public async Task<IActionResult> UploadFile()
         {
             try
             {
                 _currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
 
-                var paymentOrderFiles = JsonConvert.DeserializeObject<List<PaymentOrderFile>>(payment.PaymentOrderFiles);
+                var form = await Request.ReadFormAsync();
+
+                var paymentOrderFiles = JsonConvert.DeserializeObject<List<PaymentOrderFile>>(form["PaymentOrderFile"]);
                 foreach (var file in paymentOrderFiles)
                 {
                     if (file.ID > 0) await _fileRepo.UpdateAsync(file);
                 }
 
 
-                //Sửa lý đường dẫn lưu file
-
-                //var form = await Request.ReadFormAsync();
-                //var key = form["key"].ToString();
+                var paymentOrderID = TextUtils.ToInt32(form["PaymentOrderID"]);
                 var files = Request.Form.Files;
-                //var files = form.Files;
-
-                string key = "PathPaymentOrder";
-
-                // Kiểm tra input
-                //if (string.IsNullOrWhiteSpace(key))
-                //{
-                //    return BadRequest(ApiResponseFactory.Fail(null, "Key không được để trống!"));
-                //}
-
-                //if (files == null || files.Count == 0)
-                //{
-                //    return BadRequest(ApiResponseFactory.Fail(null, "Danh sách file không được để trống!"));
-                //}
 
                 // Lấy đường dẫn từ ConfigSystem
-                var uploadPath = _configSystemRepo.GetUploadPathByKey(key);
-                if (string.IsNullOrWhiteSpace(uploadPath))
+                var pathServer = _configSystemRepo.GetUploadPathByKey("PathPaymentOrder");
+                if (string.IsNullOrWhiteSpace(pathServer))
                 {
-                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: {key}"));
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: PathPaymentOrder"));
                 }
 
-                // Đọc subPath từ form (nếu có) và ghép vào uploadPath
-                //var subPathRaw = form["subPath"].ToString()?.Trim() ?? "";
-                string targetFolder = uploadPath;
-                //if (!string.IsNullOrWhiteSpace(subPathRaw))
-                //{
-                //    // Chuẩn hóa dấu phân cách và loại bỏ ký tự không hợp lệ trong từng segment
-                //    var separator = Path.DirectorySeparatorChar;
-                //    var segments = subPathRaw
-                //        .Replace('/', separator)
-                //        .Replace('\\', separator)
-                //        .Split(separator, StringSplitOptions.RemoveEmptyEntries)
-                //        .Select(seg =>
-                //        {
-                //            var invalidChars = Path.GetInvalidFileNameChars();
-                //            var cleaned = new string(seg.Where(c => !invalidChars.Contains(c)).ToArray());
-                //            // Ngăn chặn đường dẫn leo lên thư mục cha
-                //            cleaned = cleaned.Replace("..", "").Trim();
-                //            return cleaned;
-                //        })
-                //        .Where(s => !string.IsNullOrWhiteSpace(s))
-                //        .ToArray();
+                var order = _paymentRepo.GetByID(paymentOrderID);
 
-                //    if (segments.Length > 0)
-                //    {
-                //        targetFolder = Path.Combine(uploadPath, Path.Combine(segments));
-                //    }
-                //}
+                string pathPattern = $@"NĂM {order.DateOrder.Value.Year}\ĐỀ NGHỊ THANH TOÁN\THÁNG {order.DateOrder.Value.ToString("MM.yyyy")}\{order.DateOrder.Value.ToString("dd.MM.yyyy")}\{order.Code}";
+                string pathUpload = Path.Combine(pathServer, pathPattern);
 
                 foreach (var file in files)
                 {
-                    var result = await FileHelper.UploadFile(file, targetFolder);
+                    var result = await FileHelper.UploadFile(file, pathUpload);
 
                     if (result.status == 1)
                     {
                         var orderFile = new PaymentOrderFile();
-                        orderFile.PaymentOrderID = (paymentOrderFiles.FirstOrDefault() ?? new PaymentOrderFile()).PaymentOrderID;
-                        orderFile.FileName = TextUtils.ToString(result.data);
+                        orderFile.PaymentOrderID = order.ID;
+                        orderFile.FileName = $"{Path.GetFileNameWithoutExtension(file.FileName)}_{DateTime.Now:yyyyMMdd_HHmmss}{Path.GetExtension(file.FileName)}";
                         orderFile.OriginPath = "";
-                        orderFile.ServerPath = targetFolder;
+                        orderFile.ServerPath = pathUpload;
 
                         await _fileRepo.CreateAsync(orderFile);
                     }
                 }
 
-                return Ok(ApiResponseFactory.Success(payment.PaymentOrderFiles, "Cập nhật thành công!"));
+                //Process.Start(pathUpload);
+
+                return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
             }
             catch (Exception ex)
             {
@@ -248,6 +215,55 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             }
         }
 
+
+        [HttpPost("upload-file-bankslip")]
+        public async Task<IActionResult> UploadFileBankSlip()
+        {
+            try
+            {
+                _currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
+
+                var form = await Request.ReadFormAsync();
+                var paymentOrderID = TextUtils.ToInt32(form["PaymentOrderID"]);
+                var files = Request.Form.Files;
+
+                // Lấy đường dẫn từ ConfigSystem
+                var pathServer = _configSystemRepo.GetUploadPathByKey("PathPaymentOrder");
+                if (string.IsNullOrWhiteSpace(pathServer))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: PathPaymentOrder"));
+                }
+
+                var order = _paymentRepo.GetByID(paymentOrderID);
+
+                string pathPattern = $@"NĂM {order.DateOrder.Value.Year}\ĐỀ NGHỊ THANH TOÁN\THÁNG {order.DateOrder.Value.ToString("MM.yyyy")}\{order.DateOrder.Value.ToString("dd.MM.yyyy")}\{order.Code}";
+                string pathUpload = Path.Combine(pathServer, pathPattern);
+
+                foreach (var file in files)
+                {
+                    var result = await FileHelper.UploadFile(file, pathUpload);
+
+                    if (result.status == 1)
+                    {
+                        var orderFile = new PaymentOrderFileBankSlip();
+                        orderFile.PaymentOrderID = order.ID;
+                        orderFile.FileName = TextUtils.ToString(result.data);
+                        orderFile.OriginPath = "";
+                        orderFile.ServerPath = pathUpload;
+
+                        await _fileBankSlipRepo.CreateAsync(orderFile);
+                    }
+                }
+
+                //Process.Start(pathUpload);
+
+                return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
 
         [HttpGet("get-data-combo")]
         public IActionResult GetDataCombo()
@@ -285,6 +301,83 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("appoved-tbp")]
+        public async Task<IActionResult> ApprovedTBP([FromBody] List<PaymentOrderDTO> payment)
+        {
+            try
+            {
+                var reponse = await _logRepo.Appoved(payment);
+                if (reponse == 1)
+                {
+                    return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+                }
+                else
+                {
+                    return Ok(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("appoved-hr")]
+        public async Task<IActionResult> ApprovedHR([FromBody] List<PaymentOrderDTO> payment)
+        {
+            var reponse = await _logRepo.Appoved(payment);
+            if (reponse == 1)
+            {
+                return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+            }
+            else
+            {
+                return Ok(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+            }
+        }
+
+        [HttpPost("appoved-kttt")]
+        public async Task<IActionResult> ApprovedKTTT([FromBody] List<PaymentOrderDTO> payment)
+        {
+            var reponse = await _logRepo.Appoved(payment);
+            if (reponse == 1)
+            {
+                return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+            }
+            else
+            {
+                return Ok(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+            }
+        }
+
+        [HttpPost("appoved-ktt")]
+        public async Task<IActionResult> ApprovedKTT([FromBody] List<PaymentOrderDTO> payment)
+        {
+            var reponse = await _logRepo.Appoved(payment);
+            if (reponse == 1)
+            {
+                return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+            }
+            else
+            {
+                return Ok(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+            }
+        }
+
+        [HttpPost("appoved-bgd")]
+        public async Task<IActionResult> ApprovedBGD([FromBody] List<PaymentOrderDTO> payment)
+        {
+            var reponse = await _logRepo.Appoved(payment);
+            if (reponse == 1)
+            {
+                return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+            }
+            else
+            {
+                return Ok(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
             }
         }
     }

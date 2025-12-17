@@ -48,7 +48,12 @@ namespace RERPAPI.Model.Common
         {
             try
             {
-                return Convert.ToInt32(x);
+                //return Convert.ToInt32(x);
+
+                if (x == null) return 0;
+
+                var str = x.ToString(); // StringValues → string
+                return int.TryParse(str, out var result) ? result : 0;
             }
             catch
             {

@@ -51,7 +51,8 @@ namespace RERPAPI.Controllers.Old
                 {
                     employeeID = currentUser.EmployeeID;
                 }
-                var employeeOnLeaves = SQLHelper<object>.ProcedureToList("spGetDayOff", new string[] { "@PageNumber", "@PageSize", "@Keyword", "@Month", "@Year", "@IDApprovedTP", "@Status", "@DepartmentID", "@EmployeeID" },
+                var employeeOnLeaves = SQLHelper<object>.ProcedureToList("spGetDayOff", 
+                    new string[] { "@PageNumber", "@PageSize", "@Keyword", "@Month", "@Year", "@IDApprovedTP", "@Status", "@DepartmentID", "@EmployeeID" },
                     new object[] { param.pageNumber, param.pageSize, param.keyWord, param.month, param.year, param.IDApprovedTP, param.status, param.departmentId, employeeID });
 
                 var data = SQLHelper<object>.GetListData(employeeOnLeaves, 0);
