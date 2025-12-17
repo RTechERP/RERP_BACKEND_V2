@@ -1,10 +1,5 @@
-using DocumentFormat.OpenXml.Bibliography;
-using DocumentFormat.OpenXml.Office2010.Excel;
-using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
-using NPOI.SS.Formula.Functions;
 using NPOI.Util;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
@@ -13,8 +8,6 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using System.Data;
-using System.Data.Entity.Migrations.Model;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -224,7 +217,40 @@ namespace RERPAPI.Controllers.Old
             }
 
         }
+        [HttpPost("get-all-demo")]
+        //[RequiresPermission("N58,N35,N1")]
+        public IActionResult GetAllDemo([FromBody] ProjectPartlistPurchaseRequestParam filter)
+        {
+            try
+            {
+                DateTime dateStart = filter.DateStart.Date;
+                DateTime dateEnd = filter.DateEnd.Date
+                                    .AddHours(23)
+                                    .AddMinutes(59)
+                                    .AddSeconds(59);
+                var dt = SQLHelper<dynamic>.ProcedureToList("spGetProjectPartlistPurchaseRequest_New_Khanh",
+                    new string[] {
+                "@DateStart", "@DateEnd", "@StatusRequest", "@ProjectID", "@Keyword",
+                "@SupplierSaleID", "@IsApprovedTBP", "@IsApprovedBGD", "@IsCommercialProduct",
+                "@POKHID", "@ProductRTCID", "@IsDeleted", "@IsTechBought", "@IsJobRequirement","@EmployeeID"
 
+                    },
+                    new object[] {
+                filter.DateStart, filter.DateEnd, filter.StatusRequest, filter.ProjectID, filter.Keyword,
+                filter.SupplierSaleID, filter.IsApprovedTBP, filter.IsApprovedBGD, filter.IsCommercialProduct,
+                filter.POKHID, filter.ProductRTCID, filter.IsDeleted, filter.IsTechBought, filter.IsJobRequirement,
+                filter.EmployeeID
+                    });
+
+                var data = SQLHelper<dynamic>.GetListData(dt, 0);
+
+                return Ok(ApiResponseFactory.Success(data, null));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [HttpPost("get-all")]
         [RequiresPermission("N58,N35,N1")]
         public IActionResult GetAll([FromBody] ProjectPartlistPurchaseRequestParam filter)
@@ -450,7 +476,43 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpPost("save-data-rtc")]
+        public async Task<IActionResult> SaveDataRTC(ProjectPartlistPurchaseRequest model)
+        {
+            try
+            {
+                if (!_repo.Validate(model, out string message))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, message));
+                }
+                if (model.IsTechBought == true)
+                {
+                    var requestBoughts = _repo.GetAll(x => x.ProjectPartListID == model.ProjectPartListID);
+                    if (requestBoughts.Count > 0)
+                    {
+                        foreach (var item in requestBoughts)
+                        {
+                            item.IsDeleted = model.IsTechBought;
+                            await _repo.UpdateAsync(item);
+                        }
+                    }
+                    //model.IsTechBought = requestBought.IsTechBought;
+                    //model.ProjectPartListID = requestBought.ProjectPartListID;
+                    //model.Note = txtNote.Text;
+                    //model.ProductCode = requestBought.ProductCode;
+                }
+                model.StatusRequest = 1;
+                model.ProjectPartlistPurchaseRequestTypeID = model.TicketType == 1 ? 4 : 3;
+                if (model.ID > 0) await _repo.UpdateAsync(model);
+                else await _repo.CreateAsync(model);
+                return Ok(ApiResponseFactory.Success(model));
 
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [HttpPost("save-data")]
         [RequiresPermission("N35,N1")]
         public async Task<IActionResult> SaveData([FromBody] List<ProjectPartlistPurchaseRequestDTO> data)
@@ -480,7 +542,7 @@ namespace RERPAPI.Controllers.Old
                         continue;
                     }
 
-                    if((item.ProductGroupID <= 0 && item.ProductGroupRTCID <= 0))
+                    if ((item.ProductGroupID <= 0 && item.ProductGroupRTCID <= 0))
                     {
                         _repo.UpdateData(item);
                         await _repo.UpdateAsync(item);
@@ -886,10 +948,10 @@ namespace RERPAPI.Controllers.Old
         [HttpPost("create-product")]
         public async Task<IActionResult> CreateProduct(List<ProjectPartlistPurchaseRequestDTO> data)
         {
-            if (data == null || data.Count <= 0) return BadRequest(ApiResponseFactory.Fail(null,"Không có dữ liệu truyền về để cập nhật!"));
+            if (data == null || data.Count <= 0) return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu truyền về để cập nhật!"));
             try
             {
-               await _repo.CreateProduct(data);
+                await _repo.CreateProduct(data);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)

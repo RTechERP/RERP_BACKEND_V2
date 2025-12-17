@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
@@ -9,6 +10,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.HRM.VehicleManagement;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
+using ZXing;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers
@@ -22,12 +24,35 @@ namespace RERPAPI.Controllers
         List<PathStaticFile> _vehicleBookingFilePaths;
         private IConfiguration _configuration;
 
-        public VehicleBookingManagementController(VehicleBookingManagementRepo vehicleBookingManagementRepo, VehicleBookingFileRepo vehicleBookingFileRepo, IConfiguration configuration)
+        private readonly EmployeeRepo _employeeRepo;
+        private readonly ConfigSystemRepo _configSystemRepo;
+        private readonly ProjectRepo _projectRepo;
+        private readonly EmployeeApproveRepo _employeeApproveRepo;
+        private readonly ProvinceRepo _provinceRepo;
+        private readonly NotifyRepo _notifyRepo;
+
+        public VehicleBookingManagementController(
+            VehicleBookingManagementRepo vehicleBookingManagementRepo,
+            VehicleBookingFileRepo vehicleBookingFileRepo,
+            IConfiguration configuration,
+            EmployeeRepo employeeRepo,
+            ConfigSystemRepo configSystemRepo,
+            ProjectRepo projectRepo,
+            EmployeeApproveRepo employeeApproveRepo,
+            ProvinceRepo provinceRepo,
+            NotifyRepo notifyRepo
+            )
         {
             _vehicleBookingManagementRepo = vehicleBookingManagementRepo;
             _vehicleBookingFileRepo = vehicleBookingFileRepo;
             _configuration = configuration;
             _vehicleBookingFilePaths = configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();
+            _employeeRepo = employeeRepo;
+            _configSystemRepo = configSystemRepo;
+            _projectRepo = projectRepo;
+            _employeeApproveRepo = employeeApproveRepo;
+            _provinceRepo = provinceRepo;
+            _notifyRepo = notifyRepo;
         }
 
         // POST: /api/vehiclebookingmanagement
@@ -40,21 +65,24 @@ namespace RERPAPI.Controllers
 
                 // 1. Chuẩn bị tham số
                 string procedureName = "spGetVehicleBookingManagement";
-                string[] paramNames = new string[] { "@StartDate", "@EndDate", "@Keyword", "Category", "@Status", "@IsCancel" };
-                object[] paramValues = new object[] { request.StartDate, request.EndDate,
-                            request.Keyword.Trim(), request.Category,
-                            request.Status, request.IsCancel,
-                          };
+                string[] paramNames = new string[] { "@StartDate", "@EndDate", "@Keyword", "@Category", "@EmployeeID", "@DriverEmployeeID", "@Status", "@IsCancel" };
+                object[] paramValues = new object[] { request.StartDate, request.EndDate, request.Keyword.Trim(), request.Category, request.EmployeeId, request.DriverEmployeeId, request.Status, request.IsCancel,};
                 // 2. Gọi procedure thông qua helper    
                 var data = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
                 // 3. Xử lý kết quả
                 var result = SQLHelper<object>.GetListData(data, 0);
-                return Ok(new
+                //return Ok(new
+                //{
+                //    data = result,
+                //    TotalPage = SQLHelper<object>.GetListData(data, 1),
+                //    Status = 1
+                //});
+                return Ok(ApiResponseFactory.Success(new
                 {
                     data = result,
                     TotalPage = SQLHelper<object>.GetListData(data, 1),
                     Status = 1
-                });
+                }, ""));
             }
             catch (Exception ex)
             {
@@ -100,11 +128,16 @@ namespace RERPAPI.Controllers
                 var data = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
                 // 3. Xử lý kết quả
                 var result = SQLHelper<object>.GetListData(data, 0);
-                return Ok(new
+                //return Ok(new
+                //{
+                //    data = result,
+                //    Status = 1
+                //});
+                return Ok(ApiResponseFactory.Success(new
                 {
                     data = result,
                     Status = 1
-                });
+                }, ""));
             }
             catch (Exception ex)
             {
@@ -191,11 +224,16 @@ namespace RERPAPI.Controllers
                 }
 
 
-                return Ok(new
+                //return Ok(new
+                //{
+                //    data = vehicleBookingFileImageDTO,
+                //    Status = 1
+                //});
+                return Ok(ApiResponseFactory.Success(new
                 {
                     data = vehicleBookingFileImageDTO,
                     Status = 1
-                });
+                }, ""));
             }
             catch (Exception ex)
             {
@@ -218,16 +256,409 @@ namespace RERPAPI.Controllers
                 var result = SQLHelper<object>.GetListData(data, 0);
 
 
-                return Ok(new
+                //return Ok(new
+                //{
+                //    data = result,
+                //    Status = 1
+                //});
+                return Ok(ApiResponseFactory.Success(new
                 {
                     data = result,
                     Status = 1
-                });
+                }, ""));
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        [HttpGet("get-employees")]
+        public IActionResult LoadEmployees()
+        {
+            try
+            {
+                var list = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
+                                 new string[] { "@Keyword", "@Status" },
+                                 new object[] { "", 0 });
+                return Ok(ApiResponseFactory.Success(list, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-employee-by-id")]
+        public IActionResult LoadEmployeeByID(int employeeId)
+        {
+            try
+            {
+                var list = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
+                                 new string[] { "@Keyword", "@Status" },
+                                 new object[] { "", -1 });
+                var employee = list.FirstOrDefault(e => e.ID == employeeId);
+                return Ok(ApiResponseFactory.Success(employee, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-projects")]
+        public IActionResult LoadProjects()
+        {
+            try
+            {
+                var projects = _projectRepo.GetAll(x => x.IsDeleted != true);
+                return Ok(ApiResponseFactory.Success(projects, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-files")]
+        public IActionResult LoadFiles(int vehicleBookingId)
+        {
+            try
+            {
+                var file = _vehicleBookingFileRepo.GetAll(x => x.VehicleBookingID == vehicleBookingId);
+                return Ok(ApiResponseFactory.Success(file, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("vehicle-booking-cancel")]
+        public IActionResult VehicleBookingCancel(int vehicleBookingId)
+        {
+            try
+            {
+                VehicleBookingManagement vehicleBooking = _vehicleBookingManagementRepo.GetByID(vehicleBookingId);
+                if (vehicleBooking == null) return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu cần hủy"));
+                vehicleBooking.Status = 3;
+                vehicleBooking.IsCancel = true;
+                _vehicleBookingManagementRepo.Update(vehicleBooking);
+                return Ok(ApiResponseFactory.Success(null, "Hủy thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-province-arrives")]
+        public IActionResult LoadProvinceArrives(int employeeId)
+        {
+            try
+            {
+                var provinces = _provinceRepo.GetAll();
+                return Ok(ApiResponseFactory.Success(provinces, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-approved-list")]
+        public IActionResult GetApprovedList()
+        {
+            var approved = _employeeApproveRepo.GetAll(x => x.Type == 1);
+            return Ok(ApiResponseFactory.Success(approved, ""));
+        }
+
+        [HttpGet("get-province-departure")]
+        public IActionResult LoadProvinceDeparture(int employeeId)
+        {
+            try
+            {
+                List<int> provinceDepartureIDs = new List<int>() { 1, 2, 3, 4 };
+
+                var provinceDepartures = _provinceRepo.GetAll().Select(x => new
+                {
+                    x.ID,
+                    ProvinceName = provinceDepartureIDs.Contains(x.ID) ? $"VP {x.ProvinceName}" : x.ProvinceName,
+                }).ToList();
+                return Ok(ApiResponseFactory.Success(provinceDepartures, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("create")]
+        public IActionResult Create([FromBody] VehicleBookingManagement vehicleBooking)
+        {
+            try
+            {
+                DateTime dateRegister = DateTime.Now;
+
+                // Kiểm tra phát sinh
+                bool isProblem = _vehicleBookingManagementRepo.IsProblem(vehicleBooking);
+
+                var cateText = vehicleBooking.Category == 1 ? "đến" : "giao đến";
+
+                //  Validate thời gian cần đến 
+                if (!vehicleBooking.TimeNeedPresent.HasValue)
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Vui lòng nhập Thời gian cần {cateText}!"));
+
+                DateTime timeNeed = vehicleBooking.TimeNeedPresent.Value;
+                if (timeNeed <= dateRegister)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Thời gian cần đến phải lớn hơn thời gian hiện tại!"));
+
+                if (vehicleBooking.TimeReturn.HasValue)
+                {
+                    if (vehicleBooking.TimeReturn.Value <= timeNeed)
+                        return BadRequest(ApiResponseFactory.Fail(null, "Thời gian cần về phải lớn hơn thời gian cần đến!"));
+                }
+
+                // Validate thời gian xuất phát
+                if (vehicleBooking.Category != 2 && vehicleBooking.Category != 6)
+                {
+                    if (!vehicleBooking.DepartureDate.HasValue)
+                        return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng nhập Thời gian xuất phát!"));
+
+                    if (vehicleBooking.DepartureDate.Value <= dateRegister)
+                        return BadRequest(ApiResponseFactory.Fail(null, "Thời gian xuất phát phải lớn hơn thời gian hiện tại!"));
+
+                    if (vehicleBooking.DepartureDate.Value >= timeNeed)
+                        return BadRequest(ApiResponseFactory.Fail(null, "Thời gian xuất phát phải nhỏ hơn thời gian cần đến!"));
+                }
+
+                // Validate địa điểm 
+                if (string.IsNullOrWhiteSpace(vehicleBooking.CompanyNameArrives))
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Vui lòng nhập Công ty {cateText}!"));
+
+                if (string.IsNullOrWhiteSpace(vehicleBooking.Province))
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Vui lòng nhập Tỉnh {cateText}!"));
+
+                if (string.IsNullOrWhiteSpace(vehicleBooking.SpecificDestinationAddress))
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Vui lòng nhập Địa chỉ cụ thể {cateText}!"));
+
+                //  Validate phát sinh 
+                if (isProblem && vehicleBooking.Category != 5)
+                {
+                    if (vehicleBooking.ApprovedTBP == 0)
+                        return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng chọn Người duyệt!"));
+
+                    if (string.IsNullOrWhiteSpace(vehicleBooking.ProblemArises))
+                        return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng nhập Vấn đề phát sinh!"));
+                }
+
+                // Validate người đi / người nhận 
+                if (vehicleBooking.Category == 1 || vehicleBooking.Category == 4 || vehicleBooking.Category == 5)
+                {
+                    if (string.IsNullOrWhiteSpace(vehicleBooking.PassengerName))
+                        return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng nhập tên người đi!"));
+
+                    if (string.IsNullOrWhiteSpace(vehicleBooking.PassengerPhoneNumber))
+                        return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng nhập SDT người đi!"));
+                }
+                else
+                {
+                    if (string.IsNullOrWhiteSpace(vehicleBooking.ReceiverName))
+                        return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng nhập tên người nhận hàng!"));
+
+                    if (string.IsNullOrWhiteSpace(vehicleBooking.PackageName))
+                        return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng nhập tên kiện hàng!"));
+
+                    if (vehicleBooking.PackageQuantity <= 0)
+                        return BadRequest(ApiResponseFactory.Fail(null, "Số lượng kiện hàng phải lớn hơn 0!"));
+                }
+
+                if (vehicleBooking.ProjectID == 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng chọn Dự án!"));
+
+
+                // Gán dữ liệu
+                vehicleBooking.Status = vehicleBooking.Category == 4 ? 4 : 1;
+                vehicleBooking.IsCancel = false;
+                vehicleBooking.IsSend = false;
+                vehicleBooking.IsNotifiled = false;
+
+                //  Lưu
+                if (vehicleBooking.ID > 0)
+                {
+                    _vehicleBookingManagementRepo.Update(vehicleBooking);
+                }
+                else
+                {
+                    _vehicleBookingManagementRepo.Create(vehicleBooking);
+
+                    //Auto tạo đăng ký về
+                    if (vehicleBooking.Category == 1 && vehicleBooking.TimeReturn.HasValue)
+                    {
+                        var exist = _vehicleBookingManagementRepo
+                            .GetAll(x => x.ParentID == vehicleBooking.ID)
+                            .Any();
+
+                        if (!exist)
+                        {
+                            var returnBooking = new VehicleBookingManagement
+                            {
+                                ParentID = vehicleBooking.ID,
+                                Category = 5,
+                                CompanyNameArrives = vehicleBooking.DepartureAddress,
+                                DepartureAddress = vehicleBooking.CompanyNameArrives,
+                                DepartureDate = vehicleBooking.TimeReturn,
+                                Province = vehicleBooking.Province,
+                                SpecificDestinationAddress = vehicleBooking.SpecificDestinationAddress,
+                                Status = 1,
+                                CreatedDate = DateTime.Now
+                            };
+
+                            _vehicleBookingManagementRepo.Create(returnBooking);
+                        }
+                    }
+
+                    if (vehicleBooking.IsProblemArises == true)
+                    {
+                        string categoryText = vehicleBooking.Category switch
+                        {
+                            1 => "Đăng ký đi",
+                            2 => "Đăng ký giao hàng",
+                            3 => "Xếp xe về",
+                            4 => "Chủ động phương tiện",
+                            5 => "Đăng ký về",
+                            6 => "Đăng ký lấy hàng",
+                            _ => ""
+                        };
+
+                        string content =
+                            $"Mục đích: {categoryText}\n" +
+                            $"Lý do: {vehicleBooking.ProblemArises}\n" +
+                            $"Thời gian xuất phát: {vehicleBooking.DepartureDate:dd/MM/yyyy HH:mm}";
+
+                        _notifyRepo.AddNotify("ĐĂNG KÝ XE", content, vehicleBooking.ApprovedTBP ?? 0);
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(vehicleBooking, "Tạo đăng ký xe thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("upload-file")]
+        public async Task<IActionResult> UploadFile(
+            int vehicleBookingId,
+            [FromForm] List<IFormFile> files)
+        {
+            try
+            {
+                var booking = _vehicleBookingManagementRepo.GetByID(vehicleBookingId);
+                if (booking == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tồn tại đơn đăng ký xe"));
+
+                string pathServer = @"\\192.168.1.190\Common\11. HCNS\DatXe";
+                string folder = $"DANGKYDATXENGAY{booking.CreatedDate:dd.MM.yyyy}";
+                string pathUpload = Path.Combine(pathServer, folder);
+
+                if (!Directory.Exists(pathUpload))
+                    Directory.CreateDirectory(pathUpload);
+
+                foreach (var file in files)
+                {
+                    var filePath = Path.Combine(pathUpload, file.FileName);
+                    using var stream = new FileStream(filePath, FileMode.Create);
+                    await file.CopyToAsync(stream);
+
+                    await _vehicleBookingFileRepo.CreateAsync(new VehicleBookingFile
+                    {
+                        VehicleBookingID = booking.ID,
+                        FileName = file.FileName,
+                        ServerPath = pathUpload,
+                    });
+                }
+
+                return Ok(ApiResponseFactory.Success(null, "Upload file thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("remove-file")]
+        public async Task<IActionResult> RemoveFile([FromBody] List<int> fileIds)
+        {
+            try
+            {
+                foreach (var id in fileIds)
+                {
+                    var file = _vehicleBookingFileRepo.GetByID(id);
+                    if (file == null) continue;
+
+                    string fullPath = Path.Combine(file.ServerPath, file.FileName);
+                    if (System.IO.File.Exists(fullPath))
+                        System.IO.File.Delete(fullPath);
+
+                    await _vehicleBookingFileRepo.DeleteAsync(id);
+                }
+
+                return Ok(ApiResponseFactory.Success(null, "Xóa file thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("send-email")]
+        public IActionResult SendEmail([FromBody] VehicleBookingManagementDTO booking)
+        {
+            try
+            {
+                int[] categories = { 1, 4, 5 };
+
+                // gửi TBP
+                if (booking.ApprovedTBP > 0)
+                {
+                    _vehicleBookingManagementRepo.SendEmail(
+                        booking, booking.ApprovedTBP ?? 0, "ĐĂNG KÝ XE");
+                }
+
+                // gửi người liên quan
+                if (categories.Contains(booking.Category ?? 0))
+                {
+                    var passengers = booking.EmployeeAttaches
+                        .Select(x => x.PassengerEmployeeID)
+                        .Where(x => x.HasValue)
+                        .Select(x => x.Value)
+                        .Distinct();
+
+                    foreach (var id in passengers)
+                        _vehicleBookingManagementRepo.SendEmail(booking, id, "ĐĂNG KÝ XE");
+                }
+                else
+                {
+                    var receivers = booking.EmployeeAttaches
+                        .Select(x => x.ReceiverEmployeeID)
+                        .Where(x => x.HasValue)
+                        .Select(x => x.Value)
+                        .Distinct();
+
+                    foreach (var id in receivers)
+                        _vehicleBookingManagementRepo.SendEmail(booking, id, "ĐĂNG KÝ XE");
+                }
+
+                return Ok(ApiResponseFactory.Success(null, "Gửi email thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
     }
 }

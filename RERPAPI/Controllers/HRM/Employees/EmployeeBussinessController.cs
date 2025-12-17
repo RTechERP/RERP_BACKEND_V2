@@ -10,6 +10,7 @@ using RERPAPI.Model.Param;
 using RERPAPI.Model.Param.HRM;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Asset;
+using RERPAPI.Repo.GenericEntity.GeneralCatetogy;
 using RERPAPI.Repo.GenericEntity.HRM;
 using System;
 
@@ -22,11 +23,15 @@ namespace RERPAPI.Controllers.HRM.Employees
     {
         private EmployeeBussinessRepo _employeeBussinessRepo;
         EmployeeBussinessFileRepo _employeeBussinessFileRepo;
-        public EmployeeBussinessController(EmployeeBussinessRepo employeeBussinessRepo, EmployeeBussinessFileRepo employeeBussinessFileRepo)
+        EmployeeBussinessVehicleRepo _employeeBussinessVehicleRepo;
+
+        public EmployeeBussinessController(EmployeeBussinessRepo employeeBussinessRepo, EmployeeBussinessFileRepo employeeBussinessFileRepo, EmployeeBussinessVehicleRepo employeeBussinessVehicleRepo)
         {
             _employeeBussinessRepo = employeeBussinessRepo;
             _employeeBussinessFileRepo = employeeBussinessFileRepo;
+            _employeeBussinessVehicleRepo = employeeBussinessVehicleRepo;
         }
+
         [RequiresPermission("N1,N2")]
         [HttpPost]
         public IActionResult getEmployeeBussiness(EmployeeBussinessParam param)
@@ -68,7 +73,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 var lastDay = firstDay.AddMonths(1).AddDays(-1);
                 var arrParamName = new string[] { "@DateStart", "@DateEnd", "@Keyword", "@EmployeeID", "@IsApproved", "@Type", "@VehicleID", "@NotCheckIn" };
                 var arrParamValue = new object[] { param.DateStart ?? firstDay, param.DateEnd ?? lastDay, param.Keyword ?? "",currentUser.EmployeeID, param.IsApproved ?? 0, param.Type??0, param.VehicleID??0, param.NotCheckIn??-1};
-                var employeeBussiness = SQLHelper<object>.ProcedureToList("spGetEmployeeBussinessInWeb", arrParamName, arrParamValue);
+                    var employeeBussiness = SQLHelper<object>.ProcedureToList("spGetEmployeeBussinessInWeb", arrParamName, arrParamValue);
 
                 var result = SQLHelper<object>.GetListData(employeeBussiness, 0);
 
@@ -183,7 +188,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [RequiresPermission("N1,N2")]
+      
         [HttpGet("deleted")]
         public async Task<IActionResult> deleteEmployeeBussiness([FromQuery] List<int> listID)
         {
@@ -319,8 +324,17 @@ namespace RERPAPI.Controllers.HRM.Employees
                     else
                         await _employeeBussinessFileRepo.UpdateAsync(dto.employeeBussinessFiles);
                 }
-
-                return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
+                if (dto.employeeBussinessVehicle != null)
+                {
+                    if (dto.employeeBussinessVehicle.ID <= 0)
+                    {
+                      
+                        await _employeeBussinessVehicleRepo.CreateAsync(dto.employeeBussinessVehicle);
+                    }
+                    else
+                        await _employeeBussinessVehicleRepo.UpdateAsync(dto.employeeBussinessVehicle);
+                }
+                return Ok(ApiResponseFactory.Success(dto, "Lưu thành công"));
             }
             catch (Exception ex)
             {
@@ -354,6 +368,36 @@ namespace RERPAPI.Controllers.HRM.Employees
             {
                 var file = _employeeBussinessFileRepo.GetAll(x => x.EmployeeBussinessID == bussinessID&&x.IsDeleted!=true);
                 return Ok(ApiResponseFactory.Success(file, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-employee-buissiness-vehicle")]
+        public IActionResult GetEmployeeBussinessVehicle (int id)
+        {
+            try
+            {
+                var arrParamName = new string[] { "@IDBussiness" };
+                var arrParamValue = new object[] { id };
+                var employeeBussinessVehicle = SQLHelper<object>.ProcedureToList("spGetBussinessVehicle", arrParamName, arrParamValue);
+
+                var result = SQLHelper<object>.GetListData(employeeBussinessVehicle, 0);
+                return Ok(ApiResponseFactory.Success(result, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-by-id")]
+        public IActionResult GetByID(int id)
+        {
+            try
+            {
+                var employeeBussiness = _employeeBussinessRepo.GetByID(id);
+                return Ok(ApiResponseFactory.Success(employeeBussiness, ""));
             }
             catch (Exception ex)
             {

@@ -16,6 +16,7 @@ using RERPAPI.Repo.GenericEntity.BBNV;
 using RERPAPI.Repo.GenericEntity.DocumentManager;
 using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
 using RERPAPI.Repo.GenericEntity.Film;
+using RERPAPI.Repo.GenericEntity.GeneralCatetogy;
 using RERPAPI.Repo.GenericEntity.GeneralCatetogy.JobRequirements;
 using RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders;
 using RERPAPI.Repo.GenericEntity.HRM;
@@ -397,6 +398,7 @@ builder.Services.AddScoped<HCNSProposalsRepo>();
 #endregion
 
 builder.Services.AddScoped<BillExportTechnicalRepo>();
+builder.Services.AddScoped<EmployeeBussinessVehicleRepo>();
 builder.Services.AddScoped<TaxCompanyRepo>();
 builder.Services.AddScoped<HistoryErrorRepo>();
 builder.Services.AddScoped<HistoryProductRTCLogRepo>();
@@ -405,6 +407,7 @@ builder.Services.AddScoped<BillDocumentImportTechnicalRepo>();
 builder.Services.AddScoped<BillDocumentImportTechnicalLogRepo>();
 builder.Services.AddScoped<BillExportTechnicalLogRepo>();
 builder.Services.AddScoped<RegisterContractRepo>();
+builder.Services.AddScoped<BookingRoomRepo>();
 
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();

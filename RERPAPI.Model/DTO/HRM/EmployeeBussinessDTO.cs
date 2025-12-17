@@ -11,5 +11,6 @@ namespace RERPAPI.Model.DTO.HRM
     {
         public EmployeeBussiness? employeeBussiness { get; set; }
         public EmployeeBussinessFile? employeeBussinessFiles { get; set; }
+        public EmployeeBussinessVehicle? employeeBussinessVehicle { get; set; }
     }
 }

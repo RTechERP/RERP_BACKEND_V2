@@ -201,7 +201,7 @@ namespace RERPAPI.Controllers.Old.POKH
 
             try
             {
-                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetMainIndex", new string[] { "@Type" }, new object[] { 1 });
+                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetMainIndex", new string[] { "@Type" }, new object[] { 0 });
                 var data = SQLHelper<dynamic>.GetListData(list, 0);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }

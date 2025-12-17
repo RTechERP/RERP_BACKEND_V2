@@ -450,7 +450,7 @@ namespace RERPAPI.Controllers.Project
                     }
                 }
 
-                _projectPartlistRepo.UpdatePurchaseRequest(listPartLists);
+                _projectPartlistRepo.UpdatePurchaseRequest(listPartLists, currentUser.EmployeeID);
                 return Ok(ApiResponseFactory.Success(null, ""));
             }
             catch (Exception ex)
@@ -944,7 +944,7 @@ namespace RERPAPI.Controllers.Project
                         var row = request.Items.FirstOrDefault(x => x.ProductCode == diff.ProductCode);
                         if (row == null) continue;
 
-                        if (diff.Choose == "STOCK")
+                        if (diff.Choose == "Stock")
                         {
                             row.GroupMaterial = diff.GroupMaterialStock;
                             row.Manufacturer = diff.ManufacturerStock;
