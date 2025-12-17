@@ -19,13 +19,15 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
     public class RequestInvoiceDetailController : ControllerBase
     {
         //private readonly string _uploadPath;
-        RequestInvoiceRepo _requestInvoiceRepo;
-        RequestInvoiceDetailRepo _requestInvoiceDetailRepo;
-        RequestInvoiceFileRepo _requestInvoiceFileRepo;
-        EmployeeRepo _employeeRepo;
-        ProductSaleRepo _productSaleRepo;
-        ProjectRepo _projectRepo;
-        ConfigSystemRepo _configSystemRepo;
+        private readonly RequestInvoiceRepo _requestInvoiceRepo;
+        private readonly RequestInvoiceDetailRepo _requestInvoiceDetailRepo;
+        private readonly RequestInvoiceFileRepo _requestInvoiceFileRepo;
+        private readonly RequestInvoiceStatusLinkRepo _requestInvoiceStatusLinkRepo;
+        private readonly EmployeeRepo _employeeRepo;
+        private readonly ProductSaleRepo _productSaleRepo;
+        private readonly ProjectRepo _projectRepo;
+        private readonly ConfigSystemRepo _configSystemRepo;
+        
 
         public RequestInvoiceDetailController(
             RequestInvoiceRepo requestInvoiceRepo,
@@ -34,7 +36,9 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
             EmployeeRepo employeeRepo,
             ProductSaleRepo productSaleRepo,
             ProjectRepo projectRepo,
-            ConfigSystemRepo configSystemRepo
+            ConfigSystemRepo configSystemRepo,
+            RequestInvoiceStatusLinkRepo requestInvoiceStatusLinkRepo
+
             )
         {
             //_uploadPath = Path.Combine(environment.ContentRootPath, "Uploads", "RequestInvoice");
@@ -49,6 +53,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
             _productSaleRepo = productSaleRepo;
             _projectRepo = projectRepo;
             _configSystemRepo = configSystemRepo;
+            _requestInvoiceStatusLinkRepo = requestInvoiceStatusLinkRepo;
         }
 
         [HttpGet("get-employee")]
@@ -192,6 +197,13 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                 if (dto.RequestInvoices.ID <= 0)
                 {
                     await _requestInvoiceRepo.CreateAsync(dto.RequestInvoices);
+
+                    RequestInvoiceStatusLink statusLinkModelDefault = new RequestInvoiceStatusLink();
+                    statusLinkModelDefault.RequestInvoiceID = dto.RequestInvoices.ID;
+                    statusLinkModelDefault.StatusID = 1;
+                    statusLinkModelDefault.IsApproved = 1;
+                    statusLinkModelDefault.IsCurrent = true;
+                    _requestInvoiceStatusLinkRepo.Create(statusLinkModelDefault);
                 }
                 else
                 {

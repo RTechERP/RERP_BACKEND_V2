@@ -335,7 +335,7 @@ namespace RERPAPI.Controllers
         }
 
         [HttpPost("vehicle-booking-cancel")]
-        public IActionResult VehicleBookingCancel(int vehicleBookingId)
+        public IActionResult VehicleBookingCancel([FromBody] int vehicleBookingId)
         {
             try
             {
@@ -404,6 +404,12 @@ namespace RERPAPI.Controllers
                 bool isProblem = _vehicleBookingManagementRepo.IsProblem(vehicleBooking);
 
                 var cateText = vehicleBooking.Category == 1 ? "đến" : "giao đến";
+                //var cateText = (vehicleBooking.Category == 1 || vehicleBooking.Category == 4 || vehicleBooking.Category == 5)
+                //                ? "đến"
+                //                : (vehicleBooking.Category == 6 || vehicleBooking.Category == 7)
+                //                    ? "đến lấy"
+                //                    : "giao đến";
+
 
                 //  Validate thời gian cần đến 
                 if (!vehicleBooking.TimeNeedPresent.HasValue)
@@ -420,7 +426,7 @@ namespace RERPAPI.Controllers
                 }
 
                 // Validate thời gian xuất phát
-                if (vehicleBooking.Category != 2 && vehicleBooking.Category != 6)
+                if (vehicleBooking.Category != 2 && vehicleBooking.Category != 6 && vehicleBooking.Category != 7 && vehicleBooking.Category != 8)
                 {
                     if (!vehicleBooking.DepartureDate.HasValue)
                         return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng nhập Thời gian xuất phát!"));
@@ -503,15 +509,41 @@ namespace RERPAPI.Controllers
                         {
                             var returnBooking = new VehicleBookingManagement
                             {
+                                // COPY NGUYÊN TỪ PHIẾU ĐI
+                                VehicleType = vehicleBooking.VehicleType,
+                                VehicleManagementID = vehicleBooking.VehicleManagementID,
+                                EmployeeID = vehicleBooking.EmployeeID,
+                                BookerVehicles = vehicleBooking.BookerVehicles,
+                                PhoneNumber = vehicleBooking.PhoneNumber,
+
+                                PassengerEmployeeID = vehicleBooking.PassengerEmployeeID,
+                                PassengerCode = vehicleBooking.PassengerCode,
+                                PassengerName = vehicleBooking.PassengerName,
+                                PassengerDepartment = vehicleBooking.PassengerDepartment,
+                                PassengerPhoneNumber = vehicleBooking.PassengerPhoneNumber,
+
+                                Note = vehicleBooking.Note,
+                                ProjectID = vehicleBooking.ProjectID,
+
+                                //FIELD KHÁC CHO PHIẾU VỀ 
                                 ParentID = vehicleBooking.ID,
                                 Category = 5,
+                                Status = 1,
+
                                 CompanyNameArrives = vehicleBooking.DepartureAddress,
                                 DepartureAddress = vehicleBooking.CompanyNameArrives,
                                 DepartureDate = vehicleBooking.TimeReturn,
+                                TimeNeedPresent = vehicleBooking.TimeNeedPresent,
+
                                 Province = vehicleBooking.Province,
                                 SpecificDestinationAddress = vehicleBooking.SpecificDestinationAddress,
-                                Status = 1,
-                                CreatedDate = DateTime.Now
+
+                                //  FLAG 
+                                IsCancel = false,
+                                IsSend = false,
+                                IsNotifiled = false,
+                                IsProblemArises = false,
+
                             };
 
                             _vehicleBookingManagementRepo.Create(returnBooking);
@@ -522,12 +554,14 @@ namespace RERPAPI.Controllers
                     {
                         string categoryText = vehicleBooking.Category switch
                         {
-                            1 => "Đăng ký đi",
-                            2 => "Đăng ký giao hàng",
+                            1 => "Đăng ký người đi ",
+                            2 => "Đăng ký giao hàng thương mại",
                             3 => "Xếp xe về",
                             4 => "Chủ động phương tiện",
-                            5 => "Đăng ký về",
-                            6 => "Đăng ký lấy hàng",
+                            5 => "Đăng ký người về",
+                            6 => "Đăng ký lấy hàng thương mại",
+                            7 => "Đăng ký lấy hàng Demo/triển Lãm",
+                            8 => "Đăng ký giao hàng Demo/triển lãm",
                             _ => ""
                         };
 
@@ -548,45 +582,146 @@ namespace RERPAPI.Controllers
             }
         }
 
+        //[HttpPost("upload-file")]
+        //public async Task<IActionResult> UploadFile(
+        //    int vehicleBookingId,
+        //    [FromForm] List<IFormFile> files)
+        //{
+        //    try
+        //    {
+        //        var booking = _vehicleBookingManagementRepo.GetByID(vehicleBookingId);
+        //        if (booking == null)
+        //            return BadRequest(ApiResponseFactory.Fail(null, "Không tồn tại đơn đăng ký xe"));
+
+        //        string pathServer = @"\\192.168.1.190\Common\11. HCNS\DatXe";
+        //        string folder = $"DANGKYDATXENGAY{booking.CreatedDate:dd.MM.yyyy}";
+        //        string pathUpload = Path.Combine(pathServer, folder);
+
+        //        if (!Directory.Exists(pathUpload))
+        //            Directory.CreateDirectory(pathUpload);
+
+        //        foreach (var file in files)
+        //        {
+        //            var filePath = Path.Combine(pathUpload, file.FileName);
+        //            using var stream = new FileStream(filePath, FileMode.Create);
+        //            await file.CopyToAsync(stream);
+
+        //            await _vehicleBookingFileRepo.CreateAsync(new VehicleBookingFile
+        //            {
+        //                VehicleBookingID = booking.ID,
+        //                FileName = file.FileName,
+        //                ServerPath = pathUpload,
+        //            });
+        //        }
+
+        //        return Ok(ApiResponseFactory.Success(null, "Upload file thành công"));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
+
+        #region Upload file Vehicle Booking
         [HttpPost("upload-file")]
-        public async Task<IActionResult> UploadFile(
-            int vehicleBookingId,
-            [FromForm] List<IFormFile> files)
+        [DisableRequestSizeLimit]
+        public async Task<IActionResult> UploadVehicleBookingFile(int vehicleBookingId)
         {
             try
             {
+                var form = await Request.ReadFormAsync();
+                var key = form["key"].ToString();
+                var files = form.Files;
+
+                if (string.IsNullOrWhiteSpace(key))
+                    return BadRequest(ApiResponseFactory.Fail(null, "Key không được để trống"));
+
+                if (files == null || files.Count == 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Danh sách file không được để trống"));
+
                 var booking = _vehicleBookingManagementRepo.GetByID(vehicleBookingId);
                 if (booking == null)
                     return BadRequest(ApiResponseFactory.Fail(null, "Không tồn tại đơn đăng ký xe"));
 
-                string pathServer = @"\\192.168.1.190\Common\11. HCNS\DatXe";
-                string folder = $"DANGKYDATXENGAY{booking.CreatedDate:dd.MM.yyyy}";
-                string pathUpload = Path.Combine(pathServer, folder);
+                // Lấy đường dẫn upload từ cấu hình
+                var uploadPath = _configSystemRepo.GetUploadPathByKey(key);
+                if (string.IsNullOrWhiteSpace(uploadPath))
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: {key}"));
 
-                if (!Directory.Exists(pathUpload))
-                    Directory.CreateDirectory(pathUpload);
+                // Xử lý subPath
+                var subPathRaw = form["subPath"].ToString()?.Trim() ?? "";
+                string targetFolder = uploadPath;
+
+                if (!string.IsNullOrWhiteSpace(subPathRaw))
+                {
+                    var separator = Path.DirectorySeparatorChar;
+                    var segments = subPathRaw
+                        .Replace('/', separator)
+                        .Replace('\\', separator)
+                        .Split(separator, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(seg =>
+                        {
+                            var invalidChars = Path.GetInvalidFileNameChars();
+                            var cleaned = new string(seg.Where(c => !invalidChars.Contains(c)).ToArray());
+                            cleaned = cleaned.Replace("..", "").Trim();
+                            return cleaned;
+                        })
+                        .Where(s => !string.IsNullOrWhiteSpace(s))
+                        .ToArray();
+
+                    if (segments.Length > 0)
+                        targetFolder = Path.Combine(uploadPath, Path.Combine(segments));
+                }
+                else
+                {
+                    targetFolder = Path.Combine(
+                        uploadPath,
+                        $"DANGKYDATXENGAY{booking.CreatedDate:dd.MM.yyyy}"
+                    );
+                }
+
+                if (!Directory.Exists(targetFolder))
+                    Directory.CreateDirectory(targetFolder);
+
+                var processedFiles = new List<VehicleBookingFile>();
 
                 foreach (var file in files)
                 {
-                    var filePath = Path.Combine(pathUpload, file.FileName);
-                    using var stream = new FileStream(filePath, FileMode.Create);
-                    await file.CopyToAsync(stream);
+                    if (file.Length <= 0) continue;
 
-                    await _vehicleBookingFileRepo.CreateAsync(new VehicleBookingFile
+                    var fileExtension = Path.GetExtension(file.FileName);
+                    var originalFileName = Path.GetFileNameWithoutExtension(file.FileName);
+                    var uniqueFileName = $"{originalFileName}{fileExtension}";
+                    var fullPath = Path.Combine(targetFolder, uniqueFileName);
+
+                    using (var stream = new FileStream(fullPath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+
+                    var bookingFile = new VehicleBookingFile
                     {
                         VehicleBookingID = booking.ID,
-                        FileName = file.FileName,
-                        ServerPath = pathUpload,
-                    });
+                        FileName = uniqueFileName,
+                        ServerPath = targetFolder,
+                    };
+
+                    await _vehicleBookingFileRepo.CreateAsync(bookingFile);
+                    processedFiles.Add(bookingFile);
                 }
 
-                return Ok(ApiResponseFactory.Success(null, "Upload file thành công"));
+                return Ok(ApiResponseFactory.Success(
+                    processedFiles,
+                    $"{processedFiles.Count} tệp đã được tải lên thành công"
+                ));
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi upload file: {ex.Message}"));
             }
         }
+        #endregion
+
 
         [HttpPost("remove-file")]
         public async Task<IActionResult> RemoveFile([FromBody] List<int> fileIds)

@@ -289,56 +289,174 @@ namespace RERPAPI.Controllers.HRM
         }
 
 
+        //[HttpPost("upload-file")]
+        //public async Task<IActionResult> UploadFile(int id, [FromForm] List<IFormFile> files)
+        //{
+        //    try
+        //    {
+        //        var tracking = _trackingMarksRepo.GetByID(id);
+        //        if (tracking == null)
+        //            return BadRequest(ApiResponseFactory.Fail(null, "Không tồn tại dữ liệu"));
+
+        //        if (tracking.EmployeeID != _currentUser.EmployeeID)
+        //            return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền upload"));
+
+        //        var config = _configSystemRepo.GetAll()
+        //            .FirstOrDefault(x => x.KeyName == "TrackingMarks");
+
+        //        if (config == null || string.IsNullOrEmpty(config.KeyValue))
+        //            return BadRequest(ApiResponseFactory.Fail(null, "Chưa cấu hình đường dẫn"));
+
+        //        string pathUpload = Path.Combine(
+        //            config.KeyValue.Trim(),
+        //            $"NĂM {tracking.RegisterDate.Value.Year}",
+        //            $"THÁNG {tracking.RegisterDate.Value:MM.yyyy}",
+        //            tracking.RegisterDate.Value.ToString("dd.MM.yyyy")
+        //        );
+
+        //        Directory.CreateDirectory(pathUpload);
+
+        //        foreach (var file in files)
+        //        {
+        //            string fullPath = Path.Combine(pathUpload, file.FileName);
+        //            using var stream = new FileStream(fullPath, FileMode.Create);
+        //            await file.CopyToAsync(stream);
+
+        //            _trackingMarksFileRepo.Create(new TrackingMarksFile
+        //            {
+        //                TrackingMarksID = id,
+        //                FileName = file.FileName,
+        //                ServerPath = pathUpload,
+        //                CreatedBy = _currentUser.LoginName,
+        //                CreatedDate = DateTime.Now
+        //            });
+        //        }
+
+        //        return Ok(ApiResponseFactory.Success(null, "Upload file thành công"));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
+        //TrackingMarksFile, RegisterIdeaFile, VehicleBookingFile
         [HttpPost("upload-file")]
-        public async Task<IActionResult> UploadFile(int id, [FromForm] List<IFormFile> files)
+        [DisableRequestSizeLimit]
+        public async Task<IActionResult> UploadFile(int id)
         {
             try
             {
+                var form = await Request.ReadFormAsync();
+                var key = form["key"].ToString();
+                var files = form.Files;
+
+                // Validate input
+                if (id <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Id không hợp lệ"));
+
+                if (string.IsNullOrWhiteSpace(key))
+                    return BadRequest(ApiResponseFactory.Fail(null, "Key không được để trống"));
+
+                if (files == null || files.Count == 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Danh sách file không được để trống"));
+
+                // Check tồn tại dữ liệu
                 var tracking = _trackingMarksRepo.GetByID(id);
                 if (tracking == null)
                     return BadRequest(ApiResponseFactory.Fail(null, "Không tồn tại dữ liệu"));
 
+                // Check quyền upload
                 if (tracking.EmployeeID != _currentUser.EmployeeID)
                     return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền upload"));
 
-                var config = _configSystemRepo.GetAll()
-                    .FirstOrDefault(x => x.KeyName == "TrackingMarks");
+                // Lấy đường dẫn upload từ config system (GIỐNG POKH)
+                var uploadPath = _configSystemRepo.GetUploadPathByKey(key);
+                if (string.IsNullOrWhiteSpace(uploadPath))
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: {key}"));
 
-                if (config == null || string.IsNullOrEmpty(config.KeyValue))
-                    return BadRequest(ApiResponseFactory.Fail(null, "Chưa cấu hình đường dẫn"));
+                // Xử lý subPath (nếu có)
+                var subPathRaw = form["subPath"].ToString()?.Trim() ?? "";
+                string targetFolder = uploadPath;
 
-                string pathUpload = Path.Combine(
-                    config.KeyValue.Trim(),
-                    $"NĂM {tracking.RegisterDate.Value.Year}",
-                    $"THÁNG {tracking.RegisterDate.Value:MM.yyyy}",
-                    tracking.RegisterDate.Value.ToString("dd.MM.yyyy")
-                );
+                if (!string.IsNullOrWhiteSpace(subPathRaw))
+                {
+                    var separator = Path.DirectorySeparatorChar;
+                    var segments = subPathRaw
+                        .Replace('/', separator)
+                        .Replace('\\', separator)
+                        .Split(separator, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(seg =>
+                        {
+                            var invalidChars = Path.GetInvalidFileNameChars();
+                            var cleaned = new string(seg.Where(c => !invalidChars.Contains(c)).ToArray());
+                            cleaned = cleaned.Replace("..", "").Trim();
+                            return cleaned;
+                        })
+                        .Where(s => !string.IsNullOrWhiteSpace(s))
+                        .ToArray();
 
-                Directory.CreateDirectory(pathUpload);
+                    if (segments.Length > 0)
+                        targetFolder = Path.Combine(uploadPath, Path.Combine(segments));
+                }
+                else
+                {
+                    // Folder mặc định (GIỐNG NB{ID} của POKH)
+                    targetFolder = Path.Combine(
+                        uploadPath,
+                        $"TM{id}"
+                    );
+                }
+
+                if (!Directory.Exists(targetFolder))
+                    Directory.CreateDirectory(targetFolder);
+
+                var processedFiles = new List<TrackingMarksFile>();
 
                 foreach (var file in files)
                 {
-                    string fullPath = Path.Combine(pathUpload, file.FileName);
-                    using var stream = new FileStream(fullPath, FileMode.Create);
-                    await file.CopyToAsync(stream);
+                    if (file.Length <= 0)
+                        continue;
 
-                    _trackingMarksFileRepo.Create(new TrackingMarksFile
+                    // Check trùng file
+                    bool exists = _trackingMarksFileRepo.GetAll()
+                        .Any(x => x.TrackingMarksID == id && x.FileName == file.FileName);
+
+                    if (exists)
+                        continue;
+
+                    var fileExtension = Path.GetExtension(file.FileName);
+                    var originalName = Path.GetFileNameWithoutExtension(file.FileName);
+                    var uniqueFileName = $"{originalName}{fileExtension}";
+                    var fullPath = Path.Combine(targetFolder, uniqueFileName);
+
+                    // Lưu file trực tiếp (GIỐNG POKH)
+                    using (var stream = new FileStream(fullPath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+
+                    var fileEntity = new TrackingMarksFile
                     {
                         TrackingMarksID = id,
-                        FileName = file.FileName,
-                        ServerPath = pathUpload,
-                        CreatedBy = _currentUser.LoginName,
-                        CreatedDate = DateTime.Now
-                    });
+                        FileName = uniqueFileName,
+                        ServerPath = targetFolder,
+                    };
+
+                    await _trackingMarksFileRepo.CreateAsync(fileEntity);
+                    processedFiles.Add(fileEntity);
                 }
 
-                return Ok(ApiResponseFactory.Success(null, "Upload file thành công"));
+                return Ok(ApiResponseFactory.Success(
+                    processedFiles,
+                    $"{processedFiles.Count} file đã được upload thành công"
+                ));
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi upload file: {ex.Message}"));
             }
         }
+
 
 
         [HttpGet("download-file")]
