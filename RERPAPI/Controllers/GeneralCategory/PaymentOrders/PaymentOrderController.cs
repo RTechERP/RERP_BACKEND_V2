@@ -101,7 +101,10 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             {
                 //Get chi tiết đề nghị
                 var dataDetail = SQLHelper<object>.ProcedureToList("spGetPaymentOrderByID", new string[] { "@ID" }, new object[] { id });
+
+                var paymentOrder = SQLHelper<object>.GetListData(dataDetail, 0);
                 var details = SQLHelper<object>.GetListData(dataDetail, 1);
+                var signs = SQLHelper<object>.GetListData(dataDetail, 2);
 
                 //Get file đính kèm
                 var files = SQLHelper<object>.GetListData(dataDetail, 3);
@@ -111,7 +114,9 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
 
                 return Ok(ApiResponseFactory.Success(new
                 {
+                    paymentOrder,
                     details,
+                    signs,
                     files,
                     fileBankSlips
                 }, ""));
