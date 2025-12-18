@@ -6,6 +6,7 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.HRM;
 using ZXing;
 
 namespace RERPAPI.Controllers.Old
@@ -17,11 +18,16 @@ namespace RERPAPI.Controllers.Old
     {
         private readonly EmployeeFoodOrderRepo _employeeFoodOrderRepo;
         private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
+        PhasedAllocationPersonRepo _phaseRepo;
+        PhasedAllocationPersonDetailRepo _phaseDetailRepo;
 
-        public EmployeeFoodOrderController(EmployeeFoodOrderRepo employeeFoodOrderRepo, vUserGroupLinksRepo vUserGroupLinksRepo)
+        public EmployeeFoodOrderController(EmployeeFoodOrderRepo employeeFoodOrderRepo, vUserGroupLinksRepo vUserGroupLinksRepo , PhasedAllocationPersonRepo phaseRepo, PhasedAllocationPersonDetailRepo phasedAllocationPersonDetailRepo
+)
         {
+            _phaseRepo = phaseRepo;
             _employeeFoodOrderRepo = employeeFoodOrderRepo;
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
+            _phaseDetailRepo = phasedAllocationPersonDetailRepo;
         }
 
         [HttpGet("day-of-week")]
@@ -185,7 +191,28 @@ namespace RERPAPI.Controllers.Old
                 {
                     employeeID = currentUser.EmployeeID;
                 }
-             
+                bool exist = true;
+                if (foodOrder.IsApproved==true&& foodOrder.Location==1)
+                {
+                      exist = _employeeFoodOrderRepo.AddPhaseAllocation(foodOrder);
+                }
+                var codePhase = _phaseRepo.GenPhaseAllocationCode(foodOrder.DateOrder);
+                PhasedAllocationPerson codePhaseExist = _phaseRepo.GetAll(x => x.Code == codePhase).FirstOrDefault() ?? new PhasedAllocationPerson();
+                var phaseAllocationID = codePhaseExist.ID;
+                if(exist == false)
+                {
+
+                    var data = _phaseDetailRepo.GetAll(x => x.EmployeeID == foodOrder.EmployeeID && x.PhasedAllocationPersonID == phaseAllocationID);
+                    var detailExist = _phaseDetailRepo.GetAll(x => x.EmployeeID == foodOrder.EmployeeID && x.PhasedAllocationPersonID == phaseAllocationID)
+                    .FirstOrDefault() ?? new PhasedAllocationPersonDetail();
+
+                    if (detailExist.ID<=0)
+                    {
+                        _employeeFoodOrderRepo.AddPhaseAllocationDetail(foodOrder, phaseAllocationID);
+                    }
+
+                }    
+
                 var today10AM = new DateTime(now.Year, now.Month, now.Day, 10, 0, 0);
 
                 if (vUserHR == null && now > today10AM)
@@ -199,7 +226,7 @@ namespace RERPAPI.Controllers.Old
                 var checkExist = _employeeFoodOrderRepo
                 .GetAll(x => x.EmployeeID == foodOrder.EmployeeID
                           && x.DateOrder.Value.Date == foodOrder.DateOrder.Value.Date 
-                          && x.IsApproved != true 
+                          && foodOrder.IsApproved != true 
                           && x.IsDeleted != true)
                 .FirstOrDefault();
 

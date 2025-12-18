@@ -13,5 +13,11 @@ namespace RERPAPI.Repo.GenericEntity.HRM
         public PhasedAllocationPersonRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
+        public string GenPhaseAllocationCode(DateTime? phaseDate)
+        {
+            var date = phaseDate.Value.Date;
+            string phaseCode = $"ComCa{date:ddMMyyyy}";
+            return phaseCode;
+        }
     }
 }

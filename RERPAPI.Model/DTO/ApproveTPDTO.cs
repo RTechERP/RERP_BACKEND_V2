@@ -23,6 +23,7 @@ namespace RERPAPI.Model.DTO
             public bool? IsApprovedHR { get; set; }
             public bool? IsApprovedBGD { get; set; }
             public int? IsCancelRegister { get; set; }
+            public string? ReasonDeciline { get; set; }
             public int? TType { get; set; }           
 
             public bool? IsSeniorApproved { get; set; } 
