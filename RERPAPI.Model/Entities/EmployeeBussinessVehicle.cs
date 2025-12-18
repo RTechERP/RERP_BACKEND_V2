@@ -26,4 +26,6 @@ public partial class EmployeeBussinessVehicle
     public string? Note { get; set; }
 
     public string? VehicleName { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }
