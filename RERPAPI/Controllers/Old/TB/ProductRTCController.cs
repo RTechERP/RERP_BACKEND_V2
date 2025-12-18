@@ -83,7 +83,8 @@ namespace RERPAPI.Controllers.Old.TB
         {
             try
             {
-                List<ProductGroupRTC> productGroup = _productGroupRTCRepo.GetAll(x => x.WarehouseType == warehouseType && x.IsDeleted == false);
+                List<ProductGroupRTC> productGroup = _productGroupRTCRepo.GetAll(x => x.WarehouseType == warehouseType 
+                                                                                    && x.IsDeleted == false);
                 //.Where(x => x.IsDeleted == false)
                 //.ToList();
 

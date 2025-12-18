@@ -3,26 +3,26 @@ using System.Collections.Generic;
 
 namespace RERPAPI.Model.Entities;
 
-public partial class BookingRoom
+public partial class PhasedAllocationPersonDetail
 {
     public int ID { get; set; }
 
-    public int? MeetingRoomID { get; set; }
-
-    public DateTime? DateRegister { get; set; }
+    public int? PhasedAllocationPersonID { get; set; }
 
     public int? EmployeeID { get; set; }
 
-    public DateTime? StartTime { get; set; }
-
-    public DateTime? EndTime { get; set; }
-
-    public string? Content { get; set; }
+    public DateTime? DateReceive { get; set; }
 
     /// <summary>
-    /// 0:Chưa duyệt; 1:đã duyệt
+    /// 0: Chưa nhận; 1: Đã nhận
     /// </summary>
-    public int? IsApproved { get; set; }
+    public int? StatusReceive { get; set; }
+
+    public int? Quantity { get; set; }
+
+    public string? UnitName { get; set; }
+
+    public string? ContentReceive { get; set; }
 
     public string? CreatedBy { get; set; }
 
@@ -31,8 +31,6 @@ public partial class BookingRoom
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
-
-    public int? DepartmentID { get; set; }
 
     public bool? IsDeleted { get; set; }
 }

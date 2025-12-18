@@ -58,4 +58,6 @@ public partial class DailyReportTechnical
     public int? PercentComplete { get; set; }
 
     public decimal? TotalHourOT { get; set; }
+
+    public string? Location { get; set; }
 }
