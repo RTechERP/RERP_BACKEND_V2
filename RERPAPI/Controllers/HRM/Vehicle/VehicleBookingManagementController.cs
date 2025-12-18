@@ -529,6 +529,20 @@ namespace RERPAPI.Controllers
                                 ParentID = vehicleBooking.ID,
                                 Category = 5,
                                 Status = 1,
+                                ApprovedTBP = vehicleBooking.ApprovedTBP,
+                                IsApprovedTBP = vehicleBooking.IsApprovedTBP,
+                                ProblemArises = vehicleBooking.ProblemArises,
+                                DeliverName = vehicleBooking.DeliverName,
+                                DeliverPhoneNumber = vehicleBooking.DeliverPhoneNumber,
+                                ReceiverName = vehicleBooking.ReceiverName,
+                                ReceiverPhoneNumber = vehicleBooking.ReceiverPhoneNumber,
+
+                                PackageWeight = vehicleBooking.PackageWeight,
+                                PackageSize = vehicleBooking.PackageSize,
+                                PackageQuantity = vehicleBooking.PackageQuantity,
+                                PackageName = vehicleBooking.PackageName,
+                                
+                                
 
                                 CompanyNameArrives = vehicleBooking.DepartureAddress,
                                 DepartureAddress = vehicleBooking.CompanyNameArrives,
@@ -542,7 +556,7 @@ namespace RERPAPI.Controllers
                                 IsCancel = false,
                                 IsSend = false,
                                 IsNotifiled = false,
-                                IsProblemArises = false,
+                                IsProblemArises = vehicleBooking.IsProblemArises,
 
                             };
 
