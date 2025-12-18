@@ -6,11 +6,13 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Model.Entities;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace RERPAPI.Controllers.Course
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class CourseController : ControllerBase
     {
         // lấy danh sách nhân viên cho bảng trong tổng hợp khóa học 

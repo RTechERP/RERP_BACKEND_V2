@@ -61,23 +61,28 @@ namespace RERPAPI.Repo.GenericEntity
             if (!tt.Contains("."))
                 return 0;
 
-            // Tách theo mọi mức
             var parts = tt.Split('.', StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length <= 1)
                 return 0;
 
-            // TT cha (ví dụ: 3.4.2 → 3.4)
-            string parentTT = string.Join(".", parts.Take(parts.Length - 1));
+            // Tìm cha từ cấp gần nhất đến cấp gốc
+            // Ví dụ: 1.1.1 → tìm 1.1 → không có → tìm 1 → không có → return 0
+            for (int i = parts.Length - 1; i > 0; i--)
+            {
+                string parentTT = string.Join(".", parts.Take(i));
 
-            var parent = GetAll(x =>
-                x.TT != null &&
-                x.TT.Trim() == parentTT &&
-                x.ProjectPartListVersionID == versionId &&
-                (x.ProjectTypeID ?? 0) == projectTypeId &&
-                x.IsDeleted != true
-            ).FirstOrDefault();
+                var parent = GetAll(x =>
+                    x.TT != null &&
+                    x.TT.Trim() == parentTT &&
+                    x.ProjectPartListVersionID == versionId &&
+                    x.IsDeleted != true
+                ).FirstOrDefault();
 
-            return parent?.ID ?? 0;
+                if (parent != null)
+                    return parent.ID;
+            }
+
+            return 0;
         }
         public bool Validate(ProjectPartList item, out string message)
         {
@@ -1017,6 +1022,7 @@ namespace RERPAPI.Repo.GenericEntity
                     $"Mã thiết bị [{item.ProductCode}] đã có TÍCH XANH.\n" +
                     $"Các trường không khớp:\n {string.Join("", errors)}\n" +
                     $"Vui lòng kiểm tra lại!";
+               
                 return false;
             }
 

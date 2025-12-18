@@ -1,4 +1,5 @@
 ﻿using DocumentFormat.OpenXml.Bibliography;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Identity.Client;
@@ -6,6 +7,7 @@ using NPOI.HSSF.Record.Chart;
 using NPOI.OpenXmlFormats.Dml;
 using NPOI.SS.Formula.Functions;
 using NPOI.SS.Util;
+using OfficeOpenXml;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -13,19 +15,25 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Project;
+using System.Text.RegularExpressions;
 
 namespace RERPAPI.Controllers.Old.Technical
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class DailyReportTechController : ControllerBase
     {
         DailyReportTechnicalRepo _dailyReportTechnicalRepo;
         ProjectItemRepo _projectItemRepo;
-        public DailyReportTechController(DailyReportTechnicalRepo dailyReportTechnicalRepo, ProjectItemRepo projectItemRepo)
+        EmployeeSendEmailRepo _employeeSendEmailRepo;
+        private IConfiguration _configuration;
+        public DailyReportTechController(DailyReportTechnicalRepo dailyReportTechnicalRepo, ProjectItemRepo projectItemRepo, EmployeeSendEmailRepo employeeSendEmailRepo, IConfiguration configuration)
         {
             _dailyReportTechnicalRepo = dailyReportTechnicalRepo;
             _projectItemRepo = projectItemRepo;
+            _employeeSendEmailRepo = employeeSendEmailRepo;
+            _configuration = configuration;
         }
         [HttpPost("get-daily-report-tech")]
         public IActionResult GetDailyReportHr([FromBody] DailyReportTechParam request)
@@ -243,6 +251,186 @@ namespace RERPAPI.Controllers.Old.Technical
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
+        [HttpPost("send-email-report")]
+        public async Task<IActionResult> SendEmailReport([FromBody] SendEmailReportRequestParam request)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                // Kiểm tra điều kiện gửi email (chỉ team 10 - có thể điều chỉnh theo yêu cầu)
+                if (currentUser.TeamOfUser != 10)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Bạn không thuộc team được phép gửi email báo cáo."));
+                }
+
+                // Validate request
+                if (string.IsNullOrWhiteSpace(request.Body))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Nội dung email không được để trống!"));
+                }
+
+                // Tạo subject
+                var dateReport = request.DateReport ?? DateTime.Now;
+                var subject = $"{currentUser.FullName} - BÁO CÁO CÔNG VIỆC NGÀY {dateReport:dd/MM/yyyy}".ToUpper();
+
+                // Chuyển đổi \n thành <br /> nếu body chưa phải HTML
+                var emailBody = request.Body;
+                if (!emailBody.Contains("<br") && !emailBody.Contains("<div"))
+                {
+                    emailBody = $"<div>{emailBody.Replace("\n", "<br />")}</div>";
+                }
+                var email = new
+                {
+                    Subject = subject,
+                    Body = emailBody,
+                    //EmailTo = "nguyenvan.thao@rtc.edu.vn", // Email người nhận
+                    EmailTo = "nhubinh2104@gmail.com", // Email người nhận        
+                    StatusSend = 1, // 1: Đã gửi
+                    DateSend = DateTime.Now,
+                    EmployeeID = currentUser.EmployeeID,
+                    Receiver = 84,
+                };
+                var emailEntity = new EmployeeSendEmail
+                {
+                    Subject = email.Subject,
+                    Body = email.Body,
+                    EmailTo = email.EmailTo,
+                    EmailCC = "",
+                    StatusSend = email.StatusSend,
+                    DateSend = email.DateSend,
+                    EmployeeID = email.EmployeeID,
+                    Receiver = email.Receiver
+                };
+                await _employeeSendEmailRepo.CreateAsync(emailEntity);
+
+
+                return Ok(ApiResponseFactory.Success(null, "Gửi email thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi khi gửi email: {ex.Message}"));
+            }
+        }
+
+        [HttpPost("export-to-excel")]
+        public IActionResult ExportToExcel([FromBody] ExportExcelDailyReportTechRequest request)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                if (request == null)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu request không hợp lệ!"));
+                }
+
+                var dateStart = request.DateStart ?? DateTime.Now.AddDays(-30);
+                var dateEnd = request.DateEnd ?? DateTime.Now;
+
+                dateStart = new DateTime(dateStart.Year, dateStart.Month, dateStart.Day, 0, 0, 0);
+                dateEnd = new DateTime(dateEnd.Year, dateEnd.Month, dateEnd.Day, 23, 59, 59);
+
+                var data = SQLHelper<object>.ProcedureToList("spExportToExcelDRT",
+                    new string[] { "@DateStart", "@DateEnd", "@TeamID" },
+                    new object[] { dateStart, dateEnd, request.TeamID ?? "" });
+                var listExport = SQLHelper<Object>.GetListData(data, 0);
+
+                string teamName = request.TeamName ?? "All";
+                teamName = Regex.Replace(teamName, @"[^\w\-_\.]", "_");
+                string fileName = $"DanhSachBaoCaoCongViec_{teamName}_{dateStart:ddMMyyyy}_{dateEnd:ddMMyyyy}.xlsx";
+
+                string sheetNewName = $"Tháng {dateStart.Month} - {dateEnd.Year}";
+
+                var templateFolder = _configuration.GetValue<string>("PathTemplate");
+
+                if (string.IsNullOrWhiteSpace(templateFolder))
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy đường dẫn thư mục template trên server!"));
+
+                string templateFileName = _configuration.GetValue<string>("DailyReportTechinial") ?? "DS_DailyReport.xlsx";
+                string templatePath = Path.Combine(templateFolder, "ExportExcel", templateFileName);
+
+                if (!System.IO.File.Exists(templatePath))
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy file mẫu: {templatePath}"));
+
+                // ✅ Set license giống API ExportAllocationAssetReport
+                ExcelPackage.License.SetNonCommercialOrganization("RTC");
+
+                using var stream = new FileStream(templatePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                using var package = new ExcelPackage(stream);
+                var ws = package.Workbook.Worksheets[0];
+
+                ws.Name = sheetNewName;
+
+                int startRow = 4;
+
+                var firstItem = listExport.Count > 0 ? listExport[0] as IDictionary<string, object> : null;
+                var columnKeys = firstItem?.Keys.ToList() ?? new List<string>();
+                int colCount = columnKeys.Count;
+
+                for (int i = 0; i < listExport.Count; i++)
+                {
+                    var row = listExport[i] as IDictionary<string, object>;
+                    if (row == null) continue;
+
+                    int currentRow = startRow + i;
+
+                    for (int j = 0; j < columnKeys.Count; j++)
+                    {
+                        string columnKey = columnKeys[j];
+                        var value = row.ContainsKey(columnKey) ? row[columnKey] : null;
+
+                        if (value == null || value == DBNull.Value)
+                        {
+                            ws.Cells[currentRow, j + 1].Value = "";
+                        }
+                        else
+                        {
+                            if (value is DateTime)
+                            {
+                                ws.Cells[currentRow, j + 1].Value = ((DateTime)value).ToString("dd/MM/yyyy");
+                            }
+                            else if (value is DateTime?)
+                            {
+                                var dateValue = (DateTime?)value;
+                                ws.Cells[currentRow, j + 1].Value = dateValue.HasValue ? dateValue.Value.ToString("dd/MM/yyyy") : "";
+                            }
+                            else
+                            {
+                                ws.Cells[currentRow, j + 1].Value = value.ToString();
+                            }
+                        }
+                    }
+                }
+
+                if (listExport.Count > 0)
+                {
+                    int endRow = startRow + listExport.Count - 1;
+
+                    if (colCount > 0)
+                    {
+                        ws.Cells[startRow, 1, endRow, colCount].Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                        ws.Cells[startRow, 1, endRow, colCount].Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                        ws.Cells[startRow, 1, endRow, colCount].Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                        ws.Cells[startRow, 1, endRow, colCount].Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                    }
+                }
+
+                var outputStream = new MemoryStream();
+                package.SaveAs(outputStream);
+                outputStream.Position = 0;
+
+                return File(outputStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi khi xuất Excel: {ex.Message}"));
             }
         }
     }
