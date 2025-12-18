@@ -40,13 +40,15 @@ namespace RERPAPI.Controllers.Old.Technical
         {
             try
             {
-
+                // Force convert về local timezone hoặc UTC
+                var dateStart = request.dateStart?.ToLocalTime() ?? DateTime.Now.Date;
+                var dateEnd = request.dateEnd?.ToLocalTime() ?? DateTime.Now.Date.AddDays(1).AddTicks(-1);
                 var keyword = (request.keyword ?? string.Empty).Trim();
 
                 var dataTech = SQLHelper<object>.ProcedureToList(
                     "spGetDailyReportTechnical",
                     new[] { "@DateStart", "@DateEnd", "@TeamID", "@Keyword", "@UserID", "@DepartmentID" },
-                    new object[] { request.dateStart ?? DateTime.Now, request.dateEnd ?? DateTime.Now, request.teamID, keyword, request.userID, request.departmentID }
+                    new object[] { dateStart, dateEnd, request.teamID, keyword, request.userID, request.departmentID }
                 );
                 var technical = SQLHelper<object>.GetListData(dataTech, 0);
                 return Ok(ApiResponseFactory.Success(technical,
@@ -289,8 +291,8 @@ namespace RERPAPI.Controllers.Old.Technical
                 {
                     Subject = subject,
                     Body = emailBody,
-                    //EmailTo = "nguyenvan.thao@rtc.edu.vn", // Email người nhận
-                    EmailTo = "nhubinh2104@gmail.com", // Email người nhận        
+                    EmailTo = "nguyenvan.thao@rtc.edu.vn", // Email người nhận
+                    //EmailTo = "nhubinh2104@gmail.com", // Email người nhận        
                     StatusSend = 1, // 1: Đã gửi
                     DateSend = DateTime.Now,
                     EmployeeID = currentUser.EmployeeID,
