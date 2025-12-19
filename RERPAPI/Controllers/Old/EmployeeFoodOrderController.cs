@@ -215,7 +215,7 @@ namespace RERPAPI.Controllers.Old
 
                 var today10AM = new DateTime(now.Year, now.Month, now.Day, 10, 0, 0);
 
-                if (vUserHR == null && now > today10AM)
+                if (vUserHR == null && now > today10AM&&currentUser.IsAdmin!=true)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null,
                         "Bạn chỉ có thể đặt cơm trước 10h sáng hằng ngày."));
