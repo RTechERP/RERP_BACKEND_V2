@@ -519,6 +519,65 @@ namespace RERPAPI.Controllers.Old.Technical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        [HttpGet("get-check-history-tech")]
+        public IActionResult GetCheckHistoryCheck(DateTime dateStart, DateTime dateEnd, int employeeId, int employeeBorrowId, int supplierId, int wareHouseId, string? filterText)
+        {
+            try
+            {
+                var dt = SQLHelper<dynamic>.ProcedureToList("spGetBillImportTechHistory",
+                                                    new string[] { "@DateStart", "@DateEnd", "@EmployeeID", "@EmployeeBorrowID", "@SupplierID", "@FilterText", "@WarehouseID" },
+                                                    new object[] { dateStart, dateEnd, employeeId, employeeBorrowId, supplierId, filterText, wareHouseId });
+
+
+                var data = SQLHelper<dynamic>.GetListData(dt, 0);
+                return Ok(data);
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-employee-borrow")]
+        public IActionResult GetEmployeeBorrow(int status = 0)
+        {
+            try
+            {
+                var dt = SQLHelper<dynamic>.ProcedureToList(
+                    "spGetEmployee",
+                    new string[] { "@Status" },
+                    new object[] { status }
+                );
+
+                var data = SQLHelper<dynamic>.GetListData(dt, 0);
+                return Ok(data);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-employee-history-product")]
+        public IActionResult GetEmployeeHistoryProduct(int userId = 0)
+        {
+            try
+            {
+                var dt = SQLHelper<dynamic>.ProcedureToList(
+                    "spGetUsersHistoryProductRTC",
+                    new string[] { "@UsersID" },
+                    new object[] { userId }
+                );
+
+                var data = SQLHelper<dynamic>.GetListData(dt, 0);
+                return Ok(data);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpPost("unapprove")]
         public async Task<IActionResult> Unapprove([FromBody] List<BillImportTechnical> bills)
         {
