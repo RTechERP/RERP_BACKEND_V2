@@ -96,7 +96,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 DateTime de = new DateTime(request.DateEnd.Year, request.DateEnd.Month, request.DateEnd.Day, 23, 59, 59);
                 var dt = SQLHelper<object>.ProcedureToList("spGetEmployeeNoFingerprint",
                                                    new string[] { "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@IDApprovedTP", "@Status", @"Keyword" },
-                                                   new object[] { request.Page ?? 1, request.Size ?? 50, ds, de, request.DepartmentID ?? 0, employeeID, request.IDApprovedTP, request.Status, request.KeyWord ?? "" });
+                                                   new object[] { request.Page ?? 1, request.Size ?? 50, ds, de, request.DepartmentID ?? 0, 0, request.IDApprovedTP, request.Status, request.KeyWord ?? "" });
                 var data = SQLHelper<object>.GetListData(dt, 0);
                 var totalPage = SQLHelper<object>.GetListData(dt, 1);
 

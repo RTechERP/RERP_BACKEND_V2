@@ -14,6 +14,7 @@ namespace RERPAPI.Controllers.HRM
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
+
     public class PhasedAllocationPersonController : ControllerBase
     {
         private readonly IConfiguration _configuration;
@@ -37,6 +38,7 @@ namespace RERPAPI.Controllers.HRM
         {
             try
             {
+            
                 var data = SQLHelper<object>.ProcedureToList("spGetPhasedAllocationPerson", new string[] { "@Year", "@Month" }, new object[] { year, month });
                 var phaseds = SQLHelper<object>.GetListData(data, 0);
                 return Ok(ApiResponseFactory.Success(phaseds, ""));

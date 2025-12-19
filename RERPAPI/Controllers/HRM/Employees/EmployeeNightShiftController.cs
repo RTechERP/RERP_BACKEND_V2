@@ -132,10 +132,14 @@ namespace RERPAPI.Controllers.HRM.Employees
                 {
                     foreach (var item in nightShifts)
                     {
-                        if (!_employeeNightShiftRepo.Validate(item, out string message))
+                        if(item.IsDeleted!=true)
                         {
-                            return BadRequest(ApiResponseFactory.Fail(null, message));
+                            if (!_employeeNightShiftRepo.Validate(item, out string message))
+                            {
+                                return BadRequest(ApiResponseFactory.Fail(null, message));
+                            }
                         }
+                     
 
                         if (item.ID <= 0)
                             await _employeeNightShiftRepo.CreateAsync(item);

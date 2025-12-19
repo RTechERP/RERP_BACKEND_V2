@@ -8,6 +8,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Model.Param.HRM;
 using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.AddNewBillExport;
 using RERPAPI.Repo.GenericEntity.HRM;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
 
@@ -18,8 +19,8 @@ namespace RERPAPI.Controllers.Old
     [Route("api/[controller]")]
     public class EmployeeOverTimeController : ControllerBase
     {
-        private readonly EmployeeOverTimeRepo _employeeOverTimeRepo;
-        private readonly EmployeeTypeOverTimeRepo _employeeTypeOvertimeRepo;
+        EmployeeOverTimeRepo _employeeOverTimeRepo;
+        EmployeeTypeOverTimeRepo _employeeTypeOvertimeRepo;
         EmployeeOvertimeFileRepo _employeeOvertimeFileRepo;
         public EmployeeOverTimeController(EmployeeOverTimeRepo employeeOverTimeRepo, EmployeeTypeOverTimeRepo employeeTypeOvertimeRepo, EmployeeOvertimeFileRepo employeeOvertimeFileRepo)
         {
@@ -92,6 +93,7 @@ namespace RERPAPI.Controllers.Old
                     var employeeOverTime = existingOvertime ?? new EmployeeOvertime();
 
                     employeeOverTime.EmployeeID = employeeOvertime.EmployeeID;
+                    employeeOverTime.ApprovedHR = employeeOvertime.ApprovedHR;
                     employeeOverTime.ApprovedID = employeeOvertime.ApprovedID;
                     employeeOverTime.DateRegister = employeeOvertime.DateRegister;
                     employeeOverTime.TimeStart = employeeOvertime.TimeStart;
@@ -260,8 +262,11 @@ namespace RERPAPI.Controllers.Old
             try
             {
                 if (dto == null) { return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." }); }
+            
                 foreach (var item in dto.EmployeeOvertimes)
                 {
+                    var validate = _employeeOverTimeRepo.Validate(item);
+                    if (validate.status == 0 && item.IsDeleted!=true) return BadRequest(validate);
                     if (item.ID <= 0)
                     {
                         
