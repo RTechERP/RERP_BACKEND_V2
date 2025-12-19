@@ -2249,9 +2249,11 @@ namespace RERPAPI.Controllers.Project
 
                 CreateCommonFolders(basePath);
 
-                string url = $"/api/share/duan/projects/{year}/{project.ProjectCode}";
+                //string url = $"/api/share/duan/projects/{year}/{project.ProjectCode}";
+                string url = $"\\\\192.168.1.190\\duan\\Projects\\{ year}\\{project.ProjectCode}";
+                string urlOnl = $"\\\\113.190.234.64\\DUAN\\Projects\\{year}\\{project.ProjectCode}";
 
-                return Ok(ApiResponseFactory.Success(url, "Tạo cây thư mục thành công"));
+                return Ok(ApiResponseFactory.Success(new {url,urlOnl}, "Tạo cây thư mục thành công"));
             }
             catch (Exception ex)
             {
