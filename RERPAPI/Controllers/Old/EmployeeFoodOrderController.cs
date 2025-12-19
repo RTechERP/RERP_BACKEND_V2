@@ -266,7 +266,7 @@ namespace RERPAPI.Controllers.Old
                                 "Không thể sửa đặt cơm của ngày hôm trước."
                             ));
                         }
-                        if (orderDate == today && now > today10AM)
+                        if (orderDate == today && now > today10AM&& currentUser.IsAdmin !=true)
                         {
                             return BadRequest(ApiResponseFactory.Fail(
                                 null,
