@@ -44,6 +44,8 @@ namespace RERPAPI.Controllers.Project
         private readonly ProjectCostRepo projectCostRepo;
         private readonly ProjectPriorityLinkRepo projectPriorityLinkRepo;
 
+        
+
         private readonly ProjectCurrentSituationRepo projectCurrentSituationRepo;
 
         private readonly ProjectPriorityRepo projectPriorityRepo;
@@ -1781,8 +1783,11 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                var existing = projectPersonalPriotityRepo.GetAll(x => x.ProjectID == projectPP.ProjectID && x.UserID == projectPP.UserID).FirstOrDefault();
-                if (existing != null)
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var existing = projectPersonalPriotityRepo.GetAll(x => x.ProjectID == projectPP.ProjectID && x.UserID == currentUser.ID).FirstOrDefault();
+                if (existing != null && existing.ID > 0)
                 {
                     projectPP.ID = existing.ID;
                     await projectPersonalPriotityRepo.UpdateAsync(projectPP);
