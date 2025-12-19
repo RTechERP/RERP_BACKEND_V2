@@ -771,7 +771,7 @@ namespace RERPAPI.Controllers
 
             return null;
         }
-
+        [RequiresPermission("N32")]
         [HttpPost("approve-tbp")]
         public IActionResult ApproveTBP([FromBody] ApproveRequestParam request)
         {
@@ -813,6 +813,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [RequiresPermission("N32")]
         [HttpPost("un-approve-tbp")]
         public IActionResult UnApproveTBP([FromBody] ApproveRequestParam request)
         {
@@ -841,20 +842,8 @@ namespace RERPAPI.Controllers
                         continue;
 
                     }
-                    SQLHelper<object>.ExcuteProcedure(
-      "spUpdateTableByFieldNameAndID",
-      new[] { "@TableName", "@FieldName", "@Value", "@ID", "@ValueUpdatedBy", "@ValueUpdatedDate", "@ValueDecilineApprove", "@Content", "@EvaluateResults" },
-      new object[] {
-        item.TableName,
-        item.FieldName,  // IsApprovedTP
-        item.IsApprovedTP.HasValue ? (item.IsApprovedTP.Value ? "1" : "0") : "0",  // Convert bool to "0" hoặc "1"
-        item.Id,
-        "",  // @ValueUpdatedBy
-        item.ValueUpdatedDate ?? "",
-        item.ValueDecilineApprove ?? "",  // Lý do không duyệt -> DecilineApprove column
-        item.ReasonDeciline ?? "",  // @Content -> ReasonDeciline column
-        item.EvaluateResults ?? ""
-      });
+                    SQLHelper<object>.ExcuteProcedure( "spUpdateTableByFieldNameAndID",new[] { "@TableName", "@FieldName", "@Value", "@ID", "@ValueUpdatedBy", "@ValueUpdatedDate", "@ValueDecilineApprove", "@Content", "@EvaluateResults" }, 
+                        new object[] { item.TableName,item.FieldName,  item.IsApprovedTP.HasValue ? (item.IsApprovedTP.Value ? "1" : "0") : "0", item.Id,"", item.ValueUpdatedDate ?? "",item.ValueDecilineApprove ?? "",  item.ReasonDeciline ?? "",  item.EvaluateResults ?? ""});
 
                 }
                 return Ok(ApiResponseFactory.Success(notProcessed, notProcessed.Count == 0 ? "Duyệt thành công." : $"Duyệt thành công, bỏ qua {notProcessed.Count} bản ghi."));
@@ -864,7 +853,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1")]
         [HttpPost("approve-bgd")]
         public IActionResult ApproveBGD([FromBody] ApproveRequestParam request)
         {
@@ -907,12 +896,13 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message)); 
             }
         }
+        [RequiresPermission("N85")]
         [HttpPost("approve-senior")]
         public IActionResult ApproveSenior([FromBody] ApproveRequestParam request)
         {
             try
             {
-                if (request == null || request.Items == null || request.Items.Count == 0)
+                if (request == null || request.Items == null || request.Items.Count == 0)   
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Danh sách phê duyệt không được để trống!"));
                 }
