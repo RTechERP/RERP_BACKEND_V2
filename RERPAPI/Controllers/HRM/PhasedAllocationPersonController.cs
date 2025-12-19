@@ -34,12 +34,13 @@ namespace RERPAPI.Controllers.HRM
         }
 
         [HttpGet("")]
-        public IActionResult GetAll(int year, int month)
+        public IActionResult GetAll(int year, int month, int typeAllocation = 0, int statusAllocation = 0, string keyword = "")
         {
             try
             {
-            
-                var data = SQLHelper<object>.ProcedureToList("spGetPhasedAllocationPerson", new string[] { "@Year", "@Month" }, new object[] { year, month });
+                var data = SQLHelper<object>.ProcedureToList("spGetPhasedAllocationPerson",
+                    new string[] { "@Year", "@Month", "@TypeAllocation", "@StatusAllocation", "@Keyword" },
+                    new object[] { year, month, typeAllocation, statusAllocation, keyword });
                 var phaseds = SQLHelper<object>.GetListData(data, 0);
                 return Ok(ApiResponseFactory.Success(phaseds, ""));
             }
@@ -107,7 +108,7 @@ namespace RERPAPI.Controllers.HRM
                 }
 
                 string message = "Cập nhập thành công!";
-                if (employeeFails.Count() >0)
+                if (employeeFails.Count() > 0)
                 {
                     message = string.Join("\n", employeeFails);
                 }
