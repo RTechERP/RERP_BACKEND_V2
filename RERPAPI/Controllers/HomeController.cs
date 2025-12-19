@@ -726,10 +726,10 @@ namespace RERPAPI.Controllers
 
          
 
-            if (!isApproved && !(item.IsApprovedTP ?? false))
-                return $"Nhân viên [{item.FullName}] chưa được TBP duyệt, không thể hủy duyệt.";
+            //if (!isApproved && !(item.IsApprovedTP ?? false))
+            //    return $"Nhân viên [{item.FullName}] chưa được TBP duyệt, không thể hủy duyệt.";
 
-            if (!isApproved && (item.IsApprovedBGD ?? false))
+            if (!isApproved && (item.IsApprovedBGD ==true))
                 return $"Nhân viên [{item.FullName}] đã được BGĐ duyệt, không thể hủy duyệt TBP.";
 
             return null;
@@ -744,7 +744,7 @@ namespace RERPAPI.Controllers
                 return $"Nhân viên [{item.FullName}] chưa được HR duyệt, BGD không thể duyệt / hủy duyệt.";
 
        
-            if (!isApproved && !(item.IsApprovedBGD ?? false))
+            if (!isApproved && !(item.IsApprovedBGD ==true))
                 return $"Nhân viên [{item.FullName}] chưa được BGĐ duyệt, không thể hủy duyệt.";
 
             return null;
@@ -813,6 +813,58 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpPost("un-approve-tbp")]
+        public IActionResult UnApproveTBP([FromBody] ApproveRequestParam request)
+        {
+            try
+            {
+                if (request == null || request.Items == null || request.Items.Count == 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Danh sách phê duyệt không được để trống!"));
+                }
+
+                var notProcessed = new List<NotProcessedApprovalItem>();
+
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                foreach (var item in request.Items)
+                {
+                    var error = ValidateTBP(item, request.IsApproved ?? false);
+                    if (error != null)
+                    {
+                        notProcessed.Add(new NotProcessedApprovalItem
+                        {
+                            Item = item,
+                            Reason = error
+                        });
+                        continue;
+
+                    }
+                    SQLHelper<object>.ExcuteProcedure(
+      "spUpdateTableByFieldNameAndID",
+      new[] { "@TableName", "@FieldName", "@Value", "@ID", "@ValueUpdatedBy", "@ValueUpdatedDate", "@ValueDecilineApprove", "@Content", "@EvaluateResults" },
+      new object[] {
+        item.TableName,
+        item.FieldName,  // IsApprovedTP
+        item.IsApprovedTP.HasValue ? (item.IsApprovedTP.Value ? "1" : "0") : "0",  // Convert bool to "0" hoặc "1"
+        item.Id,
+        "",  // @ValueUpdatedBy
+        item.ValueUpdatedDate ?? "",
+        item.ValueDecilineApprove ?? "",  // Lý do không duyệt -> DecilineApprove column
+        item.ReasonDeciline ?? "",  // @Content -> ReasonDeciline column
+        item.EvaluateResults ?? ""
+      });
+
+                }
+                return Ok(ApiResponseFactory.Success(notProcessed, notProcessed.Count == 0 ? "Duyệt thành công." : $"Duyệt thành công, bỏ qua {notProcessed.Count} bản ghi."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpPost("approve-bgd")]
         public IActionResult ApproveBGD([FromBody] ApproveRequestParam request)
         {
@@ -843,7 +895,7 @@ namespace RERPAPI.Controllers
                     SQLHelper<object>.ExcuteProcedure(
                "spUpdateTableByFieldNameAndID",
                new[] { "@TableName", "@FieldName", "@Value", "@ID", "@ValueUpdatedDate", "@ValueDecilineApprove", "@EvaluateResults" },
-               new object[] { item.TableName, item.FieldName, item.IsApprovedBGD, item.Id, item.ValueUpdatedDate, item.ValueDecilineApprove ?? "", item.EvaluateResults }
+               new object[] { item.TableName, item.FieldName, item.IsApprovedTP, item.Id, item.ValueUpdatedDate, item.ValueDecilineApprove ?? "", item.EvaluateResults }
            );
 
                 }
