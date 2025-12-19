@@ -451,7 +451,7 @@ namespace RERPAPI.Controllers.Project
                     }
                 }
 
-                _projectPartlistRepo.UpdatePurchaseRequest(listPartLists, currentUser.EmployeeID);
+                _projectPartlistRepo.UpdatePurchaseRequest(listPartLists,currentUser.EmployeeID);
                 return Ok(ApiResponseFactory.Success(null, ""));
             }
             catch (Exception ex)

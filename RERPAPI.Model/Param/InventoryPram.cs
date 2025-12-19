@@ -7,7 +7,7 @@
         public string Find { get; set; }
         public string WarehouseCode { get; set; }
         public bool IsStock { get; set; }
-        public int PageSize { get; set; }
-        public int PageNumber { get; set; }
+        //public int PageSize { get; set; }
+        //public int PageNumber { get; set; }
     }
 }

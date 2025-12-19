@@ -51,6 +51,7 @@ namespace RERPAPI.Controllers
         {
             try
             {
+
                 var data = SQLHelper<object>.ProcedureToList("spGetUsersHistoryProductRTC", new string[] { "@UsersID", "@Status" }, new object[] { userId, status });
                 var dt = SQLHelper<object>.GetListData(data, 0);
                 return Ok(ApiResponseFactory.Success(dt, ""))
