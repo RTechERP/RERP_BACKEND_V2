@@ -45,7 +45,7 @@ namespace RERPAPI.Repo.GenericEntity.HRM
                     var detail = _phaseDetailRepo.GetAll(x => x.PhasedAllocationPersonID == phase.ID && x.EmployeeID == item.EmployeeID && x.IsDeleted != true)
                                                  .FirstOrDefault() ?? new PhasedAllocationPersonDetail();
 
-                    if (detail.ID <= 0)
+                    if (detail.ID <= 0&&item.IsApproved==true)
                     {
                         detail.PhasedAllocationPersonID = phase.ID;
                         detail.EmployeeID = item.EmployeeID;
