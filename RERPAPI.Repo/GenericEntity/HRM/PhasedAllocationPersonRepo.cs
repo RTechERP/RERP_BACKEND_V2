@@ -3,6 +3,7 @@ using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization.Formatters;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -26,7 +27,7 @@ namespace RERPAPI.Repo.GenericEntity.HRM
                     var phase = GetAll(x => x.YearValue == item.DateOrder.Value.Year
                                     && x.MontValue == item.DateOrder.Value.Month
                                     && x.Code == code
-                                    && item.IsApproved==true
+                                 
                                     && x.IsDeleted != true).FirstOrDefault() ?? new PhasedAllocationPerson();
                     if (phase.ID <= 0)
                     {
@@ -39,7 +40,7 @@ namespace RERPAPI.Repo.GenericEntity.HRM
 
                         await CreateAsync(phase);
                     }
-
+                    
                     //Tìm kiếm detai
                     var detail = _phaseDetailRepo.GetAll(x => x.PhasedAllocationPersonID == phase.ID && x.EmployeeID == item.EmployeeID && x.IsDeleted != true)
                                                  .FirstOrDefault() ?? new PhasedAllocationPersonDetail();
@@ -55,6 +56,20 @@ namespace RERPAPI.Repo.GenericEntity.HRM
 
                         await _phaseDetailRepo.CreateAsync(detail);
                     }
+
+                    //Hủy duyệt Detail
+                    if(item.IsApproved==false)
+                    {
+                        var phaseUnApprove = _phaseDetailRepo.GetAll(x => x.PhasedAllocationPersonID == phase.ID &&
+                                              x.EmployeeID == item.EmployeeID &&
+                                              x.IsDeleted != true).FirstOrDefault();
+                        if (phaseUnApprove != null)
+                        {
+                            phaseUnApprove.IsDeleted = true;
+                            await _phaseDetailRepo.UpdateAsync(phaseUnApprove);
+                        }
+                    }    
+                  
 
                 }
             }
