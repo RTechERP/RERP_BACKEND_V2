@@ -1,4 +1,5 @@
 ﻿using DocumentFormat.OpenXml.Drawing.Charts;
+using DocumentFormat.OpenXml.Drawing.Spreadsheet;
 using DocumentFormat.OpenXml.Office.CustomUI;
 using DocumentFormat.OpenXml.Office2010.CustomUI;
 using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
@@ -1117,9 +1118,17 @@ namespace RERPAPI.Controllers.Project
                     // status = 2 → update theo kho (stock)
                     if (status == 2)
                     {
-                        partList.Manufacturer = item.MakerStock;
-                        partList.Unit = item.UnitStock;
-                        partList.GroupMaterial = item.ProductNameStock;
+                        string maker = item.MakerStock;
+                        string unit = item.UnitStock;
+                        string productName = item.ProductNameStock;
+                        if (string.IsNullOrWhiteSpace(maker) && string.IsNullOrWhiteSpace(unit) && string.IsNullOrWhiteSpace(productName)) continue; // bỏ qua 
+                        
+                        if (string.IsNullOrWhiteSpace(maker)) maker = item.Maker;
+                        if (string.IsNullOrWhiteSpace(unit)) unit = item.Unit;
+                        if (string.IsNullOrWhiteSpace(productName)) productName = item.ProductName;
+                        partList.Manufacturer = maker;
+                        partList.Unit = unit;
+                        partList.GroupMaterial = productName;
                     }
                     await _projectPartlistRepo.UpdateAsync(partList);
                 }

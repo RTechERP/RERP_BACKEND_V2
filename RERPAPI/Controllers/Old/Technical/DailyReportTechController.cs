@@ -40,8 +40,17 @@ namespace RERPAPI.Controllers.Old.Technical
         {
             try
             {
+                // DateStart: 00:00:00
+                var dateStart = (request.dateStart?.ToLocalTime() ?? DateTime.Now)
+                                .Date;  // ← .Date tự động set về 00:00:00
+
+                // DateEnd: 23:59:59.9999999
+                //var dateEnd = (request.dateEnd?.ToLocalTime() ?? DateTime.Now)
+                //              .Date
+                //              .AddDays(1)      // Sang ngày hôm sau 00:00:00
+                //              .AddTicks(-1);   // Trừ 1 tick = 23:59:59.9999999
                 // Force convert về local timezone hoặc UTC
-                var dateStart = request.dateStart?.ToLocalTime() ?? DateTime.Now.Date;
+                //var dateStart = request.dateStart?.ToLocalTime() ?? DateTime.Now.Date;
                 var dateEnd = request.dateEnd?.ToLocalTime() ?? DateTime.Now.Date.AddDays(1).AddTicks(-1);
                 var keyword = (request.keyword ?? string.Empty).Trim();
 
@@ -190,6 +199,7 @@ namespace RERPAPI.Controllers.Old.Technical
                         item.OldProjectID = 0;
                         item.DeleteFlag = 0;
                         item.Confirm = false;
+                        item.CreatedDate = DateTime.Today.AddHours(23).AddMinutes(30);
                         await _dailyReportTechnicalRepo.CreateAsync(item);
                         await UpdateProjectItem(item);
 
