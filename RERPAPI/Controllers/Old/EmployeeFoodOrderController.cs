@@ -185,7 +185,7 @@ namespace RERPAPI.Controllers.Old
 
                 if (vUserHR != null)
                 {
-                    employeeID = foodOrder.EmployeeID.Value;
+                    employeeID = foodOrder.EmployeeID ?? currentUser.EmployeeID;
                 }
                 else
                 {
