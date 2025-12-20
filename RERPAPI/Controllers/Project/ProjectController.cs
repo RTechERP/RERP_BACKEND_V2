@@ -1308,24 +1308,38 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
         [HttpGet("get-employee-permission")]
         public async Task<IActionResult> GetEmployeePermission(int projectId, int employeeId)
         {
             try
             {
+                int rowNumber=0;
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
                 bool havePermission = false;
                 var employee = SQLHelper<object>.ProcedureToList("spGetProjectEmployeePermisstion",
                                                         new string[] { "@ProjectID", "@EmployeeID" },
                                                         new object[] { projectId, employeeId });
+                
                 var data = SQLHelper<object>.GetListData(employee, 0);
+                if (data.Count > 0)
+                {
+                    var dict = (IDictionary<string, object>)data[0];
 
-                int valueRow = (int)data[0]["RowNumber"];
+                    if (dict.ContainsKey("RowNumber"))
+                    {
+                        rowNumber = Convert.ToInt32(dict["RowNumber"]);
+                    }
+                }
+
 
                 Model.Entities.Project project = projectRepo.GetByID(projectId);
 
-                // Check quyền sau khi có phân quyền
-                //if(project.ProjectManager == Global.EmployeeID || project.UserID == Global.UserID || Global.IsAdmin || valueRow > 0 || project.UserTechnicalID == Global.UserID)
+                //Check quyền sau khi có phân quyền
+                if (project.ProjectManager == currentUser.EmployeeID || project.UserID == currentUser.ID || currentUser.IsAdmin || rowNumber > 0 || project.UserTechnicalID == currentUser.ID)
+                {
+                    havePermission = true;
+                }
                 return Ok(ApiResponseFactory.Success(havePermission, ""));
             }
             catch (Exception ex)
@@ -1333,7 +1347,6 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
         #endregion
 
 
@@ -1790,10 +1803,12 @@ namespace RERPAPI.Controllers.Project
                 if (existing != null && existing.ID > 0)
                 {
                     projectPP.ID = existing.ID;
+                    projectPP.UserID= currentUser.ID;
                     await projectPersonalPriotityRepo.UpdateAsync(projectPP);
                 }
                 else
                 {
+                    projectPP.UserID = currentUser.ID;
                     await projectPersonalPriotityRepo.CreateAsync(projectPP);
                 }
                 return Ok(ApiResponseFactory.Success(true, "Lưu dữ liệu thành công"));

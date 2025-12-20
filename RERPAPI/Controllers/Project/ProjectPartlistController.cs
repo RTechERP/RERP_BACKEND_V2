@@ -1121,6 +1121,8 @@ namespace RERPAPI.Controllers.Project
                         string maker = item.MakerStock;
                         string unit = item.UnitStock;
                         string productName = item.ProductNameStock;
+                        if (string.IsNullOrWhiteSpace(maker) && string.IsNullOrWhiteSpace(unit) && string.IsNullOrWhiteSpace(productName)) continue; // bỏ qua 
+                        
                         if (string.IsNullOrWhiteSpace(maker)) maker = item.Maker;
                         if (string.IsNullOrWhiteSpace(unit)) unit = item.Unit;
                         if (string.IsNullOrWhiteSpace(productName)) productName = item.ProductName;
