@@ -433,6 +433,9 @@ builder.Services.AddScoped<PaymentOrderTypeRepo>();
 builder.Services.AddScoped<PhasedAllocationPersonRepo>();
 builder.Services.AddScoped<PhasedAllocationPersonDetailRepo>();
 
+builder.Services.AddScoped<MenuAppRepo>();
+builder.Services.AddScoped<MenuAppUserGroupLinkRepo>();
+
 
 builder.Services.AddScoped<CurrentUser>(provider =>
 {
