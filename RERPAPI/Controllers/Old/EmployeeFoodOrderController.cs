@@ -162,7 +162,7 @@ namespace RERPAPI.Controllers.Old
 
         [HttpPost("save-data")]
         //[RequiresPermission("N2,N23,N34,N1,N80")]
-        public async Task<IActionResult> SaveEmployeeFoodOrder([FromBody] EmployeeFoodOrder foodOrder)
+        public async Task<IActionResult> SaveData([FromBody] EmployeeFoodOrder foodOrder)
         {
             try
             {
@@ -181,16 +181,6 @@ namespace RERPAPI.Controllers.Old
           (x.Code == "N23" || x.Code == "N1" || x.Code == "N2" || x.Code == "N34") &&
           x.UserID == currentUser.ID);
 
-                int employeeID;
-
-                if (vUserHR != null)
-                {
-                    employeeID = foodOrder.EmployeeID ?? currentUser.EmployeeID;
-                }
-                else
-                {
-                    employeeID = currentUser.EmployeeID;
-                }
                 bool exist = true;
                 if (foodOrder.IsApproved==true&& foodOrder.Location==1)
                 {
@@ -238,7 +228,7 @@ namespace RERPAPI.Controllers.Old
                 if (foodOrder.IsDeleted == true && vUserHR == null && foodOrder.DateOrder.HasValue)
                 {
                     var orderDate = foodOrder.DateOrder.Value.Date;
-                    if (orderDate < today)
+                    if (orderDate < today) 
                     {
                         return BadRequest(ApiResponseFactory.Fail(
                             null,
