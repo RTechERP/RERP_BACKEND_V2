@@ -56,19 +56,12 @@ namespace RERPAPI.Repo.GenericEntity.HRM
 
                         await _phaseDetailRepo.CreateAsync(detail);
                     }
-
-                    //Hủy duyệt Detail
-                    if(item.IsApproved==false)
+                    else if(item.IsApproved==false)
                     {
-                        var phaseUnApprove = _phaseDetailRepo.GetAll(x => x.PhasedAllocationPersonID == phase.ID &&
-                                              x.EmployeeID == item.EmployeeID &&
-                                              x.IsDeleted != true).FirstOrDefault();
-                        if (phaseUnApprove != null)
-                        {
-                            phaseUnApprove.IsDeleted = true;
-                            await _phaseDetailRepo.UpdateAsync(phaseUnApprove);
-                        }
+                        detail.IsDeleted = true;
+                        await _phaseDetailRepo.UpdateAsync(detail);
                     }    
+
                   
 
                 }
