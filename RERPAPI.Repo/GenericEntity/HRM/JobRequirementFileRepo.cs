@@ -6,13 +6,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RERPAPI.Repo.GenericEntity
+namespace RERPAPI.Repo.GenericEntity.HRM
 {
-    public class EmployeeEarlyLateRepo : GenericRepo<EmployeeEarlyLate>
+    public class JobRequirementFileRepo : GenericRepo<JobRequirementFile>
     {
-        public EmployeeEarlyLateRepo(CurrentUser currentUser) : base(currentUser)
+        public JobRequirementFileRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
-
     }
 }

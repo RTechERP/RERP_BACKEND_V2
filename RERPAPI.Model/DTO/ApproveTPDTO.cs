@@ -18,6 +18,8 @@ namespace RERPAPI.Model.DTO
             public string? FullName { get; set; } = "";
             public string? FieldName { get; set; } = "";
 
+            public int? EmployeeID { get; set; }
+
             public bool? DeleteFlag { get; set; }
             public bool? IsApprovedTP { get; set; }
             public bool? IsApprovedHR { get; set; }

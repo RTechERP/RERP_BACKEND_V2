@@ -1,4 +1,5 @@
 ﻿using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.EMMA;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NPOI.HSSF.Record.Chart;
@@ -19,12 +20,14 @@ namespace RERPAPI.Controllers.Old
         private readonly EmployeeOnLeaveRepo _employeeOnLeaveRepo;
         private readonly EmployeeRepo _employeeRepo;
         private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
+        EmployeeSendEmailRepo _employeeSendEmailRepo;
 
-        public EmployeeOnLeaveController(EmployeeOnLeaveRepo employeeOnLeaveRepo, EmployeeRepo employeeRepo, vUserGroupLinksRepo vUserGroupLinksRepo)
+        public EmployeeOnLeaveController(EmployeeOnLeaveRepo employeeOnLeaveRepo, EmployeeRepo employeeRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeSendEmailRepo employeeSendEmailRepo)
         {
             _employeeOnLeaveRepo = employeeOnLeaveRepo;
             _employeeRepo = employeeRepo;
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
+            _employeeSendEmailRepo = employeeSendEmailRepo;
         }
 
         [HttpPost]
@@ -198,9 +201,28 @@ namespace RERPAPI.Controllers.Old
 
                 if (employeeOnLeave.ID <= 0)
                 {
-                    await _employeeOnLeaveRepo.CreateAsync(employeeOnLeave);
+                   var result =  await _employeeOnLeaveRepo.CreateAsync(employeeOnLeave);
+                    if (result > 0)
+                    {
+                        var employee = _employeeRepo.GetByID(employeeOnLeave.EmployeeID ?? 0);
+                        var employeeTP = _employeeRepo.GetByID(employeeOnLeave.ApprovedTP ?? 0);
+                        string timeonleave = employeeOnLeave.TimeOnLeave == 1 ? "buổi sáng ngày" : employeeOnLeave.TimeOnLeave == 2 ? "buổi chiều ngày" : "ngày";
+
+                        //Loại nghỉ
+                        string type = employeeOnLeave.TypeIsReal == 1 ? "nghỉ không lương" : (employeeOnLeave.TypeIsReal == 2 ? "nghỉ phép" : "nghỉ việc riêng có hưởng lương");
+                        string subject = $"NGHỈ - {employee.FullName??"".ToUpper()} - {employeeOnLeave.StartDate.Value.ToString("dd/MM/yyyy")}";
+                        string body = "<div> <p style=\"font - weight: bold; color: red;\">[NO REPLY]</p> <p>Dear anh/chị " + employeeTP.FullName + "</p> </div> <div style=\"margin-top: 30px;\"> " +
+                                      $"<p>Em xin phép anh/chị cho em {type} {timeonleave} {employeeOnLeave.StartDate.Value.ToString("dd/MM/yyyy")}.</p> " +
+                                      "<p>Lý do: " + employeeOnLeave.Reason + "</p> " +
+                                      "<p>Anh/chị duyệt giúp em với ạ. Em cảm ơn!</p> </div>" +
+                                      "<div style=\"margin-top: 30px;\"> <p>Thanks</p> <p>" + employee.FullName + "</p> </div>";
+                        _employeeSendEmailRepo.SendMail(employeeOnLeave.EmployeeID ?? 0, employeeOnLeave.ApprovedTP ?? 0, subject, body, "");
+                    }
                 }
                 else
+                {
+
+                }
                 {
                     await _employeeOnLeaveRepo.UpdateAsync(employeeOnLeave);
                 }
