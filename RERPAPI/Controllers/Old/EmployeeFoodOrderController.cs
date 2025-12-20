@@ -212,7 +212,7 @@ namespace RERPAPI.Controllers.Old
                 }
 
                 // Gán lại cho foodOrder
-                foodOrder.EmployeeID = employeeID;
+            
                 var checkExist = _employeeFoodOrderRepo
                 .GetAll(x => x.EmployeeID == foodOrder.EmployeeID
                           && x.DateOrder.Value.Date == foodOrder.DateOrder.Value.Date 
