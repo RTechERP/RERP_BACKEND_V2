@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using DocumentFormat.OpenXml.Office.CustomUI;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
@@ -21,7 +22,7 @@ namespace RERPAPI.Controllers.Old
         PhasedAllocationPersonRepo _phaseRepo;
         PhasedAllocationPersonDetailRepo _phaseDetailRepo;
 
-        public EmployeeFoodOrderController(EmployeeFoodOrderRepo employeeFoodOrderRepo, vUserGroupLinksRepo vUserGroupLinksRepo , PhasedAllocationPersonRepo phaseRepo, PhasedAllocationPersonDetailRepo phasedAllocationPersonDetailRepo
+        public EmployeeFoodOrderController(EmployeeFoodOrderRepo employeeFoodOrderRepo, vUserGroupLinksRepo vUserGroupLinksRepo, PhasedAllocationPersonRepo phaseRepo, PhasedAllocationPersonDetailRepo phasedAllocationPersonDetailRepo
 )
         {
             _phaseRepo = phaseRepo;
@@ -60,7 +61,7 @@ namespace RERPAPI.Controllers.Old
                 var vUserHR = _vUserGroupLinksRepo
       .GetAll()
       .FirstOrDefault(x =>
-          (x.Code == "N23" || x.Code == "N1" || x.Code == "N2" || x.Code == "N34" ) &&
+          (x.Code == "N23" || x.Code == "N1" || x.Code == "N2" || x.Code == "N34") &&
           x.UserID == currentUser.ID);
 
                 int employeeID;
@@ -72,7 +73,7 @@ namespace RERPAPI.Controllers.Old
                 {
                     employeeID = currentUser.EmployeeID;
                 }
-                DateTime dateStart = param.dateStart.Date;                     
+                DateTime dateStart = param.dateStart.Date;
                 DateTime dateEnd = param.dateEnd.Date.AddDays(1).AddTicks(-1);
                 var foodOrders = SQLHelper<object>.ProcedureToList("spGetFoodOrder", new string[] { "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@Keyword", "@EmployeeID" },
                     new object[] { param.pageNumber, param.pageSize, dateStart, dateEnd, param.keyWord, employeeID });
@@ -177,50 +178,23 @@ namespace RERPAPI.Controllers.Old
                 // Kiểm tra user có thuộc nhóm quyền HR hay không
                 var vUserHR = _vUserGroupLinksRepo
                     .GetAll()
-                    .FirstOrDefault(x =>
-          (x.Code == "N23" || x.Code == "N1" || x.Code == "N2" || x.Code == "N34") &&
-          x.UserID == currentUser.ID);
-
-                bool exist = true;
-                if (foodOrder.IsApproved==true&& foodOrder.Location==1)
-                {
-                      exist = _employeeFoodOrderRepo.AddPhaseAllocation(foodOrder);
-                }
-                var codePhase = _phaseRepo.GenPhaseAllocationCode(foodOrder.DateOrder);
-                PhasedAllocationPerson codePhaseExist = _phaseRepo.GetAll(x => x.Code == codePhase).FirstOrDefault() ?? new PhasedAllocationPerson();
-                var phaseAllocationID = codePhaseExist.ID;
-                if(exist == false)
-                {
-
-                    var data = _phaseDetailRepo.GetAll(x => x.EmployeeID == foodOrder.EmployeeID && x.PhasedAllocationPersonID == phaseAllocationID);
-                    var detailExist = _phaseDetailRepo.GetAll(x => x.EmployeeID == foodOrder.EmployeeID && x.PhasedAllocationPersonID == phaseAllocationID)
-                    .FirstOrDefault() ?? new PhasedAllocationPersonDetail();
-
-                    if (detailExist.ID<=0)
-                    {
-                        _employeeFoodOrderRepo.AddPhaseAllocationDetail(foodOrder, phaseAllocationID);
-                    }
-
-                }    
-
+                    .FirstOrDefault(x =>(x.Code == "N23" || x.Code == "N1" || x.Code == "N2" || x.Code == "N34") && x.UserID == currentUser.ID);
                 var today10AM = new DateTime(now.Year, now.Month, now.Day, 10, 0, 0);
 
-                if (vUserHR == null && now > today10AM&&currentUser.IsAdmin!=true)
+                if (vUserHR == null && now > today10AM && currentUser.IsAdmin != true)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null,
                         "Bạn chỉ có thể đặt cơm trước 10h sáng hằng ngày."));
                 }
-
                 // Gán lại cho foodOrder
-            
                 var checkExist = _employeeFoodOrderRepo
                 .GetAll(x => x.EmployeeID == foodOrder.EmployeeID
-                          && x.DateOrder.Value.Date == foodOrder.DateOrder.Value.Date 
-                          && foodOrder.IsApproved != true 
+                          && x.DateOrder.Value.Date == foodOrder.DateOrder.Value.Date
+                          && foodOrder.IsApproved != true
                           && x.IsDeleted != true)
                 .FirstOrDefault();
 
-                if(checkExist != null)
+                if (checkExist != null)
                 {
                     foodOrder.ID = checkExist.ID;
                     foodOrder.Quantity = foodOrder.Quantity + checkExist.Quantity;
@@ -228,7 +202,7 @@ namespace RERPAPI.Controllers.Old
                 if (foodOrder.IsDeleted == true && vUserHR == null && foodOrder.DateOrder.HasValue)
                 {
                     var orderDate = foodOrder.DateOrder.Value.Date;
-                    if (orderDate < today) 
+                    if (orderDate < today)
                     {
                         return BadRequest(ApiResponseFactory.Fail(
                             null,
@@ -246,7 +220,7 @@ namespace RERPAPI.Controllers.Old
                 if (foodOrder.ID <= 0) await _employeeFoodOrderRepo.CreateAsync(foodOrder);
                 else
                 {
-                    if(foodOrder.ID >0 && vUserHR == null && foodOrder.DateOrder.HasValue)
+                    if (foodOrder.ID > 0 && vUserHR == null && foodOrder.DateOrder.HasValue)
                     {
                         var orderDate = foodOrder.DateOrder.Value.Date;
                         if (orderDate < today)
@@ -256,18 +230,41 @@ namespace RERPAPI.Controllers.Old
                                 "Không thể sửa đặt cơm của ngày hôm trước."
                             ));
                         }
-                        if (orderDate == today && now > today10AM&& currentUser.IsAdmin !=true)
+                        if (orderDate == today && now > today10AM && currentUser.IsAdmin != true)
                         {
                             return BadRequest(ApiResponseFactory.Fail(
                                 null,
                                 "Không thể sửa đặt cơm sau 10H ngày hôm nay."
                             ));
                         }
-                    }    
+                    }
 
                     await _employeeFoodOrderRepo.UpdateAsync(foodOrder);
                 }
                 return Ok(ApiResponseFactory.Success(foodOrder, "Lưu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [RequiresPermission("N2,N23,N34,N1")]
+        [HttpPost("save-approve")]
+        public async Task<IActionResult> SaveApprove([FromBody] List<EmployeeFoodOrder> foodOrders)
+        {
+            try
+            {
+                foreach (var item in foodOrders)
+                {
+                    if (item.ID <= 0) await _employeeFoodOrderRepo.CreateAsync(item);
+                    else
+                    {
+                        await _employeeFoodOrderRepo.UpdateAsync(item);
+                    }
+                }
+                //Lưu phase cấp phát
+                await _phaseRepo.UpdatePhaseFromFoodOrder(foodOrders);
+                return Ok(ApiResponseFactory.Success(foodOrders, "Lưu thành công"));
             }
             catch (Exception ex)
             {

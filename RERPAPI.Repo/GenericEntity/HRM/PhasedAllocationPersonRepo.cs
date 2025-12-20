@@ -10,14 +10,59 @@ namespace RERPAPI.Repo.GenericEntity.HRM
 {
     public class PhasedAllocationPersonRepo : GenericRepo<PhasedAllocationPerson>
     {
-        public PhasedAllocationPersonRepo(CurrentUser currentUser) : base(currentUser)
+        private PhasedAllocationPersonDetailRepo _phaseDetailRepo;
+        public PhasedAllocationPersonRepo(CurrentUser currentUser , PhasedAllocationPersonDetailRepo phaseDetailRepo) : base(currentUser)
         {
+            _phaseDetailRepo = phaseDetailRepo;
         }
-        public string GenPhaseAllocationCode(DateTime? phaseDate)
+     
+        public async Task UpdatePhaseFromFoodOrder(List<EmployeeFoodOrder> foodOrders)
         {
-            var date = phaseDate.Value.Date;
-            string phaseCode = $"ComCa{date:ddMMyyyy}";
-            return phaseCode;
+            try
+            {
+                foreach (var item in foodOrders)
+                {
+                    string code = item.DateOrder.Value.ToString("ddMMyyyy");
+                    var phase = GetAll(x => x.YearValue == item.DateOrder.Value.Year
+                                    && x.MontValue == item.DateOrder.Value.Month
+                                    && x.Code == code
+                                    && item.IsApproved==true
+                                    && x.IsDeleted != true).FirstOrDefault() ?? new PhasedAllocationPerson();
+                    if (phase.ID <= 0)
+                    {
+                        phase.TypeAllocation = 3;
+                        phase.Code = code;
+                        phase.ContentAllocation = $"Cấp phát cơm ca ngày {item.DateOrder.Value.ToString("dd/MM/yyyy")}";
+                        phase.YearValue = item.DateOrder.Value.Year;
+                        phase.MontValue = item.DateOrder.Value.Month;
+                        phase.StatusAllocation = 0;
+
+                        await CreateAsync(phase);
+                    }
+
+                    //Tìm kiếm detai
+                    var detail = _phaseDetailRepo.GetAll(x => x.PhasedAllocationPersonID == phase.ID && x.EmployeeID == item.EmployeeID && x.IsDeleted != true)
+                                                 .FirstOrDefault() ?? new PhasedAllocationPersonDetail();
+
+                    if (detail.ID <= 0)
+                    {
+                        detail.PhasedAllocationPersonID = phase.ID;
+                        detail.EmployeeID = item.EmployeeID;
+                        detail.StatusReceive = 0;
+                        detail.Quantity = item.Quantity;
+                        detail.UnitName = "Suất";
+                        detail.ContentReceive = "";
+
+                        await _phaseDetailRepo.CreateAsync(detail);
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+
+                throw new Exception(ex.Message);
+            }
         }
     }
 }
