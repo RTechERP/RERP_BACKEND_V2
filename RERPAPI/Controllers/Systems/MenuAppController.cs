@@ -57,7 +57,7 @@ namespace RERPAPI.Controllers.Systems
                 var menu = _menuRepo.GetByID(id);
                 var menuLinks = _menuLinkRepo.GetAll(x => x.MenuAppID == menu.ID && x.IsDeleted != true);
 
-                return Ok(ApiResponseFactory.Success(new {menu,menuLinks}, ""));
+                return Ok(ApiResponseFactory.Success(new { menu, menuLinks }, ""));
             }
             catch (Exception ex)
             {
@@ -66,14 +66,32 @@ namespace RERPAPI.Controllers.Systems
         }
 
         [HttpPost("save-data")]
-        public async Task<IActionResult> SaveData([FromBody])
+        public async Task<IActionResult> SaveData([FromBody] MenuAppDTO menu)
         {
             try
             {
-                var menu = _menuRepo.GetByID(id);
-                var menuLinks = _menuLinkRepo.GetAll(x => x.MenuAppID == menu.ID && x.IsDeleted != true);
+                if (menu.ID <= 0) await _menuRepo.CreateAsync(menu);
+                else await _menuRepo.UpdateAsync(menu);
 
-                return Ok(ApiResponseFactory.Success(new { menu, menuLinks }, ""));
+                //Xóa hết link cũ
+                var menuLinks = _menuLinkRepo.GetAll(x => x.MenuAppID == menu.ID && x.IsDeleted != true);
+                foreach (var item in menuLinks)
+                {
+                    item.IsDeleted = true;
+                    await _menuLinkRepo.UpdateAsync(item);
+                }
+
+                if (menu.IsDeleted != true)
+                {
+                    menu.MenuAppUserGroupLinks.ForEach(x =>
+                    {
+                        x.MenuAppID = menu.ID;
+                    });
+
+                    await _menuLinkRepo.CreateRangeAsync(menu.MenuAppUserGroupLinks);
+                }
+
+                return Ok(ApiResponseFactory.Success(menu, "Cập nhật thành công!"));
             }
             catch (Exception ex)
             {
