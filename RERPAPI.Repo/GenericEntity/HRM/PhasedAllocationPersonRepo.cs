@@ -56,7 +56,7 @@ namespace RERPAPI.Repo.GenericEntity.HRM
 
                         await _phaseDetailRepo.CreateAsync(detail);
                     }
-                    else if(item.IsApproved==false)
+                    else if(item.IsApproved==false&& detail.ID>0)
                     {
                         detail.IsDeleted = true;
                         await _phaseDetailRepo.UpdateAsync(detail);
