@@ -24,12 +24,13 @@ namespace RERPAPI.Controllers.Old.TB
         private readonly ConfigSystemRepo config;
         private readonly FirmRepo _firmRepo;
         private readonly InventoryDemoRepo _inventoryDemoRepo;
+        private readonly UnitCountKTRepo _unitCountKTRepo;
 
         public ProductRTCController(
             ProductGroupRTCRepo productGroupRTCRepo,
             ProductRTCRepo productRTCRepo,
             ProductLocationRepo productLocationRepo,
-            ConfigSystemRepo configSystemRepo, FirmRepo firmRepo, InventoryDemoRepo inventoryDemoRepo)
+            ConfigSystemRepo configSystemRepo, FirmRepo firmRepo, InventoryDemoRepo inventoryDemoRepo, UnitCountKTRepo unitCountKTRepo)
         {
             _productGroupRTCRepo = productGroupRTCRepo;
             _productRTCRepo = productRTCRepo;
@@ -37,6 +38,7 @@ namespace RERPAPI.Controllers.Old.TB
             config = configSystemRepo;
             _firmRepo = firmRepo;
             _inventoryDemoRepo = inventoryDemoRepo;
+            _unitCountKTRepo = unitCountKTRepo;
         }
 
 
@@ -83,8 +85,8 @@ namespace RERPAPI.Controllers.Old.TB
         {
             try
             {
-                List<ProductGroupRTC> productGroup = _productGroupRTCRepo.GetAll(x => x.WarehouseType == warehouseType 
-                                                                                    && x.IsDeleted == false);
+                List<ProductGroupRTC> productGroup = _productGroupRTCRepo.GetAll(x => x.WarehouseType == warehouseType
+                                                                                    && x.IsDeleted == false).OrderBy(x => x.NumberOrder).ToList();
                 //.Where(x => x.IsDeleted == false)
                 //.ToList();
 
@@ -569,7 +571,20 @@ namespace RERPAPI.Controllers.Old.TB
 
         //}
 
+        [HttpGet("get-unitcount-kt")]
+        public IActionResult GetUnitCount()
+        {
+            try
+            {
+                var rs = _unitCountKTRepo.GetAll();
+                return Ok(ApiResponseFactory.Success(rs, ""));
 
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [HttpGet("get-by-qrcode")]
         public IActionResult GetProductByQrCode(string qrCode)
         {

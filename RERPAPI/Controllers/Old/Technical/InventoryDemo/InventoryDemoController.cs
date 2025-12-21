@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.Technical;
+using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Technical;
 
 namespace RERPAPI.Controllers.Old.Technical.InventoryDemo
@@ -13,9 +14,11 @@ namespace RERPAPI.Controllers.Old.Technical.InventoryDemo
     public class InventoryDemoController : ControllerBase
     {
         private readonly ProductRTCQRCodeRepo _productRTCQRCodeRepo;
-        public InventoryDemoController(ProductRTCQRCodeRepo productRTCQRCodeRepo)
+        private readonly ProductGroupRTCRepo _productGroupRTCRepo;
+        public InventoryDemoController(ProductRTCQRCodeRepo productRTCQRCodeRepo, ProductGroupRTCRepo productGroupRTCRepo)
         {
             _productRTCQRCodeRepo = productRTCQRCodeRepo;
+            _productGroupRTCRepo = productGroupRTCRepo;
         }
         [HttpPost("get-inventoryDemo")]
         public IActionResult GetInventoryDemo([FromBody] InventoryDemoRequestParam request)
@@ -124,7 +127,21 @@ namespace RERPAPI.Controllers.Old.Technical.InventoryDemo
             }
         }
 
+        [HttpGet("get-productRTC-group")]
+        public IActionResult GetAll(int warehouseID, int warehouseType = 1)
+        {
+            try
+            {
+                List<ProductGroupRTC> productGroup = _productGroupRTCRepo.GetAll(x => x.WarehouseType == warehouseType && x.WarehouseID == warehouseID
+                                                                                    && x.IsDeleted == false && !x.ProductGroupNo.Contains("DBH") && x.ProductGroupNo != "CCDC").OrderBy(x => x.NumberOrder).ToList();
 
+                return Ok(ApiResponseFactory.Success(productGroup, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
 
     }
 }
