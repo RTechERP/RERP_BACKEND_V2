@@ -179,7 +179,7 @@ namespace RERPAPI.Controllers
 
                         // Encode để xử lý khoảng trắng, dấu, ký tự đặc biệt (&, %, ...)
                         var encodedPath = Uri.EscapeUriString(relativePath);
-                        string url = $"{baseUrl}/api/share/common/{encodedPath}";
+                        string url = $"{baseUrl}/api/api/share/common/{encodedPath}";
                         //item.urlImage = url;
                         item.urlImage = url;
                         var timeRecive = item.TimeNeedPresent.Value.ToString("dd/MM/yyyyy HH:mm");

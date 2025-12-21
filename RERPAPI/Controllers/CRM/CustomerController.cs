@@ -406,16 +406,17 @@ namespace RERPAPI.Controllers.CRM
         //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
         //    }
         //}
-        AddressStockRepo _addressStockRepo;
-        CustomerContactRepo _customerContactRepo;
-        CustomerEmployeeRepo _customerEmployeeRepo;
-        EmployeeRepo _employeeRepo;
-        CustomerSpecializationRepo _customerSpecializationRepo;
-        BusinessFieldRepo _businessFieldRepo;
-        CustomerRepo _customerRepo;
-        BusinessFieldLinkRepo _businessFieldLinkRepo;
-        vUserGroupLinksRepo _vUserGroupLinksRepo;
-        public CustomerController(AddressStockRepo addressStockRepo, CustomerContactRepo customerContactRepo, CustomerEmployeeRepo customerEmployeeRepo, EmployeeRepo employeeRepo, CustomerSpecializationRepo customerSpecializationRepo, BusinessFieldRepo businessFieldRepo, CustomerRepo customerRepo, BusinessFieldLinkRepo businessFieldLinkRepo, vUserGroupLinksRepo vUserGroupLinksRepo)
+        private readonly AddressStockRepo _addressStockRepo;
+        private readonly CustomerContactRepo _customerContactRepo;
+        private readonly CustomerEmployeeRepo _customerEmployeeRepo;
+        private readonly EmployeeRepo _employeeRepo;
+        private readonly CustomerSpecializationRepo _customerSpecializationRepo;
+        private readonly BusinessFieldRepo _businessFieldRepo;
+        private readonly CustomerRepo _customerRepo;
+        private readonly BusinessFieldLinkRepo _businessFieldLinkRepo;
+        private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
+        private readonly ProvinceRepo _provinceRepo;
+        public CustomerController(AddressStockRepo addressStockRepo, CustomerContactRepo customerContactRepo, CustomerEmployeeRepo customerEmployeeRepo, EmployeeRepo employeeRepo, CustomerSpecializationRepo customerSpecializationRepo, BusinessFieldRepo businessFieldRepo, CustomerRepo customerRepo, BusinessFieldLinkRepo businessFieldLinkRepo, vUserGroupLinksRepo vUserGroupLinksRepo, ProvinceRepo provinceRepo)
         {
             _addressStockRepo = addressStockRepo;
             _customerContactRepo = customerContactRepo;
@@ -426,6 +427,7 @@ namespace RERPAPI.Controllers.CRM
             _customerRepo = customerRepo;
             _businessFieldLinkRepo = businessFieldLinkRepo;
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
+            _provinceRepo = provinceRepo;
         }
         private static string json = System.IO.File.ReadAllText(@"jsonProvinces.txt");
         private static List<Provinces> provinces = JsonConvert.DeserializeObject<List<Provinces>>(json);
@@ -561,7 +563,7 @@ namespace RERPAPI.Controllers.CRM
         {
             try
             {
-                var data = provinces.OrderBy(x => x.STT).ToList();
+                var data = _provinceRepo.GetAll().OrderBy(x => x.STT).ToList();
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
