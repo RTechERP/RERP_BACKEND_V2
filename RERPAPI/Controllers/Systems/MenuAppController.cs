@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using NPOI.SS.Formula.Functions;
+using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Repo.GenericEntity.Systems;
@@ -31,17 +33,19 @@ namespace RERPAPI.Controllers.Systems
         }
 
         [HttpGet("")]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll(string keyword = "")
         {
             try
             {
+                _currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
                 var connection = new SqlConnection(_configuration.GetValue<string>("ConnectionString") ?? "");
-                var param = new { Keyword = "" };
-                var data = await connection.QueryMultipleAsync("spGetMenu", param, commandType: System.Data.CommandType.StoredProcedure);
+                var param = new { Keyword = keyword, UserID = _currentUser.ID};
+                var data = await connection.QueryMultipleAsync("spGetMenuApp", param, commandType: System.Data.CommandType.StoredProcedure);
 
                 var menus = (await data.ReadAsync()).ToList();
+                var userGroups = (await data.ReadAsync()).ToList();
 
-                return Ok(ApiResponseFactory.Success(menus, ""));
+                return Ok(ApiResponseFactory.Success(new { menus, userGroups }, ""));
             }
             catch (Exception ex)
             {
@@ -50,7 +54,7 @@ namespace RERPAPI.Controllers.Systems
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetByID(int id)
+        public IActionResult GetByID(int id)
         {
             try
             {
@@ -70,6 +74,7 @@ namespace RERPAPI.Controllers.Systems
         {
             try
             {
+                
                 if (menu.ID <= 0) await _menuRepo.CreateAsync(menu);
                 else await _menuRepo.UpdateAsync(menu);
 
