@@ -10,4 +10,5 @@ public partial class UnitCountKT
     public string? UnitCountCode { get; set; }
 
     public string? UnitCountName { get; set; }
+    public bool? IsDeleted { get; set; }
 }

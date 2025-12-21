@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.TB;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -15,11 +14,11 @@ namespace RERPAPI.Controllers.Old
             _productGroupRTCRepo = productGroupRTCRepo;
         }
         [HttpGet("get-all")]
-        public IActionResult GetAll()
+        public IActionResult GetAll(int warehouseType)
         {
             try
             {
-                List<ProductGroupRTC> productGroups = _productGroupRTCRepo.GetAll(x => x.WarehouseID == 1 && !x.ProductGroupNo.Contains("DBH") && x.ProductGroupNo != "CCDC");
+                List<ProductGroupRTC> productGroups = _productGroupRTCRepo.GetAll(x => x.WarehouseID == 1 && !x.ProductGroupNo.Contains("DBH") && x.ProductGroupNo != "CCDC" && x.WarehouseType == warehouseType);
                 return Ok(new
                 {
                     status = 1,
