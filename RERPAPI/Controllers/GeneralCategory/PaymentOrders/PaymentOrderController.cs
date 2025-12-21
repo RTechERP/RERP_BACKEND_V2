@@ -134,11 +134,11 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             {
                 _currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
 
-                //var validate = _paymentRepo.Validate(payment);
-                //if (validate.status == 0)
-                //{
-                //    return BadRequest(validate);
-                //}
+                var validate = _paymentRepo.Validate(payment);
+                if (validate.status == 0)
+                {
+                    return BadRequest(validate);
+                }
 
                 payment.EmployeeID = _currentUser.EmployeeID;
                 payment.IsUrgent = payment.DatePayment.HasValue;

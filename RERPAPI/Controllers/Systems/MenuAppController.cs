@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using NPOI.POIFS.Properties;
 using NPOI.SS.Formula.Functions;
 using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
@@ -15,7 +16,7 @@ namespace RERPAPI.Controllers.Systems
 {
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize]
+    [Authorize]
     public class MenuAppController : ControllerBase
     {
         private readonly IConfiguration _configuration;
@@ -39,7 +40,7 @@ namespace RERPAPI.Controllers.Systems
             {
                 _currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
                 var connection = new SqlConnection(_configuration.GetValue<string>("ConnectionString") ?? "");
-                var param = new { Keyword = keyword, UserID = _currentUser.ID};
+                var param = new { Keyword = keyword, UserID = 78};
                 var data = await connection.QueryMultipleAsync("spGetMenuApp", param, commandType: System.Data.CommandType.StoredProcedure);
 
                 var menus = (await data.ReadAsync()).ToList();
@@ -74,7 +75,16 @@ namespace RERPAPI.Controllers.Systems
         {
             try
             {
-                
+
+                if (menu.IsDeleted != true)
+                {
+
+                    var validate = _menuRepo.Validate(menu);
+                    if (validate.status == 0)
+                    {
+                        return BadRequest(validate);
+                    }
+                }
                 if (menu.ID <= 0) await _menuRepo.CreateAsync(menu);
                 else await _menuRepo.UpdateAsync(menu);
 

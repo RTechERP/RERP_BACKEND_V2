@@ -5596,6 +5596,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedBy).HasMaxLength(50);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.Icon).HasMaxLength(50);
+            entity.Property(e => e.QueryParam).HasMaxLength(550);
             entity.Property(e => e.Router)
                 .HasMaxLength(250)
                 .IsUnicode(false);
