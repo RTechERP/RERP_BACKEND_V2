@@ -25,14 +25,16 @@ namespace RERPAPI.Controllers.Old.Technical
     public class DailyReportTechController : ControllerBase
     {
         DailyReportTechnicalRepo _dailyReportTechnicalRepo;
+        DailyReportHRRepo _dailyReportHRRepo;
         ProjectItemRepo _projectItemRepo;
         EmployeeSendEmailRepo _employeeSendEmailRepo;
         private IConfiguration _configuration;
-        public DailyReportTechController(DailyReportTechnicalRepo dailyReportTechnicalRepo, ProjectItemRepo projectItemRepo, EmployeeSendEmailRepo employeeSendEmailRepo, IConfiguration configuration)
+        public DailyReportTechController(DailyReportTechnicalRepo dailyReportTechnicalRepo, ProjectItemRepo projectItemRepo, EmployeeSendEmailRepo employeeSendEmailRepo, DailyReportHRRepo dailyReportHRRepo, IConfiguration configuration)
         {
             _dailyReportTechnicalRepo = dailyReportTechnicalRepo;
             _projectItemRepo = projectItemRepo;
             _employeeSendEmailRepo = employeeSendEmailRepo;
+            _dailyReportHRRepo = dailyReportHRRepo;
             _configuration = configuration;
         }
         [HttpPost("get-daily-report-tech")]
@@ -216,6 +218,58 @@ namespace RERPAPI.Controllers.Old.Technical
             }
         }
 
+        [HttpPost("save-report-hr")]
+        public async Task<IActionResult> SaveReportHr([FromBody] DailyReportTechnical request)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                int userId = currentUser.ID;
+
+                // 1. Kiểm tra request null hoặc empty
+                if (request == null)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Danh sách báo cáo không được rỗng!"));
+                }
+                if (!_dailyReportHRRepo.ValidateDailyReportHR(request, out string validationMessage, existingReports: null, userId))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, validationMessage));
+                }
+                if (request.ID > 0)
+                {
+                    await _dailyReportTechnicalRepo.UpdateAsync(request);
+                }
+                else
+                {
+                    // Set các giá trị mặc định
+                    request.ProjectID = 0;
+                    request.TotalHours = 0;
+                    request.TotalHourOT = 0;
+                    request.MasterID = 0;
+                    request.Type = 0;
+                    request.ReportLate = 0;
+                    request.StatusResult = 0;
+                    request.Type = 0; // Luôn set Type = 0 (không OT) khi tạo mới
+                    request.ReportLate = 0; // Set mặc định = 0, KHÔNG tính toán
+                    request.WorkPlanDetailID = 0;
+                    request.OldProjectID = 0;
+                    request.DeleteFlag = 0;
+                    request.Confirm = false;
+                    request.CreatedDate = DateTime.Today.AddHours(23).AddMinutes(30);
+                    await _dailyReportTechnicalRepo.CreateAsync(request);
+
+                }
+                return Ok(ApiResponseFactory.Success(null,
+                          "Lưu dữ liệu thành công"
+                      ));
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [HttpPost("delete-daily-report")]
         public async Task<IActionResult> DeletedDailyreport(int dailyReportID)
         {
@@ -247,13 +301,23 @@ namespace RERPAPI.Controllers.Old.Technical
         {
             try
             {
+                var dateStart = (request.dateStart?.ToLocalTime() ?? DateTime.Now)
+                .Date;  // ← .Date tự động set về 00:00:00
 
+                // DateEnd: 23:59:59.9999999
+                //var dateEnd = (request.dateEnd?.ToLocalTime() ?? DateTime.Now)
+                //              .Date
+                //              .AddDays(1)      // Sang ngày hôm sau 00:00:00
+                //              .AddTicks(-1);   // Trừ 1 tick = 23:59:59.9999999
+                // Force convert về local timezone hoặc UTC
+                //var dateStart = request.dateStart?.ToLocalTime() ?? DateTime.Now.Date;
+                var dateEnd = request.dateEnd?.ToLocalTime() ?? DateTime.Now.Date.AddDays(1).AddTicks(-1);
                 var keyword = (request.keyword ?? string.Empty).Trim();
 
                 var dataTech = SQLHelper<object>.ProcedureToList(
                      "spGetDailyReportTechnicalForCopy",
                     new string[] { "@DateStart", "@DateEnd", "@TeamID", "@Keyword", "@UserID", "@DepartmentID" },
-                    new object[] { request.dateStart ?? DateTime.Now, request.dateEnd ?? DateTime.Now, request.teamID, keyword, request.userID, request.departmentID }
+                    new object[] { dateStart, dateEnd, request.teamID, keyword, request.userID, request.departmentID }
                 );
                 var technical = SQLHelper<object>.GetListData(dataTech, 0);
                 return Ok(ApiResponseFactory.Success(technical,
