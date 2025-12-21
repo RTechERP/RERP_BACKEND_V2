@@ -65,7 +65,7 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.JobRequirements
             }
             //return null;
         }
-
+      
 
     }
 }

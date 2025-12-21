@@ -26,10 +26,11 @@ namespace RERPAPI.Controllers.GeneralCategory
         private JobRequirementFileRepo _fileRepo;
         private JobRequirementApprovedRepo _approvedRepo;
         private EmployeeRepo _employeeRepo;
-        
+        private JobRequirementCommentRepo _commentRepo;
 
 
-        public JobRequirementController(IConfiguration configuration, CurrentUser currentUser, JobRequirementRepo jobRepo, JobRequirementDetailRepo detailRepo , JobRequirementFileRepo jobRequirementFileRepo, JobRequirementApprovedRepo approvedRepo, EmployeeRepo employeeRepo)
+
+        public JobRequirementController(IConfiguration configuration, CurrentUser currentUser, JobRequirementRepo jobRepo, JobRequirementDetailRepo detailRepo , JobRequirementFileRepo jobRequirementFileRepo, JobRequirementApprovedRepo approvedRepo, EmployeeRepo employeeRepo, JobRequirementCommentRepo commentRepo)
         {
             _configuration = configuration;
             _currentUser = currentUser;
@@ -38,6 +39,7 @@ namespace RERPAPI.Controllers.GeneralCategory
             _fileRepo = jobRequirementFileRepo;
             _approvedRepo = approvedRepo;
             _employeeRepo = employeeRepo;
+            _commentRepo = commentRepo;
         }
 
 
@@ -126,11 +128,12 @@ namespace RERPAPI.Controllers.GeneralCategory
                     var result =  await _jobRepo.CreateAsync(job);
                     if(result>0)
                     {
-                      await  _approvedRepo.CreateJobRequirementApproved(job.ApprovedTBPID ?? 0, job);
+                     
                              _jobRepo.SendMail(job);
                     }    
                 }
                 else await _jobRepo.UpdateAsync(job);
+                await _approvedRepo.CreateJobRequirementApproved(job.ApprovedTBPID ?? 0, job);
                 // Thêm detail
                 foreach (var item in job.JobRequirementDetails)
                 {
@@ -152,7 +155,199 @@ namespace RERPAPI.Controllers.GeneralCategory
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpPost("delete")]
+        public async Task<IActionResult> Delete([FromBody] List<int> ids)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                if (ids == null || ids.Count == 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng chọn yccv để xóa"));
+                foreach (var item in ids)
+                {
+                   
+                    var jobRe = _jobRepo.GetByID(item);
+                    var jobReApprove = _approvedRepo.GetAll(x => x.JobRequirementID == jobRe.ID && x.IsApproved==1 && x.Step!=1);
+                    if (jobReApprove.Any())
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, $"Phiếu yêu cầu công việc [{jobRe.NumberRequest}] đã được duyệt, không thể xóa"));
+                    }    
+                    else if(jobRe.EmployeeID !=currentUser.EmployeeID)
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, $"Bạn không thể xóa phiếu yêu cầu công việc của người khác"));
+                    }
+                    jobRe.IsDeleted = true;
+                   await _jobRepo.UpdateAsync(jobRe);
+                    
+                }
+                return Ok(ApiResponseFactory.Success(ids, "Xóa thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpPost("approve")]
+        public async Task<IActionResult> Approve([FromBody] List<JobRequirementApproveDTO> list)
+        {
+            var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+            var currentUser = ObjectMapper.GetCurrentUser(claims);
+            var result = new List<object>();
+            foreach (var param in list)
+            {
+                try
+                {
+                    var job = _jobRepo.GetByID(param.JobRequirementID);
+                    if (job == null)
+                    {
+                        result.Add(new { param.JobRequirementID, Success = false, Message = "Phiếu không tồn tại" });
+                        continue;
+                    }
 
-     
+                    var approves = _approvedRepo
+                        .GetAll(x => x.JobRequirementID == job.ID)
+                        .OrderBy(x => x.Step)
+                        .ToList();
+
+                    var currentApprove = approves.FirstOrDefault(x => x.Step == param.Step);
+                    if (currentApprove == null)
+                    {
+                        result.Add(new { job.ID, Success = false, Message = "Không tìm thấy bước duyệt" });
+                        continue;
+                    }
+
+                    // check step trước
+                    if (param.Step > 1)
+                    {
+                        var prevStep = approves.First(x => x.Step == param.Step - 1);
+                        if (prevStep.IsApproved != 1)
+                        {
+                            result.Add(new { job.ID, Success = false, Message = $" Số yêu cầu {job.NumberRequest} chưa được  duyệt, không thể duyệt" });
+                            continue;
+                        }
+                    }
+
+                    // check đã duyệt chưa
+                    if (currentApprove.IsApproved == 1 && param.Status == 1)
+                    {
+                        result.Add(new { job.ID, Success = false, Message = $"Số yêu cầu {job.NumberRequest} đã duyệt, không thể duyệt lại" });
+                        continue;
+                    }
+
+                    // phân quyền step đặc biệt (VD TBP)
+                    if (param.Step == 2 &&
+                        job.ApprovedTBPID != currentUser.EmployeeID &&
+                        !currentUser.IsAdmin)
+                    {
+                        result.Add(new { job.ID, Success = false, Message = "Bạn không phải TBP nên không có quyền duyệt" });
+                        continue;
+                    }
+
+                    // xử lý duyệt / huỷ
+                    if (param.Status == 2)
+                    {
+                        if (string.IsNullOrEmpty(param.ReasonCancel))
+                        {
+                            result.Add(new { job.ID, Success = false, Message = "Vui lòng nhập lý do huỷ" });
+                            continue;
+                        }
+
+                        currentApprove.IsApproved = 2;
+                        currentApprove.ReasonCancel = param.ReasonCancel;
+                    }
+                    else
+                    {
+                        currentApprove.IsApproved = 1;
+                    }
+
+                    currentApprove.DateApproved = DateTime.Now;
+                    currentApprove.ApprovedActualID = currentUser.EmployeeID;
+
+                    await _approvedRepo.UpdateAsync(currentApprove);
+
+                    result.Add(new { job.ID, Success = true });
+                }
+                catch (Exception ex)
+                {
+                    result.Add(new { param.JobRequirementID, Success = false, Message = ex.Message });
+                }
+            }
+
+            return Ok(ApiResponseFactory.Success(result, "Xử lý duyệt hoàn tất"));
+        }
+        [HttpPost("save-request-bgd-approve")]
+        public async Task<IActionResult> SaveRequestBGDApprove([FromBody] JobRequirement model)
+        {
+            try
+            {
+                if(model!=null)
+                {
+                    string isRequestText = model.IsRequestBGDApproved ?? false ? "yêu cầu" : "huỷ yêu cầu";
+                    if(model.ID>0)
+                    {
+                        await _jobRepo.UpdateAsync(model);
+                    }    
+                }    
+
+                return Ok(ApiResponseFactory.Success(model, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpPost("save-comment")]
+        public async Task<IActionResult> SaveComment([FromBody] JobRequirement model)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                JobRequirementComment comment = new JobRequirementComment();
+                comment.JobRequirementID = model.ID;
+                comment.DateComment = DateTime.Now;
+                comment.EmployeeID = currentUser.EmployeeID;
+                comment.CommentContent = model.Note;
+                await _commentRepo.CreateAsync(comment);
+                return Ok(ApiResponseFactory.Success(model, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpPost("get-project-partlist-purchase-request")]
+        public IActionResult GetProjectPartlistPurchaseRequest([FromBody] JobProjectPartlistPurchaseRequestParam request)
+        {
+            try
+            {
+                var ds = request.DateStart.AddHours(00).AddMinutes(00).AddSeconds(00); // 00:00:00
+                var de = request.DateEnd.AddHours(23).AddMinutes(59).AddSeconds(59); // 23:59:59
+                var data = SQLHelper<object>.ProcedureToList("spGetProjectPartlistPurchaseRequest_New_Khanh",
+                                                             new string[] { "@DateStart", "@DateEnd", "@Keyword", "@JobRequirementID" },
+                                                             new object[] { ds, de, request.KeyWord??"", request.JobRequirementID });
+                var dataList = SQLHelper<object>.GetListData(data, 0);
+                return Ok(ApiResponseFactory.Success(dataList, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-all")]
+        public IActionResult GetAllJobRequirement()
+        {
+            try
+            {
+                var job = _jobRepo.GetAll(x => x.IsDeleted != true);
+              
+                return Ok(ApiResponseFactory.Success(job, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 }
