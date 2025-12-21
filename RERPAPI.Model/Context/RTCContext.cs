@@ -566,6 +566,10 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<Menu> Menus { get; set; }
 
+    public virtual DbSet<MenuApp> MenuApps { get; set; }
+
+    public virtual DbSet<MenuAppUserGroupLink> MenuAppUserGroupLinks { get; set; }
+
     public virtual DbSet<MenuEmployeeLink> MenuEmployeeLinks { get; set; }
 
     public virtual DbSet<ModulaLocation> ModulaLocations { get; set; }
@@ -5579,6 +5583,34 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedBy)
                 .HasMaxLength(20)
                 .IsUnicode(false);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<MenuApp>(entity =>
+        {
+            entity.ToTable("MenuApp");
+
+            entity.Property(e => e.Code)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.Icon).HasMaxLength(50);
+            entity.Property(e => e.Router)
+                .HasMaxLength(250)
+                .IsUnicode(false);
+            entity.Property(e => e.Title).HasMaxLength(550);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<MenuAppUserGroupLink>(entity =>
+        {
+            entity.ToTable("MenuAppUserGroupLink");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
