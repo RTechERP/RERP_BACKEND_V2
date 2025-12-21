@@ -27,34 +27,34 @@ namespace RERPAPI.Controllers.HRM
             _configuration = configuration;
         }
 
-  
+
 
         [HttpGet("employees")]
         public IActionResult GetEmployee(int? status, int? departmentid, string? keyword)
         {
             try
             {
-               
+
                 departmentid = departmentid ?? 0;
                 keyword = string.IsNullOrWhiteSpace(keyword) ? "" : keyword;
                 status = status ?? 0;
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 object data;
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
-                var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x =>(x.Code == "N1" || x.Code == "N2" || x.Code == "N60") &&x.UserID == currentUser.ID);
+                var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x => (x.Code == "N1" || x.Code == "N2" || x.Code == "N60") && x.UserID == currentUser.ID);
                 if (vUserHR == null)
                 {
-                     data = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
-                                                 new string[] { "@Status", "@DepartmentID", "@Keyword" },
-                                                 new object[] { status, departmentid, keyword ?? "" });
+                    data = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
+                                                new string[] { "@Status", "@DepartmentID", "@Keyword" },
+                                                new object[] { status, departmentid, keyword ?? "" });
                 }
                 else
                 {
                     var employee = SQLHelper<object>.ProcedureToList("spGetEmployee",
                                                new string[] { "@Status", "@DepartmentID", "@Keyword" },
                                                new object[] { status, departmentid, keyword });
-                      data = SQLHelper<object>.GetListData(employee, 0);
-                }    
+                    data = SQLHelper<object>.GetListData(employee, 0);
+                }
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
@@ -116,7 +116,7 @@ namespace RERPAPI.Controllers.HRM
         {
             try
             {
-                if(!_employeeRepo.Validate(employee, out string message))
+                if (!_employeeRepo.Validate(employee, out string message) && employee.Status != 1)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, message));
                 }
@@ -129,6 +129,8 @@ namespace RERPAPI.Controllers.HRM
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+
         }
+
     }
 }

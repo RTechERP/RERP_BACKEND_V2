@@ -1,12 +1,15 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using NPOI.HSSF.Record.Chart;
 using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
+using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.GeneralCatetogy.JobRequirements;
+using RERPAPI.Repo.GenericEntity.HRM;
 using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.GeneralCategory
@@ -20,13 +23,21 @@ namespace RERPAPI.Controllers.GeneralCategory
         private CurrentUser _currentUser;
         private readonly JobRequirementRepo _jobRepo;
         private readonly JobRequirementDetailRepo _detailRepo;
+        private JobRequirementFileRepo _fileRepo;
+        private JobRequirementApprovedRepo _approvedRepo;
+        private EmployeeRepo _employeeRepo;
+        
 
-        public JobRequirementController(IConfiguration configuration, CurrentUser currentUser, JobRequirementRepo jobRepo, JobRequirementDetailRepo detailRepo)
+
+        public JobRequirementController(IConfiguration configuration, CurrentUser currentUser, JobRequirementRepo jobRepo, JobRequirementDetailRepo detailRepo , JobRequirementFileRepo jobRequirementFileRepo, JobRequirementApprovedRepo approvedRepo, EmployeeRepo employeeRepo)
         {
             _configuration = configuration;
             _currentUser = currentUser;
             _jobRepo = jobRepo;
             _detailRepo = detailRepo;
+            _fileRepo = jobRequirementFileRepo;
+            _approvedRepo = approvedRepo;
+            _employeeRepo = employeeRepo;
         }
 
 
@@ -96,31 +107,44 @@ namespace RERPAPI.Controllers.GeneralCategory
         }
 
 
-        [HttpGet("save-data")]
+        [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] JobRequirementDTO job)
         {
             try
             {
-                _currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey"));
-
+                //  _currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey"));
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
                 //Update master
                 if (job.ID <= 0)
                 {
                     job.NumberRequest = "";
-                    job.EmployeeID = _currentUser.EmployeeID;
-
-                    await _jobRepo.CreateAsync(job);
+                    job.EmployeeID = currentUser.EmployeeID;
+                    int currentYear = DateTime.Now.Year;
+                    var list = _jobRepo.GetAll(x => x.DateRequest.Value.Year == currentYear);
+                    job.NumberRequest = $"{list.Count + 1}.{currentYear}.PYC-RTC";
+                    var result =  await _jobRepo.CreateAsync(job);
+                    if(result>0)
+                    {
+                      await  _approvedRepo.CreateJobRequirementApproved(job.ApprovedTBPID ?? 0, job);
+                             _jobRepo.SendMail(job);
+                    }    
                 }
                 else await _jobRepo.UpdateAsync(job);
-
-                //Update detail
+                // Thêm detail
                 foreach (var item in job.JobRequirementDetails)
                 {
                     item.JobRequirementID = job.ID;
                     if (item.ID <= 0) await _detailRepo.CreateAsync(item);
                     else await _detailRepo.UpdateAsync(item);
                 }
-
+                //thêm file
+                foreach (var item in job.JobRequirementFiles)
+                {
+                    item.JobRequirementID = job.ID;
+                    if (item.ID <= 0) await _fileRepo.CreateAsync(item);
+                    else await _fileRepo.UpdateAsync(item);
+                }
                 return Ok(ApiResponseFactory.Success(job, ""));
             }
             catch (Exception ex)
@@ -128,5 +152,7 @@ namespace RERPAPI.Controllers.GeneralCategory
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+     
     }
 }

@@ -31,7 +31,7 @@ namespace RERPAPI.Controllers.HRM.DailyReportHR
                 var startDate = (request.dateStart ?? weekStart).Date;
                 var endDate = (request.dateEnd ?? weekEnd).Date;
 
-                var ds = startDate; // 00:00:00
+                var ds = startDate.AddHours(00).AddMinutes(00).AddSeconds(00); // 00:00:00
                 var de = endDate.AddHours(23).AddMinutes(59).AddSeconds(59); // 23:59:59
 
                 var keyword = (request.keyword ?? string.Empty).Trim();
@@ -50,7 +50,7 @@ namespace RERPAPI.Controllers.HRM.DailyReportHR
                     new object[] { ds, de, keyword, request.employeeID }
                 );
 
-                var hrAll = SQLHelper<object>.GetListData(dataHr, 0);
+                    var hrAll = SQLHelper<object>.GetListData(dataHr, 0);
 
                 var dataFilm = hrAll
                     .Where(x =>

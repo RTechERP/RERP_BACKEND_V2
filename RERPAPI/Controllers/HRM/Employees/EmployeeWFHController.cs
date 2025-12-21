@@ -20,12 +20,16 @@ namespace RERPAPI.Controllers
         private readonly EmployeeWFHRepo _employeeWFHRepo;
         private readonly DepartmentRepo _departmentRepo;
         private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
+        EmployeeRepo _employeeRepo;
+        EmployeeSendEmailRepo _employeeSendEmailRepo;
 
-        public EmployeeWFHController(EmployeeWFHRepo employeeWFHRepo, DepartmentRepo departmentRepo, vUserGroupLinksRepo vUserGroupLinksRepo)
+        public EmployeeWFHController(EmployeeWFHRepo employeeWFHRepo, DepartmentRepo departmentRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeRepo employeeRepo, EmployeeSendEmailRepo employeeSendEmailRepo)
         {
             _employeeWFHRepo = employeeWFHRepo;
             _departmentRepo = departmentRepo;
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
+            _employeeRepo = employeeRepo;
+            _employeeSendEmailRepo = employeeSendEmailRepo;
         }
 
         //[RequiresPermission("N1,N2")]
@@ -151,8 +155,29 @@ namespace RERPAPI.Controllers
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, message));
                 }
-                if (employeeWFH.ID <= 0) await _employeeWFHRepo.CreateAsync(employeeWFH);
-                else await _employeeWFHRepo.UpdateAsync(employeeWFH);
+                if (employeeWFH.ID <= 0)
+                {
+                  var result=  await _employeeWFHRepo.CreateAsync(employeeWFH);
+                    if(result>0)
+                    {
+                        var employee = _employeeRepo.GetByID(employeeWFH.EmployeeID ?? 0);
+                        var employeeTP = _employeeRepo.GetByID(employeeWFH.ApprovedID ?? 0);
+                        string type = employeeWFH.TimeWFH == 1 ? " buổi sáng" : (employeeWFH.TimeWFH == 2 ? " buổi chiều" : "");
+
+                        string subject = $"WFH{type.ToUpper()} - {employee.FullName??"".ToUpper()} - {employeeWFH.DateWFH.Value.ToString("dd/MM/yyyy")}";
+                        string body = "<div> <p style=\"font - weight: bold; color: red;\">[NO REPLY]</p> <p>Dear anh/chị " + employeeTP.FullName + "</p> </div> <div style=\"margin-top: 30px;\"> " +
+                                      $"<p>Em xin phép anh/chị cho em làm việc tại nhà{type} ngày {employeeWFH.DateWFH.Value.ToString("dd/MM/yyyy")}.</p> " +
+                                      "<p>Lý do: " + employeeWFH.Reason + "</p> " +
+                                      "<p>Anh/chị duyệt giúp em với ạ. Em cảm ơn!</p> </div>" +
+                                      "<div style=\"margin-top: 30px;\"> <p>Thanks</p> <p>" + employee.FullName + "</p> </div>";
+
+                        _employeeSendEmailRepo.SendMail(employeeWFH.EmployeeID ?? 0, employeeWFH.ApprovedID ?? 0, subject, body, "");
+                    }    
+                }
+                else
+                {
+                    await _employeeWFHRepo.UpdateAsync(employeeWFH);
+                }
                 return Ok(ApiResponseFactory.Success(employeeWFH, "Cập nhật thành công!"));
             }
             catch (Exception ex)
