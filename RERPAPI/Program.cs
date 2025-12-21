@@ -430,7 +430,10 @@ builder.Services.AddScoped<PaymentOrderTypeRepo>();
 builder.Services.AddScoped<PaymentOrderFileRepo>();
 builder.Services.AddScoped<PaymentOrderFileBankSlipRepo>();
 builder.Services.AddScoped<PaymentOrderTypeRepo>();
+
 #endregion
+builder.Services.AddScoped<DailyReportHRRepo>();
+
 
 builder.Services.AddScoped<PhasedAllocationPersonRepo>();
 builder.Services.AddScoped<PhasedAllocationPersonDetailRepo>();
