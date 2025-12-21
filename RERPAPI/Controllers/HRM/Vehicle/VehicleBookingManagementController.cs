@@ -30,6 +30,7 @@ namespace RERPAPI.Controllers
         private readonly EmployeeApproveRepo _employeeApproveRepo;
         private readonly ProvinceRepo _provinceRepo;
         private readonly NotifyRepo _notifyRepo;
+        private readonly CurrentUser _currentUser;
 
         public VehicleBookingManagementController(
             VehicleBookingManagementRepo vehicleBookingManagementRepo,
@@ -40,7 +41,8 @@ namespace RERPAPI.Controllers
             ProjectRepo projectRepo,
             EmployeeApproveRepo employeeApproveRepo,
             ProvinceRepo provinceRepo,
-            NotifyRepo notifyRepo
+            NotifyRepo notifyRepo,
+            CurrentUser currentUser
             )
         {
             _vehicleBookingManagementRepo = vehicleBookingManagementRepo;
@@ -53,6 +55,7 @@ namespace RERPAPI.Controllers
             _employeeApproveRepo = employeeApproveRepo;
             _provinceRepo = provinceRepo;
             _notifyRepo = notifyRepo;
+            _currentUser = currentUser;
         }
 
         // POST: /api/vehiclebookingmanagement
@@ -768,14 +771,16 @@ namespace RERPAPI.Controllers
             try
             {
                 int[] categories = { 1, 4, 5 };
+                var employee = _employeeRepo.GetByID(booking.ApprovedTBP ?? 0) ?? new Employee();
 
                 // gửi TBP
-                if (booking.ApprovedTBP > 0)
+                if (employee.ID > 0)
                 {
                     _vehicleBookingManagementRepo.SendEmail(
                         booking, booking.ApprovedTBP ?? 0, "ĐĂNG KÝ XE");
                 }
 
+                booking.ApprovedTBP = 0;
                 // gửi người liên quan
                 if (categories.Contains(booking.Category ?? 0))
                 {
@@ -786,7 +791,11 @@ namespace RERPAPI.Controllers
                         .Distinct();
 
                     foreach (var id in passengers)
+                    {
+                        if(_currentUser.EmployeeID == id)
+                            continue;
                         _vehicleBookingManagementRepo.SendEmail(booking, id, "ĐĂNG KÝ XE");
+                    }
                 }
                 else
                 {
