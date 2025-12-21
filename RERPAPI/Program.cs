@@ -409,6 +409,8 @@ builder.Services.AddScoped<BillExportTechnicalLogRepo>();
 builder.Services.AddScoped<RegisterContractRepo>();
 builder.Services.AddScoped<BookingRoomRepo>();
 builder.Services.AddScoped<PhasedAllocationPersonDetailRepo>();
+builder.Services.AddScoped<JobRequirementFileRepo>();
+builder.Services.AddScoped<JobRequirementApprovedRepo>();
 
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();
@@ -431,6 +433,7 @@ builder.Services.AddScoped<PaymentOrderTypeRepo>();
 
 #endregion
 builder.Services.AddScoped<DailyReportHRRepo>();
+builder.Services.AddScoped<DailyReportLXCP>();
 
 
 builder.Services.AddScoped<PhasedAllocationPersonRepo>();

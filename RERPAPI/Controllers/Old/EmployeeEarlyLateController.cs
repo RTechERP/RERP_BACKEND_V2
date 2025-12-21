@@ -17,11 +17,15 @@ namespace RERPAPI.Controllers.Old
     {
         private readonly EmployeeEarlyLateRepo _employeeEarlyLateRepo;
         private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
+        EmployeeSendEmailRepo _employeeSendEmailRepo;
+        EmployeeRepo _employeeRepo;
 
-        public EmployeeEarlyLateController(EmployeeEarlyLateRepo employeeEarlyLateRepo, vUserGroupLinksRepo vUserGroupLinksRepo)
+        public EmployeeEarlyLateController(EmployeeEarlyLateRepo employeeEarlyLateRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeSendEmailRepo employeeSendEmailRepo, EmployeeRepo employeeRepo)
         {
             _employeeEarlyLateRepo = employeeEarlyLateRepo;
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
+            _employeeSendEmailRepo = employeeSendEmailRepo;
+            _employeeRepo = employeeRepo;
         }
 
         [HttpPost]
@@ -49,9 +53,10 @@ namespace RERPAPI.Controllers.Old
                     employeeID = currentUser.EmployeeID;
                 }
                 var arrParamName = new string[] { "@FilterText", "@PageNumber", "@PageSize", "@Month", "@Year", "@DepartmentID", "@EmployeeID", "@IDApprovedTP", "@Status" };
-                var arrParamValue = new object[] { param.keyWord ?? "", param.pageNumber, param.pageSize, param.month, param.year, param.departmentId, employeeID, param.idApprovedTp, param.status};
+                var arrParamValue = new object[] { param.keyWord ?? "", param.pageNumber, param.pageSize, param.month, param.year, param.departmentId, employeeID, param.idApprovedTp, param.status };
                 var employeeEarlyLate = SQLHelper<object>.ProcedureToList("spGetEmployeeEarlyLate", arrParamName, arrParamValue);
-                return Ok(new {
+                return Ok(new
+                {
                     data = SQLHelper<object>.GetListData(employeeEarlyLate, 0),
                     status = 1
                 });
@@ -112,7 +117,7 @@ namespace RERPAPI.Controllers.Old
             try
             {
 
-               if(employeeEarlyLate.ID <= 0)
+                if (employeeEarlyLate.ID <= 0)
                 {
                     if (employeeEarlyLate.DateStart.HasValue)
                     {
@@ -122,11 +127,10 @@ namespace RERPAPI.Controllers.Old
                     {
                         employeeEarlyLate.DateEnd = DateTime.SpecifyKind(employeeEarlyLate.DateEnd.Value, DateTimeKind.Utc);
                     }
-                    var exisingEmployeeEarlyLate = _employeeEarlyLateRepo.GetAll().Where(x =>  x.EmployeeID == employeeEarlyLate.EmployeeID && 
+                    var exisingEmployeeEarlyLate = _employeeEarlyLateRepo.GetAll().Where(x => x.EmployeeID == employeeEarlyLate.EmployeeID &&
                                                                                                  x.DateRegister.Value.Date == employeeEarlyLate.DateRegister.Value.Date &&
                                                                                                     x.Type == employeeEarlyLate.Type &&
                                                                                                      x.ID != employeeEarlyLate.ID);
-
                     if (exisingEmployeeEarlyLate.Any())
                     {
                         return BadRequest(new
@@ -135,24 +139,38 @@ namespace RERPAPI.Controllers.Old
                             message = "Nhân viên đã khai báo ngày này rồi! Vui lòng kiếm tra lại",
                         });
                     }
-                        var result = await _employeeEarlyLateRepo.CreateAsync(employeeEarlyLate);
-                        return Ok(new
-                        {
-                            status = 1,
-                            message = "Thêm thành công",
-                            data = result
-                        });
-                    }
-                    else
+                    var result = await _employeeEarlyLateRepo.CreateAsync(employeeEarlyLate);
+                    if (result > 0)
                     {
-                        var result = await _employeeEarlyLateRepo.UpdateAsync(employeeEarlyLate);
-                        return Ok(new
-                        {
-                            status = 1,
-                            message = "Cập nhật thành công",
-                            data = result
-                        });
+                        var employee = _employeeRepo.GetByID(employeeEarlyLate.EmployeeID ?? 0);
+                        var employeeTP = _employeeRepo.GetByID(employeeEarlyLate.ApprovedID ?? 0);
+                        string type = employeeEarlyLate.Type == 1 ? "Đi muộn" : (employeeEarlyLate.Type == 2 ? "Về sớm" : (employeeEarlyLate.Type == 3 ? "Về sớm" : "Đi muộn"));
+                        string subject = $"{type.ToUpper()} {employeeEarlyLate.TimeRegister} PHÚT - {employee.FullName ?? "".ToUpper()} - {employeeEarlyLate.DateRegister.Value.ToString("dd/MM/yyyy")}";
+                        string body = "<div> <p style=\"font - weight: bold; color: red;\">[NO REPLY]</p><p>Dear anh/chị " + employeeTP.FullName + "</p> </div> <div style=\"margin-top: 30px;\"> " +
+                                      $"<p>Em xin phép anh/chị cho em {type} {employeeEarlyLate.TimeRegister} phút ngày {employeeEarlyLate.DateRegister.Value.ToString("dd/MM/yyyy")}.</p> " +
+                                      "<p>Lý do: " + employeeEarlyLate.Reason + "</p> " +
+                                      "<p>Anh/chị duyệt giúp em với ạ. Em cảm ơn!</p> </div>" +
+                                      "<div style=\"margin-top: 30px;\"> <p>Thanks</p> <p>" + employee.FullName + "</p> </div>";
+
+                        _employeeSendEmailRepo.SendMail(employeeEarlyLate.EmployeeID ?? 0, employeeEarlyLate.ApprovedTP ?? 0, subject, body, "");
                     }
+                    return Ok(new
+                    {
+                        status = 1,
+                        message = "Thêm thành công",
+                        data = result
+                    });
+                }
+                else
+                {
+                    var result = await _employeeEarlyLateRepo.UpdateAsync(employeeEarlyLate);
+                    return Ok(new
+                    {
+                        status = 1,
+                        message = "Cập nhật thành công",
+                        data = result
+                    });
+                }
             }
             catch (Exception ex)
             {
@@ -166,4 +184,3 @@ namespace RERPAPI.Controllers.Old
         }
     }
 }
-    

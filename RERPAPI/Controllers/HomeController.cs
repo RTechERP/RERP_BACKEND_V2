@@ -31,7 +31,7 @@ namespace RERPAPI.Controllers
         private readonly JwtSettings _jwtSettings;
         private readonly RTCContext _context;
         private readonly IConfiguration _configuration;
-
+        EmployeeOverTimeRepo _employeeOverTimeRepo;
         //UserRepo _userRepo = new UserRepo();
         vUserGroupLinksRepo _vUserGroupLinksRepo;
 
@@ -40,7 +40,7 @@ namespace RERPAPI.Controllers
         private readonly EmployeeWFHRepo _wfhRepo;
         private readonly ConfigSystemRepo _configSystemRepo;
 
-        public HomeController(IOptions<JwtSettings> jwtSettings, RTCContext context, IConfiguration configuration, EmployeeOnLeaveRepo onLeaveRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeWFHRepo employeeWFHRepo, ConfigSystemRepo configSystemRepo)
+        public HomeController(IOptions<JwtSettings> jwtSettings, RTCContext context, IConfiguration configuration, EmployeeOnLeaveRepo onLeaveRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeWFHRepo employeeWFHRepo, ConfigSystemRepo configSystemRepo, EmployeeOverTimeRepo employeeOverTimeRepo)
         {
             _jwtSettings = jwtSettings.Value;
             _context = context;
@@ -49,6 +49,7 @@ namespace RERPAPI.Controllers
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
             _wfhRepo = employeeWFHRepo;
             _configSystemRepo = configSystemRepo;
+            _employeeOverTimeRepo = employeeOverTimeRepo;
         }
         [HttpPost("login")]
         public IActionResult Login([FromBody] User user)
@@ -724,12 +725,12 @@ namespace RERPAPI.Controllers
             if ((item.IsCancelRegister ?? 0) > 0)
                 return $"Nhân viên [{item.FullName}] đã đăng ký hủy, không thể duyệt / hủy duyệt.";
 
-         
+
 
             //if (!isApproved && !(item.IsApprovedTP ?? false))
             //    return $"Nhân viên [{item.FullName}] chưa được TBP duyệt, không thể hủy duyệt.";
 
-            if (!isApproved && (item.IsApprovedBGD ==true))
+            if (!isApproved && (item.IsApprovedBGD == true))
                 return $"Nhân viên [{item.FullName}] đã được BGĐ duyệt, không thể hủy duyệt TBP.";
 
             return null;
@@ -743,8 +744,8 @@ namespace RERPAPI.Controllers
             if (!(item.IsApprovedHR ?? false))
                 return $"Nhân viên [{item.FullName}] chưa được HR duyệt, BGD không thể duyệt / hủy duyệt.";
 
-       
-            if (!isApproved && !(item.IsApprovedBGD ==true))
+
+            if (!isApproved && !(item.IsApprovedBGD == true))
                 return $"Nhân viên [{item.FullName}] chưa được BGĐ duyệt, không thể hủy duyệt.";
 
             return null;
@@ -759,17 +760,40 @@ namespace RERPAPI.Controllers
             if (!string.Equals(item.TableName, "EmployeeOvertime", StringComparison.OrdinalIgnoreCase))
                 return "Senior chỉ được duyệt cho đăng ký làm thêm (EmployeeOvertime).";
 
-            if (item.IsApprovedBGD ?? false)
+            if (item.IsApprovedBGD == true)
                 return $"Nhân viên [{item.FullName}] đã được BGĐ duyệt, Senior không thể thay đổi.";
 
-            if (item.IsApprovedTP ?? false)
-                return $"Nhân viên [{item.FullName}] đã được TBP duyệt, Senior không thể thay đổi.";
 
-            // Hủy duyệt mà chưa từng Senior duyệt
-            if (!isApproved && !(item.IsSeniorApproved ?? false))
-                return $"Nhân viên [{item.FullName}] chưa được Senior duyệt, không thể hủy duyệt.";
+
+            //// Hủy duyệt mà chưa từng Senior duyệt
+            //if (isApproved==false && (item.IsSeniorApproved != true))
+            //    return $"Nhân viên [{item.FullName}] chưa được Senior duyệt, không thể hủy duyệt.";
 
             return null;
+        }
+        [HttpPost("save-approve-senior")]
+        public async Task<IActionResult> SaveApproveSenior(ApproveItemParam item, bool isApproved)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                string isApprovedText = isApproved ? "duyệt" : "hủy duyệt";
+                if (item == null)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Chưa có dữ liệu để {isApprovedText}"));
+                }
+                var dt = SQLHelper<dynamic>.ProcedureToList("spGetUserTeamLinkByLeaderID", new string[] { "@LeaderID" }, new object[] { currentUser.EmployeeID });
+                var data = SQLHelper<object>.GetListData(dt, 0);
+                var result = data.Cast<IDictionary<string, object>>().FirstOrDefault(x => x.ContainsKey("EmployeeID") && x["EmployeeID"] != null && Convert.ToInt32(x["EmployeeID"]) == item.EmployeeID);
+
+
+                return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
         }
         [RequiresPermission("N32")]
         [HttpPost("approve-tbp")]
@@ -781,7 +805,7 @@ namespace RERPAPI.Controllers
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Danh sách phê duyệt không được để trống!"));
                 }
-                
+
                 var notProcessed = new List<NotProcessedApprovalItem>();
 
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
@@ -802,8 +826,8 @@ namespace RERPAPI.Controllers
                     }
                     SQLHelper<object>.ExcuteProcedure(
                   "spUpdateTableByFieldNameAndID",
-                  new[] { "@TableName", "@FieldName","@Value", "@ID", "@ValueUpdatedDate", "@ValueDecilineApprove", "@EvaluateResults" },
-                  new object[] { item.TableName, item.FieldName,item.IsApprovedTP, item.Id, item.ValueUpdatedDate, item.ValueDecilineApprove ?? "", item.EvaluateResults });
+                  new[] { "@TableName", "@FieldName", "@Value", "@ID", "@ValueUpdatedDate", "@ValueDecilineApprove", "@EvaluateResults" },
+                  new object[] { item.TableName, item.FieldName, item.IsApprovedTP, item.Id, item.ValueUpdatedDate, item.ValueDecilineApprove ?? "", item.EvaluateResults });
 
                 }
                 return Ok(ApiResponseFactory.Success(notProcessed, notProcessed.Count == 0 ? "Duyệt thành công." : $"Duyệt thành công, bỏ qua {notProcessed.Count} bản ghi."));
@@ -842,8 +866,8 @@ namespace RERPAPI.Controllers
                         continue;
 
                     }
-                    SQLHelper<object>.ExcuteProcedure( "spUpdateTableByFieldNameAndID",new[] { "@TableName", "@FieldName", "@Value", "@ID", "@ValueUpdatedBy", "@ValueUpdatedDate", "@ValueDecilineApprove", "@Content", "@EvaluateResults" }, 
-                        new object[] { item.TableName,item.FieldName,  item.IsApprovedTP.HasValue ? (item.IsApprovedTP.Value ? "1" : "0") : "0", item.Id,"", item.ValueUpdatedDate ?? "",item.ValueDecilineApprove ?? "",  item.ReasonDeciline ?? "",  item.EvaluateResults ?? ""});
+                    SQLHelper<object>.ExcuteProcedure("spUpdateTableByFieldNameAndID", new[] { "@TableName", "@FieldName", "@Value", "@ID", "@ValueUpdatedBy", "@ValueUpdatedDate", "@ValueDecilineApprove", "@Content", "@EvaluateResults" },
+                        new object[] { item.TableName, item.FieldName, item.IsApprovedTP.HasValue ? (item.IsApprovedTP.Value ? "1" : "0") : "0", item.Id, "", item.ValueUpdatedDate ?? "", item.ValueDecilineApprove ?? "", item.ReasonDeciline ?? "", item.EvaluateResults ?? "" });
 
                 }
                 return Ok(ApiResponseFactory.Success(notProcessed, notProcessed.Count == 0 ? "Duyệt thành công." : $"Duyệt thành công, bỏ qua {notProcessed.Count} bản ghi."));
@@ -893,28 +917,39 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message)); 
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         [RequiresPermission("N85")]
         [HttpPost("approve-senior")]
-        public IActionResult ApproveSenior([FromBody] ApproveRequestParam request)
+        public IActionResult ApproveSenior([FromBody] ApproveRequestParam
+            request)
         {
             try
             {
-                if (request == null || request.Items == null || request.Items.Count == 0)   
+                if (request == null || request.Items == null || request.Items.Count == 0)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Danh sách phê duyệt không được để trống!"));
                 }
-
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 int seniorId = currentUser.EmployeeID;
-
                 var notProcessed = new List<NotProcessedApprovalItem>();
-
+                var dt = SQLHelper<dynamic>.ProcedureToList("spGetUserTeamLinkByLeaderID", new string[] { "@LeaderID" }, new object[] { currentUser.EmployeeID });
+                var data = SQLHelper<object>.GetListData(dt, 0);
+                var teamEmployeeIds = data.Cast<IDictionary<string, object>>().Where(x => x.ContainsKey("EmployeeID") && x["EmployeeID"] != null).Select(x => Convert.ToInt32(x["EmployeeID"])).ToHashSet(); // 
+                  //   var result = data.Cast<IDictionary<string, object>>().FirstOrDefault(x => x.ContainsKey("EmployeeID") && x["EmployeeID"] != null && Convert.ToInt32(x["EmployeeID"]) == request.Items.EmployeeID);
                 foreach (var item in request.Items)
                 {
+                    if (!item.EmployeeID.HasValue || !teamEmployeeIds.Contains(item.EmployeeID.Value))
+                    {
+                        notProcessed.Add(new NotProcessedApprovalItem
+                        {
+                            Item = item,
+                            Reason = "Nhân viên không thuộc team của bạn"
+                        });
+                        continue;
+                    }
                     var error = ValidateSenior(item, request.IsApproved ?? false);
                     if (error != null)
                     {
@@ -927,13 +962,9 @@ namespace RERPAPI.Controllers
                     }
                     SQLHelper<object>.ExcuteProcedure(
                "spUpdateTableByFieldNameAndID",
-               new[] { "@TableName", "@FieldName", "@ID", "@ValueUpdatedDate", "@ValueDecilineApprove", "@EvaluateResults" },
-               new object[] { item.TableName, item.FieldName, item.Id, item.ValueUpdatedDate, item.ValueDecilineApprove ?? "", item.EvaluateResults }
-           );
-
-
+               new[] { "@TableName", "@FieldName", "@Value", "@ID", "@ValueUpdatedDate", "@ValueDecilineApprove", "@EvaluateResults" },
+               new object[] { item.TableName, item.FieldName, item.IsSeniorApproved, item.Id, item.ValueUpdatedDate, item.ValueDecilineApprove ?? "", item.EvaluateResults });
                 }
-
                 return Ok(ApiResponseFactory.Success(notProcessed, notProcessed.Count == 0 ? "Duyệt thành công." : $"Duyệt thành công, bỏ qua {notProcessed.Count} bản ghi."));
             }
             catch (Exception ex)
@@ -941,153 +972,153 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-            [HttpGet("get-personal-synthetic-by-month")]
-            public IActionResult GetPersonalSyntheticByMonth(int year, int month)
+        [HttpGet("get-personal-synthetic-by-month")]
+        public IActionResult GetPersonalSyntheticByMonth(int year, int month)
+        {
+            try
             {
-                try
-                {
-                 
-                    var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                    var currentUser = ObjectMapper.GetCurrentUser(claims);
 
-      
-                    DateTime dateStart = new DateTime(year, month, 1, 0, 0, 0);
-                    DateTime dateEnd = dateStart.AddMonths(1).AddSeconds(-1);
-
-                    var listSummary = SQLHelper<object>.ProcedureToList("spGetPersonalSyntheticByMonth",
-                        new string[] { "@Year", "@Month", "@EmployeeID" },
-                        new object[] { year, month, currentUser.EmployeeID });
-
-                    var payrollData = SQLHelper<object>.ProcedureToList("spGetEmployeePayrollDetail",
-                        new string[] { "@Year", "@Month", "@DepartmentID", "@EmployeeID", "@Keyword", "@IsPublish", "@IsAll" },
-                        new object[] { year, month, currentUser.DepartmentID, currentUser.EmployeeID, "", 1, 0 });
-                var payroll = SQLHelper<object>.GetListData(payrollData, 0); 
-                    var rawFingerData = SQLHelper<dynamic>.ProcedureToList("spGetEmployeeAttendance",
-                        new string[] { "@DepartmentID", "@EmployeeID", "@FindText", "@DateStart", "@DateEnd" },
-                        new object[] { currentUser.DepartmentID, currentUser.EmployeeID, "", dateStart, dateEnd });
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
 
 
-                    var listFingerDetails = SQLHelper<object>.GetListData(rawFingerData, 0);
+                DateTime dateStart = new DateTime(year, month, 1, 0, 0, 0);
+                DateTime dateEnd = dateStart.AddMonths(1).AddSeconds(-1);
 
-                    var summaryFinger = SQLHelper<object>.GetListData(rawFingerData, 1).FirstOrDefault();
+                var listSummary = SQLHelper<object>.ProcedureToList("spGetPersonalSyntheticByMonth",
+                    new string[] { "@Year", "@Month", "@EmployeeID" },
+                    new object[] { year, month, currentUser.EmployeeID });
 
-                    var fingers = new
-                    {
-
-                        data = summaryFinger,
-                        details = listFingerDetails
-                    };
-                    var rawChamCongData = SQLHelper<dynamic>.ProcedureToList("spGetChamCongNew",
-                        new string[] { "@Month", "@Year", "@EmployeeID" },
-                        new object[] { month, year, currentUser.EmployeeID });
-
-
-                    var chamcongInfo = SQLHelper<object>.GetListData(rawChamCongData, 0).FirstOrDefault();
-                    var dynamicListTable1 = SQLHelper<dynamic>.GetListData(rawChamCongData, 1);
-                    var rowChamCongChiTiet = dynamicListTable1 != null ? dynamicListTable1.FirstOrDefault() : null;
-                    var dynamicListTable2 = SQLHelper<dynamic>.GetListData(rawChamCongData, 2);
-                    var rowTotalWork = dynamicListTable2 != null ? dynamicListTable2.FirstOrDefault() : null;
-                    IDictionary<string, object>     dictChamCong = null;
-                    if (rowChamCongChiTiet != null)
-                    {
-
-                        if (rowChamCongChiTiet is IDictionary<string, object>)
-                            dictChamCong = (IDictionary<string, object>)rowChamCongChiTiet;
-                        else
-                        {
-                            var json = Newtonsoft.Json.JsonConvert.SerializeObject(rowChamCongChiTiet);
-                            dictChamCong = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
-                        }
-                    }
-                    int totalWorkDay = 0;
-                    if (rowTotalWork != null)
-                    {
-                        IDictionary<string, object> dictTotal = null;
-                        if (rowTotalWork is IDictionary<string, object>) dictTotal = (IDictionary<string, object>)rowTotalWork;
-                        else dictTotal = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(Newtonsoft.Json.JsonConvert.SerializeObject(rowTotalWork));
-
-                        if (dictTotal != null && dictTotal.ContainsKey("TotalWorkDay"))
-                            totalWorkDay = TextUtils.ToInt32(dictTotal["TotalWorkDay"]);
-                    }
+                var payrollData = SQLHelper<object>.ProcedureToList("spGetEmployeePayrollDetail",
+                    new string[] { "@Year", "@Month", "@DepartmentID", "@EmployeeID", "@Keyword", "@IsPublish", "@IsAll" },
+                    new object[] { year, month, currentUser.DepartmentID, currentUser.EmployeeID, "", 1, 0 });
+                var payroll = SQLHelper<object>.GetListData(payrollData, 0);
+                var rawFingerData = SQLHelper<dynamic>.ProcedureToList("spGetEmployeeAttendance",
+                    new string[] { "@DepartmentID", "@EmployeeID", "@FindText", "@DateStart", "@DateEnd" },
+                    new object[] { currentUser.DepartmentID, currentUser.EmployeeID, "", dateStart, dateEnd });
 
 
-                    var listHeaderChamCong = new List<object>();
-                    var listDates = Enumerable.Range(1, DateTime.DaysInMonth(year, month))
-                                              .Select(day => new DateTime(year, month, day))
-                                              .ToList();
+                var listFingerDetails = SQLHelper<object>.GetListData(rawFingerData, 0);
 
-                    foreach (var item in listDates)
-                    {
-                        string key = $"D{item.Day}";
-                        string rawValue = "";
-                        if (dictChamCong != null && dictChamCong.ContainsKey(key))
-                        {
-                            rawValue = TextUtils.ToString(dictChamCong[key]);
-                        }
-                        var parts = rawValue.Split(';');
-                        string textShow = parts.Length > 0 ? parts[0] : "";
-                        int statusWork = parts.Length > 1 ? TextUtils.ToInt32(parts[1]) : 0;
+                var summaryFinger = SQLHelper<object>.GetListData(rawFingerData, 1).FirstOrDefault();
 
-                        listHeaderChamCong.Add(new
-                        {
-                            fieldname = key,
-                            text = $"{item.Day}<br />{textShow}",
-                            statuswork = statusWork,
-                        });
-                    }
-                    var listChamcongDetail = new List<object>();
-                    DateTime firstDateInMonth = new DateTime(year, month, 1);
-                    DateTime lastDateInMonth = firstDateInMonth.AddMonths(1).AddDays(-1);
-                    DateTime dateValue = firstDateInMonth.AddDays(-(int)firstDateInMonth.DayOfWeek + (int)DayOfWeek.Monday);
-
-                    for (int i = 0; i < (7 * 6); i++) 
-                    {
-                        DateTime currentDate = dateValue.AddDays(i);
-                        bool isValidDay = (currentDate >= firstDateInMonth && currentDate <= lastDateInMonth);
-
-                        string key = $"D{currentDate.Day}";
-                        string rawValue = "";
-                        if (isValidDay && dictChamCong != null && dictChamCong.ContainsKey(key))
-                        {
-                            rawValue = TextUtils.ToString(dictChamCong[key]);
-                        }
-
-                        var parts = rawValue.Split(';');
-                        int statusWork = parts.Length > 1 ? TextUtils.ToInt32(parts[1]) : 0;
-
-                        listChamcongDetail.Add(new
-                        {
-                            value = currentDate,
-                            fieldname = isValidDay ? key : "",
-                            text = currentDate.Day,
-                            disabled = !isValidDay,
-                            statuswork = statusWork
-                        });
-                    }
-
-                    var listChamcong = new
-                    {
-                        header = listHeaderChamCong,
-                        data = chamcongInfo,
-                        totalworkday = totalWorkDay,
-                        detail = listChamcongDetail
-                    };
-                    var result = new
-                    {
-                        listSummary = listSummary,
-                        fingers = fingers,
-                        payroll = payroll,
-                        listChamcong = listChamcong
-                    };
-
-                    return Ok(ApiResponseFactory.Success(result));
-                }
-                catch (Exception ex)
+                var fingers = new
                 {
 
-                    return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+                    data = summaryFinger,
+                    details = listFingerDetails
+                };
+                var rawChamCongData = SQLHelper<dynamic>.ProcedureToList("spGetChamCongNew",
+                    new string[] { "@Month", "@Year", "@EmployeeID" },
+                    new object[] { month, year, currentUser.EmployeeID });
+
+
+                var chamcongInfo = SQLHelper<object>.GetListData(rawChamCongData, 0).FirstOrDefault();
+                var dynamicListTable1 = SQLHelper<dynamic>.GetListData(rawChamCongData, 1);
+                var rowChamCongChiTiet = dynamicListTable1 != null ? dynamicListTable1.FirstOrDefault() : null;
+                var dynamicListTable2 = SQLHelper<dynamic>.GetListData(rawChamCongData, 2);
+                var rowTotalWork = dynamicListTable2 != null ? dynamicListTable2.FirstOrDefault() : null;
+                IDictionary<string, object> dictChamCong = null;
+                if (rowChamCongChiTiet != null)
+                {
+
+                    if (rowChamCongChiTiet is IDictionary<string, object>)
+                        dictChamCong = (IDictionary<string, object>)rowChamCongChiTiet;
+                    else
+                    {
+                        var json = Newtonsoft.Json.JsonConvert.SerializeObject(rowChamCongChiTiet);
+                        dictChamCong = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
+                    }
                 }
+                int totalWorkDay = 0;
+                if (rowTotalWork != null)
+                {
+                    IDictionary<string, object> dictTotal = null;
+                    if (rowTotalWork is IDictionary<string, object>) dictTotal = (IDictionary<string, object>)rowTotalWork;
+                    else dictTotal = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(Newtonsoft.Json.JsonConvert.SerializeObject(rowTotalWork));
+
+                    if (dictTotal != null && dictTotal.ContainsKey("TotalWorkDay"))
+                        totalWorkDay = TextUtils.ToInt32(dictTotal["TotalWorkDay"]);
+                }
+
+
+                var listHeaderChamCong = new List<object>();
+                var listDates = Enumerable.Range(1, DateTime.DaysInMonth(year, month))
+                                          .Select(day => new DateTime(year, month, day))
+                                          .ToList();
+
+                foreach (var item in listDates)
+                {
+                    string key = $"D{item.Day}";
+                    string rawValue = "";
+                    if (dictChamCong != null && dictChamCong.ContainsKey(key))
+                    {
+                        rawValue = TextUtils.ToString(dictChamCong[key]);
+                    }
+                    var parts = rawValue.Split(';');
+                    string textShow = parts.Length > 0 ? parts[0] : "";
+                    int statusWork = parts.Length > 1 ? TextUtils.ToInt32(parts[1]) : 0;
+
+                    listHeaderChamCong.Add(new
+                    {
+                        fieldname = key,
+                        text = $"{item.Day}<br />{textShow}",
+                        statuswork = statusWork,
+                    });
+                }
+                var listChamcongDetail = new List<object>();
+                DateTime firstDateInMonth = new DateTime(year, month, 1);
+                DateTime lastDateInMonth = firstDateInMonth.AddMonths(1).AddDays(-1);
+                DateTime dateValue = firstDateInMonth.AddDays(-(int)firstDateInMonth.DayOfWeek + (int)DayOfWeek.Monday);
+
+                for (int i = 0; i < (7 * 6); i++)
+                {
+                    DateTime currentDate = dateValue.AddDays(i);
+                    bool isValidDay = (currentDate >= firstDateInMonth && currentDate <= lastDateInMonth);
+
+                    string key = $"D{currentDate.Day}";
+                    string rawValue = "";
+                    if (isValidDay && dictChamCong != null && dictChamCong.ContainsKey(key))
+                    {
+                        rawValue = TextUtils.ToString(dictChamCong[key]);
+                    }
+
+                    var parts = rawValue.Split(';');
+                    int statusWork = parts.Length > 1 ? TextUtils.ToInt32(parts[1]) : 0;
+
+                    listChamcongDetail.Add(new
+                    {
+                        value = currentDate,
+                        fieldname = isValidDay ? key : "",
+                        text = currentDate.Day,
+                        disabled = !isValidDay,
+                        statuswork = statusWork
+                    });
+                }
+
+                var listChamcong = new
+                {
+                    header = listHeaderChamCong,
+                    data = chamcongInfo,
+                    totalworkday = totalWorkDay,
+                    detail = listChamcongDetail
+                };
+                var result = new
+                {
+                    listSummary = listSummary,
+                    fingers = fingers,
+                    payroll = payroll,
+                    listChamcong = listChamcong
+                };
+
+                return Ok(ApiResponseFactory.Success(result));
             }
+            catch (Exception ex)
+            {
+
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [HttpGet("get-user-team")]
         public IActionResult GetUserTeam()
         {
@@ -1095,7 +1126,7 @@ namespace RERPAPI.Controllers
             {
                 int currentYear = DateTime.Now.Year;
                 int currentQuarter = (DateTime.Now.Month - 1) / 3 + 1;
-                var team = SQLHelper<object>.ProcedureToList("spGetALLKPIEmployeeTeam" , 
+                var team = SQLHelper<object>.ProcedureToList("spGetALLKPIEmployeeTeam",
                                                 new string[] { "@YearValue", "@QuarterValue", "@DepartmentID" },
                                                 new object[] { currentYear, currentQuarter, 0 });
                 var data = SQLHelper<object>.GetListData(team, 0);
@@ -1105,7 +1136,7 @@ namespace RERPAPI.Controllers
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-          
+
         }
         [HttpGet("get-user-team-link-by-leader-id")]
         public IActionResult GetUserTeamLinkByLeaderID()
@@ -1114,9 +1145,9 @@ namespace RERPAPI.Controllers
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
-              
+
                 var team = SQLHelper<object>.ProcedureToList("spGetUserTeamLinkByLeaderID",
-                                                new string[] { "@LeaderID"},
+                                                new string[] { "@LeaderID" },
                                                 new object[] { currentUser.EmployeeID });
                 var data = SQLHelper<object>.GetListData(team, 0);
                 return Ok(ApiResponseFactory.Success(data, ""));
