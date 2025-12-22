@@ -70,13 +70,13 @@ namespace RERPAPI.Repo.GenericEntity
                 message = "Vui lòng chọn Chức vụ (Theo Nội bộ)!";
                 return false;
             }
-
             // ===== 7. Validate Đơn vị BHXH =====
-            if (string.IsNullOrWhiteSpace(item.BHXH))
+            if (string.IsNullOrWhiteSpace(item.DvBHXH))
             {
                 message = "Vui lòng chọn Đơn vị bảo hiểm xã hội!";
                 return false;
             }
+
 
             // ===== 8. Validate Ngày sinh =====
             if (!item.BirthOfDate.HasValue)
