@@ -452,7 +452,7 @@ namespace RERPAPI.Controllers.Project
                     }
                 }
 
-                _projectPartlistRepo.UpdatePurchaseRequest(listPartLists,currentUser.EmployeeID);
+                _projectPartlistRepo.UpdatePurchaseRequest(listPartLists, currentUser.EmployeeID);
                 return Ok(ApiResponseFactory.Success(null, ""));
             }
             catch (Exception ex)
@@ -716,8 +716,8 @@ namespace RERPAPI.Controllers.Project
                                             x.IsDeleted != true &&
                                             x.ProductCode == partList.ProductCode &&
                                             x.IsFix == true
-                                            ).FirstOrDefault() ;
-                        return Ok(ApiResponseFactory.Fail(null, fixMessage,fixedProduct));
+                                            ).FirstOrDefault();
+                        return Ok(ApiResponseFactory.Fail(null, fixMessage, fixedProduct));
                     }
                 }
 
@@ -1122,7 +1122,7 @@ namespace RERPAPI.Controllers.Project
                         string unit = item.UnitStock;
                         string productName = item.ProductNameStock;
                         if (string.IsNullOrWhiteSpace(maker) && string.IsNullOrWhiteSpace(unit) && string.IsNullOrWhiteSpace(productName)) continue; // bỏ qua 
-                        
+
                         if (string.IsNullOrWhiteSpace(maker)) maker = item.Maker;
                         if (string.IsNullOrWhiteSpace(unit)) unit = item.Unit;
                         if (string.IsNullOrWhiteSpace(productName)) productName = item.ProductName;
@@ -1218,14 +1218,15 @@ namespace RERPAPI.Controllers.Project
 
                 if (validIds.Count <= 0)
                 {
-                    return BadRequest(ApiResponseFactory.Fail(null, $"Các sản phẩm TT [{string.Join(";  ", productNewCodes)}] sẽ không được yêu cầu xuất kho vì không đủ số lượng!"));
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Các sản phẩm có mã nội bộ [{string.Join("\n- ", productNewCodes)}] sẽ không được yêu cầu xuất kho vì không đủ số lượng!"));
                 }
 
                 // Warning message nếu có sản phẩm không đủ số lượng
                 string warningMessage = "";
                 if (productNewCodes.Count > 0)
                 {
-                    warningMessage = $"Các sản phẩm có mã nội bộ [{string.Join(";", productNewCodes)}] sẽ không được yêu cầu xuất kho vì không đủ số lượng!";
+                    warningMessage ="Các sản phẩm sau không đủ số lượng để xuất kho:\n- " + string.Join("\n- ", productNewCodes);
+                    //warningMessage = $"Các sản phẩm có mã nội bộ [{string.Join(";", productNewCodes)}] sẽ không được yêu cầu xuất kho vì không đủ số lượng!";
                 }
 
                 // Gọi stored procedure
@@ -1698,7 +1699,7 @@ namespace RERPAPI.Controllers.Project
                     partList.QtyMin = item.QtyMin;
                     partList.QtyFull = item.QtyFull;
                     partList.Unit = item.Unit;
-                    partList.Price = item.Price.HasValue? Convert.ToDecimal(item.Price.Value): 0m; ;//<= 0 ? item.UnitPriceQuote : item.Price;
+                    partList.Price = item.Price.HasValue ? Convert.ToDecimal(item.Price.Value) : 0m; ;//<= 0 ? item.UnitPriceQuote : item.Price;
                     partList.Amount = item.Amount;// partList.Price * partList.QtyFull;
                     partList.LeadTime = item.LeadTime; // tien do
                     partList.NCC = item.NCC;
