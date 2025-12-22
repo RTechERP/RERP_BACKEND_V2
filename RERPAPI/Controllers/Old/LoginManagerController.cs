@@ -110,7 +110,13 @@ namespace RERPAPI.Controllers.Old
 
                 // Set TeamID
                 user.TeamID = loginInfo.TeamID;
-
+                if (loginManagerRepo.GetAll(x =>x.LoginName == loginInfo.LoginName &&x.ID != loginInfo.UserID).Any())
+                {
+                    return BadRequest(ApiResponseFactory.Fail(
+                        null,
+                        $"Tên đăng nhập {loginInfo.LoginName} đã tồn tại"
+                    ));
+                }
                 // Update or insert records
                 if (loginInfo.UserID > 0 && user.ID > 0 && employee.ID > 0)
                 {
@@ -119,6 +125,7 @@ namespace RERPAPI.Controllers.Old
                 }
                 else
                 {
+                  
                     await loginManagerRepo.CreateAsync(user);
                     employee.UserID = user.ID;
                     await employeeRepo.UpdateAsync(employee);
