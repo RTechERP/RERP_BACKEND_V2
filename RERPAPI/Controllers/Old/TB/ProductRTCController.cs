@@ -86,7 +86,7 @@ namespace RERPAPI.Controllers.Old.TB
             try
             {
                 List<ProductGroupRTC> productGroup = _productGroupRTCRepo.GetAll(x => x.WarehouseType == warehouseType
-                                                                                    && x.IsDeleted == false).OrderBy(x => x.NumberOrder).ToList();
+                                                                                    && x.IsDeleted == false && !x.ProductGroupNo.Contains("DBH") && x.ProductGroupNo != "CCDC" && x.WarehouseID == 1).OrderBy(x => x.NumberOrder).ToList();
                 //.Where(x => x.IsDeleted == false)
                 //.ToList();
 
@@ -570,7 +570,24 @@ namespace RERPAPI.Controllers.Old.TB
         //    }
 
         //}
-
+        [HttpPost("update-location")]
+        public async Task<IActionResult> UpdateLocation(int id, int locationID)
+        {
+            try
+            {
+                var product = _productRTCRepo.GetByID(id);
+                if (product.ID > 0)
+                {
+                    product.ProductLocationID = locationID;
+                    await _productRTCRepo.UpdateAsync(product);
+                }
+                return Ok(ApiResponseFactory.Success(product));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [HttpGet("get-unitcount-kt")]
         public IActionResult GetUnitCount()
         {

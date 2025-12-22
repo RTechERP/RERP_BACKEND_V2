@@ -19,7 +19,7 @@ namespace RERPAPI.Controllers.Old
         }   
 
         [HttpGet("get-all")]
-        [RequiresPermission("N2,N1")]
+        //[RequiresPermission("N2,N1")]
         public IActionResult GetAll()
         {
             try
