@@ -15,6 +15,8 @@ public partial class MenuApp
 
     public string? Router { get; set; }
 
+    public string? QueryParam { get; set; }
+
     public string? Icon { get; set; }
 
     public int? ParentID { get; set; }

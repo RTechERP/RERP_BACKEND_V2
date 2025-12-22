@@ -3899,13 +3899,13 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.DateWFH).HasColumnType("datetime");
             entity.Property(e => e.DecilineApprove).HasComment("2: Không đồng ý duyệt; 1: Có đồng ý duyệt");
             entity.Property(e => e.EvaluateResults).HasMaxLength(550);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.Note).HasMaxLength(550);
             entity.Property(e => e.Reason).HasMaxLength(550);
             entity.Property(e => e.TimeWFH).HasComment("1: Buổi sáng; 2:Buổi chiều, 3: Cả ngày");
             entity.Property(e => e.TotalDay).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
-            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
         });
 
         modelBuilder.Entity<EmployeeWorkingProcess>(entity =>
@@ -5308,8 +5308,8 @@ public partial class RTCContext : DbContext
 
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-            entity.Property(e => e.RuleCode).HasMaxLength(50);
-            entity.Property(e => e.RuleName).HasMaxLength(50);
+            entity.Property(e => e.RuleCode).HasMaxLength(150);
+            entity.Property(e => e.RuleName).HasMaxLength(550);
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
@@ -5597,6 +5597,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedBy).HasMaxLength(50);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.Icon).HasMaxLength(50);
+            entity.Property(e => e.QueryParam).HasMaxLength(550);
             entity.Property(e => e.Router)
                 .HasMaxLength(250)
                 .IsUnicode(false);
@@ -9945,6 +9946,7 @@ public partial class RTCContext : DbContext
         {
             entity.ToTable("UnitCountKT");
 
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.UnitCountCode).HasMaxLength(150);
             entity.Property(e => e.UnitCountName).HasMaxLength(150);
         });
