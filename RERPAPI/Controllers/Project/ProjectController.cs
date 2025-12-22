@@ -44,7 +44,7 @@ namespace RERPAPI.Controllers.Project
         private readonly ProjectCostRepo projectCostRepo;
         private readonly ProjectPriorityLinkRepo projectPriorityLinkRepo;
 
-        
+
 
         private readonly ProjectCurrentSituationRepo projectCurrentSituationRepo;
 
@@ -1313,14 +1313,14 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                int rowNumber=0;
+                int rowNumber = 0;
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 bool havePermission = false;
                 var employee = SQLHelper<object>.ProcedureToList("spGetProjectEmployeePermisstion",
                                                         new string[] { "@ProjectID", "@EmployeeID" },
                                                         new object[] { projectId, employeeId });
-                
+
                 var data = SQLHelper<object>.GetListData(employee, 0);
                 if (data.Count > 0)
                 {
@@ -1803,7 +1803,7 @@ namespace RERPAPI.Controllers.Project
                 if (existing != null && existing.ID > 0)
                 {
                     projectPP.ID = existing.ID;
-                    projectPP.UserID= currentUser.ID;
+                    projectPP.UserID = currentUser.ID;
                     await projectPersonalPriotityRepo.UpdateAsync(projectPP);
                 }
                 else
@@ -2265,10 +2265,10 @@ namespace RERPAPI.Controllers.Project
                 CreateCommonFolders(basePath);
 
                 //string url = $"/api/share/duan/projects/{year}/{project.ProjectCode}";
-                string url = $"\\\\192.168.1.190\\duan\\Projects\\{ year}\\{project.ProjectCode}";
+                string url = $"\\\\192.168.1.190\\duan\\Projects\\{year}\\{project.ProjectCode}";
                 string urlOnl = $"\\\\113.190.234.64\\DUAN\\Projects\\{year}\\{project.ProjectCode}";
 
-                return Ok(ApiResponseFactory.Success(new {url,urlOnl}, "Tạo cây thư mục thành công"));
+                return Ok(ApiResponseFactory.Success(new { url, urlOnl }, "Tạo cây thư mục thành công"));
             }
             catch (Exception ex)
             {
@@ -2342,7 +2342,7 @@ namespace RERPAPI.Controllers.Project
         #endregion
         //update status 
         [HttpPost("update-status")]
-        public async Task<IActionResult> UpdateStatus(int projectID, int projectStatusID, DateTime dateLog) 
+        public async Task<IActionResult> UpdateStatus(int projectID, int projectStatusID, DateTime dateLog)
         {
             try
             {
@@ -2374,6 +2374,23 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
 
             }
+        }
+        // lấy nhân viên theo team 
+        [HttpGet("get-employee-by-userTeam")]
+        public async Task<IActionResult> getEmployeeByUserTeam(int userTeamID)
+        {
+            try
+            {
+                var data = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployeeByTeamID",
+                            new string[] { "@TeamID" },
+                            new object[] { userTeamID });
+                return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+
         }
 
     }

@@ -1054,12 +1054,12 @@ namespace RERPAPI.Repo.GenericEntity
 
             if (remainQuantity <= 0) // nếu còn lại = 0 thì không thể xuất
             {
-                productNewCode = partList.TT;
+                productNewCode = partList.ProductNewCode;
                 return false;
             }
             if (quantityReturn <= 0)  // số lượng đã về = 0 thì hnagf chưa về không có gì để xuất
             {
-                productNewCode = partList.TT;
+                productNewCode = partList.ProductNewCode;
                 return false;
             }
 
@@ -1068,6 +1068,7 @@ namespace RERPAPI.Repo.GenericEntity
             int pokhDetailID = 0;
 
             string tt = partList.TT ?? "";
+            string productnewCode = partList.ProductNewCode ?? ""; 
             string projectCode = partList.ProjectCode ?? " ";
 
 
@@ -1091,7 +1092,7 @@ namespace RERPAPI.Repo.GenericEntity
             decimal totalStock = Math.Max(totalQuantityKeep, 0) + totalQuantityRemain + Math.Max(totalQuantityLast, 0);
             if (totalQty > totalStock)
             {
-                productNewCode = tt;
+                productNewCode = productnewCode;
                 return false;
             }
 
