@@ -52,6 +52,7 @@ builder.Services.AddScoped<EmployeeOnLeaveRepo>();
 builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.AddressStockRepo>();
 builder.Services.AddScoped<AccountingContractRepo>();
 builder.Services.AddScoped<AccountingContractLogRepo>();
+builder.Services.AddScoped<AccountingContractFileRepo>();
 builder.Services.AddScoped<AccountingContractTypeRepo>();
 builder.Services.AddScoped<BillDocumentExportLogRepo>();
 builder.Services.AddScoped<BillDocumentImportLogRepo>();
