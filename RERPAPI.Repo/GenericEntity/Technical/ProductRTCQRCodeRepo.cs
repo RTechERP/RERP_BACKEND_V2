@@ -37,18 +37,14 @@ namespace RERPAPI.Repo.GenericEntity.Technical
                         return ApiResponseFactory.Fail(null, $"Mã QrCode {productRTCQRCode.ProductQRCode} đã được sử dụng vui lòng kiểm tra lại !");
                     }    
                 }
-                if(string.IsNullOrWhiteSpace(productRTCQRCode.SerialNumber))
-                {
-                    return ApiResponseFactory.Fail(null, "Vui lòng nhập SerialNumber!");
-                }
-                else
-                {
-                    var codeExist1 = GetAll(x => x.SerialNumber!.ToLower().Trim() == productRTCQRCode.SerialNumber.ToLower().Trim() && x.WarehouseID == productRTCQRCode.WarehouseID && x.ID != productRTCQRCode.ID);
-                    if (codeExist1.Count>0)
-                    {
-                        return ApiResponseFactory.Fail(null, $"Mã SerialNumber {productRTCQRCode.SerialNumber}   đã được sử dụng vui lòng kiểm tra lại !");
-                    }
-                }
+                //else
+                //{
+                //    var codeExist1 = GetAll(x => x.SerialNumber!.ToLower().Trim() == productRTCQRCode.SerialNumber.ToLower().Trim() && x.WarehouseID == productRTCQRCode.WarehouseID && x.ID != productRTCQRCode.ID);
+                //    if (codeExist1.Count>0)
+                //    {
+                //        return ApiResponseFactory.Fail(null, $"Mã SerialNumber {productRTCQRCode.SerialNumber}   đã được sử dụng vui lòng kiểm tra lại !");
+                //    }
+                //}
                 return ApiResponseFactory.Success(null, "");
             }
             catch (Exception ex)

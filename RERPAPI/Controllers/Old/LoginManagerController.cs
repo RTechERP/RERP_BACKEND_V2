@@ -78,7 +78,7 @@ namespace RERPAPI.Controllers.Old
                         message = "Chưa có thông tin nhân viên"
                     });
                 }
-                User user = loginManagerRepo.GetAll(x => x.LoginName.ToLower() == loginInfo.LoginName.ToLower() && x.Status != 1).FirstOrDefault();
+                User user = loginManagerRepo.GetAll(x => x.LoginName.ToLower() == loginInfo.LoginName.ToLower() && x.Status != 1).FirstOrDefault()??new Model.Entities.User();
                 Employee employee = employeeRepo.GetAll(x=> x.Code.ToLower() == loginInfo.Code && x.FullName.ToLower() == loginInfo.FullName.ToLower()).FirstOrDefault();
 
 
@@ -119,7 +119,7 @@ namespace RERPAPI.Controllers.Old
                 }
                 else
                 {
-                    user.ID = await loginManagerRepo.CreateAsync(user);
+                    await loginManagerRepo.CreateAsync(user);
                     employee.UserID = user.ID;
                     await employeeRepo.UpdateAsync(employee);
                 }
