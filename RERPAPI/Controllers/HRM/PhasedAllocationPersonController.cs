@@ -70,7 +70,20 @@ namespace RERPAPI.Controllers.HRM
         {
             try
             {
-                if (phased.ID <= 0) await _phasedRepo.CreateAsync(phased);
+                if (phased.IsDeleted != true)
+                {
+                    var isExistCode = _phasedRepo.GetAll(x => x.Code.Trim().ToUpper() == phased.Code.Trim().ToUpper() && x.IsDeleted != true&& x.ID != phased.ID).Any();
+                    if (isExistCode)
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, $"Mã cấp phát [{phased.Code}] đã tồn tại!"));
+                    }
+                }
+
+                if (phased.ID <= 0)
+                {
+
+                    await _phasedRepo.CreateAsync(phased);
+                }
                 else await _phasedRepo.UpdateAsync(phased);
                 return Ok(ApiResponseFactory.Success(phased, "Cập nhập thành công!"));
             }
@@ -86,27 +99,55 @@ namespace RERPAPI.Controllers.HRM
             try
             {
                 List<string> employeeFails = new List<string>();
+                int phasedAllocationPersonID = 0;
                 foreach (var item in details)
                 {
-                    var employee = _employeeRepo.GetAll(x => x.Code == item.EmployeeCode && x.Status != 1).FirstOrDefault() ?? new Employee();
-                    if (employee.ID <= 0)
+                    if (!string.IsNullOrWhiteSpace(item.EmployeeCode))
                     {
-                        employeeFails.Add($"Mã nhân viên [{item.EmployeeCode}] không tồn tại hoặc đã bị xóa!");
-                        continue;
+                        var employee = _employeeRepo.GetAll(x => x.Code == item.EmployeeCode && x.Status != 1).FirstOrDefault() ?? new Employee();
+                        if (employee.ID <= 0)
+                        {
+                            employeeFails.Add($"Mã nhân viên [{item.EmployeeCode}] không tồn tại hoặc đã bị xóa!");
+                            continue;
+                        }
+                        var detail = _phasedDetailRepo.GetAll(x => x.PhasedAllocationPersonID == item.PhasedAllocationPersonID && x.EmployeeID == employee.ID).FirstOrDefault() ?? new PhasedAllocationPersonDetail();
+                        if (detail.ID <= 0) await _phasedDetailRepo.CreateAsync(item);
+                        else
+                        {
+                            detail.DateReceive = DateTime.Now;
+                            detail.UpdatedDate = DateTime.Now;
+                            detail.StatusReceive = 1;
+                            await _phasedDetailRepo.UpdateAsync(detail);
+                        }
                     }
-                    var detai = _phasedDetailRepo.GetAll(x => x.PhasedAllocationPersonID == item.PhasedAllocationPersonID && x.EmployeeID == employee.ID).FirstOrDefault() ?? new PhasedAllocationPersonDetail();
-                    if (detai.ID <= 0) await _phasedDetailRepo.CreateAsync(item);
                     else
                     {
-                        detai.DateReceive = DateTime.Now;
-                        detai.StatusReceive = 1;
-                        detai.UpdatedDate = DateTime.Now;
-
-                        await _phasedDetailRepo.UpdateAsync(detai);
+                        if (item.ID <= 0)
+                            await _phasedDetailRepo.CreateAsync(item);
+                        else
+                        {
+                            if (item.StatusReceive == 1)
+                            {
+                                item.DateReceive = DateTime.Now;
+                            }
+                            await _phasedDetailRepo.UpdateAsync(item);
+                        }
                     }
-
+                    phasedAllocationPersonID = (int)item.PhasedAllocationPersonID;
                 }
 
+                if (phasedAllocationPersonID != 0)
+                {
+                    List<PhasedAllocationPersonDetail> lstDetail = _phasedDetailRepo.GetAll(p => p.PhasedAllocationPersonID == phasedAllocationPersonID && !p.IsDeleted.Value);
+                    PhasedAllocationPerson allocationPerson = _phasedRepo.GetByID(phasedAllocationPersonID);
+                    if (lstDetail.Count(p => p.StatusReceive == 1) == lstDetail.Count)
+                    {
+                        allocationPerson.StatusAllocation = 1;
+                        await _phasedRepo.UpdateAsync(allocationPerson);
+                    }
+                }
+
+                //Kiểm tra all update lại trạng thái phiếu
                 string message = "Cập nhập thành công!";
                 if (employeeFails.Count() > 0)
                 {

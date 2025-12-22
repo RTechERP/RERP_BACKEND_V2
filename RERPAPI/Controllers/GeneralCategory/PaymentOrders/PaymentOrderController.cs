@@ -1,6 +1,4 @@
-﻿using DocumentFormat.OpenXml.Drawing.Charts;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using RERPAPI.Middleware;
@@ -10,9 +8,6 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders;
-using System.Diagnostics;
-using System.Numerics;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
 {
@@ -37,6 +32,12 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         private readonly PONCCRepo _poNccRepo;
         private readonly RegisterContractRepo _registerContractRepo;
         private readonly ProjectRepo _projectRepo;
+        private readonly PONCCDetailRepo _poNccDetailRepo;
+        private readonly ProductSaleRepo _productSaleRepo;
+        private readonly ProductRTCRepo _productRTCRepo;
+        private readonly UnitCountKTRepo _unitCountKTRepo;
+        private readonly CurrencyRepo _currencyRepo;
+
 
 
         public PaymentOrderController(IConfiguration configuration, CurrentUser currentUser,
@@ -52,7 +53,12 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             SupplierSaleRepo supplierSaleRepo,
             PONCCRepo poNcc,
             RegisterContractRepo registerContractRepo,
-            ProjectRepo projectRepo
+            ProjectRepo projectRepo,
+            PONCCDetailRepo poNccDetailRepo,
+            ProductSaleRepo productSaleRepo,
+            ProductRTCRepo productRTCRepo,
+            UnitCountKTRepo unitCountKTRepo,
+            CurrencyRepo currencyRepo
             )
         {
             _configuration = configuration;
@@ -70,6 +76,11 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             _poNccRepo = poNcc;
             _registerContractRepo = registerContractRepo;
             _projectRepo = projectRepo;
+            _poNccDetailRepo = poNccDetailRepo;
+            _productSaleRepo = productSaleRepo;
+            _productRTCRepo = productRTCRepo;
+            _unitCountKTRepo = unitCountKTRepo;
+            _currencyRepo = currencyRepo;
         }
 
 
@@ -383,6 +394,96 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             else
             {
                 return Ok(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+            }
+        }
+        [HttpGet("get-data-from-poncc/{ponccID}")]
+        public IActionResult GetDataFromPONCC(int ponccID)
+        {
+            try
+            {
+                var poNCC = _poNccRepo.GetByID(ponccID);
+
+                if (poNCC == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy PO NCC"));
+
+                var supplierSale = _supplierSaleRepo.GetByID(poNCC.SupplierSaleID ?? 0);
+                var currency = _currencyRepo.GetByID(poNCC.CurrencyID ?? 0);
+                var currencyCode = currency?.Code ?? "VND";
+                // Lấy details
+                var details = _poNccDetailRepo.GetAll(x => x.PONCCID == ponccID).ToList();
+
+                // Lấy tất cả ProductSale và ProductRTC (không dùng Contains)
+                var allProductSales = _productSaleRepo.GetAll();
+                var allProductRTCs = _productRTCRepo.GetAll();
+                var allUnitCounts = _unitCountKTRepo.GetAll();
+
+                // Tạo Dictionary để lookup
+                var productSaleDict = allProductSales.ToDictionary(x => x.ID);
+                var productRTCDict = allProductRTCs.ToDictionary(x => x.ID);
+                var unitCountDict = allUnitCounts.ToDictionary(x => x.ID);
+
+                // Map data
+                var poNCCDetails = details.Select(detail =>
+                {
+                    string productName = "";
+                    string unit = "";
+
+                    if (detail.ProductSaleID > 0 && productSaleDict.TryGetValue(detail.ProductSaleID ?? 0, out var productSale))
+                    {
+                        productName = productSale.ProductName ?? "";
+                        unit = productSale.Unit ?? "";
+                    }
+                    else if (detail.ProductRTCID > 0 && productRTCDict.TryGetValue(detail.ProductRTCID ?? 0, out var productRTC))
+                    {
+                        productName = productRTC.ProductName ?? "";
+                        if (productRTC.UnitCountID > 0 && unitCountDict.TryGetValue(productRTC.UnitCountID ?? 0, out var unitCount))
+                        {
+                            unit = unitCount.UnitCountName ?? "";
+                        }
+                    }
+
+                    return new
+                    {
+                        STT = detail.STT,
+                        QtyRequest = detail.QtyRequest,
+                        UnitPrice = detail.UnitPrice,
+                        TotalPrice = detail.TotalPrice,
+                        Note = detail.Note,
+                        ProductSaleID = detail.ProductSaleID,
+                        ProductRTCID = detail.ProductRTCID,
+                        ProductName = productName,
+                        Unit = unit
+                    };
+                }).ToList();
+
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    poNCC = new
+                    {
+                        poNCC.ID,
+                        poNCC.POCode,
+                        poNCC.BillCode,
+                        poNCC.SupplierSaleID,
+                        poNCC.AccountNumberSupplier,
+                        poNCC.BankSupplier,
+                        poNCC.TotalMoneyPO,
+                        poNCC.CurrencyID,
+                        poNCC.CurrencyRate,
+                        Unit = currencyCode
+                    },
+                    supplierSale = supplierSale == null ? null : new
+                    {
+                        supplierSale.ID,
+                        supplierSale.NameNCC,
+                        supplierSale.SoTK,
+                        supplierSale.NganHang
+                    },
+                    poNCCDetails
+                }));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

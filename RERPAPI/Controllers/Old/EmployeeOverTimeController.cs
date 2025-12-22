@@ -306,8 +306,6 @@ namespace RERPAPI.Controllers.Old
             {
                 var employeeOverTime = _employeeOverTimeRepo.GetByID(ID);
                 var overTimeFile = _employeeOvertimeFileRepo.GetAll(x => x.EmployeeOvertimeID == ID && x.IsDeleted != true).FirstOrDefault();
-
-
                 return Ok(ApiResponseFactory.Success(new { employeeOverTime, overTimeFile }, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)

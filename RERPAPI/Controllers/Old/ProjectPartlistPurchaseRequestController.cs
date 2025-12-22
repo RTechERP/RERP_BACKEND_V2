@@ -120,7 +120,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                var warehouses = _warehouseRepo.GetAll();
+                var warehouses = _warehouseRepo.GetAll(x => x.IsDeleted != true);
                 return Ok(ApiResponseFactory.Success(warehouses, ""));
             }
             catch (Exception ex)

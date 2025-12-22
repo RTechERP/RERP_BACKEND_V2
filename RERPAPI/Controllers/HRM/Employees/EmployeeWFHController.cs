@@ -151,7 +151,7 @@ namespace RERPAPI.Controllers
             try
             {
 
-                if (!_employeeWFHRepo.Validate(employeeWFH, out string message))
+                if (!_employeeWFHRepo.Validate(employeeWFH, out string message)&&employeeWFH.IsDeleted!=true)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, message));
                 }

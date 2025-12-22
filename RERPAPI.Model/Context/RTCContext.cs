@@ -3905,6 +3905,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.TotalDay).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
         });
 
         modelBuilder.Entity<EmployeeWorkingProcess>(entity =>

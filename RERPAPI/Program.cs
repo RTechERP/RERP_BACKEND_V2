@@ -414,6 +414,7 @@ builder.Services.AddScoped<BookingRoomRepo>();
 builder.Services.AddScoped<PhasedAllocationPersonDetailRepo>();
 builder.Services.AddScoped<JobRequirementFileRepo>();
 builder.Services.AddScoped<JobRequirementApprovedRepo>();
+builder.Services.AddScoped<JobRequirementCommentRepo>();
 
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();

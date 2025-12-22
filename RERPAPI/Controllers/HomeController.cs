@@ -745,8 +745,7 @@ namespace RERPAPI.Controllers
                 return $"Nhân viên [{item.FullName}] chưa được HR duyệt, BGD không thể duyệt / hủy duyệt.";
 
 
-            if (!isApproved && !(item.IsApprovedBGD == true))
-                return $"Nhân viên [{item.FullName}] chưa được BGĐ duyệt, không thể hủy duyệt.";
+          
 
             return null;
         }
@@ -847,7 +846,7 @@ namespace RERPAPI.Controllers
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Danh sách phê duyệt không được để trống!"));
                 }
-
+             
                 var notProcessed = new List<NotProcessedApprovalItem>();
 
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
@@ -855,7 +854,11 @@ namespace RERPAPI.Controllers
 
                 foreach (var item in request.Items)
                 {
-                    var error = ValidateTBP(item, request.IsApproved ?? false);
+                    if (item.TableName== "EmployeeWFH")
+                    {
+                        item.FieldName = "IsApproved";
+                    }
+                        var error = ValidateTBP(item, request.IsApproved ?? false);
                     if (error != null)
                     {
                         notProcessed.Add(new NotProcessedApprovalItem
@@ -908,7 +911,7 @@ namespace RERPAPI.Controllers
                     SQLHelper<object>.ExcuteProcedure(
                "spUpdateTableByFieldNameAndID",
                new[] { "@TableName", "@FieldName", "@Value", "@ID", "@ValueUpdatedDate", "@ValueDecilineApprove", "@EvaluateResults" },
-               new object[] { item.TableName, item.FieldName, item.IsApprovedTP, item.Id, item.ValueUpdatedDate, item.ValueDecilineApprove ?? "", item.EvaluateResults }
+               new object[] { item.TableName, item.FieldName, request.IsApproved, item.Id, item.ValueUpdatedDate, item.ValueDecilineApprove ?? "", item.EvaluateResults }
            );
 
                 }

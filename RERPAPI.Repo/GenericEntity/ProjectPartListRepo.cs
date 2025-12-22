@@ -547,6 +547,7 @@ namespace RERPAPI.Repo.GenericEntity
         }
 
 
+
         #region validate import excel
         public bool ValidateImportExcel(PartlistImportRequestDTO request, out string message)
         {
