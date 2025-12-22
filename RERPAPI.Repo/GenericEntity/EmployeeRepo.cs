@@ -71,12 +71,7 @@ namespace RERPAPI.Repo.GenericEntity
                 return false;
             }
 
-            // ===== 7. Validate Đơn vị BHXH =====
-            if (string.IsNullOrWhiteSpace(item.BHXH))
-            {
-                message = "Vui lòng chọn Đơn vị bảo hiểm xã hội!";
-                return false;
-            }
+           
 
             // ===== 8. Validate Ngày sinh =====
             if (!item.BirthOfDate.HasValue)
