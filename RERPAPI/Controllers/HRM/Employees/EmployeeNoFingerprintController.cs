@@ -21,12 +21,14 @@ namespace RERPAPI.Controllers.HRM.Employees
         EmployeeNoFingerprintRepo _employeeNoFingerprintRepo;
         DepartmentRepo _departmentRepo;
         private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
+        EmployeeApproveRepo _employeeApproveRepo;
 
-        public EmployeeNoFingerprintController(EmployeeNoFingerprintRepo employeeNoFingerprintRepo, DepartmentRepo departmentRepo, vUserGroupLinksRepo vUserGroupLinksRepo)
+        public EmployeeNoFingerprintController(EmployeeNoFingerprintRepo employeeNoFingerprintRepo, DepartmentRepo departmentRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeApproveRepo employeeApproveRepo)
         {
             _employeeNoFingerprintRepo = employeeNoFingerprintRepo;
             _departmentRepo = departmentRepo;
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
+            _employeeApproveRepo = employeeApproveRepo;
         }
 
 

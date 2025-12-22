@@ -10,8 +10,10 @@ namespace RERPAPI.Repo.GenericEntity.HRM
 {
     public class EmployeeWFHRepo : GenericRepo<EmployeeWFH>
     {
-        public EmployeeWFHRepo(CurrentUser currentUser) : base(currentUser)
+        CurrentUser _currentUser;
+        public EmployeeWFHRepo(CurrentUser currentUser ) : base(currentUser)
         {
+            _currentUser = currentUser;
         }
         public bool Validate(EmployeeWFH item, out string message)
         {
@@ -84,7 +86,7 @@ namespace RERPAPI.Repo.GenericEntity.HRM
             }
 
             // 7. Nếu sửa (ID > 0) thì bắt buộc nhập lý do sửa cho HR
-            if (item.ID > 0 && string.IsNullOrWhiteSpace(item.ReasonHREdit))
+            if (item.ID > 0 && string.IsNullOrWhiteSpace(item.ReasonHREdit)&& _currentUser.EmployeeID!=item.EmployeeID)
             {
                 message = "Vui lòng nhập Lý do sửa!";
                 return false;
