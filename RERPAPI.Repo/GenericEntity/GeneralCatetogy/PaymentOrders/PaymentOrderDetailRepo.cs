@@ -10,8 +10,10 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
 {
     public class PaymentOrderDetailRepo : GenericRepo<PaymentOrderDetail>
     {
-        public PaymentOrderDetailRepo(CurrentUser currentUser) : base(currentUser)
+        private readonly PaymentOrderDetailUserTeamSaleRepo _paymentOrderDetailUserTeamSaleRepo;
+        public PaymentOrderDetailRepo(CurrentUser currentUser, PaymentOrderDetailUserTeamSaleRepo paymentOrderDetailUserTeamSaleRepo) : base(currentUser)
         {
+            _paymentOrderDetailUserTeamSaleRepo = paymentOrderDetailUserTeamSaleRepo;
         }
 
         public async Task<int> Create(PaymentOrderDTO payment)
@@ -54,7 +56,11 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                         }
                     }
                 }
-                return await CreateRangeAsync(details);
+
+                await CreateRangeAsync(details);
+                await _paymentOrderDetailUserTeamSaleRepo.Create(payment);
+
+                return 1;
 
             }
             catch (Exception ex)

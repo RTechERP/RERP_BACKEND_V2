@@ -10,5 +10,7 @@ namespace RERPAPI.Model.DTO
    public  class PaymentOrderDetailDTO: PaymentOrderDetail
     {
         public int _id { get; set; }
+
+        public List<PaymentOrderDetailUserTeamSale> PaymentOrderDetailUserTeamSales { get; set; } = new List<PaymentOrderDetailUserTeamSale>();
     }
 }
