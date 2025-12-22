@@ -434,6 +434,8 @@ builder.Services.AddScoped<PaymentOrderTypeRepo>();
 builder.Services.AddScoped<PaymentOrderFileRepo>();
 builder.Services.AddScoped<PaymentOrderFileBankSlipRepo>();
 builder.Services.AddScoped<PaymentOrderTypeRepo>();
+builder.Services.AddScoped<PaymentOrderDetailUserTeamSaleRepo>();
+builder.Services.AddScoped<PaymentOrderPORepo>();
 
 #endregion
 builder.Services.AddScoped<DailyReportHRRepo>();

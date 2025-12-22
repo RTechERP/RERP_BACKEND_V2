@@ -25,6 +25,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         private readonly PaymentOrderLogRepo _logRepo;
         private readonly PaymentOrderFileRepo _fileRepo;
         private readonly PaymentOrderFileBankSlipRepo _fileBankSlipRepo;
+        private readonly PaymentOrderPORepo _paymentOrderPORepo;
 
         private readonly PaymentOrderTypeRepo _orderTypeRepo;
         private readonly EmployeeApprovedRepo _approvedRepo;
@@ -47,6 +48,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             ConfigSystemRepo configSystemRepo,
             PaymentOrderFileRepo fileRepo,
             PaymentOrderFileBankSlipRepo fileBankSlipRepo,
+            PaymentOrderPORepo paymentOrderPORepo,
 
             PaymentOrderTypeRepo orderTypeRepo,
             EmployeeApprovedRepo approvedRepo,
@@ -69,6 +71,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             _configSystemRepo = configSystemRepo;
             _fileRepo = fileRepo;
             _fileBankSlipRepo = fileBankSlipRepo;
+            _paymentOrderPORepo = paymentOrderPORepo;
 
             _orderTypeRepo = orderTypeRepo;
             _approvedRepo = approvedRepo;
@@ -159,6 +162,10 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     await _paymentRepo.CreateAsync(payment);
                 }
                 else await _paymentRepo.UpdateAsync(payment);
+
+                //Update link pokh
+
+                await _paymentOrderPORepo.Create(payment);
 
                 //Update chi tiết thanh toán
                 await _detailRepo.Create(payment);

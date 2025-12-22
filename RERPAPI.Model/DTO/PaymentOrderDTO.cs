@@ -19,6 +19,7 @@ namespace RERPAPI.Model.DTO
         public string PaymentOrderFiles { get; set; } = string.Empty;
         public List<PaymentOrderLog> PaymentOrderLogs { get; set; } = new List<PaymentOrderLog>();
         public PaymentOrderLog PaymentOrderLog { get; set; } = new PaymentOrderLog();
+        public List<PaymentOrderPO> PaymentOrderPOs { get; set; } = new List<PaymentOrderPO>();
     }
 
     public class PaymentOrderAction
