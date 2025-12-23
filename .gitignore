@@ -31,3 +31,4 @@ secrets.json
 /RERPAPI/Templates
 /RERPAPI/Properties/PublishProfiles/IISProfile.pubxml
 /RERPAPI/appsettings.json
+/RERPAPI/Properties/PublishProfiles/IISProfile1.pubxml
