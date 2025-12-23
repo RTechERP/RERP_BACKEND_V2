@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Identity.Client;
+using Newtonsoft.Json;
 using NPOI.SS.Formula.Functions;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -24,7 +25,9 @@ namespace RERPAPI.Controllers.Old.KETOAN
         private readonly SupplierSaleRepo _supplierSaleRepo;
         private readonly CurrentUser _currentUser;
         private readonly AccountingContractTypeRepo _accountingContractTypeRepo;
-        public AccountingContractController(AccountingContractRepo accountingContractRepo, AccountingContractLogRepo accountingContractLogRepo, CurrentUser currentUser, CustomerRepo customerRepo, SupplierSaleRepo supplierSaleRepo, AccountingContractTypeRepo accountingContractTypeRepo)
+        private readonly AccountingContractFileRepo _accountingContractFileRepo;
+        private readonly ConfigSystemRepo _configSystemRepo;
+        public AccountingContractController(AccountingContractRepo accountingContractRepo, AccountingContractLogRepo accountingContractLogRepo, CurrentUser currentUser, CustomerRepo customerRepo, SupplierSaleRepo supplierSaleRepo, AccountingContractTypeRepo accountingContractTypeRepo, AccountingContractFileRepo accountingContractFileRepo, ConfigSystemRepo configSystemRepo)
         {
             _accountingContractRepo = accountingContractRepo;
             _accountingContractLogRepo = accountingContractLogRepo;
@@ -32,6 +35,8 @@ namespace RERPAPI.Controllers.Old.KETOAN
             _customerRepo = customerRepo;
             _supplierSaleRepo = supplierSaleRepo;
             _accountingContractTypeRepo = accountingContractTypeRepo;
+            _accountingContractFileRepo = accountingContractFileRepo;
+            _configSystemRepo = configSystemRepo;
         }
 
         [HttpGet("get-accouting-contract-types")]
@@ -271,9 +276,15 @@ namespace RERPAPI.Controllers.Old.KETOAN
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveAsync(AccountingContractSaveDTO req)
         {
-            Validate(req);
+
             try
             {
+                AccountingContract? oldSnapshot = null;
+                var validateMessage = Validate(req);
+                if (!string.IsNullOrEmpty(validateMessage))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, validateMessage));
+                }
                 AccountingContract contract;
                 AccountingContract oldContract = null;
 
@@ -282,6 +293,9 @@ namespace RERPAPI.Controllers.Old.KETOAN
                     oldContract = _accountingContractRepo.GetByID(req.accountingContract.ID);
                     if (oldContract == null)
                         return BadRequest(ApiResponseFactory.Fail(null, "Hợp đồng không tồn tại"));
+                    oldSnapshot = JsonConvert.DeserializeObject<AccountingContract>(
+                        JsonConvert.SerializeObject(oldContract)
+                    );
 
                     contract = oldContract;
                 }
@@ -320,7 +334,7 @@ namespace RERPAPI.Controllers.Old.KETOAN
                 if (req.accountingContract.ID > 0)
                 {
                     await _accountingContractRepo.UpdateAsync(contract);
-                    SaveLog(oldContract, contract);
+                    SaveLog(oldSnapshot, contract);
                 }
                 else
                 {
@@ -336,14 +350,150 @@ namespace RERPAPI.Controllers.Old.KETOAN
 
         }
 
+        [HttpPost("upload-file")]
+        [DisableRequestSizeLimit]
+        //[RequiresPermission("N27,N36,N1,N31")]
+
+        public async Task<IActionResult> Upload(int contractID, int fileType)
+        {
+            try
+            {
+                var form = await Request.ReadFormAsync();
+                var key = form["key"].ToString();
+                var files = form.Files;
+
+                // Kiểm tra input
+                if (string.IsNullOrWhiteSpace(key))
+                    return BadRequest(ApiResponseFactory.Fail(null, "Key không được để trống!"));
+
+                if (files == null || files.Count == 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Danh sách file không được để trống!"));
+
+                var ac = _accountingContractRepo.GetByID(contractID);
+                if (ac == null)
+                    throw new Exception("AccountingContract not found");
+
+                var uploadPath = _configSystemRepo.GetUploadPathByKey(key);
+                if (string.IsNullOrWhiteSpace(uploadPath))
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: {key}"));
+
+                var subPathRaw = form["subPath"].ToString()?.Trim() ?? "";
+                string targetFolder = uploadPath;
+                if (!string.IsNullOrWhiteSpace(subPathRaw))
+                {
+                    var separator = Path.DirectorySeparatorChar;
+                    var segments = subPathRaw
+                        .Replace('/', separator)
+                        .Replace('\\', separator)
+                        .Split(separator, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(seg =>
+                        {
+                            var invalidChars = Path.GetInvalidFileNameChars();
+                            var cleaned = new string(seg.Where(c => !invalidChars.Contains(c)).ToArray());
+                            cleaned = cleaned.Replace("..", "").Trim();
+                            return cleaned;
+                        })
+                        .Where(s => !string.IsNullOrWhiteSpace(s))
+                        .ToArray();
+
+                    if (segments.Length > 0)
+                        targetFolder = Path.Combine(uploadPath, Path.Combine(segments));
+                }
+                else
+                {
+                    targetFolder = Path.Combine(uploadPath, $"NB{ac.ID}");
+                }
+
+                if (!Directory.Exists(targetFolder))
+                    Directory.CreateDirectory(targetFolder);
+
+                var processedFile = new List<AccountingContractFile>();
+
+                foreach (var file in files)
+                {
+                    if (file.Length <= 0) continue;
+
+                    // Tạo tên file unique để tránh trùng lặp
+                    var fileExtension = Path.GetExtension(file.FileName);
+                    var originalFileName = Path.GetFileNameWithoutExtension(file.FileName);
+                    var uniqueFileName = $"{originalFileName}{fileExtension}";
+                    var fullPath = Path.Combine(targetFolder, uniqueFileName);
+
+                    // Lưu file trực tiếp vào targetFolder (không tạo file tạm khác)
+                    using (var stream = new FileStream(fullPath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+
+                    var filePO = new AccountingContractFile
+                    {
+                        AccountingContractID = ac.ID,
+                        FileName = uniqueFileName,
+                        OriginPath = targetFolder,
+                        ServerPath = targetFolder,
+                        //IsDeleted = false,
+                        CreatedBy = User.Identity?.Name ?? "System",
+                        CreatedDate = DateTime.Now,
+                        UpdatedBy = User.Identity?.Name ?? "System",
+                        UpdatedDate = DateTime.Now
+                    };
+
+                    await _accountingContractFileRepo.CreateAsync(filePO);
+                    processedFile.Add(filePO);
+                }
+
+                return Ok(ApiResponseFactory.Success(processedFile, $"{processedFile.Count} tệp đã được tải lên thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi upload file: {ex.Message}"));
+            }
+        }
+
+        [HttpPost("delete-file")]
+        public IActionResult DeleteFile([FromBody] List<int> fileIds)
+        {
+            if (fileIds == null || !fileIds.Any())
+                throw new Exception("Danh sách file ID không được trống");
+
+            try
+            {
+                var results = new List<object>();
+
+                foreach (var fileId in fileIds)
+                {
+                    var file = _accountingContractFileRepo.GetByID(fileId);
+
+                    // Cập nhật database
+                    //file.IsDeleted = true;
+                    //file.UpdatedBy = User.Identity?.Name ?? "System";
+                    //file.UpdatedDate = DateTime.UtcNow;
+                    _accountingContractFileRepo.Delete(fileId);
+
+                    // Xóa file vật lý
+                    var physicalPath = Path.Combine(file.ServerPath, file.FileName);
+                    if (System.IO.File.Exists(physicalPath))
+                        System.IO.File.Delete(physicalPath);
+
+                    results.Add(new { fileId, success = true, message = "Xóa thành công" });
+                }
+
+                return Ok(ApiResponseFactory.Success(results, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         private void SaveLog(AccountingContract oldC, AccountingContract newC)
         {
             var compare = _accountingContractRepo.DeepEquals(oldC, newC);
-            bool equal = (bool)compare.GetType().GetProperty("equal").GetValue(compare);
+            //bool equal = (bool)compare.GetType().GetProperty("equal").GetValue(compare);
 
-            if (equal) return;
+            if (compare.Equal) return;
 
-            var props = (List<string>)compare.GetType().GetProperty("property").GetValue(compare);
+            var props = compare.ChangedProperties;
             var content = new StringBuilder();
 
             foreach (var prop in props)
@@ -366,55 +516,54 @@ namespace RERPAPI.Controllers.Old.KETOAN
         }
 
 
-        private void Validate(AccountingContractSaveDTO req)
+        private string? Validate(AccountingContractSaveDTO req)
         {
             var c = req.accountingContract;
-            if (req.accountingContract.Company <= 0)
-                throw new Exception("Vui lòng nhập Công ty");
 
-            if (req.accountingContract.ContractGroup <= 0)
-                throw new Exception("Vui lòng nhập Phân loại HĐ chính");
+            if (c.Company <= 0)
+                return "Vui lòng nhập Công ty";
 
-            if (req.accountingContract.AccountingContractTypeID <= 0)
-                throw new Exception("Vui lòng nhập Loại HĐ");
+            if (c.ContractGroup <= 0)
+                return "Vui lòng nhập Phân loại HĐ chính";
 
-            if (req.accountingContract.ContractGroup == 1 && (!req.accountingContract.SupplierSaleID.HasValue || req.accountingContract.SupplierSaleID <= 0))
-                throw new Exception("Vui lòng nhập Nhà cung cấp");
+            if (c.AccountingContractTypeID <= 0)
+                return "Vui lòng nhập Loại HĐ";
 
-            if (req.accountingContract.ContractGroup == 2 && (!req.accountingContract.CustomerID.HasValue || req.accountingContract.CustomerID <= 0))
-                throw new Exception("Vui lòng nhập Khách hàng");
+            if (c.ContractGroup == 1 && (!c.SupplierSaleID.HasValue || c.SupplierSaleID <= 0))
+                return "Vui lòng nhập Nhà cung cấp";
 
-            if (string.IsNullOrWhiteSpace(req.accountingContract.ContractNumber))
-                throw new Exception("Vui lòng nhập Số HĐ/PL");
+            if (c.ContractGroup == 2 && (!c.CustomerID.HasValue || c.CustomerID <= 0))
+                return "Vui lòng nhập Khách hàng";
 
-            if (req.accountingContract.EmployeeID <= 0)
-                throw new Exception("Vui lòng nhập NV phụ trách");
+            if (string.IsNullOrWhiteSpace(c.ContractNumber))
+                return "Vui lòng nhập Số HĐ/PL";
 
-            if (string.IsNullOrWhiteSpace(req.accountingContract.ContractContent))
-                throw new Exception("Vui lòng nhập Nội dung HĐ");
+            if (c.EmployeeID <= 0)
+                return "Vui lòng nhập NV phụ trách";
 
-            if (string.IsNullOrWhiteSpace(req.accountingContract.ContentPayment))
-                throw new Exception("Vui lòng nhập Nội dung thanh toán");
-            //Validate theo loại hợp đồng
+            if (string.IsNullOrWhiteSpace(c.ContractContent))
+                return "Vui lòng nhập Nội dung HĐ";
+
+            if (string.IsNullOrWhiteSpace(c.ContentPayment))
+                return "Vui lòng nhập Nội dung thanh toán";
+
+            // Validate theo loại hợp đồng
             var contractType = _accountingContractTypeRepo.GetByID(c.AccountingContractTypeID ?? 0);
             if (contractType == null)
-                throw new Exception("Loại hợp đồng không tồn tại");
+                return "Loại hợp đồng không tồn tại";
 
             if (contractType.IsContractValue == true)
             {
                 if (c.ContractValue <= 0)
-                    throw new Exception("Vui lòng nhập Giá trị HĐ");
+                    return "Vui lòng nhập Giá trị HĐ";
 
                 if (string.IsNullOrWhiteSpace(c.Unit))
-                    throw new Exception("Vui lòng nhập ĐVT");
+                    return "Vui lòng nhập ĐVT";
             }
 
             // Validate nhận chứng từ
-            if (c.DateReceived.HasValue)
-            {
-                if (c.QuantityDocument <= 0)
-                    throw new Exception("Vui lòng nhập SL hồ sơ");
-            }
+            if (c.DateReceived.HasValue && c.QuantityDocument <= 0)
+                return "Vui lòng nhập SL hồ sơ";
 
             // Validate update cần NOTE
             if (c.ID > 0)
@@ -423,15 +572,20 @@ namespace RERPAPI.Controllers.Old.KETOAN
                 if (oldContract != null)
                 {
                     var compare = _accountingContractRepo.DeepEquals(oldContract, c);
-                    bool equal = (bool)compare.GetType().GetProperty("equal").GetValue(compare);
+                    //bool equal = (bool)compare.GetType().GetProperty("equal")!.GetValue(compare)!;
 
-                    if (!equal && string.IsNullOrWhiteSpace(c.Note))
-                    {
-                        throw new Exception("Bạn đã thay đổi thông tin. Vui lòng nhập Nội dung thay đổi");
-                    }
+                    //if (!equal && string.IsNullOrWhiteSpace(c.Note))
+                    //    return "Bạn đã thay đổi thông tin. Vui lòng nhập Nội dung thay đổi";
+
+                    if (!compare.Equal && string.IsNullOrWhiteSpace(c.Note))
+                        return "Bạn đã thay đổi thông tin. Vui lòng nhập Nội dung thay đổi";
+
                 }
             }
+
+            return null; // OK
         }
+
 
         public class AccountingContractApprovalDTO
         {

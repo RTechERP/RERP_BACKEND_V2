@@ -76,6 +76,22 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
+        [HttpPost("get-summary-over-time-person")]
+
+        public IActionResult GetEmployeeOverTimePerson(EmployeeOverTimeSummaryPersonParam request)
+        {
+            var ds = request.DateStart.AddHours(00).AddMinutes(00).AddSeconds(00); // 00:00:00
+            var de = request.DateEnd.AddHours(23).AddMinutes(59).AddSeconds(59); // 23:59:59
+            var employeeOverTimeSummary = SQLHelper<object>.ProcedureToList("spGetEmployeeOvertime", 
+               new string[] { "@FilterText", "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@DepartmentID", "@IDApprovedTP", "@Status", "@EmployeeID", "@TeamID" },
+               new object[] { request.FilterText ?? "", request.Page ?? 1, request.Size ?? 100000, ds, de, request.DepartmentID ?? 0, request.IDApprovedTP ?? 0, request.Status ?? -1, request.EmployeeID ?? 0, request.TeamID ?? 0 });
+
+            var data = SQLHelper<object>.GetListData(employeeOverTimeSummary, 0);
+            var summaryPerson = SQLHelper<object>.GetListData(employeeOverTimeSummary, 1);
+            var TotalPages = SQLHelper<object>.GetListData(employeeOverTimeSummary, 2);
+            return Ok(ApiResponseFactory.Success(new { data, summaryPerson, TotalPages }, ""));
+
+        }
         [HttpPost("save-data")]
         [RequiresPermission("N2,N1")]
         public async Task<IActionResult> SaveEmployeeOverTime([FromBody] EmployeeOverTimeDTO request)
@@ -262,14 +278,14 @@ namespace RERPAPI.Controllers.Old
             try
             {
                 if (dto == null) { return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." }); }
-            
+
                 foreach (var item in dto.EmployeeOvertimes)
                 {
                     var validate = _employeeOverTimeRepo.Validate(item);
-                    if (validate.status == 0 && item.IsDeleted!=true) return BadRequest(validate);
+                    if (validate.status == 0 && item.IsDeleted != true) return BadRequest(validate);
                     if (item.ID <= 0)
                     {
-                        
+
                         await _employeeOverTimeRepo.CreateAsync(item);
                         dto.employeeOvertimeFile.EmployeeOvertimeID = item.ID;
                     }
@@ -277,7 +293,7 @@ namespace RERPAPI.Controllers.Old
                     {
                         await _employeeOverTimeRepo.UpdateAsync(item);
                     }
-                  
+
 
                 }
                 if (dto.employeeOvertimeFile != null)
