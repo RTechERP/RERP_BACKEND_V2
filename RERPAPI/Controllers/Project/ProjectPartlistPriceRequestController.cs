@@ -171,13 +171,13 @@ namespace RERPAPI.Controllers.Project
         [HttpGet("get-po-code")]
         public async Task<IActionResult> GetPoCode()
         {
-            var dtPOKH = pOKHRepo.GetAll(x=>x.IsDeleted==false);
+            var dtPOKH = pOKHRepo.GetAll(x => x.IsDeleted == false);
             return Ok(new { status = 1, data = dtPOKH });
         }
         [HttpGet("get-product-sale")]
         public async Task<IActionResult> GetProductSale()
         {
-            var data = productSaleRepo.GetAll(x=>x.IsDeleted==false);
+            var data = productSaleRepo.GetAll(x => x.IsDeleted == false);
 
             return Ok(new
             {
@@ -251,7 +251,7 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                var purchaseRequest = supplierSaleRepo.GetAll(x=>x.IsDeleted==false)
+                var purchaseRequest = supplierSaleRepo.GetAll(x => x.IsDeleted == false)
                     .OrderBy(x => x.NgayUpdate)
                     .Select(x => new
                     {
@@ -369,8 +369,8 @@ namespace RERPAPI.Controllers.Project
 
                 // Lấy base URL real-time
                 var baseUrl = $"{Request.Scheme}://{Request.Host}";
-                //var fileUrl = $"{baseUrl}/api/share/duan/{pathPattern}/{fileName}";
-                var fileUrl = $"{baseUrl}/api/share/software/duan/Projects/{pathPattern}/{fileName}";
+                var fileUrl = $"{baseUrl}/api/api/share/duan/{pathPattern}/{fileName}";
+                //var fileUrl = $"{baseUrl}/api/share/software/duan/Projects/{pathPattern}/{fileName}";
 
                 return Ok(ApiResponseFactory.Success(fileUrl, ""));
             }
@@ -672,7 +672,8 @@ namespace RERPAPI.Controllers.Project
                         requestModel.DateReturnExpected = deadline;
                         requestModel.Quantity = item.Quantity;
                         requestModel.NoteHR = item.NoteHR;
-                        requestModel.ProjectPartlistPurchaseRequestTypeID = request.ProjectPartlistPriceRequestTypeID;
+                        if (request.ProjectPartlistPriceRequestTypeID == 4) requestModel.ProjectPartlistPurchaseRequestTypeID = 7;//mkt
+                        else if (request.ProjectPartlistPriceRequestTypeID == 3) requestModel.ProjectPartlistPurchaseRequestTypeID = 6;//hr
 
                         // Gán ProductSale & Unit
                         var productSale = productSaleRepo.GetAll(p =>
