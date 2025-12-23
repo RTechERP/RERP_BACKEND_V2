@@ -18,6 +18,7 @@ using System.Net.Mime;
 using System.Security.Claims;
 using System.Text;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
+using static NPOI.HSSF.Util.HSSFColor;
 using static RERPAPI.Model.DTO.ApproveTPDTO;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -1161,5 +1162,38 @@ namespace RERPAPI.Controllers
             }
 
         }
+        [HttpGet("get-all-contact")]
+        public IActionResult GetAllContact(int departmentID, string? keyword)
+        {
+            try
+            {
+                keyword = string.IsNullOrEmpty(keyword) ? "" : keyword;
+                var list = SQLHelper<EmployeeContactDTO>.ProcedureToListModel("spGetEmployee",
+                                                                new string[] { "@Status", "@DepartmentID", "@Keyword" },
+                                                                new object[] { 0, departmentID, keyword??"" })
+                                                .Select(x => new
+                                                {
+                                                    x.STT,
+                                                    x.FullName,
+                                                    x.DepartmentName,
+                                                    x.EmployeeTeamName,
+                                                    x.ChucVu,
+                                                    x.SDTCaNhan,
+                                                    x.EmailCongTy,
+                                                    x.StartWorking,
+                                                    x.BirthOfDate,
+                                                    x.Code
+                                                });
+
+                
+                return Ok(ApiResponseFactory.Success(list, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
     }
 }
