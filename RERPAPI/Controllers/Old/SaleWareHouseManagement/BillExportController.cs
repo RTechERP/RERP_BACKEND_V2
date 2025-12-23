@@ -274,163 +274,192 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
             return Ok(ApiResponseFactory.Success(details, "Đã tính lại TotalQty thành công"));
         }
+        //[HttpPost("save-data")]
+        //[RequiresPermission("N27,N1,N33,N34,N69")]
+        //public async Task<IActionResult> SaveDataBillExport([FromBody] BillExportDTO dto)
+        //{
+        //    try
+        //    {
+        //// 1. Validate cơ bảnget-inventory-project
+        //var (isValid, errorMessage) = await ValidateBillExport(dto);
+        //if (!isValid)
+        //    return BadRequest(new { status = 0, message = errorMessage });
+
+        //if ((dto.billExportDetail == null || !dto.billExportDetail.Any()) && (dto.DeletedDetailIDs == null || !dto.DeletedDetailIDs.Any()))
+        //{
+        //    _billexportRepo.Update(dto.billExport);
+        //    return Ok(new { status = 1, message = $"Đã xóa thành công phiếu {dto.billExport.Code}" });
+        //}
+
+        //var inventoryList = _inventoryRepo.GetAll();
+
+        //// 2. Tính TotalQty chung theo ProductID / Project / POKH
+        //var groupedQuantities = dto.billExportDetail
+        //    .GroupBy(d => new { d.ProductID, ProjectID = d.POKHDetailID > 0 ? 0 : d.ProjectID, POKHDetailID = d.POKHDetailID })
+        //    .ToDictionary(g => g.Key, g => g.Sum(d => d.Qty));
+
+        //foreach (var detail in dto.billExportDetail)
+        //{
+        //    var key = new { detail.ProductID, ProjectID = detail.POKHDetailID > 0 ? 0 : detail.ProjectID, POKHDetailID = detail.POKHDetailID };
+        //    if (groupedQuantities.ContainsKey(key))
+        //        detail.TotalQty = groupedQuantities[key];
+        //}
+
+        //// 3. Validate Keep (tồn kho tổng)
+        //foreach (var detail in dto.billExportDetail)
+        //{
+        //    int productId = detail.ProductID ?? 0;
+        //    ProductSale product = _productSaleRepo.GetByID(productId);
+        //    string productCode = product.ProductNewCode ?? "";
+        //    int projectId = detail.POKHDetailID > 0 ? 0 : detail.ProjectID ?? 0;
+        //    int pokhDetailId = detail.POKHDetailID ?? 0;
+
+        //    decimal totalQty = detail.TotalQty ?? 0;
+
+        //    // Lấy tồn kho theo sp, project, POKH
+        //    var ds = SQLHelper<dynamic>.ProcedureToList("spGetInventoryProjectImportExport",
+        //        new string[] { "@WarehouseID", "@ProductID", "@ProjectID", "@POKHDetailID", "@BillExportDetailID" },
+        //        new object[] { dto.billExport?.WarehouseID ?? 0, productId, projectId, pokhDetailId, detail.ID });
+
+        //    var inventoryProjects = ds[0];
+        //    var dtImport = ds[1];
+        //    var dtExport = ds[2];
+        //    var dtStock = ds[3];
+
+        //    decimal totalQuantityKeep = inventoryProjects.Count > 0 ? Convert.ToDecimal(inventoryProjects[0].TotalQuantity) : 0;
+        //    decimal totalQuantityLast = dtStock.Count > 0 ? Convert.ToDecimal(dtStock[0].TotalQuantityLast) : 0;
+        //    decimal totalImport = dtImport.Count > 0 ? Convert.ToDecimal(dtImport[0].TotalImport) : 0;
+        //    decimal totalExport = dtExport.Count > 0 ? Convert.ToDecimal(dtExport[0].TotalExport) : 0;
+
+        //    decimal totalQuantityRemain = Math.Max(totalImport - totalExport, 0);
+        //    decimal totalStock = Math.Max(totalQuantityKeep, 0) + totalQuantityRemain + Math.Max(totalQuantityLast, 0);
+        //    //decimal totalQuantityRemain = Math.Max(totalImport - totalExport, 0);
+        //    //decimal totalStock = Math.Max(totalQuantityKeep, 0) + totalQuantityRemain + Math.Max(totalQuantityLast, 0);
+
+
+
+        //    if (totalStock < totalQty)
+        //    {
+        //        return BadRequest(new
+        //        {
+        //            status = 0,
+        //            message = $"Số lượng còn lại sản phẩm [{product.ProductNewCode}] không đủ! SL xuất: {totalQty}, SL giữ: {totalQuantityKeep}, Tồn CK: {totalQuantityLast}, Tổng: {totalStock}"
+        //        });
+        //    }
+        //}
+        //int billExportId;
+        //if (dto.billExport.ID <= 0)
+        //{
+        //    dto.billExport.IsMerge = false;
+        //    dto.billExport.UnApprove = 0;
+        //    dto.billExport.IsDeleted = false;
+        //    await _billexportRepo.CreateAsync(dto.billExport);
+        //    billExportId = dto.billExport.ID;
+        //}
+        //else // Cập nhật
+        //{
+        //    _billexportRepo.Update(dto.billExport);
+        //    billExportId = dto.billExport.ID;
+        //}
+
+        //// 5. Xử lý chi tiết phiếu xuất
+        //foreach (var detail in dto.billExportDetail)
+        //{
+        //    detail.BillID = billExportId;
+
+        //    if (detail.ID <= 0)
+        //    {
+        //        detail.IsDeleted = false;
+        //        await _billExportDetailRepo.CreateAsync(detail);
+        //    }
+        //    else
+        //    {
+        //        var existingDetail = _billExportDetailRepo.GetByID(detail.ID);
+        //        if (existingDetail != null)
+        //            _billExportDetailRepo.Update(detail);
+        //    }
+
+        //    // 6. Save InventoryProjectExport for status 2 (Exported) or 6 (Request Export)
+        //    // Matches desktop logic: if (billExport.Status == 2 || billExport.Status == 6)
+        //    if (dto.billExport.Status == 2 || dto.billExport.Status == 6)
+        //    {
+        //        // Get ChosenInventoryProject string from detail
+        //        // Format: "inventoryProjectID1-quantity1;inventoryProjectID2-quantity2"
+        //        string chosenInventoryProject = detail.ChosenInventoryProject ?? "";
+
+        //        if (!string.IsNullOrWhiteSpace(chosenInventoryProject))
+        //        {
+        //            string[] chosenInventoryProjects = chosenInventoryProject.Split(';');
+
+        //            // First, soft delete existing records for this detail (matching desktop logic)
+        //            var existingRecords = _inventoryprojectexportRepo.GetAll(x =>
+        //                x.BillExportDetailID == detail.ID && x.IsDeleted != true);
+
+        //            foreach (var existing in existingRecords)
+        //            {
+        //                existing.IsDeleted = true;
+        //                await _inventoryprojectexportRepo.UpdateAsync(existing);
+        //            }
+
+        //            // Then create new records
+        //            foreach (string item in chosenInventoryProjects)
+        //            {
+        //                if (string.IsNullOrWhiteSpace(item)) continue;
+
+        //                var parts = item.Split('-');
+        //                if (parts.Length < 2) continue;
+
+        //                if (!int.TryParse(parts[0], out int inventoryProjectID)) continue;
+        //                if (!decimal.TryParse(parts[1], out decimal quantity)) continue;
+
+        //                var projectExport = new InventoryProjectExport
+        //                {
+        //                    BillExportDetailID = detail.ID,
+        //                    InventoryProjectID = inventoryProjectID,
+        //                    Quantity = quantity,
+        //                    IsDeleted = false
+        //                };
+
+        //                await _inventoryprojectexportRepo.CreateAsync(projectExport);
+        //            }
+        //        }
+        //    }
+        //}
+        //        
         [HttpPost("save-data")]
         [RequiresPermission("N27,N1,N33,N34,N69")]
         public async Task<IActionResult> SaveDataBillExport([FromBody] BillExportDTO dto)
         {
             try
             {
-                // 1. Validate cơ bảnget-inventory-project
-                var (isValid, errorMessage) = await ValidateBillExport(dto);
-                if (!isValid)
-                    return BadRequest(new { status = 0, message = errorMessage });
+                // ✅ Nhận return value từ SaveBillExportWithDetails
+                var (success, message, billExportId) = await _billexportRepo.SaveBillExportWithDetails(dto);
 
-                if ((dto.billExportDetail == null || !dto.billExportDetail.Any()) && (dto.DeletedDetailIDs == null || !dto.DeletedDetailIDs.Any()))
+                if (success)
                 {
-                    _billexportRepo.Update(dto.billExport);
-                    return Ok(new { status = 1, message = $"Đã xóa thành công phiếu {dto.billExport.Code}" });
-                }
-
-                var inventoryList = _inventoryRepo.GetAll();
-
-                // 2. Tính TotalQty chung theo ProductID / Project / POKH
-                var groupedQuantities = dto.billExportDetail
-                    .GroupBy(d => new { d.ProductID, ProjectID = d.POKHDetailID > 0 ? 0 : d.ProjectID, POKHDetailID = d.POKHDetailID })
-                    .ToDictionary(g => g.Key, g => g.Sum(d => d.Qty));
-
-                foreach (var detail in dto.billExportDetail)
-                {
-                    var key = new { detail.ProductID, ProjectID = detail.POKHDetailID > 0 ? 0 : detail.ProjectID, POKHDetailID = detail.POKHDetailID };
-                    if (groupedQuantities.ContainsKey(key))
-                        detail.TotalQty = groupedQuantities[key];
-                }
-
-                // 3. Validate Keep (tồn kho tổng)
-                foreach (var detail in dto.billExportDetail)
-                {
-                    int productId = detail.ProductID ?? 0;
-                    ProductSale product = _productSaleRepo.GetByID(productId);
-                    string productCode = product.ProductNewCode ?? "";
-                    int projectId = detail.POKHDetailID > 0 ? 0 : detail.ProjectID ?? 0;
-                    int pokhDetailId = detail.POKHDetailID ?? 0;
-
-                    decimal totalQty = detail.TotalQty ?? 0;
-
-                    // Lấy tồn kho theo sp, project, POKH
-                    var ds = SQLHelper<dynamic>.ProcedureToList("spGetInventoryProjectImportExport",
-                        new string[] { "@WarehouseID", "@ProductID", "@ProjectID", "@POKHDetailID", "@BillExportDetailID" },
-                        new object[] { dto.billExport?.WarehouseID ?? 0, productId, projectId, pokhDetailId, detail.ID });
-
-                    var inventoryProjects = ds[0];
-                    var dtImport = ds[1];
-                    var dtExport = ds[2];
-                    var dtStock = ds[3];
-
-                    decimal totalQuantityKeep = inventoryProjects.Count > 0 ? Convert.ToDecimal(inventoryProjects[0].TotalQuantity) : 0;
-                    decimal totalQuantityLast = dtStock.Count > 0 ? Convert.ToDecimal(dtStock[0].TotalQuantityLast) : 0;
-                    decimal totalImport = dtImport.Count > 0 ? Convert.ToDecimal(dtImport[0].TotalImport) : 0;
-                    decimal totalExport = dtExport.Count > 0 ? Convert.ToDecimal(dtExport[0].TotalExport) : 0;
-
-                    decimal totalQuantityRemain = Math.Max(totalImport - totalExport, 0);
-                    decimal totalStock = Math.Max(totalQuantityKeep, 0) + totalQuantityRemain + Math.Max(totalQuantityLast, 0);
-                    //decimal totalQuantityRemain = Math.Max(totalImport - totalExport, 0);
-                    //decimal totalStock = Math.Max(totalQuantityKeep, 0) + totalQuantityRemain + Math.Max(totalQuantityLast, 0);
-
-
-
-                    if (totalStock < totalQty)
+                    return Ok(new
                     {
-                        return BadRequest(new
-                        {
-                            status = 0,
-                            message = $"Số lượng còn lại sản phẩm [{product.ProductNewCode}] không đủ! SL xuất: {totalQty}, SL giữ: {totalQuantityKeep}, Tồn CK: {totalQuantityLast}, Tổng: {totalStock}"
-                        });
-                    }
+                        status = 1,
+                        message = message,
+                        data = new { BillExportID = billExportId }
+                    });
                 }
-                int billExportId;
-                if (dto.billExport.ID <= 0)
+                else
                 {
-                    dto.billExport.IsMerge = false;
-                    dto.billExport.UnApprove = 0;
-                    dto.billExport.IsDeleted = false;
-                    await _billexportRepo.CreateAsync(dto.billExport);
-                    billExportId = dto.billExport.ID;
-                }
-                else // Cập nhật
-                {
-                    _billexportRepo.Update(dto.billExport);
-                    billExportId = dto.billExport.ID;
-                }
-
-                // 5. Xử lý chi tiết phiếu xuất
-                foreach (var detail in dto.billExportDetail)
-                {
-                    detail.BillID = billExportId;
-
-                    if (detail.ID <= 0)
+                    return BadRequest(new
                     {
-                        detail.IsDeleted = false;
-                        await _billExportDetailRepo.CreateAsync(detail);
-                    }
-                    else
-                    {
-                        var existingDetail = _billExportDetailRepo.GetByID(detail.ID);
-                        if (existingDetail != null)
-                            _billExportDetailRepo.Update(detail);
-                    }
-
-                    // 6. Save InventoryProjectExport for status 2 (Exported) or 6 (Request Export)
-                    // Matches desktop logic: if (billExport.Status == 2 || billExport.Status == 6)
-                    if (dto.billExport.Status == 2 || dto.billExport.Status == 6)
-                    {
-                        // Get ChosenInventoryProject string from detail
-                        // Format: "inventoryProjectID1-quantity1;inventoryProjectID2-quantity2"
-                        string chosenInventoryProject = detail.ChosenInventoryProject ?? "";
-
-                        if (!string.IsNullOrWhiteSpace(chosenInventoryProject))
-                        {
-                            string[] chosenInventoryProjects = chosenInventoryProject.Split(';');
-
-                            // First, soft delete existing records for this detail (matching desktop logic)
-                            var existingRecords = _inventoryprojectexportRepo.GetAll(x =>
-                                x.BillExportDetailID == detail.ID && x.IsDeleted != true);
-
-                            foreach (var existing in existingRecords)
-                            {
-                                existing.IsDeleted = true;
-                                await _inventoryprojectexportRepo.UpdateAsync(existing);
-                            }
-
-                            // Then create new records
-                            foreach (string item in chosenInventoryProjects)
-                            {
-                                if (string.IsNullOrWhiteSpace(item)) continue;
-
-                                var parts = item.Split('-');
-                                if (parts.Length < 2) continue;
-
-                                if (!int.TryParse(parts[0], out int inventoryProjectID)) continue;
-                                if (!decimal.TryParse(parts[1], out decimal quantity)) continue;
-
-                                var projectExport = new InventoryProjectExport
-                                {
-                                    BillExportDetailID = detail.ID,
-                                    InventoryProjectID = inventoryProjectID,
-                                    Quantity = quantity,
-                                    IsDeleted = false
-                                };
-
-                                await _inventoryprojectexportRepo.CreateAsync(projectExport);
-                            }
-                        }
-                    }
+                        status = 0,
+                        message = message
+                    });
                 }
-
-                return Ok(ApiResponseFactory.Success(dto, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+                return StatusCode(500, new
+                {
+                    status = 0,
+                    message = $"Lỗi server: {ex.Message}"
+                });
             }
         }
 
@@ -788,7 +817,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 var bill = bills.FirstOrDefault();
 
                 if (bill == null)
-                    return NotFound(new { status = 0, message = $"Không tìm thấy phiếu với mã {code}." });
+                    return BadRequest(new { status = 0, message = $"Không tìm thấy phiếu với mã {code}." });
 
                 // 2. Kiểm tra nếu là phiếu không được quét
                 string tableName = typeof(BillExport).Name.Replace("Model", "");
@@ -815,7 +844,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
                 if (detailList == null || detailList.Count == 0)
                 {
-                    return NotFound(new { status = 0, message = "Không có chi tiết phiếu trong kho." });
+                    return BadRequest(new { status = 0, message = "Không có chi tiết phiếu trong kho." });
                 }
 
                 return Ok(new
@@ -1020,7 +1049,30 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpGet("get-all-inventorProjects")]
+        public IActionResult GetInventoryProject(int warehouseId, int productId, int projectId = 0, int pokhDetailId = 0)
+        {
+            try
+            {
+                List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList("spGetInventoryProject",
+                        new string[] { "@ProjectID", "@EmployeeID", "@ProductSaleID", "@Keyword", "@WarehouseID", "@POKHDetailID" },
+                        new object[] { projectId, 0, productId, "", warehouseId, pokhDetailId }
+                );
 
+                return Ok(new
+                {
+                    status = 1,
+                    inventoryProjects = SQLHelper<object>.GetListData(result, 0),
+                    imports = result.Count > 1 ? SQLHelper<object>.GetListData(result, 1) : new List<object>(),
+                    exports = result.Count > 2 ? SQLHelper<object>.GetListData(result, 2) : new List<object>(),
+                    stock = result.Count > 3 ? SQLHelper<object>.GetListData(result, 3) : new List<object>()
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         // GET: api/BillExport/get-inventory-project
         [HttpGet("get-inventory-project")]
         public IActionResult GetInventoryProject(int warehouseId, int productId, int projectId = 0, int pokhDetailId = 0, int billExportDetailId = 0)
