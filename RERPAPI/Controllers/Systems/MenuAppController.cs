@@ -38,7 +38,9 @@ namespace RERPAPI.Controllers.Systems
         {
             try
             {
-                _currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
+                //_currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                _currentUser = ObjectMapper.GetCurrentUser(claims);
                 var connection = new SqlConnection(_configuration.GetValue<string>("ConnectionString") ?? "");
                 var param = new { Keyword = keyword, UserID = 78};
                 var data = await connection.QueryMultipleAsync("spGetMenuApp", param, commandType: System.Data.CommandType.StoredProcedure);
