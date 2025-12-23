@@ -439,7 +439,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                     var file = _requestInvoiceFileRepo.GetByID(fileId);
 
                     // Cập nhật database
-                    //file.IsDeleted = true;
+                    file.IsDeleted = true;
                     //file.UpdatedBy = User.Identity?.Name ?? "System";
                     //file.UpdatedDate = DateTime.UtcNow;
                     _requestInvoiceFileRepo.Update(file);

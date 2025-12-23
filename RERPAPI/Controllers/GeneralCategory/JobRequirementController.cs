@@ -335,6 +335,24 @@ namespace RERPAPI.Controllers.GeneralCategory
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpPost("get-summary-jobrequirement")]
+        public IActionResult GetSummaryJobRequireMent([FromBody] SummaryJobrequirementRequestParam request)
+        {
+            try
+            {
+                var ds = request.DateStart.AddHours(00).AddMinutes(00).AddSeconds(00); // 00:00:00
+                var de = request.DateEnd.AddHours(23).AddMinutes(59).AddSeconds(59); // 23:59:59
+                var data = SQLHelper<object>.ProcedureToList("spGetSumarizeJobrequirement",
+                                                             new string[] { "@DateStart", "@DateEnd", "@Request", "@EmployeeId", "@Step", "@DepartmentId" },
+                                                             new object[] { ds, de, request.request ?? "", request.EmployeeID??0, request.Step??0, request.DepartmentID });
+                var dataList = SQLHelper<object>.GetListData(data, 0);
+                return Ok(ApiResponseFactory.Success(dataList, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [HttpGet("get-all")]
         public IActionResult GetAllJobRequirement()
         {
