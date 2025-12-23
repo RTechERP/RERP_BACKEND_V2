@@ -10,7 +10,7 @@ namespace RERPAPI.Model.Param
     {
         public DateTime DateStart { get; set; }
         public DateTime DateEnd { get; set; }
-        public string Keyword { get; set; } = string.Empty;
+        public string Request { get; set; } = string.Empty;
         public int EmployeeID { get; set; }
         public int Step { get; set; }
         public int DepartmentID { get; set; }
