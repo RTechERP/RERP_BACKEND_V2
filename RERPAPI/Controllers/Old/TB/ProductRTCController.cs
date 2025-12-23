@@ -434,23 +434,25 @@ namespace RERPAPI.Controllers.Old.TB
                 {
                     if (item.IsDelete != true)
                     {
-                        if (_productRTCRepo.checkExistProductCodeRTC(item, product.productGroupRTC.WarehouseType ?? 1))
+                        var productGroup = _productGroupRTCRepo.GetByID(item.ProductGroupRTCID??0);
+                        if (productGroup.ID <= 0) return BadRequest(ApiResponseFactory.Fail(null,$"Không có nhóm sản phẩm có mã {item.ProductGroupRTCID}"));
+                        if (_productRTCRepo.checkExistProductCodeRTC(item, productGroup.ID))
                         {
                             return BadRequest(ApiResponseFactory.Fail(null,
                                 $"Mã thiết bị [{item.ProductCode}] đã tồn tại trong hệ thống."));
                         }
 
-                        if (_productRTCRepo.checkExistSerialRTC(item))
-                        {
-                            return BadRequest(ApiResponseFactory.Fail(null,
-                                $"Số serial [{item.SerialNumber}] đã tồn tại trong hệ thống."));
-                        }
+                        //if (_productRTCRepo.checkExistSerialRTC(item))
+                        //{
+                        //    return BadRequest(ApiResponseFactory.Fail(null,
+                        //        $"Số serial [{item.SerialNumber}] đã tồn tại trong hệ thống."));
+                        //}
 
-                        if (_productRTCRepo.checkExistPartnumberRTC(item))
-                        {
-                            return BadRequest(ApiResponseFactory.Fail(null,
-                                $"Partnumber [{item.PartNumber}] đã tồn tại trong hệ thống."));
-                        }
+                        //if (_productRTCRepo.checkExistPartnumberRTC(item))
+                        //{
+                        //    return BadRequest(ApiResponseFactory.Fail(null,
+                        //        $"Partnumber [{item.PartNumber}] đã tồn tại trong hệ thống."));
+                        //}
                     }
                 }
 
