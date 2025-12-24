@@ -18,12 +18,13 @@ namespace RERPAPI.Controllers.Old.KPISALE
         private readonly ReportTypeRepo _reportTypeRepo;
         private readonly ProjectRepo _projectRepo;
         private readonly DailyReportSaleAdminRepo _dailyReportSaleAdminRepo;
-        public DailyReportSaleAdminController(CustomerRepo customerRepo, ReportTypeRepo reportTypeRepo, ProjectRepo projectRepo, DailyReportSaleAdminRepo dailyReportSaleAdminRepo)
+        public DailyReportSaleAdminController(CustomerRepo customerRepo, ReportTypeRepo reportTypeRepo, ProjectRepo projectRepo, DailyReportSaleAdminRepo dailyReportSaleAdminRepo, ReportTypeRepo reportType)
         {
             _customerRepo = customerRepo;
             _reportTypeRepo = reportTypeRepo;
             _projectRepo = projectRepo;
             _dailyReportSaleAdminRepo = dailyReportSaleAdminRepo;
+            _reportTypeRepo = reportType;
         }
         [HttpGet("load-data")]
         public IActionResult Get(DateTime dateStart, DateTime dateEnd, int customerId, int userId, string keyword = "" )
@@ -177,6 +178,28 @@ namespace RERPAPI.Controllers.Old.KPISALE
                 {
                     return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
                 }
+        }
+
+        [HttpPost("save-reporttype")]
+        public IActionResult SaveReportType(ReportType model)
+        {
+            try
+            {
+                var exist = _reportTypeRepo.GetAll(x => x.ReportTypeName.ToLower().Trim() == model.ReportTypeName.ToLower().Trim());
+                if (exist != null && exist.Count > 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, ""));
+                }
+                ReportType data = new ReportType();
+                data.ReportTypeName = model.ReportTypeName;
+                _reportTypeRepo.Create(data);
+                return Ok(ApiResponseFactory.Success("", "Lưu thành công"));
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
         }
         public class DailyReportSaleAdminDTO
         {
