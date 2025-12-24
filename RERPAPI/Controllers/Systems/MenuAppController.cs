@@ -42,7 +42,7 @@ namespace RERPAPI.Controllers.Systems
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 _currentUser = ObjectMapper.GetCurrentUser(claims);
                 var connection = new SqlConnection(_configuration.GetValue<string>("ConnectionString") ?? "");
-                var param = new { Keyword = keyword, UserID = 78};
+                var param = new { Keyword = keyword, UserID = _currentUser .ID};
                 var data = await connection.QueryMultipleAsync("spGetMenuApp", param, commandType: System.Data.CommandType.StoredProcedure);
 
                 var menus = (await data.ReadAsync()).ToList();
