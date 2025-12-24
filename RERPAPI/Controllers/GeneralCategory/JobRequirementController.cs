@@ -183,7 +183,6 @@ namespace RERPAPI.Controllers.GeneralCategory
                     }
                     jobRe.IsDeleted = true;
                     await _jobRepo.UpdateAsync(jobRe);
-
                 }
                 return Ok(ApiResponseFactory.Success(ids, "Xóa thành công"));
             }

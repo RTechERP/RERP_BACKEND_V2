@@ -35,13 +35,14 @@ namespace RERPAPI.Controllers
         EmployeeOverTimeRepo _employeeOverTimeRepo;
         //UserRepo _userRepo = new UserRepo();
         vUserGroupLinksRepo _vUserGroupLinksRepo;
+        private readonly RoleConfig _roleConfig;
 
 
         private readonly EmployeeOnLeaveRepo _onLeaveRepo;
         private readonly EmployeeWFHRepo _wfhRepo;
         private readonly ConfigSystemRepo _configSystemRepo;
 
-        public HomeController(IOptions<JwtSettings> jwtSettings, RTCContext context, IConfiguration configuration, EmployeeOnLeaveRepo onLeaveRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeWFHRepo employeeWFHRepo, ConfigSystemRepo configSystemRepo, EmployeeOverTimeRepo employeeOverTimeRepo)
+        public HomeController(IOptions<JwtSettings> jwtSettings, RTCContext context, IConfiguration configuration, EmployeeOnLeaveRepo onLeaveRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeWFHRepo employeeWFHRepo, ConfigSystemRepo configSystemRepo, EmployeeOverTimeRepo employeeOverTimeRepo, RoleConfig roleConfig)
         {
             _jwtSettings = jwtSettings.Value;
             _context = context;
@@ -51,6 +52,7 @@ namespace RERPAPI.Controllers
             _wfhRepo = employeeWFHRepo;
             _configSystemRepo = configSystemRepo;
             _employeeOverTimeRepo = employeeOverTimeRepo;
+            _roleConfig = roleConfig;
         }
         [HttpPost("login")]
         public IActionResult Login([FromBody] User user)
@@ -1167,6 +1169,9 @@ namespace RERPAPI.Controllers
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                bool isPermissDownload =(_roleConfig.EmployeeDownloadContact?.Contains(currentUser.EmployeeID) ?? false) ||currentUser.IsAdmin == true; 
                 keyword = string.IsNullOrEmpty(keyword) ? "" : keyword;
                 var list = SQLHelper<EmployeeContactDTO>.ProcedureToListModel("spGetEmployee",
                                                                 new string[] { "@Status", "@DepartmentID", "@Keyword" },
@@ -1186,7 +1191,7 @@ namespace RERPAPI.Controllers
                                                 });
 
                 
-                return Ok(ApiResponseFactory.Success(list, ""));
+                return Ok(ApiResponseFactory.Success(new {list, isPermissDownload }, ""));
             }
             catch (Exception ex)
             {
