@@ -25,6 +25,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         private readonly PaymentOrderLogRepo _logRepo;
         private readonly PaymentOrderFileRepo _fileRepo;
         private readonly PaymentOrderFileBankSlipRepo _fileBankSlipRepo;
+        private readonly PaymentOrderPORepo _paymentOrderPORepo;
 
         private readonly PaymentOrderTypeRepo _orderTypeRepo;
         private readonly EmployeeApprovedRepo _approvedRepo;
@@ -38,7 +39,10 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         private readonly UnitCountKTRepo _unitCountKTRepo;
         private readonly CurrencyRepo _currencyRepo;
 
-
+        private readonly CustomerRepo _customerRepo;
+        private readonly POKHRepo _poKHRepo;
+        private readonly POKHDetailRepo _pOKHDetailRepo;
+        private readonly EmployeeTeamSaleRepo _employeeTeamSaleRepo;
 
         public PaymentOrderController(IConfiguration configuration, CurrentUser currentUser,
             PaymentOrderRepo paymentRepo,
@@ -47,6 +51,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             ConfigSystemRepo configSystemRepo,
             PaymentOrderFileRepo fileRepo,
             PaymentOrderFileBankSlipRepo fileBankSlipRepo,
+            PaymentOrderPORepo paymentOrderPORepo,
 
             PaymentOrderTypeRepo orderTypeRepo,
             EmployeeApprovedRepo approvedRepo,
@@ -58,7 +63,12 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             ProductSaleRepo productSaleRepo,
             ProductRTCRepo productRTCRepo,
             UnitCountKTRepo unitCountKTRepo,
-            CurrencyRepo currencyRepo
+            CurrencyRepo currencyRepo,
+
+            CustomerRepo customerRepo,
+            POKHRepo poKHRepo,
+            POKHDetailRepo pOKHDetailRepo,
+            EmployeeTeamSaleRepo employeeTeamSaleRepo
             )
         {
             _configuration = configuration;
@@ -69,6 +79,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             _configSystemRepo = configSystemRepo;
             _fileRepo = fileRepo;
             _fileBankSlipRepo = fileBankSlipRepo;
+            _paymentOrderPORepo = paymentOrderPORepo;
 
             _orderTypeRepo = orderTypeRepo;
             _approvedRepo = approvedRepo;
@@ -81,6 +92,11 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             _productRTCRepo = productRTCRepo;
             _unitCountKTRepo = unitCountKTRepo;
             _currencyRepo = currencyRepo;
+
+            _customerRepo = customerRepo;
+            _poKHRepo = poKHRepo;
+            _pOKHDetailRepo = pOKHDetailRepo;
+            _employeeTeamSaleRepo = employeeTeamSaleRepo;
         }
 
 
@@ -143,22 +159,29 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         {
             try
             {
-                _currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
+                //_currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
 
-                //var validate = _paymentRepo.Validate(payment);
-                //if (validate.status == 0)
-                //{
-                //    return BadRequest(validate);
-                //}
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                _currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var validate = _paymentRepo.Validate(payment);
+                if (validate.status == 0)
+                {
+                    return BadRequest(validate);
+                }
 
                 payment.EmployeeID = _currentUser.EmployeeID;
-                payment.IsUrgent = payment.DatePayment.HasValue;
+                payment.IsUrgent = payment.DeadlinePayment.HasValue;
+                if (payment.IsSpecialOrder == true) payment.TypeOrder = 0;
                 if (payment.ID <= 0)
                 {
                     payment.Code = _paymentRepo.GetCode(payment);
                     await _paymentRepo.CreateAsync(payment);
                 }
                 else await _paymentRepo.UpdateAsync(payment);
+
+                //Update link pokh
+                await _paymentOrderPORepo.Create(payment);
 
                 //Update chi tiết thanh toán
                 await _detailRepo.Create(payment);
@@ -179,7 +202,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         {
             try
             {
-                _currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
+                //_currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
 
                 var form = await Request.ReadFormAsync();
 
@@ -213,7 +236,8 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     {
                         var orderFile = new PaymentOrderFile();
                         orderFile.PaymentOrderID = order.ID;
-                        orderFile.FileName = $"{Path.GetFileNameWithoutExtension(file.FileName)}_{DateTime.Now:yyyyMMdd_HHmmss}{Path.GetExtension(file.FileName)}";
+                        //orderFile.FileName = $"{Path.GetFileNameWithoutExtension(file.FileName)}_{DateTime.Now:yyyyMMdd_HHmmss}{Path.GetExtension(file.FileName)}";
+                        orderFile.FileName = TextUtils.ToString(result.data);
                         orderFile.OriginPath = "";
                         orderFile.ServerPath = pathUpload;
 
@@ -237,7 +261,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         {
             try
             {
-                _currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
+                //_currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
 
                 var form = await Request.ReadFormAsync();
                 var paymentOrderID = TextUtils.ToInt32(form["PaymentOrderID"]);
@@ -302,6 +326,12 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 var registerContracts = _registerContractRepo.GetAll(x => x.EmployeeID == _currentUser.EmployeeID && x.IsDeleted != true);
                 var projects = _projectRepo.GetAll(x => x.IsDeleted != true);
 
+
+                var customers = _customerRepo.GetAll(x => x.IsDeleted != true).OrderByDescending(x => x.ID).ToList();
+                var pokhs = _poKHRepo.GetAll(x => x.IsDeleted != true).OrderByDescending(x => x.ID).ToList();
+                var pokhDetails = _pOKHDetailRepo.GetAll(x => x.IsDeleted != true).OrderByDescending(x => x.ID).ToList();
+                var userTeamNames = _employeeTeamSaleRepo.GetAll(x => x.IsDeleted == 0).OrderByDescending(x => x.ID).ToList();
+
                 var data = new
                 {
                     paymentOrderTypes,
@@ -309,7 +339,12 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     supplierSales,
                     poNCCs,
                     registerContracts,
-                    projects
+                    projects,
+
+                    customers,
+                    pokhs,
+                    pokhDetails,
+                    userTeamNames
                 };
 
                 return Ok(ApiResponseFactory.Success(data));
