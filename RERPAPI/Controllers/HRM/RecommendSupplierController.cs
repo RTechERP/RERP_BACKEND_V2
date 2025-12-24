@@ -1,4 +1,4 @@
-﻿using DocumentFormat.OpenXml.Office2010.Excel;
+﻿    using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
@@ -85,7 +85,7 @@ namespace RERPAPI.Controllers.HRM
 
                 int JobRequirementID = dto.JobRequirementID;
                 int DepartmentRequiredID = 0;
-     
+        
 
                 // Phòng ban yêu cầu
                 if (dto.DepartmentRequired != null)

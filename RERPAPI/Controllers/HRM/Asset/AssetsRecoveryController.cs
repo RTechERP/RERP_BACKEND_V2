@@ -144,7 +144,7 @@ namespace RERPAPI.Controllers.Old.Asset
         public IActionResult ExportRecoveryAssetReport([FromBody] AssetRecoveryExportFullDto dto)
         {
             var master = dto.Master;
-            var details = dto.Details;
+                var details = dto.Details;
 
             if (master == null || details == null || !details.Any())
                 return BadRequest("Dữ liệu thu hồi không hợp lệ.");
@@ -184,8 +184,9 @@ namespace RERPAPI.Controllers.Old.Asset
                     ws.Cells[15, 3].Value = master.DepartmentRecovery;
 
                     ws.Cells[17, 3].Value = master.Note;
+                    ws.Cells[28, 1].Value = master.DateApprovedHR?.ToString("dd/MM/yyyy HH:mm") ??"";
+                    ws.Cells[28, 8].Value = master.DateApprovedPersonalProperty?.ToString("dd/MM/yyyy HH:mm") ?? "";
 
-                 
 
                     // Xoá dòng template sẵn (dòng 20 + 21)
                     ws.DeleteRow(20, 1);
@@ -225,7 +226,7 @@ namespace RERPAPI.Controllers.Old.Asset
             }
         }
         [RequiresPermission("N1,N23")]
-
+            
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData2([FromBody] AssetRecoveryDTO asset)
         {
