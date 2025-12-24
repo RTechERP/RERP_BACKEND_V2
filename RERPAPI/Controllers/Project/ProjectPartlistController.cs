@@ -967,6 +967,7 @@ namespace RERPAPI.Controllers.Project
                     x.ProjectPartListVersionID == request.ProjectPartListVersionID &&
                     x.IsDeleted != true
                 );
+              
 
                 List<string> listParentTT = oldItems
                     .Where(x => x.TT.Contains("."))
@@ -990,8 +991,14 @@ namespace RERPAPI.Controllers.Project
 
                     // Tìm record cũ theo TT
                     var exist = oldItems.FirstOrDefault(x => x.TT == item.TT);
+                    if (exist != null) continue; // TN.Binh update 24/12 tự bỏ qua vật tư trung TT 
 
-                    var entity = exist ?? new ProjectPartList();
+                    if (request.IsProblem)
+                    {
+                        if (listParentTT.Contains(item.TT))
+                            continue;
+                    }  // TN.Binh update 24/12 NẾU LÀ PHÁT SINH → BỎ QUA TT LÀ PARENT
+                    var entity = new ProjectPartList();
                     bool isNew = exist == null;
 
                     entity.ProjectID = request.ProjectID;
