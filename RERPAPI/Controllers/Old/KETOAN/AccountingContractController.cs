@@ -27,7 +27,8 @@ namespace RERPAPI.Controllers.Old.KETOAN
         private readonly AccountingContractTypeRepo _accountingContractTypeRepo;
         private readonly AccountingContractFileRepo _accountingContractFileRepo;
         private readonly ConfigSystemRepo _configSystemRepo;
-        public AccountingContractController(AccountingContractRepo accountingContractRepo, AccountingContractLogRepo accountingContractLogRepo, CurrentUser currentUser, CustomerRepo customerRepo, SupplierSaleRepo supplierSaleRepo, AccountingContractTypeRepo accountingContractTypeRepo, AccountingContractFileRepo accountingContractFileRepo, ConfigSystemRepo configSystemRepo)
+        private readonly UserRepo _userRepo;
+        public AccountingContractController(AccountingContractRepo accountingContractRepo, AccountingContractLogRepo accountingContractLogRepo, CurrentUser currentUser, CustomerRepo customerRepo, SupplierSaleRepo supplierSaleRepo, AccountingContractTypeRepo accountingContractTypeRepo, AccountingContractFileRepo accountingContractFileRepo, ConfigSystemRepo configSystemRepo, UserRepo userRepo)
         {
             _accountingContractRepo = accountingContractRepo;
             _accountingContractLogRepo = accountingContractLogRepo;
@@ -37,6 +38,7 @@ namespace RERPAPI.Controllers.Old.KETOAN
             _accountingContractTypeRepo = accountingContractTypeRepo;
             _accountingContractFileRepo = accountingContractFileRepo;
             _configSystemRepo = configSystemRepo;
+            _userRepo = userRepo;
         }
 
         [HttpGet("get-accouting-contract-types")]
@@ -46,6 +48,35 @@ namespace RERPAPI.Controllers.Old.KETOAN
             {
                 var data = _accountingContractTypeRepo.GetAll().OrderByDescending(x => x.CreatedDate).ToList();
                 return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-users")]
+        public IActionResult LoadUsers()
+        {
+            try
+            {
+                var data = _userRepo.GetAll();
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-contract-for-log")]
+        public IActionResult LoadContractForLog()
+        {
+            try
+            {
+                var list = _accountingContractRepo.GetAll(x => x.IsDelete == false).OrderByDescending(x => x.DateInput).ToList();
+                list.Insert(0, new AccountingContract() { ID = -1, ContractNumber = "--Tất cả--" });
+                return Ok(ApiResponseFactory.Success(list, ""));
             }
             catch (Exception ex)
             {
@@ -199,7 +230,7 @@ namespace RERPAPI.Controllers.Old.KETOAN
             try
             {
                 var model = _accountingContractRepo.GetByID(accountingContractId);
-                if (_currentUser.LoginName.Trim() != model.CreatedBy.Trim() || _currentUser.IsAdmin == false )
+                if (_currentUser.IsAdmin == false && _currentUser.LoginName.Trim() != model.CreatedBy.Trim() )
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền xóa"));
                 }    
