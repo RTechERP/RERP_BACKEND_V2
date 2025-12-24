@@ -30,7 +30,7 @@ namespace RERPAPI.Controllers.GeneralCategory
 
 
 
-        public JobRequirementController(IConfiguration configuration, CurrentUser currentUser, JobRequirementRepo jobRepo, JobRequirementDetailRepo detailRepo , JobRequirementFileRepo jobRequirementFileRepo, JobRequirementApprovedRepo approvedRepo, EmployeeRepo employeeRepo, JobRequirementCommentRepo commentRepo)
+        public JobRequirementController(IConfiguration configuration, CurrentUser currentUser, JobRequirementRepo jobRepo, JobRequirementDetailRepo detailRepo, JobRequirementFileRepo jobRequirementFileRepo, JobRequirementApprovedRepo approvedRepo, EmployeeRepo employeeRepo, JobRequirementCommentRepo commentRepo)
         {
             _configuration = configuration;
             _currentUser = currentUser;
@@ -53,7 +53,7 @@ namespace RERPAPI.Controllers.GeneralCategory
 
                 var data = SQLHelper<object>.ProcedureToList("spGetJobRequirement",
                                                             new string[] { "@DateStart", "@DateEnd", "@Request", "@EmployeeId", "@Step", "@DepartmentId", "@ApprovedTBPID" },
-                                                            new object[] { param.DateStart, param.DateEnd, param.Keyword, param.EmployeeID, param.Step, param.DepartmentID, param.ApprovedTBPID });
+                                                            new object[] { param.DateStart, param.DateEnd, param.Request, param.EmployeeID, param.Step, param.DepartmentID, param.ApprovedTBPID });
 
                 var jobs = SQLHelper<object>.GetListData(data, 0);
 
@@ -125,13 +125,17 @@ namespace RERPAPI.Controllers.GeneralCategory
                     int currentYear = DateTime.Now.Year;
                     var list = _jobRepo.GetAll(x => x.DateRequest.Value.Year == currentYear);
                     job.NumberRequest = $"{list.Count + 1}.{currentYear}.PYC-RTC";
-                    var result =  await _jobRepo.CreateAsync(job);
-                    if(result>0)
+                    var result = await _jobRepo.CreateAsync(job);
+                    if (result > 0)
                     {
-                     
-                             _jobRepo.SendMail(job);
-                    }    
+
+                        _jobRepo.SendMail(job);
+                    }
                 }
+                else if(job.EmployeeID!=currentUser.EmployeeID)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Bạn không thể sửa phiếu của người khác"));
+                }    
                 else await _jobRepo.UpdateAsync(job);
                 await _approvedRepo.CreateJobRequirementApproved(job.ApprovedTBPID ?? 0, job);
                 // Thêm detail
@@ -166,20 +170,20 @@ namespace RERPAPI.Controllers.GeneralCategory
                     return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng chọn yccv để xóa"));
                 foreach (var item in ids)
                 {
-                   
+
                     var jobRe = _jobRepo.GetByID(item);
-                    var jobReApprove = _approvedRepo.GetAll(x => x.JobRequirementID == jobRe.ID && x.IsApproved==1 && x.Step!=1);
+                    var jobReApprove = _approvedRepo.GetAll(x => x.JobRequirementID == jobRe.ID && x.IsApproved == 1 && x.Step != 1);
                     if (jobReApprove.Any())
                     {
                         return BadRequest(ApiResponseFactory.Fail(null, $"Phiếu yêu cầu công việc [{jobRe.NumberRequest}] đã được duyệt, không thể xóa"));
-                    }    
-                    else if(jobRe.EmployeeID !=currentUser.EmployeeID)
+                    }
+                    else if (jobRe.EmployeeID != currentUser.EmployeeID)
                     {
                         return BadRequest(ApiResponseFactory.Fail(null, $"Bạn không thể xóa phiếu yêu cầu công việc của người khác"));
                     }
                     jobRe.IsDeleted = true;
-                   await _jobRepo.UpdateAsync(jobRe);
-                    
+                    await _jobRepo.UpdateAsync(jobRe);
+
                 }
                 return Ok(ApiResponseFactory.Success(ids, "Xóa thành công"));
             }
@@ -281,14 +285,14 @@ namespace RERPAPI.Controllers.GeneralCategory
         {
             try
             {
-                if(model!=null)
+                if (model != null)
                 {
                     string isRequestText = model.IsRequestBGDApproved ?? false ? "yêu cầu" : "huỷ yêu cầu";
-                    if(model.ID>0)
+                    if (model.ID > 0)
                     {
                         await _jobRepo.UpdateAsync(model);
-                    }    
-                }    
+                    }
+                }
 
                 return Ok(ApiResponseFactory.Success(model, ""));
             }
@@ -326,7 +330,7 @@ namespace RERPAPI.Controllers.GeneralCategory
                 var de = request.DateEnd.AddHours(23).AddMinutes(59).AddSeconds(59); // 23:59:59
                 var data = SQLHelper<object>.ProcedureToList("spGetProjectPartlistPurchaseRequest_New_Khanh",
                                                              new string[] { "@DateStart", "@DateEnd", "@Keyword", "@JobRequirementID" },
-                                                             new object[] { ds, de, request.KeyWord??"", request.JobRequirementID });
+                                                             new object[] { ds, de, request.KeyWord ?? "", request.JobRequirementID });
                 var dataList = SQLHelper<object>.GetListData(data, 0);
                 return Ok(ApiResponseFactory.Success(dataList, "Lấy dữ liệu thành công"));
             }
@@ -344,7 +348,7 @@ namespace RERPAPI.Controllers.GeneralCategory
                 var de = request.DateEnd.AddHours(23).AddMinutes(59).AddSeconds(59); // 23:59:59
                 var data = SQLHelper<object>.ProcedureToList("spGetSumarizeJobrequirement",
                                                              new string[] { "@DateStart", "@DateEnd", "@Request", "@EmployeeId", "@Step", "@DepartmentId" },
-                                                             new object[] { ds, de, request.request ?? "", request.EmployeeID??0, request.Step??0, request.DepartmentID });
+                                                             new object[] { ds, de, request.request ?? "", request.EmployeeID ?? 0, request.Step ?? 0, request.DepartmentID });
                 var dataList = SQLHelper<object>.GetListData(data, 0);
                 return Ok(ApiResponseFactory.Success(dataList, "Lấy dữ liệu thành công"));
             }
@@ -359,7 +363,7 @@ namespace RERPAPI.Controllers.GeneralCategory
             try
             {
                 var job = _jobRepo.GetAll(x => x.IsDeleted != true);
-              
+
                 return Ok(ApiResponseFactory.Success(job, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
