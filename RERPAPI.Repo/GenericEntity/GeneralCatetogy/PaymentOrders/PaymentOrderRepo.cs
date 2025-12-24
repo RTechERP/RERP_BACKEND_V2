@@ -72,7 +72,7 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
             {
                 var response = ApiResponseFactory.Success(null, "");
 
-                if (payment.TypeOrder <= 0)
+                if (payment.TypeOrder <= 0 && payment.IsSpecialOrder == false)
                 {
                     response = ApiResponseFactory.Fail(null, "Vui lòng chọn Loại đề nghị!");
                 }
@@ -82,7 +82,7 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                     response = ApiResponseFactory.Fail(null, "Vui lòng chọn Nhập thời gian thanh quyết toán!");
                 }
 
-                if (payment.PaymentOrderTypeID <= 0)
+                if (payment.PaymentOrderTypeID <= 0 && payment.IsSpecialOrder == false)
                 {
                     response = ApiResponseFactory.Fail(null, "Vui lòng chọn Loại nội dung đề nghị!");
                 }
@@ -102,7 +102,7 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                     response = ApiResponseFactory.Fail(null, "Vui lòng nhập Lý do!");
                 }
 
-                if (string.IsNullOrWhiteSpace(payment.ReceiverInfo))
+                if (string.IsNullOrWhiteSpace(payment.ReceiverInfo) && payment.IsSpecialOrder == false)
                 {
                     response = ApiResponseFactory.Fail(null, "Vui lòng nhập Thông tin người nhận tiền!");
                 }
@@ -140,13 +140,15 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                 {
                     if (string.IsNullOrWhiteSpace(detail.ContentPayment))
                     {
-                        response = ApiResponseFactory.Fail(null, $"Vui lòng nhập Nội dung thanh toán dòng [{detail.STT}]!");
+                        string message = payment.IsSpecialOrder == true ? "Đối tượng nhận COM" : "Nội dung thanh toán";
+                        response = ApiResponseFactory.Fail(null, $"Vui lòng nhập {message} dòng [{detail.STT}]!");
                         break;
                     }
 
                     if (detail.TotalMoney == 0)
                     {
-                        response = ApiResponseFactory.Fail(null, $"Vui lòng nhập Thành tiền dòng [{detail.STT}]!");
+                        string message = payment.IsSpecialOrder == true ? "Số tiền" : "Thành tiền";
+                        response = ApiResponseFactory.Fail(null, $"Vui lòng nhập {message} dòng [{detail.STT}]!");
                         break;
                     }
                 }

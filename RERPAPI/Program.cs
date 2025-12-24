@@ -435,6 +435,8 @@ builder.Services.AddScoped<PaymentOrderTypeRepo>();
 builder.Services.AddScoped<PaymentOrderFileRepo>();
 builder.Services.AddScoped<PaymentOrderFileBankSlipRepo>();
 builder.Services.AddScoped<PaymentOrderTypeRepo>();
+builder.Services.AddScoped<PaymentOrderDetailUserTeamSaleRepo>();
+builder.Services.AddScoped<PaymentOrderPORepo>();
 
 #endregion
 builder.Services.AddScoped<DailyReportHRRepo>();
@@ -443,6 +445,9 @@ builder.Services.AddScoped<DailyReportLXCP>();
 
 builder.Services.AddScoped<PhasedAllocationPersonRepo>();
 builder.Services.AddScoped<PhasedAllocationPersonDetailRepo>();
+
+builder.Services.AddScoped<MenuAppRepo>();
+builder.Services.AddScoped<MenuAppUserGroupLinkRepo>();
 
 
 builder.Services.AddScoped<CurrentUser>(provider =>
