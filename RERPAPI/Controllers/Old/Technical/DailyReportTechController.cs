@@ -170,13 +170,14 @@ namespace RERPAPI.Controllers.Old.Technical
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 int userId = currentUser.ID;
+                bool isTechnical = currentUser.DepartmentID == 2 ? true : false;
 
                 // 1. Kiểm tra request null hoặc empty
                 if (request == null || request.Count == 0)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Danh sách báo cáo không được rỗng!"));
                 }
-                if (!_dailyReportTechnicalRepo.ValidateDailyReportTechnicalList(request, out string validationMessage, existingReports: null, userId, isTechnical: true
+                if (!_dailyReportTechnicalRepo.ValidateDailyReportTechnicalList(request, out string validationMessage, existingReports: null, userId, isTechnical
                ))
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, validationMessage));
@@ -186,7 +187,7 @@ namespace RERPAPI.Controllers.Old.Technical
                     if (item.ID > 0)
                     {
                         await _dailyReportTechnicalRepo.UpdateAsync(item);
-                        await UpdateProjectItem(item);
+                        if(isTechnical) await UpdateProjectItem(item);
                     }
                     else
                     {
@@ -199,11 +200,12 @@ namespace RERPAPI.Controllers.Old.Technical
                         item.ReportLate = 0; // Set mặc định = 0, KHÔNG tính toán
                         item.WorkPlanDetailID = 0;
                         item.OldProjectID = 0;
+                        item.OldProjectID = 0;
                         item.DeleteFlag = 0;
                         item.Confirm = false;
                         item.CreatedDate = DateTime.Today.AddHours(23).AddMinutes(30);
                         await _dailyReportTechnicalRepo.CreateAsync(item);
-                        await UpdateProjectItem(item);
+                        if (isTechnical) await UpdateProjectItem(item);
 
                     }
                 }
