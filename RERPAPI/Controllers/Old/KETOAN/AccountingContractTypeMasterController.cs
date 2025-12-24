@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -21,6 +22,7 @@ namespace RERPAPI.Controllers.Old.KETOAN
         }
 
         [HttpGet("get-data")]
+        [RequiresPermission("N53,N52,N1,N36")]
         public IActionResult Get(string keywords = "")
         {
             try
@@ -38,6 +40,7 @@ namespace RERPAPI.Controllers.Old.KETOAN
         }
 
         [HttpPost("save-data")]
+        [RequiresPermission("N53,N52,N1,N36")]
         public IActionResult Save(AccountingContractType request)
         {
             try

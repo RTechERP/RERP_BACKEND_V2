@@ -70,7 +70,6 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-/*
         [HttpPost("save-data-department-required")]
         public async Task<IActionResult> SaveData([FromBody] RecommendSupplierDTO dto)
         {
@@ -175,7 +174,7 @@ namespace RERPAPI.Controllers.HRM
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-        }*/
+        }
 
     }
 }

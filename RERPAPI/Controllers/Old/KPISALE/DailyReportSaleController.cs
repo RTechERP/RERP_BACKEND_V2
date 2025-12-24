@@ -548,6 +548,29 @@ namespace RERPAPI.Controllers.Old.KPISALE
             }
         }
 
+        [HttpPost("save-project-status")]
+        public IActionResult SaveProjectStatus(ProjectStatus model)
+        {
+            try
+            {
+                var exist = _projectStatusRepo.GetAll(x => x.StatusName.ToLower().Trim() == model.StatusName.ToLower().Trim());
+                if(exist != null && exist.Count > 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null,""));
+                }
+                ProjectStatus data = new ProjectStatus();
+                data.STT = model.STT;
+                data.StatusName = model.StatusName;
+                _projectStatusRepo.Create(data);
+                return Ok(ApiResponseFactory.Success("", "Lưu thành công"));
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         private string GetString(Dictionary<string, object> row, string key)
         {
             return row.TryGetValue(key, out var value) ? value?.ToString()?.Trim() ?? "" : "";

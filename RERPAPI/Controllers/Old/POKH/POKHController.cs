@@ -169,6 +169,21 @@ namespace RERPAPI.Controllers.Old.POKH
             }
         }
 
+        [HttpGet("get-pokh-detail-request-buy")]
+        public IActionResult getPOKHProductForPORequestBuy(int id)
+        {
+            try
+            {
+                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetPOKHDetail", new string[] { "@ID", "@IDDetail" }, new object[] { id, 0 });
+                var data = SQLHelper<dynamic>.GetListData(list, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpGet("get-pokh-files")]
         public IActionResult getPOKHFiles(int id)
         {
@@ -258,7 +273,7 @@ namespace RERPAPI.Controllers.Old.POKH
         /// - Duyệt qua danh sách POKHDetailsMoney để xử lý tạo/cập nhật thông tin.
         /// </remarks>
         [HttpPost("handle")]
-        [RequiresPermission("N27,N36,N1,N31")]
+        [RequiresPermission("N53,N52,N1")]
 
         public async Task<IActionResult> Handle([FromBody] POKHDTO dto)
         {

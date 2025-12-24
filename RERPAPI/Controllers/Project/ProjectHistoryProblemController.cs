@@ -36,7 +36,7 @@ namespace RERPAPI.Controllers.Project
 
                 var dtDetail = SQLHelper<object>.GetListData(data, 0);
                 var dtMaster = SQLHelper<object>.GetListData(data, 2);
-                return Ok(ApiResponseFactory.Success( new{ dtDetail,dtMaster },
+                return Ok(ApiResponseFactory.Success(new { dtDetail, dtMaster },
                     "Lấy dữ liệu thành công"));
 
             }
@@ -68,6 +68,8 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
 
                 if (!_historyproblemRepo.Validate(request, out string message))
                 {
@@ -76,14 +78,16 @@ namespace RERPAPI.Controllers.Project
                 //lưu problem
                 foreach (var item in request)
                 {
-                    if(item.projectHistoryProblem != null)
+                    if (item.projectHistoryProblem != null)
                     {
                         if (item.projectHistoryProblem.ID > 0)
                         {
+                            //item.projectHistoryProblem.EmployeeID = currentUser.EmployeeID;
                             await _historyproblemRepo.UpdateAsync(item.projectHistoryProblem);
                         }
                         else
                         {
+                            item.projectHistoryProblem.EmployeeID = currentUser.EmployeeID;
                             await _historyproblemRepo.CreateAsync(item.projectHistoryProblem);
                         }
                     }
@@ -109,15 +113,15 @@ namespace RERPAPI.Controllers.Project
                 foreach (var item in request)
                 {
                     if (item.deleteIdsMaster != null && item.deleteIdsMaster.Count > 0)
-                    foreach(var ids in item.deleteIdsMaster)
+                        foreach (var ids in item.deleteIdsMaster)
                         {
                             ProjectHistoryProblem p = _historyproblemRepo.GetByID(ids);
                             p.IsDeleted = true;
                             await _historyproblemRepo.UpdateAsync(p);
                             List<ProjectHistoryProblemDetail> d = _historyproblemDetailRepo.GetAll(x => x.ProjectHistoryProblemID == ids);
-                            if(d!= null && d.Count > 0)
+                            if (d != null && d.Count > 0)
                             {
-                                foreach(var idD in d)
+                                foreach (var idD in d)
                                 {
                                     idD.IsDeleted = true;
                                     await _historyproblemDetailRepo.UpdateAsync(idD);
@@ -135,7 +139,38 @@ namespace RERPAPI.Controllers.Project
                     }
                 }
                 return Ok(ApiResponseFactory.Success(
-                   null,"Lưu dữ liệu thành công"));
+                   null, "Lưu dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("add-problem")]
+        public async Task<IActionResult> GetProjectHistoryProblemByProject(int projectID, DateTime dateProblem)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                var fromDate = dateProblem.Date;
+                var toDate = fromDate.AddDays(1);
+
+                var data = _historyproblemRepo.GetAll()
+                    .Where(p => p.ProjectID == projectID
+                        && p.EmployeeID == currentUser.EmployeeID
+                        && p.DateProblem.HasValue
+                        && p.DateProblem.Value >= fromDate
+                        && p.DateProblem.Value < toDate)
+                    .Select(p => new
+                    {
+                        contentError = p.ContentError,
+                        remedies = p.Remedies
+                    })
+                    .ToList();
+                // 3. Trả về đúng danh sách data để JS loop
+                return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
             {

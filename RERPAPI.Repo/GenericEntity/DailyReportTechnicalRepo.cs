@@ -180,11 +180,9 @@ namespace RERPAPI.Repo.GenericEntity
             }
 
             // Kiểm tra trùng lặp (nếu có danh sách existing reports và userId)
-            if (existingReports != null && userId.HasValue && isTechnical)
+            if (existingReports != null && userId.HasValue)
             {
                 // Kiểm tra trùng ProjectItemID trong cùng ngày
-                if (data.ProjectItemID.HasValue && data.ProjectItemID > 0)
-                {
                     var exits = existingReports.Where(x =>
                         x.ID != data.ID &&
                         x.UserReport == userId.Value &&
@@ -199,7 +197,6 @@ namespace RERPAPI.Repo.GenericEntity
                             : $"{projectPrefix}: Công việc đã được báo cáo! Vui lòng kiểm tra lại!";
                         return false;
                     }
-                }
             }
 
             return true;
@@ -223,7 +220,7 @@ namespace RERPAPI.Repo.GenericEntity
 
             // Tự động lấy existingReports nếu chưa có và có userId
             // Điều này giúp Controller không cần query trước
-            if (existingReports == null && userId.HasValue && isTechnical)
+            if (existingReports == null && userId.HasValue)
             {
                 existingReports = GetAll().Where(x =>
                     x.UserReport == userId.Value &&
