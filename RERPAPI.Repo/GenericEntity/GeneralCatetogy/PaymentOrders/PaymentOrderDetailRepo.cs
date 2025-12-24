@@ -34,8 +34,10 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                 {
                     payment.PaymentOrderDetails.ForEach(x =>
                     {
+                        x.ID = 0;
                         x.PaymentOrderID = payment.ID;
                         x.ParentID = x.ParentID ?? 0;
+                        x._id = payment.IsSpecialOrder == true ? -1 : x._id;
                     });
                     //return await CreateRangeAsync(payment.PaymentOrderDetails);
 

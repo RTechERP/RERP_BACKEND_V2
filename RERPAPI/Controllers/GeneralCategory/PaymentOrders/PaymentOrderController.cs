@@ -172,6 +172,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
 
                 payment.EmployeeID = _currentUser.EmployeeID;
                 payment.IsUrgent = payment.DeadlinePayment.HasValue;
+                if (payment.IsSpecialOrder == true) payment.TypeOrder = 0;
                 if (payment.ID <= 0)
                 {
                     payment.Code = _paymentRepo.GetCode(payment);
@@ -180,7 +181,6 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 else await _paymentRepo.UpdateAsync(payment);
 
                 //Update link pokh
-
                 await _paymentOrderPORepo.Create(payment);
 
                 //Update chi tiết thanh toán
@@ -202,7 +202,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         {
             try
             {
-                _currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
+                //_currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
 
                 var form = await Request.ReadFormAsync();
 
@@ -236,7 +236,8 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     {
                         var orderFile = new PaymentOrderFile();
                         orderFile.PaymentOrderID = order.ID;
-                        orderFile.FileName = $"{Path.GetFileNameWithoutExtension(file.FileName)}_{DateTime.Now:yyyyMMdd_HHmmss}{Path.GetExtension(file.FileName)}";
+                        //orderFile.FileName = $"{Path.GetFileNameWithoutExtension(file.FileName)}_{DateTime.Now:yyyyMMdd_HHmmss}{Path.GetExtension(file.FileName)}";
+                        orderFile.FileName = TextUtils.ToString(result.data);
                         orderFile.OriginPath = "";
                         orderFile.ServerPath = pathUpload;
 
@@ -260,7 +261,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         {
             try
             {
-                _currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
+                //_currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
 
                 var form = await Request.ReadFormAsync();
                 var paymentOrderID = TextUtils.ToInt32(form["PaymentOrderID"]);

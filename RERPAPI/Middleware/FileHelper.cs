@@ -74,7 +74,7 @@ namespace RERPAPI.Middleware
                     // Tạo tên file unique
                     var fileExtension = Path.GetExtension(file.FileName);
                     var originalFileName = Path.GetFileNameWithoutExtension(file.FileName);
-                    var uniqueFileName = $"{originalFileName}_{DateTime.Now.ToString("ddMMyyyyHHmmss")}_{fileExtension}";
+                    var uniqueFileName = $"{originalFileName}_{DateTime.Now.ToString("ddMMyyyy_HHmmss")}{fileExtension}";
 
                     //var uniqueFileName = originalFileName;
                     var fullPath = Path.Combine(path, uniqueFileName);
