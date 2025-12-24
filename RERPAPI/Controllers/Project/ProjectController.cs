@@ -1460,8 +1460,8 @@ namespace RERPAPI.Controllers.Project
                     prjTypeLink.ProjectTypeID = item.ID;
                     prjTypeLink.Selected = item.Selected;
 
-                    if (prjTypeLink.ID > 0) projectTypeLinkRepo.Update(prjTypeLink);
-                    else projectTypeLinkRepo.CreateAsync(prjTypeLink);
+                    if (prjTypeLink.ID > 0) await projectTypeLinkRepo.UpdateAsync(prjTypeLink);
+                    else await projectTypeLinkRepo.CreateAsync(prjTypeLink);
                 }
 
                 // Lưu thông tin người tham gia

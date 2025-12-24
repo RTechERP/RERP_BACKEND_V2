@@ -153,7 +153,7 @@ namespace RERPAPI.Repo.GenericEntity
                 return false;
             }
             //kiểm tra nơi làm việc 
-            if(string.IsNullOrEmpty(data.Location)) 
+            if (string.IsNullOrEmpty(data.Location))
             {
                 message = string.IsNullOrEmpty(projectPrefix)
                   ? "Vui lòng chọn nơi làm việc!"
@@ -183,20 +183,20 @@ namespace RERPAPI.Repo.GenericEntity
             if (existingReports != null && userId.HasValue)
             {
                 // Kiểm tra trùng ProjectItemID trong cùng ngày
-                    var exits = existingReports.Where(x =>
-                        x.ID != data.ID &&
-                        x.UserReport == userId.Value &&
-                        x.DateReport == data.DateReport &&
-                        x.ProjectItemID == data.ProjectItemID &&
-                        (x.DeleteFlag == null || x.DeleteFlag != 1)).ToList();
+                var exits = existingReports.Where(x =>
+                    x.ID != data.ID &&
+                    x.UserReport == userId.Value &&
+                    x.DateReport == data.DateReport &&
+                    x.ProjectItemID == data.ProjectItemID &&
+                    (x.DeleteFlag == null || x.DeleteFlag != 1)).ToList();
 
-                    if (exits.Count > 0)
-                    {
-                        message = string.IsNullOrEmpty(projectPrefix)
-                            ? $"Công việc đã được báo cáo! Vui lòng kiểm tra lại!"
-                            : $"{projectPrefix}: Công việc đã được báo cáo! Vui lòng kiểm tra lại!";
-                        return false;
-                    }
+                if (exits.Count > 0)
+                {
+                    message = string.IsNullOrEmpty(projectPrefix)
+                        ? $"Công việc đã được báo cáo! Vui lòng kiểm tra lại!"
+                        : $"{projectPrefix}: Công việc đã được báo cáo! Vui lòng kiểm tra lại!";
+                    return false;
+                }
             }
 
             return true;
@@ -243,7 +243,8 @@ namespace RERPAPI.Repo.GenericEntity
             {
                 var groupedByProjectAndDate = dataList
                     .Where(x => x.DateReport.HasValue && x.ProjectID.HasValue && x.ProjectID > 0)
-                    .GroupBy(x => new {
+                    .GroupBy(x => new
+                    {
                         ProjectID = x.ProjectID.Value,
                         DateReport = x.DateReport.Value
                     });
@@ -287,6 +288,60 @@ namespace RERPAPI.Repo.GenericEntity
                 }
             }
 
+            return true;
+        }
+
+        public bool VallidateDailyMar(
+          DailyReportTechnical data,
+          out string message)
+        {
+            string projectCode = string.Empty;
+            message = string.Empty;
+
+            // Kiểm tra null
+            if (data == null)
+            {
+                message = "Không có dữ liệu. Vui lòng kiểm tra lại!";
+                return false;
+            }
+            string projectPrefix = string.IsNullOrEmpty(projectCode)
+              ? string.Empty
+              : $"Dự án [{projectCode}]";
+
+            // Kiểm tra Nội dung công việc
+            if (string.IsNullOrWhiteSpace(data.Content))
+            {
+                message = string.IsNullOrEmpty(projectPrefix)
+                    ? "Vui lòng nhập Nội dung công việc!"
+                    : $"{projectPrefix}: Vui lòng nhập Nội dung công việc!";
+                return false;
+            }
+            ////kiểm tra nơi làm việc 
+            //if (string.IsNullOrEmpty(data.Location))
+            //{
+            //    message = string.IsNullOrEmpty(projectPrefix)
+            //      ? "Vui lòng chọn nơi làm việc!"
+            //      : $"{projectPrefix}: Vui lòng chọn nơi làm việc!";
+            //    return false;
+            //}
+
+            // Kiểm tra Kết quả
+            if (string.IsNullOrWhiteSpace(data.Results))
+            {
+                message = string.IsNullOrEmpty(projectPrefix)
+                    ? "Vui lòng nhập Kết quả!"
+                    : $"{projectPrefix}: Vui lòng nhập Kết quả!";
+                return false;
+            }
+
+            // Kiểm tra Kế hoạch ngày tiếp theo
+            if (string.IsNullOrWhiteSpace(data.PlanNextDay))
+            {
+                message = string.IsNullOrEmpty(projectPrefix)
+                    ? "Vui lòng nhập Kế hoạch ngày tiếp theo!"
+                    : $"{projectPrefix}: Vui lòng nhập Kế hoạch ngày tiếp theo!";
+                return false;
+            }
             return true;
         }
     }

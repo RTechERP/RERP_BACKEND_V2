@@ -272,6 +272,59 @@ namespace RERPAPI.Controllers.Old.Technical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        //[HttpPost("save-report-mar")]
+        //public async Task<IActionResult> SaveReportMar([FromBody] DailyReportTechnical request)
+        //{
+        //    try
+        //    {
+        //        var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+        //        var currentUser = ObjectMapper.GetCurrentUser(claims);
+        //        int userId = currentUser.ID;
+
+        //        // 1. Kiểm tra request null hoặc empty
+        //        if (request == null)
+        //        {
+        //            return BadRequest(ApiResponseFactory.Fail(null, "Danh sách báo cáo không được rỗng!"));
+        //        }
+        //        if (!_dailyReportTechnicalRepo.VallidateDailyMar(request, out string validationMessage)
+        //        {
+        //            return BadRequest(ApiResponseFactory.Fail(null, validationMessage));
+        //        }
+        //        if (request.ID > 0)
+        //        {
+        //            await _dailyReportTechnicalRepo.UpdateAsync(request);
+        //        }
+        //        else
+        //        {
+        //            // Set các giá trị mặc định
+        //            request.ProjectID = 0;
+        //            request.TotalHours = 0;
+        //            request.TotalHourOT = 0;
+        //            request.MasterID = 0;
+        //            request.Type = 0;
+        //            request.ReportLate = 0;
+        //            request.StatusResult = 0;
+        //            request.Type = 0; // Luôn set Type = 0 (không OT) khi tạo mới
+        //            request.ReportLate = 0; // Set mặc định = 0, KHÔNG tính toán
+        //            request.WorkPlanDetailID = 0;
+        //            request.OldProjectID = 0;
+        //            request.DeleteFlag = 0;
+        //            request.Confirm = false;
+        //            request.CreatedDate = DateTime.Today.AddHours(23).AddMinutes(30);
+        //            await _dailyReportTechnicalRepo.CreateAsync(request);
+
+        //        }
+        //        return Ok(ApiResponseFactory.Success(null,
+        //                  "Lưu dữ liệu thành công"
+        //              ));
+
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
         [HttpPost("delete-daily-report")]
         public async Task<IActionResult> DeletedDailyreport(int dailyReportID)
         {
