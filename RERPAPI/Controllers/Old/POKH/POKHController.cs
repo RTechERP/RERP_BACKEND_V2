@@ -273,7 +273,7 @@ namespace RERPAPI.Controllers.Old.POKH
         /// - Duyệt qua danh sách POKHDetailsMoney để xử lý tạo/cập nhật thông tin.
         /// </remarks>
         [HttpPost("handle")]
-        [RequiresPermission("N53,N52,N1")]
+        //[RequiresPermission("N53,N52,N1")]
 
         public async Task<IActionResult> Handle([FromBody] POKHDTO dto)
         {
