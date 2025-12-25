@@ -27,10 +27,11 @@ namespace RERPAPI.Controllers.GeneralCategory
         private JobRequirementApprovedRepo _approvedRepo;
         private EmployeeRepo _employeeRepo;
         private JobRequirementCommentRepo _commentRepo;
+        private vUserGroupLinksRepo _vUserGroupLinksRepo;
 
 
 
-        public JobRequirementController(IConfiguration configuration, CurrentUser currentUser, JobRequirementRepo jobRepo, JobRequirementDetailRepo detailRepo, JobRequirementFileRepo jobRequirementFileRepo, JobRequirementApprovedRepo approvedRepo, EmployeeRepo employeeRepo, JobRequirementCommentRepo commentRepo)
+        public JobRequirementController(IConfiguration configuration, CurrentUser currentUser, JobRequirementRepo jobRepo, JobRequirementDetailRepo detailRepo, JobRequirementFileRepo jobRequirementFileRepo, JobRequirementApprovedRepo approvedRepo, EmployeeRepo employeeRepo, JobRequirementCommentRepo commentRepo, vUserGroupLinksRepo userLinkRepo)
         {
             _configuration = configuration;
             _currentUser = currentUser;
@@ -40,6 +41,7 @@ namespace RERPAPI.Controllers.GeneralCategory
             _approvedRepo = approvedRepo;
             _employeeRepo = employeeRepo;
             _commentRepo = commentRepo;
+            _vUserGroupLinksRepo = userLinkRepo;
         }
 
 
@@ -50,10 +52,31 @@ namespace RERPAPI.Controllers.GeneralCategory
             {
                 param.DateStart = new DateTime(param.DateStart.Year, param.DateStart.Month, param.DateStart.Day, 0, 0, 0);
                 param.DateEnd = new DateTime(param.DateEnd.Year, param.DateEnd.Month, param.DateEnd.Day, 23, 59, 59);
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
 
+                var vUserViewAllYCCV = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x => (
+                                                           x.Code == "N1"
+                                                        || x.Code == "N2"
+                                                        || x.Code == "N32"
+                                                        || x.Code == "N34"
+                                                        || x.Code == "N57"
+                                                        || x.Code == "N58"
+                                                        || x.Code == "N59"
+                                                        || x.Code == "N56") &&
+                                                           x.UserID == currentUser.ID);
+                int employeeID;
+                if (vUserViewAllYCCV != null)
+                {
+                    employeeID = param.EmployeeID;
+                }
+                else
+                {
+                    employeeID = currentUser.EmployeeID;
+                }
                 var data = SQLHelper<object>.ProcedureToList("spGetJobRequirement",
                                                             new string[] { "@DateStart", "@DateEnd", "@Request", "@EmployeeId", "@Step", "@DepartmentId", "@ApprovedTBPID" },
-                                                            new object[] { param.DateStart, param.DateEnd, param.Request, param.EmployeeID, param.Step, param.DepartmentID, param.ApprovedTBPID });
+                                                            new object[] { param.DateStart, param.DateEnd, param.Request, employeeID, param.Step, param.DepartmentID, param.ApprovedTBPID });
 
                 var jobs = SQLHelper<object>.GetListData(data, 0);
 
@@ -132,10 +155,10 @@ namespace RERPAPI.Controllers.GeneralCategory
                         _jobRepo.SendMail(job);
                     }
                 }
-                else if(job.EmployeeID!=currentUser.EmployeeID)
+                else if (job.EmployeeID != currentUser.EmployeeID)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Bạn không thể sửa phiếu của người khác"));
-                }    
+                }
                 else await _jobRepo.UpdateAsync(job);
                 await _approvedRepo.CreateJobRequirementApproved(job.ApprovedTBPID ?? 0, job);
                 // Thêm detail

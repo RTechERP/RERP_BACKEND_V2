@@ -826,6 +826,7 @@ namespace RERPAPI.Controllers
                         continue;
 
                     }
+                   
                     SQLHelper<object>.ExcuteProcedure(
                   "spUpdateTableByFieldNameAndID",
                   new[] { "@TableName", "@FieldName", "@Value", "@ID", "@ValueUpdatedDate", "@ValueDecilineApprove", "@EvaluateResults" },
@@ -861,7 +862,11 @@ namespace RERPAPI.Controllers
                     {
                         item.FieldName = "IsApproved";
                     }
-                        var error = ValidateTBP(item, request.IsApproved ?? false);
+                    if (item.TableName == "EmployeeOvertime")
+                    {
+                        item.FieldName = "IsApproved";
+                    }
+                    var error = ValidateTBP(item, request.IsApproved ?? false);
                     if (error != null)
                     {
                         notProcessed.Add(new NotProcessedApprovalItem
