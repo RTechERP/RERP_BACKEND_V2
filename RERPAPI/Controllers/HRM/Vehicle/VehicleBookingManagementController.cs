@@ -99,6 +99,12 @@ namespace RERPAPI.Controllers
         {
             try
             {
+                if(vehicleBookingManagement.DepartureDateActual==null)
+                {
+                    var booking = _vehicleBookingManagementRepo.GetByID(vehicleBookingManagement.ID);
+                    vehicleBookingManagement.DepartureDateActual = booking.DepartureDate;
+                    
+                }    
                 if (vehicleBookingManagement.ID > 0)
                 {
 

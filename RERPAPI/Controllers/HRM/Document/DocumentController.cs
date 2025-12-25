@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.Document;
 using RERPAPI.Repo.GenericEntity;
@@ -480,6 +481,23 @@ namespace RERPAPI.Controllers.DocumentManager
             }
 
             return table;
+        }
+        [HttpGet("get-document-common")]
+        public IActionResult GetDocumrntCommon(string? keyword, int departID, int groupType)
+        {
+            try
+            {
+                var document = SQLHelper<dynamic>.ProcedureToList("spGetDocument",
+                       new string[] { "@FilterText", "@DepartmentID", "@GroupType" },
+                    new object[] { keyword??"", departID, groupType });
+              var  documentList = SQLHelper<object>.GetListData(document, 0);
+                return Ok(ApiResponseFactory.Success(documentList, ""));
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
         }
     }
 }
