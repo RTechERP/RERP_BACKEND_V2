@@ -2,11 +2,13 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.Asset;
 using RERPAPI.Model.DTO.Project;
 using RERPAPI.Model.Entities;
+using RERPAPI.Model.Param.Project;
 using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.Project;
 using System.Net.WebSockets;
@@ -43,7 +45,7 @@ namespace RERPAPI.Controllers.Project
                 var rowNum = SQLHelper<dynamic>.ProcedureToList(
                 "spGetProjectEmployeePermisstion",
                 new string[] { "@ProjectID", "@EmployeeID" },
-                new object[] { projectID, employeeID } );
+                new object[] { projectID, employeeID });
                 var data = SQLHelper<dynamic>.GetListData(rowNum, 0);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
@@ -60,7 +62,7 @@ namespace RERPAPI.Controllers.Project
             {
                 var projectItem = SQLHelper<dynamic>.ProcedureToList("spGetProjectItem",
                 new string[] { "@ProjectID" },
-                new object[] { projectID});
+                new object[] { projectID });
                 var projectItemData = SQLHelper<dynamic>.GetListData(projectItem, 0);
                 return Ok(ApiResponseFactory.Success(projectItemData, ""));
             }
@@ -70,7 +72,7 @@ namespace RERPAPI.Controllers.Project
             }
         }
         //Hàm lấy mã hạng mục công việc
-       // [Authorize]
+        // [Authorize]
         [HttpGet("get-project-item-code")]
         public IActionResult GetProjectItemCode([FromQuery] int projectId)
         {
@@ -96,7 +98,7 @@ namespace RERPAPI.Controllers.Project
                 string fileName = "";
                 string message = "Upload file thất bại!";
                 if (file != null)
-                {               
+                {
                     var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp" };
                     var fileExtension = Path.GetExtension(file.FileName).ToLower();
 
@@ -118,9 +120,9 @@ namespace RERPAPI.Controllers.Project
                         file.CopyTo(fileStream);
                         fileStream.Flush();
 
-                            statusCode = 1;
-                            fileName = file.FileName;
-                            message = "Upload File thành công!";
+                        statusCode = 1;
+                        fileName = file.FileName;
+                        message = "Upload File thành công!";
                     }
                 }
                 else
@@ -128,7 +130,7 @@ namespace RERPAPI.Controllers.Project
                     statusCode = 0;
                     message = "Không có file được gửi lên.";
                 }
-            
+
                 return Ok(ApiResponseFactory.Success(new { statusCode, fileName, message }, "Upload file thành công"));
             }
             catch (Exception ex)
@@ -144,15 +146,15 @@ namespace RERPAPI.Controllers.Project
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
-                bool isTBP =  currentUser.EmployeeID == 54;
+                bool isTBP = currentUser.EmployeeID == 54;
                 bool isPBP = (currentUser.PositionCode == "CV57" || currentUser.PositionCode == "CV28");
                 //Lưu hạng mục công việc nếu có
 
                 if (projectItem.projectItems != null)
                 {
-                    if(currentUser.IsAdmin)
-                    foreach (var item in projectItem.projectItems)
-                    {
+                    if (currentUser.IsAdmin)
+                        foreach (var item in projectItem.projectItems)
+                        {
                             // Nếu có IsDeleted = true thì check quyền trước
                             if (item.IsDeleted == true)
                             {
@@ -162,10 +164,10 @@ namespace RERPAPI.Controllers.Project
                                 }
                             }
                             if (item.ID <= 0)
-                            await _projectItemRepo.CreateAsync(item);
-                        else
-                            _projectItemRepo.Update(item);
-                    }
+                                await _projectItemRepo.CreateAsync(item);
+                            else
+                                _projectItemRepo.Update(item);
+                        }
                 }
                 // Lưu phát sinh của hạng mục nếu có
                 if (projectItem.projectItemProblem != null)
@@ -183,7 +185,7 @@ namespace RERPAPI.Controllers.Project
                     else
                         _projectItemFileRepo.Update(projectItem.ProjectItemFile);
                 }
-                return Ok(ApiResponseFactory.Success(1,"Lưu thành công"));
+                return Ok(ApiResponseFactory.Success(1, "Lưu thành công"));
             }
             catch (Exception ex)
             {
@@ -191,5 +193,27 @@ namespace RERPAPI.Controllers.Project
             }
 
         }
+
+
+
+        #region hạng mục công việc cá nhân 
+        //API lấy list hạng mục công việc cá nhân
+        [HttpPost("get-project-item-person")]
+        public IActionResult GetProjectItem(ProjectItemRequestParam request)
+        {
+            try
+            {
+                var projectItem = SQLHelper<dynamic>.ProcedureToList("spGetProjectItem",
+                    new[] {"@ProjectID", "@UserID", "@Keyword", "@Status" },
+                    new object[] {request.ProjectID, request.UserID, request.Keyword, request.Status });
+                var rows = SQLHelper<dynamic>.GetListData(projectItem, 0);
+                return Ok(ApiResponseFactory.Success(rows, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        #endregion
     }
 }

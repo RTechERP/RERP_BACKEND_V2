@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
@@ -52,6 +53,7 @@ namespace RERPAPI.Controllers.Project
             try
             {
                 string message = "";
+                int ID = 0;
                 if (!_projectPartlistVersionRepo.Validate(request, out message))
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, message));
@@ -63,6 +65,7 @@ namespace RERPAPI.Controllers.Project
                 else
                 {
                     await _projectPartlistVersionRepo.CreateAsync(request);
+                    ID = request.ID;
                 }
                 if (request.IsActive == false)
                 {
@@ -70,8 +73,10 @@ namespace RERPAPI.Controllers.Project
                             {
                                 { x => x.IsApprovedTBP, false },
                                 { x => x.IsApprovedPurchase, false }
+
                             };
-                    await _projectPartListRepo.UpdateFieldByAttributeAsync(x => x.ProjectPartListVersionID == request.ID, myDict);
+                    await _projectPartListRepo.UpdateFieldByAttributeAsync(x => x.ProjectPartListVersionID == ID, // Bây giờ mới có ID đúng
+        myDict);
                 }
                 if (request.IsDeleted == true)
                 {

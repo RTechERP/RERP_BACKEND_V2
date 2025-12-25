@@ -441,6 +441,7 @@ builder.Services.AddScoped<PaymentOrderPORepo>();
 #endregion
 builder.Services.AddScoped<DailyReportHRRepo>();
 builder.Services.AddScoped<DailyReportLXCP>();
+builder.Services.AddScoped<DailyReportMarketingFileRepo>();
 
 
 builder.Services.AddScoped<PhasedAllocationPersonRepo>();
