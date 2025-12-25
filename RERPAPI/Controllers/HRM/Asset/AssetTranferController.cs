@@ -148,7 +148,8 @@ namespace RERPAPI.Controllers.Old.Asset
 
                 //if (master.DateApprovedPersonalProperty.HasValue)
                 //    ws.Cells[32, 8].Value = master.DateApprovedPersonalProperty.Value.ToString("dd/MM/yyyy HH:mm");
-
+                ws.Cells[28, 1].Value = master.DateApprovedHR?.ToString("dd/MM/yyyy HH:mm") ?? "";
+                ws.Cells[28, 8].Value = master.DateApprovedPersonalProperty?.ToString("dd/MM/yyyy HH:mm") ?? "";
                 ws.DeleteRow(20, 1);
 
                 // Ghi dữ liệu chi tiết từ dòng 21 trở đi

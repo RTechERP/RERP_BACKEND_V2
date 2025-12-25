@@ -19,13 +19,12 @@ namespace RERPAPI.Repo.GenericEntity
         {
             try
             {
-                bool exists = GetAll().Any(x =>
+                bool exists = GetAll(x =>
                     x.ID != item.ID &&
                     x.IsDeleted != true &&
-                    x.EmployeeID ==item.EmployeeID&&
+                    x.EmployeeID == item.EmployeeID &&
                     item.TimeStart < x.EndTime &&
-                    item.EndTime > x.TimeStart
-                );
+                    item.EndTime > x.TimeStart).Any();
 
                 if (exists)
                 {

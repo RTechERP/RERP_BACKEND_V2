@@ -20,6 +20,7 @@ namespace RERPAPI.Model.DTO.Asset
         public string Reason { get; set; }
         public DateTime? CreatedDate { get; set; }
         public DateTime? DateApprovedPersonalProperty { get; set; }
+        public DateTime? DateApprovedHR { get; set; }
     }
 
 }
