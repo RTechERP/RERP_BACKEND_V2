@@ -69,6 +69,23 @@ namespace RERPAPI.Controllers.Old.KETOAN
             }
         }
 
+        [HttpGet("get-accounting-contract-log")]
+        public IActionResult LoadAccountingContractLog(int accountingContractId, int userId)
+        {
+            try
+            {
+                var result = SQLHelper<dynamic>.ProcedureToList("spGetAccountingContractLog",
+                                new string[] { "@AccountingContractID", "@UserID" },
+                                new object[] { accountingContractId, userId });
+                var data = SQLHelper<dynamic>.GetListData(result, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpGet("get-contract-for-log")]
         public IActionResult LoadContractForLog()
         {

@@ -159,7 +159,7 @@ namespace RERPAPI.Controllers.Old.POKH
         {
             try
             {
-                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetPOKHDetail_New", new string[] { "@ID", "@IDDetail" }, new object[] { id, idDetail });
+                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetPOKHDetail", new string[] { "@ID", "@IDDetail" }, new object[] { id, idDetail });
                 var data = SQLHelper<dynamic>.GetListData(list, 0);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
@@ -273,7 +273,7 @@ namespace RERPAPI.Controllers.Old.POKH
         /// - Duyệt qua danh sách POKHDetailsMoney để xử lý tạo/cập nhật thông tin.
         /// </remarks>
         [HttpPost("handle")]
-        [RequiresPermission("N53,N52,N1")]
+        //[RequiresPermission("N53,N52,N1")]
 
         public async Task<IActionResult> Handle([FromBody] POKHDTO dto)
         {
