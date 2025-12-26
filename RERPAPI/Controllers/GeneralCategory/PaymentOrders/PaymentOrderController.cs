@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using RERPAPI.Attributes;
 using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -378,6 +379,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         }
 
         [HttpPost("appoved-tbp")]
+        [RequiresPermission("N57")]
         public async Task<IActionResult> ApprovedTBP([FromBody] List<PaymentOrderDTO> payment)
         {
             try
@@ -400,6 +402,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         }
 
         [HttpPost("appoved-hr")]
+        [RequiresPermission("N59,N56")]
         public async Task<IActionResult> ApprovedHR([FromBody] List<PaymentOrderDTO> payment)
         {
             var reponse = await _logRepo.Appoved(payment);
@@ -414,6 +417,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         }
 
         [HttpPost("appoved-kttt")]
+        [RequiresPermission("N55")]
         public async Task<IActionResult> ApprovedKTTT([FromBody] List<PaymentOrderDTO> payment)
         {
             var reponse = await _logRepo.Appoved(payment);
@@ -428,6 +432,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         }
 
         [HttpPost("appoved-ktt")]
+        [RequiresPermission("N61")]
         public async Task<IActionResult> ApprovedKTT([FromBody] List<PaymentOrderDTO> payment)
         {
             var reponse = await _logRepo.Appoved(payment);
@@ -442,6 +447,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         }
 
         [HttpPost("appoved-bgd")]
+        [RequiresPermission("N58")]
         public async Task<IActionResult> ApprovedBGD([FromBody] List<PaymentOrderDTO> payment)
         {
             var reponse = await _logRepo.Appoved(payment);
