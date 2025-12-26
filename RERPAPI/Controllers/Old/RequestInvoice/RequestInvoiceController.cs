@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using System.Data;
 
@@ -17,11 +18,12 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
     {
         private readonly RequestInvoiceRepo _requestInvoiceRepo;
         private readonly POKHFilesRepo _pokhFileRepo;
-
-        public RequestInvoiceController(RequestInvoiceRepo requestInvoiceRepo, POKHFilesRepo pokhFileRepo)
+        private readonly ConfigSystemRepo _configSystemRepo;
+        public RequestInvoiceController(RequestInvoiceRepo requestInvoiceRepo, POKHFilesRepo pokhFileRepo, ConfigSystemRepo configSystemRepo)
         {
             _requestInvoiceRepo = requestInvoiceRepo;
             _pokhFileRepo = pokhFileRepo;
+            _configSystemRepo = configSystemRepo;
         }
         [HttpGet]
         public IActionResult Get(DateTime dateStart, DateTime dateEnd, int warehouseId, string keyWords = "")
@@ -79,6 +81,32 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
             {
                 var data = _pokhFileRepo.GetAll(x=>x.POKHID == pokhId);
                 return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-tree-folder-path")]
+        public IActionResult GetTreeFolderPath(int requestInvoiceID)
+        {
+            try
+            {
+
+                ConfigSystem config = _configSystemRepo.GetAll(x => x.KeyName == "RequestInvoiceFile").FirstOrDefault();
+                if (config == null || string.IsNullOrEmpty(config.KeyValue))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng chọn đường dẫn lưu trên server!"));
+                }
+                var requestInvoice = _requestInvoiceRepo.GetByID(requestInvoiceID);
+
+                DateTime dateRequest = requestInvoice.CreatedDate.Value;
+                string pathServer = config.KeyValue.Trim();
+                string pathPattern = $@"{dateRequest.ToString("yyyy")}\T{dateRequest.ToString("MM")}\{requestInvoice.Code}";
+                string pathUpload = Path.Combine(pathServer, pathPattern);
+
+                return Ok(ApiResponseFactory.Success(pathUpload, ""));
             }
             catch (Exception ex)
             {
