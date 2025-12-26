@@ -793,12 +793,30 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
         //    //);
         //}
         //#endregion
+        bool HasPermission(params string[] requiredPermissions)
+        {
+            if (string.IsNullOrWhiteSpace(_currentUser.Permissions))
+                return false;
+
+            var userPermissions = _currentUser.Permissions
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(p => p.Trim());
+
+            return requiredPermissions.Any(rp => userPermissions.Contains(rp));
+        }
 
         #region Main Save Method
         public async Task<(bool Success, string Message, int BillExportId)> SaveBillExportWithDetails(BillExportDTO dto)
         {
             try
             {
+                if (dto.billExport != null && dto.billExport.ID > 0)
+                {
+                    if (!HasPermission("N1", "N27", "N33", "N34", "N69") && !_currentUser.IsAdmin)
+                    {
+                        return (false, "Bạn không có quyền để lưu phiếu này!", dto.billExport.ID);
+                    }
+                }
                 // 0. Tính lại TotalQty
                 RecalculateTotalQty(dto);
 
@@ -954,8 +972,8 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                 .GroupBy(d => new
                 {
                     d.ProductID,
-                    ProjectID = (d.POKHDetailIDActual ?? d.POKHDetailID ?? 0) > 0 ? 0 : d.ProjectID,
-                    POKHDetailID = d.POKHDetailIDActual ?? d.POKHDetailID ?? 0
+                    ProjectID =  (d.POKHDetailID ?? 0) > 0 ? 0 : d.ProjectID,
+                    POKHDetailID =  d.POKHDetailID ?? 0
                 })
                 .ToDictionary(g => g.Key, g => g.Sum(d => d.Qty ?? 0));
 
@@ -977,16 +995,16 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                 var key = new
                 {
                     detail.ProductID,
-                    ProjectID = (detail.POKHDetailIDActual ?? detail.POKHDetailID ?? 0) > 0 ? 0 : detail.ProjectID,
-                    POKHDetailID = detail.POKHDetailIDActual ?? detail.POKHDetailID ?? 0
+                    ProjectID = (detail.POKHDetailID ?? 0) > 0 ? 0 : detail.ProjectID,
+                    POKHDetailID = detail.POKHDetailID ?? 0
                 };
 
                 if (groupedQuantities.ContainsKey(key))
                     detail.TotalQty = groupedQuantities[key];
 
                 int productId = detail.ProductID ?? 0;
-                int projectId = (detail.POKHDetailIDActual ?? detail.POKHDetailID ?? 0) > 0 ? 0 : detail.ProjectID ?? 0;
-                int pokhDetailId = detail.POKHDetailIDActual ?? detail.POKHDetailID ?? 0;
+                int projectId = (detail.POKHDetailID ?? 0) > 0 ? 0 : detail.ProjectID ?? 0;
+                int pokhDetailId = detail.POKHDetailID ?? 0;
                 decimal totalQty = detail.TotalQty ?? 0;
 
                 // Lấy tồn kho
