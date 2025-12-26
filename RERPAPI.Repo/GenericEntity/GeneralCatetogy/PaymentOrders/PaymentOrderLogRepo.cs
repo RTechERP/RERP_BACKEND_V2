@@ -171,7 +171,7 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                         return 0;
                     }
 
-                    if (actionStep == 2) //Kiểm tra đề nghị có phải của tbp đó hay ko
+                    if (actionStep == 2 && !_currentUser.IsAdmin) //Kiểm tra đề nghị có phải của tbp đó hay ko
                     {
                         var logDb = GetAll(x => x.IsDeleted != true
                                             && x.PaymentOrderID == item.ID

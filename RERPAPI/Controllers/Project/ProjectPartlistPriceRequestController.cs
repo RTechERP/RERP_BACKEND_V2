@@ -369,7 +369,7 @@ namespace RERPAPI.Controllers.Project
 
                 // Lấy base URL real-time
                 var baseUrl = $"{Request.Scheme}://{Request.Host}";
-                var fileUrl = $"{baseUrl}/api/api/share/duan/{pathPattern}/{fileName}";
+                var fileUrl = $"{baseUrl}/api/api/share/duan/Projects/{pathPattern}/{fileName}";
                 //var fileUrl = $"{baseUrl}/api/share/software/duan/Projects/{pathPattern}/{fileName}";
 
                 return Ok(ApiResponseFactory.Success(fileUrl, ""));

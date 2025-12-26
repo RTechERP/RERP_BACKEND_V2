@@ -73,8 +73,11 @@ namespace RERPAPI.Controllers.Old
                 {
                     employeeID = currentUser.EmployeeID;
                 }
-                var ds = param.dateStart.Date.AddHours(00).AddMinutes(00).AddSeconds(00).AddSeconds(-1);
-                var de = param.dateEnd.Date.AddHours(23).AddMinutes(59).AddSeconds(59).AddSeconds(+1);
+                //var ds = param.dateStart.Date.AddHours(00).AddMinutes(00).AddSeconds(00).AddSeconds(-1);
+                //var de = param.dateEnd.Date.AddHours(23).AddMinutes(59).AddSeconds(59).AddSeconds(+1);
+
+                var ds = param.dateStart.Date; ;
+                var de = param.dateEnd.Date.AddDays(+1).AddSeconds(-1);
                 //DateTime dateStart = param.dateStart.Date;
                 //DateTime dateEnd = param.dateEnd.Date.AddDays(1).AddTicks(-1);
                 var foodOrders = SQLHelper<object>.ProcedureToList("spGetFoodOrder", new string[] { "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@Keyword", "@EmployeeID" },
@@ -180,7 +183,7 @@ namespace RERPAPI.Controllers.Old
                 // Kiểm tra user có thuộc nhóm quyền HR hay không
                 var vUserHR = _vUserGroupLinksRepo
                     .GetAll()
-                    .FirstOrDefault(x =>(x.Code == "N23" || x.Code == "N1" || x.Code == "N2" || x.Code == "N34") && x.UserID == currentUser.ID);
+                    .FirstOrDefault(x => (x.Code == "N23" || x.Code == "N1" || x.Code == "N2" || x.Code == "N34") && x.UserID == currentUser.ID);
                 var today10AM = new DateTime(now.Year, now.Month, now.Day, 10, 0, 0);
 
                 if (vUserHR == null && now > today10AM && currentUser.IsAdmin != true)
