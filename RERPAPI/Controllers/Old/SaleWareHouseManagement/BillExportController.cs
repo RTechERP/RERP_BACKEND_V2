@@ -427,7 +427,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         //}
         //        
         [HttpPost("save-data")]
-        [RequiresPermission("N27,N1,N33,N34,N69")]
+        //[RequiresPermission("N27,N1,N33,N34,N69")]
         public async Task<IActionResult> SaveDataBillExport([FromBody] BillExportDTO dto)
         {
             try
@@ -455,7 +455,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new
+                return BadRequest(new
                 {
                     status = 0,
                     message = $"Lỗi server: {ex.Message}"
