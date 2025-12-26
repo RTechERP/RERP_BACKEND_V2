@@ -73,8 +73,8 @@ namespace RERPAPI.Controllers.Old
                 {
                     employeeID = currentUser.EmployeeID;
                 }
-                var ds = param.dateStart.Date.AddHours(00).AddMinutes(00).AddSeconds(00); // 00:00:00
-                var de = param.dateEnd.Date.AddHours(23).AddMinutes(59).AddSeconds(59); // 23:59:59
+                var ds = param.dateStart.Date.AddHours(00).AddMinutes(00).AddSeconds(00).AddSeconds(-1);
+                var de = param.dateEnd.Date.AddHours(23).AddMinutes(59).AddSeconds(59).AddSeconds(+1);
                 //DateTime dateStart = param.dateStart.Date;
                 //DateTime dateEnd = param.dateEnd.Date.AddDays(1).AddTicks(-1);
                 var foodOrders = SQLHelper<object>.ProcedureToList("spGetFoodOrder", new string[] { "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@Keyword", "@EmployeeID" },
