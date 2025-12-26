@@ -54,6 +54,54 @@ namespace RERPAPI.Controllers.Old.KETOAN
             }
         }
 
+        [HttpPost("delete-document")]
+        public IActionResult Delete(int documentType, int id)
+        {
+            try
+            {
+                if (id <= 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "ID không hợp lệ"));
+                }
+
+                if (documentType == 1)
+                {
+                    // Xóa chứng từ nhập
+                    var model = _documentImportRepo.GetByID(id);
+                    if (model == null || model.IsDeleted == true)
+                    {
+                        return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy chứng từ"));
+                    }
+
+                    model.IsDeleted = true;
+                    _documentImportRepo.Update(model);
+                }
+                else if (documentType == 2)
+                {
+                    // Xóa chứng từ xuất
+                    var model = _documentExportRepo.GetByID(id);
+                    if (model == null || model.IsDeleted == true)
+                    {
+                        return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy chứng từ"));
+                    }
+
+                    model.IsDeleted = true;
+                    _documentExportRepo.Update(model);
+                }
+                else
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Loại chứng từ không hợp lệ"));
+                }
+
+                return Ok(ApiResponseFactory.Success(null, "Xóa thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
         [HttpPost("save-document-import-export")]
         public IActionResult Save(int documentType, string code, string name, int? id = null)
         {
