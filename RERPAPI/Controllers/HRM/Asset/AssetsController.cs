@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Spreadsheet;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -6,6 +8,7 @@ using NPOI.SS.Formula.Functions;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.Asset;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.Asset;
@@ -13,6 +16,8 @@ using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
 using System;
+using System.Text.Json;
+using ZXing;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 namespace RERPAPI.Controllers.Old.Asset
@@ -30,18 +35,11 @@ namespace RERPAPI.Controllers.Old.Asset
         private readonly ProductGroupRepo _productgroupRepo;
         private readonly ProductSaleRepo _productsaleRepo;
         private readonly UnitCountRepo _unitCountRepo;
+        private readonly TSAssetAllocationRepo _tSAssetAllocationRepo;
+        private readonly TSAssetRecoveryRepo _tSAssetRecoveryRepo;
+        private readonly TSAssetTransferRepo _tSAssetTransferRepo;
 
-        public AssetsController(
-            TSLostReportAssetRepo tsLostReportRepo,
-            TSAllocationEvictionAssetRepo tSAllocationEvictionRepo,
-            TSReportBrokenAssetRepo tsReportBrokenAssetRepo,
-            TSAssetManagementRepo tsAssetManagementRepo,
-            TSRepairAssetRepo tSRepairAssetRepo,
-            TSLiQuidationAssetRepo tsLiQuidationAssetRepo,
-          ProductSaleRepo productSaleRepo,
-            ProductGroupRepo productgroupRepo,
-            UnitCountRepo unitCountRepo
-        )
+        public AssetsController(TSLostReportAssetRepo tsLostReportRepo, TSAllocationEvictionAssetRepo tSAllocationEvictionRepo, TSReportBrokenAssetRepo tsReportBrokenAssetRepo, TSAssetManagementRepo tsAssetManagementRepo, TSRepairAssetRepo tSRepairAssetRepo, TSLiQuidationAssetRepo tsLiQuidationAssetRepo, ProductGroupRepo productgroupRepo, ProductSaleRepo productsaleRepo, UnitCountRepo unitCountRepo, TSAssetAllocationRepo tSAssetAllocationRepo, TSAssetRecoveryRepo tSAssetRecoveryRepo, TSAssetTransferRepo tSAssetTransferRepo)
         {
             _tsLostReportRepo = tsLostReportRepo;
             _tSAllocationEvictionRepo = tSAllocationEvictionRepo;
@@ -50,9 +48,13 @@ namespace RERPAPI.Controllers.Old.Asset
             _tSRepairAssetRepo = tSRepairAssetRepo;
             _tsLiQuidationAssetRepo = tsLiQuidationAssetRepo;
             _productgroupRepo = productgroupRepo;
-            _productsaleRepo = productSaleRepo;
+            _productsaleRepo = productsaleRepo;
             _unitCountRepo = unitCountRepo;
+            _tSAssetAllocationRepo = tSAssetAllocationRepo;
+            _tSAssetRecoveryRepo = tSAssetRecoveryRepo;
+            _tSAssetTransferRepo = tSAssetTransferRepo;
         }
+
         [RequiresPermission("N2,N23,N1,N67")]
         [HttpPost("get-asset")]
         public IActionResult GetListAssets([FromBody] AssetmanagementRequestParam request)
@@ -85,7 +87,63 @@ namespace RERPAPI.Controllers.Old.Asset
                 });
             }
         }
+        [HttpPost("get-asset-person")]
+        public IActionResult GetPersonalPropertiesByPerson([FromBody] AssetmanagementRequestParam request)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                var assets = SQLHelper<dynamic>.ProcedureToList("spGetTSAssetManagement",
+                         new string[] { "@FilterText", "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@EmployeeID" },
+                    new object[] { request.FilterText, request.PageNumber, request.PageSize, request.DateStart, request.DateEnd, currentUser.EmployeeID });
 
+
+                return Ok(ApiResponseFactory.Success(assets));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-personal-properties")]
+        public IActionResult GetPersonalProperties([FromQuery] DateTime dateStart,
+            [FromQuery] DateTime dateEnd,
+            [FromQuery] int receiverID = 0,
+            [FromQuery] int assetCategory = 0)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                var assets = SQLHelper<dynamic>.ProcedureToList("spGetPersonalProperty",
+                       new string[] { "@DateStart", "@DateEnd", "@ReceiverID", "@AssetCategory" },
+                    new object[] { dateStart, dateEnd, currentUser.EmployeeID, assetCategory });
+                return Ok(ApiResponseFactory.Success(assets));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-personal-property-details")]
+        public IActionResult GetPersonalPropertyDetails(int assetID, int assetCategory)
+        {
+            try
+            {
+                var data = SQLHelper<dynamic>.ProcedureToList(
+                          "spGetPersonalPropertyDetail",
+                          new string[] { "@AssetID", "@AssetCategory" },
+                          new object[] { assetID, assetCategory });
+                return Ok(ApiResponseFactory.Success(data));
+            }
+            catch (Exception ex)
+            {
+
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+
+        }
         [HttpGet("get-allocation-detail")]
         public IActionResult GetAllocation(string? id)
         {
@@ -240,23 +298,23 @@ namespace RERPAPI.Controllers.Old.Asset
                             groupID = productgroupModel.ID;
                         }
                         string productCode = item.Model ?? "";
-                        var codeExist = _productsaleRepo.GetAll(x => x.ProductCode == productCode&&x.ProductGroupID==groupID).FirstOrDefault();
-                     
+                        var codeExist = _productsaleRepo.GetAll(x => x.ProductCode == productCode && x.ProductGroupID == groupID).FirstOrDefault();
+
                         codeExist = codeExist == null ? new ProductSale() : codeExist;
                         codeExist.ProductNewCode = GenerateProductNewCode(groupID);
                         codeExist.SupplierName = "";
                         codeExist.ProductGroupID = groupID;
                         codeExist.ProductCode = item.Model;
                         codeExist.ProductName = item.TSAssetName;
-                        codeExist.Unit = _unitCountRepo.GetByID(item.UnitID??0).UnitName;
-                        if(codeExist.ID>0)
+                        codeExist.Unit = _unitCountRepo.GetByID(item.UnitID ?? 0).UnitName;
+                        if (codeExist.ID > 0)
                         {
                             await _productsaleRepo.UpdateAsync(codeExist);
-                        }    
+                        }
                         else
                         {
                             await _productsaleRepo.CreateAsync(codeExist);
-                        }    
+                        }
                     }
                 }
                 if (asset.tSAllocationEvictionAssets != null && asset.tSAllocationEvictionAssets.Any())
@@ -334,6 +392,38 @@ namespace RERPAPI.Controllers.Old.Asset
             string numberCodeText = nextSTT.ToString().PadLeft(9 - productGroupCode.Length, '0');
 
             return productGroupCode + numberCodeText;
+        }
+
+        [HttpPost("change-status-asset")]
+        public IActionResult ChangeStatusAsset([FromBody]  PersonalPropertyDTO asset)
+        {
+            try
+            {
+
+                var repoDictionary = new Dictionary<int, dynamic>
+                    {
+                      { 0,_tSAssetTransferRepo },
+                      { 1,_tSAssetAllocationRepo },
+                      { 2,_tSAssetRecoveryRepo  }
+                     };
+                if (!repoDictionary.ContainsKey(asset.AssetCategory))
+                    return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu không hợp lệ"));
+                var repo = repoDictionary[asset.AssetCategory];
+                var model = repo.GetByID(asset.AssetID);
+                if (model == null)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Phiếu không tồn tại!"));
+                }
+                model.IsApprovedPersonalProperty = asset.IsApprove;
+                model.DateApprovedPersonalProperty = DateTime.Now;
+                repo.Update(model);
+
+                return Ok(ApiResponseFactory.Success("Lưu dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
         }
     }
 }
