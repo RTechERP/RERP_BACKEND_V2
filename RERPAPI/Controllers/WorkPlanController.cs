@@ -113,43 +113,43 @@ namespace RERPAPI.Controllers
         /// <summary>
         /// Xóa kế hoạch theo ID
         /// </summary>
-        [HttpPost("{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            try
-            {
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+        //[HttpPost("{id}")]
+        //public async Task<IActionResult> Delete(int id)
+        //{
+        //    try
+        //    { 
+        //        var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+        //        CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
 
-                var workPlan = _workPlanRepo.GetByID(id);
-                var workPlanDetails = _planDetailRepo.GetAll(x => x.WorkPlanID == id && x.IsDeleted != true).FirstOrDefault();
-                if (workPlan == null)
-                {
-                    return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy kế hoạch!"));
-                }
+        //        var workPlan = _workPlanRepo.GetByID(id);
+        //        var workPlanDetails = _planDetailRepo.GetAll(x => x.WorkPlanID == id && x.IsDeleted != true).FirstOrDefault();
+        //        if (workPlan == null)
+        //        {
+        //            return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy kế hoạch!"));
+        //        }
 
-                // Kiểm tra quyền xóa - chỉ được xóa kế hoạch của chính mình
-                if (workPlan.UserID != currentUser.ID)
-                {
-                    return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền xóa kế hoạch này!"));
-                }
-                workPlan.IsDeleted=true;
-                if(workPlanDetails!=null)
-                {
-                    workPlanDetails.IsDeleted=true;
-                    // Xóa chi tiết kế hoạch trước
-                    await _planDetailRepo.UpdateAsync(workPlanDetails);
-                }    
-                // Xóa kế hoạch
-                await _workPlanRepo.UpdateAsync(workPlan);
+        //        // Kiểm tra quyền xóa - chỉ được xóa kế hoạch của chính mình
+        //        if (workPlan.UserID != currentUser.ID)
+        //        {
+        //            return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền xóa kế hoạch này!"));
+        //        }
+        //        workPlan.IsDeleted=true;
+        //        if(workPlanDetails!=null)
+        //        {
+        //            workPlanDetails.IsDeleted=true;
+        //            // Xóa chi tiết kế hoạch trước
+        //            await _planDetailRepo.UpdateAsync(workPlanDetails);
+        //        }    
+        //        // Xóa kế hoạch
+        //        await _workPlanRepo.UpdateAsync(workPlan);
 
-                return Ok(ApiResponseFactory.Success(null, "Xóa thành công!"));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
+        //        return Ok(ApiResponseFactory.Success(null, "Xóa thành công!"));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
 
         [HttpPost("summary")]
         public IActionResult GetWorkPlanSummary([FromBody] WorkPlanSummaryParam param)
@@ -196,8 +196,6 @@ namespace RERPAPI.Controllers
                             Pre = g.Select(x => (string)x.WorkContentPre).Distinct().ToList(),
                             Cur = g.Select(x => (string)x.WorkContentCur).Distinct().ToList()
                         });
-
-                // ===== Build data =====
                 var result = new List<WorkPlanDetailDTO>();
 
                 foreach (var row in dtWorkPlan)
@@ -245,9 +243,7 @@ namespace RERPAPI.Controllers
         }
 
 
-        /// <summary>
-        /// Lấy kế hoạch hạng mục tổng hợp theo cá nhân - Chức năng 3
-        /// </summary>
+     
         [HttpGet("summarize-work")]
         public IActionResult GetSummarizeWork(
             [FromQuery] DateTime dateStart,

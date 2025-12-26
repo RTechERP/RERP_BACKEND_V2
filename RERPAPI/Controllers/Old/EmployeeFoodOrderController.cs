@@ -61,7 +61,7 @@ namespace RERPAPI.Controllers.Old
                 var vUserHR = _vUserGroupLinksRepo
       .GetAll()
       .FirstOrDefault(x =>
-          (x.Code == "N23" || x.Code == "N1" || x.Code == "N2" || x.Code == "N34") &&
+            (x.Code == "N23" || x.Code == "N1" || x.Code == "N2" || x.Code == "N34") &&
           x.UserID == currentUser.ID);
 
                 int employeeID;
@@ -73,10 +73,12 @@ namespace RERPAPI.Controllers.Old
                 {
                     employeeID = currentUser.EmployeeID;
                 }
-                DateTime dateStart = param.dateStart.Date;
-                DateTime dateEnd = param.dateEnd.Date.AddDays(1).AddTicks(-1);
+                var ds = param.dateStart.Date.AddHours(00).AddMinutes(00).AddSeconds(00); // 00:00:00
+                var de = param.dateEnd.Date.AddHours(23).AddMinutes(59).AddSeconds(59); // 23:59:59
+                //DateTime dateStart = param.dateStart.Date;
+                //DateTime dateEnd = param.dateEnd.Date.AddDays(1).AddTicks(-1);
                 var foodOrders = SQLHelper<object>.ProcedureToList("spGetFoodOrder", new string[] { "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@Keyword", "@EmployeeID" },
-                    new object[] { param.pageNumber, param.pageSize, dateStart, dateEnd, param.keyWord, employeeID });
+                    new object[] { param.pageNumber, param.pageSize, ds, de, param.keyWord, employeeID });
 
                 var result = SQLHelper<object>.GetListData(foodOrders, 0);
 
