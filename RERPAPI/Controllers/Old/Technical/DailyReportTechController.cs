@@ -15,6 +15,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Project;
+using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 
 namespace RERPAPI.Controllers.Old.Technical
@@ -28,14 +29,18 @@ namespace RERPAPI.Controllers.Old.Technical
         DailyReportHRRepo _dailyReportHRRepo;
         ProjectItemRepo _projectItemRepo;
         EmployeeSendEmailRepo _employeeSendEmailRepo;
+        DailyReportMarketingFileRepo _dailyFileMar;
+        EmployeeRepo _employeeRepo;
         private IConfiguration _configuration;
-        public DailyReportTechController(DailyReportTechnicalRepo dailyReportTechnicalRepo, ProjectItemRepo projectItemRepo, EmployeeSendEmailRepo employeeSendEmailRepo, DailyReportHRRepo dailyReportHRRepo, IConfiguration configuration)
+        public DailyReportTechController(DailyReportTechnicalRepo dailyReportTechnicalRepo, ProjectItemRepo projectItemRepo, EmployeeSendEmailRepo employeeSendEmailRepo, DailyReportHRRepo dailyReportHRRepo, IConfiguration configuration, DailyReportMarketingFileRepo dailyFileMar, EmployeeRepo employeeRepo   )
         {
             _dailyReportTechnicalRepo = dailyReportTechnicalRepo;
             _projectItemRepo = projectItemRepo;
             _employeeSendEmailRepo = employeeSendEmailRepo;
             _dailyReportHRRepo = dailyReportHRRepo;
             _configuration = configuration;
+            _dailyFileMar = dailyFileMar;
+            _employeeRepo = employeeRepo;
         }
         [HttpPost("get-daily-report-tech")]
         public IActionResult GetDailyReportHr([FromBody] DailyReportTechParam request)
@@ -273,58 +278,103 @@ namespace RERPAPI.Controllers.Old.Technical
             }
         }
 
-        //[HttpPost("save-report-mar")]
-        //public async Task<IActionResult> SaveReportMar([FromBody] DailyReportTechnical request)
-        //{
-        //    try
-        //    {
-        //        var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-        //        var currentUser = ObjectMapper.GetCurrentUser(claims);
-        //        int userId = currentUser.ID;
+        #region dành cho mar
+        [HttpPost("save-report-mar")]
+        public async Task<IActionResult> SaveReportMar([FromBody] DailyReportMarketingDTO request)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                int userId = currentUser.ID;
+                int dailyID = 0;
 
-        //        // 1. Kiểm tra request null hoặc empty
-        //        if (request == null)
-        //        {
-        //            return BadRequest(ApiResponseFactory.Fail(null, "Danh sách báo cáo không được rỗng!"));
-        //        }
-        //        if (!_dailyReportTechnicalRepo.VallidateDailyMar(request, out string validationMessage)
-        //        {
-        //            return BadRequest(ApiResponseFactory.Fail(null, validationMessage));
-        //        }
-        //        if (request.ID > 0)
-        //        {
-        //            await _dailyReportTechnicalRepo.UpdateAsync(request);
-        //        }
-        //        else
-        //        {
-        //            // Set các giá trị mặc định
-        //            request.ProjectID = 0;
-        //            request.TotalHours = 0;
-        //            request.TotalHourOT = 0;
-        //            request.MasterID = 0;
-        //            request.Type = 0;
-        //            request.ReportLate = 0;
-        //            request.StatusResult = 0;
-        //            request.Type = 0; // Luôn set Type = 0 (không OT) khi tạo mới
-        //            request.ReportLate = 0; // Set mặc định = 0, KHÔNG tính toán
-        //            request.WorkPlanDetailID = 0;
-        //            request.OldProjectID = 0;
-        //            request.DeleteFlag = 0;
-        //            request.Confirm = false;
-        //            request.CreatedDate = DateTime.Today.AddHours(23).AddMinutes(30);
-        //            await _dailyReportTechnicalRepo.CreateAsync(request);
+                // 1. Kiểm tra request null hoặc empty
+                if (request == null)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Danh sách báo cáo không được rỗng!"));
+                }
+                if (!_dailyReportTechnicalRepo.VallidateDailyMar(request, out string validationMessage))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, validationMessage));
+                }
+                if (request.ID > 0)
+                {
+                    await _dailyReportTechnicalRepo.UpdateAsync(request);
+                }
+                else
+                {
+                    // Set các giá trị mặc định
+                    request.ProjectID = 0;
+                    request.TotalHours = 0;
+                    request.TotalHourOT = 0;
+                    request.MasterID = 0;
+                    request.Type = 0;
+                    request.ReportLate = 0;
+                    request.StatusResult = 0;
+                    request.Type = 0; // Luôn set Type = 0 (không OT) khi tạo mới
+                    request.ReportLate = 0; // Set mặc định = 0, KHÔNG tính toán
+                    request.WorkPlanDetailID = 0;
+                    request.OldProjectID = 0;
+                    request.DeleteFlag = 0;
+                    request.Confirm = false;
+                    request.CreatedDate = DateTime.Today.AddHours(23).AddMinutes(30);
+                    await _dailyReportTechnicalRepo.CreateAsync(request);
+                    dailyID = request.ID;
+                }
+                ///lohic them file
+                if (request.dailyReportMarketingFiles?.Count > 0)
+                {
+                    foreach (var item in request.dailyReportMarketingFiles)
+                    {
+                        if (item.ID > 0)
+                        {
+                            await _dailyFileMar.UpdateAsync(item);
+                        }
+                        else
+                        {
+                            //item.ProjectRequestID = projectRequestID;
+                            item.DailyReportID = dailyID;
+                            await _dailyFileMar.CreateAsync(item);
+                        }
+                    }
+                }
+                if (request.deletedFileID?.Count > 0)
+                {
+                    foreach (var item in request.deletedFileID)
+                    {
+                        var data = _dailyFileMar.GetByID(item);
+                        data.IsDeleted = true;
+                        await _dailyFileMar.UpdateAsync(data);
+                    }
+                }
 
-        //        }
-        //        return Ok(ApiResponseFactory.Success(null,
-        //                  "Lưu dữ liệu thành công"
-        //              ));
+                return Ok(ApiResponseFactory.Success(null,
+                          "Lưu dữ liệu thành công"
+                      ));
 
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-        //    }
-        //}
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        //lay du lieu bao cao theo id 
+        [HttpGet("get-by-id-hr")]
+        public async Task<IActionResult> GetDataByIDHR(int dailyID)
+        {
+            try
+            {
+                var dailyData = _dailyReportTechnicalRepo.GetByID(dailyID);
+                var dailyFileData = _dailyFileMar.GetAll(x => x.DailyReportID == dailyID && x.IsDeleted ==false);
+                return Ok(ApiResponseFactory.Success(new { dailyData, dailyFileData }, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        #endregion
         [HttpPost("delete-daily-report")]
         public async Task<IActionResult> DeletedDailyreport(int dailyReportID)
         {
@@ -564,5 +614,156 @@ namespace RERPAPI.Controllers.Old.Technical
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi khi xuất Excel: {ex.Message}"));
             }
         }
+        /// <summary>
+        /// API endpoint để gửi email báo cáo công việc Marketing
+        /// </summary>
+        /// <remarks>
+        /// Logic phân quyền:
+        /// - Thực tập sinh Marketing (PositionID = 88): Gửi cho Marketing Manager
+        /// - Nhân viên Marketing khác: Gửi cho Nguyễn Văn Thắng + CC
+        /// </remarks>
+        [HttpPost("send-email-marketing-report")]
+        public async Task<IActionResult> SendEmailMarketingReport([FromBody] SendEmailMarketingReportRequest request)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                var positionSendMailMarketing = _configuration.GetValue<string>("PositionSendMailMarketing"); // "88"
+                var marketingManagerID = _configuration.GetValue<int>("MarketingManager"); // 516
+
+                int[] positionList = positionSendMailMarketing
+                    .Split(',')
+                    .Select(p => int.Parse(p.Trim()))
+                    .ToArray();
+
+                var dateReport = request.DateReport ?? DateTime.Now;
+                var subject = $"{currentUser.FullName} - BÁO CÁO CÔNG VIỆC NGÀY {dateReport:dd/MM/yyyy}".ToUpper();
+                string emailTo;
+                string emailCc = "";
+                int receiverEmployeeId;
+                if (positionList.Contains(currentUser.PositionID))
+                {
+                    // Trường hợp 1: Thực tập sinh Marketing (Position = 88)
+                    // Gửi cho Marketing Manager
+                    var marketingManager = _employeeRepo.GetByID(marketingManagerID);
+
+                    if (marketingManager == null)
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy thông tin Marketing Manager!"));
+                    }
+                    emailTo = marketingManager.EmailCongTy;
+                    emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
+                    receiverEmployeeId = marketingManagerID;
+                }
+                else
+                {
+                    // Trường hợp 2: Nhân viên Marketing khác
+                    // Gửi cho Nguyễn Văn Thắng
+                    emailTo = "nguyenvan.thang@rtc.edu.vn";
+                    emailCc = "nguyenvan.sao@rtc.edu.vn,sales.manager@rtc.edu.vn";
+                    receiverEmployeeId = 2; // ID của Nguyễn Văn Thắng
+                }
+                var emailEntity = new EmployeeSendEmail
+                {
+                    Subject = subject,
+                    Body = request.Body,
+                    EmailTo = emailTo,
+                    EmailCC = emailCc,
+                    StatusSend = 1, // 1 = Đã đưa vào queue
+                    DateSend = DateTime.Now,
+                    EmployeeID = currentUser.EmployeeID,
+                    Receiver = receiverEmployeeId,
+                };
+                await _employeeSendEmailRepo.CreateAsync(emailEntity);
+                // ⑩ Trả về kết quả
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    EmailId = emailEntity.ID,
+                    SentTo = emailTo,
+                    SentCc = emailCc,
+                    Subject = subject
+                }, "Gửi email báo cáo thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi khi gửi email: {ex.Message}"));
+            }
+        }
+        // ========================================
+        // REQUEST DTO
+        // ========================================
+        /// <summary>
+        /// Request model để gửi email báo cáo Marketing
+        /// </summary>
+        public class SendEmailMarketingReportRequest
+        {
+            /// <summary>
+            /// <summary>
+            /// Nội dung email (có thể là text hoặc HTML)
+            /// </summary>
+            public string Body { get; set; }
+
+            /// <summary>
+            /// Ngày báo cáo (optional, mặc định là ngày hiện tại)
+            /// </summary>
+            public DateTime? DateReport { get; set; }
+            /// <summary>
+            /// Danh sách file đính kèm (Optional)
+            /// </summary>
+            public List<FileLink> FileLinks { get; set; }
+        }
+        /// <summary>
+        /// Thông tin file đính kèm
+        /// </summary>
+        public class FileLink
+        {
+            /// <summary>
+            /// Tên file
+            /// </summary>
+            public string FileName { get; set; }
+            /// <summary>
+            /// URL để download file
+            /// </summary>
+            public string Url { get; set; }
+        }
+        // ========================================
+        // CÁCH SỬ DỤNG
+        // ========================================
+        /*
+         * POST /api/daily-report-marketing/send-email-marketing-report
+         * 
+         * Request Body:
+         * {
+         *   "dateReport": "2025-12-25",
+         *   "content": "Nghiên cứu và triển khai chiến dịch marketing cho sản phẩm mới",
+         *   "results": "Hoàn thành 80% kế hoạch, đạt 1000 lượt tương tác",
+         *   "planNextDay": "Tiếp tục theo dõi và tối ưu hóa chiến dịch",
+         *   "note": "Cần tăng ngân sách quảng cáo",
+         *   "fileLinks": [
+         *     {
+         *       "fileName": "Campaign_Report.pdf",
+         *       "url": "/api/files/download/123"
+         *     },
+         *     {
+         *       "fileName": "Analytics.xlsx",
+         *       "url": "/api/files/download/124"
+         *     }
+         *   ]
+         * }
+         * 
+         * Response (Success):
+         * {
+         *   "isSuccess": true,
+         *   "data": {
+         *     "emailId": 456,
+         *     "sentTo": "nguyenvan.thang@rtc.edu.vn",
+         *     "sentCc": "nguyenvan.sao@rtc.edu.vn,sales.manager@rtc.edu.vn",
+         *     "subject": "NGUYỄN VĂN A - BÁO CÁO CÔNG VIỆC NGÀY 25/12/2025"
+         *   },
+         *   "message": "Gửi email báo cáo thành công!",
+         *   "errors": null
+         * }
+         */
     }
 }
