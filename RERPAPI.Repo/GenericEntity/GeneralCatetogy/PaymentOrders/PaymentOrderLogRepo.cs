@@ -171,6 +171,19 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                         return 0;
                     }
 
+                    if (actionStep == 2) //Kiểm tra đề nghị có phải của tbp đó hay ko
+                    {
+                        var logDb = GetAll(x => x.IsDeleted != true
+                                            && x.PaymentOrderID == item.ID
+                                            && x.Step == actionStep).FirstOrDefault() ?? new PaymentOrderLog();
+
+                        if (logDb.EmployeeID != _currentUser.EmployeeID)
+                        {
+                            //ApiResponseFactory.Fail(null, $"Bạn không thể {statusText} đề nghị [{item.Code}]!");
+                            continue;
+                        }
+                    }
+
                     //int currentApproved = item.PaymentOrderLog.IsApproved ?? 0;
                     if (actionStep == item.Step)
                     {

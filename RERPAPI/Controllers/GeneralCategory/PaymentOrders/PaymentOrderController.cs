@@ -164,6 +164,28 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 _currentUser = ObjectMapper.GetCurrentUser(claims);
 
+                if (payment.ID > 0)
+                {
+                    var paymentDb = _paymentRepo.GetByID(payment.ID);
+                    if (paymentDb.EmployeeID != _currentUser.EmployeeID)
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền cập nhập đề nghị của nhân viên khác!"));
+                    }
+
+                    //Get log
+                    var logDb = _logRepo.GetAll(x => x.IsDeleted != true
+                                                    && x.PaymentOrderID == payment.ID
+                                                    && x.Step > 1
+                                                    && x.IsApproved != 0)
+                                        .OrderByDescending(x => x.Step)
+                                        .FirstOrDefault() ?? new PaymentOrderLog();
+                    if (logDb.ID > 0)
+                    {
+                        string isApprovedText = logDb.IsApproved == 1 ? "duyệt" : (logDb.IsApproved == 2 ? "hủy duyệt" : "yêu cầu bổ sung");
+                        return BadRequest(ApiResponseFactory.Fail(null, $"Đề nghị [{payment.Code}] đã được {logDb.StepName} {isApprovedText}. Bạn không thể cập nhật!"));
+                    }
+                }
+
                 var validate = _paymentRepo.Validate(payment);
                 if (validate.status == 0)
                 {
@@ -360,6 +382,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         {
             try
             {
+                
                 var reponse = await _logRepo.Appoved(payment);
                 if (reponse == 1)
                 {
