@@ -59,6 +59,7 @@
         /// Tên đơn vị tính (UnitName)
         /// </summary>
         public string UnitName { get; set; } = "";
+        public string Maker { get; set; } = "";
     }
 
 }
