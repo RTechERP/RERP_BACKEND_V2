@@ -37,6 +37,7 @@ namespace RERPAPI.Controllers.Old.POKH
                     {
                         ProjectPartListID = 0, // Chưa có thông tin về ProjectPartListID, cần xác định cách lấy giá trị này
 
+                        ProjectPartlistPurchaseRequestTypeID = 5,
                         EmployeeID = item.EmployeeID,
                         ProductCode = item.ProductCode,
                         ProductName = item.ProductName,

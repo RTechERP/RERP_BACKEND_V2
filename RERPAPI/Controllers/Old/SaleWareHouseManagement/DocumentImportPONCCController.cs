@@ -70,7 +70,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                             DocumentStatus = dto.Status,
                             LogDate = dto.DateRecive,
                             Note = $"LÝ DO HUỶ: {dto.ReasonCancel}\nGHI CHÚ: {dto.Note}",
-                       //     DocumentImportID = dto.DocumentImportID
+                            DocumentImportID = dto.DocumentImportID
                         };
                         await _billDocumentImportLogRepo.CreateAsync(log);
                     }
@@ -79,11 +79,11 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         await _documentRepo.UpdateAsync(dto);
                         BillDocumentImportLog log = new BillDocumentImportLog
                         {
-                            BillDocumentImportID = dto.BillImportID,
+                            BillDocumentImportID = dto.ID,
                             DocumentStatus = dto.Status,
                             LogDate = dto.DateRecive,
                             Note = $"LÝ DO HUỶ: {dto.ReasonCancel}\nGHI CHÚ: {dto.Note}",
-//DocumentImportID = dto.DocumentImportID
+                            DocumentImportID = dto.DocumentImportID
                         };
                         await _billDocumentImportLogRepo.CreateAsync(log);
                     }
