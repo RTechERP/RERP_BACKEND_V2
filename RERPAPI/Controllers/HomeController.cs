@@ -748,7 +748,7 @@ namespace RERPAPI.Controllers
                 return $"Nhân viên [{item.FullName}] chưa được HR duyệt, BGD không thể duyệt / hủy duyệt.";
 
 
-          
+
 
             return null;
         }
@@ -826,7 +826,7 @@ namespace RERPAPI.Controllers
                         continue;
 
                     }
-                   
+
                     SQLHelper<object>.ExcuteProcedure(
                   "spUpdateTableByFieldNameAndID",
                   new[] { "@TableName", "@FieldName", "@Value", "@ID", "@ValueUpdatedDate", "@ValueDecilineApprove", "@EvaluateResults" },
@@ -850,7 +850,7 @@ namespace RERPAPI.Controllers
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Danh sách phê duyệt không được để trống!"));
                 }
-             
+
                 var notProcessed = new List<NotProcessedApprovalItem>();
 
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
@@ -858,7 +858,7 @@ namespace RERPAPI.Controllers
 
                 foreach (var item in request.Items)
                 {
-                    if (item.TableName== "EmployeeWFH")
+                    if (item.TableName == "EmployeeWFH")
                     {
                         item.FieldName = "IsApproved";
                     }
@@ -949,7 +949,7 @@ namespace RERPAPI.Controllers
                 var dt = SQLHelper<dynamic>.ProcedureToList("spGetUserTeamLinkByLeaderID", new string[] { "@LeaderID" }, new object[] { currentUser.EmployeeID });
                 var data = SQLHelper<object>.GetListData(dt, 0);
                 var teamEmployeeIds = data.Cast<IDictionary<string, object>>().Where(x => x.ContainsKey("EmployeeID") && x["EmployeeID"] != null).Select(x => Convert.ToInt32(x["EmployeeID"])).ToHashSet(); // 
-                  //   var result = data.Cast<IDictionary<string, object>>().FirstOrDefault(x => x.ContainsKey("EmployeeID") && x["EmployeeID"] != null && Convert.ToInt32(x["EmployeeID"]) == request.Items.EmployeeID);
+                                                                                                                                                                                                             //   var result = data.Cast<IDictionary<string, object>>().FirstOrDefault(x => x.ContainsKey("EmployeeID") && x["EmployeeID"] != null && Convert.ToInt32(x["EmployeeID"]) == request.Items.EmployeeID);
                 foreach (var item in request.Items)
                 {
                     if (!item.EmployeeID.HasValue || !teamEmployeeIds.Contains(item.EmployeeID.Value))
@@ -1176,11 +1176,11 @@ namespace RERPAPI.Controllers
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
-                bool isPermissDownload =(_roleConfig.EmployeeDownloadContact?.Contains(currentUser.EmployeeID) ?? false) ||currentUser.IsAdmin == true; 
+                bool isPermissDownload = (_roleConfig.EmployeeDownloadContact?.Contains(currentUser.EmployeeID) ?? false) || currentUser.IsAdmin == true;
                 keyword = string.IsNullOrEmpty(keyword) ? "" : keyword;
                 var list = SQLHelper<EmployeeContactDTO>.ProcedureToListModel("spGetEmployee",
                                                                 new string[] { "@Status", "@DepartmentID", "@Keyword" },
-                                                                new object[] { 0, departmentID, keyword??"" })
+                                                                new object[] { 0, departmentID, keyword ?? "" })
                                                 .Select(x => new
                                                 {
                                                     x.STT,
@@ -1195,15 +1195,36 @@ namespace RERPAPI.Controllers
                                                     x.Code
                                                 });
 
-                
-                return Ok(ApiResponseFactory.Success(new {list, isPermissDownload }, ""));
+
+                return Ok(ApiResponseFactory.Success(new { list, isPermissDownload }, ""));
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpGet("get-all-team-new")]
+        public IActionResult GetAllTeamNew(int deID)
+        {
+
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                var orgCharts = SQLHelper<dynamic>.ProcedureToList("spGetOrganizationalChart",
+                                                                            new string[] { "@TaxCompanyID", "@DepartmentID", "@Keyword" },
+                                                                            new object[] { 1, deID, "" });
+                var orgdChart = SQLHelper<dynamic>.ProcedureToList("spGetOrganizationalChartDetail", new string[] { "@ID" }, new object[] { 0 });
+                var dt = SQLHelper<object>.GetListData(orgCharts, 0);
+                var dtDetail = SQLHelper<object>.GetListData(orgdChart, 0);
 
 
+                return Ok(ApiResponseFactory.Success(new { dt, dtDetail }, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 }
