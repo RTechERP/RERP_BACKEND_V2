@@ -2083,13 +2083,10 @@ public partial class RTCContext : DbContext
 
         modelBuilder.Entity<BillImportQCDetail>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("BillImportQCDetail");
+            entity.ToTable("BillImportQCDetail");
 
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-            entity.Property(e => e.ID).ValueGeneratedOnAdd();
             entity.Property(e => e.POKHCode).HasMaxLength(550);
             entity.Property(e => e.Quantity).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.Status).HasComment("1.OK 2.NG");
@@ -7389,9 +7386,14 @@ public partial class RTCContext : DbContext
 
             entity.HasIndex(e => e.SupplierSaleID, "Index_ProjectPartlistPurchaseRequest_SupplierSaleID");
 
+            entity.Property(e => e.ApprovedBGD).HasDefaultValue(0);
+            entity.Property(e => e.ApprovedTBP).HasDefaultValue(0);
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-            entity.Property(e => e.CurrencyRate).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.CurrencyID).HasDefaultValue(0);
+            entity.Property(e => e.CurrencyRate)
+                .HasDefaultValue(0m)
+                .HasColumnType("decimal(18, 2)");
             entity.Property(e => e.DateApprovedBGD).HasColumnType("datetime");
             entity.Property(e => e.DateApprovedTBP).HasColumnType("datetime");
             entity.Property(e => e.DateEstimate)
@@ -7407,33 +7409,82 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.DateReturnExpected)
                 .HasComment("Ngày hàng về mong đợi (Deadline)")
                 .HasColumnType("datetime");
+            entity.Property(e => e.DuplicateID).HasDefaultValue(0);
             entity.Property(e => e.EmployeeApproveID).HasDefaultValue(0);
-            entity.Property(e => e.HistoryPrice).HasColumnType("decimal(18, 2)");
-            entity.Property(e => e.IsPaidLater).HasComment("Đợi ghép sau");
+            entity.Property(e => e.EmployeeID).HasDefaultValue(0);
+            entity.Property(e => e.EmployeeIDRequestApproved).HasDefaultValue(0);
+            entity.Property(e => e.HistoryPrice)
+                .HasDefaultValue(0m)
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.InventoryProjectID).HasDefaultValue(0);
+            entity.Property(e => e.IsApprovedBGD).HasDefaultValue(false);
+            entity.Property(e => e.IsApprovedTBP).HasDefaultValue(false);
+            entity.Property(e => e.IsCommercialProduct).HasDefaultValue(false);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.IsImport).HasDefaultValue(false);
+            entity.Property(e => e.IsPaidLater)
+                .HasDefaultValue(false)
+                .HasComment("Đợi ghép sau");
+            entity.Property(e => e.IsPurchase).HasDefaultValue(false);
+            entity.Property(e => e.IsRequestApproved).HasDefaultValue(false);
+            entity.Property(e => e.IsTechBought).HasDefaultValue(false);
+            entity.Property(e => e.JobRequirementID).HasDefaultValue(0);
             entity.Property(e => e.LeadTime).HasMaxLength(100);
             entity.Property(e => e.Maker).HasMaxLength(250);
             entity.Property(e => e.OriginQuantity).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.POKHDetailID).HasDefaultValue(0);
             entity.Property(e => e.ParentProductCode).HasMaxLength(550);
             entity.Property(e => e.ProductCode).HasMaxLength(550);
-            entity.Property(e => e.ProjectPartlistPurchaseRequestTypeID).HasComment("1: Mua dự án; 2: Kỹ thuật đã mua; 3: Mua demo; 4: Mượn demo;5: Hàng thương mại; 6: Hàng HR; 7: Hàng Marketing");
-            entity.Property(e => e.Quantity).HasColumnType("decimal(18, 2)");
-            entity.Property(e => e.StatusRequest).HasComment("1:Y/c mua hàng;2:Huỷ Y/c mua; 3: Đã đặt hàng; 4: Đang về; 5:Đã về; 6:Không đặt hàng");
+            entity.Property(e => e.ProductGroupID).HasDefaultValue(0);
+            entity.Property(e => e.ProductGroupRTCID).HasDefaultValue(0);
+            entity.Property(e => e.ProductRTCID).HasDefaultValue(0);
+            entity.Property(e => e.ProductSaleID).HasDefaultValue(0);
+            entity.Property(e => e.ProjectPartListID).HasDefaultValue(0);
+            entity.Property(e => e.ProjectPartlistPurchaseRequestTypeID)
+                .HasDefaultValue(0)
+                .HasComment("1: Mua dự án; 2: Kỹ thuật đã mua; 3: Mua demo; 4: Mượn demo;5: Hàng thương mại; 6: Hàng HR; 7: Hàng Marketing");
+            entity.Property(e => e.Quantity)
+                .HasDefaultValue(0m)
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.StatusRequest)
+                .HasDefaultValue(0)
+                .HasComment("1:Y/c mua hàng;2:Huỷ Y/c mua; 3: Đã đặt hàng; 4: Đang về; 5:Đã về; 6:Không đặt hàng");
+            entity.Property(e => e.SupplierSaleID).HasDefaultValue(0);
             entity.Property(e => e.TargetPrice).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.TicketType)
                 .HasDefaultValue(0)
                 .HasComment(" 0: yêu cầu mua; 1: Yêu cầu mượn");
-            entity.Property(e => e.TotaMoneyVAT).HasColumnType("decimal(18, 2)");
-            entity.Property(e => e.TotalImportPrice).HasColumnType("decimal(18, 2)");
-            entity.Property(e => e.TotalPrice).HasColumnType("decimal(18, 2)");
-            entity.Property(e => e.TotalPriceExchange).HasColumnType("decimal(18, 2)");
-            entity.Property(e => e.UnitFactoryExportPrice).HasColumnType("decimal(18, 2)");
-            entity.Property(e => e.UnitImportPrice).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TotaMoneyVAT)
+                .HasDefaultValue(0m)
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TotalDayLeadTime).HasDefaultValue(0);
+            entity.Property(e => e.TotalImportPrice)
+                .HasDefaultValue(0m)
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TotalPrice)
+                .HasDefaultValue(0m)
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TotalPriceExchange)
+                .HasDefaultValue(0m)
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.UnitCountID).HasDefaultValue(0);
+            entity.Property(e => e.UnitFactoryExportPrice)
+                .HasDefaultValue(0m)
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.UnitImportPrice)
+                .HasDefaultValue(0m)
+                .HasColumnType("decimal(18, 2)");
             entity.Property(e => e.UnitMoney).HasMaxLength(50);
             entity.Property(e => e.UnitName).HasMaxLength(150);
-            entity.Property(e => e.UnitPrice).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.UnitPrice)
+                .HasDefaultValue(0m)
+                .HasColumnType("decimal(18, 2)");
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
-            entity.Property(e => e.VAT).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.VAT)
+                .HasDefaultValue(0m)
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.WarehouseID).HasDefaultValue(0);
         });
 
         modelBuilder.Entity<ProjectPartlistPurchaseRequestNote>(entity =>
