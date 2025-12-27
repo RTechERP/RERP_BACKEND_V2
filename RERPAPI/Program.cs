@@ -421,6 +421,8 @@ builder.Services.AddScoped<PhasedAllocationPersonDetailRepo>();
 builder.Services.AddScoped<JobRequirementFileRepo>();
 builder.Services.AddScoped<JobRequirementApprovedRepo>();
 builder.Services.AddScoped<JobRequirementCommentRepo>();
+builder.Services.AddScoped<OrganizationalChartDetailRepo>();
+builder.Services.AddScoped<OrganizationalChartRepo>();
 
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();
