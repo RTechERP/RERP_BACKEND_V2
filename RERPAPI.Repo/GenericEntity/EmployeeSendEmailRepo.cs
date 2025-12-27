@@ -33,7 +33,7 @@ namespace RERPAPI.Repo.GenericEntity
                     }
                 }
 
-                if (!string.IsNullOrEmpty(employeeSend.EmailCongTy.Trim()))
+                if (!string.IsNullOrEmpty(employeeSend.EmailCongTy))
                 {
                     if (!listEmailCC.Contains(employeeSend.EmailCongTy.Trim()))
                     {
@@ -42,7 +42,7 @@ namespace RERPAPI.Repo.GenericEntity
                 }
                 else
                 {
-                    if (!listEmailCC.Contains(employeeSend.EmailCaNhan.Trim()))
+                    if (!listEmailCC.Contains(employeeSend.EmailCaNhan) && !string.IsNullOrEmpty(employeeSend.EmailCaNhan))
                     {
                         listEmailCC.Add(employeeSend.EmailCaNhan.Trim());
                     }

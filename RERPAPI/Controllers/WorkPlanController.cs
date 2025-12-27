@@ -39,8 +39,8 @@ namespace RERPAPI.Controllers
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
 
-                param.DateStart = param.DateStart.Value.Date.AddSeconds(-1);
-                param.DateEnd = param.DateEnd.Value.Date.AddDays(+1);
+                param.DateStart = param.DateStart.Value.Date;
+                param.DateEnd = param.DateEnd.Value.Date;
 
                 var data = SQLHelper<object>.ProcedureToList("spGetWorkPlanPaging",
                                             new string[] { "@StartDate", "@EndDate", "@UserID", "@PageNumber", "@PageSize", "@Keyword" },
@@ -156,8 +156,8 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                param.DateStart = param.DateStart.Value.Date.AddSeconds(-1);
-                param.DateEnd = param.DateEnd.Value.Date.AddDays(1);
+                //param.DateStart = param.DateStart.Value.Date.AddSeconds(-1);
+              //  param.DateEnd = param.DateEnd.Value.Date.AddDays(1);
 
                 var departmentId = param.TeamId > 0 ? 0 : param.DepartmentId;
 
