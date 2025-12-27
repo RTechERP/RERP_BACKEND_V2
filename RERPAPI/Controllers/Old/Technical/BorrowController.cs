@@ -79,15 +79,13 @@ namespace RERPAPI.Controllers
                     new object[] { historyId, 1 }
                 );
 
-                return Ok(ApiResponseFactory.Success(historyProductBorrowDetail, ""));
+                return Ok(ApiResponseFactory.Success(SQLHelper<dynamic>.GetListData(historyProductBorrowDetail, 0), ""));
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-
         [HttpGet("get-productrtc-detail")]
         public async Task<IActionResult> GetProductrtcDetail(int ProductGroupID, string? Keyword, int CheckAll, string? Filter, int WarehouseID, int WarehouseType)
         {
@@ -258,6 +256,25 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpPost("delete")]
+        public async Task<IActionResult> DeleteHistoryProduct(List<int> items)
+        {
+            try
+            {
+                foreach (var item in items)
+                {
+                    var history = historyProductRTCRepo.GetByID(item);
+                    if (history.ID <= 0) return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy lịch sử mượn"));
+                    history.IsDelete = true;
+                    await historyProductRTCRepo.UpdateAsync(history);
+                }
+                return Ok(ApiResponseFactory.Success(items, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [HttpPost("save-bill-export-technical")]
         public async Task<IActionResult> SaveBillExportTechnical(BillExportTechnical item)
         {
@@ -332,48 +349,7 @@ namespace RERPAPI.Controllers
             public bool IsAdmin { get; set; }
         }
 
-        //[HttpPost("return-productrtc")]
-        //public IActionResult ReturnProductRtc([FromBody] ReturnProductRtcRequest req)
-        //{
-        //    if (req == null || req.IsAdmin != true)
-        //        return BadRequest(ApiResponseFactory.Fail(null, "Chỉ có admin mới có quyền truy cập vào chức năng này!"));
 
-        //    if (req.HistoryId <= 0)
-        //        return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu truyền vào không đúng, vui lòng thử lại!"));
-
-        //    var history = historyProductRTCRepo.GetByID(req.HistoryId);
-        //    if (history == null)
-        //        return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy lịch sử mượn!"));
-
-        //    try
-        //    {
-        //        if (req.IsAdmin)
-        //        {
-        //            history.Status = 0;
-        //            history.DateReturn = DateTime.Now;
-        //            history.AdminConfirm = true;
-        //            historyProductRTCRepo.Update(history);
-
-        //            // Cập nhật trạng thái QR
-        //            SQLHelper<object>.ExcuteProcedure(
-        //                "spUpdateStatusProductRTCQRCode",
-        //                new[] { "@ProductRTCQRCodeID", "@Status" },
-        //                new object[] { history.ProductRTCQRCodeID, 1 }
-        //            );
-        //        }
-        //        else
-        //        {
-        //            history.Status = 4;
-        //            historyProductRTCRepo.Update(history);
-        //        }
-
-        //        return Ok(new { status = 1, data = new { id = history.ID } });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-        //    }
-        //}
         [HttpPost("return-productrtc")]
         public IActionResult ReturnProductRtc([FromBody] ReturnProductRtcRequest req)
         {
@@ -385,7 +361,7 @@ namespace RERPAPI.Controllers
 
             var history = historyProductRTCRepo.GetByID(req.HistoryId);
             if (history == null)
-                return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy lịch sử mượn!"));
+                return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy lịch sử mượn!"));
 
             // Status phải được phép trả
             if (history.Status != 1 && history.Status != 4 && history.Status != 7)
