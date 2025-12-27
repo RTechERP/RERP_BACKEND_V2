@@ -258,7 +258,19 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [HttpGet("get-project-item-parent")]
+        public async Task<IActionResult> GetDataParent(int projectID)
+        {
+            try
+            {
+                var data = _projectItemRepo.GetAll(x=>x.ParentID ==0 && x.IsDeleted == false && x.ProjectID ==projectID);
+                return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [HttpPost("save-data-person")]
         public async Task<IActionResult> SaveDataPerson([FromBody] ProjectItemFullDTO projectItem)
         {

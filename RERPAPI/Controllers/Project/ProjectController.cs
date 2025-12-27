@@ -7,6 +7,7 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
+using RERPAPI.Model.Param.Project;
 using RERPAPI.Repo.GenericEntity;
 using System.Data;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
@@ -2390,7 +2391,30 @@ namespace RERPAPI.Controllers.Project
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+        }
+        //get data tổng hợp tham gia dự án 
+        [HttpPost("get-summary-project-join")]
+        public async Task<IActionResult> GetDataProjectJoin([FromBody] ProjectJoinReqeestParam request)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                var data = SQLHelper<object>.ProcedureToList("spGetProjectByEmployeeID",
+                                                    new string[] { "@EmployeeID", "@UserIDPriotity", "@DateStart", "@DateEnd" },
+                                                    new object[] { request.employeeID, currentUser.ID, request.dateStart, request.dateEnd });
+                var data2 = SQLHelper<object>.ProcedureToList("spGetProjectEmployeeByEmployeeID",
+                                                    new string[] { "@EmployeeID" },
+                                                    new object[] { request.employeeID });
+                var rs = SQLHelper<object>.GetListData(data, 0);
+                var rs2 = SQLHelper<object>.GetListData(data2, 0);
+                return Ok(ApiResponseFactory.Success(new { rs, rs2 }, "Lấy dữ liệu thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
 
+            }
         }
 
     }
