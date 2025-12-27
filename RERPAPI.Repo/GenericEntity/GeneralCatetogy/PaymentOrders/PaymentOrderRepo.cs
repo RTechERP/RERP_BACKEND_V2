@@ -77,7 +77,7 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                     response = ApiResponseFactory.Fail(null, "Vui lòng chọn Loại đề nghị!");
                 }
 
-                if (payment.TypeOrder == 1 && payment.DatePayment.HasValue)
+                if (payment.TypeOrder == 1 && !payment.DatePayment.HasValue)
                 {
                     response = ApiResponseFactory.Fail(null, "Vui lòng chọn Nhập thời gian thanh quyết toán!");
                 }
@@ -145,12 +145,25 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                         break;
                     }
 
-                    if (detail.TotalMoney == 0)
+                    if (payment.TypeOrder == 2)
                     {
-                        string message = payment.IsSpecialOrder == true ? "Số tiền" : "Thành tiền";
-                        response = ApiResponseFactory.Fail(null, $"Vui lòng nhập {message} dòng [{detail.STT}]!");
-                        break;
+                        if (detail.TotalMoney == 0 && detail.ParentID == 2)
+                        {
+                            string message = payment.IsSpecialOrder == true ? "Số tiền\n" : "Thành tiền\n";
+                            response = ApiResponseFactory.Fail(null, $"Vui lòng nhập {message} dòng {detail.STT}.{detail.ContentPayment}!");
+                            break;
+                        }
                     }
+                    else
+                    {
+                        if (detail.TotalMoney == 0)
+                        {
+                            string message = payment.IsSpecialOrder == true ? "Số tiền\n" : "Thành tiền\n";
+                            response = ApiResponseFactory.Fail(null, $"Vui lòng nhập {message} dòng {detail.STT}.{detail.ContentPayment}!");
+                            break;
+                        }
+                    }
+                    
                 }
 
                 return response;

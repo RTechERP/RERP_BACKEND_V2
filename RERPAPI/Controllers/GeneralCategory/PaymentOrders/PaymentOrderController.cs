@@ -187,11 +187,16 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     }
                 }
 
-                var validate = _paymentRepo.Validate(payment);
-                if (validate.status == 0)
+                if (payment.IsDelete != true)
                 {
-                    return BadRequest(validate);
+                    var validate = _paymentRepo.Validate(payment);
+                    if (validate.status == 0)
+                    {
+                        return BadRequest(validate);
+                    }
                 }
+
+                
 
                 payment.EmployeeID = _currentUser.EmployeeID;
                 payment.IsUrgent = payment.DeadlinePayment.HasValue;
