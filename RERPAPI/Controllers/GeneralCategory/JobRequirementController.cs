@@ -74,7 +74,7 @@ namespace RERPAPI.Controllers.GeneralCategory
                 {
                     employeeID = currentUser.EmployeeID;
                 }
-                var data = SQLHelper<object>.ProcedureToList("spGetJobRequirement",
+                var data = SQLHelper<object>.ProcedureToList("spGetJobRequirement   ",
                                                             new string[] { "@DateStart", "@DateEnd", "@Request", "@EmployeeId", "@Step", "@DepartmentId", "@ApprovedTBPID" },
                                                             new object[] { param.DateStart, param.DateEnd, param.Request, employeeID, param.Step, param.DepartmentID, param.ApprovedTBPID });
 
@@ -141,19 +141,16 @@ namespace RERPAPI.Controllers.GeneralCategory
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 //Update master
-                if (job.ID <= 0)
+                bool isNew = job.ID <= 0;
+                if (isNew)
                 {
                     job.NumberRequest = "";
-                    job.EmployeeID = currentUser.EmployeeID;
+                    job.EmployeeID = job.EmployeeID;
                     int currentYear = DateTime.Now.Year;
                     var list = _jobRepo.GetAll(x => x.DateRequest.Value.Year == currentYear);
                     job.NumberRequest = $"{list.Count + 1}.{currentYear}.PYC-RTC";
                     var result = await _jobRepo.CreateAsync(job);
-                    if (result > 0)
-                    {
-
-                        _jobRepo.SendMail(job);
-                    }
+                   
                 }
                 else if (job.EmployeeID != currentUser.EmployeeID)
                 {
@@ -174,6 +171,10 @@ namespace RERPAPI.Controllers.GeneralCategory
                     item.JobRequirementID = job.ID;
                     if (item.ID <= 0) await _fileRepo.CreateAsync(item);
                     else await _fileRepo.UpdateAsync(item);
+                }
+                if (isNew)
+                {
+                    _jobRepo.SendMail(job);
                 }
                 return Ok(ApiResponseFactory.Success(job, ""));
             }
