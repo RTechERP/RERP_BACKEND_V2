@@ -37,8 +37,10 @@ namespace RERPAPI.Repo.GenericEntity.Project
         }
         public string GetMaxSTT(int? projectID)
         {
-            if (projectID is null) return "1";
-            var max = GetAll(x => x.ProjectID == projectID)
+            if (projectID == null || projectID <= 0) return "1";
+
+            var max = GetAll()
+                .Where(x => x.ProjectID == projectID)
                 .Select(x => x.STT)
                 .AsEnumerable()
                 .Select(s =>
@@ -52,6 +54,7 @@ namespace RERPAPI.Repo.GenericEntity.Project
                 .Max();
             return (max + 1).ToString();
         }
+
 
         public bool Validate(ProjectItem item, out string message)
         {

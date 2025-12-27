@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using MathNet.Numerics.Distributions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using NPOI.SS.Formula.Functions;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -164,6 +166,7 @@ namespace RERPAPI.Controllers.Project
                                 }
                             }
                             if (item.ID <= 0)
+
                                 await _projectItemRepo.CreateAsync(item);
                             else
                                 _projectItemRepo.Update(item);
@@ -185,6 +188,8 @@ namespace RERPAPI.Controllers.Project
                     else
                         _projectItemFileRepo.Update(projectItem.ProjectItemFile);
                 }
+
+
                 return Ok(ApiResponseFactory.Success(1, "Lưu thành công"));
             }
             catch (Exception ex)
@@ -204,14 +209,122 @@ namespace RERPAPI.Controllers.Project
             try
             {
                 var projectItem = SQLHelper<dynamic>.ProcedureToList("spGetProjectItem",
-                    new[] {"@ProjectID", "@UserID", "@Keyword", "@Status" },
-                    new object[] {request.ProjectID, request.UserID, request.Keyword, request.Status });
+                    new[] { "@ProjectID", "@UserID", "@Keyword", "@Status" },
+                    new object[] { request.ProjectID, request.UserID, request.Keyword, request.Status });
                 var rows = SQLHelper<dynamic>.GetListData(projectItem, 0);
                 return Ok(ApiResponseFactory.Success(rows, ""));
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        //load người giao việc
+        [HttpGet("get-employee-request")]
+        public IActionResult GetEmployeeRequest()
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                int employeeRequest = 0;
+                ProjectItem lastItem = _projectItemRepo.GetAll().Where(x => x.UserID == currentUser.ID && x.EmployeeIDRequest > 0)
+                                                      .OrderByDescending(x => x.ID).FirstOrDefault();
+                if (lastItem != null)
+                {
+                    employeeRequest = lastItem.EmployeeIDRequest ?? 0;
+                }
+                var projectItem = SQLHelper<dynamic>.ProcedureToList("spGetEmployeeRequestProjectItem",
+                    new string[] { },
+                    new object[] { });
+                var rows = SQLHelper<dynamic>.GetListData(projectItem, 0);
+                return Ok(ApiResponseFactory.Success(new { employeeRequest, rows }, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-by-id")]
+        public async Task<IActionResult> GetDataByID(int projectItemID)
+        {
+            try
+            {
+                ProjectItem data = _projectItemRepo.GetByID(projectItemID);
+                return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("save-data-person")]
+        public async Task<IActionResult> SaveDataPerson([FromBody] ProjectItemFullDTO projectItem)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+             
+                //Lưu hạng mục công việc nếu có
+                int projectID = 0;
+                if (projectItem.projectItems != null)
+                {
+                    foreach (var item in projectItem.projectItems)
+                    {
+                        projectID = item.ProjectID ?? 0;
+
+                        if (!_projectItemRepo.Validate(item, out string mesage))
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null, mesage));
+                        }
+                        if (item.ID <= 0)
+                        {
+                            item.STT = _projectItemRepo.GetMaxSTT(item.ProjectID);
+                            item.UserID = currentUser.ID;
+                            item.ItemLate = 0;
+                            _projectItemRepo.CalculateDays(item);
+                            if (item.ActualEndDate.HasValue) item.IsApproved = 2;
+                            await _projectItemRepo.CreateAsync(item);
+                        }
+                        else
+                        {
+                            item.ItemLate = 0;
+                            if (item.ActualEndDate.HasValue && item.IsApproved < 2)
+                                item.IsApproved = 2;
+                            _projectItemRepo.CalculateDays(item);
+                            await _projectItemRepo.UpdateAsync(item);
+                        }
+                    }
+                    if (projectID > 0)
+                    {
+                        await _projectItemRepo.UpdatePercent(projectID);
+                        await _projectItemRepo.UpdateLate(projectID);
+                    }
+                    // Lưu phát sinh của hạng mục nếu có
+                    if (projectItem.projectItemProblem != null)
+                    {
+                        if (projectItem.projectItemProblem.ID <= 0)
+                            await _projectItemProblemRepo.CreateAsync(projectItem.projectItemProblem);
+                        else
+                            _projectItemProblemRepo.Update(projectItem.projectItemProblem);
+                    }
+                }
+                //Lưu projectFile nếu có
+                if (projectItem.ProjectItemFile != null)
+                {
+                    if (projectItem.ProjectItemFile.ID <= 0)
+                        await _projectItemFileRepo.CreateAsync(projectItem.ProjectItemFile);
+                    else
+                        _projectItemFileRepo.Update(projectItem.ProjectItemFile);
+                }
+
+                return Ok(ApiResponseFactory.Success(1, "Lưu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         #endregion

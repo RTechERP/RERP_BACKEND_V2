@@ -11,9 +11,10 @@ namespace RERPAPI.Repo.GenericEntity.Project
 {
     public class ProjectItemProblemRepo : GenericRepo<ProjectItemProblem>
     {
-        public ProjectItemProblemRepo(CurrentUser currentUser) : base(currentUser)
+        ProjectItemRepo _projectItemRepo;
+        public ProjectItemProblemRepo(CurrentUser currentUser, ProjectItemRepo projectItemRepo) : base(currentUser)
         {
-
+            _projectItemRepo = projectItemRepo;
         }
         public bool CanEdit(ProjectItem item, CurrentUser user)
         {
@@ -25,6 +26,25 @@ namespace RERPAPI.Repo.GenericEntity.Project
                 || check.Count > 0
                 || user.IsAdmin == true
                 || item.EmployeeIDRequest == user.EmployeeID;
+        }
+        public string UpdateReasonLateProjectItem(int projectItemID, string loginName, int isUpdateProjectItem)
+        {
+            string reasonLate = "";
+            var listProblem = GetAll().Where(x => x.ProjectItemID == projectItemID).OrderByDescending(x => x.CreatedDate).ToList();
+            foreach (ProjectItemProblem problem in listProblem)
+            {
+                reasonLate += $"{problem.CreatedDate.Value.ToString("dd/MM/yyyy HH:mm:ss")} - {problem.ContentProblem}\n";
+            }
+            if (isUpdateProjectItem == 1)
+            {
+                ProjectItem item = _projectItemRepo.GetByID(projectItemID);
+                item.ReasonLate = reasonLate;
+                item.UpdatedDate = DateTime.Now;
+                item.UpdatedBy = loginName;
+                _projectItemRepo.Update(item);
+            }
+
+            return reasonLate;
         }
     }
 }
