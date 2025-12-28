@@ -16,6 +16,7 @@ using RERPAPI.Model.Param.Project;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Project;
 using System.Collections.Immutable;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace RERPAPI.Controllers.Project
 {
@@ -346,6 +347,7 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
+                int isUpdate = dto.ID <= 0 ? 1 : 0;
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 ProjectItem projectItem = _projectItemRepo.GetByID(dto.ProjectItemID ?? 0);
@@ -360,6 +362,7 @@ namespace RERPAPI.Controllers.Project
                 else
                 {
                     await _projectItemProblemRepo.CreateAsync(dto);
+                    _projectItemProblemRepo.UpdateReasonLateProjectItem(dto.ProjectItemID ?? 0, currentUser.LoginName, isUpdate);
                 }
 
                 return Ok(ApiResponseFactory.Success(null, "Thêm thành công"));
