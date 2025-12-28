@@ -817,6 +817,10 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                         return (false, "Bạn không có quyền để lưu phiếu này!", dto.billExport.ID);
                     }
                 }
+                if (dto.billExport.ID > 0)
+                {
+                    await LoadExistingInventoryProjectData(dto);
+                }
                 // 0. Tính lại TotalQty
                 RecalculateTotalQty(dto);
 
@@ -972,8 +976,8 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                 .GroupBy(d => new
                 {
                     d.ProductID,
-                    ProjectID =  (d.POKHDetailID ?? 0) > 0 ? 0 : d.ProjectID,
-                    POKHDetailID =  d.POKHDetailID ?? 0
+                    ProjectID = (d.POKHDetailID ?? 0) > 0 ? 0 : d.ProjectID,
+                    POKHDetailID = d.POKHDetailID ?? 0
                 })
                 .ToDictionary(g => g.Key, g => g.Sum(d => d.Qty ?? 0));
 
@@ -1090,7 +1094,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
             var result = SQLHelper<dynamic>.ProcedureToList(
                 "spGetInventoryProjectImportExport",
                 new string[] { "@WarehouseID", "@ProductID", "@ProjectID", "@POKHDetailID", "@BillExportDetailID" },
-                new object[] { warehouseId, productId, 0, pokhDetailId, billExportDetailId }
+                new object[] { warehouseId, productId, projectId, pokhDetailId, billExportDetailId }
             );
 
             return result;
@@ -1276,7 +1280,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                 .ToList();
 
             // 3. Lấy tổng tồn kho
-            var ds = GetInventoryProjectImportExport(warehouseId, productId, projectId, pokhDetailId, currentDetail.ID);
+            var ds = GetInventoryProjectImportExport(warehouseId, productId, projectId, pokhDetailId, 0);
             var dtStock = ds.Count > 3 ? ds[3] : new List<dynamic>();
 
             decimal totalStockAvailable = dtStock.Count > 0
@@ -1522,16 +1526,57 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
         }
 
         #endregion
+        //private Dictionary<int, decimal> CalculateUsedInventoryQuantities(
+        //    List<BillExportDetailExtendedDTO> allDetails,
+        //    int currentDetailId,
+        //    int productId,
+        //    int projectId,
+        //    int pokhDetailId)
+        //{
+        //    var usedQuantities = new Dictionary<int, decimal>();
+
+        //    var relatedDetails = allDetails.Where(d => d.ID == currentDetailId && d.ProductID == productId && d.POKHDetailID == pokhDetailId);
+
+        //    foreach (var detail in relatedDetails)
+        //    {
+        //        if (string.IsNullOrWhiteSpace(detail.ChosenInventoryProject))
+        //            continue;
+
+        //        foreach (var item in detail.ChosenInventoryProject.Split(';'))
+        //        {
+        //            if (string.IsNullOrWhiteSpace(item)) continue;
+
+        //            var parts = item.Split('-');
+        //            if (parts.Length < 2) continue;
+
+        //            if (int.TryParse(parts[0], out int id) && decimal.TryParse(parts[1], out decimal qty))
+        //            {
+        //                if (!usedQuantities.ContainsKey(id))
+        //                    usedQuantities[id] = 0;
+        //                usedQuantities[id] += qty;
+        //            }
+        //        }
+        //    }
+
+        //    return usedQuantities;
+        //}
         private Dictionary<int, decimal> CalculateUsedInventoryQuantities(
-            List<BillExportDetailExtendedDTO> allDetails,
-            int currentDetailId,
-            int productId,
-            int projectId,
-            int pokhDetailId)
+    List<BillExportDetailExtendedDTO> allDetails,
+    int currentDetailId,
+    int productId,
+    int projectId,
+    int pokhDetailId)
         {
             var usedQuantities = new Dictionary<int, decimal>();
 
-            var relatedDetails = allDetails.Where(d => d.ID == currentDetailId && d.ProductID == productId && d.POKHDetailID == pokhDetailId);
+            // ✅ FIX: Lấy các detail KHÁC (loại trừ currentDetailId)
+            var relatedDetails = allDetails.Where(d =>
+                (d.ChildID ?? d.ID) != currentDetailId &&  // ✅ LOẠI TRỪ detail hiện tại
+                d.ProductID == productId &&
+                (pokhDetailId > 0
+                    ? d.POKHDetailID == pokhDetailId
+                    : d.ProjectID == projectId)  // ✅ Thêm điều kiện ProjectID
+            );
 
             foreach (var detail in relatedDetails)
             {
@@ -1545,7 +1590,8 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                     var parts = item.Split('-');
                     if (parts.Length < 2) continue;
 
-                    if (int.TryParse(parts[0], out int id) && decimal.TryParse(parts[1], out decimal qty))
+                    if (int.TryParse(parts[0], out int id) &&
+                        decimal.TryParse(parts[1], out decimal qty))
                     {
                         if (!usedQuantities.ContainsKey(id))
                             usedQuantities[id] = 0;
@@ -1870,5 +1916,76 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
         //    }
         //}
         //#endregion
+
+
+        #region Load Existing Inventory Project Data
+        /// <summary>
+        /// Load ChosenInventoryProject từ DB cho các detail đang sửa
+        /// Chỉ load nếu frontend KHÔNG gửi ChosenInventoryProject và ForceReallocate = false
+        /// </summary>
+        private async Task LoadExistingInventoryProjectData(BillExportDTO dto)
+        {
+            foreach (var detail in dto.billExportDetail ?? new List<BillExportDetailExtendedDTO>())
+            {
+                // ✅ Chỉ xử lý detail có ID (đang sửa)
+                if (detail.ID <= 0)
+                    continue;
+
+                // ✅ Nếu frontend đã gửi ChosenInventoryProject → giữ nguyên
+                if (!string.IsNullOrWhiteSpace(detail.ChosenInventoryProject))
+                    continue;
+
+                // ✅ Nếu frontend yêu cầu phân bổ lại (ForceReallocate = true) → skip load từ DB
+                if (detail.ForceReallocate == true)
+                {
+                    // Để trống để AutoAllocateInventoryProject xử lý
+                    continue;
+                }
+
+                // ✅ Load từ DB chỉ khi frontend gửi rỗng VÀ KHÔNG có thay đổi
+                var existingExports = _inventoryProjectExportRepo.GetAll(x =>
+                    x.BillExportDetailID == detail.ID &&
+                    x.IsDeleted != true
+                ).ToList();
+
+                if (existingExports.Any())
+                {
+                    // Format: "123-5;456-10"
+                    detail.ChosenInventoryProject = string.Join(";",
+                        existingExports.Select(x => $"{x.InventoryProjectID}-{x.Quantity}")
+                    );
+
+                    // ✅ Optional: Load ProductCode
+                    var ds = GetInventoryProjectImportExport(
+                        dto.billExport.WarehouseID ?? 0,
+                        detail.ProductID ?? 0,
+                        (detail.POKHDetailID ?? 0) > 0 ? 0 : detail.ProjectID ?? 0,
+                        detail.POKHDetailID ?? 0,
+                        0
+                    );
+
+                    if (ds.Count > 0)
+                    {
+                        var inventoryProjects = ds[0];
+                        var productCodes = new List<string>();
+
+                        foreach (var export in existingExports)
+                        {
+                            var inv = inventoryProjects.FirstOrDefault(x =>
+                                GetIntFromDynamic(x, "ID") == export.InventoryProjectID
+                            );
+                            if (inv != null)
+                            {
+                                productCodes.Add(GetStringFromDynamic(inv, "ProductCode"));
+                            }
+                        }
+
+                        detail.ProductCodeExport = string.Join(";",
+                            productCodes.Where(x => !string.IsNullOrEmpty(x)));
+                    }
+                }
+            }
+        }
+        #endregion
     }
 }

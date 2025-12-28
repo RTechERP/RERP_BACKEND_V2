@@ -66,5 +66,6 @@ namespace RERPAPI.Model.DTO
         /// Frontend có map field này
         /// </summary>
         public int? ImportDetailID { get; set; }
+        public bool? ForceReallocate { get; set; }
     }
 }
