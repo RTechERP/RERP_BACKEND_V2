@@ -146,6 +146,71 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             }
         }
 
+        //_billImportDetailSerialNumberRepo;
+        //_billExportDetailSerialNumberRepo;
+        //_billExportTechDetailSerialRepo;
+        //_billImportTechDetailSerialRepo;
+
+        [HttpGet("serial-bill-import")]
+        [Authorize]
+        public async Task<IActionResult> LoadSerialBillImport(int id)
+        {
+            try
+            {
+                var count = _billImportDetailSerialNumberRepo.GetAll(x => x.BillImportDetailID == id).Count();
+                return Ok(ApiResponseFactory.Success(count, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("serial-bill-export")]
+        [Authorize]
+        public async Task<IActionResult> LoadSerialBillExport(int id)
+        {
+            try
+            {
+                var count = _billExportDetailSerialNumberRepo.GetAll(x => x.BillExportDetailID == id).Count();
+                return Ok(ApiResponseFactory.Success(count, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("serial-bill-import-tech")]
+        [Authorize]
+        public async Task<IActionResult> LoadSerialBillImportTech(int id)
+        {
+            try
+            {
+                var count = _billImportTechDetailSerialRepo.GetAll(x => x.BillImportTechDetailID == id).Count();
+                return Ok(ApiResponseFactory.Success(count, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("serial-bill-export-tech")]
+        [Authorize]
+        public async Task<IActionResult> LoadSerialBillExportTech(int id)
+        {
+            try
+            {
+                var count = _billExportTechDetailSerialRepo.GetAll(x => x.BillExportTechDetailID == id).Count();
+                return Ok(ApiResponseFactory.Success(count, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpGet("data-serialnumber-tech")]
         [RequiresPermission("")]
         public IActionResult LoadData(int billId, int type, int warehouseId)
