@@ -13,6 +13,7 @@ namespace RERPAPI.Model.Common
         public List<string> PBPPositionCodes { get; set; } = new();
         public List<int> UserAllsOfficeSupply { get; set; } = new();
         public List<int> DepartmentIDs { get; set; } = new();
+        public List<int> EmployeeIDSaleApproveDNTTDBs { get; set; } = new();
     }
 
 }
