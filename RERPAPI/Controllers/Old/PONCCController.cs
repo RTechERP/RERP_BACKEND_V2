@@ -82,7 +82,7 @@ namespace RERPAPI.Controllers.Old
 
         #region Lấy data master/ detail
         [HttpGet("get-all")]
-        [RequiresPermission("N35,N33,N1")]
+        [RequiresPermission("N33,N35,N36,N1,N52,N38,N54")]
         public IActionResult GetAll(
                 string? keyword = "",
                 int pageNumber = 1,
@@ -195,7 +195,7 @@ namespace RERPAPI.Controllers.Old
 
 
         [HttpGet("data-detail")]
-        [RequiresPermission("N35,N33,N1")]
+        [RequiresPermission("N33,N35,N36,N1,N52,N38,N54")]
         public IActionResult GetDetail(int ponccId)
         {
             try
@@ -223,7 +223,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet("poncc-detail")]
-        [RequiresPermission("N35,N33,N1")]
+        [RequiresPermission("N33,N35,N36,N1,N52,N38,N54")]
         public IActionResult Getponccdetail(string idText, int warehouseID, string detailId)
         {
             try
