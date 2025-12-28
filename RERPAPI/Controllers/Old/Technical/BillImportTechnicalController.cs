@@ -25,7 +25,8 @@ namespace RERPAPI.Controllers.Old.Technical
         private readonly BillDocumentImportTechnicalLogRepo _billDocumentImportTechnicalLogRepo;
         private readonly InventoryDemoRepo _inventoryDemoRepo;
         private readonly PONCCRepo _pONCCRepo;
-        public BillImportTechnicalController(HistoryDeleteBillRepo historyDeleteBillRepo, BillImportTechnicalRepo billImportTechnicalRepo, BillImportTechnicalDetailRepo billImportTechnicalDetailRepo, BillImportTechDetailSerialRepo billImportTechDetailSerialRepo, RulePayRepo rulePayRepo, IConfiguration configuration, BillImportTechnicalLogRepo billImportTechnicalLogRepo, BillDocumentImportTechnicalRepo billDocumentImportTechnicalRepo, BillDocumentImportTechnicalLogRepo billDocumentImportTechnicalLogRepo, InventoryDemoRepo inventoryDemoRepo, PONCCRepo pONCCRepo)
+        private readonly DocumentImportRepo _documentImportRepo;
+        public BillImportTechnicalController(HistoryDeleteBillRepo historyDeleteBillRepo, BillImportTechnicalRepo billImportTechnicalRepo, BillImportTechnicalDetailRepo billImportTechnicalDetailRepo, BillImportTechDetailSerialRepo billImportTechDetailSerialRepo, RulePayRepo rulePayRepo, IConfiguration configuration, BillImportTechnicalLogRepo billImportTechnicalLogRepo, BillDocumentImportTechnicalRepo billDocumentImportTechnicalRepo, BillDocumentImportTechnicalLogRepo billDocumentImportTechnicalLogRepo, InventoryDemoRepo inventoryDemoRepo, PONCCRepo pONCCRepo, DocumentImportRepo documentImportRepo)
         {
             _historyDeleteBillRepo = historyDeleteBillRepo;
             _billImportTechnicalRepo = billImportTechnicalRepo;
@@ -38,6 +39,7 @@ namespace RERPAPI.Controllers.Old.Technical
             _billDocumentImportTechnicalLogRepo = billDocumentImportTechnicalLogRepo;
             _inventoryDemoRepo = inventoryDemoRepo;
             _pONCCRepo = pONCCRepo;
+            _documentImportRepo = documentImportRepo;
         }
         [HttpGet("get-rulepay")]
         public IActionResult GetRulepay()
@@ -250,7 +252,7 @@ namespace RERPAPI.Controllers.Old.Technical
                 using var package = new ExcelPackage(new FileInfo(templatePath));
                 var ws = package.Workbook.Worksheets[0];
 
-                DateTime createDate = master.CreatedDate ?? DateTime.Now;
+                DateTime createDate = master.CreateDate ?? DateTime.Now;
                 string locationDate = $"Hà Nội, Ngày {createDate.Day} tháng {createDate.Month} năm {createDate.Year}";
                 string supplier = master.SupplierName?.Trim() ?? "";
                 string customer = master.CustomerName?.Trim() ?? "";
@@ -634,5 +636,108 @@ namespace RERPAPI.Controllers.Old.Technical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpPost("get-bill-import-technical-summary")]
+        public IActionResult GetBillImportTechnicalSummary([FromBody] BillImportTechnicalSummaryParam request)
+        {
+            try
+            {
+                DateTime? dateStart;
+                DateTime? dateEnd;
+
+                if (request.IsAll)
+                {
+                    dateStart = _billImportTechnicalRepo
+                        .GetAll(x => x.WarehouseID == request.WarehouseId)
+                        .Min(x => (DateTime?)x.CreatDate);
+
+                    //dateStart = DateTime.MinValue;
+                    dateEnd = DateTime.Now;
+                }
+                else
+                {
+                    dateStart = request.DateStart?.Date;
+                    dateEnd = request.DateEnd?.Date.AddDays(1).AddSeconds(-1);
+                }
+                var dtSummary = SQLHelper<dynamic>.ProcedureToList(
+                    "spGetBillImportTechnicalSummary", ["@DateStart", "@DateEnd", "@Status", "@FilterText", "@WarehouseId", "@PageSize", "@PageNumber"], [dateStart, dateEnd, request.Status, request.FilterText ?? "", request.WarehouseId, 100000, 1]
+                );
+                var summaryData = SQLHelper<dynamic>.GetListData(dtSummary, 0);
+
+                var documentList = _documentImportRepo.GetAll(x => x.IsDeleted == false);
+
+                //var documentList = SQLHelper<object>.GetListData(documents, 0);
+
+                return Ok(new
+                {
+                    status = 1,
+                    data = summaryData,
+                    documents = documentList
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpPost("save-bill-import-summary")]
+        public async Task<IActionResult> SaveBillImportSummary([FromBody] List<BillImportSummaryUpdateDTO> data)
+        {
+            if (data == null || data.Count == 0)
+                return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu thay đổi"));
+
+            var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+            var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+            bool isAdmin = currentUser.IsAdmin && currentUser.EmployeeID <= 0;
+
+            int successCount = 0;
+            List<int> skippedIds = new();
+
+            try
+            {
+                foreach (var item in data)
+                {
+                    if (item.IDDetail <= 0)
+                        continue;
+
+                    var billDetail = _billImportTechnicalDetailRepo.GetByID(item.IDDetail);
+                    if (item.DeliverID != currentUser.EmployeeID && !isAdmin)
+                    {
+                        skippedIds.Add(item.IDDetail);
+                        continue;
+                    }
+
+                    DateTime? dueDate = null;
+                    if (item.DateSomeBill.HasValue)
+                        dueDate = item.DateSomeBill.Value.AddDays(item.DPO);
+
+                    billDetail.SomeBill = item.SomeBill;
+                    billDetail.DateSomeBill = item.DateSomeBill;
+                    billDetail.DueDate = dueDate;
+                    billDetail.TaxReduction = item.TaxReduction;
+                    billDetail.COFormE = item.COFormE;
+
+                    await _billImportTechnicalDetailRepo.UpdateAsync(billDetail);
+
+                    successCount++;
+                }
+                if (successCount > 0)
+                {
+                    return Ok(ApiResponseFactory.Success(
+                        new
+                        {
+                            Updated = successCount,
+                        },
+                        $"Lưu thành công {successCount} dòng"
+                    ));
+                }
+                return Ok(ApiResponseFactory.Fail(null, $"Lưu dữ liệu thất bại!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
     }
 }
