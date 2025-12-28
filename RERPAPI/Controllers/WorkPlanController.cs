@@ -259,7 +259,7 @@ namespace RERPAPI.Controllers
 
                 var data = SQLHelper<object>.ProcedureToList("spGetSummarizeWork_New",
                     new string[] { "@DateStart", "@DateEnd", "@DepartmentID", "@TeamID", "@UserID", "@Keyword" },
-                    new object[] { dateStart, dateEnd, departmentID, teamID, userID, keyWord ?? "" });
+                    new object[] { dateStart, dateEnd, 2, teamID, userID, keyWord ?? "" });
 
                 var result = SQLHelper<object>.GetListData(data, 0);
 
