@@ -17,6 +17,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
+    
+
     public class BillImportDetailSerialNumberController : ControllerBase
     {
         private readonly BillImportDetailSerialNumberRepo _billImportDetailSerialNumberRepo;
@@ -104,7 +106,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
 
         [HttpGet("get-serialnumber")]
-        [Authorize]
+        [RequiresPermission("N27,N1,N33,N34,N69")]
         public async Task<IActionResult> GetSerialNumber(int billImportDetailID)
         {
             try
@@ -120,7 +122,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpGet("location-modula")]
-        [Authorize]
+        [RequiresPermission("N27,N1,N33,N34,N69")]
         public async Task<IActionResult> LoadLocationModula()
         {
             try
@@ -152,7 +154,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         //_billImportTechDetailSerialRepo;
 
         [HttpGet("serial-bill-import")]
-        [Authorize]
+        [RequiresPermission("N27,N1,N33,N34,N69")]
         public async Task<IActionResult> LoadSerialBillImport(int id)
         {
             try
@@ -167,7 +169,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpGet("serial-bill-export")]
-        [Authorize]
+        [RequiresPermission("N27,N1,N33,N34,N69")]
         public async Task<IActionResult> LoadSerialBillExport(int id)
         {
             try
@@ -182,7 +184,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpGet("serial-bill-import-tech")]
-        [Authorize]
+        [RequiresPermission("N27,N1,N33,N34,N69")]
         public async Task<IActionResult> LoadSerialBillImportTech(int id)
         {
             try
@@ -197,7 +199,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpGet("serial-bill-export-tech")]
-        [Authorize]
+        [RequiresPermission("N27,N1,N33,N34,N69")]
         public async Task<IActionResult> LoadSerialBillExportTech(int id)
         {
             try
@@ -212,7 +214,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpGet("data-serialnumber-tech")]
-        [RequiresPermission("")]
+        [RequiresPermission("N27,N1,N33,N34,N69")]
         public IActionResult LoadData(int billId, int type, int warehouseId)
         {
             try
@@ -241,7 +243,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpGet("data-serialnumber")]
-        [RequiresPermission("")]
+        [RequiresPermission("N27,N1,N33,N34,N69")]
         public IActionResult LoadData(int billId, int type)
         {
             try
@@ -270,7 +272,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpGet("serialnumber-product")]
-        [RequiresPermission("")]
+        [RequiresPermission("N27,N1,N33,N34,N69")]
         public IActionResult LoadDataProduct(int productID)
         {
             try
@@ -297,6 +299,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpPost("save-data")]
+        [RequiresPermission("N27,N1,N33,N34,N69")]
         public async Task<IActionResult> SaveData([FromBody] BillDetailSerialNumberDTO dto)
         {
             try
@@ -367,6 +370,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpPost("save-data-tech")]
+        [RequiresPermission("N27,N1,N33,N34,N69")]
         public async Task<IActionResult> SaveDataTech([FromBody] BillDetailSerialNumberDTO dto)
         {
             try
