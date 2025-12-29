@@ -82,71 +82,71 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             public List<int> Ids { get; set; }
             public int Type { get; set; }
         }
-        [HttpPost("save-data")]
-        public async Task<IActionResult> SaveDataBillExportDetailSerialNumber([FromBody] BillDetailSerialNumberDTO dto)
-        {
-            try
-            {
-                if (dto == null)
-                {
-                    return BadRequest(new { status = 0, message = "Dữ liệu không hợp lệ" });
-                }
+        //[HttpPost("save-data")]
+        //public async Task<IActionResult> SaveDataBillExportDetailSerialNumber([FromBody] BillDetailSerialNumberDTO dto)
+        //{
+        //    try
+        //    {
+        //        if (dto == null)
+        //        {
+        //            return BadRequest(new { status = 0, message = "Dữ liệu không hợp lệ" });
+        //        }
 
-                if (dto.type == 1)
-                {
-                    if (dto.billImportDetailSerialNumbers == null || !dto.billImportDetailSerialNumbers.Any())
-                    {
-                        return BadRequest(new { status = 0, message = "Danh sách nhập hóa đơn rỗng" });
-                    }
+        //        if (dto.type == 1)
+        //        {
+        //            if (dto.billImportDetailSerialNumbers == null || !dto.billImportDetailSerialNumbers.Any())
+        //            {
+        //                return BadRequest(new { status = 0, message = "Danh sách nhập hóa đơn rỗng" });
+        //            }
 
-                    foreach (var item in dto.billImportDetailSerialNumbers)
-                    {
-                        if (item.ID <= 0)
-                        {
-                             _billImportDetailSerialNumberRepo.Create(item);
-                        }
-                        else
-                        {
-                            _billImportDetailSerialNumberRepo.Update(item);
-                        }
-                    }
-                }
-                else
-                {
-                    if (dto.billExportDetailSerialNumbers == null || !dto.billExportDetailSerialNumbers.Any())
-                    {
-                        return BadRequest(new { status = 0, message = "Danh sách xuất hóa đơn rỗng" });
-                    }
+        //            foreach (var item in dto.billImportDetailSerialNumbers)
+        //            {
+        //                if (item.ID <= 0)
+        //                {
+        //                     _billImportDetailSerialNumberRepo.Create(item);
+        //                }
+        //                else
+        //                {
+        //                    _billImportDetailSerialNumberRepo.Update(item);
+        //                }
+        //            }
+        //        }
+        //        else
+        //        {
+        //            if (dto.billExportDetailSerialNumbers == null || !dto.billExportDetailSerialNumbers.Any())
+        //            {
+        //                return BadRequest(new { status = 0, message = "Danh sách xuất hóa đơn rỗng" });
+        //            }
 
-                    foreach (var item in dto.billExportDetailSerialNumbers)
-                    {
-                        if (item.ID <= 0)
-                        {
-                             _billExportDetailSerialNumberRepo.Create(item);
-                        }
-                        else
-                        {
-                             _billExportDetailSerialNumberRepo.Update(item);
-                        }
-                    }
-                }
+        //            foreach (var item in dto.billExportDetailSerialNumbers)
+        //            {
+        //                if (item.ID <= 0)
+        //                {
+        //                     _billExportDetailSerialNumberRepo.Create(item);
+        //                }
+        //                else
+        //                {
+        //                     _billExportDetailSerialNumberRepo.Update(item);
+        //                }
+        //            }
+        //        }
 
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Xử lý thành công",
-                    data = dto
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
-        }
+        //        return Ok(new
+        //        {
+        //            status = 1,
+        //            message = "Xử lý thành công",
+        //            data = dto
+        //        });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(new
+        //        {
+        //            status = 0,
+        //            message = ex.Message,
+        //            error = ex.ToString()
+        //        });
+        //    }
+        //}
     }
 }
