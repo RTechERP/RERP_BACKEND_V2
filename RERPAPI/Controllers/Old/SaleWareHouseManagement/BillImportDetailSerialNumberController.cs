@@ -104,7 +104,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
 
         [HttpGet("get-serialnumber")]
-        [Authorize]
         public async Task<IActionResult> GetSerialNumber(int billImportDetailID)
         {
             try
@@ -120,7 +119,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpGet("location-modula")]
-        [Authorize]
         public async Task<IActionResult> LoadLocationModula()
         {
             try
@@ -152,7 +150,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         //_billImportTechDetailSerialRepo;
 
         [HttpGet("serial-bill-import")]
-        [Authorize]
         public async Task<IActionResult> LoadSerialBillImport(int id)
         {
             try
@@ -167,7 +164,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpGet("serial-bill-export")]
-        [Authorize]
         public async Task<IActionResult> LoadSerialBillExport(int id)
         {
             try
@@ -182,7 +178,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpGet("serial-bill-import-tech")]
-        [Authorize]
         public async Task<IActionResult> LoadSerialBillImportTech(int id)
         {
             try
@@ -197,7 +192,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpGet("serial-bill-export-tech")]
-        [Authorize]
         public async Task<IActionResult> LoadSerialBillExportTech(int id)
         {
             try
@@ -212,7 +206,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpGet("data-serialnumber-tech")]
-        [RequiresPermission("")]
         public IActionResult LoadData(int billId, int type, int warehouseId)
         {
             try
@@ -241,7 +234,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpGet("data-serialnumber")]
-        [RequiresPermission("")]
         public IActionResult LoadData(int billId, int type)
         {
             try
@@ -270,7 +262,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpGet("serialnumber-product")]
-        [RequiresPermission("")]
         public IActionResult LoadDataProduct(int productID)
         {
             try
