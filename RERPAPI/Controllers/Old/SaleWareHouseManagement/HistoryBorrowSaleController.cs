@@ -12,17 +12,19 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     {
         private readonly BillExportDetailRepo _billExportDetailRepo;
         private readonly WarehouseRepo _wareHouseRepo;
+        private readonly UserRepo _userRepo;
 
         public HistoryBorrowSaleController(
             BillExportDetailRepo billExportDetailRepo,
-            WarehouseRepo wareHouseRepo)
+            WarehouseRepo wareHouseRepo,
+            UserRepo userRepo)
         {
             _billExportDetailRepo = billExportDetailRepo;
             _wareHouseRepo = wareHouseRepo;
+            _userRepo = userRepo;
         }
 
         [HttpPost("")]
-
         public IActionResult getReport(HistoryBorrowParam filter)
         {
             var rs = _wareHouseRepo.GetAll(x => x.WarehouseCode == "HN").FirstOrDefault();
@@ -31,7 +33,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
                     "spGetHistoryBorrowSale",
                     new string[] { "@PageNumber", "@PageSize", "@DateBegin", "@DateEnd", "@ProductGroupID", "@ReturnStatus", "@FilterText", "@WareHouseID", "@EmployeeID" },
-                    new object[] { filter.PageNumber, filter.PageSize, filter.DateStart, filter.DateEnd, filter.ProductGroupID, filter.Status - 1, filter.FilterText, rs.ID, filter.EmployeeID }
+                    new object[] { filter.PageNumber, filter.PageSize, filter.DateStart, filter.DateEnd, filter.ProductGroupID, filter.Status - 1, filter.FilterText, filter.WareHouseID, filter.EmployeeID }
                     );
                 return Ok(new
                 {
@@ -125,6 +127,11 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [HttpGet("get-user")]
+        public IActionResult GetUser()
+        {
+            var list = _userRepo.GetAll(x => x.Status == 0);
+            return Ok(ApiResponseFactory.Success(list, ""));
+        }
     }
 }

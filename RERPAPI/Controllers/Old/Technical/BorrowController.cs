@@ -376,7 +376,6 @@ namespace RERPAPI.Controllers
                         "Nhân viên chưa hoàn thành thao tác trả hàng. Bạn không thể duyệt trả!"));
                 }
             }
-
             try
             {
                 if (req.IsAdmin)
