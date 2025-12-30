@@ -58,50 +58,48 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             }
         }
 
-        #region Không dùng
-        //[HttpPost("save-data")]
-        //[Authorize]
-        //public async Task<IActionResult> saveData([FromBody] List<BillImportDetailSerialNumber> data)
-        //{
-        //    try
-        //    {
-        //        var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-        //        CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+        [HttpPost("save-data")]
+        [Authorize]
+        public async Task<IActionResult> saveData([FromBody] List<BillImportDetailSerialNumber> data)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
 
-        //        foreach (var item in data)
-        //        {
-        //            if (!string.IsNullOrWhiteSpace(item.SerialNumberRTC))
-        //            {
-        //                var serialRTC = _billImportDetailSerialNumberRepo.GetAll(x => x.SerialNumberRTC == item.SerialNumberRTC.Trim() &&
-        //                                                                                x.BillImportDetailID == item.BillImportDetailID &&
-        //                                                                                x.ID != item.ID);
-        //                if (serialRTC.Count() > 0) return BadRequest(ApiResponseFactory.Fail(null, $"Số Serial Number RTC [{item.SerialNumberRTC}] đã tồn tại!", serialRTC));
-        //            }
+                foreach (var item in data)
+                {
+                    if (!string.IsNullOrWhiteSpace(item.SerialNumberRTC))
+                    {
+                        var serialRTC = _billImportDetailSerialNumberRepo.GetAll(x => x.SerialNumberRTC == item.SerialNumberRTC.Trim() &&
+                                                                                        x.BillImportDetailID == item.BillImportDetailID &&
+                                                                                        x.ID != item.ID);
+                        if (serialRTC.Count() > 0) return BadRequest(ApiResponseFactory.Fail(null, $"Số Serial Number RTC [{item.SerialNumberRTC}] đã tồn tại!", serialRTC));
+                    }
 
-        //        }
+                }
 
-        //        foreach (var item in data)
-        //        {
-        //            //if (string.IsNullOrWhiteSpace(item.SerialNumberRTC)) continue;
-        //            if (item.ID > 0)
-        //            {
-        //                item.UpdatedBy = currentUser.LoginName;
-        //                await _billImportDetailSerialNumberRepo.UpdateAsync(item);
-        //            }
-        //            else
-        //            {
-        //                item.CreatedBy = item.UpdatedBy = currentUser.LoginName;
-        //                await _billImportDetailSerialNumberRepo.CreateAsync(item);
-        //            }
-        //        }
-        //        return Ok(ApiResponseFactory.Success(data, "Lưu dữ liệu thành công"));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-        //    }
-        //}
-        #endregion
+                foreach (var item in data)
+                {
+                    //if (string.IsNullOrWhiteSpace(item.SerialNumberRTC)) continue;
+                    if (item.ID > 0)
+                    {
+                        item.UpdatedBy = currentUser.LoginName;
+                        await _billImportDetailSerialNumberRepo.UpdateAsync(item);
+                    }
+                    else
+                    {
+                        item.CreatedBy = item.UpdatedBy = currentUser.LoginName;
+                        await _billImportDetailSerialNumberRepo.CreateAsync(item);
+                    }
+                }
+                return Ok(ApiResponseFactory.Success(data, "Lưu dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
 
 
 
@@ -298,7 +296,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             }
         }
 
-        [HttpPost("save-data")]
+        [HttpPost("save-data-sale")]
         [RequiresPermission("N27,N1,N33,N34,N69")]
         public async Task<IActionResult> SaveData([FromBody] BillDetailSerialNumberDTO dto)
         {
