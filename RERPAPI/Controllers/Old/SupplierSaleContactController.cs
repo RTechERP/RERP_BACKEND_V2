@@ -25,7 +25,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet("supplier-sale-contact")]
-        [RequiresPermission("N27,N33,N52,N53,N35,N1")]
+        //[RequiresPermission("N27,N33,N52,N53,N35,N1")]
         public async Task<IActionResult> getSupplierSaleContact(int supplierID)
         {
             try
