@@ -19,15 +19,16 @@ namespace RERPAPI.Controllers.HRM
         private readonly EmployeeRepo _employeeRepo;
         vUserGroupLinksRepo _vUserGroupLinksRepo;
         private CurrentUser _currentUser;
+        private readonly EmployeeApprovedRepo _approvedRepo;
 
-        public EmployeeController(EmployeeRepo employeeRepo, vUserGroupLinksRepo vUserGroupLinksRepo, IConfiguration configuration)
+        public EmployeeController(IConfiguration configuration, EmployeeRepo employeeRepo, vUserGroupLinksRepo vUserGroupLinksRepo, CurrentUser currentUser, EmployeeApprovedRepo approvedRepo)
         {
+            _configuration = configuration;
             _employeeRepo = employeeRepo;
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
-            _configuration = configuration;
+            _currentUser = currentUser;
+            _approvedRepo = approvedRepo;
         }
-
-
 
         [HttpGet("employees")]
         public IActionResult GetEmployee(int? status, int? departmentid, string? keyword)
@@ -131,6 +132,21 @@ namespace RERPAPI.Controllers.HRM
             }
 
         }
+        [HttpGet("get-approve")]
+        public IActionResult GetApprove()
+        {
+            try
+            {
+                var approvedTBPs = _approvedRepo.GetAll(x => x.Type == 3 && x.IsDeleted != true);
+               
+                return Ok(ApiResponseFactory.Success(approvedTBPs, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
 
-    }
+        }
+
+    }       
 }
