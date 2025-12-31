@@ -423,6 +423,9 @@ builder.Services.AddScoped<JobRequirementApprovedRepo>();
 builder.Services.AddScoped<JobRequirementCommentRepo>();
 builder.Services.AddScoped<OrganizationalChartDetailRepo>();
 builder.Services.AddScoped<OrganizationalChartRepo>();
+builder.Services.AddScoped<NewsletterTypeRepo>();
+builder.Services.AddScoped<NewsletterRepo>();
+builder.Services.AddScoped<NewsletterFileRepo>();
 
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();
