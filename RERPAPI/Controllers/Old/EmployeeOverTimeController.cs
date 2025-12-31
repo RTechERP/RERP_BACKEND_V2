@@ -63,8 +63,10 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
+                var ds = request.DateStart.AddHours(00).AddMinutes(00).AddSeconds(00); // 00:00:00
+                var de = request.DateEnd.AddHours(23).AddMinutes(59).AddSeconds(59); // 23:59:59
                 var employeeOverTimeSummary = SQLHelper<object>.ProcedureToList("spGetEmployeeOnLeaveInWeb", new string[] { "@Keyword", "@DateStart", "@DateEnd", "@IsApproved", "@Type", "@DepartmentID", "@EmployeeID" },
-               new object[] { request.Keyword ?? "", request.DateStart, request.DateEnd, request.IsApproved, request.Type, request.DepartmentID ?? 0, request.EmployeeID ?? 0 });
+               new object[] { request.Keyword ?? "", ds, de , request.IsApproved, request.Type, request.DepartmentID ?? 0, request.EmployeeID ?? 0 });
 
                 var data = SQLHelper<object>.GetListData(employeeOverTimeSummary, 0);
                 var TotalPages = SQLHelper<object>.GetListData(employeeOverTimeSummary, 1);

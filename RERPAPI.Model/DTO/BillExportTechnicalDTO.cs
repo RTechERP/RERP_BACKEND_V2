@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace RERPAPI.Model.DTO
+﻿namespace RERPAPI.Model.DTO
 {
     public class BillExportTechnicalDTO
     {
@@ -11,7 +9,7 @@ namespace RERPAPI.Model.DTO
         public int? CustomerID { get; set; }
         public string? Receiver { get; set; }
         public string? Deliver { get; set; }
-        public string? Addres { get; set; } 
+        public string? Addres { get; set; }
         public int? Status { get; set; }
         public string? WarehouseType { get; set; }
         public string? Note { get; set; }
@@ -26,6 +24,7 @@ namespace RERPAPI.Model.DTO
         public int? WarehouseID { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
+        public DateTime? CreateDate { get; set; }
         public string? UpdatedBy { get; set; }
         public DateTime? UpdatedDate { get; set; }
         public int? SupplierSaleID { get; set; }

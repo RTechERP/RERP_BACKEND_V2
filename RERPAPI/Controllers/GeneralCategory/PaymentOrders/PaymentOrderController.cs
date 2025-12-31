@@ -1,14 +1,19 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Dapper;
+using DocumentFormat.OpenXml.Bibliography;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Newtonsoft.Json;
 using RERPAPI.Attributes;
 using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
+using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
 {
@@ -19,6 +24,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
     {
         private readonly IConfiguration _configuration;
         private CurrentUser _currentUser;
+        private readonly RoleConfig _roleConfig;
 
         private readonly ConfigSystemRepo _configSystemRepo;
         private readonly PaymentOrderRepo _paymentRepo;
@@ -44,8 +50,10 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         private readonly POKHRepo _poKHRepo;
         private readonly POKHDetailRepo _pOKHDetailRepo;
         private readonly EmployeeTeamSaleRepo _employeeTeamSaleRepo;
+        private readonly EmployeeRepo _employeeRepo;
 
-        public PaymentOrderController(IConfiguration configuration, CurrentUser currentUser,
+
+        public PaymentOrderController(IConfiguration configuration, CurrentUser currentUser, RoleConfig roleConfig,
             PaymentOrderRepo paymentRepo,
             PaymentOrderDetailRepo detailRepo,
             PaymentOrderLogRepo logRepo,
@@ -69,11 +77,14 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             CustomerRepo customerRepo,
             POKHRepo poKHRepo,
             POKHDetailRepo pOKHDetailRepo,
-            EmployeeTeamSaleRepo employeeTeamSaleRepo
+            EmployeeTeamSaleRepo employeeTeamSaleRepo,
+            EmployeeRepo employeeRepo
             )
         {
             _configuration = configuration;
             _currentUser = currentUser;
+            _roleConfig = roleConfig;
+
             _paymentRepo = paymentRepo;
             _detailRepo = detailRepo;
             _logRepo = logRepo;
@@ -98,6 +109,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             _poKHRepo = poKHRepo;
             _pOKHDetailRepo = pOKHDetailRepo;
             _employeeTeamSaleRepo = employeeTeamSaleRepo;
+            _employeeRepo = employeeRepo;
         }
 
 
@@ -334,7 +346,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         }
 
         [HttpGet("get-data-combo")]
-        public IActionResult GetDataCombo()
+        public async Task<IActionResult> GetDataCombo()
         {
             try
             {
@@ -354,11 +366,28 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 var registerContracts = _registerContractRepo.GetAll(x => x.EmployeeID == _currentUser.EmployeeID && x.IsDeleted != true);
                 var projects = _projectRepo.GetAll(x => x.IsDeleted != true);
 
-
                 var customers = _customerRepo.GetAll(x => x.IsDeleted != true).OrderByDescending(x => x.ID).ToList();
                 var pokhs = _poKHRepo.GetAll(x => x.IsDeleted != true).OrderByDescending(x => x.ID).ToList();
                 var pokhDetails = _pOKHDetailRepo.GetAll(x => x.IsDeleted != true).OrderByDescending(x => x.ID).ToList();
-                var userTeamNames = _employeeTeamSaleRepo.GetAll(x => x.IsDeleted == 0).OrderByDescending(x => x.ID).ToList();
+                
+                //var userTeamNames = _employeeTeamSaleRepo.GetAll(x => x.IsDeleted == 0).OrderByDescending(x => x.ID).ToList();
+                //var employeeTeamSales = (from t in userTeamNames
+                //                         join p in userTeamNames on t.ParentID equals p.ID into parentTeams
+                //                         from pt in parentTeams.DefaultIfEmpty()
+                //                         select new
+                //                         {
+                //                             value = t.ID,
+                //                             label = $"{t.Name} ({pt?.Name ?? ""})"
+                //                         }).ToList();
+
+                var connection = new SqlConnection(_configuration.GetValue<string>("ConnectionString") ?? "");
+                var param = new { Status = 0 };
+                var employeeData = await connection.QueryMultipleAsync("spGetEmployee", param, commandType: System.Data.CommandType.StoredProcedure);
+
+                var employees = (await employeeData.ReadAsync<EmployeeCommonDTO>());
+                var approverSales = employees.Where(x => x.DepartmentID == 3 || _roleConfig.EmployeeIDSaleApproveDNTTDBs.Contains(x.ID)).ToList();
+                var approverBGDs = employees.Where(x => x.DepartmentID == 1).ToList();
+
 
                 var data = new
                 {
@@ -372,7 +401,9 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     customers,
                     pokhs,
                     pokhDetails,
-                    userTeamNames
+                    //userTeamNames = employeeTeamSales,
+                    approverSales,
+                    approverBGDs
                 };
 
                 return Ok(ApiResponseFactory.Success(data));

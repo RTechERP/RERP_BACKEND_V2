@@ -605,7 +605,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost("deleted-request")]
-        [RequiresPermission("N35,N1")]
+        //[RequiresPermission("N35,N1")]
         public async Task<IActionResult> DeletedRequest([FromBody] List<ProjectPartlistPurchaseRequestDTO> data, bool isPurchaseRequestDemo)
         {
             try

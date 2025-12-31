@@ -1,7 +1,11 @@
 ﻿using DocumentFormat.OpenXml.Office2010.Excel;
+using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using NPOI.SS.Formula.Functions;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -12,12 +16,31 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
+    
+
     public class BillImportDetailSerialNumberController : ControllerBase
     {
         private readonly BillImportDetailSerialNumberRepo _billImportDetailSerialNumberRepo;
-        public BillImportDetailSerialNumberController(BillImportDetailSerialNumberRepo billImportDetailSerialNumberRepo)
+        private readonly BillExportDetailSerialNumberRepo _billExportDetailSerialNumberRepo;
+        private readonly BillExportTechDetailSerialRepo _billExportTechDetailSerialRepo;
+        private readonly BillImportTechDetailSerialRepo _billImportTechDetailSerialRepo;
+        private readonly BillImportDetailSerialNumberModulaLocationRepo _billImportDetailSerialNumberModulaLocationRepo;
+        private readonly BillExportDetailSerialNumberModulaLocationRepo _billExportDetailSerialNumberModulaLocationRepo;
+        public BillImportDetailSerialNumberController(BillImportDetailSerialNumberRepo billImportDetailSerialNumberRepo, 
+            BillExportDetailSerialNumberRepo billExportDetailSerialNumberRepo,
+            BillExportTechDetailSerialRepo billExportTechDetailSerialRepo,
+            BillImportTechDetailSerialRepo billImportTechDetailSerialRepo,
+            BillImportDetailSerialNumberModulaLocationRepo billImportDetailSerialNumberModulaLocationRepo,
+            BillExportDetailSerialNumberModulaLocationRepo billExportDetailSerialNumberModulaLocationRepo
+            )
         {
             _billImportDetailSerialNumberRepo = billImportDetailSerialNumberRepo;
+            _billExportDetailSerialNumberRepo = billExportDetailSerialNumberRepo;
+            _billExportTechDetailSerialRepo = billExportTechDetailSerialRepo;
+            _billImportTechDetailSerialRepo = billImportTechDetailSerialRepo;
+            _billImportDetailSerialNumberModulaLocationRepo = billImportDetailSerialNumberModulaLocationRepo;
+            _billExportDetailSerialNumberModulaLocationRepo = billExportDetailSerialNumberModulaLocationRepo;
         }
 
         [HttpGet("{id}")]
@@ -27,11 +50,11 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             {
                 var result = _billImportDetailSerialNumberRepo.GetByID(id);
 
-                return Ok(ApiResponseFactory.Success(result,""));
+                return Ok(ApiResponseFactory.Success(result, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex,ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -48,12 +71,12 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 {
                     if (!string.IsNullOrWhiteSpace(item.SerialNumberRTC))
                     {
-                        var serialRTC = _billImportDetailSerialNumberRepo.GetAll(x => x.SerialNumberRTC == item.SerialNumberRTC.Trim() && 
+                        var serialRTC = _billImportDetailSerialNumberRepo.GetAll(x => x.SerialNumberRTC == item.SerialNumberRTC.Trim() &&
                                                                                         x.BillImportDetailID == item.BillImportDetailID &&
                                                                                         x.ID != item.ID);
                         if (serialRTC.Count() > 0) return BadRequest(ApiResponseFactory.Fail(null, $"Số Serial Number RTC [{item.SerialNumberRTC}] đã tồn tại!", serialRTC));
                     }
-                    
+
                 }
 
                 foreach (var item in data)
@@ -79,8 +102,9 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
 
+
         [HttpGet("get-serialnumber")]
-        [Authorize]
+        [RequiresPermission("N27,N1,N33,N34,N69")]
         public async Task<IActionResult> GetSerialNumber(int billImportDetailID)
         {
             try
@@ -88,6 +112,358 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 var serialNumbers = _billImportDetailSerialNumberRepo.GetAll(x => x.BillImportDetailID == billImportDetailID);
 
                 return Ok(ApiResponseFactory.Success(serialNumbers, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("location-modula")]
+        [RequiresPermission("N27,N1,N33,N34,N69")]
+        public async Task<IActionResult> LoadLocationModula()
+        {
+            try
+            {
+                var dt = SQLHelper<dynamic>.ProcedureToList(
+                    "spGetModulaLocation",
+                    new string[]
+                    {
+                "@ModulaLocationID", "@Keyword"
+                    },
+                    new object[]
+                    {
+                0,""
+                    }
+                );
+
+                var data = SQLHelper<dynamic>.GetListData(dt, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        //_billImportDetailSerialNumberRepo;
+        //_billExportDetailSerialNumberRepo;
+        //_billExportTechDetailSerialRepo;
+        //_billImportTechDetailSerialRepo;
+
+        [HttpGet("serial-bill-import")]
+        [RequiresPermission("N27,N1,N33,N34,N69")]
+        public async Task<IActionResult> LoadSerialBillImport(int id)
+        {
+            try
+            {
+                var count = _billImportDetailSerialNumberRepo.GetAll(x => x.BillImportDetailID == id).Count();
+                return Ok(ApiResponseFactory.Success(count, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("serial-bill-export")]
+        [RequiresPermission("N27,N1,N33,N34,N69")]
+        public async Task<IActionResult> LoadSerialBillExport(int id)
+        {
+            try
+            {
+                var count = _billExportDetailSerialNumberRepo.GetAll(x => x.BillExportDetailID == id).Count();
+                return Ok(ApiResponseFactory.Success(count, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("serial-bill-import-tech")]
+        [RequiresPermission("N27,N1,N33,N34,N69")]
+        public async Task<IActionResult> LoadSerialBillImportTech(int id)
+        {
+            try
+            {
+                var count = _billImportTechDetailSerialRepo.GetAll(x => x.BillImportTechDetailID == id).Count();
+                return Ok(ApiResponseFactory.Success(count, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("serial-bill-export-tech")]
+        [RequiresPermission("N27,N1,N33,N34,N69")]
+        public async Task<IActionResult> LoadSerialBillExportTech(int id)
+        {
+            try
+            {
+                var count = _billExportTechDetailSerialRepo.GetAll(x => x.BillExportTechDetailID == id).Count();
+                return Ok(ApiResponseFactory.Success(count, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("data-serialnumber-tech")]
+        [RequiresPermission("N27,N1,N33,N34,N69")]
+        public IActionResult LoadData(int billId, int type, int warehouseId)
+        {
+            try
+            {
+                string procedureName = type == 1 ? "spGetBillImportTechDetailSerial" : "spGetBillExportTechDetailSerial";
+                string paramName = type == 1 ? "@BillImportTechDetail" : "@BillExportTechDetailID";
+                var dt = SQLHelper<dynamic>.ProcedureToList(
+                    procedureName,
+                    new string[]
+                    {
+                paramName, "@WarehouseID"
+                    },
+                    new object[]
+                    {
+                billId, warehouseId
+                    }
+                );
+
+                var data = SQLHelper<dynamic>.GetListData(dt, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("data-serialnumber")]
+        [RequiresPermission("N27,N1,N33,N34,N69")]
+        public IActionResult LoadData(int billId, int type)
+        {
+            try
+            {
+                string procedureName = type == 1 ? "spGetBillImportDetailSerialNumber" : "spGetBillExportDetailSerialNumber";
+                string paramName = type == 1 ? "@BillImportDetailID" : "@BillExportDetailID";
+                var dt = SQLHelper<dynamic>.ProcedureToList(
+                    procedureName,
+                    new string[]
+                    {
+                paramName
+                    },
+                    new object[]
+                    {
+                billId
+                    }
+                );
+
+                var data = SQLHelper<dynamic>.GetListData(dt, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("serialnumber-product")]
+        [RequiresPermission("N27,N1,N33,N34,N69")]
+        public IActionResult LoadDataProduct(int productID)
+        {
+            try
+            {
+                var dt = SQLHelper<dynamic>.ProcedureToList(
+                    "spGetSerialNumberBillImportByProductID",
+                    new string[]
+                    {
+                "@ProductID"
+                    },
+                    new object[]
+                    {
+                productID
+                    }
+                );
+
+                var data = SQLHelper<dynamic>.GetListData(dt, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("save-data-sale")]
+        [RequiresPermission("N27,N1,N33,N34,N69")]
+        public async Task<IActionResult> SaveData([FromBody] BillDetailSerialNumberDTO dto)
+        {
+            try
+            {
+                if (dto.type == 1)
+                {
+                    if (dto.billImportDetailSerialNumbers == null || !dto.billImportDetailSerialNumbers.Any())
+                    {
+                        return BadRequest(new { status = 0, message = "Danh sách đơn rỗng" });
+                    }
+
+                    foreach (var item in dto.billImportDetailSerialNumbers)
+                    {
+                        if (item.ID <= 0)
+                        {
+                            await _billImportDetailSerialNumberRepo.CreateAsync(item);
+                        }
+                        else
+                        {
+                            await _billImportDetailSerialNumberRepo.UpdateAsync(item);
+                        }
+                    }
+                }
+                else
+                {
+                    if (dto.billExportDetailSerialNumbers == null || !dto.billExportDetailSerialNumbers.Any())
+                    {
+                        return BadRequest(new { status = 0, message = "Danh sách đơn rỗng" });
+                    }
+
+                    foreach (var item in dto.billExportDetailSerialNumbers)
+                    {
+                        if (item.ID <= 0)
+                        {
+                            await _billExportDetailSerialNumberRepo.CreateAsync(item);
+                        }
+                        else
+                        {
+                            await _billExportDetailSerialNumberRepo.UpdateAsync(item);
+                        }
+                    }
+                }
+
+                if (dto.lsDeleted != null && dto.lsDeleted.Count() > 0)
+                {
+                    if (dto.type == 1)
+                    {
+                        foreach (var id in dto.lsDeleted)
+                        {
+                            await _billImportDetailSerialNumberRepo.DeleteAsync(id);
+                        }
+                    }
+                    else
+                    {
+                        foreach (var id in dto.lsDeleted)
+                        {
+                            await _billExportDetailSerialNumberRepo.DeleteAsync(id);
+                        }
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(null, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("save-data-tech")]
+        [RequiresPermission("N27,N1,N33,N34,N69")]
+        public async Task<IActionResult> SaveDataTech([FromBody] BillDetailSerialNumberDTO dto)
+        {
+            try
+            {
+                if (dto.type == 1)
+                {
+                    if (dto.billImportTechDetailSerials == null || !dto.billImportTechDetailSerials.Any())
+                    {
+                        return BadRequest(new { status = 0, message = "Danh sách nhập rỗng" });
+                    }
+
+                    foreach (var item in dto.billImportTechDetailSerials)
+                    {
+                        if (item.ID <= 0)
+                        {
+                            item.ID = 0;
+                            await _billImportTechDetailSerialRepo.CreateAsync(item);
+                        }
+                        else
+                        {
+                            await _billImportTechDetailSerialRepo.UpdateAsync(item);
+                        }
+
+                        var locations = _billImportDetailSerialNumberModulaLocationRepo.
+                            GetAll(x=> x.ModulaLocationDetailID ==  item.ModulaLocationDetailID
+                            && x.BillImportTechDetailSerialID == item.ID).ToList();
+                        if (locations.Count > 0) continue;
+
+                        BillImportDetailSerialNumberModulaLocation location = new BillImportDetailSerialNumberModulaLocation();
+
+                        location.ModulaLocationDetailID = item.ModulaLocationDetailID;
+                        location.Quantity = 1;
+                        location.BillImportTechDetailSerialID = item.ID;
+
+
+                        await _billImportDetailSerialNumberModulaLocationRepo.CreateAsync(location);
+
+                    }
+                }
+                else
+                {
+                    if (dto.billExportTechDetailSerials == null || !dto.billExportTechDetailSerials.Any())
+                    {
+                        return BadRequest(new { status = 0, message = "Danh sách xuất rỗng" });
+                    }
+
+                    foreach (var item in dto.billExportTechDetailSerials)
+                    {
+                        if (item.ID <= 0)
+                        {
+                            item.ID = 0;
+                            await _billExportTechDetailSerialRepo.CreateAsync(item);
+                        }
+                        else
+                        {
+                            await _billExportTechDetailSerialRepo.UpdateAsync(item);
+                        }
+
+                        var locations = _billExportDetailSerialNumberModulaLocationRepo.
+                            GetAll(x => x.ModulaLocationDetailID == item.ModulaLocationDetailID
+                            && x.BillExportDetailSerialNumberID == item.ID).ToList();
+                        if (locations.Count > 0) continue;
+
+                        BillExportDetailSerialNumberModulaLocation location = new BillExportDetailSerialNumberModulaLocation();
+
+                        location.ModulaLocationDetailID = item.ModulaLocationDetailID;
+                        location.Quantity = 1;
+                        location.BillExportDetailSerialNumberID = item.ID;
+
+
+                        await _billExportDetailSerialNumberModulaLocationRepo.CreateAsync(location);
+                    }
+
+                    
+                }
+
+                if (dto.lsDeleted != null && dto.lsDeleted.Count() > 0)
+                {
+                    if (dto.type == 1)
+                    {
+                        foreach (var id in dto.lsDeleted)
+                        {
+                            await _billImportTechDetailSerialRepo.DeleteAsync(id);
+                        }
+                    }
+                    else 
+                    {
+                        foreach (var id in dto.lsDeleted)
+                        {
+                            await _billExportTechDetailSerialRepo.DeleteAsync(id);
+                        }
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(null, ""));
             }
             catch (Exception ex)
             {
