@@ -1122,11 +1122,11 @@ public partial class RTCContext : DbContext
 
             entity.ToTable("AGVBillExportDetailSerial", "agv");
 
-            entity.Property(e => e.CreatedBy).HasMaxLength(100);
-            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-            entity.Property(e => e.SerialNumber).HasMaxLength(50);
-            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
-            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+            //entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            //entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            //entity.Property(e => e.SerialNumber).HasMaxLength(50);
+            //entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            //entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<AGVBillExportLog>(entity =>
@@ -1191,11 +1191,11 @@ public partial class RTCContext : DbContext
         {
             entity.ToTable("AGVBillImportDetailSerial", "agv");
 
-            entity.Property(e => e.CreatedBy).HasMaxLength(150);
-            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-            entity.Property(e => e.SerialNumber).HasMaxLength(50);
-            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
-            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+            //entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            //entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            //entity.Property(e => e.SerialNumber).HasMaxLength(50);
+            //entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            //entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<AGVBillImportDetailSerialNumber>(entity =>
