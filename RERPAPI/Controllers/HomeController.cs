@@ -66,7 +66,8 @@ namespace RERPAPI.Controllers
 
                 //1. Check user
                 string loginName = user.LoginName ?? "";
-                string password = MaHoaMD5.EncryptPassword(user.PasswordHash ?? "");
+                //string password = MaHoaMD5.EncryptPassword(user.PasswordHash ?? "");
+                string password = user.PasswordHash;
 
                 var login = SQLHelper<object>.ProcedureToList("spLogin", new string[] { "@LoginName", "@Password" }, new object[] { loginName, password });
                 var hasUsers = SQLHelper<object>.GetListData(login, 0);

@@ -118,8 +118,8 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         {
             try
             {
-                p.DateStart = p.DateStart.Value.Date;
-                p.DateEnd = p.DateEnd.Value.Date.AddDays(+1).AddSeconds(-1);
+                p.DateStart = p.DateStart.Value.ToLocalTime().Date;
+                p.DateEnd = p.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
 
                 var data = SQLHelper<object>.ProcedureToList("spGetPaymentOrder",
                             new string[] { "@PageNumber", "@PageSize", "@TypeOrder", "@PaymentOrderTypeID", "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@Keyword", "@IsIgnoreHR", "@IsApproved", "@IsSpecialOrder", "@ApprovedTBPID", "@Step", "@IsShowTable", "@Statuslog", "@IsDelete" },
