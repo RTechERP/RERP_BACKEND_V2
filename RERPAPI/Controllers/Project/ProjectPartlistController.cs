@@ -199,7 +199,11 @@ namespace RERPAPI.Controllers.Project
                     // Tạo mốc thời gian 3 tháng trước
                     var threeMonthsAgo = DateTime.Now.AddMonths(-3);
                     if (item.ID <= 0) continue;
-                    if (item.StatusPriceRequest > 0 && (item.DatePriceQuote == null || item.DatePriceQuote > threeMonthsAgo)) continue;
+                    var existingRequest = _priceRequestRepo.GetAll(x => x.ProjectPartListID == item.ID && x.IsDeleted == false)
+                                                              .OrderByDescending(x => x.StatusRequest)
+                                                              .FirstOrDefault();
+                   // if (item.StatusPriceRequest > 0 && (item.DatePriceQuote == null || item.DatePriceQuote > threeMonthsAgo)) continue;
+                    if (existingRequest != null && existingRequest.StatusRequest > 0 && (item.DatePriceQuote == null || item.DatePriceQuote > threeMonthsAgo)) continue;
 
                     // Cập nhật ProjectPartList (cả cha và con)
                     var partList = _projectPartlistRepo.GetByID(item.ID);
