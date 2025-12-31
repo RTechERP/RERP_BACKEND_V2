@@ -698,10 +698,12 @@ namespace RERPAPI.Controllers
                 bool isBGD = currentUser.DepartmentID == 1 && currentUser.EmployeeID != 54;
                 var firstDay = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
                 var lastDay = firstDay.AddMonths(1).AddDays(-1);
+                var ds = request.DateStart?.Date ?? firstDay;
+                var de = request.DateEnd?.Date.AddDays(1).AddSeconds(-1) ?? lastDay;
                 var approve = SQLHelper<dynamic>.ProcedureToList(
-                    "spGetApprovedByApprovedTP",
-                    new string[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID" },
-                    new object[] { request.FilterText ?? "", request.DateStart ?? firstDay, request.DateEnd ?? lastDay, request.IDApprovedTP ?? 0, request.Status ?? 0, request.DeleteFlag ?? 0, request.EmployeeID ?? 0, request.TType ?? 0, request.StatusHR ?? 0, request.StatusBGD ?? 0, isBGD, request.UserTeamID ?? 0 });
+                    "spGetApprovedByApprovedTP_New",
+                    new string[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID" ,"@StatusSenior"},
+                    new object[] { request.FilterText ?? "", ds , de, request.IDApprovedTP ?? 0, request.Status ?? 0, request.DeleteFlag ?? 0, request.EmployeeID ?? 0, request.TType ?? 0, request.StatusHR ?? 0, request.StatusBGD ?? 0, isBGD, request.UserTeamID ?? 0, request.SeniorID, request.StatusSenior });
 
                 var listData = SQLHelper<dynamic>.GetListData(approve, 0);
                 return Ok(ApiResponseFactory.Success(listData, "Lấy dữ liệu thành công"));
@@ -758,9 +760,9 @@ namespace RERPAPI.Controllers
             if ((item.Id ?? 0) <= 0)
                 return "ID không hợp lệ.";
 
-            // TableName có thể null nhưng string.Equals static handle được null, nên giữ nguyên cũng ok
-            if (!string.Equals(item.TableName, "EmployeeOvertime", StringComparison.OrdinalIgnoreCase))
-                return "Senior chỉ được duyệt cho đăng ký làm thêm (EmployeeOvertime).";
+            //// TableName có thể null nhưng string.Equals static handle được null, nên giữ nguyên cũng ok
+            //if (!string.Equals(item.TableName, "EmployeeOvertime", StringComparison.OrdinalIgnoreCase))
+            //    return "Senior chỉ được duyệt cho đăng ký làm thêm (EmployeeOvertime).";
 
             if (item.IsApprovedBGD == true)
                 return $"Nhân viên [{item.FullName}] đã được BGĐ duyệt, Senior không thể thay đổi.";
@@ -790,7 +792,7 @@ namespace RERPAPI.Controllers
                 var result = data.Cast<IDictionary<string, object>>().FirstOrDefault(x => x.ContainsKey("EmployeeID") && x["EmployeeID"] != null && Convert.ToInt32(x["EmployeeID"]) == item.EmployeeID);
 
 
-                return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
+                return Ok(ApiResponseFactory.Success(null, $"{isApprovedText} thành công"));
             }
             catch (Exception ex)
             {
@@ -807,7 +809,7 @@ namespace RERPAPI.Controllers
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Danh sách phê duyệt không được để trống!"));
                 }
-
+                
                 var notProcessed = new List<NotProcessedApprovalItem>();
 
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
@@ -833,7 +835,7 @@ namespace RERPAPI.Controllers
                   new object[] { item.TableName, item.FieldName, item.IsApprovedTP, item.Id, item.ValueUpdatedDate, item.ValueDecilineApprove ?? "", item.EvaluateResults });
 
                 }
-                return Ok(ApiResponseFactory.Success(notProcessed, notProcessed.Count == 0 ? "Duyệt thành công." : $"Duyệt thành công, bỏ qua {notProcessed.Count} bản ghi."));
+                return Ok(ApiResponseFactory.Success(notProcessed, notProcessed.Count == 0 ? "Cập nhật thành công." : $"Cập nhật thành công, bỏ qua {notProcessed.Count} bản ghi."));
             }
             catch (Exception ex)
             {
@@ -881,7 +883,7 @@ namespace RERPAPI.Controllers
                         new object[] { item.TableName, item.FieldName, item.IsApprovedTP.HasValue ? (item.IsApprovedTP.Value ? "1" : "0") : "0", item.Id, "", item.ValueUpdatedDate ?? "", item.ValueDecilineApprove ?? "", item.ReasonDeciline ?? "", item.EvaluateResults ?? "" });
 
                 }
-                return Ok(ApiResponseFactory.Success(notProcessed, notProcessed.Count == 0 ? "Duyệt thành công." : $"Duyệt thành công, bỏ qua {notProcessed.Count} bản ghi."));
+                return Ok(ApiResponseFactory.Success(notProcessed, notProcessed.Count == 0 ? "Cập nhật thành công." : $"Cập nhật thành công, bỏ qua {notProcessed.Count} bản ghi."));
             }
             catch (Exception ex)
             {
@@ -924,7 +926,7 @@ namespace RERPAPI.Controllers
 
                 }
 
-                return Ok(ApiResponseFactory.Success(notProcessed, notProcessed.Count == 0 ? "Duyệt thành công." : $"Duyệt thành công, bỏ qua {notProcessed.Count} bản ghi."));
+                return Ok(ApiResponseFactory.Success(notProcessed, notProcessed.Count == 0 ? "Cập nhật thành công." : $"Cập nhật thành công, bỏ qua {notProcessed.Count} bản ghi."));
             }
             catch (Exception ex)
             {
@@ -976,7 +978,7 @@ namespace RERPAPI.Controllers
                new[] { "@TableName", "@FieldName", "@Value", "@ID", "@ValueUpdatedDate", "@ValueDecilineApprove", "@EvaluateResults" },
                new object[] { item.TableName, item.FieldName, item.IsSeniorApproved, item.Id, item.ValueUpdatedDate, item.ValueDecilineApprove ?? "", item.EvaluateResults });
                 }
-                return Ok(ApiResponseFactory.Success(notProcessed, notProcessed.Count == 0 ? "Duyệt thành công." : $"Duyệt thành công, bỏ qua {notProcessed.Count} bản ghi."));
+                return Ok(ApiResponseFactory.Success(notProcessed, notProcessed.Count == 0 ? "Cập nhật thành công." : $"Cập nhậtthành công, bỏ qua {notProcessed.Count} bản ghi."));
             }
             catch (Exception ex)
             {
@@ -1226,5 +1228,48 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpPost("get-quantity-approve")]
+        public IActionResult GetQuantityApprove([FromBody] ApproveByApproveTPRequestParam request)
+            {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                bool isBGD = currentUser.DepartmentID == 1 && currentUser.EmployeeID != 54;
+
+                var firstDay = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+                var lastDay = firstDay.AddMonths(1).AddDays(-1);
+                var ds = request.DateStart?.Date ?? firstDay;
+                var de = request.DateEnd?.Date.AddDays(1).AddSeconds(-1) ?? lastDay;
+                var approveResultSenior = SQLHelper<dynamic>.ProcedureToList(
+                    "spGetApprovedByApprovedTP_New",
+                    new[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID", "@StatusSenior" },
+                    new object[] { "", ds, de, 0, -1, 0, 0, 0, -1, 0, false, 0, currentUser.EmployeeID ,0});
+                var approveResultTP = SQLHelper<dynamic>.ProcedureToList(
+                   "spGetApprovedByApprovedTP_New",
+                   new[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID" , "@StatusSenior" },
+                   new object[] { "", ds, de, currentUser.EmployeeID, 0, 0, 0, 0, -1, 0, false, 0, 0 ,-1});
+                var approveResultBGD = SQLHelper<dynamic>.ProcedureToList(
+                   "spGetApprovedByApprovedTP_New       ",
+                   new[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID", "@StatusSenior" },
+                   new object[] { "", ds, de, currentUser.EmployeeID, 0, 0, 0, 0, -1, 0, isBGD, 0, 0 ,-1});
+                var approveListSenior = SQLHelper<dynamic>.GetListData(approveResultSenior, 0);
+                var approveListTP = SQLHelper<dynamic>.GetListData(approveResultTP, 0);
+                var approveListBGD = SQLHelper<dynamic>.GetListData(approveResultBGD, 0);
+                var result = new[]
+                        {
+                            new { Type = "Senior", Count = approveListSenior?.Count ?? 0 },
+                            new { Type = "TP",     Count = approveListTP?.Count ?? 0 },
+                            new { Type = "BGD",    Count = approveListBGD?.Count ?? 0 }
+                        }.FirstOrDefault(x => x.Count > 0);
+                return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
     }
 }
