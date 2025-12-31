@@ -137,7 +137,7 @@ namespace RERPAPI.Controllers.HRM
         {
             try
             {
-                var approvedTBPs = _approvedRepo.GetAll(x => x.Type == 3 && x.IsDeleted != true);
+                var approvedTBPs = _approvedRepo.GetAll(x => x.Type == 1 && x.IsDeleted != true);
                
                 return Ok(ApiResponseFactory.Success(approvedTBPs, ""));
             }
