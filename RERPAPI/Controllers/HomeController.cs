@@ -444,7 +444,12 @@ namespace RERPAPI.Controllers
                         // Tạo tên file unique
                         var fileExtension = Path.GetExtension(file.FileName);
                         var originalFileName = Path.GetFileNameWithoutExtension(file.FileName);
-                        var uniqueFileName = $"{originalFileName}{fileExtension}";
+                       // var uniqueFileName = $"{originalFileName}{fileExtension}";
+
+
+
+                        // Tạo tên file unique để tránh trùng lặp
+                        var uniqueFileName = $"{originalFileName}_{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid().ToString("N")[..8]}{fileExtension}";
 
 
                         //var uniqueFileName = originalFileName;
@@ -465,6 +470,8 @@ namespace RERPAPI.Controllers
                             file.ContentType,
                             UploadTime = DateTime.Now
                         });
+
+
                     }
                 }
 
