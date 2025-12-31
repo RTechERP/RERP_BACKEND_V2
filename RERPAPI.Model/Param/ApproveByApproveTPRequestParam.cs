@@ -18,8 +18,10 @@ namespace RERPAPI.Model.Param
         public int? TType { get; set; }
         public int? StatusHR { get; set; }
         public int? StatusBGD { get; set; }
+        public int? StatusSenior { get; set; }
         public int? IsBGD { get; set; }
         public int? UserTeamID { get; set; }
+        public int? SeniorID { get; set; }
 
     }
 }
