@@ -56,4 +56,10 @@ public partial class EmployeeNighShift
     public bool? IsDeleted { get; set; }
 
     public decimal? WorkTime { get; set; }
+
+    public int? IsSeniorApproved { get; set; }
+
+    public int? ApprovedSeniorID { get; set; }
+
+    public DateTime? DateApprovedSenior { get; set; }
 }

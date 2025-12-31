@@ -44,4 +44,10 @@ public partial class EmployeeNoFingerprint
     public string? ReasonHREdit { get; set; }
 
     public bool? IsDeleted { get; set; }
+
+    public int? IsSeniorApproved { get; set; }
+
+    public int? ApprovedSeniorID { get; set; }
+
+    public DateTime? DateApprovedSenior { get; set; }
 }
