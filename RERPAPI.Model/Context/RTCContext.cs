@@ -576,6 +576,12 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<ModulaLocationDetail> ModulaLocationDetails { get; set; }
 
+    public virtual DbSet<Newsletter> Newsletters { get; set; }
+
+    public virtual DbSet<NewsletterFile> NewsletterFiles { get; set; }
+
+    public virtual DbSet<NewsletterType> NewsletterTypes { get; set; }
+
     public virtual DbSet<Notify> Notifies { get; set; }
 
     public virtual DbSet<Number> Numbers { get; set; }
@@ -5671,6 +5677,56 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
             entity.Property(e => e.Width).HasComment("Đơn vị chiều rộng theo mm");
+        });
+
+        modelBuilder.Entity<Newsletter>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK_Newsletters");
+
+            entity.ToTable("Newsletter");
+
+            entity.Property(e => e.Code)
+                .HasMaxLength(150)
+                .IsUnicode(false);
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.Image).IsUnicode(false);
+            entity.Property(e => e.Title).HasMaxLength(550);
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<NewsletterFile>(entity =>
+        {
+            entity.ToTable("NewsletterFile");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.FileName).HasMaxLength(550);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<NewsletterType>(entity =>
+        {
+            entity.ToTable("NewsletterType");
+
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.NewsletterTypeCode)
+                .HasMaxLength(150)
+                .IsUnicode(false);
+            entity.Property(e => e.NewsletterTypeName).HasMaxLength(550);
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<Notify>(entity =>
