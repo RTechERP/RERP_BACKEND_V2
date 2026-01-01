@@ -111,7 +111,7 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-
+                dateEnd = dateEnd.AddDays(1).AddSeconds(-1);
                 var dtPriceRequestResults = SQLHelper<dynamic>.ProcedureToList(
                     "spGetProjectPartlistPriceRequest_New",
                     new string[] {
@@ -661,7 +661,10 @@ namespace RERPAPI.Controllers.Project
                             resultFail.Add($"{item.ProductCode} đã được duyệt, không thể yêu cầu mua.");
                             continue;
                         }
-
+                        if (request.ProjectPartlistPriceRequestTypeID == 6)
+                        {
+                            requestModel.SupplierSaleID = item.SupplierSaleID ?? 0;
+                        }
                         // Map thông tin
                         requestModel.JobRequirementID = request.IsVPP ? 999999 : request.JobRequirementID;
                         requestModel.EmployeeID = request.EmployeeID;
@@ -674,6 +677,7 @@ namespace RERPAPI.Controllers.Project
                         requestModel.NoteHR = item.NoteHR;
                         if (request.ProjectPartlistPriceRequestTypeID == 4) requestModel.ProjectPartlistPurchaseRequestTypeID = 7;//mkt
                         else if (request.ProjectPartlistPriceRequestTypeID == 3) requestModel.ProjectPartlistPurchaseRequestTypeID = 6;//hr
+                        else if (request.ProjectPartlistPriceRequestTypeID == 6) requestModel.ProjectPartlistPurchaseRequestTypeID = 3;//demo
 
                         // Gán ProductSale & Unit
                         var productSale = productSaleRepo.GetAll(p =>
@@ -717,7 +721,7 @@ namespace RERPAPI.Controllers.Project
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex, "Có lỗi xảy ra khi xử lý yêu cầu mua."));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
