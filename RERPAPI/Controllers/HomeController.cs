@@ -704,14 +704,18 @@ namespace RERPAPI.Controllers
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
                 bool isBGD = currentUser.DepartmentID == 1 && currentUser.EmployeeID != 54;
-                var firstDay = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-                var lastDay = firstDay.AddMonths(1).AddDays(-1);
-                var ds = request.DateStart?.Date ?? firstDay;
-                var de = request.DateEnd?.Date.AddDays(1).AddSeconds(-1) ?? lastDay;
+                if(isBGD==true)
+                {
+                    request.IDApprovedTP = 0;
+                   
+                }    
+                request.DateStart = request.DateStart.Value.ToLocalTime().Date;
+                request.DateEnd = request.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
+             
                 var approve = SQLHelper<dynamic>.ProcedureToList(
                     "spGetApprovedByApprovedTP_New",
                     new string[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID" ,"@StatusSenior"},
-                    new object[] { request.FilterText ?? "", ds , de, request.IDApprovedTP ?? 0, request.Status ?? 0, request.DeleteFlag ?? 0, request.EmployeeID ?? 0, request.TType ?? 0, request.StatusHR ?? 0, request.StatusBGD ?? 0, isBGD, request.UserTeamID ?? 0, request.SeniorID, request.StatusSenior });
+                    new object[] { request.FilterText ?? "", request.DateStart, request.DateEnd, request.IDApprovedTP ?? 0, request.Status ?? 0, request.DeleteFlag ?? 0, request.EmployeeID ?? 0, request.TType ?? 0, request.StatusHR ?? 0, request.StatusBGD ?? 0, isBGD, request.UserTeamID ?? 0, request.SeniorID, request.StatusSenior });
 
                 var listData = SQLHelper<dynamic>.GetListData(approve, 0);
                 return Ok(ApiResponseFactory.Success(listData, "Lấy dữ liệu thành công"));
@@ -721,278 +725,278 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        private string? ValidateTBP(ApproveItemParam item, bool isApproved)
-        {
-            // Id là int? => ép về int
-            if ((item.Id ?? 0) <= 0)
-                return "ID không hợp lệ.";
+        //private string? ValidateTBP(ApproveItemParam item, bool isApproved)
+        //{
+        //    // Id là int? => ép về int
+        //    if ((item.ID ?? 0) <= 0)
+        //        return "ID không hợp lệ.";
 
-            if (item.DeleteFlag ?? false)
-                return $"Nhân viên [{item.FullName}] đã tự xoá khai báo, không thể duyệt / hủy duyệt.";
+        //    if (item.DeleteFlag ?? false)
+        //        return $"Nhân viên [{item.FullName}] đã tự xoá khai báo, không thể duyệt / hủy duyệt.";
 
-            // IsApprovedHR là bool? => ép về bool
-            if (!isApproved && (item.IsApprovedHR ?? false))
-                return $"Nhân viên [{item.FullName}] đã được HR duyệt, không thể hủy duyệt TBP.";
+        //    // IsApprovedHR là bool? => ép về bool
+        //    if (!isApproved && (item.IsApprovedHR ?? false))
+        //        return $"Nhân viên [{item.FullName}] đã được HR duyệt, không thể hủy duyệt TBP.";
 
-            // IsCancelRegister là int? => ép về int
-            if ((item.IsCancelRegister ?? 0) > 0)
-                return $"Nhân viên [{item.FullName}] đã đăng ký hủy, không thể duyệt / hủy duyệt.";
-
-
-
-            //if (!isApproved && !(item.IsApprovedTP ?? false))
-            //    return $"Nhân viên [{item.FullName}] chưa được TBP duyệt, không thể hủy duyệt.";
-
-            if (!isApproved && (item.IsApprovedBGD == true))
-                return $"Nhân viên [{item.FullName}] đã được BGĐ duyệt, không thể hủy duyệt TBP.";
-
-            return null;
-        }
-
-        private string? ValidateBgd(ApproveItemParam item, bool isApproved)
-        {
-            if ((item.Id ?? 0) <= 0)
-                return "ID không hợp lệ.";
-
-            if (!(item.IsApprovedHR ?? false))
-                return $"Nhân viên [{item.FullName}] chưa được HR duyệt, BGD không thể duyệt / hủy duyệt.";
+        //    // IsCancelRegister là int? => ép về int
+        //    if ((item.IsCancelRegister ) > 0)
+        //        return $"Nhân viên [{item.FullName}] đã đăng ký hủy, không thể duyệt / hủy duyệt.";
 
 
 
+        //    //if (!isApproved && !(item.IsApprovedTP ?? false))
+        //    //    return $"Nhân viên [{item.FullName}] chưa được TBP duyệt, không thể hủy duyệt.";
 
-            return null;
-        }
+        //    if (!isApproved && (item.IsApprovedBGD == true))
+        //        return $"Nhân viên [{item.FullName}] đã được BGĐ duyệt, không thể hủy duyệt TBP.";
 
-        private string? ValidateSenior(ApproveItemParam item, bool isApproved)
-        {
-            if ((item.Id ?? 0) <= 0)
-                return "ID không hợp lệ.";
+        //    return null;
+        //}
 
-            //// TableName có thể null nhưng string.Equals static handle được null, nên giữ nguyên cũng ok
-            //if (!string.Equals(item.TableName, "EmployeeOvertime", StringComparison.OrdinalIgnoreCase))
-            //    return "Senior chỉ được duyệt cho đăng ký làm thêm (EmployeeOvertime).";
+        //private string? ValidateBgd(ApproveItemParam item, bool isApproved)
+        //{
+        //    if ((item.ID ?? 0) <= 0)
+        //        return "ID không hợp lệ.";
 
-            if (item.IsApprovedBGD == true)
-                return $"Nhân viên [{item.FullName}] đã được BGĐ duyệt, Senior không thể thay đổi.";
-
-
-
-            //// Hủy duyệt mà chưa từng Senior duyệt
-            //if (isApproved==false && (item.IsSeniorApproved != true))
-            //    return $"Nhân viên [{item.FullName}] chưa được Senior duyệt, không thể hủy duyệt.";
-
-            return null;
-        }
-        [HttpPost("save-approve-senior")]
-        public async Task<IActionResult> SaveApproveSenior(ApproveItemParam item, bool isApproved)
-        {
-            try
-            {
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
-                string isApprovedText = isApproved ? "duyệt" : "hủy duyệt";
-                if (item == null)
-                {
-                    return BadRequest(ApiResponseFactory.Fail(null, $"Chưa có dữ liệu để {isApprovedText}"));
-                }
-                var dt = SQLHelper<dynamic>.ProcedureToList("spGetUserTeamLinkByLeaderID", new string[] { "@LeaderID" }, new object[] { currentUser.EmployeeID });
-                var data = SQLHelper<object>.GetListData(dt, 0);
-                var result = data.Cast<IDictionary<string, object>>().FirstOrDefault(x => x.ContainsKey("EmployeeID") && x["EmployeeID"] != null && Convert.ToInt32(x["EmployeeID"]) == item.EmployeeID);
+        //    if (!(item.IsApprovedHR ?? false))
+        //        return $"Nhân viên [{item.FullName}] chưa được HR duyệt, BGD không thể duyệt / hủy duyệt.";
 
 
-                return Ok(ApiResponseFactory.Success(null, $"{isApprovedText} thành công"));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-        [RequiresPermission("N32")]
-        [HttpPost("approve-tbp")]
-        public IActionResult ApproveTBP([FromBody] ApproveRequestParam request)
-        {
-            try
-            {
-                if (request == null || request.Items == null || request.Items.Count == 0)
-                {
-                    return BadRequest(ApiResponseFactory.Fail(null, "Danh sách phê duyệt không được để trống!"));
-                }
+
+
+        //    return null;
+        //}
+
+        //private string? ValidateSenior(ApproveItemParam item, bool isApproved)
+        //{
+        //    if ((item.ID ?? 0) <= 0)
+        //        return "ID không hợp lệ.";
+
+        //    //// TableName có thể null nhưng string.Equals static handle được null, nên giữ nguyên cũng ok
+        //    //if (!string.Equals(item.TableName, "EmployeeOvertime", StringComparison.OrdinalIgnoreCase))
+        //    //    return "Senior chỉ được duyệt cho đăng ký làm thêm (EmployeeOvertime).";
+
+        //    if (item.IsApprovedBGD == true)
+        //        return $"Nhân viên [{item.FullName}] đã được BGĐ duyệt, Senior không thể thay đổi.";
+
+
+
+        //    //// Hủy duyệt mà chưa từng Senior duyệt
+        //    //if (isApproved==false && (item.IsSeniorApproved != true))
+        //    //    return $"Nhân viên [{item.FullName}] chưa được Senior duyệt, không thể hủy duyệt.";
+
+        //    return null;
+        //}
+        //[HttpPost("save-approve-senior")]
+        //public async Task<IActionResult> SaveApproveSenior(ApproveItemParam item, bool isApproved)
+        //{
+        //    try
+        //    {
+        //        var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+        //        CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+        //        string isApprovedText = isApproved ? "duyệt" : "hủy duyệt";
+        //        if (item == null)
+        //        {
+        //            return BadRequest(ApiResponseFactory.Fail(null, $"Chưa có dữ liệu để {isApprovedText}"));
+        //        }
+        //        var dt = SQLHelper<dynamic>.ProcedureToList("spGetUserTeamLinkByLeaderID", new string[] { "@LeaderID" }, new object[] { currentUser.EmployeeID });
+        //        var data = SQLHelper<object>.GetListData(dt, 0);
+        //        var result = data.Cast<IDictionary<string, object>>().FirstOrDefault(x => x.ContainsKey("EmployeeID") && x["EmployeeID"] != null && Convert.ToInt32(x["EmployeeID"]) == item.EmployeeID);
+
+
+        //        return Ok(ApiResponseFactory.Success(null, $"{isApprovedText} thành công"));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
+        //[RequiresPermission("N32")]
+        //[HttpPost("approve-tbp")]
+        //public IActionResult ApproveTBP([FromBody] ApproveRequestParam request)
+        //{
+        //    try
+        //    {
+        //        if (request == null || request.Items == null || request.Items.Count == 0)
+        //        {
+        //            return BadRequest(ApiResponseFactory.Fail(null, "Danh sách phê duyệt không được để trống!"));
+        //        }
                 
-                var notProcessed = new List<NotProcessedApprovalItem>();
+        //        var notProcessed = new List<NotProcessedApprovalItem>();
 
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                var currentUser = ObjectMapper.GetCurrentUser(claims);
+        //        var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+        //        var currentUser = ObjectMapper.GetCurrentUser(claims);
 
-                foreach (var item in request.Items)
-                {
-                    var error = ValidateTBP(item, request.IsApproved ?? false);
-                    if (error != null)
-                    {
-                        notProcessed.Add(new NotProcessedApprovalItem
-                        {
-                            Item = item,
-                            Reason = error
-                        });
-                        continue;
+        //        foreach (var item in request.Items)
+        //        {
+        //            var error = ValidateTBP(item, request.IsApproved ?? false);
+        //            if (error != null)
+        //            {
+        //                notProcessed.Add(new NotProcessedApprovalItem
+        //                {
+        //                    Item = item,
+        //                    Reason = error
+        //                });
+        //                continue;
 
-                    }
+        //            }
 
-                    SQLHelper<object>.ExcuteProcedure(
-                  "spUpdateTableByFieldNameAndID",
-                  new[] { "@TableName", "@FieldName", "@Value", "@ID", "@ValueUpdatedDate", "@ValueDecilineApprove", "@EvaluateResults" },
-                  new object[] { item.TableName, item.FieldName, item.IsApprovedTP, item.Id, item.ValueUpdatedDate, item.ValueDecilineApprove ?? "", item.EvaluateResults });
+        //            SQLHelper<object>.ExcuteProcedure(
+        //          "spUpdateTableByFieldNameAndID",
+        //          new[] { "@TableName", "@FieldName", "@Value", "@ID", "@ValueUpdatedDate", "@ValueDecilineApprove", "@EvaluateResults" },
+        //          new object[] { item.TableName, item.FieldName, item.IsApprovedTP, item.ID, item.ValueUpdatedDate, item.ValueDecilineApprove ?? "", item.EvaluateResults });
 
-                }
-                return Ok(ApiResponseFactory.Success(notProcessed, notProcessed.Count == 0 ? "Cập nhật thành công." : $"Cập nhật thành công, bỏ qua {notProcessed.Count} bản ghi."));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-        [RequiresPermission("N32")]
-        [HttpPost("un-approve-tbp")]
-        public IActionResult UnApproveTBP([FromBody] ApproveRequestParam request)
-        {
-            try
-            {
-                if (request == null || request.Items == null || request.Items.Count == 0)
-                {
-                    return BadRequest(ApiResponseFactory.Fail(null, "Danh sách phê duyệt không được để trống!"));
-                }
+        //        }
+        //        return Ok(ApiResponseFactory.Success(notProcessed, notProcessed.Count == 0 ? "Cập nhật thành công." : $"Cập nhật thành công, bỏ qua {notProcessed.Count} bản ghi."));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
+        //[RequiresPermission("N32")]
+        //[HttpPost("un-approve-tbp")]
+        //public IActionResult UnApproveTBP([FromBody] ApproveRequestParam request)
+        //{
+        //    try
+        //    {
+        //        if (request == null || request.Items == null || request.Items.Count == 0)
+        //        {
+        //            return BadRequest(ApiResponseFactory.Fail(null, "Danh sách phê duyệt không được để trống!"));
+        //        }
 
-                var notProcessed = new List<NotProcessedApprovalItem>();
+        //        var notProcessed = new List<NotProcessedApprovalItem>();
 
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                var currentUser = ObjectMapper.GetCurrentUser(claims);
+        //        var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+        //        var currentUser = ObjectMapper.GetCurrentUser(claims);
 
-                foreach (var item in request.Items)
-                {
-                    if (item.TableName == "EmployeeWFH")
-                    {
-                        item.FieldName = "IsApproved";
-                    }
-                    if (item.TableName == "EmployeeOvertime")
-                    {
-                        item.FieldName = "IsApproved";
-                    }
-                    var error = ValidateTBP(item, request.IsApproved ?? false);
-                    if (error != null)
-                    {
-                        notProcessed.Add(new NotProcessedApprovalItem
-                        {
-                            Item = item,
-                            Reason = error
-                        });
-                        continue;
+        //        foreach (var item in request.Items)
+        //        {
+        //            if (item.TableName == "EmployeeWFH")
+        //            {
+        //                item.FieldName = "IsApproved";
+        //            }
+        //            if (item.TableName == "EmployeeOvertime")
+        //            {
+        //                item.FieldName = "IsApproved";
+        //            }
+        //            var error = ValidateTBP(item, request.IsApproved ?? false);
+        //            if (error != null)
+        //            {
+        //                notProcessed.Add(new NotProcessedApprovalItem
+        //                {
+        //                    Item = item,
+        //                    Reason = error
+        //                });
+        //                continue;
 
-                    }
-                    SQLHelper<object>.ExcuteProcedure("spUpdateTableByFieldNameAndID", new[] { "@TableName", "@FieldName", "@Value", "@ID", "@ValueUpdatedBy", "@ValueUpdatedDate", "@ValueDecilineApprove", "@Content", "@EvaluateResults" },
-                        new object[] { item.TableName, item.FieldName, item.IsApprovedTP.HasValue ? (item.IsApprovedTP.Value ? "1" : "0") : "0", item.Id, "", item.ValueUpdatedDate ?? "", item.ValueDecilineApprove ?? "", item.ReasonDeciline ?? "", item.EvaluateResults ?? "" });
+        //            }
+        //            SQLHelper<object>.ExcuteProcedure("spUpdateTableByFieldNameAndID", new[] { "@TableName", "@FieldName", "@Value", "@ID", "@ValueUpdatedBy", "@ValueUpdatedDate", "@ValueDecilineApprove", "@Content", "@EvaluateResults" },
+        //                new object[] { item.TableName, item.FieldName, item.IsApprovedTP.HasValue ? (item.IsApprovedTP.Value ? "1" : "0") : "0", item.ID, "", item.ValueUpdatedDate ?? "", item.ValueDecilineApprove ?? "", item.ReasonDeciline ?? "", item.EvaluateResults ?? "" });
 
-                }
-                return Ok(ApiResponseFactory.Success(notProcessed, notProcessed.Count == 0 ? "Cập nhật thành công." : $"Cập nhật thành công, bỏ qua {notProcessed.Count} bản ghi."));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-        [RequiresPermission("N1")]
-        [HttpPost("approve-bgd")]
-        public IActionResult ApproveBGD([FromBody] ApproveRequestParam request)
-        {
-            try
-            {
-                if (request == null || request.Items == null || request.Items.Count == 0)
-                {
-                    return BadRequest(ApiResponseFactory.Fail(null, "Danh sách phê duyệt không được để trống!"));
-                }
+        //        }
+        //        return Ok(ApiResponseFactory.Success(notProcessed, notProcessed.Count == 0 ? "Cập nhật thành công." : $"Cập nhật thành công, bỏ qua {notProcessed.Count} bản ghi."));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
+        //[RequiresPermission("N1")]
+        //[HttpPost("approve-bgd")]
+        //public IActionResult ApproveBGD([FromBody] ApproveRequestParam request)
+        //{
+        //    try
+        //    {
+        //        if (request == null || request.Items == null || request.Items.Count == 0)
+        //        {
+        //            return BadRequest(ApiResponseFactory.Fail(null, "Danh sách phê duyệt không được để trống!"));
+        //        }
 
-                var notProcessed = new List<NotProcessedApprovalItem>();
+        //        var notProcessed = new List<NotProcessedApprovalItem>();
 
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                var currentUser = ObjectMapper.GetCurrentUser(claims);
+        //        var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+        //        var currentUser = ObjectMapper.GetCurrentUser(claims);
 
-                foreach (var item in request.Items)
-                {
-                    var error = ValidateBgd(item, request.IsApproved ?? false);
-                    if (error != null)
-                    {
-                        notProcessed.Add(new NotProcessedApprovalItem
-                        {
-                            Item = item,
-                            Reason = error
-                        });
-                        continue;
-                    }
-                    SQLHelper<object>.ExcuteProcedure(
-               "spUpdateTableByFieldNameAndID",
-               new[] { "@TableName", "@FieldName", "@Value", "@ID", "@ValueUpdatedDate", "@ValueDecilineApprove", "@EvaluateResults" },
-               new object[] { item.TableName, item.FieldName, request.IsApproved, item.Id, item.ValueUpdatedDate, item.ValueDecilineApprove ?? "", item.EvaluateResults }
-           );
+        //        foreach (var item in request.Items)
+        //        {
+        //            var error = ValidateBgd(item, request.IsApproved ?? false);
+        //            if (error != null)
+        //            {
+        //                notProcessed.Add(new NotProcessedApprovalItem
+        //                {
+        //                    Item = item,
+        //                    Reason = error
+        //                });
+        //                continue;
+        //            }
+        //            SQLHelper<object>.ExcuteProcedure(
+        //       "spUpdateTableByFieldNameAndID",
+        //       new[] { "@TableName", "@FieldName", "@Value", "@ID", "@ValueUpdatedDate", "@ValueDecilineApprove", "@EvaluateResults" },
+        //       new object[] { item.TableName, item.FieldName, request.IsApproved, item.ID, item.ValueUpdatedDate, item.ValueDecilineApprove ?? "", item.EvaluateResults }
+        //   );
 
-                }
+        //        }
 
-                return Ok(ApiResponseFactory.Success(notProcessed, notProcessed.Count == 0 ? "Cập nhật thành công." : $"Cập nhật thành công, bỏ qua {notProcessed.Count} bản ghi."));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-        [RequiresPermission("N85")]
-        [HttpPost("approve-senior")]
-        public IActionResult ApproveSenior([FromBody] ApproveRequestParam
-            request)
-        {
-            try
-            {
-                if (request == null || request.Items == null || request.Items.Count == 0)
-                {
-                    return BadRequest(ApiResponseFactory.Fail(null, "Danh sách phê duyệt không được để trống!"));
-                }
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                var currentUser = ObjectMapper.GetCurrentUser(claims);
-                int seniorId = currentUser.EmployeeID;
-                var notProcessed = new List<NotProcessedApprovalItem>();
-                var dt = SQLHelper<dynamic>.ProcedureToList("spGetUserTeamLinkByLeaderID", new string[] { "@LeaderID" }, new object[] { currentUser.EmployeeID });
-                var data = SQLHelper<object>.GetListData(dt, 0);
-                var teamEmployeeIds = data.Cast<IDictionary<string, object>>().Where(x => x.ContainsKey("EmployeeID") && x["EmployeeID"] != null).Select(x => Convert.ToInt32(x["EmployeeID"])).ToHashSet(); // 
-                                                                                                                                                                                                             //   var result = data.Cast<IDictionary<string, object>>().FirstOrDefault(x => x.ContainsKey("EmployeeID") && x["EmployeeID"] != null && Convert.ToInt32(x["EmployeeID"]) == request.Items.EmployeeID);
-                foreach (var item in request.Items)
-                {
-                    if (!item.EmployeeID.HasValue || !teamEmployeeIds.Contains(item.EmployeeID.Value))
-                    {
-                        notProcessed.Add(new NotProcessedApprovalItem
-                        {
-                            Item = item,
-                            Reason = "Nhân viên không thuộc team của bạn"
-                        });
-                        continue;
-                    }
-                    var error = ValidateSenior(item, request.IsApproved ?? false);
-                    if (error != null)
-                    {
-                        notProcessed.Add(new NotProcessedApprovalItem
-                        {
-                            Item = item,
-                            Reason = error
-                        });
-                        continue;
-                    }
-                    SQLHelper<object>.ExcuteProcedure(
-               "spUpdateTableByFieldNameAndID",
-               new[] { "@TableName", "@FieldName", "@Value", "@ID", "@ValueUpdatedDate", "@ValueDecilineApprove", "@EvaluateResults" },
-               new object[] { item.TableName, item.FieldName, item.IsSeniorApproved, item.Id, item.ValueUpdatedDate, item.ValueDecilineApprove ?? "", item.EvaluateResults });
-                }
-                return Ok(ApiResponseFactory.Success(notProcessed, notProcessed.Count == 0 ? "Cập nhật thành công." : $"Cập nhậtthành công, bỏ qua {notProcessed.Count} bản ghi."));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
+        //        return Ok(ApiResponseFactory.Success(notProcessed, notProcessed.Count == 0 ? "Cập nhật thành công." : $"Cập nhật thành công, bỏ qua {notProcessed.Count} bản ghi."));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
+        //[RequiresPermission("N85")]
+        //[HttpPost("approve-senior")]
+        //public IActionResult ApproveSenior([FromBody] ApproveRequestParam
+        //    request)
+        //{
+        //    try
+        //    {
+        //        if (request == null || request.Items == null || request.Items.Count == 0)
+        //        {
+        //            return BadRequest(ApiResponseFactory.Fail(null, "Danh sách phê duyệt không được để trống!"));
+        //        }
+        //        var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+        //        var currentUser = ObjectMapper.GetCurrentUser(claims);
+        //        int seniorId = currentUser.EmployeeID;
+        //        var notProcessed = new List<NotProcessedApprovalItem>();
+        //        var dt = SQLHelper<dynamic>.ProcedureToList("spGetUserTeamLinkByLeaderID", new string[] { "@LeaderID" }, new object[] { currentUser.EmployeeID });
+        //        var data = SQLHelper<object>.GetListData(dt, 0);
+        //        var teamEmployeeIds = data.Cast<IDictionary<string, object>>().Where(x => x.ContainsKey("EmployeeID") && x["EmployeeID"] != null).Select(x => Convert.ToInt32(x["EmployeeID"])).ToHashSet(); // 
+        //                                                                                                                                                                                                     //   var result = data.Cast<IDictionary<string, object>>().FirstOrDefault(x => x.ContainsKey("EmployeeID") && x["EmployeeID"] != null && Convert.ToInt32(x["EmployeeID"]) == request.Items.EmployeeID);
+        //        foreach (var item in request.Items)
+        //        {
+        //            if ( !teamEmployeeIds.Contains(item.EmployeeID ?? 0))
+        //            {
+        //                notProcessed.Add(new NotProcessedApprovalItem   
+        //                {
+        //                    Item = item,
+        //                    Reason = "Nhân viên không thuộc team của bạn"
+        //                });
+        //                continue;
+        //            }
+        //            var error = ValidateSenior(item, request.IsApproved ?? false);
+        //            if (error != null)
+        //            {
+        //                notProcessed.Add(new NotProcessedApprovalItem
+        //                {
+        //                    Item = item,
+        //                    Reason = error
+        //                });
+        //                continue;
+        //            }
+        //            SQLHelper<object>.ExcuteProcedure(
+        //       "spUpdateTableByFieldNameAndID",
+        //       new[] { "@TableName", "@FieldName", "@Value", "@ID", "@ValueUpdatedDate", "@ValueDecilineApprove", "@EvaluateResults" },
+        //       new object[] { item.TableName, item.FieldName, item.IsSeniorApproved, item.ID, item.ValueUpdatedDate, item.ValueDecilineApprove ?? "", item.EvaluateResults });
+        //        }
+        //        return Ok(ApiResponseFactory.Success(notProcessed, notProcessed.Count == 0 ? "Cập nhật thành công." : $"Cập nhậtthành công, bỏ qua {notProcessed.Count} bản ghi."));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
         [HttpGet("get-personal-synthetic-by-month")]
         public IActionResult GetPersonalSyntheticByMonth(int year, int month)
         {
@@ -1017,8 +1021,6 @@ namespace RERPAPI.Controllers
                 var rawFingerData = SQLHelper<dynamic>.ProcedureToList("spGetEmployeeAttendance",
                     new string[] { "@DepartmentID", "@EmployeeID", "@FindText", "@DateStart", "@DateEnd" },
                     new object[] { currentUser.DepartmentID, currentUser.EmployeeID, "", dateStart, dateEnd });
-
-
                 var listFingerDetails = SQLHelper<object>.GetListData(rawFingerData, 0);
 
                 var summaryFinger = SQLHelper<object>.GetListData(rawFingerData, 1).FirstOrDefault();
@@ -1032,8 +1034,6 @@ namespace RERPAPI.Controllers
                 var rawChamCongData = SQLHelper<dynamic>.ProcedureToList("spGetChamCongNew",
                     new string[] { "@Month", "@Year", "@EmployeeID" },
                     new object[] { month, year, currentUser.EmployeeID });
-
-
                 var chamcongInfo = SQLHelper<object>.GetListData(rawChamCongData, 0).FirstOrDefault();
                 var dynamicListTable1 = SQLHelper<dynamic>.GetListData(rawChamCongData, 1);
                 var rowChamCongChiTiet = dynamicListTable1 != null ? dynamicListTable1.FirstOrDefault() : null;
@@ -1246,22 +1246,20 @@ namespace RERPAPI.Controllers
 
                 bool isBGD = currentUser.DepartmentID == 1 && currentUser.EmployeeID != 54;
 
-                var firstDay = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-                var lastDay = firstDay.AddMonths(1).AddDays(-1);
-                var ds = request.DateStart?.Date ?? firstDay;
-                var de = request.DateEnd?.Date.AddDays(1).AddSeconds(-1) ?? lastDay;
+                request.DateStart = request.DateStart.Value.ToLocalTime().Date;
+                request.DateEnd = request.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
                 var approveResultSenior = SQLHelper<dynamic>.ProcedureToList(
                     "spGetApprovedByApprovedTP_New",
                     new[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID", "@StatusSenior" },
-                    new object[] { "", ds, de, 0, -1, 0, 0, 0, -1, 0, false, 0, currentUser.EmployeeID ,0});
+                    new object[] { "", request.DateStart, request.DateEnd, 0, -1, 0, 0, 0, -1, 0, false, 0, currentUser.EmployeeID ,0});
                 var approveResultTP = SQLHelper<dynamic>.ProcedureToList(
                    "spGetApprovedByApprovedTP_New",
                    new[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID" , "@StatusSenior" },
-                   new object[] { "", ds, de, currentUser.EmployeeID, 0, 0, 0, 0, -1, 0, false, 0, 0 ,-1});
+                   new object[] { "", request.DateStart, request.DateEnd, currentUser.EmployeeID, 0, 0, 0, 0, -1, 0, false, 0, 0 ,-1});
                 var approveResultBGD = SQLHelper<dynamic>.ProcedureToList(
                    "spGetApprovedByApprovedTP_New       ",
                    new[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID", "@StatusSenior" },
-                   new object[] { "", ds, de, currentUser.EmployeeID, 0, 0, 0, 0, -1, 0, isBGD, 0, 0 ,-1});
+                   new object[] { "", request.DateStart, request.DateEnd, currentUser.EmployeeID, 0, 0, 0, 0, -1, 0, isBGD, 0, 0 ,-1});
                 var approveListSenior = SQLHelper<dynamic>.GetListData(approveResultSenior, 0);
                 var approveListTP = SQLHelper<dynamic>.GetListData(approveResultTP, 0);
                 var approveListBGD = SQLHelper<dynamic>.GetListData(approveResultBGD, 0);
@@ -1271,13 +1269,54 @@ namespace RERPAPI.Controllers
                             new { Type = "TP",     Count = approveListTP?.Count ?? 0 },
                             new { Type = "BGD",    Count = approveListBGD?.Count ?? 0 }
                         }.FirstOrDefault(x => x.Count > 0);
-                return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu thành công"));
+                    return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        //[HttpPost("save-approve")]
+        //public IActionResult GetQuantityApprove([FromBody] ApproveByApproveTPRequestParam request)
+        //{
+        //    try
+        //    {
+        //        var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+        //        var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+        //        bool isBGD = currentUser.DepartmentID == 1 && currentUser.EmployeeID != 54;
+
+        //        request.DateStart = request.DateStart.Value.ToLocalTime().Date;
+        //        request.DateEnd = request.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
+        //        var approveResultSenior = SQLHelper<dynamic>.ProcedureToList(
+        //            "spGetApprovedByApprovedTP_New",
+        //            new[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID", "@StatusSenior" },
+        //            new object[] { "", request.DateStart, request.DateEnd, 0, -1, 0, 0, 0, -1, 0, false, 0, currentUser.EmployeeID, 0 });
+        //        var approveResultTP = SQLHelper<dynamic>.ProcedureToList(
+        //           "spGetApprovedByApprovedTP_New",
+        //           new[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID", "@StatusSenior" },
+        //           new object[] { "", request.DateStart, request.DateEnd, currentUser.EmployeeID, 0, 0, 0, 0, -1, 0, false, 0, 0, -1 });
+        //        var approveResultBGD = SQLHelper<dynamic>.ProcedureToList(
+        //           "spGetApprovedByApprovedTP_New       ",
+        //           new[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID", "@StatusSenior" },
+        //           new object[] { "", request.DateStart, request.DateEnd, currentUser.EmployeeID, 0, 0, 0, 0, -1, 0, isBGD, 0, 0, -1 });
+        //        var approveListSenior = SQLHelper<dynamic>.GetListData(approveResultSenior, 0);
+        //        var approveListTP = SQLHelper<dynamic>.GetListData(approveResultTP, 0);
+        //        var approveListBGD = SQLHelper<dynamic>.GetListData(approveResultBGD, 0);
+        //        var result = new[]
+        //                {
+        //                    new { Type = "Senior", Count = approveListSenior?.Count ?? 0 },
+        //                    new { Type = "TP",     Count = approveListTP?.Count ?? 0 },
+        //                    new { Type = "BGD",    Count = approveListBGD?.Count ?? 0 }
+        //                }.FirstOrDefault(x => x.Count > 0);
+        //        return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu thành công"));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
+     
 
     }
 }
