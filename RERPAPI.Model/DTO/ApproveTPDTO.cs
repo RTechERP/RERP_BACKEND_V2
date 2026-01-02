@@ -10,7 +10,7 @@ namespace RERPAPI.Model.DTO
     {
         public class ApproveItemParam
         {
-            public int? Id { get; set; }
+            public int? ID { get; set; }
             public string? TableName { get; set; } = "";
             public string? ValueUpdatedDate { get; set; } = "";
             public string? ValueDecilineApprove { get; set; } = "";
