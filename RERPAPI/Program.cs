@@ -164,6 +164,7 @@ builder.Services.AddScoped<PONCCDetailRepo>();
 builder.Services.AddScoped<PONCCDetailRequestBuyRepo>();
 builder.Services.AddScoped<PONCCRepo>();
 builder.Services.AddScoped<PONCCRulePayRepo>();
+builder.Services.AddScoped<PONCCHistoryRepo>();
 builder.Services.AddScoped<PositionContractRepo>();
 builder.Services.AddScoped<PositionInternalRepo>();
 builder.Services.AddScoped<ProductGroupRTCRepo>();
