@@ -165,8 +165,13 @@ namespace RERPAPI.Controllers
             var type = typeof(T);
             typeof(T).GetProperty("ID")?.SetValue(e, item.ID);
             SetApproveValue(e, "IsSeniorApproved", item.IsSeniorApproved);
-                
-
+            var prop = type.GetProperty("DateApprovedSenitor");
+            if (prop != null && prop.CanWrite)
+            {
+                prop.SetValue(e, DateTime.Now);
+            }
+            if (item.ApprovedSeniorID != null)
+                type.GetProperty("ApprovedSeniorID")?.SetValue(e, item.ApprovedSeniorID);
             return e;
         }
         private static T MapApproveTP<T>(ApproveItemParam item, bool isApproved)where T : class, new()
@@ -406,6 +411,7 @@ namespace RERPAPI.Controllers
             {
                 try
                 {
+                    item.ApprovedSeniorID = currentUser.EmployeeID;
                     var error = ValidateSenior(item, request.IsApproved ?? false);
                     if (error != null)
                     {
