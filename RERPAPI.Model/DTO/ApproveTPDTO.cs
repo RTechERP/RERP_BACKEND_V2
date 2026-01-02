@@ -28,7 +28,8 @@ namespace RERPAPI.Model.DTO
             public string? ReasonDeciline { get; set; }
             public int? TType { get; set; }           
 
-            public bool? IsSeniorApproved { get; set; } 
+            public bool? IsSeniorApproved { get; set; }
+          public int? ApprovedSeniorID { get; set; }
         }
 
         public class ApproveRequestParam

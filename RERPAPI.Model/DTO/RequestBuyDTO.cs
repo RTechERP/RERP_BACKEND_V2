@@ -60,6 +60,7 @@
         /// </summary>
         public string UnitName { get; set; } = "";
         public string Maker { get; set; } = "";
+        public int? SupplierSaleID { get; set; }
     }
 
 }
