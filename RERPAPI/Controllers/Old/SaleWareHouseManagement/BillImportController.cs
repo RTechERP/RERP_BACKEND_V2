@@ -473,6 +473,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
                 foreach (var dto in dtos)
                 {
                     var (isValid, errorMessage) = await ValidateBillImport(dto);
@@ -580,34 +582,35 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                             };
                             await _inventoryRepo.CreateAsync(inventory);
                         }
-                        List<InvoiceDTO> lst = listInvoice.Where(p => p.IdMapping == detail.STT).ToList();
-                        // await _invoiceLinkRepo.DeleteByAttributeAsync("BillImportDetailID", (int?)detail.ID);
-                        var invoicelink = _invoiceLinkRepo.GetAll(p => p.BillImportDetailID == detail.ID).FirstOrDefault();
-                        if (invoicelink != null)
-                        {
-                            invoicelink.IsDeleted = true;
-                            _invoiceLinkRepo.Update(invoicelink);
-                        }
-                        foreach (InvoiceDTO item in lst)
-                        {
-                            foreach (InvoiceLink model in item.Details)
-                            {
-                                model.BillImportDetailID = detail.ID;
-                                //InvoiceBO.Instance.Insert(model);
-                                _invoiceLinkRepo.Create(model);
-                            }
-                        }
+                        //List<InvoiceDTO> lst = listInvoice.Where(p => p.IdMapping == detail.STT).ToList();
+                        //// await _invoiceLinkRepo.DeleteByAttributeAsync("BillImportDetailID", (int?)detail.ID);
+                        //var invoicelink = _invoiceLinkRepo.GetAll(p => p.BillImportDetailID == detail.ID).FirstOrDefault();
+                        //if (invoicelink != null)
+                        //{
+                        //    invoicelink.IsDeleted = true;
+                        //    _invoiceLinkRepo.Update(invoicelink);
+                        //}
+                        //foreach (InvoiceDTO item in lst)
+                        //{
+                        //    foreach (InvoiceLink model in item.Details)
+                        //    {
+                        //        model.BillImportDetailID = detail.ID;
+                        //        //InvoiceBO.Instance.Insert(model);
+                        //        _invoiceLinkRepo.Create(model);
+                        //    }
+                        //}
 
-                        // Cập nhật trạng thái
-                        SQLHelper<dynamic>.ExcuteProcedure("spUpdateReturnedStatusForBillExportDetail",
-                            new string[] { "@BillImportID", "@Approved" },
-                            new object[] { detail.BillImportID ?? billImportId, 0 });
-                        var listDetails = _billImportDetailRepo.GetAll(x => x.BillImportID == detail.BillImportID);
-                        string poNCCDetailID = string.Join(",", listDetails.Select(x => x.PONCCDetailID));
-                        SQLHelper<dynamic>.ExcuteProcedure("spUpdateStatusPONCC",
-                            new string[] { "@PONCCDetailID" },
-                            new object[] { poNCCDetailID });
+
                     }
+                    // Cập nhật trạng thái
+                    SQLHelper<dynamic>.ExcuteProcedure("spUpdateReturnedStatusForBillExportDetail",
+                        new string[] { "@BillImportID", "@Approved" },
+                        new object[] { dto.billImport.ID, 0 });
+                    var listDetails = _billImportDetailRepo.GetAll(x => x.BillImportID == dto.billImport.ID);
+                    string poNCCDetailID = string.Join(",", listDetails.Select(x => x.PONCCDetailID));
+                    SQLHelper<dynamic>.ExcuteProcedure("spUpdateStatusPONCC",
+                        new string[] { "@PONCCDetailID", "@UpdatedBy" },
+                        new object[] { poNCCDetailID, currentUser.LoginName });
                     if (dto.pONCCID != null && dto.pONCCID > 0)
                     {
                         PONCC po = _pONCCRepo.GetByID(dto.pONCCID ?? 0);
@@ -716,8 +719,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     }
 
                     // Footer signatures
-                    sheet.Cell(19, 3).Value = masterData["Deliver"]?.ToString()?.Trim() ?? "";
-                    sheet.Cell(19, 8).Value = masterData["Reciver"]?.ToString()?.Trim() ?? "";
+                    sheet.Cell(24, 3).Value = masterData["Deliver"]?.ToString()?.Trim() ?? "";
+                    sheet.Cell(24, 8).Value = masterData["Reciver"]?.ToString()?.Trim() ?? "";
 
                     // Generate QR code
                     string qrCodeText = masterData["BillImportID"]?.ToString()?.Trim() ?? "Unknown";
@@ -794,6 +797,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
                             currentRow++;
                         }
+                        sheet.Row(14).Delete();
+
                     }
                     else
                     {

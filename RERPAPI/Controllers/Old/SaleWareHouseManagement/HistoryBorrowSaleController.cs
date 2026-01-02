@@ -32,7 +32,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             {
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
                     "spGetHistoryBorrowSale",
-                    new string[] { "@PageNumber", "@PageSize", "@DateBegin", "@DateEnd", "@ProductGroupID", "@ReturnStatus", "@FilterText", "@WareHouseID", "@EmployeeID" },
+                    new string[] {"@PageNumber", "@PageSize", "@DateBegin", "@DateEnd", "@ProductGroupID", "@ReturnStatus", "@FilterText", "@WareHouseID", "@EmployeeID"},
                     new object[] { filter.PageNumber, filter.PageSize, filter.DateStart, filter.DateEnd, filter.ProductGroupID, filter.Status - 1, filter.FilterText, filter.WareHouseID, filter.EmployeeID }
                     );
                 return Ok(new
