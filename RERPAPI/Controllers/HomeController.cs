@@ -36,7 +36,7 @@ namespace RERPAPI.Controllers
         //UserRepo _userRepo = new UserRepo();
         vUserGroupLinksRepo _vUserGroupLinksRepo;
         private readonly RoleConfig _roleConfig;
-
+        private readonly EmployeePayrollDetailRepo _employeePayrollDetailRepo;
 
         private readonly EmployeeOnLeaveRepo _onLeaveRepo;
         private readonly EmployeeWFHRepo _wfhRepo;
@@ -1316,7 +1316,24 @@ namespace RERPAPI.Controllers
         //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
         //    }
         //}
-     
+        [HttpPost("confirm-payroll")]
+        public IActionResult ConfirmPayroll([FromBody] int id, bool sign)
+        {
+            try
+            {
+              var payroll = _employeePayrollDetailRepo.GetByID(id);
+                if(payroll.ID>0)
+                {
+                    payroll.Sign = sign;
+                    _employeePayrollDetailRepo.Update(payroll);
+                }    
 
+                return Ok(ApiResponseFactory.Success(null, "Xác nhận bảng lương thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 }
