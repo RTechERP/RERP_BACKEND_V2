@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
@@ -63,6 +64,7 @@ namespace RERPAPI.Controllers.Project
         /// <param name="size"></param>
         /// <returns></returns>
         [HttpGet("get-all-project-parList-price-request")]
+        [RequiresPermission("N35,N33,N1,N36,N27,N69,N80")]
         public async Task<IActionResult> GetAll(DateTime dateStart, DateTime dateEnd, int statusRequest, int projectId, string? keyword, int employeeID,
             int isDeleted, int projectTypeID, int poKHID, int isJobRequirement = -1, int projectPartlistPriceRequestTypeID = -1, int isCommercialProduct = -1, int page = 1, int size = 25)
         {
@@ -111,7 +113,9 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                dateEnd = dateEnd.AddDays(1).AddSeconds(-1);
+                dateStart = dateStart.Date;
+                dateEnd = dateEnd.Date.AddHours(23).AddMinutes(59).AddSeconds(59);
+
                 var dtPriceRequestResults = SQLHelper<dynamic>.ProcedureToList(
                     "spGetProjectPartlistPriceRequest_New",
                     new string[] {
@@ -120,7 +124,7 @@ namespace RERPAPI.Controllers.Project
                     "@IsJobRequirement", "@ProjectPartlistPriceRequestTypeID", "@EmployeeID"
                     },
                     new object[] {
-                    dateStart, dateEnd, statusRequest, projectId, keyword, isDeleted,
+                    dateStart, dateEnd, statusRequest, projectId, keyword ?? "", isDeleted,
                     projectTypeID, isCommercialProduct, poKHID,
                     isJobRequirement, projectPartlistPriceRequestTypeID, employeeID
                     }
@@ -193,10 +197,12 @@ namespace RERPAPI.Controllers.Project
             return Ok(new { status = 1, data = currencies });
         }
         [HttpPost("save-data")]
+        [RequiresPermission("N35,N1")]
         public async Task<IActionResult> SaveData([FromBody] List<ProjectPartlistPriceRequest> projectPartlistPriceRequest)
         {
             try
             {
+                List < ProjectPartlistPriceRequest > data = new List<ProjectPartlistPriceRequest>();
                 if (projectPartlistPriceRequest != null && projectPartlistPriceRequest.Any())
                 {
                     foreach (var item in projectPartlistPriceRequest)
@@ -209,10 +215,12 @@ namespace RERPAPI.Controllers.Project
                         {
                             requestRepo.Create(item);
                         }
+
+                        data.Add(item);
                     }
                 }
 
-                return Ok(new { status = 1 });
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {
@@ -281,6 +289,7 @@ namespace RERPAPI.Controllers.Project
             }
         }
         [HttpGet("get-price-history-partlist")]
+        [RequiresPermission("N35,N1")]
         public async Task<IActionResult> GetPriceHistoryPartlist(int projectId, int supplierSaleId, int employeeRequestId, string? keyword)
         {
             try
@@ -346,6 +355,7 @@ namespace RERPAPI.Controllers.Project
         //    }
         //}
         [HttpPost("download")]
+        [RequiresPermission("N35,N1")]
         public async Task<IActionResult> DownloadFile([FromBody] DownloadProjectPartlistPriceRequestDTO request)
         {
             try
@@ -381,6 +391,7 @@ namespace RERPAPI.Controllers.Project
         }
 
         [HttpPost("check-price")]
+        [RequiresPermission("N35,N1")]
         public async Task<IActionResult> CheckPrice(List<ProjectPartlistPriceRequest> lst)
         {
             try
@@ -409,6 +420,7 @@ namespace RERPAPI.Controllers.Project
             }
         }
         [HttpPost("cancel-price-request")]
+        [RequiresPermission("N35,N1")]
         public async Task<IActionResult> CancelPriceRequest(List<ProjectPartlistPriceRequest> lst)
         {
             try
@@ -430,6 +442,7 @@ namespace RERPAPI.Controllers.Project
             }
         }
         [HttpPost("send-mail")]
+        [RequiresPermission("N35,N1")]
         public async Task<IActionResult> SendMail(List<MailItemPriceRequestDTO> data)
         {
             try
@@ -447,6 +460,7 @@ namespace RERPAPI.Controllers.Project
         #region Update Price Request Status (Từ chối / Hủy từ chối báo giá)
 
         [HttpPost("update-price-request-status")]
+        [RequiresPermission("N35,N1")]
         public async Task<IActionResult> UpdatePriceRequestStatus([FromBody] UpdatePriceRequestStatusRequestDTO request)
         {
             try
@@ -610,6 +624,7 @@ namespace RERPAPI.Controllers.Project
         }
 
         [HttpPost("request-buy")]
+        [RequiresPermission("N35,N1")]
         public async Task<IActionResult> RequestBuy([FromBody] RequestBuyDTO request)
         {
             try
@@ -827,6 +842,7 @@ namespace RERPAPI.Controllers.Project
 
         #endregion
         [HttpPost("quote-price")]
+        [RequiresPermission("N35,N1")]
         public async Task<IActionResult> QuotePriceRequest(List<ProjectPartlistPriceRequest> lst)
         {
             try
@@ -886,6 +902,7 @@ namespace RERPAPI.Controllers.Project
         }
 
         [HttpPost("save-request-note")]
+        [RequiresPermission("N35,N1")]
         public async Task<IActionResult> SaveDataPriceRequestNote([FromBody] List<ProjectPartlistPriceRequestNote> notes)
         {
             try
