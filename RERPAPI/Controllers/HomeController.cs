@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using RERPAPI.Attributes;
 using RERPAPI.Middleware;
+using RERPAPI.Model;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
@@ -42,7 +43,7 @@ namespace RERPAPI.Controllers
         private readonly EmployeeWFHRepo _wfhRepo;
         private readonly ConfigSystemRepo _configSystemRepo;
 
-        public HomeController(IOptions<JwtSettings> jwtSettings, RTCContext context, IConfiguration configuration, EmployeeOnLeaveRepo onLeaveRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeWFHRepo employeeWFHRepo, ConfigSystemRepo configSystemRepo, EmployeeOverTimeRepo employeeOverTimeRepo, RoleConfig roleConfig)
+        public HomeController(IOptions<JwtSettings> jwtSettings, RTCContext context, IConfiguration configuration, EmployeeOnLeaveRepo onLeaveRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeWFHRepo employeeWFHRepo, ConfigSystemRepo configSystemRepo, EmployeeOverTimeRepo employeeOverTimeRepo, RoleConfig roleConfig, EmployeePayrollDetailRepo employeePayrollDetailRepo)
         {
             _jwtSettings = jwtSettings.Value;
             _context = context;
@@ -53,6 +54,7 @@ namespace RERPAPI.Controllers
             _configSystemRepo = configSystemRepo;
             _employeeOverTimeRepo = employeeOverTimeRepo;
             _roleConfig = roleConfig;
+            _employeePayrollDetailRepo = employeePayrollDetailRepo;
         }
         [HttpPost("login")]
         public IActionResult Login([FromBody] User user)
@@ -1316,17 +1318,18 @@ namespace RERPAPI.Controllers
         //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
         //    }
         //}
+    
         [HttpPost("confirm-payroll")]
-        public IActionResult ConfirmPayroll([FromBody] int id, bool sign)
+        public IActionResult ConfirmPayroll([FromBody] ConfirmPayrollDTO dto)
         {
             try
             {
-              var payroll = _employeePayrollDetailRepo.GetByID(id);
-                if(payroll.ID>0)
-                {
-                    payroll.Sign = sign;
-                    _employeePayrollDetailRepo.Update(payroll);
-                }    
+                var payroll = _employeePayrollDetailRepo.GetByID(dto.Id);
+                if (payroll == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy bảng lương"));
+
+                payroll.Sign = dto.Sign;
+                _employeePayrollDetailRepo.Update(payroll);
 
                 return Ok(ApiResponseFactory.Success(null, "Xác nhận bảng lương thành công"));
             }
