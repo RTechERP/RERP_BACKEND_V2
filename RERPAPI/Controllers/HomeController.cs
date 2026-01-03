@@ -69,7 +69,6 @@ namespace RERPAPI.Controllers
                 //1. Check user
                 string loginName = user.LoginName ?? "";
                 string password = MaHoaMD5.EncryptPassword(user.PasswordHash ?? "");
-                //string password = user.PasswordHash;
 
                 var login = SQLHelper<object>.ProcedureToList("spLogin", new string[] { "@LoginName", "@Password" }, new object[] { loginName, password });
                 var hasUsers = SQLHelper<object>.GetListData(login, 0);
@@ -446,7 +445,7 @@ namespace RERPAPI.Controllers
                         // Tạo tên file unique
                         var fileExtension = Path.GetExtension(file.FileName);
                         var originalFileName = Path.GetFileNameWithoutExtension(file.FileName);
-                       // var uniqueFileName = $"{originalFileName}{fileExtension}";
+                        // var uniqueFileName = $"{originalFileName}{fileExtension}";
 
 
 
@@ -706,17 +705,17 @@ namespace RERPAPI.Controllers
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
                 bool isBGD = currentUser.DepartmentID == 1 && currentUser.EmployeeID != 54;
-                if(isBGD==true)
+                if (isBGD == true)
                 {
                     request.IDApprovedTP = 0;
-                   
-                }    
+
+                }
                 request.DateStart = request.DateStart.Value.ToLocalTime().Date;
                 request.DateEnd = request.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
-             
+
                 var approve = SQLHelper<dynamic>.ProcedureToList(
                     "spGetApprovedByApprovedTP_New",
-                    new string[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID" ,"@StatusSenior"},
+                    new string[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID", "@StatusSenior" },
                     new object[] { request.FilterText ?? "", request.DateStart, request.DateEnd, request.IDApprovedTP ?? 0, request.Status ?? 0, request.DeleteFlag ?? 0, request.EmployeeID ?? 0, request.TType ?? 0, request.StatusHR ?? 0, request.StatusBGD ?? 0, isBGD, request.UserTeamID ?? 0, request.SeniorID, request.StatusSenior });
 
                 var listData = SQLHelper<dynamic>.GetListData(approve, 0);
@@ -823,7 +822,7 @@ namespace RERPAPI.Controllers
         //        {
         //            return BadRequest(ApiResponseFactory.Fail(null, "Danh sách phê duyệt không được để trống!"));
         //        }
-                
+
         //        var notProcessed = new List<NotProcessedApprovalItem>();
 
         //        var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
@@ -1240,7 +1239,7 @@ namespace RERPAPI.Controllers
         }
         [HttpPost("get-quantity-approve")]
         public IActionResult GetQuantityApprove([FromBody] ApproveByApproveTPRequestParam request)
-            {
+        {
             try
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
@@ -1253,15 +1252,15 @@ namespace RERPAPI.Controllers
                 var approveResultSenior = SQLHelper<dynamic>.ProcedureToList(
                     "spGetApprovedByApprovedTP_New",
                     new[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID", "@StatusSenior" },
-                    new object[] { "", request.DateStart, request.DateEnd, 0, -1, 0, 0, 0, -1, 0, false, 0, currentUser.EmployeeID ,0});
+                    new object[] { "", request.DateStart, request.DateEnd, 0, -1, 0, 0, 0, -1, 0, false, 0, currentUser.EmployeeID, 0 });
                 var approveResultTP = SQLHelper<dynamic>.ProcedureToList(
                    "spGetApprovedByApprovedTP_New",
-                   new[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID" , "@StatusSenior" },
-                   new object[] { "", request.DateStart, request.DateEnd, currentUser.EmployeeID, 0, 0, 0, 0, -1, 0, false, 0, 0 ,-1});
+                   new[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID", "@StatusSenior" },
+                   new object[] { "", request.DateStart, request.DateEnd, currentUser.EmployeeID, 0, 0, 0, 0, -1, 0, false, 0, 0, -1 });
                 var approveResultBGD = SQLHelper<dynamic>.ProcedureToList(
                    "spGetApprovedByApprovedTP_New       ",
                    new[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID", "@StatusSenior" },
-                   new object[] { "", request.DateStart, request.DateEnd, currentUser.EmployeeID, 0, 0, 0, 0, -1, 0, isBGD, 0, 0 ,-1});
+                   new object[] { "", request.DateStart, request.DateEnd, currentUser.EmployeeID, 0, 0, 0, 0, -1, 0, isBGD, 0, 0, -1 });
                 var approveListSenior = SQLHelper<dynamic>.GetListData(approveResultSenior, 0);
                 var approveListTP = SQLHelper<dynamic>.GetListData(approveResultTP, 0);
                 var approveListBGD = SQLHelper<dynamic>.GetListData(approveResultBGD, 0);
@@ -1271,7 +1270,7 @@ namespace RERPAPI.Controllers
                             new { Type = "TP",     Count = approveListTP?.Count ?? 0 },
                             new { Type = "BGD",    Count = approveListBGD?.Count ?? 0 }
                         }.FirstOrDefault(x => x.Count > 0);
-                    return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu thành công"));
+                return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
             {
@@ -1318,7 +1317,7 @@ namespace RERPAPI.Controllers
         //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
         //    }
         //}
-    
+
         [HttpPost("confirm-payroll")]
         public IActionResult ConfirmPayroll([FromBody] ConfirmPayrollDTO dto)
         {
