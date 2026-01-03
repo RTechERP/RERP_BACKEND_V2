@@ -178,9 +178,34 @@ namespace RERPAPI.Controllers
         {
             var e = new T();
             var type = typeof(T);
-            if (!string.IsNullOrWhiteSpace(item.ValueDecilineApprove)&& int.TryParse(item.ValueDecilineApprove, out var decilineApprove))
+            if (!string.IsNullOrWhiteSpace(item.ValueDecilineApprove))
             {
-                type.GetProperty("DecilineApprove")?.SetValue(e, decilineApprove);
+                var prop = type.GetProperty("DecilineApprove");
+                if (prop != null && prop.CanWrite)
+                {
+                    var targetType = Nullable.GetUnderlyingType(prop.PropertyType)
+                                     ?? prop.PropertyType;
+
+                    object? valueToSet = null;
+
+                    if (targetType == typeof(string))
+                    {
+                        valueToSet = item.ValueDecilineApprove;
+                    }
+                    else if (targetType == typeof(int))
+                    {
+                        if (int.TryParse(item.ValueDecilineApprove, out var i))
+                            valueToSet = i;
+                    }
+                    else if (targetType == typeof(bool))
+                    {
+                        if (int.TryParse(item.ValueDecilineApprove, out var b))
+                            valueToSet = b == 1;
+                    }
+
+                    if (valueToSet != null)
+                        prop.SetValue(e, valueToSet);
+                }
             }
             if (!string.IsNullOrWhiteSpace(item.ReasonDeciline))
             {
@@ -221,6 +246,7 @@ namespace RERPAPI.Controllers
         {
             SetApproveValue(entity, "IsApproved", value);
             SetApproveValue(entity, "IsApprovedTP", value);
+            SetApproveValue(entity, "IsApprovedTBP", value);
         }
 
         private string? ValidateBgd(ApproveItemParam item, bool isApproved)
