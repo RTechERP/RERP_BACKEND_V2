@@ -420,6 +420,7 @@ namespace RERPAPI.Controllers
             var history = historyProductRTCRepo.GetByID(req.HistoryId);
             if (history == null)
                 return BadRequest(new { status = 0, message = "Không tìm thấy lịch sử mượn!" });
+            if (req.ModulaLocationDetailID > 0 && history.StatusPerson <= 0) return BadRequest(ApiResponseFactory.Fail(null, "Nhân viên chưa hoàn thành thao tác lấy hàng.\nBạn không thể duyệt!"));
 
             try
             {

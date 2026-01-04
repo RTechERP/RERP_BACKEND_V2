@@ -319,6 +319,20 @@ namespace RERPAPI.Repo.GenericEntity
 
             return code;
         }
+        public async Task UpdatePurchaseRequest(int projectPartlistPurchaseRequestID, int supplierSaleID)
+        {
+            ProjectPartlistPurchaseRequest request = _prjPartListRepo.
+                        GetByID(projectPartlistPurchaseRequestID);
+
+            if (request == null) return;
+            if (supplierSaleID == request.SupplierSaleID) return;
+
+            request.SupplierSaleID = supplierSaleID;
+            if (request.ID > 0)
+            {
+                await _prjPartListRepo.UpdateAsync(request);
+            }
+        }
         public async Task UpdateTinhHinhDonHang(BillImportApprovedDTO lstModels, bool isapproved)
         {
             int PONCCID = 0;
@@ -377,7 +391,7 @@ namespace RERPAPI.Repo.GenericEntity
             if (string.IsNullOrWhiteSpace(s)) return "";
             Regex regex = new Regex("\\p{IsCombiningDiacriticalMarks}+");
             string temp = s.Normalize(NormalizationForm.FormD);
-            return regex.Replace(temp, String.Empty).Replace('\u0111', 'd').Replace('\u0110', 'D');
+            return regex.Replace(temp, System.String.Empty).Replace('\u0111', 'd').Replace('\u0110', 'D');
         }
 
         public string ConvertPhoneNumberVietnamese(string phoneNumber)

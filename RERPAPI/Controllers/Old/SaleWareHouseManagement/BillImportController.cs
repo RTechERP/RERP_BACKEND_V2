@@ -1066,15 +1066,15 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             if (detail.IsNotKeep == true)
             {
                 //không giữ=> xóa khỏi kho giữ
-                if (detail.InventoryProjectID.HasValue && detail.InventoryProjectID > 0)
-                {
-                    var existingInv = await _inventoryProjectRepo.GetByIDAsync(detail.InventoryProjectID.Value);
-                    if (existingInv != null && existingInv.ID > 0)
-                    {
-                        existingInv.IsDeleted = true;
-                        await _inventoryProjectRepo.UpdateAsync(existingInv);
-                    }
-                }
+                //if (detail.InventoryProjectID.HasValue && detail.InventoryProjectID > 0)
+                //{
+                //    var existingInv = await _inventoryProjectRepo.GetByIDAsync(detail.InventoryProjectID.Value);
+                //    if (existingInv != null && existingInv.ID > 0)
+                //    {
+                //        existingInv.IsDeleted = true;
+                //        await _inventoryProjectRepo.UpdateAsync(existingInv);
+                //    }
+                //}
                 return;
             }
 
@@ -1156,51 +1156,51 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     }
                 }
             }
-            else
-            {
-                // Nếu không có POKHList, tạo/update duy nhất 1 InventoryProject
-                decimal thisQuantityKeep = quantityKeep;
-                if (thisQuantityKeep <= 0) return;
+            //else
+            //{
+            //    // Nếu không có POKHList, tạo/update duy nhất 1 InventoryProject
+            //    decimal thisQuantityKeep = quantityKeep;
+            //    if (thisQuantityKeep <= 0) return;
 
-                // Fix: Chỉ query nếu InventoryProjectID > 0
-                var existing = detail.InventoryProjectID > 0
-                    ? await _inventoryProjectRepo.GetByIDAsync(detail.InventoryProjectID.Value)
-                    : null;
+            //    // Fix: Chỉ query nếu InventoryProjectID > 0
+            //    var existing = detail.InventoryProjectID > 0
+            //        ? await _inventoryProjectRepo.GetByIDAsync(detail.InventoryProjectID.Value)
+            //        : null;
 
-                InventoryProject invProject;
-                if (existing == null || existing.ID <= 0)
-                {
+            //    InventoryProject invProject;
+            //    if (existing == null || existing.ID <= 0)
+            //    {
 
-                    invProject = new InventoryProject
-                    {
-                        ProjectID = detail.ProjectID,
-                        ProductSaleID = detail.ProductID,
-                        WarehouseID = billImport.WarehouseID,
-                        Quantity = thisQuantityKeep,
-                        QuantityOrigin = thisQuantityKeep,
-                        Note = detail.Note,
-                        CustomerID = detail.CustomerID,
-                        EmployeeID = em.ID,
-                        CreatedDate = DateTime.Now,
-                        IsDeleted = false
-                    };
-                    await _inventoryProjectRepo.CreateAsync(invProject);
-                }
-                else
-                {
-                    existing.Quantity = thisQuantityKeep;
-                    existing.QuantityOrigin = thisQuantityKeep;
-                    existing.Note = detail.Note;
-                    existing.EmployeeID = em.ID;
-                    existing.CustomerID = detail.CustomerID;
-                    existing.IsDeleted = thisQuantityKeep <= 0;
-                    existing.UpdatedDate = DateTime.Now;
-                    await _inventoryProjectRepo.UpdateAsync(existing);
-                    invProject = existing;
-                }
+            //        invProject = new InventoryProject
+            //        {
+            //            ProjectID = detail.ProjectID,
+            //            ProductSaleID = detail.ProductID,
+            //            WarehouseID = billImport.WarehouseID,
+            //            Quantity = thisQuantityKeep,
+            //            QuantityOrigin = thisQuantityKeep,
+            //            Note = detail.Note,
+            //            CustomerID = detail.CustomerID,
+            //            EmployeeID = em.ID,
+            //            CreatedDate = DateTime.Now,
+            //            IsDeleted = false
+            //        };
+            //        await _inventoryProjectRepo.CreateAsync(invProject);
+            //    }
+            //    else
+            //    {
+            //        existing.Quantity = thisQuantityKeep;
+            //        existing.QuantityOrigin = thisQuantityKeep;
+            //        existing.Note = detail.Note;
+            //        existing.EmployeeID = em.ID;
+            //        existing.CustomerID = detail.CustomerID;
+            //        existing.IsDeleted = thisQuantityKeep <= 0;
+            //        existing.UpdatedDate = DateTime.Now;
+            //        await _inventoryProjectRepo.UpdateAsync(existing);
+            //        invProject = existing;
+            //    }
 
-                detail.InventoryProjectID ??= invProject.ID;
-            }
+            //    detail.InventoryProjectID ??= invProject.ID;
+            //}
         }
 
         private async Task<decimal> UpdateReturnQuantityLoan(int pokhDetailId, decimal quantityKeep)

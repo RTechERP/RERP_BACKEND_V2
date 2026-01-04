@@ -29,8 +29,10 @@ namespace RERPAPI.Controllers.Project
         ProjectPartlistPriceRequestNoteRepo projectPartlistPriceRequestNoteRepo;
         ProjectPartlistPurchaseRequestRepo _projectPartlistPurchaseRequestRepo;
         UnitCountRepo _unitCountRepo;
+        ProductRTCRepo _productRTCRepo;
 
-        public ProjectPartlistPriceRequestController(ProjectRepo projectRepo, POKHRepo pOKHRepo, ProjectPartlistPriceRequestRepo requestRepo, ProductSaleRepo productSaleRepo, CurrencyRepo currencyRepo, SupplierSaleRepo supplierSaleRepo, ProjectSolutionRepo projectSolutionRepo, EmployeeSendEmailRepo employeeSendEmailRepo, ProjectPartlistPriceRequestTypeRepo projectPartlistPriceRequestTypeRepo, ProjectPartlistPriceRequestNoteRepo projectPartlistPriceRequestNoteRepo, ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo, UnitCountRepo unitCountRepo)
+
+        public ProjectPartlistPriceRequestController(ProjectRepo projectRepo, POKHRepo pOKHRepo, ProjectPartlistPriceRequestRepo requestRepo, ProductSaleRepo productSaleRepo, CurrencyRepo currencyRepo, SupplierSaleRepo supplierSaleRepo, ProjectSolutionRepo projectSolutionRepo, EmployeeSendEmailRepo employeeSendEmailRepo, ProjectPartlistPriceRequestTypeRepo projectPartlistPriceRequestTypeRepo, ProjectPartlistPriceRequestNoteRepo projectPartlistPriceRequestNoteRepo, ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo, UnitCountRepo unitCountRepo, ProductRTCRepo productRTCRepo)
         {
             this.projectRepo = projectRepo;
             this.pOKHRepo = pOKHRepo;
@@ -44,6 +46,7 @@ namespace RERPAPI.Controllers.Project
             this.projectPartlistPriceRequestNoteRepo = projectPartlistPriceRequestNoteRepo;
             _projectPartlistPurchaseRequestRepo = projectPartlistPurchaseRequestRepo;
             _unitCountRepo = unitCountRepo;
+            _productRTCRepo = productRTCRepo;
         }
 
         #endregion
@@ -693,15 +696,28 @@ namespace RERPAPI.Controllers.Project
                         if (request.ProjectPartlistPriceRequestTypeID == 4) requestModel.ProjectPartlistPurchaseRequestTypeID = 7;//mkt
                         else if (request.ProjectPartlistPriceRequestTypeID == 3) requestModel.ProjectPartlistPurchaseRequestTypeID = 6;//hr
                         else if (request.ProjectPartlistPriceRequestTypeID == 6) requestModel.ProjectPartlistPurchaseRequestTypeID = 3;//demo
+                        if(requestModel.ProjectPartlistPurchaseRequestTypeID != 3)
+                        {
+                            // Gán ProductSale & Unit
+                            var productSale = productSaleRepo.GetAll(p =>
+                                p.ProductCode == item.ProductCode &&
+                                p.ProductGroupID == (request.IsVPP ? 80 : (request.JobRequirementID > 0 ? 77 : 0)) &&
+                                p.IsDeleted == false);
+                            var productSaleModel = productSale.FirstOrDefault() ?? new ProductSale();
+                            requestModel.ProductSaleID = productSaleModel.ID;
+                            requestModel.ProductGroupID = productSaleModel.ProductGroupID;
 
-                        // Gán ProductSale & Unit
-                        var productSale = productSaleRepo.GetAll(p =>
-                            p.ProductCode == item.ProductCode &&
-                            p.ProductGroupID == (request.IsVPP ? 80 : (request.JobRequirementID > 0 ? 77 : 0)) &&
-                            p.IsDeleted == false);
-                        var productSaleModel = productSale.FirstOrDefault() ?? new ProductSale();
-                        requestModel.ProductSaleID = productSaleModel.ID;
-                        requestModel.ProductGroupID = productSaleModel.ProductGroupID;
+                        }
+                        else
+                        {
+                            var productRTC = _productRTCRepo.GetAll(x => x.ProductCode == item.ProductCode).FirstOrDefault();
+                            if (productRTC == null)
+                            {
+                                return BadRequest(ApiResponseFactory.Fail(null,"Sản phẩm không có trong kho demo!"));
+                            }
+                            requestModel.ProductRTCID = productRTC.ID;
+                            requestModel.ProductGroupRTCID = productRTC.ProductGroupRTCID;
+                        }
 
                         var unit = _unitCountRepo.GetAll(u => u.UnitName == item.UnitName.Trim());
                         requestModel.UnitCountID = unit.FirstOrDefault()?.ID;
