@@ -1,4 +1,4 @@
-﻿using DocumentFormat.OpenXml.Office.CustomUI;
+﻿    using DocumentFormat.OpenXml.Office.CustomUI;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
@@ -183,7 +183,7 @@ namespace RERPAPI.Controllers.Old
                 // Kiểm tra user có thuộc nhóm quyền HR hay không
                 var vUserHR = _vUserGroupLinksRepo
                     .GetAll()
-                    .FirstOrDefault(x => (x.Code == "N23" || x.Code == "N1" || x.Code == "N2" || x.Code == "N34") && x.UserID == currentUser.ID);
+                    .FirstOrDefault(x => (x.Code == "N23" || x.Code == "N1" || x.Code == "N2" || x.Code == "N34" || x.Code == "N80") && x.UserID == currentUser.ID);
                 var today10AM = new DateTime(now.Year, now.Month, now.Day, 10, 0, 0);
 
                 if (vUserHR == null && now > today10AM && currentUser.IsAdmin != true)
