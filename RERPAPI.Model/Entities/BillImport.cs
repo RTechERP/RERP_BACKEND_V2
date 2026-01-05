@@ -83,10 +83,10 @@ public partial class BillImport
 
     public bool? IsDeleted { get; set; }
 
+    public int? BillExportID { get; set; }
+
     /// <summary>
     /// 1: đã đủ, 0: chưa đủ
     /// </summary>
     public bool? StatusDocumentImport { get; set; }
-
-    public int? BillExportID { get; set; }
 }
