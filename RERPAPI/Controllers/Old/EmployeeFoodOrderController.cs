@@ -199,7 +199,7 @@ namespace RERPAPI.Controllers.Old
                           && x.IsDeleted != true)
                 .FirstOrDefault();
 
-                if (checkExist != null)
+                if (checkExist != null&& foodOrder.IsDeleted != true)
                 {
                     foodOrder.ID = checkExist.ID;
                     foodOrder.Quantity = foodOrder.Quantity + checkExist.Quantity;

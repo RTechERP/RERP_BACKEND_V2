@@ -91,16 +91,20 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
                 {
                     effectiveDepartmentId = departmentID ?? 0;
                 }
-                if (currentUser.EmployeeID == 331 || currentUser.EmployeeID == 548 || currentUser.EmployeeID == 668)
-                {
-                    effectiveDepartmentId = departmentID??2;
-                }
                 else
                 {
-                    effectiveEmployeeId = currentUser.EmployeeID;
+                    if (currentUser.EmployeeID == 331 || currentUser.EmployeeID == 548 || currentUser.EmployeeID == 668)
+                    {
+                        effectiveDepartmentId = departmentID ?? 2;
+                    }
+                    else
+                    {
+                        effectiveEmployeeId = currentUser.EmployeeID;
 
-                    effectiveDepartmentId = currentUser.DepartmentID;
+                        effectiveDepartmentId = currentUser.DepartmentID;
+                    }
                 }
+              
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
                     "spGetOfficeSupplyRequests",
                     new[] { "@MonthInput", "@KeyWord", "@EmployeeID", "@DepartmentID" },
