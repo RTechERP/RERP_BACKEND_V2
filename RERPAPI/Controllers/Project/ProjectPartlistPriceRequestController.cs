@@ -289,7 +289,7 @@ namespace RERPAPI.Controllers.Project
             }
         }
         [HttpGet("get-price-history-partlist")]
-        //[RequiresPermission("N35,N1")]
+        [RequiresPermission("N38,N1,N79,N13,N82")]
         public async Task<IActionResult> GetPriceHistoryPartlist(int projectId, int supplierSaleId, int employeeRequestId, string? keyword)
         {
             try
