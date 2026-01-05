@@ -82,20 +82,26 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
                 keyword ??= string.Empty;
                 DateTime month = monthInput ?? new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
 
-                // Xác định quyền giống rule cũ
                 bool isPowerUser =
                     (_roleConfig.UserAllsOfficeSupply?.Contains(currentUser.EmployeeID) ?? false) ||
                     (_roleConfig.TBPEmployeeIds?.Contains(currentUser.EmployeeID) ?? false) ||
                     (_roleConfig.PBPPositionCodes?.Contains(currentUser.PositionCode) ?? false) ||
                     currentUser.IsAdmin==true; // nếu có cờ IsAdmin
-
+                bool xemAll = (_roleConfig.UserAllsOfficeSupply?.Contains(currentUser.EmployeeID) ?? false);
                 int effectiveDepartmentId;
                 int effectiveEmployeeId;
 
                 if (isPowerUser)
                 {
 
-                    effectiveDepartmentId =   currentUser.DepartmentID; // 0 = all trong SP
+                    if (xemAll)
+                    {
+                        effectiveDepartmentId = 0;
+                    }
+                    else
+                    {
+                        effectiveDepartmentId = currentUser.DepartmentID; // 0 = all trong SP
+                    }
                     effectiveEmployeeId = employeeID ?? 0;     // 0 = all trong SP
                 }
                 else
@@ -106,7 +112,11 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
                     effectiveDepartmentId = currentUser.DepartmentID;
                     effectiveEmployeeId = currentUser.EmployeeID;
                 }
-
+                if (currentUser.EmployeeID == 331 || currentUser.EmployeeID == 548) //nếu là hương và Hà admin
+                {
+                    effectiveDepartmentId = currentUser.DepartmentID;
+                    effectiveEmployeeId = 0;
+                }
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
                     "spGetOfficeSupplyRequests",
                     new string[] { "@KeyWord", "@MonthInput", "@EmployeeID", "@DepartmentID" },
