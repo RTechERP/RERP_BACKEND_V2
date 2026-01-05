@@ -61,7 +61,7 @@ namespace RERPAPI.Controllers.Old
                 var vUserHR = _vUserGroupLinksRepo
       .GetAll()
       .FirstOrDefault(x =>
-            (x.Code == "N23" || x.Code == "N1" || x.Code == "N2" || x.Code == "N34") &&
+            (x.Code == "N23" || x.Code == "N1" || x.Code == "N2" || x.Code == "N34" || x.Code == "N80") &&
           x.UserID == currentUser.ID);
 
                 int employeeID;
