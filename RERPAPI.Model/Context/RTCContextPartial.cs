@@ -90,66 +90,74 @@ namespace RERPAPI.Model.Context
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            string loginName = CurrentUser.LoginName;
-            var entries = ChangeTracker.Entries()
-                                       .Where(x => x.Entity != null && (x.State == EntityState.Added || x.State == EntityState.Modified));
-
-            foreach (var item in entries)
+            try
             {
-                var type = item.Entity.GetType();
+                string loginName = CurrentUser.LoginName;
+                var entries = ChangeTracker.Entries()
+                                           .Where(x => x.Entity != null && (x.State == EntityState.Added || x.State == EntityState.Modified));
 
-                var createdBy = type.GetProperty("CreatedBy");
-                var createdDate = type.GetProperty("CreatedDate");
-                var updatedBy = type.GetProperty("UpdatedBy");
-                var updatedDate = type.GetProperty("UpdatedDate");
-
-                var isDeleted = type.GetProperty("IsDeleted");
-                var isDelete = type.GetProperty("IsDelete");
-
-                if (item.State == EntityState.Added) //Thêm mới
+                foreach (var item in entries)
                 {
-                    if (createdBy != null && createdBy.CanWrite) createdBy.SetValue(item.Entity, loginName);
-                    if (createdDate != null && createdDate.CanWrite) createdDate.SetValue(item.Entity, DateTime.Now);
-                    if (updatedBy != null && updatedBy.CanWrite) updatedBy.SetValue(item.Entity, loginName);
-                    if (updatedDate != null && updatedDate.CanWrite) updatedDate.SetValue(item.Entity, DateTime.Now);
-                    //if (isDeleted != null && isDeleted.CanWrite) isDeleted.SetValue(item.Entity, false);
-                    //if (isDelete != null && isDelete.CanWrite) isDelete.SetValue(item.Entity, false);
+                    var type = item.Entity.GetType();
 
-                    if (isDeleted != null && isDeleted.CanWrite)
+                    var createdBy = type.GetProperty("CreatedBy");
+                    var createdDate = type.GetProperty("CreatedDate");
+                    var updatedBy = type.GetProperty("UpdatedBy");
+                    var updatedDate = type.GetProperty("UpdatedDate");
+
+                    var isDeleted = type.GetProperty("IsDeleted");
+                    var isDelete = type.GetProperty("IsDelete");
+
+                    if (item.State == EntityState.Added) //Thêm mới
                     {
-                        var propType = isDeleted.PropertyType;
+                        if (createdBy != null && createdBy.CanWrite) createdBy.SetValue(item.Entity, loginName);
+                        if (createdDate != null && createdDate.CanWrite) createdDate.SetValue(item.Entity, DateTime.Now);
+                        if (updatedBy != null && updatedBy.CanWrite) updatedBy.SetValue(item.Entity, loginName);
+                        if (updatedDate != null && updatedDate.CanWrite) updatedDate.SetValue(item.Entity, DateTime.Now);
+                        //if (isDeleted != null && isDeleted.CanWrite) isDeleted.SetValue(item.Entity, false);
+                        //if (isDelete != null && isDelete.CanWrite) isDelete.SetValue(item.Entity, false);
 
-                        if (propType == typeof(bool) || propType == typeof(bool?))
-                            isDeleted.SetValue(item.Entity, false);
-                        else if (propType == typeof(int) || propType == typeof(int?))
-                            isDeleted.SetValue(item.Entity, 0);
+                        if (isDeleted != null && isDeleted.CanWrite)
+                        {
+                            var propType = isDeleted.PropertyType;
+
+                            if (propType == typeof(bool) || propType == typeof(bool?))
+                                isDeleted.SetValue(item.Entity, false);
+                            else if (propType == typeof(int) || propType == typeof(int?))
+                                isDeleted.SetValue(item.Entity, 0);
+                        }
+
+                        if (isDelete != null && isDelete.CanWrite)
+                        {
+                            var propType = isDelete.PropertyType;
+
+                            if (propType == typeof(bool) || propType == typeof(bool?))
+                                isDelete.SetValue(item.Entity, false);
+                            else if (propType == typeof(int) || propType == typeof(int?))
+                                isDelete.SetValue(item.Entity, 0);
+                        }
                     }
 
-                    if (isDelete != null && isDelete.CanWrite)
+                    if (item.State == EntityState.Modified)
                     {
-                        var propType = isDelete.PropertyType;
 
-                        if (propType == typeof(bool) || propType == typeof(bool?))
-                            isDelete.SetValue(item.Entity, false);
-                        else if (propType == typeof(int) || propType == typeof(int?))
-                            isDelete.SetValue(item.Entity, 0);
+                        if (updatedBy != null && updatedBy.CanWrite) updatedBy.SetValue(item.Entity, loginName);
+                        if (updatedDate != null && updatedDate.CanWrite)
+                        {
+                            var updatedDateValue = updatedDate.GetValue(item.Entity);
+                            updatedDate.SetValue(item.Entity, updatedDateValue == null ? DateTime.Now : updatedDateValue);
+                        }
                     }
                 }
 
-                if (item.State == EntityState.Modified)
-                {
-                    
-                    if (updatedBy != null && updatedBy.CanWrite) updatedBy.SetValue(item.Entity, loginName);
-                    if (updatedDate != null && updatedDate.CanWrite)
-                    {
-                        var updatedDateValue = updatedDate.GetValue(item.Entity);
-                        updatedDate.SetValue(item.Entity, updatedDateValue == null ? DateTime.Now: updatedDateValue);
-                    }
-                }
+                //AddAuditLogs();
+                return await base.SaveChangesAsync(cancellationToken);
             }
+            catch (Exception ex)
+            {
 
-            AddAuditLogs();
-            return await base.SaveChangesAsync(cancellationToken);
+                throw new Exception(ex.ToString());
+            }
         }
 
         private void AddAuditLogs()
@@ -163,6 +171,8 @@ namespace RERPAPI.Model.Context
 
             foreach (var entry in entries)
             {
+                if (entry.Entity.GetType().Name == "ActivityLog") continue;
+
                 var log = new ActivityLog
                 {
                     LogTime = DateTime.UtcNow,
@@ -178,7 +188,6 @@ namespace RERPAPI.Model.Context
 
                 logs.Add(log);
             }
-
 
             ActivityLogs.AddRange(logs);
         }
