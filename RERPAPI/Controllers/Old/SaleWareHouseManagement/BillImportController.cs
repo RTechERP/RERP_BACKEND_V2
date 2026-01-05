@@ -1095,30 +1095,40 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             }
 
             // Nếu có POKHList, phân bổ quantityKeep theo tỷ lệ, trả nợ parent
-            if (detail.POKHList != null && detail.POKHList.Count > 0)
+            // Nếu có POKHList, phân bổ quantityKeep theo tỷ lệ, trả nợ parent
+            bool hasPO = detail.POKHList != null && detail.POKHList.Count > 0;
+
+            if (hasPO)
             {
                 decimal totalPokhQty = detail.POKHList.Sum(x => x.QuantityRequest);
+
                 foreach (var item in detail.POKHList)
                 {
-                    decimal proportion = totalPokhQty > 0 ? item.QuantityRequest / totalPokhQty : 0;
-                    decimal thisQuantityKeep = proportion * quantityKeep;
+                    decimal proportion = totalPokhQty > 0
+                        ? item.QuantityRequest / totalPokhQty
+                        : 0;
 
+                    decimal thisQuantityKeep = proportion * quantityKeep;
                     if (thisQuantityKeep <= 0) continue;
 
-                    // Trả nợ parent trước khi tạo/update mới
-                    decimal adjustedQty = await UpdateReturnQuantityLoan(item.POKHDetailID, thisQuantityKeep);
+                    // Trả nợ parent trước
+                    decimal adjustedQty = await UpdateReturnQuantityLoan(
+                        item.POKHDetailID,
+                        thisQuantityKeep
+                    );
 
-                    // Tìm InventoryProject root theo POKHDetailID
+                    // ===== FIND ROOT THEO PO =====
                     var existingRoot = _inventoryProjectRepo.GetAll(x =>
-                            x.POKHDetailID == item.POKHDetailID &&
-                            x.ParentID == 0 &&
-                            x.IsDeleted == false)
-                        .FirstOrDefault();
+                        x.POKHDetailID == item.POKHDetailID &&
+                        x.ParentID == 0 &&
+                        x.IsDeleted == false
+                    ).FirstOrDefault();
 
                     InventoryProject invProject;
+
                     if (existingRoot == null)
                     {
-                        // Tạo mới
+                        // ===== CREATE ROOT =====
                         invProject = new InventoryProject
                         {
                             ProjectID = detail.ProjectID,
@@ -1127,18 +1137,18 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                             Quantity = adjustedQty,
                             QuantityOrigin = adjustedQty,
                             Note = detail.Note,
-                            POKHDetailID = item.POKHDetailID,
                             CustomerID = detail.CustomerID,
                             EmployeeID = em.ID,
+                            ParentID = 0,
                             IsDeleted = false,
-                            ParentID = 0
+                            POKHDetailID = item.POKHDetailID
                         };
 
                         await _inventoryProjectRepo.CreateAsync(invProject);
                     }
                     else
                     {
-                        // Update root
+                        // ===== UPDATE ROOT =====
                         existingRoot.Quantity = adjustedQty;
                         existingRoot.QuantityOrigin = adjustedQty;
                         existingRoot.Note = detail.Note;
@@ -1156,6 +1166,119 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     }
                 }
             }
+            else if (detail.ProjectID > 0)
+            {
+                decimal adjustedQty = quantityKeep;
+
+                var existingRoot = _inventoryProjectRepo.GetAll(x =>
+                    x.ProjectID == detail.ProjectID &&
+                    (x.POKHDetailID == null || x.POKHDetailID == 0) &&
+                    x.ParentID == 0 &&
+                    x.IsDeleted == false
+                ).FirstOrDefault();
+
+                InventoryProject invProject;
+
+                if (existingRoot == null)
+                {
+                    invProject = new InventoryProject
+                    {
+                        ProjectID = detail.ProjectID,
+                        ProductSaleID = detail.ProductID,
+                        WarehouseID = billImport.WarehouseID,
+                        Quantity = adjustedQty,
+                        QuantityOrigin = adjustedQty,
+                        Note = detail.Note,
+                        CustomerID = detail.CustomerID,
+                        EmployeeID = em.ID,
+                        ParentID = 0,
+                        IsDeleted = false,
+                        POKHDetailID = null
+                    };
+
+                    await _inventoryProjectRepo.CreateAsync(invProject);
+                }
+                else
+                {
+                    existingRoot.Quantity = adjustedQty;
+                    existingRoot.QuantityOrigin = adjustedQty;
+                    existingRoot.Note = detail.Note;
+                    existingRoot.EmployeeID = em.ID;
+                    existingRoot.CustomerID = detail.CustomerID;
+                    existingRoot.IsDeleted = adjustedQty <= 0;
+
+                    await _inventoryProjectRepo.UpdateAsync(existingRoot);
+                    invProject = existingRoot;
+                }
+
+                if (invProject.ID > 0 && adjustedQty > 0)
+                {
+                    detail.InventoryProjectID = invProject.ID;
+                    await _billImportDetailRepo.UpdateAsync(detail);
+                }
+            }
+
+            //if (detail.ProjectID>0 || (detail.POKHList != null && detail.POKHList.Count > 0))
+            //{
+            //    decimal totalPokhQty = detail.POKHList.Sum(x => x.QuantityRequest);
+            //    foreach (var item in detail.POKHList)
+            //    {
+            //        decimal proportion = totalPokhQty > 0 ? item.QuantityRequest / totalPokhQty : 0;
+            //        decimal thisQuantityKeep = proportion * quantityKeep;
+
+            //        if (thisQuantityKeep <= 0) continue;
+
+            //        // Trả nợ parent trước khi tạo/update mới
+            //        decimal adjustedQty = await UpdateReturnQuantityLoan(item.POKHDetailID, thisQuantityKeep);
+
+            //        // Tìm InventoryProject root theo POKHDetailID
+            //        var existingRoot = _inventoryProjectRepo.GetAll(x =>
+            //                x.POKHDetailID == item.POKHDetailID &&
+            //                x.ParentID == 0 &&
+            //                x.IsDeleted == false)
+            //            .FirstOrDefault();
+
+            //        InventoryProject invProject;
+            //        if (existingRoot == null)
+            //        {
+            //            // Tạo mới
+            //            invProject = new InventoryProject
+            //            {
+            //                ProjectID = detail.ProjectID,
+            //                ProductSaleID = detail.ProductID,
+            //                WarehouseID = billImport.WarehouseID,
+            //                Quantity = adjustedQty,
+            //                QuantityOrigin = adjustedQty,
+            //                Note = detail.Note,
+            //                POKHDetailID = item.POKHDetailID,
+            //                CustomerID = detail.CustomerID,
+            //                EmployeeID = em.ID,
+            //                IsDeleted = false,
+            //                ParentID = 0
+            //            };
+
+            //            await _inventoryProjectRepo.CreateAsync(invProject);
+            //        }
+            //        else
+            //        {
+            //            // Update root
+            //            existingRoot.Quantity = adjustedQty;
+            //            existingRoot.QuantityOrigin = adjustedQty;
+            //            existingRoot.Note = detail.Note;
+            //            existingRoot.EmployeeID = em.ID;
+            //            existingRoot.CustomerID = detail.CustomerID;
+            //            existingRoot.IsDeleted = adjustedQty <= 0;
+
+            //            await _inventoryProjectRepo.UpdateAsync(existingRoot);
+            //            invProject = existingRoot;
+            //        }
+
+            //        if (invProject.ID > 0 && adjustedQty > 0)
+            //        {
+            //            detail.InventoryProjectID ??= invProject.ID;
+            //        }
+            //    }
+            //}
             //else
             //{
             //    // Nếu không có POKHList, tạo/update duy nhất 1 InventoryProject
@@ -1237,7 +1360,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         {
             foreach (var item in docImport)
             {
-
                 if (item.ID <= 0)
                 {
                     item.BillImportID = billImportID;
