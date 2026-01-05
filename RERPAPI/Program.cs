@@ -164,6 +164,7 @@ builder.Services.AddScoped<PONCCDetailRepo>();
 builder.Services.AddScoped<PONCCDetailRequestBuyRepo>();
 builder.Services.AddScoped<PONCCRepo>();
 builder.Services.AddScoped<PONCCRulePayRepo>();
+builder.Services.AddScoped<PONCCHistoryRepo>();
 builder.Services.AddScoped<PositionContractRepo>();
 builder.Services.AddScoped<PositionInternalRepo>();
 builder.Services.AddScoped<ProductGroupRTCRepo>();
@@ -423,6 +424,9 @@ builder.Services.AddScoped<JobRequirementApprovedRepo>();
 builder.Services.AddScoped<JobRequirementCommentRepo>();
 builder.Services.AddScoped<OrganizationalChartDetailRepo>();
 builder.Services.AddScoped<OrganizationalChartRepo>();
+builder.Services.AddScoped<NewsletterTypeRepo>();
+builder.Services.AddScoped<NewsletterRepo>();
+builder.Services.AddScoped<NewsletterFileRepo>();
 
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();

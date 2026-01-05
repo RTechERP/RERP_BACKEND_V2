@@ -21,7 +21,7 @@ public partial class PaymentOrderDetail
 
     public decimal? TotalMoney { get; set; }
 
-    public string? Note { get; set; }
+    public string Note { get; set; } = null!;
 
     public int? ParentID { get; set; }
 
@@ -33,6 +33,9 @@ public partial class PaymentOrderDetail
 
     public DateTime? UpdatedDate { get; set; }
 
+    /// <summary>
+    /// 0:Tiền mặt; 1: Chuyển khoản
+    /// </summary>
     public int? PaymentMethods { get; set; }
 
     public string? PaymentInfor { get; set; }

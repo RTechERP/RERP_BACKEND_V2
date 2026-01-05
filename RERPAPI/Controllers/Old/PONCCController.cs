@@ -97,6 +97,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
+                pageSize = 999999;
                 DateTime _dateStart = dateStart?.Date ?? DateTime.MinValue;
                 DateTime _dateEnd = (dateEnd?.Date ?? DateTime.MaxValue)
                                     .AddHours(23).AddMinutes(59).AddSeconds(59);
@@ -858,13 +859,15 @@ namespace RERPAPI.Controllers.Old
                 string picPrepared = Path.Combine(pathImage, $@"{po.Code.Trim()}.png");
                 string picDirector = Path.Combine(pathImage, $"seal{companyText.ToUpper()}.png");
 
+                string logo = Path.Combine(pathImage, $"logo{companyText.ToUpper()}.jpg");
 
                 po.PicPrepared = ImageHelper.ImageToBase64(picPrepared);
                 po.PicDirector = ImageHelper.ImageToBase64(picDirector);
+                po.Logo = ImageHelper.ImageToBase64(logo);
 
                 //get danh sách chi tiết sản phẩm
                 var poDetails = SQLHelper<PONCCDetailDTO>.ProcedureToListModel("spGetPONCCDetail", new string[] { "@PONCCID" }, new object[] { id });
-                poDetails = poDetails.Where(x => x.IsPurchase == false).ToList();
+                poDetails = poDetails.Where(x => x.IsPurchase != true).ToList();
                 if (isMerge)
                 {
                     bool isHCNS = poDetails.Any(x => x.ProductGroupID == 77);

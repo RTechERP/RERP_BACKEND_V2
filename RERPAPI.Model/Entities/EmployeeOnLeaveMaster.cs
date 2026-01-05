@@ -31,5 +31,5 @@ public partial class EmployeeOnLeaveMaster
 
     public int? YearOnleave { get; set; }
 
-    public bool? IsDeleted { get; set; }
+    public bool IsDeleted { get; set; }
 }

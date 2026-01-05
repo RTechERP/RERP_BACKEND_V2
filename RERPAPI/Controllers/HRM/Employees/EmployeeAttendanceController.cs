@@ -409,5 +409,27 @@ namespace RERPAPI.Controllers
             }
             return (isLate, timeLate, isEarly, timeEarly, totalHour, totalDay, isLunch);
         }
+        [HttpPost("delete-attendance")]
+        public async Task<IActionResult> Delete(List<int> ids)
+        {
+            try
+            {
+                foreach (var id in ids)
+                {
+                    var exist = _employeeAttendanceRepo.GetByID(id);
+                      if(exist.ID>0)
+                    {
+                        await _employeeAttendanceRepo.DeleteAsync(exist.ID);
+                    }    
+
+                }
+                return Ok(ApiResponseFactory.Success( null,"Xóa thành công"));
+            }
+            catch (Exception ex)
+            {
+
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 }

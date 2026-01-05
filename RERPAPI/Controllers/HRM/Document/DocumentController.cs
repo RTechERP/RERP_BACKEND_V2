@@ -1,4 +1,5 @@
 ﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -491,6 +492,22 @@ namespace RERPAPI.Controllers.DocumentManager
                        new string[] { "@FilterText", "@DepartmentID", "@GroupType" },
                     new object[] { keyword??"", departID, groupType });
               var  documentList = SQLHelper<object>.GetListData(document, 0);
+                return Ok(ApiResponseFactory.Success(documentList, ""));
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-document-admin-sale")]
+        public IActionResult GetDocumrntCommon(int departID)
+        {
+            try
+            {
+                var document = SQLHelper<dynamic>.ProcedureToList("spGetDocumentSaleAdmin",
+                     new string[] { "@GroupType", "@DepartmentID" }, new object[] { 2, departID });
+                var documentList = SQLHelper<object>.GetListData(document, 0);
                 return Ok(ApiResponseFactory.Success(documentList, ""));
 
             }
