@@ -184,6 +184,10 @@ namespace RERPAPI.Controllers.Old.Asset
                     ws.Cells[15, 3].Value = master.DepartmentRecovery;
 
                     ws.Cells[17, 3].Value = master.Note;
+
+
+                    ws.Cells[27, 1].Value = master.EmployeeRecoveryName??"";
+                    ws.Cells[27, 8].Value = master.EmployeeReturnName??"";
                     ws.Cells[28, 1].Value = master.DateApprovedHR?.ToString("dd/MM/yyyy HH:mm") ??"";
                     ws.Cells[28, 8].Value = master.DateApprovedPersonalProperty?.ToString("dd/MM/yyyy HH:mm") ?? "";
 
