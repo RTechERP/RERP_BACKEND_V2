@@ -252,7 +252,7 @@ namespace RERPAPI.Controllers.Old
             }
         }
         [HttpPost("get-all")]
-        [RequiresPermission("N58,N35,N1")]
+        //[RequiresPermission("N58,N35,N1")]
         public IActionResult GetAll([FromBody] ProjectPartlistPurchaseRequestParam filter)
         {
             try
@@ -555,7 +555,6 @@ namespace RERPAPI.Controllers.Old
                     x.ProductCode.ToLower() == item.ProductCode.ToLower() &&
                     x.IsDeleted != true
                     ).FirstOrDefault();
-
                     productSale = productSale ?? new ProductSale();
                     if (productSale.ID <= 0)
                     {

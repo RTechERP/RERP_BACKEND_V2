@@ -345,14 +345,14 @@ namespace RERPAPI.Controllers.Project
         #endregion
         #region Xóa khảo sát dự án
         [HttpGet("deleted-project-survey")]
-        public async Task<IActionResult> deletedprojectsurvey(int projectSurveyId)
+        public async Task<IActionResult> deletedprojectsurvey(int ids)
         {
             try
             {
                 string messageError;
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
-                ProjectSurvey model = projectSurveyRepo.GetByID(projectSurveyId);
+                ProjectSurvey model = projectSurveyRepo.GetByID(ids);
                 if (!projectSurveyRepo.ValidateDeleted(model, currentUser, out messageError))
                 {
                     return Ok(new { status = 2, message = messageError });

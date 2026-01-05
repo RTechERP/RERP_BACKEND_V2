@@ -15,7 +15,7 @@ public partial class EmployeeTeam
 
     public int? STT { get; set; }
 
-    public int? IsDeleted { get; set; }
+    public bool? IsDeleted { get; set; }
 
     public string? CreatedBy { get; set; }
 

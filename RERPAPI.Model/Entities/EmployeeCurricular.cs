@@ -28,4 +28,6 @@ public partial class EmployeeCurricular
     public string? UpdatedBy { get; set; }
 
     public string? Note { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }

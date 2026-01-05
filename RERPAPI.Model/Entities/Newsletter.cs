@@ -3,19 +3,19 @@ using System.Collections.Generic;
 
 namespace RERPAPI.Model.Entities;
 
-public partial class KPIPositionType
+public partial class Newsletter
 {
     public int ID { get; set; }
 
-    public int? STT { get; set; }
+    public string? Code { get; set; }
 
-    public string? TypeCode { get; set; }
+    public string? Title { get; set; }
 
-    public string? TypeName { get; set; }
+    public string? NewsletterContent { get; set; }
 
-    public int? YearValue { get; set; }
+    public int? Type { get; set; }
 
-    public int? QuaterValue { get; set; }
+    public string? Image { get; set; }
 
     public string? CreatedBy { get; set; }
 
@@ -27,5 +27,7 @@ public partial class KPIPositionType
 
     public bool? IsDeleted { get; set; }
 
-    public int? ProjectTypeID { get; set; }
+    public string? OriginImgPath { get; set; }
+
+    public string? ServerImgPath { get; set; }
 }

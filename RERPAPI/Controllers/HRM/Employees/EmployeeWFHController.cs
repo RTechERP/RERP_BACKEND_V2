@@ -147,7 +147,7 @@ namespace RERPAPI.Controllers
         //[RequiresPermission("N1,N2")]
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] EmployeeWFH employeeWFH)
-        {
+            {
             try
             {
 

@@ -126,7 +126,7 @@ public partial class ProjectPartlistPurchaseRequest
     public int? ProductRTCID { get; set; }
 
     /// <summary>
-    ///  0: yêu cầu mua; 1: Yêu cầu mượn
+    /// 0: yêu cầu mua; 1: Yêu cầu mượn
     /// </summary>
     public int? TicketType { get; set; }
 
@@ -155,10 +155,13 @@ public partial class ProjectPartlistPurchaseRequest
 
     public bool? IsPurchase { get; set; }
 
+    /// <summary>
+    /// ID kho
+    /// </summary>
     public int? WarehouseID { get; set; }
 
     /// <summary>
-    /// Đợi ghép sau
+    /// Đã trả sau
     /// </summary>
     public bool? IsPaidLater { get; set; }
 }
