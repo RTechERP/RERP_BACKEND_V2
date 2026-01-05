@@ -353,30 +353,30 @@ namespace RERPAPI.Controllers.Old.POKH
                         model.POKHID = dto.POKH.ID;
                         model.ParentID = parentId;
                         //
-                        model.ProductID = item.ProductID;
-                        model.STT = item.STT;
-                        model.KHID = item.KHID;
+                        model.ProductID = item.ProductID ?? 0;
+                        model.STT = item.STT ?? 0;
+                        model.KHID = item.KHID ?? 0;
                         model.GuestCode = item.GuestCode;
-                        model.Qty = item.Qty;
+                        model.Qty = item.Qty ?? 0;
                         model.FilmSize = item.FilmSize;
-                        model.UnitPrice = item.UnitPrice;
-                        model.IntoMoney = item.IntoMoney;
-                        model.VAT = item.VAT;
+                        model.UnitPrice = item.UnitPrice ?? 0;
+                        model.IntoMoney = item.IntoMoney ?? 0;
+                        model.VAT = item.VAT ?? 0;
                         model.Spec = item.Spec;
-                        model.NetUnitPrice = item.NetUnitPrice;
-                        model.TotalPriceIncludeVAT = item.TotalPriceIncludeVAT;
+                        model.NetUnitPrice = item.NetUnitPrice ?? 0;
+                        model.TotalPriceIncludeVAT = item.TotalPriceIncludeVAT ?? 0;
                         model.UserReceiver = item.UserReceiver;
                         model.DeliveryRequestedDate = item.DeliveryRequestedDate;
-                        model.EstimatedPay = item.EstimatedPay;
+                        model.EstimatedPay = item.EstimatedPay ?? 0;
                         model.BillDate = item.BillDate;
                         model.BillNumber = item.BillNumber;
-                        model.Debt = item.Debt;
+                        model.Debt = item.Debt ?? 0;
                         model.PayDate = item.PayDate;
                         model.GroupPO = item.GroupPO;
                         model.ActualDeliveryDate = item.ActualDeliveryDate;
                         model.RecivedMoneyDate = item.RecivedMoneyDate;
                         model.Note = item.Note;
-                        model.ProjectPartListID = item.ProjectPartListID;
+                        model.ProjectPartListID = item.ProjectPartListID ?? 0;
                         model.IsDeleted = item.IsDeleted;
 
 
