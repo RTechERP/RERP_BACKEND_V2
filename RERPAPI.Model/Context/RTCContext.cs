@@ -1128,11 +1128,11 @@ public partial class RTCContext : DbContext
 
             entity.ToTable("AGVBillExportDetailSerial", "agv");
 
-            //entity.Property(e => e.CreatedBy).HasMaxLength(100);
-            //entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-            //entity.Property(e => e.SerialNumber).HasMaxLength(50);
-            //entity.Property(e => e.UpdatedBy).HasMaxLength(100);
-            //entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.SerialNumber).HasMaxLength(50);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<AGVBillExportLog>(entity =>
@@ -1197,11 +1197,11 @@ public partial class RTCContext : DbContext
         {
             entity.ToTable("AGVBillImportDetailSerial", "agv");
 
-            //entity.Property(e => e.CreatedBy).HasMaxLength(150);
-            //entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-            //entity.Property(e => e.SerialNumber).HasMaxLength(50);
-            //entity.Property(e => e.UpdatedBy).HasMaxLength(150);
-            //entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.SerialNumber).HasMaxLength(50);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<AGVBillImportDetailSerialNumber>(entity =>
@@ -3682,6 +3682,29 @@ public partial class RTCContext : DbContext
                 .HasComment("Tính tiền công 1h")
                 .HasColumnType("decimal(18, 2)");
             entity.Property(e => e.Sign).HasComment("Ký");
+            entity.Property(e => e.StatusContract).HasMaxLength(550);
+            entity.Property(e => e.TaxAbleIncome)
+                .HasComment("Thu thập tính thuế")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TaxCompanyName).HasMaxLength(150);
+            entity.Property(e => e.TaxDeduction)
+                .HasComment("Khấu trừ thuế TNCN")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TaxDependentsDeduction)
+                .HasComment("Giảm trừ người phụ thuộc (- thuế)")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TaxPersonalDeduction)
+                .HasComment("Giảm trừ bản thân (- thuế)")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TaxSalaryMeal)
+                .HasComment("phụ cấp cơm ca (- thuế)")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TaxSalaryOT)
+                .HasComment("Lương làm thêm (- thuế)")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TaxSalaryPhone)
+                .HasComment("phụ cấp điện thoại (- thuế)")
+                .HasColumnType("decimal(18, 2)");
             entity.Property(e => e.TotalMerit)
                 .HasComment("Tổng công được tính (Bao gồm công thực tế và phép)")
                 .HasColumnType("decimal(18, 2)");
@@ -7158,6 +7181,7 @@ public partial class RTCContext : DbContext
                 .HasComment("lưu tên người yêu cầu lấy từ bảng Employee, nếu  = 0 thì là tên KH");
             entity.Property(e => e.IsApproved).HasComment("0: Chờ duyệt kế hoạch; 1:Leader duyệt kế hoạch; 2:Chờ duyệt thực tế; 3:Leader Duyệt thực tế");
             entity.Property(e => e.ItemLate).HasComment("1:Hạng mục quá hạn,\r\n0: Hạng mục đúng hạn");
+            entity.Property(e => e.Location).HasMaxLength(550);
             entity.Property(e => e.PercentItem).HasColumnType("decimal(18, 1)");
             entity.Property(e => e.PercentageActual).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.PlanEndDate).HasColumnType("datetime");

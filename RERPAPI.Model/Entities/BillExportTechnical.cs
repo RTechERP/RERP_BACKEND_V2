@@ -69,6 +69,9 @@ public partial class BillExportTechnical
 
     public int? ApproverID { get; set; }
 
+    /// <summary>
+    /// 1: Kho Demo; 2: Kho AGV
+    /// </summary>
     public int? WarehouseTypeBill { get; set; }
 
     public bool? IsDeleted { get; set; }
