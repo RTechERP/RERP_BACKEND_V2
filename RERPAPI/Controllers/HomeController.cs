@@ -13,6 +13,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
+using RERPAPI.Services;
 using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Mime;
@@ -43,6 +44,7 @@ namespace RERPAPI.Controllers
         private readonly EmployeeWFHRepo _wfhRepo;
         private readonly ConfigSystemRepo _configSystemRepo;
 
+        //IRabbitMqPublisher _publisher;
         public HomeController(IOptions<JwtSettings> jwtSettings, RTCContext context, IConfiguration configuration, EmployeeOnLeaveRepo onLeaveRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeWFHRepo employeeWFHRepo, ConfigSystemRepo configSystemRepo, EmployeeOverTimeRepo employeeOverTimeRepo, RoleConfig roleConfig, EmployeePayrollDetailRepo employeePayrollDetailRepo)
         {
             _jwtSettings = jwtSettings.Value;
@@ -55,6 +57,7 @@ namespace RERPAPI.Controllers
             _employeeOverTimeRepo = employeeOverTimeRepo;
             _roleConfig = roleConfig;
             _employeePayrollDetailRepo = employeePayrollDetailRepo;
+            //_publisher = publisher;
         }
         [HttpPost("login")]
         public IActionResult Login([FromBody] User user)
@@ -561,6 +564,15 @@ namespace RERPAPI.Controllers
             }
 
         }
+
+        //[HttpPost("send")]
+        //public async Task<IActionResult> Send(EmployeeSendEmail e)
+        //{
+        //    await _publisher.PublishAsync(e);
+        //    return Ok();
+        //}
+
+
 
         //[HttpGet("download")]
         //public IActionResult DownloadFile([FromQuery] string controllerName, [FromQuery] string subPath) {
@@ -1149,8 +1161,8 @@ namespace RERPAPI.Controllers
                 int currentYear = DateTime.Now.Year;
                 int currentQuarter = (DateTime.Now.Month - 1) / 3 + 1;
                 var team = SQLHelper<object>.ProcedureToList("spGetUserTeam",
-                                                new string[] {  "@DepartmentID" },
-                                                new object[] {  0 });
+                                                new string[] { "@DepartmentID" },
+                                                new object[] { 0 });
                 var data = SQLHelper<object>.GetListData(team, 0);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
