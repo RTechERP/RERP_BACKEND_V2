@@ -7,7 +7,6 @@ using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
-using RERPAPI.Model.Entities;
 using RERPAPI.Repo;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
@@ -397,7 +396,6 @@ builder.Services.AddScoped<AGVBillExportDetailRepo>();
 builder.Services.AddScoped<AGVInventoryDemoRepo>();
 builder.Services.AddScoped<AGVHistoryProductRepo>();
 #endregion
-
 
 #region YCCV
 builder.Services.AddScoped<JobRequirementRepo>();

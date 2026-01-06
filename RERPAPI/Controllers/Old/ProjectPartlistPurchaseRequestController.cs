@@ -447,13 +447,12 @@ namespace RERPAPI.Controllers.Old
                     var existingRequest = _repo.GetByID(item.ID);
                     if (existingRequest == null) continue;
 
-                    if (existingRequest.EmployeeIDRequestApproved != currentUser.EmployeeID
-                        && !currentUser.IsAdmin) continue;
+                    //if (existingRequest.EmployeeIDRequestApproved != currentUser.EmployeeID
+                    //    && !currentUser.IsAdmin) continue;
                     if (item.ProjectPartlistPurchaseRequestTypeID == 3 || item.ProjectPartlistPurchaseRequestTypeID == 7)
                     {
                         _repo.UpdateData(item);
                     }
-
                     if (type)
                     {
                         item.IsApprovedTBP = status;
@@ -465,10 +464,8 @@ namespace RERPAPI.Controllers.Old
                         item.DateApprovedBGD = DateTime.Now;
                         item.ApprovedBGD = currentUser.EmployeeID;
                     }
-
                     await _repo.UpdateAsync(item);
                 }
-
                 return Ok(ApiResponseFactory.Success(null, $"Đã cập nhật trạng thái {textStatus} thành công."));
             }
             catch (Exception ex)
@@ -530,13 +527,58 @@ namespace RERPAPI.Controllers.Old
 
                 if (!_repo.ValidateUpdateData(data, out string mes))
                     return BadRequest(ApiResponseFactory.Fail(null, mes));
+                foreach (var item in data)
+                {
+                    // ===== HANDLE DUPLICATE =====
+                    if (item.ID <= 0 && item.DuplicateID > 0)
+                    {
+                        var source = _repo.GetByID(item.DuplicateID ?? 0);
+                        if (source.ID <= 0) continue;
+                        item.EmployeeID = source.EmployeeID;
+                        item.ProjectPartListID = source.ProjectPartListID;
+                        item.UnitCountID = source.UnitCountID;
+                        item.StatusRequest = source.StatusRequest;
+                        item.SupplierSaleID = source.SupplierSaleID;
+
+                        item.IsApprovedTBP = source.IsApprovedTBP;
+                        item.ApprovedTBP = source.ApprovedTBP;
+                        item.IsApprovedBGD = source.IsApprovedBGD;
+                        item.ApprovedBGD = source.ApprovedBGD;
+
+                        item.ProductSaleID = source.ProductSaleID;
+                        item.ProductGroupID = source.ProductGroupID;
+                        item.CurrencyID = source.CurrencyID;
+
+                        item.IsImport = source.IsImport;
+                        item.IsRequestApproved = source.IsRequestApproved;
+                        item.POKHDetailID = source.POKHDetailID;
+                        item.JobRequirementID = source.JobRequirementID;
+
+                        item.IsDeleted = source.IsDeleted;
+                        item.InventoryProjectID = source.InventoryProjectID;
+                        item.IsTechBought = source.IsTechBought;
+
+                        item.ProductGroupRTCID = source.ProductGroupRTCID;
+                        item.ProductRTCID = source.ProductRTCID;
+                        item.TicketType = source.TicketType;
+
+                        item.DateReturnEstimated = source.DateReturnEstimated;
+
+                        item.EmployeeApproveID = source.EmployeeApproveID;
+                        item.EmployeeIDRequestApproved = source.EmployeeIDRequestApproved;
+
+                        item.UnitName = source.UnitName;
+
+                    }
+                    // ===== END HANDLE DUPLICATE =====
+                }
 
                 var firms = _firmRepo.GetAll(x => x.FirmType == 1 && x.IsDelete != true);
-
                 foreach (var item in data)
                 {
                     ProjectPartlistPurchaseRequest prjPartList = _repo.GetByID(item.ID);
-                    if ((prjPartList.EmployeeIDRequestApproved != currentUser.EmployeeID && !currentUser.IsAdmin)
+
+                    if ((prjPartList.ID > 0 && prjPartList.EmployeeIDRequestApproved != currentUser.EmployeeID && !currentUser.IsAdmin)
                     )
                     {
                         continue;
@@ -545,7 +587,8 @@ namespace RERPAPI.Controllers.Old
                     if ((item.ProductGroupID <= 0 && item.ProductGroupRTCID <= 0))
                     {
                         _repo.UpdateData(item);
-                        await _repo.UpdateAsync(item);
+                        if (item.ID <= 0) await _repo.CreateAsync(item);
+                        else await _repo.UpdateAsync(item);
                         continue;
                     }
 
@@ -592,7 +635,8 @@ namespace RERPAPI.Controllers.Old
                     }
 
                     _repo.UpdateData(item);
-                    await _repo.UpdateAsync(item);
+                    if (item.ID <= 0) await _repo.CreateAsync(item);
+                    else await _repo.UpdateAsync(item);
                 }
 
                 return Ok(ApiResponseFactory.Success(null, $"Đã lưu dữ liệu thành công"));

@@ -212,7 +212,7 @@ namespace RERPAPI.Repo.GenericEntity
                 if (request.ID <= 0)
                     continue;
 
-                bool isTBPApproved = (bool)request.IsApprovedTBP;
+                bool isTBPApproved = request.IsApprovedTBP ?? false;
                 int isBorrowProduct = request.TicketType ?? 0;
 
                 bool invalidRTC = request.ProductRTCID == null || request.ProductRTCID <= 0;
@@ -330,53 +330,118 @@ namespace RERPAPI.Repo.GenericEntity
             return true;
         }
 
+        //public bool validateDeleted(List<ProjectPartlistPurchaseRequestDTO> requests, bool isPurchaseRequestDemo, out string message)
+        //{
+        //    message = "";
+        //    foreach (var item in requests)
+        //    {
+        //        if (item.ID <= 0) continue;
+
+        //        bool isCommercialProduct = Convert.ToBoolean(item.IsCommercialProduct);
+        //        int poNCC = Convert.ToInt32(item.PONCCID);
+        //        string productCode = Convert.ToString(item.ProductCode);
+
+        //        if (!isCommercialProduct)
+        //        {
+        //            message = $"Sản phẩm mã [{productCode}] không phải hàng thương mại.\nBạn không thể xoá!";
+        //            return false;
+        //        }
+
+        //        if (poNCC > 0)
+        //        {
+        //            message = $"Sản phẩm mã [{productCode}] đã có PO Nhà cung cấp.\nBạn không thể xoá!";
+        //            return false;
+        //        }
+
+        //        if (isPurchaseRequestDemo)
+        //        {
+        //            string updateName = Convert.ToString(item.UpdatedName);
+        //            int requestStatus = Convert.ToInt32(item.StatusRequest);
+        //            bool isApprovedTBP = Convert.ToBoolean(item.IsApprovedTBP);
+        //            bool isApprovedBGD = Convert.ToBoolean(item.IsApprovedBGD);
+
+        //            if (updateName != "" && requestStatus != 1)
+        //            {
+        //                message = $"Sản phẩm mã [{productCode}] đã nhân viên mua.\nBạn không thể hủy yêu cầu!";
+        //                return false;
+        //            }
+
+        //            if (isApprovedTBP)
+        //            {
+        //                message = $"Sản phẩm mã [{productCode}] đã được TBP duyệt.\nBạn không thể hủy yêu cầu!";
+        //                return false;
+        //            }
+
+        //            if (isApprovedBGD)
+        //            {
+        //                message = $"Sản phẩm mã [{productCode}] đã được BGD duyệt.\nBạn không thể hủy yêu cầu!";
+        //                return false;
+        //            }
+        //        }
+        //    }
+
+        //    return true;
+        //}
         public bool validateDeleted(List<ProjectPartlistPurchaseRequestDTO> requests, bool isPurchaseRequestDemo, out string message)
         {
             message = "";
+
+            if (requests == null || requests.Count == 0)
+            {
+                message = "Danh sách xoá không hợp lệ";
+                return false;
+            }
+
             foreach (var item in requests)
             {
                 if (item.ID <= 0) continue;
 
-                bool isCommercialProduct = Convert.ToBoolean(item.IsCommercialProduct);
-                int poNCC = Convert.ToInt32(item.PONCCID);
-                string productCode = Convert.ToString(item.ProductCode);
+                string productCode = item.ProductCode ?? "";
 
-                if (!isCommercialProduct)
+                bool isAllowedType = false;
+
+                if (item.ProjectPartlistPurchaseRequestTypeID.HasValue)
                 {
-                    message = $"Sản phẩm mã [{productCode}] không phải hàng thương mại.\nBạn không thể xoá!";
+                    int typeId = item.ProjectPartlistPurchaseRequestTypeID.Value;
+                    isAllowedType = typeId == 5 || typeId == 6 || typeId == 7;
+                }
+                else
+                {
+                    isAllowedType = item.IsCommercialProduct == true;
+                }
+
+                if (!isAllowedType)
+                {
+                    message = $"Sản phẩm mã [{productCode}] không thuộc loại được phép xoá.";
                     return false;
                 }
 
-                if (poNCC > 0)
+                if ((item.PONCCID ?? 0) > 0)
                 {
                     message = $"Sản phẩm mã [{productCode}] đã có PO Nhà cung cấp.\nBạn không thể xoá!";
                     return false;
                 }
 
-                if (isPurchaseRequestDemo)
+                if (!isPurchaseRequestDemo)
+                    continue;
+
+                // ---- Rule riêng cho DEMO ----
+                if (!string.IsNullOrEmpty(item.UpdatedName) && item.StatusRequest != 1)
                 {
-                    string updateName = Convert.ToString(item.UpdatedName);
-                    int requestStatus = Convert.ToInt32(item.StatusRequest);
-                    bool isApprovedTBP = Convert.ToBoolean(item.IsApprovedTBP);
-                    bool isApprovedBGD = Convert.ToBoolean(item.IsApprovedTBP);
+                    message = $"Sản phẩm mã [{productCode}] đã nhân viên mua.\nBạn không thể huỷ yêu cầu!";
+                    return false;
+                }
 
-                    if (updateName != "" && requestStatus != 1)
-                    {
-                        message = $"Sản phẩm mã [{productCode}] đã nhân viên mua.\nBạn không thể hủy yêu cầu!";
-                        return false;
-                    }
+                if (item.IsApprovedTBP == true)
+                {
+                    message = $"Sản phẩm mã [{productCode}] đã được TBP duyệt.\nBạn không thể huỷ yêu cầu!";
+                    return false;
+                }
 
-                    if (isApprovedTBP)
-                    {
-                        message = $"Sản phẩm mã [{productCode}] đã được TBP duyệt.\nBạn không thể hủy yêu cầu!";
-                        return false;
-                    }
-
-                    if (isApprovedBGD)
-                    {
-                        message = $"Sản phẩm mã [{productCode}] đã được BGD duyệt.\nBạn không thể hủy yêu cầu!";
-                        return false;
-                    }
+                if (item.IsApprovedBGD == true)
+                {
+                    message = $"Sản phẩm mã [{productCode}] đã được BGD duyệt.\nBạn không thể huỷ yêu cầu!";
+                    return false;
                 }
             }
 
