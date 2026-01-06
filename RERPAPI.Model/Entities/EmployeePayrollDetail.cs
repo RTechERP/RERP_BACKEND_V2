@@ -182,4 +182,43 @@ public partial class EmployeePayrollDetail
     public string? UpdatedBy { get; set; }
 
     public int? MealUse { get; set; }
+
+    public string? TaxCompanyName { get; set; }
+
+    public string? StatusContract { get; set; }
+
+    /// <summary>
+    /// Lương làm thêm (- thuế)
+    /// </summary>
+    public decimal? TaxSalaryOT { get; set; }
+
+    /// <summary>
+    /// phụ cấp cơm ca (- thuế)
+    /// </summary>
+    public decimal? TaxSalaryMeal { get; set; }
+
+    /// <summary>
+    /// phụ cấp điện thoại (- thuế)
+    /// </summary>
+    public decimal? TaxSalaryPhone { get; set; }
+
+    /// <summary>
+    /// Giảm trừ bản thân (- thuế)
+    /// </summary>
+    public decimal? TaxPersonalDeduction { get; set; }
+
+    /// <summary>
+    /// Giảm trừ người phụ thuộc (- thuế)
+    /// </summary>
+    public decimal? TaxDependentsDeduction { get; set; }
+
+    /// <summary>
+    /// Thu thập tính thuế
+    /// </summary>
+    public decimal? TaxAbleIncome { get; set; }
+
+    /// <summary>
+    /// Khấu trừ thuế TNCN
+    /// </summary>
+    public decimal? TaxDeduction { get; set; }
 }

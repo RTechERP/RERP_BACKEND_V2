@@ -1148,9 +1148,9 @@ namespace RERPAPI.Controllers
             {
                 int currentYear = DateTime.Now.Year;
                 int currentQuarter = (DateTime.Now.Month - 1) / 3 + 1;
-                var team = SQLHelper<object>.ProcedureToList("spGetALLKPIEmployeeTeam",
-                                                new string[] { "@YearValue", "@QuarterValue", "@DepartmentID" },
-                                                new object[] { currentYear, currentQuarter, 0 });
+                var team = SQLHelper<object>.ProcedureToList("spGetUserTeam",
+                                                new string[] {  "@DepartmentID" },
+                                                new object[] {  0 });
                 var data = SQLHelper<object>.GetListData(team, 0);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }

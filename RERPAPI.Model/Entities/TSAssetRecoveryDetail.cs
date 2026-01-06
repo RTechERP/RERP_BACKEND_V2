@@ -36,7 +36,7 @@ public partial class TSAssetRecoveryDetail
     public int? LastEmployeeID { get; set; }
 
     /// <summary>
-    /// 1:đã xóa;0:chưa xóa
+    ///  1:đã xóa;0:chưa xóa
     /// </summary>
     public bool? IsDeleted { get; set; }
 }
