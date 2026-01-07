@@ -5,11 +5,13 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Technical;
+using ZXing.QrCode.Internal;
 
 namespace RERPAPI.Controllers.Old
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class HistoryProductRTCController : ControllerBase
     {
         private const int WAREHOUSE_ID = 1;
@@ -20,7 +22,6 @@ namespace RERPAPI.Controllers.Old
             _historyRepo = historyRepo;
         }
 
-        [Authorize]
         [HttpGet("get-all")]
         public IActionResult GetAll()
         {
@@ -47,7 +48,6 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
-        [Authorize]
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] List<HistoryProductRTC> historyProducts)
         {
@@ -102,7 +102,144 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
+        #region Mượn trả phiếu bằng qrcode
+        [HttpGet("user-product-qr")]
+        public IActionResult getUserProductQR(int userId)
+        {
+            try
+            {
+                var data = SQLHelper<object>.ProcedureToList("spGetUsersHistoryProductRTC",
+                                new string[] { "@UsersID" },
+                                new object[] { userId });
+                var dt = SQLHelper<dynamic>.GetListData(data, 0);
+                return Ok(ApiResponseFactory.Success(dt, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
 
+        [HttpGet("product-qr")]
+        public IActionResult ProductQR()
+        {
+            try
+            {
+                var data = SQLHelper<object>.ProcedureToList("spGetProductQrCode",
+                                new string[] { },
+                                new object[] { });
+                var dt = SQLHelper<dynamic>.GetListData(data, 0);
+                return Ok(ApiResponseFactory.Success(dt, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("product-rtc-by-qr")]
+        public IActionResult ProductRTCByQR(string qrCode, int warehouseID)
+        {
+            try
+            {
+                var data = SQLHelper<object>.ProcedureToList("spGetProductQrCode",
+                                new string[] { "@ProductRTCQRCode", "@WarehouseID" },
+                                new object[] { qrCode, warehouseID });
+                var dt = SQLHelper<dynamic>.GetListData(data, 0);
+                var dt1 = SQLHelper<dynamic>.GetListData(data, 1);
+
+                var result = new
+                {
+                    data = dt,
+                    data1 = dt1
+                };
+                return Ok(ApiResponseFactory.Success(result, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("load-qr-code")]
+        public IActionResult LoadQRCode(string qrCode, int warehouseID)
+        {
+            try
+            {
+                var data = SQLHelper<object>.ProcedureToList("spGetProductRTCByQrCode",
+                                new string[] { "@ProductRTCQRCode", "@WarehouseID" },
+                                new object[] { qrCode, warehouseID });
+                var dt = SQLHelper<dynamic>.GetListData(data, 0);
+                var dt1 = SQLHelper<dynamic>.GetListData(data, 1);
+                if (dt.Count() > 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Sản phẩm đã được mượn.\nVui lòng báo với admin."));
+                }
+
+                if(dt1.Count() <=0) return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy sản phẩm cần mượn.\nVui lòng báo với admin."));
+
+                return Ok(ApiResponseFactory.Success(dt1, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("load-qr-code-return")]
+        public IActionResult LoadQRCodeReturn(string qrCode, int userId, int warehouseID)
+        {
+            try
+            {
+                var data = SQLHelper<object>.ProcedureToList("spGetProductRTCByQrCode_Return",
+                                new string[] { "@ProductRTCQRCode", "@PeopleID", "@WarehouseID" },
+                                new object[] { qrCode, userId, warehouseID });
+                var dt = SQLHelper<dynamic>.GetListData(data, 0);
+                if (dt.Count() <= 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy mã {qrCode} đang mượn!"));
+                }
+
+                return Ok(ApiResponseFactory.Success(dt, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("save-data-product-qr")]
+        public async Task<IActionResult> SaveDataProductRTC([FromBody] List<HistoryProductRTC> historyProducts)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                if (historyProducts.Count() <= 0) return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu rỗng"));
+
+                foreach (var model in historyProducts)
+                {
+                    if (model.ID > 0)
+                    {
+                        await _historyRepo.UpdateAsync(model);
+                    }
+                    else
+                    {
+                        await _historyRepo.CreateAsync(model);
+                        var exec = SQLHelper<object>.ProcedureToList("spUpdateStatusProductRTCQRCode",
+                                    new string[] { "@ProductRTCQRCodeID", "@Status" },
+                                    new object[] { model.ProductRTCQRCodeID, 2 });
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(null, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        #endregion
 
     }
 }
