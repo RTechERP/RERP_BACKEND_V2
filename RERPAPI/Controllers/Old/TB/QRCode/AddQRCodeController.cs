@@ -73,14 +73,13 @@ namespace RERPAPI.Controllers.Old.TB.QRCode
             }
         }
         [HttpGet("get-product-and-qrcode")]
-        public IActionResult GetQRCode([FromQuery] int? wearHouseID,
-    [FromQuery] string? filterText = "")
+        public IActionResult GetQRCode(int? wareHouseID, string? filterText = "")
         {
             try
             {
                 string procedureName = "spGetProductAndQrCode";
                 string[] paramNames = new string[] { "@WarehouseID", "@FilterText" };
-                object[] paramValues = new object[] { wearHouseID ?? 1, filterText ?? "" };
+                object[] paramValues = new object[] { wareHouseID ?? 1, filterText ?? "" };
                 var qrCode = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
                 var dataList = SQLHelper<dynamic>.GetListData(qrCode, 0);
                 return Ok(ApiResponseFactory.Success(new { dataList }, "Lấy danh sách QRCode thành công"));
@@ -128,7 +127,7 @@ namespace RERPAPI.Controllers.Old.TB.QRCode
                             await _productRTCQRCodeRepo.UpdateAsync(item);
                     }
                 }
-                return Ok(ApiResponseFactory.Success(qrCodes,"Lưu dữ liệu thành công"));
+                return Ok(ApiResponseFactory.Success(qrCodes, "Lưu dữ liệu thành công"));
             }
             catch (Exception ex)
             {
@@ -145,7 +144,7 @@ namespace RERPAPI.Controllers.Old.TB.QRCode
 
                     foreach (var item in qrCodes)
                     {
-                      
+
 
                         if (item.ID <= 0)
                         {
