@@ -37,7 +37,7 @@ namespace RERPAPI.Controllers.Project
     {
         ProductSaleRepo _productSaleRepo;
         FirmRepo _firmRepo;
-        UnitCountKTRepo _unitCountRepo;
+        UnitCountRepo _unitCountRepo;
         ProductRTCRepo _productRTCRepo;
         ProjectPartlistPriceRequestRepo _priceRequestRepo;
         ProjectPartlistVersionRepo _partlistVersionRepo;
@@ -48,7 +48,7 @@ namespace RERPAPI.Controllers.Project
         private readonly ProductGroupRepo _productGroupRepo;
         private readonly InventoryStockRepo _inventoryStockRepo;
         UnitCountKTRepo _unitCountKTRepo;
-        public ProjectPartlistController(ProjectPartListRepo projectPartlistRepo, ProductSaleRepo productSaleRepo, FirmRepo firmRepo, UnitCountKTRepo unitCountRepo, ProductRTCRepo productRTCRepo, ProjectPartlistPriceRequestRepo priceRequestRepo, ProjectPartlistVersionRepo partlistVersionRepo, ProjectPartlistPurchaseRequestRepo partlistPurchaseRequestRepo, UnitCountKTRepo unitCountKTRepo, WarehouseRepo warehouseRepo, BillExportRepo billExportRepo, ProductGroupRepo productGroupRepo, InventoryStockRepo inventoryStockRepo)
+        public ProjectPartlistController(ProjectPartListRepo projectPartlistRepo, ProductSaleRepo productSaleRepo, FirmRepo firmRepo, UnitCountRepo unitCountRepo, ProductRTCRepo productRTCRepo, ProjectPartlistPriceRequestRepo priceRequestRepo, ProjectPartlistVersionRepo partlistVersionRepo, ProjectPartlistPurchaseRequestRepo partlistPurchaseRequestRepo, UnitCountKTRepo unitCountKTRepo, WarehouseRepo warehouseRepo, BillExportRepo billExportRepo, ProductGroupRepo productGroupRepo, InventoryStockRepo inventoryStockRepo)
         {
             _projectPartlistRepo = projectPartlistRepo;
             _productSaleRepo = productSaleRepo;
@@ -202,7 +202,7 @@ namespace RERPAPI.Controllers.Project
                     var existingRequest = _priceRequestRepo.GetAll(x => x.ProjectPartListID == item.ID && x.IsDeleted == false)
                                                               .OrderByDescending(x => x.StatusRequest)
                                                               .FirstOrDefault();
-                   // if (item.StatusPriceRequest > 0 && (item.DatePriceQuote == null || item.DatePriceQuote > threeMonthsAgo)) continue;
+                    // if (item.StatusPriceRequest > 0 && (item.DatePriceQuote == null || item.DatePriceQuote > threeMonthsAgo)) continue;
                     if (existingRequest != null && existingRequest.StatusRequest > 0 && (item.DatePriceQuote == null || item.DatePriceQuote > threeMonthsAgo)) continue;
 
                     // Cập nhật ProjectPartList (cả cha và con)
@@ -943,6 +943,43 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        //[HttpPost("check-exits-import")]
+        //public async Task<IActionResult> CheckExistImport([FromBody] PartlistImportRequestDTO request)
+        //{
+        //    try
+        //    {
+        //        List<Firm> diffFirm = new List<Firm>();
+        //        List<UnitCount> diffUnit = new List<UnitCount>();
+        //        List<string> diff = new List<string>(); // Khởi tạo list
+        //        foreach (var item in request.Items)
+        //        {
+        //            if ((item.Manufacturer == null || item.Manufacturer.Length < 0) && (item.Unit == null || item.Unit.Length < 0 )) continue;
+
+        //            if (item.Manufacturer.Trim() != "")
+        //            {
+        //                diffFirm = _firmRepo.GetAll(x => x.FirmName == item.Manufacturer);
+        //            }
+        //            if(item.Unit.Trim() != "")
+        //            {
+        //                diffUnit = _unitCountRepo.GetAll(x => x.UnitName == item.Unit);
+        //            }
+
+
+        //            if (data.Count == 0) // Nếu không tìm thấy manufacturer
+        //            {
+        //                diff.Add($"TT: {item.TT} - {item.Manufacturer},<br>"); // Sửa cú pháp string interpolation
+        //            }
+        //        }
+        //        string message = diff.Count > 0
+        //? $"*Lưu ý: Các hãng không tồn tại trong danh sách hãng:<br> {string.Join("", diff)}"
+        //: "Đã xử lý thành công!";
+        //        return Ok(ApiResponseFactory.Success(diff, message));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
         [HttpPost("apply-diff2")]
         public async Task<IActionResult> ApplyDiff([FromBody] PartlistImportRequestDTO request)
         {
@@ -971,7 +1008,7 @@ namespace RERPAPI.Controllers.Project
                     x.ProjectPartListVersionID == request.ProjectPartListVersionID &&
                     x.IsDeleted != true
                 );
-              
+
 
                 List<string> listParentTT = oldItems
                     .Where(x => x.TT.Contains("."))
@@ -1236,7 +1273,7 @@ namespace RERPAPI.Controllers.Project
                 string warningMessage = "";
                 if (productNewCodes.Count > 0)
                 {
-                    warningMessage ="Các sản phẩm sau không đủ số lượng để xuất kho:\n- " + string.Join("\n- ", productNewCodes);
+                    warningMessage = "Các sản phẩm sau không đủ số lượng để xuất kho:\n- " + string.Join("\n- ", productNewCodes);
                     //warningMessage = $"Các sản phẩm có mã nội bộ [{string.Join(";", productNewCodes)}] sẽ không được yêu cầu xuất kho vì không đủ số lượng!";
                 }
 
@@ -1747,6 +1784,31 @@ namespace RERPAPI.Controllers.Project
 
         }
 
+        [HttpPost("check-approve-newcode")]
+        public async Task<IActionResult> CheckApprovedNew([FromBody] List<ProjectPartlistDTO> request)
+        {
+            try
+            {
+                List<string> diff = new List<string>(); // Khởi tạo list
+                foreach (var item in request)
+                {
+                    if (item.Manufacturer == null || item.Manufacturer.Length < 0) continue;
+                    var data = _firmRepo.GetAll(x => x.FirmName == item.Manufacturer);
+                    if (data.Count == 0) // Nếu không tìm thấy manufacturer
+                    {
+                        diff.Add($"TT: {item.TT} - {item.Manufacturer},<br>"); // Sửa cú pháp string interpolation
+                    }
+                }
+                string message = diff.Count > 0
+        ? $"*Lưu ý: Các hãng không tồn tại trong danh sách hãng:<br> {string.Join("", diff)}"
+        : "Đã xử lý thành công!";
+                return Ok(ApiResponseFactory.Success(diff, message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 
 }
