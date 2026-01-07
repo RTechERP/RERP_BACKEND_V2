@@ -1251,7 +1251,7 @@ namespace RERPAPI.Controllers
                 request.DateStart = request.DateStart.Value.ToLocalTime().Date;
                 request.DateEnd = request.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
                 var approveResultSenior = SQLHelper<dynamic>.ProcedureToList(
-                    "   ",
+                    "spGetApprovedByApprovedTP_New",
                     new[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID", "@StatusSenior" },
                     new object[] { "", request.DateStart, request.DateEnd, 0, -1, 0, 0, 0, -1, 0, false, 0, currentUser.EmployeeID, 0 });
                 var approveResultTP = SQLHelper<dynamic>.ProcedureToList(
@@ -1259,7 +1259,7 @@ namespace RERPAPI.Controllers
                    new[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID", "@StatusSenior" },
                    new object[] { "", request.DateStart, request.DateEnd, currentUser.EmployeeID, 0, 0, 0, 0, -1, 0, false, 0, 0, -1 });
                 var approveResultBGD = SQLHelper<dynamic>.ProcedureToList(
-                   "spGetApprovedByApprovedTP_New       ",
+                   "spGetApprovedByApprovedTP_New",
                    new[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID", "@StatusSenior" },
                    new object[] { "", request.DateStart, request.DateEnd, currentUser.EmployeeID, 0, 0, 0, 0, -1, 0, isBGD, 0, 0, -1 });
                 var approveListSenior = SQLHelper<dynamic>.GetListData(approveResultSenior, 0);
