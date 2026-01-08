@@ -610,7 +610,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
-                #region ===== MASTER =====
                 var masterSets = SQLHelper<dynamic>.ProcedureToList(
                     "spGetExportExcel",
                     new[] { "@ID" },
@@ -621,9 +620,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu master"));
 
                 var master = (IDictionary<string, object>)masterSets[0][0];
-                #endregion
 
-                #region ===== DETAIL (STORE RIÊNG) =====
                 var detailSets = SQLHelper<dynamic>.ProcedureToList(
                     "spGetBillExportDetail",
                     new[] { "@BillID" },
@@ -636,7 +633,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 var details = detailSets[0]
                     .Cast<IDictionary<string, object>>()
                     .ToList();
-                #endregion
 
                 #region ===== LOAD TEMPLATE =====
                 string rootPath = _configuration.GetValue<string>("PathTemplate");
