@@ -943,43 +943,73 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        //[HttpPost("check-exits-import")]
-        //public async Task<IActionResult> CheckExistImport([FromBody] PartlistImportRequestDTO request)
-        //{
-        //    try
-        //    {
-        //        List<Firm> diffFirm = new List<Firm>();
-        //        List<UnitCount> diffUnit = new List<UnitCount>();
-        //        List<string> diff = new List<string>(); // Khởi tạo list
-        //        foreach (var item in request.Items)
-        //        {
-        //            if ((item.Manufacturer == null || item.Manufacturer.Length < 0) && (item.Unit == null || item.Unit.Length < 0 )) continue;
+        [HttpPost("check-exits-import")]
+        public async Task<IActionResult> CheckExistImport([FromBody] PartlistImportRequestDTO request)
+        {
+            try
+            {
+                var diffFirm = new List<string>(); // Chỉ lưu TT
+                var diffUnit = new List<string>(); // Chỉ lưu TT
+                var details = new Dictionary<string, string>(); // Lưu chi tiết đầy đủ
 
-        //            if (item.Manufacturer.Trim() != "")
-        //            {
-        //                diffFirm = _firmRepo.GetAll(x => x.FirmName == item.Manufacturer);
-        //            }
-        //            if(item.Unit.Trim() != "")
-        //            {
-        //                diffUnit = _unitCountRepo.GetAll(x => x.UnitName == item.Unit);
-        //            }
+                foreach (var item in request.Items)
+                {
+                    var issues = new List<string>();
 
+                    // Check Manufacturer
+                    if (!string.IsNullOrWhiteSpace(item.Manufacturer))
+                    {
+                        var firmExists = _firmRepo.GetAll(x => x.FirmName == item.Manufacturer).Count > 0;
+                        if (!firmExists)
+                        {
+                            diffFirm.Add(item.TT ?? "");
+                            issues.Add($"Hãng: {item.Manufacturer}");
+                        }
+                    }
 
-        //            if (data.Count == 0) // Nếu không tìm thấy manufacturer
-        //            {
-        //                diff.Add($"TT: {item.TT} - {item.Manufacturer},<br>"); // Sửa cú pháp string interpolation
-        //            }
-        //        }
-        //        string message = diff.Count > 0
-        //? $"*Lưu ý: Các hãng không tồn tại trong danh sách hãng:<br> {string.Join("", diff)}"
-        //: "Đã xử lý thành công!";
-        //        return Ok(ApiResponseFactory.Success(diff, message));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-        //    }
-        //}
+                    // Check Unit
+                    if (!string.IsNullOrWhiteSpace(item.Unit))
+                    {
+                        var unitExists = _unitCountRepo.GetAll(x => x.UnitName == item.Unit).Count > 0;
+                        if (!unitExists)
+                        {
+                            diffUnit.Add(item.TT ?? "");
+                            issues.Add($"Đơn vị: {item.Unit}");
+                        }
+                    }
+
+                    if (issues.Count > 0)
+                    {
+                        details[item.TT ?? ""] = string.Join(" | ", issues);
+                    }
+                }
+
+                // Build message
+                string message = "";
+                if (details.Count > 0)
+                {
+                    var messageList = details.Select(d => $"<li><b>TT: {d.Key}</b> - {d.Value}</li>");
+                    message = $" <b>*Lưu ý: Có {details.Count} vật tư có đơn vị, hãng khác trong danh sách :</b><br><ul style='margin: 5px 0; padding-left: 20px;'>{string.Join("", messageList)}</ul>";
+                }
+                else
+                {
+                    message = " Đã xử lý thành công!";
+                }
+
+                var result = new
+                {
+                    firmIssues = diffFirm.Distinct().ToList(),
+                    unitIssues = diffUnit.Distinct().ToList(),
+                    details = details
+                };
+
+                return Ok(ApiResponseFactory.Success(result, message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [HttpPost("apply-diff2")]
         public async Task<IActionResult> ApplyDiff([FromBody] PartlistImportRequestDTO request)
         {
@@ -1266,7 +1296,7 @@ namespace RERPAPI.Controllers.Project
 
                 if (validIds.Count <= 0)
                 {
-                    return BadRequest(ApiResponseFactory.Fail(null, $"Các sản phẩm có mã nội bộ [{string.Join("\n- ", productNewCodes)}] sẽ không được yêu cầu xuất kho vì không đủ số lượng!"));
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Các sản phẩm có mã nội bộ [{string.Join("\n- ", productNewCodes)}] sẽ không được yêu cầu xuất/chuyển kho vì không đủ số lượng!"));
                 }
 
                 // Warning message nếu có sản phẩm không đủ số lượng
