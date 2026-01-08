@@ -1350,8 +1350,9 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("get-summary-employee-person")]
-        public IActionResult GetProposeVehicleRepair([FromBody] EmployeeOnleaveSummaryParam request)
+        public IActionResult GetProposeVehicleRepair([FromBody] SummaryPersonal request)
         {
             try
             {
@@ -1365,26 +1366,29 @@ namespace RERPAPI.Controllers
                 string procedureENF = "spGetEmployeeNoFingerprintInWeb";
                 string procedureNightShift = "spGetEmployeeNightShift";
                 string[] paramNames = new string[] { "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@IsApproved", "@Keyword" };
-                object[] paramValues = new object[] { request.DateStart, request.DateEnd, request.DepartmentID??0, request.EmployeeID??0, request.IsApproved, request.Keyword??"" };
+                object[] paramValues = new object[] { request.DateStart, request.DateEnd, request.DepartmentID ?? 0, request.EmployeeID ?? 0, request.IsApproved, request.Keyword ?? "" };
+                string[] paramNamesNightShift = new string[] { "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@IsApproved", "@Keyword" ,"@PageNumber","@PageSize"};
+                object[] paramValuesNightShift = new object[] { request.DateStart, request.DateEnd, request.DepartmentID ?? 0, request.EmployeeID ?? 0, request.IsApproved, request.Keyword ?? "",1,10000000 };
+                string[] paramNamesEarlyLate = new string[] { "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@IsApproved", "@Keyword","@Type" };
+                object[] paramValuesEarlyLate = new object[] { request.DateStart, request.DateEnd, request.DepartmentID ?? 0, request.EmployeeID ?? 0, request.IsApproved, request.Keyword ?? "",0 };
+                string[] paramNameBuissiness = new string[] { "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@IsApproved", "@Keyword", "@Type", "@VehicleID", "@NotCheckIn" };
+                object[] paramValueBuissiness = new object[] { request.DateStart, request.DateEnd, request.DepartmentID ?? 0, request.EmployeeID ?? 0, request.IsApproved, request.Keyword ?? "", 0 ,0,-1};
+
+           //string[] paramNameBuissiness = new string[] { "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@IsApproved", "@Keyword", "@Type", "@NotCheckIn" };
+           //    object[] paramValueBuissiness = new object[] { request.DateStart, request.DateEnd, request.DepartmentID ?? 0, request.EmployeeID ?? 0, request.IsApproved, request.Keyword ?? "", 0, -1};
+
 
                 var dataOnLeave = SQLHelper<object>.ProcedureToList(procedureOnLeave, paramNames, paramValues);
-                var dataEarlyLate = SQLHelper<object>.ProcedureToList(procedureEarlyLate, paramNames, paramValues);
-                var dataOverTime = SQLHelper<object>.ProcedureToList(procedureOverTime, paramNames, paramValues);
-                var dataBussiness = SQLHelper<object>.ProcedureToList(procedureBussiness, paramNames, paramValues);
+                var dataEarlyLate = SQLHelper<object>.ProcedureToList(procedureEarlyLate, paramNamesEarlyLate, paramValuesEarlyLate);
+                var dataOverTime = SQLHelper<object>.ProcedureToList(procedureOverTime, paramNamesEarlyLate, paramValuesEarlyLate);
+                var dataBussiness = SQLHelper<object>.ProcedureToList(procedureBussiness, paramNameBuissiness, paramValueBuissiness);
                 var dataWFH = SQLHelper<object>.ProcedureToList(procedureOnWFH, paramNames, paramValues);
                 var dataENF = SQLHelper<object>.ProcedureToList(procedureENF, paramNames, paramValues);
-                var dataNightShift = SQLHelper<object>.ProcedureToList(procedureNightShift, paramNames, paramValues);
+                var dataNightShiftData = SQLHelper<dynamic>.ProcedureToList(procedureNightShift, paramNamesNightShift, paramValuesNightShift);
 
+                var dataNightShift = SQLHelper<dynamic>.GetListData(dataNightShiftData, 0);
 
-                var OnLeave = SQLHelper<object>.GetListData(dataOnLeave, 0);
-                var EarlyLate = SQLHelper<object>.GetListData(dataEarlyLate, 0);
-                var OverTime = SQLHelper<object>.GetListData(dataOverTime, 0);
-                var Bussiness = SQLHelper<object>.GetListData(dataBussiness, 0);
-                var WFH = SQLHelper<object>.GetListData(dataWFH, 0);
-                var ENF = SQLHelper<object>.GetListData(dataENF, 0);
-                var NightShift = SQLHelper<object>.GetListData(dataNightShift, 0);
-               
-                return Ok(ApiResponseFactory.Success(new { OnLeave, EarlyLate, OverTime, Bussiness , WFH, ENF , NightShift }, "Lấy dữ liệu thành công"));
+                return Ok(ApiResponseFactory.Success(new { dataOnLeave, dataEarlyLate, dataOverTime, dataBussiness, dataWFH, dataENF, dataNightShift }, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
             {
