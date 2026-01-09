@@ -444,7 +444,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             }
 
             // Validate Bill Type and Creation Date
-            if (dto.billImport.BillTypeNew != 4 && !dto.billImport.CreatedDate.HasValue)
+            if (dto.billImport.BillTypeNew != 4 && !dto.billImport.CreatDate.HasValue)
             {
                 return (false, "Vui lòng nhập Ngày nhập!");
             }

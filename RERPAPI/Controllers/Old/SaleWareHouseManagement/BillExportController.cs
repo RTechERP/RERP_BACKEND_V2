@@ -1300,7 +1300,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         {
             try
             {
-                var warehouses = _warehouseRepo.GetAll();
+                var warehouses = _warehouseRepo.GetAll(x => x.IsDeleted == false || x.IsDeleted == null);
                 return Ok(new
                 {
                     status = 1,
