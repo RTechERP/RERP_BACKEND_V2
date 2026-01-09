@@ -296,7 +296,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
             }
             catch (Exception ex)
-            {
+            {   
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
@@ -328,7 +328,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 {
                     if (dto.employeeBussinessVehicle.ID <= 0)
                     {
-                      
+                        dto.employeeBussinessVehicle.EmployeeBussinesID = dto.employeeBussiness.ID;
                         await _employeeBussinessVehicleRepo.CreateAsync(dto.employeeBussinessVehicle);
                     }
                     else

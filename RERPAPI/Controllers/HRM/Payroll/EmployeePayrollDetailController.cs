@@ -105,15 +105,24 @@ namespace RERPAPI.Controllers.Old
             {
                 if (listID.Count() > 0)
                 {
-                    List<EmployeePayrollDetail> employeePayrollDetails = _employeePayrollDetailRepo.GetAll().Where(x => listID.Contains(x.ID)).ToList();
-                    if (employeePayrollDetails.Count() > 0)
+                    foreach (int id in listID)
                     {
-                        foreach (EmployeePayrollDetail item in employeePayrollDetails)
+                        EmployeePayrollDetail payrollDetail = _employeePayrollDetailRepo.GetByID(id);
+                        if (payrollDetail.ID >0)
                         {
-                            item.IsPublish = isPublish;
-                            _employeePayrollDetailRepo.UpdateAsync(item);
+                            payrollDetail.IsPublish = isPublish;
+                            await _employeePayrollDetailRepo.UpdateAsync(payrollDetail);
                         }
                     }
+                    //List<EmployeePayrollDetail> employeePayrollDetails = _employeePayrollDetailRepo.GetAll().Where(x => listID.Contains(x.ID)).ToList();
+                    //if (employeePayrollDetails.Count() > 0)
+                    //{
+                    //    foreach (EmployeePayrollDetail item in employeePayrollDetails)
+                    //    {
+                    //        item.IsPublish = isPublish;
+                    //        _employeePayrollDetailRepo.UpdateAsync(item);
+                    //    }
+                    //}
                 }
                 return Ok(ApiResponseFactory.Success(1, ""));
             }
@@ -161,10 +170,11 @@ namespace RERPAPI.Controllers.Old
 
                             // Boolean
                             employeePayrollDetail.IsPublish = row["IsPublish"]?.ToString().ToLower() == "true";
-                            employeePayrollDetail.Sign = row["Sign"]?.ToString().ToLower() == "true";
+                            employeePayrollDetail.TotalWorkday = TextUtils.ToInt32(row["TotalWorkday"]);
 
                             // Cơ bản
                             employeePayrollDetail.STT = row["STT"] != null ? Convert.ToInt32(row["STT"].ToString()) : 0;
+                            //employeePayrollDetail.STT = row["STT"] != null ? Convert.ToInt32(row["STT"].ToString()) : 0;
 
                             employeePayrollDetail.EmployeeID = employee.First().ID;
                             employeePayrollDetail.PayrollID = PayrollID;
@@ -186,7 +196,6 @@ namespace RERPAPI.Controllers.Old
 
                             employeePayrollDetail.OT_Hour_HD = row["OT_Hour_HD"] != null ? Convert.ToDecimal(row["OT_Hour_HD"].ToString()) : 0;
                             employeePayrollDetail.OT_Money_HD = row["OT_Money_HD"] != null ? Convert.ToDecimal(row["OT_Money_HD"].ToString()) : 0;
-
 
 
 
@@ -236,6 +245,16 @@ namespace RERPAPI.Controllers.Old
 
                             // Ghi chú
                             employeePayrollDetail.Note = row["Note"]?.ToString();
+
+                            employeePayrollDetail.TaxCompanyName = row["TaxCompanyName"]?.ToString();
+                            employeePayrollDetail.StatusContract = row["StatusContract"]?.ToString();
+                            employeePayrollDetail.TaxSalaryOT = TextUtils.ToDecimal(row["TaxSalaryOT"]);
+                            employeePayrollDetail.TaxSalaryMeal = TextUtils.ToDecimal(row["TaxSalaryMeal"]);
+                            employeePayrollDetail.TaxSalaryPhone = TextUtils.ToDecimal(row["TaxSalaryPhone"]);
+                            employeePayrollDetail.TaxPersonalDeduction = TextUtils.ToDecimal(row["TaxPersonalDeduction"]);
+                            employeePayrollDetail.TaxDependentsDeduction = TextUtils.ToDecimal(row["TaxDependentsDeduction"]);
+                            employeePayrollDetail.TaxAbleIncome = TextUtils.ToDecimal(row["TaxAbleIncome"]);
+                            employeePayrollDetail.TaxDeduction = TextUtils.ToDecimal(row["TaxDeduction"]);
 
                             // Lưu
                             if (lstExistFromDB.Any())

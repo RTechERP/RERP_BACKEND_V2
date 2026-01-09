@@ -244,6 +244,11 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             {
                 //_currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
 
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                _currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                
+
                 var form = await Request.ReadFormAsync();
 
                 var paymentOrderFiles = JsonConvert.DeserializeObject<List<PaymentOrderFile>>(form["PaymentOrderFile"]);
@@ -264,6 +269,11 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 }
 
                 var order = _paymentRepo.GetByID(paymentOrderID);
+
+                if (_currentUser.EmployeeID != order.EmployeeID)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Bạn không thể bổ sung file vào đề nghị của người khác!"));
+                }
 
                 string pathPattern = $@"NĂM {order.DateOrder.Value.Year}\ĐỀ NGHỊ THANH TOÁN\THÁNG {order.DateOrder.Value.ToString("MM.yyyy")}\{order.DateOrder.Value.ToString("dd.MM.yyyy")}\{order.Code}";
                 string pathUpload = Path.Combine(pathServer, pathPattern);

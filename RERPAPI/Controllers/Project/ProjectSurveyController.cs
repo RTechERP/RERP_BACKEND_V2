@@ -355,7 +355,7 @@ namespace RERPAPI.Controllers.Project
                 ProjectSurvey model = projectSurveyRepo.GetByID(ids);
                 if (!projectSurveyRepo.ValidateDeleted(model, currentUser, out messageError))
                 {
-                    return Ok(new { status = 2, message = messageError });
+                    return BadRequest(ApiResponseFactory.Fail(null, messageError));
                 }
                 model.IsDeleted = true;
                 model.UpdatedBy = ""; // Chưa có tên người đăng nhập

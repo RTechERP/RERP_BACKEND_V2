@@ -7,7 +7,6 @@ using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
-using RERPAPI.Model.Entities;
 using RERPAPI.Repo;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
@@ -28,6 +27,7 @@ using RERPAPI.Repo.GenericEntity.Systems;
 using RERPAPI.Repo.GenericEntity.TB;
 using RERPAPI.Repo.GenericEntity.Technical;
 using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
+using RERPAPI.Services;
 using RTCApi.Repo.GenericRepo;
 using System.Text;
 
@@ -397,7 +397,6 @@ builder.Services.AddScoped<AGVInventoryDemoRepo>();
 builder.Services.AddScoped<AGVHistoryProductRepo>();
 #endregion
 
-
 #region YCCV
 builder.Services.AddScoped<JobRequirementRepo>();
 builder.Services.AddScoped<JobRequirementDetailRepo>();
@@ -460,6 +459,14 @@ builder.Services.AddScoped<PhasedAllocationPersonDetailRepo>();
 
 builder.Services.AddScoped<MenuAppRepo>();
 builder.Services.AddScoped<MenuAppUserGroupLinkRepo>();
+
+
+
+#region RabbitService
+//builder.Services.AddSingleton<RabbitMqConnection>();
+//builder.Services.AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>();
+//builder.Services.AddHostedService<EmailConsumer>();
+#endregion
 
 
 builder.Services.AddScoped<CurrentUser>(provider =>

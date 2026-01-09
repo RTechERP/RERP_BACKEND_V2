@@ -1,29 +1,14 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using DocumentFormat.OpenXml.Drawing.Charts;
-using DocumentFormat.OpenXml.Office2010.Excel;
-using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
-using DocumentFormat.OpenXml.Wordprocessing;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json.Linq;
-using NPOI.SS.Formula.Functions;
-using OfficeOpenXml.Style.XmlAccess;
 using RERPAPI.Attributes;
-using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
-using RERPAPI.Model.Param.HRM.VehicleManagement;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.DocumentManager;
 using RTCApi.Repo.GenericRepo;
 using System.Data;
-using System.Net;
-using System.Threading.Tasks;
-using ZXing;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -470,11 +455,14 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet("product-rtc")]
-        public IActionResult getProductRTC()
+        public IActionResult getProductRTC(int? warehouseType)
         {
             try
             {
-                var dt = SQLHelper<object>.ProcedureToList("spGetProductRTC", new string[] { }, new object[] { });
+                if (warehouseType == null) warehouseType = 1;
+                var dt = SQLHelper<dynamic>.ProcedureToList("spGetProductRTC",
+                new string[] { "@ProductGroupID", "@Keyword", "@CheckAll", "@WarehouseID", "@ProductRTCID", "@ProductGroupNo", "@PageNumber", "@PageSize", "@WarehouseType" },
+                new object[] { 0, "", 0, 0, 0, "", 1, 100000000, warehouseType });
                 var data = SQLHelper<object>.GetListData(dt, 0);
                 return Ok(ApiResponseFactory.Success(data, null));
             }
@@ -702,19 +690,9 @@ namespace RERPAPI.Controllers.Old
                     else await _pONCCDetailRepo.CreateAsync(item);
 
                     if (item.ProjectPartlistPurchaseRequestID == null) continue;
-                    ProjectPartlistPurchaseRequest request = _projectPartlistPurchaseRequestRepo.
-                        GetByID((int)item.ProjectPartlistPurchaseRequestID);
+                    await _pONCCRepo.UpdatePurchaseRequest(item.ProjectPartlistPurchaseRequestID ?? 0, data.poncc.SupplierSaleID ?? 0);
 
-                    if (request == null) continue;
-                    if (data.poncc.SupplierSaleID == request.SupplierSaleID) continue;
-
-                    request.SupplierSaleID = data.poncc.SupplierSaleID;
-                    if (request.ID > 0)
-                    {
-                        await _projectPartlistPurchaseRequestRepo.UpdateAsync(request);
-                    }
-
-                    string ponccDetailRequestBuyId = item.PONCCDetailRequestBuyID;
+                    string ponccDetailRequestBuyId = item.PONCCDetailRequestBuyID ?? "";
                     if (string.IsNullOrWhiteSpace(ponccDetailRequestBuyId)) continue;
                     string[] idRequestBuys = ponccDetailRequestBuyId.Split(';');
 
@@ -744,7 +722,6 @@ namespace RERPAPI.Controllers.Old
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
 
         [HttpPost("update-poncc")]
@@ -828,7 +805,7 @@ namespace RERPAPI.Controllers.Old
             }
         }
         #endregion
-        
+
         [HttpGet("printpo")]
         public IActionResult PrintPO(int id, bool isMerge)
         {
@@ -844,7 +821,7 @@ namespace RERPAPI.Controllers.Old
                 int employeeID = TextUtils.ToInt32(po.EmployeeID);
 
                 var employeePurchase = _employeePurchaseRepo.GetAll(x => x.EmployeeID == employeeID && x.TaxCompayID == taxCompany.ID).FirstOrDefault() ?? new EmployeePurchase();
-                po.Purchaser = $"{_pONCCRepo.ConvertVietnameseToEnglish(po.FullName)} - Phone: {_pONCCRepo.ConvertPhoneNumberVietnamese(employeePurchase.Telephone ??"")} - Email: {employeePurchase.Email}";
+                po.Purchaser = $"{_pONCCRepo.ConvertVietnameseToEnglish(po.FullName)} - Phone: {_pONCCRepo.ConvertPhoneNumberVietnamese(employeePurchase.Telephone ?? "")} - Email: {employeePurchase.Email}";
                 po.TotalAmountText = _pONCCRepo.ConvertNumberToTextEnglish(Convert.ToDecimal(po.TotalMoneyPO), po.CurrencyText);
                 po.TotalMoneyText = _pONCCRepo.ConvertNumberToTextVietNamese(Convert.ToDecimal(po.TotalMoneyPO), po.CurrencyText);
 
