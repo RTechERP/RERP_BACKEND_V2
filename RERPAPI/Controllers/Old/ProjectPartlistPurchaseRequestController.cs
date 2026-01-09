@@ -438,6 +438,7 @@ namespace RERPAPI.Controllers.Old
                     if (item.ProductSaleID <= 0 && status && item.ProductNewCode == null)
                     {
                         return BadRequest(ApiResponseFactory.Fail(null, $"Vui lòng tạo Mã nội bộ cho sản phẩm [{item.ProductCode}].\nChọn Loại kho sau đó chọn Lưu thay đổi để tạo Mã nội bộ!"));
+                        return BadRequest(ApiResponseFactory.Fail(null, $"Vui lòng tạo Mã nội bộ cho sản phẩm [{item.ProductCode}].\nChọn Loại kho sau đó chọn Lưu thay đổi để tạo Mã nội bộ!"));
                     }
                     projectPartlistPurchaseRequests.Add(item);
                 }
@@ -597,8 +598,8 @@ namespace RERPAPI.Controllers.Old
                     x.ProductGroupID == item.ProductGroupID &&
                     x.ProductCode.ToLower() == item.ProductCode.ToLower() &&
                     x.IsDeleted != true
-                    ).FirstOrDefault();
-                    productSale = productSale ?? new ProductSale();
+                    ).FirstOrDefault() ?? new ProductSale();
+                    //productSale = productSale ?? new ProductSale();
                     if (productSale.ID <= 0)
                     {
                         productSale.ProductCode = item.ProductCode;

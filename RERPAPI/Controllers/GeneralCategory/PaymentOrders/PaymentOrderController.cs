@@ -370,11 +370,12 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
 
                 DateTime updateDateSupplier = new DateTime(2024, 04, 04);
                 var supplierSales = _supplierSaleRepo.GetAll(x => x.UpdatedDate.Value.Date >= updateDateSupplier && x.IsDeleted != true)
-                                                    .Select(x => new
-                                                    {
-                                                        ID = x.ID,
-                                                        NameNCC = string.IsNullOrEmpty(x.MaSoThue ?? "".Trim()) ? x.NameNCC : $"{x.MaSoThue} - {x.NameNCC}",
-                                                    }).OrderByDescending(x => x.ID).ToList();
+                                                    //.Select(x => new
+                                                    //{
+                                                    //    ID = x.ID,
+                                                    //    NameNCCFull = string.IsNullOrEmpty(x.MaSoThue ?? "".Trim()) ? x.NameNCC : $"{x.MaSoThue} - {x.NameNCC}",
+                                                    //})
+                                                    .OrderByDescending(x => x.ID).ToList();
                 var poNCCs = _poNccRepo.GetAll(x => x.IsDeleted != true);
                 var registerContracts = _registerContractRepo.GetAll(x => x.EmployeeID == _currentUser.EmployeeID && x.IsDeleted != true);
                 var projects = _projectRepo.GetAll(x => x.IsDeleted != true);
