@@ -426,6 +426,12 @@ builder.Services.AddScoped<OrganizationalChartRepo>();
 builder.Services.AddScoped<NewsletterTypeRepo>();
 builder.Services.AddScoped<NewsletterRepo>();
 builder.Services.AddScoped<NewsletterFileRepo>();
+builder.Services.AddScoped<CourseCatalogRepo>();
+builder.Services.AddScoped<CourseCatalogProjectTypeRepo>();
+builder.Services.AddScoped<KPIPositionTypeRepo>();
+builder.Services.AddScoped<CourseRepo>();
+builder.Services.AddScoped<CourseRegisterIdeaRepo>();
+
 
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();

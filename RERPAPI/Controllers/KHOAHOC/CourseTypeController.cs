@@ -5,7 +5,7 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
-namespace RERPAPI.Controllers.Course
+namespace RERPAPI.Controllers.KHOAHOC
 {
     [Route("api/[controller]")]
     [ApiController]
