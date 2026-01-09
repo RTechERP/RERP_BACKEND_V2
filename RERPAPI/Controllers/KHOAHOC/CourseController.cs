@@ -326,6 +326,8 @@ namespace RERPAPI.Controllers.KHOAHOC
                             // DELETE
                             foreach (var projectTypeId in idsToRemove)
                             {
+                                var entity = existingProjectTypes
+                                    .FirstOrDefault(x => x.ProjectTypeID == projectTypeId);
                                 if (entity != null && entity.ID > 0)
                                 {
                                     entity.IsDeleted = true;
