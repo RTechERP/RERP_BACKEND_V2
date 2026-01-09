@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace RERPAPI.Model.Common
@@ -93,15 +94,47 @@ namespace RERPAPI.Model.Common
         /// </summary>
         /// <param name="x">giá trị cần chuyển</param>
         /// <returns></returns>
-        public static Decimal ToDecimal(object x)
+        //public static Decimal ToDecimal(object x)
+        //{
+        //    try
+        //    {
+        //        return Convert.ToDecimal(x);
+        //    }
+        //    catch
+        //    {
+        //        return 0;
+        //    }
+        //}
+
+        public static decimal ToDecimal(object value)
         {
+            if (value == null || value == DBNull.Value)
+                return 0m;
+
             try
             {
-                return Convert.ToDecimal(x);
+                // 🔹 Case JSON
+                if (value is JsonElement je)
+                {
+                    return je.ValueKind switch
+                    {
+                        JsonValueKind.Number => je.GetDecimal(),
+
+                        JsonValueKind.String =>
+                            decimal.TryParse(je.GetString(), out var d)
+                                ? d
+                                : 0m,
+
+                        _ => 0m
+                    };
+                }
+
+                // 🔹 Case bình thường
+                return Convert.ToDecimal(value);
             }
             catch
             {
-                return 0;
+                return 0m;
             }
         }
 
