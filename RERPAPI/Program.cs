@@ -379,6 +379,7 @@ builder.Services.AddScoped<EmployeePayrollBonusDeuctionRepo>();
 #region Yêu cần mua hàng
 builder.Services.AddScoped<SupplierRepo>();
 builder.Services.AddScoped<ProjectTypeAssignRepo>();
+builder.Services.AddScoped<InventoryProjectProductSaleLinkRepo>();
 #endregion
 #region Yêu Cầu QC
 builder.Services.AddScoped<BillImportQCRepo>();
@@ -396,7 +397,6 @@ builder.Services.AddScoped<AGVBillExportDetailRepo>();
 builder.Services.AddScoped<AGVInventoryDemoRepo>();
 builder.Services.AddScoped<AGVHistoryProductRepo>();
 #endregion
-
 #region YCCV
 builder.Services.AddScoped<JobRequirementRepo>();
 builder.Services.AddScoped<JobRequirementDetailRepo>();
