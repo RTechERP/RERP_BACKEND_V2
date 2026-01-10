@@ -231,7 +231,7 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
 
 
                     //Get quy trình duyệt
-                    var log = GetAll(x => x.PaymentOrderID == item.ID && x.Step == actionStep).FirstOrDefault() ?? new PaymentOrderLog();
+                    var log = GetAll(x => x.PaymentOrderID == item.ID && x.Step == actionStep && x.IsDeleted != true).FirstOrDefault() ?? new PaymentOrderLog();
                     if (item.PaymentOrderLog.IsApproved == 2)
                     {
                         if (string.IsNullOrWhiteSpace(item.ReasonCancel))
