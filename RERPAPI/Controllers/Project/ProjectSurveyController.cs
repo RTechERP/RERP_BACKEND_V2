@@ -604,7 +604,7 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-        #region cây thư mục 
+        #region cây thư mục khảo sát
         [HttpPost("create-survey-folder/{projectId}")]
         public IActionResult CreateSurveyFolder(int projectId)
         {
@@ -639,9 +639,10 @@ namespace RERPAPI.Controllers.Project
                 Directory.CreateDirectory(surveyFolder);
 
                 // URL FE sẽ mở
-                string url = $"/api/share/duan/projects/{year}/{project.ProjectCode}/TaiLieuChung/ThongTinKhaoSat";
+                string url = $"\\\\192.168.1.190\\duan\\Projects\\{year}\\{project.ProjectCode}\\TaiLieuChung\\ThongTinKhaoSat";
+                string urlOnl = $"\\\\113.190.234.64\\DUAN\\Projects\\{year}\\{project.ProjectCode}\\TaiLieuChung\\ThongTinKhaoSat";
 
-                return Ok(ApiResponseFactory.Success(url, "Tạo thư mục khảo sát thành công"));
+                return Ok(ApiResponseFactory.Success(new { url, urlOnl }, "Tạo thư mục khảo sát thành công"));
             }
             catch (Exception ex)
             {
