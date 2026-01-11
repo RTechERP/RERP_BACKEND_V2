@@ -192,6 +192,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<CourseQuestion> CourseQuestions { get; set; }
 
+    public virtual DbSet<CourseRegisterIdea> CourseRegisterIdeas { get; set; }
+
     public virtual DbSet<CourseRightAnswer> CourseRightAnswers { get; set; }
 
     public virtual DbSet<CourseType> CourseTypes { get; set; }
@@ -502,6 +504,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<KPIEmployeePointDetail> KPIEmployeePointDetails { get; set; }
 
+    public virtual DbSet<KPIEmployeePointYear> KPIEmployeePointYears { get; set; }
+
     public virtual DbSet<KPIEmployeeTeam> KPIEmployeeTeams { get; set; }
 
     public virtual DbSet<KPIEmployeeTeamLink> KPIEmployeeTeamLinks { get; set; }
@@ -715,6 +719,8 @@ public partial class RTCContext : DbContext
     public virtual DbSet<ProjectMachinePriceDetail> ProjectMachinePriceDetails { get; set; }
 
     public virtual DbSet<ProjectPartList> ProjectPartLists { get; set; }
+
+    public virtual DbSet<ProjectPartListPurchaseRequestApproveLog> ProjectPartListPurchaseRequestApproveLogs { get; set; }
 
     public virtual DbSet<ProjectPartListType> ProjectPartListTypes { get; set; }
 
@@ -2502,6 +2508,19 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CheckInput).HasComment("1: có 1 đáp án đúng; 2: Có nhiều đáp án đúng");
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<CourseRegisterIdea>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToTable("CourseRegisterIdea");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.ID).ValueGeneratedOnAdd();
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
@@ -5191,6 +5210,17 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
+        modelBuilder.Entity<KPIEmployeePointYear>(entity =>
+        {
+            entity.ToTable("KPIEmployeePointYear");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.PointPercentYear).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
         modelBuilder.Entity<KPIEmployeeTeam>(entity =>
         {
             entity.ToTable("KPIEmployeeTeam");
@@ -7350,6 +7380,18 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
             entity.Property(e => e.VAT).HasColumnType("decimal(18, 2)");
+        });
+
+        modelBuilder.Entity<ProjectPartListPurchaseRequestApproveLog>(entity =>
+        {
+            entity.ToTable("ProjectPartListPurchaseRequestApproveLog");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.DateStatus).HasColumnType("datetime");
+            entity.Property(e => e.Status).HasComment("1:Yêu cầu duyệt,2:Hủy yêu cầu duyệt, 3:BGĐ duyệt, 4:BGĐ hủy duyệt,5:TBP duyệt,6:TBP hủy duyệt, 7:hoàn thành, 8:Hủy hoàn thành, 9:Check đặt hàng; 10:Hủy check đặt hàng");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<ProjectPartListType>(entity =>

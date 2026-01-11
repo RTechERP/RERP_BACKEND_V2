@@ -86,4 +86,8 @@ public partial class ProposeVehicleRepair
     public int? EmployeeProposeID { get; set; }
 
     public DateTime? DatePropose { get; set; }
+
+    public int? KmPreviousPeriod { get; set; }
+
+    public int? KmCurrentPeriod { get; set; }
 }

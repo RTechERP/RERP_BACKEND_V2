@@ -444,7 +444,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             }
 
             // Validate Bill Type and Creation Date
-            if (dto.billImport.BillTypeNew != 4 && !dto.billImport.CreatedDate.HasValue)
+            if (dto.billImport.BillTypeNew != 4 && !dto.billImport.CreatDate.HasValue)
             {
                 return (false, "Vui lòng nhập Ngày nhập!");
             }
@@ -467,7 +467,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             return Ok(new { data = newCode }); // <-- Đây là điểm quan trọng
         }
         [HttpPost("save-data")]
-        [RequiresPermission("N27,N1,N33,N34,N69")]
+        [RequiresPermission("N27,N1,N33,N34,N69,N35")]
         public async Task<IActionResult> saveDataBillImport([FromBody] List<BillImportDTO> dtos)
         {
 

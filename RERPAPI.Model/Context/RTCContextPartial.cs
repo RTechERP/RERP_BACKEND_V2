@@ -203,7 +203,7 @@ namespace RERPAPI.Model.Context
                 var current = entry.CurrentValues[prop];
 
                 // Chỉ log những cột thay đổi
-                if (entry.State == EntityState.Modified && Equals(original, current))
+                if (entry.State == EntityState.Modified && Equals(original, current) && prop.Name != "ID")
                     continue;
 
                 oldValues[prop.Name] = original;

@@ -5,6 +5,7 @@ using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
+using RERPAPI.Model.Enum;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using System.Data;
@@ -29,6 +30,7 @@ namespace RERPAPI.Controllers.Old
         POKHDetailRepo _pOKHDetailRepo;
         WarehouseRepo _warehouseRepo;
         ProductGroupRTCRepo _productGroupRTCRepo;
+        ProjectPartListPurchaseRequestApproveLogRepo _projectPartListPurchaseRequestApproveLogRepo;
         List<PathStaticFile> _pathStaticFiles;
 
         public ProjectPartlistPurchaseRequestController(
@@ -43,7 +45,8 @@ namespace RERPAPI.Controllers.Old
             POKHDetailRepo pOKHDetailRepo,
             WarehouseRepo warehouseRepo,
             ProductGroupRTCRepo productGroupRTCRepo,
-            IConfiguration configuration
+            IConfiguration configuration,
+            ProjectPartListPurchaseRequestApproveLogRepo projectPartListPurchaseRequestApproveLogRepo
             )
         {
             _repo = projectPartlistPurchaseRequestRepo;
@@ -58,6 +61,7 @@ namespace RERPAPI.Controllers.Old
             _warehouseRepo = warehouseRepo;
             _productGroupRTCRepo = productGroupRTCRepo;
             _pathStaticFiles = configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();
+            _projectPartListPurchaseRequestApproveLogRepo = projectPartListPurchaseRequestApproveLogRepo;
         }
 
         #endregion Khai báo repository
@@ -296,6 +300,10 @@ namespace RERPAPI.Controllers.Old
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 if (listIds == null || listIds.Count == 0) return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu không hợp lệ"));
                 string statusText = status ? "check" : "hủy check";
+                PurchaseRequestApproveStatus logStatus = status
+                                                        ? PurchaseRequestApproveStatus.CheckOrder
+                                                        : PurchaseRequestApproveStatus.CancelCheckOrder;
+
                 List<ProjectPartlistPurchaseRequest> projectPartlistPurchaseRequests = new List<ProjectPartlistPurchaseRequest>();
                 foreach (var id in listIds)
                 {
@@ -324,6 +332,7 @@ namespace RERPAPI.Controllers.Old
                 {
                     item.EmployeeIDRequestApproved = employeeId;
                     await _repo.UpdateAsync(item);
+                    await _projectPartListPurchaseRequestApproveLogRepo.CreateLogAsync(item.ID, logStatus, currentUser.EmployeeID, currentUser.LoginName);
                 }
 
                 return Ok(ApiResponseFactory.Success(null, $"Đã xử lý xong danh sách {statusText}"));
@@ -347,8 +356,9 @@ namespace RERPAPI.Controllers.Old
                 }
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
-
-                List<ProjectPartlistPurchaseRequestDTO> projectPartlistPurchaseRequests = new List<ProjectPartlistPurchaseRequestDTO>();
+                PurchaseRequestApproveStatus logStatus = status
+                                                           ? PurchaseRequestApproveStatus.RequestApprove
+                                                           : PurchaseRequestApproveStatus.CancelRequestApprove;
                 foreach (ProjectPartlistPurchaseRequestDTO item in data)
                 {
                     if (item.ID <= 0) continue;
@@ -357,22 +367,14 @@ namespace RERPAPI.Controllers.Old
 
                     if (existingRequest.EmployeeIDRequestApproved != currentUser.EmployeeID
                         && !currentUser.IsAdmin) continue;
-                    projectPartlistPurchaseRequests.Add(item);
-                }
-                if (projectPartlistPurchaseRequests.Count() <= 0)
-                    return Ok(ApiResponseFactory.Success(null, $"Đã cập nhật trạng thái {textStatus} thành công."));
 
-                foreach (ProjectPartlistPurchaseRequestDTO item in data)
-                {
                     _repo.UpdateData(item);
                     item.IsRequestApproved = status;
                     item.EmployeeIDRequestApproved = currentUser.EmployeeID;
-
                     await _repo.UpdateAsync(item);
+                    await _projectPartListPurchaseRequestApproveLogRepo.CreateLogAsync(item.ID, logStatus, currentUser.EmployeeID, currentUser.LoginName);
                 }
-
-
-                return Ok(ApiResponseFactory.Success(null, $"Đã cập nhật trạng thái {textStatus} thành công."));
+                return Ok(ApiResponseFactory.Success(data, $"Đã cập nhật trạng thái {textStatus} thành công."));
             }
             catch (Exception ex)
             {
@@ -393,7 +395,9 @@ namespace RERPAPI.Controllers.Old
                 }
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
-
+                PurchaseRequestApproveStatus logStatus = status == 7
+                                                            ? PurchaseRequestApproveStatus.Completed
+                                                            : PurchaseRequestApproveStatus.CancelCompleted;
                 foreach (ProjectPartlistPurchaseRequestDTO item in data)
                 {
                     if (item.ID <= 0) continue;
@@ -408,6 +412,8 @@ namespace RERPAPI.Controllers.Old
                     item.EmployeeIDRequestApproved = currentUser.EmployeeID;
 
                     await _repo.UpdateAsync(item);
+                    await _projectPartListPurchaseRequestApproveLogRepo.CreateLogAsync(item.ID, logStatus, currentUser.EmployeeID, currentUser.LoginName);
+
                 }
 
 
@@ -425,54 +431,64 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
+                if (data == null || !data.Any())
+                    return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu không hợp lệ"));
+
                 string textStatus = status ? "duyệt" : "hủy duyệt";
-                if (data.Count() <= 0) return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu không hợp lệ"));
 
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
 
-                List<ProjectPartlistPurchaseRequestDTO> projectPartlistPurchaseRequests = new List<ProjectPartlistPurchaseRequestDTO>();
-                foreach (ProjectPartlistPurchaseRequestDTO item in data)
+                foreach (var item in data)
                 {
                     if (item.ID <= 0) continue;
-                    if (item.ProductSaleID <= 0 && status && item.ProductNewCode == null)
-                    {
-                        return BadRequest(ApiResponseFactory.Fail(null, $"Vui lòng tạo Mã nội bộ cho sản phẩm [{item.ProductCode}].\nChọn Loại kho sau đó chọn Lưu thay đổi để tạo Mã nội bộ!"));
-                    }
-                    projectPartlistPurchaseRequests.Add(item);
-                }
 
-                foreach (ProjectPartlistPurchaseRequestDTO item in data)
-                {
+                    if (status && item.ProductSaleID <= 0 && string.IsNullOrEmpty(item.ProductNewCode))
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(
+                            null,
+                            $"Vui lòng tạo Mã nội bộ cho sản phẩm [{item.ProductCode}].\n" +
+                            $"Chọn Loại kho sau đó chọn Lưu thay đổi để tạo Mã nội bộ!"
+                        ));
+                    }
+
                     var existingRequest = _repo.GetByID(item.ID);
                     if (existingRequest == null) continue;
 
-                    //if (existingRequest.EmployeeIDRequestApproved != currentUser.EmployeeID
-                    //    && !currentUser.IsAdmin) continue;
-                    if (item.ProjectPartlistPurchaseRequestTypeID == 3 || item.ProjectPartlistPurchaseRequestTypeID == 7)
+                    PurchaseRequestApproveStatus logStatus;
+
+                    if (type) // TBP
                     {
-                        _repo.UpdateData(item);
+                        existingRequest.IsApprovedTBP = status;
+                        existingRequest.DateApprovedTBP = DateTime.Now;
+
+                        logStatus = status
+                                    ? PurchaseRequestApproveStatus.TBPApprove
+                                    : PurchaseRequestApproveStatus.TBPCancelApprove;
                     }
-                    if (type)
+                    else // BGĐ
                     {
-                        item.IsApprovedTBP = status;
-                        item.DateApprovedTBP = DateTime.Now;
+                        existingRequest.IsApprovedBGD = status;
+                        existingRequest.DateApprovedBGD = DateTime.Now;
+                        existingRequest.ApprovedBGD = currentUser.EmployeeID;
+
+                        logStatus = status
+                                    ? PurchaseRequestApproveStatus.BGDApprove
+                                    : PurchaseRequestApproveStatus.BGDCancelApprove;
                     }
-                    else
-                    {
-                        item.IsApprovedBGD = status;
-                        item.DateApprovedBGD = DateTime.Now;
-                        item.ApprovedBGD = currentUser.EmployeeID;
-                    }
-                    await _repo.UpdateAsync(item);
+                    await _projectPartListPurchaseRequestApproveLogRepo.CreateLogAsync(item.ID, logStatus, currentUser.EmployeeID, currentUser.LoginName);
+
+                    await _repo.UpdateAsync(existingRequest);
                 }
-                return Ok(ApiResponseFactory.Success(null, $"Đã cập nhật trạng thái {textStatus} thành công."));
+
+                return Ok(ApiResponseFactory.Success(data, $"Đã cập nhật trạng thái {data.Count} yêu cầu {textStatus} thành công."));
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-data-rtc")]
         public async Task<IActionResult> SaveDataRTC(ProjectPartlistPurchaseRequest model)
         {
@@ -504,6 +520,7 @@ namespace RERPAPI.Controllers.Old
                 else await _repo.CreateAsync(model);
                 return Ok(ApiResponseFactory.Success(model));
 
+
             }
             catch (Exception ex)
             {
@@ -527,51 +544,51 @@ namespace RERPAPI.Controllers.Old
 
                 if (!_repo.ValidateUpdateData(data, out string mes))
                     return BadRequest(ApiResponseFactory.Fail(null, mes));
-                foreach (var item in data)
-                {
-                    // ===== HANDLE DUPLICATE =====
-                    if (item.ID <= 0 && item.DuplicateID > 0)
-                    {
-                        var source = _repo.GetByID(item.DuplicateID ?? 0);
-                        if (source.ID <= 0) continue;
-                        item.EmployeeID = source.EmployeeID;
-                        item.ProjectPartListID = source.ProjectPartListID;
-                        item.UnitCountID = source.UnitCountID;
-                        item.StatusRequest = source.StatusRequest;
-                        item.SupplierSaleID = source.SupplierSaleID;
+                //foreach (var item in data)
+                //{
+                //// ===== HANDLE DUPLICATE =====
+                //if (item.ID <= 0 && item.DuplicateID > 0)
+                //{
+                //    var source = _repo.GetByID(item.DuplicateID ?? 0);
+                //    if (source.ID <= 0) continue;
+                //    item.EmployeeID = source.EmployeeID;
+                //    item.ProjectPartListID = source.ProjectPartListID;
+                //    item.UnitCountID = source.UnitCountID;
+                //    item.StatusRequest = source.StatusRequest;
+                //    item.SupplierSaleID = source.SupplierSaleID;
 
-                        item.IsApprovedTBP = source.IsApprovedTBP;
-                        item.ApprovedTBP = source.ApprovedTBP;
-                        item.IsApprovedBGD = source.IsApprovedBGD;
-                        item.ApprovedBGD = source.ApprovedBGD;
+                //    item.IsApprovedTBP = source.IsApprovedTBP;
+                //    item.ApprovedTBP = source.ApprovedTBP;
+                //    item.IsApprovedBGD = source.IsApprovedBGD;
+                //    item.ApprovedBGD = source.ApprovedBGD;
 
-                        item.ProductSaleID = source.ProductSaleID;
-                        item.ProductGroupID = source.ProductGroupID;
-                        item.CurrencyID = source.CurrencyID;
+                //    item.ProductSaleID = source.ProductSaleID;
+                //    item.ProductGroupID = source.ProductGroupID;
+                //    item.CurrencyID = source.CurrencyID;
 
-                        item.IsImport = source.IsImport;
-                        item.IsRequestApproved = source.IsRequestApproved;
-                        item.POKHDetailID = source.POKHDetailID;
-                        item.JobRequirementID = source.JobRequirementID;
+                //    item.IsImport = source.IsImport;
+                //    item.IsRequestApproved = source.IsRequestApproved;
+                //    item.POKHDetailID = source.POKHDetailID;
+                //    item.JobRequirementID = source.JobRequirementID;
 
-                        item.IsDeleted = source.IsDeleted;
-                        item.InventoryProjectID = source.InventoryProjectID;
-                        item.IsTechBought = source.IsTechBought;
+                //    item.IsDeleted = source.IsDeleted;
+                //    item.InventoryProjectID = source.InventoryProjectID;
+                //    item.IsTechBought = source.IsTechBought;
 
-                        item.ProductGroupRTCID = source.ProductGroupRTCID;
-                        item.ProductRTCID = source.ProductRTCID;
-                        item.TicketType = source.TicketType;
+                //    item.ProductGroupRTCID = source.ProductGroupRTCID;
+                //    item.ProductRTCID = source.ProductRTCID;
+                //    item.TicketType = source.TicketType;
 
-                        item.DateReturnEstimated = source.DateReturnEstimated;
+                //    item.DateReturnEstimated = source.DateReturnEstimated;
 
-                        item.EmployeeApproveID = source.EmployeeApproveID;
-                        item.EmployeeIDRequestApproved = source.EmployeeIDRequestApproved;
+                //    item.EmployeeApproveID = source.EmployeeApproveID;
+                //    item.EmployeeIDRequestApproved = source.EmployeeIDRequestApproved;
 
-                        item.UnitName = source.UnitName;
+                //    item.UnitName = source.UnitName;
 
-                    }
-                    // ===== END HANDLE DUPLICATE =====
-                }
+                //}
+                //// ===== END HANDLE DUPLICATE =====
+                //}
 
                 var firms = _firmRepo.GetAll(x => x.FirmType == 1 && x.IsDelete != true);
                 foreach (var item in data)
@@ -597,8 +614,8 @@ namespace RERPAPI.Controllers.Old
                     x.ProductGroupID == item.ProductGroupID &&
                     x.ProductCode.ToLower() == item.ProductCode.ToLower() &&
                     x.IsDeleted != true
-                    ).FirstOrDefault();
-                    productSale = productSale ?? new ProductSale();
+                    ).FirstOrDefault() ?? new ProductSale();
+                    //productSale = productSale ?? new ProductSale();
                     if (productSale.ID <= 0)
                     {
                         productSale.ProductCode = item.ProductCode;
@@ -637,6 +654,9 @@ namespace RERPAPI.Controllers.Old
                     _repo.UpdateData(item);
                     if (item.ID <= 0) await _repo.CreateAsync(item);
                     else await _repo.UpdateAsync(item);
+
+                    await _projectPartListPurchaseRequestApproveLogRepo.CreateLogAsync(item.ID, PurchaseRequestApproveStatus.SaveData, currentUser.EmployeeID, currentUser.LoginName);
+
                 }
 
                 return Ok(ApiResponseFactory.Success(null, $"Đã lưu dữ liệu thành công"));
@@ -763,7 +783,9 @@ namespace RERPAPI.Controllers.Old
             try
             {
                 if (data.Count() <= 0) return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu không hợp lệ"));
-                string import = (bool)data[0].IsImport ? "cập nhật hàng nhập khẩu" : "hủy hàng nhập khẩu";
+                string import = data[0].IsImport == true
+                    ? "cập nhật hàng nhập khẩu"
+                    : "hủy hàng nhập khẩu";
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 foreach (var item in data)

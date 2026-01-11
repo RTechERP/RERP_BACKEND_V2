@@ -380,6 +380,7 @@ builder.Services.AddScoped<EmployeePayrollBonusDeuctionRepo>();
 #region Yêu cần mua hàng
 builder.Services.AddScoped<SupplierRepo>();
 builder.Services.AddScoped<ProjectTypeAssignRepo>();
+builder.Services.AddScoped<InventoryProjectProductSaleLinkRepo>();
 #endregion
 #region Yêu Cầu QC
 builder.Services.AddScoped<BillImportQCRepo>();
@@ -397,7 +398,6 @@ builder.Services.AddScoped<AGVBillExportDetailRepo>();
 builder.Services.AddScoped<AGVInventoryDemoRepo>();
 builder.Services.AddScoped<AGVHistoryProductRepo>();
 #endregion
-
 #region YCCV
 builder.Services.AddScoped<JobRequirementRepo>();
 builder.Services.AddScoped<JobRequirementDetailRepo>();
@@ -427,6 +427,12 @@ builder.Services.AddScoped<OrganizationalChartRepo>();
 builder.Services.AddScoped<NewsletterTypeRepo>();
 builder.Services.AddScoped<NewsletterRepo>();
 builder.Services.AddScoped<NewsletterFileRepo>();
+builder.Services.AddScoped<CourseCatalogRepo>();
+builder.Services.AddScoped<CourseCatalogProjectTypeRepo>();
+builder.Services.AddScoped<KPIPositionTypeRepo>();
+builder.Services.AddScoped<CourseRepo>();
+builder.Services.AddScoped<CourseRegisterIdeaRepo>();
+
 
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();
@@ -460,6 +466,7 @@ builder.Services.AddScoped<PhasedAllocationPersonDetailRepo>();
 
 builder.Services.AddScoped<MenuAppRepo>();
 builder.Services.AddScoped<MenuAppUserGroupLinkRepo>();
+builder.Services.AddScoped<ProjectPartListPurchaseRequestApproveLogRepo>();
 
 #region KPI
 builder.Services.AddScoped<KPIEvaluationPointRepo>();
