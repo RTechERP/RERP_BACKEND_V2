@@ -29,4 +29,6 @@ public partial class CourseCatalog
     /// 1:Cơ bản; 2:Nâng cao
     /// </summary>
     public int? CatalogType { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }
