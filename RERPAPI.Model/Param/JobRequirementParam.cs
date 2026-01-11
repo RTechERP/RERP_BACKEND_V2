@@ -8,12 +8,12 @@ namespace RERPAPI.Model.Param
 {
     public class JobRequirementParam
     {
-        public DateTime DateStart { get; set; }
-        public DateTime DateEnd { get; set; }
+        public DateTime DateStart { get; set; } = DateTime.MinValue;
+        public DateTime DateEnd { get; set; } = DateTime.MaxValue;
         public string Request { get; set; } = string.Empty;
-        public int EmployeeID { get; set; }
-        public int Step { get; set; }
-        public int DepartmentID { get; set; }
-        public int ApprovedTBPID { get; set; }
+        public int EmployeeID { get; set; } = 0;
+        public int Step { get; set; } = 0;
+        public int DepartmentID { get; set; } = 0;
+        public int ApprovedTBPID { get; set; } = 0;
     }
 }
