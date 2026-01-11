@@ -25,95 +25,6 @@ namespace RERPAPI.Controllers.Old
             _newsletterFileRepo = newsletterFileRepo;
         }
 
-
-        //[HttpPost]
-        //public IActionResult GetNesletter(NewsletterParam param)
-        //{
-        //    try
-        //    {
-        //        var ds = param.FromDate.Date; ;
-        //        var de = param.ToDate.Date.AddDays(+1).AddSeconds(-1);
-
-        //        var newsletters = SQLHelper<object>.ProcedureToList("sp_GetNewsletters", new string[] { "@Keyword", "@TypeId", "@FromDate", "@ToDate" },
-        //            new object[] { param.Keyword, param.TypeId, ds, de });
-
-        //        var newslettersResult = SQLHelper<object>.GetListData(newsletters, 0);
-
-        //        // Lấy tất cả NewsletterID
-        //        var newsletterIds = newslettersResult.Select(n => n.ID).ToList();
-
-        //        var newsletterIdsString = string.Join(",", newsletterIds);
-
-        //        var newsletterFiles = SQLHelper<object>.ProcedureToList("spGetNewsletterFileByNesletterID", new string[] { "@Text" },
-        //            new object[] { newsletterIdsString });
-
-        //        var newsletterFilesResult = SQLHelper<object>.GetListData(newsletterFiles, 0);
-
-        //    // 4. Group files by NewsletterID
-        //    var filesByNewsletterId = newsletterFilesResult
-        //        .Where(f => f["NewsletterID"] != null)
-        //        .GroupBy(f => Convert.ToInt32(f["NewsletterID"]))
-        //        .ToDictionary(
-        //            g => g.Key,
-        //            g => g.Select(f => new NewsletterFile
-        //            {
-        //                ID = f["ID"] != null ? Convert.ToInt32(f["ID"]) : 0,
-        //                NewsletterID = f["NewsletterID"] != null ? Convert.ToInt32(f["NewsletterID"]) : 0,
-        //                FileName = f["FileName"]?.ToString(),
-        //                ServerPath = f["ServerPath"]?.ToString(),
-        //                OriginPath = f["OriginPath"]?.ToString(),
-        //                CreatedBy = f["CreatedBy"]?.ToString(),
-        //                CreatedDate = f["CreatedDate"] != null ? Convert.ToDateTime(f["CreatedDate"]) : (DateTime?)null,
-        //                UpdatedBy = f["UpdatedBy"]?.ToString(),
-        //                UpdatedDate = f["UpdatedDate"] != null ? Convert.ToDateTime(f["UpdatedDate"]) : (DateTime?)null,
-        //                IsDeleted = f["IsDeleted"] != null ? Convert.ToBoolean(f["IsDeleted"]) : (bool?)null
-
-        //            }).ToList()
-        //        );
-        //    // 5. Tạo kết quả cuối cùng
-        //    var finalResult = newslettersResult.Select(n =>
-        //    {
-        //        var newsletterId = Convert.ToInt32(n["ID"]);
-        //        List<NewsletterFile> files = filesByNewsletterId.ContainsKey(newsletterId)
-        //            ? filesByNewsletterId[newsletterId]
-        //            : new List<NewsletterFile>();
-
-        //        // Tạo chuỗi file links
-        //        var fileLinks = string.Join(", ", files
-        //            .Where(f => f.ServerPath != null && !string.IsNullOrEmpty(f.ServerPath.Trim()))
-        //            .Select(f => f.ServerPath.Trim()));
-
-        //        return new NewsletterWithFilesDTO
-        //        {
-        //            ID = newsletterId,
-        //            Code = n["Code"]?.ToString(),
-        //            Title = n["Title"]?.ToString(),
-        //            NewsletterContent = n["NewsletterContent"]?.ToString(),
-        //            Type = n["Type"] != null ? Convert.ToInt32(n["Type"]) : (int?)null,
-        //            Image = n["Image"]?.ToString(),
-        //            CreatedBy = n["CreatedBy"]?.ToString(),
-        //            CreatedDate = n["CreatedDate"] != null ? Convert.ToDateTime(n["CreatedDate"]) : (DateTime?)null,
-        //            UpdatedBy = n["UpdatedBy"]?.ToString(),
-        //            UpdatedDate = n["UpdatedDate"] != null ? Convert.ToDateTime(n["UpdatedDate"]) : (DateTime?)null,
-        //            IsDeleted = n["IsDeleted"] != null ? Convert.ToInt32(n["IsDeleted"]) : (int?)null,
-        //            OriginImgPath = n["OriginImgPath"]?.ToString(),
-        //            ServerImgPath = n["ServerImgPath"]?.ToString(),
-        //            NewsletterTypeCode = n["NewsletterTypeCode"]?.ToString(),
-        //            NewsletterTypeName = n["NewsletterTypeName"]?.ToString(),
-        //            NewsletterFiles = files,
-
-        //        };
-        //    }).ToList();
-
-        //    return Ok(ApiResponseFactory.Success(finalResult, ""));
-        //    //return Ok(ApiResponseFactory.Success(result, ""));
-        //}
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-        //    }
-        //}
-
         [HttpGet]
         public IActionResult GetNewLetter()
         {
@@ -122,6 +33,24 @@ namespace RERPAPI.Controllers.Old
                 var newsletters = SQLHelper<object>.ProcedureToList("sp_GetNewsletters",
                     new string[] { "@Keyword", "@TypeId", "@FromDate", "@ToDate" },
                     new object[] { "", 0, "", "" });
+                var newslettersResult = SQLHelper<object>.GetListData(newsletters, 0) as List<dynamic>;
+                return Ok(ApiResponseFactory.Success(newslettersResult, "Success"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi GET newsletter: {ex.Message}"));
+            }
+        }
+
+        [HttpGet("get-limit-newsletter")]
+        public IActionResult GetLimitNewLetter()
+        {
+            try
+            {
+                int limit = 5;
+                var newsletters = SQLHelper<object>.ProcedureToList("sp_GetNewsletters",
+                    new string[] { "@Keyword", "@TypeId", "@FromDate", "@ToDate","@Limit" },
+                    new object[] { "", 0, "", "" , limit });
                 var newslettersResult = SQLHelper<object>.GetListData(newsletters, 0) as List<dynamic>;
                 return Ok(ApiResponseFactory.Success(newslettersResult, "Success"));
             }
@@ -160,29 +89,6 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi GET newsletter by newsletter id: {ex.Message}"));
             }
         }
-
-        //[HttpPost("delete-newsletter-folder-by-id")]
-        //public async Task<IActionResult> DeleteNewsletterFolderByID(int id)
-        //{
-        //    try
-        //    {
-        //        var newsletter = _newsletterFileRepo.GetAll(x => x.ID == id).FirstOrDefault();
-
-        //        if (newsletter == null)
-        //        {
-        //            return BadRequest(ApiResponseFactory.Fail(null, "Newsletter không tồn tại."));
-        //        }
-        //        newsletter.IsDeleted = true;
-        //        var result = await _newsletterFileRepo.UpdateAsync(newsletter);
-
-        //        return Ok(ApiResponseFactory.Success(null, "Xóa newsletter thành công!"));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi xóa newsletter: {ex.Message}"));
-        //    }
-        //}
-
 
         [HttpPost("delete-newsletter-folder-by-id")]
         public async Task<IActionResult> DeleteNewsletterFolderByID(string ids)
