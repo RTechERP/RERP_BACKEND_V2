@@ -192,6 +192,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<CourseQuestion> CourseQuestions { get; set; }
 
+    public virtual DbSet<CourseRegisterIdea> CourseRegisterIdeas { get; set; }
+
     public virtual DbSet<CourseRightAnswer> CourseRightAnswers { get; set; }
 
     public virtual DbSet<CourseType> CourseTypes { get; set; }
@@ -2506,6 +2508,19 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CheckInput).HasComment("1: có 1 đáp án đúng; 2: Có nhiều đáp án đúng");
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<CourseRegisterIdea>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToTable("CourseRegisterIdea");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.ID).ValueGeneratedOnAdd();
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
