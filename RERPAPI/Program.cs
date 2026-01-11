@@ -26,6 +26,7 @@ using RERPAPI.Repo.GenericEntity.Project;
 using RERPAPI.Repo.GenericEntity.Systems;
 using RERPAPI.Repo.GenericEntity.TB;
 using RERPAPI.Repo.GenericEntity.Technical;
+using RERPAPI.Repo.GenericEntity.Technical.KPI;
 using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
 using RERPAPI.Services;
 using RTCApi.Repo.GenericRepo;
@@ -467,7 +468,10 @@ builder.Services.AddScoped<MenuAppRepo>();
 builder.Services.AddScoped<MenuAppUserGroupLinkRepo>();
 builder.Services.AddScoped<ProjectPartListPurchaseRequestApproveLogRepo>();
 
-
+#region KPI
+builder.Services.AddScoped<KPIEvaluationPointRepo>();
+builder.Services.AddScoped<KPISessionRepo>();
+#endregion
 
 #region RabbitService
 //builder.Services.AddSingleton<RabbitMqConnection>();
