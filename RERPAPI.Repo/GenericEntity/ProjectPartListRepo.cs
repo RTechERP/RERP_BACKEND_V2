@@ -282,6 +282,174 @@ namespace RERPAPI.Repo.GenericEntity
                }*/
             return true;
         }
+        public bool ValidateUpdate(ProjectPartList item, out string message)
+        {
+            message = string.Empty;
+            //check đã có yc báo giá chưa
+            if (item.ID > 0)
+            {
+                if (item.IsDeleted == true) //Xóa
+                {
+                    if (item.IsApprovedPurchase == true)
+                    {
+                        message = $"Thiết bị mã [{item.ProductCode}] đã yêu cầu mua. Bạn không thể xóa.\nVui lòng liên hệ nhân viên mua hàng hoặc PM để hủy YÊU CẦU MUA HÀNG trước";
+                        return false;
+                    }
+                    if (item.IsApprovedTBP == true)
+                    {
+                        message = $"Vật tư TT [{item.STT}] đã được TBP duyệt.\nVui lòng huỷ duyệt trước!";
+                        return false;
+                    }
+                    if (item.ReasonDeleted == null || string.IsNullOrWhiteSpace((item.ReasonDeleted ?? "").Trim()))
+                    {
+                        message = $"Vui lòng nhập Lý do xóa!";
+                        return false;
+                    }
+                    return true;
+                }
+                else if (item.IsProblem == true)
+                {
+                    if (string.IsNullOrWhiteSpace(item.ReasonProblem))
+                    {
+                        message = "Vật tư phát sinh phải có Lý do phát sinh!";
+                        return false;
+                    }
+                    return true;
+                }
+                else if (item.IsApprovedTBP == true)
+                {
+                    string errorMessage = string.Empty;
+                    if (!ValidateApproveTBP(item, true, out errorMessage))
+                    {
+                        message = errorMessage;
+                        return false;
+                    }
+                    return true;
+                }
+                else if (item.IsApprovedPurchase == true)
+                {
+                    string errorMessage = string.Empty;
+                    if (!ValidateApprovePurchase(item, true, out errorMessage))
+                    {
+                        message = errorMessage;
+                        return false;
+                    }
+                }
+
+                //check đã có yc mua hàng chưa
+                var purchaseRequestDeletes = _purchaseRepo.GetAll(x => x.ProjectPartListID == item.ID && x.IsDeleted == false);
+                var purchaseRequestCancels = _purchaseRepo.GetAll(x => x.ProjectPartListID == item.ID && x.StatusRequest != 2);
+                if (purchaseRequestDeletes.Count > 0 && purchaseRequestCancels.Count > 0)
+                {
+                    message = $"Thiết bị mã [{item.ProductCode}] đã yêu cầu mua. Bạn không thể sửa.\nVui lòng liên hệ nhân viên mua hàng hoặc PM để hủy YÊU CẦU MUA HÀNG trước";
+                    return false;
+                }
+                //check yêu cầu báo giá
+                ProjectPartlistPriceRequest priceRequest = _priceRepo.GetAll(x => x.ProjectPartListID == item.ID && x.IsDeleted != true && x.IsCommercialProduct != true).FirstOrDefault() ?? new ProjectPartlistPriceRequest();
+                if (priceRequest.ProjectPartListID > 0)
+                {
+                    if (priceRequest.IsCheckPrice == true)
+                    {
+                        message = $"Thiết bị mã [{item.ProductCode}] đang được check giá. Bạn không thể sửa.\nVui lòng liên hệ nhân viên mua hàng";
+                        return false;
+                    }
+                    if (priceRequest.StatusRequest == 2)
+                    {
+                        message = $"Thiết bị mã [{item.ProductCode}] đã báo giá. Bạn không thể sửa.\nVui lòng liên hệ nhân viên mua hàng";
+                        return false;
+                    }
+                    if (priceRequest.StatusRequest == 3)
+                    {
+                        message = $"Thiết bị mã [{item.ProductCode}] đã hoàn thành báo giá. Bạn không thể sửa.\nVui lòng liên hệ nhân viên mua hàng";
+                        return false;
+                    }
+                }
+            }
+
+            //else
+            //{
+            //    ProjectPartlistPriceRequest priceRequestCheck = _priceRepo.GetAll(x => x.ProjectPartListID == item.ID && x.IsDeleted != true).FirstOrDefault() ?? new ProjectPartlistPriceRequest();
+            //    if (priceRequestCheck.ProjectPartListID > 0 && priceRequestCheck.IsCheckPrice == true)
+            //    {
+            //        message = $"Phòng mua đang check giá sản phẩm Stt [{item.STT}].\nBạn không thể Huỷ Y/c báo giá!";
+            //        return false;
+            //    }
+            //}
+
+
+            string pattern = @"^[^àáảãạâầấẩẫậăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵÀÁẢÃẠÂẦẤẨẪẬĂẰẮẲẴẶÈÉẺẼẸÊỀẾỂỄỆÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴ]+$";
+            Regex regex = new Regex(pattern);
+            if (item.ProjectID <= 0)
+            {
+                message = "Vui lòng nhập Dự án!";
+                return false;
+            }
+            if (item.ProjectPartListVersionID <= 0)
+            {
+                message = "Vui lòng nhập Phiên bản!";
+                return false;
+            }
+            if (string.IsNullOrWhiteSpace(item.TT))
+            {
+                message = "Vui lòng nhập TT!";
+                return false;
+            }
+            else
+            {
+                List<ProjectPartList> projectPartLists = GetAll(x => x.ProjectPartListVersionID == item.ProjectPartListVersionID && (x.TT ?? "").Trim() == (item.TT ?? "").Trim() && x.ID != item.ID && x.IsDeleted != true && x.IsProblem != true);
+                if (projectPartLists.Count > 0 && item.IsProblem == false)
+                {
+                    message = $"TT [{item.TT}] đã tồn tại.\nVui lòng kiểm tra lại!";
+                    return false;
+                }
+                //check cùng TT giữa các danh mục phát sinh
+                List<ProjectPartList> partLists = GetAll(x => x.ProjectPartListVersionID == item.ProjectPartListVersionID && (x.TT ?? "").Trim() == (item.TT ?? "").Trim() && x.ID != item.ID && x.IsDeleted != true && x.IsProblem == true);
+                if (partLists.Count > 0 && item.IsProblem == false)
+                {
+                    message = $"TT [{item.TT}] là mục phát sinh đã tồn tại .\nVui lòng kiểm tra lại!";
+                    return false;
+                }
+
+            }
+            if (!string.IsNullOrWhiteSpace(item.SpecialCode))
+            {
+                var specialCode = GetAll(x => x.SpecialCode == item.SpecialCode && x.ID != item.ID && x.IsDeleted != true);
+                if (specialCode.Count > 0)
+                {
+                    message = $"Mã đặc biệt [{item.SpecialCode}] đã tồn tại .\nVui lòng kiểm tra lại!";
+                    return false;
+                }
+            }
+            List<ProjectPartList> listChilds = GetAll(x => x.IsDeleted != true && x.ParentID == item.ParentID);
+            if (listChilds.Count < 0)
+            {
+                //if (string.IsNullOrEmpty((item.ProductCode ?? "").Trim()))
+                //{
+                //    message = "Vui lòng nhập Mã thiết bị!";
+                //    return false;
+                //}
+                //else
+                //{
+                //    bool isCheck = regex.IsMatch((item.ProductCode ?? "").Trim());
+                //    if (!isCheck)
+                //    {
+                //        message = "Mã thiết bị không được chứa ký tự tiếng Việt!";
+                //        return false;
+                //    }
+                //}
+                //if (string.IsNullOrEmpty((item.GroupMaterial ?? "").Trim()))
+                //{
+                //    message = "Vui lòng nhập Tên thiết bị!";
+                //    return false;
+                //}
+                if (item.IsProblem == true && string.IsNullOrWhiteSpace((item.ReasonProblem ?? "").Trim()))
+                {
+                    message = "Vui lòng nhập Lý do phát sinh!";
+                    return false;
+                }
+            }
+            return true;
+        }
         public bool ValidateApproveTBP(ProjectPartList partlist, bool isApproved, out string message)
         {
             message = string.Empty;

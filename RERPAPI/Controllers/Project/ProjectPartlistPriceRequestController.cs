@@ -293,15 +293,16 @@ namespace RERPAPI.Controllers.Project
         }
         [HttpGet("get-price-history-partlist")]
         [RequiresPermission("N38,N1,N79,N13,N82")]
-        public async Task<IActionResult> GetPriceHistoryPartlist(int projectId, int supplierSaleId, int employeeRequestId, string? keyword)
+        public async Task<IActionResult> GetPriceHistoryPartlist(int pageNumber, int pageSize, int projectId, int supplierSaleId, int employeeRequestId, string? keyword)
         {
             try
             {
                 var priceHistoryPartlist = SQLHelper<object>.ProcedureToList("spGetHistoryPricePartlist",
-                new string[] { "@Keyword", "@ProjectID", "@SupplierSaleID", "@EmployeeRequestID" },
-                new object[] { keyword ?? "", projectId, supplierSaleId, employeeRequestId });
-                var data = SQLHelper<object>.GetListData(priceHistoryPartlist, 0);
-                return Ok(ApiResponseFactory.Success(data, ""));
+                new string[] { "@Keyword", "@ProjectID", "@SupplierSaleID", "@EmployeeRequestID", "@PageSize", "@PageNumber"  },
+                new object[] { keyword ?? "", projectId, supplierSaleId, employeeRequestId, pageSize, pageNumber});
+                var dt = SQLHelper<object>.GetListData(priceHistoryPartlist, 0);
+                var totalpage = SQLHelper<object>.GetListData(priceHistoryPartlist, 1);
+                return Ok(ApiResponseFactory.Success(new { dt, totalpage }, ""));
             }
             catch (Exception ex)
             {
