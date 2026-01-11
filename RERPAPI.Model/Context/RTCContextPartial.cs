@@ -84,7 +84,7 @@ namespace RERPAPI.Model.Context
                 }
             }
 
-      //      AddAuditLogs();
+            AddAuditLogs();
             return base.SaveChanges();
         }
 
@@ -150,7 +150,7 @@ namespace RERPAPI.Model.Context
                     }
                 }
 
-           //     AddAuditLogs();
+                AddAuditLogs();
                 return await base.SaveChangesAsync(cancellationToken);
             }
             catch (Exception ex)
