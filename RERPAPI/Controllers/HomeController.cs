@@ -1400,8 +1400,30 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                var data = _configSystemRepo.GetAll(x => x.KeyName== "EmployeeOvertime"||x.KeyName== "EmployeeBussiness");
-                return Ok(ApiResponseFactory.Success(new {data }, "Lấy dữ liệu thành công"));
+                var data = _configSystemRepo.GetAll(x => x.KeyName == "EmployeeOvertime" || x.KeyName == "EmployeeBussiness");
+                return Ok(ApiResponseFactory.Success(new { data }, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+
+
+        }
+      
+        [HttpPost("save-config-system-hr")]
+        public IActionResult SaveConfigSystemHR([FromBody] SaveConfigSystemHRRequestDTO request)
+        {
+            try
+            {
+                var configHR = _configSystemRepo.GetByID(request.Id);
+                if (configHR == null)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy cấu hình hệ thống"));
+                }
+                configHR.KeyValue2 = request.KeyValue;
+                _configSystemRepo.Update(configHR);
+                return Ok(ApiResponseFactory.Success(null, "Lưu dữ liệu thành công"));
             }
             catch (Exception ex)
             {
