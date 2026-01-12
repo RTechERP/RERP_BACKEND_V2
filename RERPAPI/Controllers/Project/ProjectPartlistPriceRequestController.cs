@@ -200,12 +200,11 @@ namespace RERPAPI.Controllers.Project
             return Ok(new { status = 1, data = currencies });
         }
         [HttpPost("save-data")]
-        [RequiresPermission("N35,N1")]
         public async Task<IActionResult> SaveData([FromBody] List<ProjectPartlistPriceRequest> projectPartlistPriceRequest)
         {
             try
             {
-                List < ProjectPartlistPriceRequest > data = new List<ProjectPartlistPriceRequest>();
+                List<ProjectPartlistPriceRequest> data = new List<ProjectPartlistPriceRequest>();
                 if (projectPartlistPriceRequest != null && projectPartlistPriceRequest.Any())
                 {
                     foreach (var item in projectPartlistPriceRequest)
@@ -298,8 +297,8 @@ namespace RERPAPI.Controllers.Project
             try
             {
                 var priceHistoryPartlist = SQLHelper<object>.ProcedureToList("spGetHistoryPricePartlist",
-                new string[] { "@Keyword", "@ProjectID", "@SupplierSaleID", "@EmployeeRequestID", "@PageSize", "@PageNumber"  },
-                new object[] { keyword ?? "", projectId, supplierSaleId, employeeRequestId, pageSize, pageNumber});
+                new string[] { "@Keyword", "@ProjectID", "@SupplierSaleID", "@EmployeeRequestID", "@PageSize", "@PageNumber" },
+                new object[] { keyword ?? "", projectId, supplierSaleId, employeeRequestId, pageSize, pageNumber });
                 var dt = SQLHelper<object>.GetListData(priceHistoryPartlist, 0);
                 var totalpage = SQLHelper<object>.GetListData(priceHistoryPartlist, 1);
                 return Ok(ApiResponseFactory.Success(new { dt, totalpage }, ""));
@@ -697,7 +696,7 @@ namespace RERPAPI.Controllers.Project
                         if (request.ProjectPartlistPriceRequestTypeID == 4) requestModel.ProjectPartlistPurchaseRequestTypeID = 7;//mkt
                         else if (request.ProjectPartlistPriceRequestTypeID == 3) requestModel.ProjectPartlistPurchaseRequestTypeID = 6;//hr
                         else if (request.ProjectPartlistPriceRequestTypeID == 6) requestModel.ProjectPartlistPurchaseRequestTypeID = 3;//demo
-                        if(requestModel.ProjectPartlistPurchaseRequestTypeID != 3)
+                        if (requestModel.ProjectPartlistPurchaseRequestTypeID != 3)
                         {
                             // Gán ProductSale & Unit
                             var productSale = productSaleRepo.GetAll(p =>
@@ -714,7 +713,7 @@ namespace RERPAPI.Controllers.Project
                             var productRTC = _productRTCRepo.GetAll(x => x.ProductCode == item.ProductCode).FirstOrDefault();
                             if (productRTC == null)
                             {
-                                return BadRequest(ApiResponseFactory.Fail(null,"Sản phẩm không có trong kho demo!"));
+                                return BadRequest(ApiResponseFactory.Fail(null, "Sản phẩm không có trong kho demo!"));
                             }
                             requestModel.ProductRTCID = productRTC.ID;
                             requestModel.ProductGroupRTCID = productRTC.ProductGroupRTCID;

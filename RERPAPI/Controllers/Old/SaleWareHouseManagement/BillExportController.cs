@@ -43,6 +43,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         private readonly EmployeeRepo _employeeRepo;
         private readonly DepartmentRepo _departmentRepo;
         private readonly IConfiguration _configuration;
+        private readonly POKHRepo _pokhRepo;
+        private readonly POKHFilesRepo _pokhFilesRepo;
 
 
         public BillExportController(
@@ -57,7 +59,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             BillExportLogRepo billexportlogRepo,
             ProjectRepo projectRepo,
             HistoryDeleteBillRepo historyDeleteBillRepo,
-            WarehouseRepo warehouseRepo, InventoryProjectRepo inventoryProjectRepo, ProductSaleRepo productSaleRepo, Repo.GenericEntity.AddressStockRepo addressStockRepo, CustomerRepo customerRepo, SupplierSaleRepo supplierSaleRepo, UserRepo userRepo, IConfiguration configuration, DepartmentRepo departmentRepo, EmployeeRepo employeeRepo)
+            WarehouseRepo warehouseRepo, InventoryProjectRepo inventoryProjectRepo, ProductSaleRepo productSaleRepo, Repo.GenericEntity.AddressStockRepo addressStockRepo, CustomerRepo customerRepo, SupplierSaleRepo supplierSaleRepo, UserRepo userRepo, IConfiguration configuration, DepartmentRepo departmentRepo, EmployeeRepo employeeRepo, POKHRepo pokhRepo, POKHFilesRepo pokhFilesRepo)
         {
             _productgroupRepo = productgroupRepo;
             _billdocumentexportRepo = billdocumentexportRepo;
@@ -82,6 +84,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             _configuration = configuration;
             _departmentRepo = departmentRepo;
             _employeeRepo = employeeRepo;
+            _pokhRepo = pokhRepo;
+            _pokhFilesRepo = pokhFilesRepo;
         }
         [HttpGet("get-all-project")]
         public IActionResult getAllProject()
@@ -887,13 +891,12 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                             sheet.Cell(excelRow, 14).Value = note.StartsWith("=") ? $"'{note}" : note;
 
                             sheet.Row(excelRow).InsertRowsBelow(1);
+                            excelRow++;
                         }
-
-                        sheet.Row(excelRow + details.Count - 1).Delete();
+                        sheet.Row(excelRow + details.Count).Delete();
                         sheet.Row(excelRow + details.Count - 1).Delete();
                         #endregion
 
-                        #region ===== ADD TO ZIP =====
                         using var excelStream = new MemoryStream();
                         workbook.SaveAs(excelStream);
                         excelStream.Position = 0;
@@ -903,7 +906,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
                         using var entryStream = entry.Open();
                         excelStream.CopyTo(entryStream);
-                        #endregion
                     }
                 }
 
@@ -1300,7 +1302,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 var warehouse = _warehouseRepo.GetAll(w => w.WarehouseCode == code.Trim()).FirstOrDefault();
                 if (warehouse == null)
                 {
-                    return NotFound(new
+                    return BadRequest(new
                     {
                         status = 0,
                         message = "Warehouse not found"
@@ -1476,5 +1478,118 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
         //    }
         //}
+
+        // GET: api/BillExport/download-pokh-file/{poNumber}/{fileName}
+        [HttpGet("download-pokh-file/{poNumber}/{fileName}")]
+        public IActionResult DownloadPOKHFile(string poNumber, string fileName)
+        {
+            try
+            {
+                // Find POKH by PONumber
+                var pokh = _pokhRepo.GetAll(p => p.PONumber == poNumber && p.IsDeleted != true).FirstOrDefault();
+                if (pokh == null)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy PO với số {poNumber}"));
+                }
+
+                // Find file by POKHID and FileName
+                var pokhFile = _pokhFilesRepo.GetAll(f => f.POKHID == pokh.ID && f.FileName == fileName && f.IsDeleted != true).FirstOrDefault();
+                if (pokhFile == null)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy file {fileName} trong PO {poNumber}"));
+                }
+
+                // Get file path from ServerPath
+                string filePath = pokhFile.ServerPath;
+                if (string.IsNullOrEmpty(filePath) || !System.IO.File.Exists(filePath))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"File không tồn tại trên server: {fileName}"));
+                }
+
+                // Read file and return
+                byte[] fileBytes = System.IO.File.ReadAllBytes(filePath);
+                string contentType = GetContentType(fileName);
+
+                return File(fileBytes, contentType, fileName);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-inventory-project-import-export")]
+        public IActionResult GetInventoryProjectImportExport(
+    int warehouseId,
+    int productId,
+    int projectId = 0,
+    int pokhDetailId = 0,
+    string billExportDetailIds = "")
+        {
+            try
+            {
+                List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
+                    "spGetInventoryProjectImportExport",
+                    new string[] { "@WarehouseID", "@ProductID", "@ProjectID", "@POKHDetailID", "@BillExportDetailID" },
+                    new object[] { warehouseId, productId, projectId, pokhDetailId, billExportDetailIds }
+                );
+
+                return Ok(new
+                {
+                    status = 1,
+                    inventoryProjects = SQLHelper<object>.GetListData(result, 0),
+                    import = result.Count > 1 ? SQLHelper<object>.GetListData(result, 1) : new List<object>(),
+                    export = result.Count > 2 ? SQLHelper<object>.GetListData(result, 2) : new List<object>(),
+                    stock = result.Count > 3 ? SQLHelper<object>.GetListData(result, 3) : new List<object>()
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        // GET: api/BillExport/get-pokh-files/{poNumber}
+        [HttpGet("get-pokh-files/{poNumber}")]
+        public IActionResult GetPOKHFiles(string poNumber)
+        {
+            try
+            {
+                // Find POKH by PONumber
+                var pokh = _pokhRepo.GetAll(p => p.PONumber == poNumber && p.IsDeleted != true).FirstOrDefault();
+                if (pokh == null)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy PO với số {poNumber}"));
+                }
+
+                // Get all files for this POKH
+                var files = _pokhFilesRepo.GetAll(f => f.POKHID == pokh.ID && f.IsDeleted != true).ToList();
+
+                return Ok(ApiResponseFactory.Success(files, $"Tìm thấy {files.Count} file"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        private string GetContentType(string fileName)
+        {
+            string extension = Path.GetExtension(fileName).ToLowerInvariant();
+            return extension switch
+            {
+                ".pdf" => "application/pdf",
+                ".doc" => "application/msword",
+                ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                ".xls" => "application/vnd.ms-excel",
+                ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                ".png" => "image/png",
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".gif" => "image/gif",
+                ".txt" => "text/plain",
+                ".zip" => "application/zip",
+                ".rar" => "application/x-rar-compressed",
+                _ => "application/octet-stream"
+            };
+        }
     }
 }
