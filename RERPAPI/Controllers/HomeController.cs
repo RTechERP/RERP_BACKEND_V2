@@ -115,9 +115,7 @@ namespace RERPAPI.Controllers
 
                 var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
-                //4.Lưu session trên server
-                HttpContext.Session.SetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey"), ObjectMapper.GetCurrentUser(claims.ToDictionary(x => x.Type, x => x.Value)));
-
+                
                 return Ok(new
                 {
                     access_token = tokenString,
@@ -126,7 +124,7 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message + "\n"));
             }
         }
 
