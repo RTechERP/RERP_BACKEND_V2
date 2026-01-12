@@ -157,7 +157,9 @@ namespace RERPAPI.Controllers
             try
             {
                 //param.DateStart = param.DateStart.Value.Date.AddSeconds(-1);
-              //  param.DateEnd = param.DateEnd.Value.Date.AddDays(1);
+                //  param.DateEnd = param.DateEnd.Value.Date.AddDays(1);
+                param.DateStart = param.DateStart.Value.ToLocalTime().Date;
+                param.DateEnd = param.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
 
                 var departmentId = param.TeamId > 0 ? 0 : param.DepartmentId;
 
@@ -255,7 +257,9 @@ namespace RERPAPI.Controllers
         {
             try
             {
-            
+
+                dateStart = dateStart.ToLocalTime().Date;
+                dateEnd = dateEnd.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
 
                 var data = SQLHelper<object>.ProcedureToList("spGetSummarizeWork_New",
                     new string[] { "@DateStart", "@DateEnd", "@DepartmentID", "@TeamID", "@UserID", "@Keyword" },
