@@ -13,6 +13,7 @@
         public int SupplierSaleID { get; set; }
         public int IsApprovedTBP { get; set; }
         public int IsApprovedBGD { get; set; }
+        public int IsRequestApproved { get; set; } = 0;
         public int IsCommercialProduct { get; set; } = -1;
         public int POKHID { get; set; }
         public int ProductRTCID { get; set; }

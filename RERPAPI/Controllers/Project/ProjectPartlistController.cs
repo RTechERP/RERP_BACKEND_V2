@@ -787,12 +787,12 @@ namespace RERPAPI.Controllers.Project
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 // 1. Trim string fields
                 partList.TT = partList.TT?.Trim();
-                partList.ProductCode = partList.ProductCode?.Trim();
-                partList.SpecialCode = partList.SpecialCode?.Trim();
-                partList.GroupMaterial = partList.GroupMaterial?.Trim();
-                partList.Manufacturer = partList.Manufacturer?.Trim();
+                partList.ProductCode = partList.ProductCode?.Trim() ?? "";
+                partList.SpecialCode = partList.SpecialCode?.Trim() ?? "";
+                partList.GroupMaterial = partList.GroupMaterial?.Trim() ?? "";
+                partList.Manufacturer = partList.Manufacturer?.Trim() ?? "";
                 partList.Model = partList.Model?.Trim();
-                partList.Unit = partList.Unit?.Trim();
+                partList.Unit = partList.Unit?.Trim() ?? "";
                 partList.ReasonProblem = partList.ReasonProblem?.Trim();
                 partList.Note = partList.Note?.Trim();
 

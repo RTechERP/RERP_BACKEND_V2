@@ -199,7 +199,8 @@ namespace RERPAPI.Controllers.HRM.Employees
                     foreach (var id in listID)
                     {
                         var employeeBussiness = _employeeBussinessRepo.GetByID(id);
-                        if (employeeBussiness != null) await _employeeBussinessRepo.DeleteAsync(id);
+                        employeeBussiness.IsDeleted = true;
+                        if (employeeBussiness != null) await _employeeBussinessRepo.UpdateAsync(employeeBussiness);
 
                     }
                 }
