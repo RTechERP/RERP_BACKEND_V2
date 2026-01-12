@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RERPAPI.Model.Common;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,8 +9,8 @@ namespace RERPAPI.Model.Param
 {
     public class ApproveByApproveTPRequestParam
     {
-        public DateTime? DateStart { get; set; } = DateTime.MinValue;
-        public DateTime? DateEnd { get; set; } = DateTime.MaxValue;
+        public DateTime? DateStart { get; set; } = TextUtils.MinDate;
+        public DateTime? DateEnd { get; set; } = TextUtils.MaxDate;
         public string? FilterText { get; set; } = "";
         public int? IDApprovedTP { get; set; } = 0;
         public int? Status { get; set; } = 0;
