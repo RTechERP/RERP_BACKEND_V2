@@ -1,4 +1,5 @@
 ﻿using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -72,7 +73,7 @@ namespace RERPAPI.Controllers.HRM
             {
                 if (phased.IsDeleted != true)
                 {
-                    var isExistCode = _phasedRepo.GetAll(x => x.Code.Trim().ToUpper() == phased.Code.Trim().ToUpper() && x.IsDeleted != true&& x.ID != phased.ID).Any();
+                    var isExistCode = _phasedRepo.GetAll(x => x.Code.Trim().ToUpper() == phased.Code.Trim().ToUpper() && x.IsDeleted != true && x.ID != phased.ID).Any();
                     if (isExistCode)
                     {
                         return BadRequest(ApiResponseFactory.Fail(null, $"Mã cấp phát [{phased.Code}] đã tồn tại!"));
@@ -122,16 +123,19 @@ namespace RERPAPI.Controllers.HRM
                     }
                     else
                     {
-                        if (item.ID <= 0)
-                            await _phasedDetailRepo.CreateAsync(item);
-                        else
+                        if (item.ID <= 0) continue;
+
+                        var detail = _phasedDetailRepo.GetByID(item.ID);
+                        if (detail == null) continue;
+
+                        if (item.StatusReceive == 1 && detail.StatusReceive != 1)
                         {
-                            if (item.StatusReceive == 1)
-                            {
-                                item.DateReceive = DateTime.Now;
-                            }
-                            await _phasedDetailRepo.UpdateAsync(item);
+                            detail.DateReceive = DateTime.Now;
                         }
+                        detail.StatusReceive = item.StatusReceive;
+                        detail.UpdatedDate = DateTime.Now;
+
+                        await _phasedDetailRepo.UpdateAsync(detail);
                     }
                     phasedAllocationPersonID = (int)item.PhasedAllocationPersonID;
                 }
