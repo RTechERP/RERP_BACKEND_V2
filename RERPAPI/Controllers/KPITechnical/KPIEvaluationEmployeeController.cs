@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using NPOI.HSSF.Record.Chart;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
 using RERPAPI.Repo.GenericEntity.Technical.KPI;
 
@@ -15,10 +15,12 @@ namespace RERPAPI.Controllers.KPITechnical
     {
         KPIEvaluationPointRepo _kpiEvaluationPointRepo;
         KPISessionRepo _kpiSessionRepo;
-        public KPIEvaluationEmployeeController(KPIEvaluationPointRepo kpiEvaluationPointRepo, KPISessionRepo kpiSessionRepo)
+        KPIEmployeePointRepo _kpiEmployeePointRepo;
+        public KPIEvaluationEmployeeController(KPIEvaluationPointRepo kpiEvaluationPointRepo, KPISessionRepo kpiSessionRepo, KPIEmployeePointRepo kpiEmployeePointRepo)
         {
             _kpiEvaluationPointRepo = kpiEvaluationPointRepo;
             _kpiSessionRepo = kpiSessionRepo;
+            _kpiEmployeePointRepo = kpiEmployeePointRepo;
         }
         #region load dữ liệu combobox team 
         [HttpGet("get-combobox-team")]
@@ -191,8 +193,81 @@ namespace RERPAPI.Controllers.KPITechnical
             {
                 var data = SQLHelper<object>.ProcedureToList("spGetAllEmployeeKPIEvaluated"
                  , new string[] { "@EvaluationType", "@DepartmentID", "@Keywords", "@Status", "@UserTeamID", "@KPIExamID" }
-                 , new object[] { 1, departmentID, keyword ?? "", status, userTeamID,kpiExamID });
+                 , new object[] { 1, departmentID, keyword ?? "", status, userTeamID, kpiExamID });
                 return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0), "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        #endregion
+
+
+        #region load dữ liệu KPI kỹ năng , chuyên môn , chung , rule
+        [HttpGet("load-kpi-kynang")]
+        public async Task<IActionResult> LoadKPIKyNang(int kpiExamID, bool isPublic, int employeeID)
+        {
+            try
+            {
+                var data = SQLHelper<object>.ProcedureToList("spGetAllKPIEvaluationPoint"
+                 , new string[] { "@EmployeeID", "@EvaluationType", "@KPIExamID", "@IsPulbic" }
+                 , new object[] { employeeID, 1, kpiExamID, isPublic });
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0), "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("load-kpi-chung")]
+        public async Task<IActionResult> LoadKPIChung(int kpiExamID, bool isPublic, int employeeID)
+        {
+            try
+            {
+                var data = SQLHelper<object>.ProcedureToList("spGetAllKPIEvaluationPoint"
+                 , new string[] { "@EmployeeID", "@EvaluationType", "@KPIExamID", "@IsPulbic" }
+                 , new object[] { employeeID, 3, kpiExamID, isPublic });
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0), "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("load-kpi-chuyenmon")]
+        public async Task<IActionResult> LoadKPIChuyenMon(int kpiExamID, bool isPublic, int employeeID)
+        {
+            try
+            {
+                var data = SQLHelper<object>.ProcedureToList("spGetAllKPIEvaluationPoint"
+                 , new string[] { "@EmployeeID", "@EvaluationType", "@KPIExamID", "@IsPulbic" }
+                 , new object[] { employeeID, 2, kpiExamID, isPublic });
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0), "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("load-kpi-rule-and-team")]
+        public async Task<IActionResult> LoadKPIRule(int kpiExamID, bool isPublic, int employeeID)
+        {
+            try
+            {
+                KPIEmployeePoint kpiEmpPoint = _kpiEmployeePointRepo.GetByID(employeeID);
+                var data1 = SQLHelper<object>.ProcedureToList("spGetKpiRuleSumarizeTeamNew"
+                 , new string[] { "@KPIEmployeePointID" }
+                 , new object[] { kpiEmpPoint.ID });
+
+                var data2 = SQLHelper<object>.ProcedureToList("spGetEmployeeRulePointByKPIEmpPointIDNew"
+              , new string[] { "@KPIEmployeePointID", "@IsPublic" }
+              , new object[] { kpiEmpPoint.ID, isPublic });
+
+                var dtTeam = SQLHelper<object>.GetListData(data1, 0);
+                var dtKpiRule = SQLHelper<object>.GetListData(data2, 0);
+               
+                return Ok(ApiResponseFactory.Success(new { dtTeam , dtKpiRule }, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
             {
