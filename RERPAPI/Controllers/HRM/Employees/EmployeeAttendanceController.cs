@@ -166,6 +166,7 @@ namespace RERPAPI.Controllers
                             var newRecord = new EmployeeAttendance
                             {
                                 STT = stt,
+                                EmployeeID=0,
                                 IDChamCongMoi = emp.IDChamCongMoi,
                                 AttendanceDate = date.Value,
                                 DayWeek = dayWeek ?? "",
@@ -200,6 +201,7 @@ namespace RERPAPI.Controllers
                             if (existing != null)
                             {
                                 existing.STT = stt;
+                                existing.EmployeeID = 0;
                                 existing.DayWeek = dayWeek ?? "";
                                 existing.CheckIn = inDt?.ToString("HH:mm");
                                 existing.CheckOut = outDt?.ToString("HH:mm");
@@ -222,6 +224,7 @@ namespace RERPAPI.Controllers
                                 var newRecord = new EmployeeAttendance
                                 {
                                     STT = stt,
+                                    EmployeeID = 0,
                                     IDChamCongMoi = emp.IDChamCongMoi,
                                     AttendanceDate = date.Value,
                                     DayWeek = dayWeek ?? "",
