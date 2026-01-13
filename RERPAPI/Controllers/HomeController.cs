@@ -20,6 +20,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Net.Mime;
 using System.Security.Claims;
 using System.Text;
+using System.Threading.Tasks;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 using static NPOI.HSSF.Util.HSSFColor;
 using static RERPAPI.Model.DTO.ApproveTPDTO;
@@ -115,7 +116,7 @@ namespace RERPAPI.Controllers
 
                 var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
-                
+
                 return Ok(new
                 {
                     access_token = tokenString,
@@ -1408,7 +1409,7 @@ namespace RERPAPI.Controllers
 
 
         }
-      
+
         [HttpPost("save-config-system-hr")]
         public IActionResult SaveConfigSystemHR([FromBody] SaveConfigSystemHRRequestDTO request)
         {
@@ -1427,8 +1428,122 @@ namespace RERPAPI.Controllers
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
-
         }
+
+
+
+        #region API của DA Trường
+
+        [HttpGet("get-users-truongda")]
+        public async Task<IActionResult> GetUser(int departmentID, int kpiEmployeeTeam)
+        {
+            try
+            {
+                var param = new { DepartmentID = departmentID, KPIEmployeeTeam = kpiEmployeeTeam };
+                var data = await SqlDapper.ProcedureToListAsync("spGetKPIEmployeeByDepartmentID", param);
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-vehicle-booking-management-truongda")]
+        public async Task<IActionResult> GetVehicleBookingManagement(string ngayBD, string? teamID, string? keyword, int? userID, int? departmentID, string? listUserID)
+        {
+            try
+            {
+                var param = new
+                {
+                    DateStart = ngayBD,
+                    DateEnd = ngayBD,
+                    TeamID = teamID ?? "",
+                    Keyword = keyword ?? "",
+                    UserID = userID ?? 0,
+                    DepartmentID = departmentID ?? 0,
+                    ListUserID = listUserID ?? "",
+                };
+                var data = await SqlDapper.ProcedureToListAsync("spGetVehicleBookingManagementByDATruong", param);
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
+        [HttpGet("get-user-teamlink-truongda")]
+        public async Task<IActionResult> GetUserTeamLink(string? userTeamID)
+        {
+            try
+            {
+                var param = new
+                {
+                    UserTeamID = userTeamID ?? "",
+                };
+                var data = await SqlDapper.ProcedureToListAsync("spGetUserTeamLink_NewByDATruong", param);
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-employee-onleave-truongda")]
+        public async Task<IActionResult> GetEmployeeOnLeave(string ngayBD, string? teamID, string? keyword, int? userID, int? departmentID, string? listUserID)
+        {
+            try
+            {
+                var param = new
+                {
+                    DateStart = ngayBD,
+                    DateEnd = ngayBD,
+                    TeamID = teamID ?? "",
+                    Keyword = keyword ?? "",
+                    UserID = userID ?? 0,
+                    DepartmentID = departmentID ?? 0,
+                    ListUserID = listUserID ?? "",
+                };
+                var data = await SqlDapper.ProcedureToListAsync("spGetEmployeeOnLeaveByDATruong", param);
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-dailyreport-technical-truongda")]
+        public async Task<IActionResult> GetDailyReportTechnical(string ngayBD, string ngayKT, string? teamID, string? keyword, int? userID, int? departmentID, string? listUserID)
+        {
+            try
+            {
+                var param = new
+                {
+                    DateStart = ngayBD,
+                    DateEnd = ngayKT,
+                    TeamID = teamID ?? "",
+                    Keyword = keyword ?? "",
+                    UserID = userID ?? 0,
+                    DepartmentID = departmentID ?? 0,
+                    ListUserID = listUserID ?? "",
+                };
+                var data = await SqlDapper.ProcedureToListAsync("spGetDailyReportTechnicalByThao", param);
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        #endregion
     }
 }
