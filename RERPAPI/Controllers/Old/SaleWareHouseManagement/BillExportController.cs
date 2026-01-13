@@ -11,10 +11,6 @@ using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
 using RERPAPI.Repo.GenericEntity.Technical;
 using System.Data;
-using System.Drawing;
-using System.Drawing.Imaging;
-using ZXing;
-using ZXing.Common;
 
 
 namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
@@ -602,156 +598,320 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [HttpGet("export-excel")]
-        public IActionResult ExportExcel(int id, int type)
+        private static string GetString(IDictionary<string, object> row, string key)
+        {
+            if (!row.ContainsKey(key) || row[key] == null || row[key] == DBNull.Value)
+                return "";
+            return row[key].ToString();
+        }
+
+        private static int GetInt(IDictionary<string, object> row, string key)
+        {
+            if (!row.ContainsKey(key) || row[key] == null || row[key] == DBNull.Value)
+                return 0;
+            return Convert.ToInt32(row[key]);
+        }
+
+        private static decimal GetDecimal(IDictionary<string, object> row, string key)
+        {
+            if (!row.ContainsKey(key) || row[key] == null || row[key] == DBNull.Value)
+                return 0;
+            return Convert.ToDecimal(row[key]);
+        }
+
+        //[HttpGet("export-excel")]
+        //public IActionResult ExportExcel(int id, int type)
+        //{
+        //    try
+
+        //    {
+        //        var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+        //        var currentUser = ObjectMapper.GetCurrentUser(claims);
+        //        var masterSets = SQLHelper<dynamic>.ProcedureToList(
+        //            "spGetExportExcel",
+        //            new[] { "@ID" },
+        //            new object[] { id }
+        //        );
+
+        //        if (masterSets == null || masterSets.Count == 0 || masterSets[0].Count == 0)
+        //            return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu master"));
+
+        //        var master = (IDictionary<string, object>)masterSets[0][0];
+
+        //        var detailSets = SQLHelper<dynamic>.ProcedureToList(
+        //            "spGetBillExportDetail",
+        //            new[] { "@BillID" },
+        //            new object[] { id }
+        //        );
+
+        //        if (detailSets == null || detailSets.Count == 0)
+        //            return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu chi tiết"));
+
+        //        var details = detailSets[0]
+        //            .Cast<IDictionary<string, object>>()
+        //            .ToList();
+
+        //        #region ===== LOAD TEMPLATE =====
+        //        string rootPath = _configuration.GetValue<string>("PathTemplate");
+        //        string templatePath = Path.Combine(rootPath, "ExportExcel", "PhieuXuatSale.xlsx");
+
+        //        using var workbook = new XLWorkbook(templatePath);
+        //        var sheet = workbook.Worksheet(1);
+        //        #endregion
+
+        //        #region ===== MAP MASTER (GIỐNG WINFORMS) =====
+        //        sheet.Cell(6, 1).Value = "Số: " + GetString(master, "Code");
+
+        //        string fullName = GetString(master, "FullName").Trim();
+        //        int userId = GetInt(master, "UserID");
+
+        //        int departmentID = _employeeRepo.GetByID(userId)?.DepartmentID ?? 0;
+        //        string department = _departmentRepo.GetByID(departmentID)?.Name ?? "";
+
+        //        sheet.Cell(9, 4).Value = string.IsNullOrWhiteSpace(department)
+        //            ? fullName
+        //            : $"{fullName} / Phòng {department}";
+
+        //        string customer = GetString(master, "CustomerName").Trim();
+        //        string supplier = GetString(master, "NameNCC").Trim();
+
+        //        sheet.Cell(10, 3).Value = "'- Khách hàng/Nhà cung cấp:";
+        //        sheet.Cell(10, 4).Value = string.IsNullOrEmpty(customer) ? supplier : customer;
+
+        //        sheet.Cell(11, 4).Value = GetString(master, "Address");
+        //        sheet.Cell(12, 4).Value = GetString(master, "AddressStock");
+
+        //        sheet.Cell(25, 3).Value = GetString(master, "FullNameSender");
+        //        sheet.Cell(25, 9).Value = GetString(master, "FullName");
+
+        //        if (GetInt(master, "WarehouseID") == 1)
+        //            sheet.Cell(15, 10).Value = "Loại vật tư";
+
+        //        if (DateTime.TryParse(GetString(master, "CreatDate"), out var d))
+        //            sheet.Cell(18, 9).Value = $"Ngày {d:dd} tháng {d:MM} năm {d:yyyy}";
+
+        //        #endregion
+
+        //        #region ===== MAP DETAIL (LOGIC GIỐNG HỆT WINFORMS) =====
+        //        int excelRow = 16;
+        //        int stt = 1;
+
+        //        for (int i = details.Count - 1; i >= 0; i--)
+        //        {
+        //            int parentId = Convert.ToInt32(details[i]["ParentID"] ?? 0);
+
+        //            if (type == 1 && parentId != 0) continue;
+
+        //            sheet.Cell(excelRow, 1).Value = stt++;
+        //            sheet.Cell(excelRow, 2).Value = GetString(details[i], "ProductNewCode");
+        //            sheet.Cell(excelRow, 3).Value = GetString(details[i], "ProductCode");
+        //            sheet.Cell(excelRow, 4).Value = GetString(details[i], "ProductFullName");
+        //            sheet.Cell(excelRow, 5).Value = GetString(details[i], "ProductName");
+        //            sheet.Cell(excelRow, 6).Value = GetString(details[i], "Unit");
+        //            sheet.Cell(excelRow, 7).Value = GetDecimal(details[i], "Qty");
+        //            sheet.Cell(excelRow, 8).Value = GetString(details[i], "ProjectCodeText");
+        //            sheet.Cell(excelRow, 9).Value = GetString(details[i], "ProjectNameText");
+        //            sheet.Cell(excelRow, 10).Value = GetString(details[i], "ProductTypeText");
+
+        //            sheet.Cell(excelRow, 11).Value = GetDecimal(details[i], "UnitPricePOKH");
+        //            sheet.Cell(excelRow, 12).Value = GetDecimal(details[i], "UnitPricePurchase");
+
+        //            sheet.Cell(excelRow, 13).Value =
+        //                GetInt(master, "WarehouseID") == 1
+        //                    ? GetString(details[i], "ProductGroupName")
+        //                    : GetString(details[i], "WarehouseName");
+
+        //            string note = GetString(details[i], "Note");
+        //            sheet.Cell(excelRow, 14).Value = note.StartsWith("=") ? $"'{note}" : note;
+
+
+        //            // === INSERT GIỐNG WINFORMS ===
+        //            sheet.Row(excelRow).InsertRowsBelow(1);
+        //        }
+
+        //        // === DELETE GIỐNG WINFORMS ===
+        //        sheet.Row(excelRow + details.Count - 1).Delete();
+        //        sheet.Row(excelRow + details.Count - 1).Delete();
+        //        //sheet.Row(15).Delete();
+        //        #endregion
+
+        //        #region ===== QR CODE =====
+        //        string qrText = master["Code"]?.ToString();
+
+        //        var writer = new BarcodeWriterPixelData
+        //        {
+        //            Format = BarcodeFormat.QR_CODE,
+        //            Options = new EncodingOptions { Width = 250, Height = 250 }
+        //        };
+
+        //        var pixelData = writer.Write(qrText);
+        //        using var bmp = new Bitmap(pixelData.Width, pixelData.Height, PixelFormat.Format32bppRgb);
+
+        //        var data = bmp.LockBits(
+        //            new Rectangle(0, 0, bmp.Width, bmp.Height),
+        //            ImageLockMode.WriteOnly,
+        //            bmp.PixelFormat);
+
+        //        System.Runtime.InteropServices.Marshal.Copy(pixelData.Pixels, 0, data.Scan0, pixelData.Pixels.Length);
+        //        bmp.UnlockBits(data);
+
+        //        string tempPath = Path.GetTempFileName();
+        //        bmp.Save(tempPath, ImageFormat.Png);
+
+        //        sheet.AddPicture(tempPath)
+        //             .MoveTo(sheet.Cell(1, 10), 20, 10)
+        //             .WithSize(120, 120);
+
+        //        System.IO.File.Delete(tempPath);
+        //        #endregion
+
+        //        using var stream = new MemoryStream();
+        //        workbook.SaveAs(stream);
+
+        //        return File(
+        //            stream.ToArray(),
+        //            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        //            $"{master["Code"]}_{DateTime.Now:dd_MM_yyyy_HH_mm_ss}.xlsx"
+        //        );
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
+        [HttpPost("export-excel")]
+        public IActionResult ExportExcel([FromBody] List<int> listId, int type)
         {
             try
-
             {
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                var currentUser = ObjectMapper.GetCurrentUser(claims);
-                var masterSets = SQLHelper<dynamic>.ProcedureToList(
-                    "spGetExportExcel",
-                    new[] { "@ID" },
-                    new object[] { id }
-                );
+                if (listId == null || !listId.Any())
+                    return BadRequest(ApiResponseFactory.Fail(null, "Danh sách Phiếu rỗng"));
 
-                if (masterSets == null || masterSets.Count == 0 || masterSets[0].Count == 0)
-                    return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu master"));
-
-                var master = (IDictionary<string, object>)masterSets[0][0];
-
-                var detailSets = SQLHelper<dynamic>.ProcedureToList(
-                    "spGetBillExportDetail",
-                    new[] { "@BillID" },
-                    new object[] { id }
-                );
-
-                if (detailSets == null || detailSets.Count == 0)
-                    return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu chi tiết"));
-
-                var details = detailSets[0]
-                    .Cast<IDictionary<string, object>>()
-                    .ToList();
-
-                #region ===== LOAD TEMPLATE =====
                 string rootPath = _configuration.GetValue<string>("PathTemplate");
                 string templatePath = Path.Combine(rootPath, "ExportExcel", "PhieuXuatSale.xlsx");
 
-                using var workbook = new XLWorkbook(templatePath);
-                var sheet = workbook.Worksheet(1);
-                #endregion
-
-                #region ===== MAP MASTER (GIỐNG WINFORMS) =====
-                sheet.Cell(6, 1).Value = "Số: " + master["Code"];
-
-                string fullName = master["FullName"]?.ToString()?.Trim();
-                int departmentID = _employeeRepo.GetByID(Convert.ToInt32(master["UserID"])).DepartmentID ?? 0;
-                string department = _departmentRepo.GetByID(departmentID).Name ?? "";
-                //string department = master["DepartmentName"]?.ToString()?.Trim();
-
-                sheet.Cell(9, 4).Value = string.IsNullOrWhiteSpace(department)
-                    ? fullName
-                    : $"{fullName} / Phòng {department}";
-
-                string customer = master["CustomerName"]?.ToString()?.Trim();
-                string supplier = master["NameNCC"]?.ToString()?.Trim();
-
-                sheet.Cell(10, 3).Value = "'- Khách hàng/Nhà cung cấp:";
-                sheet.Cell(10, 4).Value = string.IsNullOrEmpty(customer) ? supplier : customer;
-
-                sheet.Cell(11, 4).Value = master["Address"].ToString();
-                if (master["AddressStock"] != null) sheet.Cell(12, 4).Value = master["AddressStock"].ToString();
-
-                sheet.Cell(25, 3).Value = master["FullNameSender"].ToString();
-                sheet.Cell(25, 9).Value = master["FullName"].ToString();
-
-                if (Convert.ToInt32(master["WarehouseID"]) == 1)
-                    sheet.Cell(15, 10).Value = "Loại vật tư";
-
-                if (DateTime.TryParse(master["CreatDate"]?.ToString(), out var d))
-                    sheet.Cell(18, 9).Value = $"Ngày {d:dd} tháng {d:MM} năm {d:yyyy}";
-                #endregion
-
-                #region ===== MAP DETAIL (LOGIC GIỐNG HỆT WINFORMS) =====
-                int excelRow = 16;
-                int stt = 1;
-
-                for (int i = details.Count - 1; i >= 0; i--)
+                using var zipStream = new MemoryStream();
+                using (var archive = new System.IO.Compression.ZipArchive(zipStream, System.IO.Compression.ZipArchiveMode.Create, true))
                 {
-                    int parentId = Convert.ToInt32(details[i]["ParentID"] ?? 0);
+                    foreach (var id in listId)
+                    {
+                        #region ===== LOAD DATA =====
+                        var masterSets = SQLHelper<dynamic>.ProcedureToList(
+                            "spGetExportExcel",
+                            new[] { "@ID" },
+                            new object[] { id }
+                        );
 
-                    if (type == 1 && parentId != 0) continue;
+                        if (masterSets == null || masterSets[0].Count == 0)
+                            continue;
 
-                    sheet.Cell(excelRow, 1).Value = stt++;
-                    sheet.Cell(excelRow, 2).Value = details[i]["ProductNewCode"].ToString();
-                    sheet.Cell(excelRow, 3).Value = details[i]["ProductCode"].ToString();
-                    sheet.Cell(excelRow, 4).Value = details[i]["ProductFullName"].ToString();
-                    sheet.Cell(excelRow, 5).Value = details[i]["ProductName"].ToString();
-                    sheet.Cell(excelRow, 6).Value = details[i]["Unit"].ToString();
-                    sheet.Cell(excelRow, 7).Value = details[i]["Qty"].ToString();
-                    sheet.Cell(excelRow, 8).Value = details[i]["ProjectCodeText"].ToString();
-                    sheet.Cell(excelRow, 9).Value = details[i]["ProjectNameText"].ToString();
-                    sheet.Cell(excelRow, 10).Value = details[i]["ProductTypeText"].ToString();
+                        var master = (IDictionary<string, object>)masterSets[0][0];
 
-                    sheet.Cell(excelRow, 11).Value = details[i]["UnitPricePOKH"].ToString();
-                    sheet.Cell(excelRow, 12).Value = details[i]["UnitPricePurchase"].ToString();
+                        var detailSets = SQLHelper<dynamic>.ProcedureToList(
+                            "spGetBillExportDetail",
+                            new[] { "@BillID" },
+                            new object[] { id }
+                        );
 
-                    sheet.Cell(excelRow, 13).Value =
-                        Convert.ToInt32(master["WarehouseID"]) == 1
-                            ? details[i]["ProductGroupName"].ToString()
-                            : details[i]["WarehouseName"].ToString();
+                        if (detailSets == null || detailSets.Count == 0)
+                            continue;
 
-                    string note = details[i]["Note"]?.ToString() ?? "";
-                    sheet.Cell(excelRow, 14).Value = note.StartsWith("=") ? $"'{note}" : note;
+                        var details = detailSets[0].Cast<IDictionary<string, object>>().ToList();
+                        #endregion
 
-                    // === INSERT GIỐNG WINFORMS ===
-                    sheet.Row(excelRow).InsertRowsBelow(1);
+                        #region ===== CREATE WORKBOOK =====
+                        using var workbook = new XLWorkbook(templatePath);
+                        var sheet = workbook.Worksheet(1);
+                        #endregion
+
+                        #region ===== MAP MASTER =====
+                        sheet.Cell(6, 1).Value = "Số: " + GetString(master, "Code");
+
+                        string fullName = GetString(master, "FullName").Trim();
+                        int userId = GetInt(master, "UserID");
+
+                        int departmentID = _employeeRepo.GetByID(userId)?.DepartmentID ?? 0;
+                        string department = _departmentRepo.GetByID(departmentID)?.Name ?? "";
+
+                        sheet.Cell(9, 4).Value = string.IsNullOrWhiteSpace(department)
+                            ? fullName
+                            : $"{fullName} / Phòng {department}";
+
+                        string customer = GetString(master, "CustomerName").Trim();
+                        string supplier = GetString(master, "NameNCC").Trim();
+
+                        sheet.Cell(10, 3).Value = "'- Khách hàng/Nhà cung cấp:";
+                        sheet.Cell(10, 4).Value = string.IsNullOrEmpty(customer) ? supplier : customer;
+
+                        sheet.Cell(11, 4).Value = GetString(master, "Address");
+                        sheet.Cell(12, 4).Value = GetString(master, "AddressStock");
+
+                        sheet.Cell(25, 3).Value = GetString(master, "FullNameSender");
+                        sheet.Cell(25, 9).Value = GetString(master, "FullName");
+
+                        if (GetInt(master, "WarehouseID") == 1)
+                            sheet.Cell(15, 10).Value = "Loại vật tư";
+
+                        if (DateTime.TryParse(GetString(master, "CreatDate"), out var d))
+                            sheet.Cell(18, 9).Value = $"Ngày {d:dd} tháng {d:MM} năm {d:yyyy}";
+                        #endregion
+
+                        #region ===== MAP DETAIL =====
+                        int excelRow = 16;
+                        int stt = 1;
+
+                        for (int i = details.Count - 1; i >= 0; i--)
+                        {
+                            int parentId = GetInt(details[i], "ParentID");
+                            if (type == 1 && parentId != 0) continue;
+
+                            sheet.Cell(excelRow, 1).Value = stt++;
+                            sheet.Cell(excelRow, 2).Value = GetString(details[i], "ProductNewCode");
+                            sheet.Cell(excelRow, 3).Value = GetString(details[i], "ProductCode");
+                            sheet.Cell(excelRow, 4).Value = GetString(details[i], "ProductFullName");
+                            sheet.Cell(excelRow, 5).Value = GetString(details[i], "ProductName");
+                            sheet.Cell(excelRow, 6).Value = GetString(details[i], "Unit");
+                            sheet.Cell(excelRow, 7).Value = GetDecimal(details[i], "Qty");
+                            sheet.Cell(excelRow, 8).Value = GetString(details[i], "ProjectCodeText");
+                            sheet.Cell(excelRow, 9).Value = GetString(details[i], "ProjectNameText");
+                            sheet.Cell(excelRow, 10).Value = GetString(details[i], "ProductTypeText");
+                            sheet.Cell(excelRow, 11).Value = GetDecimal(details[i], "UnitPricePOKH");
+                            sheet.Cell(excelRow, 12).Value = GetDecimal(details[i], "UnitPricePurchase");
+
+                            sheet.Cell(excelRow, 13).Value =
+                                GetInt(master, "WarehouseID") == 1
+                                    ? GetString(details[i], "ProductGroupName")
+                                    : GetString(details[i], "WarehouseName");
+
+                            string note = GetString(details[i], "Note");
+                            sheet.Cell(excelRow, 14).Value = note.StartsWith("=") ? $"'{note}" : note;
+
+                            sheet.Row(excelRow).InsertRowsBelow(1);
+                        }
+
+                        sheet.Row(excelRow + details.Count - 1).Delete();
+                        sheet.Row(excelRow + details.Count - 1).Delete();
+                        #endregion
+
+                        #region ===== ADD TO ZIP =====
+                        using var excelStream = new MemoryStream();
+                        workbook.SaveAs(excelStream);
+                        excelStream.Position = 0;
+
+                        string fileName = $"{GetString(master, "Code")}.xlsx";
+                        var entry = archive.CreateEntry(fileName);
+
+                        using var entryStream = entry.Open();
+                        excelStream.CopyTo(entryStream);
+                        #endregion
+                    }
                 }
 
-                // === DELETE GIỐNG WINFORMS ===
-                sheet.Row(excelRow + details.Count - 1).Delete();
-                sheet.Row(excelRow + details.Count - 1).Delete();
-                //sheet.Row(15).Delete();
-                #endregion
-
-                #region ===== QR CODE =====
-                string qrText = master["Code"]?.ToString();
-
-                var writer = new BarcodeWriterPixelData
-                {
-                    Format = BarcodeFormat.QR_CODE,
-                    Options = new EncodingOptions { Width = 250, Height = 250 }
-                };
-
-                var pixelData = writer.Write(qrText);
-                using var bmp = new Bitmap(pixelData.Width, pixelData.Height, PixelFormat.Format32bppRgb);
-
-                var data = bmp.LockBits(
-                    new Rectangle(0, 0, bmp.Width, bmp.Height),
-                    ImageLockMode.WriteOnly,
-                    bmp.PixelFormat);
-
-                System.Runtime.InteropServices.Marshal.Copy(pixelData.Pixels, 0, data.Scan0, pixelData.Pixels.Length);
-                bmp.UnlockBits(data);
-
-                string tempPath = Path.GetTempFileName();
-                bmp.Save(tempPath, ImageFormat.Png);
-
-                sheet.AddPicture(tempPath)
-                     .MoveTo(sheet.Cell(1, 10), 20, 10)
-                     .WithSize(120, 120);
-
-                System.IO.File.Delete(tempPath);
-                #endregion
-
-                using var stream = new MemoryStream();
-                workbook.SaveAs(stream);
-
+                zipStream.Position = 0;
                 return File(
-                    stream.ToArray(),
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    $"{master["Code"]}_{DateTime.Now:dd_MM_yyyy_HH_mm_ss}.xlsx"
+                    zipStream.ToArray(),
+                    "application/zip",
+                    $"PhieuXuat_{DateTime.Now:dd_MM_yyyy_HH_mm_ss}.zip"
                 );
             }
             catch (Exception ex)
@@ -759,188 +919,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-        //[HttpGet("export-excel")]
-        //public IActionResult ExportExcel(int id, int type)
-        //{
-        //    try
-        //    {
-        //        List<List<dynamic>> resultSets = SQLHelper<dynamic>.ProcedureToList(
-        //            "spGetExportExcel",
-        //            new string[] { "@ID" },
-        //            new object[] { id }
-        //        );
-
-
-
-        //        if (resultSets == null || resultSets.Count == 0 || resultSets[0].Count == 0)
-        //        {
-        //            return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu"));
-        //        }
-
-        //        var allData = resultSets[0];
-        //        var masterData = allData.FirstOrDefault();
-
-
-        //        if (masterData == null)
-        //        {
-        //            return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu master"));
-        //        }
-        //        var path = _configuration.GetValue<string>("PathTemplate");
-        //        if (path == null) return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy đường dẫn server để lấy mẫu xuất!"));
-
-        //        string templatePath = Path.Combine(path, "ExportExcel", "PhieuXuatSale.xlsx");
-        //        if (!System.IO.File.Exists(templatePath))
-        //        {
-        //            return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy file mẫu Excel"));
-        //        }
-
-        //        using (var workbook = new XLWorkbook(templatePath))
-        //        {
-        //            var sheet = workbook.Worksheet(1);
-
-        //            // Mapping dữ liệu Master
-        //            sheet.Cell(6, 1).Value = $"Số: {masterData.Code}";
-        //            sheet.Cell(9, 4).Value = string.IsNullOrWhiteSpace((string)masterData.FullName)
-        //                ? masterData.FullName
-        //                : $"{masterData.FullName}";
-
-        //            string customerName = masterData.CustomerName?.ToString()?.Trim() ?? "";
-        //            string supplierName = masterData.NameNCC?.ToString()?.Trim() ?? "";
-
-        //            sheet.Cell(10, 3).Value = "'- Khách hàng/Nhà cung cấp:";
-        //            sheet.Cell(10, 4).Value = !string.IsNullOrEmpty(customerName) ? customerName : supplierName;
-
-        //            sheet.Cell(11, 4).Value = masterData.Address?.ToString() ?? "";
-        //            sheet.Cell(12, 4).Value = masterData.AddressStock?.ToString() ?? "";
-
-        //            DateTime? creatDate = masterData.CreatDate != null ? Convert.ToDateTime(masterData.CreatDate) : null;
-        //            if (creatDate.HasValue)
-        //            {
-        //                sheet.Cell(18, 9).Value = $"Ngày {creatDate.Value:dd} tháng {creatDate.Value:MM} năm {creatDate.Value:yyyy}";
-        //            }
-
-        //            sheet.Cell(25, 3).Value = masterData.FullNameSender?.ToString() ?? "";
-        //            sheet.Cell(25, 9).Value = masterData.FullName?.ToString() ?? "";
-        //            if (Convert.ToInt32(masterData.WarehouseID) == 1)
-        //            {
-        //                sheet.Cell(15, 10).Value = "Loại vật tư";
-        //            }
-        //            List<List<dynamic>> resultDetail = SQLHelper<dynamic>.ProcedureToList(
-        //          "spGetBillExportDetail",
-        //          new string[] { "@BillID" },
-        //          new object[] { id }
-        //      );
-        //            var detailList = resultDetail[0]
-        //                    .Cast<IDictionary<string, object>>()
-        //                     .ToList();
-
-        //            // Mapping dữ liệu chi tiết
-        //            int startRow = 15;
-        //            int currentRow = startRow;
-        //            int stt = 1;
-        //            // Chỉ chèn thêm dòng nếu có nhiều hơn 1 mục chi tiết,
-        //            // vì file mẫu đã có sẵn 1 dòng để sử dụng.
-        //            if (detailList.Count > 1)
-        //            {
-        //                // Ví dụ: có 5 mục chi tiết -> chèn thêm 4 dòng.
-        //                sheet.Row(startRow).InsertRowsBelow(detailList.Count - 1);
-        //            }
-        //            if (detailList.Any())
-        //            {
-        //                foreach (var item in detailList)
-        //                {
-        //                    int parentId = Convert.ToInt32(item["ParentID"] ?? 0);
-
-        //                    if (type == 1 && parentId != 0) continue; // giống Winform: nếu type=1 thì bỏ qua dòng con
-
-        //                    sheet.Cell(currentRow, 1).Value = stt++;
-        //                    sheet.Cell(currentRow, 2).Value = item["ProductNewCode"]?.ToString() ?? "";
-        //                    sheet.Cell(currentRow, 3).Value = item["ProductCode"]?.ToString() ?? "";
-        //                    sheet.Cell(currentRow, 4).Value = item["ProductFullName"]?.ToString() ?? "";
-        //                    sheet.Cell(currentRow, 5).Value = item["ProductName"]?.ToString() ?? "";
-        //                    sheet.Cell(currentRow, 6).Value = item["Unit"]?.ToString() ?? "";
-        //                    sheet.Cell(currentRow, 7).Value = Convert.ToDecimal(item["Qty"] ?? 0);
-        //                    sheet.Cell(currentRow, 8).Value = item["ProjectCodeText"]?.ToString() ?? "";
-        //                    sheet.Cell(currentRow, 9).Value = item["ProjectNameText"]?.ToString() ?? "";
-        //                    sheet.Cell(currentRow, 10).Value = item["ProductTypeText"]?.ToString() ?? "";
-
-        //                    sheet.Cell(currentRow, 11).Value = masterData.WarehouseID?.ToString() == "1"
-        //                        ? item["ProductGroupName"]?.ToString() ?? ""
-        //                        : item["WarehouseName"]?.ToString() ?? "";
-
-        //                    string note = item["Note"]?.ToString() ?? "";
-        //                    sheet.Cell(currentRow, 12).Value = note.StartsWith("=") ? $"'{note}" : note;
-
-        //                    currentRow++;
-        //                }
-        //            }
-        //            else // Nếu không có dòng chi tiết nào
-        //            {
-        //                // Xoá dòng mẫu đi
-        //                sheet.Row(startRow).Delete();
-        //            }
-
-        //            using (var stream = new MemoryStream())
-        //            {
-
-        //                // --- TẠO QR CODE bằng ZXing.Net ---
-        //                string qrCodeText = masterData?.Code?.ToString() ?? "Unknown";
-
-        //                var writer = new BarcodeWriterPixelData
-        //                {
-        //                    Format = BarcodeFormat.QR_CODE,
-        //                    Options = new EncodingOptions
-        //                    {
-        //                        Height = 250,
-        //                        Width = 250,
-        //                        Margin = 1
-        //                    }
-        //                };
-
-        //                var pixelData = writer.Write(qrCodeText);
-
-        //                using (var bitmap = new Bitmap(pixelData.Width, pixelData.Height, PixelFormat.Format32bppRgb))
-        //                {
-        //                    var bitmapData = bitmap.LockBits(
-        //                        new Rectangle(0, 0, pixelData.Width, pixelData.Height),
-        //                        ImageLockMode.WriteOnly,
-        //                        PixelFormat.Format32bppRgb);
-
-        //                    try
-        //                    {
-        //                        System.Runtime.InteropServices.Marshal.Copy(pixelData.Pixels, 0, bitmapData.Scan0, pixelData.Pixels.Length);
-        //                    }
-        //                    finally
-        //                    {
-        //                        bitmap.UnlockBits(bitmapData);
-        //                    }
-
-        //                    // Lưu vào tệp tạm
-        //                    string tempPath = Path.Combine(Path.GetTempPath(), $"qr_{Guid.NewGuid()}.png");
-        //                    bitmap.Save(tempPath, ImageFormat.Png);
-
-        //                    // Thêm ảnh vào Excel
-        //                    sheet.AddPicture(tempPath)
-        //                   .MoveTo(sheet.Cell(1, 10), 20, 10)  // Đặt tại ô (1,10), lệch phải 20px, xuống 10px
-        //                   .WithSize(120, 120);
-
-        //                    System.IO.File.Delete(tempPath);
-        //                }
-
-        //                workbook.SaveAs(stream);
-        //                stream.Position = 0;
-
-        //                string fileName = $"{masterData.Code}_{DateTime.Now:dd_MM_yyyy_HH_mm_ss}.xlsx";
-        //                return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
-        //            }
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-        //    }
-        //}
 
         [HttpPost("bill-export-synthetic")]
         public IActionResult getBillExportSynthetic([FromBody] BillExportSyntheticParamRequest filter)
