@@ -123,8 +123,9 @@ namespace RERPAPI.Controllers.HRM
         {
             try
             {
+                int maxSTT = _economicContractTermRepo.GetAll(x => x.IsDeleted != true).Max(x => x.STT) +1?? 1;
                 var data = _economicContractTermRepo.GetAll(x => x.IsDeleted != true);
-                return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
+                return Ok(ApiResponseFactory.Success(new { data, maxSTT }, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
             {
@@ -204,8 +205,9 @@ namespace RERPAPI.Controllers.HRM
         {
             try
             {
+                int maxSTT = _economicContractTypeRepo.GetAll(x=>x.IsDeleted!=true).Max(x => x.STT)+1 ?? 1;
                 var data = _economicContractTypeRepo.GetAll(x => x.IsDeleted != true);
-                return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
+                return Ok(ApiResponseFactory.Success(new {data, maxSTT}, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
             {
