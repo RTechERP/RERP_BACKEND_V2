@@ -471,6 +471,7 @@ builder.Services.AddScoped<ProjectPartListPurchaseRequestApproveLogRepo>();
 #region KPI
 builder.Services.AddScoped<KPIEvaluationPointRepo>();
 builder.Services.AddScoped<KPISessionRepo>();
+builder.Services.AddScoped<KPIEmployeePointRepo>();
 #endregion
 
 #region RabbitService
