@@ -15,7 +15,7 @@ namespace RERPAPI.Controllers.HRM
 {
     [Route("api/[controller]")]
     [ApiController]
-   // [Authorize]
+   [Authorize]
     
     public class EconomicContractController : ControllerBase
     {
@@ -31,7 +31,7 @@ namespace RERPAPI.Controllers.HRM
             _economicContractFileRepo = economicContractFileRepo;
             _economicContractRepo = economicContractRepo;
         }
-        [RequiresPermission("N1,N2,N34")]
+        [RequiresPermission("N1,N34")]
         [HttpPost("get-economic-contract")]
         public IActionResult GetEconomicContract([FromBody] EconomicContractRequestParam request)
         {
@@ -50,7 +50,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [RequiresPermission("N1,N2,N34")]
+        [RequiresPermission("N1,N34")]
         [HttpPost("save-contract")]
         public async Task<IActionResult> SaveContract([FromBody] EconomicContract item)
         {
@@ -87,7 +87,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [RequiresPermission("N1,N2,N34")]
+        [RequiresPermission("N1,N34")]
         [HttpPost("delete-contract")]
         public IActionResult DeleteContract([FromBody] List<int> ids)
         {
@@ -117,7 +117,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [RequiresPermission("N1,N2,N34")]
+        [RequiresPermission("N1,N34")]
         [HttpGet("get-economic-contract-term")]
         public IActionResult GetEconomicContractTerms()
         {
@@ -131,7 +131,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [RequiresPermission("N1,N2,N34")]
+        [RequiresPermission("N1,N34")]
         [HttpPost("save-contract-term")]
         public async Task<IActionResult> SaveContractTerm([FromBody] EconomicContractTerm term)
         {
@@ -168,7 +168,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [RequiresPermission("N1,N2,N34")]
+        [RequiresPermission("N1,N34")]
         [HttpPost("delete-term")]
         public IActionResult DeleteTerm([FromBody] List<int> ids)
         {
@@ -198,7 +198,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [RequiresPermission("N1,N2,N34")]
+        [RequiresPermission("N1,N34")]
         [HttpGet("get-economic-contract-type")]
         public IActionResult GetEconomicContractType()
         {
@@ -212,7 +212,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [RequiresPermission("N1,N2,N34")]
+        [RequiresPermission("N1,N34")]
         [HttpPost("save-contract-type")]
         public async Task<IActionResult> SaveContractType([FromBody] EconomicContractType term)
         {
@@ -249,7 +249,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [RequiresPermission("N1,N2,N34")]
+        [RequiresPermission("N1,N34")]
         [HttpPost("delete-type")]
         public IActionResult DeleteType([FromBody] List<int> ids)
         {
@@ -279,7 +279,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [RequiresPermission("N1,N2,N34")]
+        [RequiresPermission("N1,N34")]
         [HttpGet("get-file-by-contract-id")]
         public IActionResult GetFileByContractID(int contractID)
         {
@@ -293,7 +293,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [RequiresPermission("N1,N2,N34")]
+        [RequiresPermission("N1,N34")]
         [HttpPost("save-contract-file")]
         public async Task<IActionResult> SaveContractFile([FromBody] EconomicContractFile item)
         {
