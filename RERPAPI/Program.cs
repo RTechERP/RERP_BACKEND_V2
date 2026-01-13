@@ -459,6 +459,10 @@ builder.Services.AddScoped<PaymentOrderPORepo>();
 builder.Services.AddScoped<DailyReportHRRepo>();
 builder.Services.AddScoped<DailyReportLXCP>();
 builder.Services.AddScoped<DailyReportMarketingFileRepo>();
+builder.Services.AddScoped<EconomicContractRepo>();
+builder.Services.AddScoped<EconomicContractFileRepo>();
+builder.Services.AddScoped<EconomicContractTypeRepo>();
+builder.Services.AddScoped<EconomicContractTermRepo>();
 
 
 builder.Services.AddScoped<PhasedAllocationPersonRepo>();
