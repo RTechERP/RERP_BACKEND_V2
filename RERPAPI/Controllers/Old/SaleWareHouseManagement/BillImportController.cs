@@ -723,7 +723,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     sheet.Cell(24, 8).Value = masterData["Reciver"]?.ToString()?.Trim() ?? "";
 
                     // Generate QR code
-                    string qrCodeText = masterData["BillImportID"]?.ToString()?.Trim() ?? "Unknown";
+                    string qrCodeText = billImport.BillImportCode?.Trim() ?? "Unknown";
                     var writer = new BarcodeWriterPixelData
                     {
                         Format = BarcodeFormat.QR_CODE,
