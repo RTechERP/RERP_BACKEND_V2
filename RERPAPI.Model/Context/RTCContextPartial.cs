@@ -34,6 +34,7 @@ namespace RERPAPI.Model.Context
                 var updatedDate = type.GetProperty("UpdatedDate");
                 var isDeleted = type.GetProperty("IsDeleted");
                 var isDelete = type.GetProperty("IsDelete");
+                var deleteFlag = type.GetProperty("DeleteFlag");
 
                 if (item.State == EntityState.Added) //Thêm mới
                 {
@@ -63,6 +64,16 @@ namespace RERPAPI.Model.Context
                         else if (propType == typeof(int) || propType == typeof(int?))
                             isDelete.SetValue(item.Entity, 0);
                     }
+
+                    if (deleteFlag != null && deleteFlag.CanWrite)
+                    {
+                        var propType = deleteFlag.PropertyType;
+                        if (propType == typeof(bool) || propType == typeof(bool?))
+                            deleteFlag.SetValue(item.Entity, false);
+                        else if (propType == typeof(int) || propType == typeof(int?))
+                            deleteFlag.SetValue(item.Entity, 0);
+                    }
+
 
                 }
 
@@ -107,6 +118,7 @@ namespace RERPAPI.Model.Context
 
                     var isDeleted = type.GetProperty("IsDeleted");
                     var isDelete = type.GetProperty("IsDelete");
+                    var deleteFlag = type.GetProperty("DeleteFlag");
 
                     if (item.State == EntityState.Added) //Thêm mới
                     {
@@ -135,6 +147,15 @@ namespace RERPAPI.Model.Context
                                 isDelete.SetValue(item.Entity, false);
                             else if (propType == typeof(int) || propType == typeof(int?))
                                 isDelete.SetValue(item.Entity, 0);
+                        }
+
+                        if (deleteFlag != null && deleteFlag.CanWrite)
+                        {
+                            var propType = deleteFlag.PropertyType;
+                            if (propType == typeof(bool) || propType == typeof(bool?))
+                                deleteFlag.SetValue(item.Entity, false);
+                            else if (propType == typeof(int) || propType == typeof(int?))
+                                deleteFlag.SetValue(item.Entity, 0);
                         }
                     }
 
