@@ -8,6 +8,7 @@ using RERPAPI.Model.DTO.Asset;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
+using System.Numerics;
 using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers
@@ -21,16 +22,16 @@ namespace RERPAPI.Controllers
         private CurrentUser _currentUser;
         private readonly WorkPlanRepo _workPlanRepo;
         private readonly WorkPlanDetailRepo _planDetailRepo;
+        private readonly UserTeamRepo _userTeamRepo;
 
-        public WorkPlanController(IConfiguration configuration, CurrentUser currentUser, WorkPlanRepo workPlanRepo, WorkPlanDetailRepo planDetailRepo)
+        public WorkPlanController(IConfiguration configuration, CurrentUser currentUser, WorkPlanRepo workPlanRepo, WorkPlanDetailRepo planDetailRepo, UserTeamRepo userTeamRepo)
         {
             _configuration = configuration;
             _currentUser = currentUser;
             _workPlanRepo = workPlanRepo;
             _planDetailRepo = planDetailRepo;
+            _userTeamRepo = userTeamRepo;
         }
-
-
         [HttpPost("")]
         public IActionResult GetAll([FromBody] WorkPlanParam param)
         {
@@ -53,7 +54,22 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpGet("get-team-by-department-id")]
+        public IActionResult getTeamByDepartment(int departmentID)
+        {
+            
+            try
+            {
+                var data = _userTeamRepo.GetAll(x => x.DepartmentID == departmentID);
+                return Ok(ApiResponseFactory.Success(data, "Cập nhật thành công!"));
+            }
+            catch (Exception ex)
+            {
 
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+
+        }
       
 
         [HttpPost("save-data")]
