@@ -6,6 +6,8 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
 using RERPAPI.Repo.GenericEntity.Technical.KPI;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.KPITechnical
 {
@@ -274,6 +276,39 @@ namespace RERPAPI.Controllers.KPITechnical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        #endregion
+        #region lấy dữ liệu KPIEmployeePointID
+        //public async Task<int>  GetKPIEmployeePointID(int ruleID, int employeeID)
+        //{
+        //    try
+        //    {
+        //        int empID = employeeID;
+        //        if (empID <= 0)
+        //        {
+        //            return -1;
+        //        }
+        //        if (ruleID <= 0)
+        //        {
+        //            return -1;
+        //        }
+        //        KPIEmployeePoint model = _kpiEmployeePointRepo.GetAll().FirstOrDefault(x => x.EmployeeID == empID && x.KPIEvaluationRuleID == ruleID && x.IsDelete == false) ?? new KPIEmployeePoint();
+        //        model.EmployeeID = empID;
+        //        model.KPIEvaluationRuleID = ruleID;
+        //        model.Status = 1;
+        //        if(model.ID > 0)
+        //        {
+        //            return model.ID;
+        //        }else
+        //        {
+        //            await _kpiEmployeePointRepo.CreateAsync(model);
+        //            return model.ID;
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+                
+        //    }
+        //}
         #endregion
     }
 }

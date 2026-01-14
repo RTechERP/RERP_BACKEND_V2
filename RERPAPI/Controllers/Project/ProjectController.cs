@@ -1094,6 +1094,9 @@ namespace RERPAPI.Controllers.Project
                     else if (projectType == 3)
                     {
                         returnProjectCode = $"F.{returnProjectCode}";
+                    }else if(projectType == 4)
+                    {
+                        returnProjectCode = $"NB.{returnProjectCode}";
                     }
                 }
 
