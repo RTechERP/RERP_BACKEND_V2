@@ -261,7 +261,7 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                var purchaseRequest = supplierSaleRepo.GetAll(x => x.IsDeleted == false)
+                var purchaseRequest = supplierSaleRepo.GetAll(x => x.IsDeleted != true)
                     .OrderBy(x => x.NgayUpdate)
                     .Select(x => new
                     {
