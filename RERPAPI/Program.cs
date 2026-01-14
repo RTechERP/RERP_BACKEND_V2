@@ -28,7 +28,6 @@ using RERPAPI.Repo.GenericEntity.TB;
 using RERPAPI.Repo.GenericEntity.Technical;
 using RERPAPI.Repo.GenericEntity.Technical.KPI;
 using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
-using RERPAPI.Services;
 using RTCApi.Repo.GenericRepo;
 using System.Text;
 
@@ -433,6 +432,7 @@ builder.Services.AddScoped<KPIPositionTypeRepo>();
 builder.Services.AddScoped<CourseRepo>();
 builder.Services.AddScoped<CourseRegisterIdeaRepo>();
 
+builder.Services.AddScoped<InventoryProjectProductSaleLinkRepo>();
 
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();
@@ -471,6 +471,7 @@ builder.Services.AddScoped<PhasedAllocationPersonDetailRepo>();
 builder.Services.AddScoped<MenuAppRepo>();
 builder.Services.AddScoped<MenuAppUserGroupLinkRepo>();
 builder.Services.AddScoped<ProjectPartListPurchaseRequestApproveLogRepo>();
+
 
 #region KPI
 builder.Services.AddScoped<KPIEvaluationPointRepo>();

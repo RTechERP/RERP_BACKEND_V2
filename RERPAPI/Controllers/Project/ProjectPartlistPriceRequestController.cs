@@ -67,7 +67,7 @@ namespace RERPAPI.Controllers.Project
         /// <param name="size"></param>
         /// <returns></returns>
         [HttpGet("get-all-project-parList-price-request")]
-        [RequiresPermission("N35,N33,N1,N36,N27,N69,N80")]
+        //[RequiresPermission("N35,N33,N1,N36,N27,N69,N80")]
         public async Task<IActionResult> GetAll(DateTime dateStart, DateTime dateEnd, int statusRequest, int projectId, string? keyword, int employeeID,
             int isDeleted, int projectTypeID, int poKHID, int isJobRequirement = -1, int projectPartlistPriceRequestTypeID = -1, int isCommercialProduct = -1, int page = 1, int size = 25)
         {
@@ -261,7 +261,7 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                var purchaseRequest = supplierSaleRepo.GetAll(x => x.IsDeleted == false)
+                var purchaseRequest = supplierSaleRepo.GetAll(x => x.IsDeleted != true)
                     .OrderBy(x => x.NgayUpdate)
                     .Select(x => new
                     {
@@ -627,7 +627,6 @@ namespace RERPAPI.Controllers.Project
         }
 
         [HttpPost("request-buy")]
-        [RequiresPermission("N35,N1")]
         public async Task<IActionResult> RequestBuy([FromBody] RequestBuyDTO request)
         {
             try
@@ -918,7 +917,7 @@ namespace RERPAPI.Controllers.Project
         }
 
         [HttpPost("save-request-note")]
-        [RequiresPermission("N35,N1")]
+        //[RequiresPermission("N35,N1")]
         public async Task<IActionResult> SaveDataPriceRequestNote([FromBody] List<ProjectPartlistPriceRequestNote> notes)
         {
             try

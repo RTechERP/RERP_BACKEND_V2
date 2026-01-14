@@ -11,6 +11,10 @@ using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
 using RERPAPI.Repo.GenericEntity.Technical;
 using System.Data;
+using System.Drawing;
+using System.Drawing.Imaging;
+using ZXing;
+using ZXing.Common;
 
 
 namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
@@ -893,10 +897,37 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                             sheet.Row(excelRow).InsertRowsBelow(1);
                             excelRow++;
                         }
-                        sheet.Row(excelRow + details.Count).Delete();
+                        //sheet.Row(excelRow + details.Count).Delete();
                         sheet.Row(excelRow + details.Count - 1).Delete();
                         #endregion
+                        //#region ===== QR CODE =====
+                        string qrText = master["Code"]?.ToString();
 
+                        var writer = new BarcodeWriterPixelData
+                        {
+                            Format = BarcodeFormat.QR_CODE,
+                            Options = new EncodingOptions { Width = 250, Height = 250 }
+                        };
+
+                        var pixelData = writer.Write(qrText);
+                        using var bmp = new Bitmap(pixelData.Width, pixelData.Height, PixelFormat.Format32bppRgb);
+
+                        var data = bmp.LockBits(
+                            new Rectangle(0, 0, bmp.Width, bmp.Height),
+                            ImageLockMode.WriteOnly,
+                            bmp.PixelFormat);
+
+                        System.Runtime.InteropServices.Marshal.Copy(pixelData.Pixels, 0, data.Scan0, pixelData.Pixels.Length);
+                        bmp.UnlockBits(data);
+
+                        string tempPath = Path.GetTempFileName();
+                        bmp.Save(tempPath, ImageFormat.Png);
+
+                        sheet.AddPicture(tempPath)
+                             .MoveTo(sheet.Cell(1, 10), 20, 10)
+                             .WithSize(120, 120);
+
+                        System.IO.File.Delete(tempPath);
                         using var excelStream = new MemoryStream();
                         workbook.SaveAs(excelStream);
                         excelStream.Position = 0;
