@@ -726,6 +726,13 @@ namespace RERPAPI.Controllers.Project
                         if (requestModel.ID <= 0 || request.ProjectPartlistPriceRequestTypeID == 7)
                         {
                             var inserted = await _projectPartlistPurchaseRequestRepo.CreateAsync(requestModel);
+                            bool isRequestBuy = requestModel.ID > 0;
+                            var pricerequest = requestRepo.GetByID(item.ID);
+                            pricerequest.IsRequestBuy = isRequestBuy;
+                            pricerequest.JobRequirementID = request.JobRequirementID;
+                            await requestRepo.UpdateAsync(pricerequest);
+
+
                             if (inserted != null)
                                 resultSuccess.Add(item.ProductCode);
                             else
@@ -733,6 +740,7 @@ namespace RERPAPI.Controllers.Project
                         }
                         else
                         {
+                            if (requestModel.StatusRequest > 2) continue;
                             await _projectPartlistPurchaseRequestRepo.UpdateAsync(requestModel);
                             resultSuccess.Add(item.ProductCode);
                         }
