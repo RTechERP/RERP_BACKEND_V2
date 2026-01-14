@@ -267,7 +267,8 @@ namespace RERPAPI.Controllers.Project
                     {
                         x.ID,
                         x.CodeNCC,
-                        x.NameNCC
+                        x.NameNCC,
+                        x.NgayUpdate
                     })
                     .ToList();
                 return Ok(ApiResponseFactory.Success(purchaseRequest, ""));
@@ -664,20 +665,25 @@ namespace RERPAPI.Controllers.Project
                 {
                     try
                     {
-                        // Kiểm tra xem sản phẩm đã tồn tại trong DB chưa
-                        var existingRequests = _projectPartlistPurchaseRequestRepo
-                            .GetAll(r => r.JobRequirementID == request.JobRequirementID
-                                            && r.ProductCode == item.ProductCode
-                                            && r.IsDeleted == false);
+                        //List<ProjectPartlistPurchaseRequest> existingRequests = new List<ProjectPartlistPurchaseRequest>();
+                        //// Kiểm tra xem sản phẩm đã tồn tại trong DB chưa
+                        //if (request.ProjectPartlistPriceRequestTypeID != 6)
+                        //{
+                        //    existingRequests = _projectPartlistPurchaseRequestRepo
+                        //    .GetAll(r => r.JobRequirementID == request.JobRequirementID
+                        //                    && r.ProductCode == item.ProductCode
+                        //                    && r.IsDeleted == false);
+                        //}
 
-                        ProjectPartlistPurchaseRequest requestModel = existingRequests.FirstOrDefault() ?? new ProjectPartlistPurchaseRequest();
+                        //ProjectPartlistPurchaseRequest requestModel = existingRequests.FirstOrDefault() ?? new ProjectPartlistPurchaseRequest();
+                        ProjectPartlistPurchaseRequest requestModel = new ProjectPartlistPurchaseRequest();
 
                         // Nếu đã approved thì bỏ qua
-                        if (requestModel.EmployeeApproveID > 0)
-                        {
-                            resultFail.Add($"{item.ProductCode} đã được duyệt, không thể yêu cầu mua.");
-                            continue;
-                        }
+                        //if (requestModel.EmployeeApproveID > 0)
+                        //{
+                        //    resultFail.Add($"{item.ProductCode} đã được duyệt, không thể yêu cầu mua.");
+                        //    continue;
+                        //}
                         if (request.ProjectPartlistPriceRequestTypeID == 6)
                         {
                             requestModel.SupplierSaleID = item.SupplierSaleID ?? 0;
@@ -738,12 +744,12 @@ namespace RERPAPI.Controllers.Project
                             else
                                 resultFail.Add(item.ProductCode);
                         }
-                        else
-                        {
-                            if (requestModel.StatusRequest > 2) continue;
-                            await _projectPartlistPurchaseRequestRepo.UpdateAsync(requestModel);
-                            resultSuccess.Add(item.ProductCode);
-                        }
+                        //else
+                        //{
+                        //    if (requestModel.StatusRequest > 2) continue;
+                        //    await _projectPartlistPurchaseRequestRepo.UpdateAsync(requestModel);
+                        //    resultSuccess.Add(item.ProductCode);
+                        //}
                     }
                     catch (Exception ex)
                     {
