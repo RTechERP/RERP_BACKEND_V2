@@ -102,7 +102,7 @@ namespace RERPAPI.Controllers.HRM
 
                 List<string> employeeFails = new List<string>();
                 int phasedAllocationPersonID = 0;
-                int sl = 0;
+                int record = 0;
                 foreach (var item in details)
                 {
                     if (!string.IsNullOrWhiteSpace(item.EmployeeCode))
@@ -119,7 +119,7 @@ namespace RERPAPI.Controllers.HRM
                           var result =   await _phasedDetailRepo.CreateAsync(item);
                             if (result > 0)
                             {
-                                sl++;
+                                record++;
                             }
                         }
 
@@ -131,7 +131,7 @@ namespace RERPAPI.Controllers.HRM
                             var result = await _phasedDetailRepo.UpdateAsync(detail);
                             if (result > 0)
                             {
-                                sl++;
+                                record++;
                             }
                         }
                     }
@@ -153,7 +153,7 @@ namespace RERPAPI.Controllers.HRM
                         var result = await _phasedDetailRepo.UpdateAsync(detail);
                         if (result > 0)
                         {
-                            sl++;
+                            record++;
                         }
                     }
                     phasedAllocationPersonID = (int)item.PhasedAllocationPersonID;
@@ -169,7 +169,7 @@ namespace RERPAPI.Controllers.HRM
                         var result = await _phasedRepo.UpdateAsync(allocationPerson);
                         if (result > 0)
                         {
-                            sl++;
+                            record++;
                         }
                     }
                 }
@@ -180,7 +180,7 @@ namespace RERPAPI.Controllers.HRM
                 {
                     message = string.Join("\n", employeeFails);
                 }
-                if (sl > 0)
+                if (record > 0)
                 {
                     return Ok(ApiResponseFactory.Success(details, message));
                 }
