@@ -189,5 +189,22 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpGet("get-team-by-department-id")]
+        public IActionResult getTeamByDepartment(int departmentID)
+        {
+
+            try
+            {
+                var data = _userTeamRepo.GetAll(x => x.DepartmentID == departmentID);
+                return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công!"));
+            }
+            catch (Exception ex)
+            {
+
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+
+        }
+
     }
 }
