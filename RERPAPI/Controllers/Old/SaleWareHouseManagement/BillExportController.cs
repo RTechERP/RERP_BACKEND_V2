@@ -1532,13 +1532,14 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
                 // Get file path from ServerPath
                 string filePath = pokhFile.ServerPath;
-                if (string.IsNullOrEmpty(filePath) || !System.IO.File.Exists(filePath))
+                string path = Path.Combine(filePath, fileName);
+                if (string.IsNullOrEmpty(filePath) || !System.IO.File.Exists(path))
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, $"File không tồn tại trên server: {fileName}"));
                 }
 
                 // Read file and return
-                byte[] fileBytes = System.IO.File.ReadAllBytes(filePath);
+                byte[] fileBytes = System.IO.File.ReadAllBytes(path);
                 string contentType = GetContentType(fileName);
 
                 return File(fileBytes, contentType, fileName);
