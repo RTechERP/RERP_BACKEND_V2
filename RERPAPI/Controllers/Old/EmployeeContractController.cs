@@ -23,7 +23,7 @@ namespace RERPAPI.Controllers.Old
         }
 
 
-        
+
 
         //[HttpGet]
         //public IActionResult GetAll()
@@ -207,7 +207,7 @@ namespace RERPAPI.Controllers.Old
                 }
                 else // HĐLĐ không xác định thời hạn
                 {
-                    templatePath = Path.Combine(_environment.WebRootPath, "templates", "(Mau)_HDLD.docx");
+                    templatePath = Path.Combine(_environment.WebRootPath, "templates", "(Mau)_HDTV_Company.docx");
                     outputFileName = $"{contractNumber}.docx";
                 }
 
@@ -246,9 +246,22 @@ namespace RERPAPI.Controllers.Old
                         doc.ReplaceText("#ContractType", data.ContractType ?? "");
                         doc.ReplaceText("#ContractDuration", data.ContractDuration ?? "");
                         doc.ReplaceText("#Position", data.Position ?? "");
-                        doc.ReplaceText("#Salary", data.Salary ?? "");
                         doc.ReplaceText("#Department", data.Department ?? "");
+                        doc.ReplaceText("#Salary", data.Salary ?? "");
                         doc.ReplaceText("#NotificationDate", data.NotificationDate ?? "");
+
+                        // ===== THÔNG TIN CÔNG TY =====
+                        doc.ReplaceText("#CompanyNameHeader",
+                            (data.CompanyName ?? "").Replace("\n", "\r\n").ToUpper());
+                        doc.ReplaceText("#COMPANYCODE", data.COMPANYCODE ?? "");
+                        doc.ReplaceText("#CompanyName", data.CompanyName ?? "");
+                        doc.ReplaceText("#UPPERCOMPANYNAME", (data.CompanyName ?? "").ToUpper());
+                        doc.ReplaceText("#TaxCodeCom", data.TaxCodeCom ?? "");
+                        doc.ReplaceText("#AddCom", data.AddressCom ?? "");
+                        doc.ReplaceText("#PhoneCom", data.PhoneNumberCom ?? "");
+                        doc.ReplaceText("#DirectorCom", data.DirectorCom ?? "");
+                        doc.ReplaceText("#PosCom", data.PositionCom ?? "");
+
 
                         // Save document
                         doc.SaveAs(outputStream);
