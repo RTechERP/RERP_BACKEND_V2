@@ -103,7 +103,7 @@ namespace RERPAPI.Controllers.Project
             try
             {
                 ProjectSurveyDetail model = projectSurveyDetailRepo.GetByID(id);
-                model.Status = status ? 1 : 0;
+                model.Status = status ? 1 : 2;
                 model.EmployeeID = employeeID;
                 model.DateSurvey = dateSurvey;
                 model.ReasonCancel = reasonCancel;

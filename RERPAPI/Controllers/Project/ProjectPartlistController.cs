@@ -2000,7 +2000,7 @@ namespace RERPAPI.Controllers.Project
                 List<ConvertPartListPODTO> listPartlists = SQLHelper<ConvertPartListPODTO>.ProcedureToListModel(
                         "spGetProjectPartList_Khanh",
                         new string[] { "@ProjectID", "@PartListTypeID", "@IsDeleted", "@Keyword", "@IsApprovedTBP", "@IsApprovedPurchase", "@ProjectPartListVersionID" },
-                        new object[] { projectID, 0, -1, " ", -1, -1, oldVersionID }
+                        new object[] { projectID, 0, -1, "", -1, -1, oldVersionID }
                     );
                 Regex regex = new Regex(@"^-?[\d\.]+$");
                 foreach (ConvertPartListPODTO item in listPartlists)
@@ -2075,8 +2075,9 @@ namespace RERPAPI.Controllers.Project
                 foreach (var item in request)
                 {
                     if (item.Manufacturer == null || item.Manufacturer.Length < 0) continue;
-                    var data = _firmRepo.GetAll(x => x.FirmName == item.Manufacturer);
-                    if (data.Count == 0) // Nếu không tìm thấy manufacturer
+                    var data = _firmRepo.GetAll(x => x.FirmName == item.Manufacturer); // check hãng trong bảng hãng
+                    var data2 = _productSaleRepo.GetAll(x => x.Maker == item.Manufacturer); // check hãng trong productsale
+                    if (data.Count == 0 && data2.Count==0) // Nếu không tìm thấy manufacturer
                     {
                         diff.Add($"TT: {item.TT} - {item.Manufacturer},<br>"); // Sửa cú pháp string interpolation
                     }
