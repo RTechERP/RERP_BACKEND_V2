@@ -178,13 +178,13 @@ namespace RERPAPI.Controllers.Project
         [HttpGet("get-po-code")]
         public async Task<IActionResult> GetPoCode()
         {
-            var dtPOKH = pOKHRepo.GetAll(x => x.IsDeleted == false);
+            var dtPOKH = pOKHRepo.GetAll(x => x.IsDeleted != true);
             return Ok(new { status = 1, data = dtPOKH });
         }
         [HttpGet("get-product-sale")]
         public async Task<IActionResult> GetProductSale()
         {
-            var data = productSaleRepo.GetAll(x => x.IsDeleted == false);
+            var data = productSaleRepo.GetAll(x => x.IsDeleted != true);
 
             return Ok(new
             {
@@ -195,7 +195,7 @@ namespace RERPAPI.Controllers.Project
         [HttpGet("get-currency")]
         public async Task<IActionResult> GetCurrency()
         {
-            List<Currency> currencies = currencyRepo.GetAll(x => x.IsDeleted == false);
+            List<Currency> currencies = currencyRepo.GetAll(x => x.IsDeleted != true);
 
             return Ok(new { status = 1, data = currencies });
         }
@@ -707,7 +707,7 @@ namespace RERPAPI.Controllers.Project
                             var productSale = productSaleRepo.GetAll(p =>
                                 p.ProductCode == item.ProductCode &&
                                 p.ProductGroupID == (request.IsVPP ? 80 : (request.JobRequirementID > 0 ? 77 : 0)) &&
-                                p.IsDeleted == false);
+                                p.IsDeleted != true);
                             var productSaleModel = productSale.FirstOrDefault() ?? new ProductSale();
                             requestModel.ProductSaleID = productSaleModel.ID;
                             requestModel.ProductGroupID = productSaleModel.ProductGroupID;
