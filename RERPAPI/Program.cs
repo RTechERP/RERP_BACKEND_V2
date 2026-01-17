@@ -482,6 +482,9 @@ builder.Services.AddScoped<ProjectPartListPurchaseRequestApproveLogRepo>();
 builder.Services.AddScoped<KPIEvaluationPointRepo>();
 builder.Services.AddScoped<KPISessionRepo>();
 builder.Services.AddScoped<KPIEmployeePointRepo>();
+builder.Services.AddScoped<KPIPositionRepo>();
+builder.Services.AddScoped<KPIEvaluationRuleRepo>();
+builder.Services.AddScoped<KPIPositionEmployeeRepo>();
 #endregion
 
 #region RabbitService
