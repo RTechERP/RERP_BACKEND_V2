@@ -485,6 +485,7 @@ builder.Services.AddScoped<KPIEmployeePointRepo>();
 builder.Services.AddScoped<KPIPositionRepo>();
 builder.Services.AddScoped<KPIEvaluationRuleRepo>();
 builder.Services.AddScoped<KPIPositionEmployeeRepo>();
+builder.Services.AddScoped<KPIEmployeePointDetailRepo>();
 #endregion
 
 #region RabbitService
