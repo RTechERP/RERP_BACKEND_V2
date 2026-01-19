@@ -304,7 +304,7 @@ namespace RERPAPI.Controllers.KPITechnical
                     isPublic = false;
                 }
 
-                KPIEmployeePoint kpiEmpPoint = _kpiEmployeePointRepo.GetByID(empPoint.ID);
+                KPIEmployeePoint kpiEmpPoint = _kpiEmployeePointRepo.GetByID(empPoint.ID); 
                 var data1 = SQLHelper<object>.ProcedureToList("spGetKpiRuleSumarizeTeamNew"
                  , new string[] { "@KPIEmployeePointID" }
                  , new object[] { kpiEmpPoint.ID });
