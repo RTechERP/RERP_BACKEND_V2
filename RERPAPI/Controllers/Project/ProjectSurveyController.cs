@@ -130,6 +130,7 @@ namespace RERPAPI.Controllers.Project
                 var data = SQLHelper<object>.ProcedureToList("spGetProjectSurveyDetail",
                                                     new string[] { "@ProjectSurveyID", "@ProjectID" },
                                                     new object[] { projectSurveyId, projectId });
+                var data2 = SQLHelper<object>.GetListData(data, 0);
 
                 return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0), ""));
             }
