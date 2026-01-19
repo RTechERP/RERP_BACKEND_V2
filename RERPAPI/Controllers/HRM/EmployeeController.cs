@@ -20,14 +20,16 @@ namespace RERPAPI.Controllers.HRM
         vUserGroupLinksRepo _vUserGroupLinksRepo;
         private CurrentUser _currentUser;
         private readonly EmployeeApprovedRepo _approvedRepo;
+        private readonly TaxCompanyRepo _taxCompanyRepo;
 
-        public EmployeeController(IConfiguration configuration, EmployeeRepo employeeRepo, vUserGroupLinksRepo vUserGroupLinksRepo, CurrentUser currentUser, EmployeeApprovedRepo approvedRepo)
+        public EmployeeController(IConfiguration configuration, EmployeeRepo employeeRepo, vUserGroupLinksRepo vUserGroupLinksRepo, CurrentUser currentUser, EmployeeApprovedRepo approvedRepo, TaxCompanyRepo taxCompanyRepo)
         {
             _configuration = configuration;
             _employeeRepo = employeeRepo;
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
             _currentUser = currentUser;
             _approvedRepo = approvedRepo;
+            _taxCompanyRepo = taxCompanyRepo;
         }
 
         [HttpGet("employees")]
@@ -143,6 +145,22 @@ namespace RERPAPI.Controllers.HRM
             }
             catch (Exception ex)
             {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+
+        }
+        [HttpGet("get-tax-company")]
+        public IActionResult GetTaxCompany()
+        {
+
+            try
+            {
+                var data = _taxCompanyRepo.GetAll(x => x.IsDeleted != true);
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
 

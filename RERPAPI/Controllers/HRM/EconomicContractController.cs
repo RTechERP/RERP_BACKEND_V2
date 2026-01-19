@@ -32,6 +32,7 @@ namespace RERPAPI.Controllers.HRM
             _economicContractRepo = economicContractRepo;
         }
         [RequiresPermission("N1,N34")]
+        //lấy master hợp đồng
         [HttpPost("get-economic-contract")]
         public IActionResult GetEconomicContract([FromBody] EconomicContractRequestParam request)
         {
@@ -50,6 +51,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        //lưu hợp đồng
         [RequiresPermission("N1,N34")]
         [HttpPost("save-contract")]
         public async Task<IActionResult> SaveContract([FromBody] EconomicContract item)
@@ -87,6 +89,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        //xóa hợp đồng
         [RequiresPermission("N1,N34")]
         [HttpPost("delete-contract")]
         public IActionResult DeleteContract([FromBody] List<int> ids)
@@ -117,6 +120,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        //lấy điều khoản hợp đồng
         [RequiresPermission("N1,N34")]
         [HttpGet("get-economic-contract-term")]
         public IActionResult GetEconomicContractTerms()
@@ -132,6 +136,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        //lưu điều khoản hợp đồng
         [RequiresPermission("N1,N34")]
         [HttpPost("save-contract-term")]
         public async Task<IActionResult> SaveContractTerm([FromBody] EconomicContractTerm term)
@@ -169,6 +174,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        //Xóa điều khoản hợp đồng
         [RequiresPermission("N1,N34")]
         [HttpPost("delete-term")]
         public IActionResult DeleteTerm([FromBody] List<int> ids)
@@ -199,6 +205,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        //lấy loại hợp đồng
         [RequiresPermission("N1,N34")]
         [HttpGet("get-economic-contract-type")]
         public IActionResult GetEconomicContractType()
@@ -214,6 +221,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        //Lưu loại hợp đồng
         [RequiresPermission("N1,N34")]
         [HttpPost("save-contract-type")]
         public async Task<IActionResult> SaveContractType([FromBody] EconomicContractType term)
@@ -251,6 +259,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        //Xóa loại hợp đồng
         [RequiresPermission("N1,N34")]
         [HttpPost("delete-type")]
         public IActionResult DeleteType([FromBody] List<int> ids)
@@ -281,6 +290,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        //Lấy file đính kèm theo id hợp đồng
         [RequiresPermission("N1,N34")]
         [HttpGet("get-file-by-contract-id")]
         public IActionResult GetFileByContractID(int contractID)
@@ -295,6 +305,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        //Lưu file hợp đồng
         [RequiresPermission("N1,N34")]
         [HttpPost("save-contract-file")]
         public async Task<IActionResult> SaveContractFile([FromBody] EconomicContractFile item)

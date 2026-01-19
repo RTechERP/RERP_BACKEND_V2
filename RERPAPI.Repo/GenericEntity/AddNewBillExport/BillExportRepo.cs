@@ -2076,7 +2076,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                     TotalQty = exportDetail.TotalQty,
                     SerialNumber = exportDetail.SerialNumber,
                     BillExportDetailID = exportDetail.ID,
-                    PONCCDetailID = exportDetail.POKHDetailID,
+                    //PONCCDetailID = exportDetail.POKHDetailID,
                     QtyRequest = exportDetail.Qty,
                     ReturnedStatus = false,
                     //IsKeepProject = true,

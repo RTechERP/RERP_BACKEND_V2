@@ -178,13 +178,13 @@ namespace RERPAPI.Controllers.Project
         [HttpGet("get-po-code")]
         public async Task<IActionResult> GetPoCode()
         {
-            var dtPOKH = pOKHRepo.GetAll(x => x.IsDeleted == false);
+            var dtPOKH = pOKHRepo.GetAll(x => x.IsDeleted != true);
             return Ok(new { status = 1, data = dtPOKH });
         }
         [HttpGet("get-product-sale")]
         public async Task<IActionResult> GetProductSale()
         {
-            var data = productSaleRepo.GetAll(x => x.IsDeleted == false);
+            var data = productSaleRepo.GetAll(x => x.IsDeleted != true);
 
             return Ok(new
             {
@@ -195,7 +195,7 @@ namespace RERPAPI.Controllers.Project
         [HttpGet("get-currency")]
         public async Task<IActionResult> GetCurrency()
         {
-            List<Currency> currencies = currencyRepo.GetAll(x => x.IsDeleted == false);
+            List<Currency> currencies = currencyRepo.GetAll(x => x.IsDeleted != true);
 
             return Ok(new { status = 1, data = currencies });
         }
@@ -267,7 +267,8 @@ namespace RERPAPI.Controllers.Project
                     {
                         x.ID,
                         x.CodeNCC,
-                        x.NameNCC
+                        x.NameNCC,
+                        x.NgayUpdate
                     })
                     .ToList();
                 return Ok(ApiResponseFactory.Success(purchaseRequest, ""));
@@ -664,20 +665,25 @@ namespace RERPAPI.Controllers.Project
                 {
                     try
                     {
-                        // Kiểm tra xem sản phẩm đã tồn tại trong DB chưa
-                        var existingRequests = _projectPartlistPurchaseRequestRepo
-                            .GetAll(r => r.JobRequirementID == request.JobRequirementID
-                                            && r.ProductCode == item.ProductCode
-                                            && r.IsDeleted == false);
+                        //List<ProjectPartlistPurchaseRequest> existingRequests = new List<ProjectPartlistPurchaseRequest>();
+                        //// Kiểm tra xem sản phẩm đã tồn tại trong DB chưa
+                        //if (request.ProjectPartlistPriceRequestTypeID != 6)
+                        //{
+                        //    existingRequests = _projectPartlistPurchaseRequestRepo
+                        //    .GetAll(r => r.JobRequirementID == request.JobRequirementID
+                        //                    && r.ProductCode == item.ProductCode
+                        //                    && r.IsDeleted == false);
+                        //}
 
-                        ProjectPartlistPurchaseRequest requestModel = existingRequests.FirstOrDefault() ?? new ProjectPartlistPurchaseRequest();
+                        //ProjectPartlistPurchaseRequest requestModel = existingRequests.FirstOrDefault() ?? new ProjectPartlistPurchaseRequest();
+                        ProjectPartlistPurchaseRequest requestModel = new ProjectPartlistPurchaseRequest();
 
                         // Nếu đã approved thì bỏ qua
-                        if (requestModel.EmployeeApproveID > 0)
-                        {
-                            resultFail.Add($"{item.ProductCode} đã được duyệt, không thể yêu cầu mua.");
-                            continue;
-                        }
+                        //if (requestModel.EmployeeApproveID > 0)
+                        //{
+                        //    resultFail.Add($"{item.ProductCode} đã được duyệt, không thể yêu cầu mua.");
+                        //    continue;
+                        //}
                         if (request.ProjectPartlistPriceRequestTypeID == 6)
                         {
                             requestModel.SupplierSaleID = item.SupplierSaleID ?? 0;
@@ -701,7 +707,7 @@ namespace RERPAPI.Controllers.Project
                             var productSale = productSaleRepo.GetAll(p =>
                                 p.ProductCode == item.ProductCode &&
                                 p.ProductGroupID == (request.IsVPP ? 80 : (request.JobRequirementID > 0 ? 77 : 0)) &&
-                                p.IsDeleted == false);
+                                p.IsDeleted != true);
                             var productSaleModel = productSale.FirstOrDefault() ?? new ProductSale();
                             requestModel.ProductSaleID = productSaleModel.ID;
                             requestModel.ProductGroupID = productSaleModel.ProductGroupID;
@@ -726,16 +732,24 @@ namespace RERPAPI.Controllers.Project
                         if (requestModel.ID <= 0 || request.ProjectPartlistPriceRequestTypeID == 7)
                         {
                             var inserted = await _projectPartlistPurchaseRequestRepo.CreateAsync(requestModel);
+                            bool isRequestBuy = requestModel.ID > 0;
+                            var pricerequest = requestRepo.GetByID(item.ID);
+                            pricerequest.IsRequestBuy = isRequestBuy;
+                            pricerequest.JobRequirementID = request.JobRequirementID;
+                            await requestRepo.UpdateAsync(pricerequest);
+
+
                             if (inserted != null)
                                 resultSuccess.Add(item.ProductCode);
                             else
                                 resultFail.Add(item.ProductCode);
                         }
-                        else
-                        {
-                            await _projectPartlistPurchaseRequestRepo.UpdateAsync(requestModel);
-                            resultSuccess.Add(item.ProductCode);
-                        }
+                        //else
+                        //{
+                        //    if (requestModel.StatusRequest > 2) continue;
+                        //    await _projectPartlistPurchaseRequestRepo.UpdateAsync(requestModel);
+                        //    resultSuccess.Add(item.ProductCode);
+                        //}
                     }
                     catch (Exception ex)
                     {

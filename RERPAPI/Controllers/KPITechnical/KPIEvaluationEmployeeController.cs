@@ -6,6 +6,8 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
 using RERPAPI.Repo.GenericEntity.Technical.KPI;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.KPITechnical
 {
@@ -16,11 +18,17 @@ namespace RERPAPI.Controllers.KPITechnical
         KPIEvaluationPointRepo _kpiEvaluationPointRepo;
         KPISessionRepo _kpiSessionRepo;
         KPIEmployeePointRepo _kpiEmployeePointRepo;
-        public KPIEvaluationEmployeeController(KPIEvaluationPointRepo kpiEvaluationPointRepo, KPISessionRepo kpiSessionRepo, KPIEmployeePointRepo kpiEmployeePointRepo)
+        KPIPositionRepo _kpiPositionRepo;
+        KPIPositionEmployeeRepo _kpiPositionEmployeeRepo;
+        KPIEvaluationRuleRepo _kpiEvaluationRuleRepo;
+        public KPIEvaluationEmployeeController(KPIEvaluationPointRepo kpiEvaluationPointRepo, KPISessionRepo kpiSessionRepo, KPIEmployeePointRepo kpiEmployeePointRepo, KPIPositionRepo kpiPositionRepo, KPIPositionEmployeeRepo kpiPositionEmployeeRepo, KPIEvaluationRuleRepo kpiEvaluationRuleRepo   )
         {
             _kpiEvaluationPointRepo = kpiEvaluationPointRepo;
             _kpiSessionRepo = kpiSessionRepo;
             _kpiEmployeePointRepo = kpiEmployeePointRepo;
+            _kpiPositionRepo = kpiPositionRepo;
+            _kpiPositionEmployeeRepo = kpiPositionEmployeeRepo;
+            _kpiEvaluationRuleRepo = kpiEvaluationRuleRepo;
         }
         #region load dữ liệu combobox team 
         [HttpGet("get-combobox-team")]
@@ -145,6 +153,26 @@ namespace RERPAPI.Controllers.KPITechnical
             }
         }
         #endregion
+        #region load dữ liệu vị trí theo kỳ 
+        [HttpGet("get-position-employee")]
+        public async Task<IActionResult> GetPostionEmployee(int kpiSessionID)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                List<KPIPositionEmployee> employee = SQLHelper<KPIPositionEmployee>.ProcedureToListModel("spGetEmployeeInKPISession", new string[] { "@KPISessionID", "@EmployeeID" },
+                                                                                                  new object[] { kpiSessionID, currentUser.EmployeeID });
+                return Ok(ApiResponseFactory.Success(employee, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        #endregion
+
 
         #region load dữ liệu cobobox team (kpi)
         [HttpGet("get-combobox-team-kpi")]
@@ -251,11 +279,32 @@ namespace RERPAPI.Controllers.KPITechnical
             }
         }
         [HttpGet("load-kpi-rule-and-team")]
-        public async Task<IActionResult> LoadKPIRule(int kpiExamID, bool isPublic, int employeeID)
+        public async Task<IActionResult> LoadKPIRule(int kpiExamID, bool isPublic, int employeeID, int sessionID)
         {
             try
             {
-                KPIEmployeePoint kpiEmpPoint = _kpiEmployeePointRepo.GetByID(employeeID);
+                //Get possition của nhân viên
+                List<KPIPosition> kpiPositions = _kpiPositionRepo.GetAll(x => x.KPISessionID == sessionID && x.IsDeleted == false);
+                List<KPIPositionEmployee> kpiPositionEmployees = _kpiPositionEmployeeRepo.GetAll(x => x.EmployeeID == employeeID && x.IsDeleted == false);
+
+                var empPosition = (from p in kpiPositions
+                                   join pe in kpiPositionEmployees on p.ID equals pe.KPIPosiotionID
+                                   select pe)
+
+                     .FirstOrDefault() ?? new KPIPositionEmployee();
+
+                KPIEvaluationRule rule = _kpiEvaluationRuleRepo.GetAll(x => x.KPISessionID == sessionID && x.KPIPositionID == (empPosition.KPIPosiotionID > 0 ? empPosition.KPIPosiotionID : 1) && x.IsDeleted == false)
+                    .FirstOrDefault() ?? new KPIEvaluationRule(); // 1 là kỹ thuật
+
+                int empPointId = await GetKPIEmployeePointID(rule.ID, employeeID);
+                KPIEmployeePoint empPoint = _kpiEmployeePointRepo.GetByID(empPointId);
+
+                if (rule.ID <= 0)
+                {
+                    isPublic = false;
+                }
+
+                KPIEmployeePoint kpiEmpPoint = _kpiEmployeePointRepo.GetByID(empPoint.ID);
                 var data1 = SQLHelper<object>.ProcedureToList("spGetKpiRuleSumarizeTeamNew"
                  , new string[] { "@KPIEmployeePointID" }
                  , new object[] { kpiEmpPoint.ID });
@@ -272,6 +321,41 @@ namespace RERPAPI.Controllers.KPITechnical
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        #endregion
+        #region lấy dữ liệu KPIEmployeePointID
+        [NonAction]
+        public async Task<int> GetKPIEmployeePointID(int ruleID, int employeeID)
+        {
+            try
+            {
+                int empID = employeeID;
+                if (empID <= 0)
+                {
+                    return -1;
+                }
+                if (ruleID <= 0)
+                {
+                    return -1;
+                }
+                KPIEmployeePoint model = _kpiEmployeePointRepo.GetAll().FirstOrDefault(x => x.EmployeeID == empID && x.KPIEvaluationRuleID == ruleID && x.IsDelete == false) ?? new KPIEmployeePoint();
+                model.EmployeeID = empID;
+                model.KPIEvaluationRuleID = ruleID;
+                model.Status = 1;
+                if (model.ID > 0)
+                {
+                    return model.ID;
+                }
+                else
+                {
+                    await _kpiEmployeePointRepo.CreateAsync(model);
+                    return model.ID;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Lỗi: " + ex.Message);
             }
         }
         #endregion

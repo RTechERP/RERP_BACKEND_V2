@@ -144,6 +144,11 @@ builder.Services.AddScoped<IssueSolutionStatusRepo>();
 builder.Services.AddScoped<KPIEmployeeTeamLinkRepo>();
 builder.Services.AddScoped<KPIEmployeeTeamRepo>();
 builder.Services.AddScoped<KPIEvaluationRepo>();
+builder.Services.AddScoped<KPIErrorTypeRepo>();
+builder.Services.AddScoped<KPIErrorRepo>();
+builder.Services.AddScoped<KPIErrorFineAmountRepo>();
+builder.Services.AddScoped<KPIErrorEmployeeFileRepo>();
+builder.Services.AddScoped<KPIErrorEmployeeRepo>();
 builder.Services.AddScoped<LocationRepo>();
 builder.Services.AddScoped<LoginManagerRepo>();
 builder.Services.AddScoped<MainIndexRepo>();
@@ -477,6 +482,9 @@ builder.Services.AddScoped<ProjectPartListPurchaseRequestApproveLogRepo>();
 builder.Services.AddScoped<KPIEvaluationPointRepo>();
 builder.Services.AddScoped<KPISessionRepo>();
 builder.Services.AddScoped<KPIEmployeePointRepo>();
+builder.Services.AddScoped<KPIPositionRepo>();
+builder.Services.AddScoped<KPIEvaluationRuleRepo>();
+builder.Services.AddScoped<KPIPositionEmployeeRepo>();
 #endregion
 
 #region RabbitService

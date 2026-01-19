@@ -1440,7 +1440,7 @@ namespace RERPAPI.Controllers
             try
             {
                 var param = new { DepartmentID = departmentID, KPIEmployeeTeam = kpiEmployeeTeam };
-                var data = await SqlDapper.ProcedureToListAsync("spGetKPIEmployeeByDepartmentID", param);
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetKPIEmployeeByDepartmentID", param);
 
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
@@ -1465,7 +1465,7 @@ namespace RERPAPI.Controllers
                     DepartmentID = departmentID ?? 0,
                     ListUserID = listUserID ?? "",
                 };
-                var data = await SqlDapper.ProcedureToListAsync("spGetVehicleBookingManagementByDATruong", param);
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetVehicleBookingManagementByDATruong", param);
 
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
@@ -1485,7 +1485,7 @@ namespace RERPAPI.Controllers
                 {
                     UserTeamID = userTeamID ?? "",
                 };
-                var data = await SqlDapper.ProcedureToListAsync("spGetUserTeamLink_NewByDATruong", param);
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetUserTeamLink_NewByDATruong", param);
 
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
@@ -1510,7 +1510,7 @@ namespace RERPAPI.Controllers
                     DepartmentID = departmentID ?? 0,
                     ListUserID = listUserID ?? "",
                 };
-                var data = await SqlDapper.ProcedureToListAsync("spGetEmployeeOnLeaveByDATruong", param);
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetEmployeeOnLeaveByDATruong", param);
 
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
@@ -1535,7 +1535,7 @@ namespace RERPAPI.Controllers
                     DepartmentID = departmentID ?? 0,
                     ListUserID = listUserID ?? "",
                 };
-                var data = await SqlDapper.ProcedureToListAsync("spGetDailyReportTechnicalByThao", param);
+                var data = await SqlDapper<object>.ProcedureToListTAsync("spGetDailyReportTechnicalByThao", param);
 
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
