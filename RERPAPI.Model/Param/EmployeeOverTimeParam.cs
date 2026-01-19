@@ -13,7 +13,7 @@ namespace RERPAPI.Model.Param
         public int pageSize { get; set; } = 1000000;
         public DateTime dateStart { get; set; }
         public DateTime dateEnd { get; set; }
-        public int departmentId { get; set; }
+        public int departmentId { get; set; } = 0;
         public int idApprovedTp { get; set; }
         public int status { get; set; }
     }

@@ -2,6 +2,7 @@
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using System.Data;
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -501,7 +502,7 @@ namespace RERPAPI.Repo.GenericEntity
         {
             try
             {
-                string numberText = num.ToString();
+                string numberText = num.ToString("N2", new CultureInfo("vi-VN"));
                 string numberMoneyText = "";
                 if (!string.IsNullOrEmpty(numberText.Trim()))
                 {
@@ -510,6 +511,7 @@ namespace RERPAPI.Repo.GenericEntity
                     if (numberText.Contains(','))
                     {
                         string intergerPart = numberText.Substring(0, numberText.LastIndexOf(','));
+                        intergerPart = intergerPart.Replace(".", "");
                         decimalPart = numberText.Substring(numberText.LastIndexOf(',') + 1);
                         string separator = numberText.Substring(numberText.LastIndexOf(','), 1);
 
