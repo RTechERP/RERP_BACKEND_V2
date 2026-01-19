@@ -1477,13 +1477,13 @@ namespace RERPAPI.Controllers
 
 
         [HttpGet("get-user-teamlink-truongda")]
-        public async Task<IActionResult> GetUserTeamLink(string? userTeamID)
+        public async Task<IActionResult> GetUserTeamLink(string? listUserID)
         {
             try
             {
                 var param = new
                 {
-                    UserTeamID = userTeamID ?? "",
+                    ListUserID = listUserID ?? "",
                 };
                 var data = await SqlDapper<object>.ProcedureToListAsync("spGetUserTeamLink_NewByDATruong", param);
 
