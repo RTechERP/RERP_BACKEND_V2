@@ -1933,8 +1933,8 @@ namespace RERPAPI.Controllers.Project
                 }
 
                 var existsData = _projectPartlistRepo.GetAll(
-                    x => x.SpecialCode.Trim().ToLower() == specialCode.ToLower()
-                         && x.ID != partlistId);
+                    x => x.SpecialCode.Trim().ToLower() == specialCode.Trim().ToLower()
+                         && x.ID != partlistId && x.ProductCode != partlistData.ProductCode);
 
                 if (existsData.Count > 0 && !string.IsNullOrWhiteSpace(specialCode))
                 {
