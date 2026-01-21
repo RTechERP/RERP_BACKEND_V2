@@ -173,6 +173,7 @@ namespace RERPAPI.Controllers.Old
                     employeeOnLeave.EndDate = DateTime.SpecifyKind(employeeOnLeave.EndDate.Value, DateTimeKind.Utc);
                 }
 
+               
                 var existingLeaves = _employeeOnLeaveRepo.GetAll()
                     .Where(x => x.EmployeeID == employeeOnLeave.EmployeeID
                         && x.TypeIsReal == employeeOnLeave.TypeIsReal
@@ -180,7 +181,8 @@ namespace RERPAPI.Controllers.Old
                         && x.StartDate.HasValue
                         && employeeOnLeave.StartDate.HasValue
                         && x.StartDate.Value.Date == employeeOnLeave.StartDate.Value.Date 
-                        && x.DeleteFlag != true);
+                        && x.DeleteFlag != true
+                        && employeeOnLeave.DeleteFlag!=true);
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
                 var vUserHR = _vUserGroupLinksRepo
@@ -221,11 +223,9 @@ namespace RERPAPI.Controllers.Old
                 }
                 else
                 {
-
-                }
-                {
                     await _employeeOnLeaveRepo.UpdateAsync(employeeOnLeave);
                 }
+            
                 return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
             }
             catch (Exception ex)

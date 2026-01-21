@@ -207,7 +207,7 @@ namespace RERPAPI.Controllers.Old
                 }
                 else // HĐLĐ không xác định thời hạn
                 {
-                    templatePath = Path.Combine(_environment.WebRootPath, "templates", "(Mau)_HDTV_Company.docx");
+                    templatePath = Path.Combine(_environment.WebRootPath, "templates", "(Mau)_HDLD.docx");
                     outputFileName = $"{contractNumber}.docx";
                 }
 
