@@ -12,6 +12,7 @@ namespace RERPAPI.Repo.GenericEntity.HRM
     {
         public EmployeeLuckyNumberRepo(CurrentUser currentUser) : base(currentUser)
         {
+
         }
     }
 }
