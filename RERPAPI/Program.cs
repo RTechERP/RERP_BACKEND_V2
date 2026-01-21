@@ -476,6 +476,7 @@ builder.Services.AddScoped<PhasedAllocationPersonDetailRepo>();
 builder.Services.AddScoped<MenuAppRepo>();
 builder.Services.AddScoped<MenuAppUserGroupLinkRepo>();
 builder.Services.AddScoped<ProjectPartListPurchaseRequestApproveLogRepo>();
+builder.Services.AddScoped<EmployeeLuckyNumberRepo>();
 
 
 #region KPI
