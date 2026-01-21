@@ -451,6 +451,13 @@ builder.Services.AddScoped<CourseRepo>();
 builder.Services.AddScoped<CourseRegisterIdeaRepo>();
 builder.Services.AddScoped<CourseLessonRepo>();
 builder.Services.AddScoped<CourseFilesRepo>();
+builder.Services.AddScoped<CourseExamRepo>();
+builder.Services.AddScoped<CourseLessonHistoryRepo>();
+builder.Services.AddScoped<CourseExamResultRepo>();
+builder.Services.AddScoped<CourseExamResultDetailRepo>();
+builder.Services.AddScoped<CourseQuestionRepo>();
+builder.Services.AddScoped<CourseRightAnswerRepo>();
+builder.Services.AddScoped<CourseExamEvaluateRepo>();
 
 builder.Services.AddScoped<InventoryProjectProductSaleLinkRepo>();
 builder.Services.AddScoped<HandoverPersonalAssetRepo>();
@@ -739,22 +746,27 @@ app.Use(async (context, next) =>
 app.UseStaticFiles();
 List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();
 
-//foreach (var item in staticFiles)
-//{
-//    app.UseStaticFiles(new StaticFileOptions()
-//    {
-//        FileProvider = new PhysicalFileProvider(item.PathFull),
-//        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-//    });
+foreach (var item in staticFiles)
+{
+    app.UseStaticFiles(new StaticFileOptions()
+    {
+        FileProvider = new PhysicalFileProvider(item.PathFull),
+        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+    });
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     app.UseDirectoryBrowser(new DirectoryBrowserOptions 
+=======
+    app.UseDirectoryBrowser(new DirectoryBrowserOptions
+>>>>>>> f5ef47b (change course controller, add coursePractice and change newsletter)
     {
         FileProvider = new PhysicalFileProvider(item.PathFull),
         RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
     });
 }
+<<<<<<< HEAD
 =======
 //    app.UseDirectoryBrowser(new DirectoryBrowserOptions
 //    {
@@ -763,5 +775,7 @@ List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticF
 //    });
 //}
 >>>>>>> c2476d0 (update course management)
+=======
+>>>>>>> f5ef47b (change course controller, add coursePractice and change newsletter)
 
 app.Run();

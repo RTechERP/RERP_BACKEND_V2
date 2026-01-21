@@ -63,7 +63,11 @@ namespace RERPAPI.Controllers.Old
                     .GetAll()
                     .FirstOrDefault(x => (x.Code == "N23" || x.Code == "N1" || x.Code == "N2" || x.Code == "N34") && x.UserID == currentUser.ID);
 
-                
+                var exitNewsletterType = _newsletterTypeRepo.GetAll(x => x.NewsletterTypeCode.Trim().ToLower() == newsletterType.NewsletterTypeCode.Trim().ToLower());
+                if(exitNewsletterType.Count > 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Mã loại tin tức đã tồn tại!"));
+                }
                 
                 if (newsletterType.ID <= 0)
                 {   
