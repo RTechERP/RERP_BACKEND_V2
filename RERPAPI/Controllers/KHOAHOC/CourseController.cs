@@ -98,7 +98,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 var data = SQLHelper<object>.ProcedureToList("spGetCourseNew",
-                                              new string[] { "@CourseCatalogID", "@UserID", "@Status" },
+                                              new string[] { "@CourseCatalogID", "@EmployeeID", "@Status" },
                                               new object[] { courseCatalogID, currentUser.ID, -1 });
                     return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0), ""));
             }
@@ -471,7 +471,10 @@ namespace RERPAPI.Controllers.KHOAHOC
                         LeadTime = model.LeadTime,
                         CourseCopyID = model.CourseCopyID,
                         CourseTypeID = model.CourseTypeID,
-                        EmployeeID = currentUser.ID,
+                        EmployeeID = 0,
+                        Instructor = currentUser.FullName,
+                        FileCourseID = 0,
+                        IsPractice = false
                     };
                     await _courseRepo.CreateAsync(courseNew);
 

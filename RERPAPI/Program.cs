@@ -438,6 +438,13 @@ builder.Services.AddScoped<CourseRepo>();
 builder.Services.AddScoped<CourseRegisterIdeaRepo>();
 builder.Services.AddScoped<CourseLessonRepo>();
 builder.Services.AddScoped<CourseFilesRepo>();
+builder.Services.AddScoped<CourseExamRepo>();
+builder.Services.AddScoped<CourseLessonHistoryRepo>();
+builder.Services.AddScoped<CourseExamResultRepo>();
+builder.Services.AddScoped<CourseExamResultDetailRepo>();
+builder.Services.AddScoped<CourseQuestionRepo>();
+builder.Services.AddScoped<CourseRightAnswerRepo>();
+builder.Services.AddScoped<CourseExamEvaluateRepo>();
 
 builder.Services.AddScoped<InventoryProjectProductSaleLinkRepo>();
 
@@ -657,20 +664,20 @@ app.Use(async (context, next) =>
 app.UseStaticFiles();
 List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();
 
-//foreach (var item in staticFiles)
-//{
-//    app.UseStaticFiles(new StaticFileOptions()
-//    {
-//        FileProvider = new PhysicalFileProvider(item.PathFull),
-//        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-//    });
+foreach (var item in staticFiles)
+{
+    app.UseStaticFiles(new StaticFileOptions()
+    {
+        FileProvider = new PhysicalFileProvider(item.PathFull),
+        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+    });
 
 
-//    app.UseDirectoryBrowser(new DirectoryBrowserOptions
-//    {
-//        FileProvider = new PhysicalFileProvider(item.PathFull),
-//        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-//    });
-//}
+    app.UseDirectoryBrowser(new DirectoryBrowserOptions
+    {
+        FileProvider = new PhysicalFileProvider(item.PathFull),
+        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+    });
+}
 
 app.Run();
