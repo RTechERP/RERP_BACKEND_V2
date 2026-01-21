@@ -28,7 +28,6 @@ using RERPAPI.Repo.GenericEntity.TB;
 using RERPAPI.Repo.GenericEntity.Technical;
 using RERPAPI.Repo.GenericEntity.Technical.KPI;
 using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
-using RERPAPI.Services;
 using RTCApi.Repo.GenericRepo;
 using System.Text;
 
@@ -145,6 +144,11 @@ builder.Services.AddScoped<IssueSolutionStatusRepo>();
 builder.Services.AddScoped<KPIEmployeeTeamLinkRepo>();
 builder.Services.AddScoped<KPIEmployeeTeamRepo>();
 builder.Services.AddScoped<KPIEvaluationRepo>();
+builder.Services.AddScoped<KPIErrorTypeRepo>();
+builder.Services.AddScoped<KPIErrorRepo>();
+builder.Services.AddScoped<KPIErrorFineAmountRepo>();
+builder.Services.AddScoped<KPIErrorEmployeeFileRepo>();
+builder.Services.AddScoped<KPIErrorEmployeeRepo>();
 builder.Services.AddScoped<LocationRepo>();
 builder.Services.AddScoped<LoginManagerRepo>();
 builder.Services.AddScoped<MainIndexRepo>();
@@ -435,6 +439,7 @@ builder.Services.AddScoped<CourseRegisterIdeaRepo>();
 builder.Services.AddScoped<CourseLessonRepo>();
 builder.Services.AddScoped<CourseFilesRepo>();
 
+builder.Services.AddScoped<InventoryProjectProductSaleLinkRepo>();
 
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();
@@ -461,6 +466,10 @@ builder.Services.AddScoped<PaymentOrderPORepo>();
 builder.Services.AddScoped<DailyReportHRRepo>();
 builder.Services.AddScoped<DailyReportLXCP>();
 builder.Services.AddScoped<DailyReportMarketingFileRepo>();
+builder.Services.AddScoped<EconomicContractRepo>();
+builder.Services.AddScoped<EconomicContractFileRepo>();
+builder.Services.AddScoped<EconomicContractTypeRepo>();
+builder.Services.AddScoped<EconomicContractTermRepo>();
 
 
 builder.Services.AddScoped<PhasedAllocationPersonRepo>();
@@ -470,9 +479,15 @@ builder.Services.AddScoped<MenuAppRepo>();
 builder.Services.AddScoped<MenuAppUserGroupLinkRepo>();
 builder.Services.AddScoped<ProjectPartListPurchaseRequestApproveLogRepo>();
 
+
 #region KPI
 builder.Services.AddScoped<KPIEvaluationPointRepo>();
 builder.Services.AddScoped<KPISessionRepo>();
+builder.Services.AddScoped<KPIEmployeePointRepo>();
+builder.Services.AddScoped<KPIPositionRepo>();
+builder.Services.AddScoped<KPIEvaluationRuleRepo>();
+builder.Services.AddScoped<KPIPositionEmployeeRepo>();
+builder.Services.AddScoped<KPIEmployeePointDetailRepo>();
 #endregion
 
 #region RabbitService

@@ -302,6 +302,8 @@ namespace RERPAPI.Controllers.Project
                         }
                         else
                         {
+                            ProjectItem data = _projectItemRepo.GetByID(item.ID);
+                            item.Code = data.Code;
                             item.ItemLate = 0;
                             if (item.ActualEndDate.HasValue && item.IsApproved < 2)
                                 item.IsApproved = 2;

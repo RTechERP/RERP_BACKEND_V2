@@ -20,6 +20,7 @@ namespace RERPAPI.Controllers.Old.KPISALE
         private readonly ProjectRepo _projectRepo;
         private readonly CustomerRepo _customerRepo;
         private readonly EmployeeTeamSaleRepo _employeeTeamSaleRepo;
+        private readonly EmployeeTeamSaleLinkRepo _employeeTeamSaleLinkRepo;
         private readonly GroupSaleRepo _groupSaleRepo;
         private readonly FirmBaseRepo _firmBaseRepo;
         private readonly ProjectTypeBaseRepo _projectTypeBaseRepo;
@@ -29,7 +30,7 @@ namespace RERPAPI.Controllers.Old.KPISALE
         private readonly CustomerPartsRepo _customerPartRepo;
         private readonly ProjectStatusLogRepo _projectStatusLogRepo;
 
-        public DailyReportSaleController(DailyReportSaleRepo dailyReportSaleRepo,CustomerPartsRepo customerPartsRepo , ProjectRepo projectRepo, CustomerRepo customerRepo, GroupSaleRepo groupSaleRepo, EmployeeTeamSaleRepo employeeTeamSaleRepo, FirmBaseRepo firmBaseRepo, ProjectTypeBaseRepo projectTypeBaseRepo, ProjectStatusRepo projectStatusRepo, CustomerContactRepo customerContactRepo, FollowProjectBaseRepo followProjectBaseRepo, ProjectStatusLogRepo projectStatusLogRepo)
+        public DailyReportSaleController(DailyReportSaleRepo dailyReportSaleRepo,CustomerPartsRepo customerPartsRepo , ProjectRepo projectRepo, CustomerRepo customerRepo, GroupSaleRepo groupSaleRepo, EmployeeTeamSaleRepo employeeTeamSaleRepo, FirmBaseRepo firmBaseRepo, ProjectTypeBaseRepo projectTypeBaseRepo, ProjectStatusRepo projectStatusRepo, CustomerContactRepo customerContactRepo, FollowProjectBaseRepo followProjectBaseRepo, ProjectStatusLogRepo projectStatusLogRepo, EmployeeTeamSaleLinkRepo employeeTeamSaleLinkRepo)
         {
             _dailyReportSaleRepo = dailyReportSaleRepo;
             _projectRepo = projectRepo;
@@ -43,6 +44,7 @@ namespace RERPAPI.Controllers.Old.KPISALE
             _followProjectBaseRepo = followProjectBaseRepo;
             _projectStatusLogRepo = projectStatusLogRepo;
             _customerPartRepo = customerPartsRepo;
+            _employeeTeamSaleLinkRepo = employeeTeamSaleLinkRepo;
         }
 
         [HttpGet("get-data")]
@@ -232,6 +234,32 @@ namespace RERPAPI.Controllers.Old.KPISALE
             }
         }
 
+        [HttpGet("get-teamsale-by-employee")]
+        public IActionResult GetTeamSaleByEmployee(int employeeId)
+        {
+            try
+            {
+                var result = (
+                    from el in _employeeTeamSaleLinkRepo.GetAll(x =>
+                            x.EmployeeID == employeeId)
+                    join ets in _employeeTeamSaleRepo.GetAll(x =>
+                            x.IsDeleted != 1 && x.ParentID == 0)
+                        on el.EmployeeTeamSaleID equals ets.ID
+                    select new
+                    {
+                        TeamSaleID = ets.ID,
+                        TeamSaleName = ets.Name
+                    }
+                ).Distinct().FirstOrDefault();
+
+                return Ok(ApiResponseFactory.Success(result, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpPost("save-data")]
         public async Task<IActionResult> Save(DailyReportSaleDTO dto)
         {
@@ -405,7 +433,9 @@ namespace RERPAPI.Controllers.Old.KPISALE
         {
             try
             {
-                _dailyReportSaleRepo.Delete(id);
+                var model = _dailyReportSaleRepo.GetByID(id);
+                model.DeleteFlag = 1;
+                _dailyReportSaleRepo.Update(model);
                 return Ok(ApiResponseFactory.Success("", ""));
 
             }

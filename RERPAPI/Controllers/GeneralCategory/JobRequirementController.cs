@@ -74,7 +74,7 @@ namespace RERPAPI.Controllers.GeneralCategory
                 {
                     employeeID = currentUser.EmployeeID;
                 }
-                var data = SQLHelper<object>.ProcedureToList("spGetJobRequirement   ",
+                var data = SQLHelper<object>.ProcedureToList("spGetJobRequirement",
                                                             new string[] { "@DateStart", "@DateEnd", "@Request", "@EmployeeId", "@Step", "@DepartmentId", "@ApprovedTBPID" },
                                                             new object[] { param.DateStart, param.DateEnd, param.Request, employeeID, param.Step, param.DepartmentID, param.ApprovedTBPID });
 

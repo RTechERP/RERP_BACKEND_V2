@@ -20,6 +20,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Net.Mime;
 using System.Security.Claims;
 using System.Text;
+using System.Threading.Tasks;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 using static NPOI.HSSF.Util.HSSFColor;
 using static RERPAPI.Model.DTO.ApproveTPDTO;
@@ -115,8 +116,6 @@ namespace RERPAPI.Controllers
 
                 var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
-                //4.Lưu session trên server
-                HttpContext.Session.SetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey"), ObjectMapper.GetCurrentUser(claims.ToDictionary(x => x.Type, x => x.Value)));
 
                 return Ok(new
                 {
@@ -126,7 +125,7 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message + "\n"));
             }
         }
 
@@ -1367,15 +1366,15 @@ namespace RERPAPI.Controllers
                 string procedureNightShift = "spGetEmployeeNightShift";
                 string[] paramNames = new string[] { "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@IsApproved", "@Keyword" };
                 object[] paramValues = new object[] { request.DateStart, request.DateEnd, request.DepartmentID ?? 0, request.EmployeeID ?? 0, request.IsApproved, request.Keyword ?? "" };
-                string[] paramNamesNightShift = new string[] { "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@IsApproved", "@Keyword" ,"@PageNumber","@PageSize"};
-                object[] paramValuesNightShift = new object[] { request.DateStart, request.DateEnd, request.DepartmentID ?? 0, request.EmployeeID ?? 0, request.IsApproved, request.Keyword ?? "",1,10000000 };
-                string[] paramNamesEarlyLate = new string[] { "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@IsApproved", "@Keyword","@Type" };
-                object[] paramValuesEarlyLate = new object[] { request.DateStart, request.DateEnd, request.DepartmentID ?? 0, request.EmployeeID ?? 0, request.IsApproved, request.Keyword ?? "",0 };
+                string[] paramNamesNightShift = new string[] { "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@IsApproved", "@Keyword", "@PageNumber", "@PageSize" };
+                object[] paramValuesNightShift = new object[] { request.DateStart, request.DateEnd, request.DepartmentID ?? 0, request.EmployeeID ?? 0, request.IsApproved, request.Keyword ?? "", 1, 10000000 };
+                string[] paramNamesEarlyLate = new string[] { "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@IsApproved", "@Keyword", "@Type" };
+                object[] paramValuesEarlyLate = new object[] { request.DateStart, request.DateEnd, request.DepartmentID ?? 0, request.EmployeeID ?? 0, request.IsApproved, request.Keyword ?? "", 0 };
                 string[] paramNameBuissiness = new string[] { "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@IsApproved", "@Keyword", "@Type", "@VehicleID", "@NotCheckIn" };
-                object[] paramValueBuissiness = new object[] { request.DateStart, request.DateEnd, request.DepartmentID ?? 0, request.EmployeeID ?? 0, request.IsApproved, request.Keyword ?? "", 0 ,0,-1};
+                object[] paramValueBuissiness = new object[] { request.DateStart, request.DateEnd, request.DepartmentID ?? 0, request.EmployeeID ?? 0, request.IsApproved, request.Keyword ?? "", 0, 0, -1 };
 
-           //string[] paramNameBuissiness = new string[] { "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@IsApproved", "@Keyword", "@Type", "@NotCheckIn" };
-           //    object[] paramValueBuissiness = new object[] { request.DateStart, request.DateEnd, request.DepartmentID ?? 0, request.EmployeeID ?? 0, request.IsApproved, request.Keyword ?? "", 0, -1};
+                //string[] paramNameBuissiness = new string[] { "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@IsApproved", "@Keyword", "@Type", "@NotCheckIn" };
+                //    object[] paramValueBuissiness = new object[] { request.DateStart, request.DateEnd, request.DepartmentID ?? 0, request.EmployeeID ?? 0, request.IsApproved, request.Keyword ?? "", 0, -1};
 
 
                 var dataOnLeave = SQLHelper<object>.ProcedureToList(procedureOnLeave, paramNames, paramValues);
@@ -1395,5 +1394,156 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpGet("get-config-system-hr")]
+        public IActionResult GetConfigSystem()
+        {
+            try
+            {
+                var data = _configSystemRepo.GetAll(x => x.KeyName == "EmployeeOvertime" || x.KeyName == "EmployeeBussiness");
+                return Ok(ApiResponseFactory.Success(new { data }, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+
+
+        }
+
+        [HttpPost("save-config-system-hr")]
+        public IActionResult SaveConfigSystemHR([FromBody] SaveConfigSystemHRRequestDTO request)
+        {
+            try
+            {
+                var configHR = _configSystemRepo.GetByID(request.Id);
+                if (configHR == null)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy cấu hình hệ thống"));
+                }
+                configHR.KeyValue2 = request.KeyValue;
+                _configSystemRepo.Update(configHR);
+                return Ok(ApiResponseFactory.Success(null, "Lưu dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
+
+        #region API của DA Trường
+
+        [HttpGet("get-users-truongda")]
+        public async Task<IActionResult> GetUser(int departmentID, int kpiEmployeeTeam)
+        {
+            try
+            {
+                var param = new { DepartmentID = departmentID, KPIEmployeeTeam = kpiEmployeeTeam };
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetKPIEmployeeByDepartmentID", param);
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-vehicle-booking-management-truongda")]
+        public async Task<IActionResult> GetVehicleBookingManagement(string ngayBD, string? teamID, string? keyword, int? userID, int? departmentID, string? listUserID)
+        {
+            try
+            {
+                var param = new
+                {
+                    DateStart = ngayBD,
+                    DateEnd = ngayBD,
+                    TeamID = teamID ?? "",
+                    Keyword = keyword ?? "",
+                    UserID = userID ?? 0,
+                    DepartmentID = departmentID ?? 0,
+                    ListUserID = listUserID ?? "",
+                };
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetVehicleBookingManagementByDATruong", param);
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
+        [HttpGet("get-user-teamlink-truongda")]
+        public async Task<IActionResult> GetUserTeamLink(string? listUserID)
+        {
+            try
+            {
+                var param = new
+                {
+                    ListUserID = listUserID ?? "",
+                };
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetUserTeamLink_NewByDATruong", param);
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-employee-onleave-truongda")]
+        public async Task<IActionResult> GetEmployeeOnLeave(string ngayBD, string? teamID, string? keyword, int? userID, int? departmentID, string? listUserID)
+        {
+            try
+            {
+                var param = new
+                {
+                    DateStart = ngayBD,
+                    DateEnd = ngayBD,
+                    TeamID = teamID ?? "",
+                    Keyword = keyword ?? "",
+                    UserID = userID ?? 0,
+                    DepartmentID = departmentID ?? 0,
+                    ListUserID = listUserID ?? "",
+                };
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetEmployeeOnLeaveByDATruong", param);
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-dailyreport-technical-truongda")]
+        public async Task<IActionResult> GetDailyReportTechnical(string ngayBD, string ngayKT, string? teamID, string? keyword, int? userID, int? departmentID, string? listUserID)
+        {
+            try
+            {
+                var param = new
+                {
+                    DateStart = ngayBD,
+                    DateEnd = ngayKT,
+                    TeamID = teamID ?? "",
+                    Keyword = keyword ?? "",
+                    UserID = userID ?? 0,
+                    DepartmentID = departmentID ?? 0,
+                    ListUserID = listUserID ?? "",
+                };
+                var data = await SqlDapper<object>.ProcedureToListTAsync("spGetDailyReportTechnicalByThao", param);
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        #endregion
     }
 }

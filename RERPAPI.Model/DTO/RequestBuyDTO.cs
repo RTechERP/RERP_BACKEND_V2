@@ -2,6 +2,7 @@
 {
     public class RequestBuyDTO
     {
+
         /// <summary>
         /// ID JobRequirement, nếu là VPP sẽ override trong API
         /// </summary>
@@ -35,6 +36,8 @@
 
     public class RequestBuyProductDTO
     {
+
+        public int ID { get; set; }
         /// <summary>
         /// Mã sản phẩm
         /// </summary>

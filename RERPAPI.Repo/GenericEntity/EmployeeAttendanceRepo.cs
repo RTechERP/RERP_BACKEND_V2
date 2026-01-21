@@ -7,8 +7,9 @@ namespace RERPAPI.Repo.GenericEntity
     {
         private readonly EmployeeRepo _employeeRepo;
 
-        public EmployeeAttendanceRepo(CurrentUser currentUser) : base(currentUser)
+        public EmployeeAttendanceRepo(CurrentUser currentUser,EmployeeRepo employeeRepo) : base(currentUser)
         {
+            _employeeRepo = employeeRepo;   
         }
 
         /// <summary>

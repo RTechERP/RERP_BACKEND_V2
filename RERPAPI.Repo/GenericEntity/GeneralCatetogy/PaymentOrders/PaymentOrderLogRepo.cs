@@ -44,7 +44,7 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                     var paymentOrderType = _typeRepo.GetByID(TextUtils.ToInt32(payment.PaymentOrderTypeID));
                     int followType = 1;
                     if (paymentOrderType.IsIgnoreHR == true) followType = 2;
-                    else if (payment.IsSpecialOrder == true) followType = 3;
+                    if (payment.IsSpecialOrder == true) followType = 3;
                     var follows = _followRepo.GetAll(x => x.FollowType == followType && x.IsDeleted != true)
                                              .OrderBy(x => x.Step)
                                              .ToList();
@@ -124,7 +124,7 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                         else if (item.Action.ButtonActionGroup == "btnKTTT")
                         {
                             //if (item.Action.ButtonActionName == "btnReceiveDocument" || item.Action.ButtonActionName == "btnUnApproveDocument") return ApiResponseFactory.Fail(null,"");
-                            if (item.Action.ButtonActionName == "btnReceiveDocument" || item.Action.ButtonActionName == "btnUnApproveDocument") return 0;
+                            if (item.Action.ButtonActionName == "btnReceiveDocument" || item.Action.ButtonActionName == "btnUnApproveDocument") continue;
                             else if (item.Action.ButtonActionName == "btnIsPayment" || item.Action.ButtonActionName == "btnUnPayment") actionStep = 5;
                         }
                     }

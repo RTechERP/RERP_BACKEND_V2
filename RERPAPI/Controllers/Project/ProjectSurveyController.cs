@@ -103,7 +103,7 @@ namespace RERPAPI.Controllers.Project
             try
             {
                 ProjectSurveyDetail model = projectSurveyDetailRepo.GetByID(id);
-                model.Status = status ? 1 : 0;
+                model.Status = status ? 1 : 2;
                 model.EmployeeID = employeeID;
                 model.DateSurvey = dateSurvey;
                 model.ReasonCancel = reasonCancel;
@@ -130,6 +130,7 @@ namespace RERPAPI.Controllers.Project
                 var data = SQLHelper<object>.ProcedureToList("spGetProjectSurveyDetail",
                                                     new string[] { "@ProjectSurveyID", "@ProjectID" },
                                                     new object[] { projectSurveyId, projectId });
+                var data2 = SQLHelper<object>.GetListData(data, 0);
 
                 return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0), ""));
             }

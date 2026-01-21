@@ -1,7 +1,4 @@
-﻿using DocumentFormat.OpenXml.InkML;
-using DocumentFormat.OpenXml.Wordprocessing;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Param;
 
@@ -17,13 +14,17 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         {
             try
             {
-              
+                filter.StartDate = filter.StartDate.Date;
+
+                filter.EndDate = filter.EndDate.Date
+                    .AddDays(1)
+                    .AddSeconds(-1);
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
                     "spGetDataReportImportExport_New",
                     new string[] { "@StartDate", "@EndDate", "@Find", "@Group", "@WarehouseCode" },
-                    new object[] { filter.StartDate, filter.EndDate, filter.Find,filter.Group, filter.WareHouseCode  }
+                    new object[] { filter.StartDate, filter.EndDate, filter.Find, filter.Group, filter.WareHouseCode }
                     );
-                
+
                 return Ok(new
                 {
                     status = 1,
@@ -48,14 +49,14 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
                     "spGetHistoryImportExportInventory",
-                    new string[] { "@ProductSaleID", "@WarehouseCode"},
-                    new object[] { productsaleID, warehouseCode}
+                    new string[] { "@ProductSaleID", "@WarehouseCode" },
+                    new object[] { productsaleID, warehouseCode }
                     );
 
                 return Ok(new
                 {
                     status = 1,
-                    data=result,
+                    data = result,
                 });
             }
             catch (Exception ex)

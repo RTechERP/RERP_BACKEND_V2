@@ -8,6 +8,7 @@ using RERPAPI.Model.DTO.Asset;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
+using System.Numerics;
 using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers
@@ -21,16 +22,16 @@ namespace RERPAPI.Controllers
         private CurrentUser _currentUser;
         private readonly WorkPlanRepo _workPlanRepo;
         private readonly WorkPlanDetailRepo _planDetailRepo;
+        private readonly UserTeamRepo _userTeamRepo;
 
-        public WorkPlanController(IConfiguration configuration, CurrentUser currentUser, WorkPlanRepo workPlanRepo, WorkPlanDetailRepo planDetailRepo)
+        public WorkPlanController(IConfiguration configuration, CurrentUser currentUser, WorkPlanRepo workPlanRepo, WorkPlanDetailRepo planDetailRepo, UserTeamRepo userTeamRepo)
         {
             _configuration = configuration;
             _currentUser = currentUser;
             _workPlanRepo = workPlanRepo;
             _planDetailRepo = planDetailRepo;
+            _userTeamRepo = userTeamRepo;
         }
-
-
         [HttpPost("")]
         public IActionResult GetAll([FromBody] WorkPlanParam param)
         {
@@ -39,8 +40,8 @@ namespace RERPAPI.Controllers
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
 
-                param.DateStart = param.DateStart.Value.Date;
-                param.DateEnd = param.DateEnd.Value.Date;
+                param.DateStart = param.DateStart.Value.ToLocalTime().Date;
+                param.DateEnd = param.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
 
                 var data = SQLHelper<object>.ProcedureToList("spGetWorkPlanPaging",
                                             new string[] { "@StartDate", "@EndDate", "@UserID", "@PageNumber", "@PageSize", "@Keyword" },
@@ -53,7 +54,6 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
       
 
         [HttpPost("save-data")]
@@ -157,7 +157,9 @@ namespace RERPAPI.Controllers
             try
             {
                 //param.DateStart = param.DateStart.Value.Date.AddSeconds(-1);
-              //  param.DateEnd = param.DateEnd.Value.Date.AddDays(1);
+                //  param.DateEnd = param.DateEnd.Value.Date.AddDays(1);
+                param.DateStart = param.DateStart.Value.ToLocalTime().Date;
+                param.DateEnd = param.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
 
                 var departmentId = param.TeamId > 0 ? 0 : param.DepartmentId;
 
@@ -255,11 +257,13 @@ namespace RERPAPI.Controllers
         {
             try
             {
-            
+
+                dateStart = dateStart.ToLocalTime().Date;
+                dateEnd = dateEnd.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
 
                 var data = SQLHelper<object>.ProcedureToList("spGetSummarizeWork_New",
                     new string[] { "@DateStart", "@DateEnd", "@DepartmentID", "@TeamID", "@UserID", "@Keyword" },
-                    new object[] { dateStart, dateEnd, 2, teamID, userID, keyWord ?? "" });
+                    new object[] { dateStart, dateEnd, departmentID, teamID, userID, keyWord ?? "" });
 
                 var result = SQLHelper<object>.GetListData(data, 0);
 

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RERPAPI.Repo.GenericEntity
+namespace RERPAPI.Repo.GenericEntity.Technical.KPI
 {
     public class KPISessionRepo : GenericRepo<KPISession>
     {

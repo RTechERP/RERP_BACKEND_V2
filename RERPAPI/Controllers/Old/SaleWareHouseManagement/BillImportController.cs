@@ -12,6 +12,7 @@ using RERPAPI.Repo.GenericEntity.AddNewBillExport;
 using RERPAPI.Repo.GenericEntity.Technical;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO.Compression;
 using ZXing;
 using ZXing.Common;
 
@@ -723,7 +724,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     sheet.Cell(24, 8).Value = masterData["Reciver"]?.ToString()?.Trim() ?? "";
 
                     // Generate QR code
-                    string qrCodeText = masterData["BillImportID"]?.ToString()?.Trim() ?? "Unknown";
+                    string qrCodeText = billImport.BillImportCode?.Trim() ?? "Unknown";
                     var writer = new BarcodeWriterPixelData
                     {
                         Format = BarcodeFormat.QR_CODE,
@@ -1375,5 +1376,174 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             var data = SQLHelper<dynamic>.GetListData(dt, 0);
             return Ok(ApiResponseFactory.Success(data, ""));
         }
+
+        [HttpPost("export-files-sale")]
+        public IActionResult ExportFiles([FromBody] List<int> billImportIds)
+        {
+            try
+            {
+                if (billImportIds == null || billImportIds.Count == 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không có file để xuất"));
+                }
+
+                string templatePath = Path.Combine(
+                    @"\\192.168.1.190\Software\Template\ExportExcel",
+                    "BillImportSale.xlsx"
+                );
+
+                if (!System.IO.File.Exists(templatePath))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy file template: {templatePath}"));
+                }
+
+                using var zipStream = new MemoryStream();
+                using (var zip = new ZipArchive(zipStream, ZipArchiveMode.Create, true))
+                {
+                    foreach (var id in billImportIds)
+                    {
+                        // ===== LẤY DATA =====
+                        var resultDetail = SQLHelper<dynamic>.ProcedureToList(
+                            "spGetBillImportDetail",
+                            new[] { "@ID" },
+                            new object[] { id }
+                        );
+
+                        var detailList = resultDetail[0]
+                            .Cast<IDictionary<string, object>>()
+                            .ToList();
+
+                        if (!detailList.Any())
+                            continue; // ❗ bỏ qua ID lỗi
+
+                        var masterData = detailList[0];
+                        BillImport billImport = _billImportRepo.GetByID(id);
+
+                        // ===== TẠO EXCEL =====
+                        using var workbook = new XLWorkbook(templatePath);
+                        var sheet = workbook.Worksheet(1);
+
+                        // ===== MASTER =====
+                        sheet.Cell(6, 1).Value = billImport?.BillImportCode ?? "";
+                        sheet.Cell(9, 4).Value = masterData["NameNCC"]?.ToString()?.Trim() ?? "";
+                        sheet.Cell(11, 4).Value = masterData["RulePayName"]?.ToString()?.Trim() ?? "";
+
+                        if (masterData["WarehouseName"]?.ToString()?.Trim() != "KHO HN")
+                        {
+                            sheet.Cell(10, 3).Value = "- Kho";
+                            sheet.Cell(10, 4).Value = masterData["WarehouseName"]?.ToString()?.Trim() ?? "";
+                        }
+                        else
+                        {
+                            sheet.Cell(10, 4).Value = masterData["ProductGroupName"]?.ToString()?.Trim() ?? "";
+                        }
+
+                        string departmentName = masterData["CustomerFullName"]?.ToString()?.Trim() ?? "";
+                        sheet.Cell(8, 4).Value = string.IsNullOrEmpty(departmentName)
+                            ? masterData["Deliver"]?.ToString()?.Trim() ?? ""
+                            : $"{masterData["Deliver"]?.ToString()?.Trim() ?? ""} / Phòng {departmentName}";
+
+                        DateTime? creatDate = masterData["CreatDate"] != null
+                            ? Convert.ToDateTime(masterData["CreatDate"])
+                            : null;
+
+                        if (creatDate.HasValue)
+                        {
+                            sheet.Cell(17, 8).Value =
+                                $"Ngày {creatDate:dd} Tháng {creatDate:MM} Năm {creatDate:yyyy}";
+                        }
+
+                        sheet.Cell(24, 3).Value = masterData["Deliver"]?.ToString()?.Trim() ?? "";
+                        sheet.Cell(24, 8).Value = masterData["Reciver"]?.ToString()?.Trim() ?? "";
+
+                        // ===== QR =====
+                        string qrText = billImport?.BillImportCode ?? "Unknown";
+                        var writer = new BarcodeWriterPixelData
+                        {
+                            Format = BarcodeFormat.QR_CODE,
+                            Options = new EncodingOptions { Height = 100, Width = 100, Margin = 1 }
+                        };
+
+                        var pixelData = writer.Write(qrText);
+                        using (var bmp = new Bitmap(pixelData.Width, pixelData.Height, PixelFormat.Format32bppRgb))
+                        {
+                            var bmpData = bmp.LockBits(
+                                new Rectangle(0, 0, pixelData.Width, pixelData.Height),
+                                ImageLockMode.WriteOnly,
+                                PixelFormat.Format32bppRgb);
+
+                            System.Runtime.InteropServices.Marshal.Copy(
+                                pixelData.Pixels, 0, bmpData.Scan0, pixelData.Pixels.Length);
+
+                            bmp.UnlockBits(bmpData);
+
+                            string tempQr = Path.Combine(Path.GetTempPath(), $"qr_{Guid.NewGuid()}.png");
+                            bmp.Save(tempQr, ImageFormat.Png);
+
+                            sheet.AddPicture(tempQr)
+                                .MoveTo(sheet.Cell(1, 11), 10, 5)
+                                .WithSize(100, 100);
+
+                            System.IO.File.Delete(tempQr);
+                        }
+
+                        // ===== DETAIL =====
+                        int startRow = 15;
+                        if (detailList.Count > 1)
+                            sheet.Row(startRow).InsertRowsBelow(detailList.Count - 1);
+
+                        int row = startRow;
+                        int stt = 1;
+
+                        foreach (var item in detailList.OrderByDescending(x => x["ID"]))
+                        {
+                            sheet.Cell(row, 1).Value = stt++;
+                            sheet.Cell(row, 2).Value = item["ProductNewCode"]?.ToString()?.Trim() ?? "";
+                            sheet.Cell(row, 3).Value = item["ProductCode"]?.ToString()?.Trim() ?? "";
+                            sheet.Cell(row, 4).Value = item["ProductName"]?.ToString()?.Trim() ?? "";
+                            sheet.Cell(row, 5).Value = item["Unit"]?.ToString()?.Trim() ?? "";
+                            sheet.Cell(row, 6).Value = item["ProjectCode"]?.ToString()?.Trim() ?? "";
+                            sheet.Cell(row, 7).Value = Convert.ToDecimal(item["Qty"] ?? 0);
+                            sheet.Cell(row, 8).Value = item["SomeBill"]?.ToString()?.Trim() ?? "";
+                            sheet.Cell(row, 9).Value = item["ProjectCodeText"]?.ToString()?.Trim() ?? "";
+                            sheet.Cell(row, 10).Value = item["ProjectNameText"]?.ToString()?.Trim() ?? "";
+                            sheet.Cell(row, 11).Value = item["BillCodePO"]?.ToString()?.Trim() ?? "";
+
+                            string note = item["Note"]?.ToString()?.Trim() ?? "";
+                            string codePM = item["CodeMaPhieuMuon"]?.ToString()?.Trim() ?? "";
+                            note = note.StartsWith("=") ? $"'{note}" : note;
+                            sheet.Cell(row, 12).Value = $"{note}\n{codePM}".Trim();
+
+                            row++;
+                        }
+
+                        sheet.Row(14).Delete();
+
+                        // ===== ADD TO ZIP =====
+                        using var excelStream = new MemoryStream();
+                        workbook.SaveAs(excelStream);
+
+                        string excelName =
+                            $"PhieuNhap-{billImport?.BillImportCode}_{DateTime.Now:dd_MM_yyyy}.xlsx";
+
+                        var entry = zip.CreateEntry(excelName, System.IO.Compression.CompressionLevel.Fastest);
+                        using var entryStream = entry.Open();
+                        entryStream.Write(excelStream.ToArray());
+                    }
+                }
+
+                zipStream.Position = 0;
+                string zipName = $"PhieuNhap_{DateTime.Now:dd_MM_yyyy_HH_mm_ss}.zip";
+
+                return File(zipStream.ToArray(), "application/zip", zipName);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
+
     }
 }

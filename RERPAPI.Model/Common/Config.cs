@@ -3,11 +3,11 @@
     public static class Config
     {
         private static int _isPublish = 0;
-        public static string Path()
-        {
-            string path = @"D:\\LeTheAnh\\RTC";
-            return path;
-        }
+        //public static string Path()
+        //{
+        //    string path = @"D:\\LeTheAnh\\RTC";
+        //    return path;
+        //}
         public static string ConnectionString { get; set; } = @"";
 
         //public static string ConnectionString
