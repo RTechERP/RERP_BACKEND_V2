@@ -117,5 +117,4 @@ public partial class ProductRTC
 
     public string? CodeHCM { get; set; }
 
-    public bool IsDeleted { get; set; }
 }

@@ -21,6 +21,7 @@ using RERPAPI.Repo.GenericEntity.GeneralCatetogy.JobRequirements;
 using RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders;
 using RERPAPI.Repo.GenericEntity.HRM;
 using RERPAPI.Repo.GenericEntity.HRM.DepartmentRequire;
+using RERPAPI.Repo.GenericEntity.HRM.ProductProtectiveGear;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
 using RERPAPI.Repo.GenericEntity.MeetingMinutesRepo;
 using RERPAPI.Repo.GenericEntity.Project;
@@ -167,7 +168,7 @@ builder.Services.AddScoped<PONCCRulePayRepo>();
 builder.Services.AddScoped<PONCCHistoryRepo>();
 builder.Services.AddScoped<PositionContractRepo>();
 builder.Services.AddScoped<PositionInternalRepo>();
-builder.Services.AddScoped<ProductGroupRTCRepo>();
+builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.ProductGroupRTCRepo>();
 builder.Services.AddScoped<ProductGroupRepo>();
 builder.Services.AddScoped<ProductGroupWareHouseRepo>();
 builder.Services.AddScoped<ProductLocationRepo>();
@@ -413,6 +414,7 @@ builder.Services.AddScoped<TaxCompanyRepo>();
 builder.Services.AddScoped<HistoryErrorRepo>();
 builder.Services.AddScoped<HistoryProductRTCLogRepo>();
 builder.Services.AddScoped<BillImportTechnicalLogRepo>();
+builder.Services.AddScoped<BillImportDetailTechnicalRepo>();
 builder.Services.AddScoped<BillDocumentImportTechnicalRepo>();
 builder.Services.AddScoped<BillDocumentImportTechnicalLogRepo>();
 builder.Services.AddScoped<BillExportTechnicalLogRepo>();
@@ -427,7 +429,9 @@ builder.Services.AddScoped<OrganizationalChartRepo>();
 builder.Services.AddScoped<NewsletterTypeRepo>();
 builder.Services.AddScoped<NewsletterRepo>();
 builder.Services.AddScoped<NewsletterFileRepo>();
-
+#region Đồ bảo hộ 
+builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.HRM.ProductProtectiveGear.ProductGroupRTCRepo>();
+#endregion
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();
 #endregion
@@ -620,22 +624,22 @@ app.Use(async (context, next) =>
 
 
 app.UseStaticFiles();
-List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();
+//List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();
 
-foreach (var item in staticFiles)
-{
-    app.UseStaticFiles(new StaticFileOptions()
-    {
-        FileProvider = new PhysicalFileProvider(item.PathFull),
-        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-    });
+//foreach (var item in staticFiles)
+//{
+//    app.UseStaticFiles(new StaticFileOptions()
+//    {
+//        FileProvider = new PhysicalFileProvider(item.PathFull),
+//        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+//    });
 
 
-    app.UseDirectoryBrowser(new DirectoryBrowserOptions
-    {
-        FileProvider = new PhysicalFileProvider(item.PathFull),
-        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-    });
-}
+//    app.UseDirectoryBrowser(new DirectoryBrowserOptions
+//    {
+//        FileProvider = new PhysicalFileProvider(item.PathFull),
+//        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+//    });
+//}
 
 app.Run();
