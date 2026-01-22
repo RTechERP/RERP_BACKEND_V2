@@ -723,7 +723,7 @@ namespace RERPAPI.Controllers.Old
                     }
                 }
                 #endregion
-                return Ok(ApiResponseFactory.Success(null, "Đã cập nhật đặt hàng thành công."));
+                return Ok(ApiResponseFactory.Success(data.poncc, "Đã cập nhật đặt hàng thành công."));
             }
             catch (Exception ex)
             {
