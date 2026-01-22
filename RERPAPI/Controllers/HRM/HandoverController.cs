@@ -8,6 +8,7 @@ using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.Handover;
 using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.BBNV;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
@@ -28,19 +29,9 @@ namespace RERPAPI.Controllers
         private readonly HandoverSubordinateRepo _handoverSubordinateRepo;
         private readonly HandoverApproveRepo _approveRepo;
         private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
+        private readonly TSAssetManagementRepo _tsAssetManagementRepo;
 
-        public HandoverController(
-            DepartmentRepo tsDepartment,
-            EmployeeChucVuHDRepo positionRepo,
-            HandoverRepo handoverRepo,
-            HandoverReceiverRepo handoverReceiverRepo,
-            HandoverWorkRepo handoverWorkRepo,
-            HandoverWarehouseAssetRepo handoverWarehouseAssetRepo,
-            HandoverAssetManagementRepo handoverAssetManagementRepo,
-            HandoverFinanceRepo handoverFinanceRepo,
-            HandoverSubordinateRepo handoverSubordinateRepo,
-            HandoverApproveRepo approveRepo,
-            vUserGroupLinksRepo vUserGroupLinksRepo)
+        public HandoverController(DepartmentRepo tsDepartment, EmployeeChucVuHDRepo positionRepo, HandoverRepo handoverRepo, HandoverReceiverRepo handoverReceiverRepo, HandoverWorkRepo handoverWorkRepo, HandoverWarehouseAssetRepo handoverWarehouseAssetRepo, HandoverAssetManagementRepo handoverAssetManagementRepo, HandoverFinanceRepo handoverFinanceRepo, HandoverSubordinateRepo handoverSubordinateRepo, HandoverApproveRepo approveRepo, vUserGroupLinksRepo vUserGroupLinksRepo, TSAssetManagementRepo tsAssetManagementRepo)
         {
             _tsDepartment = tsDepartment;
             _positionRepo = positionRepo;
@@ -53,9 +44,8 @@ namespace RERPAPI.Controllers
             _handoverSubordinateRepo = handoverSubordinateRepo;
             _approveRepo = approveRepo;
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
+            _tsAssetManagementRepo = tsAssetManagementRepo;
         }
-
-
 
         [HttpPost("get-handover")]
         public IActionResult GetHandover([FromBody] HandoverRequestParam handoverrequest)
@@ -70,41 +60,42 @@ namespace RERPAPI.Controllers
                 .GetAll()
                 .FirstOrDefault(x => x.Code == "N23" && x.UserID == currentUser.ID);
 
-            //int employeeID;
-            //if (vUserHR != null)
-            //{
-            //    employeeID = handoverrequest.LeaderID;
-            //}
-            //else
-            //{
-            //    employeeID = currentUser.EmployeeID;
-            //}
+            int employeeID;
+            if (vUserHR != null)
+            {
+                employeeID = handoverrequest.EmployeeID;
+            }
+            else
+            {
+                employeeID = currentUser.EmployeeID;
+            }
 
 
 
             //int employeeID = 0;
             //int approverID = 0;
-            if (vUserHR != null)
-            {
-                handoverrequest.LeaderID = handoverrequest.LeaderID;
-            }
-            else
-            {
-                handoverrequest.LeaderID = currentUser.EmployeeID;
+            //if (vUserHR != null)
+            //{
+            //    handoverrequest.LeaderID = 0;
+            //    handoverrequest.EmployeeID = 0;
+            //}
+            //else
+            //{
+            //    handoverrequest.EmployeeID = currentUser.EmployeeID;
 
-            }
-            var vUserTBP = _vUserGroupLinksRepo
-               .GetAll()
-               .FirstOrDefault(x => x.Code == "N32" && x.UserID == currentUser.ID);
-            if (vUserTBP != null)
-            {
-                //approverID = handoverrequest.ApproverID;
-                handoverrequest.ApproverID = currentUser.EmployeeID;
-            }
+            //}
+            //var vUserTBP = _vUserGroupLinksRepo
+            //   .GetAll()
+            //   .FirstOrDefault(x => x.Code == "N32" && x.UserID == currentUser.ID);
+            //if (vUserTBP != null)
+            //{
+            //    //approverID = handoverrequest.ApproverID;
+            //    //handoverrequest.ApproverID = currentUser.EmployeeID;
+            //}
 
             var handover = SQLHelper<dynamic>.ProcedureToList("spGetHandover",
                 new string[] { "@DepartmentID", "@EmployeeID", "@Keyword", "@LeaderID", "@DateStart", "@DateEnd", "@ApproverID" },
-                new object[] { handoverrequest.DepartmentID, handoverrequest.EmployeeID, handoverrequest.Keyword, handoverrequest.LeaderID, handoverrequest.DateStart, handoverrequest.DateEnd, handoverrequest.ApproverID }
+                new object[] { handoverrequest.DepartmentID, employeeID, handoverrequest.Keyword, handoverrequest.LeaderID, handoverrequest.DateStart, handoverrequest.DateEnd, handoverrequest.ApproverID }
                 );
             try
             {
@@ -336,6 +327,26 @@ namespace RERPAPI.Controllers
                 });
             }
         }
+
+        private async Task UpdateEmployeeForAssets(List<HandoverAssetManagement> assets, int newEmployeeId)
+        {
+            if (assets == null || !assets.Any()) return;
+
+            foreach (var item in assets)
+            {
+                var asset = _tsAssetManagementRepo
+                    .GetAll()
+                    .FirstOrDefault(x => x.TSAssetCode == item.TSAssetCode);
+
+                if (asset != null)
+                {
+                    asset.EmployeeID = newEmployeeId; // nhân viên mượn
+                    asset.UpdatedDate = DateTime.Now;
+                    await _tsAssetManagementRepo.UpdateAsync(asset);
+                }
+            }
+        }
+
 
         [HttpPost("save-data-handover")]
         public async Task<IActionResult> SaveData([FromBody] HandoverDTO dto)
@@ -1244,13 +1255,30 @@ namespace RERPAPI.Controllers
                         await _approveRepo.UpdateAsync(currentApprove);
                     }
 
+                    //var handover = _handoverRepo.GetByID(handoverId.Value);
+                    //if (handover != null)
+                    //{
+                    //    handover.IsApprove = approves.All(x => x.ApproveStatus == 1);
+                    //    handover.UpdatedDate = DateTime.Now;
+                    //    await _handoverRepo.UpdateAsync(handover);
+                    //}
+
                     var handover = _handoverRepo.GetByID(handoverId.Value);
                     if (handover != null)
                     {
-                        handover.IsApprove = approves.All(x => x.ApproveStatus == 1);
+                        bool isAllApproved = approves.All(x => x.ApproveStatus == 1);
+
+                        // nếu vừa chuyển sang trạng thái duyệt hết
+                        if (isAllApproved && handover.IsApprove != true)
+                        {
+                            await UpdateEmployeeForAssets(handoverId.Value);
+                        }
+
+                        handover.IsApprove = isAllApproved;
                         handover.UpdatedDate = DateTime.Now;
                         await _handoverRepo.UpdateAsync(handover);
                     }
+
                 }
 
                 return Ok(ApiResponseFactory.Success(null, "Duyệt theo trình tự thành công!"));
@@ -1260,6 +1288,30 @@ namespace RERPAPI.Controllers
                 return StatusCode(500, ApiResponseFactory.Fail(null, ex.Message));
             }
         }
+
+        private async Task UpdateEmployeeForAssets(int handoverId)
+        {
+            var assets = _handoverAssetManagementRepo.GetAll()
+                .Where(x => x.HandoverID == handoverId && x.IsDeleted == false)
+                .ToList();
+
+            foreach (var item in assets)
+            {
+                if (item.EmployeeID == null) continue;
+
+                var asset = _tsAssetManagementRepo.GetAll()
+                    .FirstOrDefault(x => x.TSCodeNCC == item.TSAssetCode && x.IsDeleted == false);
+
+                if (asset != null)
+                {
+                    asset.EmployeeID = item.EmployeeID; 
+                    asset.UpdatedDate = DateTime.Now;
+                    await _tsAssetManagementRepo.UpdateAsync(asset);
+                }
+            }
+        }
+
+
 
 
     }
