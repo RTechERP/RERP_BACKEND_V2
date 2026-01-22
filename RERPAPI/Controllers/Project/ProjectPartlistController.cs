@@ -703,10 +703,10 @@ namespace RERPAPI.Controllers.Project
                 partList.SpecialCode = partList.SpecialCode?.Trim();
                 partList.GroupMaterial = partList.GroupMaterial?.Trim();
                 partList.Manufacturer = partList.Manufacturer?.Trim();
-                partList.Model = partList.Model?.Trim();
+                partList.Model = partList.Model?.Trim() ?? "";
                 partList.Unit = partList.Unit?.Trim();
-                partList.ReasonProblem = partList.ReasonProblem?.Trim();
-                partList.Note = partList.Note?.Trim();
+                partList.ReasonProblem = partList.ReasonProblem?.Trim() ?? "";
+                partList.Note = partList.Note?.Trim() ?? "";
 
                 // 2. Validate
                 if (!_projectPartlistRepo.Validate(partList, out string message))
@@ -792,10 +792,10 @@ namespace RERPAPI.Controllers.Project
                 partList.SpecialCode = partList.SpecialCode?.Trim() ?? "";
                 partList.GroupMaterial = partList.GroupMaterial?.Trim() ?? "";
                 partList.Manufacturer = partList.Manufacturer?.Trim() ?? "";
-                partList.Model = partList.Model?.Trim();
+                partList.Model = partList.Model?.Trim() ?? "";
                 partList.Unit = partList.Unit?.Trim() ?? "";
-                partList.ReasonProblem = partList.ReasonProblem?.Trim();
-                partList.Note = partList.Note?.Trim();
+                partList.ReasonProblem = partList.ReasonProblem?.Trim() ?? "";
+                partList.Note = partList.Note?.Trim() ?? "";
 
                 // 2. Validate
                 if (isLeaf)
