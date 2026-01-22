@@ -1,29 +1,19 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
+﻿using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Drawing.Charts;
-using DocumentFormat.OpenXml.Office2010.Excel;
-using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
-using DocumentFormat.OpenXml.Wordprocessing;
+using DocumentFormat.OpenXml.Office2013.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json.Linq;
 using NPOI.SS.Formula.Functions;
-using OfficeOpenXml.Style.XmlAccess;
+using NPOI.Util;
 using RERPAPI.Attributes;
-using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
-using RERPAPI.Model.Param.HRM.VehicleManagement;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.DocumentManager;
 using RTCApi.Repo.GenericRepo;
 using System.Data;
-using System.Net;
-using System.Threading.Tasks;
-using ZXing;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -45,6 +35,7 @@ namespace RERPAPI.Controllers.Old
         WarehouseRepo _warehouseRepo;
         BillImportRepo _billImportRepo;
         BillImportTechnicalRepo _billImportTechnicalRepo;
+        private readonly IConfiguration _configuration;
         private readonly TaxCompanyRepo _taxCompanyRepo;
         private readonly EmployeePurchaseRepo _employeePurchaseRepo;
 
@@ -60,7 +51,7 @@ namespace RERPAPI.Controllers.Old
             , PONCCDetailRequestBuyRepo pONCCDetailRequestBuyRepo
             , WarehouseRepo warehouseRepo
             , BillImportRepo billImportRepo
-            , BillImportTechnicalRepo billImportTechRepo, TaxCompanyRepo taxCompanyRepo, EmployeePurchaseRepo employeePurchaseRepo
+            , BillImportTechnicalRepo billImportTechRepo, TaxCompanyRepo taxCompanyRepo, EmployeePurchaseRepo employeePurchaseRepo, IConfiguration configuration
             )
         {
             _pathStaticFiles = pathStaticFiles.Value;
@@ -77,6 +68,7 @@ namespace RERPAPI.Controllers.Old
             _billImportTechnicalRepo = billImportTechRepo;
             _taxCompanyRepo = taxCompanyRepo;
             _employeePurchaseRepo = employeePurchaseRepo;
+            _configuration = configuration;
 
         }
 
@@ -470,11 +462,14 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet("product-rtc")]
-        public IActionResult getProductRTC()
+        public IActionResult getProductRTC(int? warehouseType)
         {
             try
             {
-                var dt = SQLHelper<object>.ProcedureToList("spGetProductRTC", new string[] { }, new object[] { });
+                if (warehouseType == null) warehouseType = 1;
+                var dt = SQLHelper<dynamic>.ProcedureToList("spGetProductRTC",
+                new string[] { "@ProductGroupID", "@Keyword", "@CheckAll", "@WarehouseID", "@ProductRTCID", "@ProductGroupNo", "@PageNumber", "@PageSize", "@WarehouseType" },
+                new object[] { 0, "", 0, 0, 0, "", 1, 100000000, warehouseType });
                 var data = SQLHelper<object>.GetListData(dt, 0);
                 return Ok(ApiResponseFactory.Success(data, null));
             }
@@ -702,19 +697,9 @@ namespace RERPAPI.Controllers.Old
                     else await _pONCCDetailRepo.CreateAsync(item);
 
                     if (item.ProjectPartlistPurchaseRequestID == null) continue;
-                    ProjectPartlistPurchaseRequest request = _projectPartlistPurchaseRequestRepo.
-                        GetByID((int)item.ProjectPartlistPurchaseRequestID);
+                    await _pONCCRepo.UpdatePurchaseRequest(item.ProjectPartlistPurchaseRequestID ?? 0, data.poncc.SupplierSaleID ?? 0);
 
-                    if (request == null) continue;
-                    if (data.poncc.SupplierSaleID == request.SupplierSaleID) continue;
-
-                    request.SupplierSaleID = data.poncc.SupplierSaleID;
-                    if (request.ID > 0)
-                    {
-                        await _projectPartlistPurchaseRequestRepo.UpdateAsync(request);
-                    }
-
-                    string ponccDetailRequestBuyId = item.PONCCDetailRequestBuyID;
+                    string ponccDetailRequestBuyId = item.PONCCDetailRequestBuyID ?? "";
                     if (string.IsNullOrWhiteSpace(ponccDetailRequestBuyId)) continue;
                     string[] idRequestBuys = ponccDetailRequestBuyId.Split(';');
 
@@ -738,13 +723,12 @@ namespace RERPAPI.Controllers.Old
                     }
                 }
                 #endregion
-                return Ok(ApiResponseFactory.Success(null, "Đã cập nhật đặt hàng thành công."));
+                return Ok(ApiResponseFactory.Success(data.poncc, "Đã cập nhật đặt hàng thành công."));
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
 
         [HttpPost("update-poncc")]
@@ -828,7 +812,7 @@ namespace RERPAPI.Controllers.Old
             }
         }
         #endregion
-        
+
         [HttpGet("printpo")]
         public IActionResult PrintPO(int id, bool isMerge)
         {
@@ -844,7 +828,7 @@ namespace RERPAPI.Controllers.Old
                 int employeeID = TextUtils.ToInt32(po.EmployeeID);
 
                 var employeePurchase = _employeePurchaseRepo.GetAll(x => x.EmployeeID == employeeID && x.TaxCompayID == taxCompany.ID).FirstOrDefault() ?? new EmployeePurchase();
-                po.Purchaser = $"{_pONCCRepo.ConvertVietnameseToEnglish(po.FullName)} - Phone: {_pONCCRepo.ConvertPhoneNumberVietnamese(employeePurchase.Telephone ??"")} - Email: {employeePurchase.Email}";
+                po.Purchaser = $"{_pONCCRepo.ConvertVietnameseToEnglish(po.FullName)} - Phone: {_pONCCRepo.ConvertPhoneNumberVietnamese(employeePurchase.Telephone ?? "")} - Email: {employeePurchase.Email}";
                 po.TotalAmountText = _pONCCRepo.ConvertNumberToTextEnglish(Convert.ToDecimal(po.TotalMoneyPO), po.CurrencyText);
                 po.TotalMoneyText = _pONCCRepo.ConvertNumberToTextVietNamese(Convert.ToDecimal(po.TotalMoneyPO), po.CurrencyText);
 
@@ -857,6 +841,7 @@ namespace RERPAPI.Controllers.Old
 
                 string pathImage = Path.Combine(pathStaticFile.PathFull, @"2. quy trình. quy định chung\1. quy trình mua hàng\phần mềm misa\ảnh import misa\signnonback");
                 string picPrepared = Path.Combine(pathImage, $@"{po.Code.Trim()}.png");
+                //string picPrepared = Path.Combine(pathImage, $@"R0101.png");
                 string picDirector = Path.Combine(pathImage, $"seal{companyText.ToUpper()}.png");
 
                 string logo = Path.Combine(pathImage, $"logo{companyText.ToUpper()}.jpg");
@@ -934,5 +919,361 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        #region Xuất file excel poncc theo mẫu 
+        [HttpGet("print-excel")]
+        public IActionResult PrintExcel(int id, bool isMerge, string language, bool isShowSign, bool isShowSeal)
+        {
+            string message = "";
+            try
+            {
+                //get thông tin master
+                var dataPO = SQLHelper<object>.ProcedureToList("spGetPONCCByID", new string[] { "@ID" }, new object[] { id });
+                var po = SQLHelper<object>.GetListData(dataPO, 0)[0];
+                string companyText = po.CompanyText.ToUpper().Trim();
+                var taxCompany = _taxCompanyRepo.GetAll(x => x.Code.ToUpper().Trim() == companyText).FirstOrDefault() ?? new TaxCompany();
+
+                int employeeID = TextUtils.ToInt32(po.EmployeeID);
+
+                var employeePurchase = _employeePurchaseRepo.GetAll(x => x.EmployeeID == employeeID && x.TaxCompayID == taxCompany.ID).FirstOrDefault() ?? new EmployeePurchase();
+                po.Purchaser = $"{_pONCCRepo.ConvertVietnameseToEnglish(po.FullName)} - Phone: {_pONCCRepo.ConvertPhoneNumberVietnamese(employeePurchase.Telephone ?? "")} - Email: {employeePurchase.Email}";
+                po.TotalAmountText = _pONCCRepo.ConvertNumberToTextEnglish(Convert.ToDecimal(po.TotalMoneyPO), po.CurrencyText);
+                po.TotalMoneyText = _pONCCRepo.ConvertNumberToTextVietNamese(Convert.ToDecimal(po.TotalMoneyPO), po.CurrencyText);
+
+
+                PathStaticFile pathStaticFile = _pathStaticFiles.Where(x => x.PathName == "Purchases").FirstOrDefault() ?? new PathStaticFile();
+                if (!Path.Exists(pathStaticFile.PathFull))
+                {
+                    message = $"Thư mục ảnh chữ ký không tồn tại!\n{pathStaticFile.PathName}: {pathStaticFile.PathFull}";
+                }
+
+                string pathImage = Path.Combine(pathStaticFile.PathFull, @"2. quy trình. quy định chung\1. quy trình mua hàng\phần mềm misa\ảnh import misa\signnonback");
+                //string picPrepared = Path.Combine(pathImage, $@"R0101.png");
+                string picPrepared = Path.Combine(pathImage, $@"{po.Code.Trim()}.png");
+                string picDirector = Path.Combine(pathImage, $"seal{companyText.ToUpper()}.png");
+
+                string logo = Path.Combine(pathImage, $"logo{companyText.ToUpper()}.jpg");
+
+                //get danh sách chi tiết sản phẩm
+                var poDetails = SQLHelper<PONCCDetailDTO>.ProcedureToListModel("spGetPONCCDetail", new string[] { "@PONCCID" }, new object[] { id });
+                poDetails = poDetails.Where(x => x.IsPurchase != true).ToList();
+                if (isMerge)
+                {
+                    bool isHCNS = poDetails.Any(x => x.ProductGroupID == 77);
+                    if (isHCNS)
+                    {
+                        poDetails = poDetails.GroupBy(item => new { item.ProductCodeOfSupplier, item.UnitPrice })
+                                            .Select(cl => new PONCCDetailDTO
+                                            {
+                                                STT = cl.First().Status,
+                                                ProductCodeOfSupplier = cl.First().ProductCodeOfSupplier,
+                                                Unit = cl.First().Unit,
+                                                UnitName = cl.First().UnitName,
+                                                QtyRequest = cl.Sum(q => q.QtyRequest),
+                                                UnitPrice = cl.First().UnitPrice,
+                                                ThanhTien = cl.Sum(q => q.ThanhTien),
+                                                VAT = cl.First().VAT,
+                                                VATMoney = cl.Sum(q => q.VATMoney),
+                                                Discount = cl.Sum(q => q.Discount),
+                                                TotalPrice = cl.Sum(q => q.TotalPrice),
+                                            })
+                                            .Select((item, index) =>
+                                            {
+                                                item.STT = index + 1;
+                                                return item;
+                                            }).ToList();
+                    }
+                    else
+                    {
+                        poDetails = poDetails.GroupBy(item => new { item.ProductCode, item.UnitPrice.Value, item.ProductCodeOfSupplier })
+                                                                            .Select(cl => new PONCCDetailDTO
+                                                                            {
+                                                                                STT = cl.First().Status,
+                                                                                ProductCodeOfSupplier = cl.First().ProductCodeOfSupplier,
+                                                                                Unit = cl.First().Unit,
+                                                                                UnitName = cl.First().UnitName,
+                                                                                QtyRequest = cl.Sum(q => q.QtyRequest),
+                                                                                UnitPrice = cl.First().UnitPrice,
+                                                                                ThanhTien = cl.Sum(q => q.ThanhTien),
+                                                                                VAT = cl.First().VAT,
+                                                                                VATMoney = cl.Sum(q => q.VATMoney),
+                                                                                Discount = cl.Sum(q => q.Discount),
+                                                                                TotalPrice = cl.Sum(q => q.TotalPrice),
+                                                                            })
+                                                                            .Select((item, index) =>
+                                                                            {
+                                                                                item.STT = index + 1;
+                                                                                return item;
+                                                                            }).ToList();
+
+                    }
+                }
+
+                string templatePath = "";
+                var basePath = _configuration.GetValue<string>("PathTemplate");
+
+                templatePath = language == "en"
+                    ? Path.Combine(basePath, "ExportExcel", "PONCCReportEnTemplate.xlsx")
+                    : Path.Combine(basePath, "ExportExcel", "PONCCReportViTemplate.xlsx");
+                if (!System.IO.File.Exists(templatePath))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy file template: {templatePath}"));
+                }
+                using (var workbook = new XLWorkbook(templatePath))
+                {
+                    var sheet = workbook.Worksheet(1);
+                    decimal totalAmount = 0;
+                    decimal vatMoney = 0;
+                    decimal discount = 0;
+                    decimal totalPrice = 0;
+
+                    int startRow = language == "en" ? 15 : 14;
+                    int currentRow = startRow;
+                    int stt = 1;
+                    int additionalRows = 0; // Số dòng thêm vào để điều chỉnh vị trí các thành phần khác
+
+                    // Tính toán tổng tiền
+                    if (poDetails.Any())
+                    {
+                        foreach (var item in poDetails)
+                        {
+                            totalAmount += Convert.ToDecimal(item.ThanhTien);
+                            vatMoney += Convert.ToDecimal(item.VATMoney);
+                            discount += Convert.ToDecimal(item.Discount);
+                            totalPrice += Convert.ToDecimal(item.TotalPrice);
+                        }
+                    }
+
+                    // Điền thông tin Header theo ngôn ngữ
+                    switch (language)
+                    {
+                        case "en":
+                            #region in tiếng anh
+                            sheet.Cell(2, 41).Value = po.POCode ?? "";
+                            sheet.Cell(3, 18).Value = po.NameNCC ?? "";
+                            sheet.Cell(3, 52).Value = (po.RequestDate).ToString("dd/MM/yyyy") ?? "";
+                            sheet.Cell(4, 18).Value = po.AddressNCC ?? "";
+                            sheet.Cell(4, 52).Value = po.BillCode ?? "";
+                            sheet.Cell(6, 18).Value = po.SupplierContactPhone ?? "";
+                            sheet.Cell(6, 39).Value = po.Fax ?? "............................";
+                            sheet.Cell(5, 55).Value = po.CurrencyText ?? "";
+                            sheet.Cell(8, 18).Value = po.SupplierContactName ?? "";
+                            sheet.Cell(8, 39).Value = po.SupplierContactEmail ?? "";
+                            sheet.Cell(9, 18).Value = taxCompany.BuyerEnglish ?? "";
+                            sheet.Cell(10, 18).Value = taxCompany.AddressBuyerEnglish ?? "";
+                            sheet.Cell(11, 18).Value = taxCompany.LegalRepresentativeEnglish ?? "";
+                            sheet.Cell(12, 18).Value = po.Purchaser ?? "";
+
+                            if (poDetails.Any())
+                            {
+                                // Tính số dòng cần thêm
+                                additionalRows = poDetails.Count - 1;
+
+                                // Insert rows nếu cần (chỉ insert khi có nhiều hơn 1 item)
+                                if (additionalRows > 0)
+                                {
+                                    sheet.Row(startRow + 1).InsertRowsAbove(additionalRows);
+
+                                    // Copy format từ dòng template sang các dòng mới
+                                    for (int i = 1; i <= additionalRows; i++)
+                                    {
+                                        sheet.Row(startRow).CopyTo(sheet.Row(startRow + i));
+                                    }
+                                }
+
+                                // Fill data vào các dòng
+                                foreach (var item in poDetails)
+                                {
+                                    sheet.Cell(currentRow, 2).Value = stt++;
+                                    sheet.Cell(currentRow, 5).Value = item.ProductCodeOfSupplier?.Trim() ?? "";
+                                    sheet.Cell(currentRow, 28).Value = (item.UnitName?.Trim() ?? item.Unit?.Trim()) ?? "";
+                                    sheet.Cell(currentRow, 31).Value = item.QtyRequest ?? 0;
+                                    sheet.Cell(currentRow, 38).Value = item.UnitPrice ?? 0;
+                                    sheet.Cell(currentRow, 45).Value = item.ThanhTien ?? 0;
+                                    sheet.Cell(currentRow, 50).Value = item.VAT ?? 0;
+                                    sheet.Cell(currentRow, 53).Value = item.VATMoney ?? 0;
+                                    currentRow++;
+                                }
+
+                                // Apply number format cho các cột số
+                                var numberColumns = new[] { 31, 38, 45, 50, 53 };
+                                foreach (var col in numberColumns)
+                                {
+                                    sheet.Range(startRow, col, currentRow - 1, col)
+                                        .Style.NumberFormat.Format = "#,##0.00";
+                                }
+                            }
+
+                            // Điền tổng tiền với vị trí đã điều chỉnh
+                            int summaryRowOffset = 17 + additionalRows;
+                            sheet.Cell(summaryRowOffset, 43).Value = totalAmount;
+                            sheet.Cell(summaryRowOffset + 1, 43).Value = vatMoney;
+                            sheet.Cell(summaryRowOffset + 2, 43).Value = discount;
+                            sheet.Cell(summaryRowOffset + 3, 43).Value = totalPrice;
+                            sheet.Range(summaryRowOffset, 43, summaryRowOffset + 3, 43).Style.NumberFormat.Format = "#,##0.00";
+
+                            sheet.Cell(summaryRowOffset + 4, 20).Value = po.TotalAmountText ?? "";
+                            sheet.Cell(summaryRowOffset + 6, 15).Value = (po.DeliveryDate).ToString("dd/MM/yyyy") ?? "";
+                            sheet.Cell(summaryRowOffset + 7, 15).Value = po.AddressDelivery ?? "";
+                            sheet.Cell(summaryRowOffset + 8, 15).Value = po.RulePayName ?? "";
+                            sheet.Cell(summaryRowOffset + 9, 15).Value = po.BankCharge ?? "";
+                            sheet.Cell(summaryRowOffset + 10, 15).Value = po.FedexAccount ?? "";
+                            sheet.Cell(summaryRowOffset + 11, 15).Value = po.AccountNumberSupplier ?? "";
+
+                            
+                            #endregion
+                            break;
+
+                        case "vi":
+                            #region in tiếng việt
+                            string taxInfor = $"{taxCompany.BuyerVietnamese ?? ""}\n" +
+                                $"{taxCompany.AddressBuyerVienamese ?? ""}\n" +
+                                $"{taxCompany.TaxVietnamese ?? ""}";
+                            sheet.Cell(2, 2).Value = taxInfor;
+                            sheet.Cell(4, 12).Value = po.NameNCC ?? "";
+                            sheet.Cell(4, 41).Value = (po.RequestDate).ToString("dd/MM/yyyy") ?? "";
+                            sheet.Cell(5, 12).Value = po.AddressNCC ?? "";
+                            sheet.Cell(5, 41).Value = po.BillCode ?? "";
+                            sheet.Cell(8, 12).Value = po.MaSoThue ?? "";
+                            sheet.Cell(7, 44).Value = po.CurrencyText ?? "";
+                            sheet.Cell(10, 12).Value = po.SupplierContactPhone ?? "";
+                            sheet.Cell(10, 32).Value = po.Fax ?? "............................";
+                            sheet.Cell(11, 12).Value = po.Note ?? "";
+
+                            if (poDetails.Any())
+                            {
+                                // Tính số dòng cần thêm
+                                additionalRows = poDetails.Count - 1;
+
+                                // Insert rows nếu cần
+                                if (additionalRows > 0)
+                                {
+                                    sheet.Row(startRow + 1).InsertRowsAbove(additionalRows);
+
+                                    // Copy format từ dòng template
+                                    for (int i = 1; i <= additionalRows; i++)
+                                    {
+                                        sheet.Row(startRow).CopyTo(sheet.Row(startRow + i));
+                                    }
+                                }
+
+                                // Fill data
+                                foreach (var item in poDetails)
+                                {
+                                    sheet.Cell(currentRow, 2).Value = stt++;
+                                    sheet.Cell(currentRow, 3).Value = item.ProductCodeOfSupplier?.Trim() ?? "";
+                                    sheet.Cell(currentRow, 20).Value = (item.UnitName?.Trim() ?? item.Unit?.Trim()) ?? "";
+                                    sheet.Cell(currentRow, 24).Value = item.QtyRequest ?? 0;
+                                    sheet.Cell(currentRow, 28).Value = item.UnitPrice ?? 0;
+                                    sheet.Cell(currentRow, 34).Value = item.ThanhTien ?? 0;
+                                    sheet.Cell(currentRow, 39).Value = item.VAT ?? 0;
+                                    sheet.Cell(currentRow, 43).Value = item.VATMoney ?? 0;
+                                    currentRow++;
+                                }
+
+                                // Apply number format
+                                var numberColumns = new[] { 24, 28, 34, 39, 43 };
+                                foreach (var col in numberColumns)
+                                {
+                                    sheet.Range(startRow, col, currentRow - 1, col)
+                                        .Style.NumberFormat.Format = "#,##0.00";
+                                }
+                            }
+                            else
+                            {
+                                // Nếu không có detail thì xóa dòng template
+                                sheet.Row(startRow).Delete();
+                                additionalRows = -1; // Giảm 1 dòng
+                            }
+
+                            // Điền tổng tiền với vị trí đã điều chỉnh
+                            int summaryRowOffsetVi = 15 + additionalRows;
+                            sheet.Cell(summaryRowOffsetVi, 40).Value = totalAmount;
+                            sheet.Cell(summaryRowOffsetVi + 1, 40).Value = vatMoney;
+                            sheet.Cell(summaryRowOffsetVi + 2, 40).Value = discount;
+                            sheet.Cell(summaryRowOffsetVi + 3, 40).Value = totalPrice;
+                            sheet.Range(summaryRowOffsetVi, 40, summaryRowOffsetVi + 3, 40).Style.NumberFormat.Format = "#,##0.00";
+
+                            sheet.Cell(summaryRowOffsetVi + 4, 15).Value = po.TotalMoneyText ?? "";
+                            sheet.Cell(summaryRowOffsetVi + 6, 14).Value = (po.DeliveryDate).ToString("dd/MM/yyyy") ?? "";
+                            sheet.Cell(summaryRowOffsetVi + 7, 14).Value = po.AddressDelivery ?? "";
+                            sheet.Cell(summaryRowOffsetVi + 8, 14).Value = po.RulePayName ?? "";
+                            sheet.Cell(summaryRowOffsetVi + 9, 14).Value = po.AccountNumberSupplier ?? "";
+
+                            sheet.Cell(summaryRowOffsetVi + 13, 24).Value = employeePurchase.Telephone ?? "";
+                            sheet.Cell(summaryRowOffsetVi + 14, 24).Value = employeePurchase.Email ?? "";
+
+                            #endregion
+                            break;
+                        default:
+                            break;
+                    }
+
+                    #region Gán ảnh logo và chữ ký, seal (Đã điều chỉnh vị trí theo số dòng thêm vào)
+
+                    // 1. Xử lý Logo (không bị ảnh hưởng vì ở trên phần detail)
+                    // 1. Logo
+                    if (System.IO.File.Exists(logo) && isShowSign && language == "en")
+                    {
+                        using var ms = ConvertImageToMemoryStream(logo);
+                        sheet.AddPicture(ms)
+                             .MoveTo(sheet.Cell(2, 2))
+                             .Scale(0.13); // zoom 50%
+                    }
+
+                    // 2. Chữ ký người lập
+                    if (System.IO.File.Exists(picPrepared) && isShowSign)
+                    {
+                        using var ms = ConvertImageToMemoryStream(picPrepared);
+                        int preparedRow = language == "vi" ? 27 + additionalRows : 31 + additionalRows;
+                        int preparedCol = language == "vi" ? 20 : 25;
+
+                        sheet.AddPicture(ms)
+                             .MoveTo(sheet.Cell(preparedRow, preparedCol))
+                             .Scale(0.8); // zoom 70%
+                    }
+
+                    // 3. Dấu và chữ ký giám đốc
+                    if (System.IO.File.Exists(picDirector) && isShowSeal)
+                    {
+                        using var ms = ConvertImageToMemoryStream(picDirector);
+                        int directorRow = language == "vi" ? 27 + additionalRows : 31 + additionalRows;
+                        int directorCol = language == "vi" ? 35 : 42;
+
+                        sheet.AddPicture(ms)
+                             .MoveTo(sheet.Cell(directorRow, directorCol))
+                             .Scale(0.8); // zoom 60%
+                    }
+
+                    #endregion
+
+                    using (var stream = new MemoryStream())
+                    {
+                        workbook.SaveAs(stream);
+                        stream.Position = 0;
+
+                        string fileName = $"{po.BillCode}.xlsx";
+                        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        private MemoryStream ConvertImageToMemoryStream(string imagePath)
+        {
+            byte[] imgBytes;
+            using (var img = System.Drawing.Image.FromFile(imagePath))
+            using (var msTemp = new MemoryStream())
+            {
+                img.Save(msTemp, System.Drawing.Imaging.ImageFormat.Png);
+                imgBytes = msTemp.ToArray();
+            }
+            return new MemoryStream(imgBytes);
+        }
+        #endregion
     }
 }

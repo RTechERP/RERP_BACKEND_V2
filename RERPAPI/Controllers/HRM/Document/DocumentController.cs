@@ -65,7 +65,7 @@ namespace RERPAPI.Controllers.DocumentManager
 
         [HttpPost("get-document")]
         public IActionResult GetListDocument([FromBody] DocumentRequestParam request)
-        {
+        {   
             try
             {
                 var document = SQLHelper<dynamic>.ProcedureToList("spGetDocument",
@@ -92,7 +92,7 @@ namespace RERPAPI.Controllers.DocumentManager
         {
             try
             {
-                List<DocumentFile> result = _documentfile.GetAll(x => x.DocumentID == id).ToList();
+                List<DocumentFile> result = _documentfile.GetAll(x => x.DocumentID == id && x.IsDeleted !=true).ToList();
                 return Ok(new
                 {
                     status = 1,

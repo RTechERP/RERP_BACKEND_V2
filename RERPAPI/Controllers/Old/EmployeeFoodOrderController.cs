@@ -199,7 +199,7 @@ namespace RERPAPI.Controllers.Old
                           && x.IsDeleted != true)
                 .FirstOrDefault();
 
-                if (checkExist != null&& foodOrder.IsDeleted != true)
+                if (checkExist != null&& foodOrder.IsDeleted != true && foodOrder.ID==0)
                 {
                     foodOrder.ID = checkExist.ID;
                     foodOrder.Quantity = foodOrder.Quantity + checkExist.Quantity;
@@ -253,7 +253,7 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [RequiresPermission("N2,N23,N34,N1")]
+        [RequiresPermission("N2,N23,N34,N1,N80")]
         [HttpPost("save-approve")]
         public async Task<IActionResult> SaveApprove([FromBody] List<EmployeeFoodOrder> foodOrders)
         {

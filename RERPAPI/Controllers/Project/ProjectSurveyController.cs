@@ -103,7 +103,7 @@ namespace RERPAPI.Controllers.Project
             try
             {
                 ProjectSurveyDetail model = projectSurveyDetailRepo.GetByID(id);
-                model.Status = status ? 1 : 0;
+                model.Status = status ? 1 : 2;
                 model.EmployeeID = employeeID;
                 model.DateSurvey = dateSurvey;
                 model.ReasonCancel = reasonCancel;
@@ -130,6 +130,7 @@ namespace RERPAPI.Controllers.Project
                 var data = SQLHelper<object>.ProcedureToList("spGetProjectSurveyDetail",
                                                     new string[] { "@ProjectSurveyID", "@ProjectID" },
                                                     new object[] { projectSurveyId, projectId });
+                var data2 = SQLHelper<object>.GetListData(data, 0);
 
                 return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0), ""));
             }
@@ -355,7 +356,7 @@ namespace RERPAPI.Controllers.Project
                 ProjectSurvey model = projectSurveyRepo.GetByID(ids);
                 if (!projectSurveyRepo.ValidateDeleted(model, currentUser, out messageError))
                 {
-                    return Ok(new { status = 2, message = messageError });
+                    return BadRequest(ApiResponseFactory.Fail(null, messageError));
                 }
                 model.IsDeleted = true;
                 model.UpdatedBy = ""; // Chưa có tên người đăng nhập
@@ -604,7 +605,7 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-        #region cây thư mục 
+        #region cây thư mục khảo sát
         [HttpPost("create-survey-folder/{projectId}")]
         public IActionResult CreateSurveyFolder(int projectId)
         {
@@ -639,9 +640,10 @@ namespace RERPAPI.Controllers.Project
                 Directory.CreateDirectory(surveyFolder);
 
                 // URL FE sẽ mở
-                string url = $"/api/share/duan/projects/{year}/{project.ProjectCode}/TaiLieuChung/ThongTinKhaoSat";
+                string url = $"\\\\192.168.1.190\\duan\\Projects\\{year}\\{project.ProjectCode}\\TaiLieuChung\\ThongTinKhaoSat";
+                string urlOnl = $"\\\\113.190.234.64\\DUAN\\Projects\\{year}\\{project.ProjectCode}\\TaiLieuChung\\ThongTinKhaoSat";
 
-                return Ok(ApiResponseFactory.Success(url, "Tạo thư mục khảo sát thành công"));
+                return Ok(ApiResponseFactory.Success(new { url, urlOnl }, "Tạo thư mục khảo sát thành công"));
             }
             catch (Exception ex)
             {

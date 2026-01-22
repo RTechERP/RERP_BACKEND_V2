@@ -117,6 +117,7 @@ namespace RERPAPI.Controllers.Old
                     employeeOverTime.TimeStart = employeeOvertime.TimeStart;
                     employeeOverTime.EndTime = employeeOvertime.EndTime;
                     employeeOverTime.Location = employeeOvertime.Location;
+                    employeeOverTime.ProjectID = employeeOvertime.ProjectID;
                     employeeOverTime.Overnight = employeeOvertime.Overnight;
                     employeeOverTime.TypeID = employeeOvertime.TypeID;
                     employeeOverTime.Reason = employeeOvertime.Reason;

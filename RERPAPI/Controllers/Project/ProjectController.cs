@@ -1094,6 +1094,9 @@ namespace RERPAPI.Controllers.Project
                     else if (projectType == 3)
                     {
                         returnProjectCode = $"F.{returnProjectCode}";
+                    }else if(projectType == 4)
+                    {
+                        returnProjectCode = $"NB.{returnProjectCode}";
                     }
                 }
 
@@ -1449,7 +1452,7 @@ namespace RERPAPI.Controllers.Project
 
                     }
                 }
-
+                List<int> selectedProjectTypeLink = new List<int>();
                 foreach (var item in projectTypeLinks)
                 {
                     int projectTypeLinkID = item.ProjectTypeLinkID;
@@ -1463,6 +1466,11 @@ namespace RERPAPI.Controllers.Project
 
                     if (prjTypeLink.ID > 0) await projectTypeLinkRepo.UpdateAsync(prjTypeLink);
                     else await projectTypeLinkRepo.CreateAsync(prjTypeLink);
+                }
+                var lst = projectTypeLinkRepo.GetAll(x => x.ProjectID == projectId && x.Selected == true);
+                foreach (var l in lst)
+                {
+                    selectedProjectTypeLink.Add(l.ProjectTypeID ?? 0);
                 }
 
                 // Lưu thông tin người tham gia
@@ -1568,7 +1576,7 @@ namespace RERPAPI.Controllers.Project
                     }
                 }
 
-                return Ok(ApiResponseFactory.Success(true, "Lưu dự án thành công"));
+                return Ok(ApiResponseFactory.Success(new {project, selectedProjectTypeLink}, "Lưu dự án thành công"));
             }
             catch (Exception ex)
             {

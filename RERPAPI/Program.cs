@@ -7,7 +7,6 @@ using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
-using RERPAPI.Model.Entities;
 using RERPAPI.Repo;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
@@ -28,6 +27,7 @@ using RERPAPI.Repo.GenericEntity.Project;
 using RERPAPI.Repo.GenericEntity.Systems;
 using RERPAPI.Repo.GenericEntity.TB;
 using RERPAPI.Repo.GenericEntity.Technical;
+using RERPAPI.Repo.GenericEntity.Technical.KPI;
 using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
 using RTCApi.Repo.GenericRepo;
 using System.Text;
@@ -145,6 +145,11 @@ builder.Services.AddScoped<IssueSolutionStatusRepo>();
 builder.Services.AddScoped<KPIEmployeeTeamLinkRepo>();
 builder.Services.AddScoped<KPIEmployeeTeamRepo>();
 builder.Services.AddScoped<KPIEvaluationRepo>();
+builder.Services.AddScoped<KPIErrorTypeRepo>();
+builder.Services.AddScoped<KPIErrorRepo>();
+builder.Services.AddScoped<KPIErrorFineAmountRepo>();
+builder.Services.AddScoped<KPIErrorEmployeeFileRepo>();
+builder.Services.AddScoped<KPIErrorEmployeeRepo>();
 builder.Services.AddScoped<LocationRepo>();
 builder.Services.AddScoped<LoginManagerRepo>();
 builder.Services.AddScoped<MainIndexRepo>();
@@ -380,6 +385,7 @@ builder.Services.AddScoped<EmployeePayrollBonusDeuctionRepo>();
 #region Yêu cần mua hàng
 builder.Services.AddScoped<SupplierRepo>();
 builder.Services.AddScoped<ProjectTypeAssignRepo>();
+builder.Services.AddScoped<InventoryProjectProductSaleLinkRepo>();
 #endregion
 #region Yêu Cầu QC
 builder.Services.AddScoped<BillImportQCRepo>();
@@ -397,8 +403,6 @@ builder.Services.AddScoped<AGVBillExportDetailRepo>();
 builder.Services.AddScoped<AGVInventoryDemoRepo>();
 builder.Services.AddScoped<AGVHistoryProductRepo>();
 #endregion
-
-
 #region YCCV
 builder.Services.AddScoped<JobRequirementRepo>();
 builder.Services.AddScoped<JobRequirementDetailRepo>();
@@ -432,6 +436,14 @@ builder.Services.AddScoped<NewsletterFileRepo>();
 #region Đồ bảo hộ 
 builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.HRM.ProductProtectiveGear.ProductGroupRTCRepo>();
 #endregion
+builder.Services.AddScoped<CourseCatalogRepo>();
+builder.Services.AddScoped<CourseCatalogProjectTypeRepo>();
+builder.Services.AddScoped<KPIPositionTypeRepo>();
+builder.Services.AddScoped<CourseRepo>();
+builder.Services.AddScoped<CourseRegisterIdeaRepo>();
+
+builder.Services.AddScoped<InventoryProjectProductSaleLinkRepo>();
+
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();
 #endregion
@@ -457,6 +469,10 @@ builder.Services.AddScoped<PaymentOrderPORepo>();
 builder.Services.AddScoped<DailyReportHRRepo>();
 builder.Services.AddScoped<DailyReportLXCP>();
 builder.Services.AddScoped<DailyReportMarketingFileRepo>();
+builder.Services.AddScoped<EconomicContractRepo>();
+builder.Services.AddScoped<EconomicContractFileRepo>();
+builder.Services.AddScoped<EconomicContractTypeRepo>();
+builder.Services.AddScoped<EconomicContractTermRepo>();
 
 
 builder.Services.AddScoped<PhasedAllocationPersonRepo>();
@@ -464,6 +480,25 @@ builder.Services.AddScoped<PhasedAllocationPersonDetailRepo>();
 
 builder.Services.AddScoped<MenuAppRepo>();
 builder.Services.AddScoped<MenuAppUserGroupLinkRepo>();
+builder.Services.AddScoped<ProjectPartListPurchaseRequestApproveLogRepo>();
+builder.Services.AddScoped<EmployeeLuckyNumberRepo>();
+
+
+#region KPI
+builder.Services.AddScoped<KPIEvaluationPointRepo>();
+builder.Services.AddScoped<KPISessionRepo>();
+builder.Services.AddScoped<KPIEmployeePointRepo>();
+builder.Services.AddScoped<KPIPositionRepo>();
+builder.Services.AddScoped<KPIEvaluationRuleRepo>();
+builder.Services.AddScoped<KPIPositionEmployeeRepo>();
+builder.Services.AddScoped<KPIEmployeePointDetailRepo>();
+#endregion
+
+#region RabbitService
+//builder.Services.AddSingleton<RabbitMqConnection>();
+//builder.Services.AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>();
+//builder.Services.AddHostedService<EmailConsumer>();
+#endregion
 
 
 builder.Services.AddScoped<CurrentUser>(provider =>

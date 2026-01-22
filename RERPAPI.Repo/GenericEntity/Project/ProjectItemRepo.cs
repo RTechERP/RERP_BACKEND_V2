@@ -59,7 +59,7 @@ namespace RERPAPI.Repo.GenericEntity.Project
         public bool Validate(ProjectItem item, out string message)
         {
             message = "";
-            if (item.ID < 0 || item.CreatedDate.HasValue)
+            if (item.ID < 0 || !item.CreatedDate.HasValue)
             {
                 if (item.TypeProjectItem <= 0)
                 {
@@ -104,7 +104,7 @@ namespace RERPAPI.Repo.GenericEntity.Project
                     message = $"Hạng mục [{item.Code}]: Vui lòng nhập ngày kết thúc thực tế";
                     return false;
                 }
-                if (item.ActualStartDate > item.ActualEndDate)
+                if (item.ActualStartDate.Value.Date > item.ActualEndDate.Value.Date)
                 {
                     message = $"Hạng mục [{item.Code}]: Ngày kết thúc phải lớn hơn ngày thực tế";
                     return false;

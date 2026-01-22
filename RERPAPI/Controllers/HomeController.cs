@@ -11,13 +11,16 @@ using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
+using RERPAPI.Model.Param.HRM.VehicleManagement;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
+using RERPAPI.Services;
 using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Mime;
 using System.Security.Claims;
 using System.Text;
+using System.Threading.Tasks;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 using static NPOI.HSSF.Util.HSSFColor;
 using static RERPAPI.Model.DTO.ApproveTPDTO;
@@ -43,6 +46,7 @@ namespace RERPAPI.Controllers
         private readonly EmployeeWFHRepo _wfhRepo;
         private readonly ConfigSystemRepo _configSystemRepo;
 
+        //IRabbitMqPublisher _publisher;
         public HomeController(IOptions<JwtSettings> jwtSettings, RTCContext context, IConfiguration configuration, EmployeeOnLeaveRepo onLeaveRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeWFHRepo employeeWFHRepo, ConfigSystemRepo configSystemRepo, EmployeeOverTimeRepo employeeOverTimeRepo, RoleConfig roleConfig, EmployeePayrollDetailRepo employeePayrollDetailRepo)
         {
             _jwtSettings = jwtSettings.Value;
@@ -55,6 +59,7 @@ namespace RERPAPI.Controllers
             _employeeOverTimeRepo = employeeOverTimeRepo;
             _roleConfig = roleConfig;
             _employeePayrollDetailRepo = employeePayrollDetailRepo;
+            //_publisher = publisher;
         }
         [HttpPost("login")]
         public IActionResult Login([FromBody] User user)
@@ -111,8 +116,6 @@ namespace RERPAPI.Controllers
 
                 var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
-                //4.Lưu session trên server
-                HttpContext.Session.SetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey"), ObjectMapper.GetCurrentUser(claims.ToDictionary(x => x.Type, x => x.Value)));
 
                 return Ok(new
                 {
@@ -122,7 +125,7 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message + "\n"));
             }
         }
 
@@ -561,6 +564,15 @@ namespace RERPAPI.Controllers
             }
 
         }
+
+        //[HttpPost("send")]
+        //public async Task<IActionResult> Send(EmployeeSendEmail e)
+        //{
+        //    await _publisher.PublishAsync(e);
+        //    return Ok();
+        //}
+
+
 
         //[HttpGet("download")]
         //public IActionResult DownloadFile([FromQuery] string controllerName, [FromQuery] string subPath) {
@@ -1148,9 +1160,9 @@ namespace RERPAPI.Controllers
             {
                 int currentYear = DateTime.Now.Year;
                 int currentQuarter = (DateTime.Now.Month - 1) / 3 + 1;
-                var team = SQLHelper<object>.ProcedureToList("spGetALLKPIEmployeeTeam",
-                                                new string[] { "@YearValue", "@QuarterValue", "@DepartmentID" },
-                                                new object[] { currentYear, currentQuarter, 0 });
+                var team = SQLHelper<object>.ProcedureToList("spGetUserTeam",
+                                                new string[] { "@DepartmentID" },
+                                                new object[] { 0 });
                 var data = SQLHelper<object>.GetListData(team, 0);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
@@ -1258,7 +1270,7 @@ namespace RERPAPI.Controllers
                    new[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID", "@StatusSenior" },
                    new object[] { "", request.DateStart, request.DateEnd, currentUser.EmployeeID, 0, 0, 0, 0, -1, 0, false, 0, 0, -1 });
                 var approveResultBGD = SQLHelper<dynamic>.ProcedureToList(
-                   "spGetApprovedByApprovedTP_New       ",
+                   "spGetApprovedByApprovedTP_New",
                    new[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID", "@StatusSenior" },
                    new object[] { "", request.DateStart, request.DateEnd, currentUser.EmployeeID, 0, 0, 0, 0, -1, 0, isBGD, 0, 0, -1 });
                 var approveListSenior = SQLHelper<dynamic>.GetListData(approveResultSenior, 0);
@@ -1337,5 +1349,201 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        [HttpPost("get-summary-employee-person")]
+        public IActionResult GetProposeVehicleRepair([FromBody] SummaryPersonal request)
+        {
+            try
+            {
+                request.DateStart = request.DateStart.ToLocalTime().Date;
+                request.DateEnd = request.DateEnd.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
+                string procedureOnLeave = "spGetEmployeeOnLeaveInWeb";
+                string procedureEarlyLate = "spGetEmployeeEarlyLateInWeb";
+                string procedureOverTime = "spGetEmployeeOvertimeInWeb";
+                string procedureBussiness = "spGetEmployeeBussinessInWeb";
+                string procedureOnWFH = "spGetEmployeeWFHInWeb";
+                string procedureENF = "spGetEmployeeNoFingerprintInWeb";
+                string procedureNightShift = "spGetEmployeeNightShift";
+                string[] paramNames = new string[] { "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@IsApproved", "@Keyword" };
+                object[] paramValues = new object[] { request.DateStart, request.DateEnd, request.DepartmentID ?? 0, request.EmployeeID ?? 0, request.IsApproved, request.Keyword ?? "" };
+                string[] paramNamesNightShift = new string[] { "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@IsApproved", "@Keyword", "@PageNumber", "@PageSize" };
+                object[] paramValuesNightShift = new object[] { request.DateStart, request.DateEnd, request.DepartmentID ?? 0, request.EmployeeID ?? 0, request.IsApproved, request.Keyword ?? "", 1, 10000000 };
+                string[] paramNamesEarlyLate = new string[] { "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@IsApproved", "@Keyword", "@Type" };
+                object[] paramValuesEarlyLate = new object[] { request.DateStart, request.DateEnd, request.DepartmentID ?? 0, request.EmployeeID ?? 0, request.IsApproved, request.Keyword ?? "", 0 };
+                string[] paramNameBuissiness = new string[] { "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@IsApproved", "@Keyword", "@Type", "@VehicleID", "@NotCheckIn" };
+                object[] paramValueBuissiness = new object[] { request.DateStart, request.DateEnd, request.DepartmentID ?? 0, request.EmployeeID ?? 0, request.IsApproved, request.Keyword ?? "", 0, 0, -1 };
+
+                //string[] paramNameBuissiness = new string[] { "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@IsApproved", "@Keyword", "@Type", "@NotCheckIn" };
+                //    object[] paramValueBuissiness = new object[] { request.DateStart, request.DateEnd, request.DepartmentID ?? 0, request.EmployeeID ?? 0, request.IsApproved, request.Keyword ?? "", 0, -1};
+
+
+                var dataOnLeave = SQLHelper<object>.ProcedureToList(procedureOnLeave, paramNames, paramValues);
+                var dataEarlyLate = SQLHelper<object>.ProcedureToList(procedureEarlyLate, paramNamesEarlyLate, paramValuesEarlyLate);
+                var dataOverTime = SQLHelper<object>.ProcedureToList(procedureOverTime, paramNamesEarlyLate, paramValuesEarlyLate);
+                var dataBussiness = SQLHelper<object>.ProcedureToList(procedureBussiness, paramNameBuissiness, paramValueBuissiness);
+                var dataWFH = SQLHelper<object>.ProcedureToList(procedureOnWFH, paramNames, paramValues);
+                var dataENF = SQLHelper<object>.ProcedureToList(procedureENF, paramNames, paramValues);
+                var dataNightShiftData = SQLHelper<dynamic>.ProcedureToList(procedureNightShift, paramNamesNightShift, paramValuesNightShift);
+
+                var dataNightShift = SQLHelper<dynamic>.GetListData(dataNightShiftData, 0);
+
+                return Ok(ApiResponseFactory.Success(new { dataOnLeave, dataEarlyLate, dataOverTime, dataBussiness, dataWFH, dataENF, dataNightShift }, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-config-system-hr")]
+        public IActionResult GetConfigSystem()
+        {
+            try
+            {
+                var data = _configSystemRepo.GetAll(x => x.KeyName == "EmployeeOvertime" || x.KeyName == "EmployeeBussiness");
+                return Ok(ApiResponseFactory.Success(new { data }, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+
+
+        }
+
+        [HttpPost("save-config-system-hr")]
+        public IActionResult SaveConfigSystemHR([FromBody] SaveConfigSystemHRRequestDTO request)
+        {
+            try
+            {
+                var configHR = _configSystemRepo.GetByID(request.Id);
+                if (configHR == null)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy cấu hình hệ thống"));
+                }
+                configHR.KeyValue2 = request.KeyValue;
+                _configSystemRepo.Update(configHR);
+                return Ok(ApiResponseFactory.Success(null, "Lưu dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
+
+        #region API của DA Trường
+
+        [HttpGet("get-users-truongda")]
+        public async Task<IActionResult> GetUser(int departmentID, int kpiEmployeeTeam)
+        {
+            try
+            {
+                var param = new { DepartmentID = departmentID, KPIEmployeeTeam = kpiEmployeeTeam };
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetKPIEmployeeByDepartmentID", param);
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-vehicle-booking-management-truongda")]
+        public async Task<IActionResult> GetVehicleBookingManagement(string ngayBD, string? teamID, string? keyword, int? userID, int? departmentID, string? listUserID)
+        {
+            try
+            {
+                var param = new
+                {
+                    DateStart = ngayBD,
+                    DateEnd = ngayBD,
+                    TeamID = teamID ?? "",
+                    Keyword = keyword ?? "",
+                    UserID = userID ?? 0,
+                    DepartmentID = departmentID ?? 0,
+                    ListUserID = listUserID ?? "",
+                };
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetVehicleBookingManagementByDATruong", param);
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
+        [HttpGet("get-user-teamlink-truongda")]
+        public async Task<IActionResult> GetUserTeamLink(string? listUserID)
+        {
+            try
+            {
+                var param = new
+                {
+                    ListUserID = listUserID ?? "",
+                };
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetUserTeamLink_NewByDATruong", param);
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-employee-onleave-truongda")]
+        public async Task<IActionResult> GetEmployeeOnLeave(string ngayBD, string? teamID, string? keyword, int? userID, int? departmentID, string? listUserID)
+        {
+            try
+            {
+                var param = new
+                {
+                    DateStart = ngayBD,
+                    DateEnd = ngayBD,
+                    TeamID = teamID ?? "",
+                    Keyword = keyword ?? "",
+                    UserID = userID ?? 0,
+                    DepartmentID = departmentID ?? 0,
+                    ListUserID = listUserID ?? "",
+                };
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetEmployeeOnLeaveByDATruong", param);
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-dailyreport-technical-truongda")]
+        public async Task<IActionResult> GetDailyReportTechnical(string ngayBD, string ngayKT, string? teamID, string? keyword, int? userID, int? departmentID, string? listUserID)
+        {
+            try
+            {
+                var param = new
+                {
+                    DateStart = ngayBD,
+                    DateEnd = ngayKT,
+                    TeamID = teamID ?? "",
+                    Keyword = keyword ?? "",
+                    UserID = userID ?? 0,
+                    DepartmentID = departmentID ?? 0,
+                    ListUserID = listUserID ?? "",
+                };
+                var data = await SqlDapper<object>.ProcedureToListTAsync("spGetDailyReportTechnicalByThao", param);
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        #endregion
     }
 }

@@ -29,8 +29,10 @@ namespace RERPAPI.Controllers.Project
         ProjectPartlistPriceRequestNoteRepo projectPartlistPriceRequestNoteRepo;
         ProjectPartlistPurchaseRequestRepo _projectPartlistPurchaseRequestRepo;
         UnitCountRepo _unitCountRepo;
+        ProductRTCRepo _productRTCRepo;
 
-        public ProjectPartlistPriceRequestController(ProjectRepo projectRepo, POKHRepo pOKHRepo, ProjectPartlistPriceRequestRepo requestRepo, ProductSaleRepo productSaleRepo, CurrencyRepo currencyRepo, SupplierSaleRepo supplierSaleRepo, ProjectSolutionRepo projectSolutionRepo, EmployeeSendEmailRepo employeeSendEmailRepo, ProjectPartlistPriceRequestTypeRepo projectPartlistPriceRequestTypeRepo, ProjectPartlistPriceRequestNoteRepo projectPartlistPriceRequestNoteRepo, ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo, UnitCountRepo unitCountRepo)
+
+        public ProjectPartlistPriceRequestController(ProjectRepo projectRepo, POKHRepo pOKHRepo, ProjectPartlistPriceRequestRepo requestRepo, ProductSaleRepo productSaleRepo, CurrencyRepo currencyRepo, SupplierSaleRepo supplierSaleRepo, ProjectSolutionRepo projectSolutionRepo, EmployeeSendEmailRepo employeeSendEmailRepo, ProjectPartlistPriceRequestTypeRepo projectPartlistPriceRequestTypeRepo, ProjectPartlistPriceRequestNoteRepo projectPartlistPriceRequestNoteRepo, ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo, UnitCountRepo unitCountRepo, ProductRTCRepo productRTCRepo)
         {
             this.projectRepo = projectRepo;
             this.pOKHRepo = pOKHRepo;
@@ -44,6 +46,7 @@ namespace RERPAPI.Controllers.Project
             this.projectPartlistPriceRequestNoteRepo = projectPartlistPriceRequestNoteRepo;
             _projectPartlistPurchaseRequestRepo = projectPartlistPurchaseRequestRepo;
             _unitCountRepo = unitCountRepo;
+            _productRTCRepo = productRTCRepo;
         }
 
         #endregion
@@ -64,7 +67,7 @@ namespace RERPAPI.Controllers.Project
         /// <param name="size"></param>
         /// <returns></returns>
         [HttpGet("get-all-project-parList-price-request")]
-        [RequiresPermission("N35,N33,N1,N36,N27,N69,N80")]
+        //[RequiresPermission("N35,N33,N1,N36,N27,N69,N80")]
         public async Task<IActionResult> GetAll(DateTime dateStart, DateTime dateEnd, int statusRequest, int projectId, string? keyword, int employeeID,
             int isDeleted, int projectTypeID, int poKHID, int isJobRequirement = -1, int projectPartlistPriceRequestTypeID = -1, int isCommercialProduct = -1, int page = 1, int size = 25)
         {
@@ -175,13 +178,13 @@ namespace RERPAPI.Controllers.Project
         [HttpGet("get-po-code")]
         public async Task<IActionResult> GetPoCode()
         {
-            var dtPOKH = pOKHRepo.GetAll(x => x.IsDeleted == false);
+            var dtPOKH = pOKHRepo.GetAll(x => x.IsDeleted != true);
             return Ok(new { status = 1, data = dtPOKH });
         }
         [HttpGet("get-product-sale")]
         public async Task<IActionResult> GetProductSale()
         {
-            var data = productSaleRepo.GetAll(x => x.IsDeleted == false);
+            var data = productSaleRepo.GetAll(x => x.IsDeleted != true);
 
             return Ok(new
             {
@@ -192,17 +195,16 @@ namespace RERPAPI.Controllers.Project
         [HttpGet("get-currency")]
         public async Task<IActionResult> GetCurrency()
         {
-            List<Currency> currencies = currencyRepo.GetAll(x => x.IsDeleted == false);
+            List<Currency> currencies = currencyRepo.GetAll(x => x.IsDeleted != true);
 
             return Ok(new { status = 1, data = currencies });
         }
         [HttpPost("save-data")]
-        [RequiresPermission("N35,N1")]
         public async Task<IActionResult> SaveData([FromBody] List<ProjectPartlistPriceRequest> projectPartlistPriceRequest)
         {
             try
             {
-                List < ProjectPartlistPriceRequest > data = new List<ProjectPartlistPriceRequest>();
+                List<ProjectPartlistPriceRequest> data = new List<ProjectPartlistPriceRequest>();
                 if (projectPartlistPriceRequest != null && projectPartlistPriceRequest.Any())
                 {
                     foreach (var item in projectPartlistPriceRequest)
@@ -259,13 +261,14 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                var purchaseRequest = supplierSaleRepo.GetAll(x => x.IsDeleted == false)
+                var purchaseRequest = supplierSaleRepo.GetAll(x => x.IsDeleted != true)
                     .OrderBy(x => x.NgayUpdate)
                     .Select(x => new
                     {
                         x.ID,
                         x.CodeNCC,
-                        x.NameNCC
+                        x.NameNCC,
+                        x.NgayUpdate
                     })
                     .ToList();
                 return Ok(ApiResponseFactory.Success(purchaseRequest, ""));
@@ -290,15 +293,16 @@ namespace RERPAPI.Controllers.Project
         }
         [HttpGet("get-price-history-partlist")]
         [RequiresPermission("N38,N1,N79,N13,N82")]
-        public async Task<IActionResult> GetPriceHistoryPartlist(int projectId, int supplierSaleId, int employeeRequestId, string? keyword)
+        public async Task<IActionResult> GetPriceHistoryPartlist(int pageNumber, int pageSize, int projectId, int supplierSaleId, int employeeRequestId, string? keyword)
         {
             try
             {
                 var priceHistoryPartlist = SQLHelper<object>.ProcedureToList("spGetHistoryPricePartlist",
-                new string[] { "@Keyword", "@ProjectID", "@SupplierSaleID", "@EmployeeRequestID" },
-                new object[] { keyword ?? "", projectId, supplierSaleId, employeeRequestId });
-                var data = SQLHelper<object>.GetListData(priceHistoryPartlist, 0);
-                return Ok(ApiResponseFactory.Success(data, ""));
+                new string[] { "@Keyword", "@ProjectID", "@SupplierSaleID", "@EmployeeRequestID", "@PageSize", "@PageNumber" },
+                new object[] { keyword ?? "", projectId, supplierSaleId, employeeRequestId, pageSize, pageNumber });
+                var dt = SQLHelper<object>.GetListData(priceHistoryPartlist, 0);
+                var totalpage = SQLHelper<object>.GetListData(priceHistoryPartlist, 1);
+                return Ok(ApiResponseFactory.Success(new { dt, totalpage }, ""));
             }
             catch (Exception ex)
             {
@@ -624,7 +628,6 @@ namespace RERPAPI.Controllers.Project
         }
 
         [HttpPost("request-buy")]
-        [RequiresPermission("N35,N1")]
         public async Task<IActionResult> RequestBuy([FromBody] RequestBuyDTO request)
         {
             try
@@ -662,20 +665,25 @@ namespace RERPAPI.Controllers.Project
                 {
                     try
                     {
-                        // Kiểm tra xem sản phẩm đã tồn tại trong DB chưa
-                        var existingRequests = _projectPartlistPurchaseRequestRepo
-                            .GetAll(r => r.JobRequirementID == request.JobRequirementID
-                                            && r.ProductCode == item.ProductCode
-                                            && r.IsDeleted == false);
+                        //List<ProjectPartlistPurchaseRequest> existingRequests = new List<ProjectPartlistPurchaseRequest>();
+                        //// Kiểm tra xem sản phẩm đã tồn tại trong DB chưa
+                        //if (request.ProjectPartlistPriceRequestTypeID != 6)
+                        //{
+                        //    existingRequests = _projectPartlistPurchaseRequestRepo
+                        //    .GetAll(r => r.JobRequirementID == request.JobRequirementID
+                        //                    && r.ProductCode == item.ProductCode
+                        //                    && r.IsDeleted == false);
+                        //}
 
-                        ProjectPartlistPurchaseRequest requestModel = existingRequests.FirstOrDefault() ?? new ProjectPartlistPurchaseRequest();
+                        //ProjectPartlistPurchaseRequest requestModel = existingRequests.FirstOrDefault() ?? new ProjectPartlistPurchaseRequest();
+                        ProjectPartlistPurchaseRequest requestModel = new ProjectPartlistPurchaseRequest();
 
                         // Nếu đã approved thì bỏ qua
-                        if (requestModel.EmployeeApproveID > 0)
-                        {
-                            resultFail.Add($"{item.ProductCode} đã được duyệt, không thể yêu cầu mua.");
-                            continue;
-                        }
+                        //if (requestModel.EmployeeApproveID > 0)
+                        //{
+                        //    resultFail.Add($"{item.ProductCode} đã được duyệt, không thể yêu cầu mua.");
+                        //    continue;
+                        //}
                         if (request.ProjectPartlistPriceRequestTypeID == 6)
                         {
                             requestModel.SupplierSaleID = item.SupplierSaleID ?? 0;
@@ -693,15 +701,28 @@ namespace RERPAPI.Controllers.Project
                         if (request.ProjectPartlistPriceRequestTypeID == 4) requestModel.ProjectPartlistPurchaseRequestTypeID = 7;//mkt
                         else if (request.ProjectPartlistPriceRequestTypeID == 3) requestModel.ProjectPartlistPurchaseRequestTypeID = 6;//hr
                         else if (request.ProjectPartlistPriceRequestTypeID == 6) requestModel.ProjectPartlistPurchaseRequestTypeID = 3;//demo
+                        if (requestModel.ProjectPartlistPurchaseRequestTypeID != 3)
+                        {
+                            // Gán ProductSale & Unit
+                            var productSale = productSaleRepo.GetAll(p =>
+                                p.ProductCode == item.ProductCode &&
+                                p.ProductGroupID == (request.IsVPP ? 80 : (request.JobRequirementID > 0 ? 77 : 0)) &&
+                                p.IsDeleted != true);
+                            var productSaleModel = productSale.FirstOrDefault() ?? new ProductSale();
+                            requestModel.ProductSaleID = productSaleModel.ID;
+                            requestModel.ProductGroupID = productSaleModel.ProductGroupID;
 
-                        // Gán ProductSale & Unit
-                        var productSale = productSaleRepo.GetAll(p =>
-                            p.ProductCode == item.ProductCode &&
-                            p.ProductGroupID == (request.IsVPP ? 80 : (request.JobRequirementID > 0 ? 77 : 0)) &&
-                            p.IsDeleted == false);
-                        var productSaleModel = productSale.FirstOrDefault() ?? new ProductSale();
-                        requestModel.ProductSaleID = productSaleModel.ID;
-                        requestModel.ProductGroupID = productSaleModel.ProductGroupID;
+                        }
+                        else
+                        {
+                            var productRTC = _productRTCRepo.GetAll(x => x.ProductCode == item.ProductCode).FirstOrDefault();
+                            if (productRTC == null)
+                            {
+                                return BadRequest(ApiResponseFactory.Fail(null, "Sản phẩm không có trong kho demo!"));
+                            }
+                            requestModel.ProductRTCID = productRTC.ID;
+                            requestModel.ProductGroupRTCID = productRTC.ProductGroupRTCID;
+                        }
 
                         var unit = _unitCountRepo.GetAll(u => u.UnitName == item.UnitName.Trim());
                         requestModel.UnitCountID = unit.FirstOrDefault()?.ID;
@@ -711,16 +732,24 @@ namespace RERPAPI.Controllers.Project
                         if (requestModel.ID <= 0 || request.ProjectPartlistPriceRequestTypeID == 7)
                         {
                             var inserted = await _projectPartlistPurchaseRequestRepo.CreateAsync(requestModel);
+                            bool isRequestBuy = requestModel.ID > 0;
+                            var pricerequest = requestRepo.GetByID(item.ID);
+                            pricerequest.IsRequestBuy = isRequestBuy;
+                            pricerequest.JobRequirementID = request.JobRequirementID;
+                            await requestRepo.UpdateAsync(pricerequest);
+
+
                             if (inserted != null)
                                 resultSuccess.Add(item.ProductCode);
                             else
                                 resultFail.Add(item.ProductCode);
                         }
-                        else
-                        {
-                            await _projectPartlistPurchaseRequestRepo.UpdateAsync(requestModel);
-                            resultSuccess.Add(item.ProductCode);
-                        }
+                        //else
+                        //{
+                        //    if (requestModel.StatusRequest > 2) continue;
+                        //    await _projectPartlistPurchaseRequestRepo.UpdateAsync(requestModel);
+                        //    resultSuccess.Add(item.ProductCode);
+                        //}
                     }
                     catch (Exception ex)
                     {
@@ -902,7 +931,7 @@ namespace RERPAPI.Controllers.Project
         }
 
         [HttpPost("save-request-note")]
-        [RequiresPermission("N35,N1")]
+        //[RequiresPermission("N35,N1")]
         public async Task<IActionResult> SaveDataPriceRequestNote([FromBody] List<ProjectPartlistPriceRequestNote> notes)
         {
             try

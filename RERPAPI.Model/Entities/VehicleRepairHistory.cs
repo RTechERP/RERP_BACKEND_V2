@@ -134,4 +134,10 @@ public partial class VehicleRepairHistory
     public bool? IsDeleted { get; set; }
 
     public DateTime? DateApprove { get; set; }
+
+    public int? WarrantyPeriod { get; set; }
+
+    public int? KmPreviousPeriod { get; set; }
+
+    public int? KmCurrentPeriod { get; set; }
 }

@@ -212,6 +212,9 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
 
                 payment.EmployeeID = _currentUser.EmployeeID;
                 payment.IsUrgent = payment.DeadlinePayment.HasValue;
+                if (payment.DeadlinePayment.HasValue) payment.DeadlinePayment = payment.DeadlinePayment.Value.ToLocalTime();
+                if (payment.DateOrder.HasValue) payment.DateOrder = payment.DateOrder.Value.ToLocalTime();
+                if (payment.DatePayment.HasValue) payment.DatePayment = payment.DatePayment.Value.ToLocalTime();
                 if (payment.IsSpecialOrder == true) payment.TypeOrder = 0;
                 if (payment.ID <= 0)
                 {
@@ -244,6 +247,11 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             {
                 //_currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
 
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                _currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                
+
                 var form = await Request.ReadFormAsync();
 
                 var paymentOrderFiles = JsonConvert.DeserializeObject<List<PaymentOrderFile>>(form["PaymentOrderFile"]);
@@ -264,6 +272,11 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 }
 
                 var order = _paymentRepo.GetByID(paymentOrderID);
+
+                if (_currentUser.EmployeeID != order.EmployeeID)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Bạn không thể bổ sung file vào đề nghị của người khác!"));
+                }
 
                 string pathPattern = $@"NĂM {order.DateOrder.Value.Year}\ĐỀ NGHỊ THANH TOÁN\THÁNG {order.DateOrder.Value.ToString("MM.yyyy")}\{order.DateOrder.Value.ToString("dd.MM.yyyy")}\{order.Code}";
                 string pathUpload = Path.Combine(pathServer, pathPattern);
@@ -357,11 +370,12 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
 
                 DateTime updateDateSupplier = new DateTime(2024, 04, 04);
                 var supplierSales = _supplierSaleRepo.GetAll(x => x.UpdatedDate.Value.Date >= updateDateSupplier && x.IsDeleted != true)
-                                                    .Select(x => new
-                                                    {
-                                                        ID = x.ID,
-                                                        NameNCC = string.IsNullOrEmpty(x.MaSoThue ?? "".Trim()) ? x.NameNCC : $"{x.MaSoThue} - {x.NameNCC}",
-                                                    }).OrderByDescending(x => x.ID).ToList();
+                                                    //.Select(x => new
+                                                    //{
+                                                    //    ID = x.ID,
+                                                    //    NameNCCFull = string.IsNullOrEmpty(x.MaSoThue ?? "".Trim()) ? x.NameNCC : $"{x.MaSoThue} - {x.NameNCC}",
+                                                    //})
+                                                    .OrderByDescending(x => x.ID).ToList();
                 var poNCCs = _poNccRepo.GetAll(x => x.IsDeleted != true);
                 var registerContracts = _registerContractRepo.GetAll(x => x.EmployeeID == _currentUser.EmployeeID && x.IsDeleted != true);
                 var projects = _projectRepo.GetAll(x => x.IsDeleted != true);

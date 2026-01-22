@@ -22,4 +22,6 @@ public partial class AGVBillImportDetailSerialNumber
     public string? CreatedBy { get; set; }
 
     public string? UpdatedBy { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }

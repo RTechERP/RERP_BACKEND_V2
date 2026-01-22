@@ -392,6 +392,7 @@ namespace RERPAPI.Repo
                 throw new Exception($"Error updating entities by attribute: {ex.Message}", ex);
             }
         }
+      
 
         public int UpdateFieldByAttribute<TValue>(Expression<Func<T, bool>> predicate, Dictionary<Expression<Func<T, object>>, TValue> updatedFields)
         {

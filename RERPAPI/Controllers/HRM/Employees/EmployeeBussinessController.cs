@@ -199,7 +199,8 @@ namespace RERPAPI.Controllers.HRM.Employees
                     foreach (var id in listID)
                     {
                         var employeeBussiness = _employeeBussinessRepo.GetByID(id);
-                        if (employeeBussiness != null) await _employeeBussinessRepo.DeleteAsync(id);
+                        employeeBussiness.IsDeleted = true;
+                        if (employeeBussiness != null) await _employeeBussinessRepo.UpdateAsync(employeeBussiness);
 
                     }
                 }
@@ -296,7 +297,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
             }
             catch (Exception ex)
-            {
+            {   
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
@@ -328,7 +329,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 {
                     if (dto.employeeBussinessVehicle.ID <= 0)
                     {
-                      
+                        dto.employeeBussinessVehicle.EmployeeBussinesID = dto.employeeBussiness.ID;
                         await _employeeBussinessVehicleRepo.CreateAsync(dto.employeeBussinessVehicle);
                     }
                     else

@@ -65,7 +65,8 @@ namespace RERPAPI.Controllers
         {
             try
             {
-
+                request.StartDate = request.StartDate.Value.ToLocalTime().Date;
+                request.EndDate = request.EndDate.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
                 // 1. Chuẩn bị tham số
                 string procedureName = "spGetVehicleBookingManagement";
                 string[] paramNames = new string[] { "@StartDate", "@EndDate", "@Keyword", "@Category", "@EmployeeID", "@DriverEmployeeID", "@Status", "@IsCancel" };

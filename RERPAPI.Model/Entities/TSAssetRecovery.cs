@@ -40,8 +40,5 @@ public partial class TSAssetRecovery
 
     public DateTime? DateApprovedHR { get; set; }
 
-    /// <summary>
-    /// 0: Chưa xóa | 1: Đã xóa
-    /// </summary>
     public bool? IsDeleted { get; set; }
 }

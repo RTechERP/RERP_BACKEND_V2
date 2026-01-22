@@ -90,7 +90,7 @@ public partial class ProjectItem
     /// </summary>
     public string? EmployeeRequestName { get; set; }
 
-    public bool? IsDeleted { get; set; }
+    public bool IsDeleted { get; set; }
 
     public string? Location { get; set; }
 }

@@ -39,7 +39,7 @@ namespace RERPAPI.Controllers.Old.Technical
             _billExportTechnicalLogRepo = billExportTechnicalLogRepo;
         }
         [HttpPost("get-bill-export-technical")]
-        [RequiresPermission("N19,N18,N26,N36,N29,N50,N54,N1")]
+        //[RequiresPermission("N19,N18,N26,N36,N29,N50,N54,N1")]
         public ActionResult GetBillExportTechnical([FromBody] BillExportTechnicalRequestParam request)
         {
             try
@@ -672,6 +672,8 @@ namespace RERPAPI.Controllers.Old.Technical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+
         [HttpPost("approve-bill")]
         // [Authorize] // Bắt buộc phải có Token
         [RequiresPermission("N18,N19,N50,N52,N1,N80")]

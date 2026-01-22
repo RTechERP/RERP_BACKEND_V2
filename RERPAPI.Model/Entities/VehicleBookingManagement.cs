@@ -30,6 +30,9 @@ public partial class VehicleBookingManagement
     /// </summary>
     public int? Category { get; set; }
 
+    /// <summary>
+    /// 1: Chờ xếp; 2: Đã xếp; 3: Hủy xếp; 4: Chủ động phương tiện
+    /// </summary>
     public int? Status { get; set; }
 
     public string? CompanyNameArrives { get; set; }
@@ -130,7 +133,7 @@ public partial class VehicleBookingManagement
     /// <summary>
     /// Loại phương tiện (1: Oto, xe máy....; 2: Máy bay)
     /// </summary>
-    public int VehicleType { get; set; }
+    public int? VehicleType { get; set; }
 
     public DateTime? StartTimeActual { get; set; }
 }

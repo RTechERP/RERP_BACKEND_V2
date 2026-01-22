@@ -22,4 +22,6 @@ public partial class ActivityLog
     public int? EmployeeID { get; set; }
 
     public string? ControlName { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }

@@ -1,4 +1,5 @@
 ﻿using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -72,7 +73,7 @@ namespace RERPAPI.Controllers.HRM
             {
                 if (phased.IsDeleted != true)
                 {
-                    var isExistCode = _phasedRepo.GetAll(x => x.Code.Trim().ToUpper() == phased.Code.Trim().ToUpper() && x.IsDeleted != true&& x.ID != phased.ID).Any();
+                    var isExistCode = _phasedRepo.GetAll(x => x.Code.Trim().ToUpper() == phased.Code.Trim().ToUpper() && x.IsDeleted != true && x.ID != phased.ID).Any();
                     if (isExistCode)
                     {
                         return BadRequest(ApiResponseFactory.Fail(null, $"Mã cấp phát [{phased.Code}] đã tồn tại!"));
@@ -98,8 +99,10 @@ namespace RERPAPI.Controllers.HRM
         {
             try
             {
+
                 List<string> employeeFails = new List<string>();
                 int phasedAllocationPersonID = 0;
+                int record = 0;
                 foreach (var item in details)
                 {
                     if (!string.IsNullOrWhiteSpace(item.EmployeeCode))
@@ -111,26 +114,46 @@ namespace RERPAPI.Controllers.HRM
                             continue;
                         }
                         var detail = _phasedDetailRepo.GetAll(x => x.PhasedAllocationPersonID == item.PhasedAllocationPersonID && x.EmployeeID == employee.ID).FirstOrDefault() ?? new PhasedAllocationPersonDetail();
-                        if (detail.ID <= 0) await _phasedDetailRepo.CreateAsync(item);
+                        if (detail.ID <= 0)
+                        {
+                          var result =   await _phasedDetailRepo.CreateAsync(item);
+                            if (result > 0)
+                            {
+                                record++;
+                            }
+                        }
+
                         else
                         {
                             detail.DateReceive = DateTime.Now;
                             detail.UpdatedDate = DateTime.Now;
                             detail.StatusReceive = 1;
-                            await _phasedDetailRepo.UpdateAsync(detail);
+                            var result = await _phasedDetailRepo.UpdateAsync(detail);
+                            if (result > 0)
+                            {
+                                record++;
+                            }
                         }
                     }
                     else
                     {
-                        if (item.ID <= 0)
-                            await _phasedDetailRepo.CreateAsync(item);
-                        else
+                        if (item.ID <= 0) continue;
+
+                        var detail = _phasedDetailRepo.GetByID(item.ID);
+                        if (detail == null) continue;
+
+                        if (item.StatusReceive == 1 && detail.StatusReceive != 1)
                         {
-                            if (item.StatusReceive == 1)
-                            {
-                                item.DateReceive = DateTime.Now;
-                            }
-                            await _phasedDetailRepo.UpdateAsync(item);
+                            detail.DateReceive = DateTime.Now;
+                        }
+                        detail.IsDeleted = item.IsDeleted;
+                        detail.StatusReceive = item.StatusReceive;
+                        detail.UpdatedDate = DateTime.Now;
+
+                        var result = await _phasedDetailRepo.UpdateAsync(detail);
+                        if (result > 0)
+                        {
+                            record++;
                         }
                     }
                     phasedAllocationPersonID = (int)item.PhasedAllocationPersonID;
@@ -143,7 +166,11 @@ namespace RERPAPI.Controllers.HRM
                     if (lstDetail.Count(p => p.StatusReceive == 1) == lstDetail.Count)
                     {
                         allocationPerson.StatusAllocation = 1;
-                        await _phasedRepo.UpdateAsync(allocationPerson);
+                        var result = await _phasedRepo.UpdateAsync(allocationPerson);
+                        if (result > 0)
+                        {
+                            record++;
+                        }
                     }
                 }
 
@@ -153,7 +180,14 @@ namespace RERPAPI.Controllers.HRM
                 {
                     message = string.Join("\n", employeeFails);
                 }
-                return Ok(ApiResponseFactory.Success(details, message));
+                if (record > 0)
+                {
+                    return Ok(ApiResponseFactory.Success(details, message));
+                }
+                else
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Lưu thất bại"));
+                }
             }
             catch (Exception ex)
             {

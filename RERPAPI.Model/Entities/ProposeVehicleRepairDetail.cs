@@ -93,4 +93,6 @@ public partial class ProposeVehicleRepairDetail
     public int? ApproveID { get; set; }
 
     public DateTime? DateApprove { get; set; }
+
+    public int? WarrantyPeriod { get; set; }
 }
