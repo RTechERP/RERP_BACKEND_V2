@@ -840,8 +840,8 @@ namespace RERPAPI.Controllers.Old
                 }
 
                 string pathImage = Path.Combine(pathStaticFile.PathFull, @"2. quy trình. quy định chung\1. quy trình mua hàng\phần mềm misa\ảnh import misa\signnonback");
-                //string picPrepared = Path.Combine(pathImage, $@"{po.Code.Trim()}.png");
-                string picPrepared = Path.Combine(pathImage, $@"R0101.png");
+                string picPrepared = Path.Combine(pathImage, $@"{po.Code.Trim()}.png");
+                //string picPrepared = Path.Combine(pathImage, $@"R0101.png");
                 string picDirector = Path.Combine(pathImage, $"seal{companyText.ToUpper()}.png");
 
                 string logo = Path.Combine(pathImage, $"logo{companyText.ToUpper()}.jpg");
@@ -948,8 +948,8 @@ namespace RERPAPI.Controllers.Old
                 }
 
                 string pathImage = Path.Combine(pathStaticFile.PathFull, @"2. quy trình. quy định chung\1. quy trình mua hàng\phần mềm misa\ảnh import misa\signnonback");
-                string picPrepared = Path.Combine(pathImage, $@"R0101.png");
-                //string picPrepared = Path.Combine(pathImage, $@"{po.Code.Trim()}.png");
+                //string picPrepared = Path.Combine(pathImage, $@"R0101.png");
+                string picPrepared = Path.Combine(pathImage, $@"{po.Code.Trim()}.png");
                 string picDirector = Path.Combine(pathImage, $"seal{companyText.ToUpper()}.png");
 
                 string logo = Path.Combine(pathImage, $"logo{companyText.ToUpper()}.jpg");
