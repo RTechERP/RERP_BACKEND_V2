@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using Azure;
+using Dapper;
 using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -208,7 +209,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     }
                 }
 
-                
+
 
                 payment.EmployeeID = _currentUser.EmployeeID;
                 payment.IsUrgent = payment.DeadlinePayment.HasValue;
@@ -249,8 +250,6 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
 
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 _currentUser = ObjectMapper.GetCurrentUser(claims);
-
-                
 
                 var form = await Request.ReadFormAsync();
 
@@ -363,7 +362,10 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         {
             try
             {
-                _currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
+                //_currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
+
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                _currentUser = ObjectMapper.GetCurrentUser(claims);
 
                 var paymentOrderTypes = _orderTypeRepo.GetAll(x => x.IsDelete != true && x.IsSpecialOrder != true);
                 var approvedTBPs = _approvedRepo.GetAll(x => x.Type == 3 && x.IsDeleted != true);
@@ -383,7 +385,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 var customers = _customerRepo.GetAll(x => x.IsDeleted != true).OrderByDescending(x => x.ID).ToList();
                 var pokhs = _poKHRepo.GetAll(x => x.IsDeleted != true).OrderByDescending(x => x.ID).ToList();
                 var pokhDetails = _pOKHDetailRepo.GetAll(x => x.IsDeleted != true).OrderByDescending(x => x.ID).ToList();
-                
+
                 //var userTeamNames = _employeeTeamSaleRepo.GetAll(x => x.IsDeleted == 0).OrderByDescending(x => x.ID).ToList();
                 //var employeeTeamSales = (from t in userTeamNames
                 //                         join p in userTeamNames on t.ParentID equals p.ID into parentTeams
@@ -434,7 +436,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         {
             try
             {
-                
+
                 var reponse = await _logRepo.Appoved(payment);
                 if (reponse == 1)
                 {
@@ -510,6 +512,47 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 return Ok(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
             }
         }
+
+
+
+        [HttpPost("appoved-khreceive")]
+        //[RequiresPermission("N55")]
+        public async Task<IActionResult> ApprovedKHReceive([FromBody] List<PaymentOrderDTO> payments)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                _currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                int records = 0;
+                foreach (var payment in payments)
+                {
+                    PaymentOrder paymentOrder = _paymentRepo.GetByID(payment.ID);
+                    if (paymentOrder.ID <= 0) continue;
+                    if (paymentOrder.IsSpecialOrder == false) continue;
+                    if (paymentOrder.EmployeeID != _currentUser.EmployeeID && !_currentUser.IsAdmin) continue;
+
+                    PaymentOrderLog log = _logRepo.GetAll(x => x.PaymentOrderID == payment.ID && x.Step == 6 && x.IsDeleted != true).FirstOrDefault() ?? new PaymentOrderLog();
+                    if (log.ID <= 0) continue;
+
+                    log.DateApproved = DateTime.Now;
+                    log.EmployeeApproveActualID = _currentUser.EmployeeID;
+                    log.IsApproved = payment.PaymentOrderLog.IsApproved;
+                    log.ReasonCancel += $"{DateTime.Now.ToString("dd/MM/yyyy")}: " + payment.ReasonCancel + "\n";
+                    log.ContentLog += $"{DateTime.Now.ToString("dd/MM/yyyy")}: {_currentUser.FullName} {payment.Action.ButtonActionText}\n";
+
+                    records += await _logRepo.UpdateAsync(log);
+                }
+                if (records > 0) return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+                else return Ok(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpGet("get-data-from-poncc/{ponccID}")]
         public IActionResult GetDataFromPONCC(int ponccID)
         {
