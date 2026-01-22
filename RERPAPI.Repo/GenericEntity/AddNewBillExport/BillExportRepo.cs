@@ -24,6 +24,8 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
         private readonly BillImportDetailSerialNumberRepo _billImportDetailSerialNumberRepo;
         private readonly HistoryDeleteBillRepo _historyDeleteBillRepo;
         private readonly CurrentUser _currentUser;
+        private readonly UserRepo _userRepo;
+        private readonly SupplierRepo _supplierRepo;
 
         public BillExportRepo(
             CurrentUser currentUser,
@@ -41,7 +43,9 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
             ProductSaleRepo productSaleRepo,
             ProjectRepo projectRepo,
             BillImportDetailSerialNumberRepo billImportDetailSerialNumberRepo,
-            HistoryDeleteBillRepo historyDeleteBillRepo
+            HistoryDeleteBillRepo historyDeleteBillRepo,
+            UserRepo userRepo,
+            SupplierRepo supplierRepo
         ) : base(currentUser)
         {
             _currentUser = currentUser;
@@ -60,6 +64,8 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
             _projectRepo = projectRepo;
             _billImportDetailSerialNumberRepo = billImportDetailSerialNumberRepo;
             _historyDeleteBillRepo = historyDeleteBillRepo;
+            _userRepo = userRepo;
+            _supplierRepo = supplierRepo;
         }
 
         #region Bill Code Generation
@@ -1970,15 +1976,21 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
             BillImport billImport;
 
             // ✅ 2. TH1: Chưa có phiếu nhập → Tạo mới
+            var deliver = _userRepo.GetByID(dto.billExport.SenderID ?? 0);
+            var reciver = _userRepo.GetByID(dto.billExport.UserID ?? 0);
+            var supplier = _supplierRepo.GetByID(dto.billExport.SupplierID ?? 0);
             if (existingImport == null)
             {
                 billImport = new BillImport
                 {
                     BillExportID = billExportId,
                     DeliverID = dto.billExport.SenderID,
+                    Deliver = deliver.FullName,
                     ReciverID = dto.billExport.UserID,
+                    Reciver = reciver.FullName,
                     KhoTypeID = dto.billExport.KhoTypeID,
                     SupplierID = dto.billExport.SupplierID,
+                    Suplier = supplier.SupplierName,
                     GroupID = dto.billExport.GroupID,
                     DateRequestImport = DateTime.Now,
                     BillTypeNew = 4,
@@ -2001,6 +2013,8 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
             {
 
                 existingImport.DeliverID = dto.billExport.SenderID;
+                existingImport.Deliver = deliver.FullName;
+                existingImport.Reciver = reciver.FullName;
                 existingImport.ReciverID = dto.billExport.UserID;
                 existingImport.KhoTypeID = dto.billExport.KhoTypeID;
                 existingImport.SupplierID = dto.billExport.SupplierID;
@@ -2008,6 +2022,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                 existingImport.WarehouseID = dto.billExport.WareHouseTranferID ?? 0;
                 existingImport.CreatDate = dto.billExport.CreatDate;
                 existingImport.UpdatedDate = DateTime.Now;
+                existingImport.Suplier = supplier.SupplierName;
                 existingImport.UpdatedBy = _currentUser.LoginName;
 
                 await _billImportRepo.UpdateAsync(existingImport);
@@ -2071,7 +2086,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                     ProjectName = exportDetail.ProjectName,
                     ProjectCode = exportDetail.ProjectName,
                     SomeBill = "",
-                    Note = exportDetail.Note,
+                    Note = dto.billExport.Code,
                     STT = exportDetail.STT,
                     TotalQty = exportDetail.TotalQty,
                     SerialNumber = exportDetail.SerialNumber,

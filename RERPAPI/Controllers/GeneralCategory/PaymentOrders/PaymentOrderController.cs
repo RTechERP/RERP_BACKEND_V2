@@ -214,7 +214,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 payment.IsUrgent = payment.DeadlinePayment.HasValue;
                 if (payment.DeadlinePayment.HasValue) payment.DeadlinePayment = payment.DeadlinePayment.Value.ToLocalTime();
                 if (payment.DateOrder.HasValue) payment.DateOrder = payment.DateOrder.Value.ToLocalTime();
-                if (payment.DateOrder.HasValue) payment.DateOrder = payment.DateOrder.Value.ToLocalTime();
+                if (payment.DatePayment.HasValue) payment.DatePayment = payment.DatePayment.Value.ToLocalTime();
                 if (payment.IsSpecialOrder == true) payment.TypeOrder = 0;
                 if (payment.ID <= 0)
                 {
