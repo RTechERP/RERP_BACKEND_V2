@@ -20,7 +20,7 @@ namespace RERPAPI.Model.Common
             {
                 var connection = new SqlConnection(connectionString);
                 //var param = new { Keyword = keyword, UserID = _currentUser.ID };
-                var data = await connection.QueryMultipleAsync(procedureName, param, commandType: System.Data.CommandType.StoredProcedure);
+                var data = await connection.QueryMultipleAsync(procedureName, param, commandType: System.Data.CommandType.StoredProcedure,commandTimeout:commandTimeout);
 
                 //var menus = (await data.ReadAsync()).ToList();
                 //var userGroups = (await data.ReadAsync()).ToList();
@@ -41,7 +41,7 @@ namespace RERPAPI.Model.Common
             {
                 var connection = new SqlConnection(connectionString);
                 //var param = new { Keyword = keyword, UserID = _currentUser.ID };
-                var data = await connection.QueryMultipleAsync(procedureName, param, commandType: System.Data.CommandType.StoredProcedure);
+                var data = await connection.QueryMultipleAsync(procedureName, param, commandType: System.Data.CommandType.StoredProcedure, commandTimeout: commandTimeout);
 
                 //var menus = (await data.ReadAsync()).ToList();
                 //var userGroups = (await data.ReadAsync()).ToList();
