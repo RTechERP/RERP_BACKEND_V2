@@ -525,15 +525,34 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 _currentUser = ObjectMapper.GetCurrentUser(claims);
 
                 int records = 0;
+                string message = "";
                 foreach (var payment in payments)
                 {
                     PaymentOrder paymentOrder = _paymentRepo.GetByID(payment.ID);
                     if (paymentOrder.ID <= 0) continue;
-                    if (paymentOrder.IsSpecialOrder == false) continue;
-                    if (paymentOrder.EmployeeID != _currentUser.EmployeeID && !_currentUser.IsAdmin) continue;
+                    if (paymentOrder.IsSpecialOrder == false)
+                    {
+                        message += $"Đề nghị {paymentOrder.Code} không phải ĐNTTĐB\r\n";
+                        continue;
+                    }
+                    if (paymentOrder.EmployeeID != _currentUser.EmployeeID && !_currentUser.IsAdmin)
+                    {
+                        message += $"Bạn không phải người đề nghị của đề nghị {paymentOrder.Code}!\r\n";
+                        continue;
+                    }
 
-                    PaymentOrderLog log = _logRepo.GetAll(x => x.PaymentOrderID == payment.ID && x.Step == 6 && x.IsDeleted != true).FirstOrDefault() ?? new PaymentOrderLog();
+                    var logs = _logRepo.GetAll(x => x.PaymentOrderID == payment.ID && x.IsDeleted != true);
+
+                    PaymentOrderLog log5 = logs.FirstOrDefault(x => x.Step == 5) ?? new PaymentOrderLog();
+                    if (log5.IsApproved != 1)
+                    {
+                        message += $"Đề nghị {paymentOrder.Code} chưa được kế toán thanh toán!\r\n";
+                        continue;
+                    }
+
+                    PaymentOrderLog log = logs.FirstOrDefault(x => x.Step == 6) ?? new PaymentOrderLog();
                     if (log.ID <= 0) continue;
+                    if (log.IsApproved == payment.PaymentOrderLog.IsApproved) continue;
 
                     log.DateApproved = DateTime.Now;
                     log.EmployeeApproveActualID = _currentUser.EmployeeID;
@@ -543,8 +562,8 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
 
                     records += await _logRepo.UpdateAsync(log);
                 }
-                if (records > 0) return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
-                else return Ok(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+                if (records > 0) return Ok(ApiResponseFactory.Success(payments, "Cập nhật thành công!"));
+                else return BadRequest(ApiResponseFactory.Fail(null, message, payments));
 
             }
             catch (Exception ex)
