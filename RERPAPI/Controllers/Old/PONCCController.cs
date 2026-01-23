@@ -1230,7 +1230,7 @@ namespace RERPAPI.Controllers.Old
 
                         sheet.AddPicture(ms)
                              .MoveTo(sheet.Cell(preparedRow, preparedCol))
-                             .Scale(0.8); // zoom 70%
+                             .Scale(0.68); // zoom 70%
                     }
 
                     // 3. Dấu và chữ ký giám đốc
