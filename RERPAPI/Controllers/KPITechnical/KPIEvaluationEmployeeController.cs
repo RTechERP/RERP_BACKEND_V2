@@ -199,6 +199,32 @@ namespace RERPAPI.Controllers.KPITechnical
             }
         }
         #endregion
+        #region  chọn vị trí trong kỳ đánh giá
+        [HttpPost("choice-position")]
+        public async Task<IActionResult> ChoicePosition( int positionID)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                if (positionID == null)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng chọn vị trí của bạn!"));
+                }
+                KPIPositionEmployee newModel = new KPIPositionEmployee()
+                {
+                    KPIPosiotionID = positionID,
+                    EmployeeID = currentUser.EmployeeID,
+                };
+                await _kpiPositionEmployeeRepo.CreateAsync(newModel);
+                return Ok(ApiResponseFactory.Success(null, "Chọn vị trí thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        #endregion
 
 
         #region load dữ liệu cobobox team (kpi)
