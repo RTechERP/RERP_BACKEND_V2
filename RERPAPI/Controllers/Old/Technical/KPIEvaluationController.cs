@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DocumentFormat.OpenXml.Packaging;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -159,6 +160,95 @@ namespace RERPAPI.Controllers
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+        }
+
+        [HttpPost("delete")]
+        public IActionResult Delete(int id)
+        {
+            try
+            {
+                if(id <= 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng chọn mã rule cần xóa"));
+                }
+                var model = _kpiEvaluationRepo.GetByID(id);
+                model.IsDeleted = true;
+                _kpiEvaluationRepo.Update(model);
+                return Ok(ApiResponseFactory.Success("", "Xóa thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-error")]
+        public async Task<IActionResult> GetError(int evaluationId)
+        {
+            try
+            {
+                var param = new
+                {
+                    EvaluationID = evaluationId
+                };
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetErrorByEvaluation", param);
+                return Ok(ApiResponseFactory.Success("", "Xóa thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("save-data")]
+        public async Task<IActionResult> SaveData(SaveKPIEvaluationRequest dto)
+        {
+            try
+            {
+                if(string.IsNullOrWhiteSpace(dto.model.EvaluationCode))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng nhập mã nội dung"));
+                }
+                var list = _kpiEvaluationRepo.GetAll(x => x.EvaluationCode == dto.model.EvaluationCode && x.ID != dto.model.ID && x.DepartmentID == dto.departmentId);
+                if(list.Count > 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Mã nội dung [{dto.model.EvaluationCode.Trim()}] đã được sử dụng!"));
+                }    
+                if(dto.model.ID > 0)
+                {
+                    await _kpiEvaluationRepo.UpdateAsync(dto.model);
+                }
+                else
+                {
+                    await _kpiEvaluationRepo.CreateAsync(dto.model);
+                }
+                var listDel = _kpiEvaluationErrorRepo.GetAll(x => x.KPIEvaluationID == dto.model.ID);
+                foreach(var itemDel in listDel)
+                {
+                    _kpiEvaluationErrorRepo.Delete(itemDel.ID);
+                }    
+                foreach(int id in dto.listErrorIds)
+                {
+                    KPIEvaluationError newChild = new KPIEvaluationError()
+                    {
+                        KPIErrorID = id,
+                        KPIEvaluationID = dto.model.ID
+                    };
+                    await _kpiEvaluationErrorRepo.CreateAsync(newChild);
+                }    
+
+                return Ok(ApiResponseFactory.Success("", "Xóa thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        public class SaveKPIEvaluationRequest
+        {
+            public KPIEvaluation model { get; set; }
+            public List<int> listErrorIds { get; set; }
+            public int departmentId { get; set; }
         }
 
 
