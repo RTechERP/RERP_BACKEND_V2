@@ -125,25 +125,25 @@ namespace RERPAPI.Controllers.KPITechnical
                     .FirstOrDefault() ?? new KPIEvaluationRule(); // 1 là kỹ thuật
 
                 int empPointId = await GetKPIEmployeePointID(rule.ID, employeeID);
-                
+
                 var param = new
                 {
                     KPIEmployeePointID = empPointId
                 };
                 var data1 = await SqlDapper<object>.ProcedureToListAsync("spGetKpiRuleSumarizeTeamNew", param);
-            //var data1 = SQLHelper<object>.ProcedureToList("spGetKpiRuleSumarizeTeamNew"
-            // , new string[] { "@KPIEmployeePointID" }
-            // , new object[] { empPointId });
+                //var data1 = SQLHelper<object>.ProcedureToList("spGetKpiRuleSumarizeTeamNew"
+                // , new string[] { "@KPIEmployeePointID" }
+                // , new object[] { empPointId });
 
-            var param2 = new
-            {
-                KPIEmployeePointID = empPointId,
-                IsPublic = 1
-            };
-            var data2 = await SqlDapper<object>.ProcedureToListAsync("spGetEmployeeRulePointByKPIEmpPointIDNew", param2);
-            //var data2 = SQLHelper<object>.ProcedureToList("spGetEmployeeRulePointByKPIEmpPointIDNew"
-            //  , new string[] { "@KPIEmployeePointID", "@IsPublic" }
-            //  , new object[] { empPointId, 1 });
+                var param2 = new
+                {
+                    KPIEmployeePointID = empPointId,
+                    IsPublic = 1
+                };
+                var data2 = await SqlDapper<object>.ProcedureToListAsync("spGetEmployeeRulePointByKPIEmpPointIDNew", param2);
+                //var data2 = SQLHelper<object>.ProcedureToList("spGetEmployeeRulePointByKPIEmpPointIDNew"
+                //  , new string[] { "@KPIEmployeePointID", "@IsPublic" }
+                //  , new object[] { empPointId, 1 });
 
                 var dtTeam = data1;
                 var dtKpiRule = data2;
@@ -317,7 +317,7 @@ namespace RERPAPI.Controllers.KPITechnical
                     detail.KPIEmployeePointID = empPointID;
                     detail.KPIEvaluationRuleDetailID = item.ID;
                     detail.FirstMonth = item.FirstMonth;
-                    detail.SecondMonth =item.SecondMonth;
+                    detail.SecondMonth = item.SecondMonth;
                     detail.ThirdMonth = item.ThirdMonth;
                     detail.PercentBonus = item.PercentBonus;
                     detail.PercentRemaining = item.PercentRemaining;
@@ -480,7 +480,7 @@ namespace RERPAPI.Controllers.KPITechnical
                                 join pe in kpiPositionEmployees on p.ID equals pe.KPIPosiotionID
                                 select pe)
                             .FirstOrDefault() ?? new KPIPositionEmployee();
-                KPIEvaluationRule rule = _kpiEvaluationRuleRepo.GetAll( x=> x.KPIPositionID == position.KPIPosiotionID  && x.KPISessionID == request.kpiSessionID)
+                KPIEvaluationRule rule = _kpiEvaluationRuleRepo.GetAll(x => x.KPIPositionID == position.KPIPosiotionID && x.KPISessionID == request.kpiSessionID)
                     .FirstOrDefault() ?? new KPIEvaluationRule();
                 int empPointMaster = await GetKPIEmployeePointID(rule.ID, request.employeeID);
 
@@ -494,5 +494,27 @@ namespace RERPAPI.Controllers.KPITechnical
 
         #endregion
 
+        #region LoadPointRuleNew
+        [HttpGet("load-point-rule-new")]
+        public async Task<IActionResult> LoadPointRuleNew(int empPointMaster)
+        {
+            try
+            {
+                var param = new
+                {
+                    KPIEmployeePointID = empPointMaster,
+                };
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetSumarizebyKPIEmpPointIDNew", param);
+                //var data = SQLHelper<object>.ProcedureToList("spGetEmployeeRulePointByKPIEmpPointIDNew"
+                //  , new string[] { "@KPIEmployeePointID", "@IsPublic" }
+                //  , new object[] { kpiEmployeePointID, isPublic });
+                return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        #endregion
     }
 }

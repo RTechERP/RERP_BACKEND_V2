@@ -189,30 +189,38 @@ namespace RERPAPI.Controllers.Old.Technical
                 ws.Cells[20, 7].Value = receiver;
                 ws.Cells[35, 5].Value = deliver;
                 // Ghi chi tiết
-                int insertRow = 27;
-                int templateRow = 28;
+                int startRow = 27; 
+                int templateRow = 27;
+
+                if (details.Count > 1)
+                {
+                    ws.InsertRow(startRow + 1, details.Count - 1);
+                }
 
                 for (int i = 0; i < details.Count; i++)
                 {
+                    int currentRow = startRow + i;
                     var row = details[i];
-                    ws.InsertRow(insertRow, 1);
-                    for (int col = 1; col <= 10; col++)
+                    if (i > 0)
                     {
-                        ws.Cells[insertRow, col].StyleID = ws.Cells[templateRow, col].StyleID;
+                        for (int col = 1; col <= 10; col++)
+                        {
+                            ws.Cells[currentRow, col].StyleID = ws.Cells[templateRow, col].StyleID;
+                        }
                     }
 
-                    ws.Cells[insertRow, 2].Value = i + 1;
-                    ws.Cells[insertRow, 3].Value = row.ProductCode;
-                    ws.Cells[insertRow, 4].Value = row.ProductName;
-                    ws.Cells[insertRow, 5].Value = row.Quantity;
-                    ws.Cells[insertRow, 6].Value = row.UnitName;
-                    ws.Cells[insertRow, 7].Value = row.Maker;
-                    ws.Cells[insertRow, 8].Value = row.WarehouseType;
-                    ws.Cells[insertRow, 9].Value = row.ProductCodeRTC;
-                    ws.Cells[insertRow, 10].Value = row.Note;
-                    insertRow++;
+                    ws.Cells[currentRow, 2].Value = i + 1;
+                    ws.Cells[currentRow, 3].Value = row.ProductCode?.Trim() ?? "";
+                    ws.Cells[currentRow, 4].Value = row.ProductName?.Trim() ?? "";
+                    ws.Cells[currentRow, 5].Value = row.Quantity;
+                    ws.Cells[currentRow, 6].Value = row.UnitName?.Trim() ?? "";
+                    ws.Cells[currentRow, 7].Value = row.Maker?.Trim() ?? "";
+                    ws.Cells[currentRow, 8].Value = row.WarehouseType?.Trim() ?? "";
+                    ws.Cells[currentRow, 9].Value = row.ProductCodeRTC?.Trim() ?? "";
+                    ws.Cells[currentRow, 10].Value = row.Note?.Trim() ?? "";
                 }
-                ws.DeleteRow(templateRow);
+
+                ws.DeleteRow(startRow + details.Count);
 
                 var stream = new MemoryStream();
                 package.SaveAs(stream);
