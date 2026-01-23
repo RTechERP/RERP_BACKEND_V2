@@ -741,7 +741,7 @@ namespace RERPAPI.Controllers
                     SeniorID = request.SeniorID,
                     StatusSenior = request.StatusSenior
                 };
-                var data = await SqlDapper<dynamic>.ProcedureToListAsync("spGetApprovedByApprovedTP_New", param);
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetApprovedByApprovedTP_New", param);
 
                 //var approve = SQLHelper<dynamic>.ProcedureToList(
                 //    "spGetApprovedByApprovedTP_New",
