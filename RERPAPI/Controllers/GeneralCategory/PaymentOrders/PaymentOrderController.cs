@@ -1,6 +1,7 @@
 ﻿using Azure;
 using Dapper;
 using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
@@ -14,6 +15,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders;
+using System.Threading.Tasks;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
@@ -34,6 +36,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         private readonly PaymentOrderFileRepo _fileRepo;
         private readonly PaymentOrderFileBankSlipRepo _fileBankSlipRepo;
         private readonly PaymentOrderPORepo _paymentOrderPORepo;
+        private readonly PaymentOrderApproveFollowRepo _approveFollowRepo;
 
         private readonly PaymentOrderTypeRepo _orderTypeRepo;
         private readonly EmployeeApprovedRepo _approvedRepo;
@@ -62,6 +65,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             PaymentOrderFileRepo fileRepo,
             PaymentOrderFileBankSlipRepo fileBankSlipRepo,
             PaymentOrderPORepo paymentOrderPORepo,
+            PaymentOrderApproveFollowRepo approveFollowRepo,
 
             PaymentOrderTypeRepo orderTypeRepo,
             EmployeeApprovedRepo approvedRepo,
@@ -93,6 +97,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             _fileRepo = fileRepo;
             _fileBankSlipRepo = fileBankSlipRepo;
             _paymentOrderPORepo = paymentOrderPORepo;
+            _approveFollowRepo = approveFollowRepo;
 
             _orderTypeRepo = orderTypeRepo;
             _approvedRepo = approvedRepo;
@@ -115,19 +120,43 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
 
 
         [HttpPost("")]
-        public IActionResult GetAll([FromBody] PaymentOrderParam p)
+        public async Task<IActionResult> GetAll([FromBody] PaymentOrderParam p)
         {
             try
             {
                 p.DateStart = p.DateStart.Value.ToLocalTime().Date;
                 p.DateEnd = p.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
 
-                var data = SQLHelper<object>.ProcedureToList("spGetPaymentOrder",
-                            new string[] { "@PageNumber", "@PageSize", "@TypeOrder", "@PaymentOrderTypeID", "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@Keyword", "@IsIgnoreHR", "@IsApproved", "@IsSpecialOrder", "@ApprovedTBPID", "@Step", "@IsShowTable", "@Statuslog", "@IsDelete" },
-                            new object[] { p.PageNumber, p.PageSize, p.TypeOrder, p.PaymentOrderTypeID, p.DateStart, p.DateEnd, p.DepartmentID, p.EmployeeID, p.Keyword, p.IsIgnoreHR, p.IsApproved, p.IsSpecialOrder, p.ApprovedTBPID, p.Step, p.IsShowTable, p.Statuslog, p.IsDelete });
+                //var data = SQLHelper<object>.ProcedureToList("spGetPaymentOrder_New",
+                //            new string[] { "@PageNumber", "@PageSize", "@TypeOrder", "@PaymentOrderTypeID", "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@Keyword", "@IsIgnoreHR", "@IsApproved", "@IsSpecialOrder", "@ApprovedTBPID", "@Step", "@IsShowTable", "@Statuslog", "@IsDelete" },
+                //            new object[] { p.PageNumber, p.PageSize, p.TypeOrder, p.PaymentOrderTypeID, p.DateStart, p.DateEnd, p.DepartmentID, p.EmployeeID, p.Keyword, p.IsIgnoreHR, p.IsApproved, p.IsSpecialOrder, p.ApprovedTBPID, p.Step, p.IsShowTable, p.Statuslog, p.IsDelete });
 
 
-                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0)));
+                var param = new
+                {
+                    PageNumber = p.PageNumber,
+                    PageSize = p.PageSize,
+                    TypeOrder = p.TypeOrder,
+                    PaymentOrderTypeID = p.PaymentOrderTypeID,
+                    DateStart = p.DateStart,
+                    DateEnd = p.DateEnd,
+                    DepartmentID = p.DepartmentID,
+                    EmployeeID = p.EmployeeID,
+                    Keyword = p.Keyword,
+                    IsIgnoreHR = p.IsIgnoreHR,
+                    IsApproved = p.IsApproved ?? -1,
+                    IsSpecialOrder = p.IsSpecialOrder,
+                    ApprovedTBPID = p.ApprovedTBPID,
+                    Step = p.Step,
+                    IsShowTable = p.IsShowTable,
+                    Statuslog = p.Statuslog,
+                    IsDelete = p.IsDelete,
+                };
+
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetPaymentOrder_New", param);
+
+                //return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0)));
+                return Ok(ApiResponseFactory.Success(data));
             }
             catch (Exception ex)
             {
@@ -404,6 +433,8 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 var approverSales = employees.Where(x => x.DepartmentID == 3 || _roleConfig.EmployeeIDSaleApproveDNTTDBs.Contains(x.ID)).ToList();
                 var approverBGDs = employees.Where(x => x.DepartmentID == 1).ToList();
 
+                var steps = _approveFollowRepo.GetAll(x => x.IsDeleted != true);
+
 
                 var data = new
                 {
@@ -419,7 +450,8 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     pokhDetails,
                     //userTeamNames = employeeTeamSales,
                     approverSales,
-                    approverBGDs
+                    approverBGDs,
+                    steps
                 };
 
                 return Ok(ApiResponseFactory.Success(data));

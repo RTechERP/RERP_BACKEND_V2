@@ -18,21 +18,33 @@ namespace RERPAPI.Repo
             _httpContextAccessor = httpContextAccessor;
         }
 
+        //public async Task<bool> HasPermissionAsync(string userId, string permission)
+        //{
+        //    if (!int.TryParse(userId, out var id)) return false;
+
+        //    var permissions = permission.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries); //NTA B update 051125
+
+        //    foreach (var perm in permissions) //NTA B update 051125
+        //    {
+        //        var hasPerm = await _dbContext.vUserGroupLinks.AnyAsync(p => p.UserID == id && p.Code == perm);
+        //        if (hasPerm) return true;
+        //    }
+
+        //    //var isPermission = await _dbContext.vUserGroupLinks.AnyAsync(p => p.UserID == id && p.Code == permission);
+        //    return false;
+        //}
+
         public async Task<bool> HasPermissionAsync(string userId, string permission)
         {
             if (!int.TryParse(userId, out var id)) return false;
 
-            var permissions = permission.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries); //NTA B update 051125
+            var permissions = permission
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-            foreach (var perm in permissions) //NTA B update 051125
-            {
-                var hasPerm = await _dbContext.vUserGroupLinks.AnyAsync(p => p.UserID == id && p.Code == perm);
-                if (hasPerm) return true;
-            }
-
-            //var isPermission = await _dbContext.vUserGroupLinks.AnyAsync(p => p.UserID == id && p.Code == permission);
-            return false;
+            return await _dbContext.vUserGroupLinks
+                .AnyAsync(p => p.UserID == id && permissions.Contains(p.Code));
         }
+
 
         public Dictionary<string, string> GetClaims()
         {
