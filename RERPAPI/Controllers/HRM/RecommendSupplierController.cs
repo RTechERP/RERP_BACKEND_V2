@@ -42,7 +42,7 @@ namespace RERPAPI.Controllers.HRM
         {
             try
             {
-                var departmentRequired = SQLHelper<dynamic>.ProcedureToList("   ",
+                var departmentRequired = SQLHelper<dynamic>.ProcedureToList("spGetDepartmentRequired",
                 new string[] { "@JobRequirementID", "@EmployeeID", "@DepartmentID", "@Keyword", "@DateStart", "@DateEnd" },
                 new object[] { request.JobRequirementID, request.EmployeeID, request.DepartmentID, request.Keyword, request.DateStart, request.DateEnd }
                 );
