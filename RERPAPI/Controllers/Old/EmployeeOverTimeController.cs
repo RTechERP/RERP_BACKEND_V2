@@ -35,10 +35,12 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                var dateStart = param.dateStart.Date; // 00:00:00
-                var dateEnd = param.dateEnd.Date.AddDays(1).AddSeconds(-1);
+                //var dateStart = param.dateStart.Date; // 00:00:00
+                //var dateEnd = param.dateEnd.Date.AddDays(1).AddSeconds(-1);
+                param.dateStart = param.dateStart.ToLocalTime().Date;
+                param.dateEnd = param.dateEnd.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
                 var arrParamName = new string[] { "@FilterText", "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@DepartmentID", "@IDApprovedTP", "@Status" };
-                var arrParamValue = new object[] { param.keyWord ?? "", param.pageNumber, param.pageSize, dateStart, dateEnd, param.departmentId, param.idApprovedTp, param.status };
+                var arrParamValue = new object[] { param.keyWord ?? "", param.pageNumber, param.pageSize, param.dateStart, param.dateEnd, param.departmentId, param.idApprovedTp, param.status };
                 var employeeOverTime = SQLHelper<object>.ProcedureToList("spGetEmployeeOvertime", arrParamName, arrParamValue);
                 return Ok(new
                 {
