@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
+using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Technical.KPI;
 
 namespace RERPAPI.Controllers.KPITechnical
@@ -18,7 +19,8 @@ namespace RERPAPI.Controllers.KPITechnical
         KPIPositionEmployeeRepo _kpiPositionEmployeeRepo;
         KPIEvaluationRuleRepo _kpiEvaluationRuleRepo;
         KPIExamRepo _kpiExamRepo;
-        public KPIEvaluationFactorScoringDetailsController(KPIEvaluationPointRepo kpiEvaluationPointRepo, KPISessionRepo kpiSessionRepo, KPIEmployeePointRepo kpiEmployeePointRepo, KPIPositionRepo kpiPositionRepo, KPIPositionEmployeeRepo kpiPositionEmployeeRepo, KPIEvaluationRuleRepo kpiEvaluationRuleRepo, KPIExamRepo kpiExamRepo)
+        KPICriterionRepo _kpiCriterionRepo;
+        public KPIEvaluationFactorScoringDetailsController(KPIEvaluationPointRepo kpiEvaluationPointRepo, KPISessionRepo kpiSessionRepo, KPIEmployeePointRepo kpiEmployeePointRepo, KPIPositionRepo kpiPositionRepo, KPIPositionEmployeeRepo kpiPositionEmployeeRepo, KPIEvaluationRuleRepo kpiEvaluationRuleRepo, KPIExamRepo kpiExamRepo, KPICriterionRepo kpiCriterionRepo)
         {
             _kpiEvaluationPointRepo = kpiEvaluationPointRepo;
             _kpiSessionRepo = kpiSessionRepo;
@@ -27,6 +29,7 @@ namespace RERPAPI.Controllers.KPITechnical
             _kpiPositionEmployeeRepo = kpiPositionEmployeeRepo;
             _kpiEvaluationRuleRepo = kpiEvaluationRuleRepo;
             _kpiExamRepo = kpiExamRepo;
+            _kpiCriterionRepo = kpiCriterionRepo;
         }
 
         #region lấy dữ liệu combobox bài đánh giá 
@@ -69,6 +72,41 @@ namespace RERPAPI.Controllers.KPITechnical
                     Status = 0,
                 };
                 var data = await SqlDapper<object>.ProcedureToListAsync("spGetEmployee", param);
+                return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        #endregion
+        #region lấy dữ liệu bảng tiêu chí
+        [HttpGet("kpi-criteria")]
+        public async Task<IActionResult> GetKPICriteria(int criteriaYear, int criteriaQuarter)
+        {
+            try
+            {
+                List<KPICriterion> lstCol = _kpiCriterionRepo.GetAll(x => x.IsDeleted == false && x.KPICriteriaYear == criteriaYear && x.KPICriteriaQuater == criteriaQuarter);
+
+                return Ok(ApiResponseFactory.Success(lstCol, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("kpi-criteria-pivot")]
+        public async Task<IActionResult> GetKPICriteriaPivot(int criteriaYear, int criteriaQuarter)
+        {
+            try
+            {
+                var param = new
+                {
+                    Year = criteriaYear,
+                    Quater = criteriaQuarter,
+                };
+                var data = await SqlDapper<KPICriterion>.ProcedureToListTAsync("spGetKpiCriteriaPivot", param);
+
                 return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
