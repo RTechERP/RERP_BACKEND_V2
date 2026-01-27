@@ -42,7 +42,6 @@ namespace RERPAPI.Controllers.Old
                               .FirstOrDefault(x =>
                                (x.Code == "N1" || x.Code == "N2") &&
                                x.UserID == currentUser.ID);
-
                 int employeeID;
                 if (vUserHR != null)
                 {
@@ -130,7 +129,8 @@ namespace RERPAPI.Controllers.Old
                     var exisingEmployeeEarlyLate = _employeeEarlyLateRepo.GetAll().Where(x => x.EmployeeID == employeeEarlyLate.EmployeeID &&
                                                                                                  x.DateRegister.Value.Date == employeeEarlyLate.DateRegister.Value.Date &&
                                                                                                     x.Type == employeeEarlyLate.Type &&
-                                                                                                     x.ID != employeeEarlyLate.ID);
+                                                                                                     x.ID != employeeEarlyLate.ID
+                                                                                                     &&x.IsDeleted!=true);
                     if (exisingEmployeeEarlyLate.Any())
                     {
                         return BadRequest(new
