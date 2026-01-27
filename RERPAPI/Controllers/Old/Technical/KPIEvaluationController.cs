@@ -1,4 +1,5 @@
 ﻿using DocumentFormat.OpenXml.Packaging;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
@@ -9,6 +10,7 @@ namespace RERPAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class KPIEvaluationController : ControllerBase
 
     {
@@ -192,7 +194,7 @@ namespace RERPAPI.Controllers
                     EvaluationID = evaluationId
                 };
                 var data = await SqlDapper<object>.ProcedureToListAsync("spGetErrorByEvaluation", param);
-                return Ok(ApiResponseFactory.Success("", "Xóa thành công"));
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {

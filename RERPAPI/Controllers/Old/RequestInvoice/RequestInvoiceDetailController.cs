@@ -216,9 +216,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                         var detailToDelete = _requestInvoiceDetailRepo.GetByID(item);
                         if (detailToDelete != null)
                         {
-                            //detailToDelete.IsDeleted = true;
-                            //detailToDelete.UpdatedBy = User.Identity.Name; // Mở comment nếu có phân quyền người dùng
-                            detailToDelete.UpdatedDate = DateTime.Now;
+                            detailToDelete.IsDeleted = true;
                             await _requestInvoiceDetailRepo.UpdateAsync(detailToDelete);
                         }
                     }
