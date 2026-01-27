@@ -213,12 +213,15 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                 {
                     foreach (var item in dto.DeletedDetailIds)
                     {
-                        var detailToDelete = _requestInvoiceDetailRepo.GetByID(item);
-                        if (detailToDelete != null)
+                        if(item > 0)
                         {
-                            detailToDelete.IsDeleted = true;
-                            await _requestInvoiceDetailRepo.UpdateAsync(detailToDelete);
-                        }
+                            var detailToDelete = _requestInvoiceDetailRepo.GetByID(item);
+                            if (detailToDelete != null && detailToDelete.ID > 0)
+                            {
+                                detailToDelete.IsDeleted = true;
+                                await _requestInvoiceDetailRepo.UpdateAsync(detailToDelete);
+                            }
+                        }    
                     }
                 }
                 if (dto.RequestInvoiceDetails.Count > 0)
