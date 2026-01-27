@@ -142,6 +142,7 @@ builder.Services.AddScoped<IssueLogSolutionRepo>();
 builder.Services.AddScoped<IssueSolutionStatusLinkRepo>();
 builder.Services.AddScoped<IssueSolutionStatusRepo>();
 builder.Services.AddScoped<KPIEmployeeTeamLinkRepo>();
+builder.Services.AddScoped<KPIEvaluationFactorRepo>();
 builder.Services.AddScoped<KPIEmployeeTeamRepo>();
 builder.Services.AddScoped<KPIEvaluationRepo>();
 builder.Services.AddScoped<KPIErrorTypeRepo>();
@@ -153,6 +154,8 @@ builder.Services.AddScoped<KPICriteriaDetailRepo>();
 builder.Services.AddScoped<KPICriterionRepo>();
 builder.Services.AddScoped<KPIPositionEmployeeRepo>();
 builder.Services.AddScoped<KPIPositionRepo>();
+builder.Services.AddScoped<KPIExamRepo>();
+builder.Services.AddScoped<KPIExamPositionRepo>();
 builder.Services.AddScoped<LocationRepo>();
 builder.Services.AddScoped<LoginManagerRepo>();
 builder.Services.AddScoped<MainIndexRepo>();
@@ -491,6 +494,7 @@ builder.Services.AddScoped<KPIPositionRepo>();
 builder.Services.AddScoped<KPIEvaluationRuleRepo>();
 builder.Services.AddScoped<KPIPositionEmployeeRepo>();
 builder.Services.AddScoped<KPIEmployeePointDetailRepo>();
+builder.Services.AddScoped<KPIEvaluationRuleDetailRepo>();
 builder.Services.AddScoped<KPIExamRepo>();
 #endregion
 
