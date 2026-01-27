@@ -11,6 +11,10 @@ using RERPAPI.Model.Param.KPITech;
 using RERPAPI.Repo.GenericEntity.Technical.KPI;
 using System.Data;
 using System.IO;
+// --- QUAN TRỌNG: THÊM CÁC DÒNG NÀY ---
+using OfficeOpenXml; // Thư viện EPPlus
+using OfficeOpenXml.Style; // Thư viện Style Excel
+using System.Drawing; // Cần cài NuGet System.Drawing.Common
 
 namespace RERPAPI.Controllers.KPITechnical
 {
@@ -516,5 +520,476 @@ namespace RERPAPI.Controllers.KPITechnical
             }
         }
         #endregion
+
+        //#region Xuất Excel theo Team
+        ///// <summary>
+        ///// Xuất file Excel đánh giá KPI theo nhóm (Team), nén thành file ZIP
+        ///// </summary>
+        ///// <param name="kpiSessionId">ID của kỳ đánh giá</param>
+        ///// <param name="departmentId">ID phòng ban</param>
+        ///// <returns>File ZIP chứa các file Excel theo Team</returns>
+        //[HttpGet("export-excel-by-team")]
+        //public async Task<IActionResult> ExportExcelByTeam(int kpiSessionId, int departmentId)
+        //{
+        //    try
+        //    {
+        //        // 1. Lấy thông tin Kỳ đánh giá
+        //        var paramSession = new { ID = kpiSessionId };
+        //        var dtSession = await SqlDapper<dynamic>.ProcedureToListAsync("spGetKPISessionByID", paramSession);
+
+        //        if (dtSession == null || dtSession.Count == 0)
+        //        {
+        //            return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy kỳ đánh giá!"));
+        //        }
+
+        //        var sessionRow = dtSession.First();
+        //        string year = sessionRow.YearEvaluation?.ToString() ?? DateTime.Now.Year.ToString();
+        //        string quarter = "Q" + (sessionRow.QuarterEvaluation?.ToString() ?? "1");
+
+        //        // 2. Chuẩn bị stream để nén file Zip
+        //        using (var memoryStream = new MemoryStream())
+        //        {
+        //            using (var archive = new System.IO.Compression.ZipArchive(memoryStream, System.IO.Compression.ZipArchiveMode.Create, true))
+        //            {
+        //                // 3. Lấy danh sách bài thi (Exam)
+        //                var paramExam = new { KPISessionID = kpiSessionId, DepartmentID = departmentId };
+        //                var exams = await SqlDapper<dynamic>.ProcedureToListAsync("spGetKPIExamByKPISessionID", paramExam);
+
+        //                if (exams != null && exams.Count > 0)
+        //                {
+        //                    foreach (var examRow in exams)
+        //                    {
+        //                        int kpiExamID = Convert.ToInt32(examRow.ID);
+        //                        string examCode = examRow.ExamCode?.ToString() ?? "Unknown";
+
+        //                        // 4. Lấy danh sách nhân viên đã được đánh giá
+        //                        var paramEmp = new
+        //                        {
+        //                            EvaluationType = 1,
+        //                            DepartmentID = departmentId,
+        //                            Keywords = "",
+        //                            Status = -1,
+        //                            UserTeamID = 0,
+        //                            KPIExamID = kpiExamID
+        //                        };
+        //                        var employees = await SqlDapper<dynamic>.ProcedureToListAsync("spGetAllEmployeeKPIEvaluated", paramEmp);
+
+        //                        if (employees == null || employees.Count == 0) continue;
+
+        //                        // 5. Nhóm nhân viên theo ProjectTypeName (Tên Team)
+        //                        var projectTypeGroups = employees
+        //                            .GroupBy(e => SanitizeFileName(e.ProjectTypeName?.ToString() ?? "ChuaXacDinh"));
+
+        //                        foreach (var group in projectTypeGroups)
+        //                        {
+        //                            string teamName = group.Key;
+
+        //                            foreach (var empRow in group)
+        //                            {
+        //                                int employeeID = Convert.ToInt32(empRow.ID);
+        //                                string employeeName = SanitizeFileName(empRow.FullName?.ToString() ?? "Unknown");
+        //                                string employeeCode = empRow.Code?.ToString() ?? "";
+
+        //                                // 6. Tạo đường dẫn file trong ZIP
+        //                                // Cấu trúc: Year/Quarter/TeamName/DanhGiaKPI_MaNV_TenNV.xlsx
+        //                                string zipEntryPath = $"{year}/{quarter}/{teamName}/DanhGiaKPI_{examCode}_{employeeCode}_{employeeName}.xlsx";
+
+        //                                // 7. Tạo file Excel cho nhân viên
+        //                                byte[] excelBytes = await GenerateKPIExcelBytesAsync(employeeID, kpiExamID, kpiSessionId, departmentId);
+
+        //                                if (excelBytes != null && excelBytes.Length > 0)
+        //                                {
+        //                                    // Thêm file Excel vào ZIP
+        //                                    var zipEntry = archive.CreateEntry(zipEntryPath);
+        //                                    using (var entryStream = zipEntry.Open())
+        //                                    {
+        //                                        await entryStream.WriteAsync(excelBytes, 0, excelBytes.Length);
+        //                                    }
+        //                                }
+        //                            }
+        //                        }
+        //                    }
+        //                }
+        //            }
+
+        //            // 8. Trả về file ZIP cho client
+        //            memoryStream.Position = 0;
+        //            string zipFileName = $"KPI_Export_{year}_{quarter}.zip";
+        //            return File(memoryStream.ToArray(), "application/zip", zipFileName);
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
+
+        ///// <summary>
+        ///// Loại bỏ các ký tự không hợp lệ trong tên file/thư mục
+        ///// </summary>
+        ///// <param name="name">Tên gốc</param>
+        ///// <returns>Tên đã được làm sạch</returns>
+        //[NonAction]
+        //private string SanitizeFileName(string name)
+        //{
+        //    if (string.IsNullOrEmpty(name)) return "Unknown";
+
+        //    // Loại bỏ các ký tự không hợp lệ trong tên file
+        //    foreach (char c in Path.GetInvalidFileNameChars())
+        //    {
+        //        name = name.Replace(c, '_');
+        //    }
+
+        //    // Loại bỏ khoảng trắng thừa
+        //    return name.Trim();
+        //}
+
+        ///// <summary>
+        ///// Tạo file Excel chứa thông tin đánh giá KPI cho một nhân viên
+        ///// </summary>
+        ///// <param name="employeeID">ID nhân viên</param>
+        ///// <param name="kpiExamID">ID bài thi KPI</param>
+        ///// <param name="kpiSessionId">ID kỳ đánh giá</param>
+        ///// <param name="departmentId">ID phòng ban</param>
+        ///// <returns>Mảng byte chứa nội dung file Excel</returns>
+        //[NonAction]
+        //private async Task<byte[]> GenerateKPIExcelBytesAsync(int employeeID, int kpiExamID, int kpiSessionId, int departmentId)
+        //{
+        //    try
+        //    {
+        //        // Khai báo License cho EPPlus (bắt buộc với phiên bản mới)
+        //        OfficeOpenXml.ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
+
+        //        using (var package = new OfficeOpenXml.ExcelPackage())
+        //        {
+        //            #region Sheet 1: Thông tin nhân viên
+
+        //            var infoSheet = package.Workbook.Worksheets.Add("Thông tin");
+
+        //            // Lấy thông tin nhân viên từ database
+        //            var paramEmp = new { ID = employeeID };
+        //            var employee = await SqlDapper<dynamic>.ProcedureToListAsync("spGetEmployeeByID", paramEmp);
+
+        //            if (employee != null && employee.Count > 0)
+        //            {
+        //                var empRow = employee.First();
+
+        //                // Tiêu đề
+        //                infoSheet.Cells["A1"].Value = "THÔNG TIN NHÂN VIÊN";
+        //                infoSheet.Cells["A1"].Style.Font.Bold = true;
+        //                infoSheet.Cells["A1"].Style.Font.Size = 14;
+        //                infoSheet.Cells["A1:B1"].Merge = true;
+
+        //                // Thông tin chi tiết
+        //                infoSheet.Cells["A3"].Value = "Họ và tên:";
+        //                infoSheet.Cells["B3"].Value = empRow.FullName?.ToString();
+        //                infoSheet.Cells["A4"].Value = "Mã nhân viên:";
+        //                infoSheet.Cells["B4"].Value = empRow.Code?.ToString();
+        //                infoSheet.Cells["A5"].Value = "Phòng ban:";
+        //                infoSheet.Cells["B5"].Value = empRow.DepartmentName?.ToString();
+        //                infoSheet.Cells["A6"].Value = "Chức vụ:";
+        //                infoSheet.Cells["B6"].Value = empRow.PositionName?.ToString();
+        //                infoSheet.Cells["A7"].Value = "Email:";
+        //                infoSheet.Cells["B7"].Value = empRow.Email?.ToString();
+
+        //                // Định dạng cột A (label)
+        //                infoSheet.Cells["A3:A7"].Style.Font.Bold = true;
+        //                infoSheet.Cells["A3:A7"].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+        //                infoSheet.Cells["A3:A7"].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+
+        //                // Tự động điều chỉnh độ rộng cột
+        //                infoSheet.Cells["A:B"].AutoFitColumns();
+        //            }
+
+        //            #endregion
+
+        //            #region Sheet 2: KPI Đánh giá kỹ năng
+
+        //            var kpiSkillSheet = package.Workbook.Worksheets.Add("KPI Kỹ năng");
+
+        //            // Lấy dữ liệu KPI Kỹ năng
+        //            var paramSkill = new { EmployeeID = employeeID, EvaluationType = 1, KPIExamID = kpiExamID, IsPulbic = true };
+        //            var dtSkill = await SqlDapper<dynamic>.ProcedureToListAsync("spGetAllKPIEvaluationPoint", paramSkill);
+
+        //            if (dtSkill != null && dtSkill.Count > 0)
+        //            {
+        //                FillKPISheet(kpiSkillSheet, dtSkill, "ĐÁNH GIÁ KPI KỸ NĂNG");
+        //            }
+        //            else
+        //            {
+        //                kpiSkillSheet.Cells["A1"].Value = "Không có dữ liệu";
+        //            }
+
+        //            #endregion
+
+        //            #region Sheet 3: KPI Đánh giá chuyên môn
+
+        //            var kpiProfSheet = package.Workbook.Worksheets.Add("KPI Chuyên môn");
+
+        //            // Lấy dữ liệu KPI Chuyên môn
+        //            var paramProf = new { EmployeeID = employeeID, EvaluationType = 2, KPIExamID = kpiExamID, IsPulbic = true };
+        //            var dtProf = await SqlDapper<dynamic>.ProcedureToListAsync("spGetAllKPIEvaluationPoint", paramProf);
+
+        //            if (dtProf != null && dtProf.Count > 0)
+        //            {
+        //                FillKPISheet(kpiProfSheet, dtProf, "ĐÁNH GIÁ KPI CHUYÊN MÔN");
+        //            }
+        //            else
+        //            {
+        //                kpiProfSheet.Cells["A1"].Value = "Không có dữ liệu";
+        //            }
+
+        //            #endregion
+
+        //            #region Sheet 4: KPI Đánh giá chung
+
+        //            var kpiGenSheet = package.Workbook.Worksheets.Add("KPI Chung");
+
+        //            // Lấy dữ liệu KPI Chung
+        //            var paramGen = new { EmployeeID = employeeID, EvaluationType = 3, KPIExamID = kpiExamID, IsPulbic = true };
+        //            var dtGen = await SqlDapper<dynamic>.ProcedureToListAsync("spGetAllKPIEvaluationPoint", paramGen);
+
+        //            if (dtGen != null && dtGen.Count > 0)
+        //            {
+        //                FillKPISheet(kpiGenSheet, dtGen, "ĐÁNH GIÁ KPI CHUNG");
+        //            }
+        //            else
+        //            {
+        //                kpiGenSheet.Cells["A1"].Value = "Không có dữ liệu";
+        //            }
+
+        //            #endregion
+
+        //            #region Sheet 5: Tổng hợp điểm
+
+        //            var summarySheet = package.Workbook.Worksheets.Add("Tổng hợp");
+
+        //            // Lấy dữ liệu tổng hợp từ Rule
+        //            var kpiPositions = _kpiPositionRepo.GetAll(x => x.KPISessionID == kpiSessionId && x.IsDeleted == false);
+        //            var kpiPositionEmployees = _kpiPositionEmployeeRepo.GetAll(x => x.EmployeeID == employeeID && x.IsDeleted == false);
+
+        //            var empPosition = (from p in kpiPositions
+        //                               join pe in kpiPositionEmployees on p.ID equals pe.KPIPosiotionID
+        //                               select pe).FirstOrDefault() ?? new KPIPositionEmployee();
+
+        //            KPIEvaluationRule rule = _kpiEvaluationRuleRepo.GetAll(x => x.KPISessionID == kpiSessionId && x.KPIPositionID == (empPosition.KPIPosiotionID > 0 ? empPosition.KPIPosiotionID : 1) && x.IsDeleted == false)
+        //                .FirstOrDefault() ?? new KPIEvaluationRule();
+
+        //            int empPointId = await GetKPIEmployeePointID(rule.ID, employeeID);
+
+        //            var paramSummary = new { KPIEmployeePointID = empPointId, IsPublic = 1 };
+        //            var dtSummary = await SqlDapper<dynamic>.ProcedureToListAsync("spGetEmployeeRulePointByKPIEmpPointIDNew", paramSummary);
+
+        //            if (dtSummary != null && dtSummary.Count > 0)
+        //            {
+        //                FillSummarySheet(summarySheet, dtSummary);
+        //            }
+        //            else
+        //            {
+        //                summarySheet.Cells["A1"].Value = "Không có dữ liệu tổng hợp";
+        //            }
+
+        //            #endregion
+
+        //            // Trả về mảng byte của file Excel
+        //            return package.GetAsByteArray();
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        // Ghi log lỗi
+        //        Console.WriteLine($"Lỗi khi tạo Excel cho nhân viên {employeeID}: {ex.Message}");
+        //        return null;
+        //    }
+        //}
+
+        ///// <summary>
+        ///// Điền dữ liệu KPI vào sheet Excel
+        ///// </summary>
+        ///// <param name="sheet">ExcelWorksheet cần điền dữ liệu</param>
+        ///// <param name="data">Danh sách dữ liệu KPI</param>
+        ///// <param name="title">Tiêu đề của sheet</param>
+        //[NonAction]
+        //private void FillKPISheet(OfficeOpenXml.ExcelWorksheet sheet, List<dynamic> data, string title)
+        //{
+        //    int row = 1;
+
+        //    // Tiêu đề sheet
+        //    sheet.Cells[row, 1].Value = title;
+        //    sheet.Cells[row, 1].Style.Font.Bold = true;
+        //    sheet.Cells[row, 1].Style.Font.Size = 14;
+        //    sheet.Cells[row, 1, row, 7].Merge = true;
+        //    sheet.Cells[row, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+        //    row += 2;
+
+        //    // Header của bảng
+        //    string[] headers = new[]
+        //    {
+        //        "STT",
+        //        "Nội dung đánh giá",
+        //        "Hệ số",
+        //        "Điểm chuẩn",
+        //        "Tự đánh giá",
+        //        "TBP đánh giá",
+        //        "BGĐ đánh giá"
+        //    };
+
+        //    for (int i = 0; i < headers.Length; i++)
+        //    {
+        //        var cell = sheet.Cells[row, i + 1];
+        //        cell.Value = headers[i];
+        //        cell.Style.Font.Bold = true;
+        //        cell.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+        //        cell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(68, 114, 196)); // Màu xanh dương
+        //        cell.Style.Font.Color.SetColor(System.Drawing.Color.White);
+        //        cell.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+        //        cell.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+        //        cell.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thin);
+        //    }
+        //    row++;
+
+        //    // Điền dữ liệu
+        //    int stt = 1;
+        //    foreach (var dataRow in data)
+        //    {
+        //        sheet.Cells[row, 1].Value = stt++;
+        //        sheet.Cells[row, 2].Value = dataRow.VerificationToolsContent?.ToString();
+        //        sheet.Cells[row, 3].Value = ConvertToDouble(dataRow.Coefficient);
+        //        sheet.Cells[row, 4].Value = ConvertToDouble(dataRow.StandardPoint);
+        //        sheet.Cells[row, 5].Value = ConvertToDouble(dataRow.EmployeePoint);
+        //        sheet.Cells[row, 6].Value = ConvertToDouble(dataRow.TBPPoint);
+        //        sheet.Cells[row, 7].Value = ConvertToDouble(dataRow.BGDPoint);
+
+        //        // Định dạng border cho từng ô
+        //        for (int col = 1; col <= 7; col++)
+        //        {
+        //            sheet.Cells[row, col].Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thin);
+
+        //            // Căn giữa cho các cột số
+        //            if (col != 2)
+        //            {
+        //                sheet.Cells[row, col].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+        //            }
+        //        }
+
+        //        row++;
+        //    }
+
+        //    // Dòng tổng kết
+        //    sheet.Cells[row, 1].Value = "";
+        //    sheet.Cells[row, 2].Value = "TỔNG CỘNG";
+        //    sheet.Cells[row, 2].Style.Font.Bold = true;
+        //    sheet.Cells[row, 3].Value = "";
+        //    sheet.Cells[row, 4].Value = "";
+
+        //    // Tính tổng điểm
+        //    sheet.Cells[row, 5].Formula = $"SUM(E4:E{row - 1})";
+        //    sheet.Cells[row, 6].Formula = $"SUM(F4:F{row - 1})";
+        //    sheet.Cells[row, 7].Formula = $"SUM(G4:G{row - 1})";
+
+        //    // Định dạng dòng tổng
+        //    for (int col = 1; col <= 7; col++)
+        //    {
+        //        var cell = sheet.Cells[row, col];
+        //        cell.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thin);
+        //        cell.Style.Font.Bold = true;
+        //        cell.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+        //        cell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightYellow);
+        //    }
+
+        //    // Tự động điều chỉnh độ rộng cột
+        //    sheet.Cells.AutoFitColumns();
+
+        //    // Đặt độ rộng cố định cho cột nội dung
+        //    sheet.Column(2).Width = 50;
+        //}
+
+        ///// <summary>
+        ///// Điền dữ liệu tổng hợp vào sheet Excel
+        ///// </summary>
+        ///// <param name="sheet">ExcelWorksheet cần điền dữ liệu</param>
+        ///// <param name="data">Danh sách dữ liệu tổng hợp</param>
+        //[NonAction]
+        //private void FillSummarySheet(OfficeOpenXml.ExcelWorksheet sheet, List<dynamic> data)
+        //{
+        //    int row = 1;
+
+        //    // Tiêu đề
+        //    sheet.Cells[row, 1].Value = "TỔNG HỢP ĐIỂM ĐÁNH GIÁ KPI";
+        //    sheet.Cells[row, 1].Style.Font.Bold = true;
+        //    sheet.Cells[row, 1].Style.Font.Size = 14;
+        //    sheet.Cells[row, 1, row, 7].Merge = true;
+        //    sheet.Cells[row, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+        //    row += 2;
+
+        //    // Header của bảng
+        //    string[] headers = new[]
+        //    {
+        //        "Nội dung đánh giá",
+        //        "Tháng 1",
+        //        "Tháng 2",
+        //        "Tháng 3",
+        //        "% Thưởng",
+        //        "% Còn lại"
+        //    };
+
+        //    for (int i = 0; i < headers.Length; i++)
+        //    {
+        //        var cell = sheet.Cells[row, i + 1];
+        //        cell.Value = headers[i];
+        //        cell.Style.Font.Bold = true;
+        //        cell.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+        //        cell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(0, 176, 80)); // Màu xanh lá
+        //        cell.Style.Font.Color.SetColor(System.Drawing.Color.White);
+        //        cell.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+        //        cell.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+        //        cell.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thin);
+        //    }
+        //    row++;
+
+        //    // Điền dữ liệu
+        //    foreach (var dataRow in data)
+        //    {
+        //        sheet.Cells[row, 1].Value = dataRow.EvaluationContent?.ToString();
+        //        sheet.Cells[row, 2].Value = ConvertToDouble(dataRow.FirstMonth);
+        //        sheet.Cells[row, 3].Value = ConvertToDouble(dataRow.SecondMonth);
+        //        sheet.Cells[row, 4].Value = ConvertToDouble(dataRow.ThirdMonth);
+        //        sheet.Cells[row, 5].Value = ConvertToDouble(dataRow.PercentBonus);
+        //        sheet.Cells[row, 6].Value = ConvertToDouble(dataRow.PercentRemaining);
+
+        //        // Định dạng border và căn giữa
+        //        for (int col = 1; col <= 6; col++)
+        //        {
+        //            sheet.Cells[row, col].Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thin);
+        //            if (col > 1)
+        //            {
+        //                sheet.Cells[row, col].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+        //            }
+        //        }
+
+        //        row++;
+        //    }
+
+        //    // Tự động điều chỉnh độ rộng cột
+        //    sheet.Cells.AutoFitColumns();
+        //}
+
+        ///// <summary>
+        ///// Chuyển đổi giá trị object sang double, trả về 0 nếu không hợp lệ
+        ///// </summary>
+        ///// <param name="value">Giá trị cần chuyển đổi</param>
+        ///// <returns>Giá trị double</returns>
+        //[NonAction]
+        //private double ConvertToDouble(object value)
+        //{
+        //    if (value == null)
+        //        return 0;
+
+        //    if (double.TryParse(value.ToString(), out double result))
+        //        return result;
+
+        //    return 0;
+        //}
+        //#endregion
     }
 }

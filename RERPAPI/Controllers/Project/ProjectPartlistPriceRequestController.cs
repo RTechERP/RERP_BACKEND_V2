@@ -297,7 +297,7 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                var priceHistoryPartlist = SQLHelper<object>.ProcedureToList("spGetHistoryPricePartlist",
+                var priceHistoryPartlist = SQLHelper<object>.ProcedureToList("spGetHistoryPricePartlist_Binh",
                 new string[] { "@Keyword", "@ProjectID", "@SupplierSaleID", "@EmployeeRequestID", "@PageSize", "@PageNumber" },
                 new object[] { keyword ?? "", projectId, supplierSaleId, employeeRequestId, pageSize, pageNumber });
                 var dt = SQLHelper<object>.GetListData(priceHistoryPartlist, 0);
