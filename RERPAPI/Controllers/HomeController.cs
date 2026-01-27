@@ -739,14 +739,14 @@ namespace RERPAPI.Controllers
                 };
                 var data = await SqlDapper<object>.ProcedureToListAsync("spGetApprovedByApprovedTP_New", param);
 
-                var approve = SQLHelper<dynamic>.ProcedureToList(
-                    "spGetApprovedByApprovedTP_New",
-                    new string[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID", "@StatusSenior" },
-                    new object[] { request.FilterText ?? "", request.DateStart, request.DateEnd, request.IDApprovedTP ?? 0, request.Status ?? 0, request.DeleteFlag ?? 0, request.EmployeeID ?? 0, request.TType ?? 0, request.StatusHR ?? 0, request.StatusBGD ?? 0, isBGD, request.UserTeamID ?? 0, request.SeniorID, request.StatusSenior });
+                //var approve = SQLHelper<dynamic>.ProcedureToList(
+                //    "spGetApprovedByApprovedTP_New",
+                //    new string[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID", "@StatusSenior" },
+                //    new object[] { request.FilterText ?? "", request.DateStart, request.DateEnd, request.IDApprovedTP ?? 0, request.Status ?? 0, request.DeleteFlag ?? 0, request.EmployeeID ?? 0, request.TType ?? 0, request.StatusHR ?? 0, request.StatusBGD ?? 0, isBGD, request.UserTeamID ?? 0, request.SeniorID, request.StatusSenior });
 
-                var listData = SQLHelper<dynamic>.GetListData(approve, 0);
-                return Ok(ApiResponseFactory.Success(listData, "Lấy dữ liệu thành công"));
-                //return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
+                //var listData = SQLHelper<dynamic>.GetListData(approve, 0);
+                //return Ok(ApiResponseFactory.Success(listData, "Lấy dữ liệu thành công"));
+                return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
             {
