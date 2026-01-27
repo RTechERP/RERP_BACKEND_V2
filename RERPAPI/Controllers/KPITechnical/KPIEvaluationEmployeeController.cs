@@ -241,7 +241,7 @@ namespace RERPAPI.Controllers.KPITechnical
                     DepartmentID = departmentID,
                 };
 
-               var data = await SqlDapper<object>.ProcedureToListAsync("spGetKPIEvaluationPoint", param);
+               var data = await SqlDapper<object>.ProcedureToListAsync("spGetALLKPIEmployeeTeam", param);
                 //var data = SQLHelper<object>.ProcedureToList("spGetALLKPIEmployeeTeam"
                 // , new string[] { "@YearValue", "@QuarterValue", "@DepartmentID" }
                 // , new object[] { kpiSession.YearEvaluation, kpiSession.QuarterEvaluation, departmentID });

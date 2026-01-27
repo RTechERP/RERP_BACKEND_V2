@@ -1264,73 +1264,135 @@ namespace RERPAPI.Controllers.Project
         }
         #region update stock nhập excel
         [HttpPost("update-stock")]
-        public async Task<IActionResult> UpdateStock([FromBody] PartlistImportRequestDTO request, bool isStock)
+        public async Task<IActionResult> UpdateStock([FromBody] PartlistImportRequestDTO request)
         {
             try
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
 
-                var firms = _firmRepo.GetAll(x => x.FirmType == 1 && x.IsDelete == false);
+                if (request.Items == null || request.Items.Count == 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu!"));
+                }
 
+                // --- 1. Áp dụng diff vào dữ liệu Excel ---
+                if (request.Diffs != null && request.Diffs.Any())
+                {
+                    foreach (var diff in request.Diffs)
+                    {
+                        var row = request.Items.FirstOrDefault(x => x.ProductCode == diff.ProductCode);
+                        if (row == null) continue;
+
+                        if (diff.Choose == "Stock")
+                        {
+                            row.GroupMaterial = diff.GroupMaterialStock;
+                            row.Manufacturer = diff.ManufacturerStock;
+                            row.Unit = diff.UnitStock;
+                        }
+                    }
+                }
+
+                var firms = _firmRepo.GetAll(x => x.FirmType == 1 && x.IsDelete == false);
+                int warehouseId = request.WarehouseID > 0 ? request.WarehouseID : 1; // Ưu tiên WarehouseID từ request
+
+                // --- 2. Xác định danh sách node cha để biết node nào là node lá ---
+                Regex regexStt = new Regex(@"^-?[\d\.]+$");
+                List<string> listParentTT = new List<string>();
                 foreach (var item in request.Items)
                 {
-                    Firm firm = firms.FirstOrDefault(x => x.FirmName.Trim().ToLower() == item.Manufacturer.ToLower()) ?? new Firm();
-                    //if (firm.ID > 0) exp7 = new Expression("FirmID", firm.ID);
+                    if (string.IsNullOrEmpty(item.TT) || !regexStt.IsMatch(item.TT)) continue;
+                    if (!item.TT.Contains(".")) continue;
+                    var root = item.TT.Substring(0, item.TT.LastIndexOf("."));
+                    if (!listParentTT.Contains(root)) listParentTT.Add(root);
+                }
+
+                // --- 3. Validate tồn tại trong kho (CHỈ CHO NODE LÁ) ---
+                foreach (var item in request.Items)
+                {
+                    if (string.IsNullOrEmpty(item.TT) || !regexStt.IsMatch(item.TT)) continue;
+                    bool isLeaf = !listParentTT.Contains(item.TT);
+                    if (!isLeaf) continue; // Chỉ validate node lá
+
+                    var manufacturerLower = (item.Manufacturer ?? "").Trim().ToLower();
+                    Firm firm = firms.FirstOrDefault(x => x.FirmName != null && x.FirmName.Trim().ToLower() == manufacturerLower) ?? new Firm();
+
+                    var productCode = (item.ProductCode ?? "").Trim();
+                    var unit = (item.Unit ?? "").Trim();
 
                     ProductSale productSale = _productSaleRepo.GetAll(x =>
-                        x.ProductCode == item.ProductCode
-                        && x.Unit == item.Unit
-                        && (firm.ID > 0 ? x.FirmID == firm.ID : x.Maker == item.Manufacturer) // ← Đúng cú pháp
+                        x.ProductCode.Trim() == productCode
+                        && x.Unit.Trim() == unit
+                        //&& (firm.ID > 0 ? x.FirmID == firm.ID : x.Maker.Trim() == item.Manufacturer)
+                        && (x.Maker.Trim() == item.Manufacturer)
                         && x.IsDeleted == false
                     ).FirstOrDefault();
                     if (productSale == null || productSale.ID <= 0)
                     {
-                        return BadRequest(ApiResponseFactory.Fail(null, $"Sản phẩm có mã {item.ProductCode} không có trong kho, vui lòng kiểm tra lại"));
+                        return BadRequest(ApiResponseFactory.Fail(null, $"Sản phẩm có số thứ tự [{item.TT}], mã [{item.ProductCode}], hãng [{item.Manufacturer}] không có trong kho, vui lòng kiểm tra lại"));
                     }
 
-                    // kiểm tra tồn kho
+                    // kiểm tra tồn kho (InventoryStock)
                     InventoryStock inventory = _inventoryStockRepo.GetAll(x =>
-                x.ProductSaleID == productSale.ID
-                && x.WarehouseID == 1
-                && x.ProjectTypeID == request.ProjectTypeID
-                && x.EmployeeIDRequest == currentUser.EmployeeID
-            ).FirstOrDefault();
+                        x.ProductSaleID == productSale.ID
+                        && x.WarehouseID == warehouseId
+                        && x.ProjectTypeID == request.ProjectTypeID
+                        && x.IsDeleted == false
+                    ).FirstOrDefault();
 
                     if (inventory != null && inventory.ID > 0)
                     {
+                        // Nếu đã có người khác yêu cầu và không phải Admin thì báo lỗi
                         if (inventory.EmployeeIDRequest != currentUser.EmployeeID && !currentUser.IsAdmin)
                         {
-                            return BadRequest(ApiResponseFactory.Fail(null, $"Vật tư {productSale.ProductCode} đã được yêu cầu bởi nhân viên khác. Vui lòng kiểm tra lại."));
+                            return BadRequest(ApiResponseFactory.Fail(null, $"Vật tư {productSale.ProductCode} (TT: {item.TT}) đã được yêu cầu bởi nhân viên khác. Vui lòng kiểm tra lại."));
                         }
                     }
                 }
+
+                // --- 4. Thực hiện cập nhật ---
+                int currentStt = _projectPartlistRepo.getSTT(request.ProjectPartListVersionID);
+
                 foreach (var item in request.Items)
                 {
-                    Regex regex = new Regex(@"^-?[\d\.]+$");
-                    if (string.IsNullOrEmpty(item.TT) || !regex.IsMatch(item.TT))
+                    if (string.IsNullOrEmpty(item.TT) || !regexStt.IsMatch(item.TT))
                         continue;
-                    ProjectPartList partList = new ProjectPartList();
-                    partList.ProjectID = request.ProjectID;
-                    partList.TT = item.TT;
-                    partList.STT += 1;
-                    // --- 4.1 ParentID ---
+
+                    bool isLeaf = !listParentTT.Contains(item.TT);
+
+                    // Tìm record cũ theo TT
+                    var existingPart = _projectPartlistRepo.GetAll(x =>
+                        x.TT == item.TT
+                        && x.ProjectID == request.ProjectID
+                        && x.ProjectPartListVersionID == request.ProjectPartListVersionID
+                        && x.IsDeleted != true
+                    ).FirstOrDefault();
+
+                    ProjectPartList partList = existingPart ?? new ProjectPartList();
+                    
+                    if (existingPart == null)
+                    {
+                        partList.ProjectID = request.ProjectID;
+                        partList.TT = item.TT;
+                        partList.STT = currentStt++;
+                    }
+
+                    // Cập nhật thông tin chung
+                    partList.ProjectTypeID = request.ProjectTypeID;
+                    partList.ProjectPartListTypeID = request.ProjectTypeID;
+                    partList.ProjectPartListVersionID = request.ProjectPartListVersionID;
                     partList.ParentID = _projectPartlistRepo.GetParentIdImport(
                             item.TT,
                             request.ProjectPartListVersionID,
                             request.IsProblem,
                             request.ProjectTypeID
                         );
-                    // --- 4.2 Gán dữ liệu ---
-                    partList.ProjectTypeID = request.ProjectTypeID;
-                    partList.ProjectPartListTypeID = request.ProjectTypeID;
-                    partList.ProjectPartListVersionID = request.ProjectPartListVersionID;
 
                     partList.GroupMaterial = item.GroupMaterial;
                     partList.ProductCode = item.ProductCode;
                     partList.OrderCode = item.OrderCode;
                     partList.Manufacturer = item.Manufacturer;
-                    partList.SpecialCode = item.SpecialCode; //TN.Binh update
+                    partList.SpecialCode = item.SpecialCode;
                     partList.Model = item.Model;
                     partList.QtyMin = item.QtyMin;
                     partList.QtyFull = item.QtyFull;
@@ -1350,20 +1412,7 @@ namespace RERPAPI.Controllers.Project
                     partList.Quality = item.Quality;
                     partList.Note = item.Note;
                     partList.ReasonProblem = item.ReasonProblem;
-
                     partList.IsProblem = request.IsProblem;
-
-                    // Kiểm tra tồn tại
-                    var existingPart = _projectPartlistRepo.GetAll(x =>
-                        x.TT == item.TT
-                        && x.ProjectID == request.ProjectID
-                        && x.ProjectPartListVersionID == request.ProjectPartListVersionID
-                    ).FirstOrDefault();
-
-                    if (existingPart != null)
-                    {
-                        partList.ID = existingPart.ID; // Lấy ID nếu tồn tại
-                    }
 
                     if (partList.ID > 0)
                     {
@@ -1374,46 +1423,59 @@ namespace RERPAPI.Controllers.Project
                         await _projectPartlistRepo.CreateAsync(partList);
                     }
 
-                    decimal minQuantity = TextUtils.ToDecimal(partList.QtyMin);
-
-                    ProductSale productSale = _productSaleRepo.GetAll(x =>
-                       x.ProductCode == item.ProductCode
-                       && x.Unit == item.Unit
-                       && x.Maker == item.Manufacturer
-                   ).FirstOrDefault();
-
-                    if (productSale.ID <= 0) continue;
-
-                    InventoryStock inventory = _inventoryStockRepo.GetAll(x => x.ProductSaleID == productSale.ID && x.WarehouseID == 1 && x.ProjectTypeID == request.ProjectTypeID).FirstOrDefault() ?? new InventoryStock();
-                    if (inventory.ID <= 0)
+                    // --- CHỈ Cập nhật InventoryStock CHO NODE LÁ ---
+                    if (isLeaf)
                     {
-                        //InventoryModel inventory1 = new InventoryModel();
-                        inventory.ProductSaleID = productSale.ID;
-                        inventory.WarehouseID = 1;
-                        inventory.Quantity = minQuantity;
-                        inventory.EmployeeIDRequest = currentUser.EmployeeID;
-                        inventory.ProjectTypeID = request.ProjectTypeID;
-                        inventory.IsDeleted = false;
-                        //inventory.IsStock = minQuantity > 0;
-                        inventory.Note = "";
-                        await _inventoryStockRepo.CreateAsync(inventory);
-                    }
-                    else
-                    {
-                        inventory.Quantity = minQuantity;
-                        //inventory.IsStock = minQuantity > 0;
-                        await _inventoryStockRepo.UpdateAsync(inventory);
+                        var manufacturerLower = (item.Manufacturer ?? "").Trim().ToLower();
+                        Firm firm = firms.FirstOrDefault(x => x.FirmName != null && x.FirmName.Trim().ToLower() == manufacturerLower) ?? new Firm();
+                        
+                        ProductSale productSale = _productSaleRepo.GetAll(x =>
+                           x.ProductCode == item.ProductCode
+                           && x.Unit == item.Unit
+                           && (firm.ID > 0 ? x.FirmID == firm.ID : x.Maker == item.Manufacturer)
+                           && x.IsDeleted == false
+                        ).FirstOrDefault();
+
+                        if (productSale == null || productSale.ID <= 0) continue;
+
+                        decimal minQuantity = item.QtyMin ?? 0;
+
+                        InventoryStock inventory = _inventoryStockRepo.GetAll(x => 
+                            x.ProductSaleID == productSale.ID 
+                            && x.WarehouseID == warehouseId 
+                            && x.ProjectTypeID == request.ProjectTypeID
+                            && x.IsDeleted == false
+                        ).FirstOrDefault();
+
+                        if (inventory == null)
+                        {
+                            inventory = new InventoryStock();
+                            inventory.ProductSaleID = productSale.ID;
+                            inventory.WarehouseID = warehouseId;
+                            inventory.Quantity = minQuantity;
+                            inventory.EmployeeIDRequest = currentUser.EmployeeID;
+                            inventory.ProjectTypeID = request.ProjectTypeID;
+                            inventory.IsDeleted = false;
+                            inventory.Note = "";
+                            await _inventoryStockRepo.CreateAsync(inventory);
+                        }
+                        else
+                        {
+                            inventory.Quantity = minQuantity;
+                            inventory.EmployeeIDRequest = currentUser.EmployeeID;
+                            await _inventoryStockRepo.UpdateAsync(inventory);
+                        }
                     }
                 }
 
-                return Ok(ApiResponseFactory.Success(null, "Update stock thành công!"));
+                return Ok(ApiResponseFactory.Success(null, "Cập nhật tồn kho thành công!"));
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
+
         #endregion
         /// <summary>
         /// 
