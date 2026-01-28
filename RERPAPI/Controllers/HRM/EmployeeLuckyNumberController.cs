@@ -134,20 +134,25 @@ namespace RERPAPI.Controllers.HRM
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 _currentUser = ObjectMapper.GetCurrentUser(claims);
 
-                int minValue = _configuration.GetValue<int>("MinValue");
-                int maxValue = _configuration.GetValue<int>("MaxValue");
+                var luckyNumbers = _employeeLucky.GetAll(x => x.YearValue == year);
+                //int minValue = _configuration.GetValue<int>("MinValue");
+                int minValue = 1;
+                int maxValue = luckyNumbers.Count();
 
-                EmployeeLuckyNumber luckyNumber = _employeeLucky.GetAll(x => x.EmployeeID == _currentUser.EmployeeID && x.YearValue == year)
-                                                                .FirstOrDefault() ?? new EmployeeLuckyNumber();
+                EmployeeLuckyNumber luckyNumber = luckyNumbers.FirstOrDefault(x => x.EmployeeID == _currentUser.EmployeeID) ?? new EmployeeLuckyNumber();
                 if (luckyNumber.LuckyNumber > 0) //nếu đã có số
                 {
-                    return Ok(ApiResponseFactory.Success(luckyNumber, $"Số may măn của bạn là {luckyNumber.LuckyNumber}."));
+                    return Ok(ApiResponseFactory.Success(new
+                    {
+                        luckyNumber,
+                        minValue,
+                        maxValue
+                    }, $"Số may măn của bạn là {luckyNumber.LuckyNumber}."));
                 }
                 else//Nếu chưa có số thì random 1 số
                 {
                     //Get 1 list số đã có
-                    List<int> luckyNumbers = _employeeLucky.GetAll(x => x.YearValue == year)
-                                                            .Select(x => Convert.ToInt32(x.LuckyNumber)).ToList();
+                    List<int> numbers = luckyNumbers.Select(x => Convert.ToInt32(x.LuckyNumber)).ToList();
 
                     Random random = new Random();
                     int randomNumber = 0;
@@ -155,9 +160,14 @@ namespace RERPAPI.Controllers.HRM
                     {
                         randomNumber = random.Next(minValue, maxValue); // Tạo số ngẫu nhiên từ 1 đến 200
                     }
-                    while (luckyNumbers.Contains(randomNumber)); // Kiểm tra số có trong danh sách không
+                    while (numbers.Contains(randomNumber)); // Kiểm tra số có trong danh sách không
 
-                    return Ok(ApiResponseFactory.Success(randomNumber, $"Số may măn của bạn là {randomNumber}."));
+                    return Ok(ApiResponseFactory.Success(new
+                    {
+                        randomNumber,
+                        minValue,
+                        maxValue
+                    }, $"Số may măn của bạn là {randomNumber}."));
                 }
 
             }
