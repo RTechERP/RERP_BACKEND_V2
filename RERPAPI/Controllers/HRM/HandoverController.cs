@@ -996,9 +996,22 @@ namespace RERPAPI.Controllers
                         // NGƯỜI NHẬN (I)
                         // =========================
                         string receiverName =
-                            rowData.ContainsKey("FullName")
-                                ? rowData["FullName"]?.ToString() ?? ""
-                                : "";
+       rowData.ContainsKey("FullName")
+           ? rowData["FullName"]?.ToString() ?? ""
+           : "";
+
+                        // Ép xuống dòng nếu tên dài (>= 3 từ)
+                        if (!string.IsNullOrWhiteSpace(receiverName))
+                        {
+                            var parts = receiverName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                            if (parts.Length >= 3)
+                            {
+                                receiverName =
+                                    string.Join(" ", parts.Take(2)) +
+                                    Environment.NewLine +
+                                    string.Join(" ", parts.Skip(2));
+                            }
+                        }
 
                         var receiverCell = sheet.Cell(rowIdx, 9);
                         receiverCell.Value = receiverName;
@@ -1010,29 +1023,15 @@ namespace RERPAPI.Controllers
                         receiverRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
                         receiverRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
 
-                        int receiverLines =
-                            (int)Math.Ceiling((double)Math.Max(receiverName.Length, 1) / 20);
+                        // Số dòng thực tế để tính height
+                        int receiverLineCount = receiverName.Split('\n').Length;
 
-                        // =========================
-                        // KÝ NHẬN
-                        // =========================
-                        sheet.Cell(rowIdx, 10).Value =
-                            rowData.ContainsKey("IsSigned") && rowData["IsSigned"] is bool signed
-                                ? (signed ? "✓" : "✗")
-                                : "";
-
-                        // =========================
-                        // 🔥 HEIGHT = MAX CỦA TẤT CẢ TEXT CỘT
-                        // =========================
                         int finalLines = Math.Max(
-                            Math.Max(contentLines, receiverLines),
-                            Math.Max(fileCungLines, fileMemLines)
-                        );
+        Math.Max(contentLines, receiverLineCount),
+        Math.Max(fileCungLines, fileMemLines)
+    );
 
-                        sheet.Row(rowIdx).Height = Math.Max(
-                            18,
-                            finalLines * 18
-                        );
+                        sheet.Row(rowIdx).Height = Math.Max(18, finalLines * 18);
                     }
 
 
@@ -1048,12 +1047,14 @@ namespace RERPAPI.Controllers
                     // =========================
                     int assetStartRow = 23;
                     int maxAssetRows = 5;
+                    int assetRowCount = assetData.Count > 0 ? assetData.Count : maxAssetRows;
                     int templateRow = assetStartRow + maxAssetRows - 1;
+                    int assetEndRow = assetStartRow + assetRowCount+4;
 
                     // Lưu template row
                     var templateRange = sheet.Range(
                         templateRow,
-                        1,
+                        1,  
                         templateRow,
                         sheet.LastColumnUsed().ColumnNumber()
                     );
@@ -1181,7 +1182,8 @@ namespace RERPAPI.Controllers
                     //}
 
                     // III.3 Tài sản kho (rows 38-42+)
-                    int warehouseStartRow = 30;
+                    int warehouseStartRow = assetEndRow + 6; // chừa 1 dòng trống
+               
                     int maxWarehouseRows = 5;
 
                     if (warehouseAssetData.Count > maxWarehouseRows)
@@ -1224,9 +1226,13 @@ namespace RERPAPI.Controllers
                     //}
 
                     // III.4 Tài chính (rows 45-49+)
-                    int financeStartRow = 37;
+                    int warehouseRowCount = warehouseAssetData.Count > 0 ? warehouseAssetData.Count : maxWarehouseRows;
+                    int warehouseEndRow = warehouseStartRow + warehouseRowCount;
+
+                    int financeStartRow = warehouseEndRow + 5;
                     int maxFinanceRows = 5;
 
+                    int currentRow = sheet.LastRowUsed().RowNumber();
                     if (financeData.Count > maxFinanceRows)
                     {
                         sheet.Row(financeStartRow + maxFinanceRows - 1).InsertRowsBelow(financeData.Count - maxFinanceRows);
@@ -1263,7 +1269,7 @@ namespace RERPAPI.Controllers
                     //}
 
                     // III.5 Nhân sự trực thuộc (rows 51-54+)
-                    int subStartRow = 43;
+                    int subStartRow = currentRow + 3;
                     int maxSubRows = 4;
 
                     if (subData.Count > maxSubRows)
@@ -1310,7 +1316,7 @@ namespace RERPAPI.Controllers
                     // =========================
                     // MERGE + ĐIỀN CHỮ KÝ
                     // =========================
-                    int signRow = 61; // dòng chữ ký
+                    int signRow = currentRow + 4;
 
                     if (approveData != null && approveData.Any())
                     {
@@ -1331,31 +1337,21 @@ namespace RERPAPI.Controllers
                             if (string.IsNullOrWhiteSpace(employeeName))
                                 continue;
 
-                            IXLRange signRange = null;
+                            var approveMap = new Dictionary<int, IXLRange>
+{
+    { 1, sheet.Range(signRow, 2, signRow, 3) },   // Người bàn giao
+    { 2, sheet.Range(signRow, 5, signRow, 7) },   // Trưởng bộ phận
+    { 3, sheet.Range(signRow, 9, signRow, 10) }   // Trưởng phòng HCNS
+};
 
-                            switch (approveLevel)
-                            {
-                                case 0:
-                                    // NGƯỜI BÀN GIAO → B:C
-                                    signRange = sheet.Range(signRow, 2, signRow, 3);
-                                    break;
+                            if (!approveMap.ContainsKey(approveLevel)) continue;
 
-                                case 1:
-                                    // TRƯỞNG BỘ PHẬN → E:F:G
-                                    signRange = sheet.Range(signRow, 5, signRow, 7);
-                                    break;
-
-                                case 2:
-                                    // TRƯỞNG PHÒNG HCNS → I:J
-                                    signRange = sheet.Range(signRow, 9, signRow, 10);
-                                    break;
-                            }
+                            var signRange = approveMap[approveLevel];
 
                             if (signRange == null) continue;
 
                             // ===== MERGE =====
-                            if (!signRange.IsMerged())
-                                signRange.Merge();
+                  
 
                             // ===== GÁN GIÁ TRỊ =====
                             signRange.Value = employeeName;
