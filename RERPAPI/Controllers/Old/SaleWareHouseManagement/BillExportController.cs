@@ -1,5 +1,9 @@
 ﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Office2010.Excel;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using RERPAPI.Attributes;
@@ -1237,5 +1241,149 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+    
+
+        [HttpGet("export-excel-file")]
+        public async Task<IActionResult> ExportFile(int billExportId)
+        {
+            try
+            {
+                string rootPath = _configuration.GetValue<string>("PathTemplate");
+                string templatePath = Path.Combine(rootPath, "ExportExcel", "PhieuXuatSale.xlsx");
+                var paramMaster = new { ID = billExportId };
+                var paramDetail = new { BillID = billExportId };
+
+                var masters = await SqlDapper<object>.ProcedureToListTAsync("spGetExportExcel", paramMaster);
+                //var master = _billexportRepo.GetByID(billExportId);
+                if (masters == null || masters.Count() <= 0) return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu phiếu"));
+
+                dynamic master = masters[0];
+
+                var details = await SqlDapper<object>.ProcedureToListTAsync("spGetBillExportDetail", paramDetail);
+
+                if (details == null || details.Count() <=0) return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu chi tiết phiếu"));
+
+                using (var workbook = new XLWorkbook(templatePath))
+                {
+                    var sheet = workbook.Worksheet(1);
+
+                    #region ===== MAP MASTER =====
+                    sheet.Cell(6, 1).Value = "Số: " + master.Code ?? "";
+
+                    string fullname = master.FullName ?? "";
+                    int userId;
+                    int.TryParse(master.UserID?.ToString(), out userId);
+
+                    int departmentid = _employeeRepo.GetByID(userId)?.DepartmentID ?? 0;
+                    string department = _departmentRepo.GetByID(departmentid)?.Name ?? "";
+
+                    sheet.Cell(9, 4).Value = string.IsNullOrWhiteSpace(department)
+                        ? fullname
+                        : $"{fullname} / phòng {department}";
+
+                    string customer = master.CustomerName;
+                    string supplier = master.NameNCC;
+
+                    sheet.Cell(10, 3).Value = "'- khách hàng/nhà cung cấp:";
+                    sheet.Cell(10, 4).Value = string.IsNullOrWhiteSpace(customer) ? supplier : customer;
+
+                    sheet.Cell(11, 4).Value = master.Address ?? "";
+                    sheet.Cell(12, 4).Value = master.AddressStock ?? "";
+
+                    sheet.Cell(25, 3).Value = master.FullNameSender ?? "";
+                    sheet.Cell(25, 9).Value = fullname;
+
+                    if (master.WarehouseID == 1)
+                        sheet.Cell(15, 10).Value = "loại vật tư";
+
+                    DateTime d;
+                    if (DateTime.TryParse(GetString(master, "CreatDate"), out d))
+                    {
+                        sheet.Cell(18, 9).Value = $"ngày {d:dd} tháng {d:MM} năm {d:yyyy}";
+                    }
+                    #endregion
+
+                    #region ===== MAP DETAIL =====
+                    int excelRow = 15;
+                    int stt = 1;
+
+                    for (int i = details.Count - 1; i >= 0; i--)
+                    {
+                        dynamic dt = details[i];
+                        sheet.Cell(excelRow, 1).Value = stt++;
+                        sheet.Cell(excelRow, 2).Value = dt.ProductNewCode ?? "";
+                        sheet.Cell(excelRow, 3).Value = dt.ProductCode ?? "";
+                        sheet.Cell(excelRow, 4).Value = dt.ProductFullName ?? "";
+                        sheet.Cell(excelRow, 5).Value = dt.ProductName ?? "";
+                        sheet.Cell(excelRow, 6).Value = dt.Unit ?? "";
+                        sheet.Cell(excelRow, 7).Value = dt.Qty ?? 0;
+                        sheet.Cell(excelRow, 8).Value = dt.ProjectCodeText ?? "";
+                        sheet.Cell(excelRow, 9).Value = dt.ProjectNameText ?? "";
+                        sheet.Cell(excelRow, 10).Value = dt.ProductTypeText ?? "";
+                        sheet.Cell(excelRow, 11).Value = dt.UnitPricePOKH ?? 0;
+                        sheet.Cell(excelRow, 12).Value = dt.UnitPricePurchase ?? 0;
+
+                        sheet.Cell(excelRow, 13).Value =
+                            master.WarehouseID == 1
+                                ? dt.ProductGroupName ?? ""
+                                : dt.WarehouseName ?? "";
+
+                        string note = dt.Note ?? "";
+                        sheet.Cell(excelRow, 14).Value = note.StartsWith("=") ? $"'{note}" : note;
+
+                        sheet.Row(excelRow).InsertRowsBelow(1);
+                        excelRow++;
+                    }
+                    sheet.Row(excelRow).Delete();
+                    //sheet.Row(excelRow + details.Count - 1).Delete();
+                    //sheet.Row(excelRow + details.Count - 1).Delete();
+                    #endregion
+
+                    #region ===== QR CODE =====
+                    string qrText = master.Code ?? "";
+
+                    var writer = new BarcodeWriterPixelData
+                    {
+                        Format = BarcodeFormat.QR_CODE,
+                        Options = new EncodingOptions { Width = 250, Height = 250 }
+                    };
+
+                    var pixelData = writer.Write(qrText);
+                    using var bmp = new Bitmap(pixelData.Width, pixelData.Height, PixelFormat.Format32bppRgb);
+
+                    var data = bmp.LockBits(
+                        new Rectangle(0, 0, bmp.Width, bmp.Height),
+                        ImageLockMode.WriteOnly,
+                        bmp.PixelFormat);
+
+                    System.Runtime.InteropServices.Marshal.Copy(pixelData.Pixels, 0, data.Scan0, pixelData.Pixels.Length);
+                    bmp.UnlockBits(data);
+
+                    string tempPath = Path.GetTempFileName();
+                    bmp.Save(tempPath, ImageFormat.Png);
+
+                    sheet.AddPicture(tempPath)
+                         .MoveTo(sheet.Cell(1, 10), 20, 10)
+                         .WithSize(120, 120);
+                    #endregion
+                    using (var stream = new MemoryStream())
+                    {
+                        workbook.SaveAs(stream);
+                        stream.Position = 0;
+
+                        string fileName = $"Phiếu xuất.xlsx";
+                        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+                    }
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
+
+
 }
