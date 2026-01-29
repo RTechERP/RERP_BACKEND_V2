@@ -556,20 +556,23 @@ namespace RERPAPI.Controllers.Project
                     }
 
                     // Update Partlist
-                    var partlists = _projectPartlistRepo.GetAll(x => x.ProductCode == item.ProductCode).ToList();
-                    if (partlists != null && partlists.Any())
+                    if (item.ProductCode != null && item.ProductCode != "")
                     {
-                        foreach (var pl in partlists)
+                        var partlists = _projectPartlistRepo.GetAll(x => x.ProductCode == item.ProductCode).ToList();
+                        if (partlists != null && partlists.Any())
                         {
-                            pl.Unit = item.Unit;
-                            pl.GroupMaterial = item.GroupMaterial;
-                            pl.Manufacturer = item.Manufacturer; // Sửa: items thay vì item
-                            await _projectPartlistRepo.UpdateAsync(pl);
+                            foreach (var pl in partlists)
+                            {
+                                pl.Unit = item.Unit;
+                                pl.GroupMaterial = item.GroupMaterial;
+                                pl.Manufacturer = item.Manufacturer; // Sửa: items thay vì item
+                                await _projectPartlistRepo.UpdateAsync(pl);
+                            }
                         }
                     }
-                }
+                    }
 
-                return Ok(ApiResponseFactory.Success(null, $"{approvedText} thành công!")); // Sửa message động
+                    return Ok(ApiResponseFactory.Success(null, $"{approvedText} thành công!")); // Sửa message động
             }
             catch (Exception ex)
             {
