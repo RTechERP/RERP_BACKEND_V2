@@ -50,7 +50,7 @@ namespace RERPAPI.Controllers.HRM
 
                 var HCNSProPosal = SQLHelper<dynamic>.ProcedureToList("spGetHCNSProposal",
                     new string[] { "@JobRequirementID", "@DepartmentRequiredID", "@DateStart", "@DateEnd" },
-                    new object[] { request.JobRequirementID, request.DepartmentRequiredID ,request.DateStart, request.DateEnd }
+                    new object[] { request.JobRequirementID, request.DepartmentRequiredID, request.DateStart, request.DateEnd }
                 );
 
                 var departmentRequiredData = SQLHelper<dynamic>.GetListData(departmentRequired, 0);
@@ -86,7 +86,7 @@ namespace RERPAPI.Controllers.HRM
 
                 int JobRequirementID = dto.JobRequirementID;
                 int DepartmentRequiredID = 0;
-        
+
 
                 // Phòng ban yêu cầu
                 if (dto.DepartmentRequired != null)
@@ -136,7 +136,7 @@ namespace RERPAPI.Controllers.HRM
                     {
 
                         itemProposal.JobRequirementID = JobRequirementID;
-                       
+
                         var existing = _hcnsproposals.GetAll()
                 .FirstOrDefault(x => x.JobRequirementID == JobRequirementID && x.ID == itemProposal.ID);
 
@@ -152,7 +152,7 @@ namespace RERPAPI.Controllers.HRM
                         else
                             itemProposal.DepartmentRequiredID = existing.DepartmentRequiredID;
                         _hcnsproposals.Update(itemProposal);
-     
+
                     }
                 }
                 if (dto.DeletedCommend.Count > 0)
@@ -214,161 +214,169 @@ namespace RERPAPI.Controllers.HRM
                 if (!masterData.Any())
                     return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu để xuất!"));
 
-                    using (var workbook = new ClosedXML.Excel.XLWorkbook(templatePath))
-                    {
-                        var sheet = workbook.Worksheet(1);
-                        int startRow = 4;
-                        int initialPlaceholders = 3;
+                using (var workbook = new ClosedXML.Excel.XLWorkbook(templatePath))
+                {
+                    var sheet = workbook.Worksheet(1);
+                    int startRow = 4;
+                    int initialPlaceholders = 3;
 
-                        // Điền Số yêu cầu vào Header (Tìm cell chứa chuỗi "Số yêu cầu")
-                        var firstMaster = masterData.FirstOrDefault();
-                        if (firstMaster != null)
+                    // Điền Số yêu cầu vào Header (Tìm cell chứa chuỗi "Số yêu cầu")
+                    var firstMaster = masterData.FirstOrDefault();
+                    if (firstMaster != null)
+                    {
+                        var fm = (IDictionary<string, object>)firstMaster;
+                        string requestNumber = GetVal(fm, "NumberRequest");
+
+                        var targetCell = sheet.CellsUsed(c => c.Address.RowNumber <= 10)
+                                              .FirstOrDefault(c => c.Value.ToString().Contains("Số yêu cầu"));
+                        if (targetCell != null)
                         {
-                            var fm = (IDictionary<string, object>)firstMaster;
-                            string requestNumber = GetVal(fm, "NumberRequest");
-                            
-                            var targetCell = sheet.CellsUsed(c => c.Address.RowNumber <= 10)
-                                                  .FirstOrDefault(c => c.Value.ToString().Contains("Số yêu cầu"));
-                            if (targetCell != null)
+                            string existingVal = targetCell.Value.ToString();
+                            // Nếu trong cell đã có text "Số yêu cầu:", ta chỉ thay thế phần sau dấu :
+                            if (existingVal.Contains("Số yêu cầu:"))
                             {
-                                string existingVal = targetCell.Value.ToString();
-                                // Nếu trong cell đã có text "Số yêu cầu:", ta chỉ thay thế phần sau dấu :
-                                if (existingVal.Contains("Số yêu cầu:"))
+                                int colonIndex = existingVal.IndexOf("Số yêu cầu:");
+                                string prefix = existingVal.Substring(0, colonIndex + "Số yêu cầu:".Length);
+                                targetCell.Value = $"{prefix} {requestNumber}";
+                            }
+                            else
+                            {
+                                // Ngược lại thì append vào cuối
+                                targetCell.Value = $"{existingVal} {requestNumber}";
+                            }
+                        }
+                        else
+                        {
+                            // Nếu không tìm thấy cell có sẵn, điền tạm vào dòng 2
+                            sheet.Cell(2, 1).Value = $"Số yêu cầu: {requestNumber}";
+                        }
+                    }
+
+                    // Tính tổng số dòng cần thiết
+                    int totalRowsNeeded = 0;
+                    foreach (var master in masterData)
+                    {
+                        var prods = detailData.Where(d => d.DepartmentRequiredID == master.ID).ToList();
+                        if (!prods.Any())
+                        {
+                            totalRowsNeeded += 1;
+                        }
+                        else
+                        {
+                            totalRowsNeeded += prods.Count;
+                        }
+                    }
+
+                    // Xóa các merge cũ trong vùng template để tránh lỗi khi merge lại theo data thực tế
+                    sheet.Range(startRow, 1, startRow + initialPlaceholders - 1, 20).Unmerge();
+
+                    // Điều chỉnh số dòng template
+                    if (totalRowsNeeded > initialPlaceholders)
+                    {
+                        // Chèn thêm dòng sau dòng cuối cùng của placeholder (dòng 6)
+                        sheet.Row(startRow + initialPlaceholders - 1).InsertRowsBelow(totalRowsNeeded - initialPlaceholders);
+                    }
+                    else if (totalRowsNeeded < initialPlaceholders && totalRowsNeeded > 0)
+                    {
+                        // Xóa các dòng thừa
+                        sheet.Rows(startRow + totalRowsNeeded, startRow + initialPlaceholders - 1).Delete();
+                    }
+
+                    int currentRow = startRow;
+                    int stt = 1;
+
+                    foreach (var master in masterData)
+                    {
+                        var productGroups = detailData.Where(d => d.DepartmentRequiredID == master.ID).GroupBy(d => d.ProductName).ToList();
+                        int currentStt = stt++;
+
+                        if (!productGroups.Any())
+                        {
+                            // Nếu không có detail, vẫn xuất dòng master
+                            FillMasterRow(sheet, currentRow, master, currentStt, "");
+                            currentRow++;
+                            continue;
+                        }
+
+                        foreach (var group in productGroups)
+                        {
+                            string productName = group.Key?.ToString() ?? "";
+                            var suppliers = group.ToList();
+                            int supplierCount = suppliers.Count;
+
+                            // Merge master cells A-K if there are multiple suppliers for one product
+                            if (supplierCount > 1)
+                            {
+                                for (int col = 1; col <= 11; col++) // A to K
                                 {
-                                    int colonIndex = existingVal.IndexOf("Số yêu cầu:");
-                                    string prefix = existingVal.Substring(0, colonIndex + "Số yêu cầu:".Length);
-                                    targetCell.Value = $"{prefix} {requestNumber}";
+                                    sheet.Range(currentRow, col, currentRow + supplierCount - 1, col).Merge();
+                                }
+                                // Tên sản phẩm column L
+                                sheet.Range(currentRow, 12, currentRow + supplierCount - 1, 12).Merge();
+                            }
+
+                            // Fill Master Info (A-K)
+                            FillMasterRow(sheet, currentRow, master, currentStt, productName);
+
+                            // Fill Suppliers (M-T)
+                            foreach (var supplier in suppliers)
+                            {
+                                var sRow = (IDictionary<string, object>)supplier;
+                                sheet.Cell(currentRow, 13).Value = GetVal(sRow, "Supplier"); // M
+                                sheet.Cell(currentRow, 14).Value = GetVal(sRow, "Contact");  // N
+
+                                // Đơn giá (O)
+                                string unitPriceStr = GetVal(sRow, "UnitPrice");
+                                if (double.TryParse(unitPriceStr, out double unitPrice))
+                                    sheet.Cell(currentRow, 15).SetValue(unitPrice);
+                                else
+                                    sheet.Cell(currentRow, 15).Value = unitPriceStr;
+
+                                // Thành tiền (P)
+
+                                string totalAmountStr = GetVal(sRow, "TotalAmount");
+                                var cellTotal = sheet.Cell(currentRow, 16);
+
+                                if (double.TryParse(totalAmountStr, out double totalAmount))
+                                {
+                                    cellTotal.Value = totalAmount;
+                                    cellTotal.Style.NumberFormat.Format = "#,##0"; // 10.000
                                 }
                                 else
                                 {
-                                    // Ngược lại thì append vào cuối
-                                    targetCell.Value = $"{existingVal} {requestNumber}";
+                                    cellTotal.Value = totalAmountStr;
                                 }
-                            }
-                            else
-                            {
-                                // Nếu không tìm thấy cell có sẵn, điền tạm vào dòng 2
-                                sheet.Cell(2, 1).Value = $"Số yêu cầu: {requestNumber}";
-                            }
-                        }
 
-                        // Tính tổng số dòng cần thiết
-                        int totalRowsNeeded = 0;
-                        foreach (var master in masterData)
-                        {
-                            var prods = detailData.Where(d => d.DepartmentRequiredID == master.ID).ToList();
-                            if (!prods.Any())
-                            {
-                                totalRowsNeeded += 1;
-                            }
-                            else
-                            {
-                                totalRowsNeeded += prods.Count;
-                            }
-                        }
+                                sheet.Cell(currentRow, 17).Value = GetVal(sRow, "Note"); // Q
 
-                        // Xóa các merge cũ trong vùng template để tránh lỗi khi merge lại theo data thực tế
-                        sheet.Range(startRow, 1, startRow + initialPlaceholders - 1, 20).Unmerge();
+                                string isApproved = GetVal(sRow, "IsApproved");
+                                var cellApprove = sheet.Cell(currentRow, 18); // R: Duyệt
+                                var cellDisapprove = sheet.Cell(currentRow, 19); // S: Không duyệt
 
-                        // Điều chỉnh số dòng template
-                        if (totalRowsNeeded > initialPlaceholders)
-                        {
-                            // Chèn thêm dòng sau dòng cuối cùng của placeholder (dòng 6)
-                            sheet.Row(startRow + initialPlaceholders - 1).InsertRowsBelow(totalRowsNeeded - initialPlaceholders);
-                        }
-                        else if (totalRowsNeeded < initialPlaceholders && totalRowsNeeded > 0)
-                        {
-                            // Xóa các dòng thừa
-                            sheet.Rows(startRow + totalRowsNeeded, startRow + initialPlaceholders - 1).Delete();
-                        }
+                                if (isApproved == "1")
+                                {
+                                    cellApprove.Value = "v";
+                                    cellApprove.Style.Font.FontColor = XLColor.Green;
+                                    cellApprove.Style.Font.Bold = true;
+                                }
+                                else if (isApproved == "2")
+                                {
+                                    cellDisapprove.Value = "v";
+                                    cellDisapprove.Style.Font.FontColor = XLColor.Red;
+                                    cellDisapprove.Style.Font.Bold = true;
+                                }
 
-                        int currentRow = startRow;
-                        int stt = 1;
+                                cellApprove.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                                cellDisapprove.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
-                        foreach (var master in masterData)
-                        {
-                            var productGroups = detailData.Where(d => d.DepartmentRequiredID == master.ID).GroupBy(d => d.ProductName).ToList();
-                            int currentStt = stt++;
+                                sheet.Cell(currentRow, 20).Value = GetVal(sRow, "DisapprovalReason"); // T
 
-                            if (!productGroups.Any())
-                            {
-                                // Nếu không có detail, vẫn xuất dòng master
-                                FillMasterRow(sheet, currentRow, master, currentStt, "");
+                                sheet.Row(currentRow).Style.Alignment.WrapText = true;
+                                sheet.Row(currentRow).Style.Alignment.Vertical = ClosedXML.Excel.XLAlignmentVerticalValues.Center;
                                 currentRow++;
-                                continue;
-                            }
-
-                            foreach (var group in productGroups)
-                            {
-                                string productName = group.Key?.ToString() ?? "";
-                                var suppliers = group.ToList();
-                                int supplierCount = suppliers.Count;
-
-                                // Merge master cells A-K if there are multiple suppliers for one product
-                                if (supplierCount > 1)
-                                {
-                                    for (int col = 1; col <= 11; col++) // A to K
-                                    {
-                                        sheet.Range(currentRow, col, currentRow + supplierCount - 1, col).Merge();
-                                    }
-                                    // Tên sản phẩm column L
-                                    sheet.Range(currentRow, 12, currentRow + supplierCount - 1, 12).Merge();
-                                }
-
-                                // Fill Master Info (A-K)
-                                FillMasterRow(sheet, currentRow, master, currentStt, productName);
-
-                                // Fill Suppliers (M-T)
-                                foreach (var supplier in suppliers)
-                                {
-                                    var sRow = (IDictionary<string, object>)supplier;
-                                    sheet.Cell(currentRow, 13).Value = GetVal(sRow, "Supplier"); // M
-                                    sheet.Cell(currentRow, 14).Value = GetVal(sRow, "Contact");  // N
-
-                                    // Đơn giá (O)
-                                    string unitPriceStr = GetVal(sRow, "UnitPrice");
-                                    if (double.TryParse(unitPriceStr, out double unitPrice))
-                                        sheet.Cell(currentRow, 15).SetValue(unitPrice);
-                                    else
-                                        sheet.Cell(currentRow, 15).Value = unitPriceStr;
-
-                                    // Thành tiền (P)
-                                    string totalAmountStr = GetVal(sRow, "TotalAmount");
-                                    if (double.TryParse(totalAmountStr, out double totalAmount))
-                                        sheet.Cell(currentRow, 16).SetValue(totalAmount);
-                                    else
-                                        sheet.Cell(currentRow, 16).Value = totalAmountStr;
-
-                                    sheet.Cell(currentRow, 17).Value = GetVal(sRow, "Note"); // Q
-                                    
-                                    string isApproved = GetVal(sRow, "IsApproved");
-                                    var cellApprove = sheet.Cell(currentRow, 18); // R: Duyệt
-                                    var cellDisapprove = sheet.Cell(currentRow, 19); // S: Không duyệt
-
-                                    if (isApproved == "1") 
-                                    {
-                                        cellApprove.Value = "v";
-                                        cellApprove.Style.Font.FontColor = XLColor.Green;
-                                        cellApprove.Style.Font.Bold = true;
-                                    }
-                                    else if (isApproved == "2") 
-                                    {
-                                        cellDisapprove.Value = "v";
-                                        cellDisapprove.Style.Font.FontColor = XLColor.Red;
-                                        cellDisapprove.Style.Font.Bold = true;
-                                    }
-
-                                    cellApprove.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                                    cellDisapprove.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                                    
-                                    sheet.Cell(currentRow, 20).Value = GetVal(sRow, "DisapprovalReason"); // T
-
-                                    sheet.Row(currentRow).Style.Alignment.WrapText = true;
-                                    sheet.Row(currentRow).Style.Alignment.Vertical = ClosedXML.Excel.XLAlignmentVerticalValues.Center;
-                                    currentRow++;
-                                }
                             }
                         }
+                    }
 
                     // Apply borders
                     var dataRange = sheet.Range(startRow, 1, currentRow - 1, 20);
