@@ -29,6 +29,7 @@ namespace RERPAPI.Controllers.Old
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                currentUser.ID = 1672;
 
                 DateTime dateStart = new DateTime(1900, 01, 01);
                 DateTime dateEnd = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 23, 59, 59);
@@ -38,8 +39,9 @@ namespace RERPAPI.Controllers.Old
                                 new object[] { dateStart, dateEnd, status, WAREHOUSE_ID, currentUser.ID });
 
                 var data = SQLHelper<object>.GetListData(historys, 0);
-                var borrows = data.Where(x => x.Status == 7).ToList();
-                var returns = data.Where(x => x.Status == 4).ToList();
+                var borrows = data.Where(x => x.Status == 7 && x.ModulaLocationDetailID > 0).ToList();
+                var returns = data.Where(x => x.Status == 4 && x.ModulaLocationDetailID > 0).ToList();
+                //var a = data.Where(x => x.Status == 1 && x.ModulaLocationDetailID > 0).ToList();
                 return Ok(ApiResponseFactory.Success(new { borrows, returns }, ""));
             }
             catch (Exception ex)
@@ -176,7 +178,7 @@ namespace RERPAPI.Controllers.Old
                     return BadRequest(ApiResponseFactory.Fail(null, "Sản phẩm đã được mượn.\nVui lòng báo với admin."));
                 }
 
-                if(dt1.Count() <=0) return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy sản phẩm cần mượn.\nVui lòng báo với admin."));
+                if (dt1.Count() <= 0) return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy sản phẩm cần mượn.\nVui lòng báo với admin."));
 
                 return Ok(ApiResponseFactory.Success(dt1, ""));
             }
