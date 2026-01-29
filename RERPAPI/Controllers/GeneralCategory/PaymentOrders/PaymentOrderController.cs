@@ -249,6 +249,13 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 if (payment.ID <= 0)
                 {
                     payment.Code = _paymentRepo.GetCode(payment);
+
+                    var existCodes = _paymentRepo.GetAll(x => x.Code == payment.Code && x.IsDelete != true);
+                    if (existCodes.Count() > 0)
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, $"Số đề nghị [{payment.Code}] đã tồn tại!"));
+                    }
+
                     await _paymentRepo.CreateAsync(payment);
                 }
                 else await _paymentRepo.UpdateAsync(payment);

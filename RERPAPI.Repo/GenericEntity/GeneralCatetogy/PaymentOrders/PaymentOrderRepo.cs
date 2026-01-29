@@ -76,7 +76,7 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                 //stt++;
                 //string sttText = stt.ToString().PadLeft(4, '0');
                 string prefixCode = PREFIX_CODES[TextUtils.ToInt32(payment.TypeOrder)];
-                code = prefixCode + payment.DateOrder.Value.ToString("yyyyMMddHHmmss");
+                code = prefixCode + payment.DateOrder.Value.ToString("yyMMddHHmmss");
                 return code;
             }
             catch (Exception ex)
