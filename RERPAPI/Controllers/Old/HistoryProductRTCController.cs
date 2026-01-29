@@ -29,7 +29,7 @@ namespace RERPAPI.Controllers.Old
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
-                currentUser.ID = 1672;
+                //currentUser.ID = 1533;
 
                 DateTime dateStart = new DateTime(1900, 01, 01);
                 DateTime dateEnd = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 23, 59, 59);
