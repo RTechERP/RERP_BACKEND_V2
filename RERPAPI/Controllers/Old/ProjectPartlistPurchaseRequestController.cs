@@ -270,13 +270,13 @@ namespace RERPAPI.Controllers.Old
                     new string[] {
                 "@DateStart", "@DateEnd", "@StatusRequest", "@ProjectID", "@Keyword",
                 "@SupplierSaleID", "@IsApprovedTBP", "@IsApprovedBGD", "@IsCommercialProduct",
-                "@POKHID", "@ProductRTCID", "@IsDeleted", "@IsTechBought", "@IsJobRequirement", "@IsRequestApproved"
+                "@POKHID", "@ProductRTCID", "@IsDeleted", "@IsTechBought", "@IsJobRequirement", "@IsRequestApproved","@EmployeeID"
 
                     },
                     new object[] {
                 filter.DateStart, filter.DateEnd, filter.StatusRequest, filter.ProjectID, filter.Keyword,
                 filter.SupplierSaleID, filter.IsApprovedTBP, filter.IsApprovedBGD, filter.IsCommercialProduct,
-                filter.POKHID, filter.ProductRTCID, filter.IsDeleted, filter.IsTechBought, filter.IsJobRequirement, filter.IsRequestApproved
+                filter.POKHID, filter.ProductRTCID, filter.IsDeleted, filter.IsTechBought, filter.IsJobRequirement, filter.IsRequestApproved,filter.EmployeeID??0
 
                     });
 
@@ -694,7 +694,7 @@ namespace RERPAPI.Controllers.Old
                     var existingRequest = _repo.GetByID(item.ID);
                     if (existingRequest == null) continue;
 
-                    if (existingRequest.EmployeeIDRequestApproved != currentUser.EmployeeID
+                    if (existingRequest.EmployeeID != currentUser.EmployeeID
                         && !currentUser.IsAdmin) continue;
 
                     if (item.ID <= 0) continue;
@@ -745,14 +745,26 @@ namespace RERPAPI.Controllers.Old
                 if (existingRequest.EmployeeIDRequestApproved != currentUser.EmployeeID
                     && !currentUser.IsAdmin) return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền sửa của nhân viên khác!")); ;
 
-                if ((bool)requestBought.IsTechBought)
+                if (requestBought.IsTechBought == true)
                 {
-                    var requestBoughts = _repo.GetAll(x => x.ProjectPartListID == requestBought.ProjectPartListID);
-                    if (requestBoughts.Count > 0)
+                    var requestBoughts = _repo.GetAll(x =>
+                        x.ProjectPartListID == requestBought.ProjectPartListID &&
+                        x.IsDeleted != true
+                    ).ToList();
+
+                    if (requestBoughts.Any())
                     {
                         foreach (var item in requestBoughts)
                         {
                             item.IsDeleted = true;
+                        }
+
+                        // ✅ Có thể batch update nếu repo hỗ trợ
+                        //await _repo.UpdateRangeAsync(requestBoughts);
+
+                        // Hoặc nếu không có UpdateRangeAsync:
+                        foreach (var item in requestBoughts)
+                        {
                             await _repo.UpdateAsync(item);
                         }
                     }

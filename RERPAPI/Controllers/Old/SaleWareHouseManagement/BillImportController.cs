@@ -333,6 +333,19 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpPost("check-bill-code")]
+        public IActionResult CheckBillCode([FromBody] string billCode)
+        {
+            try
+            {
+                bool isExists = _billImportRepo.GetAll(b => b.BillImportCode.ToLower().Trim() == billCode.ToLower().Trim() && b.IsDeleted == false).Any();
+                return Ok(ApiResponseFactory.Success(isExists));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [HttpPost("approve-document-import")]
         public IActionResult ApproveDocumentImport([FromBody] List<BillImportApproveDocumentDTO> models, [FromQuery] bool status)
         {
@@ -490,6 +503,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     }
                     var inventoryList = _inventoryRepo.GetAll();
 
+                    var createdProductIds = new HashSet<(int? WarehouseID, int? ProductID)>();
+
                     var groupedQuantities = dto.billImportDetail.GroupBy(d => d.ProductID)
                         .ToDictionary(g => g.Key, g => g.Sum(d => d.Qty));
 
@@ -569,8 +584,13 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         await UpdateInventoryProject(detail, dto.billImport);
 
                         // Kiểm tra tồn kho
-                        bool exists = inventoryList.Any(x => x.WarehouseID == dto.billImport.WarehouseID && x.ProductSaleID == detail.ProductID);
-                        if (!exists)
+                        var inventoryKey = (dto.billImport.WarehouseID, detail.ProductID);
+                        bool existsInDb = inventoryList.Any(x =>
+                            x.WarehouseID == dto.billImport.WarehouseID &&
+                            x.ProductSaleID == detail.ProductID);
+                        bool existsInCurrentBatch = createdProductIds.Contains(inventoryKey);
+
+                        if (!existsInDb && !existsInCurrentBatch)
                         {
                             Inventory inventory = new Inventory
                             {
@@ -582,7 +602,24 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                                 Export = 0
                             };
                             await _inventoryRepo.CreateAsync(inventory);
+
+                            createdProductIds.Add(inventoryKey);
                         }
+
+                        //bool exists = inventoryList.Any(x => x.WarehouseID == dto.billImport.WarehouseID && x.ProductSaleID == detail.ProductID);
+                        //if (!exists)
+                        //{
+                        //    Inventory inventory = new Inventory
+                        //    {
+                        //        WarehouseID = dto.billImport.WarehouseID,
+                        //        ProductSaleID = detail.ProductID,
+                        //        TotalQuantityFirst = 0,
+                        //        TotalQuantityLast = 0,
+                        //        Import = 0,
+                        //        Export = 0
+                        //    };
+                        //    await _inventoryRepo.CreateAsync(inventory);
+                        //}
                         //List<InvoiceDTO> lst = listInvoice.Where(p => p.IdMapping == detail.STT).ToList();
                         //// await _invoiceLinkRepo.DeleteByAttributeAsync("BillImportDetailID", (int?)detail.ID);
                         //var invoicelink = _invoiceLinkRepo.GetAll(p => p.BillImportDetailID == detail.ID).FirstOrDefault();

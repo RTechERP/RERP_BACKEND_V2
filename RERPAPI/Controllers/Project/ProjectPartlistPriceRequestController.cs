@@ -110,7 +110,7 @@ namespace RERPAPI.Controllers.Project
             });
         }
         [HttpGet("get-partlist")]
-        public IActionResult GetProjectPartlists(
+        public async Task<IActionResult> GetProjectPartlists(
            DateTime dateStart, DateTime dateEnd, int statusRequest, int projectId, string? keyword, int employeeID,
             int isDeleted, int projectTypeID, int poKHID, int isJobRequirement = -1, int projectPartlistPriceRequestTypeID = -1, int isCommercialProduct = -1)
         {
@@ -119,6 +119,25 @@ namespace RERPAPI.Controllers.Project
                 dateStart = dateStart.Date;
                 dateEnd = dateEnd.Date.AddHours(23).AddMinutes(59).AddSeconds(59);
 
+                //var dtPriceRequestResults =
+                //    await SqlDapper<object>.ProcedureToListAsync(
+                //        "spGetProjectPartlistPriceRequest_New",
+                //        new
+                //        {
+                //            DateStart = dateStart,
+                //            DateEnd = dateEnd,
+                //            StatusRequest = statusRequest,
+                //            ProjectID = projectId,
+                //            Keyword = keyword ?? "",
+                //            IsDeleted = isDeleted,
+                //            ProjectTypeID = projectTypeID,
+                //            IsCommercialProduct = isCommercialProduct,
+                //            POKHID = poKHID,
+                //            IsJobRequirement = isJobRequirement,
+                //            ProjectPartlistPriceRequestTypeID = projectPartlistPriceRequestTypeID,
+                //            EmployeeID = employeeID
+                //        }
+                //    );
                 var dtPriceRequestResults = SQLHelper<dynamic>.ProcedureToList(
                     "spGetProjectPartlistPriceRequest_New",
                     new string[] {
@@ -134,6 +153,7 @@ namespace RERPAPI.Controllers.Project
                 );
 
                 var dt = SQLHelper<dynamic>.GetListData(dtPriceRequestResults, 0);
+                //return Ok(ApiResponseFactory.Success(dtPriceRequestResults, ""));
                 return Ok(ApiResponseFactory.Success(dt, ""));
             }
             catch (Exception ex)
@@ -698,6 +718,7 @@ namespace RERPAPI.Controllers.Project
                         requestModel.DateReturnExpected = deadline;
                         requestModel.Quantity = item.Quantity;
                         requestModel.NoteHR = item.NoteHR;
+                        requestModel.Maker = item.Maker;
                         if (request.ProjectPartlistPriceRequestTypeID == 4) requestModel.ProjectPartlistPurchaseRequestTypeID = 7;//mkt
                         else if (request.ProjectPartlistPriceRequestTypeID == 3) requestModel.ProjectPartlistPurchaseRequestTypeID = 6;//hr
                         else if (request.ProjectPartlistPriceRequestTypeID == 6) requestModel.ProjectPartlistPurchaseRequestTypeID = 3;//demo
