@@ -426,7 +426,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost("approved")]
-        [RequiresPermission("N58,N1")]
+        //[RequiresPermission("N58,N1")]
         public async Task<IActionResult> Approved([FromBody] List<ProjectPartlistPurchaseRequestDTO> data, bool status, bool type)
         {
             try
