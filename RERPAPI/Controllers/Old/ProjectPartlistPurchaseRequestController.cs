@@ -742,7 +742,7 @@ namespace RERPAPI.Controllers.Old
                 var existingRequest = _repo.GetByID(requestBought.ID);
                 if (existingRequest == null) return BadRequest(ApiResponseFactory.Fail(null, "Lỗi dữ liệu không tìm thấy")); ;
 
-                if (existingRequest.EmployeeIDRequestApproved != currentUser.EmployeeID
+                if (existingRequest.EmployeeID != currentUser.EmployeeID
                     && !currentUser.IsAdmin) return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền sửa của nhân viên khác!")); ;
 
                 if (requestBought.IsTechBought == true)
@@ -757,12 +757,8 @@ namespace RERPAPI.Controllers.Old
                         foreach (var item in requestBoughts)
                         {
                             item.IsDeleted = true;
+
                         }
-
-                        // ✅ Có thể batch update nếu repo hỗ trợ
-                        //await _repo.UpdateRangeAsync(requestBoughts);
-
-                        // Hoặc nếu không có UpdateRangeAsync:
                         foreach (var item in requestBoughts)
                         {
                             await _repo.UpdateAsync(item);
