@@ -105,7 +105,7 @@ namespace RERPAPI.Controllers.KPITechnical
                     Year = criteriaYear,
                     Quater = criteriaQuarter,
                 };
-                var data = await SqlDapper<KPICriterion>.ProcedureToListTAsync("spGetKpiCriteriaPivot", param);
+                var data = await SqlDapper<object>.ProcedureToListTAsync("spGetKpiCriteriaPivot", param);
 
                 return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
             }
