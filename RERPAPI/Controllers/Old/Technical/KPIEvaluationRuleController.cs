@@ -491,33 +491,6 @@ namespace RERPAPI.Controllers.Old.Technical
                     var factors = await SqlDapper<KPIEvaluationFactor>
                         .ProcedureToListTAsync("spGetAllKPIEvaluationByYearAndQuarter", param);
 
-                    //foreach (var factor in factors.OrderBy(x => x.ParentID))
-                    //{
-                    //    factor.ID = 0;
-                    //    factor.KPIExamID = exam.ID;
-
-                    //    if (factor.ParentID > 0)
-                    //    {
-                    //        //var parent = factors.FirstOrDefault(x =>
-                    //        //x.STT == factor.STT.Remove(factor.STT.LastIndexOf(".")));
-                    //        string parentSTT = factor.STT.Remove(factor.STT.LastIndexOf("."));
-
-                    //        KPIEvaluationFactor? parent = _kpiEvaluationFactorRepo
-                    //            .GetAll(x =>
-                    //                x.STT == parentSTT &&
-                    //                x.KPIExamID == exam.ID &&
-                    //                x.EvaluationType == factor.EvaluationType &&
-                    //                x.IsDeleted == false
-                    //            )
-                    //            .FirstOrDefault();
-
-
-                    //        factor.ParentID = parent?.ID ?? 0;
-                    //    }
-
-                    //    await _kpiEvaluationFactorRepo.CreateAsync(factor);
-                    //}
-
                     foreach (var factor in factors.OrderBy(x => x.ParentID))
                     {
                         int oldParentId = factor.ParentID ?? 0;
@@ -702,62 +675,6 @@ namespace RERPAPI.Controllers.Old.Technical
             }
         }
 
-        //private async Task<IActionResult> CopyKPIRuleInternal(SaveKPIRuleRequest dto)
-        //{
-        //    // ===== 1. Xóa Rule cũ (nếu có) =====
-        //    var oldRule = _kpiEvaluationRuleRepo.GetAll(x =>
-        //        x.KPISessionID == dto.Model.KPISessionID &&
-        //        x.KPIPositionID == dto.Model.KPIPositionID &&
-        //        x.IsDeleted == false
-        //    ).FirstOrDefault();
-
-        //    if (oldRule != null)
-        //    {
-        //        oldRule.IsDeleted = true;
-        //        await _kpiEvaluationRuleRepo.UpdateAsync(oldRule);
-        //    }
-
-        //    // ===== 2. Tạo Rule mới =====
-        //    KPIEvaluationRule newRule = new KPIEvaluationRule
-        //    {
-        //        KPISessionID = dto.Model.KPISessionID,
-        //        KPIPositionID = dto.Model.KPIPositionID,
-        //        RuleCode = dto.Model.RuleCode.Trim(),
-        //        RuleName = dto.Model.RuleName.Trim(),
-        //        IsDeleted = false
-        //    };
-
-        //    await _kpiEvaluationRuleRepo.CreateAsync(newRule);
-
-        //    // ===== 3. Copy Rule Detail =====
-        //    var details = _kpiEvaluationRuleDetailRepo.GetAll(x =>
-        //        x.KPIEvaluationRuleID == dto.FromRuleID &&
-        //        x.IsDeleted == false
-        //    ).OrderBy(x => x.STT).ToList();
-
-        //    Dictionary<int, int> mapOldNew = new();
-
-        //    foreach (var d in details)
-        //    {
-        //        int oldId = d.ID;
-
-        //        d.ID = 0;
-        //        d.KPIEvaluationRuleID = newRule.ID;
-        //        d.ParentID = 0;
-
-        //        await _kpiEvaluationRuleDetailRepo.CreateAsync(d);
-        //        mapOldNew[oldId] = d.ID;
-        //    }
-
-        //    foreach (var d in details.Where(x => x.ParentID > 0))
-        //    {
-        //        d.ParentID = mapOldNew[d.ParentID.Value];
-        //        await _kpiEvaluationRuleDetailRepo.UpdateAsync(d);
-        //    }
-
-        //    return Ok(ApiResponseFactory.Success(newRule, "Sao chép Rule thành công"));
-        //}
-
         private async Task<IActionResult> CopyKPIRuleInternal(SaveKPIRuleRequest dto)
         {
             // ===== 1. Ghi đè Rule cũ (nếu có) =====
@@ -834,8 +751,160 @@ namespace RERPAPI.Controllers.Old.Technical
             return Ok(ApiResponseFactory.Success(newRule, "Sao chép Rule đánh giá thành công"));
         }
 
+        //Các API cho RuleDetail
+        [HttpGet("get-rule-detail-by-rule")]
+        public IActionResult GetRuleDetailByRule(int ruleId)
+        {
+            var data = _kpiEvaluationRuleDetailRepo
+                .GetAll(x => x.KPIEvaluationRuleID == ruleId && x.IsDeleted == false)
+                .OrderBy(x => x.STT)
+                .ToList();
+
+            return Ok(ApiResponseFactory.Success(data, ""));
+        }
+
+        [HttpGet("get-rule-detail-by-id")]
+        public IActionResult GetRuleDetailById(int id)
+        {
+            var model = _kpiEvaluationRuleDetailRepo.GetByID(id);
+            if (model == null)
+                return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu"));
+
+            return Ok(ApiResponseFactory.Success(model, ""));
+        }
+
+        [HttpPost("delete-rule-detail")]
+        public IActionResult DeleteRuleDetail(int id)
+        {
+            var model = _kpiEvaluationRuleDetailRepo.GetByID(id);
+            if (model.ID <= 0)
+                return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu"));
+
+            model.IsDeleted = true;
+            _kpiEvaluationRuleDetailRepo.Update(model);
+
+            return Ok(ApiResponseFactory.Success(null, "Xóa thành công"));
+        }
+
+        [HttpGet("get-next-stt")]
+        public IActionResult GetNextSTT(int ruleId, int parentId)
+        {
+            if (parentId > 0)
+            {
+                var parent = _kpiEvaluationRuleDetailRepo.GetByID(parentId);
+                int count = _kpiEvaluationRuleDetailRepo.GetAll(x =>
+                    x.ParentID == parentId &&
+                    x.IsDeleted == false
+                ).Count();
+
+                return Ok(ApiResponseFactory.Success($"{parent.STT}.{count + 1}", ""));
+            }
+
+            int rootCount = _kpiEvaluationRuleDetailRepo.GetAll(x =>
+                x.KPIEvaluationRuleID == ruleId &&
+                x.ParentID == 0 &&
+                x.IsDeleted == false
+            ).Count();
+
+            return Ok(ApiResponseFactory.Success($"{rootCount + 1}", ""));
+        }
 
 
+        [HttpPost("save-rule-detail")]
+        public async Task<IActionResult> SaveRuleDetail([FromBody] KPIEvaluationRuleDetail model)
+        {
+            try
+            {
+                model.ParentID ??= 0;
+
+                // ===== 1. Validate cơ bản =====
+                if (model == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu không hợp lệ"));
+
+                if (model.KPIEvaluationRuleID <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Rule không hợp lệ"));
+
+                if (string.IsNullOrWhiteSpace(model.STT))
+                    return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng nhập STT"));
+
+                if (string.IsNullOrWhiteSpace(model.RuleContent))
+                    return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng nhập Nội dung đánh giá"));
+
+                // ===== 2. Validate trùng STT =====
+                bool isDuplicateSTT = _kpiEvaluationRuleDetailRepo.GetAll(x =>
+                    x.KPIEvaluationRuleID == model.KPIEvaluationRuleID &&
+                    x.ParentID == model.ParentID &&
+                    x.STT == model.STT &&
+                    x.ID != model.ID &&
+                    x.IsDeleted == false
+                ).Any();
+
+                if (isDuplicateSTT)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(
+                        null,
+                        "STT đã tồn tại trong nhóm cha. Vui lòng nhập STT khác!"
+                    ));
+                }
+
+                // ===== 3. Save =====
+                if (model.ID > 0)
+                {
+                    // UPDATE
+                    var entity = await _kpiEvaluationRuleDetailRepo.GetByIDAsync(model.ID);
+                    if (entity == null)
+                        return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy Rule Detail"));
+
+                    entity.STT = model.STT.Trim();
+                    entity.ParentID = model.ParentID;
+                    entity.KPIEvaluationID = model.KPIEvaluationID;
+                    entity.RuleContent = model.RuleContent.Trim();
+                    entity.FormulaCode = model.FormulaCode;
+                    entity.MaxPercent = model.MaxPercent;
+                    entity.PercentageAdjustment = model.PercentageAdjustment;
+                    entity.MaxPercentageAdjustment = model.MaxPercentageAdjustment;
+                    entity.RuleNote = model.RuleNote;
+                    entity.Note = model.Note;
+
+                    await _kpiEvaluationRuleDetailRepo.UpdateAsync(entity);
+
+                    return Ok(ApiResponseFactory.Success(entity, "Cập nhật thành công"));
+                }
+                else
+                {
+                    // INSERT
+                    model.IsDeleted = false;
+                    await _kpiEvaluationRuleDetailRepo.CreateAsync(model);
+
+                    return Ok(ApiResponseFactory.Success(model, "Thêm mới thành công"));
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-kpi-evaluation")]
+        public async Task<IActionResult> GetRuleCode(int departmentId)
+        {
+            try
+            {
+                var param = new
+                {
+                    DepartmentID = departmentId
+                };
+
+                var data = await SqlDapper<object>
+                    .ProcedureToListAsync("spGetKPIEvaluation", param);
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
 
         public class SaveKPISessionRequest
         {

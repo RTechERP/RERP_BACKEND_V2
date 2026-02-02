@@ -28,6 +28,7 @@ namespace RERPAPI.Controllers.KhoBaseManager
         private readonly ProjectTypeBaseRepo _projectTypeBaseRepo;
         private readonly FollowProjectRepo _followProjectRepo;
         private readonly ProjectStatusRepo _projectStatusRepo;
+        private readonly GroupSalesUserRepo _groupSalesUserRepo;
         public FollowProjectBaseController(
             ProjectRepo projectRepo,
             UserRepo userRepo,
@@ -37,7 +38,8 @@ namespace RERPAPI.Controllers.KhoBaseManager
             FirmBaseRepo firmBaseRepo,
             ProjectTypeBaseRepo projectTypeBaseRepo,
             FollowProjectRepo followProjectRepo,
-            ProjectStatusRepo projectStatusRepo
+            ProjectStatusRepo projectStatusRepo,
+            GroupSalesUserRepo groupSalesUserRepo
             )
         {
             _projectRepo = projectRepo;
@@ -49,6 +51,7 @@ namespace RERPAPI.Controllers.KhoBaseManager
             _projectTypeBaseRepo = projectTypeBaseRepo;
             _followProjectRepo = followProjectRepo;
             _projectStatusRepo = projectStatusRepo;
+            _groupSalesUserRepo = groupSalesUserRepo;
         }
 
         // Danh sách follow project base
@@ -153,7 +156,7 @@ namespace RERPAPI.Controllers.KhoBaseManager
         }
         // Danh sách group sale suser 
         [HttpGet("getgroupsalesuser")]
-        public async Task<IActionResult> getgroupsalesuser(int groupID, int teamID)
+        public IActionResult getgroupsalesuser(int groupID, int teamID)
         {
             try
             {
@@ -173,6 +176,23 @@ namespace RERPAPI.Controllers.KhoBaseManager
                     status = 1,
                     data = SQLHelper<object>.GetListData(data, 0),
                 });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-group-sales-user-info")]
+        public IActionResult GetGroupSalesUserInfo(int userId)
+        {
+            //var model = SQLHelper<GroupSalesUserModel>.FindByAttribute("UserID", userId).FirstOrDefault();
+            //return Ok(new { status = 1, data = model });
+
+            try
+            {
+                var model = _groupSalesUserRepo.GetAll(x => x.UserID == userId).FirstOrDefault();
+                return Ok(ApiResponseFactory.Success(model, "Lưu KPI thành công"));
             }
             catch (Exception ex)
             {
@@ -381,8 +401,8 @@ namespace RERPAPI.Controllers.KhoBaseManager
                 {
                     ID = ProjectID,
                     ProjectStatus = ProjectStatusBaseID,
-                    UpdatedBy = LoginName,
-                    UpdatedDate = DateTime.Now
+                    //UpdatedBy = LoginName,
+                    //UpdatedDate = DateTime.Now
                 };
 
                 var data = await _projectRepo.UpdateAsync(project);
