@@ -530,6 +530,21 @@ namespace RERPAPI.Repo
         //    db.Claim = claim;
         //}
 
+        public async Task<int> UpdateRangeAsync_Binh(IEnumerable<T> items)
+        {
+            try
+            {
+                // EF Core sẽ tự động theo dõi các thay đổi trên các 'items' này
+                table.UpdateRange(items);
+
+                // Gửi TẤT CẢ các thay đổi đến database trong MỘT LẦN DUY NHẤT
+                return await db.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error updating range of entities: {ex.Message}", ex);
+            }
+        }
 
     }
 }
