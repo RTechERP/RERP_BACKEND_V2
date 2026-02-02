@@ -439,7 +439,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         string fullName = GetString(master, "FullName").Trim();
                         int userId = GetInt(master, "UserID");
 
-                        int departmentID = _userRepo.GetByID(userId)?.DepartmentID ?? 0;
+                        int departmentID = _employeeRepo.GetAll(x => x.UserID == userId).FirstOrDefault()?.DepartmentID ?? 0;
                         string department = _departmentRepo.GetByID(departmentID)?.Name ?? "";
 
                         sheet.Cell(9, 4).Value = string.IsNullOrWhiteSpace(department)
