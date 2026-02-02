@@ -77,7 +77,7 @@ namespace RERPAPI.Controllers.Project
             {
                 var meetingminutes = SQLHelper<dynamic>.ProcedureToList("spGetMeetingMinutes",
                     new string[] { "@DateStart", "@DateEnd", "@Keywords", "@MeetingTypeID" },
-                    new object[] { request.DateStart, request.DateEnd, request.Keywords, request.MeetingTypeID });
+                    new object[] { request.DateStart.ToLocalTime().Date, request.DateEnd.ToLocalTime().Date.AddDays(+1).AddSeconds(-1), request.Keywords, request.MeetingTypeID });
                 return Ok(new
                 {
                     status = 1,
