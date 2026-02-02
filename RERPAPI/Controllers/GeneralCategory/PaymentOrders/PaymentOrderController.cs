@@ -200,10 +200,12 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] PaymentOrderDTO payment)
         {
+            
             try
             {
                 //_currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
 
+                string message = "Cập nhật thành công!";
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 _currentUser = ObjectMapper.GetCurrentUser(claims);
 
@@ -238,8 +240,6 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     }
                 }
 
-
-
                 payment.EmployeeID = _currentUser.EmployeeID;
                 payment.IsUrgent = payment.DeadlinePayment.HasValue;
                 if (payment.DeadlinePayment.HasValue) payment.DeadlinePayment = payment.DeadlinePayment.Value.ToLocalTime();
@@ -253,7 +253,10 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     var existCodes = _paymentRepo.GetAll(x => x.Code == payment.Code && x.IsDelete != true);
                     if (existCodes.Count() > 0)
                     {
-                        return BadRequest(ApiResponseFactory.Fail(null, $"Số đề nghị [{payment.Code}] đã tồn tại!"));
+                        string newCode = _paymentRepo.GetCode(payment);
+                        message += $"\nSố ĐNTT [{payment.Code}] đã tồn tại. PM tự động đổi thành [{newCode}]";
+                        payment.Code = newCode;
+                        //return BadRequest(ApiResponseFactory.Fail(null, $"Số đề nghị [{payment.Code}] đã tồn tại!"));
                     }
 
                     await _paymentRepo.CreateAsync(payment);
@@ -269,7 +272,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 //Update quy trình duyệt
                 await _logRepo.Create(payment);
 
-                return Ok(ApiResponseFactory.Success(payment, "Cập nhật thành công!"));
+                return Ok(ApiResponseFactory.Success(payment, message));
             }
             catch (Exception ex)
             {
