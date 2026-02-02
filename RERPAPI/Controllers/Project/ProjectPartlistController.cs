@@ -1327,7 +1327,7 @@ namespace RERPAPI.Controllers.Project
                         x.ProductCode.Trim() == productCode
                         && x.Unit.Trim() == unit
                         //&& (firm.ID > 0 ? x.FirmID == firm.ID : x.Maker.Trim() == item.Manufacturer)
-                        && (x.Maker.Trim() == item.Manufacturer)
+                        && (x.Maker.Trim() == item.Manufacturer.Trim())
                         && x.IsDeleted == false
                     ).FirstOrDefault();
                     if (productSale == null || productSale.ID <= 0)
@@ -1441,7 +1441,7 @@ namespace RERPAPI.Controllers.Project
 
                         if (productSale == null || productSale.ID <= 0) continue;
 
-                        decimal minQuantity = item.QtyMin ?? 0;
+                        decimal minQuantity = item.QtyFull ?? 0; // 
 
                         InventoryStock inventory = _inventoryStockRepo.GetAll(x => 
                             x.ProductSaleID == productSale.ID 
