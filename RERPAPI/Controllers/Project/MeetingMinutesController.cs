@@ -71,21 +71,31 @@ namespace RERPAPI.Controllers.Project
         }
 
         [HttpPost("get-meeting-minutes")]
-        public IActionResult GetMeetingMinutes([FromBody] MeetingMinutesRequestParam request)
+        public async Task<IActionResult> GetMeetingMinutes([FromBody] MeetingMinutesRequestParam request)
         {
             try
             {
-                var meetingminutes = SQLHelper<dynamic>.ProcedureToList("spGetMeetingMinutes",
-                    new string[] { "@DateStart", "@DateEnd", "@Keywords", "@MeetingTypeID" },
-                    new object[] { request.DateStart, request.DateEnd, request.Keywords, request.MeetingTypeID });
+                var param = new
+                {
+                    DateStart = request.DateStart.ToLocalTime().Date,
+                    DateEnd = request.DateEnd.ToLocalTime().Date.AddDays(+1).AddSeconds(-1),
+                    Keywords = request.Keywords,
+                    MeetingTypeID = request.MeetingTypeID,
+                };
+
+                var meetingminutes = await SqlDapper<object>.ProcedureToListAsync("spGetMeetingMinutes", param);
+                //var meetingminutes = SQLHelper<dynamic>.ProcedureToList("spGetMeetingMinutes",
+                //    new string[] { "@DateStart", "@DateEnd", "@Keywords", "@MeetingTypeID" },
+                //    new object[] { request.DateStart.ToLocalTime().Date, request.DateEnd.ToLocalTime().Date.AddDays(+1).AddSeconds(-1), request.Keywords, request.MeetingTypeID });
                 return Ok(new
                 {
                     status = 1,
-                    data = new
-                    {
-                        asset = SQLHelper<dynamic>.GetListData(meetingminutes, 0),
-                        total = SQLHelper<dynamic>.GetListData(meetingminutes, 1)
-                    }
+                    //data = new
+                    //{
+                    //    asset = SQLHelper<object>.GetListData(meetingminutes, 0),
+                    //    total = SQLHelper<object>.GetListData(meetingminutes, 1)
+                    //}
+                    data = meetingminutes
 
                 });
             }

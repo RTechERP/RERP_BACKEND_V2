@@ -143,6 +143,7 @@ builder.Services.AddScoped<IssueLogSolutionRepo>();
 builder.Services.AddScoped<IssueSolutionStatusLinkRepo>();
 builder.Services.AddScoped<IssueSolutionStatusRepo>();
 builder.Services.AddScoped<KPIEmployeeTeamLinkRepo>();
+builder.Services.AddScoped<KPIEvaluationFactorRepo>();
 builder.Services.AddScoped<KPIEmployeeTeamRepo>();
 builder.Services.AddScoped<KPIEvaluationRepo>();
 builder.Services.AddScoped<KPIErrorTypeRepo>();
@@ -150,6 +151,13 @@ builder.Services.AddScoped<KPIErrorRepo>();
 builder.Services.AddScoped<KPIErrorFineAmountRepo>();
 builder.Services.AddScoped<KPIErrorEmployeeFileRepo>();
 builder.Services.AddScoped<KPIErrorEmployeeRepo>();
+builder.Services.AddScoped<KPICriteriaDetailRepo>();
+builder.Services.AddScoped<KPICriterionRepo>();
+builder.Services.AddScoped<KPIPositionEmployeeRepo>();
+builder.Services.AddScoped<KPIPositionRepo>();
+builder.Services.AddScoped<KPIExamRepo>();
+builder.Services.AddScoped<KPIExamPositionRepo>();
+builder.Services.AddScoped<KPISpecializationTypeRepo>();
 builder.Services.AddScoped<LocationRepo>();
 builder.Services.AddScoped<LoginManagerRepo>();
 builder.Services.AddScoped<MainIndexRepo>();
@@ -501,6 +509,9 @@ builder.Services.AddScoped<KPIPositionRepo>();
 builder.Services.AddScoped<KPIEvaluationRuleRepo>();
 builder.Services.AddScoped<KPIPositionEmployeeRepo>();
 builder.Services.AddScoped<KPIEmployeePointDetailRepo>();
+builder.Services.AddScoped<KPIEvaluationRuleDetailRepo>();
+builder.Services.AddScoped<KPIExamRepo>();
+builder.Services.AddScoped<KPISumaryEvaluationRepo>();
 #endregion
 
 #region RabbitService
@@ -679,7 +690,7 @@ foreach (var item in staticFiles)
     });
 
 
-    app.UseDirectoryBrowser(new DirectoryBrowserOptions
+    app.UseDirectoryBrowser(new DirectoryBrowserOptions 
     {
         FileProvider = new PhysicalFileProvider(item.PathFull),
         RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")

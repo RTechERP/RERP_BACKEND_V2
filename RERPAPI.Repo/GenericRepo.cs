@@ -260,6 +260,77 @@ namespace RERPAPI.Repo
             }
         }
 
+        public async Task<int> UpdateRangeAsync(List<T> items)
+        {
+            try
+            {
+                //var claims = _userPermissionService.GetClaims();
+                int records = 0;
+                foreach (var item in items)
+                {
+                    var fieldValues = new Dictionary<string, object>();
+                    int id = 0;
+                    var propid = typeof(T).GetProperty("ID");
+                    if (propid != null) id = Convert.ToInt32(propid.GetValue(item));
+
+                    var properties = typeof(T).GetProperties();
+                    foreach (var prop in properties)
+                    {
+                        // Bỏ qua thuộc tính ID hoặc các thuộc tính không cần cập nhật
+                        if (prop.Name != "ID" && prop.CanRead)
+                        {
+                            var value = prop.GetValue(item);
+                            if (value != null) // Chỉ thêm nếu giá trị không null
+                            {
+                                fieldValues.Add(prop.Name, value);
+                            }
+                        }
+                    }
+
+                    // Tìm entity theo ID
+                    var entity = db.Set<T>().Find(id);
+                    if (entity == null)
+                    {
+                        throw new Exception($"Entity with ID {id} not found.");
+                    }
+
+                    // Lấy type của entity
+                    Type type = typeof(T);
+
+                    // Cập nhật các trường động
+                    foreach (var field in fieldValues)
+                    {
+                        // Kiểm tra thuộc tính
+                        var property = type.GetProperty(field.Key);
+                        if (property == null || !property.CanWrite)
+                        {
+                            throw new Exception($"Property {field.Key} not found or is not writable.");
+                        }
+
+                        // Gán giá trị cho thuộc tính (xử lý null)
+                        property.SetValue(entity, field.Value == null ? null : field.Value);
+                    }
+
+                    //Gán lại giá trị updatedDate = null để sử lý khi SaveChangesAsync
+                    var updatedDate = entity.GetType().GetProperty("UpdatedDate");
+                    var updatedDateValue = fieldValues.ContainsKey("UpdatedDate") ? fieldValues["UpdatedDate"] : null;
+                    if (updatedDateValue == null) //trường UpdatedDate có value thì thôi
+                    {
+                        if (updatedDate != null) updatedDate.SetValue(entity, null);
+                    }
+
+                    db.Entry(entity).State = EntityState.Modified;
+                    // Lưu thay đổi vào cơ sở dữ liệu
+                    records += await db.SaveChangesAsync();
+                }
+                return records;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error updating entity: {ex.Message}", ex);
+            }
+        }
+
         public async Task<int> DeleteAsync(int id)
         {
             try
@@ -392,7 +463,7 @@ namespace RERPAPI.Repo
                 throw new Exception($"Error updating entities by attribute: {ex.Message}", ex);
             }
         }
-      
+
 
         public int UpdateFieldByAttribute<TValue>(Expression<Func<T, bool>> predicate, Dictionary<Expression<Func<T, object>>, TValue> updatedFields)
         {
@@ -459,6 +530,21 @@ namespace RERPAPI.Repo
         //    db.Claim = claim;
         //}
 
+        public async Task<int> UpdateRangeAsync_Binh(IEnumerable<T> items)
+        {
+            try
+            {
+                // EF Core sẽ tự động theo dõi các thay đổi trên các 'items' này
+                table.UpdateRange(items);
+
+                // Gửi TẤT CẢ các thay đổi đến database trong MỘT LẦN DUY NHẤT
+                return await db.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error updating range of entities: {ex.Message}", ex);
+            }
+        }
 
     }
 }

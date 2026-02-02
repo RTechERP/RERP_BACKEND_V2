@@ -16,47 +16,67 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
         {
         }
 
+        //public string GetCode(PaymentOrder payment)
+        //{
+        //    try
+        //    {
+        //        string code = string.Empty;
+        //        int stt = 0;
+        //        string prefixCode = "ĐNTTĐB";
+        //        if (payment.IsSpecialOrder == true)
+        //        {
+        //            var payments = GetAll(x => x.IsSpecialOrder == payment.IsSpecialOrder && x.IsDelete != true
+        //                                   && x.DateOrder.Value.Year == payment.DateOrder.Value.Year
+        //                                   && x.DateOrder.Value.Month == payment.DateOrder.Value.Month
+        //                                   && x.DateOrder.Value.Day == payment.DateOrder.Value.Day)
+        //                           .Select(x => new
+        //                           {
+        //                               Code = x.Code,
+        //                               STT = string.IsNullOrWhiteSpace(x.Code) ? 0 : TextUtils.ToInt32(x.Code.Substring(x.Code.Length - 4))
+        //                           }).ToList();
+
+        //            if (payments.Count() > 0) stt = payments.Max(x => x.STT);
+        //        }
+        //        else
+        //        {
+        //            var payments = GetAll(x => x.TypeOrder == payment.TypeOrder && x.IsDelete != true
+        //                                    && x.DateOrder.Value.Year == payment.DateOrder.Value.Year
+        //                                    && x.DateOrder.Value.Month == payment.DateOrder.Value.Month
+        //                                    && x.DateOrder.Value.Day == payment.DateOrder.Value.Day)
+        //                            .Select(x => new
+        //                            {
+        //                                Code = x.Code,
+        //                                STT = string.IsNullOrWhiteSpace(x.Code) ? 0 : TextUtils.ToInt32(x.Code.Substring(x.Code.Length - 4))
+        //                            }).ToList();
+
+        //            if (payments.Count() > 0) stt = payments.Max(x => x.STT);
+        //            prefixCode = PREFIX_CODES[TextUtils.ToInt32(payment.TypeOrder)];
+        //        }
+
+        //        stt++;
+        //        string sttText = stt.ToString().PadLeft(4,'0');
+
+        //        code = prefixCode + payment.DateOrder.Value.ToString("yyyyMMdd") + sttText;
+        //        return code;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw new Exception(ex.Message);
+        //    }
+        //}
+
+
         public string GetCode(PaymentOrder payment)
         {
             try
             {
                 string code = string.Empty;
-                int stt = 0;
-                string prefixCode = "ĐNTTĐB";
-                if (payment.IsSpecialOrder == true)
-                {
-                    var payments = GetAll(x => x.IsSpecialOrder == payment.IsSpecialOrder && x.IsDelete != true
-                                           && x.DateOrder.Value.Year == payment.DateOrder.Value.Year
-                                           && x.DateOrder.Value.Month == payment.DateOrder.Value.Month
-                                           && x.DateOrder.Value.Day == payment.DateOrder.Value.Day)
-                                   .Select(x => new
-                                   {
-                                       Code = x.Code,
-                                       STT = string.IsNullOrWhiteSpace(x.Code) ? 0 : TextUtils.ToInt32(x.Code.Substring(x.Code.Length - 4))
-                                   }).ToList();
+                
 
-                    if (payments.Count() > 0) stt = payments.Max(x => x.STT);
-                }
-                else
-                {
-                    var payments = GetAll(x => x.TypeOrder == payment.TypeOrder && x.IsDelete != true
-                                            && x.DateOrder.Value.Year == payment.DateOrder.Value.Year
-                                            && x.DateOrder.Value.Month == payment.DateOrder.Value.Month
-                                            && x.DateOrder.Value.Day == payment.DateOrder.Value.Day)
-                                    .Select(x => new
-                                    {
-                                        Code = x.Code,
-                                        STT = string.IsNullOrWhiteSpace(x.Code) ? 0 : TextUtils.ToInt32(x.Code.Substring(x.Code.Length - 4))
-                                    }).ToList();
-
-                    if (payments.Count() > 0) stt = payments.Max(x => x.STT);
-                    prefixCode = PREFIX_CODES[TextUtils.ToInt32(payment.TypeOrder)];
-                }
-
-                stt++;
-                string sttText = stt.ToString().PadLeft(4,'0');
-
-                code = prefixCode + payment.DateOrder.Value.ToString("yyyyMMdd") + sttText;
+                //stt++;
+                //string sttText = stt.ToString().PadLeft(4, '0');
+                string prefixCode = PREFIX_CODES[TextUtils.ToInt32(payment.TypeOrder)];
+                code = prefixCode + payment.DateOrder.Value.ToString("yyMMddHHmmss");
                 return code;
             }
             catch (Exception ex)

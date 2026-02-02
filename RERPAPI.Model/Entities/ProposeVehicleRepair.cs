@@ -90,4 +90,6 @@ public partial class ProposeVehicleRepair
     public int? KmPreviousPeriod { get; set; }
 
     public int? KmCurrentPeriod { get; set; }
+
+    public DateTime? TimePrevious { get; set; }
 }

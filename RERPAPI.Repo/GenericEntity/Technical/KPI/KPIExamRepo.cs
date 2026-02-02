@@ -6,13 +6,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RERPAPI.Repo.GenericEntity.HRM
+namespace RERPAPI.Repo.GenericEntity.Technical.KPI
 {
-    public class EmployeeLuckyNumberRepo : GenericRepo<EmployeeLuckyNumber>
+    public class KPIExamRepo : GenericRepo<KPIExam>
     {
-        public EmployeeLuckyNumberRepo(CurrentUser currentUser) : base(currentUser)
+        public KPIExamRepo(CurrentUser currentUser) : base(currentUser)
         {
-
         }
     }
 }

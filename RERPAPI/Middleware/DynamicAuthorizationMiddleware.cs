@@ -91,7 +91,8 @@ namespace RERPAPI.Middleware
                         if (!hasPermission)
                         {
                             context.Response.StatusCode = StatusCodes.Status403Forbidden;
-                            await context.Response.WriteAsync("Access Denied");
+                            context.Response.ContentType = "text/plain; charset=utf-8";
+                            await context.Response.WriteAsync("Bạn không có quyền!");
                             return;
                         }
                     }

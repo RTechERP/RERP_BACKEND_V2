@@ -168,6 +168,10 @@ namespace RERPAPI.Model.Common
                 //return resultLists;
                 throw new Exception(ex.Message);
             }
+            finally
+            {
+
+            }
         }
 
 

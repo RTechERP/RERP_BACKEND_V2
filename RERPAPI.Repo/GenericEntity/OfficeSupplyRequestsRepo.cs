@@ -21,9 +21,9 @@ namespace RERPAPI.Repo.GenericEntity
         {
             try
             {
-             
+
                 var today = DateTime.Today;
-                if (today.Day > 5 && _currentUser.IsAdmin!=true && _currentUser.EmployeeID!=395)
+                if (today.Day > 5 && _currentUser.IsAdmin != true && _currentUser.EmployeeID != 395)
                 {
                     return ApiResponseFactory.Fail(null, "Chỉ được đăng ký văn phòng phẩm trước ngày 05 hằng tháng!");
                 }

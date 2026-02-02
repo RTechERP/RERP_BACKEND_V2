@@ -1,6 +1,7 @@
 ﻿using Azure;
 using Dapper;
 using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
@@ -14,6 +15,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders;
+using System.Threading.Tasks;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
@@ -34,6 +36,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         private readonly PaymentOrderFileRepo _fileRepo;
         private readonly PaymentOrderFileBankSlipRepo _fileBankSlipRepo;
         private readonly PaymentOrderPORepo _paymentOrderPORepo;
+        private readonly PaymentOrderApproveFollowRepo _approveFollowRepo;
 
         private readonly PaymentOrderTypeRepo _orderTypeRepo;
         private readonly EmployeeApprovedRepo _approvedRepo;
@@ -62,6 +65,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             PaymentOrderFileRepo fileRepo,
             PaymentOrderFileBankSlipRepo fileBankSlipRepo,
             PaymentOrderPORepo paymentOrderPORepo,
+            PaymentOrderApproveFollowRepo approveFollowRepo,
 
             PaymentOrderTypeRepo orderTypeRepo,
             EmployeeApprovedRepo approvedRepo,
@@ -93,6 +97,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             _fileRepo = fileRepo;
             _fileBankSlipRepo = fileBankSlipRepo;
             _paymentOrderPORepo = paymentOrderPORepo;
+            _approveFollowRepo = approveFollowRepo;
 
             _orderTypeRepo = orderTypeRepo;
             _approvedRepo = approvedRepo;
@@ -115,19 +120,43 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
 
 
         [HttpPost("")]
-        public IActionResult GetAll([FromBody] PaymentOrderParam p)
+        public async Task<IActionResult> GetAll([FromBody] PaymentOrderParam p)
         {
             try
             {
                 p.DateStart = p.DateStart.Value.ToLocalTime().Date;
                 p.DateEnd = p.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
 
-                var data = SQLHelper<object>.ProcedureToList("spGetPaymentOrder",
-                            new string[] { "@PageNumber", "@PageSize", "@TypeOrder", "@PaymentOrderTypeID", "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@Keyword", "@IsIgnoreHR", "@IsApproved", "@IsSpecialOrder", "@ApprovedTBPID", "@Step", "@IsShowTable", "@Statuslog", "@IsDelete" },
-                            new object[] { p.PageNumber, p.PageSize, p.TypeOrder, p.PaymentOrderTypeID, p.DateStart, p.DateEnd, p.DepartmentID, p.EmployeeID, p.Keyword, p.IsIgnoreHR, p.IsApproved, p.IsSpecialOrder, p.ApprovedTBPID, p.Step, p.IsShowTable, p.Statuslog, p.IsDelete });
+                //var data = SQLHelper<object>.ProcedureToList("spGetPaymentOrder_New",
+                //            new string[] { "@PageNumber", "@PageSize", "@TypeOrder", "@PaymentOrderTypeID", "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@Keyword", "@IsIgnoreHR", "@IsApproved", "@IsSpecialOrder", "@ApprovedTBPID", "@Step", "@IsShowTable", "@Statuslog", "@IsDelete" },
+                //            new object[] { p.PageNumber, p.PageSize, p.TypeOrder, p.PaymentOrderTypeID, p.DateStart, p.DateEnd, p.DepartmentID, p.EmployeeID, p.Keyword, p.IsIgnoreHR, p.IsApproved, p.IsSpecialOrder, p.ApprovedTBPID, p.Step, p.IsShowTable, p.Statuslog, p.IsDelete });
 
 
-                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0)));
+                var param = new
+                {
+                    PageNumber = p.PageNumber,
+                    PageSize = p.PageSize,
+                    TypeOrder = p.TypeOrder,
+                    PaymentOrderTypeID = p.PaymentOrderTypeID,
+                    DateStart = p.DateStart,
+                    DateEnd = p.DateEnd,
+                    DepartmentID = p.DepartmentID,
+                    EmployeeID = p.EmployeeID,
+                    Keyword = p.Keyword,
+                    IsIgnoreHR = p.IsIgnoreHR,
+                    IsApproved = p.IsApproved ?? -1,
+                    IsSpecialOrder = p.IsSpecialOrder,
+                    ApprovedTBPID = p.ApprovedTBPID,
+                    Step = p.Step,
+                    IsShowTable = p.IsShowTable,
+                    Statuslog = p.Statuslog,
+                    IsDelete = p.IsDelete,
+                };
+
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetPaymentOrder_New", param);
+
+                //return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0)));
+                return Ok(ApiResponseFactory.Success(data));
             }
             catch (Exception ex)
             {
@@ -171,10 +200,12 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] PaymentOrderDTO payment)
         {
+            
             try
             {
                 //_currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
 
+                string message = "Cập nhật thành công!";
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 _currentUser = ObjectMapper.GetCurrentUser(claims);
 
@@ -209,8 +240,6 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     }
                 }
 
-
-
                 payment.EmployeeID = _currentUser.EmployeeID;
                 payment.IsUrgent = payment.DeadlinePayment.HasValue;
                 if (payment.DeadlinePayment.HasValue) payment.DeadlinePayment = payment.DeadlinePayment.Value.ToLocalTime();
@@ -220,6 +249,16 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 if (payment.ID <= 0)
                 {
                     payment.Code = _paymentRepo.GetCode(payment);
+
+                    var existCodes = _paymentRepo.GetAll(x => x.Code == payment.Code && x.IsDelete != true);
+                    if (existCodes.Count() > 0)
+                    {
+                        string newCode = _paymentRepo.GetCode(payment);
+                        message += $"\nSố ĐNTT [{payment.Code}] đã tồn tại. PM tự động đổi thành [{newCode}]";
+                        payment.Code = newCode;
+                        //return BadRequest(ApiResponseFactory.Fail(null, $"Số đề nghị [{payment.Code}] đã tồn tại!"));
+                    }
+
                     await _paymentRepo.CreateAsync(payment);
                 }
                 else await _paymentRepo.UpdateAsync(payment);
@@ -233,7 +272,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 //Update quy trình duyệt
                 await _logRepo.Create(payment);
 
-                return Ok(ApiResponseFactory.Success(payment, "Cập nhật thành công!"));
+                return Ok(ApiResponseFactory.Success(payment, message));
             }
             catch (Exception ex)
             {
@@ -404,6 +443,8 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 var approverSales = employees.Where(x => x.DepartmentID == 3 || _roleConfig.EmployeeIDSaleApproveDNTTDBs.Contains(x.ID)).ToList();
                 var approverBGDs = employees.Where(x => x.DepartmentID == 1).ToList();
 
+                var steps = _approveFollowRepo.GetAll(x => x.IsDeleted != true);
+
 
                 var data = new
                 {
@@ -419,7 +460,8 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     pokhDetails,
                     //userTeamNames = employeeTeamSales,
                     approverSales,
-                    approverBGDs
+                    approverBGDs,
+                    steps
                 };
 
                 return Ok(ApiResponseFactory.Success(data));
@@ -525,15 +567,34 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 _currentUser = ObjectMapper.GetCurrentUser(claims);
 
                 int records = 0;
+                string message = "";
                 foreach (var payment in payments)
                 {
                     PaymentOrder paymentOrder = _paymentRepo.GetByID(payment.ID);
                     if (paymentOrder.ID <= 0) continue;
-                    if (paymentOrder.IsSpecialOrder == false) continue;
-                    if (paymentOrder.EmployeeID != _currentUser.EmployeeID && !_currentUser.IsAdmin) continue;
+                    if (paymentOrder.IsSpecialOrder == false)
+                    {
+                        message += $"Đề nghị {paymentOrder.Code} không phải ĐNTTĐB\r\n";
+                        continue;
+                    }
+                    if (paymentOrder.EmployeeID != _currentUser.EmployeeID && !_currentUser.IsAdmin)
+                    {
+                        message += $"Bạn không phải người đề nghị của đề nghị {paymentOrder.Code}!\r\n";
+                        continue;
+                    }
 
-                    PaymentOrderLog log = _logRepo.GetAll(x => x.PaymentOrderID == payment.ID && x.Step == 6 && x.IsDeleted != true).FirstOrDefault() ?? new PaymentOrderLog();
+                    var logs = _logRepo.GetAll(x => x.PaymentOrderID == payment.ID && x.IsDeleted != true);
+
+                    PaymentOrderLog log5 = logs.FirstOrDefault(x => x.Step == 5) ?? new PaymentOrderLog();
+                    if (log5.IsApproved != 1)
+                    {
+                        message += $"Đề nghị {paymentOrder.Code} chưa được kế toán thanh toán!\r\n";
+                        continue;
+                    }
+
+                    PaymentOrderLog log = logs.FirstOrDefault(x => x.Step == 6) ?? new PaymentOrderLog();
                     if (log.ID <= 0) continue;
+                    if (log.IsApproved == payment.PaymentOrderLog.IsApproved) continue;
 
                     log.DateApproved = DateTime.Now;
                     log.EmployeeApproveActualID = _currentUser.EmployeeID;
@@ -543,8 +604,8 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
 
                     records += await _logRepo.UpdateAsync(log);
                 }
-                if (records > 0) return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
-                else return Ok(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+                if (records > 0) return Ok(ApiResponseFactory.Success(payments, "Cập nhật thành công!"));
+                else return BadRequest(ApiResponseFactory.Fail(null, message, payments));
 
             }
             catch (Exception ex)

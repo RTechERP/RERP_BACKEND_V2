@@ -38,6 +38,8 @@ namespace RERPAPI.Controllers.HRM.Employees
         {
             try
             {
+                param.dateStart = param.dateStart.ToLocalTime().Date;
+                param.dateEnd = param.dateEnd.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
                 var arrParamName = new string[] { "@PageNumber", "@PageSize", "@StartDate", "@EndDate", "@Keyword", "@DepartmentID", "@IDApprovedTP", "@Status" };
                 var arrParamValue = new object[] { param.pageNumber, param.pageSize, param.dateStart, param.dateEnd, param.keyWord, param.departmentId, param.idApprovedTp, param.status };
                 var employeeBussiness = SQLHelper<object>.ProcedureToList("spGetEmployeeBussiness", arrParamName, arrParamValue);

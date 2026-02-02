@@ -20,6 +20,7 @@ namespace RERPAPI.Model.DTO
         public bool? CheckIsStock { get; set; }
 
         public List<ProjectPartlistImportRowDto>? Items { get; set; } = new();
+        public int WarehouseID { get; set; }
         /// <summary>
         /// Danh sách diff (những dòng có sai khác Stock)
         /// FE sẽ thêm trường Choose = "Excel" hoặc "Stock"

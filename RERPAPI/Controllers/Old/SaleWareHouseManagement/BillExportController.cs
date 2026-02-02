@@ -193,247 +193,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        private async Task<(bool IsValid, string ErrorMessage)> ValidateBillExport(BillExportDTO dto)
-        {
-            // Validate Code
-            if (string.IsNullOrWhiteSpace(dto.billExport?.Code))
-            {
-                return (false, "Xin hãy điền số phiếu.");
-            }
 
-            // Check for duplicate code
-            var existingBill = _billexportRepo.GetAll(p => p.Code == dto.billExport.Code).FirstOrDefault();
-            if (dto.billExport.ID > 0)
-            {
-                // For update: check if code exists for a different ID
-                if (existingBill != null && existingBill.ID != dto.billExport.ID)
-                {
-                    return (false, "Số phiếu này đã tồn tại. Vui lòng chọn số phiếu khác!");
-                }
-            }
-            else
-            {
-                // For create: check if code already exists
-                if (existingBill != null)
-                {
-                    // Optionally generate new code here if loadBillNumber equivalent is needed
-                    return (false, $"Phiếu đã tồn tại. Vui lòng chọn số phiếu khác hoặc tải lại số phiếu!");
-                }
-            }
-
-            // Validate Customer or Supplier
-            if ((dto.billExport.CustomerID <= 0 || dto.billExport.CustomerID == null) &&
-                (dto.billExport.SupplierID <= 0 || dto.billExport.SupplierID == null))
-            {
-                return (false, "Xin hãy chọn Khách hàng hoặc Nhà cung cấp!");
-            }
-
-            // Validate Warehouse Type
-            if (string.IsNullOrWhiteSpace(dto.billExport.WarehouseType))
-            {
-                return (false, "Xin hãy chọn kho quản lý.");
-            }
-
-            /*  // Validate Group
-              if (string.IsNullOrWhiteSpace(dto.billExport.GroupID))
-              {
-                  return (false, "Xin hãy chọn nhóm.");
-              }*/
-
-            // Validate Sender
-            if (dto.billExport.SenderID == null)
-            {
-                return (false, "Xin hãy chọn người giao.");
-            }
-
-            // Validate Status
-            if (dto.billExport.Status < 0)
-            {
-                return (false, "Xin hãy chọn trạng thái.");
-            }
-
-            /*   // Validate Creation Date
-               if (dto.billExport.Status != 6 && !dto.billExport.CreatedDate.HasValue)
-               {
-                   return (false, "Xin hãy chọn Ngày xuất!");
-               }*/
-
-            return (true, string.Empty);
-        }
-        [HttpPost("recheck-qty")]
-        public IActionResult RecheckQty([FromBody] List<BillExportDetail> details)
-        {
-            if (details == null || !details.Any())
-                return BadRequest(new { status = 0, message = "Không có dữ liệu chi tiết." });
-
-            // Nhóm theo ProductID và tính tổng
-            var grouped = details
-                .GroupBy(x => x.ProductID)
-                .ToDictionary(g => g.Key, g => g.Sum(x => x.Qty ?? 0));
-
-            // Cập nhật TotalQty cho từng dòng
-            foreach (var item in details)
-            {
-                if (item.ProductID != 0 && grouped.ContainsKey(item.ProductID))
-                {
-                    item.TotalQty = grouped[item.ProductID];
-                }
-            }
-
-            return Ok(ApiResponseFactory.Success(details, "Đã tính lại TotalQty thành công"));
-        }
-        //[HttpPost("save-data")]
-        //[RequiresPermission("N27,N1,N33,N34,N69")]
-        //public async Task<IActionResult> SaveDataBillExport([FromBody] BillExportDTO dto)
-        //{
-        //    try
-        //    {
-        //// 1. Validate cơ bảnget-inventory-project
-        //var (isValid, errorMessage) = await ValidateBillExport(dto);
-        //if (!isValid)
-        //    return BadRequest(new { status = 0, message = errorMessage });
-
-        //if ((dto.billExportDetail == null || !dto.billExportDetail.Any()) && (dto.DeletedDetailIDs == null || !dto.DeletedDetailIDs.Any()))
-        //{
-        //    _billexportRepo.Update(dto.billExport);
-        //    return Ok(new { status = 1, message = $"Đã xóa thành công phiếu {dto.billExport.Code}" });
-        //}
-
-        //var inventoryList = _inventoryRepo.GetAll();
-
-        //// 2. Tính TotalQty chung theo ProductID / Project / POKH
-        //var groupedQuantities = dto.billExportDetail
-        //    .GroupBy(d => new { d.ProductID, ProjectID = d.POKHDetailID > 0 ? 0 : d.ProjectID, POKHDetailID = d.POKHDetailID })
-        //    .ToDictionary(g => g.Key, g => g.Sum(d => d.Qty));
-
-        //foreach (var detail in dto.billExportDetail)
-        //{
-        //    var key = new { detail.ProductID, ProjectID = detail.POKHDetailID > 0 ? 0 : detail.ProjectID, POKHDetailID = detail.POKHDetailID };
-        //    if (groupedQuantities.ContainsKey(key))
-        //        detail.TotalQty = groupedQuantities[key];
-        //}
-
-        //// 3. Validate Keep (tồn kho tổng)
-        //foreach (var detail in dto.billExportDetail)
-        //{
-        //    int productId = detail.ProductID ?? 0;
-        //    ProductSale product = _productSaleRepo.GetByID(productId);
-        //    string productCode = product.ProductNewCode ?? "";
-        //    int projectId = detail.POKHDetailID > 0 ? 0 : detail.ProjectID ?? 0;
-        //    int pokhDetailId = detail.POKHDetailID ?? 0;
-
-        //    decimal totalQty = detail.TotalQty ?? 0;
-
-        //    // Lấy tồn kho theo sp, project, POKH
-        //    var ds = SQLHelper<dynamic>.ProcedureToList("spGetInventoryProjectImportExport",
-        //        new string[] { "@WarehouseID", "@ProductID", "@ProjectID", "@POKHDetailID", "@BillExportDetailID" },
-        //        new object[] { dto.billExport?.WarehouseID ?? 0, productId, projectId, pokhDetailId, detail.ID });
-
-        //    var inventoryProjects = ds[0];
-        //    var dtImport = ds[1];
-        //    var dtExport = ds[2];
-        //    var dtStock = ds[3];
-
-        //    decimal totalQuantityKeep = inventoryProjects.Count > 0 ? Convert.ToDecimal(inventoryProjects[0].TotalQuantity) : 0;
-        //    decimal totalQuantityLast = dtStock.Count > 0 ? Convert.ToDecimal(dtStock[0].TotalQuantityLast) : 0;
-        //    decimal totalImport = dtImport.Count > 0 ? Convert.ToDecimal(dtImport[0].TotalImport) : 0;
-        //    decimal totalExport = dtExport.Count > 0 ? Convert.ToDecimal(dtExport[0].TotalExport) : 0;
-
-        //    decimal totalQuantityRemain = Math.Max(totalImport - totalExport, 0);
-        //    decimal totalStock = Math.Max(totalQuantityKeep, 0) + totalQuantityRemain + Math.Max(totalQuantityLast, 0);
-        //    //decimal totalQuantityRemain = Math.Max(totalImport - totalExport, 0);
-        //    //decimal totalStock = Math.Max(totalQuantityKeep, 0) + totalQuantityRemain + Math.Max(totalQuantityLast, 0);
-
-
-
-        //    if (totalStock < totalQty)
-        //    {
-        //        return BadRequest(new
-        //        {
-        //            status = 0,
-        //            message = $"Số lượng còn lại sản phẩm [{product.ProductNewCode}] không đủ! SL xuất: {totalQty}, SL giữ: {totalQuantityKeep}, Tồn CK: {totalQuantityLast}, Tổng: {totalStock}"
-        //        });
-        //    }
-        //}
-        //int billExportId;
-        //if (dto.billExport.ID <= 0)
-        //{
-        //    dto.billExport.IsMerge = false;
-        //    dto.billExport.UnApprove = 0;
-        //    dto.billExport.IsDeleted = false;
-        //    await _billexportRepo.CreateAsync(dto.billExport);
-        //    billExportId = dto.billExport.ID;
-        //}
-        //else // Cập nhật
-        //{
-        //    _billexportRepo.Update(dto.billExport);
-        //    billExportId = dto.billExport.ID;
-        //}
-
-        //// 5. Xử lý chi tiết phiếu xuất
-        //foreach (var detail in dto.billExportDetail)
-        //{
-        //    detail.BillID = billExportId;
-
-        //    if (detail.ID <= 0)
-        //    {
-        //        detail.IsDeleted = false;
-        //        await _billExportDetailRepo.CreateAsync(detail);
-        //    }
-        //    else
-        //    {
-        //        var existingDetail = _billExportDetailRepo.GetByID(detail.ID);
-        //        if (existingDetail != null)
-        //            _billExportDetailRepo.Update(detail);
-        //    }
-
-        //    // 6. Save InventoryProjectExport for status 2 (Exported) or 6 (Request Export)
-        //    // Matches desktop logic: if (billExport.Status == 2 || billExport.Status == 6)
-        //    if (dto.billExport.Status == 2 || dto.billExport.Status == 6)
-        //    {
-        //        // Get ChosenInventoryProject string from detail
-        //        // Format: "inventoryProjectID1-quantity1;inventoryProjectID2-quantity2"
-        //        string chosenInventoryProject = detail.ChosenInventoryProject ?? "";
-
-        //        if (!string.IsNullOrWhiteSpace(chosenInventoryProject))
-        //        {
-        //            string[] chosenInventoryProjects = chosenInventoryProject.Split(';');
-
-        //            // First, soft delete existing records for this detail (matching desktop logic)
-        //            var existingRecords = _inventoryprojectexportRepo.GetAll(x =>
-        //                x.BillExportDetailID == detail.ID && x.IsDeleted != true);
-
-        //            foreach (var existing in existingRecords)
-        //            {
-        //                existing.IsDeleted = true;
-        //                await _inventoryprojectexportRepo.UpdateAsync(existing);
-        //            }
-
-        //            // Then create new records
-        //            foreach (string item in chosenInventoryProjects)
-        //            {
-        //                if (string.IsNullOrWhiteSpace(item)) continue;
-
-        //                var parts = item.Split('-');
-        //                if (parts.Length < 2) continue;
-
-        //                if (!int.TryParse(parts[0], out int inventoryProjectID)) continue;
-        //                if (!decimal.TryParse(parts[1], out decimal quantity)) continue;
-
-        //                var projectExport = new InventoryProjectExport
-        //                {
-        //                    BillExportDetailID = detail.ID,
-        //                    InventoryProjectID = inventoryProjectID,
-        //                    Quantity = quantity,
-        //                    IsDeleted = false
-        //                };
-
-        //                await _inventoryprojectexportRepo.CreateAsync(projectExport);
-        //            }
-        //        }
-        //    }
-        //}
-        //        
         [HttpPost("save-data")]
         //[RequiresPermission("N27,N1,N33,N34,N69")]
         public async Task<IActionResult> SaveDataBillExport([FromBody] BillExportDTO dto)
@@ -627,166 +387,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             return Convert.ToDecimal(row[key]);
         }
 
-        //[HttpGet("export-excel")]
-        //public IActionResult ExportExcel(int id, int type)
-        //{
-        //    try
 
-        //    {
-        //        var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-        //        var currentUser = ObjectMapper.GetCurrentUser(claims);
-        //        var masterSets = SQLHelper<dynamic>.ProcedureToList(
-        //            "spGetExportExcel",
-        //            new[] { "@ID" },
-        //            new object[] { id }
-        //        );
-
-        //        if (masterSets == null || masterSets.Count == 0 || masterSets[0].Count == 0)
-        //            return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu master"));
-
-        //        var master = (IDictionary<string, object>)masterSets[0][0];
-
-        //        var detailSets = SQLHelper<dynamic>.ProcedureToList(
-        //            "spGetBillExportDetail",
-        //            new[] { "@BillID" },
-        //            new object[] { id }
-        //        );
-
-        //        if (detailSets == null || detailSets.Count == 0)
-        //            return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu chi tiết"));
-
-        //        var details = detailSets[0]
-        //            .Cast<IDictionary<string, object>>()
-        //            .ToList();
-
-        //        #region ===== LOAD TEMPLATE =====
-        //        string rootPath = _configuration.GetValue<string>("PathTemplate");
-        //        string templatePath = Path.Combine(rootPath, "ExportExcel", "PhieuXuatSale.xlsx");
-
-        //        using var workbook = new XLWorkbook(templatePath);
-        //        var sheet = workbook.Worksheet(1);
-        //        #endregion
-
-        //        #region ===== MAP MASTER (GIỐNG WINFORMS) =====
-        //        sheet.Cell(6, 1).Value = "Số: " + GetString(master, "Code");
-
-        //        string fullName = GetString(master, "FullName").Trim();
-        //        int userId = GetInt(master, "UserID");
-
-        //        int departmentID = _employeeRepo.GetByID(userId)?.DepartmentID ?? 0;
-        //        string department = _departmentRepo.GetByID(departmentID)?.Name ?? "";
-
-        //        sheet.Cell(9, 4).Value = string.IsNullOrWhiteSpace(department)
-        //            ? fullName
-        //            : $"{fullName} / Phòng {department}";
-
-        //        string customer = GetString(master, "CustomerName").Trim();
-        //        string supplier = GetString(master, "NameNCC").Trim();
-
-        //        sheet.Cell(10, 3).Value = "'- Khách hàng/Nhà cung cấp:";
-        //        sheet.Cell(10, 4).Value = string.IsNullOrEmpty(customer) ? supplier : customer;
-
-        //        sheet.Cell(11, 4).Value = GetString(master, "Address");
-        //        sheet.Cell(12, 4).Value = GetString(master, "AddressStock");
-
-        //        sheet.Cell(25, 3).Value = GetString(master, "FullNameSender");
-        //        sheet.Cell(25, 9).Value = GetString(master, "FullName");
-
-        //        if (GetInt(master, "WarehouseID") == 1)
-        //            sheet.Cell(15, 10).Value = "Loại vật tư";
-
-        //        if (DateTime.TryParse(GetString(master, "CreatDate"), out var d))
-        //            sheet.Cell(18, 9).Value = $"Ngày {d:dd} tháng {d:MM} năm {d:yyyy}";
-
-        //        #endregion
-
-        //        #region ===== MAP DETAIL (LOGIC GIỐNG HỆT WINFORMS) =====
-        //        int excelRow = 16;
-        //        int stt = 1;
-
-        //        for (int i = details.Count - 1; i >= 0; i--)
-        //        {
-        //            int parentId = Convert.ToInt32(details[i]["ParentID"] ?? 0);
-
-        //            if (type == 1 && parentId != 0) continue;
-
-        //            sheet.Cell(excelRow, 1).Value = stt++;
-        //            sheet.Cell(excelRow, 2).Value = GetString(details[i], "ProductNewCode");
-        //            sheet.Cell(excelRow, 3).Value = GetString(details[i], "ProductCode");
-        //            sheet.Cell(excelRow, 4).Value = GetString(details[i], "ProductFullName");
-        //            sheet.Cell(excelRow, 5).Value = GetString(details[i], "ProductName");
-        //            sheet.Cell(excelRow, 6).Value = GetString(details[i], "Unit");
-        //            sheet.Cell(excelRow, 7).Value = GetDecimal(details[i], "Qty");
-        //            sheet.Cell(excelRow, 8).Value = GetString(details[i], "ProjectCodeText");
-        //            sheet.Cell(excelRow, 9).Value = GetString(details[i], "ProjectNameText");
-        //            sheet.Cell(excelRow, 10).Value = GetString(details[i], "ProductTypeText");
-
-        //            sheet.Cell(excelRow, 11).Value = GetDecimal(details[i], "UnitPricePOKH");
-        //            sheet.Cell(excelRow, 12).Value = GetDecimal(details[i], "UnitPricePurchase");
-
-        //            sheet.Cell(excelRow, 13).Value =
-        //                GetInt(master, "WarehouseID") == 1
-        //                    ? GetString(details[i], "ProductGroupName")
-        //                    : GetString(details[i], "WarehouseName");
-
-        //            string note = GetString(details[i], "Note");
-        //            sheet.Cell(excelRow, 14).Value = note.StartsWith("=") ? $"'{note}" : note;
-
-
-        //            // === INSERT GIỐNG WINFORMS ===
-        //            sheet.Row(excelRow).InsertRowsBelow(1);
-        //        }
-
-        //        // === DELETE GIỐNG WINFORMS ===
-        //        sheet.Row(excelRow + details.Count - 1).Delete();
-        //        sheet.Row(excelRow + details.Count - 1).Delete();
-        //        //sheet.Row(15).Delete();
-        //        #endregion
-
-        //        #region ===== QR CODE =====
-        //        string qrText = master["Code"]?.ToString();
-
-        //        var writer = new BarcodeWriterPixelData
-        //        {
-        //            Format = BarcodeFormat.QR_CODE,
-        //            Options = new EncodingOptions { Width = 250, Height = 250 }
-        //        };
-
-        //        var pixelData = writer.Write(qrText);
-        //        using var bmp = new Bitmap(pixelData.Width, pixelData.Height, PixelFormat.Format32bppRgb);
-
-        //        var data = bmp.LockBits(
-        //            new Rectangle(0, 0, bmp.Width, bmp.Height),
-        //            ImageLockMode.WriteOnly,
-        //            bmp.PixelFormat);
-
-        //        System.Runtime.InteropServices.Marshal.Copy(pixelData.Pixels, 0, data.Scan0, pixelData.Pixels.Length);
-        //        bmp.UnlockBits(data);
-
-        //        string tempPath = Path.GetTempFileName();
-        //        bmp.Save(tempPath, ImageFormat.Png);
-
-        //        sheet.AddPicture(tempPath)
-        //             .MoveTo(sheet.Cell(1, 10), 20, 10)
-        //             .WithSize(120, 120);
-
-        //        System.IO.File.Delete(tempPath);
-        //        #endregion
-
-        //        using var stream = new MemoryStream();
-        //        workbook.SaveAs(stream);
-
-        //        return File(
-        //            stream.ToArray(),
-        //            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        //            $"{master["Code"]}_{DateTime.Now:dd_MM_yyyy_HH_mm_ss}.xlsx"
-        //        );
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-        //    }
-        //}
         [HttpPost("export-excel")]
         public IActionResult ExportExcel([FromBody] List<int> listId, int type)
         {
@@ -838,7 +439,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         string fullName = GetString(master, "FullName").Trim();
                         int userId = GetInt(master, "UserID");
 
-                        int departmentID = _employeeRepo.GetByID(userId)?.DepartmentID ?? 0;
+                        int departmentID = _employeeRepo.GetAll(x => x.UserID == userId).FirstOrDefault()?.DepartmentID ?? 0;
                         string department = _departmentRepo.GetByID(departmentID)?.Name ?? "";
 
                         sheet.Cell(9, 4).Value = string.IsNullOrWhiteSpace(department)
@@ -857,15 +458,15 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         sheet.Cell(25, 3).Value = GetString(master, "FullNameSender");
                         sheet.Cell(25, 9).Value = GetString(master, "FullName");
 
-                        if (GetInt(master, "WarehouseID") == 1)
-                            sheet.Cell(15, 10).Value = "Loại vật tư";
+                        //if (GetInt(master, "WarehouseID") == 1)
+                        //    sheet.Cell(15, 10).Value = "Loại vật tư";
 
                         if (DateTime.TryParse(GetString(master, "CreatDate"), out var d))
                             sheet.Cell(18, 9).Value = $"Ngày {d:dd} tháng {d:MM} năm {d:yyyy}";
                         #endregion
 
                         #region ===== MAP DETAIL =====
-                        int excelRow = 16;
+                        int excelRow = 15;
                         int stt = 1;
 
                         for (int i = details.Count - 1; i >= 0; i--)
@@ -898,7 +499,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                             excelRow++;
                         }
                         //sheet.Row(excelRow + details.Count).Delete();
-                        sheet.Row(excelRow + details.Count - 1).Delete();
+                        sheet.Row(excelRow).Delete();
+                        sheet.Row(excelRow).Delete();
                         #endregion
                         //#region ===== QR CODE =====
                         string qrText = master["Code"]?.ToString();
@@ -924,8 +526,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         bmp.Save(tempPath, ImageFormat.Png);
 
                         sheet.AddPicture(tempPath)
-                             .MoveTo(sheet.Cell(1, 10), 20, 10)
-                             .WithSize(120, 120);
+                             .MoveTo(sheet.Cell(1, 11), 20, 10)
+                             .WithSize(150, 150);
 
                         System.IO.File.Delete(tempPath);
                         using var excelStream = new MemoryStream();
@@ -1623,5 +1225,163 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 _ => "application/octet-stream"
             };
         }
+        [HttpPost("check-bill-code")]
+        public IActionResult CheckBillCode([FromBody] string billCode)
+        {
+            try
+            {
+                bool isExists = _billexportRepo.GetAll(b => b.Code.ToLower().Trim() == billCode.ToLower().Trim() && b.IsDeleted == false).Any();
+                return Ok(ApiResponseFactory.Success(isExists));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
+        [HttpGet("export-excel-file")]
+        public async Task<IActionResult> ExportFile(int billExportId)
+        {
+            try
+            {
+                string rootPath = _configuration.GetValue<string>("PathTemplate");
+                string templatePath = Path.Combine(rootPath, "ExportExcel", "PhieuXuatSale.xlsx");
+                var paramMaster = new { ID = billExportId };
+                var paramDetail = new { BillID = billExportId };
+
+                var masters = await SqlDapper<object>.ProcedureToListTAsync("spGetExportExcel", paramMaster);
+                //var master = _billexportRepo.GetByID(billExportId);
+                if (masters == null || masters.Count() <= 0) return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu phiếu"));
+
+                dynamic master = masters[0];
+
+                var details = await SqlDapper<object>.ProcedureToListTAsync("spGetBillExportDetail", paramDetail);
+
+                if (details == null || details.Count() <= 0) return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu chi tiết phiếu"));
+
+                using (var workbook = new XLWorkbook(templatePath))
+                {
+                    var sheet = workbook.Worksheet(1);
+
+                    #region ===== MAP MASTER =====
+                    sheet.Cell(6, 1).Value = "Số: " + master.Code ?? "";
+
+                    string fullname = master.FullName ?? "";
+                    int userId;
+                    int.TryParse(master.UserID?.ToString(), out userId);
+
+                    int departmentid = _employeeRepo.GetByID(userId)?.DepartmentID ?? 0;
+                    string department = _departmentRepo.GetByID(departmentid)?.Name ?? "";
+
+                    sheet.Cell(9, 4).Value = string.IsNullOrWhiteSpace(department)
+                        ? fullname
+                        : $"{fullname} / phòng {department}";
+
+                    string customer = master.CustomerName;
+                    string supplier = master.NameNCC;
+
+                    sheet.Cell(10, 3).Value = "'- khách hàng/nhà cung cấp:";
+                    sheet.Cell(10, 4).Value = string.IsNullOrWhiteSpace(customer) ? supplier : customer;
+
+                    sheet.Cell(11, 4).Value = master.Address ?? "";
+                    sheet.Cell(12, 4).Value = master.AddressStock ?? "";
+
+                    sheet.Cell(25, 3).Value = master.FullNameSender ?? "";
+                    sheet.Cell(25, 9).Value = fullname;
+
+                    //if (master.WarehouseID == 1)
+                    //    sheet.Cell(15, 10).Value = "loại vật tư";
+
+                    DateTime d;
+                    if (DateTime.TryParse(GetString(master, "CreatDate"), out d))
+                    {
+                        sheet.Cell(18, 9).Value = $"ngày {d:dd} tháng {d:MM} năm {d:yyyy}";
+                    }
+                    #endregion
+
+                    #region ===== MAP DETAIL =====
+                    int excelRow = 15;
+                    int stt = 1;
+
+                    for (int i = details.Count - 1; i >= 0; i--)
+                    {
+                        dynamic dt = details[i];
+                        sheet.Cell(excelRow, 1).Value = stt++;
+                        sheet.Cell(excelRow, 2).Value = dt.ProductNewCode ?? "";
+                        sheet.Cell(excelRow, 3).Value = dt.ProductCode ?? "";
+                        sheet.Cell(excelRow, 4).Value = dt.ProductFullName ?? "";
+                        sheet.Cell(excelRow, 5).Value = dt.ProductName ?? "";
+                        sheet.Cell(excelRow, 6).Value = dt.Unit ?? "";
+                        sheet.Cell(excelRow, 7).Value = dt.Qty ?? 0;
+                        sheet.Cell(excelRow, 8).Value = dt.ProjectCodeText ?? "";
+                        sheet.Cell(excelRow, 9).Value = dt.ProjectNameText ?? "";
+                        sheet.Cell(excelRow, 10).Value = dt.ProductTypeText ?? "";
+                        sheet.Cell(excelRow, 11).Value = dt.UnitPricePOKH ?? 0;
+                        sheet.Cell(excelRow, 12).Value = dt.UnitPricePurchase ?? 0;
+
+                        sheet.Cell(excelRow, 13).Value =
+                            master.WarehouseID == 1
+                                ? dt.ProductGroupName ?? ""
+                                : dt.WarehouseName ?? "";
+
+                        string note = dt.Note ?? "";
+                        sheet.Cell(excelRow, 14).Value = note.StartsWith("=") ? $"'{note}" : note;
+
+                        sheet.Row(excelRow).InsertRowsBelow(1);
+                        excelRow++;
+                    }
+                    sheet.Row(excelRow).Delete();
+                    sheet.Row(excelRow).Delete();
+                    //sheet.Row(excelRow + details.Count - 1).Delete();
+                    //sheet.Row(excelRow + details.Count - 1).Delete();
+                    #endregion
+
+                    #region ===== QR CODE =====
+                    string qrText = master.Code ?? "";
+
+                    var writer = new BarcodeWriterPixelData
+                    {
+                        Format = BarcodeFormat.QR_CODE,
+                        Options = new EncodingOptions { Width = 250, Height = 250 }
+                    };
+
+                    var pixelData = writer.Write(qrText);
+                    using var bmp = new Bitmap(pixelData.Width, pixelData.Height, PixelFormat.Format32bppRgb);
+
+                    var data = bmp.LockBits(
+                        new Rectangle(0, 0, bmp.Width, bmp.Height),
+                        ImageLockMode.WriteOnly,
+                        bmp.PixelFormat);
+
+                    System.Runtime.InteropServices.Marshal.Copy(pixelData.Pixels, 0, data.Scan0, pixelData.Pixels.Length);
+                    bmp.UnlockBits(data);
+
+                    string tempPath = Path.GetTempFileName();
+                    bmp.Save(tempPath, ImageFormat.Png);
+
+                    sheet.AddPicture(tempPath)
+                         .MoveTo(sheet.Cell(1, 11), 20, 10)
+                         .WithSize(150, 150);
+                    #endregion
+                    using (var stream = new MemoryStream())
+                    {
+                        workbook.SaveAs(stream);
+                        stream.Position = 0;
+
+                        string fileName = $"Phiếu xuất.xlsx";
+                        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+                    }
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
+
+
 }

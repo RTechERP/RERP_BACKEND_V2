@@ -34,6 +34,18 @@ namespace RERPAPI.Repo
             return false;
         }
 
+        //public async Task<bool> HasPermissionAsync(string userId, string permission)
+        //{
+        //    if (!int.TryParse(userId, out var id)) return false;
+
+        //    var permissions = permission
+        //        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        //    return await _dbContext.vUserGroupLinks
+        //        .AnyAsync(p => p.UserID == id && permissions.Contains(p.Code));
+        //}
+
+
         public Dictionary<string, string> GetClaims()
         {
             //CurrentUser currentUser = new CurrentUser();

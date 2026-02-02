@@ -1218,7 +1218,7 @@ namespace RERPAPI.Controllers.Old
                         using var ms = ConvertImageToMemoryStream(logo);
                         sheet.AddPicture(ms)
                              .MoveTo(sheet.Cell(2, 2))
-                             .Scale(0.13); // zoom 50%
+                             .Scale(0.14); // zoom 50%
                     }
 
                     // 2. Chữ ký người lập
@@ -1230,7 +1230,7 @@ namespace RERPAPI.Controllers.Old
 
                         sheet.AddPicture(ms)
                              .MoveTo(sheet.Cell(preparedRow, preparedCol))
-                             .Scale(0.8); // zoom 70%
+                             .Scale(0.68); // zoom 70%
                     }
 
                     // 3. Dấu và chữ ký giám đốc
@@ -1242,7 +1242,7 @@ namespace RERPAPI.Controllers.Old
 
                         sheet.AddPicture(ms)
                              .MoveTo(sheet.Cell(directorRow, directorCol))
-                             .Scale(0.8); // zoom 60%
+                             .Scale(0.68); // zoom 60%
                     }
 
                     #endregion

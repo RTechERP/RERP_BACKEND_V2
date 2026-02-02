@@ -2,12 +2,15 @@
 using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.AspNetCore.Mvc;
+using NPOI.Util;
+using OfficeOpenXml;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.Handover;
 using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.BBNV;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
@@ -16,7 +19,7 @@ namespace RERPAPI.Controllers
     [Route("api/[controller]")]
     [ApiController]
     public class HandoverController : ControllerBase
-        {
+    {
         private readonly DepartmentRepo _tsDepartment;
         private readonly EmployeeChucVuHDRepo _positionRepo;
         private readonly HandoverRepo _handoverRepo;
@@ -28,19 +31,10 @@ namespace RERPAPI.Controllers
         private readonly HandoverSubordinateRepo _handoverSubordinateRepo;
         private readonly HandoverApproveRepo _approveRepo;
         private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
+        private readonly TSAssetManagementRepo _tsAssetManagementRepo;
+        private IConfiguration _configuration;
 
-        public HandoverController(
-            DepartmentRepo tsDepartment,
-            EmployeeChucVuHDRepo positionRepo,
-            HandoverRepo handoverRepo,
-            HandoverReceiverRepo handoverReceiverRepo,
-            HandoverWorkRepo handoverWorkRepo,
-            HandoverWarehouseAssetRepo handoverWarehouseAssetRepo,
-            HandoverAssetManagementRepo handoverAssetManagementRepo,
-            HandoverFinanceRepo handoverFinanceRepo,
-            HandoverSubordinateRepo handoverSubordinateRepo,
-            HandoverApproveRepo approveRepo,
-            vUserGroupLinksRepo vUserGroupLinksRepo)
+        public HandoverController(DepartmentRepo tsDepartment, EmployeeChucVuHDRepo positionRepo, HandoverRepo handoverRepo, HandoverReceiverRepo handoverReceiverRepo, HandoverWorkRepo handoverWorkRepo, HandoverWarehouseAssetRepo handoverWarehouseAssetRepo, HandoverAssetManagementRepo handoverAssetManagementRepo, HandoverFinanceRepo handoverFinanceRepo, HandoverSubordinateRepo handoverSubordinateRepo, HandoverApproveRepo approveRepo, vUserGroupLinksRepo vUserGroupLinksRepo, TSAssetManagementRepo tsAssetManagementRepo, IConfiguration configuration)
         {
             _tsDepartment = tsDepartment;
             _positionRepo = positionRepo;
@@ -53,13 +47,13 @@ namespace RERPAPI.Controllers
             _handoverSubordinateRepo = handoverSubordinateRepo;
             _approveRepo = approveRepo;
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
+            _tsAssetManagementRepo = tsAssetManagementRepo;
+            _configuration = configuration;
         }
-
-
 
         [HttpPost("get-handover")]
         public IActionResult GetHandover([FromBody] HandoverRequestParam handoverrequest)
-        {
+                {
             var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
             CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
 
@@ -68,43 +62,45 @@ namespace RERPAPI.Controllers
 
             var vUserHR = _vUserGroupLinksRepo
                 .GetAll()
-                .FirstOrDefault(x => x.Code == "N23" && x.UserID == currentUser.ID);
+                .FirstOrDefault(x => (x.Code == "N23" || x.Code == "N1" || x.Code == "N34") &&
+          x.UserID == currentUser.ID);
 
-            //int employeeID;
-            //if (vUserHR != null)
-            //{
-            //    employeeID = handoverrequest.LeaderID;
-            //}
-            //else
-            //{
-            //    employeeID = currentUser.EmployeeID;
-            //}
+            int employeeID;
+            if (vUserHR != null)
+            {
+                employeeID = handoverrequest.EmployeeID;
+            }
+            else
+            {
+                employeeID = currentUser.EmployeeID;
+            }
 
 
 
             //int employeeID = 0;
             //int approverID = 0;
-            if (vUserHR != null)
-            {
-                handoverrequest.LeaderID = handoverrequest.LeaderID;
-            }
-            else
-            {
-                handoverrequest.LeaderID = currentUser.EmployeeID;
+            //if (vUserHR != null)
+            //{
+            //    handoverrequest.LeaderID = 0;
+            //    handoverrequest.EmployeeID = 0;
+            //}
+            //else
+            //{
+            //    handoverrequest.EmployeeID = currentUser.EmployeeID;
 
-            }
-            var vUserTBP = _vUserGroupLinksRepo
-               .GetAll()
-               .FirstOrDefault(x => x.Code == "N32" && x.UserID == currentUser.ID);
-            if (vUserTBP != null)
-            {
-                //approverID = handoverrequest.ApproverID;
-                handoverrequest.ApproverID = currentUser.EmployeeID;
-            }
+            //}
+            //var vUserTBP = _vUserGroupLinksRepo
+            //   .GetAll()
+            //   .FirstOrDefault(x => x.Code == "N32" && x.UserID == currentUser.ID);
+            //if (vUserTBP != null)
+            //{
+            //    //approverID = handoverrequest.ApproverID;
+            //    //handoverrequest.ApproverID = currentUser.EmployeeID;
+            //}
 
             var handover = SQLHelper<dynamic>.ProcedureToList("spGetHandover",
                 new string[] { "@DepartmentID", "@EmployeeID", "@Keyword", "@LeaderID", "@DateStart", "@DateEnd", "@ApproverID" },
-                new object[] { handoverrequest.DepartmentID, handoverrequest.EmployeeID, handoverrequest.Keyword, handoverrequest.LeaderID, handoverrequest.DateStart, handoverrequest.DateEnd, handoverrequest.ApproverID }
+                new object[] { handoverrequest.DepartmentID, employeeID, handoverrequest.Keyword, handoverrequest.LeaderID, handoverrequest.DateStart, handoverrequest.DateEnd, handoverrequest.ApproverID }
                 );
             try
             {
@@ -144,14 +140,13 @@ namespace RERPAPI.Controllers
                     new object[] { request.HandoverID }
                 );
 
-                var handoverWarehouseAsset = SQLHelper<dynamic>.ProcedureToList("spGetHandoverWarehouseAsset",
+                    var handoverWarehouseAsset = SQLHelper<dynamic>.ProcedureToList("spGetHandoverWarehouseAsset",
                   new string[] { "@PageNumber", "@PageSize", "@DateBegin", "@DateEnd", "@ProductGroupID", "@ReturnStatus", "@FilterText", "@WareHouseID", "@EmployeeID" },
                   new object[] { request.PageNumber, request.PageSize, request.DateBegin, request.DateEnd, request.ProductGroupID, request.ReturnStatus, request.FilterText, request.WareHouseID, request.EmployeeID }
                 );
-
                 var handoverAssetManagement = SQLHelper<dynamic>.ProcedureToList("spGetTSAsset",
-                    new string[] { "@LeaderID", "@DateStart", "@DateEnd", "@PageNumber", "@PageSize", "@FilterText" },
-                    new object[] { request.LeaderID, request.DateStart, request.DateEnd, request.PageNumber, request.PageSize, request.FilterText }
+                    new string[] { "@LeaderID", "@HandoverID" },
+                    new object[] { request.LeaderID, request.HandoverID }
                 );
                 var handoverFinances = SQLHelper<dynamic>.ProcedureToList("spGetHandoverFinances",
                     new string[] { "@HandoverID" },
@@ -257,9 +252,9 @@ namespace RERPAPI.Controllers
         {
             try
             {
-              
+
                 var employees = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
-                                                new string[] { "@Status"},
+                                                new string[] { "@Status" },
                                                 new object[] { 0 });
                 return Ok(new
                 {
@@ -267,7 +262,7 @@ namespace RERPAPI.Controllers
                     data = new
                     {
                         asset = employees
-                     
+
                     }
 
                 });
@@ -289,10 +284,10 @@ namespace RERPAPI.Controllers
         {
             try
             {
-             
+
                 var employees = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
                                                 new string[] { "@Status" },
-                                                new object[] {0 });
+                                                new object[] { 0 });
 
                 return Ok(new
                 {
@@ -337,6 +332,26 @@ namespace RERPAPI.Controllers
             }
         }
 
+        private async Task UpdateEmployeeForAssets(List<HandoverAssetManagement> assets, int newEmployeeId)
+        {
+            if (assets == null || !assets.Any()) return;
+
+            foreach (var item in assets)
+            {
+                var asset = _tsAssetManagementRepo
+                    .GetAll()
+                    .FirstOrDefault(x => x.TSAssetCode == item.TSAssetCode);
+
+                if (asset != null)
+                {
+                    asset.EmployeeID = newEmployeeId; // nhân viên mượn
+                    asset.UpdatedDate = DateTime.Now;
+                    await _tsAssetManagementRepo.UpdateAsync(asset);
+                }
+            }
+        }
+
+
         [HttpPost("save-data-handover")]
         public async Task<IActionResult> SaveData([FromBody] HandoverDTO dto)
         {
@@ -344,7 +359,7 @@ namespace RERPAPI.Controllers
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
-                
+
                 if (dto == null || dto.Handover == null)
                 {
                     return BadRequest(new { status = 0, message = "Dữ liệu không hợp lệ" });
@@ -417,7 +432,7 @@ namespace RERPAPI.Controllers
                         employeeReceiver.HandoverID = handoverID;
 
                         var existing = _handoverReceiverRepo.GetAll()
-                   .FirstOrDefault(x => x.HandoverID == handoverID && x.ID == employeeReceiver.ID );
+                   .FirstOrDefault(x => x.HandoverID == handoverID && x.ID == employeeReceiver.ID);
 
                         if (existing == null || employeeReceiver.ID <= 0)
                         {
@@ -490,12 +505,12 @@ namespace RERPAPI.Controllers
                     {
                         itemAsset.HandoverID = handoverID;
                         var existing = _handoverAssetManagementRepo.GetAll()
-               .FirstOrDefault(x => x.HandoverID == handoverID &&  x.TSAssetCode == itemAsset.TSAssetCode);
+               .FirstOrDefault(x => x.HandoverID == handoverID && x.TSAssetCode == itemAsset.TSAssetCode);
 
 
                         if (existing == null || itemAsset.ID <= 0)
                         {
-                    
+
                             sttHandoverAsset++;
                             itemAsset.STT = sttHandoverAsset;
                             itemAsset.CreatedDate = DateTime.Now;
@@ -508,7 +523,7 @@ namespace RERPAPI.Controllers
 
                             _handoverAssetManagementRepo.Update(itemAsset);
                         }
-                           
+
                     }
                 }
 
@@ -662,7 +677,7 @@ namespace RERPAPI.Controllers
                     return BadRequest(new { status = 0, Message = "Không có file được gửi lên." });
                 }
 
-                var allowedExtensions = new[] { ".pdf", ".doc", ".docx", ".xlsx", ".png", ".jpg"};
+                var allowedExtensions = new[] { ".pdf", ".doc", ".docx", ".xlsx", ".png", ".jpg" };
                 var fileExtension = Path.GetExtension(file.FileName).ToLower();
 
                 if (!allowedExtensions.Contains(fileExtension))
@@ -671,7 +686,7 @@ namespace RERPAPI.Controllers
                 }
 
                 //string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-                string uploadsFolder = Path.Combine("\\\\192.168.1.190\\Software\\Test","BBBG");
+                string uploadsFolder = Path.Combine("\\\\192.168.1.190\\Software\\Test", "BBBG");
                 if (!Directory.Exists(uploadsFolder))
                 {
                     Directory.CreateDirectory(uploadsFolder);
@@ -698,7 +713,15 @@ namespace RERPAPI.Controllers
                 return StatusCode(500, new { status = 0, Message = $"Upload file thất bại! ({ex.Message})" });
             }
         }
+        private void CopyRowStyle(IXLWorksheet sheet, int sourceRow, int targetRow)
+        {
+            var lastCol = sheet.LastColumnUsed().ColumnNumber();
 
+            for (int col = 1; col <= lastCol; col++)
+            {
+                sheet.Cell(targetRow, col).Style = sheet.Cell(sourceRow, col).Style;
+            }
+        }
         [HttpGet("export-excel/{id}")]
         public IActionResult ExportExcel(int id)
         {
@@ -708,24 +731,12 @@ namespace RERPAPI.Controllers
                 DateTime end = new DateTime(2099, 12, 31);
                 List<List<dynamic>> handoverList = SQLHelper<dynamic>.ProcedureToList(
                     "spGetHandover",
-                    new string[] { "@DepartmentID", "@EmployeeID", "@KeyWord" },
-                    new object[] { 0, 0, "" }
+                    new string[] { "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@KeyWord" },
+                    new object[] { TextUtils.MinDate, TextUtils.MaxDate, 0, 0, "" }
                 );
-
-                if (handoverList == null || !handoverList.Any() || !handoverList[0].Any())
-                {
-                    throw new Exception("Không có dữ liệu từ spGetHandover");
-                }
-
                 var handoverData = SQLHelper<dynamic>.GetListData(handoverList, 0).FirstOrDefault(h => h.ID == id);
                 int leaderID = handoverData?.LeaderID ?? 0;
                 int employeeID = handoverData?.EmployeeID ?? 0;
-
-                if (handoverData == null)
-                {
-                    throw new Exception($"Không tìm thấy biên bản bàn giao với ID {id}");
-                }
-
                 // Lấy chi tiết biên bản (danh sách người nhận bàn giao)
                 List<List<dynamic>> detailReceiverList = SQLHelper<dynamic>.ProcedureToList(
                     "spGetHandoverReceiver",
@@ -741,8 +752,8 @@ namespace RERPAPI.Controllers
                 //Lấy danh sách tài sản cấp phát bàn giao
                 List<List<dynamic>> detailAssetList = SQLHelper<dynamic>.ProcedureToList(
                   "spGetTSAsset",
-                  new string[] { "@LeaderID", "@DateStart", "@DateEnd", "@PageNumber", "@PageSize", "@FilterText" },
-                  new object[] { leaderID, new DateTime(2022, 9, 1), DateTime.Now, 1, 9999, "" }
+                  new string[] { "@LeaderID", "@HandoverID" },
+                  new object[] { leaderID ,id}
                 );
                 //Lấy danh sách tài sản kho bàn giao
                 List<List<dynamic>> detailAssetWarehouseList = SQLHelper<dynamic>.ProcedureToList(
@@ -766,9 +777,8 @@ namespace RERPAPI.Controllers
                 List<List<dynamic>> detailApproveList = SQLHelper<dynamic>.ProcedureToList(
                   "spGetHandoverApprove",
                   new string[] { "@HandoverID" },
-                  new object[] {id }
+                  new object[] { id }
                 );
-
                 var receiverData = SQLHelper<dynamic>.GetListData(detailReceiverList, 0);
                 var workData = SQLHelper<dynamic>.GetListData(detailWorkList, 0);
                 var assetData = SQLHelper<dynamic>.GetListData(detailAssetList, 0);
@@ -777,8 +787,20 @@ namespace RERPAPI.Controllers
                 var subData = SQLHelper<dynamic>.GetListData(detailSubList, 0);
                 var approveData = SQLHelper<dynamic>.GetListData(detailApproveList, 0);
 
+
+                ExcelPackage.License.SetNonCommercialOrganization("RTC");
+
+                //string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "BienBanBanGiao.xlsx");
+
+                var templateFolder = _configuration.GetValue<string>("PathTemplate");
+
+                if (string.IsNullOrWhiteSpace(templateFolder))
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy đường dẫn thư mục {templateFolder} trên sever!!"));
                 // Đường dẫn mẫu Excel
-                string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "BanGiaoNghiViec.xlsx");
+                //    string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "BanGiaoNghiViec.xlsx");
+                string templatePath = Path.Combine(templateFolder, "ExportExcel", "HandoverTemplate.xlsx");
+                if (!System.IO.File.Exists(templatePath))
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy File mẫu!"));
                 if (!System.IO.File.Exists(templatePath))
                 {
                     throw new Exception("Không tìm thấy file mẫu Excel");
@@ -829,58 +851,63 @@ namespace RERPAPI.Controllers
                         string startDateStr = $"Ngày vào làm việc: {startWorkingDate.Day} / {startWorkingDate.Month} / {startWorkingDate.Year}";
                         sheet.Cell("E5").Value = startDateStr;
                     }
-
-                    // II. Bên nhận bàn giao (rows 8+)
                     int receiverStartRow = 8;
-                    int maxReceiverRows = 3; // Rows 8,9,10
+                    int maxTemplateRows = 3; // template có sẵn 3 dòng Bộ phận
 
-                    if (receiverData.Count > maxReceiverRows)
+                    for (int i = 0; i < maxTemplateRows; i++)
                     {
-                        sheet.Row(receiverStartRow + maxReceiverRows - 1).InsertRowsBelow(receiverData.Count - maxReceiverRows);
-                    }
-
-                    for (int i = 0; i < receiverData.Count; i++)
-                    {
-                        var rowData = (IDictionary<string, object>)receiverData[i];
                         int rowIdx = receiverStartRow + i;
 
-                        string receiverFullName = rowData.ContainsKey("FullName") ? rowData["FullName"]?.ToString() ?? "" : "";
-                        string receiverDepartment = rowData.ContainsKey("Name") ? rowData["Name"]?.ToString() ?? "" : "";
-
-                        // B{rowIdx}: Họ tên (sau label ở A{rowIdx})
-                        sheet.Cell(rowIdx, 1).Value = $"{i + 1}. Họ và tên: {receiverFullName}";
-
-                        // G{rowIdx}: Bộ phận (sau label ở F{rowIdx})
-                        sheet.Cell(rowIdx, 6).Value = receiverDepartment;
-
-                        // Căn chỉnh text
-                        for (int j = 1; j <= 12; j++)
+                        if (i < receiverData.Count)
                         {
-                            var cell = sheet.Cell(rowIdx, j);
-                            if (cell.Value.IsText)
+                            var rowData = (IDictionary<string, object>)receiverData[i];
+
+                            string receiverFullName =
+                                rowData.ContainsKey("FullName")
+                                    ? rowData["FullName"]?.ToString() ?? ""
+                                    : "";
+
+                            string receiverDepartment =
+                                rowData.ContainsKey("Name")
+                                    ? rowData["Name"]?.ToString() ?? ""
+                                    : "";
+
+                            // Họ và tên (chỉ dòng đầu có số thứ tự)
+                            sheet.Cell(rowIdx, 1).Value =
+                                i == 0
+                                    ? $"1. Họ và tên: {receiverFullName}"
+                                    : $"{i + 1}. Họ và tên: {receiverFullName}";
+
+                            // Bộ phận
+                            sheet.Cell(rowIdx, 6).Value =
+                                $"Bộ phận: {receiverDepartment}";
+
+                            // Style
+                            for (int j = 1; j <= 12; j++)
                             {
-                                cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-                                cell.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                                var cell = sheet.Cell(rowIdx, j);
                                 cell.Style.Alignment.WrapText = true;
+                                cell.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                                cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
                             }
+                        }
+                        else
+                        {
+                            // 🔥 CLEAR DÒNG THỪA (BỘ PHẬN RỖNG)
+                            sheet.Row(rowIdx).Clear();
                         }
                     }
 
-                    // Clear các row thừa
-                    for (int i = receiverData.Count; i < maxReceiverRows; i++)
-                    {
-                        int rowIdx = receiverStartRow + i;
-                        sheet.Cell(rowIdx, 2).Clear();
-                        sheet.Cell(rowIdx, 7).Clear();
-                    }
-
-                    // III.1 Công việc bàn giao (rows 16-20+)
+                    // =========================
+                    // III.1 CÔNG VIỆC BÀN GIAO (FULL WRAP + HEIGHT)
+                    // =========================
                     int workStartRow = 16;
                     int maxWorkRows = 5;
 
                     if (workData.Count > maxWorkRows)
                     {
-                        sheet.Row(workStartRow + maxWorkRows - 1).InsertRowsBelow(workData.Count - maxWorkRows);
+                        sheet.Row(workStartRow + maxWorkRows - 1)
+                             .InsertRowsBelow(workData.Count - maxWorkRows);
                     }
 
                     for (int i = 0; i < workData.Count; i++)
@@ -888,28 +915,125 @@ namespace RERPAPI.Controllers
                         var rowData = (IDictionary<string, object>)workData[i];
                         int rowIdx = workStartRow + i;
 
-                        // A: STT, B: Nội dung công việc, D: Tình trạng, F: Tần suất thực hiện, G: File cứng, H: File mềm, J: Người nhận, K: Ký nhận
                         sheet.Cell(rowIdx, 1).Value = i + 1;
-                        sheet.Cell(rowIdx, 2).Value = rowData.ContainsKey("ContentWork") ? rowData["ContentWork"]?.ToString() ?? "" : "";
-                        sheet.Cell(rowIdx, 4).Value = rowData.ContainsKey("StatusText") ? rowData["StatusText"]?.ToString() ?? "" : "";
-                        sheet.Cell(rowIdx, 6).Value = rowData.ContainsKey("Frequency") ? rowData["Frequency"]?.ToString() ?? "" : "";
-                        sheet.Cell(rowIdx, 7).Value = rowData.ContainsKey("FileCung") ? rowData["FileCung"]?.ToString() ?? "" : "";
-                        sheet.Cell(rowIdx, 8).Value = rowData.ContainsKey("FileName") ? rowData["FileName"]?.ToString() ?? "" : "";
-                        sheet.Cell(rowIdx, 9).Value = rowData.ContainsKey("FullName") ? rowData["FullName"]?.ToString() ?? "" : "";
-                        sheet.Cell(rowIdx, 10).Value = rowData.ContainsKey("IsSigned") && rowData["IsSigned"] is bool signed? (signed ? "✓" : "✗"): "";
 
+                        // =========================
+                        // NỘI DUNG CÔNG VIỆC (B)
+                        // =========================
+                        string contentWork =
+                            rowData.ContainsKey("ContentWork")
+                                ? rowData["ContentWork"]?.ToString() ?? ""
+                                : "";
 
-                        // Căn chỉnh
-                        for (int j = 1; j <= 12; j++)
+                        var contentCell = sheet.Cell(rowIdx, 2);
+                        contentCell.Value = contentWork;
+
+                        var contentRange = contentCell.MergedRange()
+                            ?? sheet.Range(rowIdx, 2, rowIdx, 2);
+
+                        contentRange.Style.Alignment.WrapText = true;
+                        contentRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
+                        contentRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+
+                        int contentLines =
+                            (int)Math.Ceiling((double)Math.Max(contentWork.Length, 1) / 40);
+
+                        // =========================
+                        // TÌNH TRẠNG
+                        // =========================
+                        sheet.Cell(rowIdx, 4).Value =
+                            rowData.ContainsKey("StatusText") ? rowData["StatusText"]?.ToString() ?? "" : "";
+
+                        // =========================
+                        // TẦN SUẤT
+                        // =========================
+                        sheet.Cell(rowIdx, 6).Value =
+                            rowData.ContainsKey("Frequency") ? rowData["Frequency"]?.ToString() ?? "" : "";
+
+                        // =========================
+                        // FILE CỨNG (G)
+                        // =========================
+                        string fileCung =
+                            rowData.ContainsKey("FileCung")
+                                ? rowData["FileCung"]?.ToString() ?? ""
+                                : "";
+
+                        var fileCungCell = sheet.Cell(rowIdx, 7);
+                        fileCungCell.Value = fileCung;
+
+                        var fileCungRange = fileCungCell.MergedRange()
+                            ?? sheet.Range(rowIdx, 7, rowIdx, 7);
+
+                        fileCungRange.Style.Alignment.WrapText = true;
+                        fileCungRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
+                        fileCungRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+
+                        int fileCungLines =
+                            (int)Math.Ceiling((double)Math.Max(fileCung.Length, 1) / 25);
+
+                        // =========================
+                        // FILE MỀM (H)
+                        // =========================
+                        string fileMem =
+                            rowData.ContainsKey("FileName")
+                                ? rowData["FileName"]?.ToString() ?? ""
+                                : "";
+
+                        var fileMemCell = sheet.Cell(rowIdx, 8);
+                        fileMemCell.Value = fileMem;
+
+                        var fileMemRange = fileMemCell.MergedRange()
+                            ?? sheet.Range(rowIdx, 8, rowIdx, 8);
+
+                        fileMemRange.Style.Alignment.WrapText = true;
+                        fileMemRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
+                        fileMemRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+
+                        int fileMemLines =
+                            (int)Math.Ceiling((double)Math.Max(fileMem.Length, 1) / 25);
+
+                        // =========================
+                        // NGƯỜI NHẬN (I)
+                        // =========================
+                        string receiverName =
+       rowData.ContainsKey("FullName")
+           ? rowData["FullName"]?.ToString() ?? ""
+           : "";
+
+                        // Ép xuống dòng nếu tên dài (>= 3 từ)
+                        if (!string.IsNullOrWhiteSpace(receiverName))
                         {
-                            var cell = sheet.Cell(rowIdx, j);
-                            if (cell.Value.IsText)
+                            var parts = receiverName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                            if (parts.Length >= 3)
                             {
-                                cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-                                cell.Style.Alignment.WrapText = true;
+                                receiverName =
+                                    string.Join(" ", parts.Take(2)) +
+                                    Environment.NewLine +
+                                    string.Join(" ", parts.Skip(2));
                             }
                         }
+
+                        var receiverCell = sheet.Cell(rowIdx, 9);
+                        receiverCell.Value = receiverName;
+
+                        var receiverRange = receiverCell.MergedRange()
+                            ?? sheet.Range(rowIdx, 9, rowIdx, 9);
+
+                        receiverRange.Style.Alignment.WrapText = true;
+                        receiverRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
+                        receiverRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+
+                        // Số dòng thực tế để tính height
+                        int receiverLineCount = receiverName.Split('\n').Length;
+
+                        int finalLines = Math.Max(
+        Math.Max(contentLines, receiverLineCount),
+        Math.Max(fileCungLines, fileMemLines)
+    );
+
+                        sheet.Row(rowIdx).Height = Math.Max(18, finalLines * 18);
                     }
+
 
                     // Clear thừa
                     //for (int i = workData.Count; i < maxWorkRows; i++)
@@ -918,14 +1042,40 @@ namespace RERPAPI.Controllers
                     //    for (int j = 1; j <= 12; j++) sheet.Cell(rowIdx, j).Clear();
                     //}
 
-                    // III.2 Tài sản HCNS (rows 23-35+, fixed 13 rows approx)
+                    // =========================
+                    // III.2 TÀI SẢN HCNS (FIX AUTO WRAP + HEIGHT)
+                    // =========================
                     int assetStartRow = 23;
-                    int maxAssetRows = 5; // From 23 to 35
+                    int maxAssetRows = 5;
+                    int assetRowCount = assetData.Count > 0 ? assetData.Count : maxAssetRows;
+                    int templateRow = assetStartRow + maxAssetRows - 1;
+                    int assetEndRow = assetStartRow + assetRowCount+4;
 
-                    // Note: Template has fixed items, but for dynamic data, fill from 23, overwrite B if needed, insert if more
+                    // Lưu template row
+                    var templateRange = sheet.Range(
+                        templateRow,
+                        1,  
+                        templateRow,
+                        sheet.LastColumnUsed().ColumnNumber()
+                    );
+
                     if (assetData.Count > maxAssetRows)
                     {
-                        sheet.Row(assetStartRow + maxAssetRows - 1).InsertRowsBelow(assetData.Count - maxAssetRows);
+                        int rowsToInsert = assetData.Count - maxAssetRows;
+
+                        sheet.Row(templateRow).InsertRowsBelow(rowsToInsert);
+
+                        for (int i = 1; i <= rowsToInsert; i++)
+                        {
+                            templateRange.CopyTo(
+                                sheet.Range(
+                                    templateRow + i,
+                                    1,
+                                    templateRow + i,
+                                    sheet.LastColumnUsed().ColumnNumber()
+                                )
+                            );
+                        }
                     }
 
                     for (int i = 0; i < assetData.Count; i++)
@@ -933,30 +1083,89 @@ namespace RERPAPI.Controllers
                         var rowData = (IDictionary<string, object>)assetData[i];
                         int rowIdx = assetStartRow + i;
 
-                        // A: STT (if empty), B: Tên tài sản, D: Mã TS, E: SL, F: Đơn vị tính, G: Tình trạng, J: Người nhận, K: Ký nhận
-                        if (string.IsNullOrEmpty(sheet.Cell(rowIdx, 1).Value.ToString()))
-                        {
-                            sheet.Cell(rowIdx, 1).Value = i + 1;
-                        }
-                        sheet.Cell(rowIdx, 2).Value = rowData.ContainsKey("TSAssetName") ? rowData["TSAssetName"]?.ToString() ?? "" : "";
-                        sheet.Cell(rowIdx, 4).Value = rowData.ContainsKey("TSAssetCode") ? rowData["TSAssetCode"]?.ToString() ?? "" : "";
-                        sheet.Cell(rowIdx, 5).Value = rowData.ContainsKey("Quantity") ? rowData["Quantity"]?.ToString() ?? "" : "";
-                        sheet.Cell(rowIdx, 6).Value = rowData.ContainsKey("UnitName") ? rowData["UnitName"]?.ToString() ?? "" : "";
-                        sheet.Cell(rowIdx, 7).Value = rowData.ContainsKey("Status") ? rowData["Status"]?.ToString() ?? "" : "";
-                        sheet.Cell(rowIdx, 10).Value = rowData.ContainsKey("ReceiverName") ? rowData["ReceiverName"]?.ToString() ?? "" : "";
-                        sheet.Cell(rowIdx, 10).Value = rowData.ContainsKey("IsSigned") && rowData["IsSigned"] is bool signed ? (signed ? "✓" : "✗") : "";
+                        string assetName = rowData.ContainsKey("TSAssetName")
+                            ? rowData["TSAssetName"]?.ToString() ?? ""
+                            : "";
 
+                        // STT
+                        sheet.Cell(rowIdx, 1).Value = i + 1;
 
-                        // Căn chỉnh
-                        for (int j = 1; j <= 12; j++)
+                        // =========================
+                        // TÊN TÀI SẢN (MERGED CELL)
+                        // =========================
+                        var nameCell = sheet.Cell(rowIdx, 2);
+                        nameCell.Value = assetName;
+
+                        var nameRange = nameCell.MergedRange() ?? sheet.Range(rowIdx, 2, rowIdx, 2);
+                        nameRange.Style.Alignment.WrapText = true;
+                        nameRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
+                        nameRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+
+                        // 👉 AUTO HEIGHT THỦ CÔNG (BẮT BUỘC VỚI MERGE)
+                        int charPerLine = 35; // tùy width cột B
+                        int lineCount = (int)Math.Ceiling((double)(assetName.Length == 0 ? 1 : assetName.Length) / charPerLine);
+                        sheet.Row(rowIdx).Height = Math.Max(18, lineCount * 18);
+
+                        // =========================
+                        // CÁC CỘT CÒN LẠI
+                        // =========================
+                        sheet.Cell(rowIdx, 4).Value =
+                            rowData.ContainsKey("TSCodeNCC") ? rowData["TSCodeNCC"]?.ToString() ?? "" : "";
+
+                        var qtyCell = sheet.Cell(rowIdx, 5);
+                        qtyCell.Value =
+                            rowData.ContainsKey("Quantity") ? rowData["Quantity"]?.ToString() ?? "1" : "1";
+
+                        var qtyRange = qtyCell.MergedRange() ?? sheet.Range(rowIdx, 5, rowIdx, 5);
+                        qtyRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                        qtyRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                        qtyRange.Style.Alignment.WrapText = false;
+
+                        sheet.Cell(rowIdx, 6).Value =
+                            rowData.ContainsKey("UnitName") ? rowData["UnitName"]?.ToString() ?? "" : "";
+
+                        sheet.Cell(rowIdx, 7).Value =
+                            rowData.ContainsKey("Status") ? rowData["Status"]?.ToString() ?? "" : "";
+
+                        string receiverName =
+       rowData.ContainsKey("ReceiverName")
+           ? rowData["ReceiverName"]?.ToString() ?? ""
+           : "";
+
+                        // ÉP CHIA DÒNG: Nguyễn Tuấn | Nha
+                        if (!string.IsNullOrEmpty(receiverName))
                         {
-                            var cell = sheet.Cell(rowIdx, j);
-                            if (cell.Value.IsText)
+                            var parts = receiverName.Split(' ');
+                            if (parts.Length >= 3)
                             {
-                                cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-                                cell.Style.Alignment.WrapText = true;
+                                receiverName =
+                                    string.Join(" ", parts.Take(2)) +
+                                    Environment.NewLine +
+                                    string.Join(" ", parts.Skip(2));
                             }
                         }
+
+                        var receiverCell = sheet.Cell(rowIdx, 10);
+                        receiverCell.Value = receiverName;
+
+                        var receiverRange = receiverCell.MergedRange()
+                            ?? sheet.Range(rowIdx, 10, rowIdx, 10);
+
+                        receiverRange.Style.Alignment.WrapText = true;
+                        receiverRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
+                        receiverRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+
+
+                        int receiverLineCount = receiverName.Split('\n').Length;
+
+                        sheet.Row(rowIdx).Height = Math.Max(
+                            sheet.Row(rowIdx).Height,
+                            receiverLineCount * 18   // mỗi dòng ~18px
+                        );
+                        sheet.Cell(rowIdx, 11).Value =
+                            rowData.ContainsKey("IsSigned") && rowData["IsSigned"] is bool signed
+                                ? (signed ? "✓" : "✗")
+                                : "";
                     }
 
                     // Clear thừa (nếu ít hơn, clear data cells but keep fixed labels)
@@ -973,7 +1182,8 @@ namespace RERPAPI.Controllers
                     //}
 
                     // III.3 Tài sản kho (rows 38-42+)
-                    int warehouseStartRow = 30;
+                    int warehouseStartRow = assetEndRow + 6; // chừa 1 dòng trống
+               
                     int maxWarehouseRows = 5;
 
                     if (warehouseAssetData.Count > maxWarehouseRows)
@@ -992,8 +1202,8 @@ namespace RERPAPI.Controllers
                         sheet.Cell(rowIdx, 4).Value = rowData.ContainsKey("BorrowQty") ? rowData["BorrowQty"]?.ToString() ?? "" : "";
                         sheet.Cell(rowIdx, 5).Value = rowData.ContainsKey("Unit") ? rowData["Unit"]?.ToString() ?? "" : "";
                         sheet.Cell(rowIdx, 6).Value = rowData.ContainsKey("ReturnedStatusText") ? rowData["ReturnedStatusText"]?.ToString() ?? "" : "";
-                        sheet.Cell(rowIdx, 9).Value = rowData.ContainsKey("ReceiverName") ? rowData["ReceiverName"]?.ToString() ?? "" : "";
-                        sheet.Cell(rowIdx, 10).Value = rowData.ContainsKey("IsSigned") && rowData["IsSigned"] is bool signed ? (signed ? "✓" : "✗") : "";
+                        sheet.Cell(rowIdx, 10).Value = rowData.ContainsKey("ReceiverName") ? rowData["ReceiverName"]?.ToString() ?? "" : "";
+                        sheet.Cell(rowIdx, 11).Value = rowData.ContainsKey("IsSigned") && rowData["IsSigned"] is bool signed ? (signed ? "✓" : "✗") : "";
 
 
                         // Căn chỉnh
@@ -1016,9 +1226,13 @@ namespace RERPAPI.Controllers
                     //}
 
                     // III.4 Tài chính (rows 45-49+)
-                    int financeStartRow = 37;
+                    int warehouseRowCount = warehouseAssetData.Count > 0 ? warehouseAssetData.Count : maxWarehouseRows;
+                    int warehouseEndRow = warehouseStartRow + warehouseRowCount;
+
+                    int financeStartRow = warehouseEndRow + 5;
                     int maxFinanceRows = 5;
 
+                    int currentRow = sheet.LastRowUsed().RowNumber();
                     if (financeData.Count > maxFinanceRows)
                     {
                         sheet.Row(financeStartRow + maxFinanceRows - 1).InsertRowsBelow(financeData.Count - maxFinanceRows);
@@ -1055,7 +1269,7 @@ namespace RERPAPI.Controllers
                     //}
 
                     // III.5 Nhân sự trực thuộc (rows 51-54+)
-                    int subStartRow = 43;
+                    int subStartRow = currentRow + 3;
                     int maxSubRows = 4;
 
                     if (subData.Count > maxSubRows)
@@ -1099,30 +1313,68 @@ namespace RERPAPI.Controllers
                     // B57: Tên người bàn giao (ghi rõ họ tên)
                     // Người bàn giao ở B50
                     //sheet.Cell("B52").Value = handoverData.FullName?.ToString() ?? "";
-                    if (approveData.Any())
+                    // =========================
+                    // MERGE + ĐIỀN CHỮ KÝ
+                    // =========================
+                    int signRow = currentRow + 4;
+
+                    if (approveData != null && approveData.Any())
                     {
                         foreach (var item in approveData)
                         {
                             var dict = (IDictionary<string, object>)item;
-                            var level = dict.ContainsKey("ApproveLevel") ? Convert.ToInt32(dict["ApproveLevel"]) : -1;
-                            var name = dict.ContainsKey("EmployeeName") ? dict["EmployeeName"]?.ToString() ?? "" : "";
 
-                            switch (level)
-                            {
-                                case 0: // Người bàn giao
-                                    sheet.Cell("B52").Value = name;
-                                    break;
+                            int approveLevel =
+                                dict.ContainsKey("ApproveLevel") && dict["ApproveLevel"] != null
+                                    ? Convert.ToInt32(dict["ApproveLevel"])
+                                    : -1;
 
-                                case 1: // Cấp duyệt 1
-                                    sheet.Cell("F52").Value = name;
-                                    break;
+                            string employeeName =
+                                dict.ContainsKey("EmployeeName")
+                                    ? dict["EmployeeName"]?.ToString    () ?? ""
+                                    : "";
 
-                                case 2: // Cấp duyệt 2
-                                    sheet.Cell("I52").Value = name;
-                                    break;
-                            }
+                            if (string.IsNullOrWhiteSpace(employeeName))
+                                continue;
+
+                            var approveMap = new Dictionary<int, IXLRange>
+{
+    { 1, sheet.Range(signRow, 2, signRow, 3) },   // Người bàn giao
+    { 2, sheet.Range(signRow, 5, signRow, 7) },   // Trưởng bộ phận
+    { 3, sheet.Range(signRow, 9, signRow, 10) }   // Trưởng phòng HCNS
+};
+
+                            if (!approveMap.ContainsKey(approveLevel)) continue;
+
+                            var signRange = approveMap[approveLevel];
+
+                            if (signRange == null) continue;
+
+                            // ===== MERGE =====
+                  
+
+                            // ===== GÁN GIÁ TRỊ =====
+                            signRange.Value = employeeName;
+
+                            // ===== FORMAT =====
+                            signRange.Style.Font.Bold = true;
+                            signRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                            signRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                            signRange.Style.Alignment.WrapText = true;
+
+                            // ===== FIX HEIGHT (TÊN 2 DÒNG KHÔNG BỊ CẮT) =====
+                            int lineCount = employeeName.Split(' ').Length >= 3 ? 2 : 1;
+
+                            sheet.Row(signRow).Height = Math.Max(
+                                sheet.Row(signRow).Height,
+                                lineCount * 20
+                            );
                         }
                     }
+
+
+
+
 
                     // Lưu file vào stream
                     using (var stream = new MemoryStream())
@@ -1190,7 +1442,7 @@ namespace RERPAPI.Controllers
 
                 foreach (var action in sortedActions)
                 {
-                    if (action.STT == null) 
+                    if (action.STT == null)
                         return BadRequest(ApiResponseFactory.Fail(null, "Thiếu STT."));
 
                     int currentSTT = action.STT.Value;
@@ -1244,13 +1496,30 @@ namespace RERPAPI.Controllers
                         await _approveRepo.UpdateAsync(currentApprove);
                     }
 
+                    //var handover = _handoverRepo.GetByID(handoverId.Value);
+                    //if (handover != null)
+                    //{
+                    //    handover.IsApprove = approves.All(x => x.ApproveStatus == 1);
+                    //    handover.UpdatedDate = DateTime.Now;
+                    //    await _handoverRepo.UpdateAsync(handover);
+                    //}
+
                     var handover = _handoverRepo.GetByID(handoverId.Value);
                     if (handover != null)
                     {
-                        handover.IsApprove = approves.All(x => x.ApproveStatus == 1);
+                        bool isAllApproved = approves.All(x => x.ApproveStatus == 1);
+
+                        // nếu vừa chuyển sang trạng thái duyệt hết
+                        if (isAllApproved && handover.IsApprove != true)
+                        {
+                            await UpdateEmployeeForAssets(handoverId.Value);
+                        }
+
+                        handover.IsApprove = isAllApproved;
                         handover.UpdatedDate = DateTime.Now;
                         await _handoverRepo.UpdateAsync(handover);
                     }
+
                 }
 
                 return Ok(ApiResponseFactory.Success(null, "Duyệt theo trình tự thành công!"));
@@ -1260,6 +1529,30 @@ namespace RERPAPI.Controllers
                 return StatusCode(500, ApiResponseFactory.Fail(null, ex.Message));
             }
         }
+
+        private async Task UpdateEmployeeForAssets(int handoverId)
+        {
+            var assets = _handoverAssetManagementRepo.GetAll()
+                .Where(x => x.HandoverID == handoverId && x.IsDeleted == false)
+                .ToList();
+
+            foreach (var item in assets)
+            {
+                if (item.EmployeeID == null) continue;
+
+                var asset = _tsAssetManagementRepo.GetAll()
+                    .FirstOrDefault(x => x.TSCodeNCC == item.TSAssetCode && x.IsDeleted == false);
+
+                if (asset != null)
+                {
+                    asset.EmployeeID = item.EmployeeID;
+                    asset.UpdatedDate = DateTime.Now;
+                    await _tsAssetManagementRepo.UpdateAsync(asset);
+                }
+            }
+        }
+
+
 
 
     }

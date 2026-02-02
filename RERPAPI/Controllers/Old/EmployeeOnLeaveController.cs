@@ -182,6 +182,7 @@ namespace RERPAPI.Controllers.Old
                         && employeeOnLeave.StartDate.HasValue
                         && x.StartDate.Value.Date == employeeOnLeave.StartDate.Value.Date 
                         && x.DeleteFlag != true
+                        &&x.TimeOnLeave == employeeOnLeave.TimeOnLeave
                         && employeeOnLeave.DeleteFlag!=true);
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);

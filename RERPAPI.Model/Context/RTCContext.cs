@@ -1779,9 +1779,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.ExpectReturnDate).HasColumnType("datetime");
             entity.Property(e => e.GroupExport).HasMaxLength(350);
             entity.Property(e => e.InvoiceNumber).HasMaxLength(150);
-            entity.Property(e => e.ProductFullName)
-                .HasMaxLength(250)
-                .HasComment("tên sản phẩm");
+            entity.Property(e => e.ProductFullName).HasComment("tên sản phẩm");
             entity.Property(e => e.ProductID).HasComment("Id master");
             entity.Property(e => e.ProjectName)
                 .HasMaxLength(250)
@@ -4754,11 +4752,13 @@ public partial class RTCContext : DbContext
 
             entity.Property(e => e.CreatedBy).HasMaxLength(50);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsContinueUse).HasDefaultValue(false);
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.IsSigned).HasDefaultValue(false);
             entity.Property(e => e.SignedBy).HasMaxLength(50);
             entity.Property(e => e.Status).HasMaxLength(50);
             entity.Property(e => e.TSAssetCode).HasMaxLength(50);
+            entity.Property(e => e.TSAssetManagementID).HasDefaultValue(0);
             entity.Property(e => e.Unit).HasMaxLength(50);
             entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
@@ -8049,6 +8049,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.TimeEndRepair)
                 .HasComment("Thời gian kết thúc sửa chữa")
                 .HasColumnType("datetime");
+            entity.Property(e => e.TimePrevious).HasColumnType("datetime");
             entity.Property(e => e.TimeStartRepair)
                 .HasComment("Thời gian bắt đầu sửa chữa")
                 .HasColumnType("datetime");
@@ -10460,6 +10461,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.TimeEndRepair)
                 .HasComment("Thời gian kết thúc sửa chữa")
                 .HasColumnType("datetime");
+            entity.Property(e => e.TimePrevious).HasColumnType("datetime");
             entity.Property(e => e.TimeStartRepair)
                 .HasComment("Thời gian bắt đầu sửa chữa")
                 .HasColumnType("datetime");
@@ -10520,6 +10522,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.TimeEndRepair)
                 .HasComment("Thời gian kết thúc sửa chữa")
                 .HasColumnType("datetime");
+            entity.Property(e => e.TimePrevious).HasColumnType("datetime");
             entity.Property(e => e.TimeStartRepair)
                 .HasComment("Thời gian bắt đầu sửa chữa")
                 .HasColumnType("datetime");
