@@ -31,7 +31,10 @@ namespace RERPAPI.Controllers.KHOAHOC
         private readonly CourseRegisterIdeaRepo _courseRegisterIdeaRepo;
         private readonly CourseLessonRepo _courseLessonRepo;
         private readonly CourseFilesRepo _courseFilesRepo;
-        public CourseController(CourseCatalogRepo courseCatalogRepo, 
+        private readonly ConfigSystemRepo _configSystemRepo;
+
+        public CourseController(
+            CourseCatalogRepo courseCatalogRepo,
             CourseCatalogProjectTypeRepo courseCatalogProjectTypeRepo,
             DepartmentRepo departmentRepo,
             KPIPositionTypeRepo kpiPositionTypeRepo,
@@ -39,7 +42,9 @@ namespace RERPAPI.Controllers.KHOAHOC
             RegisterIdeaRepo registerIdeaRepo,
             CourseRegisterIdeaRepo courseRegisterIdeaRepo,
             CourseLessonRepo courseLessonRepo,
-            CourseFilesRepo courseFilesRepo)
+            ConfigSystemRepo configSystemRepo,
+            CourseFilesRepo courseFilesRepo
+            )
         {
             _courseCatalogRepo = courseCatalogRepo;
             _courseCatalogProjectTypeRepo = courseCatalogProjectTypeRepo;
@@ -50,6 +55,7 @@ namespace RERPAPI.Controllers.KHOAHOC
             _courseRegisterIdeaRepo = courseRegisterIdeaRepo;
             _courseLessonRepo = courseLessonRepo;
             _courseFilesRepo = courseFilesRepo;
+            _configSystemRepo = configSystemRepo;
         }
 
         [HttpGet("get-course-summary")]
@@ -89,6 +95,50 @@ namespace RERPAPI.Controllers.KHOAHOC
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpGet("get-stt-course-catalog")]
+        public async Task<IActionResult> GetSTTCourseCatalog(int TypeID, int DepartmentID)
+        {
+            try
+            {
+                var maxSTT = _courseCatalogRepo.GetAll(c => c.IsDeleted != true && c.CatalogType == TypeID && c.DepartmentID == DepartmentID).Max(c=>c.STT);
+                maxSTT = maxSTT.HasValue ? maxSTT.Value + 1 : 1;
+                return Ok(ApiResponseFactory.Success(maxSTT, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        // get stt course
+        [HttpGet("get-stt-course")]
+        public async Task<IActionResult> GetSTTCourse(int CourseCatalogID, int CourseTypeID)
+        {
+            try
+            {
+                var maxSTT = _courseRepo.GetAll(c =>  c.CourseCatalogID == CourseCatalogID && c.CourseTypeID == CourseTypeID ).Max(c => c.STT);
+                maxSTT = maxSTT.HasValue ? maxSTT.Value + 1 : 1;
+                return Ok(ApiResponseFactory.Success(maxSTT, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        // get stt lesson
+        [HttpGet("get-stt-lesson")]
+        public async Task<IActionResult> GetSTTLesson(int CourseID)
+        {
+            try
+            {
+                var maxSTT = _courseLessonRepo.GetAll(c => c.CourseID == CourseID && c.IsDeleted != true ).Max(c => c.STT);
+                maxSTT = maxSTT.HasValue ? (maxSTT.Value + 1 ): 1;
+                return Ok(ApiResponseFactory.Success(maxSTT, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         //lấy danh sách khóa học
         [HttpGet("load-data-course")]
         public async Task<IActionResult> LoadDataCourse(int courseCatalogID)
@@ -107,6 +157,8 @@ namespace RERPAPI.Controllers.KHOAHOC
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+
 
         //lấy danh sách bài học
         [HttpGet("load-dataLesson")]
@@ -255,8 +307,39 @@ namespace RERPAPI.Controllers.KHOAHOC
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+        } // Lấy videoUrl để lưu
+        [HttpGet("get-path-server")]
+        public async Task<IActionResult> getPathServer ()
+        {
+            try
+            {
+                var pathUpload = _configSystemRepo.GetUploadPathByKey("CourseLesson");
+                var subPath = "/Videos/";
+                string path = pathUpload + subPath;
+                return Ok(ApiResponseFactory.Success(path, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
         }
+        [HttpGet("stream/{lessonId}")]
+        public IActionResult StreamByLesson(int lessonId)
+        {
+            var lesson = _courseLessonRepo.GetByID(lessonId);
+            if (lesson == null || string.IsNullOrEmpty(lesson.VideoURL))
+                return NotFound();
 
+            var path = Path.Combine("D:/videos", lesson.VideoURL);
+            if (!System.IO.File.Exists(path))
+                return NotFound();
+
+            return PhysicalFile(
+                path,
+                "video/mp4",
+                enableRangeProcessing: true
+            );
+        }
         //lấy danh sách KPI Position Type
         [HttpGet("load-kpipositiontype")]
         public async Task<IActionResult> LoadKPIPositionType()
@@ -282,29 +365,31 @@ namespace RERPAPI.Controllers.KHOAHOC
 
                 if (exitCategory != null && exitCategory.ID > 0)
                 {
-                    return BadRequest(ApiResponseFactory.Fail(null, "Mã danh mục đã tồn tại! Vui lòng kiểm tra lại."));
+                    return Ok(ApiResponseFactory.Fail(null, "Mã danh mục đã tồn tại! Vui lòng kiểm tra lại."));
                 }
 
                 
 
                 if (model.ID <= 0)
                 {
-                    var dept = _departmentRepo.GetAll(x => x.STT == model.DepartmentSTT).FirstOrDefault();
                     var courseCatalog = new CourseCatalog
                     {
                         ID = 0,
                         Name = model.Name,
                         CatalogType = model.CatalogType,
-                        DeleteFlag = model.DeleteFlag,
-                        DepartmentID = dept.ID,
+                        DepartmentID = model.DepartmentID,
                         STT = model.STT,
                         Code = model.Code,
-                        IsDeleted = model.IsDeleted,
                     };
 
 
 
                      await _courseCatalogRepo.CreateAsync(courseCatalog);
+                    if(courseCatalog.ID > 0)
+                    {
+                        courseCatalog.DeleteFlag = true;
+                        await _courseCatalogRepo.UpdateAsync(courseCatalog);
+                    }
                     
                     if(model.ProjectTypeIDs.Count > 0)
                     {
@@ -322,12 +407,16 @@ namespace RERPAPI.Controllers.KHOAHOC
                 }
                 else
                 {
-                    var dept = _departmentRepo.GetAll(x => x.STT == model.DepartmentSTT).FirstOrDefault();
-
+                    var dept = _departmentRepo.GetAll(x => x.ID == model.DepartmentID).FirstOrDefault();
+                    int departmentID = 0;
+                    if (dept!=null)
+                    {
+                        departmentID = dept.ID;
+                    }
                     var courseCatalog = _courseCatalogRepo.GetByID(model.ID);
                     courseCatalog.Name = model.Name;
                     courseCatalog.CatalogType = model.CatalogType;
-                    courseCatalog.DepartmentID = dept.ID;
+                    courseCatalog.DepartmentID = departmentID;
                     courseCatalog.STT = model.STT;
                     courseCatalog.IsDeleted = model.IsDeleted;
                     courseCatalog.DeleteFlag = model.DeleteFlag;
@@ -450,7 +539,7 @@ namespace RERPAPI.Controllers.KHOAHOC
 
                 if (exitCoure != null && exitCoure.ID > 0)
                 {
-                    return BadRequest(ApiResponseFactory.Fail(null, "Mã khóa học đã tồn tại! Vui lòng kiểm tra lại."));
+                    return Ok(ApiResponseFactory.Fail(null, "Mã khóa học đã tồn tại! Vui lòng kiểm tra lại."));
                 }
 
                 if (model.ID <= 0)
@@ -465,7 +554,6 @@ namespace RERPAPI.Controllers.KHOAHOC
                         Code = model.Code,
                         NameCourse = model.NameCourse,
                         CourseCatalogID = model.CourseCatalogID,
-                        DeleteFlag = model.DeleteFlag,
                         QuestionCount = model.QuestionCount,
                         QuestionDuration = model.QuestionDuration,
                         LeadTime = model.LeadTime,
@@ -477,8 +565,14 @@ namespace RERPAPI.Controllers.KHOAHOC
                         IsPractice = false
                     };
                     await _courseRepo.CreateAsync(courseNew);
+                    if(courseNew.ID > 0)
+                    {
+                        courseNew.DeleteFlag = true;
+                        await _courseRepo.UpdateAsync(courseNew);
 
-                    if(model.IdeaIDs != null && model.IdeaIDs.Count > 0)
+                    }
+
+                    if (model.IdeaIDs != null && model.IdeaIDs.Count > 0)
                     {
                         foreach (var item in model.IdeaIDs)
                         {
@@ -601,9 +695,11 @@ namespace RERPAPI.Controllers.KHOAHOC
         {
             try
             {
+               var pathUpload =  _configSystemRepo.GetUploadPathByKey("CourseLesson");
+                var subPath = "/pdfs/";
                 if (model == null)
                 {
-                    return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu gửi lên không hợp lệ."));
+                    return Ok(ApiResponseFactory.Fail(null, "Dữ liệu gửi lên không hợp lệ."));
                 }
                 if ( model.CourseLesson.IsDeleted ?? false)
                 {
@@ -621,13 +717,17 @@ namespace RERPAPI.Controllers.KHOAHOC
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Mã bài học đã tồn tại! Vui lòng kiểm tra lại."));
                 }
+                //if (exitLessonOld.VideoURL!=null)
+                //{
+                //    exitLessonOld.VideoURL = pathUpload + "/videos/"+
+                //}
 
                 if (model.CourseLesson.ID <= 0)
                 {
                     if (model.CoursePdf != null &&
                         !string.IsNullOrWhiteSpace(model.CoursePdf.NameFile))
                     {
-                        model.CourseLesson.UrlPDF = model.CoursePdf.NameFile;
+                        model.CourseLesson.UrlPDF = pathUpload + subPath + model.CoursePdf.NameFile;
                     }
 
                     await _courseLessonRepo.CreateAsync(model.CourseLesson);
@@ -649,7 +749,7 @@ namespace RERPAPI.Controllers.KHOAHOC
 
                     if(model.CoursePdf != null && model.CoursePdf.NameFile != null)
                     {
-                        model.CourseLesson.UrlPDF = model.CoursePdf.NameFile;
+                        model.CourseLesson.UrlPDF = pathUpload + subPath + model.CoursePdf.NameFile;
                     }
                     await _courseLessonRepo.UpdateAsync(model.CourseLesson);
 
@@ -670,9 +770,6 @@ namespace RERPAPI.Controllers.KHOAHOC
                         }
                     }
                 }
-
-
-
 
                 return Ok(ApiResponseFactory.Success(model, "Lưu bài học thành công"));
             }

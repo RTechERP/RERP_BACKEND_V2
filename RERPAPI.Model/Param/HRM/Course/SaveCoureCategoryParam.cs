@@ -14,7 +14,7 @@ namespace RERPAPI.Model.Param.HRM.Course
 
         public string Name { get; set; }
 
-        public int DepartmentSTT { get; set; }
+        public int DepartmentID { get; set; }
 
         public bool DeleteFlag { get; set; }
         public int STT { get; set; }

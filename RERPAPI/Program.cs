@@ -1,7 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using NPOI.HPSF;
+using NPOI.OpenXmlFormats.Spreadsheet;
 using RERPAPI.IRepo;
 using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
@@ -31,6 +34,14 @@ using RERPAPI.Repo.GenericEntity.Technical.KPI;
 using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
 using RTCApi.Repo.GenericRepo;
 using System.Text;
+using tusdotnet;
+using tusdotnet.Helpers;
+using tusdotnet.Interfaces;
+using tusdotnet.Models;
+using tusdotnet.Models.Configuration;
+using tusdotnet.Models.Expiration;
+using tusdotnet.Stores;
+using static System.Net.WebRequestMethods;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -547,9 +558,9 @@ builder.Services.AddCors(options =>
     {
         builder.AllowAnyOrigin()
                .AllowAnyMethod()
-               .AllowAnyHeader();
-
-    });
+               .AllowAnyHeader()
+               .WithExposedHeaders(CorsHelper.GetExposedHeaders()); // config cors tus dotnet
+});
 });
 
 
@@ -696,5 +707,46 @@ app.UseStaticFiles();
         RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
     });
 }
+var tusStore = new TusDiskStore(Directory.GetCurrentDirectory());
+// config Tus dotnet
+app.UseTus(httpContext => new DefaultTusConfiguration
+{
+    Store = tusStore, // đường dẫn lưu temp file ( file chunk)
 
+    UrlPath = "/tus/upload-video", // path gọi api
+    Expiration = new AbsoluteExpiration(TimeSpan.FromHours(24)), // xóa upload không hoàn thành sau 24h
+
+    Events = new Events
+    {
+        OnFileCompleteAsync = async ctx =>
+        {
+
+            var file = await ctx.GetFileAsync();
+            if (file == null) return;
+
+            var metadata = await file.GetMetadataAsync(ctx.CancellationToken);
+
+            var fileName = metadata.ContainsKey("filename")
+                ? metadata["filename"].GetString(Encoding.UTF8)
+                : $"{file.Id}.bin";
+
+            //var destDir = @"\\192.168.1.190\Software\Test\UPLOADFILE\CourseLesson\Videos\";
+            //Directory.CreateDirectory(destDir);
+            //var destPath = Path.Combine(destDir, fileName);
+
+            var pathServer = metadata["pathServer"].GetString(Encoding.UTF8);
+            var destPath = Path.Combine(pathServer, fileName);
+            Directory.CreateDirectory(pathServer);
+            await using (var source = await file.GetContentAsync(ctx.CancellationToken))
+            {
+                await using (var target = System.IO.File.Create(destPath))
+                {
+                    await source.CopyToAsync(target);
+                }
+            }
+
+            //await tusStore.DeleteFileAsync(file.Id, ctx.CancellationToken);
+        }
+    }
+});
 app.Run();

@@ -246,15 +246,15 @@ namespace RERPAPI.Controllers.Old
                             // Ghi chú
                             employeePayrollDetail.Note = row["Note"]?.ToString();
 
-                            employeePayrollDetail.TaxCompanyName = row["TaxCompanyName"]?.ToString();
-                            employeePayrollDetail.StatusContract = row["StatusContract"]?.ToString();
-                            employeePayrollDetail.TaxSalaryOT = TextUtils.ToDecimal(row["TaxSalaryOT"]);
-                            employeePayrollDetail.TaxSalaryMeal = TextUtils.ToDecimal(row["TaxSalaryMeal"]);
-                            employeePayrollDetail.TaxSalaryPhone = TextUtils.ToDecimal(row["TaxSalaryPhone"]);
-                            employeePayrollDetail.TaxPersonalDeduction = TextUtils.ToDecimal(row["TaxPersonalDeduction"]);
-                            employeePayrollDetail.TaxDependentsDeduction = TextUtils.ToDecimal(row["TaxDependentsDeduction"]);
-                            employeePayrollDetail.TaxAbleIncome = TextUtils.ToDecimal(row["TaxAbleIncome"]);
-                            employeePayrollDetail.TaxDeduction = TextUtils.ToDecimal(row["TaxDeduction"]);
+                            //employeePayrollDetail.TaxCompanyName = row["TaxCompanyName"]?.ToString();
+                            //employeePayrollDetail.StatusContract = row["StatusContract"]?.ToString();
+                            //employeePayrollDetail.TaxSalaryOT = TextUtils.ToDecimal(row["TaxSalaryOT"]);
+                            //employeePayrollDetail.TaxSalaryMeal = TextUtils.ToDecimal(row["TaxSalaryMeal"]);
+                            //employeePayrollDetail.TaxSalaryPhone = TextUtils.ToDecimal(row["TaxSalaryPhone"]);
+                            //employeePayrollDetail.TaxPersonalDeduction = TextUtils.ToDecimal(row["TaxPersonalDeduction"]);
+                            //employeePayrollDetail.TaxDependentsDeduction = TextUtils.ToDecimal(row["TaxDependentsDeduction"]);
+                            //employeePayrollDetail.TaxAbleIncome = TextUtils.ToDecimal(row["TaxAbleIncome"]);
+                            //employeePayrollDetail.TaxDeduction = TextUtils.ToDecimal(row["TaxDeduction"]);
 
                             // Lưu
                             if (lstExistFromDB.Any())

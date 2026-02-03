@@ -342,7 +342,7 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 int productGroupRTCID = 140;
                 int warehouseID = 5;
                 var data = SQLHelper<object>.ProcedureToList("spGetHistoryProductRTCProtectiveGear",
-                           new string[] { "@DateStart", "@DateEnd", "@EmployeeID", "@Status", "@IsDeleted", "@WarehouseID", "@ProductGroupRTCID", "@Keyword" },
+                           new string[] { "@DateStart", "@DateEnd", "@EmployeeID", " Status", "@IsDeleted", "@WarehouseID", "@ProductGroupRTCID", "@Keyword" },
                            new object[] { dateStart, dateEnd, employeeID, status, isDeleted, warehouseID, productGroupRTCID, keyword });
                 var dt = SQLHelper<object>.GetListData(data, 1);
 
