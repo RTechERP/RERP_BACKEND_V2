@@ -142,4 +142,6 @@ public partial class VehicleRepairHistory
     public int? Warranty { get; set; }
 
     public int? WarrantyPeriod { get; set; }
+
+    public DateTime? TimePrevious { get; set; }
 }

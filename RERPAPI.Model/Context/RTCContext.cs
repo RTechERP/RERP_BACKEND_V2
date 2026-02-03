@@ -782,6 +782,14 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<ProjectSurveyFile> ProjectSurveyFiles { get; set; }
 
+    public virtual DbSet<ProjectTask> ProjectTasks { get; set; }
+
+    public virtual DbSet<ProjectTaskAttachment> ProjectTaskAttachments { get; set; }
+
+    public virtual DbSet<ProjectTaskChecklist> ProjectTaskChecklists { get; set; }
+
+    public virtual DbSet<ProjectTaskGroup> ProjectTaskGroups { get; set; }
+
     public virtual DbSet<ProjectTreeFolder> ProjectTreeFolders { get; set; }
 
     public virtual DbSet<ProjectType> ProjectTypes { get; set; }
@@ -1798,7 +1806,9 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.ExpectReturnDate).HasColumnType("datetime");
             entity.Property(e => e.GroupExport).HasMaxLength(350);
             entity.Property(e => e.InvoiceNumber).HasMaxLength(150);
-            entity.Property(e => e.ProductFullName).HasComment("tên sản phẩm");
+            entity.Property(e => e.ProductFullName)
+                .HasMaxLength(250)
+                .HasComment("tên sản phẩm");
             entity.Property(e => e.ProductID).HasComment("Id master");
             entity.Property(e => e.ProjectName)
                 .HasMaxLength(250)
@@ -2501,7 +2511,7 @@ public partial class RTCContext : DbContext
                 .IsUnicode(false);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.LessonTitle).HasMaxLength(400);
-            entity.Property(e => e.RequiredWatchedPercent).HasColumnType("decimal(18, 0)");
+            entity.Property(e => e.RequiredWatchedPercent).HasColumnType("decimal(18, 4)");
             entity.Property(e => e.UpdatedBy)
                 .HasMaxLength(50)
                 .IsUnicode(false);
@@ -2516,7 +2526,7 @@ public partial class RTCContext : DbContext
             entity.ToTable("CourseLessonHistory");
 
             entity.Property(e => e.ViewDate).HasColumnType("datetime");
-            entity.Property(e => e.WatchedPercent).HasColumnType("decimal(18, 0)");
+            entity.Property(e => e.WatchedPercent).HasColumnType("decimal(18, 4)");
         });
 
         modelBuilder.Entity<CourseLessonLog>(entity =>
@@ -4799,12 +4809,10 @@ public partial class RTCContext : DbContext
 
             entity.Property(e => e.CreatedBy).HasMaxLength(50);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-            entity.Property(e => e.IsContinueUse).HasDefaultValue(false);
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.SignedBy).HasMaxLength(50);
             entity.Property(e => e.Status).HasMaxLength(50);
             entity.Property(e => e.TSAssetCode).HasMaxLength(50);
-            entity.Property(e => e.TSAssetManagementID).HasDefaultValue(0);
             entity.Property(e => e.Unit).HasMaxLength(50);
             entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
@@ -7933,6 +7941,59 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.FileName).HasMaxLength(550);
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectTask>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ProjectT__3214EC27FB5E23F1");
+
+            entity.ToTable("ProjectTask");
+
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(150)
+                .IsUnicode(false);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.Title).HasMaxLength(300);
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(150)
+                .IsUnicode(false);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectTaskAttachment>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ProjectT__3214EC27B2D26D5A");
+
+            entity.ToTable("ProjectTaskAttachment");
+
+            entity.Property(e => e.FileName).HasMaxLength(255);
+            entity.Property(e => e.FilePath).HasMaxLength(500);
+            entity.Property(e => e.UploadedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectTaskChecklist>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ProjectT__3214EC2786F017DD");
+
+            entity.ToTable("ProjectTaskChecklist");
+
+            entity.Property(e => e.ChecklistTitle).HasMaxLength(200);
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectTaskGroup>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ProjectT__3214EC276D65963B");
+
+            entity.ToTable("ProjectTaskGroup");
+
+            entity.Property(e => e.Color).HasMaxLength(50);
+            entity.Property(e => e.TaskGroupName).HasMaxLength(100);
         });
 
         modelBuilder.Entity<ProjectTreeFolder>(entity =>
