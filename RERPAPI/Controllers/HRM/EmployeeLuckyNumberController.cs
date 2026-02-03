@@ -85,71 +85,84 @@ namespace RERPAPI.Controllers.HRM
             }
         }
 
-        [HttpGet("save-data")]
+        [HttpPost("save-data")]
         [Authorize]
-        public async Task<IActionResult> SaveData([FromBody] EmployeeLuckyNumber employeeLucky)
+        public async Task<IActionResult> SaveData([FromBody] List<EmployeeLuckyNumber> employeeLuckys)
         {
             try
             {
-                var employee = _employeeLucky.GetAll(x => x.YearValue == employeeLucky.YearValue
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                _currentUser = ObjectMapper.GetCurrentUser(claims);
+                int records = 0;
+
+                foreach (var employeeLucky in employeeLuckys)
+                {
+                    var employee = _employeeLucky.GetAll(x => x.YearValue == employeeLucky.YearValue
                                                         && x.EmployeeID == employeeLucky.EmployeeID
-                                                        && (x.LuckyNumber == employeeLucky.LuckyNumber || employeeLucky.LuckyNumber == 0))
+                                                        //&& (x.LuckyNumber == employeeLucky.LuckyNumber || employeeLucky.LuckyNumber == 0)
+                                                        )
                                             .FirstOrDefault() ?? new EmployeeLuckyNumber();
-                int record = 0;
-                if (employee.ID <= 0)
-                {
-                    record = await _employeeLucky.CreateAsync(employeeLucky);
-                }
-                else
-                {
-                    employee.EmployeeID = employeeLucky.EmployeeID;
-                    employee.EmployeeCode = employeeLucky.EmployeeCode;
-                    employee.EmployeeName = employeeLucky.EmployeeName;
-                    employee.PhoneNumber = employeeLucky.PhoneNumber;
-                    employee.YearValue = employeeLucky.YearValue;
-                    employee.LuckyNumber = employeeLucky.LuckyNumber;
-                    employee.IsChampion = employeeLucky.IsChampion;
-                    employee.ImageName = employeeLucky.ImageName;
-                    record = await _employeeLucky.UpdateAsync(employee);
+                    if (employee.ID <= 0)
+                    {
+                        records += await _employeeLucky.CreateAsync(employeeLucky);
+                    }
+                    else
+                    {
+                        employee.EmployeeID = employeeLucky.EmployeeID;
+                        employee.EmployeeCode = employeeLucky.EmployeeCode;
+                        employee.EmployeeName = employeeLucky.EmployeeName;
+                        employee.PhoneNumber = employeeLucky.PhoneNumber;
+                        employee.YearValue = employeeLucky.YearValue;
+                        //employee.LuckyNumber = employeeLucky.LuckyNumber;
+                        employee.IsChampion = employeeLucky.IsChampion;
+                        employee.ImageName = employeeLucky.ImageName;
+                        
+                        records += await _employeeLucky.UpdateAsync(employee);
+                    }
                 }
 
-                if (record > 0) return Ok(ApiResponseFactory.Success(employeeLucky, "Câp nhật thành công!"));
-                else return BadRequest(ApiResponseFactory.Fail(null, "Câp nhật thất bại!", employeeLucky));
-
+                if (records > 0) return Ok(ApiResponseFactory.Success(employeeLuckys, "Câp nhật thành công!"));
+                else return BadRequest(ApiResponseFactory.Fail(null, "Câp nhật thất bại!", employeeLuckys));
 
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
 
-        [HttpGet("get-random-number")]
+        [HttpPost("get-random-number")]
         [Authorize]
-        public IActionResult GetRandomNumber(int year)
+        public async Task<IActionResult> GetRandomNumberAsync([FromBody] EmployeeLuckyNumber employeeLucky)
         {
             try
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 _currentUser = ObjectMapper.GetCurrentUser(claims);
 
-                var luckyNumbers = _employeeLucky.GetAll(x => x.YearValue == year);
-                //int minValue = _configuration.GetValue<int>("MinValue");
-                int minValue = 1;
-                int maxValue = luckyNumbers.Count();
+                employeeLucky.YearValue = DateTime.Now.Year;
+
+                var luckyNumbers = _employeeLucky.GetAll(x => x.YearValue == employeeLucky.YearValue);
+                int minValue = _configuration.GetValue<int>("MinValue");
+                int maxValue = _configuration.GetValue<int>("MaxValue");
+                //int minValue = 1;
+                //int maxValue = luckyNumbers.Count();
 
                 EmployeeLuckyNumber luckyNumber = luckyNumbers.FirstOrDefault(x => x.EmployeeID == _currentUser.EmployeeID) ?? new EmployeeLuckyNumber();
-                if (luckyNumber.LuckyNumber > 0) //nếu đã có số
-                {
-                    return Ok(ApiResponseFactory.Success(new
-                    {
-                        luckyNumber,
-                        minValue,
-                        maxValue
-                    }, $"Số may măn của bạn là {luckyNumber.LuckyNumber}."));
-                }
-                else//Nếu chưa có số thì random 1 số
+                //if (luckyNumber.LuckyNumber > 0) //nếu đã có số
+                //{
+                //    return Ok(ApiResponseFactory.Success(new
+                //    {
+                //        randomNumber = luckyNumber.LuckyNumber,
+                //        minValue,
+                //        maxValue
+                //    }, $"Số may măn của bạn là {luckyNumber.LuckyNumber}."));
+                //}
+                //else//Nếu chưa có số thì random 1 số
+
+                luckyNumber.LuckyNumber = luckyNumber.LuckyNumber ?? 0;
+                if (luckyNumber.ID > 0 && luckyNumber.LuckyNumber <= 0)
                 {
                     //Get 1 list số đã có
                     List<int> numbers = luckyNumbers.Select(x => Convert.ToInt32(x.LuckyNumber)).ToList();
@@ -158,22 +171,52 @@ namespace RERPAPI.Controllers.HRM
                     int randomNumber = 0;
                     do
                     {
-                        randomNumber = random.Next(minValue, maxValue); // Tạo số ngẫu nhiên từ 1 đến 200
+                        randomNumber = random.Next(minValue, maxValue);
                     }
                     while (numbers.Contains(randomNumber)); // Kiểm tra số có trong danh sách không
 
+                    //randomNumber = 10;
+
+                    luckyNumber.EmployeeID = _currentUser.EmployeeID;
+                    luckyNumber.EmployeeCode = _currentUser.Code;
+                    luckyNumber.EmployeeName = _currentUser.FullName;
+                    luckyNumber.PhoneNumber = employeeLucky.PhoneNumber;
+                    luckyNumber.YearValue = employeeLucky.YearValue;
+                    luckyNumber.LuckyNumber = randomNumber;
+                    luckyNumber.IsChampion = false;
+                    luckyNumber.ImageName = employeeLucky.ImageName;
+
+                    var record = await _employeeLucky.UpdateAsync(luckyNumber);
+                    if (record >= 1)
+                    {
+                        return Ok(ApiResponseFactory.Success(new
+                        {
+                            randomNumber = luckyNumber.LuckyNumber,
+                            minValue,
+                            maxValue
+                        }, $"Số may măn của bạn là {randomNumber}."));
+                    }
+                    else
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, $"Lấy số thất bại. Vui lòng nhận lại số!"));
+                    }
+                }
+                else
+                {
+                    string message = $"Số may măn của bạn là {luckyNumber.LuckyNumber}.";
+                    if (luckyNumber.ID <= 0) message = "Bạn không nằm trong danh sách quay số năm nay!";
                     return Ok(ApiResponseFactory.Success(new
                     {
-                        randomNumber,
+                        randomNumber = luckyNumber.LuckyNumber,
                         minValue,
                         maxValue
-                    }, $"Số may măn của bạn là {randomNumber}."));
+                    }, message));
                 }
 
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 

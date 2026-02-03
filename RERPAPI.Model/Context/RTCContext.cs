@@ -3111,6 +3111,10 @@ public partial class RTCContext : DbContext
 
             entity.ToTable("EmployeeAttendance");
 
+            entity.HasIndex(e => e.AttendanceDate, "Index_EmployeeAttendance_AttendanceDate");
+
+            entity.HasIndex(e => e.IDChamCongMoi, "Index_EmployeeAttendance_IDChamCongMoi");
+
             entity.Property(e => e.AttendanceDate).HasColumnType("datetime");
             entity.Property(e => e.CheckIn)
                 .HasMaxLength(50)
@@ -3491,8 +3495,6 @@ public partial class RTCContext : DbContext
             entity.HasKey(e => e.ID).HasName("PK__Employee__3214EC275603858C");
 
             entity.ToTable("EmployeeLuckyNumber");
-
-            entity.HasIndex(e => e.LuckyNumber, "UQ__Employee__F83B7661035A5636").IsUnique();
 
             entity.Property(e => e.CreatedBy).HasMaxLength(250);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
