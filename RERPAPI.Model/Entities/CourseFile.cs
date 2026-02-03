@@ -24,4 +24,6 @@ public partial class CourseFile
     public DateTime? UpdatedDate { get; set; }
 
     public bool? IsDeleted { get; set; }
+
+    public string? ServerPath { get; set; }
 }

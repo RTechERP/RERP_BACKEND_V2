@@ -38,4 +38,8 @@ public partial class CourseLesson
     public bool? IsDeleted { get; set; }
 
     public int? EmployeeID { get; set; }
+
+    public int? VideoDuration { get; set; }
+
+    public decimal? RequiredWatchedPercent { get; set; }
 }

@@ -57,9 +57,18 @@ public partial class EmployeeNighShift
 
     public decimal? WorkTime { get; set; }
 
+    /// <summary>
+    /// Trạng thái Senior duyệt (0: Chờ duyệt | 1: Đã duyệt | 2: Không duyệt)
+    /// </summary>
     public int? IsSeniorApproved { get; set; }
 
+    /// <summary>
+    /// ID Senior duyệt
+    /// </summary>
     public int? ApprovedSeniorID { get; set; }
 
+    /// <summary>
+    /// Ngày Senior  duyệt
+    /// </summary>
     public DateTime? DateApprovedSenior { get; set; }
 }

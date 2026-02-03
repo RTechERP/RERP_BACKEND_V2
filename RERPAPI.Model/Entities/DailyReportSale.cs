@@ -66,4 +66,6 @@ public partial class DailyReportSale
     public bool? SaleOpportunity { get; set; }
 
     public int? WarehouseID { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }
