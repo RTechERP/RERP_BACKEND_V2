@@ -569,8 +569,25 @@ namespace RERPAPI.Controllers.Project
                                 await _projectPartlistRepo.UpdateAsync(pl);
                             }
                         }
+                        //update trạng thái duyệt cho các vật tư có cùng thông tin trong cùng 1 projectID
+                        var partlist = _projectPartlistRepo.GetAll(x => x.ProductCode.Trim() == item.ProductCode.Trim()
+                                                                    && x.GroupMaterial.Trim() == item.GroupMaterial.Trim()
+                                                                    && x.Unit.Trim() == item.Unit.Trim()
+                                                                    && x.Manufacturer.Trim() == item.Manufacturer.Trim()
+                                                                    && x.ProjectID == item.ProjectID 
+                                                                    && x.IsDeleted != true
+                                                                    ).ToList();
+
+                        if (partlists != null && partlists.Any())
+                        {
+                            foreach (var pl in partlists)
+                            {
+                                pl.IsApprovedTBPNewCode = isApprovedNew;
+                            }
+                            await _projectPartlistRepo.UpdateRangeAsync_Binh(partlists);
+                        }
                     }
-                    }
+                }
 
                     return Ok(ApiResponseFactory.Success(null, $"{approvedText} thành công!")); // Sửa message động
             }
