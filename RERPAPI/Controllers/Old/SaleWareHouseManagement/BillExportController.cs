@@ -1,9 +1,5 @@
 ﻿using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Bibliography;
-using DocumentFormat.OpenXml.Office2010.Excel;
-using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using RERPAPI.Attributes;
@@ -443,7 +439,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         string fullName = GetString(master, "FullName").Trim();
                         int userId = GetInt(master, "UserID");
 
-                        int departmentID = _employeeRepo.GetByID(userId)?.DepartmentID ?? 0;
+                        int departmentID = _employeeRepo.GetAll(x => x.UserID == userId).FirstOrDefault()?.DepartmentID ?? 0;
                         string department = _departmentRepo.GetByID(departmentID)?.Name ?? "";
 
                         sheet.Cell(9, 4).Value = string.IsNullOrWhiteSpace(department)
@@ -462,15 +458,15 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         sheet.Cell(25, 3).Value = GetString(master, "FullNameSender");
                         sheet.Cell(25, 9).Value = GetString(master, "FullName");
 
-                        if (GetInt(master, "WarehouseID") == 1)
-                            sheet.Cell(15, 10).Value = "Loại vật tư";
+                        //if (GetInt(master, "WarehouseID") == 1)
+                        //    sheet.Cell(15, 10).Value = "Loại vật tư";
 
                         if (DateTime.TryParse(GetString(master, "CreatDate"), out var d))
                             sheet.Cell(18, 9).Value = $"Ngày {d:dd} tháng {d:MM} năm {d:yyyy}";
                         #endregion
 
                         #region ===== MAP DETAIL =====
-                        int excelRow = 16;
+                        int excelRow = 15;
                         int stt = 1;
 
                         for (int i = details.Count - 1; i >= 0; i--)
@@ -503,7 +499,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                             excelRow++;
                         }
                         //sheet.Row(excelRow + details.Count).Delete();
-                        sheet.Row(excelRow + details.Count - 1).Delete();
+                        sheet.Row(excelRow).Delete();
+                        sheet.Row(excelRow).Delete();
                         #endregion
                         //#region ===== QR CODE =====
                         string qrText = master["Code"]?.ToString();
@@ -529,8 +526,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         bmp.Save(tempPath, ImageFormat.Png);
 
                         sheet.AddPicture(tempPath)
-                             .MoveTo(sheet.Cell(1, 10), 20, 10)
-                             .WithSize(120, 120);
+                             .MoveTo(sheet.Cell(1, 11), 20, 10)
+                             .WithSize(150, 150);
 
                         System.IO.File.Delete(tempPath);
                         using var excelStream = new MemoryStream();
@@ -1241,7 +1238,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-    
+
 
         [HttpGet("export-excel-file")]
         public async Task<IActionResult> ExportFile(int billExportId)
@@ -1261,7 +1258,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
                 var details = await SqlDapper<object>.ProcedureToListTAsync("spGetBillExportDetail", paramDetail);
 
-                if (details == null || details.Count() <=0) return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu chi tiết phiếu"));
+                if (details == null || details.Count() <= 0) return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu chi tiết phiếu"));
 
                 using (var workbook = new XLWorkbook(templatePath))
                 {
@@ -1293,8 +1290,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     sheet.Cell(25, 3).Value = master.FullNameSender ?? "";
                     sheet.Cell(25, 9).Value = fullname;
 
-                    if (master.WarehouseID == 1)
-                        sheet.Cell(15, 10).Value = "loại vật tư";
+                    //if (master.WarehouseID == 1)
+                    //    sheet.Cell(15, 10).Value = "loại vật tư";
 
                     DateTime d;
                     if (DateTime.TryParse(GetString(master, "CreatDate"), out d))
@@ -1335,6 +1332,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         excelRow++;
                     }
                     sheet.Row(excelRow).Delete();
+                    sheet.Row(excelRow).Delete();
                     //sheet.Row(excelRow + details.Count - 1).Delete();
                     //sheet.Row(excelRow + details.Count - 1).Delete();
                     #endregion
@@ -1363,8 +1361,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     bmp.Save(tempPath, ImageFormat.Png);
 
                     sheet.AddPicture(tempPath)
-                         .MoveTo(sheet.Cell(1, 10), 20, 10)
-                         .WithSize(120, 120);
+                         .MoveTo(sheet.Cell(1, 11), 20, 10)
+                         .WithSize(150, 150);
                     #endregion
                     using (var stream = new MemoryStream())
                     {

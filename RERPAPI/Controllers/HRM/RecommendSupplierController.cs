@@ -324,13 +324,19 @@ namespace RERPAPI.Controllers.HRM
                                 var sRow = (IDictionary<string, object>)supplier;
                                 sheet.Cell(currentRow, 13).Value = GetVal(sRow, "Supplier"); // M
                                 sheet.Cell(currentRow, 14).Value = GetVal(sRow, "Contact");  // N
-
-                                // Đơn giá (O)
+                                                                                             // Đơn giá (O)
                                 string unitPriceStr = GetVal(sRow, "UnitPrice");
+                                var cellUnitPrice = sheet.Cell(currentRow, 15);
+
                                 if (double.TryParse(unitPriceStr, out double unitPrice))
-                                    sheet.Cell(currentRow, 15).SetValue(unitPrice);
+                                {
+                                    cellUnitPrice.Value = unitPrice;
+                                    cellUnitPrice.Style.NumberFormat.Format = "#,##0"; // 10.000
+                                }
                                 else
-                                    sheet.Cell(currentRow, 15).Value = unitPriceStr;
+                                {
+                                    cellUnitPrice.Value = unitPriceStr;
+                                }
 
                                 // Thành tiền (P)
 

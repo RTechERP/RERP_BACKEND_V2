@@ -53,6 +53,19 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpGet("get-productgroup-purchase")]
+        public IActionResult getProductGroupPurchase(bool isvisible = true, string warehousecode = "")
+        {
+            try
+            {
+                var data = _productgroupRepo.GetAll(x => x.IsVisible == true);
+                return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [HttpGet("get-all")]
         public IActionResult GetAll()
         {
