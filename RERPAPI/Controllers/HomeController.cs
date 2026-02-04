@@ -91,8 +91,7 @@ namespace RERPAPI.Controllers
                 var dictionary = (IDictionary<string, object>)hasUser;
                 foreach (var item in dictionary)
                 {
-                    //if (item.Key.ToLower() == "passwordhash") continue;
-
+                    if (item.Key.ToLower() == "passwordhash") continue;
                     var claim = new Claim(item.Key.ToLower(), item.Value?.ToString() ?? "");
                     claims.Add(claim);
                 }
@@ -1266,7 +1265,7 @@ namespace RERPAPI.Controllers
         }
         [HttpPost("get-quantity-approve")]
         public async Task<IActionResult> GetQuantityApprove([FromBody] ApproveByApproveTPRequestParam request)
-            {
+        {
             try
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
@@ -1281,13 +1280,13 @@ namespace RERPAPI.Controllers
                     FilterText = "",
                     DateStart = request.DateStart,
                     DateEnd = request.DateEnd,
-                    IDApprovedTP =0,
+                    IDApprovedTP = 0,
                     Status = -1,
-                    DeleteFlag =0,
+                    DeleteFlag = 0,
                     EmployeeID = 0,
-                    TType =0,
-                    StatusHR =-1,
-                    StatusBGD =0,
+                    TType = 0,
+                    StatusHR = -1,
+                    StatusBGD = 0,
                     IsBGD = false,
                     UserTeamID = 0,
                     SeniorID = currentUser.EmployeeID,
@@ -1327,10 +1326,10 @@ namespace RERPAPI.Controllers
                     SeniorID = 0,
                     StatusSenior = -1
                 };
-                var approveResultSenior = await  SqlDapper<object>.ProcedureToListTAsync("spGetApprovedByApprovedTP_New", paramSenior);
-                var approveResultTP = await  SqlDapper<object>.ProcedureToListTAsync( "spGetApprovedByApprovedTP_New",paramTP);
-                var approveResultBGD = await SqlDapper<object>.ProcedureToListTAsync("spGetApprovedByApprovedTP_New",paramBGD);
-              
+                var approveResultSenior = await SqlDapper<object>.ProcedureToListTAsync("spGetApprovedByApprovedTP_New", paramSenior);
+                var approveResultTP = await SqlDapper<object>.ProcedureToListTAsync("spGetApprovedByApprovedTP_New", paramTP);
+                var approveResultBGD = await SqlDapper<object>.ProcedureToListTAsync("spGetApprovedByApprovedTP_New", paramBGD);
+
                 var result = new[]
                         {
                             new { Type = "Senior", Count = approveResultSenior?.Count ?? 0 },
