@@ -1265,8 +1265,8 @@ namespace RERPAPI.Controllers
             }
         }
         [HttpPost("get-quantity-approve")]
-        public IActionResult GetQuantityApprove([FromBody] ApproveByApproveTPRequestParam request)
-        {
+        public async Task<IActionResult> GetQuantityApprove([FromBody] ApproveByApproveTPRequestParam request)
+            {
             try
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
@@ -1276,26 +1276,66 @@ namespace RERPAPI.Controllers
 
                 request.DateStart = request.DateStart.Value.ToLocalTime().Date;
                 request.DateEnd = request.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
-                var approveResultSenior = SQLHelper<dynamic>.ProcedureToList(
-                    "spGetApprovedByApprovedTP_New",
-                    new[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID", "@StatusSenior" },
-                    new object[] { "", request.DateStart, request.DateEnd, 0, -1, 0, 0, 0, -1, 0, false, 0, currentUser.EmployeeID, 0 });
-                var approveResultTP = SQLHelper<dynamic>.ProcedureToList(
-                   "spGetApprovedByApprovedTP_New",
-                   new[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID", "@StatusSenior" },
-                   new object[] { "", request.DateStart, request.DateEnd, currentUser.EmployeeID, 0, 0, 0, 0, -1, 0, false, 0, 0, -1 });
-                var approveResultBGD = SQLHelper<dynamic>.ProcedureToList(
-                   "spGetApprovedByApprovedTP_New",
-                   new[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID", "@StatusSenior" },
-                   new object[] { "", request.DateStart, request.DateEnd, currentUser.EmployeeID, 0, 0, 0, 0, -1, 0, isBGD, 0, 0, -1 });
-                var approveListSenior = SQLHelper<dynamic>.GetListData(approveResultSenior, 0);
-                var approveListTP = SQLHelper<dynamic>.GetListData(approveResultTP, 0);
-                var approveListBGD = SQLHelper<dynamic>.GetListData(approveResultBGD, 0);
+                var paramSenior = new
+                {
+                    FilterText = "",
+                    DateStart = request.DateStart,
+                    DateEnd = request.DateEnd,
+                    IDApprovedTP =0,
+                    Status = -1,
+                    DeleteFlag =0,
+                    EmployeeID = 0,
+                    TType =0,
+                    StatusHR =-1,
+                    StatusBGD =0,
+                    IsBGD = false,
+                    UserTeamID = 0,
+                    SeniorID = currentUser.EmployeeID,
+                    StatusSenior = 0
+                };
+                var paramTP = new
+                {
+                    FilterText = "",
+                    DateStart = request.DateStart,
+                    DateEnd = request.DateEnd,
+                    IDApprovedTP = currentUser.EmployeeID,
+                    Status = 0,
+                    DeleteFlag = 0,
+                    EmployeeID = 0,
+                    TType = 0,
+                    StatusHR = -1,
+                    StatusBGD = 0,
+                    IsBGD = false,
+                    UserTeamID = 0,
+                    SeniorID = 0,
+                    StatusSenior = -1
+                };
+                var paramBGD = new
+                {
+                    FilterText = "",
+                    DateStart = request.DateStart,
+                    DateEnd = request.DateEnd,
+                    IDApprovedTP = currentUser.EmployeeID,
+                    Status = 0,
+                    DeleteFlag = 0,
+                    EmployeeID = 0,
+                    TType = 0,
+                    StatusHR = -1,
+                    StatusBGD = 0,
+                    IsBGD = isBGD,
+                    UserTeamID = 0,
+                    SeniorID = 0,
+                    StatusSenior = -1
+                };
+                var approveResultSenior = await  SqlDapper<object>.ProcedureToListTAsync("spGetApprovedByApprovedTP_New", paramSenior);
+                var approveResultTP = await  SqlDapper<object>.ProcedureToListTAsync( "spGetApprovedByApprovedTP_New",paramTP);
+                var approveResultBGD = await SqlDapper<object>.ProcedureToListTAsync("spGetApprovedByApprovedTP_New",paramBGD);
+              
                 var result = new[]
                         {
-                            new { Type = "Senior", Count = approveListSenior?.Count ?? 0 },
-                            new { Type = "TP",     Count = approveListTP?.Count ?? 0 },
-                            new { Type = "BGD",    Count = approveListBGD?.Count ?? 0 }
+                            new { Type = "Senior", Count = approveResultSenior?.Count ?? 0 },
+                            new { Type = "TP",     Count = approveResultTP?.Count ?? 0 },
+                            new { Type = "BGD",    Count = approveResultBGD?.Count ?? 0 }
                         }.FirstOrDefault(x => x.Count > 0);
                 return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu thành công"));
             }
@@ -1392,7 +1432,7 @@ namespace RERPAPI.Controllers
                 //    object[] paramValueBuissiness = new object[] { request.DateStart, request.DateEnd, request.DepartmentID ?? 0, request.EmployeeID ?? 0, request.IsApproved, request.Keyword ?? "", 0, -1};
 
 
-                var dataOnLeave = SQLHelper<object>.ProcedureToList(procedureOnLeave, paramNames, paramValues);
+                var dataOnLeavedata = SQLHelper<object>.ProcedureToList(procedureOnLeave, paramNames, paramValues);
                 var dataEarlyLate = SQLHelper<object>.ProcedureToList(procedureEarlyLate, paramNamesEarlyLate, paramValuesEarlyLate);
                 var dataOverTime = SQLHelper<object>.ProcedureToList(procedureOverTime, paramNamesEarlyLate, paramValuesEarlyLate);
                 var dataBussiness = SQLHelper<object>.ProcedureToList(procedureBussiness, paramNameBuissiness, paramValueBuissiness);
@@ -1401,6 +1441,7 @@ namespace RERPAPI.Controllers
                 var dataNightShiftData = SQLHelper<dynamic>.ProcedureToList(procedureNightShift, paramNamesNightShift, paramValuesNightShift);
 
                 var dataNightShift = SQLHelper<dynamic>.GetListData(dataNightShiftData, 0);
+                var dataOnLeave = SQLHelper<dynamic>.GetListData(dataOnLeavedata, 0);
 
                 return Ok(ApiResponseFactory.Success(new { dataOnLeave, dataEarlyLate, dataOverTime, dataBussiness, dataWFH, dataENF, dataNightShift }, "Lấy dữ liệu thành công"));
             }

@@ -490,7 +490,7 @@ namespace RERPAPI.Controllers.DocumentManager
             {
                 var document = SQLHelper<dynamic>.ProcedureToList("spGetDocument",
                        new string[] { "@FilterText", "@DepartmentID", "@GroupType" },
-                    new object[] { keyword??"", departID, 1 });
+                    new object[] { keyword??"", departID, groupType });
               var  documentList = SQLHelper<object>.GetListData(document, 0);
                 return Ok(ApiResponseFactory.Success(documentList, ""));
 

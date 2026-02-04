@@ -222,10 +222,10 @@ namespace RERPAPI.Controllers.Old
                         ));
                     }
                 }
-                if (foodOrder.ID <= 0) await _employeeFoodOrderRepo.CreateAsync(foodOrder);
-                else
+                if (foodOrder.ID <= 0 && foodOrder.EmployeeID !=0) await _employeeFoodOrderRepo.CreateAsync(foodOrder);
+                else 
                 {
-                    if (foodOrder.ID > 0 && vUserHR == null && foodOrder.DateOrder.HasValue)
+                    if (foodOrder.ID > 0 && vUserHR == null && foodOrder.DateOrder.HasValue && foodOrder.EmployeeID != 0)
                     {
                         var orderDate = foodOrder.DateOrder.Value.Date;
                         if (orderDate < today)
