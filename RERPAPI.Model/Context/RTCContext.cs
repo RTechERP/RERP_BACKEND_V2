@@ -3496,10 +3496,15 @@ public partial class RTCContext : DbContext
 
             entity.ToTable("EmployeeLuckyNumber");
 
+            entity.HasIndex(e => new { e.YearValue, e.LuckyNumber }, "UX_EmployeeLucky_Year_LuckyNumber")
+                .IsUnique()
+                .HasFilter("([LuckyNumber] IS NOT NULL AND [LuckyNumber]<>(0))");
+
             entity.Property(e => e.CreatedBy).HasMaxLength(250);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.EmployeeCode).HasMaxLength(150);
             entity.Property(e => e.EmployeeName).HasMaxLength(550);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.PhoneNumber)
                 .HasMaxLength(50)
                 .IsUnicode(false);

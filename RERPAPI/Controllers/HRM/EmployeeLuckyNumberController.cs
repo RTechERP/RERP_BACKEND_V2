@@ -2,9 +2,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using NPOI.HPSF;
+using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
+using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
 using SixLabors.ImageSharp;
 using System.Threading.Tasks;
@@ -19,15 +22,17 @@ namespace RERPAPI.Controllers.HRM
     {
         private readonly IConfiguration _configuration;
         private CurrentUser _currentUser;
+        private readonly ConfigSystemRepo _configSystemRepo;
 
         private EmployeeLuckyNumberRepo _employeeLucky;
 
-        public EmployeeLuckyNumberController(IConfiguration configuration, CurrentUser currentUser, EmployeeLuckyNumberRepo employeeLucky)
+        public EmployeeLuckyNumberController(IConfiguration configuration, CurrentUser currentUser, ConfigSystemRepo configSystemRepo, EmployeeLuckyNumberRepo employeeLucky)
         {
             _configuration = configuration;
             _currentUser = currentUser;
+            _configSystemRepo = configSystemRepo;
             _employeeLucky = employeeLucky;
-
+            _configSystemRepo = configSystemRepo;
         }
 
 
@@ -177,14 +182,14 @@ namespace RERPAPI.Controllers.HRM
 
                     //randomNumber = 10;
 
-                    luckyNumber.EmployeeID = _currentUser.EmployeeID;
-                    luckyNumber.EmployeeCode = _currentUser.Code;
-                    luckyNumber.EmployeeName = _currentUser.FullName;
-                    luckyNumber.PhoneNumber = employeeLucky.PhoneNumber;
-                    luckyNumber.YearValue = employeeLucky.YearValue;
+                    //luckyNumber.EmployeeID = _currentUser.EmployeeID;
+                    //luckyNumber.EmployeeCode = _currentUser.Code;
+                    //luckyNumber.EmployeeName = _currentUser.FullName;
+                    //luckyNumber.PhoneNumber = employeeLucky.PhoneNumber;
+                    //luckyNumber.YearValue = employeeLucky.YearValue;
                     luckyNumber.LuckyNumber = randomNumber;
                     luckyNumber.IsChampion = false;
-                    luckyNumber.ImageName = employeeLucky.ImageName;
+                    //luckyNumber.ImageName = employeeLucky.ImageName;
 
                     var record = await _employeeLucky.UpdateAsync(luckyNumber);
                     if (record >= 1)
@@ -212,6 +217,62 @@ namespace RERPAPI.Controllers.HRM
                         maxValue
                     }, message));
                 }
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
+        [HttpPost("upload-avatar")]
+        public async Task<IActionResult> UploadFileAvatar()
+        {
+            try
+            {
+                //_currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
+
+                var form = await Request.ReadFormAsync();
+                var employeeLuckyID = TextUtils.ToInt32(form["EmployeeLuckyNumberID"]);
+                var phoneNumber = TextUtils.ToString(form["PhoneNumber"]);
+                var files = Request.Form.Files;
+
+                // Lấy đường dẫn từ ConfigSystem
+                var pathServer = _configSystemRepo.GetUploadPathByKey("EmployeeLuckyNumber");
+                if (string.IsNullOrWhiteSpace(pathServer))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: EmployeeLuckyNumber"));
+                }
+
+                var employeeLucky = _employeeLucky.GetByID(employeeLuckyID);
+                string pathUpload = Path.Combine(pathServer, $"{DateTime.Now.Year}");
+
+                int records = 0;
+                string imageName = "";
+                if (files.Count() > 0)
+                {
+                    foreach (var file in files)
+                    {
+                        string fileName = $"{employeeLucky.EmployeeCode}_{file.FileName}";
+                        var result = await FileHelper.UploadFile(file, pathUpload, fileName);
+
+                        if (result.status == 1)
+                        {
+                            employeeLucky.ImageName = fileName;
+                            employeeLucky.PhoneNumber = phoneNumber;
+                            records += await _employeeLucky.UpdateAsync(employeeLucky);
+                        }
+                    }
+                }
+                else
+                {
+                    employeeLucky.PhoneNumber = phoneNumber;
+                    records = await _employeeLucky.UpdateAsync(employeeLucky);
+                }
+
+                if (records > 0) return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+                else return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thất bại. Vui lòng thử lại!"));
 
             }
             catch (Exception ex)
