@@ -72,15 +72,15 @@ namespace RERPAPI.Controllers.HRM
 
         [HttpGet("")]
         [Authorize]
-        public async Task<IActionResult> GetAllAsync(int? year, int? departmentID, int? employeeID, string? keyword)
+        public async Task<IActionResult> GetAllAsync(int? year, int? departmentID, int? employeeID, string? keyword, int isPerson = 0)
         {
             try
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 _currentUser = ObjectMapper.GetCurrentUser(claims);
 
-                employeeID = 0;
-                if (!_currentUser.Permissions.Contains("N34")) employeeID = _currentUser.EmployeeID;
+                employeeID = _currentUser.EmployeeID;
+                if (_currentUser.Permissions.Contains("N34") && isPerson == 0) employeeID = 0;
 
                 var param = new
                 {
