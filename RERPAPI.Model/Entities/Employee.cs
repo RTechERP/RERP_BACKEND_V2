@@ -138,6 +138,13 @@ public partial class Employee
     public string? MoiQuanHe { get; set; }
 
     public string? SDTNguoiThan { get; set; }
+    // PQ.Chien - 04/02/2026
+    public string? NguoiLienHeKhiCan2 { get; set; }
+
+    public string? MoiQuanHe2 { get; set; }
+
+    public string? SDTNguoiThan2 { get; set; }
+    // PQ.Chien - 04/02/2026
 
     public int? LoaiHDLDID { get; set; }
 
