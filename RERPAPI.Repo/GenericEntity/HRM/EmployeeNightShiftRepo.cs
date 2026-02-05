@@ -61,9 +61,10 @@ namespace RERPAPI.Repo.GenericEntity.HRM
                     && x.DateRegister.Value.Date == date
                     && x.ID != item.ID
                     && x.IsDeleted != true
+                    && item.DateStart.Value < x.DateEnd.Value
+                    && item.DateEnd.Value > x.DateStart.Value
                 )
                 .Any();
-
             if (exists)
             {
                 message = $"Nhân viên đã khai báo làm đêm ngày [{date:dd/MM/yyyy}]!";
