@@ -473,7 +473,7 @@ namespace RERPAPI.Controllers
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 var productHistory = SQLHelper<object>.ProcedureToList("spGetHistoryProduct_New",
                     new string[] { "@DateStart", "@DateEnd", "@Keyword", "@WarehouseID", "@UserID", "@Status", "@PageNumber", "@PageSize", "@IsDeleted", "@WarehouseType" },
-                    new object[] { TextUtils.MinDate, dateEnd, "", 1, currentUser.ID, 1, 1, 2000000, 0, 1 });
+                    new object[] { TextUtils.MinDate, dateEnd, "", 1, currentUser.ID, '1', 1, 2000000, 0, 0 });
 
                 // Số lượng sản phẩm mượn quá hạn
                 var quantityExpiredList = SQLHelper<object>.GetListData(productHistory, 1);
