@@ -3165,6 +3165,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.Location).HasMaxLength(550);
             entity.Property(e => e.NotChekIn).HasComment("true: Không chấm công ở văn phòng");
             entity.Property(e => e.OvernightType).HasComment("1:Phụ cấp ăn tối từ sau 20h; 2:Phụ cấp ăn tối theo loại công tác");
+            entity.Property(e => e.ProjectID).HasDefaultValue(0);
             entity.Property(e => e.ProvinceID).HasDefaultValue(0);
             entity.Property(e => e.Reason).HasMaxLength(550);
             entity.Property(e => e.TotalMoney).HasColumnType("decimal(18, 4)");
