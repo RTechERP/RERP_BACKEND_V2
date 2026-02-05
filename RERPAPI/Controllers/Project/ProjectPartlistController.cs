@@ -569,8 +569,25 @@ namespace RERPAPI.Controllers.Project
                                 await _projectPartlistRepo.UpdateAsync(pl);
                             }
                         }
+                        //update trạng thái duyệt cho các vật tư có cùng thông tin trong cùng 1 projectID
+                        var partlist = _projectPartlistRepo.GetAll(x => x.ProductCode.Trim() == item.ProductCode.Trim()
+                                                                    && x.GroupMaterial.Trim() == item.GroupMaterial.Trim()
+                                                                    && x.Unit.Trim() == item.Unit.Trim()
+                                                                    && x.Manufacturer.Trim() == item.Manufacturer.Trim()
+                                                                    && x.ProjectID == item.ProjectID 
+                                                                    && x.IsDeleted != true
+                                                                    ).ToList();
+
+                        if (partlists != null && partlists.Any())
+                        {
+                            foreach (var pl in partlists)
+                            {
+                                pl.IsApprovedTBPNewCode = isApprovedNew;
+                            }
+                            await _projectPartlistRepo.UpdateRangeAsync_Binh(partlists);
+                        }
                     }
-                    }
+                }
 
                     return Ok(ApiResponseFactory.Success(null, $"{approvedText} thành công!")); // Sửa message động
             }
@@ -1327,7 +1344,7 @@ namespace RERPAPI.Controllers.Project
                         x.ProductCode.Trim() == productCode
                         && x.Unit.Trim() == unit
                         //&& (firm.ID > 0 ? x.FirmID == firm.ID : x.Maker.Trim() == item.Manufacturer)
-                        && (x.Maker.Trim() == item.Manufacturer)
+                        && (x.Maker.Trim() == item.Manufacturer.Trim())
                         && x.IsDeleted == false
                     ).FirstOrDefault();
                     if (productSale == null || productSale.ID <= 0)
@@ -1441,7 +1458,7 @@ namespace RERPAPI.Controllers.Project
 
                         if (productSale == null || productSale.ID <= 0) continue;
 
-                        decimal minQuantity = item.QtyMin ?? 0;
+                        decimal minQuantity = item.QtyFull ?? 0; // 
 
                         InventoryStock inventory = _inventoryStockRepo.GetAll(x => 
                             x.ProductSaleID == productSale.ID 

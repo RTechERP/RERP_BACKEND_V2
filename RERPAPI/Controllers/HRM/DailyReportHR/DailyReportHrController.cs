@@ -188,7 +188,7 @@ namespace RERPAPI.Controllers.HRM.DailyReportHR
                         item.TotalTimeLate = item.TotalTimeLate ?? 0;
                     }
                     item.EmployeeID = currentUser.EmployeeID; // Gán ID nhân viên đang đăng nhập
-
+                    ///item.Quantity = Convert.ToInt32(item.Quantity);
                     if (item.ID > 0)
                     {                    
                         await _dailyReportHRRepo.UpdateAsync(item);
