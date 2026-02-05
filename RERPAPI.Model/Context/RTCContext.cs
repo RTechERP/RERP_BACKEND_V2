@@ -3027,6 +3027,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.LuongThuViec).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.MST).HasMaxLength(550);
             entity.Property(e => e.MoiQuanHe).HasMaxLength(150);
+            entity.Property(e => e.MoiQuanHe2).HasMaxLength(250);
             entity.Property(e => e.MucDongBHXHHienTai).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.NgayBatDauBHXH).HasColumnType("datetime");
             entity.Property(e => e.NgayBatDauBHXHCty).HasColumnType("datetime");
@@ -3040,6 +3041,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.NgayKetThucHDXDTH).HasColumnType("datetime");
             entity.Property(e => e.NgayKetThucThuViec).HasColumnType("datetime");
             entity.Property(e => e.NguoiLienHeKhiCan).HasMaxLength(150);
+            entity.Property(e => e.NguoiLienHeKhiCan2).HasMaxLength(250);
             entity.Property(e => e.NhaO).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.NoiCap).HasMaxLength(150);
             entity.Property(e => e.NoiSinh).HasMaxLength(550);
@@ -3056,6 +3058,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.SDTCaNhan).HasMaxLength(50);
             entity.Property(e => e.SDTCongTy).HasMaxLength(50);
             entity.Property(e => e.SDTNguoiThan).HasMaxLength(50);
+            entity.Property(e => e.SDTNguoiThan2).HasMaxLength(150);
             entity.Property(e => e.STKChuyenLuong)
                 .HasMaxLength(50)
                 .IsUnicode(false);
