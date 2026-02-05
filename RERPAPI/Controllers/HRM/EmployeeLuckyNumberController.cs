@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NPOI.HPSF;
+using RERPAPI.Attributes;
 using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -17,6 +18,7 @@ namespace RERPAPI.Controllers.HRM
 {
     [Route("api/[controller]")]
     [ApiController]
+    
 
     public class EmployeeLuckyNumberController : ControllerBase
     {
@@ -74,6 +76,12 @@ namespace RERPAPI.Controllers.HRM
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                _currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                employeeID = 0;
+                if (!_currentUser.Permissions.Contains("N34")) employeeID = _currentUser.EmployeeID;
+
                 var param = new
                 {
                     Year = year ?? new DateTime().Year,
@@ -92,6 +100,7 @@ namespace RERPAPI.Controllers.HRM
 
         [HttpPost("save-data")]
         [Authorize]
+        [RequiresPermission("N34")]
         public async Task<IActionResult> SaveData([FromBody] List<EmployeeLuckyNumber> employeeLuckys)
         {
             try
@@ -227,6 +236,7 @@ namespace RERPAPI.Controllers.HRM
 
 
         [HttpPost("upload-avatar")]
+        [Authorize]
         public async Task<IActionResult> UploadFileAvatar()
         {
             try
