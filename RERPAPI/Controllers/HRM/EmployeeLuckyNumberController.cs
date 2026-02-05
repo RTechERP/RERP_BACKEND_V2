@@ -56,7 +56,7 @@ namespace RERPAPI.Controllers.HRM
         {
             try
             {
-                int year = 2025;
+                int year = DateTime.Now.Year;
                 var employeeLucky = _employeeLucky.GetAll(x => x.YearValue == year
                                                             && x.LuckyNumber == number)
                                                   .FirstOrDefault() ?? new EmployeeLuckyNumber();
