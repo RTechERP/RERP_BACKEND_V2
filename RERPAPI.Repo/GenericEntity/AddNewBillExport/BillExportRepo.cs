@@ -32,7 +32,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
             BillExportDetailRepo billExportDetailRepo,
             BillExportDetailSerialNumberRepo serialNumberRepo,
             InventoryRepo inventoryRepo,
-           BillDocumentExportRepo billDocumentExportRepo,
+            BillDocumentExportRepo billDocumentExportRepo,
             DocumentExportRepo documentExportRepo,
             InventoryProjectExportRepo inventoryProjectExportRepo,
             BillImportRepo billImportRepo,
@@ -1885,11 +1885,10 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                 existingImport = _billImportRepo.GetByID(billExport.BillImportID.Value);
                 if (existingImport?.IsDeleted == true)
                 {
-                    existingImport = null; // Nếu đã bị xóa mềm thì coi như chưa có
+                    existingImport = null;
                 }
             }
 
-            // Nếu không tìm thấy qua BillImportID, mới tìm theo BillExportID
             if (existingImport == null)
             {
                 existingImport = _billImportRepo.GetAll(x =>
@@ -1900,13 +1899,13 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
 
             BillImport billImport;
 
-            // ✅ 2. Lấy thông tin người dùng và nhà cung cấp
+            //  Lấy thông tin người dùng và nhà cung cấp
             var deliver = _userRepo.GetByID(dto.billExport.SenderID ?? 0);
             var reciver = _userRepo.GetByID(dto.billExport.UserID ?? 0);
             var supplier = _supplierRepo.GetByID(dto.billExport.SupplierID ?? 0);
             var productGroup = _productGroupRepo.GetByID(dto.billExport.KhoTypeID ?? 0);
 
-            // ✅ 3. TH1: Chưa có phiếu nhập → Tạo mới
+            //  Chưa có phiếu nhập → Tạo mới
             if (existingImport == null)
             {
                 billImport = new BillImport
@@ -1937,7 +1936,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
             }
             else
             {
-                // ✅ 4. TH2: Đã có phiếu nhập → Update
+                // Đã có phiếu nhập → Update
                 existingImport.DeliverID = dto.billExport.SenderID;
                 existingImport.Deliver = deliver?.FullName;
                 existingImport.Reciver = reciver?.FullName;
@@ -1955,10 +1954,10 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                 billImport = existingImport;
             }
 
-            // ✅ 5. Sync chi tiết phiếu nhập
+            //  chi tiết phiếu nhập
             await SyncBillImportDetails(billImport.ID, dto);
 
-            // ✅ 6. Update lại BillImportID cho phiếu xuất (nếu chưa có)
+            // Update lại BillImportID cho phiếu xuất (nếu chưa có)
             if (billExport != null && billExport.BillImportID != billImport.ID)
             {
                 billExport.BillImportID = billImport.ID;

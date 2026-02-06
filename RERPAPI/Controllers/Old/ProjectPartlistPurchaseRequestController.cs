@@ -891,8 +891,8 @@ namespace RERPAPI.Controllers.Old
                         return BadRequest(ApiResponseFactory.Fail(null, $"Số lượng giữ sản phẩm [{item.ProductName}] cần lớn hơn 0!"));
                     }
 
-                    var inventoryProject = item.ID > 0
-                        ? _inventoryProjectRepo.GetByID(item.ID)
+                    var inventoryProject = item.InventoryProjectID > 0
+                        ? _inventoryProjectRepo.GetByID(item.InventoryProjectID ?? 0)
                         : new InventoryProject();
 
                     inventoryProject.ProjectID = item.ProjectID;
