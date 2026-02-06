@@ -2138,6 +2138,11 @@ namespace RERPAPI.Controllers.Project
                     else
                     {
                         await _projectPartlistRepo.CreateAsync(partList);
+                        if(item.IsDeleted == true)
+                        {
+                            partList.IsDeleted = item.IsDeleted;
+                            await _projectPartlistRepo.UpdateAsync(partList);
+                        }
                     }
                 }
             }
