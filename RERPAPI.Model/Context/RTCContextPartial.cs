@@ -170,8 +170,13 @@ namespace RERPAPI.Model.Context
                         }
                     }
                 }
+                var hasAttendance = entries.Any(e =>e.Entity != null &&e.Entity.GetType().Name == "EmployeeAttendance");
+                //AddAuditLogs();
 
-                AddAuditLogs();
+                if (!hasAttendance)
+                {
+                    AddAuditLogs();
+                }
                 return await base.SaveChangesAsync(cancellationToken);
             }
             catch (Exception ex)

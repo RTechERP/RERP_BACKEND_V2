@@ -1025,13 +1025,13 @@ namespace RERPAPI.Controllers
         //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
         //    }
         //}
+  
         [HttpGet("get-personal-synthetic-by-month")]
         [Authorize]
         public IActionResult GetPersonalSyntheticByMonth(int year, int month)
         {
             try
             {
-
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
 
@@ -1042,7 +1042,7 @@ namespace RERPAPI.Controllers
                     new string[] { "@Year", "@Month", "@EmployeeID" },
                     new object[] { year, month, currentUser.EmployeeID });
 
-                var payrollData = SQLHelper<object>.ProcedureToList("spGetEmployeePayrollDetail",
+                var payrollData = SQLHelper<object>.ProcedureToList("spGetEmployeePayrollDetail_Personal",
                     new string[] { "@Year", "@Month", "@DepartmentID", "@EmployeeID", "@Keyword", "@IsPublish", "@IsAll" },
                     new object[] { year, month, currentUser.DepartmentID, currentUser.EmployeeID, "", 1, 0 });
 
@@ -1390,7 +1390,7 @@ namespace RERPAPI.Controllers
         //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
         //    }
         //}
-
+      
         [HttpPost("confirm-payroll")]
         [Authorize]
         public IActionResult ConfirmPayroll([FromBody] ConfirmPayrollDTO dto)
