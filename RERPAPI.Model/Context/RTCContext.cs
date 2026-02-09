@@ -444,6 +444,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<HandoverMinutesDetail> HandoverMinutesDetails { get; set; }
 
+    public virtual DbSet<HandoverPersonalAsset> HandoverPersonalAssets { get; set; }
+
     public virtual DbSet<HandoverReceiver> HandoverReceivers { get; set; }
 
     public virtual DbSet<HandoverSubordinate> HandoverSubordinates { get; set; }
@@ -991,6 +993,8 @@ public partial class RTCContext : DbContext
     public virtual DbSet<UnitCount> UnitCounts { get; set; }
 
     public virtual DbSet<UnitCountKT> UnitCountKTs { get; set; }
+
+    public virtual DbSet<UpdateVersion> UpdateVersions { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
 
@@ -4821,6 +4825,20 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.ProductStatus).HasComment("1: Hàng mới");
             entity.Property(e => e.Quantity).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<HandoverPersonalAsset>(entity =>
+        {
+            entity.ToTable("HandoverPersonalAsset");
+
+            entity.Property(e => e.Code).HasMaxLength(100);
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.Name).HasMaxLength(255);
+            entity.Property(e => e.Status).HasComment("Trạng thái sử dụng: 1 = Đang sử dụng, 2 = Chưa sử dụng");
+            entity.Property(e => e.Unit).HasMaxLength(50);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
@@ -10230,6 +10248,40 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.UnitCountCode).HasMaxLength(150);
             entity.Property(e => e.UnitCountName).HasMaxLength(150);
+        });
+
+        modelBuilder.Entity<UpdateVersion>(entity =>
+        {
+            entity.ToTable("UpdateVersion");
+
+            entity.Property(e => e.ID).HasComment("Khóa chính, tự tăng");
+            entity.Property(e => e.Code)
+                .HasMaxLength(50)
+                .HasComment("Mã phiên bản / mã cập nhật (vd: VER_2026_02_04)");
+            entity.Property(e => e.Content).HasComment("Nội dung chi tiết bản cập nhật");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(100)
+                .HasComment("Người tạo");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasComment("Xóa mềm: 0 = Chưa xóa, 1 = Đã xóa");
+            entity.Property(e => e.Name)
+                .HasMaxLength(255)
+                .HasComment("Tên bản cập nhật");
+            entity.Property(e => e.Note)
+                .HasMaxLength(500)
+                .HasComment("Ghi chú thêm");
+            entity.Property(e => e.PublicDate)
+                .HasComment("Ngày giờ public bản cập nhật")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Status).HasComment("Trạng thái: 1 = Đã public, 2 = Chưa public");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(100)
+                .HasComment("Người cập nhật");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật gần nhất")
+                .HasColumnType("datetime");
         });
 
         modelBuilder.Entity<User>(entity =>
