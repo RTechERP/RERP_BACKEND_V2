@@ -536,8 +536,8 @@ namespace RERPAPI.Controllers.Old.Technical
                         {
                             await _billExportDetailTechnicalRepo.CreateAsync(item);
 
-                            if (product.billExportDetailTechnicals.Count == 1)
-                                singleDetailId = item.ID;
+                            //if (product.billExportDetailTechnicals.Count == 1)
+                            singleDetailId = item.ID;
 
                             if (item.STT.HasValue && item.STT.Value > 0 && !sttToDetailIdMap.ContainsKey(item.STT.Value))
                             {
