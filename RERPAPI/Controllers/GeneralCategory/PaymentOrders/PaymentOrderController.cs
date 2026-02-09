@@ -473,7 +473,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         }
 
         [HttpPost("appoved-tbp")]
-        [RequiresPermission("N57")]
+        [RequiresPermission("N57,N83")]
         public async Task<IActionResult> ApprovedTBP([FromBody] List<PaymentOrderDTO> payment)
         {
             try

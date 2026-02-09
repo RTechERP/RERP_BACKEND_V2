@@ -629,6 +629,7 @@ namespace RERPAPI.Controllers
         //}
 
         [HttpGet("download")]
+        [Authorize]
         public IActionResult DownloadFile([FromQuery] string path)
         {
             try
@@ -703,7 +704,7 @@ namespace RERPAPI.Controllers
         //}
         //API Lấy danh sách bản ghi để duyệt TBP duyệt
         [HttpPost("get-approve-by-approve-tp")]
-
+        [Authorize]
         public async Task<ActionResult> GetApproveByApproveTP([FromBody] ApproveByApproveTPRequestParam request)
 
         {
@@ -1025,6 +1026,7 @@ namespace RERPAPI.Controllers
         //    }
         //}
         [HttpGet("get-personal-synthetic-by-month")]
+        [Authorize]
         public IActionResult GetPersonalSyntheticByMonth(int year, int month)
         {
             try
@@ -1032,7 +1034,6 @@ namespace RERPAPI.Controllers
 
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
-
 
                 DateTime dateStart = new DateTime(year, month, 1, 0, 0, 0);
                 DateTime dateEnd = dateStart.AddMonths(1).AddSeconds(-1);
@@ -1044,6 +1045,7 @@ namespace RERPAPI.Controllers
                 var payrollData = SQLHelper<object>.ProcedureToList("spGetEmployeePayrollDetail",
                     new string[] { "@Year", "@Month", "@DepartmentID", "@EmployeeID", "@Keyword", "@IsPublish", "@IsAll" },
                     new object[] { year, month, currentUser.DepartmentID, currentUser.EmployeeID, "", 1, 0 });
+
                 var payroll = SQLHelper<object>.GetListData(payrollData, 0);
                 var rawFingerData = SQLHelper<dynamic>.ProcedureToList("spGetEmployeeAttendance",
                     new string[] { "@DepartmentID", "@EmployeeID", "@FindText", "@DateStart", "@DateEnd" },
@@ -1168,6 +1170,7 @@ namespace RERPAPI.Controllers
             }
         }
         [HttpGet("get-user-team")]
+        [Authorize]
         public IActionResult GetUserTeam()
         {
             try
@@ -1187,6 +1190,7 @@ namespace RERPAPI.Controllers
 
         }
         [HttpGet("get-user-team-link-by-leader-id")]
+        [Authorize]
         public IActionResult GetUserTeamLinkByLeaderID()
         {
             try
@@ -1207,6 +1211,7 @@ namespace RERPAPI.Controllers
 
         }
         [HttpGet("get-all-contact")]
+        [Authorize]
         public IActionResult GetAllContact(int departmentID, string? keyword)
         {
             try
@@ -1241,6 +1246,7 @@ namespace RERPAPI.Controllers
             }
         }
         [HttpGet("get-all-team-new")]
+        [Authorize]
         public IActionResult GetAllTeamNew(int deID)
         {
 
@@ -1264,6 +1270,7 @@ namespace RERPAPI.Controllers
             }
         }
         [HttpPost("get-quantity-approve")]
+        [Authorize]
         public async Task<IActionResult> GetQuantityApprove([FromBody] ApproveByApproveTPRequestParam request)
         {
             try
@@ -1385,10 +1392,14 @@ namespace RERPAPI.Controllers
         //}
 
         [HttpPost("confirm-payroll")]
+        [Authorize]
         public IActionResult ConfirmPayroll([FromBody] ConfirmPayrollDTO dto)
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
                 var payroll = _employeePayrollDetailRepo.GetByID(dto.Id);
                 if (payroll == null)
                     return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy bảng lương"));
@@ -1405,6 +1416,7 @@ namespace RERPAPI.Controllers
         }
 
         [HttpPost("get-summary-employee-person")]
+        [Authorize]
         public IActionResult GetProposeVehicleRepair([FromBody] SummaryPersonal request)
         {
             try
@@ -1449,7 +1461,9 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-config-system-hr")]
+        [Authorize]
         public IActionResult GetConfigSystem()
         {
             try
@@ -1466,6 +1480,7 @@ namespace RERPAPI.Controllers
         }
 
         [HttpPost("save-config-system-hr")]
+        [Authorize]
         public IActionResult SaveConfigSystemHR([FromBody] SaveConfigSystemHRRequestDTO request)
         {
             try
@@ -1484,7 +1499,6 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
 
         #region API của DA Trường
