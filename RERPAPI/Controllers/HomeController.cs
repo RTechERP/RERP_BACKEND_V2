@@ -1024,6 +1024,7 @@ namespace RERPAPI.Controllers
         //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
         //    }
         //}
+        [Authorize]
         [HttpGet("get-personal-synthetic-by-month")]
         public IActionResult GetPersonalSyntheticByMonth(int year, int month)
         {
@@ -1383,7 +1384,7 @@ namespace RERPAPI.Controllers
         //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
         //    }
         //}
-
+        [Authorize]
         [HttpPost("confirm-payroll")]
         public IActionResult ConfirmPayroll([FromBody] ConfirmPayrollDTO dto)
         {
