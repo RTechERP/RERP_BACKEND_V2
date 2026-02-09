@@ -28,6 +28,7 @@ using RERPAPI.Repo.GenericEntity.TB;
 using RERPAPI.Repo.GenericEntity.Technical;
 using RERPAPI.Repo.GenericEntity.Technical.KPI;
 using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
+using RERPAPI.SendService;
 using RTCApi.Repo.GenericRepo;
 using System.Text;
 
@@ -446,6 +447,8 @@ builder.Services.AddScoped<CourseRepo>();
 builder.Services.AddScoped<CourseRegisterIdeaRepo>();
 
 builder.Services.AddScoped<InventoryProjectProductSaleLinkRepo>();
+builder.Services.AddScoped<HandoverPersonalAssetRepo>();
+builder.Services.AddScoped<UpdateVersionRepo>();
 
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();
@@ -539,7 +542,7 @@ builder.Services.AddCors(options =>
 });
 
 
-
+builder.Services.AddSingleton<SseService>();
 
 
 //Config FormOption
