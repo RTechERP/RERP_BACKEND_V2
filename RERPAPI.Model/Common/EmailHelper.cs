@@ -1,56 +1,105 @@
-using System;
-using System.Net;
-using System.Net.Mail;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
+using MailKit.Security;
+using MimeKit;
+using SmtpClient = MailKit.Net.Smtp.SmtpClient;
+using Microsoft.Data.SqlClient;
 
 namespace RERPAPI.Model.Common
 {
-	public static class EmailHelper
-	{
-		public static async Task SendAsync(string[] toEmails, string subject, string htmlBody)
-		{
-			try
-			{
-				if (string.IsNullOrWhiteSpace(Config.SmtpHost) || string.IsNullOrWhiteSpace(Config.SmtpFrom))
-				{
-					// Chưa cấu hình SMTP => bỏ qua gửi mail
-					return;
-				}
+    public class EmailHelper
+    {
+        private readonly SmtpSettings _smtp;
 
-				using (var message = new MailMessage())
-				{
-					message.From = new MailAddress(Config.SmtpFrom, Config.SmtpFromDisplay ?? Config.SmtpFrom);
-					foreach (var to in toEmails ?? Array.Empty<string>())
-					{
-						if (!string.IsNullOrWhiteSpace(to)) message.To.Add(to);
-					}
-					if (message.To.Count == 0) return;
+        public EmailHelper(IOptions<SmtpSettings> smtp)
+        {
+            _smtp = smtp.Value;
+        }
+        //public static async Task SendAsync(string[] toEmails, string subject, string htmlBody)
+        //{
+        //	try
+        //	{
+        //		if (string.IsNullOrWhiteSpace(Config.SmtpHost) || string.IsNullOrWhiteSpace(Config.SmtpFrom))
+        //		{
+        //			// Chưa cấu hình SMTP => bỏ qua gửi mail
+        //			return;
+        //		}
 
-					message.Subject = subject ?? string.Empty;
-					message.Body = htmlBody ?? string.Empty;
-					message.IsBodyHtml = true;
+        //		using (var message = new MailMessage())
+        //		{
+        //			message.From = new MailAddress(Config.SmtpFrom, Config.SmtpFromDisplay ?? Config.SmtpFrom);
+        //			foreach (var to in toEmails ?? Array.Empty<string>())
+        //			{
+        //				if (!string.IsNullOrWhiteSpace(to)) message.To.Add(to);
+        //			}
+        //			if (message.To.Count == 0) return;
 
-					using (var client = new SmtpClient(Config.SmtpHost, Config.SmtpPort))
-					{
-						client.EnableSsl = Config.SmtpEnableSsl;
-						if (!string.IsNullOrWhiteSpace(Config.SmtpUser))
-						{
-							client.Credentials = new NetworkCredential(Config.SmtpUser, Config.SmtpPass);
-						}
-						else
-						{
-							client.UseDefaultCredentials = true;
-						}
+        //			message.Subject = subject ?? string.Empty;
+        //			message.Body = htmlBody ?? string.Empty;
+        //			message.IsBodyHtml = true;
 
-						await client.SendMailAsync(message);
-					}
-				}
-			}
-			catch
-			{
-			}
-		}
-	}
+        //			using (var client = new SmtpClient(Config.SmtpHost, Config.SmtpPort))
+        //			{
+        //				client.EnableSsl = Config.SmtpEnableSsl;
+        //				if (!string.IsNullOrWhiteSpace(Config.SmtpUser))
+        //				{
+        //					client.Credentials = new NetworkCredential(Config.SmtpUser, Config.SmtpPass);
+        //				}
+        //				else
+        //				{
+        //					client.UseDefaultCredentials = true;
+        //				}
+
+        //				await client.SendMailAsync(message);
+        //			}
+        //		}
+        //	}
+        //	catch
+        //	{
+        //	}
+        //}
+
+
+        public async Task SendAsync(string toEmail, string subject, string body, bool isHtml = true, string cc = "")
+        {
+            try
+            {
+                var email = new MimeMessage();
+                email.From.Add(new MailboxAddress(_smtp.DisplayName, _smtp.Mail));
+                email.To.Add(MailboxAddress.Parse(toEmail));
+                if (!string.IsNullOrWhiteSpace(cc))
+                {
+                    foreach (var mailcc in cc.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        if (MailboxAddress.TryParse(mailcc.Trim(), out var addr))
+                        {
+                            email.Cc.Add(addr);
+                        }
+                    }
+
+                    email.Cc.Add(MailboxAddress.Parse(toEmail));
+                }
+                email.Subject = subject;
+
+                email.Body = new TextPart(isHtml ? "html" : "plain")
+                {
+                    Text = body
+                };
+
+                using (var smtpClient = new SmtpClient())
+                {
+                    await smtpClient.ConnectAsync(_smtp.Host, _smtp.Port, SecureSocketOptions.StartTls);
+                    await smtpClient.AuthenticateAsync(_smtp.Mail, _smtp.Password);
+                    await smtpClient.SendAsync(email);
+                    await smtpClient.DisconnectAsync(true);
+                }
+            }
+            catch (Exception ex)
+            {
+
+                throw new Exception(ex.Message);
+            }
+        }
+    }
 }
 
 
