@@ -1030,7 +1030,6 @@ namespace RERPAPI.Controllers
         {
             try
             {
-
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
 
@@ -1042,7 +1041,7 @@ namespace RERPAPI.Controllers
                     new string[] { "@Year", "@Month", "@EmployeeID" },
                     new object[] { year, month, currentUser.EmployeeID });
 
-                var payrollData = SQLHelper<object>.ProcedureToList("spGetEmployeePayrollDetail",
+                var payrollData = SQLHelper<object>.ProcedureToList("spGetEmployeePayrollDetail_Personal",
                     new string[] { "@Year", "@Month", "@DepartmentID", "@EmployeeID", "@Keyword", "@IsPublish", "@IsAll" },
                     new object[] { year, month, currentUser.DepartmentID, currentUser.EmployeeID, "", 1, 0 });
                 var payroll = SQLHelper<object>.GetListData(payrollData, 0);
