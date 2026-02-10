@@ -26,7 +26,8 @@ namespace RERPAPI.Controllers.GeneralCategory
         //lấy danh sách update phiên bản
         //       [RequiresPermission("N1,N34")]
         [HttpGet("get-update-version")]
-        public IActionResult GetEconomicContractTerms()
+        [Authorize]
+        public IActionResult GetUpdateVersion()
         {
             try
             {
@@ -41,6 +42,7 @@ namespace RERPAPI.Controllers.GeneralCategory
             }
         }
         [HttpGet("get-current-version")]
+        [Authorize]
         public IActionResult GetLastVersion()
         {
             try
@@ -59,7 +61,7 @@ namespace RERPAPI.Controllers.GeneralCategory
         //lưu hợp đồng
         [Authorize]
         [HttpPost("save-version")]
-        public async Task<IActionResult> SaveContract([FromBody] UpdateVersion item)
+        public async Task<IActionResult> SaveVersion([FromBody] UpdateVersion item)
         {
             try
             {
@@ -102,7 +104,7 @@ namespace RERPAPI.Controllers.GeneralCategory
                                         code = item.Code,
                                         content=item.Content,
                                         status = item.Status,
-                                        message = "Hợp đồng đã được duyệt",
+                                        message = "Phiên bản đã được publish",
                                         time = DateTime.Now
                                     }
                                 );
