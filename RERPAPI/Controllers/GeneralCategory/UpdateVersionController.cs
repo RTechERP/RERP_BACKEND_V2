@@ -58,7 +58,8 @@ namespace RERPAPI.Controllers.GeneralCategory
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        //lưu hợp đồng
+        //lưu phiên bản
+        [RequiresPermission("N1")]
         [Authorize]
         [HttpPost("save-version")]
         public async Task<IActionResult> SaveVersion([FromBody] UpdateVersion item)
