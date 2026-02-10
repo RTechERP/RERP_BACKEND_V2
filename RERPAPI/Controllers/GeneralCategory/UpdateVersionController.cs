@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
@@ -13,21 +14,23 @@ namespace RERPAPI.Controllers.GeneralCategory
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
-
+ 
     public class UpdateVersionController : ControllerBase
     {
         private readonly UpdateVersionRepo _updateVersionRepo;
         private readonly SseService _sseService;
-        public UpdateVersionController(UpdateVersionRepo updateVersionRepo, SseService sseService)
+        private CurrentUser _currentUser;
+        public UpdateVersionController(UpdateVersionRepo updateVersionRepo, SseService sseService, CurrentUser currentUser)
         {
             _updateVersionRepo = updateVersionRepo;
             _sseService = sseService;
+            _currentUser = currentUser;
         }
         //lấy danh sách update phiên bản
         //       [RequiresPermission("N1,N34")]
         [HttpGet("get-update-version")]
-        public IActionResult GetEconomicContractTerms()
+        [Authorize]
+        public IActionResult GetUpdateVersion()
         {
             try
             {
@@ -42,6 +45,7 @@ namespace RERPAPI.Controllers.GeneralCategory
             }
         }
         [HttpGet("get-current-version")]
+        [Authorize]
         public IActionResult GetLastVersion()
         {
             try
@@ -57,13 +61,18 @@ namespace RERPAPI.Controllers.GeneralCategory
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        //lưu hợp đồng
+        //lưu phiên bản
 
+        [Authorize]
         [HttpPost("save-version")]
-        public async Task<IActionResult> SaveContract([FromBody] UpdateVersion item)
+        public async Task<IActionResult> SaveVersion([FromBody] UpdateVersion item)
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                _currentUser = ObjectMapper.GetCurrentUser(claims);
+                bool isAdmin = _currentUser.IsAdmin && _currentUser.EmployeeID <= 0;
+                if (!isAdmin) return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền update phiên bản!"));
                 if (item == null)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu"));
@@ -103,7 +112,7 @@ namespace RERPAPI.Controllers.GeneralCategory
                                         code = item.Code,
                                         content=item.Content,
                                         status = item.Status,
-                                        message = "Hợp đồng đã được duyệt",
+                                        message = "Phiên bản đã được publish",
                                         time = DateTime.Now
                                     }
                                 );
@@ -126,7 +135,7 @@ namespace RERPAPI.Controllers.GeneralCategory
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [HttpGet("sse/contracts")]
+        [HttpGet("sse/update-version")]
         public async Task GetContractSse()
         {
             Response.Headers.Add("Content-Type", "text/event-stream");
