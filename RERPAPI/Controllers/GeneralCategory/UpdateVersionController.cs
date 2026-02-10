@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
@@ -18,10 +19,12 @@ namespace RERPAPI.Controllers.GeneralCategory
     {
         private readonly UpdateVersionRepo _updateVersionRepo;
         private readonly SseService _sseService;
-        public UpdateVersionController(UpdateVersionRepo updateVersionRepo, SseService sseService)
+        private CurrentUser _currentUser;
+        public UpdateVersionController(UpdateVersionRepo updateVersionRepo, SseService sseService, CurrentUser currentUser)
         {
             _updateVersionRepo = updateVersionRepo;
             _sseService = sseService;
+            _currentUser = currentUser;
         }
         //lấy danh sách update phiên bản
         //       [RequiresPermission("N1,N34")]
@@ -59,13 +62,17 @@ namespace RERPAPI.Controllers.GeneralCategory
             }
         }
         //lưu phiên bản
-        [RequiresPermission("N1")]
+
         [Authorize]
         [HttpPost("save-version")]
         public async Task<IActionResult> SaveVersion([FromBody] UpdateVersion item)
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                _currentUser = ObjectMapper.GetCurrentUser(claims);
+                bool isAdmin = _currentUser.IsAdmin && _currentUser.EmployeeID <= 0;
+                if (!isAdmin) return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền update phiên bản!"));
                 if (item == null)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu"));
