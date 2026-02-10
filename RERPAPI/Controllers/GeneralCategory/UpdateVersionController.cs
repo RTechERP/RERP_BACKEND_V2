@@ -13,8 +13,7 @@ namespace RERPAPI.Controllers.GeneralCategory
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
-
+ 
     public class UpdateVersionController : ControllerBase
     {
         private readonly UpdateVersionRepo _updateVersionRepo;
@@ -58,7 +57,7 @@ namespace RERPAPI.Controllers.GeneralCategory
             }
         }
         //lưu hợp đồng
-
+        [Authorize]
         [HttpPost("save-version")]
         public async Task<IActionResult> SaveContract([FromBody] UpdateVersion item)
         {
@@ -126,7 +125,7 @@ namespace RERPAPI.Controllers.GeneralCategory
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [HttpGet("sse/contracts")]
+        [HttpGet("sse/update-version")]
         public async Task GetContractSse()
         {
             Response.Headers.Add("Content-Type", "text/event-stream");
