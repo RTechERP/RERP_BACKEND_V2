@@ -1003,7 +1003,27 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
 
             return (true, string.Empty);
         }
+        /// <summary>
+        /// Lấy tất cả BillExportDetailIds liên quan đến cùng product/project/pokh
+        /// </summary>
+        private string GetRelatedBillExportDetailIds(
+            List<BillExportDetailExtendedDTO> allDetails,
+            int productId,
+            int projectId,
+            int pokhDetailId)
+        {
+            var relatedIds = allDetails
+                .Where(d =>
+                    d.ProductID == productId &&
+                    (pokhDetailId > 0
+                        ? d.POKHDetailID == pokhDetailId
+                        : d.ProjectID == projectId) &&
+                    d.ID > 0) // ✅ Chỉ lấy detail đã có ID (đã lưu vào DB)
+                .Select(d => d.ID.ToString())
+                .ToList();
 
+            return relatedIds.Any() ? string.Join(",", relatedIds) : "";
+        }
         private async Task<(bool Success, string Message)> ValidateKeepInventory(BillExportDTO dto)
         {
             int status = dto.billExport.Status ?? 0;
@@ -1052,14 +1072,18 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                 int projectId = (detail.POKHDetailID ?? 0) > 0 ? 0 : detail.ProjectID ?? 0;
                 int pokhDetailId = detail.POKHDetailID ?? 0;
                 decimal totalQty = detail.TotalQty ?? 0;
-
+                string billExportDetailIds = GetRelatedBillExportDetailIds(
+dto.billExportDetail.ToList(),
+productId,
+projectId,
+pokhDetailId);
                 // Lấy tồn kho
                 var ds = GetInventoryProjectImportExport(
                     dto.billExport?.WarehouseID ?? 0,
                     productId,
                     projectId,
                     pokhDetailId,
-                    detail.ID
+                    billExportDetailIds
                 );
 
                 var inventoryProjects = ds[0];
@@ -1127,18 +1151,17 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
         /// Trả về 4 DataSets: [0] InventoryProjects Summary, [1] Import, [2] Export, [3] Stock
         /// </summary>
         public List<List<dynamic>> GetInventoryProjectImportExport(
-            int warehouseId,
-            int productId,
-            int projectId,
-            int pokhDetailId,
-            int billExportDetailId)
+    int warehouseId,
+    int productId,
+    int projectId,
+    int pokhDetailId,
+    string billExportDetailIds) // ✅ Đổi từ string sang string để nhận nhiều ID
         {
             var result = SQLHelper<dynamic>.ProcedureToList(
                 "spGetInventoryProjectImportExport",
                 new string[] { "@WarehouseID", "@ProductID", "@ProjectID", "@POKHDetailID", "@BillExportDetailID" },
-                new object[] { warehouseId, productId, projectId, pokhDetailId, billExportDetailId }
+                new object[] { warehouseId, productId, projectId, pokhDetailId, billExportDetailIds ?? "" }
             );
-
             return result;
         }
         /// <summary>
@@ -1314,7 +1337,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
 
             // 1. Lấy danh sách kho giữ
             var inventoryProjectsRaw = GetInventoryProjectList(warehouseId, productId, projectId, pokhDetailId);
-
+            string billExportDetailIds = GetRelatedBillExportDetailIds(allDetails, productId, projectId, pokhDetailId);
             // 2. Filter và sort
             var inventoryProjects = inventoryProjectsRaw
                 .Where(x => GetDecimalFromDynamic(x, "TotalQuantityRemain") > 0)
@@ -1322,7 +1345,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                 .ToList();
 
             // 3. Lấy tổng tồn kho
-            var ds = GetInventoryProjectImportExport(warehouseId, productId, projectId, pokhDetailId, currentDetail.ID);
+            var ds = GetInventoryProjectImportExport(warehouseId, productId, projectId, pokhDetailId, billExportDetailIds);
             var dtStock = ds.Count > 3 ? ds[3] : new List<dynamic>();
 
             decimal totalStockAvailable = dtStock.Count > 0
