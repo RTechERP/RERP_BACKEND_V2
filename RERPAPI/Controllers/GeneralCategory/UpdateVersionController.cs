@@ -36,7 +36,8 @@ namespace RERPAPI.Controllers.GeneralCategory
             {
                 var year = DateTime.Now.Year;
                 var data = _updateVersionRepo.GetAll(x => x.IsDeleted != true).OrderByDescending(x=>x.CreatedDate);
-                var nextCode = $"{year}.{data.Count(x => x.CreatedDate?.Year == year) + 1}";
+                var dataNextCode = _updateVersionRepo.GetAll().OrderByDescending(x => x.CreatedDate);
+                var nextCode = $"{year}.{dataNextCode.Count(x => x.CreatedDate?.Year == year) + 1}";
                 return Ok(ApiResponseFactory.Success(new { data, nextCode }, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
