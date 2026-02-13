@@ -2256,7 +2256,7 @@ pokhDetailId);
                         detail.ProductID ?? 0,
                         (detail.POKHDetailID ?? 0) > 0 ? 0 : detail.ProjectID ?? 0,
                         detail.POKHDetailID ?? 0,
-                        detail.ID
+                        detail.ID.ToString()
                     );
 
                     if (ds.Count > 0)
