@@ -136,14 +136,14 @@ namespace RERPAPI.Controllers.GeneralCategory
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [HttpGet("sse/update-version")]
-        public async Task GetContractSse()
-        {
-            Response.Headers.Add("Content-Type", "text/event-stream");
-            Response.Headers.Add("Cache-Control", "no-cache");
-            Response.Headers.Add("Connection", "keep-alive");
+        //[HttpGet("sse/update-version")]
+        //public async Task GetContractSse()
+        //{
+        //    Response.Headers.Add("Content-Type", "text/event-stream");
+        //    Response.Headers.Add("Cache-Control", "no-cache");
+        //    Response.Headers.Add("Connection", "keep-alive");
 
-            await _sseService.AddClientAsync(Response);
-        }
+        //    await _sseService.AddClientAsync(Response);
+        //}
     }
 }
