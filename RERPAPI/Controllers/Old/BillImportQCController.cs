@@ -537,7 +537,7 @@ namespace RERPAPI.Controllers.Old
                 }
                 #endregion
 
-                return Ok(ApiResponseFactory.Success(null, ""));
+                return Ok(ApiResponseFactory.Success(dto.billImportQC.ID, ""));
             }
             catch (Exception ex)
             {
