@@ -30,4 +30,6 @@ public partial class Newsletter
     public string? OriginImgPath { get; set; }
 
     public string? ServerImgPath { get; set; }
+
+    public bool? IsPublish { get; set; }
 }
