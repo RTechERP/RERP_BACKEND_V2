@@ -1304,7 +1304,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     int excelRow = 15;
                     int stt = 1;
 
-                    for (int i = details.Count - 1; i >= 0; i--)
+                    for (int i = 0; i < details.Count; i++)
                     {
                         dynamic dt = details[i];
                         sheet.Cell(excelRow, 1).Value = stt++;
