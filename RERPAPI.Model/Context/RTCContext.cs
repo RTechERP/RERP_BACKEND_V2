@@ -5852,6 +5852,7 @@ public partial class RTCContext : DbContext
                 .IsUnicode(false);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.Image).IsUnicode(false);
+            entity.Property(e => e.IsPublish).HasDefaultValue(false);
             entity.Property(e => e.Title).HasMaxLength(550);
             entity.Property(e => e.UpdatedBy)
                 .HasMaxLength(20)
