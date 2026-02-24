@@ -18,25 +18,42 @@ namespace RERPAPI.Controllers.Old
         ProjectRepo _projectRepo;
         InventoryProjectRepo _inventoryProjecRepo;
         WarehouseRepo _wareHouseRepo;
+        InventoryProjectProductSaleLinkRepo _inventoryProjectProductSaleLinkRepo;
 
-        public InventoryProjectController(ProjectRepo projectRepo, InventoryProjectRepo inventoryProjecRepo, WarehouseRepo wareHouseRepo)
+        public InventoryProjectController(ProjectRepo projectRepo, InventoryProjectRepo inventoryProjecRepo, WarehouseRepo wareHouseRepo
+            , InventoryProjectProductSaleLinkRepo inventoryProjectProductSaleLink)
         {
             _projectRepo = projectRepo;
             _inventoryProjecRepo = inventoryProjecRepo;
             _wareHouseRepo = wareHouseRepo;
+            _inventoryProjectProductSaleLinkRepo = inventoryProjectProductSaleLink;
+        }
+
+        [HttpGet("get-inventory-sale-link")]
+        public IActionResult GetInventorySaleLink()
+        {
+            try
+            {
+                var productSaleLinks = _inventoryProjectProductSaleLinkRepo.GetAll(x => x.IsDeleted != true).Select(x => x.ProductSaleID);
+                return Ok(ApiResponseFactory.Success(productSaleLinks, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
         }
 
         [HttpGet("get-inventory-by-product")]
-        public IActionResult GetInventoryByProduct(string keyword="")
+        public IActionResult GetInventoryByProduct(string keyword = "")
         {
             try
             {
                 string procedureName = "spGetProductInventoryByKeyword";
                 string[] paramNames = new string[] { "@Keyword" };
-                object[] paramValues = new object[] { keyword??"" };
+                object[] paramValues = new object[] { keyword ?? "" };
                 var data = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
                 var inventory = SQLHelper<object>.GetListData(data, 0);
-                return Ok(ApiResponseFactory.Success(inventory, "Lấy dữ liệu thành công")); 
+                return Ok(ApiResponseFactory.Success(inventory, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
             {
@@ -62,13 +79,13 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-            
+
                 string procedureName = "spGetInventoryProject";
-                string[] paramNames = new string[] { "@ProjectID", "@EmployeeID", "@ProductSaleID", "@Keyword"};
-                object[] paramValues = new object[] { request.ProjectID??0, request.EmployeeID??0, 0, request.KeyWord ?? ""};
+                string[] paramNames = new string[] { "@ProjectID", "@EmployeeID", "@ProductSaleID", "@Keyword" };
+                object[] paramValues = new object[] { request.ProjectID ?? 0, request.EmployeeID ?? 0, 0, request.KeyWord ?? "" };
                 var data = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
                 var inventoryProject = SQLHelper<object>.GetListData(data, 0);
-               
+
                 return Ok(ApiResponseFactory.Success(inventoryProject, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
@@ -82,7 +99,7 @@ namespace RERPAPI.Controllers.Old
             try
             {
                 string procedureName = "spGetPOKHDetailForInventoryProject";
-                string[] paramNames = new string[] {"@ProductID"};
+                string[] paramNames = new string[] { "@ProductID" };
                 object[] paramValues = new object[] { productSaleID };
                 var data = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
                 var POKH = SQLHelper<object>.GetListData(data, 0);
@@ -98,7 +115,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-              var projects = _projectRepo.GetAll().ToList();
+                var projects = _projectRepo.GetAll().ToList();
                 return Ok(ApiResponseFactory.Success(projects, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
@@ -106,7 +123,7 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-      
+
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] InventoryProject inventory)
         {
