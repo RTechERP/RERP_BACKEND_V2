@@ -94,6 +94,24 @@ namespace RERPAPI.Controllers.KHOAHOC
             }
         }
 
+        [HttpGet("get-course-question-export")]
+        public IActionResult GetCourseQuestionExport(int? examID)
+        {
+            try
+            {
+                examID = examID ?? 0;
+                var data = SQLHelper<object>.ProcedureToList("spGetCourseQuestion",
+                                                new string[] { "@ExamID" },
+                                                new object[] { examID });
+
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 1), ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         // load đáp án trắc nhiệu
         [HttpGet("get-right-answer")]
         public IActionResult GetRightAnswer(int? questionID)
@@ -155,7 +173,7 @@ namespace RERPAPI.Controllers.KHOAHOC
 
         // load lấy dữ liệu bài kiểm tra của bài học
         [HttpGet("get-course-lesson")]
-        public IActionResult GetCaurseLesson(int? courseID)
+        public IActionResult GetCourseLesson(int? courseID)
         {
             try
             {

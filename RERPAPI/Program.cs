@@ -451,6 +451,7 @@ builder.Services.AddScoped<InventoryProjectProductSaleLinkRepo>();
 
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();
+builder.Services.AddScoped<CourseExamPracticeRepo>();
 #endregion
 
 #region Kế hoạch tuần
