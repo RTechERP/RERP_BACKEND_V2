@@ -474,6 +474,7 @@ builder.Services.AddScoped<DailyReportAccountingRepo>();
 
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();
+builder.Services.AddScoped<CourseExamPracticeRepo>();
 #endregion
 
 #region Kế hoạch tuần
