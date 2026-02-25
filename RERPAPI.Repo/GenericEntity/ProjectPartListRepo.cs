@@ -596,9 +596,23 @@ namespace RERPAPI.Repo.GenericEntity
         // Helper Normalize
         private string Normalize(string value)
         {
-            value = (value ?? "").Trim().ToLower();
-            return UnicodeConverterService.ConvertUnicode(value, 1);
+            if (string.IsNullOrEmpty(value))
+            {
+                return "";
+            }
+
+            // 1. Chuẩn hóa về dạng Unicode Composition (Form C).
+            //    Điều này đảm bảo "e" + "^" sẽ trở thành một ký tự "ê" duy nhất.
+            string normalized = value.Normalize(NormalizationForm.FormC);
+
+            // 2. Chuyển về chữ thường và cắt bỏ khoảng trắng thừa.
+            return normalized.ToLower().Trim();
         }
+        //private string Normalize(string value)
+        //{
+        //    value = (value ?? "").Trim().ToLower();
+        //    return UnicodeConverterService.ConvertUnicode(value, 1);
+        //}
         public bool ValidateApprovePurchase(ProjectPartList partlist, bool isApproved, out string message)
         {
             message = string.Empty;
