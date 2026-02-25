@@ -12,5 +12,6 @@ namespace RERPAPI.Model.Param
         public DateTime ToDate { get; set; }
         public string Keyword { get; set; } = "";
         public int TypeId { get; set; } = 0;
+        public int IsPublish { get; set; } = -1;
     }
 }
