@@ -8,7 +8,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
-using RERPAPI.SendService;
+//using RERPAPI.SendService;
 
 namespace RERPAPI.Controllers.Systems
 {
@@ -27,7 +27,7 @@ namespace RERPAPI.Controllers.Systems
             _currentUser = currentUser;
         }
         //lấy danh sách update phiên bản
-        //       [RequiresPermission("N1,N34")]
+        //[RequiresPermission("N1,N34")]
         [HttpGet("get-update-version")]
         [Authorize]
         public IActionResult GetUpdateVersion()
