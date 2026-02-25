@@ -1627,7 +1627,7 @@ namespace RERPAPI.Controllers
             try
             {
                 string htmlBody = @"
-                    <div style='font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 1.6;'>
+                    <div>
                         <p style='text-align:center; font-weight:bold;'>GIÁM ĐỐC</p>
                         <p style='text-align:center; font-weight:bold;'>CÔNG TY CỔ PHẦN RTC TECHNOLOGY VIỆT NAM</p>
 

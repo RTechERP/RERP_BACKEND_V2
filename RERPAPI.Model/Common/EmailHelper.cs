@@ -80,10 +80,24 @@ namespace RERPAPI.Model.Common
                 }
                 email.Subject = subject;
 
-                email.Body = new TextPart(isHtml ? "html" : "plain")
-                {
-                    Text = body
-                };
+                var builder = new BodyBuilder();
+                builder.HtmlBody = $@"
+                                    <html>
+                                    <head>
+                                    <meta charset='UTF-8'>
+                                    </head>
+                                    <body >
+                                        <div style='font-family: ""Times New Roman"", Times, serif; font-size:14px;'>{body}</div>
+                                    </body>
+                                    </html>";
+
+
+
+                email.Body = builder.ToMessageBody();
+                //email.Body = new TextPart(isHtml ? "html" : "plain")
+                //{
+                //    Text = body
+                //};
 
                 using (var smtpClient = new SmtpClient())
                 {

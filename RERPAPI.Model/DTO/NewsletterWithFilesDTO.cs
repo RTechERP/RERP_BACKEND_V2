@@ -40,5 +40,7 @@ namespace RERPAPI.Model.DTO
         public string? NewsletterTypeName { get; set; }
 
         public List<NewsletterFile>? NewsletterFiles { get; set; }
+        public string IsPublishText { get; set; } = "";
+        public bool IsPublish { get; set; }
     }
 }

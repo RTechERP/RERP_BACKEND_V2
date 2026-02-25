@@ -10,7 +10,7 @@ using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
 using RERPAPI.SendService;
 
-namespace RERPAPI.Controllers.GeneralCategory
+namespace RERPAPI.Controllers.Systems
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -136,14 +136,15 @@ namespace RERPAPI.Controllers.GeneralCategory
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        //[HttpGet("sse/update-version")]
-        //public async Task GetContractSse()
-        //{
-        //    Response.Headers.Add("Content-Type", "text/event-stream");
-        //    Response.Headers.Add("Cache-Control", "no-cache");
-        //    Response.Headers.Add("Connection", "keep-alive");
 
-        //    await _sseService.AddClientAsync(Response);
-        //}
+        [HttpGet("sse/update-version")]
+        public async Task GetContactSse()
+        {
+            Response.Headers.Add("Content-Type", "text/event-stream");
+            Response.Headers.Add("Cache-Control", "no-cache");
+            Response.Headers.Add("Connection", "keep-alive");
+
+            await _sseService.AddClientAsync(Response);
+        }
     }
 }
