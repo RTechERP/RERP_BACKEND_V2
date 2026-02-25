@@ -28,7 +28,7 @@ using RERPAPI.Repo.GenericEntity.TB;
 using RERPAPI.Repo.GenericEntity.Technical;
 using RERPAPI.Repo.GenericEntity.Technical.KPI;
 using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
-using RERPAPI.SendService;
+//using RERPAPI.SendService;
 using RTCApi.Repo.GenericRepo;
 using System.Text;
 

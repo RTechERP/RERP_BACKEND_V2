@@ -8,7 +8,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
-using RERPAPI.SendService;
+//using RERPAPI.SendService;
 
 namespace RERPAPI.Controllers.Systems
 {
