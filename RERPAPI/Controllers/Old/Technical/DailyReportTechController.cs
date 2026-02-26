@@ -33,7 +33,7 @@ namespace RERPAPI.Controllers.Old.Technical
         EmployeeRepo _employeeRepo;
         private IConfiguration _configuration;
         private readonly EmailHelper _emailHelper;
-        public DailyReportTechController(DailyReportTechnicalRepo dailyReportTechnicalRepo, ProjectItemRepo projectItemRepo, EmployeeSendEmailRepo employeeSendEmailRepo, DailyReportHRRepo dailyReportHRRepo, IConfiguration configuration, DailyReportMarketingFileRepo dailyFileMar, EmployeeRepo employeeRepo)
+        public DailyReportTechController(DailyReportTechnicalRepo dailyReportTechnicalRepo, ProjectItemRepo projectItemRepo, EmployeeSendEmailRepo employeeSendEmailRepo, DailyReportHRRepo dailyReportHRRepo, IConfiguration configuration, DailyReportMarketingFileRepo dailyFileMar, EmployeeRepo employeeRepo, EmailHelper emailHelper)
         {
             _dailyReportTechnicalRepo = dailyReportTechnicalRepo;
             _projectItemRepo = projectItemRepo;
@@ -42,6 +42,7 @@ namespace RERPAPI.Controllers.Old.Technical
             _configuration = configuration;
             _dailyFileMar = dailyFileMar;
             _employeeRepo = employeeRepo;
+            _emailHelper = emailHelper;
         }
         [HttpPost("get-daily-report-tech")]
         public IActionResult GetDailyReportHr([FromBody] DailyReportTechParam request)
@@ -192,6 +193,11 @@ namespace RERPAPI.Controllers.Old.Technical
                 {
                     if (item.ID > 0)
                     {
+                        var data = _dailyReportTechnicalRepo.GetByID(item.ID);
+                        if (data.UserReport != currentUser.ID)
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null, "Bạn không thể sửa báo cáo công việc của người khác!"));
+                        }
                         await _dailyReportTechnicalRepo.UpdateAsync(item);
                         if(isTechnical) await UpdateProjectItem(item);
                     }
@@ -246,6 +252,11 @@ namespace RERPAPI.Controllers.Old.Technical
                 }
                 if (request.ID > 0)
                 {
+                    var data = _dailyReportTechnicalRepo.GetByID(request.ID);
+                    if (data.UserReport != currentUser.ID)
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, "Bạn không thể sửa báo cáo công việc của người khác!"));
+                    }
                     await _dailyReportTechnicalRepo.UpdateAsync(request);
                 }
                 else
@@ -301,6 +312,11 @@ namespace RERPAPI.Controllers.Old.Technical
                 }
                 if (request.ID > 0)
                 {
+                    var data = _dailyReportTechnicalRepo.GetByID(request.ID);
+                    if (data.UserReport != currentUser.ID)
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, "Bạn không thể sửa báo cáo công việc của người khác!"));
+                    }
                     await _dailyReportTechnicalRepo.UpdateAsync(request);
                 }
                 else
@@ -767,9 +783,9 @@ namespace RERPAPI.Controllers.Old.Technical
          * }
          */
         #region send email mkt
-        [HttpPost("send-email")]
+        [HttpPost("send-email-marketing-report-new")]
         [Authorize]
-        public async Task<IActionResult> SendEmail([FromBody] EmployeeSendEmail sendEmail)
+        public async Task<IActionResult> SendEmail([FromBody] SendEmailMarketingReportRequest request)
         {
             try
             {
@@ -777,7 +793,7 @@ namespace RERPAPI.Controllers.Old.Technical
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 var positionSendMailMarketing = _configuration.GetValue<string>("PositionSendMailMarketing"); // "88"
                 var marketingManagerID = _configuration.GetValue<int>("MarketingManager"); // 516
-                var dateReport = sendEmail.DateSend ?? DateTime.Now;
+                var dateReport = request.DateReport ?? DateTime.Now;
                 var subject = $"{currentUser.FullName} - BÁO CÁO CÔNG VIỆC NGÀY {dateReport:dd/MM/yyyy}".ToUpper();
                 string emailTo;
                 string emailCc = "";
@@ -788,12 +804,12 @@ namespace RERPAPI.Controllers.Old.Technical
                    .Select(p => int.Parse(p.Trim()))
                    .ToArray();
 
+                var marketingManager = _employeeRepo.GetByID(marketingManagerID);
                 if (positionList.Contains(currentUser.PositionID))
                 {
                     // Trường hợp 1: Thực tập sinh Marketing (Position = 88)
                     // Gửi cho Marketing Manager
-                    var marketingManager = _employeeRepo.GetByID(marketingManagerID);
-
+                
                     if (marketingManager == null)
                     {
                         return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy thông tin Marketing Manager!"));
@@ -806,12 +822,36 @@ namespace RERPAPI.Controllers.Old.Technical
                 {
                     // Trường hợp 2: Nhân viên Marketing khác
                     // Gửi cho Nguyễn Văn Thắng
-                    emailTo = "nguyenvan.thang@rtc.edu.vn";
-                    emailCc = "nguyenvan.sao@rtc.edu.vn,sales.manager@rtc.edu.vn";
-                    receiverEmployeeId = 2; // ID của Nguyễn Văn Thắng
+                    ///-- Nhân viên Đinh Hoàng Anh UserID = 1722 gửi mail cho Hoàng Thị Thu Hà ( marketing01@rtc.edu.vn ) 
+                    if (currentUser.ID == 1722)
+                    {
+                        emailTo = "nhubinh2104@gmail.com";
+                        //emailTo = "marketing01@rtc.edu.vn";
+                        emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
+                        await _emailHelper.SendAsync(emailTo, subject, request.Body, cc: emailCc);
+                    }
+                    else if (currentUser.ID == 1618) ///-- Nhân viên Bùi Lệ Thủy UserID = 1618 gửi mail cho Phạm văn Trung( marketing02@rtc.edu.vn ) 
+                    {
+                        //emailTo = "marketing02@rtc.edu.vn";
+                        emailTo = "luongtu1112@gmail.com";
+                        emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
+                        await _emailHelper.SendAsync(emailTo, subject, request.Body, cc: emailCc);
+                    }
+                    else if(currentUser.ID == 1502)
+                    {
+                        //emailTo = "nguyenvan.thang@rtc.edu.vn";
+                        emailTo = "tuananhdeptraivodichvutru001@gmail.com";
+                        emailCc = "nguyenvan.sao@rtc.edu.vn,sales.manager@rtc.edu.vn";
+                        receiverEmployeeId = 2; // ID của Nguyễn Văn Thắng
+                        await _emailHelper.SendAsync(emailTo, subject, request.Body, cc: emailCc);
+                    }
                 }
+                //emailTo = marketingManager.EmailCongTy;
+                emailTo = "nhubinhne@gmail.com";
+                emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
+                receiverEmployeeId = marketingManagerID;
+                await _emailHelper.SendAsync(emailTo, subject, request.Body, cc: emailCc);
 
-                await _emailHelper.SendAsync(sendEmail.EmailTo, sendEmail.Subject, sendEmail.Body, cc: sendEmail.EmailCC);
                 return Ok(ApiResponseFactory.Success(null, "Gửi thành công!"));
             }
             catch (Exception ex)
