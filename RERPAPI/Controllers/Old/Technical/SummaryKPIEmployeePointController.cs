@@ -25,7 +25,7 @@ namespace RERPAPI.Controllers.Old.Technical
         private readonly KPIPositionEmployeeRepo _kpiPositionEmployeeRepo;
         private readonly KPIExamRepo _kpiExamRepo;
 
-        private readonly int[] _departmentCoKhiLRs = new int[] { 10, 23 };
+
 
         public SummaryKPIEmployeePointController(
             DepartmentRepo departmentRepo,
@@ -85,6 +85,7 @@ namespace RERPAPI.Controllers.Old.Technical
         {
             try
             {
+                int[] _departmentCoKhiLRs = new int[] { 10, 23 };
                 string spName = _departmentCoKhiLRs.Contains(request.DepartmentID)
                     ? "spGetKPISumaryEvaluation"
                     : "spGetSummaryKPIEmployeePoint";
@@ -187,74 +188,103 @@ namespace RERPAPI.Controllers.Old.Technical
         }
 
 
-        [HttpPost("publish")]
-        public IActionResult Publish([FromBody] List<int> ids)
+        //[HttpPost("publish")]
+        //public IActionResult Publish([FromBody] List<int> ids)
+        //{
+        //    try
+        //    {
+        //        if (ids == null || !ids.Any())
+        //            return BadRequest(ApiResponseFactory.Fail(null, "Danh sách ID không hợp lệ"));
+
+        //        foreach (var id in ids)
+        //        {
+        //            var entity = _kpiEmployeePointRepo.GetByID(id);
+        //            if (entity == null) continue;
+
+        //            entity.IsPublish = true;
+
+        //            _kpiEmployeePointRepo.Update(entity);
+        //        }
+
+        //        return Ok(ApiResponseFactory.Success(null, "Duyệt thành công"));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
+
+        //[HttpPost("unpublish")]
+        //public IActionResult UnPublish([FromBody] List<int> ids)
+        //{
+        //    try
+        //    {
+        //        if (ids == null || !ids.Any())
+        //            return BadRequest(ApiResponseFactory.Fail(null, "Danh sách ID không hợp lệ"));
+
+        //        foreach (var id in ids)
+        //        {
+        //            var entity = _kpiEmployeePointRepo.GetByID(id);
+        //            if (entity == null) continue;
+
+        //            entity.IsPublish = false;
+
+        //            _kpiEmployeePointRepo.Update(entity);
+        //        }
+
+        //        return Ok(ApiResponseFactory.Success(null, "Hủy duyệt thành công"));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
+
+        //[HttpPost("save-actual")]
+        //public IActionResult SaveActual([FromBody] Dictionary<int, decimal> data)
+        //{
+        //    try
+        //    {
+        //        foreach (var item in data)
+        //        {
+        //            var entity = _kpiEmployeePointRepo.GetByID(item.Key);
+        //            if (entity == null) continue;
+
+        //            entity.TotalPercentActual = item.Value;
+
+        //            _kpiEmployeePointRepo.Update(entity);
+        //        }
+
+        //        return Ok(ApiResponseFactory.Success(null, "Lưu điểm thành công"));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
+
+        [HttpPost("save-actual-new")]
+        public IActionResult SaveActual([FromBody] List<SaveActualRequest> data)
         {
             try
             {
-                if (ids == null || !ids.Any())
-                    return BadRequest(ApiResponseFactory.Fail(null, "Danh sách ID không hợp lệ"));
+                if (data == null || !data.Any())
+                    return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu không hợp lệ"));
 
-                foreach (var id in ids)
-                {
-                    var entity = _kpiEmployeePointRepo.GetByID(id);
-                    if (entity == null) continue;
-
-                    entity.IsPublish = true;
-
-                    _kpiEmployeePointRepo.Update(entity);
-                }
-
-                return Ok(ApiResponseFactory.Success(null, "Duyệt thành công"));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        [HttpPost("unpublish")]
-        public IActionResult UnPublish([FromBody] List<int> ids)
-        {
-            try
-            {
-                if (ids == null || !ids.Any())
-                    return BadRequest(ApiResponseFactory.Fail(null, "Danh sách ID không hợp lệ"));
-
-                foreach (var id in ids)
-                {
-                    var entity = _kpiEmployeePointRepo.GetByID(id);
-                    if (entity == null) continue;
-
-                    entity.IsPublish = false;
-
-                    _kpiEmployeePointRepo.Update(entity);
-                }
-
-                return Ok(ApiResponseFactory.Success(null, "Hủy duyệt thành công"));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        [HttpPost("save-actual")]
-        public IActionResult SaveActual([FromBody] Dictionary<int, decimal> data)
-        {
-            try
-            {
                 foreach (var item in data)
                 {
-                    var entity = _kpiEmployeePointRepo.GetByID(item.Key);
+                    var entity = _kpiEmployeePointRepo.GetByID(item.Id);
                     if (entity == null) continue;
 
-                    entity.TotalPercentActual = item.Value;
+                    entity.TotalPercentActual = item.TotalPercentActual;
+
+                    if (item.IsPublish.HasValue)
+                        entity.IsPublish = item.IsPublish.Value;
 
                     _kpiEmployeePointRepo.Update(entity);
                 }
 
-                return Ok(ApiResponseFactory.Success(null, "Lưu điểm thành công"));
+                return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
             }
             catch (Exception ex)
             {
@@ -937,6 +967,13 @@ namespace RERPAPI.Controllers.Old.Technical
             if (totalPercent < 95) return "A-";
             if (totalPercent < 100) return "A";
             return "A+";
+        }
+
+        public class SaveActualRequest
+        {
+            public int Id { get; set; }
+            public decimal TotalPercentActual { get; set; }
+            public bool? IsPublish { get; set; } // null = không thay đổi
         }
 
         public class SummaryKPIEmployeePointRequest

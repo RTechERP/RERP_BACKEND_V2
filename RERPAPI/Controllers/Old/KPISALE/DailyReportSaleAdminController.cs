@@ -5,6 +5,7 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using System.Threading.Tasks;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.Old.KPISALE
@@ -201,6 +202,26 @@ namespace RERPAPI.Controllers.Old.KPISALE
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        [HttpGet("load-group-sales")]
+        public async Task<IActionResult> GetGroupSales(int userId)
+        {
+            try
+            {
+                var param = new
+                {
+                    UserID = userId,
+                };
+                List<GroupSale> model = await SqlDapper<GroupSale>.ProcedureToListTAsync("spGetGroupSalesByUserID", param);
+                var data = model.FirstOrDefault();
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         public class DailyReportSaleAdminDTO
         {
             public List<DailyReportSaleAdmin> request { get; set; }
