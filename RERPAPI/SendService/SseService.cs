@@ -1,41 +1,73 @@
-﻿using System.Text.Json;
+﻿using System.Collections.Concurrent;
+using System.Text.Json;
 
-namespace RERPAPI.SendService
+public class SseService
 {
+    private static readonly ConcurrentDictionary<Guid, (HttpResponse Response, SemaphoreSlim Lock)> _clients = new();
 
-    public class SseService
+    public async Task AddClientAsync(HttpResponse response)
     {
-        private static readonly List<HttpResponse> _clients = new();
+        var clientId = Guid.NewGuid();
+        var semaphore = new SemaphoreSlim(1, 1);
+        _clients.TryAdd(clientId, (response, semaphore));
 
-        public async Task AddClientAsync(HttpResponse response)
+        var cancellation = response.HttpContext.RequestAborted;
+
+        try
         {
-            _clients.Add(response);
-
-            try
+            while (!cancellation.IsCancellationRequested)
             {
-                await Task.Delay(Timeout.Infinite);
-            }
-            catch
-            {
-                _clients.Remove(response);
+                await semaphore.WaitAsync(cancellation);
+                try
+                {
+                    await response.WriteAsync(": heartbeat\n\n", cancellation);
+                    await response.Body.FlushAsync(cancellation);
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+                await Task.Delay(TimeSpan.FromSeconds(30), cancellation);
             }
         }
-
-        public async Task SendEventAsync(string eventName, object data)
+        catch (OperationCanceledException)
         {
-            var json = JsonSerializer.Serialize(data);
+        }
+        catch (Exception)
+        {
+        }
+        finally
+        {
+            _clients.TryRemove(clientId, out _);
+            semaphore.Dispose();
+        }
+    }
 
-            foreach (var client in _clients.ToList())
+    public async Task SendEventAsync(string eventName, object data)
+    {
+        var json = JsonSerializer.Serialize(data);
+        var eventPayload = $"event: {eventName}\ndata: {json}\n\n";
+
+        foreach (var clientId in _clients.Keys)
+        {
+            if (_clients.TryGetValue(clientId, out var client))
             {
                 try
                 {
-                    await client.WriteAsync($"event: {eventName}\n");
-                    await client.WriteAsync($"data: {json}\n\n");
-                    await client.Body.FlushAsync();
+                    await client.Lock.WaitAsync();
+                    try
+                    {
+                        await client.Response.WriteAsync(eventPayload);
+                        await client.Response.Body.FlushAsync();
+                    }
+                    finally
+                    {
+                        client.Lock.Release();
+                    }
                 }
                 catch
                 {
-                    _clients.Remove(client);
+                    _clients.TryRemove(clientId, out _);
                 }
             }
         }

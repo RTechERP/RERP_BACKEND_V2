@@ -43,7 +43,6 @@
 
   <ItemGroup>
     <Compile Remove="Controllers\DepartmentController.cs" />
-    <Compile Remove="Controllers\GeneralCategory\UpdateVersionController.cs" />
     <Compile Remove="Controllers\HistoryProductRTCController.cs" />
     <Compile Remove="Controllers\KPIEmployeeTeamController.cs" />
     <Compile Remove="Controllers\KPIEmployeeTeamLinkController.cs" />
@@ -67,6 +66,7 @@
     <PackageReference Include="Dapper" Version="2.1.66" />
     <PackageReference Include="DocX" Version="5.0.0" />
     <PackageReference Include="EPPlus" Version="8.2.1" />
+    <PackageReference Include="MailKit" Version="4.14.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.5">

@@ -28,7 +28,7 @@ using RERPAPI.Repo.GenericEntity.TB;
 using RERPAPI.Repo.GenericEntity.Technical;
 using RERPAPI.Repo.GenericEntity.Technical.KPI;
 using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
-using RERPAPI.SendService;
+//using RERPAPI.SendService;
 using RTCApi.Repo.GenericRepo;
 using System.Text;
 
@@ -507,6 +507,9 @@ builder.Services.AddScoped<KPISumaryEvaluationRepo>();
 //builder.Services.AddSingleton<RabbitMqConnection>();
 //builder.Services.AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>();
 //builder.Services.AddHostedService<EmailConsumer>();
+
+builder.Services.AddScoped<EmailHelper>();
+
 #endregion
 
 
@@ -589,6 +592,11 @@ builder.Services.AddAuthentication("Bearer")
                     };
                 });
 builder.Services.AddAuthentication();
+
+
+//Get SmtpSetting
+var smtpSettings = builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+
 
 //Get list static file
 builder.Services.Configure<List<PathStaticFile>>(builder.Configuration.GetSection("PathStaticFiles"));

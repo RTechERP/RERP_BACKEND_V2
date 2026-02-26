@@ -20,6 +20,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Net.Mime;
 using System.Security.Claims;
 using System.Text;
+using System.Threading.Tasks;
 
 
 namespace RERPAPI.Controllers
@@ -41,9 +42,11 @@ namespace RERPAPI.Controllers
         private readonly EmployeeOnLeaveRepo _onLeaveRepo;
         private readonly EmployeeWFHRepo _wfhRepo;
         private readonly ConfigSystemRepo _configSystemRepo;
+        private readonly EmailHelper _emailHelper;
 
         //IRabbitMqPublisher _publisher;
-        public HomeController(IOptions<JwtSettings> jwtSettings, RTCContext context, IConfiguration configuration, EmployeeOnLeaveRepo onLeaveRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeWFHRepo employeeWFHRepo, ConfigSystemRepo configSystemRepo, EmployeeOverTimeRepo employeeOverTimeRepo, RoleConfig roleConfig, EmployeePayrollDetailRepo employeePayrollDetailRepo)
+        public HomeController(IOptions<JwtSettings> jwtSettings, RTCContext context,
+            IConfiguration configuration, EmployeeOnLeaveRepo onLeaveRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeWFHRepo employeeWFHRepo, ConfigSystemRepo configSystemRepo, EmployeeOverTimeRepo employeeOverTimeRepo, RoleConfig roleConfig, EmployeePayrollDetailRepo employeePayrollDetailRepo, EmailHelper emailHelper)
         {
             _jwtSettings = jwtSettings.Value;
             _context = context;
@@ -56,6 +59,7 @@ namespace RERPAPI.Controllers
             _roleConfig = roleConfig;
             _employeePayrollDetailRepo = employeePayrollDetailRepo;
             //_publisher = publisher;
+            _emailHelper = emailHelper;
         }
         [HttpPost("login")]
         public IActionResult Login([FromBody] User user)
@@ -1025,7 +1029,7 @@ namespace RERPAPI.Controllers
         //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
         //    }
         //}
-  
+
         [HttpGet("get-personal-synthetic-by-month")]
         [Authorize]
         public IActionResult GetPersonalSyntheticByMonth(int year, int month)
@@ -1390,7 +1394,7 @@ namespace RERPAPI.Controllers
         //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
         //    }
         //}
-      
+
         [HttpPost("confirm-payroll")]
         [Authorize]
         public IActionResult ConfirmPayroll([FromBody] ConfirmPayrollDTO dto)
@@ -1614,5 +1618,82 @@ namespace RERPAPI.Controllers
             }
         }
         #endregion
+
+
+        [HttpPost("send-email")]
+        [Authorize]
+        public async Task<IActionResult> SendEmail([FromBody] EmployeeSendEmail sendEmail)
+        {
+            try
+            {
+                string htmlBody = @"
+                    <div>
+                        <p style='text-align:center; font-weight:bold;'>GIÁM ĐỐC</p>
+                        <p style='text-align:center; font-weight:bold;'>CÔNG TY CỔ PHẦN RTC TECHNOLOGY VIỆT NAM</p>
+
+                        <br/>
+
+                        <p>Căn cứ vào Bộ luật lao động số 45/2019/QH14 và các văn bản sửa đổi, bổ sung;</p>
+                        <p>Căn cứ Điều lệ tổ chức hoạt động của Công ty;</p>
+                        <p>Căn cứ Quy chế lương, thưởng của Công ty;</p>
+                        <p>Căn cứ tính chất công việc của ông/bà <strong>Lê Thế Anh</strong> – Chức vụ: Pro Engineer,</p>
+
+                        <br/>
+
+                        <p style='font-weight:bold;'>QUYẾT ĐỊNH:</p>
+
+                        <p><strong>Điều 1.</strong> Điều chỉnh lương đối với ông/bà <strong>Lê Thế Anh</strong>. Cụ thể như sau:</p>
+
+                        <table border='1' cellpadding='6' cellspacing='0' style='border-collapse: collapse; width: 100%;'>
+                            <thead style='background:#f2f2f2; font-weight:bold; text-align:center;'>
+                                <tr>
+                                    <td rowspan='2'>TT</td>
+                                    <td rowspan='2'>Họ và tên</td>
+                                    <td rowspan='2'>Chức vụ mới</td>
+                                    <td colspan='3'>Lương T12/2025 (đã bao gồm Phụ cấp ăn trưa)</td>
+                                    <td colspan='3'>Lương T1/2026 (đã bao gồm Phụ cấp ăn trưa)</td>
+                                </tr>
+                                <tr>
+                                    <td>LCB</td>
+                                    <td>PCCC</td>
+                                    <td>Tổng lương</td>
+                                    <td>LCB</td>
+                                    <td>PCCC</td>
+                                    <td>Tổng lương</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style='text-align:center;'>
+                                    <td>1</td>
+                                    <td>Lê Thị Lệ</td>
+                                    <td>Pro Tester 1</td>
+                                    <td>5,300,000</td>
+                                    <td>800,000</td>
+                                    <td>6,100,000</td>
+                                    <td>5,400,000</td>
+                                    <td>1,000,000</td>
+                                    <td>6,400,000</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <br/>
+
+                        <p><strong>Điều 2.</strong> Thời gian áp dụng kể từ ngày 01/01/2026.</p>
+
+                        <p><strong>Điều 3.</strong> Phòng Hành chính Nhân sự, Tài chính Kế toán, Phòng ban liên quan và ông/bà 
+                            <strong>Lê Thị Lệ</strong> căn cứ Quyết định thi hành./.</p>
+                    </div>";
+
+                if (string.IsNullOrWhiteSpace(sendEmail.Body)) sendEmail.Body = htmlBody;
+
+                await _emailHelper.SendAsync(sendEmail.EmailTo, sendEmail.Subject, sendEmail.Body, cc: sendEmail.EmailCC);
+                return Ok(ApiResponseFactory.Success(null, "Gửi thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 }
