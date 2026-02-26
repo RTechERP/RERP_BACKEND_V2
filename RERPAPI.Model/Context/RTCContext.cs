@@ -6877,6 +6877,7 @@ public partial class RTCContext : DbContext
         {
             entity.ToTable("ProductGroup");
 
+            entity.Property(e => e.ParentID).HasDefaultValue(0);
             entity.Property(e => e.ProductGroupID).HasMaxLength(50);
             entity.Property(e => e.ProductGroupName).HasMaxLength(250);
         });
