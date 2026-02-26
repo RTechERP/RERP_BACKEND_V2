@@ -32,7 +32,8 @@ namespace RERPAPI.Controllers.Old.Technical
         DailyReportMarketingFileRepo _dailyFileMar;
         EmployeeRepo _employeeRepo;
         private IConfiguration _configuration;
-        public DailyReportTechController(DailyReportTechnicalRepo dailyReportTechnicalRepo, ProjectItemRepo projectItemRepo, EmployeeSendEmailRepo employeeSendEmailRepo, DailyReportHRRepo dailyReportHRRepo, IConfiguration configuration, DailyReportMarketingFileRepo dailyFileMar, EmployeeRepo employeeRepo   )
+        private readonly EmailHelper _emailHelper;
+        public DailyReportTechController(DailyReportTechnicalRepo dailyReportTechnicalRepo, ProjectItemRepo projectItemRepo, EmployeeSendEmailRepo employeeSendEmailRepo, DailyReportHRRepo dailyReportHRRepo, IConfiguration configuration, DailyReportMarketingFileRepo dailyFileMar, EmployeeRepo employeeRepo)
         {
             _dailyReportTechnicalRepo = dailyReportTechnicalRepo;
             _projectItemRepo = projectItemRepo;
@@ -711,7 +712,7 @@ namespace RERPAPI.Controllers.Old.Technical
             /// <summary>
             /// Danh sách file đính kèm (Optional)
             /// </summary>
-            public List<FileLink> FileLinks { get; set; }
+            public List<FileLink>? FileLinks { get; set; }
         }
         /// <summary>
         /// Thông tin file đính kèm
@@ -721,11 +722,11 @@ namespace RERPAPI.Controllers.Old.Technical
             /// <summary>
             /// Tên file
             /// </summary>
-            public string FileName { get; set; }
+            public string? FileName { get; set; }
             /// <summary>
             /// URL để download file
             /// </summary>
-            public string Url { get; set; }
+            public string? Url { get; set; }
         }
         // ========================================
         // CÁCH SỬ DỤNG
@@ -765,5 +766,59 @@ namespace RERPAPI.Controllers.Old.Technical
          *   "errors": null
          * }
          */
+        #region send email mkt
+        [HttpPost("send-email")]
+        [Authorize]
+        public async Task<IActionResult> SendEmail([FromBody] EmployeeSendEmail sendEmail)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                var positionSendMailMarketing = _configuration.GetValue<string>("PositionSendMailMarketing"); // "88"
+                var marketingManagerID = _configuration.GetValue<int>("MarketingManager"); // 516
+                var dateReport = sendEmail.DateSend ?? DateTime.Now;
+                var subject = $"{currentUser.FullName} - BÁO CÁO CÔNG VIỆC NGÀY {dateReport:dd/MM/yyyy}".ToUpper();
+                string emailTo;
+                string emailCc = "";
+                int receiverEmployeeId;
+
+                int[] positionList = positionSendMailMarketing
+                   .Split(',')
+                   .Select(p => int.Parse(p.Trim()))
+                   .ToArray();
+
+                if (positionList.Contains(currentUser.PositionID))
+                {
+                    // Trường hợp 1: Thực tập sinh Marketing (Position = 88)
+                    // Gửi cho Marketing Manager
+                    var marketingManager = _employeeRepo.GetByID(marketingManagerID);
+
+                    if (marketingManager == null)
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy thông tin Marketing Manager!"));
+                    }
+                    emailTo = marketingManager.EmailCongTy;
+                    emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
+                    receiverEmployeeId = marketingManagerID;
+                }
+                else
+                {
+                    // Trường hợp 2: Nhân viên Marketing khác
+                    // Gửi cho Nguyễn Văn Thắng
+                    emailTo = "nguyenvan.thang@rtc.edu.vn";
+                    emailCc = "nguyenvan.sao@rtc.edu.vn,sales.manager@rtc.edu.vn";
+                    receiverEmployeeId = 2; // ID của Nguyễn Văn Thắng
+                }
+
+                await _emailHelper.SendAsync(sendEmail.EmailTo, sendEmail.Subject, sendEmail.Body, cc: sendEmail.EmailCC);
+                return Ok(ApiResponseFactory.Success(null, "Gửi thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        #endregion
     }
 }
