@@ -14,4 +14,5 @@ public partial class ProductGroup
     public bool? IsVisible { get; set; }
 
     public int? EmployeeID { get; set; }
+    public int? ParentID { get; set; }
 }
