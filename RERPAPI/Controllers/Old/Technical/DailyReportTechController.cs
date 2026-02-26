@@ -837,14 +837,14 @@ namespace RERPAPI.Controllers.Old.Technical
                         emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
                         await _emailHelper.SendAsync(emailTo, subject, request.Body, cc: emailCc);
                     }
-                    else if(currentUser.ID == 1502)
-                    {
-                        emailTo = "nguyenvan.thang@rtc.edu.vn";
-                        //emailTo = "tuananhdeptraivodichvutru001@gmail.com";
-                        emailCc = "nguyenvan.sao@rtc.edu.vn,sales.manager@rtc.edu.vn";
-                        receiverEmployeeId = 2; // ID của Nguyễn Văn Thắng
-                        await _emailHelper.SendAsync(emailTo, subject, request.Body, cc: emailCc);
-                    }
+                    //else if(currentUser.ID == 1502)
+                    //{
+                    //    emailTo = "nguyenvan.thang@rtc.edu.vn";
+                    //    //emailTo = "tuananhdeptraivodichvutru001@gmail.com";
+                    //    emailCc = "nguyenvan.sao@rtc.edu.vn,sales.manager@rtc.edu.vn";
+                    //    receiverEmployeeId = 2; // ID của Nguyễn Văn Thắng
+                    //    await _emailHelper.SendAsync(emailTo, subject, request.Body, cc: emailCc);
+                    //}
                 }
                 emailTo = marketingManager.EmailCongTy;
                 //emailTo = "nhubinhne@gmail.com";
