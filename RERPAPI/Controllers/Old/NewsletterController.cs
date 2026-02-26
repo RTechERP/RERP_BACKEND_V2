@@ -49,8 +49,8 @@ namespace RERPAPI.Controllers.Old
             {
                 int limit = 5;
                 var newsletters = SQLHelper<object>.ProcedureToList("sp_GetNewsletters",
-                    new string[] { "@Keyword", "@TypeId", "@FromDate", "@ToDate","@Limit" },
-                    new object[] { "", 0, "", "" , limit });
+                    new string[] { "@Keyword", "@TypeId", "@FromDate", "@ToDate", "@Limit", "@IsPublish" },
+                    new object[] { "", 0, "", "", limit, 1 });
                 var newslettersResult = SQLHelper<object>.GetListData(newsletters, 0) as List<dynamic>;
                 return Ok(ApiResponseFactory.Success(newslettersResult, "Success"));
             }
@@ -124,8 +124,8 @@ namespace RERPAPI.Controllers.Old
                 var de = param.ToDate.Date.AddDays(1).AddSeconds(-1);
 
                 var newsletters = SQLHelper<object>.ProcedureToList("sp_GetNewsletters",
-                    new string[] { "@Keyword", "@TypeId", "@FromDate", "@ToDate" },
-                    new object[] { param.Keyword, param.TypeId, ds, de });
+                    new string[] { "@Keyword", "@TypeId", "@FromDate", "@ToDate", "@IsPublish" },
+                    new object[] { param.Keyword, param.TypeId, ds, de,param.IsPublish });
 
                 var newslettersResult = SQLHelper<object>.GetListData(newsletters, 0) as List<dynamic>;
 
@@ -189,7 +189,8 @@ namespace RERPAPI.Controllers.Old
                                         CreatedDate = GetDateTimeValue(f.CreatedDate),
                                         UpdatedBy = GetStringValue(f.UpdatedBy),
                                         UpdatedDate = GetDateTimeValue(f.UpdatedDate),
-                                        IsDeleted = GetBoolValue(f.IsDeleted)
+                                        IsDeleted = GetBoolValue(f.IsDeleted),
+
                                     });
                                 }
                             }
@@ -243,7 +244,9 @@ namespace RERPAPI.Controllers.Old
                             ServerImgPath = GetStringValue(n.ServerImgPath),
                             NewsletterTypeCode = GetStringValue(n.NewsletterTypeCode),
                             NewsletterTypeName = GetStringValue(n.NewsletterTypeName),
-                            NewsletterFiles = files
+                            NewsletterFiles = files,
+                            IsPublishText = GetStringValue(n.IsPublishText),
+                            IsPublish = GetBoolValue(n.IsPublish),
                         });
                     }
                     catch { }
@@ -304,6 +307,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
+                int record = 0;
                 if (dto == null)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu gửi lên không hợp lệ."));
@@ -313,17 +317,18 @@ namespace RERPAPI.Controllers.Old
                 if (dto.Newsletter.ID <= 0)
                 {
                     // Tạo mới
-                    await _newsletterRepo.CreateAsync(dto.Newsletter);
+                    record = await _newsletterRepo.CreateAsync(dto.Newsletter);
                 }
                 else
                 {
                     // Cập nhật
-                    await _newsletterRepo.UpdateAsync(dto.Newsletter);
+                    record = await _newsletterRepo.UpdateAsync(dto.Newsletter);
                 }
 
                 // Lưu danh sách files nếu có
                 if (dto.NewsletterFiles != null && dto.NewsletterFiles.Any())
                 {
+
                     foreach (var file in dto.NewsletterFiles)
                     {
                         // Gán NewsletterID cho file
@@ -340,7 +345,8 @@ namespace RERPAPI.Controllers.Old
                     }
                 }
 
-                return Ok(ApiResponseFactory.Success(null, "Lưu thông tin newsletter thành công!"));
+                if (record > 0) return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+                else return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thất bại. Vui lòng thử lại!"));
             }
             catch (Exception ex)
             {
