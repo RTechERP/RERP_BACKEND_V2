@@ -639,7 +639,7 @@ namespace RERPAPI.Controllers.Old.Technical
         /// - Thực tập sinh Marketing (PositionID = 88): Gửi cho Marketing Manager
         /// - Nhân viên Marketing khác: Gửi cho Nguyễn Văn Thắng + CC
         /// </remarks>
-        [HttpPost("send-email-marketing-report")]
+        [HttpPost("send-email-marketing-report-old")]
         public async Task<IActionResult> SendEmailMarketingReport([FromBody] SendEmailMarketingReportRequest request)
         {
             try
@@ -783,7 +783,7 @@ namespace RERPAPI.Controllers.Old.Technical
          * }
          */
         #region send email mkt
-        [HttpPost("send-email-marketing-report-new")]
+        [HttpPost("send-email-marketing-report")]
         [Authorize]
         public async Task<IActionResult> SendEmail([FromBody] SendEmailMarketingReportRequest request)
         {
@@ -825,29 +825,29 @@ namespace RERPAPI.Controllers.Old.Technical
                     ///-- Nhân viên Đinh Hoàng Anh UserID = 1722 gửi mail cho Hoàng Thị Thu Hà ( marketing01@rtc.edu.vn ) 
                     if (currentUser.ID == 1722)
                     {
-                        emailTo = "nhubinh2104@gmail.com";
-                        //emailTo = "marketing01@rtc.edu.vn";
+                        //emailTo = "nhubinh2104@gmail.com";
+                        emailTo = "marketing01@rtc.edu.vn";
                         emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
                         await _emailHelper.SendAsync(emailTo, subject, request.Body, cc: emailCc);
                     }
                     else if (currentUser.ID == 1618) ///-- Nhân viên Bùi Lệ Thủy UserID = 1618 gửi mail cho Phạm văn Trung( marketing02@rtc.edu.vn ) 
                     {
-                        //emailTo = "marketing02@rtc.edu.vn";
-                        emailTo = "luongtu1112@gmail.com";
+                        emailTo = "marketing02@rtc.edu.vn";
+                        //emailTo = "luongtu1112@gmail.com";
                         emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
                         await _emailHelper.SendAsync(emailTo, subject, request.Body, cc: emailCc);
                     }
-                    else if(currentUser.ID == 1502)
-                    {
-                        //emailTo = "nguyenvan.thang@rtc.edu.vn";
-                        emailTo = "tuananhdeptraivodichvutru001@gmail.com";
-                        emailCc = "nguyenvan.sao@rtc.edu.vn,sales.manager@rtc.edu.vn";
-                        receiverEmployeeId = 2; // ID của Nguyễn Văn Thắng
-                        await _emailHelper.SendAsync(emailTo, subject, request.Body, cc: emailCc);
-                    }
+                    //else if(currentUser.ID == 1502)
+                    //{
+                    //    emailTo = "nguyenvan.thang@rtc.edu.vn";
+                    //    //emailTo = "tuananhdeptraivodichvutru001@gmail.com";
+                    //    emailCc = "nguyenvan.sao@rtc.edu.vn,sales.manager@rtc.edu.vn";
+                    //    receiverEmployeeId = 2; // ID của Nguyễn Văn Thắng
+                    //    await _emailHelper.SendAsync(emailTo, subject, request.Body, cc: emailCc);
+                    //}
                 }
-                //emailTo = marketingManager.EmailCongTy;
-                emailTo = "nhubinhne@gmail.com";
+                emailTo = marketingManager.EmailCongTy;
+                //emailTo = "nhubinhne@gmail.com";
                 emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
                 receiverEmployeeId = marketingManagerID;
                 await _emailHelper.SendAsync(emailTo, subject, request.Body, cc: emailCc);
