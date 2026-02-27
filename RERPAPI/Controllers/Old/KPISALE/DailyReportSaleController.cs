@@ -601,6 +601,41 @@ namespace RERPAPI.Controllers.Old.KPISALE
             }
         }
 
+        [HttpGet("get-root-team-by-employee")]
+        public IActionResult GetRootTeamByEmployee(int employeeId)
+        {
+            try
+            {
+                var childTeam = (
+                    from el in _employeeTeamSaleLinkRepo.GetAll(x => x.EmployeeID == employeeId)
+                    join child in _employeeTeamSaleRepo.GetAll(x => x.IsDeleted != 1)
+                        on el.EmployeeTeamSaleID equals child.ID
+                    select child
+                ).FirstOrDefault();
+
+                if (childTeam == null)
+                    return Ok(ApiResponseFactory.Success(null, ""));
+
+                var currentTeam = childTeam;
+
+                while (currentTeam.ParentID != 0)
+                {
+                    currentTeam = _employeeTeamSaleRepo.GetByID(currentTeam.ParentID);
+                    if (currentTeam == null) break;
+                }
+
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    TeamID = currentTeam?.ID,
+                    TeamName = currentTeam?.Name
+                }, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         private string GetString(Dictionary<string, object> row, string key)
         {
             return row.TryGetValue(key, out var value) ? value?.ToString()?.Trim() ?? "" : "";
