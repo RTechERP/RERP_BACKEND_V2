@@ -344,7 +344,7 @@ namespace RERPAPI.Controllers.Old.KPISALE
                             ProjectID = project.ID,
                             ProjectStatusID = project.ProjectStatus,
                             EmployeeID = dto.employeeId ?? 0,
-                            DateLog = dto.dateStatusLog,
+                            DateLog = dto.dateStatusLog.ToLocalTime(),
                         };
                         await _projectStatusLogRepo.CreateAsync(statuslog);
                     }    
