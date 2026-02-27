@@ -1015,9 +1015,9 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
             var relatedIds = allDetails
                 .Where(d =>
                     d.ProductID == productId &&
-                    (pokhDetailId > 0
-                        ? d.POKHDetailID == pokhDetailId
-                        : d.ProjectID == projectId) &&
+                    //(pokhDetailId > 0
+                    //    ? d.POKHDetailID == pokhDetailId
+                    //    : d.ProjectID == projectId) &&
                     d.ID > 0) // ✅ Chỉ lấy detail đã có ID (đã lưu vào DB)
                 .Select(d => d.ID.ToString())
                 .ToList();
