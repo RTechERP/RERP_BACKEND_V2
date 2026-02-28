@@ -344,7 +344,7 @@ namespace RERPAPI.Controllers.Old.KPISALE
                             ProjectID = project.ID,
                             ProjectStatusID = project.ProjectStatus,
                             EmployeeID = dto.employeeId ?? 0,
-                            DateLog = dto.dateStatusLog,
+                            DateLog = dto.dateStatusLog.ToLocalTime(),
                         };
                         await _projectStatusLogRepo.CreateAsync(statuslog);
                     }    
@@ -594,6 +594,41 @@ namespace RERPAPI.Controllers.Old.KPISALE
                 _projectStatusRepo.Create(data);
                 return Ok(ApiResponseFactory.Success("", "Lưu thành công"));
 
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-root-team-by-employee")]
+        public IActionResult GetRootTeamByEmployee(int employeeId)
+        {
+            try
+            {
+                var childTeam = (
+                    from el in _employeeTeamSaleLinkRepo.GetAll(x => x.EmployeeID == employeeId)
+                    join child in _employeeTeamSaleRepo.GetAll(x => x.IsDeleted != 1)
+                        on el.EmployeeTeamSaleID equals child.ID
+                    select child
+                ).FirstOrDefault();
+
+                if (childTeam == null)
+                    return Ok(ApiResponseFactory.Success(null, ""));
+
+                var currentTeam = childTeam;
+
+                while (currentTeam.ParentID != 0)
+                {
+                    currentTeam = _employeeTeamSaleRepo.GetByID(currentTeam.ParentID);
+                    if (currentTeam == null) break;
+                }
+
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    TeamID = currentTeam?.ID,
+                    TeamName = currentTeam?.Name
+                }, ""));
             }
             catch (Exception ex)
             {
