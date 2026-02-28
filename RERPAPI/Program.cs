@@ -32,6 +32,7 @@ using RERPAPI.Repo.GenericEntity.TB;
 using RERPAPI.Repo.GenericEntity.Technical;
 using RERPAPI.Repo.GenericEntity.Technical.KPI;
 using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
+//using RERPAPI.SendService;
 using RTCApi.Repo.GenericRepo;
 using System.Text;
 using tusdotnet;
@@ -469,8 +470,11 @@ builder.Services.AddScoped<CourseExamResultDetailRepo>();
 builder.Services.AddScoped<CourseQuestionRepo>();
 builder.Services.AddScoped<CourseRightAnswerRepo>();
 builder.Services.AddScoped<CourseExamEvaluateRepo>();
+builder.Services.AddScoped<Course_KPIPositionTypeRepo>();
 
 builder.Services.AddScoped<InventoryProjectProductSaleLinkRepo>();
+builder.Services.AddScoped<HandoverPersonalAssetRepo>();
+builder.Services.AddScoped<UpdateVersionRepo>();
 
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();
@@ -529,6 +533,9 @@ builder.Services.AddScoped<KPISumaryEvaluationRepo>();
 //builder.Services.AddSingleton<RabbitMqConnection>();
 //builder.Services.AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>();
 //builder.Services.AddHostedService<EmailConsumer>();
+
+builder.Services.AddScoped<EmailHelper>();
+
 #endregion
 
 
@@ -564,7 +571,7 @@ builder.Services.AddCors(options =>
 });
 
 
-
+builder.Services.AddSingleton<SseService>();
 
 
 //Config FormOption
@@ -611,6 +618,11 @@ builder.Services.AddAuthentication("Bearer")
                     };
                 });
 builder.Services.AddAuthentication();
+
+
+//Get SmtpSetting
+var smtpSettings = builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+
 
 //Get list static file
 builder.Services.Configure<List<PathStaticFile>>(builder.Configuration.GetSection("PathStaticFiles"));
@@ -690,23 +702,23 @@ app.Use(async (context, next) =>
 
 
 app.UseStaticFiles();
-//List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();
+List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();
 
-//foreach (var item in staticFiles)
-//{
-//    app.UseStaticFiles(new StaticFileOptions()
-//    {
-//        FileProvider = new PhysicalFileProvider(item.PathFull),
-//        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-//    });
+foreach (var item in staticFiles)
+{
+    app.UseStaticFiles(new StaticFileOptions()
+    {
+        FileProvider = new PhysicalFileProvider(item.PathFull),
+        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+    });
 
 
-//    app.UseDirectoryBrowser(new DirectoryBrowserOptions 
-//    {
-//        FileProvider = new PhysicalFileProvider(item.PathFull),
-//        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-//    });
-//}
+    app.UseDirectoryBrowser(new DirectoryBrowserOptions
+    {
+        FileProvider = new PhysicalFileProvider(item.PathFull),
+        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+    });
+}
 var tusStore = new TusDiskStore(Directory.GetCurrentDirectory());
 // config Tus dotnet
 app.UseTus(httpContext => new DefaultTusConfiguration

@@ -50,5 +50,8 @@ namespace RERPAPI.Model.DTO.HRM
         public string NguoiLienHeKhiCan { get; set; } = string.Empty;
         public string MoiQuanHe { get; set; } = string.Empty;
         public string SDTNguoiThan { get; set; } = string.Empty;
+        public string NguoiLienHeKhiCan2 { get; set; } = string.Empty;
+        public string MoiQuanHe2 { get; set; } = string.Empty;
+        public string SDTNguoiThan2 { get; set; } = string.Empty;
     }
 }

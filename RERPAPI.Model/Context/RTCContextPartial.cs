@@ -171,7 +171,7 @@ namespace RERPAPI.Model.Context
                     }
                 }
 
-                AddAuditLogs();
+         //       AddAuditLogs();
                 return await base.SaveChangesAsync(cancellationToken);
             }
             catch (Exception ex)

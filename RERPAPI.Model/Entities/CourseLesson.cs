@@ -39,7 +39,5 @@ public partial class CourseLesson
 
     public int? EmployeeID { get; set; }
 
-    public int? VideoDuration { get; set; }
-
     public decimal? RequiredWatchedPercent { get; set; }
 }

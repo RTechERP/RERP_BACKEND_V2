@@ -93,4 +93,6 @@ public partial class EmployeeBussiness
     public int? ApprovedSeniorID { get; set; }
 
     public DateTime? DateApprovedSenior { get; set; }
+
+    public int? ProjectID { get; set; }
 }

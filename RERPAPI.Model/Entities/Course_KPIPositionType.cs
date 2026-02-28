@@ -9,7 +9,7 @@ public partial class Course_KPIPositionType
 
     public int? CourseID { get; set; }
 
-    public string? KPIPositionTypeID { get; set; }
+    public int KPIPositionTypeID { get; set; }
 
     public string? CreatedBy { get; set; }
 
