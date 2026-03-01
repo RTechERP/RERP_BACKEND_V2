@@ -631,28 +631,28 @@ namespace RERPAPI.Controllers.KHOAHOC
                 var listCourseParent = SQLHelper<object>.GetListData(data, 0);
 
 
-                for (int i = 1; i < listCourseParent.Count; i++)
-                {
-                    var course = listCourseParent[i - 1];
+                //for (int i = 1; i < listCourseParent.Count; i++)
+                //{
+                //    var course = listCourseParent[i - 1];
 
-                    // Không override nếu đã bị khóa bởi khóa học bắt buộc
-                    if (listCourseParent[i].Status == -1) continue;
+                //    // Không override nếu đã bị khóa bởi khóa học bắt buộc
+                //    if (listCourseParent[i].Status == -1) continue;
 
-                    if (course.IsLearnInTurn ?? false)
-                    {
-                        if ((course.NumberLesson == course.TotalHistoryLession
-                             && course.Evaluate == 1)
-                            || currentUser.IsLeader > 0
-                            || currentUser.IsAdmin)
-                        {
-                            listCourseParent[i].Status = 1;
-                        }
-                        else
-                        {
-                            listCourseParent[i].Status = 0;
-                        }
-                    }
-                }
+                //    if (course.IsLearnInTurn ?? false)
+                //    {
+                //        if ((course.NumberLesson == course.TotalHistoryLession
+                //             && course.Evaluate == 1)
+                //            || currentUser.IsLeader > 0
+                //            || currentUser.IsAdmin)
+                //        {
+                //            listCourseParent[i].Status = 1;
+                //        }
+                //        else
+                //        {
+                //            listCourseParent[i].Status = 0;
+                //        }
+                //    }
+                //}
 
                 return Ok(ApiResponseFactory.Success(listCourseParent, ""));
             }
