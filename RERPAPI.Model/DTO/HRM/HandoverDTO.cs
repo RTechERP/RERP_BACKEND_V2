@@ -17,14 +17,12 @@ namespace RERPAPI.Model.DTO.HRM
         public List<HandoverFinance>? HandoverFinance { get; set; }
         public List<HandoverSubordinate>? HandoverSubordinate { get; set; }
         public List<HandoverApprove> HandoverApprove { get; set; }
+        public List<HandoverPersonalAsset>? handoverPersonalAsset { get; set; }
         public List<int>? DeletedHandoverReceiver { get; set; }
         public List<int>? DeletedWork { get; set; }
         public List<int>? DeletedAsset { get; set; }
         public List<int>? DeletedWarehouseAsset { get; set; }
         public List<int>? DeletedFinance { get; set; }
-
-
-
-
+        public List<int>? DeletedPersonalAsset { get; set; }
     }
 }
