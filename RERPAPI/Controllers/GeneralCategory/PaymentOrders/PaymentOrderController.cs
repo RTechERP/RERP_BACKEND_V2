@@ -124,6 +124,9 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                _currentUser = ObjectMapper.GetCurrentUser(claims);
+
                 p.DateStart = p.DateStart.Value.ToLocalTime().Date;
                 p.DateEnd = p.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
 
@@ -147,7 +150,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     IsApproved = p.IsApproved ?? -1,
                     IsSpecialOrder = p.IsSpecialOrder,
                     ApprovedTBPID = p.ApprovedTBPID,
-                    Step = p.Step,
+                    Step = p.Step ?? 0,
                     IsShowTable = p.IsShowTable,
                     Statuslog = p.Statuslog,
                     IsDelete = p.IsDelete,
