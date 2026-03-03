@@ -26,6 +26,4 @@ public partial class AGVBillDocumentImportLog
     public int? DocumentImportID { get; set; }
 
     public int? Status { get; set; }
-
-    public bool? IsDeleted { get; set; }
 }

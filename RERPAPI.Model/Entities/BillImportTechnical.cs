@@ -19,9 +19,6 @@ public partial class BillImportTechnical
 
     public string? Suplier { get; set; }
 
-    /// <summary>
-    /// 0: Kho Demo; 1: Kho AGV
-    /// </summary>
     public bool? BillType { get; set; }
 
     public string? WarehouseType { get; set; }

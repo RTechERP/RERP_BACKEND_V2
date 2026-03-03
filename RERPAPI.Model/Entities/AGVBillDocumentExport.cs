@@ -24,6 +24,4 @@ public partial class AGVBillDocumentExport
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
-
-    public bool? IsDeleted { get; set; }
 }

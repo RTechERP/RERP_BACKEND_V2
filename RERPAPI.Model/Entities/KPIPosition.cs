@@ -23,9 +23,6 @@ public partial class KPIPosition
 
     public int? STT { get; set; }
 
-    /// <summary>
-    /// 1: Kỹ thuật, Pro; 2: Admin; 3: Senior; 4: Phó phòng
-    /// </summary>
     public int? TypePosition { get; set; }
 
     public int? KPISessionID { get; set; }

@@ -1,7 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using NPOI.HPSF;
+using NPOI.OpenXmlFormats.Spreadsheet;
 using RERPAPI.IRepo;
 using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
@@ -20,6 +23,7 @@ using RERPAPI.Repo.GenericEntity.GeneralCatetogy.JobRequirements;
 using RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders;
 using RERPAPI.Repo.GenericEntity.HRM;
 using RERPAPI.Repo.GenericEntity.HRM.DepartmentRequire;
+using RERPAPI.Repo.GenericEntity.HRM.ProductProtectiveGear;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
 using RERPAPI.Repo.GenericEntity.MeetingMinutesRepo;
 using RERPAPI.Repo.GenericEntity.Project;
@@ -31,6 +35,14 @@ using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
 //using RERPAPI.SendService;
 using RTCApi.Repo.GenericRepo;
 using System.Text;
+using tusdotnet;
+using tusdotnet.Helpers;
+using tusdotnet.Interfaces;
+using tusdotnet.Models;
+using tusdotnet.Models.Configuration;
+using tusdotnet.Models.Expiration;
+using tusdotnet.Stores;
+using static System.Net.WebRequestMethods;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -181,7 +193,7 @@ builder.Services.AddScoped<PONCCRulePayRepo>();
 builder.Services.AddScoped<PONCCHistoryRepo>();
 builder.Services.AddScoped<PositionContractRepo>();
 builder.Services.AddScoped<PositionInternalRepo>();
-builder.Services.AddScoped<ProductGroupRTCRepo>();
+builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.ProductGroupRTCRepo>();
 builder.Services.AddScoped<ProductGroupRepo>();
 builder.Services.AddScoped<ProductGroupWareHouseRepo>();
 builder.Services.AddScoped<ProductLocationRepo>();
@@ -426,6 +438,7 @@ builder.Services.AddScoped<TaxCompanyRepo>();
 builder.Services.AddScoped<HistoryErrorRepo>();
 builder.Services.AddScoped<HistoryProductRTCLogRepo>();
 builder.Services.AddScoped<BillImportTechnicalLogRepo>();
+builder.Services.AddScoped<BillImportDetailTechnicalRepo>();
 builder.Services.AddScoped<BillDocumentImportTechnicalRepo>();
 builder.Services.AddScoped<BillDocumentImportTechnicalLogRepo>();
 builder.Services.AddScoped<BillExportTechnicalLogRepo>();
@@ -440,11 +453,24 @@ builder.Services.AddScoped<OrganizationalChartRepo>();
 builder.Services.AddScoped<NewsletterTypeRepo>();
 builder.Services.AddScoped<NewsletterRepo>();
 builder.Services.AddScoped<NewsletterFileRepo>();
+#region Đồ bảo hộ 
+builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.HRM.ProductProtectiveGear.ProductGroupRTCRepo>();
+#endregion
 builder.Services.AddScoped<CourseCatalogRepo>();
 builder.Services.AddScoped<CourseCatalogProjectTypeRepo>();
 builder.Services.AddScoped<KPIPositionTypeRepo>();
 builder.Services.AddScoped<CourseRepo>();
 builder.Services.AddScoped<CourseRegisterIdeaRepo>();
+builder.Services.AddScoped<CourseLessonRepo>();
+builder.Services.AddScoped<CourseFilesRepo>();
+builder.Services.AddScoped<CourseExamRepo>();
+builder.Services.AddScoped<CourseLessonHistoryRepo>();
+builder.Services.AddScoped<CourseExamResultRepo>();
+builder.Services.AddScoped<CourseExamResultDetailRepo>();
+builder.Services.AddScoped<CourseQuestionRepo>();
+builder.Services.AddScoped<CourseRightAnswerRepo>();
+builder.Services.AddScoped<CourseExamEvaluateRepo>();
+builder.Services.AddScoped<Course_KPIPositionTypeRepo>();
 
 builder.Services.AddScoped<InventoryProjectProductSaleLinkRepo>();
 builder.Services.AddScoped<HandoverPersonalAssetRepo>();
@@ -539,9 +565,9 @@ builder.Services.AddCors(options =>
     {
         builder.AllowAnyOrigin()
                .AllowAnyMethod()
-               .AllowAnyHeader();
-
-    });
+               .AllowAnyHeader()
+               .WithExposedHeaders(CorsHelper.GetExposedHeaders()); // config cors tus dotnet
+});
 });
 
 
@@ -687,11 +713,52 @@ foreach (var item in staticFiles)
     });
 
 
-    app.UseDirectoryBrowser(new DirectoryBrowserOptions 
+    app.UseDirectoryBrowser(new DirectoryBrowserOptions
     {
         FileProvider = new PhysicalFileProvider(item.PathFull),
         RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
     });
 }
+var tusStore = new TusDiskStore(Directory.GetCurrentDirectory());
+// config Tus dotnet
+app.UseTus(httpContext => new DefaultTusConfiguration
+{
+    Store = tusStore, // đường dẫn lưu temp file ( file chunk)
 
+    UrlPath = "/tus/upload-video", // path gọi api
+    Expiration = new AbsoluteExpiration(TimeSpan.FromHours(24)), // xóa upload không hoàn thành sau 24h
+
+    Events = new Events
+    {
+        OnFileCompleteAsync = async ctx =>
+        {
+
+            var file = await ctx.GetFileAsync();
+            if (file == null) return;
+
+            var metadata = await file.GetMetadataAsync(ctx.CancellationToken);
+
+            var fileName = metadata.ContainsKey("filename")
+                ? metadata["filename"].GetString(Encoding.UTF8)
+                : $"{file.Id}.bin";
+
+            //var destDir = @"\\192.168.1.190\Software\Test\UPLOADFILE\CourseLesson\Videos\";
+            //Directory.CreateDirectory(destDir);
+            //var destPath = Path.Combine(destDir, fileName);
+
+            var pathServer = metadata["pathServer"].GetString(Encoding.UTF8);
+            var destPath = Path.Combine(pathServer, fileName);
+            Directory.CreateDirectory(pathServer);
+            await using (var source = await file.GetContentAsync(ctx.CancellationToken))
+            {
+                await using (var target = System.IO.File.Create(destPath))
+                {
+                    await source.CopyToAsync(target);
+                }
+            }
+
+            //await tusStore.DeleteFileAsync(file.Id, ctx.CancellationToken);
+        }
+    }
+});
 app.Run();

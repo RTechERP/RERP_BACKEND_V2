@@ -135,11 +135,13 @@ public partial class VehicleRepairHistory
 
     public DateTime? DateApprove { get; set; }
 
-    public int? WarrantyPeriod { get; set; }
-
     public int? KmPreviousPeriod { get; set; }
 
     public int? KmCurrentPeriod { get; set; }
+
+    public int? Warranty { get; set; }
+
+    public int? WarrantyPeriod { get; set; }
 
     public DateTime? TimePrevious { get; set; }
 }

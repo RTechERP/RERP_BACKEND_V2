@@ -1,0 +1,67 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace RERPAPI.Entities;
+
+public partial class AGVBillImportDetail
+{
+    public int ID { get; set; }
+
+    public int? STT { get; set; }
+
+    public int? AGVBillImportID { get; set; }
+
+    public int? AGVProductID { get; set; }
+
+    public decimal? Quantity { get; set; }
+
+    public decimal? UnitPrice { get; set; }
+
+    public decimal? TotalPrice { get; set; }
+
+    public int? UnitID { get; set; }
+
+    public string? UnitName { get; set; }
+
+    public int? ProjectID { get; set; }
+
+    public string? SomeBill { get; set; }
+
+    public DateTime? DateSomeBill { get; set; }
+
+    public string? Note { get; set; }
+
+    public int? AGVHistoryProductID { get; set; }
+
+    public int? AGVProductQRCodeID { get; set; }
+
+    public int? IsBorrowSupplier { get; set; }
+
+    public decimal? QtyRequest { get; set; }
+
+    public int? PONCCDetailID { get; set; }
+
+    public string? BillCodePO { get; set; }
+
+    public int? EmployeeIDBorrow { get; set; }
+
+    public DateTime? DeadlineReturnNCC { get; set; }
+
+    public DateTime? DueDate { get; set; }
+
+    public decimal? TaxReduction { get; set; }
+
+    public decimal? COFormE { get; set; }
+
+    public int? DPO { get; set; }
+
+    public string? CreatedBy { get; set; }
+
+    public DateTime? CreatedDate { get; set; }
+
+    public string? UpdatedBy { get; set; }
+
+    public DateTime? UpdatedDate { get; set; }
+
+    public bool? IsDeleted { get; set; }
+}

@@ -17,11 +17,11 @@ namespace RERPAPI.Repo.GenericEntity
             {
                 if (excludeId.HasValue)
                 {
-                    return GetAll(x => x.LocationCode == locationCode && x.IsDeleted != true && x.ID != excludeId.Value).Any();
+                    return GetAll(x => x.LocationCode.Trim().ToLower() == locationCode.Trim().ToLower() && x.IsDeleted != true && x.ID != excludeId.Value).Any();
                 }
                 else
                 {
-                    return GetAll(x => x.LocationCode == locationCode && x.IsDeleted != true).Any();
+                    return GetAll(x => x.LocationCode.Trim().ToLower() == locationCode.Trim().ToLower() && x.IsDeleted != true).Any();
                 }
             }
             catch (Exception ex)
