@@ -33,3 +33,4 @@ secrets.json
 /RERPAPI/appsettings.json
 /RERPAPI/Properties/PublishProfiles/IISProfile1.pubxml
 /RERPAPI/appsettings.Development.json
+/RERPAPI.Repo/GenericEntity/HRM/HRHiringCandidateInformationFormOtherCertificatesRepo.cs

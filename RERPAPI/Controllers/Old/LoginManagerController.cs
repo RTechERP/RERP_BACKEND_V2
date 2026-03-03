@@ -110,7 +110,7 @@ namespace RERPAPI.Controllers.Old
 
                 // Set TeamID
                 user.TeamID = loginInfo.TeamID;
-                if (loginManagerRepo.GetAll(x =>x.LoginName == loginInfo.LoginName &&x.ID != loginInfo.UserID).Any())
+                if (loginManagerRepo.GetAll(x =>x.LoginName == loginInfo.LoginName &&x.ID != loginInfo.UserID&&x.Status!=1).Any())
                 {
                     return BadRequest(ApiResponseFactory.Fail(
                         null,
