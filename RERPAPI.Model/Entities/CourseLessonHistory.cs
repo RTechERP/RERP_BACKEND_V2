@@ -14,4 +14,12 @@ public partial class CourseLessonHistory
     public int? LessonId { get; set; }
 
     public DateTime? ViewDate { get; set; }
+
+    public int? VideoDuration { get; set; }
+
+    public int? LastWatchedSecond { get; set; }
+
+    public int? MaxWatchedSecond { get; set; }
+
+    public decimal? WatchedPercent { get; set; }
 }
