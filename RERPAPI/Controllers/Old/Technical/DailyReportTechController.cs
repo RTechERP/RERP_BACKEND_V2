@@ -337,7 +337,6 @@ namespace RERPAPI.Controllers.Old.Technical
                     request.Confirm = false;
                     request.CreatedDate = DateTime.Today.AddHours(23).AddMinutes(30);
                     await _dailyReportTechnicalRepo.CreateAsync(request);
-                    dailyID = request.ID;
                 }
                 ///lohic them file
                 if (request.dailyReportMarketingFiles?.Count > 0)
@@ -351,7 +350,7 @@ namespace RERPAPI.Controllers.Old.Technical
                         else
                         {
                             //item.ProjectRequestID = projectRequestID;
-                            item.DailyReportID = dailyID;
+                            item.DailyReportID = request.ID;
                             await _dailyFileMar.CreateAsync(item);
                         }
                     }
@@ -833,7 +832,7 @@ namespace RERPAPI.Controllers.Old.Technical
                     else if (currentUser.ID == 1618) ///-- Nhân viên Bùi Lệ Thủy UserID = 1618 gửi mail cho Phạm văn Trung( marketing02@rtc.edu.vn ) 
                     {
                         emailTo = "marketing02@rtc.edu.vn";
-                        //emailTo = "luongtu1112@gmail.com";
+                        //emailTo = "quanghung21hb@gmail.com";
                         emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
                         await _emailHelper.SendAsync(emailTo, subject, request.Body, cc: emailCc);
                     }
@@ -846,11 +845,11 @@ namespace RERPAPI.Controllers.Old.Technical
                     //    await _emailHelper.SendAsync(emailTo, subject, request.Body, cc: emailCc);
                     //}
                 }
-                emailTo = marketingManager.EmailCongTy;
-                //emailTo = "nhubinhne@gmail.com";
-                emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
-                receiverEmployeeId = marketingManagerID;
-                await _emailHelper.SendAsync(emailTo, subject, request.Body, cc: emailCc);
+                //emailTo = marketingManager.EmailCongTy;
+                ////emailTo = "nhubinhne@gmail.com";
+                //emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
+                //receiverEmployeeId = marketingManagerID;
+                //await _emailHelper.SendAsync(emailTo, subject, request.Body, cc: emailCc);
 
                 return Ok(ApiResponseFactory.Success(null, "Gửi thành công!"));
             }
