@@ -90,6 +90,8 @@ namespace RERPAPI.Controllers.HRM
         public async Task<IActionResult> GetDataHrRecruitmentCandidates(
             int? id = 0,
             int? status = -1,
+            int? employeeRequestId = -1,
+            int? departmentId = -1,
             int? employeeChucVuHDId = -1,
             DateTime? dateStart = null,
             DateTime? dateEnd = null,
@@ -109,6 +111,8 @@ namespace RERPAPI.Controllers.HRM
                 {
                     ID = id,
                     Status = status,
+                    EmployeeRequestID = employeeRequestId,
+                    DepartmentID = departmentId,
                     EmployeeChucVuHDID = employeeChucVuHDId,
                     DateStart = dateStart,
                     DateEnd = dateEnd,
