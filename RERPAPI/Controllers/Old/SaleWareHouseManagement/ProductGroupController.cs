@@ -112,7 +112,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 //TN.Binh update 19/10/25
                 if (!CheckProductGroupCode(dto))
                 {
-                    return Ok(new { status = 0, message = $"Mã nhóm [{dto.Productgroup.ProductGroupID}] đã tồn tại!" });
+                    //return Ok(new { status = 0, message = $"Mã nhóm [{dto.Productgroup.ProductGroupID}] đã tồn tại!" });
                 }
                 //end update 
                 if (dto.Productgroup.ID <= 0)
