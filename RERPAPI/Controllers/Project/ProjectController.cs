@@ -1382,6 +1382,7 @@ namespace RERPAPI.Controllers.Project
                 project.BusinessFieldID = 0;
                 project.ProjectShortName = "";
                 project.UpdatedDate = DateTime.Now;
+                project.CurrentState = prj.project.CurrentState;
 
 
                 if (statusOld != project.ProjectStatus)
