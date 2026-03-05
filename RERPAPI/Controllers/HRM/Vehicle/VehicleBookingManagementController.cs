@@ -408,6 +408,9 @@ namespace RERPAPI.Controllers
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
                 DateTime dateRegister = DateTime.Now;
 
                 // Kiểm tra phát sinh
@@ -436,7 +439,7 @@ namespace RERPAPI.Controllers
                 }
 
                 // Validate thời gian xuất phát
-                if (vehicleBooking.Category != 2 && vehicleBooking.Category != 6 && vehicleBooking.Category != 7 && vehicleBooking.Category != 8)
+                if (vehicleBooking.Category != 2 && vehicleBooking.Category != 6 && vehicleBooking.Category != 7 && vehicleBooking.Category != 8&& currentUser.EmployeeID !=395)
                 {
                     if (!vehicleBooking.DepartureDate.HasValue)
                         return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng nhập Thời gian xuất phát!"));
