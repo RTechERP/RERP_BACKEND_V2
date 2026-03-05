@@ -3,17 +3,13 @@ using System.Collections.Generic;
 
 namespace RERPAPI.Model.Entities;
 
-public partial class CourseFile
+public partial class Course_KPIPositionType
 {
     public int ID { get; set; }
 
-    public string? NameFile { get; set; }
-
     public int? CourseID { get; set; }
 
-    public int? LessonID { get; set; }
-
-    public string? OriginPath { get; set; }
+    public int? KPIPositionTypeID { get; set; }
 
     public string? CreatedBy { get; set; }
 
@@ -24,6 +20,4 @@ public partial class CourseFile
     public DateTime? UpdatedDate { get; set; }
 
     public bool? IsDeleted { get; set; }
-
-    public string? ServerPath { get; set; }
 }

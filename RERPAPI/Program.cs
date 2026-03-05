@@ -504,6 +504,11 @@ builder.Services.AddScoped<KPIExamRepo>();
 builder.Services.AddScoped<KPISumaryEvaluationRepo>();
 #endregion
 
+#region Yêu cầu tuyển dụng
+builder.Services.AddScoped<HRRecruitmentCandidateLogRepo>();
+builder.Services.AddScoped<HRRecruitmentCandidateRepo>();
+#endregion
+
 #region RabbitService
 //builder.Services.AddSingleton<RabbitMqConnection>();
 //builder.Services.AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>();
