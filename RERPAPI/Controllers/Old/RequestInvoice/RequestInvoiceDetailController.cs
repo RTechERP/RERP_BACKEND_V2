@@ -373,7 +373,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                 }
                 else
                 {
-                    targetFolder = Path.Combine(uploadPath, $"NB{ri.ID}");
+                    targetFolder = Path.Combine(uploadPath, $"YCXHD_ID_{ri.ID}");
                 }
 
                 if (!Directory.Exists(targetFolder))
@@ -405,10 +405,10 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                         OriginPath = targetFolder,
                         ServerPath = targetFolder,
                         IsDeleted = false,
-                        CreatedBy = User.Identity?.Name ?? "System",
-                        CreatedDate = DateTime.Now,
-                        UpdatedBy = User.Identity?.Name ?? "System",
-                        UpdatedDate = DateTime.Now
+                        //CreatedBy = User.Identity?.Name ?? "System",
+                        //CreatedDate = DateTime.Now,
+                        //UpdatedBy = User.Identity?.Name ?? "System",
+                        //UpdatedDate = DateTime.Now
                     };
 
                     await _requestInvoiceFileRepo.CreateAsync(filePO);

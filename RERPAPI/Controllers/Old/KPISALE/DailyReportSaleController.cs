@@ -29,8 +29,11 @@ namespace RERPAPI.Controllers.Old.KPISALE
         private readonly FollowProjectBaseRepo _followProjectBaseRepo;
         private readonly CustomerPartsRepo _customerPartRepo;
         private readonly ProjectStatusLogRepo _projectStatusLogRepo;
+        private readonly FollowProjectBaseDetailRepo _followProjectBaseDetailRepo;
+        private readonly EmployeeRepo _employeeRepo;
+        private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
 
-        public DailyReportSaleController(DailyReportSaleRepo dailyReportSaleRepo,CustomerPartsRepo customerPartsRepo , ProjectRepo projectRepo, CustomerRepo customerRepo, GroupSaleRepo groupSaleRepo, EmployeeTeamSaleRepo employeeTeamSaleRepo, FirmBaseRepo firmBaseRepo, ProjectTypeBaseRepo projectTypeBaseRepo, ProjectStatusRepo projectStatusRepo, CustomerContactRepo customerContactRepo, FollowProjectBaseRepo followProjectBaseRepo, ProjectStatusLogRepo projectStatusLogRepo, EmployeeTeamSaleLinkRepo employeeTeamSaleLinkRepo)
+        public DailyReportSaleController(DailyReportSaleRepo dailyReportSaleRepo,CustomerPartsRepo customerPartsRepo , ProjectRepo projectRepo, CustomerRepo customerRepo, GroupSaleRepo groupSaleRepo, EmployeeTeamSaleRepo employeeTeamSaleRepo, FirmBaseRepo firmBaseRepo, ProjectTypeBaseRepo projectTypeBaseRepo, ProjectStatusRepo projectStatusRepo, CustomerContactRepo customerContactRepo, FollowProjectBaseRepo followProjectBaseRepo, ProjectStatusLogRepo projectStatusLogRepo, EmployeeTeamSaleLinkRepo employeeTeamSaleLinkRepo, FollowProjectBaseDetailRepo followProjectBaseDetailRepo, EmployeeRepo employeeRepo, vUserGroupLinksRepo vUserGroupLinksRepo)
         {
             _dailyReportSaleRepo = dailyReportSaleRepo;
             _projectRepo = projectRepo;
@@ -45,6 +48,9 @@ namespace RERPAPI.Controllers.Old.KPISALE
             _projectStatusLogRepo = projectStatusLogRepo;
             _customerPartRepo = customerPartsRepo;
             _employeeTeamSaleLinkRepo = employeeTeamSaleLinkRepo;
+            _followProjectBaseDetailRepo = followProjectBaseDetailRepo;
+            _employeeRepo = employeeRepo;
+            _vUserGroupLinksRepo = vUserGroupLinksRepo;
         }
 
         [HttpGet("get-data")]
@@ -115,7 +121,8 @@ namespace RERPAPI.Controllers.Old.KPISALE
             {
                 var result = SQLHelper<dynamic>.ProcedureToList("spGetGroupSalesByUserID",
                                 new string[] { "@UserID" },
-                                new object[] { "" });
+                                new object[] { userId });
+                var data = SQLHelper<dynamic>.GetListData(result, 0);
                 return Ok(ApiResponseFactory.Success(result, ""));
             }
             catch (Exception ex)
@@ -265,92 +272,138 @@ namespace RERPAPI.Controllers.Old.KPISALE
         {
             try
             {
-                DailyReportSale model = dto.ID > 0 ? _dailyReportSaleRepo.GetByID(dto.ID) : new DailyReportSale();
-                model.UserID = dto.userId;
-                model.DateEnd = dto.dateEnd;
-                model.BigAccount = dto.bigAccount;
-                model.CustomerID = dto.customerId;
-                model.ContacID = dto.contactId;
-                model.Content = dto.content;
-                model.Result = dto.result;
-                model.ProblemBacklog = dto.problemBacklog;
-                model.PlanNext = dto.planNext;
-                //model.Note = dto.note; // bị ẩn
-                model.GroupType = dto.groupTypeId;
-                model.Month = dto.dateEnd?.Month;
-                model.Year = DateTime.Now.Year;
-                model.EndUser = dto.partId;
-                model.DateStart = dto.dateStart;
-                //model.RequestOfCustomer = dto.requestofcustomer //bị ẩn
-                model.ProductOfCustomer = dto.productOfCustomer;
-                model.ProjectID = dto.projectId;
-                model.FirmBaseID = dto.firmId;
-                model.ProjectTypeBaseID = dto.projectTypeId;
-                model.SaleOpportunity = dto.saleOpportunity;
-                model.WarehouseID = dto.warehouseId;
-                
-                if(dto.ID > 0)
-                {
-                    await _dailyReportSaleRepo.UpdateAsync(model);
-                }
-                else
-                {
-                    await _dailyReportSaleRepo.CreateAsync(model);
-                }
+                    var today = DateTime.Now.Date;
+                    var minAllowedDate = today.AddDays(-2);
+                    var reportDate = dto.dateStart.Date;
+                    // Lấy bản ghi cũ nếu đang sửa (dùng chung cho cả 2 validate)
+                    DailyReportSale? existing = dto.ID > 0 ? _dailyReportSaleRepo.GetByID(dto.ID) : null;
+                    // === 1. Validate dateStart trong 3 ngày gần nhất ===
+                    if (dto.ID <= 0)
+                    {
+                        // Tạo mới: luôn validate
+                        if (reportDate < minAllowedDate || reportDate > today)
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null,
+                                $"Chỉ được báo cáo trong 3 ngày gần nhất ({minAllowedDate:dd/MM/yyyy} - {today:dd/MM/yyyy})"));
+                        }
+                    }
+                    else
+                    {
+                        // Sửa: chỉ validate nếu user đổi dateStart
+                        if (existing != null && existing.DateStart?.Date != reportDate)
+                        {
+                            if (reportDate < minAllowedDate || reportDate > today)
+                            {
+                                return BadRequest(ApiResponseFactory.Fail(null,
+                                    $"Chỉ được đổi sang ngày trong 3 ngày gần nhất ({minAllowedDate:dd/MM/yyyy} - {today:dd/MM/yyyy})"));
+                            }
+                        }
+                    }
+                    //  Validate tối đa 10 bản ghi/ngày (không tính bản ghi đã xóa)
+                    //Chỉ check khi thêm mới vì sửa không cần check
+                    //if (dto.ID <= 0)
+                    //{
+                    //    var countInDay = _dailyReportSaleRepo
+                    //        .GetAll(x => x.UserID == dto.userId
+                    //            && x.DateStart.HasValue
+                    //            && x.DateStart.Value.Date == reportDate
+                    //            && x.DeleteFlag != 1)
+                    //        .Count();
+                    //    if (countInDay >= 10)
+                    //    {
+                    //        return BadRequest(ApiResponseFactory.Fail(null,
+                    //            $"Mỗi ngày chỉ được báo cáo tối đa 10 bản ghi. Ngày {reportDate:dd/MM/yyyy} đã có {countInDay} bản ghi."));
+                    //    }
+                    //}
 
-                RERPAPI.Model.Entities.Project project = await _projectRepo.GetByIDAsync(dto.projectId); 
-                FollowProjectBase followProjectBase = _followProjectBaseRepo.GetAll(x => x.ProjectID == project.ID).OrderByDescending(x => x.ID).FirstOrDefault() ?? new FollowProjectBase();
-                followProjectBase.ProjectID = project.ID;
-                followProjectBase.CustomerBaseID = dto.customerId;
-                followProjectBase.EndUserID = project.EndUser;
-                //followProjectBase.ProjectStatusBaseID = project.ProjectStatus;
-                followProjectBase.ProjectStartDate = project.CreatedDate;
-                followProjectBase.WarehouseID = dto.warehouseId;
-                followProjectBase.FirmBaseID = model.FirmBaseID;
-                followProjectBase.ProjectTypeBaseID = model.ProjectTypeBaseID;
-                followProjectBase.ProjectStatusBaseID = dto.projectStatusBaseId;
 
-                if(followProjectBase.ID > 0)
-                {
-                    await _followProjectBaseRepo.UpdateAsync(followProjectBase);
-                }
-                else
-                {
-                    await _followProjectBaseRepo.CreateAsync(followProjectBase);
-                }
-                FollowProjectBaseDetail detail = new FollowProjectBaseDetail()
-                {
-                    FollowProjectBaseID = followProjectBase.ID,
-                    ProjectID = project.ID,
-                    UserID = dto.userId,
-                    ImplementationDate = dto.dateStart,
-                    ExpectedDate = dto.dateEnd,
-                    WorkDone = dto.content.Trim(),
-                    WorkWillDo = dto.planNext.Trim(),
-                    Results = dto.result.Trim(),
-                    ProblemBacklog = dto.problemBacklog.Trim(),
-                }; 
+                    DailyReportSale model = dto.ID > 0 ? _dailyReportSaleRepo.GetByID(dto.ID) : new DailyReportSale();
+                    model.UserID = dto.userId;
+                    model.DateEnd = dto.dateEnd;
+                    model.BigAccount = dto.bigAccount;
+                    model.CustomerID = dto.customerId;
+                    model.ContacID = dto.contactId;
+                    model.Content = dto.content;
+                    model.Result = dto.result;
+                    model.ProblemBacklog = dto.problemBacklog;
+                    model.PlanNext = dto.planNext;
+                    //model.Note = dto.note; // bị ẩn
+                    model.GroupType = dto.groupTypeId;
+                    model.Month = dto.dateEnd?.Month;
+                    model.Year = DateTime.Now.Year;
+                    model.EndUser = dto.partId;
+                    model.DateStart = dto.dateStart;
+                    //model.RequestOfCustomer = dto.requestofcustomer //bị ẩn
+                    model.ProductOfCustomer = dto.productOfCustomer;
+                    model.ProjectID = dto.projectId;
+                    model.FirmBaseID = dto.firmId;
+                    model.ProjectTypeBaseID = dto.projectTypeId;
+                    model.SaleOpportunity = dto.saleOpportunity;
+                    model.WarehouseID = dto.warehouseId;
+
+                    if (dto.ID > 0)
+                    {
+                        await _dailyReportSaleRepo.UpdateAsync(model);
+                    }
+                    else
+                    {
+                        await _dailyReportSaleRepo.CreateAsync(model);
+                    }
+
+                    RERPAPI.Model.Entities.Project project = await _projectRepo.GetByIDAsync(dto.projectId);
+                    FollowProjectBase followProjectBase = _followProjectBaseRepo.GetAll(x => x.ProjectID == project.ID).OrderByDescending(x => x.ID).FirstOrDefault() ?? new FollowProjectBase();
+                    followProjectBase.ProjectID = project.ID;
+                    followProjectBase.CustomerBaseID = dto.customerId;
+                    followProjectBase.EndUserID = project.EndUser;
+                    //followProjectBase.ProjectStatusBaseID = project.ProjectStatus;
+                    followProjectBase.ProjectStartDate = project.CreatedDate;
+                    followProjectBase.WarehouseID = dto.warehouseId;
+                    followProjectBase.FirmBaseID = model.FirmBaseID;
+                    followProjectBase.ProjectTypeBaseID = model.ProjectTypeBaseID;
+                    followProjectBase.ProjectStatusBaseID = dto.projectStatusBaseId;
+
+                    if (followProjectBase.ID > 0)
+                    {
+                        await _followProjectBaseRepo.UpdateAsync(followProjectBase);
+                    }
+                    else
+                    {
+                        await _followProjectBaseRepo.CreateAsync(followProjectBase);
+                    }
+                    FollowProjectBaseDetail detail = new FollowProjectBaseDetail()
+                    {
+                        FollowProjectBaseID = followProjectBase.ID,
+                        ProjectID = project.ID,
+                        UserID = dto.userId,
+                        ImplementationDate = dto.dateStart,
+                        ExpectedDate = dto.dateEnd,
+                        WorkDone = dto.content.Trim(),
+                        WorkWillDo = dto.planNext.Trim(),
+                        Results = dto.result.Trim(),
+                        ProblemBacklog = dto.problemBacklog.Trim(),
+                    };
+                    await _followProjectBaseDetailRepo.CreateAsync(detail);
 
                 //Updateproject 
-                if(project.ID > 0)
-                {
-                    project.ProjectStatus = dto.projectStatusBaseId;
-                    await _projectRepo.UpdateAsync(project);
-
-                    if(dto.projectStatusOld != project.ProjectStatus)
+                if (project.ID > 0)
                     {
-                        ProjectStatusLog statuslog = new ProjectStatusLog()
+                        project.ProjectStatus = dto.projectStatusBaseId;
+                        await _projectRepo.UpdateAsync(project);
+
+                        if (dto.projectStatusOld != project.ProjectStatus)
                         {
-                            ProjectID = project.ID,
-                            ProjectStatusID = project.ProjectStatus,
-                            EmployeeID = dto.employeeId ?? 0,
-                            DateLog = dto.dateStatusLog.ToLocalTime(),
-                        };
-                        await _projectStatusLogRepo.CreateAsync(statuslog);
-                    }    
-                } 
-                    
-                return Ok(ApiResponseFactory.Success(null, ""));
+                            ProjectStatusLog statuslog = new ProjectStatusLog()
+                            {
+                                ProjectID = project.ID,
+                                ProjectStatusID = project.ProjectStatus,
+                                EmployeeID = dto.employeeId ?? 0,
+                                DateLog = dto.dateStatusLog.ToLocalTime(),
+                            };
+                            await _projectStatusLogRepo.CreateAsync(statuslog);
+                        }
+                    }
+
+                    return Ok(ApiResponseFactory.Success(null, ""));
             }
             catch (Exception ex)
             {
@@ -635,6 +688,68 @@ namespace RERPAPI.Controllers.Old.KPISALE
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        [HttpGet("get-employees-by-team-sale")]
+        public IActionResult GetEmployeesByTeamSale(int? teamId)
+        {
+            try
+            {
+                // Nếu không truyền teamId hoặc teamId = 0 thì lấy full nhân viên bằng spGetEmployee
+                if (teamId == null || teamId == 0)
+                {
+                    var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                    CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                    var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x => (x.Code == "N1" || x.Code == "N2" || x.Code == "N60") && x.UserID == currentUser.ID);
+                    object data;
+                    if (vUserHR == null)
+                    {
+                        data = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
+                            new string[] { "@Status", "@DepartmentID", "@Keyword" },
+                            new object[] { 0, 0, "" });
+                    }
+                    else
+                    {
+                        var employee = SQLHelper<object>.ProcedureToList("spGetEmployee",
+                            new string[] { "@Status", "@DepartmentID", "@Keyword" },
+                            new object[] { 0, 0, "" });
+                        data = SQLHelper<object>.GetListData(employee, 0);
+                    }
+                    return Ok(ApiResponseFactory.Success(data, ""));
+                }
+
+                // Nếu có teamId thì lấy nhân viên theo team
+                var result =
+                (
+                    from parent in _employeeTeamSaleRepo.GetAll(x => x.ID == teamId && x.IsDeleted != 1)
+
+                    join child in _employeeTeamSaleRepo.GetAll(x => x.IsDeleted != 1)
+                        on parent.ID equals child.ParentID
+
+                    join link in _employeeTeamSaleLinkRepo.GetAll()
+                        on child.ID equals link.EmployeeTeamSaleID
+
+                    join emp in _employeeRepo.GetAll()
+                        on link.EmployeeID equals emp.ID
+
+                    select new
+                    {
+                        emp.ID,
+                        emp.FullName,
+                        emp.Code,
+                        emp.DepartmentID,
+                        emp.Status,
+                        emp.UserID
+                    }
+                ).Distinct().ToList();
+
+                return Ok(ApiResponseFactory.Success(result, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
 
         private string GetString(Dictionary<string, object> row, string key)
         {
