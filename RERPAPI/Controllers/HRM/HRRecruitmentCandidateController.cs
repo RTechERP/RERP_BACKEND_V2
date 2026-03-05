@@ -76,7 +76,7 @@ namespace RERPAPI.Controllers.HRM
         {
             try
             {
-                var dtMaster = await SqlDapper<object>.ProcedureToListAsync("spGetHrRequestSelect", new {});
+                var dtMaster = await SqlDapper<object>.ProcedureToListAsync("spGetHrRequestSelect", new { });
                 return Ok(ApiResponseFactory.Success(dtMaster, null));
             }
             catch (Exception ex)
@@ -201,6 +201,13 @@ namespace RERPAPI.Controllers.HRM
 
                         var hrRecruitmentCandidates = _hrRecruitmentCandidateRepo.GetByID(id);
 
+                        if (data.Status == 1 && data.isApproved == false)
+                        {
+                            hrRecruitmentCandidates.SendMailTime = null;
+                            hrRecruitmentCandidates.StatusMail = 0;
+                            hrRecruitmentCandidates.DateInterview = null;
+                        }
+
                         if (data.Status > 0)
                         {
                             HRRecruitmentCandidateLog log = _hrRecruitmentCandidateLogRepo.
@@ -232,6 +239,7 @@ namespace RERPAPI.Controllers.HRM
                         {
                             hrRecruitmentCandidates.Status = data.Status;
                         }
+
 
                         await _hrRecruitmentCandidateRepo.UpdateAsync(hrRecruitmentCandidates);
                     }
@@ -365,7 +373,7 @@ namespace RERPAPI.Controllers.HRM
                 data.UserName = data.UserName?.Trim() ?? "";
                 data.Password = data.Password?.Trim() ?? "";
                 data.Email = data.Email?.Trim() ?? "";
-                
+
 
                 if (data.ID > 0)
                 {
@@ -424,10 +432,10 @@ namespace RERPAPI.Controllers.HRM
                 {
                     foreach (var email in sendEmails)
                     {
-                        if(email.ID > 0)
+                        if (email.ID > 0)
                         {
                             var hrRecruitmentCandidate = _hrRecruitmentCandidateRepo.GetByID(email.ID);
-                            if(hrRecruitmentCandidate != null)
+                            if (hrRecruitmentCandidate != null)
                             {
                                 hrRecruitmentCandidate.StatusMail = email.StatusSend;
                                 hrRecruitmentCandidate.DateInterview = email.DateSend;
