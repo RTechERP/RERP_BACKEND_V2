@@ -481,7 +481,6 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         {
             try
             {
-
                 var reponse = await _logRepo.Appoved(payment);
                 if (reponse == 1)
                 {
@@ -489,7 +488,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 }
                 else
                 {
-                    return Ok(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+                    return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
                 }
             }
             catch (Exception ex)
@@ -509,7 +508,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             }
             else
             {
-                return Ok(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+                return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
             }
         }
 
@@ -524,7 +523,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             }
             else
             {
-                return Ok(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+                return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
             }
         }
 
@@ -539,7 +538,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             }
             else
             {
-                return Ok(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+                return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
             }
         }
 
@@ -554,7 +553,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             }
             else
             {
-                return Ok(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+                return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
             }
         }
 

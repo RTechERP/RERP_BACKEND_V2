@@ -11,7 +11,7 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
 {
     public class PaymentOrderRepo : GenericRepo<PaymentOrder>
     {
-        string[] PREFIX_CODES = new string[] { "", "ĐNTU", "ĐNTT" };
+        string[] PREFIX_CODES = new string[] { "", "ĐNTU", "ĐNTT" , "ĐNTT" };
         public PaymentOrderRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
