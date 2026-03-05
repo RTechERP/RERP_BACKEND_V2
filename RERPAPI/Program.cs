@@ -449,6 +449,7 @@ builder.Services.AddScoped<CourseRegisterIdeaRepo>();
 builder.Services.AddScoped<InventoryProjectProductSaleLinkRepo>();
 builder.Services.AddScoped<HandoverPersonalAssetRepo>();
 builder.Services.AddScoped<UpdateVersionRepo>();
+builder.Services.AddScoped<FollowProjectBaseDetailRepo>();
 
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();
