@@ -266,6 +266,112 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpPost("save-form-auto")]
+        public async Task<IActionResult> SaveFormAuto([FromBody] HRRecruitmentApplicationFullDTO data)
+            {
+            try
+            {
+                if (data == null || data.HRRecruitmentApplicationForm == null)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu"));
+                }
+
+                // Lấy thông tin ứng viên từ claims
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentCandidate = ObjectMapper.GetCurrentCandidate(claims);
+
+                if (currentCandidate == null || currentCandidate.ID == 0)
+                {
+                    return Unauthorized(ApiResponseFactory.Fail(null, "Không tìm thấy thông tin ứng viên đăng nhập (Vui lòng đăng nhập lại)"));
+                }
+                // 1. Lưu tờ khai chính
+                var mainForm = data.HRRecruitmentApplicationForm;
+
+                // Gán ID ứng viên đang đăng nhập để đảm bảo tính an toàn dữ liệu
+                mainForm.HRRecruitmentCandidateID = currentCandidate.ID;
+
+                if (mainForm.ID > 0)
+                {
+                    await _hRHiringCandidateInformationFormRepo.UpdateAsync(mainForm);
+                }
+                else
+                {
+                    await _hRHiringCandidateInformationFormRepo.CreateAsync(mainForm);
+                }
+
+                int parentId = mainForm.ID;
+
+                // 2. Lưu Kinh nghiệp làm việc
+                if (data.WorkingExperiences != null)
+                {
+                    foreach (var item in data.WorkingExperiences)
+                    {
+                        item.HRRecruitmentApplicationFormID = parentId;
+                        if (item.ID > 0) await _hRHiringCandidateInformationFormWorkingExperienceRepo.UpdateAsync(item);
+                        else await _hRHiringCandidateInformationFormWorkingExperienceRepo.CreateAsync(item);
+                    }
+                }
+
+                // 3. Lưu Chứng chỉ khác
+                if (data.OtherCertificates != null)
+                {
+                    foreach (var item in data.OtherCertificates)
+                    {
+                        item.HRRecruitmentApplicationFormID = parentId;
+                        if (item.ID > 0) await _hRHiringCandidateInformationFormOtherCertificateRepo.UpdateAsync(item);
+                        else await _hRHiringCandidateInformationFormOtherCertificateRepo.CreateAsync(item);
+                    }
+                }
+
+                // 4. Lưu Thông tin học vấn
+                if (data.Educations != null)
+                {
+                    foreach (var item in data.Educations)
+                    {
+                        item.HRHiringCandidateInformationFormID = parentId; // Lưu ý: Tên cột là HRHiringCandidateInformationFormID
+                        if (item.ID > 0) await _hRHiringCandidateInformationFormEducationRepo.UpdateAsync(item);
+                        else await _hRHiringCandidateInformationFormEducationRepo.CreateAsync(item);
+                    }
+                }
+
+                // 5. Lưu Người liên hệ khẩn cấp
+                if (data.EmergencyContacts != null)
+                {
+                    foreach (var item in data.EmergencyContacts)
+                    {
+                        item.HRRecruitmentApplicationFormID = parentId;
+                        if (item.ID > 0) await _hRHiringCandidateInformationEmergencyContactRepo.UpdateAsync(item);
+                        else await _hRHiringCandidateInformationEmergencyContactRepo.CreateAsync(item);
+                    }
+                }
+
+                // 6. Lưu Ngoại ngữ
+                if (data.ForeignLanguageSkills != null)
+                {
+                    foreach (var item in data.ForeignLanguageSkills)
+                    {
+                        item.HRHiringCandidateInformationFormID = parentId; // Lưu ý: Tên cột là HRHiringCandidateInformationFormID
+                        if (item.ID > 0) await _hRHiringCandidateInformationFormForeignLanguageSkillsRepo.UpdateAsync(item);
+                        else await _hRHiringCandidateInformationFormForeignLanguageSkillsRepo.CreateAsync(item);
+                    }
+                }
+
+                // 7. Lưu Thông tin tuyển dụng (Dạng single object)
+                if (data.RecruitmentInfo != null)
+                {
+                    var item = data.RecruitmentInfo;
+                    item.HRRecruitmentApplicationFormID = parentId;
+                    if (item.ID > 0) await _hRHiringCandidateInformationFormRecruitmentInfoRepo.UpdateAsync(item);
+                    else await _hRHiringCandidateInformationFormRecruitmentInfoRepo.CreateAsync(item);
+                }
+
+                return Ok(ApiResponseFactory.Success(data, "Lưu tờ khai thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         //lấy master hợp đồng
         //[HttpGet("get-candidate-infomation")]
         //public IActionResult GetCandidateInfomation(int hRRecruitmentCandidateID)
