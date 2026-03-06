@@ -272,15 +272,23 @@ namespace RERPAPI.Controllers.Old.KPISALE
         {
             try
             {
-                    var today = DateTime.Now.Date;
-                    var minAllowedDate = today.AddDays(-2);
-                    var reportDate = dto.dateStart.Date;
-                    // Lấy bản ghi cũ nếu đang sửa (dùng chung cho cả 2 validate)
-                    DailyReportSale? existing = dto.ID > 0 ? _dailyReportSaleRepo.GetByID(dto.ID) : null;
+                var today = DateTime.Now.Date;
+                var minAllowedDate = today.AddDays(-2);
+                var reportDate = dto.dateStart.Date;
+
+                // Ngày bắt đầu áp dụng validate
+                var validateStartDate = new DateTime(2026, 3, 7);
+
+                // Lấy bản ghi cũ nếu đang sửa
+                DailyReportSale? existing = dto.ID > 0 ? _dailyReportSaleRepo.GetByID(dto.ID) : null;
+
+                // Chỉ validate từ ngày 07/03 trở đi
+                if (today >= validateStartDate)
+                {
                     // === 1. Validate dateStart trong 3 ngày gần nhất ===
                     if (dto.ID <= 0)
                     {
-                        // Tạo mới: luôn validate
+                        // Tạo mới
                         if (reportDate < minAllowedDate || reportDate > today)
                         {
                             return BadRequest(ApiResponseFactory.Fail(null,
@@ -299,25 +307,27 @@ namespace RERPAPI.Controllers.Old.KPISALE
                             }
                         }
                     }
-                    //  Validate tối đa 10 bản ghi/ngày (không tính bản ghi đã xóa)
-                    //Chỉ check khi thêm mới vì sửa không cần check
-                    //if (dto.ID <= 0)
-                    //{
-                    //    var countInDay = _dailyReportSaleRepo
-                    //        .GetAll(x => x.UserID == dto.userId
-                    //            && x.DateStart.HasValue
-                    //            && x.DateStart.Value.Date == reportDate
-                    //            && x.DeleteFlag != 1)
-                    //        .Count();
-                    //    if (countInDay >= 10)
-                    //    {
-                    //        return BadRequest(ApiResponseFactory.Fail(null,
-                    //            $"Mỗi ngày chỉ được báo cáo tối đa 10 bản ghi. Ngày {reportDate:dd/MM/yyyy} đã có {countInDay} bản ghi."));
-                    //    }
-                    //}
+                }
+
+                //  Validate tối đa 10 bản ghi/ngày (không tính bản ghi đã xóa)
+                //Chỉ check khi thêm mới vì sửa không cần check
+                //if (dto.ID <= 0)
+                //{
+                //    var countInDay = _dailyReportSaleRepo
+                //        .GetAll(x => x.UserID == dto.userId
+                //            && x.DateStart.HasValue
+                //            && x.DateStart.Value.Date == reportDate
+                //            && x.DeleteFlag != 1)
+                //        .Count();
+                //    if (countInDay >= 10)
+                //    {
+                //        return BadRequest(ApiResponseFactory.Fail(null,
+                //            $"Mỗi ngày chỉ được báo cáo tối đa 10 bản ghi. Ngày {reportDate:dd/MM/yyyy} đã có {countInDay} bản ghi."));
+                //    }
+                //}
 
 
-                    DailyReportSale model = dto.ID > 0 ? _dailyReportSaleRepo.GetByID(dto.ID) : new DailyReportSale();
+                DailyReportSale model = dto.ID > 0 ? _dailyReportSaleRepo.GetByID(dto.ID) : new DailyReportSale();
                     model.UserID = dto.userId;
                     model.DateEnd = dto.dateEnd;
                     model.BigAccount = dto.bigAccount;
