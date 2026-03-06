@@ -89,7 +89,7 @@ namespace RERPAPI.Controllers.HRM
                     br.IsDeleted = true;
                   await  _bookingRoomRepo.UpdateAsync(br);
                 }    
-                return Ok(ApiResponseFactory.Success(null, ""));
+                return Ok(ApiResponseFactory.Success(null, "Xóa thành công"));
             }
             catch (Exception ex)
             {
