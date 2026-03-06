@@ -334,10 +334,10 @@ namespace RERPAPI.Controllers.HRM
 
                     data.FileCVName = data.FileCV.FileName.Trim();
 
-                    var uploadPath = _configSystemRepo.GetUploadPathByKey("CandidateCV");
+                    var uploadPath = _configSystemRepo.GetUploadPathByKey("HrRecruitmentCandidate");
                     if (string.IsNullOrWhiteSpace(uploadPath))
                     {
-                        return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: Sofware"));
+                        return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: HrRecruitmentCandidate"));
                     }
 
                     string pathPattern = $@"CvUngVien\";
