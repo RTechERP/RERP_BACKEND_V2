@@ -814,7 +814,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                             sheet.Row(startRow).InsertRowsBelow(detailList.Count - 1);
                         }
 
-                        foreach (var item in detailList.OrderByDescending(x => x["ID"])) // Match original reverse order
+                        foreach (var item in detailList.OrderBy(x => x["STT"])) // Match original reverse order
                         {
                             sheet.Cell(currentRow, 1).Value = stt++;
                             sheet.Cell(currentRow, 2).Value = item["ProductNewCode"]?.ToString()?.Trim() ?? "";
