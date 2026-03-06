@@ -449,7 +449,17 @@ builder.Services.AddScoped<CourseRegisterIdeaRepo>();
 builder.Services.AddScoped<InventoryProjectProductSaleLinkRepo>();
 builder.Services.AddScoped<HandoverPersonalAssetRepo>();
 builder.Services.AddScoped<UpdateVersionRepo>();
-builder.Services.AddScoped<FollowProjectBaseDetailRepo>();
+
+builder.Services.AddScoped<HRHiringCandidateInformationFormWorkingExperienceRepo>();
+builder.Services.AddScoped<HRHiringCandidateInformationEmergencyContactRepo>();
+builder.Services.AddScoped<HRHiringCandidateInformationFormOtherCertificateRepo>();
+builder.Services.AddScoped<HRHiringCandidateInformationFormEducationRepo>();
+builder.Services.AddScoped<HRHiringCandidateInformationFormRepo>();
+builder.Services.AddScoped<HRRecruitmentCandidateRepo>();
+builder.Services.AddScoped<HRHiringCandidateInformationFormForeignLanguageSkillsRepo>();
+builder.Services.AddScoped<HRHiringCandidateInformationFormRecruitmentInfoRepo>();
+
+
 
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();
@@ -580,6 +590,7 @@ builder.Services.AddSingleton<SseService>();
 var jwtSection = builder.Configuration.GetSection("JwtSettings");
 builder.Services.Configure<JwtSettings>(jwtSection);
 var jwtSettings = jwtSection.Get<JwtSettings>() ?? new JwtSettings();
+builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<JwtSettings>>().Value);
 
 builder.Services.AddAuthentication("Bearer")
                 .AddJwtBearer("Bearer", options =>
@@ -677,7 +688,7 @@ app.MapControllers();
 app.Use(async (context, next) =>
 {
     context.Request.Path = context.Request.Path.Value?.ToLower();
-    await next();
+        await next();
 });
 
 
