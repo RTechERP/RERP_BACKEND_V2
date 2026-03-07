@@ -1216,6 +1216,7 @@ namespace RERPAPI.Controllers
         }
         [HttpGet("get-all-contact")]
         [Authorize]
+        //[RequiresPermission("N1")]
         public IActionResult GetAllContact(int departmentID, string? keyword)
         {
             try

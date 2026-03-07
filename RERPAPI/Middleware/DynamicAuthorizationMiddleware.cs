@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Linq;
 using RERPAPI.Attributes;
 using RERPAPI.IRepo;
+using RERPAPI.Model.Common;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace RERPAPI.Middleware
 {
@@ -29,7 +32,11 @@ namespace RERPAPI.Middleware
                 if (!isApiKey || apiKey != _apiKey)
                 {
                     context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                    await context.Response.WriteAsync("Invalid or missing API Key");
+
+                    var response = JsonSerializer.Serialize(ApiResponseFactory.Unauthorized("Invalid or missing API Key!"));
+                    await context.Response.WriteAsync(response);
+
+                    //await context.Response.WriteAsync("Invalid or missing API Key");
                     return;
                 }
 
@@ -52,7 +59,11 @@ namespace RERPAPI.Middleware
                 if (string.IsNullOrEmpty(userId))
                 {
                     context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                    await context.Response.WriteAsync("Unauthorized");
+
+                    var response = JsonSerializer.Serialize(ApiResponseFactory.Unauthorized("Vui lòng đăng nhập!"));
+                    await context.Response.WriteAsync(response);
+
+                    //await context.Response.WriteAsync("Unauthorized");
                     return;
                 }
 
@@ -65,7 +76,11 @@ namespace RERPAPI.Middleware
                 if (now > expires)
                 {
                     context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                    await context.Response.WriteAsync("Expired");
+
+                    var response = JsonSerializer.Serialize(ApiResponseFactory.Unauthorized("Expired!"));
+                    await context.Response.WriteAsync(response);
+
+                    //await context.Response.WriteAsync("Expired");
                     return;
                 }
 
@@ -92,7 +107,9 @@ namespace RERPAPI.Middleware
                         {
                             context.Response.StatusCode = StatusCodes.Status403Forbidden;
                             context.Response.ContentType = "text/plain; charset=utf-8";
-                            await context.Response.WriteAsync("Bạn không có quyền!");
+                            var response = JsonSerializer.Serialize(ApiResponseFactory.Unauthorized("Bạn không có quyền!"));
+                            //await context.Response.WriteAsync("Bạn không có quyền!");
+                            await context.Response.WriteAsync(response);
                             return;
                         }
                     }
