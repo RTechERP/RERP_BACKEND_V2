@@ -450,14 +450,9 @@ builder.Services.AddScoped<InventoryProjectProductSaleLinkRepo>();
 builder.Services.AddScoped<HandoverPersonalAssetRepo>();
 builder.Services.AddScoped<UpdateVersionRepo>();
 
-builder.Services.AddScoped<HRHiringCandidateInformationFormWorkingExperienceRepo>();
-builder.Services.AddScoped<HRHiringCandidateInformationEmergencyContactRepo>();
-builder.Services.AddScoped<HRHiringCandidateInformationFormOtherCertificateRepo>();
-builder.Services.AddScoped<HRHiringCandidateInformationFormEducationRepo>();
-builder.Services.AddScoped<HRHiringCandidateInformationFormRepo>();
-builder.Services.AddScoped<HRRecruitmentCandidateRepo>();
-builder.Services.AddScoped<HRHiringCandidateInformationFormForeignLanguageSkillsRepo>();
-builder.Services.AddScoped<HRHiringCandidateInformationFormRecruitmentInfoRepo>();
+builder.Services.AddScoped<FollowProjectBaseDetailRepo>();
+
+
 
 
 
@@ -517,6 +512,14 @@ builder.Services.AddScoped<KPISumaryEvaluationRepo>();
 #region Yêu cầu tuyển dụng
 builder.Services.AddScoped<HRRecruitmentCandidateLogRepo>();
 builder.Services.AddScoped<HRRecruitmentCandidateRepo>();
+builder.Services.AddScoped<HRHiringCandidateInformationFormWorkingExperienceRepo>();
+builder.Services.AddScoped<HRHiringCandidateInformationEmergencyContactRepo>();
+builder.Services.AddScoped<HRHiringCandidateInformationFormOtherCertificateRepo>();
+builder.Services.AddScoped<HRHiringCandidateInformationFormEducationRepo>();
+builder.Services.AddScoped<HRHiringCandidateInformationFormRepo>();
+builder.Services.AddScoped<HRRecruitmentCandidateRepo>();
+builder.Services.AddScoped<HRHiringCandidateInformationFormForeignLanguageSkillsRepo>();
+builder.Services.AddScoped<HRHiringCandidateInformationFormRecruitmentInfoRepo>();
 #endregion
 
 #region RabbitService
