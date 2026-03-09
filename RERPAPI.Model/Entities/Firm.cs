@@ -5,14 +5,23 @@ namespace RERPAPI.Model.Entities;
 
 public partial class Firm
 {
+    /// <summary>
+    /// ID hãng
+    /// </summary>
     public int ID { get; set; }
 
+    /// <summary>
+    /// Mã hãng
+    /// </summary>
     public string? FirmCode { get; set; }
 
+    /// <summary>
+    /// Tên hãng
+    /// </summary>
     public string? FirmName { get; set; }
 
     /// <summary>
-    /// 1: Hãng kho Sale; 2: Hãng kho Demo
+    /// Loại hãng(1: Hãng kho Sale; 2: Hãng kho Demo)
     /// </summary>
     public int? FirmType { get; set; }
 

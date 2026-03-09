@@ -5,6 +5,9 @@ namespace RERPAPI.Model.Entities;
 
 public partial class BillImport
 {
+    /// <summary>
+    /// ID Phiếu nhập
+    /// </summary>
     public int ID { get; set; }
 
     /// <summary>
@@ -73,6 +76,9 @@ public partial class BillImport
 
     public int? UnApprove { get; set; }
 
+    /// <summary>
+    /// Phiếu trả nội bộ
+    /// </summary>
     public bool? PTNB { get; set; }
 
     /// <summary>
@@ -81,7 +87,7 @@ public partial class BillImport
     public int? WarehouseID { get; set; }
 
     /// <summary>
-    /// 0: Phiếu nhập
+    /// Loại phiếu: 0: Phiếu nhập
     /// 1: Phiếu trả
     /// 2: Phiếu trả nội bộ
     /// 3: Phiếu mượn NCC
@@ -108,9 +114,12 @@ public partial class BillImport
     public bool? IsDeleted { get; set; }
 
     /// <summary>
-    /// 1: đã đủ, 0: chưa đủ
+    /// Trạng thái chứng từ: 1: đã đủ, 0: chưa đủ
     /// </summary>
     public bool? StatusDocumentImport { get; set; }
 
+    /// <summary>
+    /// ID phiếu xuất
+    /// </summary>
     public int? BillExportID { get; set; }
 }
