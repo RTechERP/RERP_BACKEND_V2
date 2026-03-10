@@ -496,7 +496,7 @@ namespace RERPAPI.Controllers.Old.Technical
 
                         int errorNumber = GetInt(row, "F6");
 
-                        decimal totalMoney = GetDecimal(row, "F7");
+                        //decimal totalMoney = GetDecimal(row, "F7");
 
                         string note = GetString(row, "F8");
 
@@ -516,7 +516,7 @@ namespace RERPAPI.Controllers.Old.Technical
                             KPIErrorID = kpiError.ID,
                             ErrorDate = errorDate,
                             ErrorNumber = errorNumber,
-                            TotalMoney = totalMoney,
+                            TotalMoney = kpiError.Monney,
                             Note = note
                         };
 

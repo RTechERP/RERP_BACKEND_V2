@@ -102,4 +102,6 @@ public partial class VehicleRepair
     public string? FileName { get; set; }
 
     public string? FilePath { get; set; }
+
+    public DateTime? TimePrevious { get; set; }
 }

@@ -32,6 +32,7 @@ namespace RERPAPI.Controllers.Old
         ProductGroupRTCRepo _productGroupRTCRepo;
         ProjectPartListPurchaseRequestApproveLogRepo _projectPartListPurchaseRequestApproveLogRepo;
         List<PathStaticFile> _pathStaticFiles;
+        ProductGroupRepo _productGroupRepo;
 
         public ProjectPartlistPurchaseRequestController(
             ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo,
@@ -46,7 +47,8 @@ namespace RERPAPI.Controllers.Old
             WarehouseRepo warehouseRepo,
             ProductGroupRTCRepo productGroupRTCRepo,
             IConfiguration configuration,
-            ProjectPartListPurchaseRequestApproveLogRepo projectPartListPurchaseRequestApproveLogRepo
+            ProjectPartListPurchaseRequestApproveLogRepo projectPartListPurchaseRequestApproveLogRepo,
+            ProductGroupRepo productGroupRepo
             )
         {
             _repo = projectPartlistPurchaseRequestRepo;
@@ -62,6 +64,7 @@ namespace RERPAPI.Controllers.Old
             _productGroupRTCRepo = productGroupRTCRepo;
             _pathStaticFiles = configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();
             _projectPartListPurchaseRequestApproveLogRepo = projectPartListPurchaseRequestApproveLogRepo;
+            _productGroupRepo = productGroupRepo;
         }
 
         #endregion Khai báo repository
@@ -609,13 +612,20 @@ namespace RERPAPI.Controllers.Old
                         continue;
                     }
 
+                    List<int> productGroupIDs = _productGroupRepo.GetAll(
+                        x => x.ID == item.ProductGroupID || x.ParentID == item.ProductGroupID)
+                        .Select(x => x.ID).ToList();
 
-                    ProductSale productSale = _productSaleRepo.GetAll(x =>
-                    x.ProductGroupID == item.ProductGroupID &&
-                    x.ProductCode.ToLower() == item.ProductCode.ToLower() &&
-                    x.IsDeleted != true
-                    ).FirstOrDefault() ?? new ProductSale();
-                    //productSale = productSale ?? new ProductSale();
+                    var productSales = _productSaleRepo.GetAll(x =>
+                        x.ProductCode.ToLower() == item.ProductCode.ToLower() &&
+                        x.IsDeleted != true
+                    ).ToList();
+
+                    // Sau đó filter Contains ở phía memory
+                    ProductSale productSale = productSales
+                        .FirstOrDefault(x => productGroupIDs.Contains((int)x.ProductGroupID))
+                        ?? new ProductSale();
+
                     if (productSale.ID <= 0)
                     {
                         productSale.ProductCode = item.ProductCode;
@@ -694,7 +704,7 @@ namespace RERPAPI.Controllers.Old
                     var existingRequest = _repo.GetByID(item.ID);
                     if (existingRequest == null) continue;
 
-                    if (existingRequest.EmployeeIDRequestApproved != currentUser.EmployeeID
+                    if (existingRequest.EmployeeID != currentUser.EmployeeID
                         && !currentUser.IsAdmin) continue;
 
                     if (item.ID <= 0) continue;
@@ -742,7 +752,7 @@ namespace RERPAPI.Controllers.Old
                 var existingRequest = _repo.GetByID(requestBought.ID);
                 if (existingRequest == null) return BadRequest(ApiResponseFactory.Fail(null, "Lỗi dữ liệu không tìm thấy")); ;
 
-                if (existingRequest.EmployeeIDRequestApproved != currentUser.EmployeeID
+                if (existingRequest.EmployeeID != currentUser.EmployeeID
                     && !currentUser.IsAdmin) return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền sửa của nhân viên khác!")); ;
 
                 if ((bool)requestBought.IsTechBought)
@@ -883,8 +893,8 @@ namespace RERPAPI.Controllers.Old
                         return BadRequest(ApiResponseFactory.Fail(null, $"Số lượng giữ sản phẩm [{item.ProductName}] cần lớn hơn 0!"));
                     }
 
-                    var inventoryProject = item.ID > 0
-                        ? _inventoryProjectRepo.GetByID(item.ID)
+                    var inventoryProject = item.InventoryProjectID > 0
+                        ? _inventoryProjectRepo.GetByID(item.InventoryProjectID ?? 0)
                         : new InventoryProject();
 
                     inventoryProject.ProjectID = item.ProjectID;

@@ -1,11 +1,5 @@
-﻿using DocumentFormat.OpenXml.Office2010.Excel;
-using DocumentFormat.OpenXml.Spreadsheet;
-using DocumentFormat.OpenXml.Wordprocessing;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NPOI.SS.Formula.Functions;
-using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -17,7 +11,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    
+
 
     public class BillImportDetailSerialNumberController : ControllerBase
     {
@@ -27,7 +21,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         private readonly BillImportTechDetailSerialRepo _billImportTechDetailSerialRepo;
         private readonly BillImportDetailSerialNumberModulaLocationRepo _billImportDetailSerialNumberModulaLocationRepo;
         private readonly BillExportDetailSerialNumberModulaLocationRepo _billExportDetailSerialNumberModulaLocationRepo;
-        public BillImportDetailSerialNumberController(BillImportDetailSerialNumberRepo billImportDetailSerialNumberRepo, 
+        public BillImportDetailSerialNumberController(BillImportDetailSerialNumberRepo billImportDetailSerialNumberRepo,
             BillExportDetailSerialNumberRepo billExportDetailSerialNumberRepo,
             BillExportTechDetailSerialRepo billExportTechDetailSerialRepo,
             BillImportTechDetailSerialRepo billImportTechDetailSerialRepo,
@@ -388,8 +382,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         }
 
                         var locations = _billImportDetailSerialNumberModulaLocationRepo.
-                            GetAll(x=> x.ModulaLocationDetailID ==  item.ModulaLocationDetailID
-                            && x.BillImportTechDetailSerialID == item.ID).ToList();
+                            GetAll(x => x.ModulaLocationDetailID == item.ModulaLocationDetailID
+                            && x.BillImportTechDetailSerialID == item.ID);
                         if (locations.Count > 0) continue;
 
                         BillImportDetailSerialNumberModulaLocation location = new BillImportDetailSerialNumberModulaLocation();
@@ -437,7 +431,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         await _billExportDetailSerialNumberModulaLocationRepo.CreateAsync(location);
                     }
 
-                    
+
                 }
 
                 if (dto.lsDeleted != null && dto.lsDeleted.Count() > 0)
@@ -449,7 +443,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                             await _billImportTechDetailSerialRepo.DeleteAsync(id);
                         }
                     }
-                    else 
+                    else
                     {
                         foreach (var id in dto.lsDeleted)
                         {

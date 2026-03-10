@@ -287,4 +287,10 @@ public partial class Employee
     public string? UserZaloID { get; set; }
 
     public int? TaxCompanyID { get; set; }
+
+    public string? NguoiLienHeKhiCan2 { get; set; }
+
+    public string? MoiQuanHe2 { get; set; }
+
+    public string? SDTNguoiThan2 { get; set; }
 }

@@ -514,6 +514,75 @@ namespace RERPAPI.Repo.GenericEntity
             return newCodeRTC;
         }
 
+        //public bool ValidateSaveDataDetail(ProjectPartlistPurchaseRequestDTO request, out string message)
+        //{
+        //    message = "";
+
+        //    if (request == null)
+        //    {
+        //        message = "Dữ liệu không hợp lệ";
+        //        return false;
+        //    }
+
+        //    // Kiểm tra Tên sản phẩm
+        //    if (string.IsNullOrWhiteSpace(request.ProductName))
+        //    {
+        //        message = "Vui lòng nhập Tên sản phẩm!";
+        //        return false;
+        //    }
+
+        //    // Kiểm tra Nhân viên mua
+        //    if (request.EmployeeBuyID == 0 && request.ID == 0)
+        //    {
+        //        message = "Vui lòng chọn Nhân viên mua!";
+        //        return false;
+        //    }
+
+        //    // Kiểm tra Số lượng
+        //    if (request.Quantity <= 0)
+        //    {
+        //        message = "Vui lòng nhập Số lượng!";
+        //        return false;
+        //    }
+
+        //    // Kiểm tra Deadline
+        //    if (!Convert.ToBoolean(request.IsTechBought))
+        //    {
+        //        DateTime deadline = (DateTime)request.DateReturnExpected;
+        //        DateTime dateNow = DateTime.Now;
+
+        //        double timeSpan = (deadline.Date - dateNow.Date).TotalDays + 1;
+
+        //        if (dateNow.Hour < 15)
+        //        {
+        //            if (timeSpan < 2)
+        //            {
+        //                message = "Deadline tối thiểu là 2 ngày từ ngày hiện tại!";
+        //                return false;
+        //            }
+        //        }
+        //        else if (timeSpan < 3)
+        //        {
+        //            message = "Yêu cầu từ sau 15h nên ngày Deadline sẽ bắt đầu tính từ ngày hôm sau và tối thiểu là 2 ngày!";
+        //            return false;
+        //        }
+
+        //        if (deadline.DayOfWeek == DayOfWeek.Sunday || deadline.DayOfWeek == DayOfWeek.Saturday)
+        //        {
+        //            message = "Deadline phải là ngày làm việc (T2 - T6)!";
+        //            return false;
+        //        }
+        //    }
+
+        //    // Kiểm tra Ghi chú nếu là TechBought
+        //    if ((bool)request.IsTechBought && string.IsNullOrWhiteSpace(request.Note))
+        //    {
+        //        message = "Vui lòng chọn Ghi chú!";
+        //        return false;
+        //    }
+
+        //    return true;
+        //}
         public bool ValidateSaveDataDetail(ProjectPartlistPurchaseRequestDTO request, out string message)
         {
             message = "";
@@ -544,13 +613,16 @@ namespace RERPAPI.Repo.GenericEntity
                 message = "Vui lòng nhập Số lượng!";
                 return false;
             }
-
-            // Kiểm tra Deadline
-            if (!Convert.ToBoolean(request.IsTechBought))
+            if (request.IsTechBought != true)
             {
-                DateTime deadline = (DateTime)request.DateReturnExpected;
-                DateTime dateNow = DateTime.Now;
+                if (!request.DateReturnExpected.HasValue)
+                {
+                    message = "Vui lòng chọn Ngày trả hàng dự kiến!";
+                    return false;
+                }
 
+                DateTime deadline = request.DateReturnExpected.Value;
+                DateTime dateNow = DateTime.Now;
                 double timeSpan = (deadline.Date - dateNow.Date).TotalDays + 1;
 
                 if (dateNow.Hour < 15)
@@ -573,17 +645,14 @@ namespace RERPAPI.Repo.GenericEntity
                     return false;
                 }
             }
-
-            // Kiểm tra Ghi chú nếu là TechBought
-            if ((bool)request.IsTechBought && string.IsNullOrWhiteSpace(request.Note))
+            if (request.IsTechBought == true && string.IsNullOrWhiteSpace(request.Note))
             {
-                message = "Vui lòng chọn Ghi chú!";
+                message = "Vui lòng nhập Ghi chú!";
                 return false;
             }
 
             return true;
         }
-
         public async Task SendMail(ProjectPartlistPurchaseRequestDTO requestBuy)
         {
             if (requestBuy.ID <= 0) return;
@@ -643,7 +712,16 @@ namespace RERPAPI.Repo.GenericEntity
                 ProjectPartlistPurchaseRequest request = GetByID(item.ID);
                 if (request.EmployeeIDRequestApproved != _currentUser.EmployeeID && !_currentUser.IsAdmin) continue;
                 if (item.ProductGroupRTCID <= 0 && item.ProductGroupID <= 0) continue;
-                ProductRTC productRTC = _productRTCRepo.GetAll(x => x.ProductCode.Trim().ToLower() == item.ProductCode.Trim().ToLower() && x.IsDelete == false).FirstOrDefault() ?? new ProductRTC();
+                //var lstProductRtc = _productRTCRepo.GetAll(x => x.ProductCode.Trim().ToLower() == item.ProductCode.Trim().ToLower() && x.IsDelete == false);
+                //var lstProductGroup = _productgroupRTCRepo.GetAll(x => x.WarehouseType == 1);
+                ProductRTC productRTC = (from p in _productRTCRepo.GetAll(x => x.IsDelete == false)
+                                         join g in _productgroupRTCRepo.GetAll(x => x.WarehouseType == 1)
+                                         on p.ProductGroupRTCID equals g.ID
+                                         where p.ProductCode.Trim().ToLower() == item.ProductCode.Trim().ToLower()
+                                         select p)
+                 .FirstOrDefault() ?? new ProductRTC();
+
+                //ProductRTC productRTC = _productRTCRepo.GetAll(x => x.ProductCode.Trim().ToLower() == item.ProductCode.Trim().ToLower() && x.IsDelete == false).FirstOrDefault() ?? new ProductRTC();
                 productRTC.ProductCode = item.ProductCode.Trim();
                 productRTC.ProductName = item.ProductName.Trim();
                 UnitCountKT unitCountKT = _unitCountKTRepo.GetAll(x => x.UnitCountName.Trim().ToLower() == item.UnitName.Trim().ToLower()).FirstOrDefault() ?? new UnitCountKT();

@@ -1382,6 +1382,7 @@ namespace RERPAPI.Controllers.Project
                 project.BusinessFieldID = 0;
                 project.ProjectShortName = "";
                 project.UpdatedDate = DateTime.Now;
+                project.CurrentState = prj.project.CurrentState;
 
 
                 if (statusOld != project.ProjectStatus)
@@ -2108,13 +2109,13 @@ namespace RERPAPI.Controllers.Project
         //    }
         //}
         [HttpGet("get-project-work-reports")]
-        public async Task<IActionResult> GetProjectWorkReports(int page, int size, int projectId, string? keyword)
+        public async Task<IActionResult> GetProjectWorkReports(int page, int size, int projectId, string? keyword, int teamId)
         {
             try
             {
                 var data = SQLHelper<object>.ProcedureToList("spGetDailyReportTechnical_New",
-                new string[] { "@ProjectID", "@FilterText", "@PageSize", "@PageNumber" },
-                new object[] { projectId, keyword ?? "", size, page });
+                new string[] { "@ProjectID", "@FilterText", "@PageSize", "@PageNumber", "@TeamID" },
+                new object[] { projectId, keyword ?? "", size, page, teamId });
                 var projectwork = SQLHelper<object>.GetListData(data, 0);
                 return Ok(ApiResponseFactory.Success(projectwork, ""));
             }

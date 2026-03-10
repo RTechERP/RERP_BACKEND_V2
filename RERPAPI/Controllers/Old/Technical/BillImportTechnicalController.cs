@@ -392,6 +392,7 @@ namespace RERPAPI.Controllers.Old.Technical
                         }
                     }
                 }
+                await _billImportTechnicalRepo.UpdateHistoryProductRTC(product);
                 List<BillImportTechDetailSerial> savedSerials = new();
 
                 if (product.billImportTechDetailSerials != null && product.billImportTechDetailSerials.Any())

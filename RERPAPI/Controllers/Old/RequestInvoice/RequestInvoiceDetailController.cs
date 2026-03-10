@@ -213,14 +213,15 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                 {
                     foreach (var item in dto.DeletedDetailIds)
                     {
-                        var detailToDelete = _requestInvoiceDetailRepo.GetByID(item);
-                        if (detailToDelete != null)
+                        if(item > 0)
                         {
-                            //detailToDelete.IsDeleted = true;
-                            //detailToDelete.UpdatedBy = User.Identity.Name; // Mở comment nếu có phân quyền người dùng
-                            detailToDelete.UpdatedDate = DateTime.Now;
-                            await _requestInvoiceDetailRepo.UpdateAsync(detailToDelete);
-                        }
+                            var detailToDelete = _requestInvoiceDetailRepo.GetByID(item);
+                            if (detailToDelete != null && detailToDelete.ID > 0)
+                            {
+                                detailToDelete.IsDeleted = true;
+                                await _requestInvoiceDetailRepo.UpdateAsync(detailToDelete);
+                            }
+                        }    
                     }
                 }
                 if (dto.RequestInvoiceDetails.Count > 0)
@@ -372,7 +373,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                 }
                 else
                 {
-                    targetFolder = Path.Combine(uploadPath, $"NB{ri.ID}");
+                    targetFolder = Path.Combine(uploadPath, $"YCXHD_ID_{ri.ID}");
                 }
 
                 if (!Directory.Exists(targetFolder))
@@ -404,10 +405,10 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                         OriginPath = targetFolder,
                         ServerPath = targetFolder,
                         IsDeleted = false,
-                        CreatedBy = User.Identity?.Name ?? "System",
-                        CreatedDate = DateTime.Now,
-                        UpdatedBy = User.Identity?.Name ?? "System",
-                        UpdatedDate = DateTime.Now
+                        //CreatedBy = User.Identity?.Name ?? "System",
+                        //CreatedDate = DateTime.Now,
+                        //UpdatedBy = User.Identity?.Name ?? "System",
+                        //UpdatedDate = DateTime.Now
                     };
 
                     await _requestInvoiceFileRepo.CreateAsync(filePO);

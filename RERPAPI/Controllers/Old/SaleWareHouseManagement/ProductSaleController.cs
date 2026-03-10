@@ -4,6 +4,7 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
+using System.Linq;
 
 namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 {
@@ -89,31 +90,87 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         #endregion
 
         #region hàm sinh mã nội bộ (productnewcode) 
+        //private string GenerateProductNewCode(int productGroupId)
+        //{
+        //    // Bước 1: Lấy mã nhóm sản phẩm từ ID
+        //    var productGroup = _productgroupRepo.GetByID(productGroupId);
+        //    if (productGroup == null || string.IsNullOrWhiteSpace(productGroup.ProductGroupID))
+        //        return string.Empty;
+
+        //    string productGroupCode = productGroup.ProductGroupID.Trim();
+
+        //    // Bước 2: Lấy danh sách sản phẩm thuộc nhóm này
+        //    var listProducts = _productsaleRepo.GetAll(x => x.ProductGroupID == productGroupId &&
+        //                    !string.IsNullOrWhiteSpace(x.ProductNewCode) &&
+        //                    x.ProductNewCode.StartsWith(productGroupCode) && x.IsDeleted == false)
+        //        .ToList();
+
+        //    // Bước 3: Tính STT cao nhất đang dùng
+        //    var listNewCodes = listProducts.Select(x => new
+        //    {
+        //        STT = int.TryParse(x.ProductNewCode.Substring(productGroupCode.Length), out int num) ? num : 0
+        //    });
+
+        //    int nextSTT = listNewCodes.Any() ? listNewCodes.Max(x => x.STT) + 1 : 1;
+        //    string numberCodeText = nextSTT.ToString().PadLeft(9 - productGroupCode.Length, '0');
+
+        //    return productGroupCode + numberCodeText;
+        //}
+
         private string GenerateProductNewCode(int productGroupId)
         {
-            // Bước 1: Lấy mã nhóm sản phẩm từ ID
-            var productGroup = _productgroupRepo.GetByID(productGroupId);
-            if (productGroup == null || string.IsNullOrWhiteSpace(productGroup.ProductGroupID))
+            // 1️⃣ Lấy nhóm hiện tại
+            var currentGroup = _productgroupRepo.GetByID(productGroupId);
+            if (currentGroup == null)
                 return string.Empty;
 
-            string productGroupCode = productGroup.ProductGroupID.Trim();
+            // 2️⃣ Xác định nhóm CHA
+            var parentGroup = currentGroup.ParentID.HasValue
+                ? _productgroupRepo.GetByID(currentGroup.ParentID.Value)
+                : currentGroup;
 
-            // Bước 2: Lấy danh sách sản phẩm thuộc nhóm này
-            var listProducts = _productsaleRepo.GetAll(x => x.ProductGroupID == productGroupId &&
-                            !string.IsNullOrWhiteSpace(x.ProductNewCode) &&
-                            x.ProductNewCode.StartsWith(productGroupCode) && x.IsDeleted == false)
+            if (parentGroup == null || string.IsNullOrWhiteSpace(parentGroup.ProductGroupID))
+                return string.Empty;
+
+            string parentGroupCode = parentGroup.ProductGroupID.Trim();
+
+            // 3️⃣ Lấy danh sách ID nhóm con (bao gồm cha)
+            var groupIds = _productgroupRepo
+                .GetAll(x => x.ID == parentGroup.ID || x.ParentID == parentGroup.ID)
+                .Select(x => x.ID)
                 .ToList();
 
-            // Bước 3: Tính STT cao nhất đang dùng
-            var listNewCodes = listProducts.Select(x => new
-            {
-                STT = int.TryParse(x.ProductNewCode.Substring(productGroupCode.Length), out int num) ? num : 0
-            });
+            // 4️⃣ Lấy toàn bộ sản phẩm thuộc nhóm cha + con
+            var listProducts = _productsaleRepo.GetAll(x =>
+                x.ProductGroupID != null &&
+                !string.IsNullOrWhiteSpace(x.ProductNewCode) &&
+                x.ProductNewCode.StartsWith(parentGroupCode) &&
+                x.IsDeleted == false
+            ).ToList(); 
 
-            int nextSTT = listNewCodes.Any() ? listNewCodes.Max(x => x.STT) + 1 : 1;
-            string numberCodeText = nextSTT.ToString().PadLeft(9 - productGroupCode.Length, '0');
+            // 2️⃣ Lọc tiếp trong memory
+            //var listProducts = products
+            //    .Where(x => groupIds.Contains(x.ProductGroupID!.Value))
+            //    .ToList();
 
-            return productGroupCode + numberCodeText;
+            // 5️⃣ Tính STT lớn nhất
+            int maxSTT = listProducts
+                .Select(x =>
+                {
+                    var numberPart = x.ProductNewCode.Substring(parentGroupCode.Length);
+                    return int.TryParse(numberPart, out int num) ? num : 0;
+                })
+                .DefaultIfEmpty(0)
+                .Max();
+
+            int nextSTT = maxSTT + 1;
+
+            // 6️⃣ Format số (đủ 9 ký tự)
+            string numberCodeText = nextSTT
+                .ToString()
+                .PadLeft(9 - parentGroupCode.Length, '0');
+
+            return parentGroupCode + numberCodeText;
         }
         #endregion
         //done+ update ngày 14/06 : xóa nhiều bản ghi 
@@ -136,6 +193,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         // Tạo mới
                         if (string.IsNullOrWhiteSpace(dto.ProductSale.ProductNewCode))
                         {
+                            var productGroup = _productgroupRepo.GetByID((int)dto.ProductSale.ProductGroupID);
+                            int productGroupID = productGroup.ParentID > 0 ? (int)productGroup.ParentID : (int)productGroup.ID;
                             dto.ProductSale.ProductNewCode = GenerateProductNewCode((int)dto.ProductSale.ProductGroupID);
                         }
                         dto.ProductSale.Import = dto.ProductSale.Export = dto.ProductSale.NumberInStoreCuoiKy = dto.ProductSale.NumberInStoreDauky;
@@ -193,6 +252,14 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         var groupName = (dto.ProductGroupName ?? "").Trim().ToLower();
                         var groupNo = (dto.ProductGroupNo ?? "").Trim().ToLower();
 
+                        var typeNo = (dto.ProductGroupTypeNo ?? "").Trim().ToLower();
+                        var typeName = (dto.ProductGroupTypeName ?? "").Trim().ToLower();
+
+                        if (groupNo == typeNo)
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null, $"Loại vật tư [{typeNo}] trùng với nhóm [{groupNo}]!"));
+                        }
+
                         if (!string.IsNullOrWhiteSpace(groupName) || !string.IsNullOrWhiteSpace(groupNo))
                         {
                             var productGroup = _productgroupRepo
@@ -213,6 +280,36 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                                 await _productgroupRepo.CreateAsync(productGroup);
 
                             dto.ProductGroupID = productGroup.ID;
+
+                            if (!string.IsNullOrWhiteSpace(typeNo) && !string.IsNullOrWhiteSpace(typeName))
+                            {
+                                var productGroupType = _productgroupRepo
+                                .GetAll(x =>
+                                    x.IsVisible != false &&
+                                    (x.ProductGroupName ?? "").ToLower() == typeName &&
+                                    (x.ProductGroupID ?? "").ToLower() == typeNo
+                                )
+                                .FirstOrDefault()
+                                ?? new ProductGroup
+                                {
+                                    ID = 0,
+                                    ProductGroupName = dto.ProductGroupTypeName,
+                                    ProductGroupID = dto.ProductGroupTypeNo,
+                                    ParentID = productGroup.ID
+                                };
+
+                                if (productGroupType.ID > 0 && productGroupType.ParentID != null && productGroupType.ParentID != productGroup.ID)
+                                {
+                                    var checkGroup = _productgroupRepo.GetByID(Convert.ToInt32(productGroupType.ParentID));
+                                    return BadRequest(ApiResponseFactory.Fail(null, $"Mã loại vật tư [{typeNo}] đã tồn tại trong nhóm [{checkGroup.ProductGroupID}-{checkGroup.ProductGroupName}]! Vui lòng kiểm tra lại."));
+                                }
+                                if (productGroupType.ID <= 0)
+                                {
+                                    await _productgroupRepo.CreateAsync(productGroupType);
+                                }
+                                dto.ProductGroupID = productGroupType.ID;
+
+                            }
                         }
 
                         if (!string.IsNullOrWhiteSpace(dto.FirmName))

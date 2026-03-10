@@ -415,7 +415,7 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
                 });
             }
         }
-        [RequiresPermission("N2,N34,N1,N54,N72")]
+
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] OfficeSupplyRequestDTO dto)
         {

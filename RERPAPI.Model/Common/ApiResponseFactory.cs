@@ -17,6 +17,7 @@ namespace RERPAPI.Model.Common
             {
                 status = 1,
                 message = message ?? "",
+                error = "",
                 data = data
             };
         }
@@ -29,6 +30,17 @@ namespace RERPAPI.Model.Common
                 message = message,
                 error = ex?.ToString(),
                 data = data
+            };
+        }
+
+        public static APIResponse Unauthorized(string message)
+        {
+            return new APIResponse
+            {
+                status = 403,
+                message = message,
+                //error = ex?.ToString(),
+                //data = data
             };
         }
 

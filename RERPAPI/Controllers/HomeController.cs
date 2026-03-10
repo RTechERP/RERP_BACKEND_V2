@@ -21,10 +21,7 @@ using System.Net.Mime;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
-using static NPOI.HSSF.Util.HSSFColor;
-using static RERPAPI.Model.DTO.ApproveTPDTO;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+
 
 namespace RERPAPI.Controllers
 {
@@ -45,9 +42,11 @@ namespace RERPAPI.Controllers
         private readonly EmployeeOnLeaveRepo _onLeaveRepo;
         private readonly EmployeeWFHRepo _wfhRepo;
         private readonly ConfigSystemRepo _configSystemRepo;
+        private readonly EmailHelper _emailHelper;
 
         //IRabbitMqPublisher _publisher;
-        public HomeController(IOptions<JwtSettings> jwtSettings, RTCContext context, IConfiguration configuration, EmployeeOnLeaveRepo onLeaveRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeWFHRepo employeeWFHRepo, ConfigSystemRepo configSystemRepo, EmployeeOverTimeRepo employeeOverTimeRepo, RoleConfig roleConfig, EmployeePayrollDetailRepo employeePayrollDetailRepo)
+        public HomeController(IOptions<JwtSettings> jwtSettings, RTCContext context,
+            IConfiguration configuration, EmployeeOnLeaveRepo onLeaveRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeWFHRepo employeeWFHRepo, ConfigSystemRepo configSystemRepo, EmployeeOverTimeRepo employeeOverTimeRepo, RoleConfig roleConfig, EmployeePayrollDetailRepo employeePayrollDetailRepo, EmailHelper emailHelper)
         {
             _jwtSettings = jwtSettings.Value;
             _context = context;
@@ -60,6 +59,7 @@ namespace RERPAPI.Controllers
             _roleConfig = roleConfig;
             _employeePayrollDetailRepo = employeePayrollDetailRepo;
             //_publisher = publisher;
+            _emailHelper = emailHelper;
         }
         [HttpPost("login")]
         public IActionResult Login([FromBody] User user)
@@ -74,7 +74,7 @@ namespace RERPAPI.Controllers
                 //1. Check user
                 string loginName = user.LoginName ?? "";
                 string password = MaHoaMD5.EncryptPassword(user.PasswordHash ?? "");
-
+                //password = user.PasswordHash;
                 var login = SQLHelper<object>.ProcedureToList("spLogin", new string[] { "@LoginName", "@Password" }, new object[] { loginName, password });
                 var hasUsers = SQLHelper<object>.GetListData(login, 0);
 
@@ -95,8 +95,7 @@ namespace RERPAPI.Controllers
                 var dictionary = (IDictionary<string, object>)hasUser;
                 foreach (var item in dictionary)
                 {
-                    //if (item.Key.ToLower() == "passwordhash") continue;
-
+                    if (item.Key.ToLower() == "passwordhash") continue;
                     var claim = new Claim(item.Key.ToLower(), item.Value?.ToString() ?? "");
                     claims.Add(claim);
                 }
@@ -634,6 +633,7 @@ namespace RERPAPI.Controllers
         //}
 
         [HttpGet("download")]
+        [Authorize]
         public IActionResult DownloadFile([FromQuery] string path)
         {
             try
@@ -708,8 +708,8 @@ namespace RERPAPI.Controllers
         //}
         //API Lấy danh sách bản ghi để duyệt TBP duyệt
         [HttpPost("get-approve-by-approve-tp")]
-
-        public ActionResult GetApproveByApproveTP([FromBody] ApproveByApproveTPRequestParam request)
+        [Authorize]
+        public async Task<ActionResult> GetApproveByApproveTP([FromBody] ApproveByApproveTPRequestParam request)
 
         {
             try
@@ -724,14 +724,33 @@ namespace RERPAPI.Controllers
                 }
                 request.DateStart = request.DateStart.Value.ToLocalTime().Date;
                 request.DateEnd = request.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
+                var param = new
+                {
+                    FilterText = request.FilterText,
+                    DateStart = request.DateStart,
+                    DateEnd = request.DateEnd,
+                    IDApprovedTP = request.IDApprovedTP,
+                    Status = request.Status,
+                    DeleteFlag = request.DeleteFlag,
+                    EmployeeID = request.EmployeeID,
+                    TType = request.TType,
+                    StatusHR = request.StatusHR,
+                    StatusBGD = request.StatusBGD,
+                    IsBGD = isBGD,
+                    UserTeamID = request.UserTeamID,
+                    SeniorID = request.SeniorID,
+                    StatusSenior = request.StatusSenior
+                };
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetApprovedByApprovedTP_New", param);
 
-                var approve = SQLHelper<dynamic>.ProcedureToList(
-                    "spGetApprovedByApprovedTP_New",
-                    new string[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID", "@StatusSenior" },
-                    new object[] { request.FilterText ?? "", request.DateStart, request.DateEnd, request.IDApprovedTP ?? 0, request.Status ?? 0, request.DeleteFlag ?? 0, request.EmployeeID ?? 0, request.TType ?? 0, request.StatusHR ?? 0, request.StatusBGD ?? 0, isBGD, request.UserTeamID ?? 0, request.SeniorID, request.StatusSenior });
+                //var approve = SQLHelper<dynamic>.ProcedureToList(
+                //    "spGetApprovedByApprovedTP_New",
+                //    new string[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID", "@StatusSenior" },
+                //    new object[] { request.FilterText ?? "", request.DateStart, request.DateEnd, request.IDApprovedTP ?? 0, request.Status ?? 0, request.DeleteFlag ?? 0, request.EmployeeID ?? 0, request.TType ?? 0, request.StatusHR ?? 0, request.StatusBGD ?? 0, isBGD, request.UserTeamID ?? 0, request.SeniorID, request.StatusSenior });
 
-                var listData = SQLHelper<dynamic>.GetListData(approve, 0);
-                return Ok(ApiResponseFactory.Success(listData, "Lấy dữ liệu thành công"));
+                //var listData = SQLHelper<dynamic>.GetListData(approve, 0);
+                //return Ok(ApiResponseFactory.Success(listData, "Lấy dữ liệu thành công"));
+                return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
             {
@@ -1010,15 +1029,15 @@ namespace RERPAPI.Controllers
         //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
         //    }
         //}
+
         [HttpGet("get-personal-synthetic-by-month")]
+        [Authorize]
         public IActionResult GetPersonalSyntheticByMonth(int year, int month)
         {
             try
             {
-
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
-
 
                 DateTime dateStart = new DateTime(year, month, 1, 0, 0, 0);
                 DateTime dateEnd = dateStart.AddMonths(1).AddSeconds(-1);
@@ -1027,9 +1046,10 @@ namespace RERPAPI.Controllers
                     new string[] { "@Year", "@Month", "@EmployeeID" },
                     new object[] { year, month, currentUser.EmployeeID });
 
-                var payrollData = SQLHelper<object>.ProcedureToList("spGetEmployeePayrollDetail",
+                var payrollData = SQLHelper<object>.ProcedureToList("spGetEmployeePayrollDetail_Personal",
                     new string[] { "@Year", "@Month", "@DepartmentID", "@EmployeeID", "@Keyword", "@IsPublish", "@IsAll" },
                     new object[] { year, month, currentUser.DepartmentID, currentUser.EmployeeID, "", 1, 0 });
+
                 var payroll = SQLHelper<object>.GetListData(payrollData, 0);
                 var rawFingerData = SQLHelper<dynamic>.ProcedureToList("spGetEmployeeAttendance",
                     new string[] { "@DepartmentID", "@EmployeeID", "@FindText", "@DateStart", "@DateEnd" },
@@ -1154,6 +1174,7 @@ namespace RERPAPI.Controllers
             }
         }
         [HttpGet("get-user-team")]
+        [Authorize]
         public IActionResult GetUserTeam()
         {
             try
@@ -1173,6 +1194,7 @@ namespace RERPAPI.Controllers
 
         }
         [HttpGet("get-user-team-link-by-leader-id")]
+        [Authorize]
         public IActionResult GetUserTeamLinkByLeaderID()
         {
             try
@@ -1193,6 +1215,8 @@ namespace RERPAPI.Controllers
 
         }
         [HttpGet("get-all-contact")]
+        [Authorize]
+        //[RequiresPermission("N1")]
         public IActionResult GetAllContact(int departmentID, string? keyword)
         {
             try
@@ -1227,6 +1251,7 @@ namespace RERPAPI.Controllers
             }
         }
         [HttpGet("get-all-team-new")]
+        [Authorize]
         public IActionResult GetAllTeamNew(int deID)
         {
 
@@ -1250,7 +1275,8 @@ namespace RERPAPI.Controllers
             }
         }
         [HttpPost("get-quantity-approve")]
-        public IActionResult GetQuantityApprove([FromBody] ApproveByApproveTPRequestParam request)
+        [Authorize]
+        public async Task<IActionResult> GetQuantityApprove([FromBody] ApproveByApproveTPRequestParam request)
         {
             try
             {
@@ -1261,26 +1287,66 @@ namespace RERPAPI.Controllers
 
                 request.DateStart = request.DateStart.Value.ToLocalTime().Date;
                 request.DateEnd = request.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
-                var approveResultSenior = SQLHelper<dynamic>.ProcedureToList(
-                    "spGetApprovedByApprovedTP_New",
-                    new[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID", "@StatusSenior" },
-                    new object[] { "", request.DateStart, request.DateEnd, 0, -1, 0, 0, 0, -1, 0, false, 0, currentUser.EmployeeID, 0 });
-                var approveResultTP = SQLHelper<dynamic>.ProcedureToList(
-                   "spGetApprovedByApprovedTP_New",
-                   new[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID", "@StatusSenior" },
-                   new object[] { "", request.DateStart, request.DateEnd, currentUser.EmployeeID, 0, 0, 0, 0, -1, 0, false, 0, 0, -1 });
-                var approveResultBGD = SQLHelper<dynamic>.ProcedureToList(
-                   "spGetApprovedByApprovedTP_New",
-                   new[] { "@FilterText", "@DateStart", "@DateEnd", "@IDApprovedTP", "@Status", "@DeleteFlag", "@EmployeeID", "@TType", "@StatusHR", "@StatusBGD", "@IsBGD", "@UserTeamID", "@SeniorID", "@StatusSenior" },
-                   new object[] { "", request.DateStart, request.DateEnd, currentUser.EmployeeID, 0, 0, 0, 0, -1, 0, isBGD, 0, 0, -1 });
-                var approveListSenior = SQLHelper<dynamic>.GetListData(approveResultSenior, 0);
-                var approveListTP = SQLHelper<dynamic>.GetListData(approveResultTP, 0);
-                var approveListBGD = SQLHelper<dynamic>.GetListData(approveResultBGD, 0);
+                var paramSenior = new
+                {
+                    FilterText = "",
+                    DateStart = request.DateStart,
+                    DateEnd = request.DateEnd,
+                    IDApprovedTP = 0,
+                    Status = -1,
+                    DeleteFlag = 0,
+                    EmployeeID = 0,
+                    TType = 0,
+                    StatusHR = -1,
+                    StatusBGD = 0,
+                    IsBGD = false,
+                    UserTeamID = 0,
+                    SeniorID = currentUser.EmployeeID,
+                    StatusSenior = 0
+                };
+                var paramTP = new
+                {
+                    FilterText = "",
+                    DateStart = request.DateStart,
+                    DateEnd = request.DateEnd,
+                    IDApprovedTP = currentUser.EmployeeID,
+                    Status = 0,
+                    DeleteFlag = 0,
+                    EmployeeID = 0,
+                    TType = 0,
+                    StatusHR = -1,
+                    StatusBGD = 0,
+                    IsBGD = false,
+                    UserTeamID = 0,
+                    SeniorID = 0,
+                    StatusSenior = -1
+                };
+                var paramBGD = new
+                {
+                    FilterText = "",
+                    DateStart = request.DateStart,
+                    DateEnd = request.DateEnd,
+                    IDApprovedTP = currentUser.EmployeeID,
+                    Status = 0,
+                    DeleteFlag = 0,
+                    EmployeeID = 0,
+                    TType = 0,
+                    StatusHR = -1,
+                    StatusBGD = 0,
+                    IsBGD = isBGD,
+                    UserTeamID = 0,
+                    SeniorID = 0,
+                    StatusSenior = -1
+                };
+                var approveResultSenior = await SqlDapper<object>.ProcedureToListTAsync("spGetApprovedByApprovedTP_New", paramSenior);
+                var approveResultTP = await SqlDapper<object>.ProcedureToListTAsync("spGetApprovedByApprovedTP_New", paramTP);
+                var approveResultBGD = await SqlDapper<object>.ProcedureToListTAsync("spGetApprovedByApprovedTP_New", paramBGD);
+
                 var result = new[]
                         {
-                            new { Type = "Senior", Count = approveListSenior?.Count ?? 0 },
-                            new { Type = "TP",     Count = approveListTP?.Count ?? 0 },
-                            new { Type = "BGD",    Count = approveListBGD?.Count ?? 0 }
+                            new { Type = "Senior", Count = approveResultSenior?.Count ?? 0 },
+                            new { Type = "TP",     Count = approveResultTP?.Count ?? 0 },
+                            new { Type = "BGD",    Count = approveResultBGD?.Count ?? 0 }
                         }.FirstOrDefault(x => x.Count > 0);
                 return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu thành công"));
             }
@@ -1331,10 +1397,14 @@ namespace RERPAPI.Controllers
         //}
 
         [HttpPost("confirm-payroll")]
+        [Authorize]
         public IActionResult ConfirmPayroll([FromBody] ConfirmPayrollDTO dto)
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
                 var payroll = _employeePayrollDetailRepo.GetByID(dto.Id);
                 if (payroll == null)
                     return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy bảng lương"));
@@ -1351,6 +1421,7 @@ namespace RERPAPI.Controllers
         }
 
         [HttpPost("get-summary-employee-person")]
+        [Authorize]
         public IActionResult GetProposeVehicleRepair([FromBody] SummaryPersonal request)
         {
             try
@@ -1377,7 +1448,7 @@ namespace RERPAPI.Controllers
                 //    object[] paramValueBuissiness = new object[] { request.DateStart, request.DateEnd, request.DepartmentID ?? 0, request.EmployeeID ?? 0, request.IsApproved, request.Keyword ?? "", 0, -1};
 
 
-                var dataOnLeave = SQLHelper<object>.ProcedureToList(procedureOnLeave, paramNames, paramValues);
+                var dataOnLeavedata = SQLHelper<object>.ProcedureToList(procedureOnLeave, paramNames, paramValues);
                 var dataEarlyLate = SQLHelper<object>.ProcedureToList(procedureEarlyLate, paramNamesEarlyLate, paramValuesEarlyLate);
                 var dataOverTime = SQLHelper<object>.ProcedureToList(procedureOverTime, paramNamesEarlyLate, paramValuesEarlyLate);
                 var dataBussiness = SQLHelper<object>.ProcedureToList(procedureBussiness, paramNameBuissiness, paramValueBuissiness);
@@ -1386,6 +1457,7 @@ namespace RERPAPI.Controllers
                 var dataNightShiftData = SQLHelper<dynamic>.ProcedureToList(procedureNightShift, paramNamesNightShift, paramValuesNightShift);
 
                 var dataNightShift = SQLHelper<dynamic>.GetListData(dataNightShiftData, 0);
+                var dataOnLeave = SQLHelper<dynamic>.GetListData(dataOnLeavedata, 0);
 
                 return Ok(ApiResponseFactory.Success(new { dataOnLeave, dataEarlyLate, dataOverTime, dataBussiness, dataWFH, dataENF, dataNightShift }, "Lấy dữ liệu thành công"));
             }
@@ -1394,7 +1466,9 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-config-system-hr")]
+        [Authorize]
         public IActionResult GetConfigSystem()
         {
             try
@@ -1411,6 +1485,7 @@ namespace RERPAPI.Controllers
         }
 
         [HttpPost("save-config-system-hr")]
+        [Authorize]
         public IActionResult SaveConfigSystemHR([FromBody] SaveConfigSystemHRRequestDTO request)
         {
             try
@@ -1429,7 +1504,6 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
 
         #region API của DA Trường
@@ -1545,5 +1619,82 @@ namespace RERPAPI.Controllers
             }
         }
         #endregion
+
+
+        [HttpPost("send-email")]
+        [Authorize]
+        public async Task<IActionResult> SendEmail([FromBody] EmployeeSendEmail sendEmail)
+        {
+            try
+            {
+                string htmlBody = @"
+                    <div>
+                        <p style='text-align:center; font-weight:bold;'>GIÁM ĐỐC</p>
+                        <p style='text-align:center; font-weight:bold;'>CÔNG TY CỔ PHẦN RTC TECHNOLOGY VIỆT NAM</p>
+
+                        <br/>
+
+                        <p>Căn cứ vào Bộ luật lao động số 45/2019/QH14 và các văn bản sửa đổi, bổ sung;</p>
+                        <p>Căn cứ Điều lệ tổ chức hoạt động của Công ty;</p>
+                        <p>Căn cứ Quy chế lương, thưởng của Công ty;</p>
+                        <p>Căn cứ tính chất công việc của ông/bà <strong>Lê Thế Anh</strong> – Chức vụ: Pro Engineer,</p>
+
+                        <br/>
+
+                        <p style='font-weight:bold;'>QUYẾT ĐỊNH:</p>
+
+                        <p><strong>Điều 1.</strong> Điều chỉnh lương đối với ông/bà <strong>Lê Thế Anh</strong>. Cụ thể như sau:</p>
+
+                        <table border='1' cellpadding='6' cellspacing='0' style='border-collapse: collapse; width: 100%;'>
+                            <thead style='background:#f2f2f2; font-weight:bold; text-align:center;'>
+                                <tr>
+                                    <td rowspan='2'>TT</td>
+                                    <td rowspan='2'>Họ và tên</td>
+                                    <td rowspan='2'>Chức vụ mới</td>
+                                    <td colspan='3'>Lương T12/2025 (đã bao gồm Phụ cấp ăn trưa)</td>
+                                    <td colspan='3'>Lương T1/2026 (đã bao gồm Phụ cấp ăn trưa)</td>
+                                </tr>
+                                <tr>
+                                    <td>LCB</td>
+                                    <td>PCCC</td>
+                                    <td>Tổng lương</td>
+                                    <td>LCB</td>
+                                    <td>PCCC</td>
+                                    <td>Tổng lương</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style='text-align:center;'>
+                                    <td>1</td>
+                                    <td>Lê Thị Lệ</td>
+                                    <td>Pro Tester 1</td>
+                                    <td>5,300,000</td>
+                                    <td>800,000</td>
+                                    <td>6,100,000</td>
+                                    <td>5,400,000</td>
+                                    <td>1,000,000</td>
+                                    <td>6,400,000</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <br/>
+
+                        <p><strong>Điều 2.</strong> Thời gian áp dụng kể từ ngày 01/01/2026.</p>
+
+                        <p><strong>Điều 3.</strong> Phòng Hành chính Nhân sự, Tài chính Kế toán, Phòng ban liên quan và ông/bà 
+                            <strong>Lê Thị Lệ</strong> căn cứ Quyết định thi hành./.</p>
+                    </div>";
+
+                if (string.IsNullOrWhiteSpace(sendEmail.Body)) sendEmail.Body = htmlBody;
+
+                await _emailHelper.SendAsync(sendEmail.EmailTo, sendEmail.Subject, sendEmail.Body, cc: sendEmail.EmailCC);
+                return Ok(ApiResponseFactory.Success(null, "Gửi thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 }

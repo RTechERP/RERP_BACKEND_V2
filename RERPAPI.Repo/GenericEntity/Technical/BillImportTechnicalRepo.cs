@@ -1,4 +1,5 @@
-﻿using RERPAPI.Model.DTO;
+﻿using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo;
 using RERPAPI.Repo.GenericEntity;
@@ -8,11 +9,13 @@ namespace RTCApi.Repo.GenericRepo
     public class BillImportTechnicalRepo : GenericRepo<BillImportTechnical>
     {
         BillImportTechnicalLogRepo _BillImportTechnicalLog;
+        ProductRTCRepo _productRTCRepo;
         CurrentUser _currentUser;
-        public BillImportTechnicalRepo(CurrentUser currentUser, BillImportTechnicalLogRepo billImportTechnicalLogRepo) : base(currentUser)
+        public BillImportTechnicalRepo(CurrentUser currentUser, BillImportTechnicalLogRepo billImportTechnicalLogRepo, ProductRTCRepo productRTCRepo) : base(currentUser)
         {
             _BillImportTechnicalLog = billImportTechnicalLogRepo;
             _currentUser = currentUser;
+            _productRTCRepo = productRTCRepo;
         }
 
         public string GetBillCode(int billtype)
@@ -60,8 +63,6 @@ namespace RTCApi.Repo.GenericRepo
             bill.UpdatedBy = _currentUser.LoginName;
             bill.UpdatedDate = DateTime.Now;
 
-            // Entity Framework sẽ tự track bill vì chúng ta đã Get nó ra trước đó, 
-            // hoặc bạn có thể gọi Update rõ ràng:
             await UpdateAsync(bill);
 
             // 2. Ghi Log
@@ -74,5 +75,45 @@ namespace RTCApi.Repo.GenericRepo
 
             await _BillImportTechnicalLog.CreateAsync(log);
         }
+        public async Task UpdateHistoryProductRTC(BillimporttechnicalFullDTO dTO)
+        {
+            bool values = true;
+
+            foreach (var item in dTO.billImportDetailTechnicals)
+            {
+                int ID = item.HistoryProductRTCID ?? 0;
+                if (ID <= 0) continue;
+                DateTime dateTime = DateTime.Now;
+                SQLHelper<object>.ExcuteProcedure("spUpdateHistoryProductRTC", new string[] { "@HistoryProductRTCID", "@Values", "@DateReturn" }, new object[] { ID, values, dateTime.ToString("yyyy-MM-dd HH:mm:ss") });
+
+                int ProductRTCQRCodeID = item.ProductRTCQRCodeID ?? 0;
+                if (ProductRTCQRCodeID > 0)
+                {
+                    if (values)
+                    {
+                        //Status=1 Trong Kho
+                        SQLHelper<object>.ExcuteProcedure("spUpdateStatusProductRTCQRCode", new string[] { "@ProductRTCQRCodeID", "@Status" }, new object[] { ProductRTCQRCodeID, 1 });
+                    }
+                    else
+                    {
+                        //Status=3 Đã xuất
+                        SQLHelper<object>.ExcuteProcedure("spUpdateStatusProductRTCQRCode", new string[] { "@ProductRTCQRCodeID", "@Status" }, new object[] { ProductRTCQRCodeID, 3 });
+                    }
+                }
+
+            }
+            foreach (var item in dTO.billImportDetailTechnicals)
+            {
+                int ProductID = item.ProductID ?? 0;
+                if (ProductID <= 0) continue;
+                ProductRTC productRTCModel = _productRTCRepo.GetByID(ProductID);
+                if (productRTCModel != null)
+                {
+                    productRTCModel.Note += " - " + item.Note;
+                    await _productRTCRepo.UpdateAsync(productRTCModel);
+                }
+            }
+        }
+
     }
 }

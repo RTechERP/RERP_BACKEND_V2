@@ -36,4 +36,8 @@ public partial class HandoverAssetManagement
     public bool? IsDeleted { get; set; }
 
     public bool? IsSigned { get; set; }
+
+    public int? TSAssetManagementID { get; set; }
+
+    public bool? IsContinueUse { get; set; }
 }

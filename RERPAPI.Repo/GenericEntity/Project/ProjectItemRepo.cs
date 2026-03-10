@@ -205,12 +205,12 @@ namespace RERPAPI.Repo.GenericEntity.Project
             foreach (var item in items)
             {
                 item.PercentItem = total > 0 ? (item.TotalDayPlan / total) * 100 : 0;
-                await UpdateAsync(item);
             }
+            await UpdateRangeAsync_Binh(items);
         }
         public async Task UpdateLate(int projectId)
         {
-            var items = GetAll(x => x.ProjectID == projectId && x.IsDeleted != true).ToList();
+            var items = GetAll(x => x.ProjectID == projectId  && x.IsDeleted != true).ToList();
             var now = DateTime.Now.Date;
 
             foreach (var item in items)
@@ -239,17 +239,16 @@ namespace RERPAPI.Repo.GenericEntity.Project
                     if ((now - item.PlanStartDate.Value.Date).TotalDays > 0)
                         late = 2;
                 }
-
                 item.ItemLate = late;
-                await UpdateAsync(item);
             }
+            await UpdateRangeAsync_Binh(items);
         }
-       /* public async Task<string> GetMaxCodeAsync(int projectId, string projectCode)
-        {
-            var count = await _context.ProjectItems
-                .CountAsync(x => x.ProjectID == projectId);
-            return $"{projectCode}_{count + 1}";
-        }*/
+        /* public async Task<string> GetMaxCodeAsync(int projectId, string projectCode)
+         {
+             var count = await _context.ProjectItems
+                 .CountAsync(x => x.ProjectID == projectId);
+             return $"{projectCode}_{count + 1}";
+         }*/
 
         //public int  GetMaxSTT(int projectId)
         //{

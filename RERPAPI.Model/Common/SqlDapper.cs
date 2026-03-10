@@ -7,29 +7,50 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Dapper;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+using System.Data;
+using System.Dynamic;
 
 namespace RERPAPI.Model.Common
 {
     public static class SqlDapper<T> where T : class, new()
     {
         static string connectionString = Config.ConnectionString;
-        static int commandTimeout = 2000;
-        public static async Task<object> ProcedureToListAsync(string procedureName,object param)
+        static int commandTimeout = 200;
+        public static async Task<object> ProcedureToListAsync(string procedureName, object param)
         {
+            //var connection = new SqlConnection(connectionString);
+            //try
+            //{
+            //    connection.Open();
+            //    var data = await connection.QueryMultipleAsync(procedureName, param, commandType: System.Data.CommandType.StoredProcedure, commandTimeout: commandTimeout);
+            //    var result = (await data.ReadAsync()).ToList();
+            //    return result;
+            //}
+            //catch (Exception ex)
+            //{
+            //    throw new Exception(ex.Message);
+            //}
+            //finally
+            //{
+            //    connection.Close();
+            //}
+
             try
             {
-                var connection = new SqlConnection(connectionString);
-                //var param = new { Keyword = keyword, UserID = _currentUser.ID };
-                var data = await connection.QueryMultipleAsync(procedureName, param, commandType: System.Data.CommandType.StoredProcedure);
-
-                //var menus = (await data.ReadAsync()).ToList();
-                //var userGroups = (await data.ReadAsync()).ToList();
-                var result = (await data.ReadAsync()).ToList();
-                return result;
+                using (var connection = new SqlConnection(connectionString))
+                {
+                    //var storedProcedureName = "spGetProduct";
+                    //var values = new { type = 6 };
+                    var data = await connection.QueryMultipleAsync(procedureName, param, commandType: System.Data.CommandType.StoredProcedure, commandTimeout: commandTimeout);
+                    //results.ForEach(r => textBox1.Text += $"{r.Code} {r.Name}" + Environment.NewLine);
+                    var result = (await data.ReadAsync()).ToList();
+                    return result;
+                }
             }
             catch (Exception ex)
             {
-
+                //return resultLists;
                 throw new Exception(ex.Message);
             }
         }
@@ -37,20 +58,38 @@ namespace RERPAPI.Model.Common
 
         public static async Task<List<T>> ProcedureToListTAsync(string procedureName, object param)
         {
+            //var connection = new SqlConnection(connectionString);
+            //try
+            //{
+            //    connection.Open();
+            //    var data = await connection.QueryMultipleAsync(procedureName, param, commandType: System.Data.CommandType.StoredProcedure, commandTimeout: commandTimeout);
+            //    var result = (await data.ReadAsync<T>()).ToList();
+            //    return result;
+            //}
+            //catch (Exception ex)
+            //{
+            //    throw new Exception(ex.Message);
+            //}
+            //finally
+            //{
+            //    connection.Close();
+            //}
+
             try
             {
-                var connection = new SqlConnection(connectionString);
-                //var param = new { Keyword = keyword, UserID = _currentUser.ID };
-                var data = await connection.QueryMultipleAsync(procedureName, param, commandType: System.Data.CommandType.StoredProcedure);
-
-                //var menus = (await data.ReadAsync()).ToList();
-                //var userGroups = (await data.ReadAsync()).ToList();
-                var result = (await data.ReadAsync<T>()).ToList();
-                return result;
+                using (var connection = new SqlConnection(connectionString))
+                {
+                    //var storedProcedureName = "spGetProduct";
+                    //var values = new { type = 6 };
+                    var data = await connection.QueryMultipleAsync(procedureName, param, commandType: System.Data.CommandType.StoredProcedure, commandTimeout: commandTimeout);
+                    //results.ForEach(r => textBox1.Text += $"{r.Code} {r.Name}" + Environment.NewLine);
+                    var result = (await data.ReadAsync<T>()).ToList();
+                    return result;
+                }
             }
             catch (Exception ex)
             {
-
+                //return resultLists;
                 throw new Exception(ex.Message);
             }
         }

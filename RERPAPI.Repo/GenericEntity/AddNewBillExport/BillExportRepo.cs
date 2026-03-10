@@ -2,7 +2,6 @@
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.Technical;
-using System.Linq.Expressions;
 
 namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
 {
@@ -25,13 +24,15 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
         private readonly HistoryDeleteBillRepo _historyDeleteBillRepo;
         private readonly CurrentUser _currentUser;
         private readonly UserRepo _userRepo;
+        private readonly SupplierRepo _supplierRepo;
+        private readonly ProductGroupRepo _productGroupRepo;
 
         public BillExportRepo(
             CurrentUser currentUser,
             BillExportDetailRepo billExportDetailRepo,
             BillExportDetailSerialNumberRepo serialNumberRepo,
             InventoryRepo inventoryRepo,
-           BillDocumentExportRepo billDocumentExportRepo,
+            BillDocumentExportRepo billDocumentExportRepo,
             DocumentExportRepo documentExportRepo,
             InventoryProjectExportRepo inventoryProjectExportRepo,
             BillImportRepo billImportRepo,
@@ -43,7 +44,9 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
             ProjectRepo projectRepo,
             BillImportDetailSerialNumberRepo billImportDetailSerialNumberRepo,
             HistoryDeleteBillRepo historyDeleteBillRepo,
-            UserRepo userRepo
+            UserRepo userRepo,
+            SupplierRepo supplierRepo,
+            ProductGroupRepo productGroupRepo
         ) : base(currentUser)
         {
             _currentUser = currentUser;
@@ -63,6 +66,8 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
             _billImportDetailSerialNumberRepo = billImportDetailSerialNumberRepo;
             _historyDeleteBillRepo = historyDeleteBillRepo;
             _userRepo = userRepo;
+            _supplierRepo = supplierRepo;
+            _productGroupRepo = productGroupRepo;
         }
 
         #region Bill Code Generation
@@ -909,6 +914,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
             // Kiểm tra trùng mã phiếu
             if (dto.billExport.ID > 0)
             {
+                BillExport billExport = GetByID(dto.billExport.ID);
                 BillImport billImports = _billImportRepo.GetAll(x => x.BillExportID == dto.billExport.ID && x.IsDeleted == false).FirstOrDefault();
                 if (billImports != null)
                 {
@@ -917,9 +923,13 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                         return (false, $"Không thể sửa phiếu xuất {dto.billExport.Code} vì phiếu nhập {billImports.BillImportCode} đã được duyệt!");
                     }
 
-                    if (billImports.BillTypeNew != 4)
+                    if (billImports.BillTypeNew != 4 && billExport.Status != 6)
                     {
                         return (false, $"Phiếu nhập {billImports.BillImportCode} đã thay đổi trạng thái, không thể sửa!");
+                    }
+                    else if (billImports.BillTypeNew != 0 && billExport.Status != 6)
+                    {
+                        return (false, $"Phiếu nhập {billImports.BillImportCode} chưa chuyển sang trạng thái [Nhập kho], không thể sửa!");
                     }
 
                     if (dto.billExport.IsTransfer == false && billImports.Status == true)
@@ -928,11 +938,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                     }
                 }
 
-                var existingCode = GetAll(x =>
-                    x.Code == dto.billExport.Code &&
-                    x.ID != dto.billExport.ID
-                ).FirstOrDefault();
-
+                var existingCode = GetAll(x => x.Code == dto.billExport.Code && x.ID != dto.billExport.ID).FirstOrDefault();
                 if (existingCode != null)
                 {
                     dto.billExport.Code = GetBillCode(dto.billExport.Status ?? 0);
@@ -948,7 +954,6 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                     return (true, $"Phiếu đã tồn tại. Phiếu được đổi tên thành: {dto.billExport.Code}");
                 }
             }
-
             if (string.IsNullOrWhiteSpace(dto.billExport.Code))
                 return (false, "Xin hãy điền số phiếu.");
 
@@ -998,7 +1003,27 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
 
             return (true, string.Empty);
         }
+        /// <summary>
+        /// Lấy tất cả BillExportDetailIds liên quan đến cùng product/project/pokh
+        /// </summary>
+        private string GetRelatedBillExportDetailIds(
+            List<BillExportDetailExtendedDTO> allDetails,
+            int productId,
+            int projectId,
+            int pokhDetailId)
+        {
+            var relatedIds = allDetails
+                .Where(d =>
+                    d.ProductID == productId &&
+                    //(pokhDetailId > 0
+                    //    ? d.POKHDetailID == pokhDetailId
+                    //    : d.ProjectID == projectId) &&
+                    d.ID > 0) // ✅ Chỉ lấy detail đã có ID (đã lưu vào DB)
+                .Select(d => d.ID.ToString())
+                .ToList();
 
+            return relatedIds.Any() ? string.Join(",", relatedIds) : "";
+        }
         private async Task<(bool Success, string Message)> ValidateKeepInventory(BillExportDTO dto)
         {
             int status = dto.billExport.Status ?? 0;
@@ -1047,14 +1072,18 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                 int projectId = (detail.POKHDetailID ?? 0) > 0 ? 0 : detail.ProjectID ?? 0;
                 int pokhDetailId = detail.POKHDetailID ?? 0;
                 decimal totalQty = detail.TotalQty ?? 0;
-
+                string billExportDetailIds = GetRelatedBillExportDetailIds(
+dto.billExportDetail.ToList(),
+productId,
+projectId,
+pokhDetailId);
                 // Lấy tồn kho
                 var ds = GetInventoryProjectImportExport(
                     dto.billExport?.WarehouseID ?? 0,
                     productId,
                     projectId,
                     pokhDetailId,
-                    0
+                    billExportDetailIds
                 );
 
                 var inventoryProjects = ds[0];
@@ -1122,18 +1151,17 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
         /// Trả về 4 DataSets: [0] InventoryProjects Summary, [1] Import, [2] Export, [3] Stock
         /// </summary>
         public List<List<dynamic>> GetInventoryProjectImportExport(
-            int warehouseId,
-            int productId,
-            int projectId,
-            int pokhDetailId,
-            int billExportDetailId)
+    int warehouseId,
+    int productId,
+    int projectId,
+    int pokhDetailId,
+    string billExportDetailIds) // ✅ Đổi từ string sang string để nhận nhiều ID
         {
             var result = SQLHelper<dynamic>.ProcedureToList(
                 "spGetInventoryProjectImportExport",
                 new string[] { "@WarehouseID", "@ProductID", "@ProjectID", "@POKHDetailID", "@BillExportDetailID" },
-                new object[] { warehouseId, productId, projectId, pokhDetailId, billExportDetailId }
+                new object[] { warehouseId, productId, projectId, pokhDetailId, billExportDetailIds ?? "" }
             );
-
             return result;
         }
         /// <summary>
@@ -1309,7 +1337,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
 
             // 1. Lấy danh sách kho giữ
             var inventoryProjectsRaw = GetInventoryProjectList(warehouseId, productId, projectId, pokhDetailId);
-
+            string billExportDetailIds = GetRelatedBillExportDetailIds(allDetails, productId, projectId, pokhDetailId);
             // 2. Filter và sort
             var inventoryProjects = inventoryProjectsRaw
                 .Where(x => GetDecimalFromDynamic(x, "TotalQuantityRemain") > 0)
@@ -1317,7 +1345,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                 .ToList();
 
             // 3. Lấy tổng tồn kho
-            var ds = GetInventoryProjectImportExport(warehouseId, productId, projectId, pokhDetailId, currentDetail.ID);
+            var ds = GetInventoryProjectImportExport(warehouseId, productId, projectId, pokhDetailId, billExportDetailIds);
             var dtStock = ds.Count > 3 ? ds[3] : new List<dynamic>();
 
             decimal totalStockAvailable = dtStock.Count > 0
@@ -1869,124 +1897,50 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
             }
         }
 
-        //private async Task HandleTransferWarehouse(BillExportDTO dto, int billExportId)
-        //{
-        //    var billImportId = dto.billExport.BillImportID ?? 0;
-
-        //    //1. Lấy danh sách detail IDs trước
-        //    var existingDetails = _billImportDetailRepo.GetAll(x => x.BillImportID == billImportId);
-
-        //    if (existingDetails != null && existingDetails.Count > 0)
-        //    {
-        //        var detailIds = existingDetails.Select(x => x.ID).ToList();
-
-        //        // 2. Soft delete serial numbers với predicate
-        //        await _billImportDetailSerialNumberRepo.UpdateRangeAsync(x => detailIds.Contains(x.BillImportDetailID ?? 0),
-        //            new Dictionary<Expression<Func<BillImportDetailSerialNumber, object>>, object>
-        //            {
-        //            { x => x.IsDeleted, true },
-        //            }
-        //        );
-
-        //        // 3. Soft delete details với predicate
-        //        await _billImportDetailRepo.UpdateRangeAsync(x => x.BillImportID == billImportId,
-        //            new Dictionary<Expression<Func<BillImportDetail, object>>, object>
-        //            {
-        //                { x => x.IsDeleted, true },
-        //            }
-        //        );
-        //    }
-        //    // Tạo BillImport tương ứng
-        //    var billImport = new BillImport
-        //    {
-        //        BillExportID = billExportId,
-        //        DeliverID = dto.billExport.SenderID,
-        //        ReciverID = dto.billExport.UserID,
-        //        KhoTypeID = dto.billExport.KhoTypeID,
-        //        SupplierID = dto.billExport.SupplierID,
-        //        GroupID = dto.billExport.GroupID,
-        //        DateRequestImport = DateTime.Now,
-        //        BillTypeNew = 4,
-        //        BillImportCode = _billImportRepo.GetBillCode(4),
-        //        WarehouseID = dto.billExport.WareHouseTranferID ?? 0,
-        //        CreatDate = dto.billExport.CreatDate,
-        //        Status = false, // Trạng thái đã nhập
-        //        CreatedDate = DateTime.Now,
-        //        CreatedBy = _currentUser.LoginName
-        //    };
-
-        //    await _billImportRepo.CreateAsync(billImport);
-
-        //    SQLHelper<object>.ExcuteProcedure("spCreateDocumentImport",
-        //                    new string[] { "@BillImportID", "@CreatedBy" },
-        //                    new object[] { billImport.ID, _currentUser.LoginName });
-
-
-        //    // Tạo BillImportDetail từ BillExportDetail
-        //    foreach (var exportDetail in dto.billExportDetail ?? new List<BillExportDetailExtendedDTO>())
-        //    {
-        //        var project = _projectRepo.GetByID(exportDetail.ProjectID ?? 0);
-        //        var importDetail = new BillImportDetail
-        //        {
-        //            BillImportID = billImport.ID,
-        //            ProductID = exportDetail.ProductID,
-        //            //ProductName = exportDetail.ProductFullName,
-        //            Qty = exportDetail.Qty,
-        //            Price = 0,
-        //            TotalPrice = 0,
-        //            ProjectID = exportDetail.ProjectID,
-        //            ProjectName = exportDetail.ProjectName,
-        //            ProjectCode = exportDetail.ProjectName,
-        //            SomeBill = "",
-        //            Note = exportDetail.Note,
-        //            STT = exportDetail.STT,
-        //            TotalQty = exportDetail.TotalQty,
-        //            SerialNumber = exportDetail.SerialNumber,
-        //            BillExportDetailID = exportDetail.ID,
-        //            CreatedDate = DateTime.Now,
-        //            InventoryProjectID = null,
-        //            CreatedBy = _currentUser.LoginName,
-        //            QtyRequest = exportDetail.Qty,
-        //            ReturnedStatus = null,
-        //            IsKeepProject = true,
-        //        };
-        //        await _billImportDetailRepo.CreateAsync(importDetail);
-        //        await EnsureInventoryExists(billImport.WarehouseID ?? 0, importDetail.ProductID ?? 0);
-        //    }
-
-        //    // Cập nhật BillExport với BillImportID
-        //    var billExport = await GetByIDAsync(billExportId);
-        //    if (billExport != null)
-        //    {
-        //        billExport.BillImportID = billImport.ID;
-        //        await UpdateAsync(billExport);
-        //    }
-        //}
         private async Task HandleTransferWarehouse(BillExportDTO dto, int billExportId)
         {
-            // ✅ 1. Tìm phiếu nhập liên kết (nếu có)
-            var existingImport = _billImportRepo.GetAll(x =>
-                x.BillExportID == billExportId &&
-                x.IsDeleted != true
-            ).FirstOrDefault();
+            var billExport = await GetByIDAsync(billExportId);
+            BillImport existingImport = null;
+
+            // Kiểm tra xem phiếu xuất đã có BillImportID chưa
+            if (billExport?.BillImportID != null && billExport.BillImportID > 0)
+            {
+                existingImport = _billImportRepo.GetByID(billExport.BillImportID.Value);
+                if (existingImport?.IsDeleted == true)
+                {
+                    existingImport = null;
+                }
+            }
+
+            if (existingImport == null)
+            {
+                existingImport = _billImportRepo.GetAll(x =>
+                    x.BillExportID == billExportId &&
+                    x.IsDeleted != true
+                ).FirstOrDefault();
+            }
 
             BillImport billImport;
 
-            // ✅ 2. TH1: Chưa có phiếu nhập → Tạo mới
+            //  Lấy thông tin người dùng và nhà cung cấp
             var deliver = _userRepo.GetByID(dto.billExport.SenderID ?? 0);
             var reciver = _userRepo.GetByID(dto.billExport.UserID ?? 0);
+            var supplier = _supplierRepo.GetByID(dto.billExport.SupplierID ?? 0);
+            var productGroup = _productGroupRepo.GetByID(dto.billExport.KhoTypeID ?? 0);
 
+            //  Chưa có phiếu nhập → Tạo mới
             if (existingImport == null)
             {
                 billImport = new BillImport
                 {
                     BillExportID = billExportId,
                     DeliverID = dto.billExport.SenderID,
-                    Deliver = deliver.FullName,
+                    Deliver = deliver?.FullName,
                     ReciverID = dto.billExport.UserID,
-                    Reciver = reciver.FullName,
+                    Reciver = reciver?.FullName,
                     KhoTypeID = dto.billExport.KhoTypeID,
                     SupplierID = dto.billExport.SupplierID,
+                    Suplier = supplier?.SupplierName,
                     GroupID = dto.billExport.GroupID,
                     DateRequestImport = DateTime.Now,
                     BillTypeNew = 4,
@@ -1995,10 +1949,8 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                     CreatDate = dto.billExport.CreatDate,
                     Status = false,
                     IsDeleted = false,
-                    CreatedDate = DateTime.Now,
-                    CreatedBy = _currentUser.LoginName
+                    KhoType = productGroup?.ProductGroupName
                 };
-
                 await _billImportRepo.CreateAsync(billImport);
 
                 SQLHelper<object>.ExcuteProcedure("spCreateDocumentImport",
@@ -2007,8 +1959,10 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
             }
             else
             {
-
+                // Đã có phiếu nhập → Update
                 existingImport.DeliverID = dto.billExport.SenderID;
+                existingImport.Deliver = deliver?.FullName;
+                existingImport.Reciver = reciver?.FullName;
                 existingImport.ReciverID = dto.billExport.UserID;
                 existingImport.KhoTypeID = dto.billExport.KhoTypeID;
                 existingImport.SupplierID = dto.billExport.SupplierID;
@@ -2016,54 +1970,129 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                 existingImport.WarehouseID = dto.billExport.WareHouseTranferID ?? 0;
                 existingImport.CreatDate = dto.billExport.CreatDate;
                 existingImport.UpdatedDate = DateTime.Now;
-                existingImport.UpdatedBy = _currentUser.LoginName;
+                existingImport.Suplier = supplier?.SupplierName;
+                existingImport.KhoType = productGroup?.ProductGroupName;
 
                 await _billImportRepo.UpdateAsync(existingImport);
-
                 billImport = existingImport;
             }
 
+            //  chi tiết phiếu nhập
             await SyncBillImportDetails(billImport.ID, dto);
 
-            var billExport = await GetByIDAsync(billExportId);
-            if (billExport != null)
+            // Update lại BillImportID cho phiếu xuất (nếu chưa có)
+            if (billExport != null && billExport.BillImportID != billImport.ID)
             {
                 billExport.BillImportID = billImport.ID;
                 await UpdateAsync(billExport);
             }
         }
-        /// <summary>
-        /// Đồng bộ chi tiết từ phiếu xuất sang phiếu nhập
-        /// </summary>
+        //private async Task HandleTransferWarehouse(BillExportDTO dto, int billExportId)
+        //{
+        //    // ✅ 1. Tìm phiếu nhập liên kết (nếu có)
+        //    var existingImport = _billImportRepo.GetAll(x =>
+        //        x.BillExportID == billExportId &&
+        //        x.IsDeleted != true
+        //    ).FirstOrDefault();
+
+        //    BillImport billImport;
+
+        //    // ✅ 2. TH1: Chưa có phiếu nhập → Tạo mới
+        //    var deliver = _userRepo.GetByID(dto.billExport.SenderID ?? 0);
+        //    var reciver = _userRepo.GetByID(dto.billExport.UserID ?? 0);
+        //    var supplier = _supplierRepo.GetByID(dto.billExport.SupplierID ?? 0);
+        //    if (existingImport == null)
+        //    {
+        //        billImport = new BillImport
+        //        {
+        //            BillExportID = billExportId,
+        //            DeliverID = dto.billExport.SenderID,
+        //            Deliver = deliver.FullName,
+        //            ReciverID = dto.billExport.UserID,
+        //            Reciver = reciver.FullName,
+        //            KhoTypeID = dto.billExport.KhoTypeID,
+        //            SupplierID = dto.billExport.SupplierID,
+        //            Suplier = supplier.SupplierName,
+        //            GroupID = dto.billExport.GroupID,
+        //            DateRequestImport = DateTime.Now,
+        //            BillTypeNew = 4,
+        //            BillImportCode = _billImportRepo.GetBillCode(4),
+        //            WarehouseID = dto.billExport.WareHouseTranferID ?? 0,
+        //            CreatDate = dto.billExport.CreatDate,
+        //            Status = false,
+        //            IsDeleted = false,
+        //            CreatedDate = DateTime.Now,
+        //            CreatedBy = _currentUser.LoginName
+        //        };
+
+        //        await _billImportRepo.CreateAsync(billImport);
+
+        //        SQLHelper<object>.ExcuteProcedure("spCreateDocumentImport",
+        //            new string[] { "@BillImportID", "@CreatedBy" },
+        //            new object[] { billImport.ID, _currentUser.LoginName });
+        //    }
+        //    else
+        //    {
+
+        //        existingImport.DeliverID = dto.billExport.SenderID;
+        //        existingImport.Deliver = deliver.FullName;
+        //        existingImport.Reciver = reciver.FullName;
+        //        existingImport.ReciverID = dto.billExport.UserID;
+        //        existingImport.KhoTypeID = dto.billExport.KhoTypeID;
+        //        existingImport.SupplierID = dto.billExport.SupplierID;
+        //        existingImport.GroupID = dto.billExport.GroupID;
+        //        existingImport.WarehouseID = dto.billExport.WareHouseTranferID ?? 0;
+        //        existingImport.CreatDate = dto.billExport.CreatDate;
+        //        existingImport.UpdatedDate = DateTime.Now;
+        //        existingImport.Suplier = supplier.SupplierName;
+        //        existingImport.UpdatedBy = _currentUser.LoginName;
+
+        //        await _billImportRepo.UpdateAsync(existingImport);
+
+        //        billImport = existingImport;
+        //    }
+
+        //    await SyncBillImportDetails(billImport.ID, dto);
+
+        //    var billExport = await GetByIDAsync(billExportId);
+        //    if (billExport != null)
+        //    {
+        //        billExport.BillImportID = billImport.ID;
+        //        await UpdateAsync(billExport);
+        //    }
+        //}
         private async Task SyncBillImportDetails(int billImportId, BillExportDTO dto)
         {
-            var existingDetails = _billImportDetailRepo.GetAll(x => x.BillImportID == billImportId).ToList();
+            var existingDetails = _billImportDetailRepo
+                .GetAll(x => x.BillImportID == billImportId && x.IsDeleted != true);
 
             if (existingDetails.Any())
             {
-                var detailIds = existingDetails.Select(x => x.ID).ToList();
+                // 1. Xóa mềm SerialNumber
+                foreach (var detail in existingDetails)
+                {
+                    var serials = _billImportDetailSerialNumberRepo
+                        .GetAll(x => x.BillImportDetailID == detail.ID)
+                        .ToList();
 
-                await _billImportDetailSerialNumberRepo.UpdateRangeAsync(
-                    x => detailIds.Contains(x.BillImportDetailID ?? 0),
-                    new Dictionary<Expression<Func<BillImportDetailSerialNumber, object>>, object>
+                    foreach (var serial in serials)
                     {
-                { x => x.IsDeleted, true },
-                { x => x.UpdatedDate, DateTime.Now },
-                { x => x.UpdatedBy, _currentUser.LoginName }
-                    }
-                );
+                        serial.IsDeleted = true;
 
-                await _billImportDetailRepo.UpdateRangeAsync(
-                    x => x.BillImportID == billImportId,
-                    new Dictionary<Expression<Func<BillImportDetail, object>>, object>
-                    {
-                { x => x.IsDeleted, true },
-                { x => x.UpdatedDate, DateTime.Now },
-                { x => x.UpdatedBy, _currentUser.LoginName }
+                        await _billImportDetailSerialNumberRepo.UpdateAsync(serial);
                     }
-                );
+                }
+
+                // 2. Xóa mềm BillImportDetail
+                foreach (var detail in existingDetails)
+                {
+                    detail.IsDeleted = true;
+
+                    await _billImportDetailRepo.UpdateAsync(detail);
+                }
             }
 
+            // 3. Insert lại dữ liệu mới
             foreach (var exportDetail in dto.billExportDetail ?? new List<BillExportDetailExtendedDTO>())
             {
                 if ((exportDetail.ProductID ?? 0) <= 0) continue;
@@ -2084,10 +2113,8 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                     TotalQty = exportDetail.TotalQty,
                     SerialNumber = exportDetail.SerialNumber,
                     BillExportDetailID = exportDetail.ID,
-                    //PONCCDetailID = exportDetail.POKHDetailID,
                     QtyRequest = exportDetail.Qty,
                     ReturnedStatus = false,
-                    //IsKeepProject = true,
                     IsNotKeep = true,
                     IsDeleted = false,
                     CreatedDate = DateTime.Now,
@@ -2102,12 +2129,14 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                 );
             }
 
-
-            SQLHelper<object>.ExcuteProcedure("spUpdateReturnedStatusForBillExportDetail",
-                new string[] { "@BillImportID", "@Approved" },
-                new object[] { billImportId, 0 });
-
+            // 4. Update trạng thái trả hàng
+            SQLHelper<object>.ExcuteProcedure(
+                "spUpdateReturnedStatusForBillExportDetail",
+                new[] { "@BillImportID", "@Approved" },
+                new object[] { billImportId, 0 }
+            );
         }
+
         /// <summary>
         /// Hủy chuyển kho - xóa phiếu nhập liên kết
         /// (Đã được validate ở ValidateBillExport)
@@ -2227,7 +2256,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                         detail.ProductID ?? 0,
                         (detail.POKHDetailID ?? 0) > 0 ? 0 : detail.ProjectID ?? 0,
                         detail.POKHDetailID ?? 0,
-                        detail.ID
+                        detail.ID.ToString()
                     );
 
                     if (ds.Count > 0)

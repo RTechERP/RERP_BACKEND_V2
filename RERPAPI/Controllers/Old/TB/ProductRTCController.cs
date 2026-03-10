@@ -86,7 +86,7 @@ namespace RERPAPI.Controllers.Old.TB
             try
             {
                 List<ProductGroupRTC> productGroup = _productGroupRTCRepo.GetAll(x => x.WarehouseType == warehouseType
-                                                                                    && x.IsDeleted == false && !x.ProductGroupNo.Contains("DBH") && x.ProductGroupNo != "CCDC" && x.WarehouseID == 1).OrderBy(x => x.NumberOrder).ToList();
+                                                                                    && x.IsDeleted == false && !(x.ProductGroupNo ?? "").Contains("DBH") && x.ProductGroupNo != "CCDC" && x.WarehouseID == 1).OrderBy(x => x.NumberOrder).ToList();
                 //.Where(x => x.IsDeleted == false)
                 //.ToList();
 
@@ -246,7 +246,7 @@ namespace RERPAPI.Controllers.Old.TB
             string root = "";
             if (con.ID > 0)
             {
-                root = con.KeyValue.Trim();
+                root = (con.KeyValue ?? "").Trim();
             }
             // Chuẩn hoá đường dẫn
             full = full.Replace('/', '\\');                       // hỗ trợ cả / và \
@@ -290,24 +290,19 @@ namespace RERPAPI.Controllers.Old.TB
 
                 int successCount = 0;
                 int failCount = 0;
+                int updateCount = 0;
+                int createCount = 0;
                 List<string> skippedCodes = new();
+
                 if (product != null && product.Any())
                 {
                     foreach (var item in product)
                     {
                         try
                         {
-
-                            // --- Kiểm tra trùng mã sản phẩm ---
-                            if (_productRTCRepo.checkExistProductCodeRTC(item, item.WarehouseType))
-                            {
-                                skippedCodes.Add("Mã sản phẩm:" + item.ProductCode ?? "N/A");
-                                failCount++;
-                                continue;
-                            }
                             if (!string.IsNullOrEmpty(item.ProductGroupName) || !string.IsNullOrEmpty(item.ProductGroupNo))
                             {
-                                var productGroup = _productGroupRTCRepo.GetAll(x => (x.ProductGroupName.Trim().ToUpper() == item.ProductGroupName.Trim().ToUpper() || x.ProductGroupNo.Trim().ToUpper() == item.ProductGroupNo.Trim().ToUpper()) && x.WarehouseType == item.WarehouseType).FirstOrDefault() ?? new ProductGroupRTC()
+                                var productGroup = _productGroupRTCRepo.GetAll(x => ((x.ProductGroupName ?? "").Trim().ToUpper() == (item.ProductGroupName ?? "").Trim().ToUpper() || (x.ProductGroupNo ?? "").Trim().ToUpper() == (item.ProductGroupNo ?? "").Trim().ToUpper()) && x.WarehouseType == item.WarehouseType).FirstOrDefault() ?? new ProductGroupRTC()
                                 {
                                     ID = 0,
                                     ProductGroupNo = item.ProductGroupNo,
@@ -320,8 +315,40 @@ namespace RERPAPI.Controllers.Old.TB
                                     await _productGroupRTCRepo.CreateAsync(productGroup);
                                 }
                                 item.ProductGroupRTCID = productGroup.ID;
-
                             }
+                            // --- Kiểm tra xem ProductCode đã tồn tại chưa ---
+                            bool isExist = _productRTCRepo.checkExistProductCodeRTC(item, item.WarehouseType);
+
+                            if (isExist)
+                            {
+                                // Nếu đã tồn tại → Tìm bản ghi cũ để UPDATE
+                                var existingProduct = _productRTCRepo.GetAll(x =>
+                                    x.ProductCode == item.ProductCode && x.IsDelete != true && x.ProductGroupRTCID == item.ProductGroupRTCID
+                                ).FirstOrDefault();
+
+                                if (existingProduct != null)
+                                {
+                                    item.ID = existingProduct.ID;
+                                }
+                            }
+
+                            //if (!string.IsNullOrEmpty(item.ProductGroupName) || !string.IsNullOrEmpty(item.ProductGroupNo))
+                            //{
+                            //    var productGroup = _productGroupRTCRepo.GetAll(x => ((x.ProductGroupName ?? "").Trim().ToUpper() == (item.ProductGroupName ?? "").Trim().ToUpper() || (x.ProductGroupNo ?? "").Trim().ToUpper() == (item.ProductGroupNo ?? "").Trim().ToUpper()) && x.WarehouseType == item.WarehouseType).FirstOrDefault() ?? new ProductGroupRTC()
+                            //    {
+                            //        ID = 0,
+                            //        ProductGroupNo = item.ProductGroupNo,
+                            //        ProductGroupName = item.ProductGroupName,
+                            //        WarehouseType = item.WarehouseType,
+                            //        WarehouseID = item.WarehouseID,
+                            //    };
+                            //    if (productGroup.ID <= 0)
+                            //    {
+                            //        await _productGroupRTCRepo.CreateAsync(productGroup);
+                            //    }
+                            //    item.ProductGroupRTCID = productGroup.ID;
+                            //}
+
                             if (!string.IsNullOrEmpty(item.LocationName) || !string.IsNullOrEmpty(item.LocationCode))
                             {
                                 int? locationType = item.WarehouseType == 2 ? 4 : (int?)null;
@@ -330,11 +357,11 @@ namespace RERPAPI.Controllers.Old.TB
                                         (
                                             (!string.IsNullOrWhiteSpace(item.LocationName) &&
                                              x.LocationName != null &&
-                                             x.LocationName.Trim().ToUpper() == item.LocationName.Trim().ToUpper())
+                                             (x.LocationName ?? "").Trim().ToUpper() == (item.LocationName ?? "").Trim().ToUpper())
                                             ||
                                             (!string.IsNullOrWhiteSpace(item.LocationCode) &&
                                              x.LocationCode != null &&
-                                             x.LocationCode.Trim().ToUpper() == item.LocationCode.Trim().ToUpper())
+                                             (x.LocationCode ?? "").Trim().ToUpper() == (item.LocationCode ?? "").Trim().ToUpper())
                                         )
                                         && x.LocationType == locationType
                                     )
@@ -350,7 +377,6 @@ namespace RERPAPI.Controllers.Old.TB
                                         LocationType = locationType,
                                         WarehouseID = item.WarehouseID
                                     };
-
                                 }
                                 if (location.ID <= 0)
                                 {
@@ -358,13 +384,11 @@ namespace RERPAPI.Controllers.Old.TB
                                 }
                                 item.ProductLocationID = location.ID;
                                 item.LocationName = location.LocationName;
-
                             }
 
-                            var firm = _firmRepo.GetAll(x => x.FirmType == (item.WarehouseType == 2 ? 3 : 2) && x.FirmName.ToUpper().Trim() == item.Maker.ToUpper().Trim() && x.IsDelete == false).FirstOrDefault() ?? new Firm()
+                            var firm = _firmRepo.GetAll(x => x.FirmType == (item.WarehouseType == 2 ? 3 : 2) && (x.FirmName ?? "").ToUpper().Trim() == (item.Maker ?? "").ToUpper().Trim() && x.IsDelete == false).FirstOrDefault() ?? new Firm()
                             {
                                 ID = 0,
-
                                 FirmCode = _firmRepo.GenerateCode(item.WarehouseType == 2 ? 3 : 2),
                                 FirmName = item.Maker,
                                 FirmType = item.WarehouseType == 2 ? 3 : 2,
@@ -372,23 +396,25 @@ namespace RERPAPI.Controllers.Old.TB
                             if (firm.ID <= 0) await _firmRepo.CreateAsync(firm);
                             item.FirmID = firm.ID;
                             item.Maker = firm.FirmName;
-                            if (item.ID <= 0)
-                            {
-                                item.ProductCodeRTC = _productRTCRepo.generateProductCode(Convert.ToInt32(item.ProductGroupRTCID));
-                                await _productRTCRepo.CreateAsync(item);
-                            }
-                            else await _productRTCRepo.UpdateAsync(item);
 
                             if (item.ID > 0)
                             {
+                                await _productRTCRepo.UpdateAsync(item);
+                                updateCount++;
+                            }
+                            else
+                            {
+                                item.ProductCodeRTC = _productRTCRepo.generateProductCode(Convert.ToInt32(item.ProductGroupRTCID));
+                                await _productRTCRepo.CreateAsync(item);
+
                                 await _inventoryDemoRepo.CreateAsync(new InventoryDemo
                                 {
                                     ProductRTCID = item.ID,
                                     WarehouseID = item.WarehouseID
                                 });
+                                createCount++;
                             }
                             successCount++;
-
                         }
                         catch (Exception ex)
                         {
@@ -396,17 +422,22 @@ namespace RERPAPI.Controllers.Old.TB
                         }
                     }
                 }
-                string message = successCount > 0 ? $"Lưu thành công {successCount} bản ghi, thất bại {failCount} bản ghi." : $"Lưu dữ liệu thất bại !";
+
+                string message = successCount > 0
+                    ? $"Lưu thành công {successCount} bản ghi (Tạo mới: {createCount}, Cập nhật: {updateCount}), thất bại {failCount} bản ghi."
+                    : $"Lưu dữ liệu thất bại !";
+
                 if (skippedCodes.Any())
-                    message += $" Các Mã sản phẩm" +
-                        //$", SerialNumber, PartNumber" +
-                        $" bị bỏ qua (trùng): {string.Join(", ", skippedCodes)}.";
+                    message += $" Các Mã sản phẩm bị bỏ qua (trùng): {string.Join(", ", skippedCodes)}.";
+
                 if (successCount > 0)
                 {
                     return Ok(ApiResponseFactory.Success(new
                     {
                         successCount,
                         failCount,
+                        createCount,
+                        updateCount,
                         skippedCodes
                     }, message));
                 }
@@ -434,8 +465,8 @@ namespace RERPAPI.Controllers.Old.TB
                 {
                     if (item.IsDelete != true)
                     {
-                        var productGroup = _productGroupRTCRepo.GetByID(item.ProductGroupRTCID??0);
-                        if (productGroup.ID <= 0) return BadRequest(ApiResponseFactory.Fail(null,$"Không có nhóm sản phẩm có mã {item.ProductGroupRTCID}"));
+                        var productGroup = _productGroupRTCRepo.GetByID(item.ProductGroupRTCID ?? 0);
+                        if (productGroup.ID <= 0) return BadRequest(ApiResponseFactory.Fail(null, $"Không có nhóm sản phẩm có mã {item.ProductGroupRTCID}"));
                         if (_productRTCRepo.checkExistProductCodeRTC(item, productGroup.ID))
                         {
                             return BadRequest(ApiResponseFactory.Fail(null,

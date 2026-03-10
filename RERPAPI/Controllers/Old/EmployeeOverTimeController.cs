@@ -35,10 +35,12 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                var dateStart = param.dateStart.Date; // 00:00:00
-                var dateEnd = param.dateEnd.Date.AddDays(1).AddSeconds(-1);
+                //var dateStart = param.dateStart.Date; // 00:00:00
+                //var dateEnd = param.dateEnd.Date.AddDays(1).AddSeconds(-1);
+                param.dateStart = param.dateStart.ToLocalTime().Date;
+                param.dateEnd = param.dateEnd.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
                 var arrParamName = new string[] { "@FilterText", "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@DepartmentID", "@IDApprovedTP", "@Status" };
-                var arrParamValue = new object[] { param.keyWord ?? "", param.pageNumber, param.pageSize, dateStart, dateEnd, param.departmentId, param.idApprovedTp, param.status };
+                var arrParamValue = new object[] { param.keyWord ?? "", param.pageNumber, param.pageSize, param.dateStart, param.dateEnd, param.departmentId, param.idApprovedTp, param.status };
                 var employeeOverTime = SQLHelper<object>.ProcedureToList("spGetEmployeeOvertime", arrParamName, arrParamValue);
                 return Ok(new
                 {
@@ -117,6 +119,7 @@ namespace RERPAPI.Controllers.Old
                     employeeOverTime.TimeStart = employeeOvertime.TimeStart;
                     employeeOverTime.EndTime = employeeOvertime.EndTime;
                     employeeOverTime.Location = employeeOvertime.Location;
+                    employeeOverTime.ProjectID = employeeOvertime.ProjectID;
                     employeeOverTime.Overnight = employeeOvertime.Overnight;
                     employeeOverTime.TypeID = employeeOvertime.TypeID;
                     employeeOverTime.Reason = employeeOvertime.Reason;
@@ -190,7 +193,53 @@ namespace RERPAPI.Controllers.Old
                 });
             }
         }
+        [HttpPost("approve-overtime-hr")]
+        [RequiresPermission("N2,N1")]
+        public async Task<IActionResult> SaveApproveHR([FromBody] EmployeeOverTimeDTO request)
+        {
+            try
+            {
+                foreach (var employeeOvertime in request.EmployeeOvertimes ?? new List<EmployeeOvertime>())
+                {
+                   
+                    if (employeeOvertime.ID > 0)
+                    {
 
+                        await _employeeOverTimeRepo.UpdateAsync(employeeOvertime);
+                    }
+                    else
+                    {
+                        employeeOvertime.DecilineApprove = 1;
+                        employeeOvertime.CreatedDate = DateTime.Now;
+                        employeeOvertime.IsApproved = false;
+                        employeeOvertime.IsApprovedHR = false;
+                        await _employeeOverTimeRepo.CreateAsync(employeeOvertime);
+                    }
+                }
+
+                // Delete records if listId is provided
+                //if (request.ListId?.Count > 0)
+                //{
+                //    await _employeeOverTimeRepo.DeleteByIdsAsync(request.ListId);
+                //}
+
+
+                return Ok(new
+                {
+                    status = 1,
+                    message = "Lưu thành công"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
+        }
         [HttpGet("detail")]
         [RequiresPermission("N2,N1")]
         public IActionResult GetEmployeeOverTimeDetail(int employeeId, DateTime dateRegister)

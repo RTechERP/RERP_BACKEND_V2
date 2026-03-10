@@ -140,4 +140,6 @@ public partial class VehicleRepairHistory
     public int? KmPreviousPeriod { get; set; }
 
     public int? KmCurrentPeriod { get; set; }
+
+    public DateTime? TimePrevious { get; set; }
 }

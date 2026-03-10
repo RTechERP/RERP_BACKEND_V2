@@ -1,4 +1,5 @@
-﻿using MathNet.Numerics.Distributions;
+﻿using DocumentFormat.OpenXml.Spreadsheet;
+using MathNet.Numerics.Distributions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -14,6 +15,7 @@ using RERPAPI.Model.Param.Project;
 using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.Project;
 using System.Net.WebSockets;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers.Project
@@ -198,21 +200,30 @@ namespace RERPAPI.Controllers.Project
             }
 
         }
-
+                           
 
 
         #region hạng mục công việc cá nhân 
         //API lấy list hạng mục công việc cá nhân
         [HttpPost("get-project-item-person")]
-        public IActionResult GetProjectItem(ProjectItemRequestParam request)
+        public async Task<IActionResult> GetProjectItem(ProjectItemRequestParam request)
         {
             try
             {
-                var projectItem = SQLHelper<dynamic>.ProcedureToList("spGetProjectItem",
-                    new[] { "@ProjectID", "@UserID", "@Keyword", "@Status" },
-                    new object[] { request.ProjectID, request.UserID, request.Keyword, request.Status });
-                var rows = SQLHelper<dynamic>.GetListData(projectItem, 0);
-                return Ok(ApiResponseFactory.Success(rows, ""));
+                var param = new
+                {
+                    ProjectID = request.ProjectID,
+                    UserID = request.UserID,
+                    Keyword = request.Keyword,
+                    Status = request.Status
+                };
+                var projectItem = await SqlDapper<object>.ProcedureToListAsync("spGetProjectItem", param);
+
+                //var projectItem = SQLHelper<dynamic>.ProcedureToList("spGetProjectItem",
+                //    new[] { "@ProjectID", "@UserID", "@Keyword", "@Status" },
+                //    new object[] { request.ProjectID, request.UserID, request.Keyword, request.Status });
+                //var rows = SQLHelper<dynamic>.GetListData(projectItem, 0);
+                return Ok(ApiResponseFactory.Success(projectItem, ""));
             }
             catch (Exception ex)
             {
@@ -221,7 +232,7 @@ namespace RERPAPI.Controllers.Project
         }
         //load người giao việc
         [HttpGet("get-employee-request")]
-        public IActionResult GetEmployeeRequest()
+        public async Task<IActionResult> GetEmployeeRequest()
         {
             try
             {
@@ -234,10 +245,9 @@ namespace RERPAPI.Controllers.Project
                 {
                     employeeRequest = lastItem.EmployeeIDRequest ?? 0;
                 }
-                var projectItem = SQLHelper<dynamic>.ProcedureToList("spGetEmployeeRequestProjectItem",
-                    new string[] { },
-                    new object[] { });
-                var rows = SQLHelper<dynamic>.GetListData(projectItem, 0);
+                var param = new { };
+                var rows = await SqlDapper<object>.ProcedureToListAsync("spGetEmployeeRequestProjectItem", param);
+                //var rows = SQLHelper<dynamic>.GetListData(projectItem, 0);
                 return Ok(ApiResponseFactory.Success(new { employeeRequest, rows }, ""));
             }
             catch (Exception ex)
@@ -276,7 +286,7 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
              
                 //Lưu hạng mục công việc nếu có

@@ -19,7 +19,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpGet("")]
-        public IActionResult getProductGroup(bool isvisible = true, string warehousecode = "")
+        public IActionResult getProductGroup(bool isvisible = true, string warehousecode = "HN")
         {
             try
             {
@@ -46,6 +46,20 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
                 var dt = SQLHelper<dynamic>.ProcedureToList("spGetProductGroups", ["@Isvisible", "@WarehouseCode"], [isvisible, warehousecode]);
                 var data = SQLHelper<ProductGroup>.GetListData(dt, 0);
+                return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-productgroup-purchase")]
+        public IActionResult getProductGroupPurchase(bool isvisible = true, string warehousecode = "")
+        {
+            try
+            {
+                var data = _productgroupRepo.GetAll(x => x.IsVisible == true);
                 return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
@@ -99,7 +113,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 //TN.Binh update 19/10/25
                 if (!CheckProductGroupCode(dto))
                 {
-                    return Ok(new { status = 0, message = $"Mã nhóm [{dto.Productgroup.ProductGroupID}] đã tồn tại!" });
+                    //return Ok(new { status = 0, message = $"Mã nhóm [{dto.Productgroup.ProductGroupID}] đã tồn tại!" });
                 }
                 //end update 
                 if (dto.Productgroup.ID <= 0)

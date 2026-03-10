@@ -28,6 +28,7 @@ using RERPAPI.Repo.GenericEntity.TB;
 using RERPAPI.Repo.GenericEntity.Technical;
 using RERPAPI.Repo.GenericEntity.Technical.KPI;
 using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
+//using RERPAPI.SendService;
 using RTCApi.Repo.GenericRepo;
 using System.Text;
 
@@ -142,6 +143,7 @@ builder.Services.AddScoped<IssueLogSolutionRepo>();
 builder.Services.AddScoped<IssueSolutionStatusLinkRepo>();
 builder.Services.AddScoped<IssueSolutionStatusRepo>();
 builder.Services.AddScoped<KPIEmployeeTeamLinkRepo>();
+builder.Services.AddScoped<KPIEvaluationFactorRepo>();
 builder.Services.AddScoped<KPIEmployeeTeamRepo>();
 builder.Services.AddScoped<KPIEvaluationRepo>();
 builder.Services.AddScoped<KPIErrorTypeRepo>();
@@ -149,6 +151,13 @@ builder.Services.AddScoped<KPIErrorRepo>();
 builder.Services.AddScoped<KPIErrorFineAmountRepo>();
 builder.Services.AddScoped<KPIErrorEmployeeFileRepo>();
 builder.Services.AddScoped<KPIErrorEmployeeRepo>();
+builder.Services.AddScoped<KPICriteriaDetailRepo>();
+builder.Services.AddScoped<KPICriterionRepo>();
+builder.Services.AddScoped<KPIPositionEmployeeRepo>();
+builder.Services.AddScoped<KPIPositionRepo>();
+builder.Services.AddScoped<KPIExamRepo>();
+builder.Services.AddScoped<KPIExamPositionRepo>();
+builder.Services.AddScoped<KPISpecializationTypeRepo>();
 builder.Services.AddScoped<LocationRepo>();
 builder.Services.AddScoped<LoginManagerRepo>();
 builder.Services.AddScoped<MainIndexRepo>();
@@ -447,6 +456,14 @@ builder.Services.AddScoped<CourseRightAnswerRepo>();
 builder.Services.AddScoped<CourseExamEvaluateRepo>();
 
 builder.Services.AddScoped<InventoryProjectProductSaleLinkRepo>();
+builder.Services.AddScoped<HandoverPersonalAssetRepo>();
+builder.Services.AddScoped<UpdateVersionRepo>();
+
+builder.Services.AddScoped<FollowProjectBaseDetailRepo>();
+
+
+
+
 
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();
@@ -485,6 +502,7 @@ builder.Services.AddScoped<PhasedAllocationPersonDetailRepo>();
 builder.Services.AddScoped<MenuAppRepo>();
 builder.Services.AddScoped<MenuAppUserGroupLinkRepo>();
 builder.Services.AddScoped<ProjectPartListPurchaseRequestApproveLogRepo>();
+builder.Services.AddScoped<EmployeeLuckyNumberRepo>();
 
 
 #region KPI
@@ -495,12 +513,31 @@ builder.Services.AddScoped<KPIPositionRepo>();
 builder.Services.AddScoped<KPIEvaluationRuleRepo>();
 builder.Services.AddScoped<KPIPositionEmployeeRepo>();
 builder.Services.AddScoped<KPIEmployeePointDetailRepo>();
+builder.Services.AddScoped<KPIEvaluationRuleDetailRepo>();
+builder.Services.AddScoped<KPIExamRepo>();
+builder.Services.AddScoped<KPISumaryEvaluationRepo>();
+#endregion
+
+#region Yêu cầu tuyển dụng
+builder.Services.AddScoped<HRRecruitmentCandidateLogRepo>();
+builder.Services.AddScoped<HRRecruitmentCandidateRepo>();
+builder.Services.AddScoped<HRHiringCandidateInformationFormWorkingExperienceRepo>();
+builder.Services.AddScoped<HRHiringCandidateInformationEmergencyContactRepo>();
+builder.Services.AddScoped<HRHiringCandidateInformationFormOtherCertificateRepo>();
+builder.Services.AddScoped<HRHiringCandidateInformationFormEducationRepo>();
+builder.Services.AddScoped<HRHiringCandidateInformationFormRepo>();
+builder.Services.AddScoped<HRRecruitmentCandidateRepo>();
+builder.Services.AddScoped<HRHiringCandidateInformationFormForeignLanguageSkillsRepo>();
+builder.Services.AddScoped<HRHiringCandidateInformationFormRecruitmentInfoRepo>();
 #endregion
 
 #region RabbitService
 //builder.Services.AddSingleton<RabbitMqConnection>();
 //builder.Services.AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>();
 //builder.Services.AddHostedService<EmailConsumer>();
+
+builder.Services.AddScoped<EmailHelper>();
+
 #endregion
 
 
@@ -536,7 +573,7 @@ builder.Services.AddCors(options =>
 });
 
 
-
+builder.Services.AddSingleton<SseService>();
 
 
 //Config FormOption
@@ -565,6 +602,7 @@ builder.Services.AddCors(options =>
 var jwtSection = builder.Configuration.GetSection("JwtSettings");
 builder.Services.Configure<JwtSettings>(jwtSection);
 var jwtSettings = jwtSection.Get<JwtSettings>() ?? new JwtSettings();
+builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<JwtSettings>>().Value);
 
 builder.Services.AddAuthentication("Bearer")
                 .AddJwtBearer("Bearer", options =>
@@ -583,6 +621,11 @@ builder.Services.AddAuthentication("Bearer")
                     };
                 });
 builder.Services.AddAuthentication();
+
+
+//Get SmtpSetting
+var smtpSettings = builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+
 
 //Get list static file
 builder.Services.Configure<List<PathStaticFile>>(builder.Configuration.GetSection("PathStaticFiles"));
@@ -657,7 +700,7 @@ app.MapControllers();
 app.Use(async (context, next) =>
 {
     context.Request.Path = context.Request.Path.Value?.ToLower();
-    await next();
+        await next();
 });
 
 
@@ -673,7 +716,7 @@ foreach (var item in staticFiles)
     });
 
 
-    app.UseDirectoryBrowser(new DirectoryBrowserOptions
+    app.UseDirectoryBrowser(new DirectoryBrowserOptions 
     {
         FileProvider = new PhysicalFileProvider(item.PathFull),
         RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
