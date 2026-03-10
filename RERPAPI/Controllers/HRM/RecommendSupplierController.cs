@@ -16,7 +16,7 @@ namespace RERPAPI.Controllers.HRM
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize] 
     public class RecommendSupplierController : ControllerBase
     {
         JobRequirementRepo _jobRepo;
@@ -433,6 +433,33 @@ namespace RERPAPI.Controllers.HRM
             if (DateTime.TryParse(date.ToString(), out DateTime dt))
                 return dt.ToString("dd/MM/yyyy");
             return date.ToString();
+        }
+
+    //Lấy danh sách lịch sử ncc, đơn giá
+        [HttpPost("get-historical-suppliers")]
+        public IActionResult GetHistoricalSuppliers()
+        {
+            try
+            {
+                // Lấy danh sách NCC đã từng nhập từ bảng HCNSProposal
+                // Có thể filter thêm theo DepartmentID của người dùng nếu cần
+                var data = SQLHelper<dynamic>.ProcedureToList("spGetHistoricalSuppliers",
+                    new string[] { },
+                    new object[] { }
+                );
+
+                var historicalData = SQLHelper<dynamic>.GetListData(data, 0);
+
+                return Ok(new
+                {
+                    status = 1,
+                    data = historicalData
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
         }
 
     }
