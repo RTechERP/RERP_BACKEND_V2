@@ -16,6 +16,7 @@ namespace RERPAPI.Repo.GenericEntity
         EmployeeSendEmailRepo _employeeSendEmailRepo;
         UnitCountKTRepo _unitCountKTRepo;
         FirmRepo _firmRepo;
+        ProductGroupRTCRepo _productgroupRTCRepo;
         public ProjectPartlistPurchaseRequestRepo(
             CurrentUser currentUser,
             ProductGroupRepo productgroupRepo,
@@ -24,7 +25,8 @@ namespace RERPAPI.Repo.GenericEntity
             EmployeeSendEmailRepo employeeSendEmailRepo,
             ProductRTCRepo productRTCRepo,
             UnitCountKTRepo unitCountKTRepo,
-            FirmRepo firmRepo
+            FirmRepo firmRepo,
+            ProductGroupRTCRepo productGroupRTCRepo
         ) : base(currentUser)
         {
             _currentUser = currentUser;
@@ -35,6 +37,7 @@ namespace RERPAPI.Repo.GenericEntity
             _productRTCRepo = productRTCRepo;
             _unitCountKTRepo = unitCountKTRepo;
             _firmRepo = firmRepo;
+            _productgroupRTCRepo = productGroupRTCRepo;
         }
 
         public bool ValidateKeepProduct(List<ProductHoldDTO> requests, out string message)
