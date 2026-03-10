@@ -712,7 +712,16 @@ namespace RERPAPI.Repo.GenericEntity
                 ProjectPartlistPurchaseRequest request = GetByID(item.ID);
                 if (request.EmployeeIDRequestApproved != _currentUser.EmployeeID && !_currentUser.IsAdmin) continue;
                 if (item.ProductGroupRTCID <= 0 && item.ProductGroupID <= 0) continue;
-                ProductRTC productRTC = _productRTCRepo.GetAll(x => x.ProductCode.Trim().ToLower() == item.ProductCode.Trim().ToLower() && x.IsDelete == false).FirstOrDefault() ?? new ProductRTC();
+                //var lstProductRtc = _productRTCRepo.GetAll(x => x.ProductCode.Trim().ToLower() == item.ProductCode.Trim().ToLower() && x.IsDelete == false);
+                //var lstProductGroup = _productgroupRTCRepo.GetAll(x => x.WarehouseType == 1);
+                ProductRTC productRTC = (from p in _productRTCRepo.GetAll(x => x.IsDelete == false)
+                                         join g in _productgroupRTCRepo.GetAll(x => x.WarehouseType == 1)
+                                         on p.ProductGroupRTCID equals g.ID
+                                         where p.ProductCode.Trim().ToLower() == item.ProductCode.Trim().ToLower()
+                                         select p)
+                 .FirstOrDefault() ?? new ProductRTC();
+
+                //ProductRTC productRTC = _productRTCRepo.GetAll(x => x.ProductCode.Trim().ToLower() == item.ProductCode.Trim().ToLower() && x.IsDelete == false).FirstOrDefault() ?? new ProductRTC();
                 productRTC.ProductCode = item.ProductCode.Trim();
                 productRTC.ProductName = item.ProductName.Trim();
                 UnitCountKT unitCountKT = _unitCountKTRepo.GetAll(x => x.UnitCountName.Trim().ToLower() == item.UnitName.Trim().ToLower()).FirstOrDefault() ?? new UnitCountKT();
