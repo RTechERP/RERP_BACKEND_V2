@@ -44,10 +44,17 @@ namespace RERPAPI.Controllers.HRM
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 object data;
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
-                var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x => (x.Code == "N1" || x.Code == "N2" || x.Code == "N60") && x.UserID == currentUser.ID);
-                if (vUserHR == null)
+                var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x => (x.Code == "N1" || x.Code == "N2") && x.UserID == currentUser.ID);
+                var vUserHRN60 = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x => (x.Code == "N60") && x.UserID == currentUser.ID);
+                if (vUserHR == null && vUserHRN60 == null)
                 {
                     data = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
+                                                new string[] { "@Status", "@DepartmentID", "@Keyword" },
+                                                new object[] { status, departmentid, keyword ?? "" });
+                }
+                else if (vUserHRN60 != null)
+                {
+                    data = SQLHelper<EmployeeDTON60>.ProcedureToListModel("spGetEmployee",
                                                 new string[] { "@Status", "@DepartmentID", "@Keyword" },
                                                 new object[] { status, departmentid, keyword ?? "" });
                 }
@@ -77,13 +84,20 @@ namespace RERPAPI.Controllers.HRM
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 object data;
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
-                var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x => (x.Code == "N1" || x.Code == "N2" || x.Code == "N60") && x.UserID == currentUser.ID);
-                if (vUserHR == null)
+                var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x => (x.Code == "N1" || x.Code == "N2") && x.UserID == currentUser.ID);
+                var vUserHRN60 = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x =>( x.Code == "N60") && x.UserID == currentUser.ID);
+                if (vUserHR == null&&vUserHRN60==null)
                 {
                     data = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
                                                 new string[] { "@Status", "@DepartmentID", "@Keyword" },
                                                 new object[] { status, departmentid, keyword ?? "" });
                 }
+                else if(vUserHRN60 !=null)
+                {
+                    data = SQLHelper<EmployeeDTON60>.ProcedureToListModel("spGetEmployee",
+                                                new string[] { "@Status", "@DepartmentID", "@Keyword" },
+                                                new object[] { status, departmentid, keyword ?? "" });
+                }    
                 else
                 {
                     var employee = SQLHelper<object>.ProcedureToList("spGetEmployee",
