@@ -19,7 +19,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpGet("")]
-        public IActionResult getProductGroup(bool isvisible = true, string warehousecode = "")
+        public IActionResult getProductGroup(bool isvisible = true, string warehousecode = "HN")
         {
             try
             {
@@ -53,6 +53,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-productgroup-purchase")]
         public IActionResult getProductGroupPurchase(bool isvisible = true, string warehousecode = "")
         {
