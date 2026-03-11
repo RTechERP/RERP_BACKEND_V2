@@ -377,6 +377,8 @@ builder.Services.AddScoped<HRHiringRequestHealthLinkRepo>();
 builder.Services.AddScoped<HRHiringRequestLanguageLinkRepo>();
 builder.Services.AddScoped<ProjectWorkerRepo>();
 builder.Services.AddScoped<ProjectRequestFileRepo>();
+builder.Services.AddScoped<FollowProjectBaseDetailRepo>();
+
 
 builder.Services.AddScoped<TaxCompanyRepo>();
 builder.Services.AddScoped<ProjectPartlistPurchaseRequestTypeRepo>();
