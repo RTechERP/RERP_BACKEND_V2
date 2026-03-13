@@ -453,6 +453,8 @@ builder.Services.AddScoped<HandoverPersonalAssetRepo>();
 builder.Services.AddScoped<UpdateVersionRepo>();
 
 builder.Services.AddScoped<FollowProjectBaseDetailRepo>();
+builder.Services.AddScoped<DailyReportAccountingRepo>();
+
 
 
 
