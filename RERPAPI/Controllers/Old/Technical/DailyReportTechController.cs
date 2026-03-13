@@ -814,7 +814,7 @@ namespace RERPAPI.Controllers.Old.Technical
                         return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy thông tin Marketing Manager!"));
                     }
                     emailTo = marketingManager.EmailCongTy;
-                    emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
+                   // emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
                     receiverEmployeeId = marketingManagerID;
                 }
                 else
@@ -826,14 +826,14 @@ namespace RERPAPI.Controllers.Old.Technical
                     {
                         //emailTo = "nhubinh2104@gmail.com";
                         emailTo = "marketing01@rtc.edu.vn";
-                        emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
+                        //emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
                         await _emailHelper.SendAsync(emailTo, subject, request.Body, cc: emailCc);
                     }
                     else if (currentUser.ID == 1618) ///-- Nhân viên Bùi Lệ Thủy UserID = 1618 gửi mail cho Phạm văn Trung( marketing02@rtc.edu.vn ) 
                     {
                         emailTo = "marketing02@rtc.edu.vn";
                         //emailTo = "quanghung21hb@gmail.com";
-                        emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
+                       // emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
                         await _emailHelper.SendAsync(emailTo, subject, request.Body, cc: emailCc);
                     }
                     //else if(currentUser.ID == 1502)
