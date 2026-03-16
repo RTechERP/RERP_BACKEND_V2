@@ -162,7 +162,7 @@ namespace RERPAPI.Controllers.Accounting
         //}
 
         [HttpGet("get-data")]
-        public async Task<IActionResult> GetData(int page, int size, int? userId, DateTime? dateStart, DateTime? dateEnd, string filterText = "")
+        public async Task<IActionResult> GetData(int page, int size, int? employeeId, DateTime? dateStart, DateTime? dateEnd, string filterText = "")
         {
             try
             {
@@ -173,7 +173,7 @@ namespace RERPAPI.Controllers.Accounting
                     PageSize = size,
                     DateStart = dateStart,
                     DateEnd = dateEnd,
-                    UserID = userId
+                    EmployeeID = employeeId
                 };
 
                 var data = await SqlDapper<object>.ProcedureToListAsync("spGetDailyReportAccounting", param);
@@ -209,7 +209,6 @@ namespace RERPAPI.Controllers.Accounting
 
         /// <summary>
         /// Lưu hoặc Cập nhật báo cáo
-        /// LƯU Ý: Chỗ này truyền thẳng Entity, bạn có thể tạo DailyReportAccountingDTO nếu muốn chặt chẽ hơn
         /// </summary>
         [HttpPost("save-data")]
         public async Task<IActionResult> Save(List<DailyReportAccountingDTO> dtos)
@@ -227,7 +226,7 @@ namespace RERPAPI.Controllers.Accounting
                 foreach (var dto in dtos)
                 {
                     // Validate
-                    if (dto.UserID <= 0)
+                    if (dto.EmployeeID <= 0)
                         return BadRequest(ApiResponseFactory.Fail(null, "UserID không hợp lệ"));
 
                     if (dto.ReportDate == default)
@@ -262,7 +261,7 @@ namespace RERPAPI.Controllers.Accounting
                     }
 
                     // Mapping trực tiếp
-                    model.UserID = dto.UserID;
+                    model.EmployeeID = dto.EmployeeID;
                     model.ReportDate = dto.ReportDate;
                     model.Content = dto.Content?.Trim();
                     model.Result = dto.Result?.Trim();
