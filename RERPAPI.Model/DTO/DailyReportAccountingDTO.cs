@@ -8,7 +8,7 @@ namespace RERPAPI.Model.DTO
 {
     public class DailyReportAccountingDTO
     {
-        public int Id { get; set; }
+        public int ID { get; set; }
         public int UserID { get; set; }
         public DateTime ReportDate { get; set; }
         public string? Content { get; set; }
