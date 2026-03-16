@@ -258,10 +258,12 @@ namespace RERPAPI.Controllers.HRM
                 // Lấy thông tin ứng viên từ claims
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentCandidate = ObjectMapper.GetCurrentCandidate(claims);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
 
-                if (currentCandidate == null || currentCandidate.ID == 0)
+                // Phải có ít nhất một thông tin đăng nhập (Ứng viên hoặc Nhân viên hệ thống)
+                if ((currentCandidate == null || currentCandidate.ID == 0) && (currentUser == null || currentUser.ID == 0))
                 {
-                    return Unauthorized(ApiResponseFactory.Fail(null, "Không tìm thấy thông tin ứng viên đăng nhập (Vui lòng đăng nhập lại)"));
+                    return Unauthorized(ApiResponseFactory.Fail(null, "Không tìm thấy thông tin đăng nhập (Vui lòng đăng nhập lại)"));
                 }
 
                 // 0. Validate data
@@ -274,8 +276,16 @@ namespace RERPAPI.Controllers.HRM
                 // 1. Lưu tờ khai chính
                 var mainForm = data.HRRecruitmentApplicationForm;
 
-                // Gán ID ứng viên đang đăng nhập để đảm bảo tính an toàn dữ liệu
-                mainForm.HRRecruitmentCandidateID = currentCandidate.ID;
+                // Nếu là ứng viên đang đăng nhập, gán ID ứng viên để đảm bảo tính an toàn dữ liệu
+                // Nếu là nhân viên hệ thống (HR), giữ nguyên ID từ payload (hoặc check quyền ở đây)
+                if (currentCandidate != null && currentCandidate.ID > 0)
+                {
+                    mainForm.HRRecruitmentCandidateID = currentCandidate.ID;
+                }
+                else if (mainForm.HRRecruitmentCandidateID <= 0)
+                {
+                     return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy ID ứng viên trong dữ liệu gửi lên"));
+                }
 
                 if (mainForm.ID > 0)
                 {
@@ -361,7 +371,7 @@ namespace RERPAPI.Controllers.HRM
         }
         [HttpPost("save-form-auto")]
         public async Task<IActionResult> SaveFormAuto([FromBody] HRRecruitmentApplicationFullDTO data)
-            {
+        {
             try
             {
                 if (data == null || data.HRRecruitmentApplicationForm == null)
@@ -372,16 +382,23 @@ namespace RERPAPI.Controllers.HRM
                 // Lấy thông tin ứng viên từ claims
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentCandidate = ObjectMapper.GetCurrentCandidate(claims);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
 
-                if (currentCandidate == null || currentCandidate.ID == 0)
+                if ((currentCandidate == null || currentCandidate.ID == 0) && (currentUser == null || currentUser.ID == 0))
                 {
-                    return Unauthorized(ApiResponseFactory.Fail(null, "Không tìm thấy thông tin ứng viên đăng nhập (Vui lòng đăng nhập lại)"));
+                    return Unauthorized(ApiResponseFactory.Fail(null, "Không tìm thấy thông tin đăng nhập (Vui lòng đăng nhập lại)"));
                 }
                 // 1. Lưu tờ khai chính
                 var mainForm = data.HRRecruitmentApplicationForm;
 
-                // Gán ID ứng viên đang đăng nhập để đảm bảo tính an toàn dữ liệu
-                mainForm.HRRecruitmentCandidateID = currentCandidate.ID;
+                if (currentCandidate != null && currentCandidate.ID > 0)
+                {
+                    mainForm.HRRecruitmentCandidateID = currentCandidate.ID;
+                }
+                else if (mainForm.HRRecruitmentCandidateID <= 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy ID ứng viên trong dữ liệu gửi lên"));
+                }
 
                 if (mainForm.ID > 0)
                 {
