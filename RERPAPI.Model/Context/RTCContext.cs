@@ -214,6 +214,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<CustomerSpecialization> CustomerSpecializations { get; set; }
 
+    public virtual DbSet<DailyReportAccounting> DailyReportAccountings { get; set; }
+
     public virtual DbSet<DailyReportHR> DailyReportHRs { get; set; }
 
     public virtual DbSet<DailyReportMarketingFile> DailyReportMarketingFiles { get; set; }
@@ -2892,6 +2894,28 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
+        modelBuilder.Entity<DailyReportAccounting>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__DailyRep__3214EC276DA43481");
+
+            entity.ToTable("DailyReportAccounting");
+
+            entity.Property(e => e.Content).HasComment("Việc đã làm");
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.EmployeeID).HasComment("Nhân viên/Họ tên (FK)");
+            entity.Property(e => e.MistakeOrViolation).HasComment("Lỗi/Sai phạm/Bị nhắc nhở");
+            entity.Property(e => e.NextPlan).HasComment("Kế hoạch tiếp theo");
+            entity.Property(e => e.PendingIssues).HasComment("Tồn đọng/Vướng mắc");
+            entity.Property(e => e.ReportDate)
+                .HasComment("Ngày báo cáo")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Result).HasComment("Kết quả/Tình trạng");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+            entity.Property(e => e.Urgent).HasComment("Phát sinh gấp cần xử lý");
+        });
+
         modelBuilder.Entity<DailyReportHR>(entity =>
         {
             entity.ToTable("DailyReportHR");
@@ -4163,7 +4187,9 @@ public partial class RTCContext : DbContext
                 .IsUnicode(false);
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.LeaderID).HasDefaultValue(0);
             entity.Property(e => e.Name).HasMaxLength(50);
+            entity.Property(e => e.ParentID).HasDefaultValue(0);
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
@@ -7635,7 +7661,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.LampType).HasMaxLength(150);
             entity.Property(e => e.LampWattage).HasMaxLength(150);
             entity.Property(e => e.LensMount).HasMaxLength(150);
-            entity.Property(e => e.LocationImg).HasMaxLength(150);
+            entity.Property(e => e.LocationImg).HasMaxLength(550);
             entity.Property(e => e.MOD).HasMaxLength(150);
             entity.Property(e => e.Maker)
                 .HasMaxLength(150)
@@ -8115,6 +8141,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.DatePriceRequest).HasColumnType("datetime");
             entity.Property(e => e.DeadlinePriceRequest).HasColumnType("datetime");
             entity.Property(e => e.ExpectedReturnDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.LeadTime).HasMaxLength(100);
             entity.Property(e => e.NCCFinal).HasMaxLength(750);
             entity.Property(e => e.OrderCode)
@@ -8199,6 +8226,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.DateRequest).HasColumnType("datetime");
             entity.Property(e => e.Deadline).HasColumnType("datetime");
             entity.Property(e => e.HistoryPrice).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.LeadTime).HasMaxLength(100);
             entity.Property(e => e.Maker).HasMaxLength(150);
             entity.Property(e => e.Quantity).HasColumnType("decimal(18, 2)");
