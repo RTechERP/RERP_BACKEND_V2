@@ -214,7 +214,19 @@ namespace RERPAPI.Controllers.Old
             }
 
         }
-
+        [HttpGet("get-rulepay-by-poncc")]
+        public IActionResult GetRulePayByPONCC(int ponccId)
+        {
+            try
+            {
+                int rulePayID = _pONCCRulePayRepo.GetAll(x => x.PONCCID == ponccId).Where(x => x.RulePayID.HasValue).Select(x => x.RulePayID.Value).FirstOrDefault();
+                return Ok(ApiResponseFactory.Success(rulePayID));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [HttpGet("poncc-detail")]
         [RequiresPermission("N33,N35,N36,N1,N52,N38,N54")]
         public IActionResult Getponccdetail(string idText, int warehouseID, string detailId)
@@ -662,6 +674,7 @@ namespace RERPAPI.Controllers.Old
                     po.SupplierVoucher = po.SupplierVoucher ?? "";
                     po.OrderTargets = po.OrderTargets ?? "";
                     po.ReasonForFailure = po.ReasonForFailure ?? "";
+                    po.ExpectedDate = po.ExpectedDate ?? null;
                     await _pONCCRepo.CreateAsync(po);
                 }
 

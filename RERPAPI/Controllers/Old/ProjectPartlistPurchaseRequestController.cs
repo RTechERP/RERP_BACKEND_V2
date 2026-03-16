@@ -704,7 +704,7 @@ namespace RERPAPI.Controllers.Old
                     var existingRequest = _repo.GetByID(item.ID);
                     if (existingRequest == null) continue;
 
-                    if (existingRequest.EmployeeIDRequestApproved != currentUser.EmployeeID
+                    if (existingRequest.EmployeeID != currentUser.EmployeeID
                         && !currentUser.IsAdmin) continue;
 
                     if (item.ID <= 0) continue;
