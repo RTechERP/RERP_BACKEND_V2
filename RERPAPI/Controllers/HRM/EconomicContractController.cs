@@ -44,6 +44,7 @@ namespace RERPAPI.Controllers.HRM
                    new object[] {request.DateStart??DateTime.MinValue, request.DateEnd??DateTime.MaxValue,request.Keyword??"", request.TypeNCC??0,request.Type??0});
                 var dataList = SQLHelper<dynamic>.GetListData(economicContract, 0);
                 return Ok(ApiResponseFactory.Success(economicContract, "Lấy dữ liệu thành công"));
+                
             }
 
             catch (Exception ex)

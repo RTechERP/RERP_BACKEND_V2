@@ -5,10 +5,19 @@ namespace RERPAPI.Model.Entities;
 
 public partial class InventoryProjectExport
 {
+    /// <summary>
+    /// ID tồn kho xuất dự án
+    /// </summary>
     public int ID { get; set; }
 
+    /// <summary>
+    /// ID tồn kho giữ
+    /// </summary>
     public int? InventoryProjectID { get; set; }
 
+    /// <summary>
+    /// ID chi tiết phiếu xuất
+    /// </summary>
     public int? BillExportDetailID { get; set; }
 
     public bool? IsDeleted { get; set; }
@@ -21,5 +30,8 @@ public partial class InventoryProjectExport
 
     public string? UpdatedBy { get; set; }
 
+    /// <summary>
+    /// số lượng
+    /// </summary>
     public decimal? Quantity { get; set; }
 }

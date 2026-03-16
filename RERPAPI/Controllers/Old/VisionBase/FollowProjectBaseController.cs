@@ -202,7 +202,7 @@ namespace RERPAPI.Controllers.KhoBaseManager
 
         [HttpGet("get-user-sale")]
         public async Task<IActionResult> GetUserSale(int userId, bool isAdmin, int isAdminSale)
-        {
+      {
             try
             {
 
@@ -216,7 +216,7 @@ namespace RERPAPI.Controllers.KhoBaseManager
 
                 int result = 0;
 
-                if (isAdmin || isAdminSale == 0)
+                if (isAdmin || isAdminSale == 1)
                 {
                     result = 1;
                 }

@@ -20,6 +20,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Net.Mime;
 using System.Security.Claims;
 using System.Text;
+using System.Threading.Tasks;
 
 
 namespace RERPAPI.Controllers
@@ -41,9 +42,11 @@ namespace RERPAPI.Controllers
         private readonly EmployeeOnLeaveRepo _onLeaveRepo;
         private readonly EmployeeWFHRepo _wfhRepo;
         private readonly ConfigSystemRepo _configSystemRepo;
+        private readonly EmailHelper _emailHelper;
 
         //IRabbitMqPublisher _publisher;
-        public HomeController(IOptions<JwtSettings> jwtSettings, RTCContext context, IConfiguration configuration, EmployeeOnLeaveRepo onLeaveRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeWFHRepo employeeWFHRepo, ConfigSystemRepo configSystemRepo, EmployeeOverTimeRepo employeeOverTimeRepo, RoleConfig roleConfig, EmployeePayrollDetailRepo employeePayrollDetailRepo)
+        public HomeController(IOptions<JwtSettings> jwtSettings, RTCContext context,
+            IConfiguration configuration, EmployeeOnLeaveRepo onLeaveRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeWFHRepo employeeWFHRepo, ConfigSystemRepo configSystemRepo, EmployeeOverTimeRepo employeeOverTimeRepo, RoleConfig roleConfig, EmployeePayrollDetailRepo employeePayrollDetailRepo, EmailHelper emailHelper)
         {
             _jwtSettings = jwtSettings.Value;
             _context = context;
@@ -56,6 +59,7 @@ namespace RERPAPI.Controllers
             _roleConfig = roleConfig;
             _employeePayrollDetailRepo = employeePayrollDetailRepo;
             //_publisher = publisher;
+            _emailHelper = emailHelper;
         }
         [HttpPost("login")]
         public IActionResult Login([FromBody] User user)
@@ -91,8 +95,7 @@ namespace RERPAPI.Controllers
                 var dictionary = (IDictionary<string, object>)hasUser;
                 foreach (var item in dictionary)
                 {
-                    //if (item.Key.ToLower() == "passwordhash") continue;
-
+                    if (item.Key.ToLower() == "passwordhash") continue;
                     var claim = new Claim(item.Key.ToLower(), item.Value?.ToString() ?? "");
                     claims.Add(claim);
                 }
@@ -630,6 +633,7 @@ namespace RERPAPI.Controllers
         //}
 
         [HttpGet("download")]
+        [Authorize]
         public IActionResult DownloadFile([FromQuery] string path)
         {
             try
@@ -704,7 +708,7 @@ namespace RERPAPI.Controllers
         //}
         //API Lấy danh sách bản ghi để duyệt TBP duyệt
         [HttpPost("get-approve-by-approve-tp")]
-
+        [Authorize]
         public async Task<ActionResult> GetApproveByApproveTP([FromBody] ApproveByApproveTPRequestParam request)
 
         {
@@ -1025,15 +1029,15 @@ namespace RERPAPI.Controllers
         //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
         //    }
         //}
+
         [HttpGet("get-personal-synthetic-by-month")]
+        [Authorize]
         public IActionResult GetPersonalSyntheticByMonth(int year, int month)
         {
             try
             {
-
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
-
 
                 DateTime dateStart = new DateTime(year, month, 1, 0, 0, 0);
                 DateTime dateEnd = dateStart.AddMonths(1).AddSeconds(-1);
@@ -1042,9 +1046,10 @@ namespace RERPAPI.Controllers
                     new string[] { "@Year", "@Month", "@EmployeeID" },
                     new object[] { year, month, currentUser.EmployeeID });
 
-                var payrollData = SQLHelper<object>.ProcedureToList("spGetEmployeePayrollDetail",
+                var payrollData = SQLHelper<object>.ProcedureToList("spGetEmployeePayrollDetail_Personal",
                     new string[] { "@Year", "@Month", "@DepartmentID", "@EmployeeID", "@Keyword", "@IsPublish", "@IsAll" },
                     new object[] { year, month, currentUser.DepartmentID, currentUser.EmployeeID, "", 1, 0 });
+
                 var payroll = SQLHelper<object>.GetListData(payrollData, 0);
                 var rawFingerData = SQLHelper<dynamic>.ProcedureToList("spGetEmployeeAttendance",
                     new string[] { "@DepartmentID", "@EmployeeID", "@FindText", "@DateStart", "@DateEnd" },
@@ -1169,6 +1174,7 @@ namespace RERPAPI.Controllers
             }
         }
         [HttpGet("get-user-team")]
+        [Authorize]
         public IActionResult GetUserTeam()
         {
             try
@@ -1188,6 +1194,7 @@ namespace RERPAPI.Controllers
 
         }
         [HttpGet("get-user-team-link-by-leader-id")]
+        [Authorize]
         public IActionResult GetUserTeamLinkByLeaderID()
         {
             try
@@ -1208,6 +1215,8 @@ namespace RERPAPI.Controllers
 
         }
         [HttpGet("get-all-contact")]
+        [Authorize]
+        //[RequiresPermission("N1")]
         public IActionResult GetAllContact(int departmentID, string? keyword)
         {
             try
@@ -1242,6 +1251,7 @@ namespace RERPAPI.Controllers
             }
         }
         [HttpGet("get-all-team-new")]
+        [Authorize]
         public IActionResult GetAllTeamNew(int deID)
         {
 
@@ -1265,8 +1275,9 @@ namespace RERPAPI.Controllers
             }
         }
         [HttpPost("get-quantity-approve")]
+        [Authorize]
         public async Task<IActionResult> GetQuantityApprove([FromBody] ApproveByApproveTPRequestParam request)
-            {
+        {
             try
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
@@ -1281,13 +1292,13 @@ namespace RERPAPI.Controllers
                     FilterText = "",
                     DateStart = request.DateStart,
                     DateEnd = request.DateEnd,
-                    IDApprovedTP =0,
+                    IDApprovedTP = 0,
                     Status = -1,
-                    DeleteFlag =0,
+                    DeleteFlag = 0,
                     EmployeeID = 0,
-                    TType =0,
-                    StatusHR =-1,
-                    StatusBGD =0,
+                    TType = 0,
+                    StatusHR = -1,
+                    StatusBGD = 0,
                     IsBGD = false,
                     UserTeamID = 0,
                     SeniorID = currentUser.EmployeeID,
@@ -1327,10 +1338,10 @@ namespace RERPAPI.Controllers
                     SeniorID = 0,
                     StatusSenior = -1
                 };
-                var approveResultSenior = await  SqlDapper<object>.ProcedureToListTAsync("spGetApprovedByApprovedTP_New", paramSenior);
-                var approveResultTP = await  SqlDapper<object>.ProcedureToListTAsync( "spGetApprovedByApprovedTP_New",paramTP);
-                var approveResultBGD = await SqlDapper<object>.ProcedureToListTAsync("spGetApprovedByApprovedTP_New",paramBGD);
-              
+                var approveResultSenior = await SqlDapper<object>.ProcedureToListTAsync("spGetApprovedByApprovedTP_New", paramSenior);
+                var approveResultTP = await SqlDapper<object>.ProcedureToListTAsync("spGetApprovedByApprovedTP_New", paramTP);
+                var approveResultBGD = await SqlDapper<object>.ProcedureToListTAsync("spGetApprovedByApprovedTP_New", paramBGD);
+
                 var result = new[]
                         {
                             new { Type = "Senior", Count = approveResultSenior?.Count ?? 0 },
@@ -1386,10 +1397,14 @@ namespace RERPAPI.Controllers
         //}
 
         [HttpPost("confirm-payroll")]
+        [Authorize]
         public IActionResult ConfirmPayroll([FromBody] ConfirmPayrollDTO dto)
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
                 var payroll = _employeePayrollDetailRepo.GetByID(dto.Id);
                 if (payroll == null)
                     return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy bảng lương"));
@@ -1406,6 +1421,7 @@ namespace RERPAPI.Controllers
         }
 
         [HttpPost("get-summary-employee-person")]
+        [Authorize]
         public IActionResult GetProposeVehicleRepair([FromBody] SummaryPersonal request)
         {
             try
@@ -1450,7 +1466,9 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-config-system-hr")]
+        [Authorize]
         public IActionResult GetConfigSystem()
         {
             try
@@ -1467,6 +1485,7 @@ namespace RERPAPI.Controllers
         }
 
         [HttpPost("save-config-system-hr")]
+        [Authorize]
         public IActionResult SaveConfigSystemHR([FromBody] SaveConfigSystemHRRequestDTO request)
         {
             try
@@ -1485,7 +1504,6 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
 
         #region API của DA Trường
@@ -1601,5 +1619,82 @@ namespace RERPAPI.Controllers
             }
         }
         #endregion
+
+
+        [HttpPost("send-email")]
+        [Authorize]
+        public async Task<IActionResult> SendEmail([FromBody] EmployeeSendEmail sendEmail)
+        {
+            try
+            {
+                string htmlBody = @"
+                    <div>
+                        <p style='text-align:center; font-weight:bold;'>GIÁM ĐỐC</p>
+                        <p style='text-align:center; font-weight:bold;'>CÔNG TY CỔ PHẦN RTC TECHNOLOGY VIỆT NAM</p>
+
+                        <br/>
+
+                        <p>Căn cứ vào Bộ luật lao động số 45/2019/QH14 và các văn bản sửa đổi, bổ sung;</p>
+                        <p>Căn cứ Điều lệ tổ chức hoạt động của Công ty;</p>
+                        <p>Căn cứ Quy chế lương, thưởng của Công ty;</p>
+                        <p>Căn cứ tính chất công việc của ông/bà <strong>Lê Thế Anh</strong> – Chức vụ: Pro Engineer,</p>
+
+                        <br/>
+
+                        <p style='font-weight:bold;'>QUYẾT ĐỊNH:</p>
+
+                        <p><strong>Điều 1.</strong> Điều chỉnh lương đối với ông/bà <strong>Lê Thế Anh</strong>. Cụ thể như sau:</p>
+
+                        <table border='1' cellpadding='6' cellspacing='0' style='border-collapse: collapse; width: 100%;'>
+                            <thead style='background:#f2f2f2; font-weight:bold; text-align:center;'>
+                                <tr>
+                                    <td rowspan='2'>TT</td>
+                                    <td rowspan='2'>Họ và tên</td>
+                                    <td rowspan='2'>Chức vụ mới</td>
+                                    <td colspan='3'>Lương T12/2025 (đã bao gồm Phụ cấp ăn trưa)</td>
+                                    <td colspan='3'>Lương T1/2026 (đã bao gồm Phụ cấp ăn trưa)</td>
+                                </tr>
+                                <tr>
+                                    <td>LCB</td>
+                                    <td>PCCC</td>
+                                    <td>Tổng lương</td>
+                                    <td>LCB</td>
+                                    <td>PCCC</td>
+                                    <td>Tổng lương</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style='text-align:center;'>
+                                    <td>1</td>
+                                    <td>Lê Thị Lệ</td>
+                                    <td>Pro Tester 1</td>
+                                    <td>5,300,000</td>
+                                    <td>800,000</td>
+                                    <td>6,100,000</td>
+                                    <td>5,400,000</td>
+                                    <td>1,000,000</td>
+                                    <td>6,400,000</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <br/>
+
+                        <p><strong>Điều 2.</strong> Thời gian áp dụng kể từ ngày 01/01/2026.</p>
+
+                        <p><strong>Điều 3.</strong> Phòng Hành chính Nhân sự, Tài chính Kế toán, Phòng ban liên quan và ông/bà 
+                            <strong>Lê Thị Lệ</strong> căn cứ Quyết định thi hành./.</p>
+                    </div>";
+
+                if (string.IsNullOrWhiteSpace(sendEmail.Body)) sendEmail.Body = htmlBody;
+
+                await _emailHelper.SendAsync(sendEmail.EmailTo, sendEmail.Subject, sendEmail.Body, cc: sendEmail.EmailCC);
+                return Ok(ApiResponseFactory.Success(null, "Gửi thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 }

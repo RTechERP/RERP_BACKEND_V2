@@ -814,9 +814,9 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                             sheet.Row(startRow).InsertRowsBelow(detailList.Count - 1);
                         }
 
-                        foreach (var item in detailList.OrderByDescending(x => x["ID"])) // Match original reverse order
+                        foreach (var item in detailList.OrderBy(x => x["STT"])) // Match original reverse order
                         {
-                            sheet.Cell(currentRow, 1).Value = stt++;
+                            sheet.Cell(currentRow, 1).Value = item["STT"]?.ToString()?.Trim() ?? "";
                             sheet.Cell(currentRow, 2).Value = item["ProductNewCode"]?.ToString()?.Trim() ?? "";
                             sheet.Cell(currentRow, 3).Value = item["ProductCode"]?.ToString()?.Trim() ?? "";
                             sheet.Cell(currentRow, 4).Value = item["ProductName"]?.ToString()?.Trim() ?? "";
@@ -1532,9 +1532,9 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         int row = startRow;
                         int stt = 1;
 
-                        foreach (var item in detailList.OrderByDescending(x => x["ID"]))
+                        foreach (var item in detailList.OrderBy(x => x["STT"]))
                         {
-                            sheet.Cell(row, 1).Value = stt++;
+                            sheet.Cell(row, 1).Value = item["STT"]?.ToString()?.Trim() ?? "";
                             sheet.Cell(row, 2).Value = item["ProductNewCode"]?.ToString()?.Trim() ?? "";
                             sheet.Cell(row, 3).Value = item["ProductCode"]?.ToString()?.Trim() ?? "";
                             sheet.Cell(row, 4).Value = item["ProductName"]?.ToString()?.Trim() ?? "";

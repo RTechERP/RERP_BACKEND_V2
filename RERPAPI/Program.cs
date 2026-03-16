@@ -28,6 +28,7 @@ using RERPAPI.Repo.GenericEntity.TB;
 using RERPAPI.Repo.GenericEntity.Technical;
 using RERPAPI.Repo.GenericEntity.Technical.KPI;
 using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
+//using RERPAPI.SendService;
 using RTCApi.Repo.GenericRepo;
 using System.Text;
 
@@ -446,6 +447,14 @@ builder.Services.AddScoped<CourseRepo>();
 builder.Services.AddScoped<CourseRegisterIdeaRepo>();
 
 builder.Services.AddScoped<InventoryProjectProductSaleLinkRepo>();
+builder.Services.AddScoped<HandoverPersonalAssetRepo>();
+builder.Services.AddScoped<UpdateVersionRepo>();
+
+builder.Services.AddScoped<FollowProjectBaseDetailRepo>();
+
+
+
+
 
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();
@@ -500,10 +509,26 @@ builder.Services.AddScoped<KPIExamRepo>();
 builder.Services.AddScoped<KPISumaryEvaluationRepo>();
 #endregion
 
+#region Yêu cầu tuyển dụng
+builder.Services.AddScoped<HRRecruitmentCandidateLogRepo>();
+builder.Services.AddScoped<HRRecruitmentCandidateRepo>();
+builder.Services.AddScoped<HRHiringCandidateInformationFormWorkingExperienceRepo>();
+builder.Services.AddScoped<HRHiringCandidateInformationEmergencyContactRepo>();
+builder.Services.AddScoped<HRHiringCandidateInformationFormOtherCertificateRepo>();
+builder.Services.AddScoped<HRHiringCandidateInformationFormEducationRepo>();
+builder.Services.AddScoped<HRHiringCandidateInformationFormRepo>();
+builder.Services.AddScoped<HRRecruitmentCandidateRepo>();
+builder.Services.AddScoped<HRHiringCandidateInformationFormForeignLanguageSkillsRepo>();
+builder.Services.AddScoped<HRHiringCandidateInformationFormRecruitmentInfoRepo>();
+#endregion
+
 #region RabbitService
 //builder.Services.AddSingleton<RabbitMqConnection>();
 //builder.Services.AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>();
 //builder.Services.AddHostedService<EmailConsumer>();
+
+builder.Services.AddScoped<EmailHelper>();
+
 #endregion
 
 
@@ -539,7 +564,7 @@ builder.Services.AddCors(options =>
 });
 
 
-
+builder.Services.AddSingleton<SseService>();
 
 
 //Config FormOption
@@ -568,6 +593,7 @@ builder.Services.AddCors(options =>
 var jwtSection = builder.Configuration.GetSection("JwtSettings");
 builder.Services.Configure<JwtSettings>(jwtSection);
 var jwtSettings = jwtSection.Get<JwtSettings>() ?? new JwtSettings();
+builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<JwtSettings>>().Value);
 
 builder.Services.AddAuthentication("Bearer")
                 .AddJwtBearer("Bearer", options =>
@@ -586,6 +612,11 @@ builder.Services.AddAuthentication("Bearer")
                     };
                 });
 builder.Services.AddAuthentication();
+
+
+//Get SmtpSetting
+var smtpSettings = builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+
 
 //Get list static file
 builder.Services.Configure<List<PathStaticFile>>(builder.Configuration.GetSection("PathStaticFiles"));
@@ -660,7 +691,7 @@ app.MapControllers();
 app.Use(async (context, next) =>
 {
     context.Request.Path = context.Request.Path.Value?.ToLower();
-    await next();
+        await next();
 });
 
 

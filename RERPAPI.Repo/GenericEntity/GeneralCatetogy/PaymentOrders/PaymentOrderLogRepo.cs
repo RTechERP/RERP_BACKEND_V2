@@ -101,6 +101,9 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                 string reasonCancel_1 = string.Empty;
                 bool isRequestAppendFileHR = false;
 
+
+                List<string> messageFails = new List<string>();
+
                 foreach (var item in payments)
                 {
                     int actionStep = 0;
@@ -291,7 +294,6 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                             }
                         }
                         await UpdateAsync(log);
-
                     }
                 }
 

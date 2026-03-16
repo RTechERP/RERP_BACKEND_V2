@@ -201,7 +201,7 @@ namespace RERPAPI.Controllers.KPITechnical
         #endregion
         #region  chọn vị trí trong kỳ đánh giá
         [HttpPost("choice-position")]
-        public async Task<IActionResult> ChoicePosition(int positionID)
+        public async Task<IActionResult> ChoicePosition( int positionID)
         {
             try
             {
@@ -217,7 +217,7 @@ namespace RERPAPI.Controllers.KPITechnical
                     EmployeeID = currentUser.EmployeeID,
                 };
                 await _kpiPositionEmployeeRepo.CreateAsync(newModel);
-                return Ok(ApiResponseFactory.Success(null, "Chọn vị trí thành công"));
+                return Ok(ApiResponseFactory.Success(newModel, "Chọn vị trí thành công"));
             }
             catch (Exception ex)
             {
@@ -331,6 +331,35 @@ namespace RERPAPI.Controllers.KPITechnical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpGet("get-ispublish")]
+        public async Task<IActionResult> GetISPublish(int kpiExamID, bool isPublic, int employeeID, int sessionID)
+        {
+            try
+            {
+                //Get possition của nhân viên
+                List<KPIPosition> kpiPositions = _kpiPositionRepo.GetAll(x => x.KPISessionID == sessionID && x.IsDeleted == false);
+                List<KPIPositionEmployee> kpiPositionEmployees = _kpiPositionEmployeeRepo.GetAll(x => x.EmployeeID == employeeID && x.IsDeleted == false);
+
+                var empPosition = (from p in kpiPositions
+                                   join pe in kpiPositionEmployees on p.ID equals pe.KPIPosiotionID
+                                   select pe)
+
+                     .FirstOrDefault() ?? new KPIPositionEmployee();
+
+                KPIEvaluationRule rule = _kpiEvaluationRuleRepo.GetAll(x => x.KPISessionID == sessionID && x.KPIPositionID == (empPosition.KPIPosiotionID > 0 ? empPosition.KPIPosiotionID : 1) && x.IsDeleted == false)
+                    .FirstOrDefault() ?? new KPIEvaluationRule(); // 1 là kỹ thuật
+
+                int empPointId = await GetKPIEmployeePointID(rule.ID, employeeID);
+                KPIEmployeePoint empPoint = _kpiEmployeePointRepo.GetByID(empPointId);
+
+                return Ok(ApiResponseFactory.Success(empPoint, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpGet("load-kpi-chung")]
         public async Task<IActionResult> LoadKPIChung(int kpiExamID, bool isPublic, int employeeID)
         {
@@ -501,5 +530,42 @@ namespace RERPAPI.Controllers.KPITechnical
         }
         #endregion
 
+        #region LoadPointRuleNew
+        [HttpGet("load-point-rule-new2")]
+        public async Task<IActionResult> LoadPointRuleNew(int kpiExamID, bool isPublic, int employeeID, int sessionID)
+        {
+            try
+            {
+                //Get possition của nhân viên
+                List<KPIPosition> kpiPositions = _kpiPositionRepo.GetAll(x => x.KPISessionID == sessionID && x.IsDeleted == false);
+                List<KPIPositionEmployee> kpiPositionEmployees = _kpiPositionEmployeeRepo.GetAll(x => x.EmployeeID == employeeID && x.IsDeleted == false);
+
+                var empPosition = (from p in kpiPositions
+                                   join pe in kpiPositionEmployees on p.ID equals pe.KPIPosiotionID
+                                   select pe)
+
+                     .FirstOrDefault() ?? new KPIPositionEmployee();
+
+                KPIEvaluationRule rule = _kpiEvaluationRuleRepo.GetAll(x => x.KPISessionID == sessionID && x.KPIPositionID == (empPosition.KPIPosiotionID > 0 ? empPosition.KPIPosiotionID : 1) && x.IsDeleted == false)
+                    .FirstOrDefault() ?? new KPIEvaluationRule(); // 1 là kỹ thuật
+
+                int empPointId = await GetKPIEmployeePointID(rule.ID, employeeID);
+                KPIEmployeePoint empPoint = _kpiEmployeePointRepo.GetByID(empPointId);
+                var param = new
+                {
+                    KPIEmployeePointID = empPoint.ID,
+                };
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetSumarizebyKPIEmpPointIDNew", param);
+                //var data = SQLHelper<object>.ProcedureToList("spGetEmployeeRulePointByKPIEmpPointIDNew"
+                //  , new string[] { "@KPIEmployeePointID", "@IsPublic" }
+                //  , new object[] { kpiEmployeePointID, isPublic });
+                return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        #endregion
     }
 }

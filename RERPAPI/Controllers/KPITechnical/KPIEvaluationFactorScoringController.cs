@@ -134,7 +134,8 @@ namespace RERPAPI.Controllers.KPITechnical
                 {
                     KPIEmployeePointID = empPointId
                 };
-                var data1 = await SqlDapper<object>.ProcedureToListAsync("spGetKpiRuleSumarizeTeamNew", param);
+                List<spGetKpiRuleSumarizeTeamNewResultDTO> data1 = await SqlDapper<spGetKpiRuleSumarizeTeamNewResultDTO>.ProcedureToListTAsync("spGetKpiRuleSumarizeTeamNew", param);
+
                 //var data1 = SQLHelper<object>.ProcedureToList("spGetKpiRuleSumarizeTeamNew"
                 // , new string[] { "@KPIEmployeePointID" }
                 // , new object[] { empPointId });
@@ -144,7 +145,7 @@ namespace RERPAPI.Controllers.KPITechnical
                     KPIEmployeePointID = empPointId,
                     IsPublic = 1
                 };
-                var data2 = await SqlDapper<object>.ProcedureToListAsync("spGetEmployeeRulePointByKPIEmpPointIDNew", param2);
+                var data2 = await SqlDapper<spGetEmployeeRulePointByKPIEmpPointIDNewResultDTO>.ProcedureToListTAsync("spGetEmployeeRulePointByKPIEmpPointIDNew", param2);
                 //var data2 = SQLHelper<object>.ProcedureToList("spGetEmployeeRulePointByKPIEmpPointIDNew"
                 //  , new string[] { "@KPIEmployeePointID", "@IsPublic" }
                 //  , new object[] { empPointId, 1 });
@@ -154,7 +155,7 @@ namespace RERPAPI.Controllers.KPITechnical
 
                 List<KPIEmployeePointDetail> lst = _kpiEmployeePointDetailRepo.GetAll(x => x.KPIEmployeePointID == empPointId);
 
-                return Ok(ApiResponseFactory.Success(new { dtTeam, dtKpiRule, lst }, "Lấy dữ liệu thành công"));
+                return Ok(ApiResponseFactory.Success(new { dtTeam, dtKpiRule, lst, empPointID = empPointId }, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
             {
@@ -500,13 +501,27 @@ namespace RERPAPI.Controllers.KPITechnical
 
         #region LoadPointRuleNew
         [HttpGet("load-point-rule-new")]
-        public async Task<IActionResult> LoadPointRuleNew(int empPointMaster)
+        public async Task<IActionResult> LoadPointRuleNew(int kpiExamID,int employeeID, int sessionID)
         {
             try
             {
+                //Get possition của nhân viên
+                List<KPIPosition> kpiPositions = _kpiPositionRepo.GetAll(x => x.KPISessionID == sessionID && x.IsDeleted == false);
+                List<KPIPositionEmployee> kpiPositionEmployees = _kpiPositionEmployeeRepo.GetAll(x => x.EmployeeID == employeeID && x.IsDeleted == false);
+
+                var empPosition = (from p in kpiPositions
+                                   join pe in kpiPositionEmployees on p.ID equals pe.KPIPosiotionID
+                                   select pe)
+
+                     .FirstOrDefault() ?? new KPIPositionEmployee();
+
+                KPIEvaluationRule rule = _kpiEvaluationRuleRepo.GetAll(x => x.KPISessionID == sessionID && x.KPIPositionID == (empPosition.KPIPosiotionID > 0 ? empPosition.KPIPosiotionID : 1) && x.IsDeleted == false)
+                    .FirstOrDefault() ?? new KPIEvaluationRule(); // 1 là kỹ thuật
+
+                int empPointId = await GetKPIEmployeePointID(rule.ID, employeeID);
                 var param = new
                 {
-                    KPIEmployeePointID = empPointMaster,
+                    KPIEmployeePointID = empPointId,
                 };
                 var data = await SqlDapper<object>.ProcedureToListAsync("spGetSumarizebyKPIEmpPointIDNew", param);
                 //var data = SQLHelper<object>.ProcedureToList("spGetEmployeeRulePointByKPIEmpPointIDNew"

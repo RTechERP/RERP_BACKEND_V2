@@ -408,6 +408,9 @@ namespace RERPAPI.Controllers
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
                 DateTime dateRegister = DateTime.Now;
 
                 // Kiểm tra phát sinh
@@ -426,7 +429,7 @@ namespace RERPAPI.Controllers
                     return BadRequest(ApiResponseFactory.Fail(null, $"Vui lòng nhập Thời gian cần {cateText}!"));
 
                 DateTime timeNeed = vehicleBooking.TimeNeedPresent.Value;
-                if (timeNeed <= dateRegister)
+                if (timeNeed <= dateRegister&& currentUser.EmployeeID!=395)
                     return BadRequest(ApiResponseFactory.Fail(null, "Thời gian cần đến phải lớn hơn thời gian hiện tại!"));
 
                 if (vehicleBooking.TimeReturn.HasValue)
@@ -434,9 +437,8 @@ namespace RERPAPI.Controllers
                     if (vehicleBooking.TimeReturn.Value <= timeNeed)
                         return BadRequest(ApiResponseFactory.Fail(null, "Thời gian cần về phải lớn hơn thời gian cần đến!"));
                 }
-
                 // Validate thời gian xuất phát
-                if (vehicleBooking.Category != 2 && vehicleBooking.Category != 6 && vehicleBooking.Category != 7 && vehicleBooking.Category != 8)
+                if (vehicleBooking.Category != 2 && vehicleBooking.Category != 6 && vehicleBooking.Category != 7 && vehicleBooking.Category != 8&& currentUser.EmployeeID !=395)
                 {
                     if (!vehicleBooking.DepartureDate.HasValue)
                         return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng nhập Thời gian xuất phát!"));

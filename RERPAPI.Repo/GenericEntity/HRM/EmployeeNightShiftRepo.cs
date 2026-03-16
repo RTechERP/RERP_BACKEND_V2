@@ -5,13 +5,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
 namespace RERPAPI.Repo.GenericEntity.HRM
 {
     public class EmployeeNightShiftRepo : GenericRepo<EmployeeNighShift>
     {
+        private readonly CurrentUser _currentUser;
         public EmployeeNightShiftRepo(CurrentUser currentUser) : base(currentUser)
         {
+            _currentUser = currentUser;
         }
         public bool Validate(EmployeeNighShift item, out string message)
         {
@@ -46,7 +47,8 @@ namespace RERPAPI.Repo.GenericEntity.HRM
             }
 
             // 5. Nếu sửa (ID > 0) thì bắt buộc nhập lý do sửa (ReasonHREdit)
-            if (item.ID > 0 && string.IsNullOrWhiteSpace(item.ReasonHREdit))
+
+            if (item.ID > 0 && string.IsNullOrWhiteSpace(item.ReasonHREdit) && _currentUser.EmployeeID != item.EmployeeID)
             {
                 message = "Vui lòng nhập Lý do sửa.";
                 return false;

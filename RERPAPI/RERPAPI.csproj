@@ -57,6 +57,7 @@
     <Compile Remove="Controllers\Old\VisionBase\CustomerController.cs" />
     <Compile Remove="Controllers\PONCCController.cs" />
     <Compile Remove="Controllers\Project\ProjectPartlistPurchaseRequestController.cs" />
+    <Compile Remove="Controllers\Systems\UpdateVersionController.cs" />
     <Compile Remove="Controllers\UsersController.cs" />
     <Compile Remove="Controllers\WareHouseController.cs" />
   </ItemGroup>
@@ -66,6 +67,7 @@
     <PackageReference Include="Dapper" Version="2.1.66" />
     <PackageReference Include="DocX" Version="5.0.0" />
     <PackageReference Include="EPPlus" Version="8.2.1" />
+    <PackageReference Include="MailKit" Version="4.14.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.5">

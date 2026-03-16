@@ -94,7 +94,7 @@ namespace RERPAPI.Controllers.Old.Technical
             {
                 var dataRaw1 = SQLHelper<object>.ProcedureToList("spGetSummaryKPIErrorEmployee",
                                                 new string[] { "@Month", "@Year", "@KPIErrorID", "@EmployeeID", "@Keyword", "@TypeID", "@DepartmentID" },
-                                                new object[] { month, year, kpiErrorId, employeeId, keywords, 1, departmentId });
+                                                new object[] { month, year, kpiErrorId, employeeId, keywords, 0, departmentId });
                 var data1 = SQLHelper<object>.GetListData(dataRaw1, 0);
 
                 var dataRaw2 = SQLHelper<object>.ProcedureToList("spGetSummaryKPIErrorEmployee",

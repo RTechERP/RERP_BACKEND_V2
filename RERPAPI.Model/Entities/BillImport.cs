@@ -5,10 +5,19 @@ namespace RERPAPI.Model.Entities;
 
 public partial class BillImport
 {
+    /// <summary>
+    /// ID Phiếu nhập
+    /// </summary>
     public int ID { get; set; }
 
+    /// <summary>
+    /// Mã phiếu nhập kho
+    /// </summary>
     public string? BillImportCode { get; set; }
 
+    /// <summary>
+    /// Ngày nhập
+    /// </summary>
     public DateTime? CreatDate { get; set; }
 
     /// <summary>
@@ -26,6 +35,9 @@ public partial class BillImport
     /// </summary>
     public bool? Status { get; set; }
 
+    /// <summary>
+    /// Tên nhà cung cấp
+    /// </summary>
     public string? Suplier { get; set; }
 
     /// <summary>
@@ -40,10 +52,16 @@ public partial class BillImport
 
     public string? GroupID { get; set; }
 
+    /// <summary>
+    /// ID nhà cung cấp
+    /// </summary>
     public int? SupplierID { get; set; }
 
     public int? DeliverID { get; set; }
 
+    /// <summary>
+    /// ID người nhận hàng
+    /// </summary>
     public int? ReciverID { get; set; }
 
     public int? KhoTypeID { get; set; }
@@ -58,12 +76,18 @@ public partial class BillImport
 
     public int? UnApprove { get; set; }
 
+    /// <summary>
+    /// Phiếu trả nội bộ
+    /// </summary>
     public bool? PTNB { get; set; }
 
+    /// <summary>
+    /// ID kho
+    /// </summary>
     public int? WarehouseID { get; set; }
 
     /// <summary>
-    /// 0: Phiếu nhập
+    /// Loại phiếu: 0: Phiếu nhập
     /// 1: Phiếu trả
     /// 2: Phiếu trả nội bộ
     /// 3: Phiếu mượn NCC
@@ -77,16 +101,25 @@ public partial class BillImport
     /// </summary>
     public int? BillDocumentImportType { get; set; }
 
+    /// <summary>
+    /// Ngày yêu cầu nhập kho
+    /// </summary>
     public DateTime? DateRequestImport { get; set; }
 
+    /// <summary>
+    /// ID điều khoản thanh toán
+    /// </summary>
     public int? RulePayID { get; set; }
 
     public bool? IsDeleted { get; set; }
 
     /// <summary>
-    /// 1: đã đủ, 0: chưa đủ
+    /// Trạng thái chứng từ: 1: đã đủ, 0: chưa đủ
     /// </summary>
     public bool? StatusDocumentImport { get; set; }
 
+    /// <summary>
+    /// ID phiếu xuất
+    /// </summary>
     public int? BillExportID { get; set; }
 }

@@ -124,6 +124,9 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                _currentUser = ObjectMapper.GetCurrentUser(claims);
+
                 p.DateStart = p.DateStart.Value.ToLocalTime().Date;
                 p.DateEnd = p.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
 
@@ -147,7 +150,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     IsApproved = p.IsApproved ?? -1,
                     IsSpecialOrder = p.IsSpecialOrder,
                     ApprovedTBPID = p.ApprovedTBPID,
-                    Step = p.Step,
+                    Step = p.Step ?? 0,
                     IsShowTable = p.IsShowTable,
                     Statuslog = p.Statuslog,
                     IsDelete = p.IsDelete,
@@ -473,12 +476,11 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         }
 
         [HttpPost("appoved-tbp")]
-        [RequiresPermission("N57")]
+        [RequiresPermission("N57,N83")]
         public async Task<IActionResult> ApprovedTBP([FromBody] List<PaymentOrderDTO> payment)
         {
             try
             {
-
                 var reponse = await _logRepo.Appoved(payment);
                 if (reponse == 1)
                 {
@@ -486,7 +488,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 }
                 else
                 {
-                    return Ok(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+                    return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
                 }
             }
             catch (Exception ex)
@@ -506,7 +508,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             }
             else
             {
-                return Ok(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+                return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
             }
         }
 
@@ -521,7 +523,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             }
             else
             {
-                return Ok(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+                return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
             }
         }
 
@@ -536,7 +538,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             }
             else
             {
-                return Ok(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+                return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
             }
         }
 
@@ -551,7 +553,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             }
             else
             {
-                return Ok(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+                return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
             }
         }
 
@@ -698,6 +700,35 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     },
                     poNCCDetails
                 }));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
+        [HttpPost("update-totalmoney")]
+        public async Task<IActionResult> UpdateTotalMoney([FromBody] List<PaymentOrder> payments)
+        {
+            try
+            {
+                //_currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
+
+                string message = "Cập nhật thành công!";
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                _currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                bool isAdmin = _currentUser.IsAdmin && _currentUser.EmployeeID <= 0;
+
+                if (!isAdmin) return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền cập nhập đề nghị!"));
+
+                foreach (var payment in payments)
+                {
+                    await _paymentRepo.UpdateAsync(payment);
+                }
+
+                return Ok(ApiResponseFactory.Success(payments, message));
             }
             catch (Exception ex)
             {
