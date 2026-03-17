@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Controllers.CRM;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -20,12 +21,14 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
         private readonly RequestInvoiceRepo _requestInvoiceRepo;
         private readonly RequestInvoiceFileRepo _requestInvoiceFileRepo;
         private readonly POKHFilesRepo _pokhFilesRepo;
-        public RequestInvoiceSummaryController(CustomerRepo customerRepo, RequestInvoiceRepo requestInvoiceRepo, RequestInvoiceFileRepo requestInvoiceFileRepo, POKHFilesRepo pokhFilesRepo)
+        private readonly ConfigSystemRepo _configSystemRepo;
+        public RequestInvoiceSummaryController(CustomerRepo customerRepo, RequestInvoiceRepo requestInvoiceRepo, RequestInvoiceFileRepo requestInvoiceFileRepo, POKHFilesRepo pokhFilesRepo, ConfigSystemRepo configSystemRepo)
         {
             _customerRepo = customerRepo;
             _requestInvoiceRepo = requestInvoiceRepo;
             _requestInvoiceFileRepo = requestInvoiceFileRepo;
             _pokhFilesRepo = pokhFilesRepo;
+            _configSystemRepo = configSystemRepo;
         }
         [HttpGet("get-request-invoice-summary")]
         public IActionResult GetEmployee(DateTime dateStart, DateTime dateEnd, int customerId, int userId, int status, string keyWords = "")
@@ -60,15 +63,25 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
 
         [HttpPost("download-batch-files")]
         [Authorize]
-        public IActionResult DownloadBatchFiles([FromBody] List<BatchDownloadDto> payload)
+        public IActionResult DownloadBatchFiles([FromBody] List<RequestInvoiceSummaryFilesDownloadDTO> payload)
         {
             try
             {
                 if (payload == null || !payload.Any())
-                    return Ok(new { status = 0, message = "Không có hóa đơn nào hợp lệ để tải." });
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu để tải file"));
+                int currentYear = DateTime.Now.Year;
+
+                string key = "RequestInvoiceSummaryFiles";
+                var rootPath = _configSystemRepo.GetUploadPathByKey(key);
+
+                if (string.IsNullOrWhiteSpace(rootPath))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: {key}"));
+                }
 
                 // Thư mục root chứa file
-                string baseDestPath = @"\\192.168.1.190\Software\ftp\Upload\Hóa đơn đầu ra 2026";
+                //string baseDestPath = $@"\\192.168.1.190\Software\ftp\Upload\Hóa đơn đầu ra {currentYear}";
+                string baseDestPath = Path.Combine(rootPath, $"Hóa đơn đầu ra {currentYear}");
                 if (!Directory.Exists(baseDestPath))
                 {
                     Directory.CreateDirectory(baseDestPath);
@@ -114,21 +127,14 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                     }
                 }
 
-                return Ok(new { status = 1, message = "Đã xuất và lưu file thành công vào máy chủ mạng." });
+                //return Ok(new { status = 1, message = "Đã xuất và lưu file thành công vào máy chủ." });
+                return Ok(ApiResponseFactory.Success(null, $"Lưu file thành công"));
             }
             catch (Exception ex)
             {
-                return Ok(new { status = 0, message = $"Lỗi tải file hàng loạt: {ex.Message}" });
+                //return Ok(new { status = 0, message = $"Lỗi tải file hàng loạt: {ex.Message}" });
+                return BadRequest(ApiResponseFactory.Fail(null, $"Lỗi tải file hàng loạt: {ex.Message}"));
             }
-        }
-
-
-        public class BatchDownloadDto
-        {
-            public int RequestInvoiceID { get; set; }
-            public int? POKHId { get; set; }
-            public string CompanyText { get; set; }
-            public string InvoiceNumber { get; set; }
         }
 
     }
