@@ -190,16 +190,17 @@ namespace RERPAPI.Controllers.HRM
                         new Claim(JwtRegisteredClaimNames.Sub,hasUser.ID.ToString()),
                         new Claim(JwtRegisteredClaimNames.UniqueName,hasUser.FullName ?? ""),
                     };
-
                 var dictionary = (IDictionary<string, object>)hasUser;
+
                 foreach (var item in dictionary)
                 {
                     if (item.Key.ToLower() == "passwordhash") continue;
 
-                    // Sửa: Đổi tên claim 'id' thành 'candidateid' để phân biệt với UserID của hệ thống
-                    string claimKey = item.Key.ToLower() == "id" ? "candidateid" : item.Key.ToLower();
-                    var claim = new Claim(claimKey, item.Value?.ToString() ?? "");
-                    claims.Add(claim);
+                    string claimKey = item.Key.ToLower() == "id"
+                        ? "candidateid"
+                        : "app_" + item.Key.ToLower();
+
+                    claims.Add(new Claim(claimKey, item.Value?.ToString() ?? ""));
                 }
 
 

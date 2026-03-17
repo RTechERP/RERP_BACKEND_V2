@@ -66,19 +66,32 @@ namespace RERPAPI.Model.Common
         }
         public static HRRecruitmentCandidate GetCurrentCandidate(Dictionary<string, string> claims)
         {
-            HRRecruitmentCandidate currentUser = new HRRecruitmentCandidate();
+            HRRecruitmentCandidate currentCandidate = new HRRecruitmentCandidate();
 
             var props = typeof(HRRecruitmentCandidate).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
             foreach (var prop in props)
             {
                 if (!prop.CanWrite) continue;
 
-                var value = claims.TryGetValue(prop.Name.ToLower(), out var rawValuea);
                 string claimKey = prop.Name.ToLower();
-                // Ưu tiên lấy từ 'candidateid' nếu prop là 'id'
-                if (claimKey == "id" && claims.ContainsKey("candidateid"))
+
+                if (claims.ContainsKey("app_" + claimKey))
                 {
-                    claimKey = "candidateid";
+                    claimKey = "app_" + claimKey;
+                }
+                // Ưu tiên lấy từ 'candidateid' nếu prop là 'id'
+                if (claimKey == "id")
+                {
+                    if (claims.ContainsKey("candidateid"))
+                    {
+                        claimKey = "candidateid";
+                    }
+                    else
+                    {
+                        // Nếu không có candidateid thì không được map vào ID của candidate
+                        // để tránh nhầm lẫn với UserID (hệ thống)
+                        continue;
+                    }
                 }
 
                 if (claims.TryGetValue(claimKey, out var rawValue))
@@ -94,7 +107,7 @@ namespace RERPAPI.Model.Common
                             _ => null
                         };
 
-                        if (parsedValue != null) prop.SetValue(currentUser, parsedValue);
+                        if (parsedValue != null) prop.SetValue(currentCandidate, parsedValue);
                     }
                     catch (Exception ex)
                     {
@@ -103,7 +116,7 @@ namespace RERPAPI.Model.Common
                 }
             }
 
-            return currentUser;
+            return currentCandidate;
         }
     }
 }
