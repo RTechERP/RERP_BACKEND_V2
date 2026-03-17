@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using DocumentFormat.OpenXml.Spreadsheet;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -8,6 +9,7 @@ using RERPAPI.Repo.GenericEntity;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.Accounting
 {
@@ -166,18 +168,23 @@ namespace RERPAPI.Controllers.Accounting
         {
             try
             {
-                var param = new
-                {
-                    FilterText = filterText,
-                    PageNumber = page,
-                    PageSize = size,
-                    DateStart = dateStart,
-                    DateEnd = dateEnd,
-                    EmployeeID = employeeId
-                };
+                //var param = new
+                //{
+                //    FilterText = filterText,
+                //    PageNumber = page,
+                //    PageSize = size,
+                //    DateStart = dateStart,
+                //    DateEnd = dateEnd,
+                //    EmployeeID = employeeId
+                //};
 
-                var data = await SqlDapper<object>.ProcedureToListAsync("spGetDailyReportAccounting", param);
-                return Ok(ApiResponseFactory.Success(new { data }, ""));
+                //var data = await SqlDapper<object>.ProcedureToListAsync("spGetDailyReportAccounting", param);
+                var list = SQLHelper<dynamic>.ProcedureToList("spGetDailyReportAccounting",
+                            new string[] { "@FilterText", "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@EmployeeID" },
+                            new object[] { filterText, page, size, dateStart, dateEnd, employeeId });
+                var data = SQLHelper<dynamic>.GetListData(list, 0);
+                var totalPages = SQLHelper<dynamic>.GetListData(list, 1);
+                return Ok(ApiResponseFactory.Success(new { data, totalPages}, ""));
             }
             catch (Exception ex)
             {
@@ -220,23 +227,14 @@ namespace RERPAPI.Controllers.Accounting
                     return BadRequest(ApiResponseFactory.Fail(null, "Danh sách báo cáo trống"));
                 }
 
-                var today = DateTime.Today;
-                var minAllowedDate = today.AddDays(-3);
-
                 foreach (var dto in dtos)
                 {
                     // Validate
                     if (dto.EmployeeID <= 0)
-                        return BadRequest(ApiResponseFactory.Fail(null, "UserID không hợp lệ"));
+                        return BadRequest(ApiResponseFactory.Fail(null, "EmployeeID không hợp lệ"));
 
                     if (dto.ReportDate == default)
                         return BadRequest(ApiResponseFactory.Fail(null, "Ngày báo cáo không hợp lệ"));
-
-                    if (dto.ReportDate.Date < minAllowedDate || dto.ReportDate.Date > today)
-                    {
-                        return BadRequest(ApiResponseFactory.Fail(null,
-                            $"Chỉ được báo cáo trong 3 ngày gần nhất ({minAllowedDate:dd/MM/yyyy} - {today:dd/MM/yyyy})"));
-                    }
 
                     if (string.IsNullOrWhiteSpace(dto.Content))
                         return BadRequest(ApiResponseFactory.Fail(null, "Nội dung công việc không được để trống"));
