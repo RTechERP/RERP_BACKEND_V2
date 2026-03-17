@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -12,6 +12,7 @@ using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
 using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.BBNV;
+using RERPAPI.Repo.GenericEntity.CourseRepoo;
 using RERPAPI.Repo.GenericEntity.DocumentManager;
 using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
 using RERPAPI.Repo.GenericEntity.Film;
@@ -21,6 +22,7 @@ using RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders;
 using RERPAPI.Repo.GenericEntity.HRM;
 using RERPAPI.Repo.GenericEntity.HRM.DepartmentRequire;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
+using RERPAPI.Repo.GenericEntity.HRRecruitmentExamRepo;
 using RERPAPI.Repo.GenericEntity.MeetingMinutesRepo;
 using RERPAPI.Repo.GenericEntity.Project;
 using RERPAPI.Repo.GenericEntity.Systems;
@@ -526,6 +528,30 @@ builder.Services.AddScoped<HRHiringCandidateInformationFormForeignLanguageSkills
 builder.Services.AddScoped<HRHiringCandidateInformationFormRecruitmentInfoRepo>();
 #endregion
 
+#region đề thi ứng tuyển 
+builder.Services.AddScoped<HRRecruitmentExamRepo>();
+builder.Services.AddScoped<HRRecruitmentQuestionRepo>();
+builder.Services.AddScoped<HRRecruitmentAnswersRepo>();
+builder.Services.AddScoped<HRRecruitmentRightAnswearsRepo>();
+builder.Services.AddScoped<HRRecruitmentExamResultRepo>();
+builder.Services.AddScoped<HRRecruitmentQuestionImageRepo>();
+builder.Services.AddScoped<HRRecruitmentExamResultDetailRepo>();
+builder.Services.AddScoped<HRRecruitmentExamResultImageRepo>();
+builder.Services.AddScoped<HiringRequestExamRepo>();
+#endregion
+#region bình thêm
+builder.Services.AddScoped<CourseRepo>();
+builder.Services.AddScoped<CourseExamRepo>();
+builder.Services.AddScoped<CourseLessonHistoryRepo>();
+builder.Services.AddScoped<CourseExamResultRepo>();
+builder.Services.AddScoped<CourseExamResultDetailRepo>();
+builder.Services.AddScoped<CourseQuestionRepo>();
+builder.Services.AddScoped<CourseRightAnswerRepo>();
+builder.Services.AddScoped<CourseExamEvaluateRepo>();
+builder.Services.AddScoped<CourseCatalogRepo>();
+builder.Services.AddScoped<DepartmentRepo>();
+builder.Services.AddScoped<CourseLessonRepo>();
+#endregion
 #region RabbitService
 //builder.Services.AddSingleton<RabbitMqConnection>();
 //builder.Services.AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>();
