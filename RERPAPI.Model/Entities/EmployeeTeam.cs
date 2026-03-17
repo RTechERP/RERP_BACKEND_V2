@@ -24,4 +24,8 @@ public partial class EmployeeTeam
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
+
+    public int? LeaderID { get; set; }
+
+    public int? ParentID { get; set; }
 }

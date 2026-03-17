@@ -174,14 +174,14 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
-        [HttpGet("product-group_rtc")]
-        public IActionResult getProductGrouprtc(int productSaleId)
+        [HttpGet("product-group-rtc")]
+        public IActionResult getProductGrouprtc(int warehouseType)
         {
             try
             {
                 var data = _productGroupRTCRepo.GetAll(x => x.WarehouseID == 1
                 && x.ProductGroupNo.Trim().ToLower() != "dbh"
-                && x.ProductGroupNo.Trim().ToLower() != "dbh");
+                && x.ProductGroupNo.Trim().ToLower() != "dbh" && x.WarehouseType == warehouseType);
 
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
