@@ -18,9 +18,7 @@ namespace RERPAPI.Middleware
             _next = next;
             _apiKey = configuration["ApiKey"] ?? throw new Exception("ApiKey missing in config");
         }
-
-        
-        public async Task InvokeAsync(HttpContext context, IUserPermissionService permissionService, CandidateJwtSettings candidateJwtSettings)
+        public async Task InvokeAsync(HttpContext context, IUserPermissionService permissionService)
         {
             var endpoint = context.GetEndpoint();
 
@@ -79,31 +77,22 @@ namespace RERPAPI.Middleware
 
                     var response = JsonSerializer.Serialize(ApiResponseFactory.Unauthorized("Expired!"));
                     await context.Response.WriteAsync(response);
-
                     //await context.Response.WriteAsync("Expired");
                     return;
                 }
-                // 🔹 User Type Check (Dựa trên claim iscandidate từ token)
                 var isCandidateClaim = context.User.FindFirst("iscandidate")?.Value;
-                bool isCandidateToken = isCandidateClaim == "true";
-                
-                // If the user is a candidate, they should not be able to access endpoints requiring specific employee permissions
+                bool isCandidateToken = bool.TryParse(isCandidateClaim, out bool parsed) && parsed;
+                // Nếu Token là ứng viên VÀ Hệ thống đang cấu hình chặn ứng viên (IsCandidate = true)
                 if (isCandidateToken)
                 {
-                    if (permissionAttributes != null && permissionAttributes.Count > 0)
-                    {
                         context.Response.StatusCode = StatusCodes.Status403Forbidden;
-                        var response = JsonSerializer.Serialize(ApiResponseFactory.Unauthorized("Ứng viên không có quyền truy cập chức năng này!"));
+                        context.Response.ContentType = "application/json; charset=utf-8";
+                        var response = JsonSerializer.Serialize(ApiResponseFactory.Unauthorized("Bạn không có quyền!"));
                         await context.Response.WriteAsync(response);
-                        return;
-                    }
-                    
-                    // Candidates are generally limited to specific controllers. 
-                    // This can be further refined later with a [CandidateAuthorize] attribute.
+                        return;    
                 }
-
                 // Check là admin không
-                var isAdminClaim = context.User.FindFirst("isadmin")?.Value; 
+                var isAdminClaim = context.User.FindFirst("isadmin")?.Value;
                 if (!string.IsNullOrEmpty(isAdminClaim) && bool.TryParse(isAdminClaim, out bool isAdmin) && isAdmin)
                 {
                     await _next(context);
@@ -126,13 +115,10 @@ namespace RERPAPI.Middleware
                         }
                     }
                 }
-
-
-                await _next(context);
-                return;
             }
 
-            //Nếu không yêu cầu Authorize
+            // Cần đảm bảo luôn gọi _next(context) ở bước cuối cùng của Middleware
+            // Nếu không yêu cầu Authorize hoặc đã pass qua tất cả các check ở trên
             await _next(context);
         }
     }

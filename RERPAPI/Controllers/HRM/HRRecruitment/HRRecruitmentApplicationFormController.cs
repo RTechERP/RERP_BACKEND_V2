@@ -70,28 +70,28 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-                        //API lấy danh sách tờ khai 
-                        [HttpGet("get-all-application-form")]
-                        public IActionResult GetAllApplicationForm(string? filterText)
-                        {
-                            try
-                            {
-                           //     var data = _hRHiringCandidateInformationFormRepo.GetAll(x => x.IsDeleted != true);
+        //API lấy danh sách tờ khai 
+        [HttpGet("get-all-application-form")]
+        public IActionResult GetAllApplicationForm(int chucVuID, string? filterText)
+        {
+            try
+            {
+                //     var data = _hRHiringCandidateInformationFormRepo.GetAll(x => x.IsDeleted != true);
                 var applicationForm = SQLHelper<dynamic>.ProcedureToList(
                                    "spGetHRCandidateApplicationForm",
-                                   new[] {  "@FilterText" },
-                                   new object[] { filterText });
+                                   new[] { "@ChucVuHDID", "@FilterText" },
+                                   new object[] { chucVuID, filterText });
                 var dataList = SQLHelper<dynamic>.GetListData(applicationForm, 0);
 
                 return Ok(ApiResponseFactory.Success(dataList, ""));
-                            }
-                            catch (Exception ex)
-                            {
-                                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-                            }           
-                        }
-                        //API lấy danh sách tờ khai 
-                        [HttpGet("get-all-application-form-detail")]
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        //API lấy danh sách tờ khai 
+        [HttpGet("get-all-application-form-detail")]
                         public IActionResult GetAllApplicationFormDetail(int hRRecruitmentCandidateID)
                         {
                             try

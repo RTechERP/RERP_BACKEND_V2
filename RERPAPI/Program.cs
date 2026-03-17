@@ -687,7 +687,7 @@ if (app.Environment.IsDevelopment())
 app.UseStaticFiles();
 app.UseRouting();
 app.UseCors("MyCors");
-//app.UseAuthentication();
+app.UseAuthentication();
 app.UseAuthorization();
 app.UseSession();
 app.UseMiddleware<DynamicAuthorizationMiddleware>();
