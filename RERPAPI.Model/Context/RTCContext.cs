@@ -5262,6 +5262,9 @@ public partial class RTCContext : DbContext
                 .IsUnicode(false)
                 .HasComment("Tên file ảnh 3x4 của ứng viên");
             entity.Property(e => e.InjuriesOrSeriousIll).HasComment("0: Không, 1: Có - Bị thương tật hoặc bệnh nặng");
+            entity.Property(e => e.IsComplete)
+                .HasDefaultValue(false)
+                .HasComment("0.Chưa hoàn thành 1.Hoàn thành");
             entity.Property(e => e.IsDeleted).HasComment("0: Chưa xóa, 1: Đã xóa");
             entity.Property(e => e.IsPlanPregnant).HasComment("0: Không, 1: Có - Dự kiến mang thai trong 6 tháng tới (Nữ)");
             entity.Property(e => e.IsSignature).HasComment("0: Chưa xác nhận, 1: Đã xác nhận");
