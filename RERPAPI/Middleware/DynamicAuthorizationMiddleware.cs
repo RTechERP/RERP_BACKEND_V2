@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Linq;
 using RERPAPI.Attributes;
@@ -20,7 +20,7 @@ namespace RERPAPI.Middleware
         }
 
         
-        public async Task InvokeAsync(HttpContext context, IUserPermissionService permissionService)
+        public async Task InvokeAsync(HttpContext context, IUserPermissionService permissionService, CandidateJwtSettings candidateJwtSettings)
         {
             var endpoint = context.GetEndpoint();
 
@@ -83,21 +83,34 @@ namespace RERPAPI.Middleware
                     //await context.Response.WriteAsync("Expired");
                     return;
                 }
+                // 🔹 User Type Check (Dựa trên claim iscandidate từ token)
+                var isCandidateClaim = context.User.FindFirst("iscandidate")?.Value;
+                bool isCandidateToken = isCandidateClaim == "true";
+                
+                // If the user is a candidate, they should not be able to access endpoints requiring specific employee permissions
+                if (isCandidateToken)
+                {
+                    if (permissionAttributes != null && permissionAttributes.Count > 0)
+                    {
+                        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                        var response = JsonSerializer.Serialize(ApiResponseFactory.Unauthorized("Ứng viên không có quyền truy cập chức năng này!"));
+                        await context.Response.WriteAsync(response);
+                        return;
+                    }
+                    
+                    // Candidates are generally limited to specific controllers. 
+                    // This can be further refined later with a [CandidateAuthorize] attribute.
+                }
 
-
-
-                //var session = HttpContext.Session
-
-                //Check là admin không
-                var isAdminClaim = context.User.FindFirst("isadmin")?.Value; //NTA B update 041125
+                // Check là admin không
+                var isAdminClaim = context.User.FindFirst("isadmin")?.Value; 
                 if (!string.IsNullOrEmpty(isAdminClaim) && bool.TryParse(isAdminClaim, out bool isAdmin) && isAdmin)
                 {
                     await _next(context);
                     return;
                 }
 
-
-                //Check có mã quyền không
+                // Check có mã quyền không
                 if (permissionAttributes != null && permissionAttributes.Count > 0)
                 {
                     foreach (var attr in permissionAttributes)
@@ -108,7 +121,6 @@ namespace RERPAPI.Middleware
                             context.Response.StatusCode = StatusCodes.Status403Forbidden;
                             context.Response.ContentType = "text/plain; charset=utf-8";
                             var response = JsonSerializer.Serialize(ApiResponseFactory.Unauthorized("Bạn không có quyền!"));
-                            //await context.Response.WriteAsync("Bạn không có quyền!");
                             await context.Response.WriteAsync(response);
                             return;
                         }

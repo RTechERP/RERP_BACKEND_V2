@@ -1,4 +1,4 @@
-﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Model.Common
@@ -32,6 +32,10 @@ namespace RERPAPI.Model.Common
         public static CurrentUser GetCurrentUser(Dictionary<string, string> claims)
         {
             CurrentUser currentUser = new CurrentUser();
+            if (claims == null || (claims.TryGetValue("iscandidate", out var isCandidate) && isCandidate == "true"))
+            {
+                return currentUser; // Nếu là Token ứng viên thì không map vào CurrentUser nhân viên
+            }
 
             var props = typeof(CurrentUser).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
             foreach (var prop in props)
@@ -67,6 +71,10 @@ namespace RERPAPI.Model.Common
         public static HRRecruitmentCandidate GetCurrentCandidate(Dictionary<string, string> claims)
         {
             HRRecruitmentCandidate currentCandidate = new HRRecruitmentCandidate();
+            if (claims == null || (claims.TryGetValue("iscandidate", out var isCandidate) && isCandidate != "true"))
+            {
+                return currentCandidate; // Nếu không phải Token ứng viên thì không map dữ liệu
+            }
 
             var props = typeof(HRRecruitmentCandidate).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
             foreach (var prop in props)
@@ -93,7 +101,22 @@ namespace RERPAPI.Model.Common
                         continue;
                     }
                 }
+                if (prop.Name == "FullName")
+                {
+                    if (claims.TryGetValue("fullname", out var fullName) ||
+                        claims.TryGetValue("app_fullname", out fullName))
+                    {
+                        prop.SetValue(currentCandidate, fullName);
+                        continue;
+                    }
 
+                 
+                    if (claims.TryGetValue("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name", out var name))
+                    {
+                        prop.SetValue(currentCandidate, name);
+                        continue;
+                    }
+                }
                 if (claims.TryGetValue(claimKey, out var rawValue))
                 {
                     try
