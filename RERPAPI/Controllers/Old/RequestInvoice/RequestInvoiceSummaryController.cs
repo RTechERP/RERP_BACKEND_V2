@@ -82,10 +82,6 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                 // Thư mục root chứa file
                 //string baseDestPath = $@"\\192.168.1.190\Software\ftp\Upload\Hóa đơn đầu ra {currentYear}";
                 string baseDestPath = Path.Combine(rootPath, $"Hóa đơn đầu ra {currentYear}");
-                if (!Directory.Exists(baseDestPath))
-                {
-                    Directory.CreateDirectory(baseDestPath);
-                }
 
                 foreach (var item in payload)
                 {
@@ -94,14 +90,8 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
 
                     // Tạo folder theo Công ty -> Số Hóa Đơn
                     string invoiceFolder = Path.Combine(baseDestPath, companyName, invoiceNum);
-                    if (!Directory.Exists(invoiceFolder)) Directory.CreateDirectory(invoiceFolder);
-
-                    // Tạo 2 thư mục con bên trong folder Hóa Đơn
-                    string ycXhdFolder = Path.Combine(invoiceFolder, "FileYCXHD");
-                    string poFolder = Path.Combine(invoiceFolder, "FilePO");
-
-                    if (!Directory.Exists(ycXhdFolder)) Directory.CreateDirectory(ycXhdFolder);
-                    if (!Directory.Exists(poFolder)) Directory.CreateDirectory(poFolder);
+                    if (!Directory.Exists(invoiceFolder))
+                        Directory.CreateDirectory(invoiceFolder);
 
                     // Truy xuất DB và tải File Yêu Cầu Xuất Hóa Đơn
                     var ycxHdfiles = _requestInvoiceFileRepo.GetAll(f => f.RequestInvoiceID == item.RequestInvoiceID).ToList();
@@ -109,7 +99,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                     {
                         if (System.IO.File.Exists(f.ServerPath))
                         {
-                            System.IO.File.Copy(f.ServerPath, Path.Combine(ycXhdFolder, f.FileName), true);
+                            System.IO.File.Copy(f.ServerPath, Path.Combine(invoiceFolder, f.FileName), true);
                         }
                     }
 
@@ -121,7 +111,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                         {
                             if (System.IO.File.Exists(pf.ServerPath))
                             {
-                                System.IO.File.Copy(pf.ServerPath, Path.Combine(poFolder, pf.FileName), true);
+                                System.IO.File.Copy(pf.ServerPath, Path.Combine(invoiceFolder, pf.FileName), true);
                             }
                         }
                     }
