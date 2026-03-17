@@ -11,7 +11,7 @@ using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRRecruitmentExamRepo;
 using RERPAPI.Repo.GenericEntity.Technical.KPI;
 
-namespace RERPAPI.Controllers.HRRecruitmentExamManagement
+namespace RERPAPI.Controllers.HRM.HRRecruitment
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -203,9 +203,9 @@ namespace RERPAPI.Controllers.HRRecruitmentExamManagement
             {
                 var param = new
                 {
-                    ExamType = requestpr.ExamType,
-                    HRRecruitmentExamID = requestpr.HRRecruitmentExamID,
-                    FilterText = requestpr.FilterText
+                    requestpr.ExamType,
+                    requestpr.HRRecruitmentExamID,
+                    requestpr.FilterText
                 };
                 var data = await SqlDapper<object>.ProcedureToListAsync("spGetHRRecruitmentExamQuestionContent", param);
                 return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
@@ -486,7 +486,7 @@ namespace RERPAPI.Controllers.HRRecruitmentExamManagement
                 }
             }
             // TRƯỜNG HỢP 2: CÂU HỎI TỰ LUẬN (Có nội dung AnswerText HOẶC có đính kèm)
-            else if (!string.IsNullOrEmpty(request.AnswerText) || (request.litsAnswerImage != null && request.litsAnswerImage.Count > 0))
+            else if (!string.IsNullOrEmpty(request.AnswerText) || request.litsAnswerImage != null && request.litsAnswerImage.Count > 0)
             {
                 var essayDetail = existingDetails.FirstOrDefault();
                 if (essayDetail != null)
@@ -622,7 +622,7 @@ namespace RERPAPI.Controllers.HRRecruitmentExamManagement
                         if (isCorrect)
                         {
                             totalCorrect++;
-                            currentScore += (q.Point ?? 0);
+                            currentScore += q.Point ?? 0;
                         }
                         else totalIncorrect++;
 
@@ -630,7 +630,7 @@ namespace RERPAPI.Controllers.HRRecruitmentExamManagement
                         foreach (var detail in detailsToUpdate)
                         {
                             detail.IsGraded = true;
-                            detail.Score = isCorrect ? (q.Point ?? 0) : 0;
+                            detail.Score = isCorrect ? q.Point ?? 0 : 0;
                             await _hrRecruitmentExamResultDetailRepo.UpdateAsync(detail);
                         }
                     }
@@ -652,14 +652,14 @@ namespace RERPAPI.Controllers.HRRecruitmentExamManagement
                         if (isCorrect)
                         {
                             totalCorrect++;
-                            currentScore += (q.Point ?? 0);
+                            currentScore += q.Point ?? 0;
                         }
                         else totalIncorrect++;
 
                         if (answerDetail != null)
                         {
                             answerDetail.IsGraded = true;
-                            answerDetail.Score = isCorrect ? (q.Point ?? 0) : 0;
+                            answerDetail.Score = isCorrect ? q.Point ?? 0 : 0;
                             await _hrRecruitmentExamResultDetailRepo.UpdateAsync(answerDetail);
                         }
                     }
@@ -675,7 +675,7 @@ namespace RERPAPI.Controllers.HRRecruitmentExamManagement
                 result.TotalIncorrect = totalIncorrect;
                 result.TotalScore = currentScore;
                 result.MaxPossibleScore = maxPossibleScore;
-                result.PercentageCorrect = maxPossibleScore > 0 ? (currentScore / maxPossibleScore) * 100 : 0;
+                result.PercentageCorrect = maxPossibleScore > 0 ? currentScore / maxPossibleScore * 100 : 0;
                 result.StatusResult = hasManualGrading ? 1 : 2; 
 
                 result.UpdatedBy = currentUser.UserName;

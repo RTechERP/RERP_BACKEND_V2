@@ -9,7 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace RERPAPI.Controllers.HRRecruitmentExamManagement
+namespace RERPAPI.Controllers.HRM.HRRecruitment
 {
     [Route("api/[controller]")]
     [ApiController]

@@ -4,7 +4,7 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.HRRecruitmentExamRepo;
 
-namespace RERPAPI.Controllers.HRRecruitmentExamManagement
+namespace RERPAPI.Controllers.HRM.HRRecruitment
 {
     [Route("api/[controller]")]
     [ApiController]
