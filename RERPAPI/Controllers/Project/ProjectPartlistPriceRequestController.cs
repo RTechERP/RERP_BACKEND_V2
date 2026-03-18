@@ -739,10 +739,10 @@ namespace RERPAPI.Controllers.Project
                             var productRTC = _productRTCRepo.GetAll(x => x.ProductCode == item.ProductCode).FirstOrDefault();
                             if (productRTC == null)
                             {
-                                return BadRequest(ApiResponseFactory.Fail(null, "Sản phẩm không có trong kho demo!"));
+                                //return BadRequest(ApiResponseFactory.Fail(null, "Sản phẩm không có trong kho demo!"));
                             }
-                            requestModel.ProductRTCID = productRTC.ID;
-                            requestModel.ProductGroupRTCID = productRTC.ProductGroupRTCID;
+                            //requestModel.ProductRTCID = productRTC.ID;
+                            //requestModel.ProductGroupRTCID = productRTC.ProductGroupRTCID;
                         }
 
                         var unit = _unitCountRepo.GetAll(u => u.UnitName == item.UnitName.Trim());

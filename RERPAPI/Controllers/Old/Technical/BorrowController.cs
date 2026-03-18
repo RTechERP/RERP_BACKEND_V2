@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -10,6 +11,7 @@ namespace RERPAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class BorrowController : ControllerBase
     {
         HistoryProductRTCRepo historyProductRTCRepo;
@@ -168,7 +170,7 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                var data = historyProductRTCRepo.GetByID(productHistoryID) ?? new HistoryProductRTC();
+                var data = historyProductRTCRepo.GetByID(productHistoryID);
                 return Ok(new
                 {
                     status = 1,
