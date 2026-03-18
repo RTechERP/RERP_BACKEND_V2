@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NPOI.SS.Formula.Functions;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
@@ -13,6 +15,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class HRHiringRequestExamController : ControllerBase
     {
         HiringRequestExamRepo _hiringRequestExamRepo;
@@ -37,6 +40,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         //    }
         //}
         [HttpGet("get-data-hiring-request")]
+        [RequiresPermission("N1,N2,N20,N32,N33,N38,N51,N52,N56,N61,N78,N79,N81,N86")]
         public async Task<IActionResult> GetDataHiringRequest()
         {
             try
@@ -50,6 +54,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             }
         }
         [HttpGet("get-exam-by-requestID")]
+        [RequiresPermission("N1,N2,N20,N32,N33,N38,N51,N52,N56,N61,N78,N79,N81,N86")]
         public async Task<IActionResult> GetExamByRequestID(int hiringRequestID)
         {
             try
@@ -63,6 +68,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             }
         }
 
+        [RequiresPermission("N1,N2,N20,N32,N33,N38,N51,N52,N56,N61,N78,N79,N81,N86")]
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] HRHiringRequestExamDTO model)
         {
@@ -140,7 +146,8 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             }
         }
 
-            [HttpPost("delete-data")]
+        [RequiresPermission("N1,N2,N20,N32,N33,N38,N51,N52,N56,N61,N78,N79,N81,N86")]
+        [HttpPost("delete-data")]
         public async Task<IActionResult> DeleteData(long id)
         {
             try

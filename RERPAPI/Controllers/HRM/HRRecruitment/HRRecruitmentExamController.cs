@@ -1,8 +1,10 @@
 using DocumentFormat.OpenXml.Office.SpreadSheetML.Y2023.MsForms;
 using DocumentFormat.OpenXml.Office2010.Excel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NPOI.SS.Formula.Functions;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -15,6 +17,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class HRRecruitmentExamController : ControllerBase
     {
         HRRecruitmentExamRepo _hrRecruitmentExamRepo;
@@ -35,6 +38,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             _hrRecruitmentExamResultImageRepo = hrRecruitmentExamResultImageRepo;
         }
         #region load dữ liệu exam
+        [RequiresPermission("N1,N2,N20,N32,N33,N38,N51,N52,N56,N61,N78,N79,N81,N86")]
         [HttpGet("get-data-exam")]
         public async Task<IActionResult> getDataExam(int departmentID, string? filter)
         {
@@ -69,6 +73,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             }
         }
         #endregion
+       
         #region save exam
         //load data cbb đợt tuyển dụng cho trường hợp thêm mới ( chỉ lấy những vị trí chưa có đề thi) 
         [HttpGet("get-data-cbb-hiring-request-insert")]
@@ -88,6 +93,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [RequiresPermission("N1,N2,N20,N32,N33,N38,N51,N52,N56,N61,N78,N79,N81,N86")]
         [HttpPost("save-data-exam")]
         public async Task<IActionResult> SaveDataExam([FromBody] HRRecruitmentExam request)
         {
@@ -149,7 +155,9 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         //    }
         //}
         #endregion
+
         #region delete exam
+        [RequiresPermission("N1,N2,N20,N32,N33,N38,N51,N52,N56,N61,N78,N79,N81,N86")]
         [HttpPost("delete-data-exam")]
         public async Task<IActionResult> DeleteDataExam(int examID)
         {
@@ -186,7 +194,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 {
                     DepartmentID = departmentID
                 };
-                var data = await SqlDapper<object>.ProcedureToListAsync("spGetHiringRequest_ComboBox", param);
+                var data = await SqlDapper<object>.ProcedureToListAsync("r ", param);
                 return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
@@ -215,7 +223,10 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // copy câu hỏi 
+
+        [RequiresPermission("N1,N2,N20,N32,N33,N38,N51,N52,N56,N61,N78,N79,N81,N86")]
         [HttpPost("copy-question-answers")]
         public async Task<IActionResult> CopyQuestionAnswers([FromBody] CopyQuestionAnswersParam request)
         {
