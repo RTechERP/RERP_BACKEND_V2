@@ -1,4 +1,4 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -63,7 +63,7 @@ namespace RERPAPI.Controllers
         }
         [HttpPost("login")]
         public IActionResult Login([FromBody] User user)
-        {
+            {
             try
             {
                 if (string.IsNullOrWhiteSpace(user.LoginName) || string.IsNullOrWhiteSpace(user.PasswordHash))
@@ -90,6 +90,7 @@ namespace RERPAPI.Controllers
                     {
                         new Claim(JwtRegisteredClaimNames.Sub,hasUser.ID.ToString()),
                         new Claim(JwtRegisteredClaimNames.UniqueName,hasUser.LoginName ?? ""),
+                        new Claim("iscandidate", _jwtSettings.IsCandidate.ToString().ToLower())
                     };
 
                 var dictionary = (IDictionary<string, object>)hasUser;
@@ -1254,7 +1255,6 @@ namespace RERPAPI.Controllers
         [Authorize]
         public IActionResult GetAllTeamNew(int deID)
         {
-
             try
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
