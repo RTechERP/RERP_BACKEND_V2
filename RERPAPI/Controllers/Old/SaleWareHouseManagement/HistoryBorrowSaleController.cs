@@ -1,5 +1,6 @@
 ﻿using DocumentFormat.OpenXml.Bibliography;
 using DocumentFormat.OpenXml.Office2010.Excel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NPOI.SS.Formula.Functions;
 using RERPAPI.Model.Common;
@@ -14,6 +15,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class HistoryBorrowSaleController : ControllerBase
     {
         private readonly BillExportDetailRepo _billExportDetailRepo;
