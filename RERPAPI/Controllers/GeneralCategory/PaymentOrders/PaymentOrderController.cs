@@ -173,7 +173,8 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             try
             {
                 //Get chi tiết đề nghị
-                var dataDetail = SQLHelper<object>.ProcedureToList("spGetPaymentOrderByID", new string[] { "@ID" }, new object[] { id });
+                //var dataDetail = SQLHelper<object>.ProcedureToList("spGetPaymentOrderByID", new string[] { "@ID" }, new object[] { id });
+                var dataDetail = SQLHelper<object>.ProcedureToList("spGetPaymentOrderByID_Test", new string[] { "@ID" }, new object[] { id });
 
                 var paymentOrder = SQLHelper<object>.GetListData(dataDetail, 0);
                 var details = SQLHelper<object>.GetListData(dataDetail, 1);
