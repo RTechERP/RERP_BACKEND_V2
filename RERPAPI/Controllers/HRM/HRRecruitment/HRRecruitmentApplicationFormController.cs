@@ -74,15 +74,15 @@ namespace RERPAPI.Controllers.HRM
         //API lấy danh sách tờ khai 
         [RequiresPermission("N1,N2")]
         [HttpGet("get-all-application-form")]
-        public IActionResult GetAllApplicationForm(int chucVuID, string? filterText)
+        public IActionResult GetAllApplicationForm( string? filterText)
         {
             try
             {
                 //     var data = _hRHiringCandidateInformationFormRepo.GetAll(x => x.IsDeleted != true);
                 var applicationForm = SQLHelper<dynamic>.ProcedureToList(
                                    "spGetHRCandidateApplicationForm",
-                                   new[] { "@ChucVuHDID", "@FilterText" },
-                                   new object[] { chucVuID, filterText });
+                                   new[] {  "@FilterText" },
+                                   new object[] {  filterText });
                 var dataList = SQLHelper<dynamic>.GetListData(applicationForm, 0);
 
                 return Ok(ApiResponseFactory.Success(dataList, ""));
