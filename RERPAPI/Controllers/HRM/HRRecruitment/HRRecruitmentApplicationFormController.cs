@@ -70,6 +70,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [Authorize]
         //API lấy danh sách tờ khai 
         [RequiresPermission("N1,N2")]
         [HttpGet("get-all-application-form")]
@@ -128,7 +129,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [Authorize]
         [RequiresPermission("N1,N2")]
         //Xóa form thông tin ứng viên 
         [HttpGet("delete-application-form")]
