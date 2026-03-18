@@ -66,4 +66,9 @@ public partial class HRRecruitmentCandidate
     public int? StatusMail { get; set; }
 
     public DateTime? DateInterview { get; set; }
+
+    /// <summary>
+    /// Chức vụ cần tuyển
+    /// </summary>
+    public string? PositionName { get; set; }
 }

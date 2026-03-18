@@ -5113,6 +5113,9 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.DateRequest).HasColumnType("datetime");
             entity.Property(e => e.HiringRequestCode).HasMaxLength(50);
             entity.Property(e => e.IsActiveExam).HasDefaultValue(false);
+            entity.Property(e => e.PositionName)
+                .HasMaxLength(500)
+                .HasComment("Chức vụ cần tuyển");
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
             entity.Property(e => e.WorkAddress).HasMaxLength(255);
@@ -5367,6 +5370,9 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.PlaceOfBirth)
                 .HasMaxLength(550)
                 .HasComment("Nơi sinh");
+            entity.Property(e => e.PositionName)
+                .HasMaxLength(500)
+                .HasComment("Chức vụ cần tuyển");
             entity.Property(e => e.ReasonApplication)
                 .HasMaxLength(550)
                 .HasComment("Lý do nộp đơn dự tuyển vào Công ty");
@@ -5409,6 +5415,9 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.Note).HasMaxLength(255);
             entity.Property(e => e.Password).HasMaxLength(255);
             entity.Property(e => e.PhoneNumber).HasMaxLength(255);
+            entity.Property(e => e.PositionName)
+                .HasMaxLength(500)
+                .HasComment("Chức vụ cần tuyển");
             entity.Property(e => e.SendMailTime).HasColumnType("datetime");
             entity.Property(e => e.ServerPath).HasMaxLength(255);
             entity.Property(e => e.Status).HasComment("Trạng thái ứng viên");
