@@ -286,7 +286,7 @@ namespace RERPAPI.Controllers.HRM
                 }
                 else if (mainForm.HRRecruitmentCandidateID <= 0)
                 {
-                     return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy ID ứng viên trong dữ liệu gửi lên"));
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy ID ứng viên trong dữ liệu gửi lên"));
                 }
 
                 if (mainForm.ID > 0)
