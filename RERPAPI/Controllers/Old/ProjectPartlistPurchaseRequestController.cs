@@ -611,40 +611,46 @@ namespace RERPAPI.Controllers.Old
                         else await _repo.UpdateAsync(item);
                         continue;
                     }
-
-                    List<int> productGroupIDs = _productGroupRepo.GetAll(
+                    if (item.ProjectPartlistPurchaseRequestTypeID != 3 && item.ProjectPartlistPurchaseRequestTypeID != 4)
+                    {
+                        List<int> productGroupIDs = _productGroupRepo.GetAll(
                         x => x.ID == item.ProductGroupID || x.ParentID == item.ProductGroupID)
                         .Select(x => x.ID).ToList();
 
-                    var productSales = _productSaleRepo.GetAll(x =>
-                        x.ProductCode.ToLower() == item.ProductCode.ToLower() &&
-                        x.IsDeleted != true
-                    ).ToList();
+                        var productSales = _productSaleRepo.GetAll(x =>
+                            x.ProductCode.ToLower() == item.ProductCode.ToLower() &&
+                            x.IsDeleted != true
+                        ).ToList();
 
-                    // Sau đó filter Contains ở phía memory
-                    ProductSale productSale = productSales
-                        .FirstOrDefault(x => productGroupIDs.Contains((int)x.ProductGroupID))
-                        ?? new ProductSale();
+                        // Sau đó filter Contains ở phía memory
+                        ProductSale productSale = productSales
+                            .FirstOrDefault(x => productGroupIDs.Contains((int)x.ProductGroupID))
+                            ?? new ProductSale();
 
-                    if (productSale.ID <= 0)
-                    {
-                        productSale.ProductCode = item.ProductCode;
-                        productSale.ProductName = item.ProductName;
-                        productSale.Unit = item.UnitName;
-                        productSale.ProductGroupID = item.ProductGroupID;
-                        productSale.ProductNewCode = _repo.GenerateProductNewCode(Convert.ToInt32(item.ProductGroupID));
-                        string maker = item.Manufacturer;
+                        if (productSale.ID <= 0)
+                        {
+                            productSale.ProductCode = item.ProductCode;
+                            productSale.ProductName = item.ProductName;
+                            productSale.Unit = item.UnitName;
+                            productSale.ProductGroupID = item.ProductGroupID;
+                            productSale.ProductNewCode = _repo.GenerateProductNewCode(Convert.ToInt32(item.ProductGroupID));
+                            string maker = item.Manufacturer;
 
-                        Firm firm = _firmRepo.GetAll(x =>
-                                    x.FirmName.Trim().ToLower() == maker.Trim().ToLower())
-                                    .FirstOrDefault() ?? new Firm();
+                            Firm firm = _firmRepo.GetAll(x =>
+                                        x.FirmName.Trim().ToLower() == maker.Trim().ToLower())
+                                        .FirstOrDefault() ?? new Firm();
 
-                        productSale.Maker = maker;
-                        productSale.FirmID = firm.ID;
-                        await _productSaleRepo.CreateAsync(productSale);
+                            productSale.Maker = maker;
+                            productSale.FirmID = firm.ID;
+                            await _productSaleRepo.CreateAsync(productSale);
+                        }
+
+                        item.ProductSaleID = productSale.ID;
                     }
-
-                    item.ProductSaleID = productSale.ID;
+                    else
+                    {
+                        await _repo.CreateProduct(data);
+                    }
                     //item.ProductNewCode = productSale.ProductNewCode;
 
                     if (item.ProjectPartListID > 0)
@@ -654,7 +660,7 @@ namespace RERPAPI.Controllers.Old
                         {
                             foreach (var detail in pokhDetails)
                             {
-                                detail.ProductID = productSale.ID;
+                                detail.ProductID = item.ProductSaleID;
                                 await _pOKHDetailRepo.UpdateAsync(detail);
                             }
                         }
@@ -687,6 +693,7 @@ namespace RERPAPI.Controllers.Old
                 {
                     return BadRequest(new { status = 0, message = "Dữ liệu không hợp lệ" });
                 }
+                List<ProjectPartlistPurchaseRequestDTO> successData = new List<ProjectPartlistPurchaseRequestDTO>();
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 if (!currentUser.IsAdmin)
@@ -710,6 +717,7 @@ namespace RERPAPI.Controllers.Old
                     if (item.ID <= 0) continue;
                     item.IsDeleted = true;
                     await _repo.UpdateAsync(item);
+                    successData.Add(item);
 
 
                     int inventoryProjectID = Convert.ToInt32(item.InventoryProjectID);
@@ -727,7 +735,7 @@ namespace RERPAPI.Controllers.Old
                     }
                 }
 
-                return Ok(new { status = 1, message = "Đã xử lý xong danh sách xoá." });
+                return Ok(ApiResponseFactory.Success(data, "Xóa yêu cầu mua hàng thành công!"));
             }
             catch (Exception ex)
             {
@@ -885,7 +893,8 @@ namespace RERPAPI.Controllers.Old
                         || (prjPartList.EmployeeIDRequestApproved != currentUser.EmployeeID && !currentUser.IsAdmin))
                         continue;
 
-                    var dt = SQLHelper<dynamic>.ProcedureToList("spGetInventory", new[] { "@ProductSaleID" }, new object[] { item.ProductSaleID });
+                    //var dt = SQLHelper<dynamic>.ProcedureToList("spGetInventory", new[] { "@ProductSaleID" }, new object[] { item.ProductSaleID });
+                    var dt = SQLHelper<dynamic>.ProcedureToList("spGetInventory_Test", new[] { "@ProductSaleID" }, new object[] { item.ProductSaleID });
                     var inventoryData = SQLHelper<dynamic>.GetListData(dt, 0);
                     var quantity = inventoryData[0]?.TotalQuantityLast;
                     if (quantity == null || Convert.ToDecimal(quantity) <= 0)

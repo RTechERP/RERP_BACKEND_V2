@@ -1,11 +1,7 @@
 ﻿using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Drawing.Charts;
-using DocumentFormat.OpenXml.Office2013.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using NPOI.SS.Formula.Functions;
-using NPOI.Util;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -1133,7 +1129,7 @@ namespace RERPAPI.Controllers.Old
                             sheet.Cell(summaryRowOffset + 10, 15).Value = po.FedexAccount ?? "";
                             sheet.Cell(summaryRowOffset + 11, 15).Value = po.AccountNumberSupplier ?? "";
 
-                            
+
                             #endregion
                             break;
 

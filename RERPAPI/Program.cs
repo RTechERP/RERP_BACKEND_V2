@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -12,6 +12,7 @@ using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
 using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.BBNV;
+//using RERPAPI.Repo.GenericEntity.CourseRepoo;
 using RERPAPI.Repo.GenericEntity.DocumentManager;
 using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
 using RERPAPI.Repo.GenericEntity.Film;
@@ -21,6 +22,7 @@ using RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders;
 using RERPAPI.Repo.GenericEntity.HRM;
 using RERPAPI.Repo.GenericEntity.HRM.DepartmentRequire;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
+using RERPAPI.Repo.GenericEntity.HRRecruitmentExamRepo;
 using RERPAPI.Repo.GenericEntity.MeetingMinutesRepo;
 using RERPAPI.Repo.GenericEntity.Project;
 using RERPAPI.Repo.GenericEntity.Systems;
@@ -526,6 +528,30 @@ builder.Services.AddScoped<HRHiringCandidateInformationFormForeignLanguageSkills
 builder.Services.AddScoped<HRHiringCandidateInformationFormRecruitmentInfoRepo>();
 #endregion
 
+#region đề thi ứng tuyển 
+builder.Services.AddScoped<HRRecruitmentExamRepo>();
+builder.Services.AddScoped<HRRecruitmentQuestionRepo>();
+builder.Services.AddScoped<HRRecruitmentAnswersRepo>();
+builder.Services.AddScoped<HRRecruitmentRightAnswearsRepo>();
+builder.Services.AddScoped<HRRecruitmentExamResultRepo>();
+builder.Services.AddScoped<HRRecruitmentQuestionImageRepo>();
+builder.Services.AddScoped<HRRecruitmentExamResultDetailRepo>();
+builder.Services.AddScoped<HRRecruitmentExamResultImageRepo>();
+builder.Services.AddScoped<HiringRequestExamRepo>();
+#endregion
+#region bình thêm
+//builder.Services.AddScoped<CourseRepo>();
+//builder.Services.AddScoped<CourseExamRepo>();
+//builder.Services.AddScoped<CourseLessonHistoryRepo>();
+//builder.Services.AddScoped<CourseExamResultRepo>();
+//builder.Services.AddScoped<CourseExamResultDetailRepo>();
+//builder.Services.AddScoped<CourseQuestionRepo>();
+//builder.Services.AddScoped<CourseRightAnswerRepo>();
+//builder.Services.AddScoped<CourseExamEvaluateRepo>();
+//builder.Services.AddScoped<CourseCatalogRepo>();
+//builder.Services.AddScoped<DepartmentRepo>();
+//builder.Services.AddScoped<CourseLessonRepo>();
+#endregion
 #region RabbitService
 //builder.Services.AddSingleton<RabbitMqConnection>();
 //builder.Services.AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>();
@@ -539,10 +565,9 @@ builder.Services.AddScoped<EmailHelper>();
 builder.Services.AddScoped<CurrentUser>(provider =>
 {
     var context = provider.GetRequiredService<IHttpContextAccessor>().HttpContext;
-    var claims = context?.User.Claims.ToDictionary(x => x.Type, x => x.Value);
+    var claims = context?.User?.Claims?.ToDictionary(x => x.Type, x => x.Value) ?? new Dictionary<string, string>();
     CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
     return currentUser;
-
 });
 
 
@@ -599,6 +624,12 @@ builder.Services.Configure<JwtSettings>(jwtSection);
 var jwtSettings = jwtSection.Get<JwtSettings>() ?? new JwtSettings();
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<JwtSettings>>().Value);
 
+// Load Candidate JWT settings
+var candidateJwtSection = builder.Configuration.GetSection("CandidateJwtSettings");
+builder.Services.Configure<CandidateJwtSettings>(candidateJwtSection);
+var candidateJwtSettings = candidateJwtSection.Get<CandidateJwtSettings>() ?? new CandidateJwtSettings();
+builder.Services.AddSingleton(candidateJwtSettings);
+
 builder.Services.AddAuthentication("Bearer")
                 .AddJwtBearer("Bearer", options =>
                 {
@@ -609,9 +640,13 @@ builder.Services.AddAuthentication("Bearer")
                         ValidateLifetime = true,
                         ValidateIssuerSigningKey = true,
 
-                        ValidIssuer = jwtSettings.Issuer,
-                        ValidAudience = jwtSettings.Audience,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
+                        ValidIssuers = new[] { jwtSettings.Issuer, candidateJwtSettings.Issuer },
+                        ValidAudiences = new[] { jwtSettings.Audience, candidateJwtSettings.Audience },
+                        IssuerSigningKeys = new[] 
+                        { 
+                            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
+                            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(candidateJwtSettings.SecretKey))
+                        },
                         NameClaimType = "sub" // Để Middleware lấy đúng UserID
                     };
                 });
@@ -682,7 +717,7 @@ if (app.Environment.IsDevelopment())
 app.UseStaticFiles();
 app.UseRouting();
 app.UseCors("MyCors");
-//app.UseAuthentication();
+app.UseAuthentication();
 app.UseAuthorization();
 app.UseSession();
 app.UseMiddleware<DynamicAuthorizationMiddleware>();
