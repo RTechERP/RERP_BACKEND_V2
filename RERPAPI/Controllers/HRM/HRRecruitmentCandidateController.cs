@@ -1,4 +1,4 @@
-﻿using ClosedXML.Excel;
+using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Drawing.Charts;
 using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using Microsoft.AspNetCore.Authorization;
@@ -83,7 +83,6 @@ namespace RERPAPI.Controllers.HRM
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
 
         [HttpGet("data")]
@@ -92,7 +91,6 @@ namespace RERPAPI.Controllers.HRM
             int? status = -1,
             int? employeeRequestId = -1,
             int? departmentId = -1,
-            int? employeeChucVuHDId = -1,
             DateTime? dateStart = null,
             DateTime? dateEnd = null,
             string? keyword = ""
@@ -113,10 +111,9 @@ namespace RERPAPI.Controllers.HRM
                     Status = status,
                     EmployeeRequestID = employeeRequestId,
                     DepartmentID = departmentId,
-                    EmployeeChucVuHDID = employeeChucVuHDId,
                     DateStart = dateStart,
                     DateEnd = dateEnd,
-                    FilterText = keyword?.Trim()
+                    FilterText = keyword?.Trim(),
                 };
                 var result = await SqlDapper<dynamic>.ProcedureToListAsync("spGetHrRecruitmentCandidate", param);
 
