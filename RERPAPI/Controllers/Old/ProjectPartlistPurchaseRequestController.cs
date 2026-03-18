@@ -885,7 +885,8 @@ namespace RERPAPI.Controllers.Old
                         || (prjPartList.EmployeeIDRequestApproved != currentUser.EmployeeID && !currentUser.IsAdmin))
                         continue;
 
-                    var dt = SQLHelper<dynamic>.ProcedureToList("spGetInventory", new[] { "@ProductSaleID" }, new object[] { item.ProductSaleID });
+                    //var dt = SQLHelper<dynamic>.ProcedureToList("spGetInventory", new[] { "@ProductSaleID" }, new object[] { item.ProductSaleID });
+                    var dt = SQLHelper<dynamic>.ProcedureToList("spGetInventory_Test", new[] { "@ProductSaleID" }, new object[] { item.ProductSaleID });
                     var inventoryData = SQLHelper<dynamic>.GetListData(dt, 0);
                     var quantity = inventoryData[0]?.TotalQuantityLast;
                     if (quantity == null || Convert.ToDecimal(quantity) <= 0)
