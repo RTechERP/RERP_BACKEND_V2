@@ -46,4 +46,6 @@ public partial class HRHiringRequest
     public DateTime? UpdatedDate { get; set; }
 
     public bool IsDeleted { get; set; }
+
+    public bool? IsActiveExam { get; set; }
 }

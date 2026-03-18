@@ -442,6 +442,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<HRHiringRequestEducationLink> HRHiringRequestEducationLinks { get; set; }
 
+    public virtual DbSet<HRHiringRequestExam> HRHiringRequestExams { get; set; }
+
     public virtual DbSet<HRHiringRequestExperienceLink> HRHiringRequestExperienceLinks { get; set; }
 
     public virtual DbSet<HRHiringRequestGenderLink> HRHiringRequestGenderLinks { get; set; }
@@ -450,11 +452,27 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<HRHiringRequestLanguageLink> HRHiringRequestLanguageLinks { get; set; }
 
+    public virtual DbSet<HRRecruitmentAnswer> HRRecruitmentAnswers { get; set; }
+
     public virtual DbSet<HRRecruitmentApplicationForm> HRRecruitmentApplicationForms { get; set; }
 
     public virtual DbSet<HRRecruitmentCandidate> HRRecruitmentCandidates { get; set; }
 
     public virtual DbSet<HRRecruitmentCandidateLog> HRRecruitmentCandidateLogs { get; set; }
+
+    public virtual DbSet<HRRecruitmentExam> HRRecruitmentExams { get; set; }
+
+    public virtual DbSet<HRRecruitmentExamResult> HRRecruitmentExamResults { get; set; }
+
+    public virtual DbSet<HRRecruitmentExamResultDetail> HRRecruitmentExamResultDetails { get; set; }
+
+    public virtual DbSet<HRRecruitmentExamResultImage> HRRecruitmentExamResultImages { get; set; }
+
+    public virtual DbSet<HRRecruitmentQuestion> HRRecruitmentQuestions { get; set; }
+
+    public virtual DbSet<HRRecruitmentQuestionImage> HRRecruitmentQuestionImages { get; set; }
+
+    public virtual DbSet<HRRecruitmentRightAnswer> HRRecruitmentRightAnswers { get; set; }
 
     public virtual DbSet<Handover> Handovers { get; set; }
 
@@ -5094,6 +5112,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.DateRequest).HasColumnType("datetime");
             entity.Property(e => e.HiringRequestCode).HasMaxLength(50);
+            entity.Property(e => e.IsActiveExam).HasDefaultValue(false);
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
             entity.Property(e => e.WorkAddress).HasMaxLength(255);
@@ -5153,6 +5172,31 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
+        modelBuilder.Entity<HRHiringRequestExam>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__HRHiring__3214EC27AF1576FE");
+
+            entity.ToTable("HRHiringRequestExam", tb => tb.HasComment("Bảng liên kết các yêu cầu tuyển dụng với các bài kiểm tra tuyển dụng."));
+
+            entity.Property(e => e.ID).HasComment("ID duy nhất của liên kết");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(100)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.HiringRequestID).HasComment("ID của yêu cầu tuyển dụng");
+            entity.Property(e => e.IsActive).HasComment("Cờ đánh dấu bài kiểm tra có đang hoạt động cho yêu cầu tuyển dụng này không");
+            entity.Property(e => e.IsDeleted).HasComment("Cờ đánh dấu bản ghi đã bị xóa mềm (0: không xóa, 1: đã xóa)");
+            entity.Property(e => e.RecruitmentExamID).HasComment("ID của bài kiểm tra tuyển dụng");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(100)
+                .HasComment("Người cập nhật bản ghi gần nhất");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật bản ghi gần nhất")
+                .HasColumnType("datetime");
+        });
+
         modelBuilder.Entity<HRHiringRequestExperienceLink>(entity =>
         {
             entity.HasKey(e => e.ID).HasName("PK__HRHiring__3214EC2772E86014");
@@ -5201,6 +5245,37 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.LanguageTypeName).HasMaxLength(255);
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<HRRecruitmentAnswer>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__HRRecrui__3214EC279B480B6B");
+
+            entity.ToTable(tb => tb.HasComment("Bảng lưu trữ các lựa chọn trả lời cho các câu hỏi tuyển dụng."));
+
+            entity.Property(e => e.ID).HasComment("ID duy nhất của câu trả lời");
+            entity.Property(e => e.AnswersNumber).HasComment("Giá trị số của câu trả lời (nếu có)");
+            entity.Property(e => e.AnswersText)
+                .HasMaxLength(500)
+                .HasComment("Nội dung của câu trả lời");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(100)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.ImageLink)
+                .HasMaxLength(100)
+                .HasComment("Đường dẫn đến hình ảnh liên quan đến câu trả lời");
+            entity.Property(e => e.IsDeleted).HasComment("Cờ đánh dấu bản ghi đã bị xóa mềm (0: không xóa, 1: đã xóa)");
+            entity.Property(e => e.QuestionType).HasComment("Loại câu hỏi mà câu trả lời này thuộc về (1:trắc nghiệm, 2: tự luận)");
+            entity.Property(e => e.RecruitmentQuestionID).HasComment("ID của câu hỏi mà câu trả lời này thuộc về");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(100)
+                .HasComment("Người cập nhật bản ghi gần nhất");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật bản ghi gần nhất")
+                .HasColumnType("datetime");
         });
 
         modelBuilder.Entity<HRRecruitmentApplicationForm>(entity =>
@@ -5353,6 +5428,222 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.Note).HasMaxLength(255);
             entity.Property(e => e.UpdatedBy).HasMaxLength(255);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<HRRecruitmentExam>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__HRRecrui__3214EC270D2A6FF7");
+
+            entity.ToTable("HRRecruitmentExam", tb => tb.HasComment("Bảng lưu trữ thông tin chi tiết về các bài kiểm tra tuyển dụng."));
+
+            entity.Property(e => e.ID).HasComment("ID duy nhất của bài kiểm tra");
+            entity.Property(e => e.CodeExam)
+                .HasMaxLength(500)
+                .HasComment("Mã của bài kiểm tra");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(100)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.DepartmentID).HasComment("ID của phòng ban");
+            entity.Property(e => e.ExamType).HasComment("Loại bài kiểm tra (1: trắc nghiệm, 2: tự luận, 3: trắc nghiệm & tự luận)");
+            entity.Property(e => e.Goal)
+                .HasComment("Điểm đạt của bài kiểm tra")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.IsDeleted).HasComment("Cờ đánh dấu bản ghi đã bị xóa mềm (0: không xóa, 1: đã xóa)");
+            entity.Property(e => e.NameExam)
+                .HasMaxLength(500)
+                .HasComment("Tên của bài kiểm tra");
+            entity.Property(e => e.TestTime)
+                .HasComment("Thời gian làm bài kiểm tra")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(100)
+                .HasComment("Người cập nhật bản ghi gần nhất");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật bản ghi gần nhất")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<HRRecruitmentExamResult>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__HRRecrui__3214EC27B5C00730");
+
+            entity.ToTable("HRRecruitmentExamResult", tb => tb.HasComment("Bảng lưu trữ kết quả tổng thể của một bài kiểm tra tuyển dụng của một ứng viên."));
+
+            entity.Property(e => e.ID).HasComment("ID duy nhất của kết quả bài kiểm tra");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(100)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.EmployeeID).HasComment("ID của ứng viên/nhân viên làm bài kiểm tra");
+            entity.Property(e => e.IsDeleted).HasComment("Cờ đánh dấu bản ghi đã bị xóa mềm (0: không xóa, 1: đã xóa)");
+            entity.Property(e => e.MaxPossibleScore)
+                .HasComment("Điểm tối đa có thể đạt được")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.PercentageCorrect)
+                .HasComment("Tỷ lệ phần trăm câu trả lời đúng")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.RecruitmentExamID).HasComment("ID của bài kiểm tra tuyển dụng");
+            entity.Property(e => e.StatusResult).HasComment("Trạng thái kết quả (0: đang làm, 1: đã nộp bài chờ chấm, 2: đã có điểm)");
+            entity.Property(e => e.TotalCorrect).HasComment("Tổng số câu trả lời đúng");
+            entity.Property(e => e.TotalIncorrect).HasComment("Tổng số câu trả lời sai");
+            entity.Property(e => e.TotalScore)
+                .HasComment("Tổng điểm đạt được")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(100)
+                .HasComment("Người cập nhật bản ghi gần nhất");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật bản ghi gần nhất")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<HRRecruitmentExamResultDetail>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__HRRecrui__3214EC278AE90C8A");
+
+            entity.ToTable("HRRecruitmentExamResultDetail", tb => tb.HasComment("Bảng lưu trữ chi tiết kết quả của từng câu hỏi trong một bài kiểm tra tuyển dụng của một ứng viên."));
+
+            entity.Property(e => e.ID).HasComment("ID duy nhất của chi tiết kết quả");
+            entity.Property(e => e.AnswerText).HasComment("Nội dung câu trả lời của ứng viên (nếu là tự luận)");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(100)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasComment("Cờ đánh dấu bản ghi đã bị xóa mềm (0: không xóa, 1: đã xóa)");
+            entity.Property(e => e.IsGraded)
+                .HasDefaultValue(false)
+                .HasComment("Cờ đánh dấu câu hỏi đã được chấm điểm chưa (0: chưa, 1: rồi)");
+            entity.Property(e => e.RecruitmentAnswerID).HasComment("ID của câu trả lời mà ứng viên đã chọn (nếu là trắc nghiệm)");
+            entity.Property(e => e.RecruitmentExamResultID).HasComment("ID của kết quả bài kiểm tra tổng thể");
+            entity.Property(e => e.RecruitmentQuestionID).HasComment("ID của câu hỏi");
+            entity.Property(e => e.Score)
+                .HasComment("Điểm đạt được cho câu hỏi này")
+                .HasColumnType("decimal(5, 2)");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(100)
+                .HasComment("Người cập nhật bản ghi gần nhất");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật bản ghi gần nhất")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<HRRecruitmentExamResultImage>(entity =>
+        {
+            entity.ToTable("HRRecruitmentExamResultImage", tb => tb.HasComment("Bảng lưu trữ thông tin về hình ảnh liên quan đến kết quả chi tiết bài kiểm tra tuyển dụng (ví dụ: ảnh bài làm tự luận)."));
+
+            entity.Property(e => e.ID).HasComment("ID duy nhất của hình ảnh kết quả bài kiểm tra");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(150)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Extension)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasComment("Phần mở rộng của file hình ảnh");
+            entity.Property(e => e.FileNameOrigin)
+                .HasMaxLength(550)
+                .HasComment("Tên gốc của file hình ảnh");
+            entity.Property(e => e.IsDeleted).HasComment("Cờ đánh dấu bản ghi đã bị xóa mềm (0: không xóa, 1: đã xóa)");
+            entity.Property(e => e.OriginPath).HasComment("Đường dẫn gốc của hình ảnh");
+            entity.Property(e => e.RecruitmentExamResultDetailID).HasComment("ID của chi tiết kết quả bài kiểm tra mà hình ảnh này thuộc về");
+            entity.Property(e => e.ServerPath).HasComment("Đường dẫn lưu trữ hình ảnh trên server");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(150)
+                .HasComment("Người cập nhật bản ghi gần nhất");
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<HRRecruitmentQuestion>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__HRRecrui__3214EC2732B7C182");
+
+            entity.ToTable("HRRecruitmentQuestion", tb => tb.HasComment("Bảng lưu trữ thông tin chi tiết về các câu hỏi trong bài kiểm tra tuyển dụng."));
+
+            entity.Property(e => e.ID).HasComment("ID duy nhất của câu hỏi");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(100)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.EssayGuidance).HasComment("Hướng dẫn cho câu hỏi tự luận - đáp án số");
+            entity.Property(e => e.IsAnswerNumberValue).HasComment("Cờ đánh dấu câu trả lời có phải là giá trị số không");
+            entity.Property(e => e.IsDeleted).HasComment("Cờ đánh dấu bản ghi đã bị xóa mềm (0: không xóa, 1: đã xóa)");
+            entity.Property(e => e.Point)
+                .HasComment("Điểm số cho câu hỏi này")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.QuestionText).HasComment("Nội dung của câu hỏi");
+            entity.Property(e => e.QuestionType).HasComment("Loại câu hỏi (1: trắc nghiệm, 2: tự luận, điền vào chỗ trống)");
+            entity.Property(e => e.RecruitmentExamID).HasComment("ID của bài kiểm tra tuyển dụng mà câu hỏi này thuộc về");
+            entity.Property(e => e.STT).HasComment("Số thứ tự của câu hỏi");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(100)
+                .HasComment("Người cập nhật bản ghi gần nhất");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật bản ghi gần nhất")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<HRRecruitmentQuestionImage>(entity =>
+        {
+            entity.ToTable("HRRecruitmentQuestionImage", tb => tb.HasComment("Bảng lưu trữ thông tin về hình ảnh liên quan đến các câu hỏi tuyển dụng."));
+
+            entity.Property(e => e.ID).HasComment("ID duy nhất của hình ảnh câu hỏi");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(150)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Extension)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasComment("Phần mở rộng của file hình ảnh");
+            entity.Property(e => e.FileNameOrigin)
+                .HasMaxLength(550)
+                .HasComment("Tên gốc của file hình ảnh");
+            entity.Property(e => e.IsDeleted).HasComment("Cờ đánh dấu bản ghi đã bị xóa mềm (0: không xóa, 1: đã xóa)");
+            entity.Property(e => e.OriginPath).HasComment("Đường dẫn gốc của hình ảnh");
+            entity.Property(e => e.RecruitmentQuestionID).HasComment("ID của câu hỏi mà hình ảnh này thuộc về");
+            entity.Property(e => e.ServerPath).HasComment("Đường dẫn lưu trữ hình ảnh trên server");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(150)
+                .HasComment("Người cập nhật bản ghi gần nhất");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật bản ghi gần nhất")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<HRRecruitmentRightAnswer>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__HRRecrui__3214EC2761F4A155");
+
+            entity.ToTable(tb => tb.HasComment("Bảng lưu trữ các câu trả lời đúng cho các câu hỏi tuyển dụng."));
+
+            entity.Property(e => e.ID).HasComment("ID duy nhất của bản ghi câu trả lời đúng");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(100)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.RecruitmentAnswerID).HasComment("ID của câu trả lời đúng");
+            entity.Property(e => e.RecruitmentQuestionID).HasComment("ID của câu hỏi");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(100)
+                .HasComment("Người cập nhật bản ghi gần nhất");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật bản ghi ")
+                .HasColumnType("datetime");
         });
 
         modelBuilder.Entity<Handover>(entity =>
