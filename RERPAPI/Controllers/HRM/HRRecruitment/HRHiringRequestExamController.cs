@@ -40,7 +40,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         //    }
         //}
         [HttpGet("get-data-hiring-request")]
-        [RequiresPermission("N1,N2,N20,N32,N33,N38,N51,N52,N56,N61,N78,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
         public async Task<IActionResult> GetDataHiringRequest()
         {
             try
@@ -54,7 +54,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             }
         }
         [HttpGet("get-exam-by-requestID")]
-        [RequiresPermission("N1,N2,N20,N32,N33,N38,N51,N52,N56,N61,N78,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
         public async Task<IActionResult> GetExamByRequestID(int hiringRequestID)
         {
             try
@@ -68,7 +68,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             }
         }
 
-        [RequiresPermission("N1,N2,N20,N32,N33,N38,N51,N52,N56,N61,N78,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] HRHiringRequestExamDTO model)
         {
@@ -146,7 +146,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             }
         }
 
-        [RequiresPermission("N1,N2,N20,N32,N33,N38,N51,N52,N56,N61,N78,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
         [HttpPost("delete-data")]
         public async Task<IActionResult> DeleteData(long id)
         {
