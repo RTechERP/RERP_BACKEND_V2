@@ -12,7 +12,7 @@ using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
 using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.BBNV;
-using RERPAPI.Repo.GenericEntity.CourseRepoo;
+//using RERPAPI.Repo.GenericEntity.CourseRepoo;
 using RERPAPI.Repo.GenericEntity.DocumentManager;
 using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
 using RERPAPI.Repo.GenericEntity.Film;
@@ -540,17 +540,17 @@ builder.Services.AddScoped<HRRecruitmentExamResultImageRepo>();
 builder.Services.AddScoped<HiringRequestExamRepo>();
 #endregion
 #region bình thêm
-builder.Services.AddScoped<CourseRepo>();
-builder.Services.AddScoped<CourseExamRepo>();
-builder.Services.AddScoped<CourseLessonHistoryRepo>();
-builder.Services.AddScoped<CourseExamResultRepo>();
-builder.Services.AddScoped<CourseExamResultDetailRepo>();
-builder.Services.AddScoped<CourseQuestionRepo>();
-builder.Services.AddScoped<CourseRightAnswerRepo>();
-builder.Services.AddScoped<CourseExamEvaluateRepo>();
-builder.Services.AddScoped<CourseCatalogRepo>();
-builder.Services.AddScoped<DepartmentRepo>();
-builder.Services.AddScoped<CourseLessonRepo>();
+//builder.Services.AddScoped<CourseRepo>();
+//builder.Services.AddScoped<CourseExamRepo>();
+//builder.Services.AddScoped<CourseLessonHistoryRepo>();
+//builder.Services.AddScoped<CourseExamResultRepo>();
+//builder.Services.AddScoped<CourseExamResultDetailRepo>();
+//builder.Services.AddScoped<CourseQuestionRepo>();
+//builder.Services.AddScoped<CourseRightAnswerRepo>();
+//builder.Services.AddScoped<CourseExamEvaluateRepo>();
+//builder.Services.AddScoped<CourseCatalogRepo>();
+//builder.Services.AddScoped<DepartmentRepo>();
+//builder.Services.AddScoped<CourseLessonRepo>();
 #endregion
 #region RabbitService
 //builder.Services.AddSingleton<RabbitMqConnection>();
