@@ -138,7 +138,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                     HRRecruitmentAnswer answer = new HRRecruitmentAnswer();
                     answer.AnswersText = a.AnswersText;
                     answer.RecruitmentQuestionID = question.ID;
-                    answer.Imagelink = a.Imagelink;
+                    answer.ImageLink = a.ImageLink;
                     answer.AnswersNumber = a.AnswersNumber;
                     if (a.ID > 0)
                     {
