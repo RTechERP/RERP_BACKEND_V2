@@ -341,7 +341,7 @@ namespace RERPAPI.Controllers.HRM
                     // Dynamic subpath: CvUngVien/Year/PositionName
                     string year = (data.DateApply ?? DateTime.Now).ToString("yyyy");
                     string position = string.IsNullOrWhiteSpace(data.PositionName) ? "NoPosition" : data.PositionName;
-                    string pathPattern = Path.Combine("CvUngVien", year, position);
+                    string pathPattern = Path.Combine( year, position);
 
                     string pathUpload = data.ServerPath = Path.Combine(uploadPath, pathPattern);
 
@@ -350,16 +350,16 @@ namespace RERPAPI.Controllers.HRM
                         Directory.CreateDirectory(pathUpload);
                     }
 
-                    if (!string.IsNullOrWhiteSpace(deleteFileName) && deleteFileName.ToLower() != data.FileCVName.ToLower())
-                    {
-                        var oldPath = hrRecruitmentCandidateOld?.ServerPath ?? pathUpload;
-                        var oldFilePath = Path.Combine(oldPath, deleteFileName);
+                    //if (!string.IsNullOrWhiteSpace(deleteFileName) && deleteFileName.ToLower() != data.FileCVName.ToLower())
+                    //{
+                    //    var oldPath = hrRecruitmentCandidateOld?.ServerPath ?? pathUpload;
+                    //    var oldFilePath = Path.Combine(oldPath, deleteFileName);
 
-                        if (System.IO.File.Exists(oldFilePath))
-                        {
-                            System.IO.File.Delete(oldFilePath);
-                        }
-                    }
+                    //    if (System.IO.File.Exists(oldFilePath))
+                    //    {
+                    //        System.IO.File.Delete(oldFilePath);
+                    //    }
+                    //}
 
                     var fullPath = Path.Combine(pathUpload, data.FileCVName!);
 
