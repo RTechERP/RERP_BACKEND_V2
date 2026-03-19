@@ -350,16 +350,16 @@ namespace RERPAPI.Controllers.HRM
                         Directory.CreateDirectory(pathUpload);
                     }
 
-                    if (!string.IsNullOrWhiteSpace(deleteFileName) && deleteFileName.ToLower() != data.FileCVName.ToLower())
-                    {
-                        var oldPath = hrRecruitmentCandidateOld?.ServerPath ?? pathUpload;
-                        var oldFilePath = Path.Combine(oldPath, deleteFileName);
+                    //if (!string.IsNullOrWhiteSpace(deleteFileName) && deleteFileName.ToLower() != data.FileCVName.ToLower())
+                    //{
+                    //    var oldPath = hrRecruitmentCandidateOld?.ServerPath ?? pathUpload;
+                    //    var oldFilePath = Path.Combine(oldPath, deleteFileName);
 
-                        if (System.IO.File.Exists(oldFilePath))
-                        {
-                            System.IO.File.Delete(oldFilePath);
-                        }
-                    }
+                    //    if (System.IO.File.Exists(oldFilePath))
+                    //    {
+                    //        System.IO.File.Delete(oldFilePath);
+                    //    }
+                    //}
 
                     var fullPath = Path.Combine(pathUpload, data.FileCVName!);
 
@@ -424,7 +424,7 @@ namespace RERPAPI.Controllers.HRM
 
         [HttpPost("send-interview-mail")]
         [RequiresPermission("N1,N2")]
-        public async Task<IActionResult> SendEmail([FromBody] List<EmployeeSendEmail> sendEmails)
+        public async Task<IActionResult> SendEmail([FromBody] List<EmployeeSendEmailDTO> sendEmails)
         {
             try
             {
@@ -442,6 +442,7 @@ namespace RERPAPI.Controllers.HRM
                             {
                                 hrRecruitmentCandidate.StatusMail = email.StatusSend;
                                 hrRecruitmentCandidate.DateInterview = email.DateSend;
+                                hrRecruitmentCandidate.DeadlineFeedbackMail = email.DeadlineFeedbackMail;
                                 hrRecruitmentCandidate.SendMailTime = DateTime.Now;
                                 hrRecruitmentCandidate.CreatedDate = DateTime.Now;
                                 hrRecruitmentCandidate.CreatedBy = _currentUser.Code;
@@ -450,7 +451,7 @@ namespace RERPAPI.Controllers.HRM
                                 await _hrRecruitmentCandidateRepo.UpdateAsync(hrRecruitmentCandidate);
                             }
                         }
-                        await _emailHelper.SendAsync(email.EmailTo, email.Subject, email.Body + footer, cc: email.EmailCC);
+                        await _emailHelper.SendAsyncHr(email.EmailTo, email.Subject, email.Body + footer, cc: email.EmailCC);
                     }
                 }
                 return Ok(ApiResponseFactory.Success(null, "Gửi thành công!"));
