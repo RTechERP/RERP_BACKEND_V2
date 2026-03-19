@@ -21,15 +21,18 @@ namespace RERPAPI.Controllers.Accounting
         private readonly DailyReportAccountingRepo _dailyReportAccountingRepo;
         private readonly EmployeeRepo _employeeRepo;
         private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
+        private readonly CurrentUser _currentUser;
 
         public DailyReportAccountingController(
             DailyReportAccountingRepo dailyReportAccountingRepo,
             EmployeeRepo employeeRepo,
-            vUserGroupLinksRepo vUserGroupLinksRepo)
+            vUserGroupLinksRepo vUserGroupLinksRepo,
+            CurrentUser currentUser)
         {
             _dailyReportAccountingRepo = dailyReportAccountingRepo;
             _employeeRepo = employeeRepo;
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
+            _currentUser = currentUser;
         }
 
         /// <summary>
@@ -227,6 +230,7 @@ namespace RERPAPI.Controllers.Accounting
                     return BadRequest(ApiResponseFactory.Fail(null, "Danh sách báo cáo trống"));
                 }
 
+
                 foreach (var dto in dtos)
                 {
                     // Validate
@@ -240,6 +244,33 @@ namespace RERPAPI.Controllers.Accounting
                         return BadRequest(ApiResponseFactory.Fail(null, "Nội dung công việc không được để trống"));
 
                     DailyReportAccounting model;
+
+                    if (dto.ID > 0)
+                    {
+                        model = _dailyReportAccountingRepo.GetByID(dto.ID);
+
+                        if (model == null || model.IsDeleted == true)
+                        {
+                            return NotFound(ApiResponseFactory.Fail(null, $"Không tìm thấy báo cáo ID = {dto.ID}"));
+                        }
+
+                        if (model.EmployeeID != _currentUser.EmployeeID)
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền sửa báo cáo của người khác"));
+                        }
+                    }
+                    else
+                    {
+                        if (dto.EmployeeID > 0 && dto.EmployeeID != _currentUser.EmployeeID)
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền tạo báo cáo cho người khác"));
+                        }
+
+                        model = new DailyReportAccounting
+                        {
+                            IsDeleted = false
+                        };
+                    }
 
                     if (dto.ID > 0)
                     {
@@ -295,7 +326,15 @@ namespace RERPAPI.Controllers.Accounting
             try
             {
                 var model = _dailyReportAccountingRepo.GetByID(id);
-                if (model == null) return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu"));
+                if (model == null || model.IsDeleted == true)
+                {
+                    return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu"));
+                }
+
+                if (model.EmployeeID != _currentUser.EmployeeID)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền xóa báo cáo của người khác"));
+                }
 
                 model.IsDeleted = true; // Soft delete
 
