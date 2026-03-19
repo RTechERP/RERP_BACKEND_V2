@@ -77,4 +77,5 @@ public partial class HRRecruitmentExamResult
     /// Cờ đánh dấu bản ghi đã bị xóa mềm (0: không xóa, 1: đã xóa)
     /// </summary>
     public bool? IsDeleted { get; set; }
+    public int? RemainingSeconds { get; set; }
 }
