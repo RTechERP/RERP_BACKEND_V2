@@ -561,6 +561,8 @@ builder.Services.AddScoped<EmailHelper>();
 
 #endregion
 
+builder.Services.AddScoped<HistoryBorrowSaleLogRepo>();
+
 
 builder.Services.AddScoped<CurrentUser>(provider =>
 {
