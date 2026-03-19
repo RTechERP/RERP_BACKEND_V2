@@ -106,7 +106,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                         }
                         else
                         {
-                            Console.WriteLine($"Không tìm thấy file: {fullPath}");
+                            return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy file: {fullPath}"));
                         }
                     }
 
@@ -126,7 +126,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                             }
                             else
                             {
-                                Console.WriteLine($"Không tìm thấy file: {fullPath}");
+                                return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy file: {fullPath}"));
                             }
                         }
                     }
