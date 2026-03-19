@@ -81,6 +81,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                 // Thư mục root chứa file
                 //string baseDestPath = $@"\\192.168.1.190\Software\ftp\Upload\Hóa đơn đầu ra {currentYear}";
                 string baseDestPath = Path.Combine(rootPath, $"Hóa đơn đầu ra {currentYear}");
+                var errorFiles = new List<string>();
 
                 foreach (var item in payload)
                 {
@@ -106,7 +107,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                         }
                         else
                         {
-                            return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy file: {fullPath}"));
+                            errorFiles.Add(fullPath);
                         }
                     }
 
@@ -126,14 +127,16 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                             }
                             else
                             {
-                                return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy file: {fullPath}"));
+                                errorFiles.Add(fullPath);
                             }
                         }
                     }
                 }
 
-                //return Ok(new { status = 1, message = "Đã xuất và lưu file thành công vào máy chủ." });
-                return Ok(ApiResponseFactory.Success(null, $"Lưu file thành công"));
+                if (errorFiles.Any())
+                    return Ok(ApiResponseFactory.Success(errorFiles, "Lưu file thành công, một số file lỗi:"));
+
+                return Ok(ApiResponseFactory.Success(null, "Lưu file thành công"));
             }
             catch (Exception ex)
             {
