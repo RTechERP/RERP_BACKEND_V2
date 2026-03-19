@@ -120,7 +120,7 @@ namespace RERPAPI.Model.Common
             try
             {
                 var email = new MimeMessage();
-                email.From.Add(new MailboxAddress(_smtp.DisplayName, _smtp.Mail));
+                email.From.Add(new MailboxAddress(_smtpHr.DisplayName, _smtpHr.Mail));
                 email.To.Add(MailboxAddress.Parse(toEmail));
                 if (!string.IsNullOrWhiteSpace(cc))
                 {

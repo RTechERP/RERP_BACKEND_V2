@@ -657,6 +657,7 @@ builder.Services.AddAuthentication();
 
 //Get SmtpSetting
 var smtpSettings = builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+builder.Services.Configure<SmtpSettingsHr>(builder.Configuration.GetSection("SmtpSettingsHr"));
 
 
 //Get list static file
