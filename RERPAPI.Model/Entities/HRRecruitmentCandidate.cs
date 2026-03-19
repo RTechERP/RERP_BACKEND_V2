@@ -71,5 +71,9 @@ public partial class HRRecruitmentCandidate
     /// Chức vụ cần tuyển
     /// </summary>
     public string? PositionName { get; set; }
+
+    /// <summary>
+    /// Hạn phản hồi mail
+    /// </summary>
     public DateTime? DeadlineFeedbackMail { get; set; }
 }

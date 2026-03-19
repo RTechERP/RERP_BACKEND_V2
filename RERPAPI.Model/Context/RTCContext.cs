@@ -5410,6 +5410,9 @@ public partial class RTCContext : DbContext
                 .HasColumnType("datetime");
             entity.Property(e => e.DateInterview).HasColumnType("datetime");
             entity.Property(e => e.DateOfBirth).HasColumnType("datetime");
+            entity.Property(e => e.DeadlineFeedbackMail)
+                .HasComment("Hạn phản hồi mail")
+                .HasColumnType("datetime");
             entity.Property(e => e.Email).HasMaxLength(255);
             entity.Property(e => e.FileCVName).HasMaxLength(500);
             entity.Property(e => e.FullName).HasMaxLength(255);
