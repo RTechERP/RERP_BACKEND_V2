@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -404,8 +404,7 @@ namespace RERPAPI.Controllers
           [FromQuery] string? findText = null,
           [FromQuery] DateTime? dateStart = null,
           [FromQuery] DateTime? dateEnd = null,
-          [FromQuery] int id = 0,
-          [FromQuery] int chucVuHDID = 0
+          [FromQuery] int id = 0
       )
         {
             try
@@ -416,8 +415,8 @@ namespace RERPAPI.Controllers
 
                 var dt = SQLHelper<object>.ProcedureToList(
                     "spGetHRHiringRequest",
-                    new string[] { "Keyword", "DepartmentID", "ChucVuHDID", "DateStart", "DateEnd", "ID" },
-                    new object[] { findText ?? "", departmentID, chucVuHDID, ds, de, id }
+                    new string[] { "Keyword", "DepartmentID", "DateStart", "DateEnd", "ID" },
+                    new object[] { findText ?? "", departmentID, ds, de, id }
                 );
                 var data = SQLHelper<object>.GetListData(dt, 0);
                 return Ok(ApiResponseFactory.Success(data, ""));
@@ -458,7 +457,6 @@ namespace RERPAPI.Controllers
             public int DepartmentID { get; set; } = 0;
             public string? Keyword { get; set; } = "";
             public int Id { get; set; } = 0;
-            public int ChucVuHDID { get; set; } = 0;
         }
 
         [HttpPost("getdata")]
@@ -477,7 +475,6 @@ namespace RERPAPI.Controllers
                 int departmentID = request.DepartmentID;
                 string keyword = request.Keyword ?? "";
                 int id = request.Id;
-                int chucVuHDID = request.ChucVuHDID;
 
                 // Parse dates
                 if (!string.IsNullOrEmpty(request.DateStart) && DateTime.TryParse(request.DateStart, out DateTime ds))
@@ -502,8 +499,8 @@ namespace RERPAPI.Controllers
 
                     var dt = SQLHelper<object>.ProcedureToList(
                         "spGetHRHiringRequest",
-                        new string[] { "Keyword", "DepartmentID", "ChucVuHDID", "DateStart", "DateEnd", "ID" },
-                        new object[] { keyword ?? "", departmentID, chucVuHDID, ds_formatted, de_formatted, 0 }
+                        new string[] { "Keyword", "DepartmentID", "DateStart", "DateEnd", "ID" },
+                        new object[] { keyword ?? "", departmentID, ds_formatted, de_formatted, 0 }
                     );
                     var data = SQLHelper<object>.GetListData(dt, 0);
                     return Ok(ApiResponseFactory.Success(new List<object> { data }, "Lấy danh sách thành công!"));
@@ -544,6 +541,7 @@ namespace RERPAPI.Controllers
                     mainRecord.HiringRequestCode,
                     mainRecord.DepartmentID,
                     mainRecord.EmployeeChucVuHDID,
+                    mainRecord.PositionName,
                     mainRecord.EmployeeRequestID,
                     mainRecord.QuantityHiring,
                     mainRecord.SalaryMin,
@@ -556,7 +554,7 @@ namespace RERPAPI.Controllers
                     mainRecord.Note,
                     mainRecord.DateRequest,
                     DepartmentName = department?.Name ?? "",
-                    EmployeeChucVuHDName = chucVuHD?.Name ?? "",
+                    EmployeeChucVuHDName = string.IsNullOrEmpty(mainRecord.PositionName) ? (chucVuHD?.Name ?? "") : mainRecord.PositionName,
                     EmployeeRequestCode = employee?.Code ?? "",
                     EmployeeRequestName = employee?.FullName ?? ""
                 };
