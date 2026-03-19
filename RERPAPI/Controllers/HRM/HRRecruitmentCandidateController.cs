@@ -320,12 +320,13 @@ namespace RERPAPI.Controllers.HRM
                 if (data.FileCV != null)
                 {
                     string deleteFileName = "";
+                    HRRecruitmentCandidate hrRecruitmentCandidateOld = null;
                     if (data.ID > 0)
                     {
-                        var hrRecruitmentCandidate = _hrRecruitmentCandidateRepo.GetByID(data.ID);
-                        if (hrRecruitmentCandidate != null)
+                        hrRecruitmentCandidateOld = _hrRecruitmentCandidateRepo.GetByID(data.ID);
+                        if (hrRecruitmentCandidateOld != null)
                         {
-                            deleteFileName = hrRecruitmentCandidate.FileCVName ?? "";
+                            deleteFileName = hrRecruitmentCandidateOld.FileCVName ?? "";
                         }
                     }
 
@@ -337,7 +338,11 @@ namespace RERPAPI.Controllers.HRM
                         return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: HrRecruitmentCandidate"));
                     }
 
-                    string pathPattern = $@"CvUngVien\";
+                    // Dynamic subpath: CvUngVien/Year/PositionName
+                    string year = (data.DateApply ?? DateTime.Now).ToString("yyyy");
+                    string position = string.IsNullOrWhiteSpace(data.PositionName) ? "NoPosition" : data.PositionName;
+                    string pathPattern = Path.Combine("CvUngVien", year, position);
+
                     string pathUpload = data.ServerPath = Path.Combine(uploadPath, pathPattern);
 
                     if (!Directory.Exists(pathUpload))
@@ -347,7 +352,8 @@ namespace RERPAPI.Controllers.HRM
 
                     if (!string.IsNullOrWhiteSpace(deleteFileName) && deleteFileName.ToLower() != data.FileCVName.ToLower())
                     {
-                        var oldFilePath = Path.Combine(pathUpload, deleteFileName);
+                        var oldPath = hrRecruitmentCandidateOld?.ServerPath ?? pathUpload;
+                        var oldFilePath = Path.Combine(oldPath, deleteFileName);
 
                         if (System.IO.File.Exists(oldFilePath))
                         {
