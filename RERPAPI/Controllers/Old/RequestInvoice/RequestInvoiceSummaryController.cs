@@ -62,7 +62,6 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
 
 
         [HttpPost("download-batch-files")]
-        [Authorize]
         public IActionResult DownloadBatchFiles([FromBody] List<RequestInvoiceSummaryFilesDownloadDTO> payload)
         {
             try
@@ -82,6 +81,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                 // Thư mục root chứa file
                 //string baseDestPath = $@"\\192.168.1.190\Software\ftp\Upload\Hóa đơn đầu ra {currentYear}";
                 string baseDestPath = Path.Combine(rootPath, $"Hóa đơn đầu ra {currentYear}");
+                var errorFiles = new List<string>();
 
                 foreach (var item in payload)
                 {
@@ -97,9 +97,17 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                     var ycxHdfiles = _requestInvoiceFileRepo.GetAll(f => f.RequestInvoiceID == item.RequestInvoiceID).ToList();
                     foreach (var f in ycxHdfiles)
                     {
-                        if (System.IO.File.Exists(f.ServerPath))
+                        var fullPath = Path.Combine(f.ServerPath, f.FileName);
+
+                        if (System.IO.File.Exists(fullPath))
                         {
-                            System.IO.File.Copy(f.ServerPath, Path.Combine(invoiceFolder, f.FileName), true);
+                            var destPath = Path.Combine(invoiceFolder, f.FileName);
+
+                            System.IO.File.Copy(fullPath, destPath, true);
+                        }
+                        else
+                        {
+                            errorFiles.Add(fullPath);
                         }
                     }
 
@@ -109,16 +117,26 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                         var poFiles = _pokhFilesRepo.GetAll(p => p.POKHID == item.POKHId.Value).ToList();
                         foreach (var pf in poFiles)
                         {
-                            if (System.IO.File.Exists(pf.ServerPath))
+                            var fullPath = Path.Combine(pf.ServerPath, pf.FileName);
+
+                            if (System.IO.File.Exists(fullPath))
                             {
-                                System.IO.File.Copy(pf.ServerPath, Path.Combine(invoiceFolder, pf.FileName), true);
+                                var destPath = Path.Combine(invoiceFolder, pf.FileName);
+
+                                System.IO.File.Copy(fullPath, destPath, true);
+                            }
+                            else
+                            {
+                                errorFiles.Add(fullPath);
                             }
                         }
                     }
                 }
 
-                //return Ok(new { status = 1, message = "Đã xuất và lưu file thành công vào máy chủ." });
-                return Ok(ApiResponseFactory.Success(null, $"Lưu file thành công"));
+                if (errorFiles.Any())
+                    return Ok(ApiResponseFactory.Success(errorFiles, "Lưu file thành công, một số file lỗi:"));
+
+                return Ok(ApiResponseFactory.Success(null, "Lưu file thành công"));
             }
             catch (Exception ex)
             {
