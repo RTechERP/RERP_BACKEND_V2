@@ -62,7 +62,6 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
 
 
         [HttpPost("download-batch-files")]
-        [Authorize]
         public IActionResult DownloadBatchFiles([FromBody] List<RequestInvoiceSummaryFilesDownloadDTO> payload)
         {
             try
@@ -97,9 +96,17 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                     var ycxHdfiles = _requestInvoiceFileRepo.GetAll(f => f.RequestInvoiceID == item.RequestInvoiceID).ToList();
                     foreach (var f in ycxHdfiles)
                     {
-                        if (System.IO.File.Exists(f.ServerPath))
+                        var fullPath = Path.Combine(f.ServerPath, f.FileName);
+
+                        if (System.IO.File.Exists(fullPath))
                         {
-                            System.IO.File.Copy(f.ServerPath, Path.Combine(invoiceFolder, f.FileName), true);
+                            var destPath = Path.Combine(invoiceFolder, f.FileName);
+
+                            System.IO.File.Copy(fullPath, destPath, true);
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Không tìm thấy file: {fullPath}");
                         }
                     }
 
@@ -109,9 +116,17 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                         var poFiles = _pokhFilesRepo.GetAll(p => p.POKHID == item.POKHId.Value).ToList();
                         foreach (var pf in poFiles)
                         {
-                            if (System.IO.File.Exists(pf.ServerPath))
+                            var fullPath = Path.Combine(pf.ServerPath, pf.FileName);
+
+                            if (System.IO.File.Exists(fullPath))
                             {
-                                System.IO.File.Copy(pf.ServerPath, Path.Combine(invoiceFolder, pf.FileName), true);
+                                var destPath = Path.Combine(invoiceFolder, pf.FileName);
+
+                                System.IO.File.Copy(fullPath, destPath, true);
+                            }
+                            else
+                            {
+                                Console.WriteLine($"Không tìm thấy file: {fullPath}");
                             }
                         }
                     }
