@@ -496,6 +496,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<HandoverWork> HandoverWorks { get; set; }
 
+    public virtual DbSet<HistoryBorrowSaleLog> HistoryBorrowSaleLogs { get; set; }
+
     public virtual DbSet<HistoryDeleteBill> HistoryDeleteBills { get; set; }
 
     public virtual DbSet<HistoryError> HistoryErrors { get; set; }
@@ -5811,6 +5813,35 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
+        modelBuilder.Entity<HistoryBorrowSaleLog>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__HistoryB__3214EC278D9015AF");
+
+            entity.ToTable("HistoryBorrowSaleLog");
+
+            entity.Property(e => e.ID).HasComment("ID lịch sử mượn sale");
+            entity.Property(e => e.BillExportDetailID).HasComment("ID chi tiết phiếu xuất");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(255)
+                .HasComment("Người tạo");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo")
+                .HasColumnType("datetime");
+            entity.Property(e => e.ExpectedReturnDate)
+                .HasComment("Ngày đăng ký gia hạn")
+                .HasColumnType("datetime");
+            entity.Property(e => e.ExtendDate)
+                .HasComment("Ngày gia hạn")
+                .HasColumnType("datetime");
+            entity.Property(e => e.IsApproved).HasComment("Trạng thái duyệt");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(255)
+                .HasComment("Người cập nhật");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật ")
+                .HasColumnType("datetime");
+        });
+
         modelBuilder.Entity<HistoryDeleteBill>(entity =>
         {
             entity.ToTable("HistoryDeleteBill");
@@ -7680,6 +7711,8 @@ public partial class RTCContext : DbContext
         {
             entity.ToTable("PaymentOrderFileBankSlip");
 
+            entity.HasIndex(e => e.PaymentOrderID, "Index_PaymentOrderFileBankSlip_PaymentOrderID");
+
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.FileName).HasMaxLength(550);
@@ -7737,6 +7770,8 @@ public partial class RTCContext : DbContext
             entity.HasKey(e => e.ID).HasName("PK__PaymentO__3214EC27AE0C2E09");
 
             entity.ToTable("PaymentOrderPO");
+
+            entity.HasIndex(e => e.PaymentOrderID, "Index_PaymentOrderPO_PaymentOrderID");
 
             entity.Property(e => e.BillNumber).HasMaxLength(550);
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
