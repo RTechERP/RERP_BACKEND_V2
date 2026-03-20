@@ -1259,10 +1259,10 @@ namespace RERPAPI.Controllers
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
-                var orgCharts = SQLHelper<dynamic>.ProcedureToList("spGetOrganizationalChart",
+                var orgCharts = SQLHelper<dynamic>.ProcedureToList("spGetOrganizationalChart_New",
                                                                             new string[] { "@TaxCompanyID", "@DepartmentID", "@Keyword" },
                                                                             new object[] { 1, deID, "" });
-                var orgdChart = SQLHelper<dynamic>.ProcedureToList("spGetOrganizationalChartDetail", new string[] { "@ID" }, new object[] { 0 });
+                var orgdChart = SQLHelper<dynamic>.ProcedureToList("spGetOrganizationalChartDetail_New", new string[] { "@ID" }, new object[] { 0 });
                 var dt = SQLHelper<object>.GetListData(orgCharts, 0);
                 var dtDetail = SQLHelper<object>.GetListData(orgdChart, 0);
 
