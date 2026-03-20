@@ -30,7 +30,7 @@ namespace RERPAPI.Controllers.HRM.Employees
         {
             try
             {
-                var dt = SQLHelper<object>.ProcedureToList("spGetOrganizationalChart", new string[] { "@TaxCompanyID", "@DepartmentID" }, new object[] { 0, 0 });
+                var dt = SQLHelper<object>.ProcedureToList("spGetOrganizationalChart_New", new string[] { "@TaxCompanyID", "@DepartmentID" }, new object[] { 0, 0 });
                 var result = SQLHelper<object>.GetListData(dt, 0);
 
                 return Ok(ApiResponseFactory.Success(result, ""));
@@ -46,7 +46,7 @@ namespace RERPAPI.Controllers.HRM.Employees
         {
             try
             {
-                var dt = SQLHelper<object>.ProcedureToList("spGetOrganizationalChartDetail", new string[] { "@ID" }, new object[] { id });
+                var dt = SQLHelper<object>.ProcedureToList("spGetOrganizationalChartDetail_New", new string[] { "@ID" }, new object[] { id });
                 var result = SQLHelper<object>.GetListData(dt, 0);
 
                 return Ok(ApiResponseFactory.Success(result, ""));

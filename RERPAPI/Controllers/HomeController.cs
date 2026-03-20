@@ -1711,7 +1711,7 @@ namespace RERPAPI.Controllers
                 {
                     if (item.Key == "LinkFileUpdate" && !string.IsNullOrWhiteSpace(item.Value))
                     {
-                        item.Value = $"{item.Value}?path={Uri.EscapeDataString(config.GetValue<string>("PathUpdate",""))}";
+                        item.Value = $"{item.Value}?path={Uri.EscapeDataString(config.GetValue<string>("PathUpdate") ?? "")}";
                     }
                     data.Add(item.Key, item.Value ?? "");
                 }
