@@ -159,7 +159,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     IsDelete = p.IsDelete,
                 };
 
-                var data = await SqlDapper<object>.ProcedureToListAsync("spGetPaymentOrder_New_V2", param);
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetPaymentOrder_New", param);
 
                 //return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0)));
                 return Ok(ApiResponseFactory.Success(data));
@@ -756,7 +756,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         }
 
         [HttpPost("get-payment-order-team")]
-        [RequiresPermission("N100")]
+        [RequiresPermission("N88")]
         public async Task<IActionResult> GetPaymentOrderTeam([FromBody] PaymentOrderTeamParam p)
         {
             try
@@ -791,7 +791,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
 
         }
         [HttpGet("get-team-sale/{employeeId}")]
-        [RequiresPermission("N100")]
+        [RequiresPermission("N88")]
         public async Task<IActionResult> GetTeamSale(int employeeId)
         {
             try
