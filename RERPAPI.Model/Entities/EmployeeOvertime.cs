@@ -81,4 +81,14 @@ public partial class EmployeeOvertime
     public DateTime? DateApprovedSenitor { get; set; }
 
     public bool IsDeleted { get; set; }
+
+    /// <summary>
+    /// Lý do Senior từ chối duyệt
+    /// </summary>
+    public string? ReasonDecilineSenior { get; set; }
+
+    /// <summary>
+    /// Trạng thái từ chối duyệt của Senior
+    /// </summary>
+    public int? DecilineApproveSenior { get; set; }
 }
