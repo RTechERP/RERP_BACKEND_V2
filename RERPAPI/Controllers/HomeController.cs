@@ -1709,6 +1709,10 @@ namespace RERPAPI.Controllers
 
                 foreach (var item in config.GetChildren())
                 {
+                    if (item.Key == "LinkFileUpdate" && !string.IsNullOrWhiteSpace(item.Value))
+                    {
+                        item.Value = $"{item.Value}?path={Uri.EscapeDataString(config.GetValue<string>("PathUpdate",""))}";
+                    }
                     data.Add(item.Key, item.Value ?? "");
                 }
                 return Ok(ApiResponseFactory.Success(data));
