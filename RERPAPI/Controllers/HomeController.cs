@@ -1696,5 +1696,56 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+
+        [HttpGet("get-config-autoupdate")]
+        public IActionResult GetConfigAutoUpdate()
+        {
+            try
+            {
+                var config = _configuration.GetSection("ConfigAutoUpdate");
+
+                var data = new Dictionary<string, string>();
+
+                foreach (var item in config.GetChildren())
+                {
+                    data.Add(item.Key, item.Value ?? "");
+                }
+                return Ok(ApiResponseFactory.Success(data));
+            }
+            catch (Exception ex)
+            {
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("listfile")]
+        public IActionResult GetFiles(string path)
+        {
+            try
+            {
+                DirectoryInfo info = new DirectoryInfo(path);
+                List<FileInfo> listfile = info.GetFiles().OrderByDescending(x => TextUtils.ToInt32(Path.GetFileNameWithoutExtension(x.FullName))).ToList();
+                string newVersion = listfile.FirstOrDefault().FullName;
+
+                //List<FileInfoDTO> listFile = new List<FileInfoDTO>();
+                List<object> listFile = new List<object>();
+                foreach (var item in listfile)
+                {
+                    var fileInfo = new
+                    {
+                        Name = item.Name,
+                        Path = item.FullName
+                    };
+                    listFile.Add(fileInfo);
+                }
+
+                return Ok(ApiResponseFactory.Success(listFile));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 }
