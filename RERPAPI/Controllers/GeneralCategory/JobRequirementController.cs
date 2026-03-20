@@ -88,7 +88,27 @@ namespace RERPAPI.Controllers.GeneralCategory
             }
         }
 
+        [HttpPost("get-job-requirement-personal")]
+        public IActionResult GetJobRequirementPersonal([FromBody] JobRequirementParam param)
+        {
+            try
+            {
+                param.DateStart = new DateTime(param.DateStart.Year, param.DateStart.Month, param.DateStart.Day, 0, 0, 0);
+                param.DateEnd = new DateTime(param.DateEnd.Year, param.DateEnd.Month, param.DateEnd.Day, 23, 59, 59);
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                var data = SQLHelper<object>.ProcedureToList("spGetJobRequirement",
+                                                            new string[] { "@DateStart", "@DateEnd", "@Request", "@EmployeeId", "@Step", "@DepartmentId", "@ApprovedTBPID" },
+                                                            new object[] { param.DateStart, param.DateEnd, param.Request, currentUser.EmployeeID, param.Step, param.DepartmentID, param.ApprovedTBPID });
 
+                var jobs = SQLHelper<object>.GetListData(data, 0);
+                return Ok(ApiResponseFactory.Success(jobs, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [HttpGet("details/{jobRequirementID}")]
         public IActionResult GetDetails(int jobRequirementID)
         {
@@ -97,7 +117,6 @@ namespace RERPAPI.Controllers.GeneralCategory
                 var data = SQLHelper<object>.ProcedureToList("spGetJobRequirementDetail",
                                                             new string[] { "@JobRequirementID" },
                                                             new object[] { jobRequirementID });
-
                 var details = SQLHelper<object>.GetListData(data, 0);
                 var approves = SQLHelper<object>.GetListData(data, 1);
                 var files = SQLHelper<object>.GetListData(data, 2);
