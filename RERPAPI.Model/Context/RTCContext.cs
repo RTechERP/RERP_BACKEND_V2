@@ -306,6 +306,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<EmployeeOnLeaveMaster> EmployeeOnLeaveMasters { get; set; }
 
+    public virtual DbSet<EmployeeOnLeavePhase> EmployeeOnLeavePhases { get; set; }
+
     public virtual DbSet<EmployeeOvertime> EmployeeOvertimes { get; set; }
 
     public virtual DbSet<EmployeeOvertimeFile> EmployeeOvertimeFiles { get; set; }
@@ -3858,6 +3860,9 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.DecilineApproveSenior)
                 .HasDefaultValue(0)
                 .HasComment("Trạng thái từ chối duyệt của Senior");
+            entity.Property(e => e.EmployeeOnLeavePhaseID)
+                .HasDefaultValue(0)
+                .HasComment("ID đợt xin nghỉ");
             entity.Property(e => e.EndDate).HasColumnType("datetime");
             entity.Property(e => e.IsSeniorApproved).HasDefaultValue(0);
             entity.Property(e => e.ReasonDecilineSenior).HasComment("Lý do Senior từ chối duyệt");
@@ -3887,6 +3892,37 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.TotalDayRemain)
                 .HasComment("Số ngày phép còn lại")
                 .HasColumnType("decimal(18, 2)");
+        });
+
+        modelBuilder.Entity<EmployeeOnLeavePhase>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__Employee__3214EC27237B9312");
+
+            entity.ToTable("EmployeeOnLeavePhase", tb => tb.HasComment("Bảng lưu thông tin các đợt đăng ký nghỉ của nhân viên"));
+
+            entity.Property(e => e.ID).HasComment("Khóa chính");
+            entity.Property(e => e.Code)
+                .HasMaxLength(500)
+                .HasComment("Mã đợt đăng ký");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(255)
+                .HasComment("Người tạo");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo")
+                .HasColumnType("datetime");
+            entity.Property(e => e.DateRegister)
+                .HasComment("Ngày đăng ký")
+                .HasColumnType("datetime");
+            entity.Property(e => e.EmployeeID).HasComment("ID nhân viên đăng ký");
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false)
+                .HasComment("Trạng thái xóa mềm (0: chưa xóa, 1: đã xóa)");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(255)
+                .HasComment("Người cập nhật");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật")
+                .HasColumnType("datetime");
         });
 
         modelBuilder.Entity<EmployeeOvertime>(entity =>

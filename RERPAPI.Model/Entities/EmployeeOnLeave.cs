@@ -96,4 +96,9 @@ public partial class EmployeeOnLeave
     /// Trạng thái từ chối duyệt của Senior
     /// </summary>
     public int? DecilineApproveSenior { get; set; }
+
+    /// <summary>
+    /// ID đợt xin nghỉ
+    /// </summary>
+    public int? EmployeeOnLeavePhaseID { get; set; }
 }
