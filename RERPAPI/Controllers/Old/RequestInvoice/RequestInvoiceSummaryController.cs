@@ -134,9 +134,9 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                 }
 
                 if (errorFiles.Any())
-                    return Ok(ApiResponseFactory.Success(errorFiles, "Lưu file thành công, một số file lỗi:"));
+                    return Ok(ApiResponseFactory.Success(new { errorFiles, baseDestPath }, "Lưu file thành công, một số file lỗi:"));
 
-                return Ok(ApiResponseFactory.Success(null, "Lưu file thành công"));
+                return Ok(ApiResponseFactory.Success(baseDestPath, "Lưu file thành công"));
             }
             catch (Exception ex)
             {
