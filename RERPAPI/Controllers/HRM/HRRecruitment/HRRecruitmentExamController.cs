@@ -28,7 +28,8 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         HRRecruitmentExamResultDetailRepo _hrRecruitmentExamResultDetailRepo;
         HRRecruitmentExamResultImageRepo _hrRecruitmentExamResultImageRepo;
         ConfigSystemRepo _configSystemRepo;
-        public HRRecruitmentExamController(HRRecruitmentQuestionRepo hrRecruitmentQuestionRepo, HRRecruitmentAnswersRepo hrRecruitmentAnswersRepo, HRRecruitmentRightAnswearsRepo hrRecruitmentRightAnswearsRepo, HRRecruitmentExamRepo hRRecruitmentExamRepo, HRRecruitmentExamResultRepo hrRecruitmentExamResultRepo, HRRecruitmentExamResultDetailRepo hrRecruitmentExamResultDetailRepo, HRRecruitmentExamResultImageRepo hrRecruitmentExamResultImageRepo, ConfigSystemRepo configSystemRepo)
+        HiringRequestExamRepo _hiringRequestExamRepo;
+        public HRRecruitmentExamController(HRRecruitmentQuestionRepo hrRecruitmentQuestionRepo, HRRecruitmentAnswersRepo hrRecruitmentAnswersRepo, HRRecruitmentRightAnswearsRepo hrRecruitmentRightAnswearsRepo, HRRecruitmentExamRepo hRRecruitmentExamRepo, HRRecruitmentExamResultRepo hrRecruitmentExamResultRepo, HRRecruitmentExamResultDetailRepo hrRecruitmentExamResultDetailRepo, HRRecruitmentExamResultImageRepo hrRecruitmentExamResultImageRepo, ConfigSystemRepo configSystemRepo, HiringRequestExamRepo hiringRequestExamRepo)
         {
             _hrRecruitmentQuestionRepo = hrRecruitmentQuestionRepo;
             _hrRecruitmentAnswersRepo = hrRecruitmentAnswersRepo;
@@ -38,6 +39,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             _hrRecruitmentExamResultDetailRepo = hrRecruitmentExamResultDetailRepo;
             _hrRecruitmentExamResultImageRepo = hrRecruitmentExamResultImageRepo;
             _configSystemRepo = configSystemRepo;
+            _hiringRequestExamRepo = hiringRequestExamRepo;
         }
         #region load dữ liệu exam
         [Authorize]
@@ -78,6 +80,22 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         }
         #endregion
 
+        #region lấy ID max
+        [HttpGet("get-max-id")]
+        public async Task<IActionResult> GetMaxID()
+        {
+            try
+            {
+                var data = _hrRecruitmentExamRepo.GetAll().Any() ? _hrRecruitmentExamRepo.GetAll().Max(x => x.ID) : 0;
+                return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        #endregion
         #region save exam
         [Authorize]
         //load data cbb đợt tuyển dụng cho trường hợp thêm mới ( chỉ lấy những vị trí chưa có đề thi) 
@@ -202,7 +220,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 {
                     DepartmentID = departmentID
                 };
-                var data = await SqlDapper<object>.ProcedureToListAsync("r ", param);
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetHiringRequest_ComboBox", param);
                 return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
@@ -355,23 +373,31 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 string targetFolder = uploadPath;
                 if (!string.IsNullOrWhiteSpace(subPath))
                 {
-                    var separator = Path.DirectorySeparatorChar;
-                    var segments = subPath
-                        .Replace('/', separator)
-                        .Replace('\\', separator)
-                        .Split(separator, StringSplitOptions.RemoveEmptyEntries)
-                        .Select(seg =>
-                        {
-                            var invalidChars = Path.GetInvalidFileNameChars();
-                            var cleaned = new string(seg.Where(c => !invalidChars.Contains(c)).ToArray());
-                            cleaned = cleaned.Replace("..", "").Trim(); // chống leo thư mục
-                            return cleaned;
-                        })
-                        .Where(s => !string.IsNullOrWhiteSpace(s))
-                        .ToArray();
+                    // Nếu subPath là đường dẫn tuyệt đối (vd: D:\...) thì không cần xử lý segment mangling
+                    if (Path.IsPathRooted(subPath))
+                    {
+                        targetFolder = subPath;
+                    }
+                    else
+                    {
+                        var separator = Path.DirectorySeparatorChar;
+                        var segments = subPath
+                            .Replace('/', separator)
+                            .Replace('\\', separator)
+                            .Split(separator, StringSplitOptions.RemoveEmptyEntries)
+                            .Select(seg =>
+                            {
+                                var invalidChars = Path.GetInvalidFileNameChars();
+                                var cleaned = new string(seg.Where(c => !invalidChars.Contains(c)).ToArray());
+                                cleaned = cleaned.Replace("..", "").Trim(); // chống leo thư mục
+                                return cleaned;
+                            })
+                            .Where(s => !string.IsNullOrWhiteSpace(s))
+                            .ToArray();
 
-                    if (segments.Length > 0)
-                        targetFolder = Path.Combine(uploadPath, Path.Combine(segments));
+                        if (segments.Length > 0)
+                            targetFolder = Path.Combine(uploadPath, Path.Combine(segments));
+                    }
                 }
 
                 // Chuẩn hóa tên file
@@ -830,6 +856,149 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 await _hrRecruitmentExamResultRepo.UpdateAsync(result);
 
                 return Ok(ApiResponseFactory.Success(result, result.StatusResult == 2 ? "Bài thi đã được chấm điểm tự động." : "Nộp bài thành công, vui lòng chờ HR chấm điểm."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        #endregion
+        #region Chấm điểm ứng viên
+        [Authorize]
+        [RequiresPermission("N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")] // Permissions consistent with other HR recruitment tasks
+        [HttpGet("get-candidate-scores")]
+        public async Task<IActionResult> GetCandidateScores(int recruitmentExamID)
+        {
+            try
+            {
+                var param = new { RecruitmentExamID = recruitmentExamID };
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetCandidateScoresByExam", param);
+                return Ok(ApiResponseFactory.Success(data, "Lấy danh sách điểm thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [Authorize]
+        [RequiresPermission("N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [HttpGet("get-candidate-answer-details")]
+        public async Task<IActionResult> GetCandidateAnswerDetails(int examResultID)
+        {
+            try
+            {
+                var param = new { ExamResultID = examResultID };
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetCandidateAnswerDetailForGrading", param);
+                return Ok(ApiResponseFactory.Success(data, "Lấy chi tiết bài làm thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [Authorize]
+        [RequiresPermission("N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [HttpPost("grade-essay-answer")]
+        public async Task<IActionResult> GradeEssayAnswer([FromBody] GradeEssayRequestDTO request)
+        {
+            try
+            {
+                var detail = _hrRecruitmentExamResultDetailRepo.GetByID(request.ExamResultDetailID);
+                if (detail == null) return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy chi tiết bài làm"));
+
+                // Security Fix: Validate score against question's max points
+                var question = _hrRecruitmentQuestionRepo.GetByID(detail.RecruitmentQuestionID ?? 0);
+                if (question != null && request.Score > (question.Point ?? 0))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Số điểm ({request.Score}) không được vượt quá điểm tối đa của câu hỏi ({question.Point})"));
+                }
+
+                detail.Score = request.Score;
+                detail.IsGraded = true;
+                detail.UpdatedDate = DateTime.Now;
+
+                await _hrRecruitmentExamResultDetailRepo.UpdateAsync(detail);
+                return Ok(ApiResponseFactory.Success(null, "Chấm điểm thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [Authorize]
+        [RequiresPermission("N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [HttpPost("finalize-grading")]
+        public async Task<IActionResult> FinalizeGrading([FromBody] FinalizeGradingRequestDTO request)
+        {
+            try
+            {
+                var result = _hrRecruitmentExamResultRepo.GetByID(request.ExamResultID);
+                if (result == null) return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy kết quả bài thi"));
+
+                // Recalculate total score from details
+                var details = _hrRecruitmentExamResultDetailRepo.GetAll(x => x.RecruitmentExamResultID == request.ExamResultID && x.IsDeleted == false);
+                
+                decimal totalScore = details.Sum(x => x.Score ?? 0);
+                int totalCorrect = details.Count(x => x.Score > 0); // basic logic, adjust if needed
+                int totalIncorrect = details.Count(x => x.Score == 0);
+
+                result.TotalScore = totalScore;
+                result.TotalCorrect = totalCorrect;
+                result.TotalIncorrect = totalIncorrect;
+                result.PercentageCorrect = result.MaxPossibleScore > 0 ? (totalScore / result.MaxPossibleScore) * 100 : 0;
+                result.StatusResult = 2; // Marked as Finished/Graded
+                result.UpdatedDate = DateTime.Now;
+
+                await _hrRecruitmentExamResultRepo.UpdateAsync(result);
+
+                return Ok(ApiResponseFactory.Success(result, "Đã hoàn tất chấm điểm bài thi."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        #endregion
+        #region Matrix View - Tổng quan điểm đa bài thi
+        [Authorize]
+        [RequiresPermission("N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [HttpGet("get-exams-by-hiring-request")]
+        public async Task<IActionResult> GetExamsByHiringRequest(int hiringRequestID)
+        {
+            try
+            {
+                var exams = _hiringRequestExamRepo.GetAll(x => x.HiringRequestID == hiringRequestID && (x.IsDeleted == false || x.IsDeleted == null) && (x.IsActive == true || x.IsActive == null));
+
+                var result = new List<object>();
+                foreach (var hre in exams)
+                {
+                    var exam = _hrRecruitmentExamRepo.GetByID(hre.RecruitmentExamID);
+                    if (exam != null)
+                    {
+                        result.Add(new { exam.ID, exam.NameExam, exam.ExamType });
+                    }
+                }
+                return Ok(ApiResponseFactory.Success(result, "Lấy danh sách đề thi thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [Authorize]
+        [RequiresPermission("N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [HttpGet("get-candidate-score-matrix")]
+        public async Task<IActionResult> GetCandidateScoreMatrix(int hiringRequestID)
+        {
+            try
+            {
+                var param = new { HiringRequestID = hiringRequestID };
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetCandidateScoreMatrixByHiringRequest", param);
+                return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu ma trận điểm thành công"));
             }
             catch (Exception ex)
             {
