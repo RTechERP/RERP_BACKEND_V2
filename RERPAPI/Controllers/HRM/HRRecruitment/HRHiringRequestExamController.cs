@@ -45,7 +45,9 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         {
             try
             {
-                var data = _hiringRequestRepo.GetAll(x => x.IsDeleted == false);
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                var data = _hiringRequestRepo.GetAll(x =>x.IsDeleted == false && (currentUser.IsAdmin || x.EmployeeRequestID == currentUser.EmployeeID));
                 return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
