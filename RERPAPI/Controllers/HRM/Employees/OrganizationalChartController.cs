@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NPOI.HSSF.Record.Chart;
 using RERPAPI.Model.Common;
@@ -12,6 +13,7 @@ namespace RERPAPI.Controllers.HRM.Employees
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class OrganizationalChartController : ControllerBase
     {
         private OrganizationalChartDetailRepo _organizationalChartDetailRepo;
@@ -95,7 +97,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                     }
                 }
 
-                return Ok(ApiResponseFactory.Success( failedEmployees, ""));
+                return Ok(ApiResponseFactory.Success(failedEmployees, ""));
             }
             catch (Exception ex)
             {
