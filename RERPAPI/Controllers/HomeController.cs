@@ -1709,12 +1709,17 @@ namespace RERPAPI.Controllers
 
                 foreach (var item in config.GetChildren())
                 {
-                    if (item.Key == "LinkFileUpdate" && !string.IsNullOrWhiteSpace(item.Value))
-                    {
-                        item.Value = $"{item.Value}?path={Uri.EscapeDataString(config.GetValue<string>("PathUpdate") ?? "")}";
-                    }
+                    //if (item.Key == "LinkFileUpdate" && !string.IsNullOrWhiteSpace(item.Value))
+                    //{
+                    //    item.Value = $"{item.Value}?path={Uri.EscapeDataString(config.GetValue<string>("PathUpdate") ?? "")}";
+                    //}
                     data.Add(item.Key, item.Value ?? "");
                 }
+
+                string linkFileUpdate = config.GetValue<string>("LinkFileUpdate") ?? "";
+                string pathFileUpdate = config.GetValue<string>("PathUpdate") ?? "";
+                string linkFileUpdateNew = $"{linkFileUpdate}?path={Uri.EscapeDataString(pathFileUpdate)}";
+                data["LinkFileUpdate"] = linkFileUpdateNew;
                 return Ok(ApiResponseFactory.Success(data));
             }
             catch (Exception ex)
@@ -1744,7 +1749,14 @@ namespace RERPAPI.Controllers
                     listFile.Add(fileInfo);
                 }
 
-                return Ok(ApiResponseFactory.Success(listFile));
+                //return Ok(ApiResponseFactory.Success(listFile));
+                return Ok(new
+                {
+                    status = 1,
+                    newVersion = newVersion,
+                    data = listFile
+
+                });
             }
             catch (Exception ex)
             {
