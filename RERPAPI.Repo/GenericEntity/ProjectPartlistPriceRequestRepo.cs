@@ -1,4 +1,5 @@
-﻿using RERPAPI.Model.DTO;
+﻿using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Repo.GenericEntity
@@ -9,12 +10,15 @@ namespace RERPAPI.Repo.GenericEntity
         EmployeeRepo _employeeRepo;
         CurrencyRepo _currencyRepo;
         CurrentUser _currentUser;
-        public ProjectPartlistPriceRequestRepo(CurrentUser currentUser, EmployeeSendEmailRepo employeeSendEmailRepo, EmployeeRepo employeeRepo, CurrencyRepo currencyRepo) : base(currentUser)
+        private readonly EmailHelper _emailHelper;
+
+        public ProjectPartlistPriceRequestRepo(CurrentUser currentUser, EmployeeSendEmailRepo employeeSendEmailRepo, EmployeeRepo employeeRepo, CurrencyRepo currencyRepo, EmailHelper emailHelper) : base(currentUser)
         {
             _employeeSendEmailRepo = employeeSendEmailRepo;
             _employeeRepo = employeeRepo;
             _currencyRepo = currencyRepo;
             _currentUser = currentUser;
+            _emailHelper = emailHelper;
         }
         public async Task SaveData(ProjectPartlistPriceRequest item)
         {
@@ -31,8 +35,6 @@ namespace RERPAPI.Repo.GenericEntity
         }
         public async Task SendMail(List<MailItemPriceRequestDTO> dataMail)
         {
-  
-            EmployeeSendEmail sendMail = new EmployeeSendEmail();
             List<Employee> employees = _employeeRepo.GetAll(x=>x.Status==0);
             List<Currency> currencies = _currencyRepo.GetAll(x=>x.IsDeleted==false);
 
@@ -65,13 +67,9 @@ namespace RERPAPI.Repo.GenericEntity
             {
                 var emp = employees.FirstOrDefault(x => x.ID == row.EmployeeID);
 
-                sendMail.Subject = $"BÁO GIÁ SẢN PHẨM NGÀY: {DateTime.Now:dd/MM/yyyy}";
-                sendMail.EmailTo = !string.IsNullOrEmpty(emp?.EmailCongTy) ? emp.EmailCongTy : emp?.EmailCaNhan;
-                sendMail.StatusSend = 1;
-                sendMail.DateSend = DateTime.Now;
-                sendMail.EmployeeID = _currentUser.EmployeeID;
-                sendMail.Receiver = row.EmployeeID;
-                sendMail.Body = $@"
+                string subject = $"BÁO GIÁ SẢN PHẨM NGÀY: {DateTime.Now:dd/MM/yyyy}";
+                string toEmail = !string.IsNullOrEmpty(emp?.EmailCongTy) ? emp.EmailCongTy : (emp?.EmailCaNhan ?? "");
+                string body = $@"
                     <div style='font-family: Arial; font-size: 14px;'>
                         Dear <b>{emp?.FullName ?? "Không rõ"}</b>,<br/><br/>
                         Nhân viên <b>{string.Join(", ", row.QuoteEmployee)}</b> 
@@ -113,7 +111,7 @@ namespace RERPAPI.Repo.GenericEntity
                         <br/>Trân trọng.
                     </div>";
 
-                await _employeeSendEmailRepo.CreateAsync(sendMail);
+                await _emailHelper.SendAsync(toEmail, subject, body, true, "");
             }
 
         }

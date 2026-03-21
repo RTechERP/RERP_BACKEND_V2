@@ -28,10 +28,10 @@ namespace RERPAPI.Controllers.GeneralCategory
         private EmployeeRepo _employeeRepo;
         private JobRequirementCommentRepo _commentRepo;
         private vUserGroupLinksRepo _vUserGroupLinksRepo;
+        private JobRequirementDetailRepo _jobRequirementDetailRepo;
+        private readonly EmailHelper _emailHelper;
 
-
-
-        public JobRequirementController(IConfiguration configuration, CurrentUser currentUser, JobRequirementRepo jobRepo, JobRequirementDetailRepo detailRepo, JobRequirementFileRepo jobRequirementFileRepo, JobRequirementApprovedRepo approvedRepo, EmployeeRepo employeeRepo, JobRequirementCommentRepo commentRepo, vUserGroupLinksRepo userLinkRepo)
+        public JobRequirementController(IConfiguration configuration, CurrentUser currentUser, JobRequirementRepo jobRepo, JobRequirementDetailRepo detailRepo, JobRequirementFileRepo jobRequirementFileRepo, JobRequirementApprovedRepo approvedRepo, EmployeeRepo employeeRepo, JobRequirementCommentRepo commentRepo, vUserGroupLinksRepo userLinkRepo, JobRequirementDetailRepo jobRequirementDetailRepo, EmailHelper emailHelper)
         {
             _configuration = configuration;
             _currentUser = currentUser;
@@ -42,6 +42,8 @@ namespace RERPAPI.Controllers.GeneralCategory
             _employeeRepo = employeeRepo;
             _commentRepo = commentRepo;
             _vUserGroupLinksRepo = userLinkRepo;
+            _jobRequirementDetailRepo = jobRequirementDetailRepo;
+            _emailHelper = emailHelper;
         }
 
 
@@ -150,7 +152,7 @@ namespace RERPAPI.Controllers.GeneralCategory
                     var list = _jobRepo.GetAll(x => x.DateRequest.Value.Year == currentYear);
                     job.NumberRequest = $"{list.Count + 1}.{currentYear}.PYC-RTC";
                     var result = await _jobRepo.CreateAsync(job);
-                   
+
                 }
                 else if (job.EmployeeID != currentUser.EmployeeID)
                 {
@@ -172,9 +174,39 @@ namespace RERPAPI.Controllers.GeneralCategory
                     if (item.ID <= 0) await _fileRepo.CreateAsync(item);
                     else await _fileRepo.UpdateAsync(item);
                 }
+
+                //todo send mail
                 if (isNew)
                 {
-                    _jobRepo.SendMail(job);
+                    //_jobRepo.SendMail(job);
+                    if (job.ID > 0)
+                    {
+                        var employee = _employeeRepo.GetByID(job.EmployeeID ?? 0);
+                        var employeeTP = _employeeRepo.GetByID(job.ApprovedTBPID ?? 0);
+                        var detail = _jobRequirementDetailRepo.GetAll(x => x.JobRequirementID == job.ID && x.IsDeleted != true).ToList();
+                        JobRequirementDetail contents = detail.Where(x => x.STT == 1).FirstOrDefault() ?? new JobRequirementDetail();
+                        JobRequirementDetail reason = detail.Where(x => x.STT == 3).FirstOrDefault() ?? new JobRequirementDetail();
+
+                        JobRequirementDetail deadline = detail.Where(x => x.STT == 7).FirstOrDefault() ?? new JobRequirementDetail();
+                        string subject = $"YÊU CẦU CÔNG VIỆC - {_currentUser.FullName.ToUpper()} - {DateTime.Now.ToString("dd/MM/yyyy")}";
+                        string toEmail = $"{employeeTP.EmailCongTy}";
+                        //sendEmail.EmailCC = $"hanhchinh@rtc.edu.vn";
+                        string body = $@"<div> <p style=""font-weight: bold; color: red;"">[NO REPLY]</p> <p> Dear anh/chị {employeeTP.FullName} </p ></div >
+                       <div style = ""margin-top: 30px;"">
+                        <p> Anh/chị cho em đăng ký phiếu yêu cầu công việc</p>
+                        <p> Nội dung: {contents.Description}</p>
+                        <p> Lý do: {reason.Description}</p>
+                        <p> Thời gian cần hoàn thành: {deadline.Description}</p>
+                        <p> Anh / chị duyệt giúp em với ạ.Em cảm ơn! </p>
+                       </div>
+                       <div style = ""margin-top: 30px;"">
+                        <p> Thanks </p>
+                        <p> {_currentUser.FullName}</p>
+                       </div>";
+
+                        string cc = string.IsNullOrEmpty(employee.EmailCongTy) ? (employee.EmailCaNhan ?? "") : employee.EmailCongTy;
+                        _emailHelper.SendAsync(toEmail, subject, body, true, cc);
+                    }
                 }
                 return Ok(ApiResponseFactory.Success(job, ""));
             }

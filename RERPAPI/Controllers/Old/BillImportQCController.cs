@@ -531,8 +531,8 @@ namespace RERPAPI.Controllers.Old
                     {
                         List<BillImportQCDetail> dtr = dto.billImportQCDetails.Where(x => x.LeaderTechID == leaderID).ToList();
 
-                        string emailEmRequest = _employeeRepo.GetByID(leaderID).EmailCongTy;
-                        _billImportQCRepo.SetInforEmail(emailCCs, emailEmRequest, leaderID, dtr, emRequestName, (DateTime)dto.billImportQC.Dealine);
+                        var leader = _employeeRepo.GetByID(leaderID);
+                        _billImportQCRepo.SetInforEmail(emailCCs, leader?.EmailCongTy ?? "", leader?.FullName ?? "", dtr, emRequestName, (DateTime)dto.billImportQC.Dealine);
                     }
                 }
                 #endregion

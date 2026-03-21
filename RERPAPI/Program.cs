@@ -451,16 +451,6 @@ builder.Services.AddScoped<CourseRepo>();
 builder.Services.AddScoped<CourseRegisterIdeaRepo>();
 builder.Services.AddScoped<CourseLessonRepo>();
 builder.Services.AddScoped<CourseFilesRepo>();
-builder.Services.AddScoped<CourseExamRepo>();
-builder.Services.AddScoped<CourseLessonHistoryRepo>();
-builder.Services.AddScoped<CourseExamResultRepo>();
-builder.Services.AddScoped<CourseExamResultDetailRepo>();
-builder.Services.AddScoped<CourseQuestionRepo>();
-builder.Services.AddScoped<CourseRightAnswerRepo>();
-builder.Services.AddScoped<CourseExamEvaluateRepo>();
-builder.Services.AddScoped<CourseAnswerRepo>();
-builder.Services.AddScoped<ExamResultRepo>();
-builder.Services.AddScoped<ExamResultDetailRepo>();
 
 builder.Services.AddScoped<InventoryProjectProductSaleLinkRepo>();
 builder.Services.AddScoped<HandoverPersonalAssetRepo>();
@@ -476,7 +466,6 @@ builder.Services.AddScoped<DailyReportAccountingRepo>();
 
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();
-builder.Services.AddScoped<CourseExamPracticeRepo>();
 #endregion
 
 #region Kế hoạch tuần
@@ -759,27 +748,11 @@ foreach (var item in staticFiles)
     });
 
 
-<<<<<<< HEAD
-<<<<<<< HEAD
     app.UseDirectoryBrowser(new DirectoryBrowserOptions 
-=======
-    app.UseDirectoryBrowser(new DirectoryBrowserOptions
->>>>>>> f5ef47b (change course controller, add coursePractice and change newsletter)
     {
         FileProvider = new PhysicalFileProvider(item.PathFull),
         RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
     });
 }
-<<<<<<< HEAD
-=======
-//    app.UseDirectoryBrowser(new DirectoryBrowserOptions
-//    {
-//        FileProvider = new PhysicalFileProvider(item.PathFull),
-//        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-//    });
-//}
->>>>>>> c2476d0 (update course management)
-=======
->>>>>>> f5ef47b (change course controller, add coursePractice and change newsletter)
 
 app.Run();
