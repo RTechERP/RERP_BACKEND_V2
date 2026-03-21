@@ -30,9 +30,10 @@ namespace RERPAPI.Controllers.Project
         ProjectPartlistPurchaseRequestRepo _projectPartlistPurchaseRequestRepo;
         UnitCountRepo _unitCountRepo;
         ProductRTCRepo _productRTCRepo;
+        private readonly EmailHelper _emailHelper;
 
 
-        public ProjectPartlistPriceRequestController(ProjectRepo projectRepo, POKHRepo pOKHRepo, ProjectPartlistPriceRequestRepo requestRepo, ProductSaleRepo productSaleRepo, CurrencyRepo currencyRepo, SupplierSaleRepo supplierSaleRepo, ProjectSolutionRepo projectSolutionRepo, EmployeeSendEmailRepo employeeSendEmailRepo, ProjectPartlistPriceRequestTypeRepo projectPartlistPriceRequestTypeRepo, ProjectPartlistPriceRequestNoteRepo projectPartlistPriceRequestNoteRepo, ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo, UnitCountRepo unitCountRepo, ProductRTCRepo productRTCRepo)
+        public ProjectPartlistPriceRequestController(ProjectRepo projectRepo, POKHRepo pOKHRepo, ProjectPartlistPriceRequestRepo requestRepo, ProductSaleRepo productSaleRepo, CurrencyRepo currencyRepo, SupplierSaleRepo supplierSaleRepo, ProjectSolutionRepo projectSolutionRepo, EmployeeSendEmailRepo employeeSendEmailRepo, ProjectPartlistPriceRequestTypeRepo projectPartlistPriceRequestTypeRepo, ProjectPartlistPriceRequestNoteRepo projectPartlistPriceRequestNoteRepo, ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo, UnitCountRepo unitCountRepo, ProductRTCRepo productRTCRepo, EmailHelper emailHelper)
         {
             this.projectRepo = projectRepo;
             this.pOKHRepo = pOKHRepo;
@@ -47,6 +48,7 @@ namespace RERPAPI.Controllers.Project
             _projectPartlistPurchaseRequestRepo = projectPartlistPurchaseRequestRepo;
             _unitCountRepo = unitCountRepo;
             _productRTCRepo = productRTCRepo;
+            _emailHelper = emailHelper;
         }
 
         #endregion
@@ -878,8 +880,8 @@ namespace RERPAPI.Controllers.Project
                     sendEmail.EmployeeID = employeeIDUnPrice;
                     sendEmail.Receiver = employeeID;
                     sendEmail.DateSend = DateTime.Now;
-                    employeeSendEmailRepo.Create(sendEmail);
-
+                    //employeeSendEmailRepo.Create(sendEmail);
+                    await _emailHelper.SendAsync(sendEmail.EmailTo, sendEmail.Subject, sendEmail.Body);
                 }
             }
             catch (Exception ex)

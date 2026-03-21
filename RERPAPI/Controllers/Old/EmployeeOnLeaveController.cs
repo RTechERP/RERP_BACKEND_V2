@@ -21,13 +21,15 @@ namespace RERPAPI.Controllers.Old
         private readonly EmployeeRepo _employeeRepo;
         private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
         EmployeeSendEmailRepo _employeeSendEmailRepo;
+        private readonly EmailHelper _emailHelper;
 
-        public EmployeeOnLeaveController(EmployeeOnLeaveRepo employeeOnLeaveRepo, EmployeeRepo employeeRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeSendEmailRepo employeeSendEmailRepo)
+        public EmployeeOnLeaveController(EmployeeOnLeaveRepo employeeOnLeaveRepo, EmployeeRepo employeeRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeSendEmailRepo employeeSendEmailRepo, EmailHelper emailHelper)
         {
             _employeeOnLeaveRepo = employeeOnLeaveRepo;
             _employeeRepo = employeeRepo;
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
             _employeeSendEmailRepo = employeeSendEmailRepo;
+            _emailHelper = emailHelper;
         }
 
         [HttpPost]
@@ -219,7 +221,10 @@ namespace RERPAPI.Controllers.Old
                                       "<p>Lý do: " + employeeOnLeave.Reason + "</p> " +
                                       "<p>Anh/chị duyệt giúp em với ạ. Em cảm ơn!</p> </div>" +
                                       "<div style=\"margin-top: 30px;\"> <p>Thanks</p> <p>" + employee.FullName + "</p> </div>";
-                        _employeeSendEmailRepo.SendMail(employeeOnLeave.EmployeeID ?? 0, employeeOnLeave.ApprovedTP ?? 0, subject, body, "");
+                        //_employeeSendEmailRepo.SendMail(employeeOnLeave.EmployeeID ?? 0, employeeOnLeave.ApprovedTP ?? 0, subject, body, "");
+
+                        string cc = string.IsNullOrEmpty(employee.EmailCongTy) ? (employee.EmailCaNhan ?? "") : employee.EmailCongTy;
+                        _emailHelper.SendAsync(employeeTP.EmailCongTy ?? "", subject, body, true, cc);
                     }
                 }
                 else

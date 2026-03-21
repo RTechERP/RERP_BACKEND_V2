@@ -22,14 +22,16 @@ namespace RERPAPI.Controllers
         private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
         EmployeeRepo _employeeRepo;
         EmployeeSendEmailRepo _employeeSendEmailRepo;
+        private readonly EmailHelper _emailHelper;
 
-        public EmployeeWFHController(EmployeeWFHRepo employeeWFHRepo, DepartmentRepo departmentRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeRepo employeeRepo, EmployeeSendEmailRepo employeeSendEmailRepo)
+        public EmployeeWFHController(EmployeeWFHRepo employeeWFHRepo, DepartmentRepo departmentRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeRepo employeeRepo, EmployeeSendEmailRepo employeeSendEmailRepo, EmailHelper emailHelper)
         {
             _employeeWFHRepo = employeeWFHRepo;
             _departmentRepo = departmentRepo;
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
             _employeeRepo = employeeRepo;
             _employeeSendEmailRepo = employeeSendEmailRepo;
+            _emailHelper = emailHelper;
         }
 
         //[RequiresPermission("N1,N2")]
@@ -171,7 +173,10 @@ namespace RERPAPI.Controllers
                                       "<p>Anh/chị duyệt giúp em với ạ. Em cảm ơn!</p> </div>" +
                                       "<div style=\"margin-top: 30px;\"> <p>Thanks</p> <p>" + employee.FullName + "</p> </div>";
 
-                        _employeeSendEmailRepo.SendMail(employeeWFH.EmployeeID ?? 0, employeeWFH.ApprovedID ?? 0, subject, body, "");
+                        //_employeeSendEmailRepo.SendMail(employeeWFH.EmployeeID ?? 0, employeeWFH.ApprovedID ?? 0, subject, body, "");
+
+                        string cc = string.IsNullOrEmpty(employee.EmailCongTy) ? (employee.EmailCaNhan ?? "") : employee.EmailCongTy;
+                        _emailHelper.SendAsync(employeeTP?.EmailCongTy ?? "", subject, body, true, cc);
                     }    
                 }
                 else
