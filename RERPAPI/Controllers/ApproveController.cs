@@ -35,6 +35,7 @@ namespace RERPAPI.Controllers
         private readonly ConfigSystemRepo _configSystemRepo;
         private readonly Dictionary<ApproveType, Func<ApproveItemParam, bool, Task>> _approveMapTP;
         private readonly Dictionary<ApproveType, Func<ApproveItemParam, Task>> _approveMapSenior;
+        private readonly Dictionary<ApproveType, Func<ApproveItemParam, Task>> _declineMapSenior;
         private readonly Dictionary<ApproveType, Func<ApproveItemParam, bool, Task>> _approveMapBGD;
 
         public ApproveController(
@@ -156,6 +157,35 @@ namespace RERPAPI.Controllers
                     _vehicleBookingManagementRepo.UpdateAsync(MapApproveBGD<VehicleBookingManagement>(item, isApproved))
             };
 
+            // ===== DECLINE SENIOR =====
+            _declineMapSenior = new()
+            {
+                [ApproveType.Onleave] = item =>
+                    _employeeOnleaveRepo.UpdateAsync(MapDeclineSenior<EmployeeOnLeave>(item)),
+
+                [ApproveType.EarlyLate] = item =>
+                    _employeeEarlyLateRepo.UpdateAsync(MapDeclineSenior<EmployeeEarlyLate>(item)),
+
+                [ApproveType.OT] = item =>
+                    _employeeOTRepo.UpdateAsync(MapDeclineSenior<EmployeeOvertime>(item)),
+
+                [ApproveType.Bussiness] = item =>
+                    _employeeBussinessRepo.UpdateAsync(MapDeclineSenior<EmployeeBussiness>(item)),
+
+                [ApproveType.WFH] = item =>
+                    _wfhRepo.UpdateAsync(MapDeclineSenior<EmployeeWFH>(item)),
+
+                [ApproveType.NoFingerprint] = item =>
+                    _employeeNoFingerprintRepo.UpdateAsync(MapDeclineSenior<EmployeeNoFingerprint>(item)),
+
+                [ApproveType.NightShift] = item =>
+                    _employeeNightShiftRepo.UpdateAsync(MapDeclineSenior<EmployeeNighShift>(item)),
+
+                [ApproveType.VehicleBooking] = item =>
+                    _vehicleBookingManagementRepo.UpdateAsync(
+                        MapDeclineSenior<VehicleBookingManagement>(item))
+            };
+
         }
 
 
@@ -170,8 +200,60 @@ namespace RERPAPI.Controllers
             {
                 prop.SetValue(e, DateTime.Now);
             }
+            // Fallback: some entities use DateApprovedSenior instead of DateApprovedSenitor
+            var propAlt = type.GetProperty("DateApprovedSenior");
+            if (propAlt != null && propAlt.CanWrite)
+            {
+                propAlt.SetValue(e, DateTime.Now);
+            }
             if (item.ApprovedSeniorID != null)
                 type.GetProperty("ApprovedSeniorID")?.SetValue(e, item.ApprovedSeniorID);
+
+            // Handle DecilineApproveSenior (giống cách MapApproveTP xử lý DecilineApprove)
+            if (item.DecilineApproveSenior != null)
+            {
+                var propDecline = type.GetProperty("DecilineApproveSenior");
+                if (propDecline != null && propDecline.CanWrite)
+                    propDecline.SetValue(e, item.DecilineApproveSenior);
+            }
+
+            // Handle ReasonDecilineSenior (giống cách MapApproveTP xử lý ReasonDeciline)
+            if (!string.IsNullOrWhiteSpace(item.ReasonDecilineSenior))
+            {
+                type.GetProperty("ReasonDecilineSenior")?.SetValue(e, item.ReasonDecilineSenior);
+            }
+
+            return e;
+        }
+
+        private static T MapDeclineSenior<T>(ApproveItemParam item) where T : class, new()
+        {
+            var e = new T();
+            var type = typeof(T);
+            type.GetProperty("ID")?.SetValue(e, item.ID);
+            SetApproveValue(e, "IsSeniorApproved", false);
+
+            if (item.DecilineApproveSenior != null)
+            {
+                var prop = type.GetProperty("DecilineApproveSenior");
+                if (prop != null && prop.CanWrite)
+                    prop.SetValue(e, item.DecilineApproveSenior);
+            }
+
+            if (!string.IsNullOrWhiteSpace(item.ReasonDecilineSenior))
+            {
+                var prop = type.GetProperty("ReasonDecilineSenior");
+                if (prop != null && prop.CanWrite)
+                    prop.SetValue(e, item.ReasonDecilineSenior);
+            }
+
+            if (item.ApprovedSeniorID != null)
+                type.GetProperty("ApprovedSeniorID")?.SetValue(e, item.ApprovedSeniorID);
+
+            var dateProp = type.GetProperty("DateApprovedSenitor") ?? type.GetProperty("DateApprovedSenior");
+            if (dateProp != null && dateProp.CanWrite)
+                dateProp.SetValue(e, DateTime.Now);
+
             return e;
         }
         private static T MapApproveTP<T>(ApproveItemParam item, bool isApproved)where T : class, new()
@@ -473,6 +555,60 @@ namespace RERPAPI.Controllers
                 notProcessed.Count == 0
                 ? $"{approved} thành công."
         : $"{approved} thành công, bỏ qua {notProcessed.Count} bản ghi."
+            ));
+        }
+
+        [HttpPost("decline-senior")]
+        public async Task<IActionResult> DeclineSenior([FromBody] ApproveRequestParam request)
+        {
+            if (request?.Items == null || request.Items.Count == 0)
+                return BadRequest(ApiResponseFactory.Fail(null, "Danh sách không được để trống"));
+
+            var notProcessed = new List<NotProcessedApprovalItem>();
+            var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+            var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+            foreach (var item in request.Items)
+            {
+                try
+                {
+                    item.ApprovedSeniorID = currentUser.EmployeeID;
+
+                    if ((item.ID ?? 0) <= 0)
+                    {
+                        notProcessed.Add(new() { Item = item, Reason = "ID không hợp lệ." });
+                        continue;
+                    }
+
+                    var type = (ApproveType)(item.TType ?? 0);
+
+                    if (!_declineMapSenior.TryGetValue(type, out var declineAction))
+                    {
+                        notProcessed.Add(new()
+                        {
+                            Item = item,
+                            Reason = "Loại phê duyệt không hợp lệ."
+                        });
+                        continue;
+                    }
+
+                    await declineAction(item);
+                }
+                catch (Exception ex)
+                {
+                    notProcessed.Add(new()
+                    {
+                        Item = item,
+                        Reason = ex.Message
+                    });
+                }
+            }
+
+            return Ok(ApiResponseFactory.Success(
+                notProcessed,
+                notProcessed.Count == 0
+                    ? "Senior không duyệt thành công."
+                    : $"Senior không duyệt thành công, bỏ qua {notProcessed.Count} bản ghi."
             ));
         }
     }
