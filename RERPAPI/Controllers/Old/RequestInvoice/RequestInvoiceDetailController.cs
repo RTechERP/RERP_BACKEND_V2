@@ -446,9 +446,9 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                     _requestInvoiceFileRepo.Update(file);
 
                     // Xóa file vật lý
-                    var physicalPath = Path.Combine(file.ServerPath, file.FileName);
-                    if (System.IO.File.Exists(physicalPath))
-                        System.IO.File.Delete(physicalPath);
+                    //var physicalPath = Path.Combine(file.ServerPath, file.FileName);
+                    //if (System.IO.File.Exists(physicalPath))
+                    //    System.IO.File.Delete(physicalPath);
 
                     results.Add(new { fileId, success = true, message = "Xóa thành công" });
                 }

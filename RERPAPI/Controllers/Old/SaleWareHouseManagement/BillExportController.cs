@@ -150,7 +150,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             try
             {
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
-                       "spGetInventory", new string[] { "@ID", "@Find", "@WarehouseCode" },
+                       //"spGetInventory", new string[] { "@ID", "@Find", "@WarehouseCode" },
+                       "spGetInventory_Test", new string[] { "@ID", "@Find", "@WarehouseCode" },
                     new object[] { productGroupID, "", warehouseCode }
                    );
                 var data = SQLHelper<object>.GetListData(result, 0);

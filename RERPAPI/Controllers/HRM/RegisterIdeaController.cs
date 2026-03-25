@@ -195,14 +195,14 @@ namespace RERPAPI.Controllers.HRM
                             continue;
 
                         // xóa file vật lý 
-                        if (!string.IsNullOrEmpty(file.ServerPath) && !string.IsNullOrEmpty(file.FileName))
-                        {
-                            string fullPath = Path.Combine(file.ServerPath, file.FileName);
-                            if (System.IO.File.Exists(fullPath))
-                            {
-                                System.IO.File.Delete(fullPath);
-                            }
-                        }
+                        //if (!string.IsNullOrEmpty(file.ServerPath) && !string.IsNullOrEmpty(file.FileName))
+                        //{
+                        //    string fullPath = Path.Combine(file.ServerPath, file.FileName);
+                        //    if (System.IO.File.Exists(fullPath))
+                        //    {
+                        //        System.IO.File.Delete(fullPath);
+                        //    }
+                        //}
 
                         _registerIdeaFileRepo.Delete(file.ID);
                     }

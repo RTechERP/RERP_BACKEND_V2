@@ -1,4 +1,4 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -63,7 +63,7 @@ namespace RERPAPI.Controllers
         }
         [HttpPost("login")]
         public IActionResult Login([FromBody] User user)
-        {
+            {
             try
             {
                 if (string.IsNullOrWhiteSpace(user.LoginName) || string.IsNullOrWhiteSpace(user.PasswordHash))
@@ -90,6 +90,7 @@ namespace RERPAPI.Controllers
                     {
                         new Claim(JwtRegisteredClaimNames.Sub,hasUser.ID.ToString()),
                         new Claim(JwtRegisteredClaimNames.UniqueName,hasUser.LoginName ?? ""),
+                        new Claim("iscandidate", _jwtSettings.IsCandidate.ToString().ToLower())
                     };
 
                 var dictionary = (IDictionary<string, object>)hasUser;
@@ -1254,15 +1255,14 @@ namespace RERPAPI.Controllers
         [Authorize]
         public IActionResult GetAllTeamNew(int deID)
         {
-
             try
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
-                var orgCharts = SQLHelper<dynamic>.ProcedureToList("spGetOrganizationalChart",
+                var orgCharts = SQLHelper<dynamic>.ProcedureToList("spGetOrganizationalChart_New",
                                                                             new string[] { "@TaxCompanyID", "@DepartmentID", "@Keyword" },
                                                                             new object[] { 1, deID, "" });
-                var orgdChart = SQLHelper<dynamic>.ProcedureToList("spGetOrganizationalChartDetail", new string[] { "@ID" }, new object[] { 0 });
+                var orgdChart = SQLHelper<dynamic>.ProcedureToList("spGetOrganizationalChartDetail_New", new string[] { "@ID" }, new object[] { 0 });
                 var dt = SQLHelper<object>.GetListData(orgCharts, 0);
                 var dtDetail = SQLHelper<object>.GetListData(orgdChart, 0);
 
@@ -1690,6 +1690,73 @@ namespace RERPAPI.Controllers
 
                 await _emailHelper.SendAsync(sendEmail.EmailTo, sendEmail.Subject, sendEmail.Body, cc: sendEmail.EmailCC);
                 return Ok(ApiResponseFactory.Success(null, "Gửi thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
+        [HttpGet("get-config-autoupdate")]
+        public IActionResult GetConfigAutoUpdate()
+        {
+            try
+            {
+                var config = _configuration.GetSection("ConfigAutoUpdate");
+
+                var data = new Dictionary<string, string>();
+
+                foreach (var item in config.GetChildren())
+                {
+                    //if (item.Key == "LinkFileUpdate" && !string.IsNullOrWhiteSpace(item.Value))
+                    //{
+                    //    item.Value = $"{item.Value}?path={Uri.EscapeDataString(config.GetValue<string>("PathUpdate") ?? "")}";
+                    //}
+                    data.Add(item.Key, item.Value ?? "");
+                }
+
+                string linkFileUpdate = config.GetValue<string>("LinkFileUpdate") ?? "";
+                string pathFileUpdate = config.GetValue<string>("PathUpdate") ?? "";
+                string linkFileUpdateNew = $"{linkFileUpdate}?path={Uri.EscapeDataString(pathFileUpdate)}";
+                data["LinkFileUpdate"] = linkFileUpdateNew;
+                return Ok(ApiResponseFactory.Success(data));
+            }
+            catch (Exception ex)
+            {
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("listfile")]
+        public IActionResult GetFiles(string path)
+        {
+            try
+            {
+                DirectoryInfo info = new DirectoryInfo(path);
+                List<FileInfo> listfile = info.GetFiles().OrderByDescending(x => TextUtils.ToInt32(Path.GetFileNameWithoutExtension(x.FullName))).ToList();
+                string newVersion = listfile.FirstOrDefault().FullName;
+
+                //List<FileInfoDTO> listFile = new List<FileInfoDTO>();
+                List<object> listFile = new List<object>();
+                foreach (var item in listfile)
+                {
+                    var fileInfo = new
+                    {
+                        Name = item.Name,
+                        Path = item.FullName
+                    };
+                    listFile.Add(fileInfo);
+                }
+
+                //return Ok(ApiResponseFactory.Success(listFile));
+                return Ok(new
+                {
+                    status = 1,
+                    newVersion = newVersion,
+                    data = listFile
+
+                });
             }
             catch (Exception ex)
             {

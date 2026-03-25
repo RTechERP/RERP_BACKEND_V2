@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Linq;
 using RERPAPI.Attributes;
@@ -18,8 +18,6 @@ namespace RERPAPI.Middleware
             _next = next;
             _apiKey = configuration["ApiKey"] ?? throw new Exception("ApiKey missing in config");
         }
-
-        
         public async Task InvokeAsync(HttpContext context, IUserPermissionService permissionService)
         {
             var endpoint = context.GetEndpoint();
@@ -79,25 +77,29 @@ namespace RERPAPI.Middleware
 
                     var response = JsonSerializer.Serialize(ApiResponseFactory.Unauthorized("Expired!"));
                     await context.Response.WriteAsync(response);
-
                     //await context.Response.WriteAsync("Expired");
                     return;
                 }
-
-
-
-                //var session = HttpContext.Session
-
-                //Check là admin không
-                var isAdminClaim = context.User.FindFirst("isadmin")?.Value; //NTA B update 041125
+                var isCandidateClaim = context.User.FindFirst("iscandidate")?.Value;
+                bool isCandidateToken = bool.TryParse(isCandidateClaim, out bool parsed) && parsed;
+                // Nếu Token là ứng viên VÀ Hệ thống đang cấu hình chặn ứng viên (IsCandidate = true)
+                if (isCandidateToken)
+                {
+                        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                        context.Response.ContentType = "application/json; charset=utf-8";
+                        var response = JsonSerializer.Serialize(ApiResponseFactory.Unauthorized("Bạn không có quyền!"));
+                        await context.Response.WriteAsync(response);
+                        return;    
+                }
+                // Check là admin không
+                var isAdminClaim = context.User.FindFirst("isadmin")?.Value;
                 if (!string.IsNullOrEmpty(isAdminClaim) && bool.TryParse(isAdminClaim, out bool isAdmin) && isAdmin)
                 {
                     await _next(context);
                     return;
                 }
 
-
-                //Check có mã quyền không
+                // Check có mã quyền không
                 if (permissionAttributes != null && permissionAttributes.Count > 0)
                 {
                     foreach (var attr in permissionAttributes)
@@ -108,19 +110,15 @@ namespace RERPAPI.Middleware
                             context.Response.StatusCode = StatusCodes.Status403Forbidden;
                             context.Response.ContentType = "text/plain; charset=utf-8";
                             var response = JsonSerializer.Serialize(ApiResponseFactory.Unauthorized("Bạn không có quyền!"));
-                            //await context.Response.WriteAsync("Bạn không có quyền!");
                             await context.Response.WriteAsync(response);
                             return;
                         }
                     }
                 }
-
-
-                await _next(context);
-                return;
             }
 
-            //Nếu không yêu cầu Authorize
+            // Cần đảm bảo luôn gọi _next(context) ở bước cuối cùng của Middleware
+            // Nếu không yêu cầu Authorize hoặc đã pass qua tất cả các check ở trên
             await _next(context);
         }
     }

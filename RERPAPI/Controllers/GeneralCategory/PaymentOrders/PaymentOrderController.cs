@@ -55,7 +55,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         private readonly POKHDetailRepo _pOKHDetailRepo;
         private readonly EmployeeTeamSaleRepo _employeeTeamSaleRepo;
         private readonly EmployeeRepo _employeeRepo;
-
+        private readonly EmployeeTeamSaleLinkRepo _employeeTeamSaleLinkRepo;
 
         public PaymentOrderController(IConfiguration configuration, CurrentUser currentUser, RoleConfig roleConfig,
             PaymentOrderRepo paymentRepo,
@@ -83,7 +83,9 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             POKHRepo poKHRepo,
             POKHDetailRepo pOKHDetailRepo,
             EmployeeTeamSaleRepo employeeTeamSaleRepo,
-            EmployeeRepo employeeRepo
+            EmployeeRepo employeeRepo,
+            EmployeeTeamSaleLinkRepo employeeTeamSaleLinkRepo
+
             )
         {
             _configuration = configuration;
@@ -116,6 +118,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             _pOKHDetailRepo = pOKHDetailRepo;
             _employeeTeamSaleRepo = employeeTeamSaleRepo;
             _employeeRepo = employeeRepo;
+            _employeeTeamSaleLinkRepo = employeeTeamSaleLinkRepo;
         }
 
 
@@ -151,7 +154,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     IsSpecialOrder = p.IsSpecialOrder,
                     ApprovedTBPID = p.ApprovedTBPID,
                     Step = p.Step ?? 0,
-                    IsShowTable = p.IsShowTable,
+                    IsShowTable = 0,
                     Statuslog = p.Statuslog,
                     IsDelete = p.IsDelete,
                 };
@@ -173,7 +176,8 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             try
             {
                 //Get chi tiết đề nghị
-                var dataDetail = SQLHelper<object>.ProcedureToList("spGetPaymentOrderByID", new string[] { "@ID" }, new object[] { id });
+                //var dataDetail = SQLHelper<object>.ProcedureToList("spGetPaymentOrderByID", new string[] { "@ID" }, new object[] { id });
+                var dataDetail = SQLHelper<object>.ProcedureToList("spGetPaymentOrderByID_Test", new string[] { "@ID" }, new object[] { id });
 
                 var paymentOrder = SQLHelper<object>.GetListData(dataDetail, 0);
                 var details = SQLHelper<object>.GetListData(dataDetail, 1);
@@ -203,7 +207,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] PaymentOrderDTO payment)
         {
-            
+
             try
             {
                 //_currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
@@ -475,6 +479,21 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             }
         }
 
+        [HttpGet("get-step")]
+        public async Task<IActionResult> GetStep()
+        {
+            try
+            {
+                //_currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
+                var steps = _approveFollowRepo.GetAll(x => x.IsDeleted != true);
+                return Ok(ApiResponseFactory.Success(steps));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpPost("appoved-tbp")]
         [RequiresPermission("N57,N83")]
         public async Task<IActionResult> ApprovedTBP([FromBody] List<PaymentOrderDTO> payment)
@@ -729,6 +748,81 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 }
 
                 return Ok(ApiResponseFactory.Success(payments, message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("get-payment-order-team")]
+        [RequiresPermission("N88")]
+        public async Task<IActionResult> GetPaymentOrderTeam([FromBody] PaymentOrderTeamParam p)
+        {
+            try
+            {
+                var param = new
+                {
+                    PageNumber = p.PageNumber,
+                    PageSize = p.PageSize,
+                    TypeOrder = p.TypeOrder ?? 0,
+                    PaymentOrderTypeID = p.PaymentOrderTypeID ?? 0,
+                    DateStart = p.DateStart,
+                    DateEnd = p.DateEnd,
+                    DepartmentID = p.DepartmentID,
+                    ListEmployeeID = p.ListEmployeeID,
+                    Keyword = p.Keyword,
+                    IsIgnoreHR = p.IsIgnoreHR,
+                    IsApproved = p.IsApproved ?? -1,
+                    IsSpecialOrder = p.IsSpecialOrder,
+                    ApprovedTBPID = p.ApprovedTBPID,
+                    Step = p.Step ?? 0,
+                    IsShowTable = 0,
+                    Statuslog = p.Statuslog,
+                    IsDelete = p.IsDelete,
+                };
+                List<object> listEmployee = await SqlDapper<object>.ProcedureToListTAsync("spGetPaymentOrder_New_Team", param);
+                return Ok(ApiResponseFactory.Success(listEmployee));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+
+        }
+        [HttpGet("get-team-sale/{employeeId}")]
+        [RequiresPermission("N88")]
+        public async Task<IActionResult> GetTeamSale(int employeeId)
+        {
+            try
+            {
+
+                EmployeeTeamSaleLink empTeamLink = _employeeTeamSaleLinkRepo.GetAll(x => x.EmployeeID == employeeId)?.FirstOrDefault() ?? new();
+
+                if (empTeamLink.ID > 0)
+                {
+                    EmployeeTeamSale sale = _employeeTeamSaleRepo.GetByID(empTeamLink.EmployeeTeamSaleID);
+
+                    // tìm tổ tông
+                    while (sale != null && sale.ParentID > 0)
+                    {
+                        sale = _employeeTeamSaleRepo.GetByID(sale.ParentID);
+                    }
+
+                    var param = new
+                    {
+                        EmployeeTeamSaleID = sale.ID
+                    };
+
+                    List<object> listEmployee =
+                        await SqlDapper<object>.ProcedureToListTAsync("spGetEmployeebyTeamSale", param);
+
+                    return Ok(ApiResponseFactory.Success(listEmployee));
+                }
+                else
+                {
+                    return Ok(ApiResponseFactory.Success(new List<object>()));
+                }
             }
             catch (Exception ex)
             {

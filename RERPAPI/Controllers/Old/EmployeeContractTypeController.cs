@@ -18,7 +18,7 @@ namespace RERPAPI.Controllers.Old
             _employeeContractTypeRepo = employeeContractTypeRepo;
         }
         [HttpGet]
-        [RequiresPermission("N1,N2")]
+        [RequiresPermission("N1,N2,N60")]
         public IActionResult GetAll()
         {
             try
@@ -42,7 +42,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet("{id}")]
-        [RequiresPermission("N1,N2")]
+        [RequiresPermission("N1,N2,N60")]
         public IActionResult GetEmployeeContractTypeByID(int id)
         {
             try
@@ -66,7 +66,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost]
-        [RequiresPermission("N1,N2")]
+        [RequiresPermission("N1,N2,N60")]
         public async Task<IActionResult> SaveEmployeeContractType([FromBody] EmployeeLoaiHDLD employeeContractType)
         {
             try

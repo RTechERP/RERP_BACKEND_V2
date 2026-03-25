@@ -101,7 +101,7 @@ namespace RERPAPI.Controllers.Systems
                         {
                             result = await _updateVersionRepo.CreateAsync(item);
                         }
-                        if(result>0)
+                        if (result > 0)
                         {
                             if (item.Status == 1)
                             {
@@ -111,7 +111,7 @@ namespace RERPAPI.Controllers.Systems
                                     {
                                         id = item.ID,
                                         code = item.Code,
-                                        content=item.Content,
+                                        content = item.Content,
                                         status = item.Status,
                                         message = "Phiên bản đã được publish",
                                         time = DateTime.Now
@@ -120,13 +120,12 @@ namespace RERPAPI.Controllers.Systems
                             }
 
                             return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
-                            
-                        }  
+
+                        }
                         else
-                        {   
+                        {
                             return BadRequest(ApiResponseFactory.Fail(null, "Lưu dữ liệu không thành công"));
-                        }    
-                      
+                        }
                     }
                     return BadRequest(ApiResponseFactory.Fail(null, "Lưu dữ liệu không thành công"));
                 }

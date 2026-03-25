@@ -55,11 +55,15 @@ namespace RERPAPI.Repo.GenericEntity.HRM
                 }
                 foreach (var contact in data.EmergencyContacts)
                 {
-                    if (string.IsNullOrWhiteSpace(contact.FullName) || string.IsNullOrWhiteSpace(contact.Relation) ||
-                        string.IsNullOrWhiteSpace(contact.Tel) || string.IsNullOrWhiteSpace(contact.Address))
+                    if(contact.IsDeleted!=true)
                     {
-                        return ApiResponseFactory.Fail(null, "Vui lòng nhập đầy đủ thông tin cho Người liên hệ khẩn cấp!");
-                    }
+                        if (string.IsNullOrWhiteSpace(contact.FullName) || string.IsNullOrWhiteSpace(contact.Relation) ||
+                       string.IsNullOrWhiteSpace(contact.Tel) || string.IsNullOrWhiteSpace(contact.Address))
+                        {
+                            return ApiResponseFactory.Fail(null, "Vui lòng nhập đầy đủ thông tin cho Người liên hệ khẩn cấp!");
+                        }
+                    }    
+                   
                 }
                 // Check Educations (at least 1)
                 if (data.Educations == null || data.Educations.Count < 1)
@@ -68,10 +72,13 @@ namespace RERPAPI.Repo.GenericEntity.HRM
                 }
                 foreach (var edu in data.Educations)
                 {
-                    if (string.IsNullOrWhiteSpace(edu.NameOfSchool) || string.IsNullOrWhiteSpace(edu.Major) ||
-                        string.IsNullOrWhiteSpace(edu.GraduatedTime) || edu.QualificationLevel <= 0)
+                    if(edu.IsDeleted!=true)
                     {
-                        return ApiResponseFactory.Fail(null, "Vui lòng nhập đầy đủ thông tin cho Trình độ học vấn!");
+                        if (string.IsNullOrWhiteSpace(edu.NameOfSchool) || string.IsNullOrWhiteSpace(edu.Major) ||
+                     string.IsNullOrWhiteSpace(edu.GraduatedTime) || edu.QualificationLevel <= 0)
+                        {
+                            return ApiResponseFactory.Fail(null, "Vui lòng nhập đầy đủ thông tin cho Trình độ học vấn!");
+                        }
                     }
                 }
                 // Work Experiences, Foreign Languages, Other Certificates: skipped by user request

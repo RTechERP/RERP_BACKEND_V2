@@ -1,0 +1,481 @@
+﻿using DocumentFormat.OpenXml.Spreadsheet;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
+using RERPAPI.Model.DTO.HRM;
+using RERPAPI.Model.Entities;
+using RERPAPI.Repo.GenericEntity; 
+using System;
+using System.Globalization;
+using System.Linq;
+using System.Threading.Tasks;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
+
+namespace RERPAPI.Controllers.Accounting
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    [Authorize]
+    public class DailyReportAccountingController : ControllerBase
+    {
+        private readonly DailyReportAccountingRepo _dailyReportAccountingRepo;
+        private readonly EmployeeRepo _employeeRepo;
+        private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
+        private readonly CurrentUser _currentUser;
+
+        public DailyReportAccountingController(
+            DailyReportAccountingRepo dailyReportAccountingRepo,
+            EmployeeRepo employeeRepo,
+            vUserGroupLinksRepo vUserGroupLinksRepo,
+            CurrentUser currentUser)
+        {
+            _dailyReportAccountingRepo = dailyReportAccountingRepo;
+            _employeeRepo = employeeRepo;
+            _vUserGroupLinksRepo = vUserGroupLinksRepo;
+            _currentUser = currentUser;
+        }
+
+        /// <summary>
+        /// API lấy danh sách User/Employee để đổ vào Select Box
+        /// </summary>
+        [HttpGet("get-employees")]
+        public IActionResult GetEmployees()
+        {
+            try
+            {
+                // Tùy theo logic hiện tại, bạn có thể gọi spGetEmployee qua SQLHelper giống bên Sale 
+                // hoặc gọi trực tiếp qua _employeeRepo. Ở đây mình làm cách đơn giản qua Repo.
+                var result = _employeeRepo.GetAll(x => x.Status == 0) // Giả sử Status = 0 là đang hoạt động
+                    .Select(x => new
+                    {
+                        ID = x.ID,
+                        UserID = x.UserID,
+                        FullName = x.FullName,
+                        Code = x.Code
+                    }).ToList();
+
+                return Ok(ApiResponseFactory.Success(result, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-employees-by-team-sale")]
+        public IActionResult GetEmployeesByTeamSale()
+        {
+            try
+            {
+                // Nếu không truyền teamId hoặc teamId = 0 thì lấy full nhân viên bằng spGetEmployee
+                //if (teamId == null || teamId == 0)
+                //{
+                    var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                    CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                    var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x => (x.Code == "N1" || x.Code == "N2" || x.Code == "N60") && x.UserID == currentUser.ID);
+                    object data;
+                    if (vUserHR == null)
+                    {
+                        data = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
+                            new string[] { "@Status", "@DepartmentID", "@Keyword" },
+                            new object[] { 0, 0, "" });
+                    }
+                    else
+                    {
+                        var employee = SQLHelper<object>.ProcedureToList("spGetEmployee",
+                            new string[] { "@Status", "@DepartmentID", "@Keyword" },
+                            new object[] { 0, 0, "" });
+                        data = SQLHelper<object>.GetListData(employee, 0);
+                    }
+                    return Ok(ApiResponseFactory.Success(data, ""));
+                //}
+
+                //// Nếu có teamId thì lấy nhân viên theo team
+                //var result =
+                //(
+                //    from parent in _employeeTeamSaleRepo.GetAll(x => x.ID == teamId && x.IsDeleted != 1)
+
+                //    join child in _employeeTeamSaleRepo.GetAll(x => x.IsDeleted != 1)
+                //        on parent.ID equals child.ParentID
+
+                //    join link in _employeeTeamSaleLinkRepo.GetAll()
+                //        on child.ID equals link.EmployeeTeamSaleID
+
+                //    join emp in _employeeRepo.GetAll()
+                //        on link.EmployeeID equals emp.ID
+
+                //    select new
+                //    {
+                //        emp.ID,
+                //        emp.FullName,
+                //        emp.Code,
+                //        emp.DepartmentID,
+                //        emp.Status,
+                //        emp.UserID
+                //    }
+                //).Distinct().ToList();
+
+                //return Ok(ApiResponseFactory.Success(result, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Lấy danh sách báo cáo kế toán (có phân trang cơ bản)
+        /// </summary>
+        //[HttpGet("get-data")]
+        //public IActionResult GetData(int page = 1, int size = 20, int? userId = null, DateTime? fromDate = null, DateTime? toDate = null)
+        //{
+        //    try
+        //    {
+        //        var query = _dailyReportAccountingRepo.GetAll(x => x.IsDeleted != true).AsQueryable();
+
+        //        if (userId.HasValue && userId > 0)
+        //        {
+        //            query = query.Where(x => x.UserID == userId.Value);
+        //        }
+
+        //        if (fromDate.HasValue)
+        //        {
+        //            var fromDateOnly = DateOnly.FromDateTime(fromDate.Value);
+        //            query = query.Where(x => x.ReportDate >= fromDateOnly);
+        //        }
+
+        //        if (toDate.HasValue)
+        //        {
+        //            var toDateOnly = DateOnly.FromDateTime(toDate.Value);
+        //            query = query.Where(x => x.ReportDate <= toDateOnly);
+        //        }
+
+        //        var totalItem = query.Count();
+        //        var data = query.OrderByDescending(x => x.CreatedDate)
+        //                        .Skip((page - 1) * size)
+        //                        .Take(size)
+        //                        .ToList();
+
+        //        var totalPage = (int)Math.Ceiling((double)totalItem / size);
+
+        //        return Ok(ApiResponseFactory.Success(new { data, totalPage }, ""));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
+
+        [HttpGet("get-data")]
+        public async Task<IActionResult> GetData(int page, int size, int? employeeId, DateTime? dateStart, DateTime? dateEnd, string filterText = "")
+        {
+            try
+            {
+                //var param = new
+                //{
+                //    FilterText = filterText,
+                //    PageNumber = page,
+                //    PageSize = size,
+                //    DateStart = dateStart,
+                //    DateEnd = dateEnd,
+                //    EmployeeID = employeeId
+                //};
+
+                //var data = await SqlDapper<object>.ProcedureToListAsync("spGetDailyReportAccounting", param);
+                var list = SQLHelper<dynamic>.ProcedureToList("spGetDailyReportAccounting",
+                            new string[] { "@FilterText", "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@EmployeeID" },
+                            new object[] { filterText, page, size, dateStart, dateEnd, employeeId });
+                var data = SQLHelper<dynamic>.GetListData(list, 0);
+                var totalPages = SQLHelper<dynamic>.GetListData(list, 1);
+                return Ok(ApiResponseFactory.Success(new { data, totalPages}, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Lấy chi tiết báo cáo theo ID
+        /// </summary>
+        [HttpGet("get-by-id")]
+        public IActionResult GetByID(int id)
+        {
+            try
+            {
+                var data = _dailyReportAccountingRepo.GetByID(id);
+                if (data == null || data.IsDeleted == true)
+                {
+                    return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu"));
+                }
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Lưu hoặc Cập nhật báo cáo
+        /// </summary>
+        [HttpPost("save-data")]
+        public async Task<IActionResult> Save(List<DailyReportAccountingDTO> dtos)
+        {
+            try
+            {
+                if (dtos == null || !dtos.Any())
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Danh sách báo cáo trống"));
+                }
+
+
+                foreach (var dto in dtos)
+                {
+                    // Validate
+                    if (dto.EmployeeID <= 0)
+                        return BadRequest(ApiResponseFactory.Fail(null, "EmployeeID không hợp lệ"));
+
+                    if (dto.ReportDate == default)
+                        return BadRequest(ApiResponseFactory.Fail(null, "Ngày báo cáo không hợp lệ"));
+
+                    if (string.IsNullOrWhiteSpace(dto.Content))
+                        return BadRequest(ApiResponseFactory.Fail(null, "Nội dung công việc không được để trống"));
+
+                    DailyReportAccounting model;
+
+                    if (dto.ID > 0)
+                    {
+                        model = _dailyReportAccountingRepo.GetByID(dto.ID);
+
+                        if (model == null || model.IsDeleted == true)
+                        {
+                            return NotFound(ApiResponseFactory.Fail(null, $"Không tìm thấy báo cáo ID = {dto.ID}"));
+                        }
+
+                        if (model.EmployeeID != _currentUser.EmployeeID)
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền sửa báo cáo của người khác"));
+                        }
+                    }
+                    else
+                    {
+                        if (dto.EmployeeID > 0 && dto.EmployeeID != _currentUser.EmployeeID)
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền tạo báo cáo cho người khác"));
+                        }
+
+                        model = new DailyReportAccounting
+                        {
+                            IsDeleted = false
+                        };
+                    }
+
+                    if (dto.ID > 0)
+                    {
+                        model = _dailyReportAccountingRepo.GetByID(dto.ID);
+
+                        if  (model.IsDeleted == true)
+                        {
+                            return NotFound(ApiResponseFactory.Fail(null, $"Không tìm thấy báo cáo ID = {dto.ID}"));
+                        }
+                    }
+                    else
+                    {
+                        model = new DailyReportAccounting
+                        {
+                            IsDeleted = false
+                        };
+                    }
+
+                    // Mapping trực tiếp
+                    model.EmployeeID = dto.EmployeeID;
+                    model.ReportDate = dto.ReportDate;
+                    model.Content = dto.Content?.Trim();
+                    model.Result = dto.Result?.Trim();
+                    model.NextPlan = dto.NextPlan?.Trim();
+                    model.PendingIssues = dto.PendingIssues?.Trim();
+                    model.Urgent = dto.Urgent?.Trim();
+                    model.MistakeOrViolation = dto.MistakeOrViolation?.Trim();
+
+                    if (dto.ID > 0)
+                    {
+                        await _dailyReportAccountingRepo.UpdateAsync(model);
+                    }
+                    else
+                    {
+                        await _dailyReportAccountingRepo.CreateAsync(model);
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(null, "Lưu báo cáo thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Xóa báo cáo (Soft Delete)
+        /// </summary>
+        [HttpPost("delete")]
+        public IActionResult Delete(int id)
+        {
+            try
+            {
+                var model = _dailyReportAccountingRepo.GetByID(id);
+                if (model == null || model.IsDeleted == true)
+                {
+                    return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu"));
+                }
+
+                if (model.EmployeeID != _currentUser.EmployeeID)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền xóa báo cáo của người khác"));
+                }
+
+                model.IsDeleted = true; // Soft delete
+
+                _dailyReportAccountingRepo.Update(model);
+
+                return Ok(ApiResponseFactory.Success("", "Xóa thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("importexcel")]
+        public async Task<IActionResult> ImportExcel([FromBody] List<Dictionary<string, object>> rows)
+        {
+            try
+            {
+                if (rows == null || !rows.Any())
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Payload rỗng"));
+                }
+
+                int created = 0, skipped = 0;
+                var errors = new List<object>();
+
+                foreach (var row in rows)
+                {
+                    try
+                    {
+                        string employeeCode = row.GetString("Mã nhân viên")?.Trim() ?? string.Empty;
+                        string content = row.GetString("Nội dung Công việc")?.Trim() ?? string.Empty;
+                        string result = row.GetString("Kết quả/ tình trạng công việc")?.Trim() ?? string.Empty;
+                        string nextPlan = row.GetString("Kế hoạch ngày tiếp theo")?.Trim() ?? string.Empty;
+                        string pendingIssues = row.GetString("Tồn đọng/ vướng mắc")?.Trim() ?? string.Empty;
+                        string urgent = row.GetString("Các phát sinh gấp cần xử lý (yêu cầu ps phải xử lý ngoài giờ)")?.Trim() ?? string.Empty;
+                        string mistakeOrViolation = row.GetString("Các lỗi/ vấn đề bị nhắc/ phát hiện trong ngày")?.Trim() ?? string.Empty;
+                        DateTime? reportDate = row.GetNullableDate("Ngày");
+
+                        if (string.IsNullOrWhiteSpace(employeeCode))
+                            throw new Exception("Thiếu 'Mã nhân viên'.");
+
+                        if (!reportDate.HasValue)
+                            throw new Exception("Thiếu hoặc sai định dạng cột 'Ngày'.");
+
+                        if (string.IsNullOrWhiteSpace(content))
+                            throw new Exception("Thiếu 'Nội dung Công việc'.");
+
+                        var employeeId = _employeeRepo.GetAll(x => x.Code == employeeCode)
+                                                      .Select(x => x.ID)
+                                                      .FirstOrDefault();
+
+                        if (employeeId <= 0)
+                            throw new Exception($"Không tìm thấy nhân viên có mã: {employeeCode}");
+
+                        var model = new DailyReportAccounting
+                        {
+                            IsDeleted = false,
+                            EmployeeID = employeeId,
+                            ReportDate = reportDate.Value,
+                            Content = content,
+                            Result = result,
+                            NextPlan = nextPlan,
+                            PendingIssues = pendingIssues,
+                            Urgent = urgent,
+                            MistakeOrViolation = mistakeOrViolation
+                        };
+
+                        await _dailyReportAccountingRepo.CreateAsync(model);
+                        created++;
+                    }
+                    catch (Exception ex)
+                    {
+                        skipped++;
+                        errors.Add(new
+                        {
+                            message = ex.Message,
+                            row
+                        });
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    created,
+                    skipped,
+                    errors
+                }, "Import Excel thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+    }
+
+    static class ImportExtensions
+    {
+        public static string GetString(this Dictionary<string, object> row, string key)
+        {
+            if (row == null)
+                return null;
+            if (!row.TryGetValue(key, out var val) || val == null)
+                return null;
+            var s = val.ToString()?.Trim();
+            return string.IsNullOrEmpty(s) ? null : s;
+        }
+
+        public static DateTime? GetNullableDate(this Dictionary<string, object> row, string key)
+        {
+            if (row == null)
+                return null;
+            if (!row.TryGetValue(key, out var val) || val == null)
+                return null;
+
+            var str = val.ToString();
+
+            // ISO string
+            if (DateTime.TryParse(str, CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var iso))
+                return iso;
+
+            // dd/MM/yyyy
+            if (DateTime.TryParseExact(str, new[] { "dd/MM/yyyy", "d/M/yyyy" },
+                CultureInfo.InvariantCulture, DateTimeStyles.None, out var dmy))
+                return dmy;
+
+            // yyyy-MM-dd
+            if (DateTime.TryParseExact(str, "yyyy-MM-dd",
+                CultureInfo.InvariantCulture, DateTimeStyles.None, out var ymd))
+                return ymd;
+
+            // Excel serial number
+            if (double.TryParse(str, NumberStyles.Any, CultureInfo.InvariantCulture, out var serial))
+            {
+                var epoch = new DateTime(1899, 12, 30);
+                return epoch.AddDays(serial);
+            }
+
+            return null;
+        }
+    }
+}

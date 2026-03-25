@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -10,6 +11,7 @@ namespace RERPAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class BorrowController : ControllerBase
     {
         HistoryProductRTCRepo historyProductRTCRepo;
@@ -168,7 +170,7 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                var data = historyProductRTCRepo.GetByID(productHistoryID) ?? new HistoryProductRTC();
+                var data = historyProductRTCRepo.GetByID(productHistoryID);
                 return Ok(new
                 {
                     status = 1,
@@ -473,7 +475,7 @@ namespace RERPAPI.Controllers
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 var productHistory = SQLHelper<object>.ProcedureToList("spGetHistoryProduct_New",
                     new string[] { "@DateStart", "@DateEnd", "@Keyword", "@WarehouseID", "@UserID", "@Status", "@PageNumber", "@PageSize", "@IsDeleted", "@WarehouseType" },
-                    new object[] { TextUtils.MinDate, dateEnd, "", 1, currentUser.ID, '1', 1, 2000000, 0, 0 });
+                    new object[] { TextUtils.MinDate, dateEnd, "", 0, currentUser.ID, "1", 1, 2000000, 0, 0 });
 
                 // Số lượng sản phẩm mượn quá hạn
                 var quantityExpiredList = SQLHelper<object>.GetListData(productHistory, 1);
@@ -500,6 +502,7 @@ namespace RERPAPI.Controllers
                 };
 
                 return Ok(ApiResponseFactory.Success(result, ""));
+
             }
             catch (Exception ex)
             {

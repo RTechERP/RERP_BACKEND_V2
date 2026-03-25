@@ -1,4 +1,4 @@
-﻿using ClosedXML.Excel;
+using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Drawing.Charts;
 using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using Microsoft.AspNetCore.Authorization;
@@ -83,7 +83,6 @@ namespace RERPAPI.Controllers.HRM
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
 
         [HttpGet("data")]
@@ -92,7 +91,6 @@ namespace RERPAPI.Controllers.HRM
             int? status = -1,
             int? employeeRequestId = -1,
             int? departmentId = -1,
-            int? employeeChucVuHDId = -1,
             DateTime? dateStart = null,
             DateTime? dateEnd = null,
             string? keyword = ""
@@ -113,10 +111,9 @@ namespace RERPAPI.Controllers.HRM
                     Status = status,
                     EmployeeRequestID = employeeRequestId,
                     DepartmentID = departmentId,
-                    EmployeeChucVuHDID = employeeChucVuHDId,
                     DateStart = dateStart,
                     DateEnd = dateEnd,
-                    FilterText = keyword?.Trim()
+                    FilterText = keyword?.Trim(),
                 };
                 var result = await SqlDapper<dynamic>.ProcedureToListAsync("spGetHrRecruitmentCandidate", param);
 
@@ -323,12 +320,13 @@ namespace RERPAPI.Controllers.HRM
                 if (data.FileCV != null)
                 {
                     string deleteFileName = "";
+                    HRRecruitmentCandidate hrRecruitmentCandidateOld = null;
                     if (data.ID > 0)
                     {
-                        var hrRecruitmentCandidate = _hrRecruitmentCandidateRepo.GetByID(data.ID);
-                        if (hrRecruitmentCandidate != null)
+                        hrRecruitmentCandidateOld = _hrRecruitmentCandidateRepo.GetByID(data.ID);
+                        if (hrRecruitmentCandidateOld != null)
                         {
-                            deleteFileName = hrRecruitmentCandidate.FileCVName ?? "";
+                            deleteFileName = hrRecruitmentCandidateOld.FileCVName ?? "";
                         }
                     }
 
@@ -340,7 +338,11 @@ namespace RERPAPI.Controllers.HRM
                         return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: HrRecruitmentCandidate"));
                     }
 
-                    string pathPattern = $@"CvUngVien\";
+                    // Dynamic subpath: CvUngVien/Year/PositionName
+                    string year = (data.DateApply ?? DateTime.Now).ToString("yyyy");
+                    string position = string.IsNullOrWhiteSpace(data.PositionName) ? "NoPosition" : data.PositionName;
+                    string pathPattern = Path.Combine( year, position);
+
                     string pathUpload = data.ServerPath = Path.Combine(uploadPath, pathPattern);
 
                     if (!Directory.Exists(pathUpload))
@@ -348,15 +350,16 @@ namespace RERPAPI.Controllers.HRM
                         Directory.CreateDirectory(pathUpload);
                     }
 
-                    if (!string.IsNullOrWhiteSpace(deleteFileName) && deleteFileName.ToLower() != data.FileCVName.ToLower())
-                    {
-                        var oldFilePath = Path.Combine(pathUpload, deleteFileName);
+                    //if (!string.IsNullOrWhiteSpace(deleteFileName) && deleteFileName.ToLower() != data.FileCVName.ToLower())
+                    //{
+                    //    var oldPath = hrRecruitmentCandidateOld?.ServerPath ?? pathUpload;
+                    //    var oldFilePath = Path.Combine(oldPath, deleteFileName);
 
-                        if (System.IO.File.Exists(oldFilePath))
-                        {
-                            System.IO.File.Delete(oldFilePath);
-                        }
-                    }
+                    //    if (System.IO.File.Exists(oldFilePath))
+                    //    {
+                    //        System.IO.File.Delete(oldFilePath);
+                    //    }
+                    //}
 
                     var fullPath = Path.Combine(pathUpload, data.FileCVName!);
 
@@ -421,7 +424,7 @@ namespace RERPAPI.Controllers.HRM
 
         [HttpPost("send-interview-mail")]
         [RequiresPermission("N1,N2")]
-        public async Task<IActionResult> SendEmail([FromBody] List<EmployeeSendEmail> sendEmails)
+        public async Task<IActionResult> SendEmail([FromBody] List<EmployeeSendEmailDTO> sendEmails)
         {
             try
             {
@@ -439,6 +442,7 @@ namespace RERPAPI.Controllers.HRM
                             {
                                 hrRecruitmentCandidate.StatusMail = email.StatusSend;
                                 hrRecruitmentCandidate.DateInterview = email.DateSend;
+                                hrRecruitmentCandidate.DeadlineFeedbackMail = email.DeadlineFeedbackMail;
                                 hrRecruitmentCandidate.SendMailTime = DateTime.Now;
                                 hrRecruitmentCandidate.CreatedDate = DateTime.Now;
                                 hrRecruitmentCandidate.CreatedBy = _currentUser.Code;
@@ -447,7 +451,7 @@ namespace RERPAPI.Controllers.HRM
                                 await _hrRecruitmentCandidateRepo.UpdateAsync(hrRecruitmentCandidate);
                             }
                         }
-                        await _emailHelper.SendAsync(email.EmailTo, email.Subject, email.Body + footer, cc: email.EmailCC);
+                        await _emailHelper.SendAsyncHr(email.EmailTo, email.Subject, email.Body + footer, cc: email.EmailCC);
                     }
                 }
                 return Ok(ApiResponseFactory.Success(null, "Gửi thành công!"));

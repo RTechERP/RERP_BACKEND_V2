@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NPOI.HSSF.Record.Chart;
 using RERPAPI.Model.Common;
@@ -12,6 +13,7 @@ namespace RERPAPI.Controllers.HRM.Employees
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class OrganizationalChartController : ControllerBase
     {
         private OrganizationalChartDetailRepo _organizationalChartDetailRepo;
@@ -30,7 +32,7 @@ namespace RERPAPI.Controllers.HRM.Employees
         {
             try
             {
-                var dt = SQLHelper<object>.ProcedureToList("spGetOrganizationalChart", new string[] { "@TaxCompanyID", "@DepartmentID" }, new object[] { 0, 0 });
+                var dt = SQLHelper<object>.ProcedureToList("spGetOrganizationalChart_New", new string[] { "@TaxCompanyID", "@DepartmentID" }, new object[] { 0, 0 });
                 var result = SQLHelper<object>.GetListData(dt, 0);
 
                 return Ok(ApiResponseFactory.Success(result, ""));
@@ -46,7 +48,7 @@ namespace RERPAPI.Controllers.HRM.Employees
         {
             try
             {
-                var dt = SQLHelper<object>.ProcedureToList("spGetOrganizationalChartDetail", new string[] { "@ID" }, new object[] { id });
+                var dt = SQLHelper<object>.ProcedureToList("spGetOrganizationalChartDetail_New", new string[] { "@ID" }, new object[] { id });
                 var result = SQLHelper<object>.GetListData(dt, 0);
 
                 return Ok(ApiResponseFactory.Success(result, ""));
@@ -95,7 +97,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                     }
                 }
 
-                return Ok(ApiResponseFactory.Success( failedEmployees, ""));
+                return Ok(ApiResponseFactory.Success(failedEmployees, ""));
             }
             catch (Exception ex)
             {

@@ -16,6 +16,7 @@ namespace RERPAPI.Repo.GenericEntity
         EmployeeSendEmailRepo _employeeSendEmailRepo;
         UnitCountKTRepo _unitCountKTRepo;
         FirmRepo _firmRepo;
+        ProductGroupRTCRepo _productgroupRTCRepo;
         public ProjectPartlistPurchaseRequestRepo(
             CurrentUser currentUser,
             ProductGroupRepo productgroupRepo,
@@ -24,7 +25,8 @@ namespace RERPAPI.Repo.GenericEntity
             EmployeeSendEmailRepo employeeSendEmailRepo,
             ProductRTCRepo productRTCRepo,
             UnitCountKTRepo unitCountKTRepo,
-            FirmRepo firmRepo
+            FirmRepo firmRepo,
+            ProductGroupRTCRepo productGroupRTCRepo
         ) : base(currentUser)
         {
             _currentUser = currentUser;
@@ -35,6 +37,7 @@ namespace RERPAPI.Repo.GenericEntity
             _productRTCRepo = productRTCRepo;
             _unitCountKTRepo = unitCountKTRepo;
             _firmRepo = firmRepo;
+            _productgroupRTCRepo = productGroupRTCRepo;
         }
 
         public bool ValidateKeepProduct(List<ProductHoldDTO> requests, out string message)
@@ -48,7 +51,8 @@ namespace RERPAPI.Repo.GenericEntity
             foreach (var item in requests)
             {
                 if (item.ProjectParlistPurchaseRequestID.Count <= 0 || item.ProductSaleID <= 0 || item.ProjectID <= 0) continue;
-                var dt = SQLHelper<dynamic>.ProcedureToList("spGetInventory", new[] { "@ProductSaleID" }, new object[] { item.ProductSaleID });
+                //var dt = SQLHelper<dynamic>.ProcedureToList("spGetInventory", new[] { "@ProductSaleID" }, new object[] { item.ProductSaleID });
+                var dt = SQLHelper<dynamic>.ProcedureToList("spGetInventory_Test", new[] { "@ProductSaleID" }, new object[] { item.ProductSaleID });
                 var inventoryData = SQLHelper<dynamic>.GetListData(dt, 0);
                 var quantity = inventoryData[0]?.TotalQuantityLast;
                 if (quantity == null || Convert.ToDecimal(quantity) <= 0)
