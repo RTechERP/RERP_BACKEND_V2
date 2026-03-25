@@ -320,6 +320,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<EmployeePayrollBonusDeuction> EmployeePayrollBonusDeuctions { get; set; }
 
+    public virtual DbSet<EmployeePayrollDeduction> EmployeePayrollDeductions { get; set; }
+
     public virtual DbSet<EmployeePayrollDetail> EmployeePayrollDetails { get; set; }
 
     public virtual DbSet<EmployeeProjectType> EmployeeProjectTypes { get; set; }
@@ -4031,6 +4033,38 @@ public partial class RTCContext : DbContext
                 .HasColumnType("decimal(18, 2)");
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<EmployeePayrollDeduction>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__Employee__3214EC2766555C3D");
+
+            entity.ToTable("EmployeePayrollDeduction", tb => tb.HasComment("Bảng lưu thông tin tiền phạt (deduction) của nhân viên theo từng lần"));
+
+            entity.Property(e => e.ID).HasComment("Khóa chính");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người tạo");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo")
+                .HasColumnType("datetime");
+            entity.Property(e => e.DeductionAmount)
+                .HasComment("Số tiền bị trừ (VNĐ)")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.DeductionDate)
+                .HasComment("Ngày phát sinh tiền phạt")
+                .HasColumnType("datetime");
+            entity.Property(e => e.DeductionType).HasComment("Loại phạt: 1.Đi muộn, 2.Quên chấm công, 3.Đăng ký nghỉ, 4.Khác");
+            entity.Property(e => e.DeductionTypeName).HasMaxLength(500);
+            entity.Property(e => e.EmployeeID).HasComment("ID nhân viên");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái xóa mềm: 0.Chưa xóa, 1.Đã xóa");
+            entity.Property(e => e.Reason).HasComment("Lý do phạt");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người cập nhật");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật")
+                .HasColumnType("datetime");
         });
 
         modelBuilder.Entity<EmployeePayrollDetail>(entity =>
