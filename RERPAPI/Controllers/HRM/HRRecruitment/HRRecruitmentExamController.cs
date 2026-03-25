@@ -17,7 +17,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
 {
     [Route("api/[controller]")]
     [ApiController]
-   
+
     public class HRRecruitmentExamController : ControllerBase
     {
         HRRecruitmentExamRepo _hrRecruitmentExamRepo;
@@ -29,7 +29,8 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         HRRecruitmentExamResultImageRepo _hrRecruitmentExamResultImageRepo;
         ConfigSystemRepo _configSystemRepo;
         HiringRequestExamRepo _hiringRequestExamRepo;
-        public HRRecruitmentExamController(HRRecruitmentQuestionRepo hrRecruitmentQuestionRepo, HRRecruitmentAnswersRepo hrRecruitmentAnswersRepo, HRRecruitmentRightAnswearsRepo hrRecruitmentRightAnswearsRepo, HRRecruitmentExamRepo hRRecruitmentExamRepo, HRRecruitmentExamResultRepo hrRecruitmentExamResultRepo, HRRecruitmentExamResultDetailRepo hrRecruitmentExamResultDetailRepo, HRRecruitmentExamResultImageRepo hrRecruitmentExamResultImageRepo, ConfigSystemRepo configSystemRepo, HiringRequestExamRepo hiringRequestExamRepo)
+        HRHiringRequestRepo _hiringRequestRepo;
+        public HRRecruitmentExamController(HRRecruitmentQuestionRepo hrRecruitmentQuestionRepo, HRRecruitmentAnswersRepo hrRecruitmentAnswersRepo, HRRecruitmentRightAnswearsRepo hrRecruitmentRightAnswearsRepo, HRRecruitmentExamRepo hRRecruitmentExamRepo, HRRecruitmentExamResultRepo hrRecruitmentExamResultRepo, HRRecruitmentExamResultDetailRepo hrRecruitmentExamResultDetailRepo, HRRecruitmentExamResultImageRepo hrRecruitmentExamResultImageRepo, ConfigSystemRepo configSystemRepo, HiringRequestExamRepo hiringRequestExamRepo, HRHiringRequestRepo hiringRequestRepo)
         {
             _hrRecruitmentQuestionRepo = hrRecruitmentQuestionRepo;
             _hrRecruitmentAnswersRepo = hrRecruitmentAnswersRepo;
@@ -40,6 +41,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             _hrRecruitmentExamResultImageRepo = hrRecruitmentExamResultImageRepo;
             _configSystemRepo = configSystemRepo;
             _hiringRequestExamRepo = hiringRequestExamRepo;
+            _hiringRequestRepo = hiringRequestRepo;
         }
         #region load dữ liệu exam
         [Authorize]
@@ -537,18 +539,19 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentCandidate(claims);
-                
+
                 // Kiểm tra xem đã có bản ghi nào "Đang làm" hay chưa để tránh thừa bản ghi
-                var existingResult = _hrRecruitmentExamResultRepo.GetAll(x => 
-                    x.EmployeeID == currentUser.ID && 
-                    x.RecruitmentExamID == request.RecruitmentExamID && 
-                    x.StatusResult == 0 && 
+                var existingResult = _hrRecruitmentExamResultRepo.GetAll(x =>
+                    x.EmployeeID == currentUser.ID &&
+                    x.RecruitmentExamID == request.RecruitmentExamID &&
+                    x.StatusResult == 0 &&
                     x.IsDeleted == false).FirstOrDefault();
 
                 if (existingResult != null)
                 {
                     // KHÔNG XÓA DỮ LIỆU CŨ ĐỂ HỖ TRỢ RESUME
-                    return Ok(ApiResponseFactory.Success(new {
+                    return Ok(ApiResponseFactory.Success(new
+                    {
                         ID = existingResult.ID,
                         RecruitmentExamID = existingResult.RecruitmentExamID,
                         EmployeeID = existingResult.EmployeeID,
@@ -562,10 +565,11 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 request.StatusResult = 0; // cực kỳ quan trọng: 0 là đang làm
                 request.CreatedDate = DateTime.Now; // Đảm bảo có StartTime
                 await _hrRecruitmentExamResultRepo.CreateAsync(request);
-                
+
                 if (request.ID > 0)
                 {
-                    return Ok(ApiResponseFactory.Success(new {
+                    return Ok(ApiResponseFactory.Success(new
+                    {
                         ID = request.ID,
                         RecruitmentExamID = request.RecruitmentExamID,
                         EmployeeID = request.EmployeeID,
@@ -767,7 +771,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 int totalIncorrect = 0;
                 decimal currentScore = 0;
                 decimal maxPossibleScore = questions.Sum(q => q.Point ?? 0);
-                bool hasManualGrading = false; 
+                bool hasManualGrading = false;
 
                 foreach (var q in questions)
                 {
@@ -814,10 +818,10 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
 
                         if (answerDetail != null && !string.IsNullOrEmpty(answerDetail.AnswerText))
                         {
-                            if (double.TryParse(answerDetail.AnswerText, out double candidateVal) && 
+                            if (double.TryParse(answerDetail.AnswerText, out double candidateVal) &&
                                 double.TryParse(q.EssayGuidance, out double correctVal))
                             {
-                                isCorrect = Math.Abs(candidateVal - correctVal) < 0.0001; 
+                                isCorrect = Math.Abs(candidateVal - correctVal) < 0.0001;
                             }
                         }
 
@@ -836,7 +840,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                         }
                     }
                     // 3. Câu hỏi tự luận thường (Cần HR chấm điểm)
-                    else 
+                    else
                     {
                         hasManualGrading = true;
                     }
@@ -848,7 +852,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 result.TotalScore = currentScore;
                 result.MaxPossibleScore = maxPossibleScore;
                 result.PercentageCorrect = maxPossibleScore > 0 ? currentScore / maxPossibleScore * 100 : 0;
-                result.StatusResult = hasManualGrading ? 1 : 2; 
+                result.StatusResult = hasManualGrading ? 1 : 2;
 
                 result.UpdatedBy = currentUser.UserName;
                 result.UpdatedDate = DateTime.Now;
@@ -940,7 +944,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
 
                 // Recalculate total score from details
                 var details = _hrRecruitmentExamResultDetailRepo.GetAll(x => x.RecruitmentExamResultID == request.ExamResultID && x.IsDeleted == false);
-                
+
                 decimal totalScore = details.Sum(x => x.Score ?? 0);
                 int totalCorrect = details.Count(x => x.Score > 0); // basic logic, adjust if needed
                 int totalIncorrect = details.Count(x => x.Score == 0);
@@ -1003,6 +1007,31 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        #endregion
+
+        #region lấy danh sách yêu cầu tuyển dụng chưa hoàn thành của phiên đăng nhập 
+        [Authorize]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [HttpGet("get-data-hiring-request-iscompleted")]
+        public async Task<IActionResult> GetHrRequestIsCompleted(bool isCompleted)
+        {
+            {
+                try
+                {
+                    var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                    var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                    var param = new { IsCompleted = isCompleted,EmployeeRequestID = (currentUser.IsAdmin == true ? 0 : currentUser.ID) };
+                    var data = await SqlDapper<object>.ProcedureToListAsync("spGetHiringRequestByEmID", param);
+
+                    return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+                }
             }
         }
         #endregion
