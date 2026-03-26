@@ -553,8 +553,9 @@ namespace RERPAPI.Controllers.Old.Technical
 
                                 // ✅ Check trong DB theo SerialNumber + BillExportTechDetailID
                                 var existingSerial = _billExportTechDetailSerialRepo
-                                    .GetAll(x => x.SerialNumber == serial.SerialNumber
-                                              && x.BillExportTechDetailID == item.ID)
+                                    .GetAll(x =>
+                                    //x.SerialNumber == serial.SerialNumber &&
+                                    x.BillExportTechDetailID == item.ID && x.IsDeleted == false)
                                     .FirstOrDefault();
 
                                 if (existingSerial != null)
