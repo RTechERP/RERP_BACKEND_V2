@@ -726,6 +726,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<ProductGroup> ProductGroups { get; set; }
 
+    public virtual DbSet<ProductGroupLink> ProductGroupLinks { get; set; }
+
     public virtual DbSet<ProductGroupRTC> ProductGroupRTCs { get; set; }
 
     public virtual DbSet<ProductGroupWarehouse> ProductGroupWarehouses { get; set; }
@@ -8013,6 +8015,18 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.ParentID).HasDefaultValue(0);
             entity.Property(e => e.ProductGroupID).HasMaxLength(50);
             entity.Property(e => e.ProductGroupName).HasMaxLength(250);
+        });
+
+        modelBuilder.Entity<ProductGroupLink>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ProductG__3214EC27AC2C4302");
+
+            entity.ToTable("ProductGroupLink");
+
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.Createdby).HasMaxLength(255);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(255);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<ProductGroupRTC>(entity =>

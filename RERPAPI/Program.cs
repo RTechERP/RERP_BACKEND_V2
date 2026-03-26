@@ -460,10 +460,6 @@ builder.Services.AddScoped<FollowProjectBaseDetailRepo>();
 builder.Services.AddScoped<DailyReportAccountingRepo>();
 
 
-
-
-
-
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();
 #endregion
