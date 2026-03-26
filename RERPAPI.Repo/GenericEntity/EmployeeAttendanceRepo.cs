@@ -1,4 +1,4 @@
-﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Repo.GenericEntity
@@ -37,6 +37,18 @@ namespace RERPAPI.Repo.GenericEntity
             ).Count();
 
             return count;
+        }
+        public async Task<int> BulkCreateAttendanceAsync(List<EmployeeAttendance> items)
+        {
+            if (items == null || !items.Any()) return 0;
+            await table.AddRangeAsync(items);
+            return await db.SaveChangesAsync();
+        }
+        public async Task<int> BulkUpdateAttendanceAsync(List<EmployeeAttendance> items)
+        {
+            if (items == null || !items.Any()) return 0;
+            table.UpdateRange(items);
+            return await db.SaveChangesAsync();
         }
     }
 }
