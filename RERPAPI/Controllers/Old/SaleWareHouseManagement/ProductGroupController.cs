@@ -187,7 +187,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
                 var (allGroups, groupInWarehouse) =
                     await SqlDapper<object>.QueryMultipleAsync<dynamic, dynamic>(
-                        "spGetProductGroups_Test", param);
+                        "spGetProductGroups_New", param);
 
                 return Ok(ApiResponseFactory.Success(new
                 {
