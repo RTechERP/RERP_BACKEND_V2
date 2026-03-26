@@ -498,6 +498,7 @@ builder.Services.AddScoped<MenuAppRepo>();
 builder.Services.AddScoped<MenuAppUserGroupLinkRepo>();
 builder.Services.AddScoped<ProjectPartListPurchaseRequestApproveLogRepo>();
 builder.Services.AddScoped<EmployeeLuckyNumberRepo>();
+builder.Services.AddScoped<ProductGroupLinkRepo>();
 
 
 #region KPI
