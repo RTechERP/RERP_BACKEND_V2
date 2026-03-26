@@ -1960,6 +1960,7 @@ public partial class RTCContext : DbContext
         {
             entity.ToTable("BillExportTechDetailSerial");
 
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.SerialNumber).HasMaxLength(50);
         });
 
@@ -11902,7 +11903,11 @@ public partial class RTCContext : DbContext
 
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.CustomerID).HasDefaultValue(0);
             entity.Property(e => e.DatePlan).HasColumnType("datetime");
+            entity.Property(e => e.Problem)
+                .HasMaxLength(500)
+                .HasDefaultValue("");
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
