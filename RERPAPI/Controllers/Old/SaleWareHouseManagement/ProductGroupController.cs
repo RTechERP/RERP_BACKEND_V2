@@ -1,5 +1,7 @@
 ﻿using DocumentFormat.OpenXml.Wordprocessing;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -9,6 +11,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ProductGroupController : ControllerBase
     {
         private readonly ProductGroupRepo _productgroupRepo;
@@ -174,6 +177,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         #region Lấy danh sách nhóm sản phẩm mới 
 
         [HttpGet("product-group-new")]
+        [RequiresPermission("N1")]
         public async Task<IActionResult> getProductGroupNew(bool isVisible, bool isDeleted, int warehouseId)
         {
             try
@@ -202,6 +206,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpPost("visible-product-group")]
+        [RequiresPermission("N1")]
         public async Task<IActionResult> visibleProductGroup([FromBody] List<ProductGroupLink> data)
         {
             try
