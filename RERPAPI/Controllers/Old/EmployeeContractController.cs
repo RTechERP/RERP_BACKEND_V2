@@ -197,7 +197,7 @@ namespace RERPAPI.Controllers.Old
 
                 if (data.EmployeeLoaiHDLDID == 1) // HĐTV
                 {
-                    templatePath = Path.Combine(_environment.WebRootPath, "templates", "(Mau)_HDTV.docx");
+                    templatePath = Path.Combine(_environment.WebRootPath, "templates", "(Mau)_HDTV_Company.docx");
                     outputFileName = $"{contractNumber}.docx";
                 }
                 else if (data.EmployeeLoaiHDLDID == 4) // HĐLĐ 12T
