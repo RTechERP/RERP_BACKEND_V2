@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
@@ -412,23 +413,16 @@ namespace RERPAPI.Controllers
             try
             {
                 var attendances = _employeeAttendanceRepo.GetAll(x => ids.Contains(x.ID));
-                if(attendances !=null)
+                if (attendances.Any())
                 {
                     await _employeeAttendanceRepo.DeleteRangeAsync(attendances);
                     return Ok(ApiResponseFactory.Success(null, "Xóa thành công"));
                 }
+                else
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Không có vân tay hợp lệ để xóa"));
-                }    
-                //foreach (var id in i
-                //ds)
-                //{
-                //    var exist = _employeeAttendanceRepo.GetByID(id);
-                //      if(exist.ID>0)
-                //    {
-                //        await _employeeAttendanceRepo.DeleteAsync(exist.ID);
-                //    }  
-                //}
+                }
+
             }
             catch (Exception ex)
             {
