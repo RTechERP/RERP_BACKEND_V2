@@ -15,13 +15,11 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     public class ProductGroupController : ControllerBase
     {
         private readonly ProductGroupRepo _productgroupRepo;
-        private readonly ProductGroupLinkRepo _productGroupLinkRepo;
         private readonly ProductGroupWareHouseRepo _productgroupwarehouseRepo;
-        public ProductGroupController(ProductGroupRepo productgroupRepo, ProductGroupWareHouseRepo productgroupwarehouseRepo, ProductGroupLinkRepo productGroupLinkRepo)
+        public ProductGroupController(ProductGroupRepo productgroupRepo, ProductGroupWareHouseRepo productgroupwarehouseRepo)
         {
             _productgroupRepo = productgroupRepo;
             _productgroupwarehouseRepo = productgroupwarehouseRepo;
-            _productGroupLinkRepo = productGroupLinkRepo;
         }
 
         [HttpGet("")]
@@ -110,21 +108,21 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     dto.ProductgroupWarehouse.ProductGroupID = newId;
                     await _productgroupwarehouseRepo.CreateAsync(dto.ProductgroupWarehouse);
 
-                    if(dto.ProductgroupWarehouse.WarehouseID > 0)
-                    {
-                        ProductGroupLink model = new ProductGroupLink
-                        {
-                            WarehouseID = dto.ProductgroupWarehouse.WarehouseID,
-                            ProductGroupID = newId,
-                            IsDeleted = false,
-                            Createdby = currentUser.LoginName,
-                            CreatedDate = DateTime.Now,
-                            UpdatedBy = currentUser.LoginName,
-                            UpdatedDate = DateTime.Now
-                        };
+                    //if(dto.ProductgroupWarehouse.WarehouseID > 0)
+                    //{
+                    //    ProductGroupLink model = new ProductGroupLink
+                    //    {
+                    //        WarehouseID = dto.ProductgroupWarehouse.WarehouseID,
+                    //        ProductGroupID = newId,
+                    //        IsDeleted = false,
+                    //        Createdby = currentUser.LoginName,
+                    //        CreatedDate = DateTime.Now,
+                    //        UpdatedBy = currentUser.LoginName,
+                    //        UpdatedDate = DateTime.Now
+                    //    };
 
-                        await _productGroupLinkRepo.CreateAsync(model);
-                    }
+                    //    await _productGroupLinkRepo.CreateAsync(model);
+                    //}
                     
                 }
                 else
@@ -177,11 +175,15 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         #region Lấy danh sách nhóm sản phẩm mới 
 
         [HttpGet("product-group-new")]
-        [RequiresPermission("N1")]
         public async Task<IActionResult> getProductGroupNew(bool isVisible, bool isDeleted, int warehouseId)
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                if(!currentUser.IsAdmin) return BadRequest(ApiResponseFactory.Fail(null, ""));
+
                 var param = new
                 {
                     WarehouseID = warehouseId,
@@ -191,7 +193,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
                 var (allGroups, groupInWarehouse) =
                     await SqlDapper<object>.QueryMultipleAsync<dynamic, dynamic>(
-                        "spGetProductGroups_New", param);
+                        "spGetProductGroups_Test", param);
 
                 return Ok(ApiResponseFactory.Success(new
                 {
@@ -206,19 +208,18 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpPost("visible-product-group")]
-        [RequiresPermission("N1")]
-        public async Task<IActionResult> visibleProductGroup([FromBody] List<ProductGroupLink> data)
+        public async Task<IActionResult> visibleProductGroup([FromBody] List<ProductGroupWarehouse> data)
         {
             try
             {
-                List<ProductGroupLink> checkList = _productGroupLinkRepo.GetAll();
+                List<ProductGroupWarehouse> checkList = _productgroupwarehouseRepo.GetAll();
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
-                foreach (ProductGroupLink item in data)
+                foreach (ProductGroupWarehouse item in data)
                 {
-                    ProductGroupLink model = checkList.
+                    ProductGroupWarehouse model = checkList.
                         FirstOrDefault(x => x.WarehouseID == item.WarehouseID && x.ProductGroupID == item.ProductGroupID) ??
-                        new ProductGroupLink();
+                        new ProductGroupWarehouse();
 
                     model.WarehouseID = item.WarehouseID;
                     model.ProductGroupID = item.ProductGroupID;
@@ -228,15 +229,15 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     {
                         model.UpdatedBy = currentUser.LoginName;
                         model.UpdatedDate = DateTime.Now;
-                        await _productGroupLinkRepo.UpdateAsync(model);
+                        await _productgroupwarehouseRepo.UpdateAsync(model);
                     }
                     else
                     {
-                        model.Createdby = currentUser.FullName;
+                        model.CreatedBy = currentUser.FullName;
                         model.CreatedDate = DateTime.Now;
                         model.UpdatedBy = currentUser.LoginName;
                         model.UpdatedDate = DateTime.Now;
-                        await _productGroupLinkRepo.CreateAsync(model);
+                        await _productgroupwarehouseRepo.CreateAsync(model);
                     }
                 }
 
