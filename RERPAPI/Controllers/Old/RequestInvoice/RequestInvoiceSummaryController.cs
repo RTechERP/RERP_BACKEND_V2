@@ -80,7 +80,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
 
                 // Thư mục root chứa file
                 //string baseDestPath = $@"\\192.168.1.190\Software\ftp\Upload\Hóa đơn đầu ra {currentYear}";
-                string baseDestPath = Path.Combine(rootPath, $"Hóa đơn đầu ra {currentYear}");
+                string baseDestPath = Path.Combine(rootPath);
                 var errorFiles = new List<string>();
 
                 foreach (var item in payload)
