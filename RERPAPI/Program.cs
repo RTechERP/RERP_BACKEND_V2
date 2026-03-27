@@ -108,10 +108,12 @@ builder.Services.AddScoped<EmployeeCurricularRepo>();
 builder.Services.AddScoped<EmployeeEarlyLateRepo>();
 builder.Services.AddScoped<EmployeeEducationLevelRepo>();
 builder.Services.AddScoped<EmployeeErrorRepo>();
+builder.Services.AddScoped<EmployeePayrollDeductionRepo>();
 builder.Services.AddScoped<EmployeeFoodOrderRepo>();
 builder.Services.AddScoped<EmployeeNoFingerprintRepo>();
 builder.Services.AddScoped<EmployeeOnLeaveMasterRepo>();
 builder.Services.AddScoped<EmployeeOnLeaveRepo>();
+builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.HRM.EmployeeOnLeavePhaseRepo>();
 builder.Services.AddScoped<EmployeeOverTimeRepo>();
 builder.Services.AddScoped<EmployeeProjectTypeRepo>();
 builder.Services.AddScoped<EmployeePurchaseRepo>();
@@ -480,10 +482,6 @@ builder.Services.AddScoped<FollowProjectBaseDetailRepo>();
 builder.Services.AddScoped<DailyReportAccountingRepo>();
 
 
-
-
-
-
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();
 #endregion
@@ -522,6 +520,7 @@ builder.Services.AddScoped<MenuAppRepo>();
 builder.Services.AddScoped<MenuAppUserGroupLinkRepo>();
 builder.Services.AddScoped<ProjectPartListPurchaseRequestApproveLogRepo>();
 builder.Services.AddScoped<EmployeeLuckyNumberRepo>();
+builder.Services.AddScoped<ProductGroupLinkRepo>();
 
 
 #region KPI

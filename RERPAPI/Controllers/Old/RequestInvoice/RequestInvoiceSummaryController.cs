@@ -80,7 +80,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
 
                 // Thư mục root chứa file
                 //string baseDestPath = $@"\\192.168.1.190\Software\ftp\Upload\Hóa đơn đầu ra {currentYear}";
-                string baseDestPath = Path.Combine(rootPath, $"Hóa đơn đầu ra {currentYear}");
+                string baseDestPath = Path.Combine(rootPath);
                 var errorFiles = new List<string>();
 
                 foreach (var item in payload)
@@ -88,8 +88,27 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                     string companyName = string.IsNullOrEmpty(item.CompanyText) ? "Unknown_Company" : item.CompanyText;
                     string invoiceNum = string.IsNullOrEmpty(item.InvoiceNumber) ? "Unknown_Invoice" : item.InvoiceNumber;
 
-                    // Tạo folder theo Công ty -> Số Hóa Đơn
-                    string invoiceFolder = Path.Combine(baseDestPath, companyName, invoiceNum);
+
+                    // Format ngày hóa đơn
+                    string invoiceDateStr = "";
+                    if (!string.IsNullOrEmpty(item.InvoiceDate))
+                    {
+                        if (DateTime.TryParse(item.InvoiceDate, out DateTime parsedDate))
+                        {
+                            invoiceDateStr = parsedDate.ToString("ddMMyyyy");
+                        }
+                        else
+                        {
+                            invoiceDateStr = item.InvoiceDate;
+                        }
+                    }
+                    string folderName = string.IsNullOrEmpty(invoiceDateStr)
+                        ? invoiceNum
+                        : $"{invoiceNum}_{invoiceDateStr}";
+                    // Đường dẫn: rootPath\{CompanyText}\NĂM {year}\PO BÁN RA {year}\{SốHĐ}_{NgàyHĐ}\
+                    string invoiceFolder = Path.Combine(baseDestPath, companyName, $"NĂM {currentYear}", $"PO BÁN RA {currentYear}", folderName);
+
+                    //string invoiceFolder = Path.Combine(baseDestPath, companyName, invoiceNum);
                     if (!Directory.Exists(invoiceFolder))
                         Directory.CreateDirectory(invoiceFolder);
 

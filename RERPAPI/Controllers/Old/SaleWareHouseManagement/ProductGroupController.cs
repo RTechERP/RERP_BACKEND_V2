@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DocumentFormat.OpenXml.Wordprocessing;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -8,6 +11,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ProductGroupController : ControllerBase
     {
         private readonly ProductGroupRepo _productgroupRepo;
@@ -23,27 +27,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         {
             try
             {
-                //update 17/07/25 them truong hop warehousecode=HCM
-                //List<ProductGroup> data;
-                //List<int> excludedIds = new List<int> { 73, 74, 75, 76, 77 };
-
-                //if (warehousecode == "HN")
-                //{
-                //    data = _productgroupRepo.GetAll(p => p.IsVisible == isvisible || !isvisible)
-                //        .OrderByDescending(p => p.IsVisible)
-                //        .ThenBy(p => p.ID)
-                //        .ToList();
-                //}
-                //else
-                //{
-                //    data = _productgroupRepo.GetAll(p => (p.IsVisible == isvisible || !isvisible)
-                //    && !excludedIds.Contains(p.ID)
-                //    )
-                //        .OrderByDescending(p => p.IsVisible)
-                //        .ThenBy(p => p.ID)
-                //        .ToList();
-                //}
-
                 var dt = SQLHelper<dynamic>.ProcedureToList("spGetProductGroups", ["@Isvisible", "@WarehouseCode"], [isvisible, warehousecode]);
                 var data = SQLHelper<ProductGroup>.GetListData(dt, 0);
                 return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công!"));
@@ -53,6 +36,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
 
         [HttpGet("get-productgroup-purchase")]
         public IActionResult getProductGroupPurchase(bool isvisible = true, string warehousecode = "")
@@ -110,6 +94,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
                 //TN.Binh update 19/10/25
                 if (!CheckProductGroupCode(dto))
                 {
@@ -121,6 +107,23 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     int newId = await _productgroupRepo.CreateAsynC(dto.Productgroup);
                     dto.ProductgroupWarehouse.ProductGroupID = newId;
                     await _productgroupwarehouseRepo.CreateAsync(dto.ProductgroupWarehouse);
+
+                    //if(dto.ProductgroupWarehouse.WarehouseID > 0)
+                    //{
+                    //    ProductGroupLink model = new ProductGroupLink
+                    //    {
+                    //        WarehouseID = dto.ProductgroupWarehouse.WarehouseID,
+                    //        ProductGroupID = newId,
+                    //        IsDeleted = false,
+                    //        Createdby = currentUser.LoginName,
+                    //        CreatedDate = DateTime.Now,
+                    //        UpdatedBy = currentUser.LoginName,
+                    //        UpdatedDate = DateTime.Now
+                    //    };
+
+                    //    await _productGroupLinkRepo.CreateAsync(model);
+                    //}
+                    
                 }
                 else
                 {
@@ -166,6 +169,88 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             return check;
         }
         //end update
+        #endregion
+
+
+        #region Lấy danh sách nhóm sản phẩm mới 
+
+        [HttpGet("product-group-new")]
+        public async Task<IActionResult> getProductGroupNew(bool isVisible, bool isDeleted, int warehouseId)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                if(!currentUser.IsAdmin) return BadRequest(ApiResponseFactory.Fail(null, ""));
+
+                var param = new
+                {
+                    WarehouseID = warehouseId,
+                    IsDeleted = isDeleted,
+                    IsVisible = isVisible
+                };
+
+                var (allGroups, groupInWarehouse) =
+                    await SqlDapper<object>.QueryMultipleAsync<dynamic, dynamic>(
+                        "spGetProductGroups_Test", param);
+
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    data = allGroups,
+                    data1 = groupInWarehouse
+                }, null));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("visible-product-group")]
+        public async Task<IActionResult> visibleProductGroup([FromBody] List<ProductGroupWarehouse> data)
+        {
+            try
+            {
+                List<ProductGroupWarehouse> checkList = _productgroupwarehouseRepo.GetAll();
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                foreach (ProductGroupWarehouse item in data)
+                {
+                    ProductGroupWarehouse model = checkList.
+                        FirstOrDefault(x => x.WarehouseID == item.WarehouseID && x.ProductGroupID == item.ProductGroupID) ??
+                        new ProductGroupWarehouse();
+
+                    model.WarehouseID = item.WarehouseID;
+                    model.ProductGroupID = item.ProductGroupID;
+                    model.IsDeleted = item.IsDeleted;
+
+                    if (model.ID > 0)
+                    {
+                        model.UpdatedBy = currentUser.LoginName;
+                        model.UpdatedDate = DateTime.Now;
+                        await _productgroupwarehouseRepo.UpdateAsync(model);
+                    }
+                    else
+                    {
+                        model.CreatedBy = currentUser.FullName;
+                        model.CreatedDate = DateTime.Now;
+                        model.UpdatedBy = currentUser.LoginName;
+                        model.UpdatedDate = DateTime.Now;
+                        await _productgroupwarehouseRepo.CreateAsync(model);
+                    }
+                }
+
+
+                return Ok(ApiResponseFactory.Success(null, "Xử lý dữ liệu thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
         #endregion
     }
 }
