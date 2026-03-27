@@ -56,20 +56,20 @@ namespace RERPAPI.Repo.GenericEntity
             }
         }
 
-        //public string GenerateProjectTaskCodeTime(int projectTaskType)
-        //{
-        //    try
-        //    {
-        //        string dateTimeNow = DateTime.Now.ToString("yyMMddhhmmssff");
-        //        var projectTaskTypeItem = _projectTaskTypeRepo.GetByID(projectTaskType);
-        //        string newcode = $"{projectTaskTypeItem.Code}{dateTimeNow}";
-        //        return newcode.Trim();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        throw new Exception($"Lỗi: {ex.Message}\r\n{ex.ToString()}");
-        //    }
-        //}
+        public string GenerateProjectTaskCodeTime(int projectTaskType)
+        {
+            try
+            {
+                string dateTimeNow = DateTime.Now.ToString("yyMMddhhmmssff");
+                var projectTaskTypeItem = _projectTaskTypeRepo.GetByID(projectTaskType);
+                string newcode = $"{projectTaskTypeItem.Code}{dateTimeNow}";
+                return newcode.Trim();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi: {ex.Message}\r\n{ex.ToString()}");
+            }
+        }
 
         //public string UpdateProjectTaskCodeByType(int projectTaskTypeNew, string oldCode)
         //{

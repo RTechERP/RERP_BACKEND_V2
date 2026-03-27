@@ -175,7 +175,7 @@ namespace RERPAPI.Model.Param
 
 
                 // await _emailHelper.SendRangeAsync(sendEmail.emailRecive, "THÔNG BÁO THAM GIA CÔNG VIỆC", htmlBody, cc: sendEmail.emailCC);
-                await _emailHelper.SendRangeAsync(sendEmail.emailRecive, "THÔNG BÁO THAM GIA CÔNG VIỆC", htmlBody, cc: sendEmail.emailCC);
+               await _emailHelper.SendRangeAsync(sendEmail.emailRecive, "THÔNG BÁO THAM GIA CÔNG VIỆC", htmlBody, cc: sendEmail.emailCC);
                 
 
             }

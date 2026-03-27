@@ -9,7 +9,7 @@ namespace RERPAPI.Model.Param
     public class ImportExcellProjectTaskParam
     {
         public string TT { get; set; }
-        public string Title { get; set; }
+        public string Mission { get; set; }
         public string ProjectCode { get; set; }
         public string EmployeeCode { get; set; }
         public string AssigneesCodes { get; set; }
