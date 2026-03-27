@@ -6,6 +6,7 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using System.Globalization;
 
 namespace RERPAPI.Controllers
 {
@@ -116,7 +117,7 @@ namespace RERPAPI.Controllers
                 }
 
                 // 3) Nếu không overwrite, load danh sách bản ghi hiện có để UPDATE (O(1) lookup)
-                Dictionary<(string, DateTime?), EmployeeAttendance> existingDict = null;
+                Dictionary<(string, DateTime), EmployeeAttendance> existingDict = null;
                 if (!payload.Overwrite)
                 {
                     var existingRecords = _employeeAttendanceRepo.GetAll(ea =>
@@ -124,8 +125,9 @@ namespace RERPAPI.Controllers
                     ).ToList();
 
                     existingDict = existingRecords
-                        .GroupBy(x => (x.IDChamCongMoi, x.AttendanceDate))
-                        .ToDictionary(g => g.Key, g => g.First());
+     .Where(x => x.AttendanceDate.HasValue) 
+     .GroupBy(x => (x.IDChamCongMoi, x.AttendanceDate.Value.Date))
+     .ToDictionary(g => g.Key, g => g.First());
                 }
 
                 var creations = new List<EmployeeAttendance>();
@@ -187,7 +189,7 @@ namespace RERPAPI.Controllers
                         }
                         else
                         {
-                            if (existingDict != null && existingDict.TryGetValue((emp.IDChamCongMoi, date), out var existing))
+                            if (existingDict.TryGetValue((emp.IDChamCongMoi, date.Value.Date), out var existing))
                             {
                                 existing.STT = stt;
                                 existing.EmployeeID = 0;
@@ -301,15 +303,25 @@ namespace RERPAPI.Controllers
 
         static DateTime? GetDate(Dictionary<string, object> r, params string[] keys)
         {
+            var formats = new[] { "dd/MM/yyyy", "d/M/yyyy", "yyyy-MM-dd" };
+
             foreach (var k in keys)
             {
                 if (!r.TryGetValue(k, out var v) || v == null) continue;
-                if (v is DateTime dt) return dt;
+
+                if (v is DateTime dt) return dt.Date;
+
                 var s = v.ToString();
-                if (DateTime.TryParse(s, out var d1)) return d1;
+
+                if (DateTime.TryParseExact(s, formats,
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.None,
+                    out var d1))
+                    return d1.Date;
+
                 if (double.TryParse(s, out var dbl))
                 {
-                    try { return DateTime.FromOADate(dbl); }
+                    try { return DateTime.FromOADate(dbl).Date; }
                     catch { }
                 }
             }
@@ -319,18 +331,26 @@ namespace RERPAPI.Controllers
         static DateTime? ParseTimeOnDate(DateTime d, string hm)
         {
             if (string.IsNullOrWhiteSpace(hm)) return null;
-            if (TimeSpan.TryParse(hm, out var ts))
-                return new DateTime(d.Year, d.Month, d.Day, ts.Hours, ts.Minutes, 0);
-            if (DateTime.TryParse(hm, out var dtFull))
-                return new DateTime(d.Year, d.Month, d.Day, dtFull.Hour, dtFull.Minute, 0);
-            if (double.TryParse(hm, out var dbl) && dbl >= 0 && dbl < 1)
+            hm = hm.Trim();
+            if (TimeSpan.TryParseExact(hm,
+                new[] { "HH\\:mm", "H\\:mm", "HH\\:mm\\:ss" },
+                CultureInfo.InvariantCulture,
+                out var ts))
             {
-                var minutes = (int)Math.Round(dbl * 24 * 60);
-                return new DateTime(d.Year, d.Month, d.Day, minutes / 60, minutes % 60, 0);
+                return d.Date.Add(ts);
             }
+            if (double.TryParse(hm, NumberStyles.Any, CultureInfo.InvariantCulture, out var dbl)
+                && dbl >= 0 && dbl < 1)
+            {
+                return d.Date.AddDays(dbl);
+            }
+            if (DateTime.TryParse(hm, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt))
+            {
+                return d.Date.AddHours(dt.Hour).AddMinutes(dt.Minute);
+            }
+
             return null;
         }
-
         static (bool IsLate, int TimeLate, bool IsEarly, int TimeEarly, decimal TotalHour, decimal TotalDay, bool IsLunch)
             ComputeAttendance(int departmentId, DateTime date, DateTime? inDt, DateTime? outDt)
         {
