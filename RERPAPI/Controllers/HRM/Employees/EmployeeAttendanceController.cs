@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Authorization;
+
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using System.Globalization;
 
 namespace RERPAPI.Controllers
 {
@@ -114,21 +116,28 @@ namespace RERPAPI.Controllers
                     }
                 }
 
-                // 3) Nếu không overwrite, load danh sách bản ghi hiện có để UPDATE (option thêm của Web, WinForm không có)
-                List<EmployeeAttendance> existingRecords = null;
+                // 3) Nếu không overwrite, load danh sách bản ghi hiện có để UPDATE (O(1) lookup)
+                Dictionary<(string, DateTime), EmployeeAttendance> existingDict = null;
                 if (!payload.Overwrite)
                 {
-                    existingRecords = _employeeAttendanceRepo.GetAll(ea =>
+                    var existingRecords = _employeeAttendanceRepo.GetAll(ea =>
                         ea.AttendanceDate >= ds && ea.AttendanceDate <= de
                     ).ToList();
+
+                    existingDict = existingRecords
+     .Where(x => x.AttendanceDate.HasValue) 
+     .GroupBy(x => (x.IDChamCongMoi, x.AttendanceDate.Value.Date))
+     .ToDictionary(g => g.Key, g => g.First());
                 }
 
-                // 4) Xử lý từng dòng payload (giống backgroundWorker1_DoWork)
+                var creations = new List<EmployeeAttendance>();
+                var updates = new List<EmployeeAttendance>();
+
+                // 4) Xử lý từng dòng payload
                 foreach (var row in payload.Rows)
                 {
                     try
                     {
-                        // Bỏ các key kỹ thuật (__rowId, ...)
                         var filtered = row
                             .Where(kvp => !kvp.Key.StartsWith("__"))
                             .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
@@ -140,33 +149,25 @@ namespace RERPAPI.Controllers
                         string sOut = GetString(filtered, "Giờ ra", "CheckOut", "Out");
                         string dayWeek = GetString(filtered, "Thứ", "DayOfWeek", "Day");
 
-                        // Thiếu dữ liệu bắt buộc
                         if (string.IsNullOrWhiteSpace(code) || !date.HasValue)
                             throw new Exception("Thiếu 'Mã nhân viên' hoặc 'Ngày'.");
 
-                        // WinForm: không lọc ngày trong vòng for → bỏ check date-range ở đây
-
-                        // Không tìm thấy nhân viên theo Code
                         if (!employees.TryGetValue(code, out var emp))
                             throw new Exception($"Không tìm thấy nhân viên Code='{code}'.");
 
                         if (string.IsNullOrWhiteSpace(emp.IDChamCongMoi))
                             throw new Exception($"Nhân viên Code='{code}' không có IDChamCongMoi.");
 
-                        // Ghép giờ vào/ra với ngày
                         DateTime? inDt = ParseTimeOnDate(date.Value, sIn);
                         DateTime? outDt = ParseTimeOnDate(date.Value, sOut);
-
-                        // Tính công, đi muộn / về sớm, ăn trưa... theo nghiệp vụ cũ
                         var comp = ComputeAttendance(emp.DepartmentID ?? 0, date.Value, inDt, outDt);
 
                         if (payload.Overwrite)
                         {
-                            // OVERWRITE: luôn INSERT mới (giống WinForm – đã xóa trước đó)
-                            var newRecord = new EmployeeAttendance
+                            creations.Add(new EmployeeAttendance
                             {
                                 STT = stt,
-                                EmployeeID=0,
+                                EmployeeID = 0,
                                 IDChamCongMoi = emp.IDChamCongMoi,
                                 AttendanceDate = date.Value,
                                 DayWeek = dayWeek ?? "",
@@ -184,21 +185,11 @@ namespace RERPAPI.Controllers
                                 IsLunch = comp.IsLunch,
                                 CreatedDate = DateTime.Now,
                                 UpdatedDate = DateTime.Now
-                            };
-
-                            await _employeeAttendanceRepo.CreateAsync(newRecord);
-                            created++;
+                            });
                         }
                         else
                         {
-                            // MODE mở rộng của Web:
-                            // Nếu đã có AttendanceDate + IDChamCongMoi thì UPDATE, nếu chưa có thì INSERT
-                            var existing = existingRecords?.FirstOrDefault(x =>
-                                x.IDChamCongMoi == emp.IDChamCongMoi &&
-                                x.AttendanceDate == date.Value
-                            );
-
-                            if (existing != null)
+                            if (existingDict.TryGetValue((emp.IDChamCongMoi, date.Value.Date), out var existing))
                             {
                                 existing.STT = stt;
                                 existing.EmployeeID = 0;
@@ -215,13 +206,11 @@ namespace RERPAPI.Controllers
                                 existing.TotalDay = comp.TotalDay;
                                 existing.IsLunch = comp.IsLunch;
                                 existing.UpdatedDate = DateTime.Now;
-
-                                await _employeeAttendanceRepo.UpdateAsync(existing);
-                                updated++;
+                                updates.Add(existing);
                             }
                             else
                             {
-                                var newRecord = new EmployeeAttendance
+                                creations.Add(new EmployeeAttendance
                                 {
                                     STT = stt,
                                     EmployeeID = 0,
@@ -242,10 +231,7 @@ namespace RERPAPI.Controllers
                                     IsLunch = comp.IsLunch,
                                     CreatedDate = DateTime.Now,
                                     UpdatedDate = DateTime.Now
-                                };
-
-                                await _employeeAttendanceRepo.CreateAsync(newRecord);
-                                created++;
+                                });
                             }
                         }
                     }
@@ -259,6 +245,18 @@ namespace RERPAPI.Controllers
                     }
                 }
 
+                // Lưu hàng loạt (Single roundtrip for creations and another for updates)
+                if (creations.Any())
+                {
+                    await _employeeAttendanceRepo.BulkCreateAttendanceAsync(creations);
+                    created = creations.Count;
+                }
+                if (updates.Any())
+                {
+                    await _employeeAttendanceRepo.BulkUpdateAttendanceAsync(updates);
+                    updated = updates.Count;
+                }
+
                 var result = new ImportResult
                 {
                     Created = created,
@@ -266,7 +264,6 @@ namespace RERPAPI.Controllers
                     Skipped = errors.Count,
                     Errors = errors
                 };
-
                 return Ok(ApiResponseFactory.Success(result, "Import hoàn tất."));
             }
             catch (Exception ex)
@@ -306,15 +303,25 @@ namespace RERPAPI.Controllers
 
         static DateTime? GetDate(Dictionary<string, object> r, params string[] keys)
         {
+            var formats = new[] { "dd/MM/yyyy", "d/M/yyyy", "yyyy-MM-dd" };
+
             foreach (var k in keys)
             {
                 if (!r.TryGetValue(k, out var v) || v == null) continue;
-                if (v is DateTime dt) return dt;
+
+                if (v is DateTime dt) return dt.Date;
+
                 var s = v.ToString();
-                if (DateTime.TryParse(s, out var d1)) return d1;
+
+                if (DateTime.TryParseExact(s, formats,
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.None,
+                    out var d1))
+                    return d1.Date;
+
                 if (double.TryParse(s, out var dbl))
                 {
-                    try { return DateTime.FromOADate(dbl); }
+                    try { return DateTime.FromOADate(dbl).Date; }
                     catch { }
                 }
             }
@@ -324,18 +331,26 @@ namespace RERPAPI.Controllers
         static DateTime? ParseTimeOnDate(DateTime d, string hm)
         {
             if (string.IsNullOrWhiteSpace(hm)) return null;
-            if (TimeSpan.TryParse(hm, out var ts))
-                return new DateTime(d.Year, d.Month, d.Day, ts.Hours, ts.Minutes, 0);
-            if (DateTime.TryParse(hm, out var dtFull))
-                return new DateTime(d.Year, d.Month, d.Day, dtFull.Hour, dtFull.Minute, 0);
-            if (double.TryParse(hm, out var dbl) && dbl >= 0 && dbl < 1)
+            hm = hm.Trim();
+            if (TimeSpan.TryParseExact(hm,
+                new[] { "HH\\:mm", "H\\:mm", "HH\\:mm\\:ss" },
+                CultureInfo.InvariantCulture,
+                out var ts))
             {
-                var minutes = (int)Math.Round(dbl * 24 * 60);
-                return new DateTime(d.Year, d.Month, d.Day, minutes / 60, minutes % 60, 0);
+                return d.Date.Add(ts);
             }
+            if (double.TryParse(hm, NumberStyles.Any, CultureInfo.InvariantCulture, out var dbl)
+                && dbl >= 0 && dbl < 1)
+            {
+                return d.Date.AddDays(dbl);
+            }
+            if (DateTime.TryParse(hm, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt))
+            {
+                return d.Date.AddHours(dt.Hour).AddMinutes(dt.Minute);
+            }
+
             return null;
         }
-
         static (bool IsLate, int TimeLate, bool IsEarly, int TimeEarly, decimal TotalHour, decimal TotalDay, bool IsLunch)
             ComputeAttendance(int departmentId, DateTime date, DateTime? inDt, DateTime? outDt)
         {
@@ -417,16 +432,17 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                foreach (var id in ids)
+                var attendances = _employeeAttendanceRepo.GetAll(x => ids.Contains(x.ID));
+                if (attendances.Any())
                 {
-                    var exist = _employeeAttendanceRepo.GetByID(id);
-                      if(exist.ID>0)
-                    {
-                        await _employeeAttendanceRepo.DeleteAsync(exist.ID);
-                    }    
-
+                    await _employeeAttendanceRepo.DeleteRangeAsync(attendances);
+                    return Ok(ApiResponseFactory.Success(null, "Xóa thành công"));
                 }
-                return Ok(ApiResponseFactory.Success( null,"Xóa thành công"));
+                else
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không có vân tay hợp lệ để xóa"));
+                }
+
             }
             catch (Exception ex)
             {

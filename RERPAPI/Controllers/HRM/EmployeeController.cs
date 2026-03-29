@@ -7,6 +7,7 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.HRM
 {
@@ -85,19 +86,19 @@ namespace RERPAPI.Controllers.HRM
                 object data;
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
                 var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x => (x.Code == "N1" || x.Code == "N2") && x.UserID == currentUser.ID);
-                var vUserHRN60 = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x =>( x.Code == "N60") && x.UserID == currentUser.ID);
-                if (vUserHR == null&&vUserHRN60==null)
+                var vUserHRN60 = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x => (x.Code == "N60") && x.UserID == currentUser.ID);
+                if (vUserHR == null && vUserHRN60 == null && currentUser.IsAdmin != true)
                 {
                     data = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
                                                 new string[] { "@Status", "@DepartmentID", "@Keyword" },
                                                 new object[] { status, departmentid, keyword ?? "" });
                 }
-                else if(vUserHRN60 !=null)
+                else if (vUserHRN60 != null)
                 {
                     data = SQLHelper<EmployeeDTON60>.ProcedureToListModel("spGetEmployee",
                                                 new string[] { "@Status", "@DepartmentID", "@Keyword" },
                                                 new object[] { status, departmentid, keyword ?? "" });
-                }    
+                }
                 else
                 {
                     var employee = SQLHelper<object>.ProcedureToList("spGetEmployee",
@@ -154,7 +155,7 @@ namespace RERPAPI.Controllers.HRM
             try
             {
                 var approvedTBPs = _approvedRepo.GetAll(x => x.Type == 1 && x.IsDeleted != true);
-               
+
                 return Ok(ApiResponseFactory.Success(approvedTBPs, ""));
             }
             catch (Exception ex)
@@ -174,11 +175,39 @@ namespace RERPAPI.Controllers.HRM
             }
             catch (Exception ex)
             {
+                    
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+
+        }
+        [HttpGet("update-count-salary")]
+        public async Task<IActionResult> UpdateCountSalary([FromQuery] int employeeID, [FromQuery] bool isExcludedFromSalary)
+        {
+
+            try
+            {
+                int result = 0;
+                var employee = _employeeRepo.GetByID(employeeID);
+                if (employee == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy nhân viên"));
+                employee.IsExcludedFromSalary = isExcludedFromSalary;
+                result = await _employeeRepo.UpdateAsync(employee);
+                if (result > 0)
+                {
+                    return Ok(ApiResponseFactory.Success(null, "Cập nhật trạng thái thành công"));
+                }
+                else
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật trạng thái thất bại"));
+                }
+            }
+            catch (Exception ex)
+            {
 
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
 
         }
 
-    }       
+    }
 }

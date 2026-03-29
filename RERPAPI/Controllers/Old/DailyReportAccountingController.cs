@@ -7,6 +7,7 @@ using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity; 
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
@@ -346,6 +347,135 @@ namespace RERPAPI.Controllers.Accounting
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+        }
+
+        [HttpPost("importexcel")]
+        public async Task<IActionResult> ImportExcel([FromBody] List<Dictionary<string, object>> rows)
+        {
+            try
+            {
+                if (rows == null || !rows.Any())
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Payload rỗng"));
+                }
+
+                int created = 0, skipped = 0;
+                var errors = new List<object>();
+
+                foreach (var row in rows)
+                {
+                    try
+                    {
+                        string employeeCode = row.GetString("Mã nhân viên")?.Trim() ?? string.Empty;
+                        string content = row.GetString("Nội dung Công việc")?.Trim() ?? string.Empty;
+                        string result = row.GetString("Kết quả/ tình trạng công việc")?.Trim() ?? string.Empty;
+                        string nextPlan = row.GetString("Kế hoạch ngày tiếp theo")?.Trim() ?? string.Empty;
+                        string pendingIssues = row.GetString("Tồn đọng/ vướng mắc")?.Trim() ?? string.Empty;
+                        string urgent = row.GetString("Các phát sinh gấp cần xử lý (yêu cầu ps phải xử lý ngoài giờ)")?.Trim() ?? string.Empty;
+                        string mistakeOrViolation = row.GetString("Các lỗi/ vấn đề bị nhắc/ phát hiện trong ngày")?.Trim() ?? string.Empty;
+                        DateTime? reportDate = row.GetNullableDate("Ngày");
+
+                        if (string.IsNullOrWhiteSpace(employeeCode))
+                            throw new Exception("Thiếu 'Mã nhân viên'.");
+
+                        if (!reportDate.HasValue)
+                            throw new Exception("Thiếu hoặc sai định dạng cột 'Ngày'.");
+
+                        if (string.IsNullOrWhiteSpace(content))
+                            throw new Exception("Thiếu 'Nội dung Công việc'.");
+
+                        var employeeId = _employeeRepo.GetAll(x => x.Code == employeeCode)
+                                                      .Select(x => x.ID)
+                                                      .FirstOrDefault();
+
+                        if (employeeId <= 0)
+                            throw new Exception($"Không tìm thấy nhân viên có mã: {employeeCode}");
+
+                        var model = new DailyReportAccounting
+                        {
+                            IsDeleted = false,
+                            EmployeeID = employeeId,
+                            ReportDate = reportDate.Value,
+                            Content = content,
+                            Result = result,
+                            NextPlan = nextPlan,
+                            PendingIssues = pendingIssues,
+                            Urgent = urgent,
+                            MistakeOrViolation = mistakeOrViolation
+                        };
+
+                        await _dailyReportAccountingRepo.CreateAsync(model);
+                        created++;
+                    }
+                    catch (Exception ex)
+                    {
+                        skipped++;
+                        errors.Add(new
+                        {
+                            message = ex.Message,
+                            row
+                        });
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    created,
+                    skipped,
+                    errors
+                }, "Import Excel thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+    }
+
+    static class ImportExtensions
+    {
+        public static string GetString(this Dictionary<string, object> row, string key)
+        {
+            if (row == null)
+                return null;
+            if (!row.TryGetValue(key, out var val) || val == null)
+                return null;
+            var s = val.ToString()?.Trim();
+            return string.IsNullOrEmpty(s) ? null : s;
+        }
+
+        public static DateTime? GetNullableDate(this Dictionary<string, object> row, string key)
+        {
+            if (row == null)
+                return null;
+            if (!row.TryGetValue(key, out var val) || val == null)
+                return null;
+
+            var str = val.ToString();
+
+            // ISO string
+            if (DateTime.TryParse(str, CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var iso))
+                return iso;
+
+            // dd/MM/yyyy
+            if (DateTime.TryParseExact(str, new[] { "dd/MM/yyyy", "d/M/yyyy" },
+                CultureInfo.InvariantCulture, DateTimeStyles.None, out var dmy))
+                return dmy;
+
+            // yyyy-MM-dd
+            if (DateTime.TryParseExact(str, "yyyy-MM-dd",
+                CultureInfo.InvariantCulture, DateTimeStyles.None, out var ymd))
+                return ymd;
+
+            // Excel serial number
+            if (double.TryParse(str, NumberStyles.Any, CultureInfo.InvariantCulture, out var serial))
+            {
+                var epoch = new DateTime(1899, 12, 30);
+                return epoch.AddDays(serial);
+            }
+
+            return null;
         }
     }
 }

@@ -10,6 +10,7 @@ using Dapper;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 using System.Data;
 using System.Dynamic;
+using System.Data.Common;
 
 namespace RERPAPI.Model.Common
 {
@@ -93,5 +94,24 @@ namespace RERPAPI.Model.Common
                 throw new Exception(ex.Message);
             }
         }
+
+        public static async Task<(List<T1>, List<T2>)> QueryMultipleAsync<T1, T2>(
+         string procedureName,
+         object? parameters = null,
+         IDbTransaction? transaction = null)
+        {
+            var connection = new SqlConnection(connectionString);
+            using var multi = await connection.QueryMultipleAsync(
+                procedureName,
+                parameters,
+                transaction,
+                commandType: CommandType.StoredProcedure);
+
+            return (
+                multi.Read<T1>().AsList(),
+                multi.Read<T2>().AsList()
+            );
+        }
+
     }
 }

@@ -269,17 +269,13 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
         [HttpGet("check-duplicate-wfh/{id}/{employeeId}/{date}/{timeWFH}")]
         public IActionResult CheckDuplicateWFH(int id, int employeeId, string date, int timeWFH)
         {
             try
             {
-                bool isDuplicate = false;
-
-                // Chuyển đổi chuỗi ngày sang DateTime
-                DateTime dateWFH;
-                if (!DateTime.TryParse(date, out dateWFH))
+                // Parse date
+                if (!DateTime.TryParse(date, out DateTime dateWFH))
                 {
                     return BadRequest(new
                     {
@@ -288,18 +284,26 @@ namespace RERPAPI.Controllers
                     });
                 }
 
-                var existWFH = _employeeWFHRepo.GetAll()
+                var query = _employeeWFHRepo.GetAll()
                     .Where(x => x.ID != id &&
                                 x.EmployeeID == employeeId &&
                                 x.DateWFH.HasValue &&
                                 x.DateWFH.Value.Date == dateWFH.Date &&
-                                x.TimeWFH == timeWFH
-                                //&& x.IsDelete == false
-                                );
+                                x.IsDeleted != true);
 
-                if (existWFH.Any())
+                bool isDuplicate = false;
+
+                if (timeWFH == 3) // đăng ký cả ngày
                 {
-                    isDuplicate = true;
+                    isDuplicate = query.Any();
+                }
+                else if (timeWFH == 1) // sáng
+                {
+                    isDuplicate = query.Any(x => x.TimeWFH == 1 || x.TimeWFH == 3);
+                }
+                else if (timeWFH == 2) // chiều
+                {
+                    isDuplicate = query.Any(x => x.TimeWFH == 2 || x.TimeWFH == 3);
                 }
 
                 return Ok(new

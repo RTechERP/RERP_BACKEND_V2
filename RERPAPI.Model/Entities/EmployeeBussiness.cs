@@ -95,4 +95,14 @@ public partial class EmployeeBussiness
     public DateTime? DateApprovedSenior { get; set; }
 
     public int? ProjectID { get; set; }
+
+    /// <summary>
+    /// Lý do Senior từ chối duyệt
+    /// </summary>
+    public string? ReasonDecilineSenior { get; set; }
+
+    /// <summary>
+    /// Trạng thái từ chối duyệt của Senior
+    /// </summary>
+    public int? DecilineApproveSenior { get; set; }
 }
