@@ -9,10 +9,12 @@ namespace RERPAPI.Model.Common
     public class EmailHelper
     {
         private readonly SmtpSettings _smtp;
+        private readonly SmtpSettingsHr _smtpHr;
 
-        public EmailHelper(IOptions<SmtpSettings> smtp)
+        public EmailHelper(IOptions<SmtpSettings> smtp, IOptions<SmtpSettingsHr> smtpHr)
         {
             _smtp = smtp.Value;
+            _smtpHr = smtpHr.Value;
         }
         //public static async Task SendAsync(string[] toEmails, string subject, string htmlBody)
         //{
@@ -92,7 +94,6 @@ namespace RERPAPI.Model.Common
                                     </html>";
 
 
-
                 email.Body = builder.ToMessageBody();
                 //email.Body = new TextPart(isHtml ? "html" : "plain")
                 //{
@@ -103,6 +104,60 @@ namespace RERPAPI.Model.Common
                 {
                     await smtpClient.ConnectAsync(_smtp.Host, _smtp.Port, SecureSocketOptions.StartTls);
                     await smtpClient.AuthenticateAsync(_smtp.Mail, _smtp.Password);
+                    await smtpClient.SendAsync(email);
+                    await smtpClient.DisconnectAsync(true);
+                }
+            }
+            catch (Exception ex)
+            {
+
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task SendAsyncHr(string toEmail, string subject, string body, bool isHtml = true, string cc = "")
+        {
+            try
+            {
+                var email = new MimeMessage();
+                email.From.Add(new MailboxAddress(_smtpHr.DisplayName, _smtpHr.Mail));
+                email.To.Add(MailboxAddress.Parse(toEmail));
+                if (!string.IsNullOrWhiteSpace(cc))
+                {
+                    foreach (var mailcc in cc.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        if (MailboxAddress.TryParse(mailcc.Trim(), out var addr))
+                        {
+                            email.Cc.Add(addr);
+                        }
+                    }
+
+                    email.Cc.Add(MailboxAddress.Parse(toEmail));
+                }
+                email.Subject = subject;
+
+                var builder = new BodyBuilder();
+                builder.HtmlBody = $@"
+                                    <html>
+                                    <head>
+                                    <meta charset='UTF-8'>
+                                    </head>
+                                    <body >
+                                        <div style='font-family: ""Times New Roman"", Times, serif; font-size:14px;'>{body}</div>
+                                    </body>
+                                    </html>";
+
+
+                email.Body = builder.ToMessageBody();
+                //email.Body = new TextPart(isHtml ? "html" : "plain")
+                //{
+                //    Text = body
+                //};
+
+                using (var smtpClient = new SmtpClient())
+                {
+                    await smtpClient.ConnectAsync(_smtpHr.Host, _smtpHr.Port, SecureSocketOptions.StartTls);
+                    await smtpClient.AuthenticateAsync(_smtpHr.Mail, _smtpHr.Password);
                     await smtpClient.SendAsync(email);
                     await smtpClient.DisconnectAsync(true);
                 }

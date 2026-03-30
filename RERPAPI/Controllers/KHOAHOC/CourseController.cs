@@ -88,7 +88,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 var data = SQLHelper<object>.ProcedureToList("spGetCourseCatalogNew",
                                               new string[] { "@CatalogType", "@UserID" },
-                                              new object[] { catalogType    , currentUser.ID });
+                                              new object[] { catalogType, currentUser.ID });
                 return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0), ""));
             }
             catch (Exception ex)
@@ -148,10 +148,10 @@ namespace RERPAPI.Controllers.KHOAHOC
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
-                 var data = SQLHelper<object>.ProcedureToList("spGetCourseNew",
-                                              new string[] { "@CourseCatalogID", "@EmployeeID", "@Status" },
-                                              new object[] { courseCatalogID, currentUser.EmployeeID, -1 });
-                  var data0 = SQLHelper<object>.GetListData(data, 0);
+                var data = SQLHelper<object>.ProcedureToList("spGetCourseNew",
+                                             new string[] { "@CourseCatalogID", "@EmployeeID", "@Status" },
+                                             new object[] { courseCatalogID, currentUser.EmployeeID, -1 });
+                var data0 = SQLHelper<object>.GetListData(data, 0);
                 return Ok(ApiResponseFactory.Success(data0, ""));
             }
             catch (Exception ex)
@@ -318,7 +318,7 @@ namespace RERPAPI.Controllers.KHOAHOC
         {
             try
             {
-                 var data = _courseLessonRepo.GetByID(id);
+                var data = _courseLessonRepo.GetByID(id);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
@@ -712,7 +712,7 @@ namespace RERPAPI.Controllers.KHOAHOC
 
 
                         // === REMOVE (soft delete + gỡ liên kết) ===
-                        foreach (var kpi in currentKpis.Where(x => !newKpiIds.Contains(x.KPIPositionTypeID)))
+                        foreach (var kpi in currentKpis.Where(x => !newKpiIds.Contains(x.KPIPositionTypeID ?? 0)))
                         {
                             kpi.IsDeleted = true;
                             // nếu entity của bạn có CourseID nullable thì gỡ ra, còn không thì bỏ dòng này
