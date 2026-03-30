@@ -546,5 +546,9 @@ namespace RERPAPI.Repo
             }
         }
 
+        public T GetSingleNoTracking(Expression<Func<T, bool>> predicate)
+        {
+            return table.AsNoTracking().FirstOrDefault(predicate) ?? new T();
+        }
     }
 }
