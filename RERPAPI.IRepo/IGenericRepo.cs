@@ -31,6 +31,8 @@ namespace RERPAPI.IRepo
         int UpdateFieldByAttribute<TValue>(Expression<Func<T, bool>> predicate, Dictionary<Expression<Func<T, object>>, TValue> updatedFields);
         Task<int> UpdateFieldByAttributeAsync<TValue>(Expression<Func<T, bool>> predicate, Dictionary<Expression<Func<T, object>>, TValue> updatedFields);
         Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate);
+        T GetSingleNoTracking(Expression<Func<T, bool>> predicate);
+
         //void SetClaim(Dictionary<string, string> claim);
     }
 }
