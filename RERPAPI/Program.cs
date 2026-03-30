@@ -472,8 +472,6 @@ builder.Services.AddScoped<ProjectTaskGroupRepo>();
 builder.Services.AddScoped<ProjectTaskChecklistRepo>();
 builder.Services.AddTransient<ProjectTaskAttachmentRepo>();
 builder.Services.AddTransient<ProjectTaskAdditionalRepo>();
-builder.Services.AddScoped<ProjectInfoRepo>();
-builder.Services.AddScoped<ProjectInforEmployeeRepo>();
 
 builder.Services.AddScoped<SendEmailReceiveProjectTaskClass>();
 
