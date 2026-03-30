@@ -1,33 +1,13 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using DocumentFormat.OpenXml.Drawing.Charts;
-using DocumentFormat.OpenXml.Drawing.Spreadsheet;
-using DocumentFormat.OpenXml.Office.CustomUI;
-using DocumentFormat.OpenXml.Office2010.CustomUI;
-using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
-using DocumentFormat.OpenXml.Spreadsheet;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NPOI.HSSF.Record.Chart;
-using NPOI.SS.Formula.Functions;
-using OfficeOpenXml.FormulaParsing.Excel.Functions.Finance.Implementations;
-using Org.BouncyCastle.Asn1.Pkcs;
-using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
-using RERPAPI.Repo;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
 using System.Data;
-using System.Diagnostics.Metrics;
-using System.Linq;
-using System.Linq.Expressions;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using ZXing;
-using ZXing.OneD.RSS;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.Project
 {
@@ -577,7 +557,7 @@ namespace RERPAPI.Controllers.Project
                                                                         && x.Unit.Trim() == item.Unit.Trim()
                                                                         && x.Manufacturer.Trim() == item.Manufacturer.Trim()
                                                                         && x.ProjectID == item.ProjectID
-                                                                        && x.IsDeleted != true 
+                                                                        && x.IsDeleted != true
                                                                         && x.IsApprovedTBPNewCode == false
                                                                         ).ToList();
 
@@ -590,10 +570,10 @@ namespace RERPAPI.Controllers.Project
                                 await _projectPartlistRepo.UpdateRangeAsync_Binh(partlists);
                             }
                         }
-                        }
                     }
+                }
 
-                    return Ok(ApiResponseFactory.Success(null, $"{approvedText} thành công!")); // Sửa message động
+                return Ok(ApiResponseFactory.Success(null, $"{approvedText} thành công!")); // Sửa message động
             }
             catch (Exception ex)
             {
@@ -869,7 +849,7 @@ namespace RERPAPI.Controllers.Project
                 else
                 {
                     // UPDATE
-                    var partlistOld = _projectPartlistRepo.GetByID(partList.ID);
+                    var partlistOld = _projectPartlistRepo.GetSingleNoTracking(x => x.ID == partList.ID);
                     if (partlistOld == null) return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu!"));
 
                     // Nếu chuyển sang IsProblem = true → INSERT new record
@@ -892,7 +872,6 @@ namespace RERPAPI.Controllers.Project
                         await UpdateRequestQuoteAsync(partList, partlistOld, currentUser);
                     }
                 }
-
                 return Ok(ApiResponseFactory.Success(null, ""));
             }
             catch (Exception ex)
@@ -1393,7 +1372,7 @@ namespace RERPAPI.Controllers.Project
                     ).FirstOrDefault();
 
                     ProjectPartList partList = existingPart ?? new ProjectPartList();
-                    
+
                     if (existingPart == null)
                     {
                         partList.ProjectID = request.ProjectID;
@@ -1452,7 +1431,7 @@ namespace RERPAPI.Controllers.Project
                     {
                         var manufacturerLower = (item.Manufacturer ?? "").Trim().ToLower();
                         Firm firm = firms.FirstOrDefault(x => x.FirmName != null && x.FirmName.Trim().ToLower() == manufacturerLower) ?? new Firm();
-                        
+
                         ProductSale productSale = _productSaleRepo.GetAll(x =>
                            x.ProductCode == item.ProductCode
                            && x.Unit == item.Unit
@@ -1464,9 +1443,9 @@ namespace RERPAPI.Controllers.Project
 
                         decimal minQuantity = item.QtyFull ?? 0; // 
 
-                        InventoryStock inventory = _inventoryStockRepo.GetAll(x => 
-                            x.ProductSaleID == productSale.ID 
-                            && x.WarehouseID == warehouseId 
+                        InventoryStock inventory = _inventoryStockRepo.GetAll(x =>
+                            x.ProductSaleID == productSale.ID
+                            && x.WarehouseID == warehouseId
                             && x.ProjectTypeID == request.ProjectTypeID
                             && x.IsDeleted == false
                         ).FirstOrDefault();
@@ -1555,7 +1534,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-       
+
 
         [HttpPost("delete-partlist")]
         public async Task<IActionResult> DeletePartList([FromBody] List<ProjectPartList> listItem)
@@ -2375,7 +2354,7 @@ namespace RERPAPI.Controllers.Project
                     else
                     {
                         await _projectPartlistRepo.CreateAsync(partList);
-                        if(item.IsDeleted == true)
+                        if (item.IsDeleted == true)
                         {
                             partList.IsDeleted = item.IsDeleted;
                             await _projectPartlistRepo.UpdateAsync(partList);
@@ -2401,7 +2380,7 @@ namespace RERPAPI.Controllers.Project
                     if (item.Manufacturer == null || item.Manufacturer.Length < 0) continue;
                     var data = _firmRepo.GetAll(x => x.FirmName == item.Manufacturer); // check hãng trong bảng hãng
                     var data2 = _productSaleRepo.GetAll(x => x.Maker == item.Manufacturer); // check hãng trong productsale
-                    if (data.Count == 0 && data2.Count==0) // Nếu không tìm thấy manufacturer
+                    if (data.Count == 0 && data2.Count == 0) // Nếu không tìm thấy manufacturer
                     {
                         diff.Add($"TT: {item.TT} - {item.Manufacturer},<br>"); // Sửa cú pháp string interpolation
                     }
