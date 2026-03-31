@@ -17,13 +17,19 @@ namespace RERPAPI.Controllers.Old.VisionBase
         private readonly WeekPlanRepo _weekPlanRepo;
         private readonly CustomerRepo _customerRepo;
         private readonly DepartmentRepo _departmentRepo;
+        private readonly EmployeeTeamSaleLinkRepo _employeeTeamSaleLinkRepo;
+        private readonly EmployeeTeamSaleRepo _employeeTeamSaleRepo;
         public PlanWeekController(WeekPlanRepo weekPlanRepo,
             DepartmentRepo departmentRepo,
-            CustomerRepo customerRepo)
+            CustomerRepo customerRepo,
+            EmployeeTeamSaleLinkRepo employeeTeamSaleLinkRepo,
+            EmployeeTeamSaleRepo employeeTeamSaleRepo)
         {
             _weekPlanRepo = weekPlanRepo;
             _departmentRepo = departmentRepo;
             _customerRepo = customerRepo;
+            _employeeTeamSaleLinkRepo = employeeTeamSaleLinkRepo;
+            _employeeTeamSaleRepo = employeeTeamSaleRepo;
         }
 
 
@@ -101,6 +107,29 @@ namespace RERPAPI.Controllers.Old.VisionBase
                     CustomerCode = e.CustomerCode,
                     ID = e.ID,
                 });
+
+                return Ok(ApiResponseFactory.Success(result, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-root-teams")]
+        public IActionResult GetRootTeams()
+        {
+            try
+            {
+                var result = _employeeTeamSaleRepo
+                    .GetAll(x => x.ParentID == 0 && x.IsDeleted != 1)
+                    .Select(t => new
+                    {
+                        TeamSaleID = t.ID,
+                        TeamSaleName = t.Name
+                    })
+                    .OrderBy(t => t.TeamSaleName)
+                    .ToList();
 
                 return Ok(ApiResponseFactory.Success(result, ""));
             }
