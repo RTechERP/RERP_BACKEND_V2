@@ -182,8 +182,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
 
-                if(!currentUser.IsAdmin) return BadRequest(ApiResponseFactory.Fail(null, ""));
-
                 var param = new
                 {
                     WarehouseID = warehouseId,

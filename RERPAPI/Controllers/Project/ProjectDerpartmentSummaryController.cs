@@ -33,10 +33,10 @@ namespace RERPAPI.Controllers.Project // tổng hợp phòng ban
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 var result = SQLHelper<object>.ProcedureToList("spGetProjectNew",
                     new string[] {
-                        "@DateStart", "@DateEnd", "@DepartmentID", "@UserTeamID", "@UserID", "@ProjectTypeID", "@Keyword"
+                        "@DateStart", "@DateEnd", "@DepartmentID", "@UserTeamID", "@UserID", "@ProjectTypeID", "@Keyword","@UserIDPriotity"
                     },
                     new object[] {
-                        filter.dateTimeS, filter.dateTimeE, filter.departmentID,filter.userTeamID,filter.userID, filter.projectTypeID, filter.keyword
+                        filter.dateTimeS, filter.dateTimeE, filter.departmentID,filter.userTeamID,filter.userID, filter.projectTypeID, filter.keyword,currentUser.ID
                     });
 
 

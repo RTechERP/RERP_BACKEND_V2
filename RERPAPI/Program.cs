@@ -7,6 +7,8 @@ using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
+using RERPAPI.Model.Param;
 using RERPAPI.Repo;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
@@ -451,10 +453,28 @@ builder.Services.AddScoped<CourseCatalogProjectTypeRepo>();
 builder.Services.AddScoped<KPIPositionTypeRepo>();
 builder.Services.AddScoped<CourseRepo>();
 builder.Services.AddScoped<CourseRegisterIdeaRepo>();
+builder.Services.AddScoped<CourseLessonRepo>();
+builder.Services.AddScoped<CourseFilesRepo>();
+builder.Services.AddScoped<CourseExamRepo>();
+builder.Services.AddScoped<CourseLessonHistoryRepo>();
+builder.Services.AddScoped<CourseExamResultRepo>();
+builder.Services.AddScoped<CourseExamResultDetailRepo>();
+builder.Services.AddScoped<CourseQuestionRepo>();
+builder.Services.AddScoped<CourseRightAnswerRepo>();
+builder.Services.AddScoped<CourseExamEvaluateRepo>();
 
 builder.Services.AddScoped<InventoryProjectProductSaleLinkRepo>();
 builder.Services.AddScoped<HandoverPersonalAssetRepo>();
 builder.Services.AddScoped<UpdateVersionRepo>();
+
+builder.Services.AddScoped<ProjectTaskRepo>();
+builder.Services.AddScoped<ProjectTaskGroupRepo>();
+builder.Services.AddScoped<ProjectTaskChecklistRepo>();
+builder.Services.AddTransient<ProjectTaskAttachmentRepo>();
+builder.Services.AddTransient<ProjectTaskAdditionalRepo>();
+
+builder.Services.AddScoped<SendEmailReceiveProjectTaskClass>();
+
 
 builder.Services.AddScoped<FollowProjectBaseDetailRepo>();
 builder.Services.AddScoped<DailyReportAccountingRepo>();
@@ -509,6 +529,17 @@ builder.Services.AddScoped<KPIPositionRepo>();
 builder.Services.AddScoped<KPIEvaluationRuleRepo>();
 builder.Services.AddScoped<KPIPositionEmployeeRepo>();
 builder.Services.AddScoped<KPIEmployeePointDetailRepo>();
+
+
+builder.Services.AddScoped<ProjectTaskChecklist>();
+builder.Services.AddScoped<ProjectTaskEmployeeRepo>();
+builder.Services.AddScoped<ProjectTaskApproveRepo>();
+builder.Services.AddScoped<ProjectTaskLogRepo>();
+builder.Services.AddScoped<ProjectTaskTypeRepo>();
+
+
+
+
 builder.Services.AddScoped<KPIEvaluationRuleDetailRepo>();
 builder.Services.AddScoped<KPIExamRepo>();
 builder.Services.AddScoped<KPISumaryEvaluationRepo>();
