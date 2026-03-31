@@ -8730,12 +8730,22 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.DatePriceQuote).HasColumnType("datetime");
             entity.Property(e => e.DateRequest).HasColumnType("datetime");
             entity.Property(e => e.Deadline).HasColumnType("datetime");
+            entity.Property(e => e.EffectiveDate)
+                .HasComment("hiệu lực")
+                .HasColumnType("datetime");
             entity.Property(e => e.HistoryPrice).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.LeadTime).HasMaxLength(100);
+            entity.Property(e => e.LeadTimeTechnical)
+                .HasDefaultValue(0)
+                .HasComment("LeadTime cần hàng (Kỹ thuật)");
             entity.Property(e => e.Maker).HasMaxLength(150);
             entity.Property(e => e.Quantity).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.StatusRequest).HasComment("1:Yêu cầu báo giá; 2:Đã báo giá;3: Từ chối báo giá");
+            entity.Property(e => e.TargetPrice)
+                .HasDefaultValue(0m)
+                .HasComment("Giá target")
+                .HasColumnType("decimal(18, 2)");
             entity.Property(e => e.TotaMoneyVAT).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.TotalImportPrice).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.TotalPrice).HasColumnType("decimal(18, 2)");
