@@ -899,9 +899,12 @@ namespace RERPAPI.Controllers.Old
                     var quantity = inventoryData[0]?.TotalQuantityLast;
                     if (quantity == null || Convert.ToDecimal(quantity) <= 0)
                     {
-                        return BadRequest(ApiResponseFactory.Fail(null, $"Số lượng giữ sản phẩm [{item.ProductName}] cần lớn hơn 0!"));
+                        return BadRequest(ApiResponseFactory.Fail(null, $"Số lượng tồn trong kho sản phẩm [{item.ProductName}] không đủ để giữ!"));
                     }
-
+                    if (item.Quantity > Convert.ToDecimal(quantity))
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, $"Số lượng giữ hàng [{item.Quantity}] vượt quá số lượng tồn kho [{quantity}] của sản phẩm [{item.ProductName}]!"));
+                    }
                     var inventoryProject = item.InventoryProjectID > 0
                         ? _inventoryProjectRepo.GetByID(item.InventoryProjectID ?? 0)
                         : new InventoryProject();
@@ -923,7 +926,7 @@ namespace RERPAPI.Controllers.Old
                     await _repo.UpdateAsync(item);
                 }
 
-                return Ok(ApiResponseFactory.Success(null, "Đã cập nhật giữ hàng thành công."));
+                return Ok(ApiResponseFactory.Success(data, "Đã cập nhật giữ hàng thành công."));
             }
             catch (Exception ex)
             {
