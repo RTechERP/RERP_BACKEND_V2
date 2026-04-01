@@ -1,6 +1,7 @@
 ﻿using DocumentFormat.OpenXml.Vml.Spreadsheet;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -19,6 +20,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet]
+        [RequiresPermission("N90")]
         public IActionResult GetProjectTaskType()
         {
             try
@@ -31,8 +33,9 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, "Failed to get project task type."));
             }
         }
-
+        
         [HttpPost]
+        [RequiresPermission("N90")]
         public async Task<IActionResult> CreateProjectTaskType([FromBody] ProjectTaskType projectTaskType)
         {
             try

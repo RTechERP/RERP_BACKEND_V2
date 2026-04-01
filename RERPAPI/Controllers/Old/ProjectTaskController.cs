@@ -1,4 +1,5 @@
-﻿using DocumentFormat.OpenXml.Office2013.Drawing.ChartStyle;
+﻿using DocumentFormat.OpenXml.Office2010.ExcelAc;
+using DocumentFormat.OpenXml.Office2013.Drawing.ChartStyle;
 using MathNet.Numerics.Distributions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -117,7 +118,7 @@ namespace RERPAPI.Controllers.Project
                 var param = new
                 {
                     EmployeeID = currentUser.EmployeeID,
-                    //EmployeeID = -1,
+                    // EmployeeID = 610,
                     DateStart = dateStart,
                     DateEnd = dateEnd,
                     Status = status
@@ -165,7 +166,7 @@ namespace RERPAPI.Controllers.Project
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 var param = new
                 {
-                    p_ProjectID = projectID ,
+                    p_ProjectID = projectID,
                     p_IsPersonalProject = isPersionalProject,
                     p_EmployeeID = currentUser.EmployeeID,
                 };
@@ -279,7 +280,7 @@ namespace RERPAPI.Controllers.Project
             try
             {
                 //var listEmployee = _employeeRepo.GetAll(x => listEmployeeAsignee.Contains(x.ID));
-                    var listEmployee = _employeeRepo.GetAll(x => listEmployeeAsignee.Contains(x.ID));
+                var listEmployee = _employeeRepo.GetAll(x => listEmployeeAsignee.Contains(x.ID));
 
                 var listDepartmentIDs = listEmployee.Select(x => x.DepartmentID).Distinct();
 
@@ -308,216 +309,6 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-        #region Commented code for project task group (Nhóm công việc)
-
-        //[HttpGet("Groups")]
-        //public IActionResult GetGroups([FromQuery(Name = "projectId")] int projectID)
-        //{
-        //    try
-        //    {
-        //        List<spGetProjectTaskGroup> projectGroups = SQLHelper<spGetProjectTaskGroup>.ProcedureToListModel("spGetProjectTaskGroup", new string[] { "@ProjectID" }, new object[] { projectID });
-        //        return Ok(ApiResponseFactory.Success(projectGroups));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ApiResponseFactory.Fail(ex, "Failed to retrieve project task groups."));
-        //    }
-        //}
-
-        //[HttpPost("Groups")]
-        //public async Task<IActionResult> AddGroup([FromBody] ProjectTaskGroup group)
-        //{
-        //    try
-        //    {
-        //        var result = await _groupRepo.CreateAsync(group);
-        //        return Ok(ApiResponseFactory.Success(result));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ApiResponseFactory.Fail(ex, "Failed to create project task group."));
-        //    }
-        //}
-
-        //[HttpGet("BoardDetails")]
-        //public IActionResult GetBoardDetails([FromQuery(Name = "projectId")] int projectID)
-        //{
-        //    try
-        //    {
-        //        List<spGetProjectTaskGroup> projectGroups = SQLHelper<spGetProjectTaskGroup>.ProcedureToListModel("spGetProjectTaskGroup", new string[] { "@ProjectID" }, new object[] { projectID });
-        //        return Ok(ApiResponseFactory.Success(projectGroups));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ApiResponseFactory.Fail(ex, "Failed to retrieve board details."));
-        //    }
-        //}
-
-        //[HttpPost("Groups/{id}/{orderIndex}/Move")]
-        //public async Task<IActionResult> MoveGroup(int id, int orderIndex)
-        //{
-        //    try
-        //    {
-        //        ProjectTaskGroup existingGroup = await _groupRepo.GetByIDAsync(id);
-        //        if (existingGroup == null || existingGroup.OrderIndex == null)
-        //        {
-        //            return NotFound(ApiResponseFactory.Fail(null, "Project task group not found."));
-        //        }
-
-        //        // Thay đổi vị trí của 2 nhóm công việc có 2 trường hợp:
-        //        // Trường hợp 1: OrderIndex mới nhỏ hơn OrderIndex cũ
-        //        if (orderIndex < existingGroup.OrderIndex)
-        //        {
-        //            var lstGroups1 = _groupRepo.GetAll(x =>
-        //            x.OrderIndex >= orderIndex && x.OrderIndex < existingGroup.OrderIndex && x.ProjectID == existingGroup.ProjectID && x.ID != id);
-        //            if (lstGroups1.Count() > 0)
-        //            {
-        //                foreach (var item in lstGroups1)
-        //                {
-        //                    item.OrderIndex += 1;
-        //                    await _groupRepo.UpdateAsync(item);
-        //                }
-        //            }
-        //        }
-        //        else if (orderIndex > existingGroup.OrderIndex) // Trường hợp 2: OrderIndex mới lớn hơn OrderIndex cũ
-        //        {
-        //            var lstGroups2 = _groupRepo.GetAll(x =>
-        //            x.OrderIndex <= orderIndex && x.OrderIndex > existingGroup.OrderIndex && x.ProjectID == existingGroup.ProjectID && x.ID != id);
-        //            if (lstGroups2.Count() > 0)
-        //            {
-        //                foreach (var item in lstGroups2)
-        //                {
-        //                    item.OrderIndex -= 1;
-        //                    await _groupRepo.UpdateAsync(item);
-        //                }
-        //            }
-        //        }
-
-        //        existingGroup.OrderIndex = orderIndex;
-        //        var result = await _groupRepo.UpdateAsync(existingGroup);
-        //        return Ok(ApiResponseFactory.Success(result));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ApiResponseFactory.Fail(ex, "Failed to move project task group."));
-        //    }
-        //}
-
-        //[HttpPut("Groups")]
-        //public async Task<IActionResult> updateTaskGroup([FromBody] ProjectTaskGroup data)
-        //{
-        //    try
-        //    {
-        //        if (data == null || data.ID <= 0)
-        //        {
-        //        }
-        //        var exitProjectTaskGroup = _groupRepo.GetByID(data.ID);
-        //        if (exitProjectTaskGroup == null || exitProjectTaskGroup.ID <= 0)
-        //        {
-        //            return BadRequest(ApiResponseFactory.Fail(null, "Failed to update project Task group"));
-        //        }
-        //        exitProjectTaskGroup.TaskGroupName = data.TaskGroupName;
-        //        exitProjectTaskGroup.Color = data.Color;
-        //        var result = await _groupRepo.UpdateAsync(exitProjectTaskGroup);
-        //        if (result == null || result <= 0)
-        //        {
-        //            return BadRequest(ApiResponseFactory.Fail(null, "Failed to update project Task group"));
-        //        }
-        //        return Ok(ApiResponseFactory.Success(exitProjectTaskGroup));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ApiResponseFactory.Fail(ex, "Failed to update project Task group"));
-        //    }
-        //}
-
-
-
-        //[HttpPost("{id}/Move")]
-        //public async Task<IActionResult> Move(int id, [FromBody] MoveRequest data)
-        //{
-        //    try
-        //    {
-        //        ProjectTask existingTask = await _projectTaskRepo.GetByIDAsync(id);
-        //        if (existingTask == null
-        //            || existingTask.OrderIndex == null
-        //            || existingTask.ProjectTaskGroupID == null)
-        //        {
-        //            return NotFound(ApiResponseFactory.Fail(null, "Project task not found."));
-        //        }
-        //        // Thay đổi vị trí của task có 2 trừng hợp:
-        //        // Trường hợp 1: Thay đổi vị trí task khác nhóm công việc
-        //        if (existingTask.ProjectTaskGroupID != data.ProjectTaskGroupID)
-        //        {
-        //            // Lấy danh sách các task trong nhóm công việc cũ có OrderIndex lớn hơn OrderIndex của task cũ
-        //            var lstTasksInOldGroup = _projectTaskRepo.GetAll(x =>
-        //            x.OrderIndex > existingTask.OrderIndex && x.ProjectTaskGroupID == existingTask.ProjectTaskGroupID);
-
-        //            // Update OrderIndex của các task trong nhóm công việc cũ
-        //            if (lstTasksInOldGroup.Count() > 0)
-        //            {
-        //                foreach (var item in lstTasksInOldGroup)
-        //                {
-        //                    item.OrderIndex -= 1;
-        //                    await _projectTaskRepo.UpdateAsync(item);
-        //                }
-        //            }
-
-        //            // Lấy danh sách các task trong nhóm công việc mới có OrderIndex lớn hơn hoặc bằng OrderIndex của task mới
-        //            var lstTasksInNewGroup = _projectTaskRepo.GetAll(x =>
-        //            x.OrderIndex >= data.OrderIndex && x.ProjectTaskGroupID == data.ProjectTaskGroupID);
-        //            // Update OrderIndex của các task trong nhóm công việc mới
-        //            if (lstTasksInNewGroup.Count() > 0)
-        //            {
-        //                foreach (var item in lstTasksInNewGroup)
-        //                {
-        //                    item.OrderIndex += 1;
-        //                    await _projectTaskRepo.UpdateAsync(item);
-        //                }
-        //            }
-        //        }
-        //        else // Trường hợp 2: Thay đổi vị trí task trong cùng một nhóm công việc
-        //        {
-        //            // Nếu OrderIndex mới lớn hơn OrderIndex cũ
-        //            if (data.OrderIndex > existingTask.OrderIndex)
-        //            {
-        //                // Lấy danh sách các task trong cùng nhóm công việc có OrderIndex nằm giữa OrderIndex cũ và OrderIndex mới
-        //                var lstTasksInGroup = _projectTaskRepo.GetAll(x =>
-        //                x.OrderIndex > existingTask.OrderIndex && x.OrderIndex <= data.OrderIndex && x.ProjectTaskGroupID == existingTask.ProjectTaskGroupID);
-        //                if (lstTasksInGroup.Count() > 0)
-        //                {
-        //                    foreach (var item in lstTasksInGroup)
-        //                    {
-        //                        item.OrderIndex -= 1;
-        //                        await _projectTaskRepo.UpdateAsync(item);
-        //                    }
-        //                }
-        //            }
-        //            else if (data.OrderIndex < existingTask.OrderIndex) // Nếu OrderIndex mới nhỏ hơn OrderIndex cũ
-        //            {
-        //                var lstTasksInGroup = _projectTaskRepo.GetAll(x =>
-        //                x.OrderIndex < existingTask.OrderIndex && x.OrderIndex >= data.OrderIndex && x.ProjectTaskGroupID == existingTask.ProjectTaskGroupID);
-        //                if (lstTasksInGroup.Count() > 0)
-        //                {
-        //                    foreach (var item in lstTasksInGroup)
-        //                    {
-        //                        item.OrderIndex += 1;
-        //                        await _projectTaskRepo.UpdateAsync(item);
-        //                    }
-        //                }
-        //            }
-        //        }
-        //        existingTask.ProjectTaskGroupID = data.ProjectTaskGroupID;
-        //        existingTask.OrderIndex = data.OrderIndex;
-        //        var result = await _projectTaskRepo.UpdateAsync(existingTask);
-        //        return Ok(ApiResponseFactory.Success(result));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ApiResponseFactory.Fail(ex, "Failed to move project task."));
-        //    }
-        //}
-
-        #endregion
 
         #region check list 
         // --- Checklists ---
@@ -526,7 +317,7 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                var list = _checklistRepo.GetAll(x => x.ProjectTaskID == taskId && (x.IsDeleted == null || x.IsDeleted == false)).OrderBy(x => x.CreatedDate);
+                var list = _checklistRepo.GetAll(x => x.ProjectTaskID == taskId && (x.IsDeleted == null || x.IsDeleted == false)).OrderBy(x => x.OrderIndex);
                 return Ok(ApiResponseFactory.Success(list));
             }
             catch (Exception ex)
@@ -613,7 +404,7 @@ namespace RERPAPI.Controllers.Project
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
-                if(item.Description == null || item.Description.Trim().Count() <= 0)
+                if (item.Description == null || item.Description.Trim().Count() <= 0)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Hãy nhập nội dung phát sinh."));
                 }
@@ -647,7 +438,8 @@ namespace RERPAPI.Controllers.Project
                             ContentLog = $"- {currentUser.Name} xóa phát sinh có nội dung: {exitAdditional.Description}"
                         };
                         await _projectTaskLogRepo.UpdateAsync(newProjectTaskLog);
-                    }else if(exitAdditional.Description.Trim() != item.Description.Trim())
+                    }
+                    else if (exitAdditional.Description.Trim() != item.Description.Trim())
                     {
                         var newProjectTaskLog = new ProjectTaskLog
                         {
@@ -898,7 +690,6 @@ namespace RERPAPI.Controllers.Project
                         return NotFound(ApiResponseFactory.Fail(null, "Project task not found."));
                     }
 
-                    existingTask.Status = projectTask.Status;
 
                     if (projectTask.Status == 3 && projectTask.ActualEndDate.HasValue
                         && projectTask.ActualStartDate.HasValue && projectTask.PlanEndDate.HasValue
@@ -926,50 +717,6 @@ namespace RERPAPI.Controllers.Project
                     // variable dùng để kiểm tra xem có thời gian nào thay đổi hay không. 
                     int changeTime = 0;
 
-                    //if (existingTask.EmployeeID != null && existingTask.EmployeeID > 0)
-                    //{
-                    //    if (existingTask.EmployeeID == currentUser.EmployeeID)
-                    //    {
-                    //        if (projectTask.PlanStartDate != null && existingTask.PlanStartDate?.Date != projectTask.PlanStartDate?.Date)
-                    //        {
-
-                    //            newProjectTaskLog.ContentLog += $"- {currentUser.FullName} đã thay đổi ngày bắt đầu dự kiến từ {existingTask.PlanStartDate?.ToString("dd/MM/yyyy")} thành {projectTask.PlanStartDate?.ToString("dd/MM/yyyy")}. \\n";
-
-                    //            changeTime++;
-                    //            existingTask.PlanStartDate = projectTask.PlanStartDate?.Date;
-
-                    //        }
-
-                    //        if (projectTask.PlanEndDate != null && existingTask.PlanEndDate?.Date != projectTask.PlanEndDate?.Date)
-                    //        {
-                    //            newProjectTaskLog.ContentLog += $"- {currentUser.FullName} đã thay đổi ngày kết thúc dự kiến từ {existingTask.PlanEndDate?.ToString("dd/MM/yyyy")} thành {projectTask.PlanEndDate?.ToString("dd/MM/yyyy")}. \\n";
-                    //            changeTime++;
-                    //            existingTask.PlanEndDate = projectTask.PlanEndDate?.Date;
-
-                    //        }
-                    //    }
-                    //}
-                    //else
-                    //{
-                    //    if (existingTask.CreatedBy == currentUser.LoginName || currentUser.IsAdmin)
-                    //    {
-                    //        if (projectTask.PlanStartDate != null && existingTask.PlanStartDate?.Date != projectTask.PlanStartDate?.Date)
-                    //        {
-                    //            newProjectTaskLog.ContentLog += $"- {currentUser.FullName} đã thay đổi ngày bắt đầu dự kiến từ {existingTask.PlanStartDate?.ToString("dd/MM/yyyy")} thành {projectTask.PlanStartDate?.ToString("dd/MM/yyyy")}. \\n";
-                    //            changeTime++;
-                    //            existingTask.PlanStartDate = projectTask.PlanStartDate?.Date;
-
-                    //        }
-
-                    //        if (projectTask.PlanEndDate != null && existingTask.PlanEndDate?.Date != projectTask.PlanEndDate?.Date)
-                    //        {
-                    //            newProjectTaskLog.ContentLog += $"- {currentUser.FullName} đã thay đổi ngày kết thúc dự kiến từ {existingTask.PlanEndDate?.ToString("dd/MM/yyyy")} thành {projectTask.PlanEndDate?.ToString("dd/MM/yyyy")}. \\n";
-                    //            changeTime++;
-                    //            existingTask.PlanEndDate = projectTask.PlanEndDate?.Date;
-
-                    //        }
-                    //    }
-                    //}
 
                     if (projectTask.PlanStartDate != null && existingTask.PlanStartDate?.Date != projectTask.PlanStartDate?.Date)
                     {
@@ -1017,7 +764,7 @@ namespace RERPAPI.Controllers.Project
                         }
                         changeTime++;
                         existingTask.ActualEndDate = projectTask.ActualEndDate?.Date;
-                        existingTask.Status = 3;
+                        projectTask.Status = 3;
 
                     }
                     else if (projectTask.ActualEndDate == null && existingTask.ActualEndDate?.Date != projectTask.ActualEndDate?.Date)
@@ -1025,7 +772,7 @@ namespace RERPAPI.Controllers.Project
                         newProjectTaskLog.ContentLog += $"- {currentUser.FullName} đã xóa ngày kết thúc thực tế. \\n";
                         changeTime++;
                         existingTask.ActualEndDate = projectTask.ActualEndDate?.Date;
-                        existingTask.Status = 2;
+                        projectTask.Status = 2;
 
                     }
 
@@ -1036,20 +783,124 @@ namespace RERPAPI.Controllers.Project
 
 
 
+                    var listEmail1 = new List<String>();
+
+                    if (projectTask.Employee != null && projectTask.Employee.Count > 0)
+                    {
+                        foreach (var emp in projectTask.Employee)
+                        {
+                            var employeeValue = await _employeeRepo.GetByIDAsync(emp);
+                            if (emp != currentUser.EmployeeID)
+                            {
+                                listEmail1.Add(employeeValue.EmailCongTy);
+                            }
+                        }
+                    }
+                    var employeeAsigner = await _employeeRepo.GetByIDAsync(existingTask.EmployeeIDRequest ?? 0);
+
+                    listEmail1.Add(employeeAsigner.EmailCongTy);
+
+                    List<UserTeam> leaders1 = new List<UserTeam>();
+                    if (projectTask.IsPersonalProject != true)
+                    {
+                        string usersString = "";
+
+                        if (projectTask.Employee.Count > 0)
+                        {
+                            usersString = string.Join(",", projectTask.Employee);
+                        }
+
+                        var param = new
+                        {
+                            p_UserID = usersString
+                        };
+                        leaders1 = await SqlDapper<UserTeam>.ProcedureToListTAsync("spGetLeaderTeam", param);
+                    }
+
+
+                    if (projectTask.EmployeeRelate != null && projectTask.EmployeeRelate.Count > 0)
+                    {
+                        if (!projectTask.EmployeeRelate.Contains(currentUser.EmployeeID) && !projectTask.Employee.Contains(currentUser.EmployeeID) && projectTask.EmployeeIDRequest != currentUser.EmployeeID)
+                        {
+                            projectTask.EmployeeRelate.Add(currentUser.EmployeeID);
+                        }
+
+
+                        if (leaders1.Count > 0)
+                        {
+                            foreach (var item in leaders1)
+                            {
+                                if (item.LeaderID != null && !projectTask.EmployeeRelate.Contains(item.LeaderID ?? -1))
+                                {
+                                    projectTask.EmployeeRelate.Add(item.LeaderID ?? 0);
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (!projectTask.Employee.Contains(currentUser.EmployeeID) && projectTask.EmployeeIDRequest != currentUser.EmployeeID)
+                        {
+                            projectTask.EmployeeRelate = new List<int>();
+                            projectTask.EmployeeRelate.Add(currentUser.EmployeeID);
+                        }
+
+                        if (leaders1.Count > 0)
+                        {
+                            foreach (var item in leaders1)
+                            {
+                                if (item.LeaderID != null && !projectTask.EmployeeRelate.Contains(item.LeaderID ?? -1))
+                                {
+                                    projectTask.EmployeeRelate.Add(item.LeaderID ?? 0);
+                                }
+                            }
+                        }
+                    }
+                    var listEmployeeRelate = new List<string>();
+                    foreach (var emp in projectTask.EmployeeRelate)
+                    {
+                        var employeeValue = await _employeeRepo.GetByIDAsync(emp);
+                        if (employeeValue != null)
+                        {
+                            listEmployeeRelate.Add(employeeValue.EmailCongTy);
+                        }
+                    }
+
+
+                    string listEmployeeRelateString1 = string.Join(",", listEmployeeRelate.Distinct());
+                    string listToEmailString1 = string.Join(",", listEmail1.Distinct());
+                    var employeeAsigner1 = await _employeeRepo.GetByIDAsync(existingTask.EmployeeIDRequest ?? 0);
+
+
+                    if (projectTask.Status == 3 && existingTask.Status != projectTask.Status && listEmployeeRelateString1.Count() > 0)
+                    {
+                        SendEmailReceiveProjectTaskParam sendEmailContent1 = new SendEmailReceiveProjectTaskParam
+                        {
+                            emailRecive = listToEmailString1,
+                            emailCC = listEmployeeRelateString1,
+                            projectTaskName = existingTask.Mission,
+                            projectTaskCode = existingTask.Code,
+                            nameAsigner = employeeAsigner1.FullName,
+                            startDate = existingTask.PlanStartDate?.ToString("dd/MM/yyyy") ?? "",
+                            endDate = existingTask.PlanEndDate?.ToString("dd/MM/yyyy") ?? "",
+                            completedDate = DateTime.Now.ToString("dd/MM/yyyy"),
+                        };
+                        _ = Task.Run(() => _sendEmailService.SendEmailCompleteProjectTask(sendEmailContent1));
+
+                    }
+                    existingTask.Status = projectTask.Status;
+
+
                     existingTask.Mission = projectTask.Mission;
                     existingTask.Description = projectTask.Description;
-                    //existingTask.Priority = projectTask.Priority;
                     existingTask.ProjectID = projectTask.ProjectID;
                     existingTask.EmployeeIDRequest = projectTask.EmployeeIDRequest;
                     existingTask.IsPersonalProject = projectTask.IsPersonalProject;
                     existingTask.IsAdditional = projectTask.IsAdditional;
                     existingTask.TaskComplexity = projectTask.TaskComplexity;
                     existingTask.ParentID = projectTask.ParentID;
-                    //if (existingTask.ProjectTaskTypeID != projectTask.ProjectTaskTypeID)
-                    //{
-                    //    existingTask.Code = _projectTaskRepo.UpdateProjectTaskCodeByType(projectTask.ProjectTaskTypeID ?? 0, existingTask.Code).Trim();
-                    //}
                     existingTask.TypeProjectItem = projectTask.TypeProjectItem;
+
                     if (existingTask.IsApproved == null || existingTask.IsApproved <= 1)
                     {
                         if (existingTask.EmployeeIDRequest > 0)
@@ -1070,7 +921,6 @@ namespace RERPAPI.Controllers.Project
                 }
                 else
                 {
-
                     var newProjectTask = new ProjectItem
                     {
                         ProjectID = projectTask.ProjectID,
@@ -1111,20 +961,17 @@ namespace RERPAPI.Controllers.Project
                         }
                     }
 
-                    if (projectTask.IsPersonalProject != null && projectTask.IsPersonalProject == true)
+                     if (projectTask.ProjectID != null && projectTask.ProjectID > 0)
                     {
-                        var employeeById = _employeeRepo.GetByID(currentUser.EmployeeID);
-                        //newProjectTask.Code = _projectTaskRepo.GenerateProjectItemPertionalCode(employeeById.Code).Trim();
-                        newProjectTask.Code = _projectTaskRepo.GenerateProjectTaskCodeTime(projectTask.TypeProjectItem??1).Trim();
-                    }else if (projectTask.ProjectID != null && projectTask.ProjectID > 0)
-                    {
-                        //newProjectTask.Code = _projectTaskRepo.GenerateProjectItemCode(projectTask.ProjectID ?? 0).Trim();
                         newProjectTask.Code = _projectItemRepo.GenerateProjectItemCode(projectTask.ProjectID ?? 0).Trim();
 
                     }
-
-                    //newProjectTask.Code = _projectTaskRepo.GenerateProjectTaskCodeTime(projectTask.ProjectTaskTypeID ?? 1).Trim();
-
+                    else
+                    {
+                        //var employeeById = _employeeRepo.GetByID(currentUser.EmployeeID);
+                        newProjectTask.Code = _projectTaskRepo.GenerateProjectTaskCodeTime(projectTask.TypeProjectItem ?? 1).Trim();
+                    }
+                    
 
                     if (projectTask.EmployeeIDRequest > 0)
                     {
@@ -1156,10 +1003,6 @@ namespace RERPAPI.Controllers.Project
 
                             if (emp != currentUser.EmployeeID)
                             {
-                                //sendEmailContent.nameRecive = employeeValue.FullName;
-                                //sendEmailContent.emailRecive = employeeValue.EmailCongTy;
-                                //sendEmailContent.role = "Người thực hiện";
-                                //await _sendEmailService.SendEmailReceiveProjectTask(sendEmailContent);
                                 listEmail.Add(employeeValue.EmailCongTy);
                             }
                             if (await _projectTaskEmployeeRepo.CreateAsync(projectTaskEmployee) <= 0)
@@ -1180,7 +1023,6 @@ namespace RERPAPI.Controllers.Project
 
                         }
 
-                        //leaders = SQLHelper<UserTeam>.ProcedureToListModel("spGetLeaderTeam", new string[] { "@p_UserID" }, new object[] { usersString });
                         var param = new
                         {
                             p_UserID = usersString
@@ -1251,19 +1093,8 @@ namespace RERPAPI.Controllers.Project
                     }
 
 
-                    // Gửi email cho người giao việc nếu người giao việc khác với người tạo công việc
-                    //if (projectTask.EmployeeID != currentUser.EmployeeID)
-                    //{
-                    //    var employeeValue = await _employeeRepo.GetByIDAsync(projectTask.EmployeeID ?? 0);
-                    //    sendEmailContent.nameRecive = employeeValue.FullName;
-                    //    sendEmailContent.emailRecive = employeeValue.EmailCongTy;
-                    //    sendEmailContent.role = "Người giao việc";
-                    //    sendEmailContent.emailCC = listEmployeeRelateString;
-                    //    await _sendEmailService.SendEmailReceiveProjectTask(sendEmailContent);
-                    //}
-
-                    string listEmployeeRelateString = string.Join(",", listEmployeeRelate);
-                    string listToEmailString = string.Join(",", listEmail);
+                    string listEmployeeRelateString = string.Join(",", listEmployeeRelate.Distinct());
+                    string listToEmailString = string.Join(",", listEmail.Distinct());
                     var employeeAsigner = await _employeeRepo.GetByIDAsync(newProjectTask.EmployeeIDRequest ?? 0);
                     if (listEmployeeRelateString.Count() > 0)
                     {
@@ -1278,11 +1109,9 @@ namespace RERPAPI.Controllers.Project
                             discription = newProjectTask.Description,
                             emailCC = listEmployeeRelateString
                         };
-                        //await _sendEmailService.SendEmailReceiveProjectTask(sendEmailContent);
-
                         _ = Task.Run(() => _sendEmailService.SendEmailReceiveProjectTask(sendEmailContent));
-
                     }
+
                     if (projectTask.ProjectTaskChecklists != null && projectTask.ProjectTaskChecklists.Count > 0)
                     {
                         foreach (var checklist in projectTask.ProjectTaskChecklists)
@@ -1341,65 +1170,6 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-        //[HttpPut("{id}")]
-        //public async Task<IActionResult> Put(int id, [FromBody] ProjectTask projectTask)
-        //{
-        //    try
-        //    {
-        //        ProjectTask existingTask = await _projectTaskRepo.GetByIDAsync(id);
-        //        if (existingTask == null)
-        //        {
-        //            return NotFound(ApiResponseFactory.Fail(null, "Project task not found."));
-        //        }
-        //        var result = await _projectTaskRepo.UpdateAsync(projectTask);
-        //        return Ok(ApiResponseFactory.Success(result));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ApiResponseFactory.Fail(ex, "Failed to update project task."));
-        //    }
-        //}
-        //[HttpPost("reorder")]
-        //public async Task<IActionResult> Reorder([FromBody] List<ProjectTask> projectTasks)
-        //{
-        //    try
-        //    {
-        //        foreach (var task in projectTasks)
-        //        {
-        //            ProjectTask existingTask = await _projectTaskRepo.GetByIDAsync(task.ID);
-        //            if (existingTask != null)
-        //            {
-        //                existingTask.OrderIndex = task.OrderIndex;
-        //                await _projectTaskRepo.UpdateAsync(existingTask);
-        //            }
-        //        }
-        //        return Ok(ApiResponseFactory.Success(null, "Project tasks reordered successfully."));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ApiResponseFactory.Fail(ex, "Failed to reorder project tasks."));
-        //    }
-        //}
-
-
-        //[HttpDelete("{id}")]
-        //public async Task<IActionResult> Delete(int id)
-        //{
-        //    try
-        //    {
-        //        ProjectTask existingTask = await _projectTaskRepo.GetByIDAsync(id);
-        //        if (existingTask == null)
-        //        {
-        //            return NotFound(ApiResponseFactory.Fail(null, "Project task not found."));
-        //        }
-        //        var result = await _projectTaskRepo.DeleteAsync(id);
-        //        return Ok(ApiResponseFactory.Success(result));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ApiResponseFactory.Fail(ex, "Failed to delete project task."));
-        //    }
-        //}
 
 
         [HttpPost("Approve")]
@@ -1414,10 +1184,135 @@ namespace RERPAPI.Controllers.Project
                 List<ProjectTaskApprove> result = new List<ProjectTaskApprove>();
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
-
                 foreach (var taskApprove in projectTaskIDs)
                 {
                     var exitProjectTask = _projectItemRepo.GetByID(taskApprove);
+
+                    #region GỬI MAIL KHI DUYỆT CÔNG VIỆC
+
+
+
+
+                    var listEmail1 = new List<String>();
+
+                    var listEmployee = _projectTaskEmployeeRepo.GetAll(x => x.ProjectTaskID == taskApprove && x.Type == 1).Select(x => x.EmployeeID).ToList();
+
+                    if (listEmployee != null && listEmployee.Count > 0)
+                    {
+                        foreach (var emp in listEmployee)
+                        {
+                            var employeeValue = await _employeeRepo.GetByIDAsync(emp ?? 0);
+
+                            if (emp != currentUser.EmployeeID)
+                            {
+                                listEmail1.Add(employeeValue.EmailCongTy);
+                            }
+
+                        }
+                    }
+                    List<UserTeam> leaders1 = new List<UserTeam>();
+
+
+
+                    string usersString = "";
+
+                    if (listEmployee.Count > 0)
+                    {
+                        usersString = string.Join(",", listEmployee.Distinct());
+
+                    }
+
+                    var param = new
+                    {
+                        p_UserID = usersString
+                    };
+                    leaders1 = await SqlDapper<UserTeam>.ProcedureToListTAsync("spGetLeaderTeam", param);
+
+                    var listEmployeeRelate = _projectTaskEmployeeRepo.GetAll(x => x.ProjectTaskID == taskApprove && x.Type == 2).Select(x => x.EmployeeID).ToList();
+
+                    if (listEmployeeRelate != null && listEmployeeRelate.Count > 0)
+                    {
+                        if (!listEmployeeRelate.Contains(currentUser.EmployeeID) && !listEmployeeRelate.Contains(currentUser.EmployeeID) && exitProjectTask.EmployeeIDRequest != currentUser.EmployeeID)
+                        {
+                            listEmployeeRelate.Add(currentUser.EmployeeID);
+                        }
+
+
+                        if (leaders1.Count > 0)
+                        {
+                            foreach (var item in leaders1)
+                            {
+                                if (item.LeaderID != null && !listEmployeeRelate.Contains(item.LeaderID ?? -1))
+                                {
+                                    listEmployeeRelate.Add(item.LeaderID ?? 0);
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (!listEmployee.Contains(currentUser.EmployeeID) && exitProjectTask.EmployeeIDRequest != currentUser.EmployeeID)
+                        {
+                            listEmployeeRelate.Add(currentUser.EmployeeID);
+                        }
+
+                        if (leaders1.Count > 0)
+                        {
+                            foreach (var item in leaders1)
+                            {
+                                if (item.LeaderID != null && !listEmployeeRelate.Contains(item.LeaderID ?? -1))
+                                {
+                                    listEmployeeRelate.Add(item.LeaderID ?? 0);
+                                }
+                            }
+                        }
+                    }
+                    var listEmployeeRelate2 = new List<string>();
+                    foreach (var emp in listEmployeeRelate)
+                    {
+                        var employeeValue = await _employeeRepo.GetByIDAsync(emp ?? 0);
+                        if (employeeValue != null)
+                        {
+                            listEmployeeRelate2.Add(employeeValue.EmailCongTy);
+                        }
+                    }
+
+
+                    string listEmployeeRelateString1 = string.Join(",", listEmployeeRelate2.Distinct());
+                    string listToEmailString1 = string.Join(",", listEmail1.Distinct());
+                    var employeeAsigner1 = await _employeeRepo.GetByIDAsync(exitProjectTask.EmployeeIDRequest ?? 0);
+
+
+                    if (listEmployeeRelateString1.Count() > 0)
+                    {
+                        SendEmailReceiveProjectTaskParam sendEmailContent1 = new SendEmailReceiveProjectTaskParam
+                        {
+                            emailRecive = listToEmailString1,
+                            emailCC = listEmployeeRelateString1,
+                            projectTaskName = exitProjectTask.Mission,
+                            projectTaskCode = exitProjectTask.Code,
+                            nameAsigner = employeeAsigner1.FullName,
+                            startDate = exitProjectTask.PlanStartDate?.ToString("dd/MM/yyyy") ?? "",
+                            endDate = exitProjectTask.PlanEndDate?.ToString("dd/MM/yyyy") ?? "",
+                            completedDate = DateTime.Now.ToString("dd/MM/yyyy"),
+                            reviewDate = DateTime.Now.ToString("dd/MM/yyyy"),
+                            reviewDiscription = review,
+                        };
+                        if (isApproved)
+                        {
+                            _ = Task.Run(() => _sendEmailService.SendEmailCompleteReviewProjectTask(sendEmailContent1));
+
+                        }
+                        else
+                        {
+                            _ = Task.Run(() => _sendEmailService.SendEmailRejectReviewProjectTask(sendEmailContent1));
+
+                        }
+                    }
+
+                    #endregion
+
+
                     if (exitProjectTask == null || exitProjectTask.ID <= 0)
                     {
                         return BadRequest(ApiResponseFactory.Fail(null, "Can't fount project task."));
