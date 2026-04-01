@@ -28,8 +28,9 @@ namespace RERPAPI.Controllers.Project
         private readonly BillExportRepo _billExportRepo;
         private readonly ProductGroupRepo _productGroupRepo;
         private readonly InventoryStockRepo _inventoryStockRepo;
+        ProjectPartlistPriceRequestNoteRepo _projectPartlistPriceRequestNoteRepo;
         UnitCountKTRepo _unitCountKTRepo;
-        public ProjectPartlistController(ProjectPartListRepo projectPartlistRepo, ProductSaleRepo productSaleRepo, FirmRepo firmRepo, UnitCountRepo unitCountRepo, ProductRTCRepo productRTCRepo, ProjectPartlistPriceRequestRepo priceRequestRepo, ProjectPartlistVersionRepo partlistVersionRepo, ProjectPartlistPurchaseRequestRepo partlistPurchaseRequestRepo, UnitCountKTRepo unitCountKTRepo, WarehouseRepo warehouseRepo, BillExportRepo billExportRepo, ProductGroupRepo productGroupRepo, InventoryStockRepo inventoryStockRepo)
+        public ProjectPartlistController(ProjectPartListRepo projectPartlistRepo, ProductSaleRepo productSaleRepo, FirmRepo firmRepo, UnitCountRepo unitCountRepo, ProductRTCRepo productRTCRepo, ProjectPartlistPriceRequestRepo priceRequestRepo, ProjectPartlistVersionRepo partlistVersionRepo, ProjectPartlistPurchaseRequestRepo partlistPurchaseRequestRepo, UnitCountKTRepo unitCountKTRepo, WarehouseRepo warehouseRepo, BillExportRepo billExportRepo, ProductGroupRepo productGroupRepo, InventoryStockRepo inventoryStockRepo, ProjectPartlistPriceRequestNoteRepo projectPartlistPriceRequestNoteRepo)
         {
             _projectPartlistRepo = projectPartlistRepo;
             _productSaleRepo = productSaleRepo;
@@ -44,6 +45,7 @@ namespace RERPAPI.Controllers.Project
             _billExportRepo = billExportRepo;
             _productGroupRepo = productGroupRepo;
             _inventoryStockRepo = inventoryStockRepo;
+            _projectPartlistPriceRequestNoteRepo = projectPartlistPriceRequestNoteRepo;
         }
         [HttpPost("get-all")]
         public IActionResult GetAll(ProjectPartlistParam param)
@@ -207,10 +209,16 @@ namespace RERPAPI.Controllers.Project
                         DateRequest = DateTime.Now,
                         Deadline = item.DeadlinePriceRequest,
                         Quantity = item.QtyFull,
-                        IsDeleted = false
+                        IsDeleted = false,
+                        //Note = item.Note
                     };
-
                     await _priceRequestRepo.CreateAsync(priceRequest);
+                    var priceRequestNote = new ProjectPartlistPriceRequestNote
+                    {
+                        ProjectPartlistPriceRequestID = priceRequest.ID,
+                        Note = item.Note,
+                    };
+                    await _projectPartlistPriceRequestNoteRepo.CreateAsync(priceRequestNote);
                 }
 
                 return Ok(ApiResponseFactory.Success(null, "Yêu cầu báo giá thành công!"));
@@ -220,6 +228,88 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi: {ex.Message}"));
             }
         }
+        #region yêu cầu báo giá lại
+        [HttpPost("price-request-again")]
+        public async Task<IActionResult> PriceRequestAgain([FromBody] List<ProjectPartlistDTO> request)
+        {
+            try
+            {
+                string messageError;
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                // ===== LOOP 1: VALIDATION =====
+                foreach (var item in request)
+                {
+                    if (item.ID <= 0) continue;
+                    if (!item.IsLeaf) continue; // Bỏ qua TẤT CẢ node cha (mọi cấp)
+                    if (!_projectPartlistRepo.CheckValidate(item, out messageError))
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, $"Lỗi: {messageError}"));
+                    }
+                    if(item.StatusPriceRequest < 1)
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, $"Vật tư Stt [{item.STT}] chưa được báo giá lần nào.\nVui lòng chọn chức năng báo giá!"));
+                    }
+                    if (item.IsApprovedTBPNewCode == false && item.IsNewCode == true)
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, $"Vật tư Stt [{item.STT}] chưa được TBP duyệt mới.\nVui lòng kiểm tra lại!"));
+                    }
+
+                }
+
+                // ===== LOOP 2: XỬ LÝ =====
+                foreach (var item in request)
+                {
+                    if (item.ID <= 0) continue;
+                    //var existingRequest = _priceRequestRepo.GetAll(x => x.ProjectPartListID == item.ID && x.IsDeleted == false)
+                    //                                          .OrderByDescending(x => x.StatusRequest)
+                    //                                          .FirstOrDefault();
+                    // if (item.StatusPriceRequest > 0 && (item.DatePriceQuote == null || item.DatePriceQuote > threeMonthsAgo)) continue;
+                    //if (existingRequest != null && existingRequest.StatusRequest > 0 && (item.DatePriceQuote == null || item.DatePriceQuote > threeMonthsAgo)) continue;
+
+                    // Cập nhật ProjectPartList (cả cha và con)
+                    var partList = _projectPartlistRepo.GetByID(item.ID);
+                    if (partList == null || partList.ID <= 0) continue;
+
+                    partList.StatusPriceRequest = 1;
+                    partList.DeadlinePriceRequest = item.DeadlinePriceRequest;
+                    partList.DatePriceRequest = DateTime.Now;
+                    partList.DatePriceQuote = null;
+                    await _projectPartlistRepo.UpdateAsync(partList);
+                    // CHỈ TẠO PRICEREQUEST CHO NODE LÁ
+                    if (!item.IsLeaf) continue;
+
+                    var priceRequest = new ProjectPartlistPriceRequest
+                    {
+                        ProjectPartListID = item.ID,
+                        EmployeeID = currentUser.EmployeeID,
+                        ProductCode = item.ProductCode,
+                        ProductName = item.GroupMaterial,
+                        StatusRequest = 1,
+                        DateRequest = DateTime.Now,
+                        Deadline = item.DeadlinePriceRequest,
+                        Quantity = item.QtyFull,
+                        IsDeleted = false,
+                        //Note = item.Note
+                    };
+                    await _priceRequestRepo.CreateAsync(priceRequest);
+                    var priceRequestNote = new ProjectPartlistPriceRequestNote
+                    {
+                        ProjectPartlistPriceRequestID = priceRequest.ID,
+                        Note = item.Note,
+                    };
+                    await _projectPartlistPriceRequestNoteRepo.CreateAsync(priceRequestNote);
+                }
+
+                return Ok(ApiResponseFactory.Success(null, "Yêu cầu báo giá lại thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi: {ex.Message}"));
+            }
+        }
+        #endregion
 
         [HttpPost("cancel-price-request")]
         public async Task<IActionResult> CancelPriceRequest([FromBody] List<ProjectPartlistDTO> request)
