@@ -18,4 +18,6 @@ public partial class ProjectType
     public int? ApprovedTBPID { get; set; }
 
     public bool? IsDeleted { get; set; }
+
+    public bool? IsHide { get; set; }
 }

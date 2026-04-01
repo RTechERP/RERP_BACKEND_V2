@@ -114,7 +114,7 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                     //int currentStep = item.Step;
                     //int paymentOrderTypeID = item.PaymentOrderTypeID ?? 0;
                     var paymentOrderType = _typeRepo.GetByID(item.PaymentOrderTypeID ?? 0);
-
+                    statusText = item.PaymentOrderLog.IsApproved == 1 ? "duyệt" : (item.PaymentOrderLog.IsApproved == 2 ? "hủy duyệt" : "bổ xung chứng từ");
                     if (item.IsSpecialOrder == true)
                     {
                         if (item.Action.ButtonActionGroup == "btnTBP") actionStep = 2;
@@ -170,7 +170,7 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
 
                     if (actionStep == 0)
                     {
-                        //return ApiResponseFactory.Fail(null, $"Đề nghị [{item.Code}] không cần dropdownButtonText.Trim().ToLower() buttonText.Trim().ToLower()!");
+                        //messageFails.Add( $"Đề nghị [{item.Code}] không cần {dropdownButtonText.Trim().ToLower()} buttonText.Trim().ToLower()!");
                         return 0;
                     }
 
@@ -182,7 +182,7 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
 
                         if (logDb.EmployeeID != _currentUser.EmployeeID)
                         {
-                            //ApiResponseFactory.Fail(null, $"Bạn không thể {statusText} đề nghị [{item.Code}]!");
+                            messageFails.Add($"Bạn không thể {statusText} đề nghị [{item.Code}]!");
                             continue;
                         }
                     }
@@ -302,10 +302,13 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                                 if (item.Action.ButtonActionName == "btnUpdateDocument") log.IsRequestAppendFileAC = true;
                             }
                         }
-                        await UpdateAsync(log);
+                        int resultUpdate = await UpdateAsync(log);
                     }
                 }
-
+                if (messageFails.Count > 0)
+                {
+                    throw new Exception(string.Join("\r\n", messageFails));
+                }
                 return 1;
             }
             catch (Exception ex)
