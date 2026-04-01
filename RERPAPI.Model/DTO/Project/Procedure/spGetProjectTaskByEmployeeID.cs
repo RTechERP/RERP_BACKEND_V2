@@ -143,6 +143,7 @@ namespace RERPAPI.Model.DTO.Project.Procedure
         public int? DepartmentAssigneeID { get; set; }
         public string? DepartmentAssignerName { get; set; }
         public string? DepartmentAssigneeName { get; set; }
-
+        public int? AsigneeEmployeeID { get; set; }
+        public string? AsigneeEmployeeFullName { get; set; }
     }
 }
