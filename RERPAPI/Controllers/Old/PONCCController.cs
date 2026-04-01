@@ -716,7 +716,7 @@ namespace RERPAPI.Controllers.Old
                     {
                         var id = Convert.ToInt32(idRequestBuy);
                         PONCCDetailRequestBuy poRequestBuy = _pONCCDetailRequestBuyRepo.GetAll(x =>
-                        x.PONCCDetailID == item.ID && x.PONCCDetailID == id).FirstOrDefault();
+                        x.PONCCDetailID == item.ID && x.ProjectPartlistPurchaseRequestID == id).FirstOrDefault();
 
                         poRequestBuy = poRequestBuy ?? new PONCCDetailRequestBuy();
                         poRequestBuy.PONCCDetailID = item.ID;

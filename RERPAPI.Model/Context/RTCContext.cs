@@ -826,6 +826,24 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<ProjectSurveyFile> ProjectSurveyFiles { get; set; }
 
+    public virtual DbSet<ProjectTask> ProjectTasks { get; set; }
+
+    public virtual DbSet<ProjectTaskAdditional> ProjectTaskAdditionals { get; set; }
+
+    public virtual DbSet<ProjectTaskApprove> ProjectTaskApproves { get; set; }
+
+    public virtual DbSet<ProjectTaskAttachment> ProjectTaskAttachments { get; set; }
+
+    public virtual DbSet<ProjectTaskChecklist> ProjectTaskChecklists { get; set; }
+
+    public virtual DbSet<ProjectTaskEmployee> ProjectTaskEmployees { get; set; }
+
+    public virtual DbSet<ProjectTaskGroup> ProjectTaskGroups { get; set; }
+
+    public virtual DbSet<ProjectTaskLog> ProjectTaskLogs { get; set; }
+
+    public virtual DbSet<ProjectTaskType> ProjectTaskTypes { get; set; }
+
     public virtual DbSet<ProjectTreeFolder> ProjectTreeFolders { get; set; }
 
     public virtual DbSet<ProjectType> ProjectTypes { get; set; }
@@ -3254,6 +3272,8 @@ public partial class RTCContext : DbContext
         modelBuilder.Entity<Employee>(entity =>
         {
             entity.ToTable("Employee");
+
+            entity.HasIndex(e => new { e.ID, e.DepartmentID }, "IX_Employee_Department");
 
             entity.Property(e => e.AnCa).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.AnhCBNV).HasColumnType("ntext");
@@ -7673,6 +7693,8 @@ public partial class RTCContext : DbContext
         {
             entity.ToTable("PaymentOrder");
 
+            entity.HasIndex(e => new { e.DateOrder, e.DatePayment, e.TypeOrder, e.PaymentOrderTypeID, e.EmployeeID, e.IsDelete }, "IX_PaymentOrder_Filter");
+
             entity.HasIndex(e => e.Code, "Index_PaymentOrder_Code");
 
             entity.HasIndex(e => e.CustomerID, "Index_PaymentOrder_CustomerID");
@@ -7897,6 +7919,8 @@ public partial class RTCContext : DbContext
         modelBuilder.Entity<PaymentOrderType>(entity =>
         {
             entity.ToTable("PaymentOrderType");
+
+            entity.HasIndex(e => e.ID, "IX_PaymentOrderType");
 
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
@@ -8462,21 +8486,33 @@ public partial class RTCContext : DbContext
                 .IsUnicode(false);
             entity.Property(e => e.CreatedBy).HasMaxLength(50);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.Description).HasComment("Mô tả chi tiết công việc");
+            entity.Property(e => e.EmployeeCreateID).HasComment("ID của nhân viên tạo bản ghi");
             entity.Property(e => e.EmployeeIDRequest).HasComment("Người giao công việc");
             entity.Property(e => e.EmployeeRequestID).HasComment("lưu ID người yêu cầu lấy từ bảng Employee, nếu  = 0 thì là tên KH");
             entity.Property(e => e.EmployeeRequestName)
                 .HasMaxLength(550)
                 .HasComment("lưu tên người yêu cầu lấy từ bảng Employee, nếu  = 0 thì là tên KH");
+            entity.Property(e => e.IsAdditional)
+                .HasDefaultValue(false)
+                .HasComment("Trạng thái đánh giá xem có phát sinh không ");
             entity.Property(e => e.IsApproved).HasComment("0: Chờ duyệt kế hoạch; 1:Leader duyệt kế hoạch; 2:Chờ duyệt thực tế; 3:Leader Duyệt thực tế");
+            entity.Property(e => e.IsPersonalProject)
+                .HasDefaultValue(false)
+                .HasComment("Trạng thái đánh giá xem đây có phải là công việc cá nhân hay không");
             entity.Property(e => e.ItemLate).HasComment("1:Hạng mục quá hạn,\r\n0: Hạng mục đúng hạn");
             entity.Property(e => e.Location).HasMaxLength(550);
             entity.Property(e => e.PercentItem).HasColumnType("decimal(18, 1)");
+            entity.Property(e => e.PercentOverTime)
+                .HasComment("Phần trăm chênh lệch quá hạn")
+                .HasColumnType("decimal(3, 2)");
             entity.Property(e => e.PercentageActual).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.PlanEndDate).HasColumnType("datetime");
             entity.Property(e => e.PlanStartDate).HasColumnType("datetime");
             entity.Property(e => e.STT)
                 .HasMaxLength(50)
                 .IsUnicode(false);
+            entity.Property(e => e.TaskComplexity).HasComment("Độ phức tạp của công việc (1 - 5)");
             entity.Property(e => e.TimeSpan).HasColumnType("decimal(18, 1)");
             entity.Property(e => e.TotalDayActual).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.TotalDayPlan).HasColumnType("decimal(18, 1)");
@@ -8694,12 +8730,22 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.DatePriceQuote).HasColumnType("datetime");
             entity.Property(e => e.DateRequest).HasColumnType("datetime");
             entity.Property(e => e.Deadline).HasColumnType("datetime");
+            entity.Property(e => e.EffectiveDate)
+                .HasComment("hiệu lực")
+                .HasColumnType("datetime");
             entity.Property(e => e.HistoryPrice).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.LeadTime).HasMaxLength(100);
+            entity.Property(e => e.LeadTimeTechnical)
+                .HasDefaultValue(0)
+                .HasComment("LeadTime cần hàng (Kỹ thuật)");
             entity.Property(e => e.Maker).HasMaxLength(150);
             entity.Property(e => e.Quantity).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.StatusRequest).HasComment("1:Yêu cầu báo giá; 2:Đã báo giá;3: Từ chối báo giá");
+            entity.Property(e => e.TargetPrice)
+                .HasDefaultValue(0m)
+                .HasComment("Giá target")
+                .HasColumnType("decimal(18, 2)");
             entity.Property(e => e.TotaMoneyVAT).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.TotalImportPrice).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.TotalPrice).HasColumnType("decimal(18, 2)");
@@ -9094,6 +9140,218 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
+        modelBuilder.Entity<ProjectTask>(entity =>
+        {
+            entity.ToTable("ProjectTask", tb => tb.HasComment("Bảng lưu  công việc của dự án"));
+
+            entity.Property(e => e.Code)
+                .HasMaxLength(50)
+                .IsFixedLength();
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.DueDate).HasColumnType("datetime");
+            entity.Property(e => e.IsAdditional).HasComment("1. Có công việc phát sinh hay không");
+            entity.Property(e => e.IsPersonalProject).HasComment("1: Công việc cá nhân");
+            entity.Property(e => e.PercentOverTime)
+                .HasComment("1. Phần trăm chênh lệch quá hạn")
+                .HasColumnType("decimal(3, 2)");
+            entity.Property(e => e.PlanEndDate).HasColumnType("datetime");
+            entity.Property(e => e.PlanStartDate).HasColumnType("datetime");
+            entity.Property(e => e.ReviewStatus).HasComment("1: Chờ duyệt, 2: Đã hoàn thành, 3: Chưa hoàn thành, default: chưa duyệt");
+            entity.Property(e => e.StartDate).HasColumnType("datetime");
+            entity.Property(e => e.Status).HasComment("1: Chưa làm, 2: Đang làm, 3: Hoàn thành, 4: Pending");
+            entity.Property(e => e.TaskComplexity).HasComment("1. Độ phức tạp của công việc");
+            entity.Property(e => e.Title).HasMaxLength(150);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectTaskAdditional>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ProjectT__3214EC273D294541");
+
+            entity.ToTable("ProjectTaskAdditional", tb => tb.HasComment("Bảng lưu phát sinh cho công việc của dự án"));
+
+            entity.Property(e => e.ID).HasComment("ID tự tăng");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Description).HasComment("Nội dung cho phát sinh");
+            entity.Property(e => e.IsDeleted).HasComment("Đánh dấu xóa mềm");
+            entity.Property(e => e.ProjectTaskID).HasComment("Để lưu ID của bảng ProjectItem");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người cập nhật bản ghi");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật bản ghi")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectTaskApprove>(entity =>
+        {
+            entity.ToTable("ProjectTaskApprove", tb => tb.HasComment("Bảng lưu chi tiết duyệt công việc của dự án"));
+
+            entity.Property(e => e.ID).HasComment("ID tự tăng");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.EmployeeID).HasComment("ID của bảng Employee");
+            entity.Property(e => e.IsApprove).HasComment("Trạng thái duyệt xem có duyệt hay không");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái xóa mềm ");
+            entity.Property(e => e.ProjectTaskID).HasComment("ID của bảng ProjectItem");
+            entity.Property(e => e.Review).HasComment("Nội dung đánh giá ");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người cập nhật bản ghi");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật bản ghi")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectTaskAttachment>(entity =>
+        {
+            entity.ToTable("ProjectTaskAttachment", tb => tb.HasComment("Bảng lưu chi tiết đính kèm (ảnh, video, link) công việc của dự án"));
+
+            entity.Property(e => e.ID).HasComment("ID tự tăng ");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.EmployeeUploadID).HasComment("ID của nhân viên tải file lên");
+            entity.Property(e => e.FileName).HasComment("Tên file hoặc tên link");
+            entity.Property(e => e.FilePath).HasComment("Đường dẫn file trên server hoặc đường dẫn link");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái xóa mềm ");
+            entity.Property(e => e.ProjectTaskID).HasComment("ID của bảng ProjectItem");
+            entity.Property(e => e.Type).HasComment("1: Files, 2: Links");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người cập nhật bản ghi");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.UploadedDate)
+                .HasComment("Ngày tải file lên")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectTaskChecklist>(entity =>
+        {
+            entity.ToTable("ProjectTaskChecklist", tb => tb.HasComment("Bảng lưu chi tiết checklist công việc của dự án"));
+
+            entity.Property(e => e.ID).HasComment("ID tự tăng");
+            entity.Property(e => e.ChecklistTitle).HasComment("Nội dung của checklist ");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái khóa mềm");
+            entity.Property(e => e.IsDone).HasComment("Trạng thái của checklist xem nó đã hoàn thành hày chưa");
+            entity.Property(e => e.OrderIndex).HasComment("Vị trí của CheckList");
+            entity.Property(e => e.ProjectTaskID).HasComment("ID của bảng ProjectItem");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người cập nhật bản ghi");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật bản ghi")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectTaskEmployee>(entity =>
+        {
+            entity.ToTable("ProjectTaskEmployee", tb => tb.HasComment("Bảng lưu nhân viên tham gia công việc của dự án"));
+
+            entity.Property(e => e.ID).HasComment("ID tự tăng");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.EmployeeID).HasComment("ID của bảng Employee");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái khóa mềm ");
+            entity.Property(e => e.ProjectTaskID).HasComment("ID của bảng ProjectItem");
+            entity.Property(e => e.Type).HasComment("1: assignee, 2: related");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người cập nhật bản ghi");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật bản ghi")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectTaskGroup>(entity =>
+        {
+            entity.ToTable("ProjectTaskGroup", tb => tb.HasComment("Bảng lưu nhóm công việc của dự án"));
+
+            entity.Property(e => e.Color)
+                .HasMaxLength(50)
+                .IsFixedLength();
+        });
+
+        modelBuilder.Entity<ProjectTaskLog>(entity =>
+        {
+            entity.ToTable("ProjectTaskLog", tb => tb.HasComment("Bảng lưu chi tiết log khi thay đổi thông tin công việc của dự án"));
+
+            entity.Property(e => e.ID).HasComment("ID tự tăng");
+            entity.Property(e => e.ContentLog).HasComment("Nội dung chi tiết log");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái khóa mềm ");
+            entity.Property(e => e.ProjectTaskID).HasComment("ID của bảng ProjectItem");
+            entity.Property(e => e.TypeLog)
+                .HasMaxLength(150)
+                .HasComment("Loại Log (người dùng có thể tự nhập tên loại log)");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Ngươì cập nhật bản ghi");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật bản ghi")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectTaskType>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ProjectT__3214EC27C9103EFC");
+
+            entity.ToTable("ProjectTaskType", tb => tb.HasComment("Bảng lưu chi tiết loại công việc của dự án"));
+
+            entity.Property(e => e.ID).HasComment("ID tự tăng");
+            entity.Property(e => e.Code)
+                .HasMaxLength(50)
+                .HasComment("Mã loại công việc");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.DepartmentID).HasComment("ID của phòng ban của công việc đó");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái xóa mềm");
+            entity.Property(e => e.TypeName)
+                .HasMaxLength(150)
+                .HasComment("Tên loại công việc");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người cập nhật bản ghi");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật bản ghi")
+                .HasColumnType("datetime");
+        });
+
         modelBuilder.Entity<ProjectTreeFolder>(entity =>
         {
             entity.ToTable("ProjectTreeFolder");
@@ -9107,6 +9365,7 @@ public partial class RTCContext : DbContext
             entity.ToTable("ProjectType");
 
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.IsHide).HasDefaultValue(false);
             entity.Property(e => e.ProjectTypeCode).HasMaxLength(250);
             entity.Property(e => e.ProjectTypeName).HasMaxLength(250);
             entity.Property(e => e.RootFolder).HasMaxLength(550);

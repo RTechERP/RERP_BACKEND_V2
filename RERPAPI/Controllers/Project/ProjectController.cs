@@ -1270,7 +1270,7 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                var projectTpye = projectTypeRepo.GetAll(x => x.IsDeleted == false);
+                var projectTpye = projectTypeRepo.GetAll(x => x.IsDeleted == false && x.IsHide == false);
                 return Ok(ApiResponseFactory.Success(projectTpye, ""));
             }
             catch (Exception ex)

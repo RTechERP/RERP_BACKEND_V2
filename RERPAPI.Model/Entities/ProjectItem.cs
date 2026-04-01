@@ -93,4 +93,34 @@ public partial class ProjectItem
     public bool IsDeleted { get; set; }
 
     public string? Location { get; set; }
+
+    /// <summary>
+    /// ID của nhân viên tạo bản ghi
+    /// </summary>
+    public int? EmployeeCreateID { get; set; }
+
+    /// <summary>
+    /// Mô tả chi tiết công việc
+    /// </summary>
+    public string? Description { get; set; }
+
+    /// <summary>
+    /// Trạng thái đánh giá xem đây có phải là công việc cá nhân hay không
+    /// </summary>
+    public bool? IsPersonalProject { get; set; }
+
+    /// <summary>
+    /// Trạng thái đánh giá xem có phát sinh không 
+    /// </summary>
+    public bool? IsAdditional { get; set; }
+
+    /// <summary>
+    /// Độ phức tạp của công việc (1 - 5)
+    /// </summary>
+    public int? TaskComplexity { get; set; }
+
+    /// <summary>
+    /// Phần trăm chênh lệch quá hạn
+    /// </summary>
+    public decimal? PercentOverTime { get; set; }
 }

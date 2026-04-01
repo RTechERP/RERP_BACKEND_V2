@@ -12,12 +12,8 @@ namespace RERPAPI.Controllers.Old
     [ApiController]
     public class ProjectInfoController : ControllerBase
     {
-        private readonly ProjectInfoRepo _projectInfoRepo;
-        private readonly ProjectInforEmployeeRepo _projectInforEmployee;
-        public ProjectInfoController(ProjectInfoRepo projectInfoRepo, ProjectInforEmployeeRepo projectInforEmployee)
+        public ProjectInfoController()
         {
-            _projectInfoRepo = projectInfoRepo;
-            _projectInforEmployee = projectInforEmployee;
         }
 
         [HttpGet]
