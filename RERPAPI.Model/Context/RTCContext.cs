@@ -742,6 +742,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<ProductSale> ProductSales { get; set; }
 
+    public virtual DbSet<ProductSaleGroupWarehouseLink> ProductSaleGroupWarehouseLinks { get; set; }
+
     public virtual DbSet<ProductWorking> ProductWorkings { get; set; }
 
     public virtual DbSet<ProductWorkingAudit> ProductWorkingAudits { get; set; }
@@ -8242,6 +8244,19 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.SupplierName).HasMaxLength(500);
             entity.Property(e => e.Unit).HasMaxLength(50);
             entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProductSaleGroupWarehouseLink>(entity =>
+        {
+            entity.ToTable("ProductSaleGroupWarehouseLink");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.ProductGroupWarehouseID).HasComment("Link bảng ProductGroupWarehouse");
+            entity.Property(e => e.ProductSaleID).HasComment("Link bảng ProductSale");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
