@@ -5719,6 +5719,7 @@ public partial class RTCContext : DbContext
                 .HasComment("Ngày tạo bản ghi")
                 .HasColumnType("datetime");
             entity.Property(e => e.EssayGuidance).HasComment("Hướng dẫn cho câu hỏi tự luận - đáp án số");
+            entity.Property(e => e.Image).HasMaxLength(500);
             entity.Property(e => e.IsAnswerNumberValue).HasComment("Cờ đánh dấu câu trả lời có phải là giá trị số không");
             entity.Property(e => e.IsDeleted).HasComment("Cờ đánh dấu bản ghi đã bị xóa mềm (0: không xóa, 1: đã xóa)");
             entity.Property(e => e.Point)

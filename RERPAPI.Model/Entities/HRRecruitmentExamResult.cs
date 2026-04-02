@@ -79,4 +79,6 @@ public partial class HRRecruitmentExamResult
     public bool? IsDeleted { get; set; }
 
     public int? RemainingSeconds { get; set; }
+
+    public int? HiringRequestID { get; set; }
 }
