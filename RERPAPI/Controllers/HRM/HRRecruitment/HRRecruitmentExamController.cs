@@ -10,6 +10,7 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.HRM;
 using RERPAPI.Repo.GenericEntity.HRRecruitmentExamRepo;
 using RERPAPI.Repo.GenericEntity.Technical.KPI;
 
@@ -30,7 +31,8 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         ConfigSystemRepo _configSystemRepo;
         HiringRequestExamRepo _hiringRequestExamRepo;
         HRHiringRequestRepo _hiringRequestRepo;
-        public HRRecruitmentExamController(HRRecruitmentQuestionRepo hrRecruitmentQuestionRepo, HRRecruitmentAnswersRepo hrRecruitmentAnswersRepo, HRRecruitmentRightAnswearsRepo hrRecruitmentRightAnswearsRepo, HRRecruitmentExamRepo hRRecruitmentExamRepo, HRRecruitmentExamResultRepo hrRecruitmentExamResultRepo, HRRecruitmentExamResultDetailRepo hrRecruitmentExamResultDetailRepo, HRRecruitmentExamResultImageRepo hrRecruitmentExamResultImageRepo, ConfigSystemRepo configSystemRepo, HiringRequestExamRepo hiringRequestExamRepo, HRHiringRequestRepo hiringRequestRepo)
+        HRRecruitmentCandidateRepo _hrRecruitmentCandidateRepo;
+        public HRRecruitmentExamController(HRRecruitmentQuestionRepo hrRecruitmentQuestionRepo, HRRecruitmentAnswersRepo hrRecruitmentAnswersRepo, HRRecruitmentRightAnswearsRepo hrRecruitmentRightAnswearsRepo, HRRecruitmentExamRepo hRRecruitmentExamRepo, HRRecruitmentExamResultRepo hrRecruitmentExamResultRepo, HRRecruitmentExamResultDetailRepo hrRecruitmentExamResultDetailRepo, HRRecruitmentExamResultImageRepo hrRecruitmentExamResultImageRepo, ConfigSystemRepo configSystemRepo, HiringRequestExamRepo hiringRequestExamRepo, HRHiringRequestRepo hiringRequestRepo, HRRecruitmentCandidateRepo hRRecruitmentCandidateRepo)
         {
             _hrRecruitmentQuestionRepo = hrRecruitmentQuestionRepo;
             _hrRecruitmentAnswersRepo = hrRecruitmentAnswersRepo;
@@ -42,6 +44,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             _configSystemRepo = configSystemRepo;
             _hiringRequestExamRepo = hiringRequestExamRepo;
             _hiringRequestRepo = hiringRequestRepo;
+            _hrRecruitmentCandidateRepo = hRRecruitmentCandidateRepo;
         }
         #region load dữ liệu exam
         [Authorize]
@@ -441,6 +444,95 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi download file: {ex.Message}"));
             }
         }
+        // API upload file cho phần thi tự luận — không yêu cầu đăng nhập
+        [HttpPost("upload-not-auth")]
+        [DisableRequestSizeLimit]
+        public async Task<IActionResult> UploadFileNotAuth()
+        {
+            try
+            {
+                var form = await Request.ReadFormAsync();
+                var key = form["key"].ToString();
+                var subPath = form["subPath"].ToString(); // ví dụ: "ExamResultFile/20260330/TênBàiThi"
+                var file = form.Files.FirstOrDefault();
+
+                // Kiểm tra đầu vào
+                if (string.IsNullOrWhiteSpace(key))
+                    return BadRequest(ApiResponseFactory.Fail(null, "Key không được để trống!"));
+
+                if (file == null || file.Length == 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "File không được để trống!"));
+
+                // Lấy đường dẫn gốc từ ConfigSystem
+                var uploadPath = _configSystemRepo.GetUploadPathByKey(key);
+                if (string.IsNullOrWhiteSpace(uploadPath))
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: {key}"));
+
+                // Xác định thư mục đích có subPath
+                string targetFolder = uploadPath;
+                if (!string.IsNullOrWhiteSpace(subPath))
+                {
+                    // Làm sạch subPath: loại bỏ ký tự độc hại, chống leo thư mục (path traversal)
+                    var separator = Path.DirectorySeparatorChar;
+                    var cleanSegments = subPath
+                        .Replace('/', separator)
+                        .Replace('\\', separator)
+                        .Split(separator, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(seg =>
+                        {
+                            var invalid = Path.GetInvalidFileNameChars();
+                            var cleaned = new string(seg.Where(c => !invalid.Contains(c)).ToArray());
+                            return cleaned.Replace("..", "").Trim();
+                        })
+                        .Where(s => !string.IsNullOrWhiteSpace(s))
+                        .ToArray();
+
+                    if (cleanSegments.Length > 0)
+                        targetFolder = Path.Combine(uploadPath, Path.Combine(cleanSegments));
+                }
+
+                // Đảm bảo targetFolder nằm trong uploadPath (chống leo lên thư mục cha)
+                var rootNormalized = Path.GetFullPath(uploadPath);
+                var targetNormalized = Path.GetFullPath(targetFolder);
+                if (!targetNormalized.StartsWith(rootNormalized, StringComparison.OrdinalIgnoreCase))
+                    return BadRequest(ApiResponseFactory.Fail(null, "Đường dẫn subPath không hợp lệ!"));
+
+                // Tạo thư mục nếu chưa tồn tại
+                if (!Directory.Exists(targetFolder))
+                    Directory.CreateDirectory(targetFolder);
+
+                // Tạo tên file unique để tránh trùng lặp
+                var fileExtension = Path.GetExtension(file.FileName);
+                var originalFileName = Path.GetFileNameWithoutExtension(file.FileName);
+                var uniqueFileName = $"{originalFileName}_{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid().ToString("N")[..8]}{fileExtension}";
+                var fullPath = Path.Combine(targetFolder, uniqueFileName);
+
+                // Lưu file vào disk
+                using (var stream = new FileStream(fullPath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                // Trả về full path để frontend lưu vào DB.
+                // Giám khảo download qua api/home/download?path={FilePath} (có auth).
+                var result = new
+                {
+                    OriginalFileName = file.FileName,
+                    SavedFileName = uniqueFileName,
+                    FilePath = fullPath,           // Full physical path — lưu vào DB
+                    FileSize = file.Length,
+                    file.ContentType,
+                    UploadTime = DateTime.Now
+                };
+
+                return Ok(ApiResponseFactory.Success(result, "Upload file thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi upload file: {ex.Message}"));
+            }
+        }
+
         // API cho phần thi Trắc nghiệm
         [HttpPost("create-exam-Recruitment-result")]
         public async Task<IActionResult> CreateExamRecruitmentResult(int recruitmentExamID)
@@ -473,15 +565,15 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
 
         //api lấy thông tin bài thi theo ứng viên 
         [HttpGet("get-data-exam-by-employee")]
-        public async Task<IActionResult> GetDataExamByEmployee()
+        public async Task<IActionResult> GetDataExamByEmployee(int hRRecruitmentCandidateID)
         {
             try
             {
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                var currentUser = ObjectMapper.GetCurrentCandidate(claims);
+                //var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                //var currentUser = ObjectMapper.GetCurrentCandidate(claims);
                 var param = new
                 {
-                    HRRecruitmentCandidateID = currentUser.ID,
+                    HRRecruitmentCandidateID = hRRecruitmentCandidateID
                 };
                 var data = await SqlDapper<object>.ProcedureToListAsync("spGetExamByCandidate", param);
                 return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
@@ -533,12 +625,12 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
 
         // tạo mới kết quả 
         [HttpPost("create-exam-hr-recruitment-result")]
-        public async Task<IActionResult> CreateExamRecruitmentResult([FromBody] HRRecruitmentExamResult request)
+        public async Task<IActionResult> CreateExamRecruitmentResult([FromBody] HRRecruitmentExamResult request, int hRRecruitmentCandidateID, int hrHiringRequestID)
         {
             try
             {
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                var currentUser = ObjectMapper.GetCurrentCandidate(claims);
+                //var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = _hrRecruitmentCandidateRepo.GetByID(hRRecruitmentCandidateID);
 
                 // Kiểm tra xem đã có bản ghi nào "Đang làm" hay chưa để tránh thừa bản ghi
                 var existingResult = _hrRecruitmentExamResultRepo.GetAll(x =>
@@ -564,6 +656,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 request.EmployeeID = currentUser.ID;
                 request.StatusResult = 0; // cực kỳ quan trọng: 0 là đang làm
                 request.CreatedDate = DateTime.Now; // Đảm bảo có StartTime
+                request.HiringRequestID = hrHiringRequestID;
                 await _hrRecruitmentExamResultRepo.CreateAsync(request);
 
                 if (request.ID > 0)
@@ -731,8 +824,8 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         [HttpPost("submit-exam-result")]
         public async Task<IActionResult> SubmitExamResult([FromBody] SubmitExamRequestDTO request)
         {
-            var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-            var currentUser = ObjectMapper.GetCurrentCandidate(claims);
+           //var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+            var currentUser = _hrRecruitmentCandidateRepo.GetByID(request.hRRecruitmentCandidateID ?? 0);
 
             try
             {
@@ -924,6 +1017,32 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 detail.UpdatedDate = DateTime.Now;
 
                 await _hrRecruitmentExamResultDetailRepo.UpdateAsync(detail);
+
+                // ccaapj nhật lại điểm tổng
+                if (detail.RecruitmentExamResultID.HasValue && detail.RecruitmentExamResultID.Value > 0)
+                {
+                    var result = _hrRecruitmentExamResultRepo.GetByID(detail.RecruitmentExamResultID.Value);
+                    if (result != null)
+                    {
+                        var allDetails = _hrRecruitmentExamResultDetailRepo
+                            .GetAll(x => x.RecruitmentExamResultID == result.ID && x.IsDeleted == false)
+                            .ToList();
+                        
+                        var questionGroups = allDetails.GroupBy(x => x.RecruitmentQuestionID).ToList();
+                        decimal totalScore = questionGroups.Sum(g => g.Max(x => x.Score ?? 0));
+                        int totalCorrect = questionGroups.Count(g => g.Max(x => x.Score ?? 0) > 0);
+                        int totalIncorrect = questionGroups.Count(g => g.Max(x => x.Score ?? 0) == 0);
+
+                        result.TotalScore = totalScore;
+                        result.TotalCorrect = totalCorrect;
+                        result.TotalIncorrect = totalIncorrect;
+                        result.PercentageCorrect = result.MaxPossibleScore > 0 ? (totalScore / result.MaxPossibleScore) * 100 : 0;
+                        result.UpdatedDate = DateTime.Now;
+
+                        await _hrRecruitmentExamResultRepo.UpdateAsync(result);
+                    }
+                }
+
                 return Ok(ApiResponseFactory.Success(null, "Chấm điểm thành công"));
             }
             catch (Exception ex)
@@ -942,18 +1061,28 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 var result = _hrRecruitmentExamResultRepo.GetByID(request.ExamResultID);
                 if (result == null) return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy kết quả bài thi"));
 
-                // Recalculate total score from details
-                var details = _hrRecruitmentExamResultDetailRepo.GetAll(x => x.RecruitmentExamResultID == request.ExamResultID && x.IsDeleted == false);
+                // Lấy toàn bộ chi tiết bài làm của ứng viên (bao gồm cả nhiều đáp án cho câu trắc nghiệm)
+                var details = _hrRecruitmentExamResultDetailRepo
+                    .GetAll(x => x.RecruitmentExamResultID == request.ExamResultID && x.IsDeleted == false)
+                    .ToList();
 
-                decimal totalScore = details.Sum(x => x.Score ?? 0);
-                int totalCorrect = details.Count(x => x.Score > 0); // basic logic, adjust if needed
-                int totalIncorrect = details.Count(x => x.Score == 0);
+                // Sửa lỗi tính điểm nhân đôi cho câu chọn nhiều đáp án:
+                // Câu trắc nghiệm nhiều đáp án tạo ra N bản ghi trong DB (một bản ghi cho mỗi đáp án đã chọn),
+                // mỗi bản ghi đều lưu cùng giá trị Score. Nếu tổng trực tiết sẽ bị nhân N lần.
+                // Giải pháp: group theo QuestionID, lấy MAX(Score) của mỗi câu → tổng điểm chính xác.
+                var questionGroups = details
+                    .GroupBy(x => x.RecruitmentQuestionID)
+                    .ToList();
+
+                decimal totalScore = questionGroups.Sum(g => g.Max(x => x.Score ?? 0));
+                int totalCorrect = questionGroups.Count(g => g.Max(x => x.Score ?? 0) > 0);
+                int totalIncorrect = questionGroups.Count(g => g.Max(x => x.Score ?? 0) == 0);
 
                 result.TotalScore = totalScore;
                 result.TotalCorrect = totalCorrect;
                 result.TotalIncorrect = totalIncorrect;
                 result.PercentageCorrect = result.MaxPossibleScore > 0 ? (totalScore / result.MaxPossibleScore) * 100 : 0;
-                result.StatusResult = 2; // Marked as Finished/Graded
+                result.StatusResult = 2; // Đã hoàn tất chấm điểm
                 result.UpdatedDate = DateTime.Now;
 
                 await _hrRecruitmentExamResultRepo.UpdateAsync(result);
@@ -965,6 +1094,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         #endregion
         #region Matrix View - Tổng quan điểm đa bài thi
         [Authorize]

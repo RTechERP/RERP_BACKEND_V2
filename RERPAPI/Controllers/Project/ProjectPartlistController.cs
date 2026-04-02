@@ -286,7 +286,7 @@ namespace RERPAPI.Controllers.Project
                         EmployeeID = currentUser.EmployeeID,
                         ProductCode = item.ProductCode,
                         ProductName = item.GroupMaterial,
-                        StatusRequest = 1,
+                        StatusRequest = 6,
                         DateRequest = DateTime.Now,
                         Deadline = item.DeadlinePriceRequest,
                         Quantity = item.QtyFull,
