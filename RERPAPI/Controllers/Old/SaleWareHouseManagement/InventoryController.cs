@@ -204,11 +204,12 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             }
         }
         [HttpPost("set-location-list")]
-        public IActionResult SetLocation([FromBody] SetLocationRequestDTO request)
+        public async Task<IActionResult> SetLocation([FromBody] SetLocationRequestDTO request)
         {
             try
             {
-                bool rs = _productSaleRepo.SetLocationList(request.LocationID, request.LstIDs);
+
+                bool rs = await _productSaleRepo.SetLocationList(request);
                 if (rs)
                 {
                     return Ok(ApiResponseFactory.Success(request.LstIDs, "Cập nhật vị trí thành công"));
