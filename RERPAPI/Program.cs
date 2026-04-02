@@ -31,9 +31,12 @@ using RERPAPI.Repo.GenericEntity.TB;
 using RERPAPI.Repo.GenericEntity.Technical;
 using RERPAPI.Repo.GenericEntity.Technical.KPI;
 using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
-//using RERPAPI.SendService;
+using RERPAPI.SendService;
 using RTCApi.Repo.GenericRepo;
 using System.Text;
+
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,6 +54,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserPermissionService, UserPermissionService>();
 builder.Services.AddScoped<RTCContext>();
 builder.Services.AddScoped<RoleConfig>();
+builder.Services.AddScoped<IFirebaseNotificationService, FirebaseNotificationService>();
 
 builder.Services.AddScoped<EmployeeOnLeaveRepo>();
 builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.AddressStockRepo>();
@@ -621,6 +625,11 @@ builder.Services.AddCors(options =>
                .AllowAnyHeader();
 
     });
+});
+// Chỉ khởi tạo 1 lần duy nhất khi chạy server
+FirebaseApp.Create(new AppOptions()
+{
+    Credential = GoogleCredential.FromFile("firebase-adminsdk.json") // Thay bằng đường dẫn thực tế
 });
 
 
