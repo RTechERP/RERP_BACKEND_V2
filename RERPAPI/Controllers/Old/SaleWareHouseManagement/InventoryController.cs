@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
@@ -14,10 +15,12 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     {
         private readonly InventoryRepo _inventoryRepo;
         private readonly WarehouseRepo _warehouseRepo;
-        public InventoryController(InventoryRepo inventoryRepo, WarehouseRepo warehouseRepo)
+        private readonly ProductSaleRepo _productSaleRepo;
+        public InventoryController(InventoryRepo inventoryRepo, WarehouseRepo warehouseRepo, ProductSaleRepo productSaleRepo)
         {
             _inventoryRepo = inventoryRepo;
             _warehouseRepo = warehouseRepo;
+            _productSaleRepo = productSaleRepo;
         }
         [HttpPost("get-inventory")]
         public IActionResult getInventory(InventoryPram filter)
@@ -174,6 +177,46 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     dtHold = SQLHelper<dynamic>.GetListData(dataHold, 0),
                     dtCbProduct = SQLHelper<dynamic>.GetListData(data, 3),
                 }, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpPost("set-location")]
+        public IActionResult SetLocation(int productSaleID, int locationID)
+        {
+            try
+            {
+                bool rs = _productSaleRepo.SetLocation(productSaleID, locationID);
+                if (rs)
+                {
+                    return Ok(ApiResponseFactory.Success(productSaleID, "Cập nhật vị trí thành công"));
+                }
+                else
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật vị trí thất bại"));
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpPost("set-location-list")]
+        public IActionResult SetLocation([FromBody] SetLocationRequestDTO request)
+        {
+            try
+            {
+                bool rs = _productSaleRepo.SetLocationList(request.LocationID, request.LstIDs);
+                if (rs)
+                {
+                    return Ok(ApiResponseFactory.Success(request.LstIDs, "Cập nhật vị trí thành công"));
+                }
+                else
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật vị trí thất bại"));
+                }
             }
             catch (Exception ex)
             {
