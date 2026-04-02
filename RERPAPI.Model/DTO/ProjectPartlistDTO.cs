@@ -24,5 +24,7 @@ namespace RERPAPI.Model.DTO
 
 
 
+        public int? LeadTimeTechnical { get; set; }
+        public decimal? TargetPrice { get; set; }
     }
 }
