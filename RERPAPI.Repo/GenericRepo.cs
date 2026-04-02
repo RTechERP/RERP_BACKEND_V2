@@ -193,70 +193,136 @@ namespace RERPAPI.Repo
             }
         }
 
+        //public async Task<int> UpdateAsync(T item)
+        //{
+
+        //    try
+        //    {
+        //        //var claims = _userPermissionService.GetClaims();
+        //        var fieldValues = new Dictionary<string, object>();
+        //        int id = 0;
+        //        var propid = typeof(T).GetProperty("ID");
+        //        if (propid != null) id = Convert.ToInt32(propid.GetValue(item));
+
+        //        var properties = typeof(T).GetProperties();
+        //        foreach (var prop in properties)
+        //        {
+        //            // Bỏ qua thuộc tính ID hoặc các thuộc tính không cần cập nhật
+        //            if (prop.Name != "ID" && prop.CanRead)
+        //            {
+        //                var value = prop.GetValue(item);
+        //                if (value != null) // Chỉ thêm nếu giá trị không null
+        //                {
+        //                    fieldValues.Add(prop.Name, value);
+        //                }
+        //            }
+        //        }
+
+        //        // Tìm entity theo ID
+        //        var entity = db.Set<T>().Find(id);
+        //        if (entity == null)
+        //        {
+        //            throw new Exception($"Entity with ID {id} not found.");
+        //        }
+
+        //        // Lấy type của entity
+        //        Type type = typeof(T);
+
+        //        // Cập nhật các trường động
+        //        foreach (var field in fieldValues)
+        //        {
+        //            // Kiểm tra thuộc tính
+        //            var property = type.GetProperty(field.Key);
+        //            if (property == null || !property.CanWrite)
+        //            {
+        //                throw new Exception($"Property {field.Key} not found or is not writable.");
+        //            }
+
+        //            // Gán giá trị cho thuộc tính (xử lý null)
+        //            property.SetValue(entity, field.Value == null ? null : field.Value);
+        //        }
+
+        //        //Gán lại giá trị updatedDate = null để sử lý khi SaveChangesAsync
+        //        var updatedDate = entity.GetType().GetProperty("UpdatedDate");
+        //        var updatedDateValue = fieldValues.ContainsKey("UpdatedDate") ? fieldValues["UpdatedDate"] : null;
+        //        if (updatedDateValue == null) //trường UpdatedDate có value thì thôi
+        //        {
+        //            if (updatedDate != null) updatedDate.SetValue(entity, null);
+        //        }
+
+        //        db.Entry(entity).State = EntityState.Modified;
+        //        // Lưu thay đổi vào cơ sở dữ liệu
+        //        var result = await db.SaveChangesAsync();
+        //        if (result == 0)
+        //        {
+        //            throw new Exception("Update failed: no rows affected.");
+        //        }
+        //        return result;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw new Exception($"Error updating entity: {ex.Message}", ex);
+        //    }
+        //}
         public async Task<int> UpdateAsync(T item)
         {
+            if (item == null)
+                throw new ArgumentNullException(nameof(item));
 
             try
             {
-                //var claims = _userPermissionService.GetClaims();
-                var fieldValues = new Dictionary<string, object>();
-                int id = 0;
-                var propid = typeof(T).GetProperty("ID");
-                if (propid != null) id = Convert.ToInt32(propid.GetValue(item));
+                var entryDto = db.Entry(item);
 
-                var properties = typeof(T).GetProperties();
-                foreach (var prop in properties)
-                {
-                    // Bỏ qua thuộc tính ID hoặc các thuộc tính không cần cập nhật
-                    if (prop.Name != "ID" && prop.CanRead)
-                    {
-                        var value = prop.GetValue(item);
-                        if (value != null) // Chỉ thêm nếu giá trị không null
-                        {
-                            fieldValues.Add(prop.Name, value);
-                        }
-                    }
-                }
+                // Lấy ID
+                var idProp = entryDto.Properties.FirstOrDefault(p => p.Metadata.IsPrimaryKey());
+                if (idProp == null)
+                    throw new Exception("Entity must have primary key");
 
-                // Tìm entity theo ID
-                var entity = db.Set<T>().Find(id);
+                var id = idProp.CurrentValue;
+
+                // 1. Lấy entity thật từ DB (QUAN TRỌNG)
+                var entity = await db.Set<T>().FindAsync(id);
                 if (entity == null)
-                {
-                    throw new Exception($"Entity with ID {id} not found.");
-                }
+                    throw new Exception($"Entity with ID {id} not found");
 
-                // Lấy type của entity
-                Type type = typeof(T);
+                var entry = db.Entry(entity);
 
-                // Cập nhật các trường động
-                foreach (var field in fieldValues)
+                // 2. Copy value nhanh bằng EF (KHÔNG loop reflection thủ công)
+                entry.CurrentValues.SetValues(item);
+
+                // 3. Không overwrite null (điểm quan trọng nhất)
+                foreach (var prop in entry.Properties)
                 {
-                    // Kiểm tra thuộc tính
-                    var property = type.GetProperty(field.Key);
-                    if (property == null || !property.CanWrite)
+                    if (prop.Metadata.IsPrimaryKey())
+                        continue;
+
+                    var newValue = entryDto.Property(prop.Metadata.Name).CurrentValue;
+
+                    if (newValue == null)
                     {
-                        throw new Exception($"Property {field.Key} not found or is not writable.");
+                        prop.IsModified = false;
                     }
-
-                    // Gán giá trị cho thuộc tính (xử lý null)
-                    property.SetValue(entity, field.Value == null ? null : field.Value);
                 }
 
-                //Gán lại giá trị updatedDate = null để sử lý khi SaveChangesAsync
-                var updatedDate = entity.GetType().GetProperty("UpdatedDate");
-                var updatedDateValue = fieldValues.ContainsKey("UpdatedDate") ? fieldValues["UpdatedDate"] : null;
-                if (updatedDateValue == null) //trường UpdatedDate có value thì thôi
+                // 4. UpdatedDate auto
+                var updatedDateProp = entry.Properties
+                    .FirstOrDefault(p => p.Metadata.Name == "UpdatedDate");
+
+                if (updatedDateProp != null)
                 {
-                    if (updatedDate != null) updatedDate.SetValue(entity, null);
+                    updatedDateProp.CurrentValue = DateTime.Now;
+                    updatedDateProp.IsModified = true;
                 }
 
-                db.Entry(entity).State = EntityState.Modified;
-                // Lưu thay đổi vào cơ sở dữ liệu
-                return await db.SaveChangesAsync();
+                var result = await db.SaveChangesAsync();
+
+                if (result == 0)
+                    throw new Exception("Update failed: no rows affected");
+                return result;
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error updating entity: {ex.Message}", ex);
+                throw new Exception($"Error updating {typeof(T).Name}: {ex.Message}", ex);
             }
         }
 
@@ -546,5 +612,9 @@ namespace RERPAPI.Repo
             }
         }
 
+        public T GetSingleNoTracking(Expression<Func<T, bool>> predicate)
+        {
+            return table.AsNoTracking().FirstOrDefault(predicate) ?? new T();
+        }
     }
 }

@@ -12,5 +12,7 @@ namespace RERPAPI.Model.DTO
         public int? POKHId { get; set; }
         public string CompanyText { get; set; }
         public string InvoiceNumber { get; set; }
+
+        public string InvoiceDate { get; set; }
     }
 }

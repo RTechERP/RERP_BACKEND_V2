@@ -14,13 +14,13 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
         CurrentUser _currentUser;
         PaymentOrderApproveFollowRepo _followRepo;
         PaymentOrderTypeRepo _typeRepo;
-        //PaymentOrderRepo _paymentOrderRepo;
-        public PaymentOrderLogRepo(CurrentUser currentUser, PaymentOrderApproveFollowRepo followRepo, PaymentOrderTypeRepo typeRepo) : base(currentUser)
+        PaymentOrderRepo _paymentOrderRepo;
+        public PaymentOrderLogRepo(CurrentUser currentUser, PaymentOrderApproveFollowRepo followRepo, PaymentOrderTypeRepo typeRepo, PaymentOrderRepo paymentOrderRepo) : base(currentUser)
         {
             _currentUser = currentUser;
             _followRepo = followRepo;
             _typeRepo = typeRepo;
-            //_paymentOrderRepo = paymentOrderRepo;
+            _paymentOrderRepo = paymentOrderRepo;
         }
 
 
@@ -114,7 +114,7 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                     //int currentStep = item.Step;
                     //int paymentOrderTypeID = item.PaymentOrderTypeID ?? 0;
                     var paymentOrderType = _typeRepo.GetByID(item.PaymentOrderTypeID ?? 0);
-
+                    statusText = item.PaymentOrderLog.IsApproved == 1 ? "duyệt" : (item.PaymentOrderLog.IsApproved == 2 ? "hủy duyệt" : "bổ xung chứng từ");
                     if (item.IsSpecialOrder == true)
                     {
                         if (item.Action.ButtonActionGroup == "btnTBP") actionStep = 2;
@@ -170,7 +170,7 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
 
                     if (actionStep == 0)
                     {
-                        //return ApiResponseFactory.Fail(null, $"Đề nghị [{item.Code}] không cần dropdownButtonText.Trim().ToLower() buttonText.Trim().ToLower()!");
+                        //messageFails.Add( $"Đề nghị [{item.Code}] không cần {dropdownButtonText.Trim().ToLower()} buttonText.Trim().ToLower()!");
                         return 0;
                     }
 
@@ -182,7 +182,7 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
 
                         if (logDb.EmployeeID != _currentUser.EmployeeID)
                         {
-                            //ApiResponseFactory.Fail(null, $"Bạn không thể {statusText} đề nghị [{item.Code}]!");
+                            messageFails.Add($"Bạn không thể {statusText} đề nghị [{item.Code}]!");
                             continue;
                         }
                     }
@@ -256,7 +256,7 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                         log.DateApproved = DateTime.Now;
                         log.IsApproved = item.PaymentOrderLog.IsApproved;
                         log.EmployeeApproveActualID = _currentUser.EmployeeID;
-                        log.ReasonCancel ="";
+                        log.ReasonCancel = "";
                         log.ContentLog += $"{DateTime.Now.ToString("dd/MM/yyyy")}: {_currentUser.FullName} {item.Action.ButtonActionText}\n";
 
                         if (item.Action.ButtonActionName == "btnApproveDocument" || item.Action.ButtonActionName == "btnApproveKT" || item.Action.ButtonActionName == "btnUpdateDocument")
@@ -277,6 +277,15 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                             log.ContentLog += $"{DateTime.Now.ToString("dd/MM/yyyy")}: {_currentUser.FullName} {item.Action.ButtonActionText}\n";
                             log.IsRequestAppendFileAC = item.PaymentOrderLog.IsApproved == 3;
                             log.ReasonRequestAppendFileAC = item.AccountingNote;
+                            if (!string.IsNullOrEmpty(item.AccountingNote))
+                            {
+                                PaymentOrder paymentOrder = _paymentOrderRepo.GetByID(item.ID);
+                                if (paymentOrder != null)
+                                {
+                                    paymentOrder.AccountingNote = item.AccountingNote.Trim();
+                                    await _paymentOrderRepo.UpdateAsync(paymentOrder);
+                                }
+                            }
                         }
                         else
                         {
@@ -293,10 +302,13 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                                 if (item.Action.ButtonActionName == "btnUpdateDocument") log.IsRequestAppendFileAC = true;
                             }
                         }
-                        await UpdateAsync(log);
+                        int resultUpdate = await UpdateAsync(log);
                     }
                 }
-
+                if (messageFails.Count > 0)
+                {
+                    throw new Exception(string.Join("\r\n", messageFails));
+                }
                 return 1;
             }
             catch (Exception ex)

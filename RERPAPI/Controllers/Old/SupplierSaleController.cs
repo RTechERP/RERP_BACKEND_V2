@@ -43,7 +43,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet("supplier-sale")]
-        [RequiresPermission("N27,N33,N35,N1,N36")]
+        [RequiresPermission("N27,N33,N35,N1,N36,N91")]
         public async Task<IActionResult> getSupplierSale(string? keyword, int page, int size)
         {
             try

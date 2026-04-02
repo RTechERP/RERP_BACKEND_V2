@@ -7,12 +7,13 @@ using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
+using RERPAPI.Model.Param;
 using RERPAPI.Repo;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
 using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.BBNV;
-//using RERPAPI.Repo.GenericEntity.CourseRepoo;
 using RERPAPI.Repo.GenericEntity.DocumentManager;
 using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
 using RERPAPI.Repo.GenericEntity.Film;
@@ -30,9 +31,12 @@ using RERPAPI.Repo.GenericEntity.TB;
 using RERPAPI.Repo.GenericEntity.Technical;
 using RERPAPI.Repo.GenericEntity.Technical.KPI;
 using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
-//using RERPAPI.SendService;
+using RERPAPI.SendService;
 using RTCApi.Repo.GenericRepo;
 using System.Text;
+
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,6 +54,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserPermissionService, UserPermissionService>();
 builder.Services.AddScoped<RTCContext>();
 builder.Services.AddScoped<RoleConfig>();
+builder.Services.AddScoped<IFirebaseNotificationService, FirebaseNotificationService>();
 
 builder.Services.AddScoped<EmployeeOnLeaveRepo>();
 builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.AddressStockRepo>();
@@ -106,10 +111,12 @@ builder.Services.AddScoped<EmployeeCurricularRepo>();
 builder.Services.AddScoped<EmployeeEarlyLateRepo>();
 builder.Services.AddScoped<EmployeeEducationLevelRepo>();
 builder.Services.AddScoped<EmployeeErrorRepo>();
+builder.Services.AddScoped<EmployeePayrollDeductionRepo>();
 builder.Services.AddScoped<EmployeeFoodOrderRepo>();
 builder.Services.AddScoped<EmployeeNoFingerprintRepo>();
 builder.Services.AddScoped<EmployeeOnLeaveMasterRepo>();
 builder.Services.AddScoped<EmployeeOnLeaveRepo>();
+builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.HRM.EmployeeOnLeavePhaseRepo>();
 builder.Services.AddScoped<EmployeeOverTimeRepo>();
 builder.Services.AddScoped<EmployeeProjectTypeRepo>();
 builder.Services.AddScoped<EmployeePurchaseRepo>();
@@ -451,17 +458,33 @@ builder.Services.AddScoped<CourseRepo>();
 builder.Services.AddScoped<CourseRegisterIdeaRepo>();
 builder.Services.AddScoped<CourseLessonRepo>();
 builder.Services.AddScoped<CourseFilesRepo>();
+builder.Services.AddScoped<CourseExamRepo>();
+builder.Services.AddScoped<CourseLessonHistoryRepo>();
+builder.Services.AddScoped<CourseExamResultRepo>();
+builder.Services.AddScoped<CourseExamResultDetailRepo>();
+builder.Services.AddScoped<CourseQuestionRepo>();
+builder.Services.AddScoped<CourseRightAnswerRepo>();
+builder.Services.AddScoped<CourseExamEvaluateRepo>();
+builder.Services.AddScoped<CourseAnswerRepo>();
+builder.Services.AddScoped<CourseExamPracticeRepo>();
+builder.Services.AddScoped<ExamResultRepo>();
+builder.Services.AddScoped<ExamResultDetailRepo>();
 
 builder.Services.AddScoped<InventoryProjectProductSaleLinkRepo>();
 builder.Services.AddScoped<HandoverPersonalAssetRepo>();
 builder.Services.AddScoped<UpdateVersionRepo>();
 
+builder.Services.AddScoped<ProjectTaskRepo>();
+builder.Services.AddScoped<ProjectTaskGroupRepo>();
+builder.Services.AddScoped<ProjectTaskChecklistRepo>();
+builder.Services.AddTransient<ProjectTaskAttachmentRepo>();
+builder.Services.AddTransient<ProjectTaskAdditionalRepo>();
+
+builder.Services.AddScoped<SendEmailReceiveProjectTaskClass>();
+
+
 builder.Services.AddScoped<FollowProjectBaseDetailRepo>();
 builder.Services.AddScoped<DailyReportAccountingRepo>();
-
-
-
-
 
 
 #region khóa học 
@@ -502,6 +525,7 @@ builder.Services.AddScoped<MenuAppRepo>();
 builder.Services.AddScoped<MenuAppUserGroupLinkRepo>();
 builder.Services.AddScoped<ProjectPartListPurchaseRequestApproveLogRepo>();
 builder.Services.AddScoped<EmployeeLuckyNumberRepo>();
+builder.Services.AddScoped<ProductGroupLinkRepo>();
 
 
 #region KPI
@@ -512,6 +536,17 @@ builder.Services.AddScoped<KPIPositionRepo>();
 builder.Services.AddScoped<KPIEvaluationRuleRepo>();
 builder.Services.AddScoped<KPIPositionEmployeeRepo>();
 builder.Services.AddScoped<KPIEmployeePointDetailRepo>();
+
+
+builder.Services.AddScoped<ProjectTaskChecklist>();
+builder.Services.AddScoped<ProjectTaskEmployeeRepo>();
+builder.Services.AddScoped<ProjectTaskApproveRepo>();
+builder.Services.AddScoped<ProjectTaskLogRepo>();
+builder.Services.AddScoped<ProjectTaskTypeRepo>();
+
+
+
+
 builder.Services.AddScoped<KPIEvaluationRuleDetailRepo>();
 builder.Services.AddScoped<KPIExamRepo>();
 builder.Services.AddScoped<KPISumaryEvaluationRepo>();
@@ -595,6 +630,11 @@ builder.Services.AddCors(options =>
 
     });
 });
+// Chỉ khởi tạo 1 lần duy nhất khi chạy server
+//FirebaseApp.Create(new AppOptions()
+//{
+//    Credential = GoogleCredential.FromFile("firebase-adminsdk-example.json") // Thay bằng đường dẫn thực tế
+//});
 
 
 builder.Services.AddSingleton<SseService>();
@@ -629,31 +669,31 @@ var jwtSettings = jwtSection.Get<JwtSettings>() ?? new JwtSettings();
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<JwtSettings>>().Value);
 
 // Load Candidate JWT settings
-var candidateJwtSection = builder.Configuration.GetSection("CandidateJwtSettings");
-builder.Services.Configure<CandidateJwtSettings>(candidateJwtSection);
-var candidateJwtSettings = candidateJwtSection.Get<CandidateJwtSettings>() ?? new CandidateJwtSettings();
-builder.Services.AddSingleton(candidateJwtSettings);
+//var candidateJwtSection = builder.Configuration.GetSection("CandidateJwtSettings");
+//builder.Services.Configure<CandidateJwtSettings>(candidateJwtSection);
+//var candidateJwtSettings = candidateJwtSection.Get<CandidateJwtSettings>() ?? new CandidateJwtSettings();
+//builder.Services.AddSingleton(candidateJwtSettings);
 
-builder.Services.AddAuthentication("Bearer")
-                .AddJwtBearer("Bearer", options =>
-                {
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuer = true,
-                        ValidateAudience = true,
-                        ValidateLifetime = true,
-                        ValidateIssuerSigningKey = true,
+//builder.Services.AddAuthentication("Bearer")
+//                .AddJwtBearer("Bearer", options =>
+//                {
+//                    options.TokenValidationParameters = new TokenValidationParameters
+//                    {
+//                        ValidateIssuer = true,
+//                        ValidateAudience = true,
+//                        ValidateLifetime = true,
+//                        ValidateIssuerSigningKey = true,
 
-                        ValidIssuers = new[] { jwtSettings.Issuer, candidateJwtSettings.Issuer },
-                        ValidAudiences = new[] { jwtSettings.Audience, candidateJwtSettings.Audience },
-                        IssuerSigningKeys = new[] 
-                        { 
-                            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
-                            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(candidateJwtSettings.SecretKey))
-                        },
-                        NameClaimType = "sub" // Để Middleware lấy đúng UserID
-                    };
-                });
+//                        ValidIssuers = new[] { jwtSettings.Issuer, candidateJwtSettings.Issuer },
+//                        ValidAudiences = new[] { jwtSettings.Audience, candidateJwtSettings.Audience },
+//                        IssuerSigningKeys = new[] 
+//                        { 
+//                            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
+//                            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(candidateJwtSettings.SecretKey))
+//                        },
+//                        NameClaimType = "sub" // Để Middleware lấy đúng UserID
+//                    };
+//                });
 builder.Services.AddAuthentication();
 
 

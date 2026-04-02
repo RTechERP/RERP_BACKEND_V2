@@ -115,6 +115,70 @@ namespace RERPAPI.Model.Common
             }
         }
 
+        public async Task SendRangeAsync(string toEmailRange, string subject, string body, bool isHtml = true, string cc = "")
+        {
+            try
+            {
+                var email = new MimeMessage();
+                email.From.Add(new MailboxAddress(_smtp.DisplayName, _smtp.Mail));
+
+                if (!string.IsNullOrEmpty(toEmailRange))
+                {
+                    foreach( var toEmail in toEmailRange.Split(new[] {';',','}, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        if(MailboxAddress.TryParse(toEmail.Trim(), out var addr))
+                        {
+                            email.To.Add(addr);
+                        }
+                    }
+                }
+
+                if (!string.IsNullOrWhiteSpace(cc))
+                {
+                    foreach (var mailcc in cc.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        if (MailboxAddress.TryParse(mailcc.Trim(), out var addr))
+                        {
+                            email.Cc.Add(addr);
+                        }
+                    }
+                }
+                email.Subject = subject;
+
+                var builder = new BodyBuilder();
+                builder.HtmlBody = $@"
+                                    <html>
+                                    <head>
+                                    <meta charset='UTF-8'>
+                                    </head>
+                                    <body >
+                                        <div style='font-family: ""Times New Roman"", Times, serif; font-size:14px;'>{body}</div>
+                                    </body>
+                                    </html>";
+
+
+
+                email.Body = builder.ToMessageBody();
+                //email.Body = new TextPart(isHtml ? "html" : "plain")
+                //{
+                //    Text = body
+                //};
+
+                using (var smtpClient = new SmtpClient())
+                {
+                    await smtpClient.ConnectAsync(_smtp.Host, _smtp.Port, SecureSocketOptions.StartTls);
+                    await smtpClient.AuthenticateAsync(_smtp.Mail, _smtp.Password);
+                    await smtpClient.SendAsync(email);
+                    await smtpClient.DisconnectAsync(true);
+                }
+            }
+            catch (Exception ex)
+            {
+
+                throw new Exception(ex.Message);
+            }
+        }
+
         public async Task SendAsyncHr(string toEmail, string subject, string body, bool isHtml = true, string cc = "")
         {
             try
