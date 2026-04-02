@@ -209,8 +209,9 @@ namespace RERPAPI.Controllers.Project
                         DateRequest = DateTime.Now,
                         Deadline = item.DeadlinePriceRequest,
                         Quantity = item.QtyFull,
-                        IsDeleted = false,
-                        //Note = item.Note
+                        //LeadTimeTechnical = item.LeadTimeTechnical,
+                        //TargetPrice = item.TargetPrice,
+                        IsDeleted = false
                     };
                     await _priceRequestRepo.CreateAsync(priceRequest);
                     var priceRequestNote = new ProjectPartlistPriceRequestNote
