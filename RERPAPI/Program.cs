@@ -631,10 +631,10 @@ builder.Services.AddCors(options =>
     });
 });
 // Chỉ khởi tạo 1 lần duy nhất khi chạy server
-//FirebaseApp.Create(new AppOptions()
-//{
-//    Credential = GoogleCredential.FromFile("firebase-adminsdk-example.json") // Thay bằng đường dẫn thực tế
-//});
+FirebaseApp.Create(new AppOptions()
+{
+    Credential = GoogleCredential.FromFile("firebase-adminsdk-example.json") // Thay bằng đường dẫn thực tế
+});
 
 
 builder.Services.AddSingleton<SseService>();
@@ -669,31 +669,31 @@ var jwtSettings = jwtSection.Get<JwtSettings>() ?? new JwtSettings();
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<JwtSettings>>().Value);
 
 // Load Candidate JWT settings
-//var candidateJwtSection = builder.Configuration.GetSection("CandidateJwtSettings");
-//builder.Services.Configure<CandidateJwtSettings>(candidateJwtSection);
-//var candidateJwtSettings = candidateJwtSection.Get<CandidateJwtSettings>() ?? new CandidateJwtSettings();
-//builder.Services.AddSingleton(candidateJwtSettings);
+var candidateJwtSection = builder.Configuration.GetSection("CandidateJwtSettings");
+builder.Services.Configure<CandidateJwtSettings>(candidateJwtSection);
+var candidateJwtSettings = candidateJwtSection.Get<CandidateJwtSettings>() ?? new CandidateJwtSettings();
+builder.Services.AddSingleton(candidateJwtSettings);
 
-//builder.Services.AddAuthentication("Bearer")
-//                .AddJwtBearer("Bearer", options =>
-//                {
-//                    options.TokenValidationParameters = new TokenValidationParameters
-//                    {
-//                        ValidateIssuer = true,
-//                        ValidateAudience = true,
-//                        ValidateLifetime = true,
-//                        ValidateIssuerSigningKey = true,
+builder.Services.AddAuthentication("Bearer")
+                .AddJwtBearer("Bearer", options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
 
-//                        ValidIssuers = new[] { jwtSettings.Issuer, candidateJwtSettings.Issuer },
-//                        ValidAudiences = new[] { jwtSettings.Audience, candidateJwtSettings.Audience },
-//                        IssuerSigningKeys = new[] 
-//                        { 
-//                            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
-//                            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(candidateJwtSettings.SecretKey))
-//                        },
-//                        NameClaimType = "sub" // Để Middleware lấy đúng UserID
-//                    };
-//                });
+                        ValidIssuers = new[] { jwtSettings.Issuer, candidateJwtSettings.Issuer },
+                        ValidAudiences = new[] { jwtSettings.Audience, candidateJwtSettings.Audience },
+                        IssuerSigningKeys = new[]
+                        {
+                            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
+                            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(candidateJwtSettings.SecretKey))
+                        },
+                        NameClaimType = "sub" // Để Middleware lấy đúng UserID
+                    };
+                });
 builder.Services.AddAuthentication();
 
 
