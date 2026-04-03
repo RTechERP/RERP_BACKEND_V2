@@ -79,7 +79,6 @@ namespace RERPAPI.Controllers.CommercialPriceRequest
         {
             try
             {
-
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
 
@@ -98,8 +97,8 @@ namespace RERPAPI.Controllers.CommercialPriceRequest
                     Moq = item.Moq,
                     PicPurID = currentUser.EmployeeID,
                     PicPurName = currentUser.Name,
-                    AdminSentAt = ParseDateTime(item.AdminSentAtDate, item.AdminSentAtHour),
-                    PurSentAt = ParseDateTime(item.PurSentAtDate, item.PurSentAtHour),
+                    AdminSentAt = TextUtils.ParseDateTime(item.AdminSentAtDate, item.AdminSentAtHour),
+                    PurSentAt = TextUtils.ParseDateTime(item.PurSentAtDate, item.PurSentAtHour),
                     QuoteDeadline = DateOnly.TryParse(item.QuoteDeadline?.ToString(), out var qd) ? qd : null,
                     UnitPrice = item.UnitPrice,
                     ShippingCost = item.ShippingCost,
@@ -176,41 +175,6 @@ namespace RERPAPI.Controllers.CommercialPriceRequest
         //            DateTimeStyles.None,
         //            out var result) ? result : null;
         //    }
-        private DateTime? ParseDateTime(string? datePart, string? hourPart)
-        {
-            if (string.IsNullOrWhiteSpace(datePart))
-                return null;
-
-            if (!DateTime.TryParseExact(
-                    datePart.Trim(),
-                    "yyyy-MM-dd",
-                    CultureInfo.InvariantCulture,
-                    DateTimeStyles.None,
-                    out var date))
-            {
-                return null;
-            }
-
-            if (string.IsNullOrWhiteSpace(hourPart))
-                return date.Date;
-
-            var hourFormats = new[]
-            {
-        "H'h'mm",
-        "H:mm",
-        "h:mm tt",
-        "h:mmtt"
-    };
-            if (DateTime.TryParseExact(
-                    hourPart.Trim(),
-                    hourFormats,
-                    CultureInfo.InvariantCulture,
-                    DateTimeStyles.None,
-                    out var time))
-            {
-                return date.Date.Add(time.TimeOfDay);
-            }
-            return date.Date;
-        }
     }
+
 }
