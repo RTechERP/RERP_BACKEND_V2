@@ -17,6 +17,7 @@ namespace RERPAPI.Repo.GenericEntity
         UnitCountKTRepo _unitCountKTRepo;
         FirmRepo _firmRepo;
         ProductGroupRTCRepo _productgroupRTCRepo;
+        EmailHelper _emailHelper;
         public ProjectPartlistPurchaseRequestRepo(
             CurrentUser currentUser,
             ProductGroupRepo productgroupRepo,
@@ -26,7 +27,8 @@ namespace RERPAPI.Repo.GenericEntity
             ProductRTCRepo productRTCRepo,
             UnitCountKTRepo unitCountKTRepo,
             FirmRepo firmRepo,
-            ProductGroupRTCRepo productGroupRTCRepo
+            ProductGroupRTCRepo productGroupRTCRepo,
+            EmailHelper emailHelper
         ) : base(currentUser)
         {
             _currentUser = currentUser;
@@ -38,6 +40,7 @@ namespace RERPAPI.Repo.GenericEntity
             _unitCountKTRepo = unitCountKTRepo;
             _firmRepo = firmRepo;
             _productgroupRTCRepo = productGroupRTCRepo;
+            _emailHelper = emailHelper;
         }
 
         public bool ValidateKeepProduct(List<ProductHoldDTO> requests, out string message)
@@ -660,14 +663,35 @@ namespace RERPAPI.Repo.GenericEntity
         public async Task SendMail(ProjectPartlistPurchaseRequestDTO requestBuy)
         {
             if (requestBuy.ID <= 0) return;
-            EmployeeSendEmail sendEmail = new EmployeeSendEmail();
+            //EmployeeSendEmail sendEmail = new EmployeeSendEmail();
 
             Employee employee = _employeeRepo.GetByID((int)requestBuy.EmployeeIDRequestApproved);
 
-            sendEmail.Subject = $"YÊU CẦU MUA HÀNG - {_currentUser.FullName.ToUpper()} - {DateTime.Now.ToString("dd/MM/yyyy")}";
-            sendEmail.EmailTo = $"{employee.EmailCongTy}";
-            sendEmail.EmailCC = $"";
-            sendEmail.Body = $@"<div> <p style=""font-weight: bold; color: red;"">[NO REPLY]</p> <p> Dear anh/chị {employee.FullName} </p ></div >
+            //sendEmail.Subject = $"YÊU CẦU MUA HÀNG - {_currentUser.FullName.ToUpper()} - {DateTime.Now.ToString("dd/MM/yyyy")}";
+            //sendEmail.EmailTo = $"{employee.EmailCongTy}";
+            //sendEmail.EmailCC = $"";
+            //sendEmail.Body = $@"<div> <p style=""font-weight: bold; color: red;"">[NO REPLY]</p> <p> Dear anh/chị {employee.FullName} </p ></div >
+            //            <div style = ""margin-top: 30px;"">
+            //            <p> Cho em yêu cầu mua hàng thông tin sản phẩm như sau: </p>
+            //            <p> Mã sản phẩm: {requestBuy.ProductCode}</p>
+            //            <p> Tên sản phẩm: {requestBuy.ProductName}</p>
+            //            <p> Số lượng: {requestBuy.Quantity}</p>
+            //            <p> Deadline: {requestBuy.DateReturnExpected}</p>
+            //            </div>
+            //            <div style = ""margin-top: 30px;"">
+            //            <p> Thanks </p>
+            //            <p> {_currentUser.FullName}</p>
+            //            </div>";
+
+            //sendEmail.StatusSend = 1;
+            //sendEmail.EmployeeID = requestBuy.JobRequirementEmployeeID;
+            //sendEmail.Receiver = requestBuy.JobRequirementApprovedTBPID;
+
+            //await _employeeSendEmailRepo.CreateAsync(sendEmail);
+
+            string subject = $"YÊU CẦU MUA HÀNG - {_currentUser.FullName.ToUpper()} - {DateTime.Now.ToString("dd/MM/yyyy")}";
+            string toEmail = $"{employee.EmailCongTy}";
+            string body = $@"<div> <p style=""font-weight: bold; color: red;"">[NO REPLY]</p> <p> Dear anh/chị {employee.FullName} </p ></div >
                         <div style = ""margin-top: 30px;"">
                         <p> Cho em yêu cầu mua hàng thông tin sản phẩm như sau: </p>
                         <p> Mã sản phẩm: {requestBuy.ProductCode}</p>
@@ -679,12 +703,7 @@ namespace RERPAPI.Repo.GenericEntity
                         <p> Thanks </p>
                         <p> {_currentUser.FullName}</p>
                         </div>";
-
-            sendEmail.StatusSend = 1;
-            sendEmail.EmployeeID = requestBuy.JobRequirementEmployeeID;
-            sendEmail.Receiver = requestBuy.JobRequirementApprovedTBPID;
-
-            await _employeeSendEmailRepo.CreateAsync(sendEmail);
+            await _emailHelper.SendAsync(toEmail, subject, body);
         }
         public string GetProductCodeRTC()
         {

@@ -465,6 +465,10 @@ builder.Services.AddScoped<CourseExamResultDetailRepo>();
 builder.Services.AddScoped<CourseQuestionRepo>();
 builder.Services.AddScoped<CourseRightAnswerRepo>();
 builder.Services.AddScoped<CourseExamEvaluateRepo>();
+builder.Services.AddScoped<CourseAnswerRepo>();
+builder.Services.AddScoped<CourseExamPracticeRepo>();
+builder.Services.AddScoped<ExamResultRepo>();
+builder.Services.AddScoped<ExamResultDetailRepo>();
 
 builder.Services.AddScoped<InventoryProjectProductSaleLinkRepo>();
 builder.Services.AddScoped<HandoverPersonalAssetRepo>();
@@ -629,7 +633,7 @@ builder.Services.AddCors(options =>
 // Chỉ khởi tạo 1 lần duy nhất khi chạy server
 FirebaseApp.Create(new AppOptions()
 {
-    Credential = GoogleCredential.FromFile("firebase-adminsdk.json") // Thay bằng đường dẫn thực tế
+    Credential = GoogleCredential.FromFile("firebase-adminsdk-example.json") // Thay bằng đường dẫn thực tế
 });
 
 
@@ -682,8 +686,8 @@ builder.Services.AddAuthentication("Bearer")
 
                         ValidIssuers = new[] { jwtSettings.Issuer, candidateJwtSettings.Issuer },
                         ValidAudiences = new[] { jwtSettings.Audience, candidateJwtSettings.Audience },
-                        IssuerSigningKeys = new[] 
-                        { 
+                        IssuerSigningKeys = new[]
+                        {
                             new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
                             new SymmetricSecurityKey(Encoding.UTF8.GetBytes(candidateJwtSettings.SecretKey))
                         },

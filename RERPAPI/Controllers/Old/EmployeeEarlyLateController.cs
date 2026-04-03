@@ -19,13 +19,15 @@ namespace RERPAPI.Controllers.Old
         private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
         EmployeeSendEmailRepo _employeeSendEmailRepo;
         EmployeeRepo _employeeRepo;
+        private readonly EmailHelper _emailHelper;
 
-        public EmployeeEarlyLateController(EmployeeEarlyLateRepo employeeEarlyLateRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeSendEmailRepo employeeSendEmailRepo, EmployeeRepo employeeRepo)
+        public EmployeeEarlyLateController(EmployeeEarlyLateRepo employeeEarlyLateRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeSendEmailRepo employeeSendEmailRepo, EmployeeRepo employeeRepo, EmailHelper emailHelper)
         {
             _employeeEarlyLateRepo = employeeEarlyLateRepo;
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
             _employeeSendEmailRepo = employeeSendEmailRepo;
             _employeeRepo = employeeRepo;
+            _emailHelper = emailHelper;
         }
 
         [HttpPost]
@@ -152,7 +154,10 @@ namespace RERPAPI.Controllers.Old
                                       "<p>Anh/chị duyệt giúp em với ạ. Em cảm ơn!</p> </div>" +
                                       "<div style=\"margin-top: 30px;\"> <p>Thanks</p> <p>" + employee.FullName + "</p> </div>";
 
-                        _employeeSendEmailRepo.SendMail(employeeEarlyLate.EmployeeID ?? 0, employeeEarlyLate.ApprovedTP ?? 0, subject, body, "");
+                        //_employeeSendEmailRepo.SendMail(employeeEarlyLate.EmployeeID ?? 0, employeeEarlyLate.ApprovedTP ?? 0, subject, body, "");
+
+                        string cc = string.IsNullOrEmpty(employee.EmailCongTy) ? (employee.EmailCaNhan ?? "") : employee.EmailCongTy;
+                        _emailHelper.SendAsync(employeeTP.EmailCongTy, subject, body, true, cc);
                     }
                     return Ok(new
                     {
