@@ -996,5 +996,38 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        #region Lấy dữ liệu tổng hợp mua hàng dự án
+        [HttpGet("purchase-quote-summary")]
+        [RequiresPermission("N35,N1,N33")]
+        public async Task<IActionResult> getPurchaseQuoteSummary(
+            DateTime? DateStart,
+            DateTime? DateEnd,
+            int? DepartmentID = -1,
+            int? EmployeeRequestID = -1,
+            string? Keyword = ""
+            )
+        {
+            try
+            {
+                var param = new
+                {
+                    DateStart = DateStart,
+                    DateEnd = DateEnd,
+                    DepartmentID = DepartmentID,
+                    EmployeeRequestID = EmployeeRequestID,
+                    Keyword = Keyword,
+                };
+
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetPurchaseQuoteSummary", param);
+
+                return Ok(ApiResponseFactory.Success(data, null));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        #endregion
     }
 }
