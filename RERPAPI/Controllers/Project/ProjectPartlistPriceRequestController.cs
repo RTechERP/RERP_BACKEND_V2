@@ -978,5 +978,33 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
+        [HttpGet("get-partlist-summary")]
+        public async Task<IActionResult> GetProjectPartlistsSummary(
+           DateTime dateStart, DateTime dateEnd, int statusRequest, int projectId, string? keyword, int employeeID, int isDeleted)
+        {
+            try
+            {
+                dateStart = dateStart.Date;
+                dateEnd = dateEnd.Date.AddHours(23).AddMinutes(59).AddSeconds(59);
+
+                var dtPriceRequestResults = SQLHelper<dynamic>.ProcedureToList(
+                    "spGetPurchaseQuoteSummaryDetail",
+                    new string[] {
+                    "@DateStart", "@DateEnd", "@StatusRequest", "@ProjectID", "@Keyword",
+                    "@IsDeleted", "@EmployeeID"
+                    },
+                    new object[] {
+                    dateStart, dateEnd, statusRequest, projectId, keyword ?? "", isDeleted, employeeID
+                    }
+                );
+
+                var dt = SQLHelper<dynamic>.GetListData(dtPriceRequestResults, 0);
+                return Ok(ApiResponseFactory.Success(dt, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 }
