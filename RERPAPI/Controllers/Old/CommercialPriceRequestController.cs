@@ -24,7 +24,7 @@ namespace RERPAPI.Controllers.CommercialPriceRequest
             _commercialPriceRequestRepo = CommercialPriceRequestRepo;
         }
         [HttpGet("get-all")]
-        [RequiresPermission("N35")]
+        [RequiresPermission("N35,N33,N1")]
         public async Task<IActionResult> GetAll(
                 string? keyword,
                 int? yearNo,
@@ -74,6 +74,7 @@ namespace RERPAPI.Controllers.CommercialPriceRequest
         }
 
         [HttpPost("post-data-import-excel")]
+        [RequiresPermission("N35,N33,N1")]
         public async Task<IActionResult> SaveData([FromBody] List<CommercialPriceRequestImportDTO> lstDTO)
         {
             try
