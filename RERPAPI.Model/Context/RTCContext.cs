@@ -160,6 +160,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<ChangeLogStore> ChangeLogStores { get; set; }
 
+    public virtual DbSet<CommercialPriceRequest> CommercialPriceRequests { get; set; }
+
     public virtual DbSet<ConfigPrice> ConfigPrices { get; set; }
 
     public virtual DbSet<ConfigSystem> ConfigSystems { get; set; }
@@ -2486,6 +2488,47 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.LoginName).HasMaxLength(256);
             entity.Property(e => e.ObjectName).HasMaxLength(256);
             entity.Property(e => e.ObjectType).HasMaxLength(25);
+        });
+
+        modelBuilder.Entity<CommercialPriceRequest>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__Commerci__3214EC272DD5FDEB");
+
+            entity.ToTable("CommercialPriceRequest", tb => tb.HasComment("Báo giá thương mại"));
+
+            entity.Property(e => e.AdminSentAt).HasColumnType("datetime");
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime");
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.Leadtime).HasMaxLength(500);
+            entity.Property(e => e.MarginRate).HasColumnType("decimal(18, 4)");
+            entity.Property(e => e.Moq).HasColumnType("decimal(18, 4)");
+            entity.Property(e => e.OtherCost)
+                .HasDefaultValue(0m)
+                .HasColumnType("decimal(18, 4)");
+            entity.Property(e => e.PicPurName).HasMaxLength(100);
+            entity.Property(e => e.ProductCode).HasMaxLength(100);
+            entity.Property(e => e.PurRepliedAt).HasColumnType("datetime");
+            entity.Property(e => e.PurSentAt).HasColumnType("datetime");
+            entity.Property(e => e.Qty)
+                .HasDefaultValue(0m)
+                .HasColumnType("decimal(18, 4)");
+            entity.Property(e => e.QuoteRound).HasDefaultValue(1);
+            entity.Property(e => e.RequestSeq).HasDefaultValue(1);
+            entity.Property(e => e.RfqNo).HasMaxLength(70);
+            entity.Property(e => e.SaleLeadtime).HasMaxLength(500);
+            entity.Property(e => e.SaleTotalPrice).HasColumnType("decimal(18, 4)");
+            entity.Property(e => e.SaleUnitPrice).HasColumnType("decimal(18, 4)");
+            entity.Property(e => e.ShippingCost)
+                .HasDefaultValue(0m)
+                .HasColumnType("decimal(18, 4)");
+            entity.Property(e => e.Supplier).HasMaxLength(500);
+            entity.Property(e => e.Unit).HasMaxLength(50);
+            entity.Property(e => e.UnitPrice).HasMaxLength(100);
+            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            entity.Property(e => e.Vat)
+                .HasDefaultValue(0m)
+                .HasColumnType("decimal(18, 4)");
         });
 
         modelBuilder.Entity<ConfigPrice>(entity =>

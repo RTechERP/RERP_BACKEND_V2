@@ -112,6 +112,25 @@ namespace RERPAPI.Model.Common
                 multi.Read<T2>().AsList()
             );
         }
+        public static async Task< int> ExecuteStoredProcedure(
+        string procedureName,
+        object parameters = null,
+        int? commandTimeout = null)
+        {
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+
+                return await connection.ExecuteAsync(
+                    procedureName,
+                    parameters,
+                    commandType: CommandType.StoredProcedure,
+                    commandTimeout: commandTimeout
+                );
+            }
+        }
+
+
 
     }
 }

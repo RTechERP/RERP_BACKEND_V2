@@ -599,6 +599,7 @@ builder.Services.AddScoped<EmailHelper>();
 #endregion
 
 builder.Services.AddScoped<HistoryBorrowSaleLogRepo>();
+builder.Services.AddScoped<CommercialPriceRequestRepo>();
 
 
 builder.Services.AddScoped<CurrentUser>(provider =>
@@ -633,7 +634,7 @@ builder.Services.AddCors(options =>
 // Chỉ khởi tạo 1 lần duy nhất khi chạy server
 FirebaseApp.Create(new AppOptions()
 {
-    Credential = GoogleCredential.FromFile("firebase-adminsdk-example.json") // Thay bằng đường dẫn thực tế
+    Credential = GoogleCredential.FromFile("firebase-adminsdk.json") // Thay bằng đường dẫn thực tế
 });
 
 
