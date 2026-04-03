@@ -979,6 +979,7 @@ namespace RERPAPI.Controllers.Project
         }
 
         [HttpGet("get-partlist-summary")]
+        [RequiresPermission("N35,N1,N33")]
         public async Task<IActionResult> GetProjectPartlistsSummary(
            DateTime dateStart, DateTime dateEnd, int statusRequest, int projectId, string? keyword, int employeeID, int isDeleted)
         {
