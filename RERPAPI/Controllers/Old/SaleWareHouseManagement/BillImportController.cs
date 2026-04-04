@@ -37,6 +37,10 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         private readonly EmployeeRepo _employeeRepo;
         //private readonly PONCCDetailRepo _pONCCDetailRepo;
         private readonly PONCCRepo _pONCCRepo;
+        private readonly ProductGroupWareHouseRepo _productGroupWareHouseRepo;
+        private readonly ProductSaleGroupWarehouseLinkRepo _productSaleGroupWarehouseLinkRepo;
+        //private readonly ProductSaleGroupWarehouseLink
+
 
         private List<InvoiceDTO> listInvoice = new List<InvoiceDTO>();
 
@@ -52,7 +56,9 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             BillImportDetailSerialNumberRepo billImportDetailSerialNumberRepo,
             IConfiguration configuration,
             DocumentImportPONCCRepo documentImportPONCCRepo, EmployeeRepo employeeRepo
-            , PONCCRepo pONCCRepo)
+            , PONCCRepo pONCCRepo
+            ,ProductSaleGroupWarehouseLinkRepo productSaleGroupWarehouseLinkRepo,
+            ProductGroupWareHouseRepo productGroupWareHouseRepo)
         {
             _billImportRepo = billImportRepo;
             _billImportLogRepo = billImportLogRepo;
@@ -67,6 +73,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             _documentImportPONCCRepo = documentImportPONCCRepo;
             _employeeRepo = employeeRepo;
             _pONCCRepo = pONCCRepo;
+            _productGroupWareHouseRepo = productGroupWareHouseRepo;
+            _productSaleGroupWarehouseLinkRepo = productSaleGroupWarehouseLinkRepo;
         }
         /// <summary>
         /// lấy danh sách phiếu nhập
@@ -582,7 +590,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                             }
                         }
                         await UpdateInventoryProject(detail, dto.billImport);
-
+                        await SyncProductSaleGroupWarehouseLink(dto.billImport, detail);
                         // Kiểm tra tồn kho
                         var inventoryKey = (dto.billImport.WarehouseID, detail.ProductID);
                         bool existsInDb = inventoryList.Any(x =>
@@ -1256,6 +1264,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 }
             }
 
+
+
             //if (detail.ProjectID>0 || (detail.POKHList != null && detail.POKHList.Count > 0))
             //{
             //    decimal totalPokhQty = detail.POKHList.Sum(x => x.QuantityRequest);
@@ -1362,6 +1372,54 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
             //    detail.InventoryProjectID ??= invProject.ID;
             //}
+        }
+
+        private async Task SyncProductSaleGroupWarehouseLink(BillImport billImport, BillImportDetailDTO detail)
+        {
+            if (detail.ProductID == null || detail.ProductID <= 0)
+                return;
+
+            if (billImport.WarehouseID == null || billImport.WarehouseID <= 0)
+                return;
+
+            if (string.IsNullOrWhiteSpace(billImport.GroupID))
+                return;
+
+            if (!int.TryParse(billImport.GroupID, out int productGroupId))
+                return;
+
+            var productGroupWarehouse = _productGroupWareHouseRepo
+                .GetAll(x =>
+                    x.ProductGroupID == productGroupId
+                    && x.WarehouseID == billImport.WarehouseID
+                    && (x.IsDeleted == null || x.IsDeleted == false))
+                .FirstOrDefault();
+
+            if (productGroupWarehouse == null)
+                return;
+
+            var existingLink = _productSaleGroupWarehouseLinkRepo
+                .GetAll(x =>
+                    x.ProductSaleID == detail.ProductID
+                    && x.ProductGroupWarehouseID == productGroupWarehouse.ID)
+                .FirstOrDefault();
+
+            if (existingLink == null)
+            {
+                var newLink = new ProductSaleGroupWarehouseLink
+                {
+                    ProductSaleID = detail.ProductID,
+                    ProductGroupWarehouseID = productGroupWarehouse.ID,
+                    IsDeleted = false
+                };
+
+                await _productSaleGroupWarehouseLinkRepo.CreateAsync(newLink);
+            }
+            else if (existingLink.IsDeleted == true)
+            {
+                existingLink.IsDeleted = false;
+                await _productSaleGroupWarehouseLinkRepo.UpdateAsync(existingLink);
+            }
         }
 
         private async Task<decimal> UpdateReturnQuantityLoan(int pokhDetailId, decimal quantityKeep)
