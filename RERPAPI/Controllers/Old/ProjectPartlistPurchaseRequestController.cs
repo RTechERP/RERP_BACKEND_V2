@@ -846,6 +846,7 @@ namespace RERPAPI.Controllers.Old
                     //var dt = SQLHelper<dynamic>.ProcedureToList("spGetInventory", new[] { "@ProductSaleID" }, new object[] { item.ProductSaleID });
                     var dt = SQLHelper<dynamic>.ProcedureToList("spGetInventory_Test", new[] { "@ProductSaleID" }, new object[] { item.ProductSaleID });
                     var inventoryData = SQLHelper<dynamic>.GetListData(dt, 0);
+                    if (inventoryData.Count < 0) return BadRequest(ApiResponseFactory.Fail(null, $"Sản phẩm [{item.ProductName}] không có trong tồn kho!"));
                     var quantity = inventoryData[0]?.TotalQuantityLast;
                     if (quantity == null || Convert.ToDecimal(quantity) <= 0)
                     {
