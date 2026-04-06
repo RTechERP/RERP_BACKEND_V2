@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders;
@@ -42,6 +41,23 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     PaymentOrderID = paymentOrderId,
                 };
                 var dataStore = await SqlDapper<object>.ProcedureToListTAsync("spGetPaymentOrderLog", param);
+                return Ok(ApiResponseFactory.Success(dataStore, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-data-new")]
+        public async Task<IActionResult> GetDataNew(int paymentOrderId)
+        {
+            try
+            {
+                var param = new
+                {
+                    ID = paymentOrderId,
+                };
+                var dataStore = await SqlDapper<object>.ProcedureToListTAsync("spGetPaymentOrderLog_New", param);
                 return Ok(ApiResponseFactory.Success(dataStore, ""));
             }
             catch (Exception ex)

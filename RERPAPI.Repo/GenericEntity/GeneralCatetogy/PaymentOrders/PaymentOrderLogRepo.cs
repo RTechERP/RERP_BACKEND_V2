@@ -302,7 +302,20 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                                 if (item.Action.ButtonActionName == "btnUpdateDocument") log.IsRequestAppendFileAC = true;
                             }
                         }
-                        int resultUpdate = await UpdateAsync(log);
+                        //int resultUpdate = await UpdateAsync(log);
+                        int resultUpdate = await SqlDapper<PaymentOrderLog>.ExecuteStoredProcedure("spUpdatePaymentOrderLog", new
+                        {
+                            ID = log.ID,
+                            DateApproved = log.DateApproved,
+                            IsApproved = log.IsApproved,
+                            EmployeeApproveActualID = log.EmployeeApproveActualID,
+                            ReasonCancel = log.ReasonCancel,
+                            ContentLog = log.ContentLog,
+                            IsRequestAppendFileAC = log.IsRequestAppendFileAC,
+                            ReasonRequestAppendFileAC = log.ReasonRequestAppendFileAC,
+                            ReasonRequestAppendFileHR = log.ReasonRequestAppendFileHR,
+                            IsRequestAppendFileHR = log.IsRequestAppendFileHR
+                        });
                     }
                 }
                 if (messageFails.Count > 0)

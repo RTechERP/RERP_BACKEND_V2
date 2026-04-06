@@ -512,10 +512,6 @@ namespace RERPAPI.Controllers.Old
                             await _repo.UpdateAsync(item);
                         }
                     }
-                    //model.IsTechBought = requestBought.IsTechBought;
-                    //model.ProjectPartListID = requestBought.ProjectPartListID;
-                    //model.Note = txtNote.Text;
-                    //model.ProductCode = requestBought.ProductCode;
                 }
                 model.StatusRequest = 1;
                 model.ProjectPartlistPurchaseRequestTypeID = model.TicketType == 1 ? 4 : 3;
@@ -547,51 +543,6 @@ namespace RERPAPI.Controllers.Old
 
                 if (!_repo.ValidateUpdateData(data, out string mes))
                     return BadRequest(ApiResponseFactory.Fail(null, mes));
-                //foreach (var item in data)
-                //{
-                //// ===== HANDLE DUPLICATE =====
-                //if (item.ID <= 0 && item.DuplicateID > 0)
-                //{
-                //    var source = _repo.GetByID(item.DuplicateID ?? 0);
-                //    if (source.ID <= 0) continue;
-                //    item.EmployeeID = source.EmployeeID;
-                //    item.ProjectPartListID = source.ProjectPartListID;
-                //    item.UnitCountID = source.UnitCountID;
-                //    item.StatusRequest = source.StatusRequest;
-                //    item.SupplierSaleID = source.SupplierSaleID;
-
-                //    item.IsApprovedTBP = source.IsApprovedTBP;
-                //    item.ApprovedTBP = source.ApprovedTBP;
-                //    item.IsApprovedBGD = source.IsApprovedBGD;
-                //    item.ApprovedBGD = source.ApprovedBGD;
-
-                //    item.ProductSaleID = source.ProductSaleID;
-                //    item.ProductGroupID = source.ProductGroupID;
-                //    item.CurrencyID = source.CurrencyID;
-
-                //    item.IsImport = source.IsImport;
-                //    item.IsRequestApproved = source.IsRequestApproved;
-                //    item.POKHDetailID = source.POKHDetailID;
-                //    item.JobRequirementID = source.JobRequirementID;
-
-                //    item.IsDeleted = source.IsDeleted;
-                //    item.InventoryProjectID = source.InventoryProjectID;
-                //    item.IsTechBought = source.IsTechBought;
-
-                //    item.ProductGroupRTCID = source.ProductGroupRTCID;
-                //    item.ProductRTCID = source.ProductRTCID;
-                //    item.TicketType = source.TicketType;
-
-                //    item.DateReturnEstimated = source.DateReturnEstimated;
-
-                //    item.EmployeeApproveID = source.EmployeeApproveID;
-                //    item.EmployeeIDRequestApproved = source.EmployeeIDRequestApproved;
-
-                //    item.UnitName = source.UnitName;
-
-                //}
-                //// ===== END HANDLE DUPLICATE =====
-                //}
 
                 var firms = _firmRepo.GetAll(x => x.FirmType == 1 && x.IsDelete != true);
                 foreach (var item in data)
@@ -622,7 +573,6 @@ namespace RERPAPI.Controllers.Old
                             x.IsDeleted != true
                         ).ToList();
 
-                        // Sau đó filter Contains ở phía memory
                         ProductSale productSale = productSales
                             .FirstOrDefault(x => productGroupIDs.Contains((int)x.ProductGroupID))
                             ?? new ProductSale();
@@ -896,6 +846,7 @@ namespace RERPAPI.Controllers.Old
                     //var dt = SQLHelper<dynamic>.ProcedureToList("spGetInventory", new[] { "@ProductSaleID" }, new object[] { item.ProductSaleID });
                     var dt = SQLHelper<dynamic>.ProcedureToList("spGetInventory_Test", new[] { "@ProductSaleID" }, new object[] { item.ProductSaleID });
                     var inventoryData = SQLHelper<dynamic>.GetListData(dt, 0);
+                    if (inventoryData.Count < 0) return BadRequest(ApiResponseFactory.Fail(null, $"Sản phẩm [{item.ProductName}] không có trong tồn kho!"));
                     var quantity = inventoryData[0]?.TotalQuantityLast;
                     if (quantity == null || Convert.ToDecimal(quantity) <= 0)
                     {
@@ -1046,5 +997,38 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        #region Lấy dữ liệu tổng hợp mua hàng dự án
+        [HttpGet("purchase-quote-summary")]
+        [RequiresPermission("N35,N1,N33")]
+        public async Task<IActionResult> getPurchaseQuoteSummary(
+            DateTime? DateStart,
+            DateTime? DateEnd,
+            int? DepartmentID = -1,
+            int? EmployeeRequestID = -1,
+            string? Keyword = ""
+            )
+        {
+            try
+            {
+                var param = new
+                {
+                    DateStart = DateStart,
+                    DateEnd = DateEnd,
+                    DepartmentID = DepartmentID,
+                    EmployeeRequestID = EmployeeRequestID,
+                    Keyword = Keyword,
+                };
+
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetPurchaseQuoteSummary", param);
+
+                return Ok(ApiResponseFactory.Success(data, null));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        #endregion
     }
 }
