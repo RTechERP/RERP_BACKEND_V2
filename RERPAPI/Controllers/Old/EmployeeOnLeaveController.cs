@@ -133,7 +133,7 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+    
         [HttpPost("list-summary-employee-on-leave-person")]
         public IActionResult ListSummaryEmployeeOnleavePerson(EmployeeOnleaveSummaryParam request)
         {
@@ -202,6 +202,7 @@ namespace RERPAPI.Controllers.Old
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
                 var vUserHR = _vUserGroupLinksRepo
+
                            .GetAll()
                            .FirstOrDefault(x =>
                             (x.Code == "N1" || x.Code == "N2") &&
@@ -290,9 +291,9 @@ namespace RERPAPI.Controllers.Old
 
                     if (employee != null && employeeTP != null)
                     {
-                        //string mailTo = employeeTP.EmailCongTy ?? employeeTP.EmailCom
-                        //                ?? employeeTP.EmailCaNhan ?? employeeTP.Email ?? "";
-                        string mailTo = "rtcmodula@gmail.com";
+                        string mailTo = employeeTP.EmailCongTy ?? employeeTP.EmailCom
+                                       ?? employeeTP.EmailCaNhan ?? employeeTP.Email ?? "";
+                      //  string mailTo = "rtcmodula@gmail.com";
 
                         if (!string.IsNullOrWhiteSpace(mailTo))
                         {
@@ -380,6 +381,21 @@ namespace RERPAPI.Controllers.Old
             {
                 var result = await _employeeOnLeavePhaseRepo.GetMultiByID(id);
                 return Ok(ApiResponseFactory.Success(result, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+            [HttpGet("get-approve-id")]
+        public IActionResult GetApproveID([FromQuery] int employeeID, [FromQuery] string tableName)
+        {
+            try
+            {
+                var approve = SQLHelper<object>.ProcedureToList("spGetApproveID", new string[] { "@EmployeeID", "@TableName" },
+               new object[] { employeeID, tableName });
+          //     var approveID = SQLHelper<object>.GetListData(approve, 1);
+                return Ok(ApiResponseFactory.Success(approve[0][0], ""));
             }
             catch (Exception ex)
             {
