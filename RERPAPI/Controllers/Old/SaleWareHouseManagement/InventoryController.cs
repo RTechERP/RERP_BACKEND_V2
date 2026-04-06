@@ -5,6 +5,7 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
+using System.Diagnostics;
 
 namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 {
@@ -27,11 +28,11 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         {
             try
             {
-
+                //Stopwatch stopwatch = new Stopwatch();
                 if (filter.checkAll == true) filter.productGroupID = 0;
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
                        //"spGetInventory", new string[] { "@ID", "@Find", "@WarehouseCode", "@IsStock" },
-                       "spGetInventory_Test", new string[] { "@ID", "@Find", "@WarehouseCode", "@IsStock" },
+                       "spGetInventory_New", new string[] { "@ID", "@Find", "@WarehouseCode", "@IsStock" },
                     new object[] { filter.productGroupID, filter.Find, filter.WarehouseCode, filter.IsStock == false ? 0 : 1 }
                    );
                 return Ok(new

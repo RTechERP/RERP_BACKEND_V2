@@ -10,4 +10,6 @@ public partial class FcmToken
     public string? Token { get; set; }
 
     public int? EmployeeID { get; set; }
+
+    public string? DeviceID { get; set; }
 }

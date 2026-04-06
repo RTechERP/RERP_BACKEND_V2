@@ -163,6 +163,25 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpGet("get-product-new")]
+        public IActionResult getOptionProductNew(string warehouseCode, int productGroupID)
+        {
+            try
+            {
+                List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
+                       //"spGetInventory", new string[] { "@ID", "@Find", "@WarehouseCode" },
+                       "spGetInventory_New", new string[] { "@ID", "@Find", "@WarehouseCode" },
+                    new object[] { productGroupID, "", warehouseCode }
+                   );
+                var data = SQLHelper<object>.GetListData(result, 0);
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [HttpGet("get-product-group")]
         public IActionResult getProductGroup(bool isAdmin, int departmentID)
         {

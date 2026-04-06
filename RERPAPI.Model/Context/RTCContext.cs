@@ -1883,6 +1883,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.InvoiceNumber)
                 .HasMaxLength(150)
                 .HasComment("Số hóa đơn");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.IsInvoice).HasComment("Hóa đơn");
             entity.Property(e => e.Note).HasComment("Ghi chú");
             entity.Property(e => e.POKHDetailID).HasComment("ID chi tiết pokh");
@@ -6214,6 +6215,7 @@ public partial class RTCContext : DbContext
                 .HasComment("Số lượng tối thiểu")
                 .HasColumnType("decimal(18, 2)");
             entity.Property(e => e.Note).HasComment("Ghi chú");
+            entity.Property(e => e.ProductGroupID).HasComment("Link với productgroup");
             entity.Property(e => e.ProductSaleID).HasComment("ID sản phẩm kho sale");
             entity.Property(e => e.TotalQuantityFirst)
                 .HasComment("Tồn đầu kỳ")
@@ -7741,6 +7743,8 @@ public partial class RTCContext : DbContext
 
             entity.HasIndex(e => new { e.DateOrder, e.DatePayment, e.TypeOrder, e.PaymentOrderTypeID, e.EmployeeID, e.IsDelete }, "IX_PaymentOrder_Filter");
 
+            entity.HasIndex(e => e.RegisterContractID, "IX_PaymentOrder_RegisterContractID");
+
             entity.HasIndex(e => e.Code, "Index_PaymentOrder_Code");
 
             entity.HasIndex(e => e.CustomerID, "Index_PaymentOrder_CustomerID");
@@ -7779,6 +7783,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.IsBill)
                 .HasDefaultValue(false)
                 .HasComment("Có hóa đơn");
+            entity.Property(e => e.IsDelete).HasDefaultValue(false);
             entity.Property(e => e.StartLocation).HasComment("Điểm đi");
             entity.Property(e => e.TotalMoney).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.TypeBankTransfer).HasComment("1:Chuyển khoản RTC; 2:Chuyển khoản MVI;3:Chuyển khoản APR;4:Chuyển khoản Yonko;5:Chuyển khoản cá nhân");
@@ -8778,6 +8783,14 @@ public partial class RTCContext : DbContext
         {
             entity.ToTable("ProjectPartlistPriceRequest");
 
+            entity.HasIndex(e => new { e.ProductCode, e.DatePriceQuote }, "IX_ProductCode_DatePriceQuote")
+                .IsDescending(false, true)
+                .HasFilter("([UnitPrice]<>(0))");
+
+            entity.HasIndex(e => new { e.ProductCode, e.UpdatedDate }, "IX_ProductCode_UpdatedDate")
+                .IsDescending(false, true)
+                .HasFilter("([UnitPrice]<>(0))");
+
             entity.HasIndex(e => e.IsDeleted, "Index_ProjectPartlistPriceRequest_IsDeleted");
 
             entity.HasIndex(e => e.UnitPrice, "Index_ProjectPartlistPriceRequest_UnitPrice");
@@ -8799,6 +8812,7 @@ public partial class RTCContext : DbContext
                 .HasDefaultValue(0)
                 .HasComment("LeadTime cần hàng (Kỹ thuật)");
             entity.Property(e => e.Maker).HasMaxLength(150);
+            entity.Property(e => e.ProductCode).HasMaxLength(550);
             entity.Property(e => e.Quantity).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.StatusRequest).HasComment("1:Yêu cầu báo giá; 2:Đã báo giá;3: Từ chối báo giá");
             entity.Property(e => e.TargetPrice)

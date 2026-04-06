@@ -13,6 +13,7 @@ using RERPAPI.Repo.GenericEntity.Technical;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO.Compression;
+using System.Threading.Tasks;
 using ZXing;
 using ZXing.Common;
 
@@ -39,6 +40,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         private readonly PONCCRepo _pONCCRepo;
         private readonly ProductGroupWareHouseRepo _productGroupWareHouseRepo;
         private readonly ProductSaleGroupWarehouseLinkRepo _productSaleGroupWarehouseLinkRepo;
+        private readonly ProductSaleRepo _productSaleRepo;
         //private readonly ProductSaleGroupWarehouseLink
 
 
@@ -58,7 +60,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             DocumentImportPONCCRepo documentImportPONCCRepo, EmployeeRepo employeeRepo
             , PONCCRepo pONCCRepo
             ,ProductSaleGroupWarehouseLinkRepo productSaleGroupWarehouseLinkRepo,
-            ProductGroupWareHouseRepo productGroupWareHouseRepo)
+            ProductGroupWareHouseRepo productGroupWareHouseRepo, ProductSaleRepo productSaleRepo)
         {
             _billImportRepo = billImportRepo;
             _billImportLogRepo = billImportLogRepo;
@@ -75,6 +77,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             _pONCCRepo = pONCCRepo;
             _productGroupWareHouseRepo = productGroupWareHouseRepo;
             _productSaleGroupWarehouseLinkRepo = productSaleGroupWarehouseLinkRepo;
+            _productSaleRepo = productSaleRepo;
         }
         /// <summary>
         /// lấy danh sách phiếu nhập
@@ -162,6 +165,31 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 });
             }
         }
+        [HttpGet("get-product-new")]
+        public async Task<IActionResult> getOptionProductNew()
+        {
+            try
+            {
+                List<ProductSale> result =  _productSaleRepo.GetAll(p => p.IsDeleted.HasValue && !p.IsDeleted.Value);
+                /* List<dynamic> billList = result[0]; // dữ liệu hóa đơn*/
+
+                return Ok(new
+                {
+                    status = 1,
+                    data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
+        }
+
 
         /// <summary>
         /// lấy dữ liệu phiếu nhâp theo id 
@@ -590,12 +618,12 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                             }
                         }
                         await UpdateInventoryProject(detail, dto.billImport);
-                        await SyncProductSaleGroupWarehouseLink(dto.billImport, detail);
+                        //await SyncProductSaleGroupWarehouseLink(dto.billImport, detail);
                         // Kiểm tra tồn kho
                         var inventoryKey = (dto.billImport.WarehouseID, detail.ProductID);
                         bool existsInDb = inventoryList.Any(x =>
                             x.WarehouseID == dto.billImport.WarehouseID &&
-                            x.ProductSaleID == detail.ProductID);
+                            x.ProductSaleID == detail.ProductID && x.ProductGroupID == dto.billImport.KhoTypeID );
                         bool existsInCurrentBatch = createdProductIds.Contains(inventoryKey);
 
                         if (!existsInDb && !existsInCurrentBatch)
@@ -604,6 +632,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                             {
                                 WarehouseID = dto.billImport.WarehouseID,
                                 ProductSaleID = detail.ProductID,
+                                ProductGroupID = dto.billImport.KhoTypeID,
                                 TotalQuantityFirst = 0,
                                 TotalQuantityLast = 0,
                                 Import = 0,
