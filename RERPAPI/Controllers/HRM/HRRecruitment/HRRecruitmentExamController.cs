@@ -31,7 +31,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         ConfigSystemRepo _configSystemRepo;
         HiringRequestExamRepo _hiringRequestExamRepo;
         HRHiringRequestRepo _hiringRequestRepo;
-        HRRecruitmentCandidateRepo _hrRecruitmentCandidateRepo;
+        HRRecruitmentCandidateRepo _hrRecruitmentCandidateRepo; 
         public HRRecruitmentExamController(HRRecruitmentQuestionRepo hrRecruitmentQuestionRepo, HRRecruitmentAnswersRepo hrRecruitmentAnswersRepo, HRRecruitmentRightAnswearsRepo hrRecruitmentRightAnswearsRepo, HRRecruitmentExamRepo hRRecruitmentExamRepo, HRRecruitmentExamResultRepo hrRecruitmentExamResultRepo, HRRecruitmentExamResultDetailRepo hrRecruitmentExamResultDetailRepo, HRRecruitmentExamResultImageRepo hrRecruitmentExamResultImageRepo, ConfigSystemRepo configSystemRepo, HiringRequestExamRepo hiringRequestExamRepo, HRHiringRequestRepo hiringRequestRepo, HRRecruitmentCandidateRepo hRRecruitmentCandidateRepo)
         {
             _hrRecruitmentQuestionRepo = hrRecruitmentQuestionRepo;
@@ -1162,6 +1162,64 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 {
                     return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
                 }
+            }
+        }
+        #endregion
+        #region api đánh giá đạt/ hủy đạt kết quả thi của ứng viên (dành cho TBP)
+        [Authorize]
+        [RequiresPermission("N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [HttpPost("evaluate-candidate-result")]
+        public async Task<IActionResult> EvaluateCandidateResult([FromBody] EvaluateCandidateRequestDTO request)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var result = _hrRecruitmentExamResultRepo.GetAll(x => x.EmployeeID == request.HRRecruitmentCandidateID && x.IsDeleted == false).ToList();
+                
+                // Optionally check if results exist
+                // if (result.Count == 0) return BadRequest(ApiResponseFactory.Fail(null, "Ứng viên chưa làm bài thi nào!"));
+                
+                foreach (var item in result)
+                {
+                    if (item.StatusResult != 2)
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, $"Vui lòng xác nhận hoàn tất chấm điểm cho tất cả bài làm của ứng viên!"));
+                    }
+                }
+                var hrRecruitmentCandidate = _hrRecruitmentCandidateRepo.GetByID(request.HRRecruitmentCandidateID);
+                if (hrRecruitmentCandidate == null)
+                {
+                    return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy thông tin ứng viên."));
+                }
+                if(hrRecruitmentCandidate.Status > 5)
+                {
+                    switch (hrRecruitmentCandidate.Status)
+                    {
+                        case 7:
+                            return BadRequest(ApiResponseFactory.Fail(null, "Ứng viên đang ở trạng thái 'Gửi thư mời nhận việc', không thể đánh giá kết quả thi!"));
+                        case 8:
+                            return BadRequest(ApiResponseFactory.Fail(null, "Ứng viên đang ở trạng thái 'Xác nhận thư mời', không thể đánh giá kết quả thi!"));
+                        case 9:
+                            return BadRequest(ApiResponseFactory.Fail(null, "Ứng viên đã trúng tuyển, không thể đánh giá kết quả thi!"));
+                        case 6:
+                            return BadRequest(ApiResponseFactory.Fail(null, "Ứng viên đang ở trạng thái 'Trình phê duyệt', không thể đánh giá kết quả thi!"));
+                        default:
+                            break;
+                    }
+                }
+
+                hrRecruitmentCandidate.Status = request.Status; // 5: Đạt, 4: Không đạt
+                hrRecruitmentCandidate.UpdatedDate = DateTime.Now;
+                hrRecruitmentCandidate.UpdatedBy = currentUser.LoginName;
+
+                await _hrRecruitmentCandidateRepo.UpdateAsync(hrRecruitmentCandidate);
+                return Ok(ApiResponseFactory.Success(result, $"Đã đánh giá kết quả thi ứng viên {(hrRecruitmentCandidate.FullName)}: {(request.Status == 5 ? "Đạt" : "Không đạt")}"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         #endregion

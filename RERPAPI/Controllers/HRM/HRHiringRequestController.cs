@@ -1,3 +1,4 @@
+using Google.Apis.Util;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Configuration;
@@ -86,6 +87,7 @@ namespace RERPAPI.Controllers
                     model.HiringRequests.HiringRequestCode = _hrHiringRequestRepo.GetRequestCode().HiringRequestCode;
                     model.HiringRequests.CreatedDate = DateTime.Now;
                     model.HiringRequests.IsDeleted = false;
+                    model.HiringRequests.IsCompleted = false;
                     model.HiringRequests.CreatedBy =  model.HiringRequests.UpdatedBy =  _currentUser.LoginName;
                     await _hrHiringRequestRepo.CreateAsync(model.HiringRequests);
                     hiringRequestId = model.HiringRequests.ID;

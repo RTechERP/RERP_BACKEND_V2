@@ -76,7 +76,7 @@ namespace RERPAPI.SendService
 
             try
             {
-                var response = await FirebaseMessaging.DefaultInstance.SendMulticastAsync(message);
+                var response = await FirebaseMessaging.DefaultInstance.SendEachForMulticastAsync(message);
                 _logger.LogInformation($"{response.SuccessCount} messages were sent successfully out of {deviceTokens.Count}");
 
                 if (response.FailureCount > 0)
