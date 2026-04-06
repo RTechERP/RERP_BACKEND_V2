@@ -10,8 +10,8 @@ namespace RERPAPI.Model.DTO.HRM
     {
         public bool IsActiveExam { get; set; }
         public int HiringRequestID { get; set; }
-        public List<int> listHiringRequestIDExam { get; set; }
+        public List<int>? listHiringRequestIDExam { get; set; }
 
-        public List<int> deletedHiringRequestIDExam { get; set; }
+        public List<int>? deletedHiringRequestIDExam { get; set; }
     }
 }

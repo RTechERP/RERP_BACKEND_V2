@@ -10,4 +10,10 @@ namespace RERPAPI.Model.DTO
     {
         public int ExamResultID { get; set; }
     }
+
+    public class EvaluateCandidateRequestDTO
+    {
+        public int HRRecruitmentCandidateID { get; set; }
+        public int Status { get; set; }
+    }
 }

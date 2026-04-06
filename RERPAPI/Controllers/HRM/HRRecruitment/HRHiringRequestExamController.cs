@@ -84,9 +84,9 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 a.IsActiveExam = model.IsActiveExam;
                 await _hiringRequestRepo.UpdateAsync(a);
 
-                // Kiểm tra nếu cả hai danh sách đều rỗng, không có gì để xử lý
+                // Kiểm tra nếu cả hai danh sách đều rỗng, không có gì để xử lý( trừ trường hợp active bài thi)
                 if ((model.listHiringRequestIDExam == null || model.listHiringRequestIDExam.Count == 0) &&
-                    (model.deletedHiringRequestIDExam == null || model.deletedHiringRequestIDExam.Count == 0))
+                    (model.deletedHiringRequestIDExam == null || model.deletedHiringRequestIDExam.Count == 0) && model.IsActiveExam==null)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Không có đề thi nào được gửi để thêm/cập nhật hoặc xóa."));
                 }
