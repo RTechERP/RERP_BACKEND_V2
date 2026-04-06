@@ -140,8 +140,8 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
 
                 var param = new
                 {
-                    PageNumber = p.PageNumber,
-                    PageSize = p.PageSize,
+                    //PageNumber = p.PageNumber,
+                    //PageSize = p.PageSize,
                     TypeOrder = p.TypeOrder ?? 0,
                     PaymentOrderTypeID = p.PaymentOrderTypeID ?? 0,
                     DateStart = p.DateStart,
@@ -154,12 +154,59 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     IsSpecialOrder = p.IsSpecialOrder,
                     ApprovedTBPID = p.ApprovedTBPID,
                     Step = p.Step ?? 0,
-                    IsShowTable = 0,
+                    //IsShowTable = 0,
                     Statuslog = p.Statuslog ?? 0,
                     IsDelete = p.IsDelete,
                 };
 
-                var data = await SqlDapper<object>.ProcedureToListAsync("spGetPaymentOrder_New", param);
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetPaymentOrder_New2", param);
+
+                //return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0)));
+                return Ok(ApiResponseFactory.Success(data));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpPost("special")]
+        public async Task<IActionResult> GetAllSpecial([FromBody] PaymentOrderParam p)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                _currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                p.DateStart = p.DateStart.Value.ToLocalTime().Date;
+                p.DateEnd = p.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
+
+                //var data = SQLHelper<object>.ProcedureToList("spGetPaymentOrder_New",
+                //            new string[] { "@PageNumber", "@PageSize", "@TypeOrder", "@PaymentOrderTypeID", "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@Keyword", "@IsIgnoreHR", "@IsApproved", "@IsSpecialOrder", "@ApprovedTBPID", "@Step", "@IsShowTable", "@Statuslog", "@IsDelete" },
+                //            new object[] { p.PageNumber, p.PageSize, p.TypeOrder, p.PaymentOrderTypeID, p.DateStart, p.DateEnd, p.DepartmentID, p.EmployeeID, p.Keyword, p.IsIgnoreHR, p.IsApproved, p.IsSpecialOrder, p.ApprovedTBPID, p.Step, p.IsShowTable, p.Statuslog, p.IsDelete });
+
+
+                var param = new
+                {
+                    //PageNumber = p.PageNumber,
+                    //PageSize = p.PageSize,
+                    TypeOrder = p.TypeOrder ?? 0,
+                    PaymentOrderTypeID = p.PaymentOrderTypeID ?? 0,
+                    DateStart = p.DateStart,
+                    DateEnd = p.DateEnd,
+                    DepartmentID = p.DepartmentID,
+                    EmployeeID = p.EmployeeID,
+                    Keyword = p.Keyword,
+                    IsIgnoreHR = p.IsIgnoreHR ?? -1,
+                    IsApproved = p.IsApproved ?? -1,
+                    IsSpecialOrder = p.IsSpecialOrder,
+                    ApprovedTBPID = p.ApprovedTBPID,
+                    Step = p.Step ?? 0,
+                    //IsShowTable = 0,
+                    Statuslog = p.Statuslog ?? 0,
+                    IsDelete = p.IsDelete,
+                };
+
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetPaymentOrder_New_Special", param);
 
                 //return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0)));
                 return Ok(ApiResponseFactory.Success(data));

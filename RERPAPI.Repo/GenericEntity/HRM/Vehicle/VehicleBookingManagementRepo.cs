@@ -15,14 +15,16 @@ namespace RERPAPI.Repo.GenericEntity.HRM.Vehicle
         private readonly EmployeeSendEmailRepo _sendEmailRepo;
         private readonly EmployeeRepo _employeeRepo;
         private readonly CurrentUser _currentUser;
-        public VehicleBookingManagementRepo(CurrentUser currentUser, EmployeeRepo employeeRepo, EmployeeSendEmailRepo employeeSendEmailRepo) : base(currentUser)
+        private readonly EmailHelper _emailHelper;
+        public VehicleBookingManagementRepo(CurrentUser currentUser, EmployeeRepo employeeRepo, EmployeeSendEmailRepo employeeSendEmailRepo, EmailHelper emailHelper) : base(currentUser)
         {
             this._currentUser = currentUser;
             this._employeeRepo = employeeRepo;
             this._sendEmailRepo = employeeSendEmailRepo;
+            _emailHelper = emailHelper;
         }
 
-        public void SendEmail( VehicleBookingManagementDTO vehicleBooking, int receiver, string subject)
+        public async void SendEmail( VehicleBookingManagementDTO vehicleBooking, int receiver, string subject)
         {
             //string status = isAdd ? "ĐĂNG KÝ" : "CẬP NHẬT";
             //string startTime = timeStart.ToString("HH:mm");
@@ -103,7 +105,9 @@ namespace RERPAPI.Repo.GenericEntity.HRM.Vehicle
             e.StatusSend = 1;
             e.EmployeeID = _currentUser.EmployeeID;
             e.Receiver = employee.ID;
-            _sendEmailRepo.Create(e);
+
+            //_sendEmailRepo.Create(e);
+            await _emailHelper.SendAsync(e.EmailTo??"", e.Subject, e.Body, true, e.EmailCC??"");
         }
 
         public bool IsProblem(VehicleBookingManagement vehicleBooking)

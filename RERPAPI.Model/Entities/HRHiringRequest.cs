@@ -53,4 +53,6 @@ public partial class HRHiringRequest
     /// Chức vụ cần tuyển
     /// </summary>
     public string? PositionName { get; set; }
+
+    public bool? IsCompleted { get; set; }
 }

@@ -504,8 +504,8 @@ namespace RERPAPI.Controllers.Old.Technical
                     EmployeeID = email.EmployeeID,
                     Receiver = email.Receiver
                 };
-                await _employeeSendEmailRepo.CreateAsync(emailEntity);
-
+                //await _employeeSendEmailRepo.CreateAsync(emailEntity);
+                await _emailHelper.SendAsync(email.EmailTo, email.Subject, email.Body);
 
                 return Ok(ApiResponseFactory.Success(null, "Gửi email thành công!"));
             }
@@ -680,22 +680,24 @@ namespace RERPAPI.Controllers.Old.Technical
                     emailCc = "nguyenvan.sao@rtc.edu.vn,sales.manager@rtc.edu.vn";
                     receiverEmployeeId = 2; // ID của Nguyễn Văn Thắng
                 }
-                var emailEntity = new EmployeeSendEmail
-                {
-                    Subject = subject,
-                    Body = request.Body,
-                    EmailTo = emailTo,
-                    EmailCC = emailCc,
-                    StatusSend = 1, // 1 = Đã đưa vào queue
-                    DateSend = DateTime.Now,
-                    EmployeeID = currentUser.EmployeeID,
-                    Receiver = receiverEmployeeId,
-                };
-                await _employeeSendEmailRepo.CreateAsync(emailEntity);
+                //var emailEntity = new EmployeeSendEmail
+                //{
+                //    Subject = subject,
+                //    Body = request.Body,
+                //    EmailTo = emailTo,
+                //    EmailCC = emailCc,
+                //    StatusSend = 1, // 1 = Đã đưa vào queue
+                //    DateSend = DateTime.Now,
+                //    EmployeeID = currentUser.EmployeeID,
+                //    Receiver = receiverEmployeeId,
+                //};
+                //await _employeeSendEmailRepo.CreateAsync(emailEntity);
+                await _emailHelper.SendAsync(emailTo??"", subject, request.Body, true, emailCc??"");
                 // ⑩ Trả về kết quả
                 return Ok(ApiResponseFactory.Success(new
                 {
-                    EmailId = emailEntity.ID,
+                    //EmailId = emailEntity.ID,
+                    EmailId = 1, // dùng hàm send email trực tiếp nên không có ID trong DB, tạm set = 1 để trả về
                     SentTo = emailTo,
                     SentCc = emailCc,
                     Subject = subject

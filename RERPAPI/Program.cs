@@ -31,9 +31,12 @@ using RERPAPI.Repo.GenericEntity.TB;
 using RERPAPI.Repo.GenericEntity.Technical;
 using RERPAPI.Repo.GenericEntity.Technical.KPI;
 using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
-//using RERPAPI.SendService;
+using RERPAPI.SendService;
 using RTCApi.Repo.GenericRepo;
 using System.Text;
+
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,6 +54,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserPermissionService, UserPermissionService>();
 builder.Services.AddScoped<RTCContext>();
 builder.Services.AddScoped<RoleConfig>();
+builder.Services.AddScoped<IFirebaseNotificationService, FirebaseNotificationService>();
 
 builder.Services.AddScoped<EmployeeOnLeaveRepo>();
 builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.AddressStockRepo>();
@@ -461,6 +465,10 @@ builder.Services.AddScoped<CourseExamResultDetailRepo>();
 builder.Services.AddScoped<CourseQuestionRepo>();
 builder.Services.AddScoped<CourseRightAnswerRepo>();
 builder.Services.AddScoped<CourseExamEvaluateRepo>();
+builder.Services.AddScoped<CourseAnswerRepo>();
+builder.Services.AddScoped<CourseExamPracticeRepo>();
+builder.Services.AddScoped<ExamResultRepo>();
+builder.Services.AddScoped<ExamResultDetailRepo>();
 
 builder.Services.AddScoped<InventoryProjectProductSaleLinkRepo>();
 builder.Services.AddScoped<HandoverPersonalAssetRepo>();
@@ -477,6 +485,7 @@ builder.Services.AddScoped<SendEmailReceiveProjectTaskClass>();
 
 builder.Services.AddScoped<FollowProjectBaseDetailRepo>();
 builder.Services.AddScoped<DailyReportAccountingRepo>();
+builder.Services.AddScoped<ProductSaleGroupWarehouseLinkRepo>();
 
 
 #region khóa học 
@@ -591,6 +600,7 @@ builder.Services.AddScoped<EmailHelper>();
 #endregion
 
 builder.Services.AddScoped<HistoryBorrowSaleLogRepo>();
+builder.Services.AddScoped<CommercialPriceRequestRepo>();
 
 
 builder.Services.AddScoped<CurrentUser>(provider =>
@@ -622,6 +632,11 @@ builder.Services.AddCors(options =>
 
     });
 });
+// Chỉ khởi tạo 1 lần duy nhất khi chạy server
+//FirebaseApp.Create(new AppOptions()
+//{
+//    Credential = GoogleCredential.FromFile("firebase-adminsdk.json") // Thay bằng đường dẫn thực tế
+//});
 
 
 builder.Services.AddSingleton<SseService>();
@@ -673,8 +688,8 @@ builder.Services.AddAuthentication("Bearer")
 
                         ValidIssuers = new[] { jwtSettings.Issuer, candidateJwtSettings.Issuer },
                         ValidAudiences = new[] { jwtSettings.Audience, candidateJwtSettings.Audience },
-                        IssuerSigningKeys = new[] 
-                        { 
+                        IssuerSigningKeys = new[]
+                        {
                             new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
                             new SymmetricSecurityKey(Encoding.UTF8.GetBytes(candidateJwtSettings.SecretKey))
                         },

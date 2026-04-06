@@ -20,8 +20,11 @@ namespace RERPAPI.Model.DTO
         public int? SupplierSaleQuoteID { get; set; }
         public decimal? UnitPriceQuote { get; set; }
         public decimal? UnitPriceHistory { get; set; }
+        public string? Note { get; set; }
 
 
 
+        public int? LeadTimeTechnical { get; set; }
+        public decimal? TargetPrice { get; set; }
     }
 }

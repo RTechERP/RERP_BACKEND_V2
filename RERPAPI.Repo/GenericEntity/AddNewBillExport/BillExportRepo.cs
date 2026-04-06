@@ -1750,7 +1750,7 @@ pokhDetailId);
                 }
 
                 // Kiểm tra và tạo Inventory
-                await EnsureInventoryExists(dto.billExport.WarehouseID ?? 0, detail.ProductID ?? 0);
+                await EnsureInventoryExists(dto.billExport.WarehouseID ?? 0, detail.ProductID ?? 0,dto.billExport.KhoTypeID ?? 0);
 
                 // Lưu InventoryProjectExport
                 if (dto.billExport.Status == 2 || dto.billExport.Status == 6)
@@ -1758,6 +1758,7 @@ pokhDetailId);
                     await SaveInventoryProjectExport(detail);
                 }
             }
+
         }
 
         private BillExportDetail MapToEntity(BillExportDetailExtendedDTO dto)
@@ -1816,11 +1817,11 @@ pokhDetailId);
             entity.UpdatedBy = dto.UpdatedBy;
         }
 
-        private async Task EnsureInventoryExists(int warehouseId, int productId)
+        private async Task EnsureInventoryExists(int warehouseId, int productId, int productGroupId)
         {
             var existingInventory = _inventoryRepo.GetAll(x =>
                 x.WarehouseID == warehouseId &&
-                x.ProductSaleID == productId
+                x.ProductSaleID == productId && x.ProductGroupID == productGroupId
             ).FirstOrDefault();
 
             if (existingInventory == null)
@@ -1829,6 +1830,7 @@ pokhDetailId);
                 {
                     WarehouseID = warehouseId,
                     ProductSaleID = productId,
+                    ProductGroupID = productGroupId,
                     TotalQuantityFirst = 0,
                     TotalQuantityLast = 0,
                     Import = 0,
@@ -2125,7 +2127,7 @@ pokhDetailId);
 
                 await EnsureInventoryExists(
                     dto.billExport.WareHouseTranferID ?? 0,
-                    exportDetail.ProductID ?? 0
+                    exportDetail.ProductID ?? 0, dto.billExport.KhoTypeID ?? 0
                 );
             }
 

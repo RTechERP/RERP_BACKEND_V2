@@ -138,6 +138,53 @@ namespace RERPAPI.Controllers.Old.VisionBase
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        [HttpGet("get-my-root-team")]
+        public IActionResult GetMyRootTeam(int employeeId)
+        {
+            try
+            {
+                // 1. Tìm team của employee thuộc về
+                var teamLink = _employeeTeamSaleLinkRepo
+                    .GetAll(x => x.EmployeeID == employeeId)
+                    .FirstOrDefault();
+
+                if (teamLink == null)
+                {
+                    return Ok(ApiResponseFactory.Success(new { TeamSaleID = 0 }, "Nhân viên chưa thuộc team nào"));
+                }
+
+                // 2. tìm root team (ParentID = 0)
+                int currentTeamId = teamLink.EmployeeTeamSaleID;
+                var visitedIds = new HashSet<int>();
+
+                while (currentTeamId > 0 && !visitedIds.Contains(currentTeamId))
+                {
+                    visitedIds.Add(currentTeamId);
+                    var team = _employeeTeamSaleRepo.GetByID(currentTeamId);
+
+                    if (team == null || team.IsDeleted == 1) break;
+
+                    if (team.ParentID == 0)
+                    {
+                        return Ok(ApiResponseFactory.Success(new
+                        {
+                            TeamSaleID = team.ID,
+                            TeamSaleName = team.Name
+                        }, ""));
+                    }
+
+                    currentTeamId = team.ParentID;
+                }
+
+                return Ok(ApiResponseFactory.Success(new { TeamSaleID = 0 }, "Không tìm thấy root team"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> Save(List<WeekPlan> model)
         {
@@ -150,10 +197,10 @@ namespace RERPAPI.Controllers.Old.VisionBase
 
                     List<string> errors = new List<string>();
 
-                    if (validate.Result?.Length > 500)
-                        errors.Add("Kết quả mong đợi không được vượt quá 500 ký tự");
-                    if (validate.ContentPlan?.Length > 500)
-                        errors.Add("Nội dung không được vượt quá 500 ký tự");
+                    //if (validate.Result?.Length > 500)
+                    //    errors.Add("Kết quả mong đợi không được vượt quá 500 ký tự");
+                    //if (validate.ContentPlan?.Length > 500)
+                    //    errors.Add("Nội dung không được vượt quá 500 ký tự");
                     if (validate.Problem?.Length > 500)
                         errors.Add("Khó khăn không được vượt quá 500 ký tự");
 
@@ -179,7 +226,11 @@ namespace RERPAPI.Controllers.Old.VisionBase
                         string.IsNullOrWhiteSpace(weekPlan.Result) &&
                         string.IsNullOrWhiteSpace(weekPlan.Problem))
                     {
-                        await _weekPlanRepo.DeleteAsync(weekPlan.ID);
+                        if (weekPlan.ID > 0) 
+                        {
+                            await _weekPlanRepo.DeleteAsync(weekPlan.ID);
+                        }
+                        continue; 
                     }
                     else
                     {
