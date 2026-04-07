@@ -1029,6 +1029,37 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        [HttpGet("purchase-quote-summary-new")]
+        [RequiresPermission("N35,N1,N33")]
+        public async Task<IActionResult> getPurchaseQuoteSummaryNew(
+            DateTime? DateStart,
+            DateTime? DateEnd,
+            int? DepartmentID = -1,
+            int? EmployeeRequestID = -1,
+            string? Keyword = ""
+            )
+        {
+            try
+            {
+                var param = new
+                {
+                    DateStart = DateStart,
+                    DateEnd = DateEnd,
+                    DepartmentID = DepartmentID,
+                    EmployeeRequestID = EmployeeRequestID,
+                    Keyword = Keyword,
+                };
+
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetPurchaseQuoteSummary_New", param);
+
+                return Ok(ApiResponseFactory.Success(data, null));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         #endregion
     }
 }
