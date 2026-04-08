@@ -145,5 +145,19 @@ namespace RERPAPI.Model.DTO.Project.Procedure
         public string? DepartmentAssigneeName { get; set; }
         public int? AsigneeEmployeeID { get; set; }
         public string? AsigneeEmployeeFullName { get; set; }
+        /// <summary>
+        /// Mã màu
+        /// </summary>
+        public string? ProjectTaskColor { get; set; }
+        public decimal? TotalActualHours { get; set; }
+
+        /// <summary>
+        /// đánh giá mức độ hoàn thành công việc từ 1 -&gt; 5
+        /// </summary>
+        public int? ReviewCompletionRating { get; set; }
+        /// <summary>
+        /// Trạng thái làm công việc
+        /// </summary>
+        public bool? IsCheck { get; set; }
     }
 }

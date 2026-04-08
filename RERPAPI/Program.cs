@@ -478,6 +478,8 @@ builder.Services.AddScoped<UpdateVersionRepo>();
 builder.Services.AddScoped<ProjectTaskRepo>();
 builder.Services.AddScoped<ProjectTaskGroupRepo>();
 builder.Services.AddScoped<ProjectTaskChecklistRepo>();
+builder.Services.AddScoped<ProjectTaskEmailBandRepo>();
+builder.Services.AddScoped<ProjectTaskAttendanceRepo>();
 builder.Services.AddTransient<ProjectTaskAttachmentRepo>();
 builder.Services.AddTransient<ProjectTaskAdditionalRepo>();
 
