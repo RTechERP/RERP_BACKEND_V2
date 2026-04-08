@@ -113,6 +113,7 @@ builder.Services.AddScoped<EmployeeEarlyLateRepo>();
 builder.Services.AddScoped<EmployeeEducationLevelRepo>();
 builder.Services.AddScoped<EmployeeErrorRepo>();
 builder.Services.AddScoped<EmployeePayrollDeductionRepo>();
+builder.Services.AddScoped<EmployeeDeductionTypeRepo>();
 builder.Services.AddScoped<EmployeeFoodOrderRepo>();
 builder.Services.AddScoped<EmployeeNoFingerprintRepo>();
 builder.Services.AddScoped<EmployeeOnLeaveMasterRepo>();
@@ -488,6 +489,13 @@ builder.Services.AddScoped<SendEmailReceiveProjectTaskClass>();
 
 builder.Services.AddScoped<FollowProjectBaseDetailRepo>();
 builder.Services.AddScoped<DailyReportAccountingRepo>();
+builder.Services.AddScoped<FiveSRatingDetailRepo>();
+builder.Services.AddScoped<FiveSRuleErrorRepo>();
+builder.Services.AddScoped<FiveSErrorRepo>();
+builder.Services.AddScoped<FiveSRatingRepo>();
+builder.Services.AddScoped<FiveSDepartmentRepo>();
+builder.Services.AddScoped<FiveSRatingTicketRepo>();
+builder.Services.AddScoped<FiveSBonusMinusRepo>();
 builder.Services.AddScoped<ProductSaleGroupWarehouseLinkRepo>();
 
 
