@@ -126,6 +126,17 @@ namespace RERPAPI.Model.Param
         public decimal? PercentOverTime { get; set; }
 
 
+        /// <summary>
+        /// Nguyên nhân/Phương án sử lý (sử dụng riêng với loại công việc là BUG)
+        /// </summary>
+        public string? DescriptionSolution { get; set; }
+        /// <summary>
+        /// Thời gian công việc phải hoàn thành
+        /// </summary>
+        public DateTime? Deadline { get; set; }
+
+        
+
         public List<int>? Employee { get; set; }
         public List<int>? EmployeeRelate { get; set; }
         public List<int>? Links { get; set; }

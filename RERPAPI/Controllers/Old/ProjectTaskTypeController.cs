@@ -60,6 +60,7 @@ namespace RERPAPI.Controllers.Old
                     existing.Code = projectTaskType.Code.Replace(" ", "").ToUpper();
                     existing.IsDeleted = projectTaskType.IsDeleted;
                     existing.DepartmentID = projectTaskType.DepartmentID ?? 0;
+                    existing.Color = projectTaskType.Color;
                     existing.UpdatedDate = DateTime.Now;
                     if (await _projectTaskTypeRepo.UpdateAsync(existing) > 0)
                     {

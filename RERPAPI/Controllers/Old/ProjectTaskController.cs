@@ -23,9 +23,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using ZXing;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
-using ProjectTaskApprove = RERPAPI.Model.Entities.ProjectTaskApprove;
-using ProjectTaskLog = RERPAPI.Model.Entities.ProjectTaskLog;
-using UserTeam = RERPAPI.Model.Entities.UserTeam;
 namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
@@ -40,31 +37,30 @@ namespace RERPAPI.Controllers.Project
         ProjectRepo _projectRepo;
         EmployeeRepo _employeeRepo;
         SendEmailReceiveProjectTaskClass _sendEmailService;
-
         ProjectTaskApproveRepo _projectTaskApproveRepo;
-
         ProjectTaskLogRepo _projectTaskLogRepo;
         ProjectTaskTypeRepo _projectTaskTypeRepo;
         ProjectTaskAdditionalRepo _projectTaskAdditionalRepo;
         DepartmentRepo _departmentRepo;
         ProjectItemRepo _projectItemRepo;
+        ProjectTaskEmailBandRepo _projectTaskEmailBandRepo;
+        ProjectTaskAttendanceRepo _projectTaskAttendanceRepo;
         public ProjectTaskController(ProjectTaskRepo projectTaskRepo,
             ProjectTaskGroupRepo groupRepo,
             ProjectTaskChecklistRepo checklistRepo,
             ProjectTaskAttachmentRepo attachmentRepo,
             ProjectTaskEmployeeRepo projectTaskEmployeeRepo,
             ProjectRepo projectRepo,
-
             ProjectTaskApproveRepo projectTaskApproveRepo,
             ProjectTaskLogRepo projectTaskLogRepo,
             EmployeeRepo employeeRepo,
             SendEmailReceiveProjectTaskClass sendEmailService,
             ProjectTaskTypeRepo projectTaskTypeRepo,
             ProjectTaskAdditionalRepo projectTaskAdditionalRepo,
-            DepartmentRepo departmentRepo
-            ,
-
-            ProjectItemRepo projectItemRepo
+            DepartmentRepo departmentRepo,
+            ProjectTaskEmailBandRepo projectTaskEmailBandRepo,
+            ProjectItemRepo projectItemRepo,
+            ProjectTaskAttendanceRepo projectTaskAttendanceRepo
             )
         {
             _projectTaskRepo = projectTaskRepo;
@@ -73,9 +69,7 @@ namespace RERPAPI.Controllers.Project
             _attachmentRepo = attachmentRepo;
             _projectTaskEmployeeRepo = projectTaskEmployeeRepo;
             _projectRepo = projectRepo;
-
             _projectTaskApproveRepo = projectTaskApproveRepo;
-
             _projectTaskLogRepo = projectTaskLogRepo;
             _employeeRepo = employeeRepo;
             _sendEmailService = sendEmailService;
@@ -83,28 +77,16 @@ namespace RERPAPI.Controllers.Project
             _projectTaskAdditionalRepo = projectTaskAdditionalRepo;
             _departmentRepo = departmentRepo;
             _projectItemRepo = projectItemRepo;
+            _projectTaskEmailBandRepo = projectTaskEmailBandRepo;
+            _projectTaskAttendanceRepo = projectTaskAttendanceRepo;
         }
+
 
         public class MoveRequest
         {
             public int ProjectTaskGroupID { get; set; }
             public int OrderIndex { get; set; }
         }
-
-        //[HttpGet]
-        //public IActionResult Get([FromQuery(Name = "projectId")] int projectID)
-        //{
-        //    try
-        //    {
-        //        List<spGetProjectTask> projectTasks = SQLHelper<spGetProjectTask>.ProcedureToListModel("spGetProjectTask", new string[] { "@ProjectID" }, new object[] { projectID });
-        //        return Ok(ApiResponseFactory.Success(projectTasks));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ApiResponseFactory.Fail(ex, "Failed to retrieve project tasks."));
-        //    }
-        //}
-
 
         [HttpGet]
         public async Task<IActionResult> GetProjectTask(DateTime dateStart, DateTime dateEnd, int status)
@@ -118,18 +100,16 @@ namespace RERPAPI.Controllers.Project
                 var param = new
                 {
                     EmployeeID = currentUser.EmployeeID,
-                    // EmployeeID = 610,
+                    //EmployeeID = 610,
                     DateStart = dateStart,
                     DateEnd = dateEnd,
                     Status = status
                 };
                 var projectTasks = await SqlDapper<spGetProjectTaskByEmployeeID>.ProcedureToListTAsync("spGetProjectTaskByEmployeeID", param);
-                //var projectTasks = SQLHelper<spGetProjectTaskByEmployeeID>.ProcedureToListModel("spGetProjectTaskByEmployeeID", new string[] { "@EmployeeID" }, new object[] { 91 });
                 return Ok(ApiResponseFactory.Success(new
                 {
                     ProjectTask = projectTasks.OrderByDescending(x => x.UpdatedDate),
                     UserID = currentUser.EmployeeID
-                    //UserID = 91
                 }));
             }
             catch (Exception ex)
@@ -168,7 +148,7 @@ namespace RERPAPI.Controllers.Project
                 {
                     p_ProjectID = projectID,
                     p_IsPersonalProject = isPersionalProject,
-                    p_EmployeeID = currentUser.EmployeeID,
+                    p_EmployeeID = currentUser.EmployeeID
                 };
                 var result = await SqlDapper<object>.ProcedureToListAsync("spGetListProjectTask", param);
                 return Ok(ApiResponseFactory.Success(result, null));
@@ -236,6 +216,41 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
+        // -- Get project task time line by Team (dùng cho lấy dữ liệu hiển thị ở timeline) ---
+        [HttpGet("project-task-timeline-by-team")]
+        public async Task<IActionResult> GetProjectTaskTimeLineByTeam(
+            [FromQuery] DateTime dateStart,
+            [FromQuery] DateTime dateEnd,
+            [FromQuery] int departmentID = 0,
+            [FromQuery] int teamID = 0,
+            [FromQuery] int userID = 0,
+            [FromQuery] int projectID = 0
+            )
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                dateStart = dateStart.Date;
+                dateEnd = dateEnd.Date.AddDays(1).AddSeconds(-1);
+                var param = new
+                {
+                    DateStart = dateStart,
+                    DateEnd = dateEnd,
+                    DepartmentID = departmentID,
+                    TeamID = teamID,
+                    UserID = userID,
+                    ProjectID = projectID
+                };
+                var projectTasks = await SqlDapper<object>.ProcedureToListAsync("spGetProjectTaskTimeLineByTeam", param);
+                return Ok(ApiResponseFactory.Success(projectTasks));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, "Failed to get project tasks time line."));
+            }
+        }
+
         // -- Get project task view status (Dùng cho lấy dữ liệu hiển thị ở project task view status tổng) ---
         [HttpGet("project-task-view-status")]
         public async Task<IActionResult> GetProjectTaskViewStatus(
@@ -265,6 +280,41 @@ namespace RERPAPI.Controllers.Project
                     Keyword = keyword
                 };
                 var projectTasks = await SqlDapper<object>.ProcedureToListAsync("spGetSummarizeProjectTask", param);
+                return Ok(ApiResponseFactory.Success(projectTasks));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, "Failed to get project tasks view status."));
+            }
+        }
+
+        // -- Get project task view status dùng cho chart ---
+        [HttpGet("project-task-view-status-chart")]
+        public async Task<IActionResult> GetProjectTaskViewStatusForChart(
+            [FromQuery] DateTime dateStart,
+            [FromQuery] DateTime dateEnd,
+            [FromQuery] int departmentID = 0,
+            [FromQuery] int teamID = 0,
+            [FromQuery] int userID = 0,
+            [FromQuery] int projectID = 0,
+            [FromQuery] string keyword = ""
+            )
+        {
+            try
+            {
+                dateStart = dateStart.Date;
+                dateEnd = dateEnd.Date.AddDays(1).AddTicks(-1);
+                var param = new
+                {
+                    DateStart = dateStart,
+                    DateEnd = dateEnd,
+                    DepartmentID = departmentID,
+                    TeamID = teamID,
+                    UserID = userID,
+                    ProjectID = projectID,
+                    Keyword = keyword
+                };
+                var projectTasks = await SqlDapper<object>.ProcedureToListAsync("spGetSummarizeProjectTaskForChart", param);
                 return Ok(ApiResponseFactory.Success(projectTasks));
             }
             catch (Exception ex)
@@ -308,6 +358,8 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+
 
 
         #region check list 
@@ -365,11 +417,33 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
                 var existing = await _checklistRepo.GetByIDAsync(id);
                 if (existing == null) return NotFound(ApiResponseFactory.Fail(null, "Checklist item not found."));
 
                 existing.ChecklistTitle = item.ChecklistTitle ?? existing.ChecklistTitle;
                 existing.IsDone = item.IsDone ?? existing.IsDone;
+                existing.OrderIndex = item.OrderIndex;
+                var newProjectTaskChangeCheckListLog = new ProjectTaskLog
+                {
+                    ProjectTaskID = existing.ProjectTaskID,
+                    TypeLog = "Thay đổi checklist",
+                    ContentLog = ""
+                };
+                if (existing.ChecklistTitle != item.ChecklistTitle)
+                {
+                    newProjectTaskChangeCheckListLog.ContentLog = $"- {currentUser.FullName} đã thay đổi nội dung checklist từ: {existing.ChecklistTitle} thành: {item.ChecklistTitle}. \\n";
+                }
+
+                if (item.IsDeleted ?? false)
+                {
+                    newProjectTaskChangeCheckListLog.ContentLog += $"- {currentUser.FullName} đã xóa check list {existing.ChecklistTitle}";
+                }
+                await _projectTaskLogRepo.CreateAsync(newProjectTaskChangeCheckListLog);
+
+
                 await _checklistRepo.UpdateAsync(existing);
                 return Ok(ApiResponseFactory.Success(existing));
             }
@@ -595,21 +669,21 @@ namespace RERPAPI.Controllers.Project
                         IsDeleted = false
                     };
                     await _projectTaskEmployeeRepo.CreateAsync(item);
-                    if (employeeType == 1)
-                    {
-                        var projectTask = await _projectTaskRepo.GetByIDAsync(projectTaskID);
-                        var employeeValue = await _employeeRepo.GetByIDAsync(projectTask.EmployeeID ?? 0);
-                        SendEmailReceiveProjectTaskParam sendEmailContent = new SendEmailReceiveProjectTaskParam
-                        {
-                            projectTaskName = projectTask.Title,
-                            projectTaskCode = projectTask.Code,
-                            nameAsigner = employeeValue.FullName,
-                            startDate = projectTask.PlanStartDate?.ToString("dd/MM/yyyy") ?? "",
-                            endDate = projectTask.PlanEndDate?.ToString("dd/MM/yyyy") ?? "",
-                            discription = projectTask.Description,
-                        };
-                        await _sendEmailService.SendEmailReceiveProjectTask(sendEmailContent);
-                    }
+                    //if (employeeType == 1)
+                    //{
+                    //    var projectTask = await _projectTaskRepo.GetByIDAsync(projectTaskID);
+                    //    var employeeValue = await _employeeRepo.GetByIDAsync(projectTask.EmployeeID ?? 0);
+                    //    SendEmailReceiveProjectTaskParam sendEmailContent = new SendEmailReceiveProjectTaskParam
+                    //    {
+                    //        projectTaskName = projectTask.Title,
+                    //        projectTaskCode = projectTask.Code,
+                    //        nameAsigner = employeeValue.FullName,
+                    //        startDate = projectTask.PlanStartDate?.ToString("dd/MM/yyyy") ?? "",
+                    //        endDate = projectTask.PlanEndDate?.ToString("dd/MM/yyyy") ?? "",
+                    //        discription = projectTask.Description,
+                    //    };
+                    //    await _sendEmailService.SendEmailReceiveProjectTask(sendEmailContent);
+                    //}
                 }
                 else
                 {
@@ -635,7 +709,7 @@ namespace RERPAPI.Controllers.Project
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Failed to get employee task."));
                 }
-                var lstEmployeeTask = _projectTaskEmployeeRepo.GetAll(x => x.ProjectTaskID == taskId && (!x.IsDeleted ?? true) && (x.Type == typeEmployee));
+                var lstEmployeeTask = _projectTaskEmployeeRepo.GetAll(x => x.ProjectTaskID == taskId && (!x.IsDeleted ?? true) && (x.Type == typeEmployee)).OrderBy(x => x.ID);
 
                 return Ok(ApiResponseFactory.Success(lstEmployeeTask));
             }
@@ -666,6 +740,135 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
+        #region Email band (Dùng để lưu cấu hình bật tắt nhận email thông báo về công việc của từng người)
+
+        [HttpGet("email-band")]
+        public async Task<IActionResult> GetDataEmailBand()
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var data = _projectTaskEmailBandRepo.GetAll(x => x.EmployeeID == currentUser.EmployeeID).FirstOrDefault();
+                return Ok(ApiResponseFactory.Success(data));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, "Failed to get data email band."));
+            }
+        }
+
+        [HttpPost("email-band")]
+        public async Task<IActionResult> SaveDataEmailBand(bool isActive)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var projectTaskEmailBand = _projectTaskEmailBandRepo.GetAll(x => x.EmployeeID == currentUser.EmployeeID).FirstOrDefault();
+
+
+                if (projectTaskEmailBand != null && projectTaskEmailBand.ID > 0)
+                {
+
+                    projectTaskEmailBand.IsActive = isActive;
+                    projectTaskEmailBand.UpdatedDate = DateTime.Now;
+                    if (await _projectTaskEmailBandRepo.UpdateAsync(projectTaskEmailBand) <= 0)
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, "Failed to update email data."));
+                    }
+                    return Ok(ApiResponseFactory.Success(projectTaskEmailBand));
+                }
+                else
+                {
+                    var existingEmail = _employeeRepo.GetByID(currentUser.EmployeeID)?.EmailCongTy;
+                    var newProjectTaskEmailBand = new ProjectTaskEmailBand
+                    {
+                        EmployeeID = currentUser.EmployeeID,
+                        EmployeeEmail = existingEmail,
+                        IsActive = isActive,
+                        IsDeleted = false,
+                    };
+                    if (await _projectTaskEmailBandRepo.CreateAsync(newProjectTaskEmailBand) <= 0)
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, "Failed to create email data."));
+                    }
+                    return Ok(ApiResponseFactory.Success(newProjectTaskEmailBand));
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, "Failed to update email data."));
+            }
+        }
+
+        #endregion
+
+        #region Attendance (Dùng để lưu lại thông tin chấm công liên quan đến công việc, phục vụ cho việc tính toán hiệu suất làm việc của nhân viên)
+        //[HttpGet("attendance")]
+        //public async Task<IActionResult> GetDataAttendance(int projectTaskID)
+        //{
+        //    try
+        //    {
+        //        var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+        //        var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+        //        var data = _projectTaskEmailBandRepo.GetAll(x => x.EmployeeID == currentUser.EmployeeID).FirstOrDefault();
+        //        return Ok(ApiResponseFactory.Success(data));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, "Failed to get data email band."));
+        //    }
+        //}
+
+        [HttpPost("attendance")]
+        public async Task<IActionResult> SaveDataAttendance(int projectTaskID, bool isCheck)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var projectTaskAttendance = _projectTaskAttendanceRepo.GetAll(x => x.ProjectTaskID == projectTaskID && x.EmployeeID == currentUser.EmployeeID && (x.Date.HasValue && x.Date.Value.Date == DateTime.Now.Date) ).FirstOrDefault();
+
+                if (projectTaskAttendance != null && projectTaskAttendance.ID > 0)
+                {
+
+                    projectTaskAttendance.IsCheck = isCheck;
+                    projectTaskAttendance.UpdatedDate = DateTime.Now;
+                    if (await _projectTaskAttendanceRepo.UpdateAsync(projectTaskAttendance) <= 0)
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, "Failed to update data."));
+                    }
+                    return Ok(ApiResponseFactory.Success(projectTaskAttendance));
+                }
+                else
+                {
+                    var newProjectTaskAttendance = new ProjectTaskAttendance
+                    {
+                        ProjectTaskID = projectTaskID,
+                        EmployeeID = currentUser.EmployeeID,
+                        IsCheck = isCheck,
+                        IsDeleted = false,
+                        Date = DateTime.Now.Date
+                    };
+                    if (await _projectTaskAttendanceRepo.CreateAsync(newProjectTaskAttendance) <= 0)
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, "Failed to create data."));
+                    }
+                    return Ok(ApiResponseFactory.Success(newProjectTaskAttendance));
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, "Failed to update data."));
+            }
+        }
+        #endregion
+
         [HttpPost("SaveData")]
         public async Task<IActionResult> SaveData([FromBody] ProjectTaskParam projectTask)
         {
@@ -690,7 +893,7 @@ namespace RERPAPI.Controllers.Project
                         return NotFound(ApiResponseFactory.Fail(null, "Project task not found."));
                     }
 
-
+                    // tính % thời gian vượt so với kế hoạch nếu có sự thay đổi về ngày bắt đầu hoặc ngày kết thúc thực tế và trạng thái công việc là đã hoàn thành.
                     if (projectTask.Status == 3 && projectTask.ActualEndDate.HasValue
                         && projectTask.ActualStartDate.HasValue && projectTask.PlanEndDate.HasValue
                         && projectTask.PlanStartDate.HasValue && ((existingTask.PlanStartDate?.Date != projectTask.PlanStartDate?.Date)
@@ -708,6 +911,7 @@ namespace RERPAPI.Controllers.Project
                             existingTask.PercentOverTime = 0;
                         }
                     }
+                    // log thay đổi thời gian
                     var newProjectTaskLog = new ProjectTaskLog
                     {
                         ProjectTaskID = existingTask.ID,
@@ -866,13 +1070,17 @@ namespace RERPAPI.Controllers.Project
                         }
                     }
 
+                    var listEmailBand = _projectTaskEmailBandRepo.GetAll(x => x.IsActive == false).Select(x => x.EmployeeEmail);
 
-                    string listEmployeeRelateString1 = string.Join(",", listEmployeeRelate.Distinct());
-                    string listToEmailString1 = string.Join(",", listEmail1.Distinct());
+                    var listemailRecive = listEmployeeRelate.Except(listEmailBand);
+                    var listemailCC = listEmail1.Except(listEmailBand);
+
+                    string listEmployeeRelateString1 = string.Join(",", listemailRecive.Distinct());
+                    string listToEmailString1 = string.Join(",", listemailCC.Distinct());
                     var employeeAsigner1 = await _employeeRepo.GetByIDAsync(existingTask.EmployeeIDRequest ?? 0);
 
 
-                    if (projectTask.Status == 3 && existingTask.Status != projectTask.Status && listEmployeeRelateString1.Count() > 0)
+                    if (projectTask.Status == 3 && existingTask.Status != projectTask.Status && listToEmailString1.Count() > 0)
                     {
                         SendEmailReceiveProjectTaskParam sendEmailContent1 = new SendEmailReceiveProjectTaskParam
                         {
@@ -888,29 +1096,184 @@ namespace RERPAPI.Controllers.Project
                         _ = Task.Run(() => _sendEmailService.SendEmailCompleteProjectTask(sendEmailContent1));
 
                     }
-                    existingTask.Status = projectTask.Status;
-
-
-                    existingTask.Mission = projectTask.Mission;
-                    existingTask.Description = projectTask.Description;
-                    existingTask.ProjectID = projectTask.ProjectID;
-                    existingTask.EmployeeIDRequest = projectTask.EmployeeIDRequest;
-                    existingTask.IsPersonalProject = projectTask.IsPersonalProject;
-                    existingTask.IsAdditional = projectTask.IsAdditional;
-                    existingTask.TaskComplexity = projectTask.TaskComplexity;
-                    existingTask.ParentID = projectTask.ParentID;
-                    existingTask.TypeProjectItem = projectTask.TypeProjectItem;
-
-                    if (existingTask.IsApproved == null || existingTask.IsApproved <= 1)
+                    if (existingTask.ProjectID != projectTask.ProjectID)
                     {
-                        if (existingTask.EmployeeIDRequest > 0)
+
+                        var newProjectTaskChangeProjectLog = new ProjectTaskLog
                         {
-                            existingTask.IsApproved = 1; // Chờ duyệt,
+                            ProjectTaskID = existingTask.ID,
+                            TypeLog = "Thay đổi dự án",
+                            ContentLog = ""
+                        };
+
+                        var oldProject = await _projectRepo.GetByIDAsync(existingTask.ProjectID ?? 0);
+                        var newProject = await _projectRepo.GetByIDAsync(projectTask.ProjectID ?? 0);
+
+
+                        // Log change project
+                        if (projectTask.ProjectID != null || projectTask.ProjectID > 0)
+                        {
+
+                            if (existingTask.ProjectID != null && existingTask.ProjectID > 0)
+                            {
+                                newProjectTaskChangeProjectLog.ContentLog = $"- {currentUser.FullName} đã thay đổi dự án từ {oldProject.ProjectName} thành {newProject.ProjectName}. \\n";
+                            }
+                            else
+                            {
+                                newProjectTaskChangeProjectLog.ContentLog = $"- {currentUser.FullName} đã thêm vào dự án {newProject.ProjectName}. \\n";
+                            }
                         }
                         else
                         {
-                            existingTask.IsApproved = 0; // chưa duyệt
+                            newProjectTaskChangeProjectLog.ContentLog = $"- {currentUser.FullName} đã xóa dự án {oldProject.ProjectName}. \\n";
                         }
+                        await _projectTaskLogRepo.CreateAsync(newProjectTaskChangeProjectLog);
+                        existingTask.ProjectID = projectTask.ProjectID;
+
+                    }
+
+                    // Log change mission
+                    if (existingTask.Mission != projectTask.Mission)
+                    {
+                        var newProjectTaskChangeMissionLog = new ProjectTaskLog
+                        {
+                            ProjectTaskID = existingTask.ID,
+                            TypeLog = "Thay đổi tên công việc",
+                            ContentLog = $"- {currentUser.FullName} đã thay đổi nội dung công việc từ {existingTask.Mission} thành {projectTask.Mission}. \\n"
+                        };
+                        await _projectTaskLogRepo.CreateAsync(newProjectTaskChangeMissionLog);
+                        existingTask.Mission = projectTask.Mission;
+                    }
+
+                    // Log change status
+                    if (existingTask.Status != projectTask.Status)
+                    {
+                        var statusText = new Dictionary<int, string>
+                            {
+                                { 1, "Chưa làm" },
+                                { 2, "Đang làm" },
+                                { 3, "Hoàn thành" },
+                                { 4, "Pending" }
+                            };
+                        var newProjectTaskChangeStatusLog = new ProjectTaskLog
+                        {
+                            ProjectTaskID = existingTask.ID,
+                            TypeLog = "Thay đổi trạng thái",
+                            ContentLog = $"- {currentUser.FullName} đã thay đổi trạng thái công việc từ {statusText[existingTask.Status ?? 1]} thành {statusText[existingTask.Status ?? 1]}. \\n"
+                        };
+                        await _projectTaskLogRepo.CreateAsync(newProjectTaskChangeStatusLog);
+                        existingTask.Status = projectTask.Status;
+                    }
+
+
+
+                    // Log change Asigner
+                    if (existingTask.EmployeeIDRequest != projectTask.EmployeeIDRequest)
+                    {
+
+                        var oldAsgner = await _employeeRepo.GetByIDAsync(existingTask.EmployeeIDRequest ?? 0);
+                        var newAsgner = await _employeeRepo.GetByIDAsync(projectTask.EmployeeIDRequest ?? 0);
+                        var newProjectTaskChangeAsignerLog = new ProjectTaskLog
+                        {
+                            ProjectTaskID = existingTask.ID,
+                            TypeLog = "Thay đổi người giao việc",
+                            ContentLog = $"- {currentUser.FullName} đã thay đổi người giao việc từ {oldAsgner.FullName} thành {newAsgner.FullName}. \\n"
+                        };
+                        await _projectTaskLogRepo.CreateAsync(newProjectTaskChangeAsignerLog);
+                        existingTask.EmployeeIDRequest = projectTask.EmployeeIDRequest;
+                    }
+
+                    // log change personal project
+                    if (existingTask.IsPersonalProject != projectTask.IsPersonalProject)
+                    {
+                        var oldPersonalProject = (existingTask.IsPersonalProject ?? false) ? "loại công việc dự án" : "loại công việc cá nhân";
+                        var newPersonalProject = (projectTask.IsPersonalProject ?? false) ? "loại công việc dự án" : "loại công việc cá nhân";
+                        var newProjectTaskChangeStatusPersonalProjectLog = new ProjectTaskLog
+                        {
+                            ProjectTaskID = existingTask.ID,
+                            TypeLog = "Thay đổi loại dự án",
+                            ContentLog = $"- {currentUser.FullName} đã thay đổi loại dự án từ {oldPersonalProject} thành {newPersonalProject}. \\n"
+                        };
+                        existingTask.IsPersonalProject = projectTask.IsPersonalProject;
+
+                    }
+
+                    // log change complexity of task
+                    if (existingTask.TaskComplexity != projectTask.TaskComplexity)
+                    {
+                        var newProjectTaskChangeStatusComplexityLog = new ProjectTaskLog
+                        {
+                            ProjectTaskID = existingTask.ID,
+                            TypeLog = "Thay đổi độ phức tạp công việc",
+                            ContentLog = $"- {currentUser.FullName} đã thay đổi độ phức tạp công việc từ {existingTask.TaskComplexity} thành {projectTask.TaskComplexity}. \\n"
+                        };
+                        await _projectTaskLogRepo.CreateAsync(newProjectTaskChangeStatusComplexityLog);
+                        existingTask.TaskComplexity = projectTask.TaskComplexity;
+
+                    }
+
+                    // log change parent task
+                    if (existingTask.ParentID != projectTask.ParentID)
+                    {
+                        var oldParentTask = await _projectItemRepo.GetByIDAsync(existingTask.ParentID ?? 0);
+                        var newParentTask = await _projectItemRepo.GetByIDAsync(projectTask.ParentID ?? 0);
+                        var newProjectTaskChangeParentLog = new ProjectTaskLog
+                        {
+                            ProjectTaskID = existingTask.ID,
+                            TypeLog = "Thay đổi công việc cha",
+                            ContentLog = $"- {currentUser.FullName} đã thay đổi công việc cha từ {(oldParentTask != null ? oldParentTask.Mission : "không có")} thành {(newParentTask != null ? newParentTask.Mission : "không có")}. \\n"
+                        };
+                        await _projectTaskLogRepo.CreateAsync(newProjectTaskChangeParentLog);
+                        existingTask.ParentID = projectTask.ParentID;
+                    }
+
+                    // log change type project item
+                    if (existingTask.TypeProjectItem != projectTask.TypeProjectItem)
+                    {
+                        var oldTypeProjectItem = _projectTaskTypeRepo.GetByID(existingTask.TypeProjectItem ?? 1);
+                        var newTypeProjectItem = _projectTaskTypeRepo.GetByID(projectTask.TypeProjectItem ?? 1);
+
+                        var newProjectTaskChangeTypeProjectItemLog = new ProjectTaskLog
+                        {
+                            ProjectTaskID = existingTask.ID,
+                            TypeLog = "Thay đổi loại công việc",
+                            ContentLog = $"- {currentUser.FullName} đã thay đổi loại công việc từ {oldTypeProjectItem} thành {newTypeProjectItem}. \\n"
+                        };
+                        await _projectTaskLogRepo.CreateAsync(newProjectTaskChangeTypeProjectItemLog);
+                        existingTask.TypeProjectItem = projectTask.TypeProjectItem;
+                    }
+
+                    // log change deadline
+                    if (existingTask.Deadline != projectTask.Deadline)
+                    {
+                        var newProjectTaskChangeDeadlineLog = new ProjectTaskLog
+                        {
+                            ProjectTaskID = existingTask.ID,
+                            TypeLog = "Thay đổi deadline",
+                            ContentLog = $"- {currentUser.FullName} đã thay đổi deadline từ {existingTask.Deadline?.ToString("dd/MM/yyyy")} thành {projectTask.Deadline?.ToString("dd/MM/yyyy")}. \\n"
+                        };
+                        await _projectTaskLogRepo.CreateAsync(newProjectTaskChangeDeadlineLog);
+                        existingTask.Deadline = projectTask.Deadline;
+                    }
+
+                    existingTask.IsAdditional = projectTask.IsAdditional;
+                    existingTask.Description = projectTask.Description;
+                    existingTask.DescriptionSolution = projectTask.DescriptionSolution;
+                    if (projectTask.Employee != null && projectTask.Employee.Count > 0)
+                    {
+                        Employee userAssignee = await _employeeRepo.GetByIDAsync(projectTask.Employee[0]);
+                        if (userAssignee.ID >= 0 && existingTask.UserID != userAssignee.UserID)
+                        {
+                            existingTask.UserID = userAssignee.ID;
+                        }
+                    }
+
+
+                    if (existingTask.IsApproved == null || existingTask.IsApproved <= 1)
+                    {
+
+                        existingTask.IsApproved = 1; // Chờ duyệt,
+
                     }
                     existingTask.UpdatedDate = DateTime.Now;
                     if (await _projectItemRepo.UpdateAsync(existingTask) <= 0)
@@ -921,6 +1284,7 @@ namespace RERPAPI.Controllers.Project
                 }
                 else
                 {
+                    // tạo một đối tượng ProjectItem để lưu 
                     var newProjectTask = new ProjectItem
                     {
                         ProjectID = projectTask.ProjectID,
@@ -929,6 +1293,7 @@ namespace RERPAPI.Controllers.Project
                         ActualStartDate = projectTask.ActualStartDate,
                         ActualEndDate = projectTask.ActualEndDate,
                         Status = projectTask.Status,
+                        IsApproved = 1,
                         IsDeleted = false,
                         EmployeeIDRequest = projectTask.EmployeeIDRequest,
                         EmployeeCreateID = currentUser.EmployeeID,
@@ -938,13 +1303,18 @@ namespace RERPAPI.Controllers.Project
                         TypeProjectItem = projectTask.TypeProjectItem ?? 1,
                         IsAdditional = projectTask.IsAdditional,
                         TaskComplexity = projectTask.TaskComplexity,
-                        ParentID = projectTask.ParentID
-
+                        ParentID = projectTask.ParentID,
+                        Deadline = projectTask.Deadline,
+                        DescriptionSolution = projectTask.DescriptionSolution
                     };
 
-                    var employeeCreate = _employeeRepo.GetByID(currentUser.EmployeeID);
+                    if (projectTask.Employee != null && projectTask.Employee.Count > 0)
+                    {
+                        Employee userAssignee = await _employeeRepo.GetByIDAsync(projectTask.Employee[0]);
+                        newProjectTask.UserID = userAssignee.UserID;
+                    }
 
-
+                    // Tính % quá hạn
                     if (projectTask.Status == 3 && projectTask.ActualEndDate != null
                         && projectTask.ActualStartDate != null && projectTask.PlanEndDate != null
                         && projectTask.PlanStartDate != null)
@@ -961,7 +1331,8 @@ namespace RERPAPI.Controllers.Project
                         }
                     }
 
-                     if (projectTask.ProjectID != null && projectTask.ProjectID > 0)
+                    // Tạo mã code cho công việc
+                    if (projectTask.ProjectID != null && projectTask.ProjectID > 0)
                     {
                         newProjectTask.Code = _projectItemRepo.GenerateProjectItemCode(projectTask.ProjectID ?? 0).Trim();
 
@@ -971,23 +1342,28 @@ namespace RERPAPI.Controllers.Project
                         //var employeeById = _employeeRepo.GetByID(currentUser.EmployeeID);
                         newProjectTask.Code = _projectTaskRepo.GenerateProjectTaskCodeTime(projectTask.TypeProjectItem ?? 1).Trim();
                     }
-                    
 
-                    if (projectTask.EmployeeIDRequest > 0)
-                    {
-                        newProjectTask.IsApproved = 1; // Chờ duyệt,
-                    }
-                    else
-                    {
-                        newProjectTask.IsApproved = 0; // chưa duyệt
-                    }
+
+                    //if (projectTask.EmployeeIDRequest > 0)
+                    //{
+                    //    newProjectTask.IsApproved = 1; // Chờ duyệt,
+                    //}
+                    //else
+                    //{
+                    //    newProjectTask.IsApproved = 0; // chưa duyệt
+                    //}
+
+                    // tạo mới công việc
                     if (await _projectItemRepo.CreateAsync(newProjectTask) <= 0)
                     {
                         return BadRequest(ApiResponseFactory.Fail(null, "Failed to create project task."));
                     }
 
+                    // Gửi mail
                     var listEmail = new List<String>();
+                    List<UserTeam> leaders = new List<UserTeam>();
 
+                    // Thêm mới người thực hiện vào danh sách người thực hiện (ProjectTaskEmployee)(type = 1) + thêm vào danh sách gửi mail
                     if (projectTask.Employee != null && projectTask.Employee.Count > 0)
                     {
                         foreach (var emp in projectTask.Employee)
@@ -1001,9 +1377,11 @@ namespace RERPAPI.Controllers.Project
                             };
                             var employeeValue = await _employeeRepo.GetByIDAsync(emp);
 
+                            // Bỏ người tạo công việc ra khỏi danh sách gửi mail
                             if (emp != currentUser.EmployeeID)
                             {
-                                listEmail.Add(employeeValue.EmailCongTy);
+                                if (employeeValue != null && employeeValue.EmailCongTy != null)
+                                    listEmail.Add(employeeValue.EmailCongTy);
                             }
                             if (await _projectTaskEmployeeRepo.CreateAsync(projectTaskEmployee) <= 0)
                             {
@@ -1011,13 +1389,13 @@ namespace RERPAPI.Controllers.Project
                             }
                         }
                     }
-                    List<UserTeam> leaders = new List<UserTeam>();
+
+                    // Lấy danh sách leader trực tiếp của người nhận việc khi đó là công việc dự án
                     if (projectTask.IsPersonalProject != true)
                     {
-
                         string usersString = "";
 
-                        if (projectTask.Employee.Count > 0)
+                        if (projectTask.Employee != null && projectTask.Employee.Count > 0)
                         {
                             usersString = string.Join(",", projectTask.Employee);
 
@@ -1031,72 +1409,71 @@ namespace RERPAPI.Controllers.Project
                     }
 
 
-
+                    // Lấy danh sách người liên quan
                     if (projectTask.EmployeeRelate != null && projectTask.EmployeeRelate.Count > 0)
                     {
-                        if (!projectTask.EmployeeRelate.Contains(currentUser.EmployeeID) && !projectTask.Employee.Contains(currentUser.EmployeeID) && projectTask.EmployeeIDRequest != currentUser.EmployeeID)
+
+                        // Thêm người tạo công việc vào người liên quan nếu người đó chưa lằm trong danh sách người liên quan + không lằm trong người nhận việc + không phải là người giao việc 
+                        if (!projectTask.EmployeeRelate.Contains(currentUser.EmployeeID) && (projectTask.Employee == null || !projectTask.Employee.Contains(currentUser.EmployeeID)) && projectTask.EmployeeIDRequest != currentUser.EmployeeID)
                         {
                             projectTask.EmployeeRelate.Add(currentUser.EmployeeID);
                         }
 
 
-
+                        // Thêm leader vào sách người liên quan
                         if (leaders.Count > 0)
                         {
                             foreach (var item in leaders)
                             {
-                                if (item.LeaderID != null && !projectTask.EmployeeRelate.Contains(item.LeaderID ?? -1))
+                                // Nếu leader chưa lằm trong danh sách người liên quan + không lằm trong người nhận việc + không phải là người giao việc thì thêm vào danh sách người liên quan
+                                if (item.LeaderID != null && (projectTask.EmployeeRelate == null || !projectTask.EmployeeRelate.Contains(item.LeaderID ?? -1)) && (projectTask.Employee == null || !projectTask.Employee.Contains(item.LeaderID ?? -1)) && projectTask.EmployeeIDRequest != item.LeaderID)
                                 {
+                                    if (projectTask.EmployeeRelate == null)
+                                    {
+                                        projectTask.EmployeeRelate = new List<int>();
+                                    }
                                     projectTask.EmployeeRelate.Add(item.LeaderID ?? 0);
                                 }
                             }
                         }
                     }
-                    else
-                    {
-                        if (!projectTask.Employee.Contains(currentUser.EmployeeID) && projectTask.EmployeeIDRequest != currentUser.EmployeeID)
-                        {
-                            projectTask.EmployeeRelate = new List<int>();
-                            projectTask.EmployeeRelate.Add(currentUser.EmployeeID);
-                        }
 
-                        if (leaders.Count > 0)
-                        {
-                            foreach (var item in leaders)
-                            {
-                                if (item.LeaderID != null && !projectTask.EmployeeRelate.Contains(item.LeaderID ?? -1))
-                                {
-                                    projectTask.EmployeeRelate.Add(item.LeaderID ?? 0);
-                                }
-                            }
-                        }
-                    }
+                    // Thêm mới người liên quan vào bảng ProjectTaskEmployee (type = 2) + thêm vào danh sách gửi mail
                     var listEmployeeRelate = new List<string>();
-                    foreach (var emp in projectTask.EmployeeRelate)
+                    if (projectTask.EmployeeRelate != null && projectTask.EmployeeRelate.Count > 0)
                     {
-                        var employeeValue = await _employeeRepo.GetByIDAsync(emp);
-                        if (employeeValue != null)
+                        foreach (var emp in projectTask.EmployeeRelate)
                         {
-                            listEmployeeRelate.Add(employeeValue.EmailCongTy);
-                        }
-                        var projectTaskEmployee = new ProjectTaskEmployee
-                        {
-                            ProjectTaskID = newProjectTask.ID,
-                            Type = 2, // 2: related 
-                            EmployeeID = emp,
-                            IsDeleted = false
-                        };
-                        if (await _projectTaskEmployeeRepo.CreateAsync(projectTaskEmployee) <= 0)
-                        {
-                            return BadRequest(ApiResponseFactory.Fail(null, "Failed to assign employee relate to project task."));
+                            var employeeValue = await _employeeRepo.GetByIDAsync(emp);
+
+                            // Thêm người liên quan vào danh sách gửi mail
+                            if (employeeValue != null)
+                            {
+                                if (employeeValue != null && employeeValue.EmailCongTy != null)
+                                    listEmployeeRelate.Add(employeeValue.EmailCongTy);
+                            }
+                            var projectTaskEmployee = new ProjectTaskEmployee
+                            {
+                                ProjectTaskID = newProjectTask.ID,
+                                Type = 2, // 2: related 
+                                EmployeeID = emp,
+                                IsDeleted = false
+                            };
+                            if (await _projectTaskEmployeeRepo.CreateAsync(projectTaskEmployee) <= 0)
+                            {
+                                return BadRequest(ApiResponseFactory.Fail(null, "Failed to assign employee relate to project task."));
+                            }
                         }
                     }
+                    var listEmailBand = _projectTaskEmailBandRepo.GetAll(x => x.IsActive == false).Select(x => x.EmployeeEmail);
 
+                    var listemailRecive = listEmployeeRelate.Except(listEmailBand);
+                    var listemailCC = listEmail.Except(listEmailBand);
 
-                    string listEmployeeRelateString = string.Join(",", listEmployeeRelate.Distinct());
-                    string listToEmailString = string.Join(",", listEmail.Distinct());
+                    string listEmployeeRelateString = string.Join(",", listemailRecive.Distinct());
+                    string listToEmailString = string.Join(",", listemailCC.Distinct());
                     var employeeAsigner = await _employeeRepo.GetByIDAsync(newProjectTask.EmployeeIDRequest ?? 0);
-                    if (listEmployeeRelateString.Count() > 0)
+                    if (listToEmailString.Count() > 0)
                     {
                         SendEmailReceiveProjectTaskParam sendEmailContent = new SendEmailReceiveProjectTaskParam
                         {
@@ -1173,7 +1550,7 @@ namespace RERPAPI.Controllers.Project
 
 
         [HttpPost("Approve")]
-        public async Task<IActionResult> ApproveTask([FromBody] List<int> projectTaskIDs, bool isApproved, string? review)
+        public async Task<IActionResult> ApproveTask([FromBody] List<int> projectTaskIDs, bool isApproved, string? review, int? completionRating)
         {
             try
             {
@@ -1277,13 +1654,17 @@ namespace RERPAPI.Controllers.Project
                         }
                     }
 
+                    var listEmailBand = _projectTaskEmailBandRepo.GetAll(x => x.IsActive == false).Select(x => x.EmployeeEmail);
 
-                    string listEmployeeRelateString1 = string.Join(",", listEmployeeRelate2.Distinct());
-                    string listToEmailString1 = string.Join(",", listEmail1.Distinct());
+                    var listemailRecive = listEmployeeRelate2.Except(listEmailBand);
+                    var listemailCC = listEmail1.Except(listEmailBand);
+
+                    string listEmployeeRelateString1 = string.Join(",", listemailRecive.Distinct());
+                    string listToEmailString1 = string.Join(",", listemailCC.Distinct());
                     var employeeAsigner1 = await _employeeRepo.GetByIDAsync(exitProjectTask.EmployeeIDRequest ?? 0);
 
 
-                    if (listEmployeeRelateString1.Count() > 0)
+                    if (listToEmailString1.Count() > 0)
                     {
                         SendEmailReceiveProjectTaskParam sendEmailContent1 = new SendEmailReceiveProjectTaskParam
                         {
@@ -1327,6 +1708,7 @@ namespace RERPAPI.Controllers.Project
                         IsApprove = isApproved,
                         Review = review,
                         EmployeeID = currentUser.EmployeeID,
+                        CompletionRating = completionRating
                     };
 
                     if (await _projectTaskApproveRepo.CreateAsync(newApproveTask) <= 0)
