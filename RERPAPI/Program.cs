@@ -37,6 +37,7 @@ using System.Text;
 
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -735,7 +736,7 @@ builder.Services.Configure<ModulaConfig>(builder.Configuration.GetSection("Modul
 
 // Nếu bạn muốn inject trực tiếp:
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<ModulaConfig>>().Value);
-
+//builder.Services.AddHostedService<PersistentTcpClientService>();
 builder.Services.AddSingleton(sp =>
 {
     var config = sp.GetRequiredService<ModulaConfig>();
@@ -750,6 +751,27 @@ builder.Services.AddSingleton(sp =>
         reconnectDelayMs: 1000
     );
 });
+
+//Add logger
+// 👉 cấu hình Serilog
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .Enrich.FromLogContext()
+    .Enrich.WithMachineName()
+    .Enrich.WithThreadId()
+    .WriteTo.Console()
+    .WriteTo.Async(a => a.File(
+        "logs/log-.txt",
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 7,
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss:fff} [{Level}] {Message}{NewLine}{Exception}"
+    ))
+    .CreateLogger();
+
+// 👉 replace logger mặc định
+builder.Host.UseSerilog();
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -799,5 +821,7 @@ foreach (var item in staticFiles)
         RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
     });
 }
+
+app.UseSerilogRequestLogging(); // log request
 
 app.Run();

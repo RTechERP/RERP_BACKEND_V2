@@ -282,6 +282,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<EmployeeCurricular> EmployeeCurriculars { get; set; }
 
+    public virtual DbSet<EmployeeDeductionType> EmployeeDeductionTypes { get; set; }
+
     public virtual DbSet<EmployeeEarlyLate> EmployeeEarlyLates { get; set; }
 
     public virtual DbSet<EmployeeEducationLevel> EmployeeEducationLevels { get; set; }
@@ -3690,6 +3692,44 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CurricularName).HasMaxLength(550);
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<EmployeeDeductionType>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__Employee__3214EC27B4524C9A");
+
+            entity.ToTable("EmployeeDeductionType", tb => tb.HasComment("Bảng khai báo danh sách loại phạt"));
+
+            entity.Property(e => e.ID).HasComment("ID bản ghi");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(100)
+                .HasComment("Người tạo");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasComment("Ngày tạo")
+                .HasColumnType("datetime");
+            entity.Property(e => e.DeductionTypeCode)
+                .HasMaxLength(50)
+                .HasComment("Mã loại phạt");
+            entity.Property(e => e.DeductionTypeName)
+                .HasMaxLength(255)
+                .HasComment("Tên loại phạt");
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false)
+                .HasComment("Trạng thái xóa mềm: 0-Chưa xóa, 1-Đã xóa");
+            entity.Property(e => e.MoneyLevel1)
+                .HasComment("Tiền phạt cấp 1")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.MoneyLevel2)
+                .HasComment("Tiền phạt cấp 2")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.Note).HasComment("Ghi chú");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(100)
+                .HasComment("Người cập nhật");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật")
+                .HasColumnType("datetime");
         });
 
         modelBuilder.Entity<EmployeeEarlyLate>(entity =>

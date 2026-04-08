@@ -1,0 +1,12 @@
+2026-04-08 08:28:42:434 [Information] User profile is available. Using '"C:\Users\Admin\AppData\Local\ASP.NET\DataProtection-Keys"' as key repository and Windows DPAPI to encrypt keys at rest.
+2026-04-08 08:28:43:870 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/swagger/index.html""" - null null
+2026-04-08 08:28:44:033 [Information] Application started. Press Ctrl+C to shut down.
+2026-04-08 08:28:44:033 [Information] Hosting environment: "Development"
+2026-04-08 08:28:44:033 [Information] Content root path: "D:\LeTheAnh\RTC\Project\2025\SourceCode\RTC.25.008\BackEnd\RERP_BACKEND_V2\RERPAPI"
+2026-04-08 08:28:44:608 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/swagger/index.html""" - 200 null "text/html;charset=utf-8" 745.39ms
+2026-04-08 08:28:44:619 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/_framework/aspnetcore-browser-refresh.js""" - null null
+2026-04-08 08:28:44:619 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/_vs/browserLink""" - null null
+2026-04-08 08:28:44:625 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/_framework/aspnetcore-browser-refresh.js""" - 200 16499 "application/javascript; charset=utf-8" 4.9938ms
+2026-04-08 08:28:44:673 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/_vs/browserLink""" - 200 null "text/javascript; charset=UTF-8" 53.8983ms
+2026-04-08 08:28:44:737 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/swagger/v1/swagger.json""" - null null
+2026-04-08 08:28:45:216 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/swagger/v1/swagger.json""" - 200 null "application/json;charset=utf-8" 478.6047ms

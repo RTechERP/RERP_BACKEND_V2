@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
+using RERPAPI.Controllers.Old;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
@@ -31,9 +32,10 @@ namespace RERPAPI.Controllers.Project
         UnitCountRepo _unitCountRepo;
         ProductRTCRepo _productRTCRepo;
         private readonly EmailHelper _emailHelper;
+        private readonly ILogger<ProjectPartlistPriceRequestController> _logger;
 
 
-        public ProjectPartlistPriceRequestController(ProjectRepo projectRepo, POKHRepo pOKHRepo, ProjectPartlistPriceRequestRepo requestRepo, ProductSaleRepo productSaleRepo, CurrencyRepo currencyRepo, SupplierSaleRepo supplierSaleRepo, ProjectSolutionRepo projectSolutionRepo, EmployeeSendEmailRepo employeeSendEmailRepo, ProjectPartlistPriceRequestTypeRepo projectPartlistPriceRequestTypeRepo, ProjectPartlistPriceRequestNoteRepo projectPartlistPriceRequestNoteRepo, ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo, UnitCountRepo unitCountRepo, ProductRTCRepo productRTCRepo, EmailHelper emailHelper)
+        public ProjectPartlistPriceRequestController(ProjectRepo projectRepo, POKHRepo pOKHRepo, ProjectPartlistPriceRequestRepo requestRepo, ProductSaleRepo productSaleRepo, CurrencyRepo currencyRepo, SupplierSaleRepo supplierSaleRepo, ProjectSolutionRepo projectSolutionRepo, EmployeeSendEmailRepo employeeSendEmailRepo, ProjectPartlistPriceRequestTypeRepo projectPartlistPriceRequestTypeRepo, ProjectPartlistPriceRequestNoteRepo projectPartlistPriceRequestNoteRepo, ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo, UnitCountRepo unitCountRepo, ProductRTCRepo productRTCRepo, EmailHelper emailHelper, ILogger<ProjectPartlistPriceRequestController> logger)
         {
             this.projectRepo = projectRepo;
             this.pOKHRepo = pOKHRepo;
@@ -49,6 +51,7 @@ namespace RERPAPI.Controllers.Project
             _unitCountRepo = unitCountRepo;
             _productRTCRepo = productRTCRepo;
             _emailHelper = emailHelper;
+            _logger = logger;
         }
 
         #endregion
@@ -118,6 +121,7 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
+
                 dateStart = dateStart.Date;
                 dateEnd = dateEnd.Date.AddHours(23).AddMinutes(59).AddSeconds(59);
 
@@ -156,6 +160,7 @@ namespace RERPAPI.Controllers.Project
 
                 var dt = SQLHelper<dynamic>.GetListData(dtPriceRequestResults, 0);
                 //return Ok(ApiResponseFactory.Success(dtPriceRequestResults, ""));
+
                 return Ok(ApiResponseFactory.Success(dt, ""));
             }
             catch (Exception ex)
