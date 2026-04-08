@@ -10,3 +10,1048 @@
 2026-04-08 08:28:44:673 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/_vs/browserLink""" - 200 null "text/javascript; charset=UTF-8" 53.8983ms
 2026-04-08 08:28:44:737 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/swagger/v1/swagger.json""" - null null
 2026-04-08 08:28:45:216 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/swagger/v1/swagger.json""" - 200 null "application/json;charset=utf-8" 478.6047ms
+2026-04-08 08:31:54:076 [Information] User profile is available. Using '"C:\Users\Admin\AppData\Local\ASP.NET\DataProtection-Keys"' as key repository and Windows DPAPI to encrypt keys at rest.
+2026-04-08 08:31:55:138 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/swagger/index.html""" - null null
+2026-04-08 08:31:55:283 [Information] Application started. Press Ctrl+C to shut down.
+2026-04-08 08:31:55:284 [Information] Hosting environment: "Development"
+2026-04-08 08:31:55:284 [Information] Content root path: "D:\LeTheAnh\RTC\Project\2025\SourceCode\RTC.25.008\BackEnd\RERP_BACKEND_V2\RERPAPI"
+2026-04-08 08:31:55:343 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/swagger/index.html""" - 200 null "text/html;charset=utf-8" 212.4678ms
+2026-04-08 08:31:55:350 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/_vs/browserLink""" - null null
+2026-04-08 08:31:55:350 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/_framework/aspnetcore-browser-refresh.js""" - null null
+2026-04-08 08:31:55:358 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/_framework/aspnetcore-browser-refresh.js""" - 200 16499 "application/javascript; charset=utf-8" 6.6669ms
+2026-04-08 08:31:55:395 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/_vs/browserLink""" - 200 null "text/javascript; charset=UTF-8" 45.2244ms
+2026-04-08 08:31:55:439 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/swagger/v1/swagger.json""" - null null
+2026-04-08 08:31:55:941 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/swagger/v1/swagger.json""" - 200 null "application/json;charset=utf-8" 501.8181ms
+2026-04-08 08:34:49:063 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/menuapp""?keyword=" - null null
+2026-04-08 08:34:49:066 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/newsletter/get-limit-newsletter""" - null null
+2026-04-08 08:34:49:073 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/historyborrowsale/quantity-borrow-sale-persional""" - null null
+2026-04-08 08:34:49:079 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/home/employee-onleave-and-wfh""" - null null
+2026-04-08 08:34:49:088 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/borrow/get-quantity-product-borrow""" - null null
+2026-04-08 08:34:49:097 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/Holiday""?month=4&year=2026" - null null
+2026-04-08 08:34:49:105 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/home/get-quantity-approve""" - null null
+2026-04-08 08:34:49:211 [Information] CORS policy execution successful.
+2026-04-08 08:34:49:211 [Information] CORS policy execution successful.
+2026-04-08 08:34:49:211 [Information] CORS policy execution successful.
+2026-04-08 08:34:49:211 [Information] CORS policy execution successful.
+2026-04-08 08:34:49:211 [Information] CORS policy execution successful.
+2026-04-08 08:34:49:211 [Information] CORS policy execution successful.
+2026-04-08 08:34:49:211 [Information] CORS policy execution successful.
+2026-04-08 08:34:49:221 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/newsletter/get-limit-newsletter""" - 204 null null 155.5218ms
+2026-04-08 08:34:49:221 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/home/get-quantity-approve""" - 204 null null 116.257ms
+2026-04-08 08:34:49:221 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/historyborrowsale/quantity-borrow-sale-persional""" - 204 null null 149.583ms
+2026-04-08 08:34:49:221 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/menuapp""?keyword=" - 204 null null 161.891ms
+2026-04-08 08:34:49:222 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/Holiday""?month=4&year=2026" - 204 null null 126.0428ms
+2026-04-08 08:34:49:222 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/home/employee-onleave-and-wfh""" - 204 null null 143.1712ms
+2026-04-08 08:34:49:222 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/borrow/get-quantity-product-borrow""" - 204 null null 135.6458ms
+2026-04-08 08:34:49:228 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/Holiday""?month=4&year=2026" - null null
+2026-04-08 08:34:49:228 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/borrow/get-quantity-product-borrow""" - null null
+2026-04-08 08:34:49:228 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/home/employee-onleave-and-wfh""" - null null
+2026-04-08 08:34:49:228 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/historyborrowsale/quantity-borrow-sale-persional""" - null null
+2026-04-08 08:34:49:228 [Information] Request starting "HTTP/2" "POST" "https"://"localhost:44365""""/api/home/get-quantity-approve""" - "application/json" 77
+2026-04-08 08:34:49:233 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/newsletter/get-limit-newsletter""" - null null
+2026-04-08 08:34:49:239 [Information] CORS policy execution successful.
+2026-04-08 08:34:49:239 [Information] CORS policy execution successful.
+2026-04-08 08:34:49:241 [Information] CORS policy execution successful.
+2026-04-08 08:34:49:242 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/menuapp""?keyword=" - null null
+2026-04-08 08:34:49:243 [Information] CORS policy execution successful.
+2026-04-08 08:34:49:244 [Information] CORS policy execution successful.
+2026-04-08 08:34:49:245 [Information] CORS policy execution successful.
+2026-04-08 08:34:49:245 [Information] CORS policy execution successful.
+2026-04-08 08:34:51:012 [Information] Executing endpoint '"RERPAPI.Controllers.Systems.MenuAppController.GetAll (RERPAPI)"'
+2026-04-08 08:34:51:012 [Information] Executing endpoint '"RERPAPI.Controllers.Old.SaleWareHouseManagement.HistoryBorrowSaleController.getQuantityBorrowSalePersional (RERPAPI)"'
+2026-04-08 08:34:51:012 [Information] Executing endpoint '"RERPAPI.Controllers.HomeController.GetQuantityApprove (RERPAPI)"'
+2026-04-08 08:34:51:012 [Information] Executing endpoint '"RERPAPI.Controllers.HomeController.GetEmployeeOnleaveAndWFHByDate (RERPAPI)"'
+2026-04-08 08:34:51:012 [Information] Executing endpoint '"RERPAPI.Controllers.Old.NewsletterController.GetLimitNewLetter (RERPAPI)"'
+2026-04-08 08:34:51:012 [Information] Executing endpoint '"RERPAPI.Controllers.Old.HolidayController.GetHoliday (RERPAPI)"'
+2026-04-08 08:34:51:012 [Information] Executing endpoint '"RERPAPI.Controllers.BorrowController.GetQuantityProductBorrow (RERPAPI)"'
+2026-04-08 08:34:51:029 [Information] Route matched with "{action = \"GetQuantityProductBorrow\", controller = \"Borrow\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetQuantityProductBorrow()" on controller "RERPAPI.Controllers.BorrowController" ("RERPAPI").
+2026-04-08 08:34:51:029 [Information] Route matched with "{action = \"GetQuantityApprove\", controller = \"Home\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetQuantityApprove(RERPAPI.Model.Param.ApproveByApproveTPRequestParam)" on controller "RERPAPI.Controllers.HomeController" ("RERPAPI").
+2026-04-08 08:34:51:029 [Information] Route matched with "{action = \"GetHoliday\", controller = \"Holiday\"}". Executing controller action with signature "Microsoft.AspNetCore.Mvc.IActionResult GetHoliday(Int32, Int32)" on controller "RERPAPI.Controllers.Old.HolidayController" ("RERPAPI").
+2026-04-08 08:34:51:029 [Information] Route matched with "{action = \"GetEmployeeOnleaveAndWFHByDate\", controller = \"Home\"}". Executing controller action with signature "Microsoft.AspNetCore.Mvc.IActionResult GetEmployeeOnleaveAndWFHByDate()" on controller "RERPAPI.Controllers.HomeController" ("RERPAPI").
+2026-04-08 08:34:51:029 [Information] Route matched with "{action = \"GetAll\", controller = \"MenuApp\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll(System.String)" on controller "RERPAPI.Controllers.Systems.MenuAppController" ("RERPAPI").
+2026-04-08 08:34:51:029 [Information] Route matched with "{action = \"getQuantityBorrowSalePersional\", controller = \"HistoryBorrowSale\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] getQuantityBorrowSalePersional()" on controller "RERPAPI.Controllers.Old.SaleWareHouseManagement.HistoryBorrowSaleController" ("RERPAPI").
+2026-04-08 08:34:51:029 [Information] Route matched with "{action = \"GetLimitNewLetter\", controller = \"Newsletter\"}". Executing controller action with signature "Microsoft.AspNetCore.Mvc.IActionResult GetLimitNewLetter()" on controller "RERPAPI.Controllers.Old.NewsletterController" ("RERPAPI").
+2026-04-08 08:34:55:183 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 08:34:55:183 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 08:34:55:210 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 08:34:55:218 [Information] Executed action "RERPAPI.Controllers.Old.HolidayController.GetHoliday (RERPAPI)" in 4184.1033ms
+2026-04-08 08:34:55:218 [Information] Executed action "RERPAPI.Controllers.Old.NewsletterController.GetLimitNewLetter (RERPAPI)" in 4184.1079ms
+2026-04-08 08:34:55:218 [Information] Executed endpoint '"RERPAPI.Controllers.Old.NewsletterController.GetLimitNewLetter (RERPAPI)"'
+2026-04-08 08:34:55:218 [Information] Executed endpoint '"RERPAPI.Controllers.Old.HolidayController.GetHoliday (RERPAPI)"'
+2026-04-08 08:34:55:221 [Information] HTTP "GET" "/api/newsletter/get-limit-newsletter" responded 200 in 4207.4807 ms
+2026-04-08 08:34:55:221 [Information] HTTP "GET" "/api/holiday" responded 200 in 4207.5000 ms
+2026-04-08 08:34:55:223 [Information] Executed action "RERPAPI.Controllers.Systems.MenuAppController.GetAll (RERPAPI)" in 4192.9185ms
+2026-04-08 08:34:55:223 [Information] Executed endpoint '"RERPAPI.Controllers.Systems.MenuAppController.GetAll (RERPAPI)"'
+2026-04-08 08:34:55:224 [Information] HTTP "GET" "/api/menuapp" responded 200 in 4212.9659 ms
+2026-04-08 08:34:55:224 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/newsletter/get-limit-newsletter""" - 200 null "application/json; charset=utf-8" 5991.695ms
+2026-04-08 08:34:55:224 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/holiday""?month=4&year=2026" - 200 null "application/json; charset=utf-8" 5996.2616ms
+2026-04-08 08:34:55:225 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/menuapp""?keyword=" - 200 null "application/json; charset=utf-8" 5983.5981ms
+2026-04-08 08:34:55:280 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M3.svg""" - null null
+2026-04-08 08:34:55:367 [Information] The file "/icon/m3.svg" was not modified
+2026-04-08 08:34:55:368 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m3.svg""" - 304 null "image/svg+xml" 88.405ms
+2026-04-08 08:34:55:471 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 08:34:55:474 [Information] Executed action "RERPAPI.Controllers.Old.SaleWareHouseManagement.HistoryBorrowSaleController.getQuantityBorrowSalePersional (RERPAPI)" in 4443.8495ms
+2026-04-08 08:34:55:474 [Information] Executed endpoint '"RERPAPI.Controllers.Old.SaleWareHouseManagement.HistoryBorrowSaleController.getQuantityBorrowSalePersional (RERPAPI)"'
+2026-04-08 08:34:55:474 [Information] HTTP "GET" "/api/historyborrowsale/quantity-borrow-sale-persional" responded 200 in 4463.0395 ms
+2026-04-08 08:34:55:474 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/historyborrowsale/quantity-borrow-sale-persional""" - 200 null "application/json; charset=utf-8" 6245.7363ms
+2026-04-08 08:34:55:665 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 08:34:55:669 [Information] Executed action "RERPAPI.Controllers.HomeController.GetEmployeeOnleaveAndWFHByDate (RERPAPI)" in 4638.8179ms
+2026-04-08 08:34:55:669 [Information] Executed endpoint '"RERPAPI.Controllers.HomeController.GetEmployeeOnleaveAndWFHByDate (RERPAPI)"'
+2026-04-08 08:34:55:669 [Information] HTTP "GET" "/api/home/employee-onleave-and-wfh" responded 200 in 4657.9737 ms
+2026-04-08 08:34:55:669 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/home/employee-onleave-and-wfh""" - 200 null "application/json; charset=utf-8" 6440.6569ms
+2026-04-08 08:34:57:807 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 08:34:57:811 [Information] Executed action "RERPAPI.Controllers.BorrowController.GetQuantityProductBorrow (RERPAPI)" in 6780.8183ms
+2026-04-08 08:34:57:811 [Information] Executed endpoint '"RERPAPI.Controllers.BorrowController.GetQuantityProductBorrow (RERPAPI)"'
+2026-04-08 08:34:57:811 [Information] HTTP "GET" "/api/borrow/get-quantity-product-borrow" responded 200 in 6800.0621 ms
+2026-04-08 08:34:57:811 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/borrow/get-quantity-product-borrow""" - 200 null "application/json; charset=utf-8" 8582.6831ms
+2026-04-08 08:40:17:556 [Information] User profile is available. Using '"C:\Users\Admin\AppData\Local\ASP.NET\DataProtection-Keys"' as key repository and Windows DPAPI to encrypt keys at rest.
+2026-04-08 08:40:18:459 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/swagger/index.html""" - null null
+2026-04-08 08:40:18:602 [Information] Application started. Press Ctrl+C to shut down.
+2026-04-08 08:40:18:602 [Information] Hosting environment: "Development"
+2026-04-08 08:40:18:602 [Information] Content root path: "D:\LeTheAnh\RTC\Project\2025\SourceCode\RTC.25.008\BackEnd\RERP_BACKEND_V2\RERPAPI"
+2026-04-08 08:40:18:657 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/swagger/index.html""" - 200 null "text/html;charset=utf-8" 204.6776ms
+2026-04-08 08:40:18:665 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/_framework/aspnetcore-browser-refresh.js""" - null null
+2026-04-08 08:40:18:666 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/_vs/browserLink""" - null null
+2026-04-08 08:40:18:672 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/_framework/aspnetcore-browser-refresh.js""" - 200 16499 "application/javascript; charset=utf-8" 3.6677ms
+2026-04-08 08:40:18:700 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/_vs/browserLink""" - 200 null "text/javascript; charset=UTF-8" 34.7712ms
+2026-04-08 08:40:18:735 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/swagger/v1/swagger.json""" - null null
+2026-04-08 08:40:19:216 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/swagger/v1/swagger.json""" - 200 null "application/json;charset=utf-8" 481.5432ms
+2026-04-08 08:40:43:752 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/menuapp""?keyword=" - null null
+2026-04-08 08:40:43:828 [Information] CORS policy execution successful.
+2026-04-08 08:40:43:829 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/menuapp""?keyword=" - 204 null null 77.7165ms
+2026-04-08 08:40:43:834 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/menuapp""?keyword=" - null null
+2026-04-08 08:40:43:836 [Information] CORS policy execution successful.
+2026-04-08 08:40:44:203 [Information] Executing endpoint '"RERPAPI.Controllers.Systems.MenuAppController.GetAll (RERPAPI)"'
+2026-04-08 08:40:44:223 [Information] Route matched with "{action = \"GetAll\", controller = \"MenuApp\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll(System.String)" on controller "RERPAPI.Controllers.Systems.MenuAppController" ("RERPAPI").
+2026-04-08 08:40:48:510 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 08:40:48:548 [Information] Executed action "RERPAPI.Controllers.Systems.MenuAppController.GetAll (RERPAPI)" in 4322.9889ms
+2026-04-08 08:40:48:549 [Information] Executed endpoint '"RERPAPI.Controllers.Systems.MenuAppController.GetAll (RERPAPI)"'
+2026-04-08 08:40:48:551 [Information] HTTP "GET" "/api/menuapp" responded 200 in 4347.4270 ms
+2026-04-08 08:40:48:555 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/menuapp""?keyword=" - 499 null "application/json; charset=utf-8" 4721.0638ms
+2026-04-08 08:40:51:239 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/menuapp""?keyword=" - null null
+2026-04-08 08:40:51:240 [Information] CORS policy execution successful.
+2026-04-08 08:40:51:241 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/menuapp""?keyword=" - 204 null null 1.3457ms
+2026-04-08 08:40:51:243 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/menuapp""?keyword=" - null null
+2026-04-08 08:40:51:243 [Information] CORS policy execution successful.
+2026-04-08 08:40:51:249 [Information] Executing endpoint '"RERPAPI.Controllers.Systems.MenuAppController.GetAll (RERPAPI)"'
+2026-04-08 08:40:51:249 [Information] Route matched with "{action = \"GetAll\", controller = \"MenuApp\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll(System.String)" on controller "RERPAPI.Controllers.Systems.MenuAppController" ("RERPAPI").
+2026-04-08 08:40:51:328 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 08:40:51:335 [Information] Executed action "RERPAPI.Controllers.Systems.MenuAppController.GetAll (RERPAPI)" in 85.9625ms
+2026-04-08 08:40:51:335 [Information] Executed endpoint '"RERPAPI.Controllers.Systems.MenuAppController.GetAll (RERPAPI)"'
+2026-04-08 08:40:51:335 [Information] HTTP "GET" "/api/menuapp" responded 200 in 86.7400 ms
+2026-04-08 08:40:51:336 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/menuapp""?keyword=" - 200 null "application/json; charset=utf-8" 93.0697ms
+2026-04-08 08:40:56:033 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M269.svg""" - null null
+2026-04-08 08:40:56:033 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M266.svg""" - null null
+2026-04-08 08:40:56:033 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M265.svg""" - null null
+2026-04-08 08:40:56:035 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M270.svg""" - null null
+2026-04-08 08:40:56:045 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M267.svg""" - null null
+2026-04-08 08:40:56:054 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M268.svg""" - null null
+2026-04-08 08:40:56:067 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M274.svg""" - null null
+2026-04-08 08:40:56:075 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M273.svg""" - null null
+2026-04-08 08:40:56:114 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M275.svg""" - null null
+2026-04-08 08:40:56:121 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M276.svg""" - null null
+2026-04-08 08:40:56:153 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M281.svg""" - null null
+2026-04-08 08:40:56:159 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M264.svg""" - null null
+2026-04-08 08:40:56:254 [Information] Sending file. Request path: '"/icon/m273.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m273.svg"'
+2026-04-08 08:40:56:254 [Information] Sending file. Request path: '"/icon/m267.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m267.svg"'
+2026-04-08 08:40:56:254 [Information] Sending file. Request path: '"/icon/m276.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m276.svg"'
+2026-04-08 08:40:56:254 [Information] Sending file. Request path: '"/icon/m266.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m266.svg"'
+2026-04-08 08:40:56:254 [Information] Sending file. Request path: '"/icon/m268.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m268.svg"'
+2026-04-08 08:40:56:254 [Information] Sending file. Request path: '"/icon/m274.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m274.svg"'
+2026-04-08 08:40:56:254 [Information] Sending file. Request path: '"/icon/m269.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m269.svg"'
+2026-04-08 08:40:56:254 [Information] Sending file. Request path: '"/icon/m270.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m270.svg"'
+2026-04-08 08:40:56:254 [Information] Sending file. Request path: '"/icon/m265.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m265.svg"'
+2026-04-08 08:40:56:254 [Information] Sending file. Request path: '"/icon/m281.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m281.svg"'
+2026-04-08 08:40:56:255 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m276.svg""" - 200 1340 "image/svg+xml" 134.1281ms
+2026-04-08 08:40:56:255 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m267.svg""" - 200 2077 "image/svg+xml" 209.6544ms
+2026-04-08 08:40:56:255 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m270.svg""" - 200 1002 "image/svg+xml" 220.15ms
+2026-04-08 08:40:56:255 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m281.svg""" - 200 1007 "image/svg+xml" 101.918ms
+2026-04-08 08:40:56:255 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m265.svg""" - 200 1259 "image/svg+xml" 222.1657ms
+2026-04-08 08:40:56:255 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m274.svg""" - 200 3743 "image/svg+xml" 188.9652ms
+2026-04-08 08:40:56:255 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m273.svg""" - 200 912 "image/svg+xml" 180.3272ms
+2026-04-08 08:40:56:255 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m268.svg""" - 200 3904 "image/svg+xml" 201.267ms
+2026-04-08 08:40:56:255 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m269.svg""" - 200 1646 "image/svg+xml" 222.157ms
+2026-04-08 08:40:56:255 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m266.svg""" - 200 4641 "image/svg+xml" 221.9606ms
+2026-04-08 08:40:56:255 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M272.svg""" - null null
+2026-04-08 08:40:56:255 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M282.svg""" - null null
+2026-04-08 08:40:56:255 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M284.svg""" - null null
+2026-04-08 08:40:56:255 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M299.svg""" - null null
+2026-04-08 08:40:56:255 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M285.svg""" - null null
+2026-04-08 08:40:56:255 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M241.svg""" - null null
+2026-04-08 08:40:56:255 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M271.svg""" - null null
+2026-04-08 08:40:56:255 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M321.svg""" - null null
+2026-04-08 08:40:56:256 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M244.svg""" - null null
+2026-04-08 08:40:56:255 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M283.svg""" - null null
+2026-04-08 08:40:56:358 [Information] Sending file. Request path: '"/icon/m264.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m264.svg"'
+2026-04-08 08:40:56:358 [Information] Sending file. Request path: '"/icon/m275.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m275.svg"'
+2026-04-08 08:40:56:358 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m264.svg""" - 200 3904 "image/svg+xml" 198.7719ms
+2026-04-08 08:40:56:358 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m275.svg""" - 200 677 "image/svg+xml" 245.3133ms
+2026-04-08 08:40:56:358 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M240.svg""" - null null
+2026-04-08 08:40:56:358 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M242.svg""" - null null
+2026-04-08 08:40:56:363 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M243.svg""" - null null
+2026-04-08 08:40:56:396 [Information] Sending file. Request path: '"/icon/m272.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m272.svg"'
+2026-04-08 08:40:56:396 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m272.svg""" - 200 3743 "image/svg+xml" 140.9956ms
+2026-04-08 08:40:56:397 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M247.svg""" - null null
+2026-04-08 08:40:56:407 [Information] Sending file. Request path: '"/icon/m321.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m321.svg"'
+2026-04-08 08:40:56:407 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m321.svg""" - 200 1559 "image/svg+xml" 151.2992ms
+2026-04-08 08:40:56:407 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M249.svg""" - null null
+2026-04-08 08:40:56:448 [Information] Sending file. Request path: '"/icon/m284.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m284.svg"'
+2026-04-08 08:40:56:452 [Information] Sending file. Request path: '"/icon/m285.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m285.svg"'
+2026-04-08 08:40:56:453 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m285.svg""" - 200 1981 "image/svg+xml" 197.3308ms
+2026-04-08 08:40:56:456 [Information] Sending file. Request path: '"/icon/m283.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m283.svg"'
+2026-04-08 08:40:56:456 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m284.svg""" - 200 1357 "image/svg+xml" 200.2956ms
+2026-04-08 08:40:56:458 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m283.svg""" - 200 1549 "image/svg+xml" 202.1504ms
+2026-04-08 08:40:56:458 [Information] Sending file. Request path: '"/icon/m271.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m271.svg"'
+2026-04-08 08:40:56:460 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m271.svg""" - 200 2001 "image/svg+xml" 203.8811ms
+2026-04-08 08:40:56:460 [Information] Sending file. Request path: '"/icon/m282.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m282.svg"'
+2026-04-08 08:40:56:460 [Information] Sending file. Request path: '"/icon/m240.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m240.svg"'
+2026-04-08 08:40:56:461 [Information] Sending file. Request path: '"/icon/m241.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m241.svg"'
+2026-04-08 08:40:56:462 [Information] Sending file. Request path: '"/icon/m299.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m299.svg"'
+2026-04-08 08:40:56:462 [Information] Sending file. Request path: '"/icon/m244.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m244.svg"'
+2026-04-08 08:40:56:462 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m240.svg""" - 200 2998 "image/svg+xml" 103.7219ms
+2026-04-08 08:40:56:463 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M250.svg""" - null null
+2026-04-08 08:40:56:463 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M237.svg""" - null null
+2026-04-08 08:40:56:463 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M251.svg""" - null null
+2026-04-08 08:40:56:463 [Information] Sending file. Request path: '"/icon/m242.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m242.svg"'
+2026-04-08 08:40:56:463 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M245.svg""" - null null
+2026-04-08 08:40:56:464 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M248.svg""" - null null
+2026-04-08 08:40:56:467 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m299.svg""" - 200 5096 "image/svg+xml" 210.988ms
+2026-04-08 08:40:56:468 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M238.svg""" - null null
+2026-04-08 08:40:56:470 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m282.svg""" - 200 3208 "image/svg+xml" 214.7689ms
+2026-04-08 08:40:56:470 [Information] Sending file. Request path: '"/icon/m243.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m243.svg"'
+2026-04-08 08:40:56:471 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M239.svg""" - null null
+2026-04-08 08:40:56:471 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m243.svg""" - 200 1507 "image/svg+xml" 108.0318ms
+2026-04-08 08:40:56:472 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m241.svg""" - 200 2998 "image/svg+xml" 216.5962ms
+2026-04-08 08:40:56:472 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M260.svg""" - null null
+2026-04-08 08:40:56:472 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m244.svg""" - 200 1154 "image/svg+xml" 216.6249ms
+2026-04-08 08:40:56:472 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M253.svg""" - null null
+2026-04-08 08:40:56:474 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M236.svg""" - null null
+2026-04-08 08:40:56:474 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m242.svg""" - 200 949 "image/svg+xml" 115.8276ms
+2026-04-08 08:40:56:474 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M256.svg""" - null null
+2026-04-08 08:40:56:481 [Information] Sending file. Request path: '"/icon/m247.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m247.svg"'
+2026-04-08 08:40:56:481 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m247.svg""" - 200 2514 "image/svg+xml" 84.4551ms
+2026-04-08 08:40:56:481 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M259.svg""" - null null
+2026-04-08 08:40:56:508 [Information] Sending file. Request path: '"/icon/m249.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m249.svg"'
+2026-04-08 08:40:56:508 [Information] Sending file. Request path: '"/icon/m250.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m250.svg"'
+2026-04-08 08:40:56:510 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m250.svg""" - 200 1154 "image/svg+xml" 47.0501ms
+2026-04-08 08:40:56:510 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m249.svg""" - 200 2514 "image/svg+xml" 102.4058ms
+2026-04-08 08:40:56:510 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M252.svg""" - null null
+2026-04-08 08:40:56:510 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M255.svg""" - null null
+2026-04-08 08:40:56:511 [Information] Sending file. Request path: '"/icon/m248.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m248.svg"'
+2026-04-08 08:40:56:511 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m248.svg""" - 200 2514 "image/svg+xml" 46.81ms
+2026-04-08 08:40:56:511 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M246.svg""" - null null
+2026-04-08 08:40:56:560 [Information] Sending file. Request path: '"/icon/m238.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m238.svg"'
+2026-04-08 08:40:56:562 [Information] Sending file. Request path: '"/icon/m245.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m245.svg"'
+2026-04-08 08:40:56:562 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m238.svg""" - 200 4091 "image/svg+xml" 93.9833ms
+2026-04-08 08:40:56:564 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m245.svg""" - 200 1290 "image/svg+xml" 100.4822ms
+2026-04-08 08:40:56:565 [Information] Sending file. Request path: '"/icon/m251.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m251.svg"'
+2026-04-08 08:40:56:567 [Information] Sending file. Request path: '"/icon/m237.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m237.svg"'
+2026-04-08 08:40:56:567 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M257.svg""" - null null
+2026-04-08 08:40:56:567 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M254.svg""" - null null
+2026-04-08 08:40:56:567 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m251.svg""" - 200 1290 "image/svg+xml" 103.7902ms
+2026-04-08 08:40:56:567 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m237.svg""" - 200 1074 "image/svg+xml" 104.0304ms
+2026-04-08 08:40:56:567 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M263.svg""" - null null
+2026-04-08 08:40:56:567 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M287.svg""" - null null
+2026-04-08 08:40:56:576 [Information] Sending file. Request path: '"/icon/m256.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m256.svg"'
+2026-04-08 08:40:56:576 [Information] Sending file. Request path: '"/icon/m239.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m239.svg"'
+2026-04-08 08:40:56:576 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m239.svg""" - 200 2337 "image/svg+xml" 104.4692ms
+2026-04-08 08:40:56:576 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m256.svg""" - 200 3262 "image/svg+xml" 101.4447ms
+2026-04-08 08:40:56:576 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M262.svg""" - null null
+2026-04-08 08:40:56:576 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M258.svg""" - null null
+2026-04-08 08:40:56:591 [Information] Sending file. Request path: '"/icon/m253.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m253.svg"'
+2026-04-08 08:40:56:591 [Information] Sending file. Request path: '"/icon/m260.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m260.svg"'
+2026-04-08 08:40:56:591 [Information] Sending file. Request path: '"/icon/m236.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m236.svg"'
+2026-04-08 08:40:56:591 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m236.svg""" - 200 1074 "image/svg+xml" 116.9372ms
+2026-04-08 08:40:56:591 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m260.svg""" - 200 3632 "image/svg+xml" 118.9607ms
+2026-04-08 08:40:56:591 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m253.svg""" - 200 791 "image/svg+xml" 118.7526ms
+2026-04-08 08:40:56:591 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M261.svg""" - null null
+2026-04-08 08:40:56:591 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M288.svg""" - null null
+2026-04-08 08:40:56:591 [Information] Sending file. Request path: '"/icon/m259.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m259.svg"'
+2026-04-08 08:40:56:592 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m259.svg""" - 200 4613 "image/svg+xml" 110.3069ms
+2026-04-08 08:40:56:592 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M296.svg""" - null null
+2026-04-08 08:40:56:622 [Information] Sending file. Request path: '"/icon/m246.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m246.svg"'
+2026-04-08 08:40:56:622 [Information] Sending file. Request path: '"/icon/m252.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m252.svg"'
+2026-04-08 08:40:56:622 [Information] Sending file. Request path: '"/icon/m255.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m255.svg"'
+2026-04-08 08:40:56:622 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m255.svg""" - 200 4348 "image/svg+xml" 111.8708ms
+2026-04-08 08:40:56:622 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m246.svg""" - 200 1297 "image/svg+xml" 111.3962ms
+2026-04-08 08:40:56:622 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m252.svg""" - 200 2144 "image/svg+xml" 111.9186ms
+2026-04-08 08:40:56:622 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M302.svg""" - null null
+2026-04-08 08:40:56:622 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M235.svg""" - null null
+2026-04-08 08:40:56:623 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M300.svg""" - null null
+2026-04-08 08:40:56:726 [Information] Sending file. Request path: '"/icon/m254.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m254.svg"'
+2026-04-08 08:40:56:730 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m254.svg""" - 200 1403 "image/svg+xml" 162.5078ms
+2026-04-08 08:40:56:736 [Information] Sending file. Request path: '"/icon/m258.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m258.svg"'
+2026-04-08 08:40:56:742 [Information] Sending file. Request path: '"/icon/m257.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m257.svg"'
+2026-04-08 08:40:56:749 [Information] Sending file. Request path: '"/icon/m263.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m263.svg"'
+2026-04-08 08:40:56:749 [Information] Sending file. Request path: '"/icon/m287.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m287.svg"'
+2026-04-08 08:40:56:749 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m257.svg""" - 200 4674 "image/svg+xml" 182.5598ms
+2026-04-08 08:40:56:751 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m263.svg""" - 200 4137 "image/svg+xml" 183.9121ms
+2026-04-08 08:40:56:751 [Information] Sending file. Request path: '"/icon/m262.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m262.svg"'
+2026-04-08 08:40:56:751 [Information] Sending file. Request path: '"/icon/m296.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m296.svg"'
+2026-04-08 08:40:56:752 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m258.svg""" - 200 604 "image/svg+xml" 175.6146ms
+2026-04-08 08:40:56:754 [Information] Sending file. Request path: '"/icon/m261.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m261.svg"'
+2026-04-08 08:40:56:755 [Information] Sending file. Request path: '"/icon/m288.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m288.svg"'
+2026-04-08 08:40:56:756 [Information] Sending file. Request path: '"/icon/m235.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m235.svg"'
+2026-04-08 08:40:56:757 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M305.svg""" - null null
+2026-04-08 08:40:56:757 [Information] Sending file. Request path: '"/icon/m300.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m300.svg"'
+2026-04-08 08:40:56:759 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M301.svg""" - null null
+2026-04-08 08:40:56:759 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/exam-svg.svg""" - null null
+2026-04-08 08:40:56:762 [Information] Sending file. Request path: '"/icon/m302.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m302.svg"'
+2026-04-08 08:40:56:764 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/evalute-svg.svg""" - null null
+2026-04-08 08:40:56:764 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m262.svg""" - 200 1034 "image/svg+xml" 187.5442ms
+2026-04-08 08:40:56:765 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M316.svg""" - null null
+2026-04-08 08:40:56:766 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m261.svg""" - 200 4009 "image/svg+xml" 175.1501ms
+2026-04-08 08:40:56:768 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M308.svg""" - null null
+2026-04-08 08:40:56:768 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m296.svg""" - 200 1882 "image/svg+xml" 176.3061ms
+2026-04-08 08:40:56:768 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m235.svg""" - 200 3260 "image/svg+xml" 145.5425ms
+2026-04-08 08:40:56:768 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m302.svg""" - 200 1167 "image/svg+xml" 145.8822ms
+2026-04-08 08:40:56:768 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M303.svg""" - null null
+2026-04-08 08:40:56:768 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M315.svg""" - null null
+2026-04-08 08:40:56:769 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/setting-svg.svg""" - null null
+2026-04-08 08:40:56:768 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m287.svg""" - 200 1458 "image/svg+xml" 200.968ms
+2026-04-08 08:40:56:770 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m300.svg""" - 200 928 "image/svg+xml" 147.1668ms
+2026-04-08 08:40:56:770 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m288.svg""" - 200 2760 "image/svg+xml" 178.3509ms
+2026-04-08 08:40:56:805 [Information] Sending file. Request path: '"/icon/evalute-svg.svg"'. Physical path: '"\\192.168.1.190\Software\icon\evalute-svg.svg"'
+2026-04-08 08:40:56:806 [Information] Sending file. Request path: '"/icon/exam-svg.svg"'. Physical path: '"\\192.168.1.190\Software\icon\exam-svg.svg"'
+2026-04-08 08:40:56:806 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/evalute-svg.svg""" - 200 2197 "image/svg+xml" 42.4015ms
+2026-04-08 08:40:56:806 [Information] Sending file. Request path: '"/icon/setting-svg.svg"'. Physical path: '"\\192.168.1.190\Software\icon\setting-svg.svg"'
+2026-04-08 08:40:56:809 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/setting-svg.svg""" - 200 4755 "image/svg+xml" 39.6525ms
+2026-04-08 08:40:56:809 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/exam-svg.svg""" - 200 2123 "image/svg+xml" 50.559ms
+2026-04-08 08:40:56:853 [Information] Sending file. Request path: '"/icon/m303.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m303.svg"'
+2026-04-08 08:40:56:856 [Information] Sending file. Request path: '"/icon/m308.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m308.svg"'
+2026-04-08 08:40:56:866 [Information] Sending file. Request path: '"/icon/m305.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m305.svg"'
+2026-04-08 08:40:56:866 [Information] Sending file. Request path: '"/icon/m301.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m301.svg"'
+2026-04-08 08:40:56:867 [Information] Sending file. Request path: '"/icon/m315.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m315.svg"'
+2026-04-08 08:40:56:868 [Information] Sending file. Request path: '"/icon/m316.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m316.svg"'
+2026-04-08 08:40:56:871 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m308.svg""" - 200 5788 "image/svg+xml" 103.1931ms
+2026-04-08 08:40:56:872 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m303.svg""" - 200 2481 "image/svg+xml" 103.1896ms
+2026-04-08 08:40:56:875 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m315.svg""" - 200 4407 "image/svg+xml" 106.5865ms
+2026-04-08 08:40:56:875 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m301.svg""" - 200 3851 "image/svg+xml" 116.7915ms
+2026-04-08 08:40:56:876 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m305.svg""" - 200 1977 "image/svg+xml" 120.2181ms
+2026-04-08 08:40:56:876 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m316.svg""" - 200 3325 "image/svg+xml" 111.6244ms
+2026-04-08 08:40:59:770 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/Department/get-all""" - null null
+2026-04-08 08:40:59:770 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/project/get-users""" - null null
+2026-04-08 08:40:59:772 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/HRRecruitmentCandidate/position-contract""" - null null
+2026-04-08 08:40:59:772 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/HRRecruitmentCandidate/data""?id=0&status=-1&employeeRequestId=-1&departmentId=-1&dateStart=2026-03-01T00:00:00&dateEnd=2026-04-30T23:59:59&keyword=" - null null
+2026-04-08 08:40:59:773 [Information] CORS policy execution successful.
+2026-04-08 08:40:59:773 [Information] CORS policy execution successful.
+2026-04-08 08:40:59:773 [Information] CORS policy execution successful.
+2026-04-08 08:40:59:773 [Information] CORS policy execution successful.
+2026-04-08 08:40:59:774 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/Department/get-all""" - 204 null null 3.8776ms
+2026-04-08 08:40:59:774 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/project/get-users""" - 204 null null 3.8758ms
+2026-04-08 08:40:59:774 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/HRRecruitmentCandidate/position-contract""" - 204 null null 1.7976ms
+2026-04-08 08:40:59:774 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/HRRecruitmentCandidate/data""?id=0&status=-1&employeeRequestId=-1&departmentId=-1&dateStart=2026-03-01T00:00:00&dateEnd=2026-04-30T23:59:59&keyword=" - 204 null null 1.8265ms
+2026-04-08 08:40:59:776 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/HRRecruitmentCandidate/position-contract""" - null null
+2026-04-08 08:40:59:776 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/HRRecruitmentCandidate/data""?id=0&status=-1&employeeRequestId=-1&departmentId=-1&dateStart=2026-03-01T00:00:00&dateEnd=2026-04-30T23:59:59&keyword=" - null null
+2026-04-08 08:40:59:776 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/project/get-users""" - null null
+2026-04-08 08:40:59:776 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/Department/get-all""" - null null
+2026-04-08 08:40:59:777 [Information] CORS policy execution successful.
+2026-04-08 08:40:59:777 [Information] CORS policy execution successful.
+2026-04-08 08:40:59:777 [Information] CORS policy execution successful.
+2026-04-08 08:40:59:777 [Information] CORS policy execution successful.
+2026-04-08 08:40:59:778 [Information] Executing endpoint '"RERPAPI.Controllers.Old.DepartmentController.GetAll (RERPAPI)"'
+2026-04-08 08:40:59:779 [Information] Executing endpoint '"RERPAPI.Controllers.HRM.HRRecruitmentCandidateController.GetDataHrRecruitmentCandidates (RERPAPI)"'
+2026-04-08 08:40:59:779 [Information] Executing endpoint '"RERPAPI.Controllers.Project.ProjectController.GetUsers (RERPAPI)"'
+2026-04-08 08:40:59:779 [Information] Executing endpoint '"RERPAPI.Controllers.HRM.HRRecruitmentCandidateController.GetPositionContract (RERPAPI)"'
+2026-04-08 08:40:59:780 [Information] Route matched with "{action = \"GetAll\", controller = \"Department\"}". Executing controller action with signature "Microsoft.AspNetCore.Mvc.IActionResult GetAll()" on controller "RERPAPI.Controllers.Old.DepartmentController" ("RERPAPI").
+2026-04-08 08:40:59:781 [Information] Route matched with "{action = \"GetPositionContract\", controller = \"HRRecruitmentCandidate\"}". Executing controller action with signature "Microsoft.AspNetCore.Mvc.IActionResult GetPositionContract()" on controller "RERPAPI.Controllers.HRM.HRRecruitmentCandidateController" ("RERPAPI").
+2026-04-08 08:40:59:783 [Information] Route matched with "{action = \"GetDataHrRecruitmentCandidates\", controller = \"HRRecruitmentCandidate\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetDataHrRecruitmentCandidates(System.Nullable`1[System.Int32], System.Nullable`1[System.Int32], System.Nullable`1[System.Int32], System.Nullable`1[System.Int32], System.Nullable`1[System.DateTime], System.Nullable`1[System.DateTime], System.String)" on controller "RERPAPI.Controllers.HRM.HRRecruitmentCandidateController" ("RERPAPI").
+2026-04-08 08:40:59:784 [Information] Route matched with "{action = \"GetUsers\", controller = \"Project\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetUsers()" on controller "RERPAPI.Controllers.Project.ProjectController" ("RERPAPI").
+2026-04-08 08:40:59:857 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 08:40:59:859 [Information] Executed action "RERPAPI.Controllers.HRM.HRRecruitmentCandidateController.GetDataHrRecruitmentCandidates (RERPAPI)" in 76.1417ms
+2026-04-08 08:40:59:859 [Information] Executed endpoint '"RERPAPI.Controllers.HRM.HRRecruitmentCandidateController.GetDataHrRecruitmentCandidates (RERPAPI)"'
+2026-04-08 08:40:59:859 [Information] HTTP "GET" "/api/hrrecruitmentcandidate/data" responded 200 in 80.1327 ms
+2026-04-08 08:40:59:859 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/hrrecruitmentcandidate/data""?id=0&status=-1&employeeRequestId=-1&departmentId=-1&dateStart=2026-03-01T00:00:00&dateEnd=2026-04-30T23:59:59&keyword=" - 200 null "application/json; charset=utf-8" 82.7815ms
+2026-04-08 08:40:59:891 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 08:40:59:893 [Information] Executed action "RERPAPI.Controllers.Project.ProjectController.GetUsers (RERPAPI)" in 108.604ms
+2026-04-08 08:40:59:893 [Information] Executed endpoint '"RERPAPI.Controllers.Project.ProjectController.GetUsers (RERPAPI)"'
+2026-04-08 08:40:59:893 [Information] HTTP "GET" "/api/project/get-users" responded 200 in 114.3590 ms
+2026-04-08 08:40:59:893 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/project/get-users""" - 200 null "application/json; charset=utf-8" 116.9258ms
+2026-04-08 08:41:00:029 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 08:41:00:029 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 08:41:00:040 [Information] Executed action "RERPAPI.Controllers.Old.DepartmentController.GetAll (RERPAPI)" in 259.135ms
+2026-04-08 08:41:00:040 [Information] Executed endpoint '"RERPAPI.Controllers.Old.DepartmentController.GetAll (RERPAPI)"'
+2026-04-08 08:41:00:040 [Information] HTTP "GET" "/api/department/get-all" responded 200 in 261.3603 ms
+2026-04-08 08:41:00:040 [Information] Executed action "RERPAPI.Controllers.HRM.HRRecruitmentCandidateController.GetPositionContract (RERPAPI)" in 258.9535ms
+2026-04-08 08:41:00:040 [Information] Executed endpoint '"RERPAPI.Controllers.HRM.HRRecruitmentCandidateController.GetPositionContract (RERPAPI)"'
+2026-04-08 08:41:00:040 [Information] HTTP "GET" "/api/hrrecruitmentcandidate/position-contract" responded 200 in 260.7760 ms
+2026-04-08 08:41:00:040 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/hrrecruitmentcandidate/position-contract""" - 200 null "application/json; charset=utf-8" 263.3553ms
+2026-04-08 08:41:00:040 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/department/get-all""" - 200 null "application/json; charset=utf-8" 263.2284ms
+2026-04-08 08:41:03:828 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/HRRecruitmentCandidate/position-contract""" - null null
+2026-04-08 08:41:03:828 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/HRRecruitmentCandidate/hiring-request""" - null null
+2026-04-08 08:41:03:829 [Information] CORS policy execution successful.
+2026-04-08 08:41:03:829 [Information] CORS policy execution successful.
+2026-04-08 08:41:03:830 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/HRRecruitmentCandidate/hiring-request""" - 204 null null 1.7505ms
+2026-04-08 08:41:03:830 [Information] Executing endpoint '"RERPAPI.Controllers.HRM.HRRecruitmentCandidateController.GetPositionContract (RERPAPI)"'
+2026-04-08 08:41:03:831 [Information] Route matched with "{action = \"GetPositionContract\", controller = \"HRRecruitmentCandidate\"}". Executing controller action with signature "Microsoft.AspNetCore.Mvc.IActionResult GetPositionContract()" on controller "RERPAPI.Controllers.HRM.HRRecruitmentCandidateController" ("RERPAPI").
+2026-04-08 08:41:03:831 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/HRRecruitmentCandidate/hiring-request""" - null null
+2026-04-08 08:41:03:831 [Information] CORS policy execution successful.
+2026-04-08 08:41:03:832 [Information] Executing endpoint '"RERPAPI.Controllers.HRM.HRRecruitmentCandidateController.GetHiringRequest (RERPAPI)"'
+2026-04-08 08:41:03:835 [Information] Route matched with "{action = \"GetHiringRequest\", controller = \"HRRecruitmentCandidate\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetHiringRequest()" on controller "RERPAPI.Controllers.HRM.HRRecruitmentCandidateController" ("RERPAPI").
+2026-04-08 08:41:03:862 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 08:41:03:863 [Information] Executed action "RERPAPI.Controllers.HRM.HRRecruitmentCandidateController.GetHiringRequest (RERPAPI)" in 27.9234ms
+2026-04-08 08:41:03:863 [Information] Executed endpoint '"RERPAPI.Controllers.HRM.HRRecruitmentCandidateController.GetHiringRequest (RERPAPI)"'
+2026-04-08 08:41:03:863 [Information] HTTP "GET" "/api/hrrecruitmentcandidate/hiring-request" responded 200 in 30.6274 ms
+2026-04-08 08:41:03:863 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/hrrecruitmentcandidate/hiring-request""" - 200 null "application/json; charset=utf-8" 31.8736ms
+2026-04-08 08:41:03:864 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 08:41:03:865 [Information] Executed action "RERPAPI.Controllers.HRM.HRRecruitmentCandidateController.GetPositionContract (RERPAPI)" in 34.049ms
+2026-04-08 08:41:03:865 [Information] Executed endpoint '"RERPAPI.Controllers.HRM.HRRecruitmentCandidateController.GetPositionContract (RERPAPI)"'
+2026-04-08 08:41:03:865 [Information] HTTP "GET" "/api/hrrecruitmentcandidate/position-contract" responded 200 in 34.3331 ms
+2026-04-08 08:41:03:865 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/hrrecruitmentcandidate/position-contract""" - 200 null "application/json; charset=utf-8" 37.0942ms
+2026-04-08 08:41:38:562 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/HRRecruitmentCandidate/send-interview-mail""" - null null
+2026-04-08 08:41:38:562 [Information] CORS policy execution successful.
+2026-04-08 08:41:38:563 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/HRRecruitmentCandidate/send-interview-mail""" - 204 null null 0.5511ms
+2026-04-08 08:41:38:564 [Information] Request starting "HTTP/2" "POST" "https"://"localhost:44365""""/api/HRRecruitmentCandidate/send-interview-mail""" - "application/json" 2421
+2026-04-08 08:41:38:564 [Information] CORS policy execution successful.
+2026-04-08 08:41:38:565 [Information] Executing endpoint '"RERPAPI.Controllers.HRM.HRRecruitmentCandidateController.SendEmail (RERPAPI)"'
+2026-04-08 08:41:38:568 [Information] Route matched with "{action = \"SendEmail\", controller = \"HRRecruitmentCandidate\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] SendEmail(System.Collections.Generic.List`1[RERPAPI.Model.DTO.EmployeeSendEmailDTO])" on controller "RERPAPI.Controllers.HRM.HRRecruitmentCandidateController" ("RERPAPI").
+2026-04-08 08:43:55:716 [Information] Executing "BadRequestObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 08:43:55:718 [Information] Executed action "RERPAPI.Controllers.HRM.HRRecruitmentCandidateController.SendEmail (RERPAPI)" in 137149.6863ms
+2026-04-08 08:43:55:718 [Information] Executed endpoint '"RERPAPI.Controllers.HRM.HRRecruitmentCandidateController.SendEmail (RERPAPI)"'
+2026-04-08 08:43:55:718 [Information] HTTP "POST" "/api/hrrecruitmentcandidate/send-interview-mail" responded 400 in 137152.4254 ms
+2026-04-08 08:43:55:719 [Information] Request finished "HTTP/2" "POST" "https"://"localhost:44365""""/api/hrrecruitmentcandidate/send-interview-mail""" - 400 null "application/json; charset=utf-8" 137154.4477ms
+2026-04-08 10:07:47:245 [Information] User profile is available. Using '"C:\Users\Admin\AppData\Local\ASP.NET\DataProtection-Keys"' as key repository and Windows DPAPI to encrypt keys at rest.
+2026-04-08 10:07:48:428 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/swagger/index.html""" - null null
+2026-04-08 10:07:48:578 [Information] Application started. Press Ctrl+C to shut down.
+2026-04-08 10:07:48:578 [Information] Hosting environment: "Development"
+2026-04-08 10:07:48:578 [Information] Content root path: "D:\LeTheAnh\RTC\Project\2025\SourceCode\RTC.25.008\BackEnd\RERP_BACKEND_V2\RERPAPI"
+2026-04-08 10:07:49:141 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/swagger/index.html""" - 200 null "text/html;charset=utf-8" 719.9791ms
+2026-04-08 10:07:49:150 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/_vs/browserLink""" - null null
+2026-04-08 10:07:49:150 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/_framework/aspnetcore-browser-refresh.js""" - null null
+2026-04-08 10:07:49:154 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/_framework/aspnetcore-browser-refresh.js""" - 200 16499 "application/javascript; charset=utf-8" 3.1164ms
+2026-04-08 10:07:49:201 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/_vs/browserLink""" - 200 null "text/javascript; charset=UTF-8" 53.529ms
+2026-04-08 10:07:49:260 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/swagger/v1/swagger.json""" - null null
+2026-04-08 10:07:49:774 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/swagger/v1/swagger.json""" - 200 null "application/json;charset=utf-8" 513.6316ms
+2026-04-08 10:07:55:165 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/menuapp""?keyword=" - null null
+2026-04-08 10:07:55:167 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/newsletter/get-limit-newsletter""" - null null
+2026-04-08 10:07:55:174 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/borrow/get-quantity-product-borrow""" - null null
+2026-04-08 10:07:55:174 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/Holiday""?month=4&year=2026" - null null
+2026-04-08 10:07:55:174 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/historyborrowsale/quantity-borrow-sale-persional""" - null null
+2026-04-08 10:07:55:178 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/home/employee-onleave-and-wfh""" - null null
+2026-04-08 10:07:55:186 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/home/get-quantity-approve""" - null null
+2026-04-08 10:07:55:268 [Information] CORS policy execution successful.
+2026-04-08 10:07:55:268 [Information] CORS policy execution successful.
+2026-04-08 10:07:55:268 [Information] CORS policy execution successful.
+2026-04-08 10:07:55:270 [Information] CORS policy execution successful.
+2026-04-08 10:07:55:270 [Information] CORS policy execution successful.
+2026-04-08 10:07:55:268 [Information] CORS policy execution successful.
+2026-04-08 10:07:55:270 [Information] CORS policy execution successful.
+2026-04-08 10:07:55:281 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/newsletter/get-limit-newsletter""" - 204 null null 116.2106ms
+2026-04-08 10:07:55:281 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/Holiday""?month=4&year=2026" - 204 null null 107.8205ms
+2026-04-08 10:07:55:281 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/home/employee-onleave-and-wfh""" - 204 null null 103.8323ms
+2026-04-08 10:07:55:281 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/borrow/get-quantity-product-borrow""" - 204 null null 107.8205ms
+2026-04-08 10:07:55:281 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/menuapp""?keyword=" - 204 null null 116.6876ms
+2026-04-08 10:07:55:281 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/home/get-quantity-approve""" - 204 null null 96.0866ms
+2026-04-08 10:07:55:281 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/historyborrowsale/quantity-borrow-sale-persional""" - 204 null null 107.5974ms
+2026-04-08 10:07:55:288 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/historyborrowsale/quantity-borrow-sale-persional""" - null null
+2026-04-08 10:07:55:288 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/Holiday""?month=4&year=2026" - null null
+2026-04-08 10:07:55:288 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/menuapp""?keyword=" - null null
+2026-04-08 10:07:55:288 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/borrow/get-quantity-product-borrow""" - null null
+2026-04-08 10:07:55:292 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/newsletter/get-limit-newsletter""" - null null
+2026-04-08 10:07:55:292 [Information] Request starting "HTTP/2" "POST" "https"://"localhost:44365""""/api/home/get-quantity-approve""" - "application/json" 77
+2026-04-08 10:07:55:292 [Information] CORS policy execution successful.
+2026-04-08 10:07:55:292 [Information] CORS policy execution successful.
+2026-04-08 10:07:55:292 [Information] CORS policy execution successful.
+2026-04-08 10:07:55:292 [Information] CORS policy execution successful.
+2026-04-08 10:07:55:296 [Information] CORS policy execution successful.
+2026-04-08 10:07:55:297 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/home/employee-onleave-and-wfh""" - null null
+2026-04-08 10:07:55:307 [Information] CORS policy execution successful.
+2026-04-08 10:07:55:307 [Information] CORS policy execution successful.
+2026-04-08 10:07:55:400 [Information] Failed to validate the token.
+Microsoft.IdentityModel.Tokens.SecurityTokenExpiredException: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '08/04/2026 2:49:52 AM', Current time (UTC): '08/04/2026 3:07:55 AM'.
+   at Microsoft.IdentityModel.Tokens.Validators.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateTokenPayloadAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateJWSAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+2026-04-08 10:07:55:400 [Information] Failed to validate the token.
+Microsoft.IdentityModel.Tokens.SecurityTokenExpiredException: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '08/04/2026 2:49:52 AM', Current time (UTC): '08/04/2026 3:07:55 AM'.
+   at Microsoft.IdentityModel.Tokens.Validators.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateTokenPayloadAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateJWSAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+2026-04-08 10:07:55:400 [Information] Failed to validate the token.
+Microsoft.IdentityModel.Tokens.SecurityTokenExpiredException: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '08/04/2026 2:49:52 AM', Current time (UTC): '08/04/2026 3:07:55 AM'.
+   at Microsoft.IdentityModel.Tokens.Validators.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateTokenPayloadAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateJWSAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+2026-04-08 10:07:55:400 [Information] Failed to validate the token.
+Microsoft.IdentityModel.Tokens.SecurityTokenExpiredException: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '08/04/2026 2:49:52 AM', Current time (UTC): '08/04/2026 3:07:55 AM'.
+   at Microsoft.IdentityModel.Tokens.Validators.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateTokenPayloadAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateJWSAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+2026-04-08 10:07:55:400 [Information] Failed to validate the token.
+Microsoft.IdentityModel.Tokens.SecurityTokenExpiredException: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '08/04/2026 2:49:52 AM', Current time (UTC): '08/04/2026 3:07:55 AM'.
+   at Microsoft.IdentityModel.Tokens.Validators.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateTokenPayloadAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateJWSAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+2026-04-08 10:07:55:400 [Information] Failed to validate the token.
+Microsoft.IdentityModel.Tokens.SecurityTokenExpiredException: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '08/04/2026 2:49:52 AM', Current time (UTC): '08/04/2026 3:07:55 AM'.
+   at Microsoft.IdentityModel.Tokens.Validators.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateTokenPayloadAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateJWSAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+2026-04-08 10:07:55:400 [Information] Failed to validate the token.
+Microsoft.IdentityModel.Tokens.SecurityTokenExpiredException: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '08/04/2026 2:49:52 AM', Current time (UTC): '08/04/2026 3:07:55 AM'.
+   at Microsoft.IdentityModel.Tokens.Validators.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateTokenPayloadAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateJWSAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+2026-04-08 10:07:55:422 [Information] "Bearer" was not authenticated. Failure message: "IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '08/04/2026 2:49:52 AM', Current time (UTC): '08/04/2026 3:07:55 AM'."
+2026-04-08 10:07:55:422 [Information] "Bearer" was not authenticated. Failure message: "IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '08/04/2026 2:49:52 AM', Current time (UTC): '08/04/2026 3:07:55 AM'."
+2026-04-08 10:07:55:422 [Information] "Bearer" was not authenticated. Failure message: "IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '08/04/2026 2:49:52 AM', Current time (UTC): '08/04/2026 3:07:55 AM'."
+2026-04-08 10:07:55:422 [Information] "Bearer" was not authenticated. Failure message: "IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '08/04/2026 2:49:52 AM', Current time (UTC): '08/04/2026 3:07:55 AM'."
+2026-04-08 10:07:55:422 [Information] "Bearer" was not authenticated. Failure message: "IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '08/04/2026 2:49:52 AM', Current time (UTC): '08/04/2026 3:07:55 AM'."
+2026-04-08 10:07:55:422 [Information] "Bearer" was not authenticated. Failure message: "IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '08/04/2026 2:49:52 AM', Current time (UTC): '08/04/2026 3:07:55 AM'."
+2026-04-08 10:07:55:422 [Information] "Bearer" was not authenticated. Failure message: "IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '08/04/2026 2:49:52 AM', Current time (UTC): '08/04/2026 3:07:55 AM'."
+2026-04-08 10:07:55:427 [Information] Authorization failed. "These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user."
+2026-04-08 10:07:55:427 [Information] Authorization failed. "These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user."
+2026-04-08 10:07:55:427 [Information] Authorization failed. "These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user."
+2026-04-08 10:07:55:427 [Information] Authorization failed. "These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user."
+2026-04-08 10:07:55:427 [Information] Authorization failed. "These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user."
+2026-04-08 10:07:55:427 [Information] Authorization failed. "These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user."
+2026-04-08 10:07:55:427 [Information] Authorization failed. "These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user."
+2026-04-08 10:07:55:431 [Information] AuthenticationScheme: "Bearer" was challenged.
+2026-04-08 10:07:55:431 [Information] AuthenticationScheme: "Bearer" was challenged.
+2026-04-08 10:07:55:431 [Information] AuthenticationScheme: "Bearer" was challenged.
+2026-04-08 10:07:55:431 [Information] AuthenticationScheme: "Bearer" was challenged.
+2026-04-08 10:07:55:431 [Information] AuthenticationScheme: "Bearer" was challenged.
+2026-04-08 10:07:55:431 [Information] AuthenticationScheme: "Bearer" was challenged.
+2026-04-08 10:07:55:431 [Information] AuthenticationScheme: "Bearer" was challenged.
+2026-04-08 10:07:55:432 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/menuapp""?keyword=" - 401 null null 143.8696ms
+2026-04-08 10:07:55:432 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/borrow/get-quantity-product-borrow""" - 401 null null 144.6316ms
+2026-04-08 10:07:55:432 [Information] Request finished "HTTP/2" "POST" "https"://"localhost:44365""""/api/home/get-quantity-approve""" - 401 null null 140.532ms
+2026-04-08 10:07:55:434 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/historyborrowsale/quantity-borrow-sale-persional""" - 401 null null 146.5946ms
+2026-04-08 10:07:55:434 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/newsletter/get-limit-newsletter""" - 401 null null 146.4509ms
+2026-04-08 10:07:55:434 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/Holiday""?month=4&year=2026" - 401 null null 146.4112ms
+2026-04-08 10:07:55:434 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/home/employee-onleave-and-wfh""" - 401 null null 137.8501ms
+2026-04-08 10:07:59:524 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/home/login""" - null null
+2026-04-08 10:07:59:524 [Information] CORS policy execution successful.
+2026-04-08 10:07:59:525 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/home/login""" - 204 null null 0.5808ms
+2026-04-08 10:07:59:527 [Information] Request starting "HTTP/2" "POST" "https"://"localhost:44365""""/api/home/login""" - "application/json" 59
+2026-04-08 10:07:59:527 [Information] CORS policy execution successful.
+2026-04-08 10:07:59:770 [Information] Executing endpoint '"RERPAPI.Controllers.HomeController.Login (RERPAPI)"'
+2026-04-08 10:07:59:786 [Information] Route matched with "{action = \"Login\", controller = \"Home\"}". Executing controller action with signature "Microsoft.AspNetCore.Mvc.IActionResult Login(RERPAPI.Model.Entities.User)" on controller "RERPAPI.Controllers.HomeController" ("RERPAPI").
+2026-04-08 10:08:03:793 [Information] Executing "OkObjectResult", writing value of type '"<>f__AnonymousType28`2[[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"'.
+2026-04-08 10:08:03:804 [Information] Executed action "RERPAPI.Controllers.HomeController.Login (RERPAPI)" in 4015.1107ms
+2026-04-08 10:08:03:804 [Information] Executed endpoint '"RERPAPI.Controllers.HomeController.Login (RERPAPI)"'
+2026-04-08 10:08:03:806 [Information] HTTP "POST" "/api/home/login" responded 200 in 4036.3519 ms
+2026-04-08 10:08:03:809 [Information] Request finished "HTTP/2" "POST" "https"://"localhost:44365""""/api/home/login""" - 200 null "application/json; charset=utf-8" 4282.2072ms
+2026-04-08 10:08:03:812 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/home/current-user""" - null null
+2026-04-08 10:08:03:812 [Information] CORS policy execution successful.
+2026-04-08 10:08:03:812 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/home/current-user""" - 204 null null 0.4142ms
+2026-04-08 10:08:03:814 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/home/current-user""" - "application/json" null
+2026-04-08 10:08:03:814 [Information] CORS policy execution successful.
+2026-04-08 10:08:03:826 [Information] Executing endpoint '"RERPAPI.Controllers.HomeController.GetCurrentUser (RERPAPI)"'
+2026-04-08 10:08:03:829 [Information] Route matched with "{action = \"GetCurrentUser\", controller = \"Home\"}". Executing controller action with signature "Microsoft.AspNetCore.Mvc.IActionResult GetCurrentUser()" on controller "RERPAPI.Controllers.HomeController" ("RERPAPI").
+2026-04-08 10:08:03:845 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 10:08:03:848 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/menuapp""?keyword=" - null null
+2026-04-08 10:08:03:848 [Information] CORS policy execution successful.
+2026-04-08 10:08:03:848 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/home/get-quantity-approve""" - null null
+2026-04-08 10:08:03:848 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/menuapp""?keyword=" - 204 null null 0.6514ms
+2026-04-08 10:08:03:848 [Information] CORS policy execution successful.
+2026-04-08 10:08:03:849 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/home/get-quantity-approve""" - 204 null null 0.5864ms
+2026-04-08 10:08:03:850 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/Holiday""?month=4&year=2026" - null null
+2026-04-08 10:08:03:850 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/menuapp""?keyword=" - null null
+2026-04-08 10:08:03:850 [Information] Request starting "HTTP/2" "POST" "https"://"localhost:44365""""/api/home/get-quantity-approve""" - "application/json" 77
+2026-04-08 10:08:03:851 [Information] CORS policy execution successful.
+2026-04-08 10:08:03:851 [Information] CORS policy execution successful.
+2026-04-08 10:08:03:851 [Information] CORS policy execution successful.
+2026-04-08 10:08:03:851 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/Holiday""?month=4&year=2026" - 204 null null 0.9948ms
+2026-04-08 10:08:03:852 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/home/employee-onleave-and-wfh""" - null null
+2026-04-08 10:08:03:852 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/borrow/get-quantity-product-borrow""" - null null
+2026-04-08 10:08:03:853 [Information] CORS policy execution successful.
+2026-04-08 10:08:03:853 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/home/employee-onleave-and-wfh""" - 204 null null 0.8602ms
+2026-04-08 10:08:03:854 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/newsletter/get-limit-newsletter""" - null null
+2026-04-08 10:08:03:854 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/historyborrowsale/quantity-borrow-sale-persional""" - null null
+2026-04-08 10:08:03:854 [Information] CORS policy execution successful.
+2026-04-08 10:08:03:854 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/newsletter/get-limit-newsletter""" - 204 null null 0.4527ms
+2026-04-08 10:08:03:856 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/Holiday""?month=4&year=2026" - null null
+2026-04-08 10:08:03:856 [Information] Executing endpoint '"RERPAPI.Controllers.HomeController.GetQuantityApprove (RERPAPI)"'
+2026-04-08 10:08:03:856 [Information] CORS policy execution successful.
+2026-04-08 10:08:03:856 [Information] Executing endpoint '"RERPAPI.Controllers.Systems.MenuAppController.GetAll (RERPAPI)"'
+2026-04-08 10:08:03:856 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/home/employee-onleave-and-wfh""" - null null
+2026-04-08 10:08:03:857 [Information] CORS policy execution successful.
+2026-04-08 10:08:03:857 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/historyborrowsale/quantity-borrow-sale-persional""" - 204 null null 3.0459ms
+2026-04-08 10:08:03:857 [Information] CORS policy execution successful.
+2026-04-08 10:08:03:857 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/newsletter/get-limit-newsletter""" - null null
+2026-04-08 10:08:03:857 [Information] CORS policy execution successful.
+2026-04-08 10:08:03:858 [Information] Executed action "RERPAPI.Controllers.HomeController.GetCurrentUser (RERPAPI)" in 29.3614ms
+2026-04-08 10:08:03:858 [Information] Executed endpoint '"RERPAPI.Controllers.HomeController.GetCurrentUser (RERPAPI)"'
+2026-04-08 10:08:03:858 [Information] HTTP "GET" "/api/home/current-user" responded 200 in 31.8755 ms
+2026-04-08 10:08:03:859 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/home/current-user""" - 200 null "application/json; charset=utf-8" 44.4391ms
+2026-04-08 10:08:03:859 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/historyborrowsale/quantity-borrow-sale-persional""" - null null
+2026-04-08 10:08:03:860 [Information] CORS policy execution successful.
+2026-04-08 10:08:03:860 [Information] Executing endpoint '"RERPAPI.Controllers.Old.HolidayController.GetHoliday (RERPAPI)"'
+2026-04-08 10:08:03:860 [Information] Executing endpoint '"RERPAPI.Controllers.HomeController.GetEmployeeOnleaveAndWFHByDate (RERPAPI)"'
+2026-04-08 10:08:03:860 [Information] Executing endpoint '"RERPAPI.Controllers.Old.NewsletterController.GetLimitNewLetter (RERPAPI)"'
+2026-04-08 10:08:03:861 [Information] Route matched with "{action = \"GetLimitNewLetter\", controller = \"Newsletter\"}". Executing controller action with signature "Microsoft.AspNetCore.Mvc.IActionResult GetLimitNewLetter()" on controller "RERPAPI.Controllers.Old.NewsletterController" ("RERPAPI").
+2026-04-08 10:08:03:861 [Information] CORS policy execution successful.
+2026-04-08 10:08:03:861 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/borrow/get-quantity-product-borrow""" - 204 null null 9.0427ms
+2026-04-08 10:08:03:862 [Information] Route matched with "{action = \"GetEmployeeOnleaveAndWFHByDate\", controller = \"Home\"}". Executing controller action with signature "Microsoft.AspNetCore.Mvc.IActionResult GetEmployeeOnleaveAndWFHByDate()" on controller "RERPAPI.Controllers.HomeController" ("RERPAPI").
+2026-04-08 10:08:03:863 [Information] Route matched with "{action = \"GetHoliday\", controller = \"Holiday\"}". Executing controller action with signature "Microsoft.AspNetCore.Mvc.IActionResult GetHoliday(Int32, Int32)" on controller "RERPAPI.Controllers.Old.HolidayController" ("RERPAPI").
+2026-04-08 10:08:03:863 [Information] Route matched with "{action = \"GetAll\", controller = \"MenuApp\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll(System.String)" on controller "RERPAPI.Controllers.Systems.MenuAppController" ("RERPAPI").
+2026-04-08 10:08:03:863 [Information] Executing endpoint '"RERPAPI.Controllers.Old.SaleWareHouseManagement.HistoryBorrowSaleController.getQuantityBorrowSalePersional (RERPAPI)"'
+2026-04-08 10:08:03:863 [Information] Route matched with "{action = \"GetQuantityApprove\", controller = \"Home\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetQuantityApprove(RERPAPI.Model.Param.ApproveByApproveTPRequestParam)" on controller "RERPAPI.Controllers.HomeController" ("RERPAPI").
+2026-04-08 10:08:03:866 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/borrow/get-quantity-product-borrow""" - null null
+2026-04-08 10:08:03:866 [Information] CORS policy execution successful.
+2026-04-08 10:08:03:868 [Information] Route matched with "{action = \"getQuantityBorrowSalePersional\", controller = \"HistoryBorrowSale\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] getQuantityBorrowSalePersional()" on controller "RERPAPI.Controllers.Old.SaleWareHouseManagement.HistoryBorrowSaleController" ("RERPAPI").
+2026-04-08 10:08:03:868 [Information] Executing endpoint '"RERPAPI.Controllers.BorrowController.GetQuantityProductBorrow (RERPAPI)"'
+2026-04-08 10:08:03:872 [Information] Route matched with "{action = \"GetQuantityProductBorrow\", controller = \"Borrow\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetQuantityProductBorrow()" on controller "RERPAPI.Controllers.BorrowController" ("RERPAPI").
+2026-04-08 10:08:03:883 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 10:08:03:900 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 10:08:03:930 [Information] Executed action "RERPAPI.Controllers.Old.HolidayController.GetHoliday (RERPAPI)" in 67.5653ms
+2026-04-08 10:08:03:930 [Information] Executed endpoint '"RERPAPI.Controllers.Old.HolidayController.GetHoliday (RERPAPI)"'
+2026-04-08 10:08:03:930 [Information] HTTP "GET" "/api/holiday" responded 200 in 70.5755 ms
+2026-04-08 10:08:03:930 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/holiday""?month=4&year=2026" - 200 null "application/json; charset=utf-8" 75.0727ms
+2026-04-08 10:08:03:932 [Information] Executed action "RERPAPI.Controllers.Old.NewsletterController.GetLimitNewLetter (RERPAPI)" in 70.7692ms
+2026-04-08 10:08:03:932 [Information] Executed endpoint '"RERPAPI.Controllers.Old.NewsletterController.GetLimitNewLetter (RERPAPI)"'
+2026-04-08 10:08:03:932 [Information] HTTP "GET" "/api/newsletter/get-limit-newsletter" responded 200 in 72.1289 ms
+2026-04-08 10:08:03:932 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/newsletter/get-limit-newsletter""" - 200 null "application/json; charset=utf-8" 75.4605ms
+2026-04-08 10:08:04:011 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 10:08:04:021 [Information] Executed action "RERPAPI.Controllers.Systems.MenuAppController.GetAll (RERPAPI)" in 158.2246ms
+2026-04-08 10:08:04:021 [Information] Executed endpoint '"RERPAPI.Controllers.Systems.MenuAppController.GetAll (RERPAPI)"'
+2026-04-08 10:08:04:023 [Information] HTTP "GET" "/api/menuapp" responded 200 in 167.1063 ms
+2026-04-08 10:08:04:024 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/menuapp""?keyword=" - 200 null "application/json; charset=utf-8" 173.9226ms
+2026-04-08 10:08:04:242 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 10:08:04:244 [Information] Executed action "RERPAPI.Controllers.BorrowController.GetQuantityProductBorrow (RERPAPI)" in 372.1206ms
+2026-04-08 10:08:04:244 [Information] Executed endpoint '"RERPAPI.Controllers.BorrowController.GetQuantityProductBorrow (RERPAPI)"'
+2026-04-08 10:08:04:244 [Information] HTTP "GET" "/api/borrow/get-quantity-product-borrow" responded 200 in 375.8941 ms
+2026-04-08 10:08:04:244 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/borrow/get-quantity-product-borrow""" - 200 null "application/json; charset=utf-8" 378.1652ms
+2026-04-08 10:08:04:290 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 10:08:04:291 [Information] Executed action "RERPAPI.Controllers.Old.SaleWareHouseManagement.HistoryBorrowSaleController.getQuantityBorrowSalePersional (RERPAPI)" in 423.4713ms
+2026-04-08 10:08:04:291 [Information] Executed endpoint '"RERPAPI.Controllers.Old.SaleWareHouseManagement.HistoryBorrowSaleController.getQuantityBorrowSalePersional (RERPAPI)"'
+2026-04-08 10:08:04:291 [Information] HTTP "GET" "/api/historyborrowsale/quantity-borrow-sale-persional" responded 200 in 428.1388 ms
+2026-04-08 10:08:04:291 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/historyborrowsale/quantity-borrow-sale-persional""" - 200 null "application/json; charset=utf-8" 432.1153ms
+2026-04-08 10:08:04:573 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 10:08:04:577 [Information] Executed action "RERPAPI.Controllers.HomeController.GetEmployeeOnleaveAndWFHByDate (RERPAPI)" in 714.4015ms
+2026-04-08 10:08:04:577 [Information] Executed endpoint '"RERPAPI.Controllers.HomeController.GetEmployeeOnleaveAndWFHByDate (RERPAPI)"'
+2026-04-08 10:08:04:577 [Information] HTTP "GET" "/api/home/employee-onleave-and-wfh" responded 200 in 716.9355 ms
+2026-04-08 10:08:04:577 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/home/employee-onleave-and-wfh""" - 200 null "application/json; charset=utf-8" 720.4767ms
+2026-04-08 10:08:10:556 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/home/login""" - null null
+2026-04-08 10:08:10:556 [Information] CORS policy execution successful.
+2026-04-08 10:08:10:556 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/home/login""" - 204 null null 0.6639ms
+2026-04-08 10:08:10:558 [Information] Request starting "HTTP/2" "POST" "https"://"localhost:44365""""/api/home/login""" - "application/json" 61
+2026-04-08 10:08:10:558 [Information] CORS policy execution successful.
+2026-04-08 10:08:10:559 [Information] Executing endpoint '"RERPAPI.Controllers.HomeController.Login (RERPAPI)"'
+2026-04-08 10:08:10:560 [Information] Route matched with "{action = \"Login\", controller = \"Home\"}". Executing controller action with signature "Microsoft.AspNetCore.Mvc.IActionResult Login(RERPAPI.Model.Entities.User)" on controller "RERPAPI.Controllers.HomeController" ("RERPAPI").
+2026-04-08 10:08:10:746 [Information] Executing "UnauthorizedObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 10:08:10:748 [Information] Executed action "RERPAPI.Controllers.HomeController.Login (RERPAPI)" in 188.2961ms
+2026-04-08 10:08:10:748 [Information] Executed endpoint '"RERPAPI.Controllers.HomeController.Login (RERPAPI)"'
+2026-04-08 10:08:10:748 [Information] HTTP "POST" "/api/home/login" responded 401 in 188.8520 ms
+2026-04-08 10:08:10:749 [Information] Request finished "HTTP/2" "POST" "https"://"localhost:44365""""/api/home/login""" - 401 null "application/json; charset=utf-8" 190.961ms
+2026-04-08 10:08:11:735 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 10:08:11:736 [Information] Executed action "RERPAPI.Controllers.HomeController.GetQuantityApprove (RERPAPI)" in 7872.1934ms
+2026-04-08 10:08:11:736 [Information] Executed endpoint '"RERPAPI.Controllers.HomeController.GetQuantityApprove (RERPAPI)"'
+2026-04-08 10:08:11:736 [Information] HTTP "POST" "/api/home/get-quantity-approve" responded 200 in 7879.9953 ms
+2026-04-08 10:08:11:736 [Information] Request finished "HTTP/2" "POST" "https"://"localhost:44365""""/api/home/get-quantity-approve""" - 200 null "application/json; charset=utf-8" 7885.7711ms
+2026-04-08 10:08:17:155 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/home/login""" - null null
+2026-04-08 10:08:17:155 [Information] CORS policy execution successful.
+2026-04-08 10:08:17:155 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/home/login""" - 204 null null 0.4279ms
+2026-04-08 10:08:17:157 [Information] Request starting "HTTP/2" "POST" "https"://"localhost:44365""""/api/home/login""" - "application/json" 68
+2026-04-08 10:08:17:157 [Information] CORS policy execution successful.
+2026-04-08 10:08:17:158 [Information] Executing endpoint '"RERPAPI.Controllers.HomeController.Login (RERPAPI)"'
+2026-04-08 10:08:17:158 [Information] Route matched with "{action = \"Login\", controller = \"Home\"}". Executing controller action with signature "Microsoft.AspNetCore.Mvc.IActionResult Login(RERPAPI.Model.Entities.User)" on controller "RERPAPI.Controllers.HomeController" ("RERPAPI").
+2026-04-08 10:08:17:381 [Information] Executing "UnauthorizedObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 10:08:17:382 [Information] Executed action "RERPAPI.Controllers.HomeController.Login (RERPAPI)" in 223.5477ms
+2026-04-08 10:08:17:382 [Information] Executed endpoint '"RERPAPI.Controllers.HomeController.Login (RERPAPI)"'
+2026-04-08 10:08:17:382 [Information] HTTP "POST" "/api/home/login" responded 401 in 223.7859 ms
+2026-04-08 10:08:17:382 [Information] Request finished "HTTP/2" "POST" "https"://"localhost:44365""""/api/home/login""" - 401 null "application/json; charset=utf-8" 225.1755ms
+2026-04-08 10:08:20:626 [Information] Request starting "HTTP/2" "POST" "https"://"localhost:44365""""/api/home/login""" - "application/json" 64
+2026-04-08 10:08:20:626 [Information] CORS policy execution successful.
+2026-04-08 10:08:20:627 [Information] Executing endpoint '"RERPAPI.Controllers.HomeController.Login (RERPAPI)"'
+2026-04-08 10:08:20:628 [Information] Route matched with "{action = \"Login\", controller = \"Home\"}". Executing controller action with signature "Microsoft.AspNetCore.Mvc.IActionResult Login(RERPAPI.Model.Entities.User)" on controller "RERPAPI.Controllers.HomeController" ("RERPAPI").
+2026-04-08 10:08:21:744 [Information] Executing "OkObjectResult", writing value of type '"<>f__AnonymousType28`2[[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"'.
+2026-04-08 10:08:21:744 [Information] Executed action "RERPAPI.Controllers.HomeController.Login (RERPAPI)" in 1116.4687ms
+2026-04-08 10:08:21:744 [Information] Executed endpoint '"RERPAPI.Controllers.HomeController.Login (RERPAPI)"'
+2026-04-08 10:08:21:744 [Information] HTTP "POST" "/api/home/login" responded 200 in 1116.7501 ms
+2026-04-08 10:08:21:744 [Information] Request finished "HTTP/2" "POST" "https"://"localhost:44365""""/api/home/login""" - 200 null "application/json; charset=utf-8" 1118.0832ms
+2026-04-08 10:08:21:747 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/home/current-user""" - null null
+2026-04-08 10:08:21:747 [Information] CORS policy execution successful.
+2026-04-08 10:08:21:747 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/home/current-user""" - 204 null null 0.2538ms
+2026-04-08 10:08:21:749 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/home/current-user""" - "application/json" null
+2026-04-08 10:08:21:749 [Information] CORS policy execution successful.
+2026-04-08 10:08:21:750 [Information] Executing endpoint '"RERPAPI.Controllers.HomeController.GetCurrentUser (RERPAPI)"'
+2026-04-08 10:08:21:750 [Information] Route matched with "{action = \"GetCurrentUser\", controller = \"Home\"}". Executing controller action with signature "Microsoft.AspNetCore.Mvc.IActionResult GetCurrentUser()" on controller "RERPAPI.Controllers.HomeController" ("RERPAPI").
+2026-04-08 10:08:21:753 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 10:08:21:754 [Information] Executed action "RERPAPI.Controllers.HomeController.GetCurrentUser (RERPAPI)" in 3.7713ms
+2026-04-08 10:08:21:754 [Information] Executed endpoint '"RERPAPI.Controllers.HomeController.GetCurrentUser (RERPAPI)"'
+2026-04-08 10:08:21:754 [Information] HTTP "GET" "/api/home/current-user" responded 200 in 3.9842 ms
+2026-04-08 10:08:21:754 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/home/current-user""" - 200 null "application/json; charset=utf-8" 5.4197ms
+2026-04-08 10:08:21:763 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/menuapp""?keyword=" - null null
+2026-04-08 10:08:21:763 [Information] CORS policy execution successful.
+2026-04-08 10:08:21:763 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/home/get-quantity-approve""" - null null
+2026-04-08 10:08:21:763 [Information] CORS policy execution successful.
+2026-04-08 10:08:21:763 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/menuapp""?keyword=" - 204 null null 0.3081ms
+2026-04-08 10:08:21:763 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/home/get-quantity-approve""" - 204 null null 0.2217ms
+2026-04-08 10:08:21:764 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/Holiday""?month=4&year=2026" - null null
+2026-04-08 10:08:21:764 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/borrow/get-quantity-product-borrow""" - null null
+2026-04-08 10:08:21:764 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/home/employee-onleave-and-wfh""" - null null
+2026-04-08 10:08:21:764 [Information] CORS policy execution successful.
+2026-04-08 10:08:21:764 [Information] CORS policy execution successful.
+2026-04-08 10:08:21:765 [Information] CORS policy execution successful.
+2026-04-08 10:08:21:765 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/Holiday""?month=4&year=2026" - 204 null null 0.3027ms
+2026-04-08 10:08:21:765 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/borrow/get-quantity-product-borrow""" - 204 null null 0.3156ms
+2026-04-08 10:08:21:765 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/home/employee-onleave-and-wfh""" - 204 null null 0.3038ms
+2026-04-08 10:08:21:766 [Information] Request starting "HTTP/2" "POST" "https"://"localhost:44365""""/api/home/get-quantity-approve""" - "application/json" 77
+2026-04-08 10:08:21:767 [Information] CORS policy execution successful.
+2026-04-08 10:08:21:768 [Information] Executing endpoint '"RERPAPI.Controllers.HomeController.GetQuantityApprove (RERPAPI)"'
+2026-04-08 10:08:21:768 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/menuapp""?keyword=" - null null
+2026-04-08 10:08:21:768 [Information] Route matched with "{action = \"GetQuantityApprove\", controller = \"Home\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetQuantityApprove(RERPAPI.Model.Param.ApproveByApproveTPRequestParam)" on controller "RERPAPI.Controllers.HomeController" ("RERPAPI").
+2026-04-08 10:08:21:768 [Information] CORS policy execution successful.
+2026-04-08 10:08:21:769 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/historyborrowsale/quantity-borrow-sale-persional""" - null null
+2026-04-08 10:08:21:769 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/newsletter/get-limit-newsletter""" - null null
+2026-04-08 10:08:21:769 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/borrow/get-quantity-product-borrow""" - null null
+2026-04-08 10:08:21:769 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/home/employee-onleave-and-wfh""" - null null
+2026-04-08 10:08:21:769 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/Holiday""?month=4&year=2026" - null null
+2026-04-08 10:08:21:769 [Information] CORS policy execution successful.
+2026-04-08 10:08:21:769 [Information] CORS policy execution successful.
+2026-04-08 10:08:21:769 [Information] CORS policy execution successful.
+2026-04-08 10:08:21:769 [Information] CORS policy execution successful.
+2026-04-08 10:08:21:769 [Information] CORS policy execution successful.
+2026-04-08 10:08:21:769 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/newsletter/get-limit-newsletter""" - 204 null null 0.2592ms
+2026-04-08 10:08:21:769 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/historyborrowsale/quantity-borrow-sale-persional""" - 204 null null 0.302ms
+2026-04-08 10:08:21:769 [Information] Executing endpoint '"RERPAPI.Controllers.Systems.MenuAppController.GetAll (RERPAPI)"'
+2026-04-08 10:08:21:769 [Information] Route matched with "{action = \"GetAll\", controller = \"MenuApp\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll(System.String)" on controller "RERPAPI.Controllers.Systems.MenuAppController" ("RERPAPI").
+2026-04-08 10:08:21:770 [Information] Executing endpoint '"RERPAPI.Controllers.HomeController.GetEmployeeOnleaveAndWFHByDate (RERPAPI)"'
+2026-04-08 10:08:21:770 [Information] Executing endpoint '"RERPAPI.Controllers.Old.HolidayController.GetHoliday (RERPAPI)"'
+2026-04-08 10:08:21:770 [Information] Executing endpoint '"RERPAPI.Controllers.BorrowController.GetQuantityProductBorrow (RERPAPI)"'
+2026-04-08 10:08:21:770 [Information] Route matched with "{action = \"GetHoliday\", controller = \"Holiday\"}". Executing controller action with signature "Microsoft.AspNetCore.Mvc.IActionResult GetHoliday(Int32, Int32)" on controller "RERPAPI.Controllers.Old.HolidayController" ("RERPAPI").
+2026-04-08 10:08:21:770 [Information] Route matched with "{action = \"GetEmployeeOnleaveAndWFHByDate\", controller = \"Home\"}". Executing controller action with signature "Microsoft.AspNetCore.Mvc.IActionResult GetEmployeeOnleaveAndWFHByDate()" on controller "RERPAPI.Controllers.HomeController" ("RERPAPI").
+2026-04-08 10:08:21:770 [Information] Route matched with "{action = \"GetQuantityProductBorrow\", controller = \"Borrow\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetQuantityProductBorrow()" on controller "RERPAPI.Controllers.BorrowController" ("RERPAPI").
+2026-04-08 10:08:21:771 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/newsletter/get-limit-newsletter""" - null null
+2026-04-08 10:08:21:771 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/historyborrowsale/quantity-borrow-sale-persional""" - null null
+2026-04-08 10:08:21:771 [Information] CORS policy execution successful.
+2026-04-08 10:08:21:771 [Information] CORS policy execution successful.
+2026-04-08 10:08:21:772 [Information] Executing endpoint '"RERPAPI.Controllers.Old.NewsletterController.GetLimitNewLetter (RERPAPI)"'
+2026-04-08 10:08:21:772 [Information] Executing endpoint '"RERPAPI.Controllers.Old.SaleWareHouseManagement.HistoryBorrowSaleController.getQuantityBorrowSalePersional (RERPAPI)"'
+2026-04-08 10:08:21:772 [Information] Route matched with "{action = \"getQuantityBorrowSalePersional\", controller = \"HistoryBorrowSale\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] getQuantityBorrowSalePersional()" on controller "RERPAPI.Controllers.Old.SaleWareHouseManagement.HistoryBorrowSaleController" ("RERPAPI").
+2026-04-08 10:08:21:772 [Information] Route matched with "{action = \"GetLimitNewLetter\", controller = \"Newsletter\"}". Executing controller action with signature "Microsoft.AspNetCore.Mvc.IActionResult GetLimitNewLetter()" on controller "RERPAPI.Controllers.Old.NewsletterController" ("RERPAPI").
+2026-04-08 10:08:21:777 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 10:08:21:780 [Information] Executed action "RERPAPI.Controllers.Old.HolidayController.GetHoliday (RERPAPI)" in 9.5639ms
+2026-04-08 10:08:21:780 [Information] Executed endpoint '"RERPAPI.Controllers.Old.HolidayController.GetHoliday (RERPAPI)"'
+2026-04-08 10:08:21:780 [Information] HTTP "GET" "/api/holiday" responded 200 in 10.1932 ms
+2026-04-08 10:08:21:781 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/holiday""?month=4&year=2026" - 200 null "application/json; charset=utf-8" 12.273ms
+2026-04-08 10:08:21:794 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 10:08:21:797 [Information] Executed action "RERPAPI.Controllers.Old.NewsletterController.GetLimitNewLetter (RERPAPI)" in 24.9036ms
+2026-04-08 10:08:21:798 [Information] Executed endpoint '"RERPAPI.Controllers.Old.NewsletterController.GetLimitNewLetter (RERPAPI)"'
+2026-04-08 10:08:21:798 [Information] HTTP "GET" "/api/newsletter/get-limit-newsletter" responded 200 in 25.3646 ms
+2026-04-08 10:08:21:798 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/newsletter/get-limit-newsletter""" - 200 null "application/json; charset=utf-8" 26.6981ms
+2026-04-08 10:08:21:863 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 10:08:21:868 [Information] Executed action "RERPAPI.Controllers.Systems.MenuAppController.GetAll (RERPAPI)" in 98.3449ms
+2026-04-08 10:08:21:868 [Information] Executed endpoint '"RERPAPI.Controllers.Systems.MenuAppController.GetAll (RERPAPI)"'
+2026-04-08 10:08:21:868 [Information] HTTP "GET" "/api/menuapp" responded 200 in 98.6733 ms
+2026-04-08 10:08:21:868 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/menuapp""?keyword=" - 200 null "application/json; charset=utf-8" 100.3851ms
+2026-04-08 10:08:22:224 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 10:08:22:224 [Information] Executed action "RERPAPI.Controllers.HomeController.GetEmployeeOnleaveAndWFHByDate (RERPAPI)" in 454.1074ms
+2026-04-08 10:08:22:224 [Information] Executed endpoint '"RERPAPI.Controllers.HomeController.GetEmployeeOnleaveAndWFHByDate (RERPAPI)"'
+2026-04-08 10:08:22:224 [Information] HTTP "GET" "/api/home/employee-onleave-and-wfh" responded 200 in 454.3034 ms
+2026-04-08 10:08:22:225 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/home/employee-onleave-and-wfh""" - 200 null "application/json; charset=utf-8" 455.6662ms
+2026-04-08 10:08:22:253 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 10:08:22:253 [Information] Executed action "RERPAPI.Controllers.Old.SaleWareHouseManagement.HistoryBorrowSaleController.getQuantityBorrowSalePersional (RERPAPI)" in 480.9472ms
+2026-04-08 10:08:22:253 [Information] Executed endpoint '"RERPAPI.Controllers.Old.SaleWareHouseManagement.HistoryBorrowSaleController.getQuantityBorrowSalePersional (RERPAPI)"'
+2026-04-08 10:08:22:253 [Information] HTTP "GET" "/api/historyborrowsale/quantity-borrow-sale-persional" responded 200 in 481.1557 ms
+2026-04-08 10:08:22:254 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/historyborrowsale/quantity-borrow-sale-persional""" - 200 null "application/json; charset=utf-8" 482.4902ms
+2026-04-08 10:08:23:034 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 10:08:23:034 [Information] Executed action "RERPAPI.Controllers.BorrowController.GetQuantityProductBorrow (RERPAPI)" in 1264.1007ms
+2026-04-08 10:08:23:034 [Information] Executed endpoint '"RERPAPI.Controllers.BorrowController.GetQuantityProductBorrow (RERPAPI)"'
+2026-04-08 10:08:23:034 [Information] HTTP "GET" "/api/borrow/get-quantity-product-borrow" responded 200 in 1264.3220 ms
+2026-04-08 10:08:23:035 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/borrow/get-quantity-product-borrow""" - 200 null "application/json; charset=utf-8" 1265.7519ms
+2026-04-08 10:08:27:927 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/menuapp""?keyword=" - null null
+2026-04-08 10:08:27:927 [Information] CORS policy execution successful.
+2026-04-08 10:08:27:927 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/menuapp""?keyword=" - 204 null null 0.4ms
+2026-04-08 10:08:27:929 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/menuapp""?keyword=" - null null
+2026-04-08 10:08:27:929 [Information] CORS policy execution successful.
+2026-04-08 10:08:27:930 [Information] Executing endpoint '"RERPAPI.Controllers.Systems.MenuAppController.GetAll (RERPAPI)"'
+2026-04-08 10:08:27:930 [Information] Route matched with "{action = \"GetAll\", controller = \"MenuApp\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll(System.String)" on controller "RERPAPI.Controllers.Systems.MenuAppController" ("RERPAPI").
+2026-04-08 10:08:28:018 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 10:08:28:021 [Information] Executed action "RERPAPI.Controllers.Systems.MenuAppController.GetAll (RERPAPI)" in 90.6775ms
+2026-04-08 10:08:28:021 [Information] Executed endpoint '"RERPAPI.Controllers.Systems.MenuAppController.GetAll (RERPAPI)"'
+2026-04-08 10:08:28:021 [Information] HTTP "GET" "/api/menuapp" responded 200 in 90.9687 ms
+2026-04-08 10:08:28:021 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/menuapp""?keyword=" - 200 null "application/json; charset=utf-8" 92.6104ms
+2026-04-08 10:08:28:044 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M84.svg""" - null null
+2026-04-08 10:08:28:045 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M89.svg""" - null null
+2026-04-08 10:08:28:044 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M88.svg""" - null null
+2026-04-08 10:08:28:044 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M85.svg""" - null null
+2026-04-08 10:08:28:045 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M87.svg""" - null null
+2026-04-08 10:08:28:045 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M86.svg""" - null null
+2026-04-08 10:08:28:314 [Information] Sending file. Request path: '"/icon/m87.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m87.svg"'
+2026-04-08 10:08:28:314 [Information] Sending file. Request path: '"/icon/m88.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m88.svg"'
+2026-04-08 10:08:28:314 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m88.svg""" - 200 3851 "image/svg+xml" 269.8908ms
+2026-04-08 10:08:28:314 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m87.svg""" - 200 754 "image/svg+xml" 269.931ms
+2026-04-08 10:08:28:315 [Information] Sending file. Request path: '"/icon/m86.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m86.svg"'
+2026-04-08 10:08:28:315 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m86.svg""" - 200 3851 "image/svg+xml" 270.2663ms
+2026-04-08 10:08:28:327 [Information] Sending file. Request path: '"/icon/m85.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m85.svg"'
+2026-04-08 10:08:28:327 [Information] Sending file. Request path: '"/icon/m89.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m89.svg"'
+2026-04-08 10:08:28:327 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m85.svg""" - 200 6531 "image/svg+xml" 282.8984ms
+2026-04-08 10:08:28:327 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m89.svg""" - 200 1964 "image/svg+xml" 282.8351ms
+2026-04-08 10:08:28:328 [Information] Sending file. Request path: '"/icon/m84.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m84.svg"'
+2026-04-08 10:08:28:330 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m84.svg""" - 200 3281 "image/svg+xml" 285.3787ms
+2026-04-08 10:08:30:545 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M266.svg""" - null null
+2026-04-08 10:08:30:545 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M265.svg""" - null null
+2026-04-08 10:08:30:546 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M267.svg""" - null null
+2026-04-08 10:08:30:546 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M268.svg""" - null null
+2026-04-08 10:08:30:547 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M269.svg""" - null null
+2026-04-08 10:08:30:548 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M270.svg""" - null null
+2026-04-08 10:08:30:548 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M264.svg""" - null null
+2026-04-08 10:08:30:549 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M272.svg""" - null null
+2026-04-08 10:08:30:551 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M273.svg""" - null null
+2026-04-08 10:08:30:552 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M274.svg""" - null null
+2026-04-08 10:08:30:552 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M275.svg""" - null null
+2026-04-08 10:08:30:562 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M281.svg""" - null null
+2026-04-08 10:08:30:587 [Information] Sending file. Request path: '"/icon/m269.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m269.svg"'
+2026-04-08 10:08:30:587 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m269.svg""" - 200 1646 "image/svg+xml" 40.1937ms
+2026-04-08 10:08:30:587 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M282.svg""" - null null
+2026-04-08 10:08:30:621 [Information] Sending file. Request path: '"/icon/m264.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m264.svg"'
+2026-04-08 10:08:30:621 [Information] Sending file. Request path: '"/icon/m268.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m268.svg"'
+2026-04-08 10:08:30:622 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m264.svg""" - 200 3904 "image/svg+xml" 73.6611ms
+2026-04-08 10:08:30:622 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m268.svg""" - 200 3904 "image/svg+xml" 75.3384ms
+2026-04-08 10:08:30:622 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M276.svg""" - null null
+2026-04-08 10:08:30:622 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M285.svg""" - null null
+2026-04-08 10:08:30:667 [Information] Sending file. Request path: '"/icon/m266.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m266.svg"'
+2026-04-08 10:08:30:669 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m266.svg""" - 200 4641 "image/svg+xml" 123.2864ms
+2026-04-08 10:08:30:671 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M284.svg""" - null null
+2026-04-08 10:08:30:671 [Information] Sending file. Request path: '"/icon/m273.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m273.svg"'
+2026-04-08 10:08:30:671 [Information] Sending file. Request path: '"/icon/m270.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m270.svg"'
+2026-04-08 10:08:30:671 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m273.svg""" - 200 912 "image/svg+xml" 120.5448ms
+2026-04-08 10:08:30:671 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m270.svg""" - 200 1002 "image/svg+xml" 123.3607ms
+2026-04-08 10:08:30:671 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M283.svg""" - null null
+2026-04-08 10:08:30:671 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M299.svg""" - null null
+2026-04-08 10:08:30:702 [Information] Sending file. Request path: '"/icon/m272.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m272.svg"'
+2026-04-08 10:08:30:702 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m272.svg""" - 200 3743 "image/svg+xml" 152.5571ms
+2026-04-08 10:08:30:702 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M271.svg""" - null null
+2026-04-08 10:08:30:711 [Information] Sending file. Request path: '"/icon/m274.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m274.svg"'
+2026-04-08 10:08:30:711 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m274.svg""" - 200 3743 "image/svg+xml" 159.0258ms
+2026-04-08 10:08:30:711 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M321.svg""" - null null
+2026-04-08 10:08:30:739 [Information] Sending file. Request path: '"/icon/m275.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m275.svg"'
+2026-04-08 10:08:30:739 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m275.svg""" - 200 677 "image/svg+xml" 186.6054ms
+2026-04-08 10:08:30:739 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M242.svg""" - null null
+2026-04-08 10:08:30:747 [Information] Sending file. Request path: '"/icon/m281.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m281.svg"'
+2026-04-08 10:08:30:747 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m281.svg""" - 200 1007 "image/svg+xml" 185.0812ms
+2026-04-08 10:08:30:750 [Information] Sending file. Request path: '"/icon/m285.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m285.svg"'
+2026-04-08 10:08:30:750 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M241.svg""" - null null
+2026-04-08 10:08:30:751 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m285.svg""" - 200 1981 "image/svg+xml" 129.0323ms
+2026-04-08 10:08:30:751 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M244.svg""" - null null
+2026-04-08 10:08:30:769 [Information] Sending file. Request path: '"/icon/m284.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m284.svg"'
+2026-04-08 10:08:30:769 [Information] Sending file. Request path: '"/icon/m276.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m276.svg"'
+2026-04-08 10:08:30:769 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m284.svg""" - 200 1357 "image/svg+xml" 98.1836ms
+2026-04-08 10:08:30:769 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m276.svg""" - 200 1340 "image/svg+xml" 147.5186ms
+2026-04-08 10:08:30:769 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M243.svg""" - null null
+2026-04-08 10:08:30:770 [Information] Sending file. Request path: '"/icon/m282.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m282.svg"'
+2026-04-08 10:08:30:772 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M240.svg""" - null null
+2026-04-08 10:08:30:772 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m282.svg""" - 200 3208 "image/svg+xml" 184.9121ms
+2026-04-08 10:08:30:772 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M246.svg""" - null null
+2026-04-08 10:08:30:797 [Information] Sending file. Request path: '"/icon/m271.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m271.svg"'
+2026-04-08 10:08:30:797 [Information] Sending file. Request path: '"/icon/m283.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m283.svg"'
+2026-04-08 10:08:30:798 [Information] Sending file. Request path: '"/icon/m299.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m299.svg"'
+2026-04-08 10:08:30:798 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m299.svg""" - 200 5096 "image/svg+xml" 126.3643ms
+2026-04-08 10:08:30:798 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m271.svg""" - 200 2001 "image/svg+xml" 95.6239ms
+2026-04-08 10:08:30:798 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m283.svg""" - 200 1549 "image/svg+xml" 126.3674ms
+2026-04-08 10:08:30:798 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M248.svg""" - null null
+2026-04-08 10:08:30:798 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M250.svg""" - null null
+2026-04-08 10:08:30:798 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M245.svg""" - null null
+2026-04-08 10:08:30:819 [Information] Sending file. Request path: '"/icon/m265.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m265.svg"'
+2026-04-08 10:08:30:821 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m265.svg""" - 200 1259 "image/svg+xml" 275.0789ms
+2026-04-08 10:08:30:822 [Information] Sending file. Request path: '"/icon/m267.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m267.svg"'
+2026-04-08 10:08:30:824 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m267.svg""" - 200 2077 "image/svg+xml" 277.6541ms
+2026-04-08 10:08:30:825 [Information] Sending file. Request path: '"/icon/m321.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m321.svg"'
+2026-04-08 10:08:30:826 [Information] Sending file. Request path: '"/icon/m244.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m244.svg"'
+2026-04-08 10:08:30:826 [Information] Sending file. Request path: '"/icon/m242.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m242.svg"'
+2026-04-08 10:08:30:826 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m321.svg""" - 200 1559 "image/svg+xml" 115.4457ms
+2026-04-08 10:08:30:829 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m242.svg""" - 200 949 "image/svg+xml" 89.3673ms
+2026-04-08 10:08:30:829 [Information] Sending file. Request path: '"/icon/m246.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m246.svg"'
+2026-04-08 10:08:30:829 [Information] Sending file. Request path: '"/icon/m240.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m240.svg"'
+2026-04-08 10:08:30:829 [Information] Sending file. Request path: '"/icon/m241.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m241.svg"'
+2026-04-08 10:08:30:830 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M249.svg""" - null null
+2026-04-08 10:08:30:831 [Information] Sending file. Request path: '"/icon/m245.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m245.svg"'
+2026-04-08 10:08:30:831 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M251.svg""" - null null
+2026-04-08 10:08:30:831 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M237.svg""" - null null
+2026-04-08 10:08:30:832 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m244.svg""" - 200 1154 "image/svg+xml" 80.6017ms
+2026-04-08 10:08:30:833 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M238.svg""" - null null
+2026-04-08 10:08:30:834 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M247.svg""" - null null
+2026-04-08 10:08:30:836 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m241.svg""" - 200 2998 "image/svg+xml" 86.0655ms
+2026-04-08 10:08:30:837 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M236.svg""" - null null
+2026-04-08 10:08:30:838 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m240.svg""" - 200 2998 "image/svg+xml" 66.0149ms
+2026-04-08 10:08:30:839 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M239.svg""" - null null
+2026-04-08 10:08:30:840 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m246.svg""" - 200 1297 "image/svg+xml" 67.6072ms
+2026-04-08 10:08:30:840 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M254.svg""" - null null
+2026-04-08 10:08:30:840 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m245.svg""" - 200 1290 "image/svg+xml" 42.6918ms
+2026-04-08 10:08:30:841 [Information] Sending file. Request path: '"/icon/m248.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m248.svg"'
+2026-04-08 10:08:30:841 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M253.svg""" - null null
+2026-04-08 10:08:30:841 [Information] Sending file. Request path: '"/icon/m250.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m250.svg"'
+2026-04-08 10:08:30:841 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m248.svg""" - 200 2514 "image/svg+xml" 43.5039ms
+2026-04-08 10:08:30:841 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m250.svg""" - 200 1154 "image/svg+xml" 43.5321ms
+2026-04-08 10:08:30:841 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M256.svg""" - null null
+2026-04-08 10:08:30:841 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M255.svg""" - null null
+2026-04-08 10:08:30:869 [Information] Sending file. Request path: '"/icon/m251.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m251.svg"'
+2026-04-08 10:08:30:869 [Information] Sending file. Request path: '"/icon/m249.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m249.svg"'
+2026-04-08 10:08:30:870 [Information] Sending file. Request path: '"/icon/m237.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m237.svg"'
+2026-04-08 10:08:30:871 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m249.svg""" - 200 2514 "image/svg+xml" 40.4848ms
+2026-04-08 10:08:30:871 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m251.svg""" - 200 1290 "image/svg+xml" 39.5301ms
+2026-04-08 10:08:30:871 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m237.svg""" - 200 1074 "image/svg+xml" 39.2994ms
+2026-04-08 10:08:30:878 [Information] Sending file. Request path: '"/icon/m243.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m243.svg"'
+2026-04-08 10:08:30:879 [Information] Sending file. Request path: '"/icon/m255.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m255.svg"'
+2026-04-08 10:08:30:879 [Information] Sending file. Request path: '"/icon/m254.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m254.svg"'
+2026-04-08 10:08:30:880 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M261.svg""" - null null
+2026-04-08 10:08:30:880 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M252.svg""" - null null
+2026-04-08 10:08:30:880 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M257.svg""" - null null
+2026-04-08 10:08:30:883 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M259.svg""" - null null
+2026-04-08 10:08:30:889 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m243.svg""" - 200 1507 "image/svg+xml" 119.1448ms
+2026-04-08 10:08:30:890 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M260.svg""" - null null
+2026-04-08 10:08:30:893 [Information] Sending file. Request path: '"/icon/m256.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m256.svg"'
+2026-04-08 10:08:30:894 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m256.svg""" - 200 3262 "image/svg+xml" 52.3172ms
+2026-04-08 10:08:30:894 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m254.svg""" - 200 1403 "image/svg+xml" 53.8717ms
+2026-04-08 10:08:30:895 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M263.svg""" - null null
+2026-04-08 10:08:30:895 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M262.svg""" - null null
+2026-04-08 10:08:30:897 [Information] Sending file. Request path: '"/icon/m247.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m247.svg"'
+2026-04-08 10:08:30:898 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m255.svg""" - 200 4348 "image/svg+xml" 56.363ms
+2026-04-08 10:08:30:898 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m247.svg""" - 200 2514 "image/svg+xml" 64.4473ms
+2026-04-08 10:08:30:898 [Information] Sending file. Request path: '"/icon/m253.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m253.svg"'
+2026-04-08 10:08:30:899 [Information] Sending file. Request path: '"/icon/m238.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m238.svg"'
+2026-04-08 10:08:30:899 [Information] Sending file. Request path: '"/icon/m239.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m239.svg"'
+2026-04-08 10:08:30:899 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m253.svg""" - 200 791 "image/svg+xml" 58.0553ms
+2026-04-08 10:08:30:899 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M258.svg""" - null null
+2026-04-08 10:08:30:899 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M287.svg""" - null null
+2026-04-08 10:08:30:899 [Information] Sending file. Request path: '"/icon/m236.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m236.svg"'
+2026-04-08 10:08:30:899 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m238.svg""" - 200 4091 "image/svg+xml" 66.5812ms
+2026-04-08 10:08:30:899 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M288.svg""" - null null
+2026-04-08 10:08:30:899 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m236.svg""" - 200 1074 "image/svg+xml" 62.5408ms
+2026-04-08 10:08:30:899 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M296.svg""" - null null
+2026-04-08 10:08:30:899 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M301.svg""" - null null
+2026-04-08 10:08:30:899 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m239.svg""" - 200 2337 "image/svg+xml" 60.4906ms
+2026-04-08 10:08:30:900 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M303.svg""" - null null
+2026-04-08 10:08:30:917 [Information] Sending file. Request path: '"/icon/m252.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m252.svg"'
+2026-04-08 10:08:30:918 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m252.svg""" - 200 2144 "image/svg+xml" 38.1082ms
+2026-04-08 10:08:30:919 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M302.svg""" - null null
+2026-04-08 10:08:30:919 [Information] Sending file. Request path: '"/icon/m261.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m261.svg"'
+2026-04-08 10:08:30:919 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m261.svg""" - 200 4009 "image/svg+xml" 38.8872ms
+2026-04-08 10:08:30:919 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M300.svg""" - null null
+2026-04-08 10:08:30:923 [Information] Sending file. Request path: '"/icon/m259.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m259.svg"'
+2026-04-08 10:08:30:923 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m259.svg""" - 200 4613 "image/svg+xml" 40.4584ms
+2026-04-08 10:08:30:923 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M305.svg""" - null null
+2026-04-08 10:08:30:939 [Information] Sending file. Request path: '"/icon/m296.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m296.svg"'
+2026-04-08 10:08:30:941 [Information] Sending file. Request path: '"/icon/m301.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m301.svg"'
+2026-04-08 10:08:30:942 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m301.svg""" - 200 3851 "image/svg+xml" 42.7768ms
+2026-04-08 10:08:30:945 [Information] Sending file. Request path: '"/icon/m303.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m303.svg"'
+2026-04-08 10:08:30:945 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m296.svg""" - 200 1882 "image/svg+xml" 45.9054ms
+2026-04-08 10:08:30:945 [Information] Sending file. Request path: '"/icon/m258.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m258.svg"'
+2026-04-08 10:08:30:945 [Information] Sending file. Request path: '"/icon/m262.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m262.svg"'
+2026-04-08 10:08:30:945 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m303.svg""" - 200 2481 "image/svg+xml" 45.7856ms
+2026-04-08 10:08:30:946 [Information] Sending file. Request path: '"/icon/m263.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m263.svg"'
+2026-04-08 10:08:30:946 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M235.svg""" - null null
+2026-04-08 10:08:30:946 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m263.svg""" - 200 4137 "image/svg+xml" 51.5591ms
+2026-04-08 10:08:30:946 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m262.svg""" - 200 1034 "image/svg+xml" 51.5955ms
+2026-04-08 10:08:30:947 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M308.svg""" - null null
+2026-04-08 10:08:30:947 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M315.svg""" - null null
+2026-04-08 10:08:30:947 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m258.svg""" - 200 604 "image/svg+xml" 47.8756ms
+2026-04-08 10:08:30:947 [Information] Sending file. Request path: '"/icon/m287.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m287.svg"'
+2026-04-08 10:08:30:947 [Information] Sending file. Request path: '"/icon/m288.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m288.svg"'
+2026-04-08 10:08:30:947 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/exam-svg.svg""" - null null
+2026-04-08 10:08:30:947 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/M316.svg""" - null null
+2026-04-08 10:08:30:948 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m288.svg""" - 200 2760 "image/svg+xml" 48.5222ms
+2026-04-08 10:08:30:948 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/evalute-svg.svg""" - null null
+2026-04-08 10:08:30:948 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/setting-svg.svg""" - null null
+2026-04-08 10:08:30:949 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m287.svg""" - 200 1458 "image/svg+xml" 49.4363ms
+2026-04-08 10:08:30:953 [Information] Sending file. Request path: '"/icon/m300.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m300.svg"'
+2026-04-08 10:08:30:956 [Information] Sending file. Request path: '"/icon/m305.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m305.svg"'
+2026-04-08 10:08:30:957 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m300.svg""" - 200 928 "image/svg+xml" 38.2976ms
+2026-04-08 10:08:30:958 [Information] Sending file. Request path: '"/icon/m302.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m302.svg"'
+2026-04-08 10:08:30:959 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m305.svg""" - 200 1977 "image/svg+xml" 35.4582ms
+2026-04-08 10:08:30:959 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m302.svg""" - 200 1167 "image/svg+xml" 39.9593ms
+2026-04-08 10:08:30:970 [Information] Sending file. Request path: '"/icon/m257.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m257.svg"'
+2026-04-08 10:08:30:971 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m257.svg""" - 200 4674 "image/svg+xml" 90.846ms
+2026-04-08 10:08:30:992 [Information] Sending file. Request path: '"/icon/m316.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m316.svg"'
+2026-04-08 10:08:30:993 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m316.svg""" - 200 3325 "image/svg+xml" 45.8176ms
+2026-04-08 10:08:31:005 [Information] Sending file. Request path: '"/icon/evalute-svg.svg"'. Physical path: '"\\192.168.1.190\Software\icon\evalute-svg.svg"'
+2026-04-08 10:08:31:006 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/evalute-svg.svg""" - 200 2197 "image/svg+xml" 57.571ms
+2026-04-08 10:08:31:022 [Information] Sending file. Request path: '"/icon/m260.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m260.svg"'
+2026-04-08 10:08:31:022 [Information] Sending file. Request path: '"/icon/m315.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m315.svg"'
+2026-04-08 10:08:31:026 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m260.svg""" - 200 3632 "image/svg+xml" 135.8719ms
+2026-04-08 10:08:31:026 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m315.svg""" - 200 4407 "image/svg+xml" 78.817ms
+2026-04-08 10:08:31:026 [Information] Sending file. Request path: '"/icon/m235.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m235.svg"'
+2026-04-08 10:08:31:026 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m235.svg""" - 200 3260 "image/svg+xml" 80.1742ms
+2026-04-08 10:08:31:036 [Information] Sending file. Request path: '"/icon/setting-svg.svg"'. Physical path: '"\\192.168.1.190\Software\icon\setting-svg.svg"'
+2026-04-08 10:08:31:037 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/setting-svg.svg""" - 200 4755 "image/svg+xml" 89.3317ms
+2026-04-08 10:08:31:047 [Information] Sending file. Request path: '"/icon/exam-svg.svg"'. Physical path: '"\\192.168.1.190\Software\icon\exam-svg.svg"'
+2026-04-08 10:08:31:049 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/exam-svg.svg""" - 200 2123 "image/svg+xml" 101.6824ms
+2026-04-08 10:08:31:084 [Information] Sending file. Request path: '"/icon/m308.svg"'. Physical path: '"\\192.168.1.190\Software\icon\m308.svg"'
+2026-04-08 10:08:31:086 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/share/software/icon/m308.svg""" - 200 5788 "image/svg+xml" 138.7277ms
+2026-04-08 10:08:35:168 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/HRRecruitmentCandidate/position-contract""" - null null
+2026-04-08 10:08:35:168 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/project/get-users""" - null null
+2026-04-08 10:08:35:169 [Information] CORS policy execution successful.
+2026-04-08 10:08:35:169 [Information] CORS policy execution successful.
+2026-04-08 10:08:35:169 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/Department/get-all""" - null null
+2026-04-08 10:08:35:169 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/HRRecruitmentCandidate/position-contract""" - 204 null null 0.9419ms
+2026-04-08 10:08:35:169 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/project/get-users""" - 204 null null 0.7967ms
+2026-04-08 10:08:35:170 [Information] CORS policy execution successful.
+2026-04-08 10:08:35:170 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/Department/get-all""" - 204 null null 0.4569ms
+2026-04-08 10:08:35:171 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/project/get-users""" - null null
+2026-04-08 10:08:35:172 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/HRRecruitmentCandidate/position-contract""" - null null
+2026-04-08 10:08:35:172 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/Department/get-all""" - null null
+2026-04-08 10:08:35:172 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/HRRecruitmentCandidate/data""?id=0&status=-1&employeeRequestId=-1&departmentId=-1&dateStart=2026-03-01T00:00:00&dateEnd=2026-04-30T23:59:59&keyword=" - null null
+2026-04-08 10:08:35:173 [Information] CORS policy execution successful.
+2026-04-08 10:08:35:173 [Information] CORS policy execution successful.
+2026-04-08 10:08:35:173 [Information] CORS policy execution successful.
+2026-04-08 10:08:35:173 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/HRRecruitmentCandidate/data""?id=0&status=-1&employeeRequestId=-1&departmentId=-1&dateStart=2026-03-01T00:00:00&dateEnd=2026-04-30T23:59:59&keyword=" - 204 null null 1.5388ms
+2026-04-08 10:08:35:174 [Information] Executing endpoint '"RERPAPI.Controllers.Old.DepartmentController.GetAll (RERPAPI)"'
+2026-04-08 10:08:35:175 [Information] Executing endpoint '"RERPAPI.Controllers.HRM.HRRecruitmentCandidateController.GetPositionContract (RERPAPI)"'
+2026-04-08 10:08:35:175 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/HRRecruitmentCandidate/data""?id=0&status=-1&employeeRequestId=-1&departmentId=-1&dateStart=2026-03-01T00:00:00&dateEnd=2026-04-30T23:59:59&keyword=" - null null
+2026-04-08 10:08:35:175 [Information] CORS policy execution successful.
+2026-04-08 10:08:35:176 [Information] Route matched with "{action = \"GetAll\", controller = \"Department\"}". Executing controller action with signature "Microsoft.AspNetCore.Mvc.IActionResult GetAll()" on controller "RERPAPI.Controllers.Old.DepartmentController" ("RERPAPI").
+2026-04-08 10:08:35:176 [Information] Route matched with "{action = \"GetPositionContract\", controller = \"HRRecruitmentCandidate\"}". Executing controller action with signature "Microsoft.AspNetCore.Mvc.IActionResult GetPositionContract()" on controller "RERPAPI.Controllers.HRM.HRRecruitmentCandidateController" ("RERPAPI").
+2026-04-08 10:08:35:176 [Information] Executing endpoint '"RERPAPI.Controllers.HRM.HRRecruitmentCandidateController.GetDataHrRecruitmentCandidates (RERPAPI)"'
+2026-04-08 10:08:35:180 [Information] Route matched with "{action = \"GetDataHrRecruitmentCandidates\", controller = \"HRRecruitmentCandidate\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetDataHrRecruitmentCandidates(System.Nullable`1[System.Int32], System.Nullable`1[System.Int32], System.Nullable`1[System.Int32], System.Nullable`1[System.Int32], System.Nullable`1[System.DateTime], System.Nullable`1[System.DateTime], System.String)" on controller "RERPAPI.Controllers.HRM.HRRecruitmentCandidateController" ("RERPAPI").
+2026-04-08 10:08:35:189 [Information] CORS policy execution successful.
+2026-04-08 10:08:35:190 [Information] Executing endpoint '"RERPAPI.Controllers.Project.ProjectController.GetUsers (RERPAPI)"'
+2026-04-08 10:08:35:201 [Information] Route matched with "{action = \"GetUsers\", controller = \"Project\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetUsers()" on controller "RERPAPI.Controllers.Project.ProjectController" ("RERPAPI").
+2026-04-08 10:08:35:216 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 10:08:35:217 [Information] Executed action "RERPAPI.Controllers.HRM.HRRecruitmentCandidateController.GetDataHrRecruitmentCandidates (RERPAPI)" in 37.1245ms
+2026-04-08 10:08:35:217 [Information] Executed endpoint '"RERPAPI.Controllers.HRM.HRRecruitmentCandidateController.GetDataHrRecruitmentCandidates (RERPAPI)"'
+2026-04-08 10:08:35:217 [Information] HTTP "GET" "/api/hrrecruitmentcandidate/data" responded 200 in 40.7180 ms
+2026-04-08 10:08:35:217 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/hrrecruitmentcandidate/data""?id=0&status=-1&employeeRequestId=-1&departmentId=-1&dateStart=2026-03-01T00:00:00&dateEnd=2026-04-30T23:59:59&keyword=" - 200 null "application/json; charset=utf-8" 42.1563ms
+2026-04-08 10:08:35:218 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 10:08:35:224 [Information] Executed action "RERPAPI.Controllers.Old.DepartmentController.GetAll (RERPAPI)" in 48.6597ms
+2026-04-08 10:08:35:224 [Information] Executed endpoint '"RERPAPI.Controllers.Old.DepartmentController.GetAll (RERPAPI)"'
+2026-04-08 10:08:35:224 [Information] HTTP "GET" "/api/department/get-all" responded 200 in 50.1949 ms
+2026-04-08 10:08:35:224 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/department/get-all""" - 200 null "application/json; charset=utf-8" 52.8265ms
+2026-04-08 10:08:35:238 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 10:08:35:239 [Information] Executed action "RERPAPI.Controllers.Project.ProjectController.GetUsers (RERPAPI)" in 38.2016ms
+2026-04-08 10:08:35:239 [Information] Executed endpoint '"RERPAPI.Controllers.Project.ProjectController.GetUsers (RERPAPI)"'
+2026-04-08 10:08:35:239 [Information] HTTP "GET" "/api/project/get-users" responded 200 in 48.7700 ms
+2026-04-08 10:08:35:239 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/project/get-users""" - 200 null "application/json; charset=utf-8" 67.6026ms
+2026-04-08 10:08:35:274 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 10:08:35:277 [Information] Executed action "RERPAPI.Controllers.HRM.HRRecruitmentCandidateController.GetPositionContract (RERPAPI)" in 100.9079ms
+2026-04-08 10:08:35:277 [Information] Executed endpoint '"RERPAPI.Controllers.HRM.HRRecruitmentCandidateController.GetPositionContract (RERPAPI)"'
+2026-04-08 10:08:35:277 [Information] HTTP "GET" "/api/hrrecruitmentcandidate/position-contract" responded 200 in 102.3496 ms
+2026-04-08 10:08:35:277 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/hrrecruitmentcandidate/position-contract""" - 200 null "application/json; charset=utf-8" 105.6209ms
+2026-04-08 10:08:39:626 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/HRRecruitmentCandidate/send-interview-mail""" - null null
+2026-04-08 10:08:39:626 [Information] CORS policy execution successful.
+2026-04-08 10:08:39:626 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/HRRecruitmentCandidate/send-interview-mail""" - 204 null null 0.501ms
+2026-04-08 10:08:39:628 [Information] Request starting "HTTP/2" "POST" "https"://"localhost:44365""""/api/HRRecruitmentCandidate/send-interview-mail""" - "application/json" 2421
+2026-04-08 10:08:39:628 [Information] CORS policy execution successful.
+2026-04-08 10:08:39:629 [Information] Executing endpoint '"RERPAPI.Controllers.HRM.HRRecruitmentCandidateController.SendEmail (RERPAPI)"'
+2026-04-08 10:08:39:631 [Information] Route matched with "{action = \"SendEmail\", controller = \"HRRecruitmentCandidate\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] SendEmail(System.Collections.Generic.List`1[RERPAPI.Model.DTO.EmployeeSendEmailDTO])" on controller "RERPAPI.Controllers.HRM.HRRecruitmentCandidateController" ("RERPAPI").
+2026-04-08 10:08:43:839 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 10:08:43:841 [Information] Executed action "RERPAPI.Controllers.HomeController.GetQuantityApprove (RERPAPI)" in 22072.8924ms
+2026-04-08 10:08:43:841 [Information] Executed endpoint '"RERPAPI.Controllers.HomeController.GetQuantityApprove (RERPAPI)"'
+2026-04-08 10:08:43:841 [Information] HTTP "POST" "/api/home/get-quantity-approve" responded 200 in 22073.1142 ms
+2026-04-08 10:08:43:841 [Information] Request finished "HTTP/2" "POST" "https"://"localhost:44365""""/api/home/get-quantity-approve""" - 200 null "application/json; charset=utf-8" 22074.5831ms
+2026-04-08 10:08:54:806 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 10:08:54:807 [Information] Executed action "RERPAPI.Controllers.HRM.HRRecruitmentCandidateController.SendEmail (RERPAPI)" in 15175.3928ms
+2026-04-08 10:08:54:807 [Information] Executed endpoint '"RERPAPI.Controllers.HRM.HRRecruitmentCandidateController.SendEmail (RERPAPI)"'
+2026-04-08 10:08:54:807 [Information] HTTP "POST" "/api/hrrecruitmentcandidate/send-interview-mail" responded 200 in 15178.3118 ms
+2026-04-08 10:08:54:807 [Information] Request finished "HTTP/2" "POST" "https"://"localhost:44365""""/api/hrrecruitmentcandidate/send-interview-mail""" - 200 null "application/json; charset=utf-8" 15179.595ms
+2026-04-08 10:08:54:816 [Information] Request starting "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/HRRecruitmentCandidate/data""?id=0&status=-1&employeeRequestId=-1&departmentId=-1&dateStart=2026-03-01T00:00:00&dateEnd=2026-04-30T23:59:59&keyword=" - null null
+2026-04-08 10:08:54:816 [Information] CORS policy execution successful.
+2026-04-08 10:08:54:816 [Information] Request finished "HTTP/2" "OPTIONS" "https"://"localhost:44365""""/api/HRRecruitmentCandidate/data""?id=0&status=-1&employeeRequestId=-1&departmentId=-1&dateStart=2026-03-01T00:00:00&dateEnd=2026-04-30T23:59:59&keyword=" - 204 null null 0.2242ms
+2026-04-08 10:08:54:818 [Information] Request starting "HTTP/2" "GET" "https"://"localhost:44365""""/api/HRRecruitmentCandidate/data""?id=0&status=-1&employeeRequestId=-1&departmentId=-1&dateStart=2026-03-01T00:00:00&dateEnd=2026-04-30T23:59:59&keyword=" - null null
+2026-04-08 10:08:54:818 [Information] CORS policy execution successful.
+2026-04-08 10:08:54:819 [Information] Executing endpoint '"RERPAPI.Controllers.HRM.HRRecruitmentCandidateController.GetDataHrRecruitmentCandidates (RERPAPI)"'
+2026-04-08 10:08:54:819 [Information] Route matched with "{action = \"GetDataHrRecruitmentCandidates\", controller = \"HRRecruitmentCandidate\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetDataHrRecruitmentCandidates(System.Nullable`1[System.Int32], System.Nullable`1[System.Int32], System.Nullable`1[System.Int32], System.Nullable`1[System.Int32], System.Nullable`1[System.DateTime], System.Nullable`1[System.DateTime], System.String)" on controller "RERPAPI.Controllers.HRM.HRRecruitmentCandidateController" ("RERPAPI").
+2026-04-08 10:08:54:842 [Information] Executing "OkObjectResult", writing value of type '"RERPAPI.Model.DTO.APIResponse"'.
+2026-04-08 10:08:54:842 [Information] Executed action "RERPAPI.Controllers.HRM.HRRecruitmentCandidateController.GetDataHrRecruitmentCandidates (RERPAPI)" in 23.2705ms
+2026-04-08 10:08:54:842 [Information] Executed endpoint '"RERPAPI.Controllers.HRM.HRRecruitmentCandidateController.GetDataHrRecruitmentCandidates (RERPAPI)"'
+2026-04-08 10:08:54:842 [Information] HTTP "GET" "/api/hrrecruitmentcandidate/data" responded 200 in 23.4464 ms
+2026-04-08 10:08:54:842 [Information] Request finished "HTTP/2" "GET" "https"://"localhost:44365""""/api/hrrecruitmentcandidate/data""?id=0&status=-1&employeeRequestId=-1&departmentId=-1&dateStart=2026-03-01T00:00:00&dateEnd=2026-04-30T23:59:59&keyword=" - 200 null "application/json; charset=utf-8" 24.7229ms

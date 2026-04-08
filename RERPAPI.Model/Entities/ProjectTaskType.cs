@@ -52,4 +52,9 @@ public partial class ProjectTaskType
     /// ID của phòng ban của công việc đó
     /// </summary>
     public int? DepartmentID { get; set; }
+
+    /// <summary>
+    /// Mã màu
+    /// </summary>
+    public string? Color { get; set; }
 }
