@@ -1,0 +1,23 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace RERPAPI.Entities;
+
+public partial class Course_KPIEmployeeTeam_Map
+{
+    public int Id { get; set; }
+
+    public int CourseID { get; set; }
+
+    public int KPIEmployeeTeamID { get; set; }
+
+    public string? CreatedBy { get; set; }
+
+    public DateTime? CreatedDate { get; set; }
+
+    public string? UpdatedBy { get; set; }
+
+    public DateTime? UpdatedDate { get; set; }
+
+    public bool? IsDeleted { get; set; }
+}

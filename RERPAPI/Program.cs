@@ -118,7 +118,7 @@ builder.Services.AddScoped<EmployeeFoodOrderRepo>();
 builder.Services.AddScoped<EmployeeNoFingerprintRepo>();
 builder.Services.AddScoped<EmployeeOnLeaveMasterRepo>();
 builder.Services.AddScoped<EmployeeOnLeaveRepo>();
-builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.HRM.EmployeeOnLeavePhaseRepo>();
+//builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.HRM.EmployeeOnLeavePhaseRepo>();
 builder.Services.AddScoped<EmployeeOverTimeRepo>();
 builder.Services.AddScoped<EmployeeProjectTypeRepo>();
 builder.Services.AddScoped<EmployeePurchaseRepo>();
@@ -192,7 +192,7 @@ builder.Services.AddScoped<PONCCRulePayRepo>();
 builder.Services.AddScoped<PONCCHistoryRepo>();
 builder.Services.AddScoped<PositionContractRepo>();
 builder.Services.AddScoped<PositionInternalRepo>();
-builder.Services.AddScoped<ProductGroupRTCRepo>();
+//builder.Services.AddScoped<ProductGroupRTCRepo>();
 builder.Services.AddScoped<ProductGroupRepo>();
 builder.Services.AddScoped<ProductGroupWareHouseRepo>();
 builder.Services.AddScoped<ProductLocationRepo>();
@@ -439,6 +439,7 @@ builder.Services.AddScoped<TaxCompanyRepo>();
 builder.Services.AddScoped<HistoryErrorRepo>();
 builder.Services.AddScoped<HistoryProductRTCLogRepo>();
 builder.Services.AddScoped<BillImportTechnicalLogRepo>();
+builder.Services.AddScoped<BillImportDetailTechnicalRepo>();
 builder.Services.AddScoped<BillDocumentImportTechnicalRepo>();
 builder.Services.AddScoped<BillDocumentImportTechnicalLogRepo>();
 builder.Services.AddScoped<BillExportTechnicalLogRepo>();
@@ -471,6 +472,7 @@ builder.Services.AddScoped<CourseAnswerRepo>();
 builder.Services.AddScoped<CourseExamPracticeRepo>();
 builder.Services.AddScoped<ExamResultRepo>();
 builder.Services.AddScoped<ExamResultDetailRepo>();
+builder.Services.AddScoped<Course_KPIPositionTypeRepo>();
 
 builder.Services.AddScoped<InventoryProjectProductSaleLinkRepo>();
 builder.Services.AddScoped<HandoverPersonalAssetRepo>();
@@ -826,6 +828,12 @@ foreach (var item in staticFiles)
     });
 }
 
+app.UseSerilogRequestLogging(); // log request
+
+            //await tusStore.DeleteFileAsync(file.Id, ctx.CancellationToken);
+        }
+    }
+});
 app.UseSerilogRequestLogging(); // log request
 
 app.Run();
