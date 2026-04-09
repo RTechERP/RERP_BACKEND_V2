@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.IdentityModel.Tokens;
 using NPOI.HSSF.Record.Chart;
 using NPOI.SS.Formula.Functions;
@@ -1280,6 +1281,26 @@ namespace RERPAPI.Controllers.Project
                     {
                         return BadRequest(ApiResponseFactory.Fail(null, "Failed to update project task."));
                     }
+
+                    if(projectTask.ActualStartDate == null && existingTask.ActualStartDate?.Date != projectTask.ActualStartDate?.Date)
+                    {
+                        var param = new
+                        {
+                            Id = existingTask.ID,
+                            TypeDate = 1 // 1: Ngày bắt đầu thực tế, 2: Ngày kết thúc thực tế
+                        };
+                        var result = await SqlDapper<UserTeam>.ExecuteStoredProcedure("spUpdateDateToNull", param);
+                    }
+                    if(projectTask.ActualEndDate == null && existingTask.ActualEndDate?.Date != projectTask.ActualEndDate?.Date)
+                    {
+                        var param = new
+                        {
+                            Id = existingTask.ID,
+                            TypeDate = 2 // 1: Ngày bắt đầu thực tế, 2: Ngày kết thúc thực tế
+                        };
+                        var result = await SqlDapper<UserTeam>.ExecuteStoredProcedure("spUpdateDateToNull", param);
+                    }
+
                     return Ok(ApiResponseFactory.Success(existingTask));
                 }
                 else

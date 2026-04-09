@@ -159,5 +159,9 @@ namespace RERPAPI.Model.DTO.Project.Procedure
         /// Trạng thái làm công việc
         /// </summary>
         public bool? IsCheck { get; set; }
+        /// <summary>
+        /// Thời gian công việc phải hoàn thành
+        /// </summary>
+        public DateTime? Deadline { get; set; }
     }
 }
