@@ -30,7 +30,9 @@ namespace RERPAPI.Controllers.KHOAHOC
         private readonly CourseLessonRepo _courseLessonRepo;
         private readonly CourseFilesRepo _courseFilesRepo;
         private readonly ConfigSystemRepo _configSystemRepo;
-        private readonly Course_KPIPositionTypeRepo _course_KPIPositionTypeRepo;
+        //private readonly Course_KPIPositionTypeRepo _course_KPIPositionTypeRepo;
+        private readonly Course_KPIEmployeeTeamMapRepo _course_KPIEmployeeTeamMapRepo;
+        private readonly Course_KPIEmployeeTeamRepo _course_KPIEmployeeTeamRepo;
 
         public CourseController(
             CourseCatalogRepo courseCatalogRepo,
@@ -42,7 +44,9 @@ namespace RERPAPI.Controllers.KHOAHOC
             CourseLessonRepo courseLessonRepo,
             ConfigSystemRepo configSystemRepo,
             CourseFilesRepo courseFilesRepo,
-            Course_KPIPositionTypeRepo course_KPIPositionTypeRepo
+            Course_KPIPositionTypeRepo course_KPIPositionTypeRepo,
+           Course_KPIEmployeeTeamMapRepo course_KPIEmployeeTeamMapRepo,
+           Course_KPIEmployeeTeamRepo course_KPIEmployeeTeamRepo
             )
         {
             _courseCatalogRepo = courseCatalogRepo;
@@ -54,7 +58,9 @@ namespace RERPAPI.Controllers.KHOAHOC
             _courseLessonRepo = courseLessonRepo;
             _courseFilesRepo = courseFilesRepo;
             _configSystemRepo = configSystemRepo;
-            _course_KPIPositionTypeRepo = course_KPIPositionTypeRepo;
+            //_course_KPIPositionTypeRepo = course_KPIPositionTypeRepo;
+            _course_KPIEmployeeTeamMapRepo = course_KPIEmployeeTeamMapRepo;
+            _course_KPIEmployeeTeamRepo = course_KPIEmployeeTeamRepo;
         }
 
         [HttpGet("get-course-summary")]
@@ -86,7 +92,7 @@ namespace RERPAPI.Controllers.KHOAHOC
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
-                var data = SQLHelper<object>.ProcedureToList("spGetCourseCatalogNew",
+                var data = SQLHelper<object>.ProcedureToList("spGetCourseCatalogNew1",
                                               new string[] { "@CatalogType", "@UserID" },
                                               new object[] { catalogType, currentUser.ID });
                 return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0), ""));
@@ -148,7 +154,7 @@ namespace RERPAPI.Controllers.KHOAHOC
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
-                var data = SQLHelper<object>.ProcedureToList("spGetCourseNew",
+                var data = SQLHelper<object>.ProcedureToList("spGetCourseNew1",
                                              new string[] { "@CourseCatalogID", "@EmployeeID", "@Status" },
                                              new object[] { courseCatalogID, currentUser.EmployeeID, -1 });
                 var data0 = SQLHelper<object>.GetListData(data, 0);
@@ -169,7 +175,7 @@ namespace RERPAPI.Controllers.KHOAHOC
             {
                 //var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 //var currentUser = ObjectMapper.GetCurrentUser(claims);
-                var data = _course_KPIPositionTypeRepo.GetAll(c => c.CourseID == courseID && (c.IsDeleted == false || c.IsDeleted == null));
+                var data = _course_KPIEmployeeTeamMapRepo.GetAll(c => c.CourseID == courseID && (c.IsDeleted == false || c.IsDeleted == null));
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
@@ -358,13 +364,16 @@ namespace RERPAPI.Controllers.KHOAHOC
                 enableRangeProcessing: true
             );
         }
-        //lấy danh sách KPI Position Type
-        [HttpGet("load-kpipositiontype")]
-        public async Task<IActionResult> LoadKPIPositionType()
+        //lấy danh sách KPI emplpoyee team
+        [HttpGet("load-kpi-employee-team")]
+        public async Task<IActionResult> LoadKPIEmployeeTeam()
         {
             try
             {
-                var data = _kpiPositionTypeRepo.GetAll(x => x.IsDeleted == false);
+
+                var data = SQLHelper<object>.ProcedureToList("spGetALLCourseKPIEmployeeTeam",
+                                                                new string[] { "@DepartmentID" },
+                                                                new object[] { 0 });
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
@@ -603,13 +612,13 @@ namespace RERPAPI.Controllers.KHOAHOC
 
                         foreach (var kpiId in kpiIds)
                         {
-                            var newCourseKpi = new Course_KPIPositionType
+                            var newCourseKpi = new Course_KPIEmployeeTeam_Map
                             {
                                 CourseID = courseNew.ID,
-                                KPIPositionTypeID = kpiId,
+                                KPIEmployeeTeamID = kpiId,
                                 IsDeleted = false
                             };
-                            await _course_KPIPositionTypeRepo.CreateAsync(newCourseKpi);
+                            await _course_KPIEmployeeTeamMapRepo.CreateAsync(newCourseKpi);
                         }
 
                     }
@@ -706,47 +715,47 @@ namespace RERPAPI.Controllers.KHOAHOC
                         // luôn xử lý KPI (kể cả khi list rỗng)
                         var newKpiIds = model.KPIIDs ?? new List<int>();
 
-                        var currentKpis = _course_KPIPositionTypeRepo
+                        var currentKpis = _course_KPIEmployeeTeamMapRepo
                             .GetAll(x => x.CourseID == courseUpdate.ID && x.IsDeleted == false)
                             .ToList();
 
 
                         // === REMOVE (soft delete + gỡ liên kết) ===
-                        foreach (var kpi in currentKpis.Where(x => !newKpiIds.Contains(x.KPIPositionTypeID ?? 0)))
+                        foreach (var kpi in currentKpis.Where(x => !newKpiIds.Contains(TextUtils.ToInt32(x.KPIEmployeeTeamID))))
                         {
                             kpi.IsDeleted = true;
                             // nếu entity của bạn có CourseID nullable thì gỡ ra, còn không thì bỏ dòng này
                             // kpi.CourseID = null;
 
-                            await _course_KPIPositionTypeRepo.UpdateAsync(kpi);
+                            await _course_KPIEmployeeTeamMapRepo.UpdateAsync(kpi);
                         }
 
 
                         // === ADD NEW ===
-                        foreach (var id in newKpiIds.Where(id => !currentKpis.Any(x => x.KPIPositionTypeID == id)))
+                        foreach (var id in newKpiIds.Where(id => !currentKpis.Any(x => x.KPIEmployeeTeamID == id)))
                         {
                             // kiểm tra đã tồn tại record soft delete chưa
-                            var existed = _course_KPIPositionTypeRepo
-                                .GetAll(x => x.CourseID == courseUpdate.ID && x.KPIPositionTypeID == id)
+                            var existed = _course_KPIEmployeeTeamMapRepo
+                                .GetAll(x => x.CourseID == courseUpdate.ID && x.KPIEmployeeTeamID == id)
                                 .FirstOrDefault();
 
                             if (existed != null)
                             {
                                 // restore lại
                                 existed.IsDeleted = false;
-                                await _course_KPIPositionTypeRepo.UpdateAsync(existed);
+                                await _course_KPIEmployeeTeamMapRepo.UpdateAsync(existed);
                             }
                             else
                             {
                                 // tạo mới
-                                var newKpi = new Course_KPIPositionType
+                                var newKpi = new Course_KPIEmployeeTeam_Map
                                 {
                                     CourseID = courseUpdate.ID,
-                                    KPIPositionTypeID = id,
+                                    KPIEmployeeTeamID = id,
                                     IsDeleted = false
                                 };
 
-                                await _course_KPIPositionTypeRepo.CreateAsync(newKpi);
+                                await _course_KPIEmployeeTeamMapRepo.CreateAsync(newKpi);
                             }
                         }
                     }

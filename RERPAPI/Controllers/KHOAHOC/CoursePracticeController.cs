@@ -592,29 +592,29 @@ namespace RERPAPI.Controllers.KHOAHOC
         }
 
 
-        //[HttpGet("load-course-category")]
-        //public async Task<IActionResult> GetDanhMuc()
-        //{
-        //    try
-        //    {
-        //        var listCourseCatalogs = _courseCatalogRepo.GetAll(c => c.DeleteFlag == true).OrderBy(x => x.STT);
-        //        var listCourseCatalogIds = listCourseCatalogs.Select(x => x.DepartmentID).Distinct().ToList();
-        //        var listDepartments = _departmentRepo.GetAll().Where(x => listCourseCatalogIds.Contains(x.ID));
+        [HttpGet("load-course-category")]
+        public async Task<IActionResult> GetDanhMuc()
+        {
+            try
+            {
+                var listCourseCatalogs = _courseCatalogRepo.GetAll(c => c.DeleteFlag == true).OrderBy(x => x.STT);
+                var listCourseCatalogIds = listCourseCatalogs.Select(x => x.DepartmentID).Distinct().ToList();
+                var listDepartments = _departmentRepo.GetAll().Where(x => listCourseCatalogIds.Contains(x.ID));
 
-        //        var data = SQLHelper<object>.ProcedureToList("spGetCourseCatalog",
-        //                                      new string[] { },
-        //                                      new object[] { });
-        //        return Ok(ApiResponseFactory.Success(new
-        //        {
-        //            Department = listDepartments,
-        //            CourseCatalog = SQLHelper<object>.GetListData(data, 0)
-        //        }, ""));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-        //    }
-        //}
+                var data = SQLHelper<object>.ProcedureToList("spGetCourseCatalog",
+                                              new string[] { },
+                                              new object[] { });
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    Department = listDepartments,
+                    CourseCatalog = SQLHelper<object>.GetListData(data, 0)
+                }, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         ////lấy danh sách khóa học
         [HttpGet("load-data-course")]
         public async Task<IActionResult> LoadDataCourse(int courseCatalogID, int catalogType)
@@ -625,7 +625,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
 
                 //var listCourseC
-                var data = SQLHelper<object>.ProcedureToList("spGetCourseNew",
+                var data = SQLHelper<object>.ProcedureToList("spGetCourseNew1",
                                                    new string[] { "@CourseCatalogID", "@EmployeeID", "@Status", "@CatalogType" },
                                                    new object[] { courseCatalogID, currentUser.EmployeeID, -1, catalogType });
                 var listCourseParent = SQLHelper<object>.GetListData(data, 0);
