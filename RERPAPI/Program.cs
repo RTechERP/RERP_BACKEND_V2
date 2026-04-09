@@ -489,13 +489,7 @@ builder.Services.AddScoped<SendEmailReceiveProjectTaskClass>();
 
 builder.Services.AddScoped<FollowProjectBaseDetailRepo>();
 builder.Services.AddScoped<DailyReportAccountingRepo>();
-builder.Services.AddScoped<FiveSRatingDetailRepo>();
-builder.Services.AddScoped<FiveSRuleErrorRepo>();
-builder.Services.AddScoped<FiveSErrorRepo>();
-builder.Services.AddScoped<FiveSRatingRepo>();
-builder.Services.AddScoped<FiveSDepartmentRepo>();
-builder.Services.AddScoped<FiveSRatingTicketRepo>();
-builder.Services.AddScoped<FiveSBonusMinusRepo>();
+
 builder.Services.AddScoped<ProductSaleGroupWarehouseLinkRepo>();
 
 
@@ -747,20 +741,20 @@ builder.Services.Configure<ModulaConfig>(builder.Configuration.GetSection("Modul
 // Nếu bạn muốn inject trực tiếp:
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<ModulaConfig>>().Value);
 //builder.Services.AddHostedService<PersistentTcpClientService>();
-builder.Services.AddSingleton(sp =>
-{
-    var config = sp.GetRequiredService<ModulaConfig>();
+//builder.Services.AddSingleton(sp =>
+//{
+//    var config = sp.GetRequiredService<ModulaConfig>();
 
-    return new PersistentTcpClientService(
-        config.IpAddress,
-        config.Port,
-        connectTimeoutMs: 3000,
-        sendTimeoutMs: 3000,
-        receiveTimeoutMs: 3000,
-        maxReconnectAttempts: 3,
-        reconnectDelayMs: 1000
-    );
-});
+//    return new PersistentTcpClientService(
+//        config.IpAddress,
+//        config.Port,
+//        connectTimeoutMs: 3000,
+//        sendTimeoutMs: 3000,
+//        receiveTimeoutMs: 3000,
+//        maxReconnectAttempts: 3,
+//        reconnectDelayMs: 1000
+//    );
+//});
 
 //Add logger
 // 👉 cấu hình Serilog
