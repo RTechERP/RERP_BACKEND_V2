@@ -991,7 +991,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                 .Select(d => d.ProductID ?? 0)
                 .Where(id => id > 0)
                 .Distinct();
-            await EnsureInventoryExistsBatch(warehouseId, uniqueProductIds);
+            await EnsureInventoryExistsBatch(warehouseId, uniqueProductIds, dto.billExport.KhoTypeID ?? 0);
 
             // Batch SaveInventoryProjectExport: 3 queries total instead of 3N queries
                 if (dto.billExport.Status == 2 || dto.billExport.Status == 6)
@@ -1091,7 +1091,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
             }
         }
 
-        private async Task EnsureInventoryExistsBatch(int warehouseId, IEnumerable<int> productIds)
+        private async Task EnsureInventoryExistsBatch(int warehouseId, IEnumerable<int> productIds, int productGroupID)
         {
             var productIdList = productIds.ToList();
             if (!productIdList.Any()) return;
@@ -1108,6 +1108,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                 {
                     WarehouseID = warehouseId,
                     ProductSaleID = productId,
+                    ProductGroupID = productGroupID,
                     TotalQuantityFirst = 0,
                     TotalQuantityLast = 0,
                     Import = 0,

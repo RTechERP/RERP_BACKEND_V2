@@ -316,9 +316,9 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                             ReasonRequestAppendFileHR = log.ReasonRequestAppendFileHR,
                             IsRequestAppendFileHR = log.IsRequestAppendFileHR
                         });
-                        if (resultUpdate <=0)
+                        if (resultUpdate <= 0)
                         {
-                            throw new Exception("Lỗi update!");
+                            throw new Exception($"Lỗi {statusText} đề nghị [{item.Code}]!");
                         }
                     }
                 }
