@@ -441,7 +441,23 @@ namespace RERPAPI.Repo
         {
             try
             {
+                var isDeletedProp = typeof(T).GetProperty("IsDeleted");
+                if (isDeletedProp != null && isDeletedProp.CanWrite)
+                {
+                    foreach (var item in items)
+                    {
+                        var propType = isDeletedProp.PropertyType;
+                        if (propType == typeof(bool) || propType == typeof(bool?))
+                            isDeletedProp.SetValue(item, true);
+                        else if (propType == typeof(int) || propType == typeof(int?))
+                            isDeletedProp.SetValue(item, 1);
+                    }
+                    table.UpdateRange(items);
+                }
+                else
+                {
                 table.RemoveRange(items);
+                }
                 return await db.SaveChangesAsync();
             }
             catch (Exception ex)
