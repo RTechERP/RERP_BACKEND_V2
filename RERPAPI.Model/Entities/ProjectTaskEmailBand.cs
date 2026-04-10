@@ -4,9 +4,9 @@ using System.Collections.Generic;
 namespace RERPAPI.Model.Entities;
 
 /// <summary>
-/// Bảng lưu chi tiết duyệt công việc của dự án
+/// Bảng danh sách email không gửi mail
 /// </summary>
-public partial class ProjectTaskApprove
+public partial class ProjectTaskEmailBand
 {
     /// <summary>
     /// ID tự tăng
@@ -14,24 +14,19 @@ public partial class ProjectTaskApprove
     public int ID { get; set; }
 
     /// <summary>
-    /// ID của bảng ProjectItem
-    /// </summary>
-    public int? ProjectTaskID { get; set; }
-
-    /// <summary>
     /// ID của bảng Employee
     /// </summary>
     public int? EmployeeID { get; set; }
 
     /// <summary>
-    /// Trạng thái duyệt xem có duyệt hay không
+    /// Email công ty của nhân viên muốn hủy gửi mail
     /// </summary>
-    public bool? IsApprove { get; set; }
+    public string? EmployeeEmail { get; set; }
 
     /// <summary>
-    /// Nội dung đánh giá 
+    /// Trạng thái hoạt động của email
     /// </summary>
-    public string? Review { get; set; }
+    public bool? IsActive { get; set; }
 
     /// <summary>
     /// Ngày tạo bản ghi
@@ -57,9 +52,4 @@ public partial class ProjectTaskApprove
     /// Trạng thái xóa mềm 
     /// </summary>
     public bool? IsDeleted { get; set; }
-
-    /// <summary>
-    /// đánh giá mức độ hoàn thành công việc từ 1 -&gt; 5
-    /// </summary>
-    public int? CompletionRating { get; set; }
 }

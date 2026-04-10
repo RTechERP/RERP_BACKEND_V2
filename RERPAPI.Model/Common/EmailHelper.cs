@@ -3,6 +3,10 @@ using MailKit.Security;
 using MimeKit;
 using SmtpClient = MailKit.Net.Smtp.SmtpClient;
 using Microsoft.Data.SqlClient;
+using Microsoft.Identity.Client;
+using Org.BouncyCastle.Cms;
+using System.Net.Mail;
+using System.Net.Http.Headers;
 
 namespace RERPAPI.Model.Common
 {
@@ -179,6 +183,100 @@ namespace RERPAPI.Model.Common
             }
         }
 
+        //public async Task SendAsyncHrGraph(
+        //    string toEmail,
+        //    string subject,
+        //    string body,
+        //    bool isHtml = true,
+        //    string cc = "")
+        //{
+        //    try
+        //    {
+        //        // 🔐 Config (lấy từ appsettings)
+        //        var tenantId = _smtpHr.TenantId;
+        //        var clientId = _smtpHr.ClientId;
+        //        var clientSecret = _smtpHr.ClientSecret;
+        //        var fromEmail = _smtpHr.Mail;
+
+        //        // 🔑 1. Lấy access token
+        //        var app = ConfidentialClientApplicationBuilder.Create(clientId)
+        //            .WithClientSecret(clientSecret)
+        //            .WithAuthority($"https://login.microsoftonline.com/{tenantId}")
+        //            .Build();
+
+        //        var scopes = new[] { "https://graph.microsoft.com/.default" };
+
+        //        var result = await app.AcquireTokenForClient(scopes).ExecuteAsync();
+
+        //        // 🔗 2. Tạo Graph client
+        //        var graphClient = new GraphServiceClient(new DelegateAuthenticationProvider((request) =>
+        //        {
+        //            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
+        //            return Task.CompletedTask;
+        //        }));
+
+        //        // 📧 3. Build danh sách TO
+        //        var toRecipients = new List<Recipient>();
+        //        if (!string.IsNullOrWhiteSpace(toEmail))
+        //        {
+        //            foreach (var mail in toEmail.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries))
+        //            {
+        //                toRecipients.Add(new Recipient
+        //                {
+        //                    EmailAddress = new EmailAddress { Address = mail.Trim() }
+        //                });
+        //            }
+        //        }
+
+        //        // 📧 4. Build danh sách CC
+        //        var ccRecipients = new List<Recipient>();
+        //        if (!string.IsNullOrWhiteSpace(cc))
+        //        {
+        //            foreach (var mailcc in cc.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries))
+        //            {
+        //                ccRecipients.Add(new Recipient
+        //                {
+        //                    EmailAddress = new EmailAddress { Address = mailcc.Trim() }
+        //                });
+        //            }
+        //        }
+
+        //        // 📝 5. Nội dung mail
+        //        var content = isHtml
+        //            ? $@"
+        //        <html>
+        //        <head><meta charset='UTF-8'></head>
+        //        <body>
+        //            <div style='font-family: ""Times New Roman""; font-size:14px;'>
+        //                {body}
+        //            </div>
+        //        </body>
+        //        </html>"
+        //            : body;
+
+        //        var message = new Message
+        //        {
+        //            Subject = subject,
+        //            Body = new ItemBody
+        //            {
+        //                ContentType = isHtml ? BodyType.Html : BodyType.Text,
+        //                Content = content
+        //            },
+        //            ToRecipients = toRecipients,
+        //            CcRecipients = ccRecipients
+        //        };
+
+        //        // 🚀 6. Gửi mail
+        //        await graphClient.Users[fromEmail]
+        //            .SendMail(message, false)
+        //            .Request()
+        //            .PostAsync();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw; // giữ stack trace
+        //    }
+        //}
         public async Task SendAsyncHr(string toEmail, string subject, string body, bool isHtml = true, string cc = "")
         {
             try

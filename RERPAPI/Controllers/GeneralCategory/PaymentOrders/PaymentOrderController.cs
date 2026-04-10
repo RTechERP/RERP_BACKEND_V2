@@ -258,8 +258,8 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             try
             {
                 //_currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
-
-                string message = "Cập nhật thành công!";
+                string saveText = payment.ID > 0 ? "Cập nhật" : "Tạo mới";
+                string message = $"{saveText} thành công!";
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 _currentUser = ObjectMapper.GetCurrentUser(claims);
 
@@ -461,7 +461,14 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 _currentUser = ObjectMapper.GetCurrentUser(claims);
 
                 var paymentOrderTypes = _orderTypeRepo.GetAll(x => x.IsDelete != true && x.IsSpecialOrder != true);
-                var approvedTBPs = _approvedRepo.GetAll(x => x.Type == 3 && x.IsDeleted != true);
+                //var approvedTBPs = _approvedRepo.GetAll(x => x.Type == 3 && x.IsDeleted != true);
+                object paramApproved = new
+                {
+                    Type = 3,
+                    ProjectID = 0,
+                    keyword = ""
+                };
+                var approvedTBPs = await SqlDapper<object>.ProcedureToListTAsync("spGetEmployeeApprove", paramApproved);
 
                 DateTime updateDateSupplier = new DateTime(2024, 04, 04);
                 var supplierSales = _supplierSaleRepo.GetAll(x => x.UpdatedDate.Value.Date >= updateDateSupplier && x.IsDeleted != true)

@@ -282,6 +282,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<EmployeeCurricular> EmployeeCurriculars { get; set; }
 
+    public virtual DbSet<EmployeeDeductionType> EmployeeDeductionTypes { get; set; }
+
     public virtual DbSet<EmployeeEarlyLate> EmployeeEarlyLates { get; set; }
 
     public virtual DbSet<EmployeeEducationLevel> EmployeeEducationLevels { get; set; }
@@ -838,7 +840,11 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<ProjectTaskAttachment> ProjectTaskAttachments { get; set; }
 
+    public virtual DbSet<ProjectTaskAttendance> ProjectTaskAttendances { get; set; }
+
     public virtual DbSet<ProjectTaskChecklist> ProjectTaskChecklists { get; set; }
+
+    public virtual DbSet<ProjectTaskEmailBand> ProjectTaskEmailBands { get; set; }
 
     public virtual DbSet<ProjectTaskEmployee> ProjectTaskEmployees { get; set; }
 
@@ -3690,6 +3696,44 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CurricularName).HasMaxLength(550);
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<EmployeeDeductionType>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__Employee__3214EC27B4524C9A");
+
+            entity.ToTable("EmployeeDeductionType", tb => tb.HasComment("Bảng khai báo danh sách loại phạt"));
+
+            entity.Property(e => e.ID).HasComment("ID bản ghi");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(100)
+                .HasComment("Người tạo");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasComment("Ngày tạo")
+                .HasColumnType("datetime");
+            entity.Property(e => e.DeductionTypeCode)
+                .HasMaxLength(50)
+                .HasComment("Mã loại phạt");
+            entity.Property(e => e.DeductionTypeName)
+                .HasMaxLength(255)
+                .HasComment("Tên loại phạt");
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false)
+                .HasComment("Trạng thái xóa mềm: 0-Chưa xóa, 1-Đã xóa");
+            entity.Property(e => e.MoneyLevel1)
+                .HasComment("Tiền phạt cấp 1")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.MoneyLevel2)
+                .HasComment("Tiền phạt cấp 2")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.Note).HasComment("Ghi chú");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(100)
+                .HasComment("Người cập nhật");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật")
+                .HasColumnType("datetime");
         });
 
         modelBuilder.Entity<EmployeeEarlyLate>(entity =>
@@ -8550,7 +8594,11 @@ public partial class RTCContext : DbContext
                 .IsUnicode(false);
             entity.Property(e => e.CreatedBy).HasMaxLength(50);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.Deadline)
+                .HasComment("Thời gian công việc phải hoàn thành")
+                .HasColumnType("datetime");
             entity.Property(e => e.Description).HasComment("Mô tả chi tiết công việc");
+            entity.Property(e => e.DescriptionSolution).HasComment("Nguyên nhân/Phương án sử lý (sử dụng riêng với loại công việc là BUG)");
             entity.Property(e => e.EmployeeCreateID).HasComment("ID của nhân viên tạo bản ghi");
             entity.Property(e => e.EmployeeIDRequest).HasComment("Người giao công việc");
             entity.Property(e => e.EmployeeRequestID).HasComment("lưu ID người yêu cầu lấy từ bảng Employee, nếu  = 0 thì là tên KH");
@@ -9268,6 +9316,7 @@ public partial class RTCContext : DbContext
             entity.ToTable("ProjectTaskApprove", tb => tb.HasComment("Bảng lưu chi tiết duyệt công việc của dự án"));
 
             entity.Property(e => e.ID).HasComment("ID tự tăng");
+            entity.Property(e => e.CompletionRating).HasComment("đánh giá mức độ hoàn thành công việc từ 1 -> 5");
             entity.Property(e => e.CreatedBy)
                 .HasMaxLength(50)
                 .HasComment("Người tạo bản ghi");
@@ -9315,6 +9364,34 @@ public partial class RTCContext : DbContext
                 .HasColumnType("datetime");
         });
 
+        modelBuilder.Entity<ProjectTaskAttendance>(entity =>
+        {
+            entity.ToTable("ProjectTaskAttendance");
+
+            entity.Property(e => e.ID).HasComment("ID tự tăng");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .IsFixedLength()
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Date)
+                .HasComment("Ngày điểm danh")
+                .HasColumnType("datetime");
+            entity.Property(e => e.EmployeeID).HasComment("ID của bảng Employee");
+            entity.Property(e => e.IsCheck).HasComment("Trạng thái làm công việc");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái xóa mềm ");
+            entity.Property(e => e.ProjectTaskID).HasComment("ID của bảng ProjectItem");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .IsFixedLength()
+                .HasComment("Người cập nhật bản ghi");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật bản ghi")
+                .HasColumnType("datetime");
+        });
+
         modelBuilder.Entity<ProjectTaskChecklist>(entity =>
         {
             entity.ToTable("ProjectTaskChecklist", tb => tb.HasComment("Bảng lưu chi tiết checklist công việc của dự án"));
@@ -9333,6 +9410,33 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.ProjectTaskID).HasComment("ID của bảng ProjectItem");
             entity.Property(e => e.UpdatedBy)
                 .HasMaxLength(50)
+                .HasComment("Người cập nhật bản ghi");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật bản ghi")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectTaskEmailBand>(entity =>
+        {
+            entity.ToTable("ProjectTaskEmailBand", tb => tb.HasComment("Bảng danh sách email không gửi mail"));
+
+            entity.Property(e => e.ID).HasComment("ID tự tăng");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .IsFixedLength()
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.EmployeeEmail)
+                .HasMaxLength(250)
+                .HasComment("Email công ty của nhân viên muốn hủy gửi mail");
+            entity.Property(e => e.EmployeeID).HasComment("ID của bảng Employee");
+            entity.Property(e => e.IsActive).HasComment("Trạng thái hoạt động của email");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái xóa mềm ");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .IsFixedLength()
                 .HasComment("Người cập nhật bản ghi");
             entity.Property(e => e.UpdatedDate)
                 .HasComment("Ngày cập nhật bản ghi")
@@ -9406,6 +9510,10 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.Code)
                 .HasMaxLength(50)
                 .HasComment("Mã loại công việc");
+            entity.Property(e => e.Color)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasComment("Mã màu");
             entity.Property(e => e.CreatedBy)
                 .HasMaxLength(50)
                 .HasComment("Người tạo bản ghi");

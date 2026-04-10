@@ -940,6 +940,46 @@ namespace RERPAPI.Controllers
             }
         }
         #endregion
+        public class UpdateComplete
+        {
+            public int ID { get; set; }
+            public bool IsCompleted { get; set; }
+        }
+        //API update trạng thái hoàn thành của phiếu yêu cầu tuyển dụng
+        [RequiresPermission("N1,N2")]
+        [HttpPost("update-completed")]
+        public async Task<IActionResult> UpdateCompleted([FromBody] List<UpdateComplete> list)
+        {
+            try
+            {
+                int result = 0;
+                foreach (var item in list)
+                {
+                    HRHiringRequest hr = _hrHiringRequestRepo.GetByID(item.ID);
+                    if (hr == null)
+                        continue;
+                    hr.IsCompleted = item.IsCompleted;
+                      int complete = await _hrHiringRequestRepo.UpdateAsync(hr);
+                    if(complete>0)
+                    {
+                        result++;
+                    }    
+                }
+                if(result>0)
+                {
+                    return Ok(ApiResponseFactory.Success(null, "Cập nhật trạng thái thành công"));
+                }    
+                else
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không có bản ghi để cập nhật"));
+                }    
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+       
 
     }
 }

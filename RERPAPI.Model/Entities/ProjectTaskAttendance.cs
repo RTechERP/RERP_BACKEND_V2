@@ -3,10 +3,7 @@ using System.Collections.Generic;
 
 namespace RERPAPI.Model.Entities;
 
-/// <summary>
-/// Bảng lưu chi tiết duyệt công việc của dự án
-/// </summary>
-public partial class ProjectTaskApprove
+public partial class ProjectTaskAttendance
 {
     /// <summary>
     /// ID tự tăng
@@ -24,14 +21,9 @@ public partial class ProjectTaskApprove
     public int? EmployeeID { get; set; }
 
     /// <summary>
-    /// Trạng thái duyệt xem có duyệt hay không
+    /// Trạng thái làm công việc
     /// </summary>
-    public bool? IsApprove { get; set; }
-
-    /// <summary>
-    /// Nội dung đánh giá 
-    /// </summary>
-    public string? Review { get; set; }
+    public bool? IsCheck { get; set; }
 
     /// <summary>
     /// Ngày tạo bản ghi
@@ -59,7 +51,7 @@ public partial class ProjectTaskApprove
     public bool? IsDeleted { get; set; }
 
     /// <summary>
-    /// đánh giá mức độ hoàn thành công việc từ 1 -&gt; 5
+    /// Ngày điểm danh
     /// </summary>
-    public int? CompletionRating { get; set; }
+    public DateTime? Date { get; set; }
 }
