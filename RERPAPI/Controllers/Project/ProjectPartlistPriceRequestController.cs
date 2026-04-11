@@ -436,7 +436,7 @@ namespace RERPAPI.Controllers.Project
 
                 foreach (var item in lst)
                 {
-                    var exist = requestRepo.GetByID(item.ID);
+                    var exist = requestRepo.GetSingleNoTracking(x=>x.ID==item.ID);
                     if (currentUser.EmployeeID != item.QuoteEmployeeID && item.QuoteEmployeeID > 0) continue;
                     item.QuoteEmployeeID = item.IsCheckPrice == false ? 0 : item.QuoteEmployeeID;
                     item.UpdatedDate = exist.UpdatedDate;
