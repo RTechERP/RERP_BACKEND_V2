@@ -308,12 +308,24 @@ namespace RERPAPI.Repo
                 var updatedDateProp = entry.Properties
                     .FirstOrDefault(p => p.Metadata.Name == "UpdatedDate");
 
+                //if (updatedDateProp != null)
+                //{
+                //    updatedDateProp.CurrentValue = DateTime.Now;
+                //    updatedDateProp.IsModified = true;
+                //}
                 if (updatedDateProp != null)
                 {
-                    updatedDateProp.CurrentValue = DateTime.Now;
-                    updatedDateProp.IsModified = true;
-                }
+                    // Chỉ gán DateTime.Now nếu giá trị hiện tại là mặc định (null hoặc MinValue)
+                    // Hoặc nếu bạn muốn Controller có quyền quyết định:
+                    var currentValue = updatedDateProp.CurrentValue;
 
+                    if (currentValue == null || (DateTime)currentValue == default(DateTime))
+                    {
+                        updatedDateProp.CurrentValue = DateTime.Now;
+                        updatedDateProp.IsModified = true;
+                    }
+                    // Nếu Controller đã gán giá trị (như exist.UpdatedDate), ta giữ nguyên giá trị đó
+                }
                 var result = await db.SaveChangesAsync();
 
                 if (result == 0)
@@ -456,7 +468,7 @@ namespace RERPAPI.Repo
                 }
                 else
                 {
-                table.RemoveRange(items);
+                    table.RemoveRange(items);
                 }
                 return await db.SaveChangesAsync();
             }
