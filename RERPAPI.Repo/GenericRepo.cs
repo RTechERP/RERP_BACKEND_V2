@@ -304,6 +304,19 @@ namespace RERPAPI.Repo
                     }
                 }
 
+                // Kiểm tra có thay đổi dữ liệu thật sự hay không
+
+                // Bỏ qua các field audit UpdatedDate, UpdatedBy, CreatedDate, CreatedBy
+                var hasChanges = entry.Properties.Any(p =>
+                    p.IsModified &&
+                    p.Metadata.Name != "UpdatedDate" &&
+                    p.Metadata.Name != "UpdatedBy" &&
+                    p.Metadata.Name != "CreatedDate" &&
+                    p.Metadata.Name != "CreatedBy");
+                // Nếu không có thay đổi dữ liệu thật sự thì không save
+                if (!hasChanges)
+                    return 0;
+
                 // 4. UpdatedDate auto
                 var updatedDateProp = entry.Properties
                     .FirstOrDefault(p => p.Metadata.Name == "UpdatedDate");
@@ -326,6 +339,7 @@ namespace RERPAPI.Repo
                     }
                     // Nếu Controller đã gán giá trị (như exist.UpdatedDate), ta giữ nguyên giá trị đó
                 }
+
                 var result = await db.SaveChangesAsync();
 
                 if (result == 0)
