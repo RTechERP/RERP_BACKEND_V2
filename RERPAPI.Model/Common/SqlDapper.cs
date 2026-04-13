@@ -112,7 +112,7 @@ namespace RERPAPI.Model.Common
                 multi.Read<T2>().AsList()
             );
         }
-        public static async Task< int> ExecuteStoredProcedure(
+        public static async Task<int> ExecuteStoredProcedure(
         string procedureName,
         object parameters = null,
         int? commandTimeout = null)
@@ -129,7 +129,23 @@ namespace RERPAPI.Model.Common
                 );
             }
         }
+        public static async Task<T> ExecuteScalarStoredProcedure<T>(
+        string procedureName,
+        object parameters = null,
+        int? commandTimeout = null)
+        {
+            using (var connection = new SqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
 
+                return await connection.ExecuteScalarAsync<T>(
+                    procedureName,
+                    parameters,
+                    commandType: CommandType.StoredProcedure,
+                    commandTimeout: commandTimeout
+                );
+            }
+        }
 
 
     }

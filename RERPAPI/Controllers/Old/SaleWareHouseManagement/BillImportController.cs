@@ -1500,7 +1500,23 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             var data = SQLHelper<dynamic>.GetListData(dt, 0);
             return Ok(ApiResponseFactory.Success(data, ""));
         }
+        [HttpGet("get-view-import-detail/{billId}")]
+        public async Task<IActionResult> GetViewExportDetail(int billId)
+        {
+            try
+            {
 
+                var rs =await SqlDapper<object>.ProcedureToListTAsync("spGetBillImportDetail_Nhat1", new
+                {
+                    ID = billId
+                });
+                return Ok(ApiResponseFactory.Success(rs, "Lấy danh sách chi tiết phiếu nhập thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [HttpPost("export-files-sale")]
         public IActionResult ExportFiles([FromBody] List<int> billImportIds)
         {

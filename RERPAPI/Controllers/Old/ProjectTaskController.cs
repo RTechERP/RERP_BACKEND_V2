@@ -1160,7 +1160,7 @@ namespace RERPAPI.Controllers.Project
                         {
                             ProjectTaskID = existingTask.ID,
                             TypeLog = "Thay đổi trạng thái",
-                            ContentLog = $"- {currentUser.FullName} đã thay đổi trạng thái công việc từ {statusText[existingTask.Status ?? 1]} thành {statusText[existingTask.Status ?? 1]}. \\n"
+                            ContentLog = $"- {currentUser.FullName} đã thay đổi trạng thái công việc từ {statusText[existingTask.Status ?? 1]} thành {statusText[projectTask.Status ?? 1]}. \\n"
                         };
                         await _projectTaskLogRepo.CreateAsync(newProjectTaskChangeStatusLog);
                         existingTask.Status = projectTask.Status;

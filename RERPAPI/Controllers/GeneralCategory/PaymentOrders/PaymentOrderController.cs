@@ -555,13 +555,13 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             try
             {
                 var reponse = await _logRepo.Appoved(payment);
-                if (reponse == 1)
+                if (reponse.Item1 == 1)
                 {
                     return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
                 }
                 else
                 {
-                    return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Cập nhật thất bại! {reponse.Item2}"));
                 }
             }
             catch (Exception ex)
@@ -574,60 +574,92 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         [RequiresPermission("N59,N56")]
         public async Task<IActionResult> ApprovedHR([FromBody] List<PaymentOrderDTO> payment)
         {
-            var reponse = await _logRepo.Appoved(payment);
-            if (reponse == 1)
+            try
             {
-                return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+                var reponse = await _logRepo.Appoved(payment);
+                if (reponse.Item1 == 1)
+                {
+                    return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+                }
+                else
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Cập nhật thất bại! {reponse.Item2}"));
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+            
         }
 
         [HttpPost("appoved-kttt")]
         [RequiresPermission("N55")]
         public async Task<IActionResult> ApprovedKTTT([FromBody] List<PaymentOrderDTO> payment)
         {
-            var reponse = await _logRepo.Appoved(payment);
-            if (reponse == 1)
+            try
             {
-                return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+                var reponse = await _logRepo.Appoved(payment);
+                if (reponse.Item1 == 1)
+                {
+                    return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+                }
+                else
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Cập nhật thất bại! {reponse.Item2}"));
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+            
         }
 
         [HttpPost("appoved-ktt")]
         [RequiresPermission("N61")]
         public async Task<IActionResult> ApprovedKTT([FromBody] List<PaymentOrderDTO> payment)
         {
-            var reponse = await _logRepo.Appoved(payment);
-            if (reponse == 1)
+            try
             {
-                return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+                var reponse = await _logRepo.Appoved(payment);
+                if (reponse.Item1 == 1)
+                {
+                    return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+                }
+                else
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Cập nhật thất bại! {reponse.Item2}"));
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+
         }
 
         [HttpPost("appoved-bgd")]
         [RequiresPermission("N58")]
         public async Task<IActionResult> ApprovedBGD([FromBody] List<PaymentOrderDTO> payment)
         {
-            var reponse = await _logRepo.Appoved(payment);
-            if (reponse == 1)
+            try
             {
-                return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+                var reponse = await _logRepo.Appoved(payment);
+                if (reponse.Item1 == 1)
+                {
+                    return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+                }
+                else
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Cập nhật thất bại! {reponse.Item2}"));
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+
         }
 
 
