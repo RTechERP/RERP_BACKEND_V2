@@ -1,7 +1,10 @@
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using RERPAPI.Entities;
 using RERPAPI.IRepo;
 using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
@@ -22,6 +25,8 @@ using RERPAPI.Repo.GenericEntity.GeneralCatetogy.JobRequirements;
 using RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders;
 using RERPAPI.Repo.GenericEntity.HRM;
 using RERPAPI.Repo.GenericEntity.HRM.DepartmentRequire;
+using RERPAPI.Repo.GenericEntity.HRM.HRRecruitmentInterviewAssessment;
+using RERPAPI.Repo.GenericEntity.HRM.ProductProtectiveGear;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
 using RERPAPI.Repo.GenericEntity.HRRecruitmentExamRepo;
 using RERPAPI.Repo.GenericEntity.MeetingMinutesRepo;
@@ -33,11 +38,13 @@ using RERPAPI.Repo.GenericEntity.Technical.KPI;
 using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
 using RERPAPI.SendService;
 using RTCApi.Repo.GenericRepo;
-using System.Text;
-
-using FirebaseAdmin;
-using Google.Apis.Auth.OAuth2;
 using Serilog;
+using System.Text;
+using tusdotnet;
+using tusdotnet.Models;
+using tusdotnet.Models.Configuration;
+using tusdotnet.Models.Expiration;
+using tusdotnet.Stores;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -494,11 +501,28 @@ builder.Services.AddScoped<DailyReportAccountingRepo>();
 
 builder.Services.AddScoped<ProductSaleGroupWarehouseLinkRepo>();
 
+builder.Services.AddScoped<HRRecruitmentInterviewAssessmentFormRepo>();
+builder.Services.AddScoped<HRRecruitmentApplicationFormRepo>();
+builder.Services.AddScoped<HRRecruitmentApproveRepo>();
+builder.Services.AddScoped<JobPerfomanceEvaluationRepo>();
+builder.Services.AddScoped<JobPerfomanceEvaluationCriteriaRepo>();
+builder.Services.AddScoped<JobPerfomanceEvaluationApproveRepo>();
+builder.Services.AddScoped<PerformanceCriteriaRepo>();
+
 
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();
+builder.Services.AddScoped<Course_KPIEmployeeTeamLinkRepo>();
+builder.Services.AddScoped<Course_KPIEmployeeTeamMapRepo>();
+builder.Services.AddScoped<Course_KPIEmployeeTeamRepo>();
+
 #endregion
 
+#region Tủ đồ bảo hộ 
+builder.Services.AddScoped<Course_KPIEmployeeTeamRepo>();
+builder.Services.AddScoped<ProductGroupRTCRepo>();
+
+#endregion
 #region Kế hoạch tuần
 builder.Services.AddScoped<WorkPlanRepo>();
 builder.Services.AddScoped<WorkPlanDetailRepo>();
@@ -546,7 +570,7 @@ builder.Services.AddScoped<KPIPositionEmployeeRepo>();
 builder.Services.AddScoped<KPIEmployeePointDetailRepo>();
 
 
-builder.Services.AddScoped<ProjectTaskChecklist>();
+//builder.Services.AddScoped<ProjectTaskChecklist>();
 builder.Services.AddScoped<ProjectTaskEmployeeRepo>();
 builder.Services.AddScoped<ProjectTaskApproveRepo>();
 builder.Services.AddScoped<ProjectTaskLogRepo>();
@@ -787,15 +811,15 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-//app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 app.UseRouting();
 app.UseCors("MyCors");
 app.UseAuthentication();
+//app.UseMiddleware<DynamicAuthorizationMiddleware>();
 app.UseAuthorization();
 app.UseSession();
-app.UseMiddleware<DynamicAuthorizationMiddleware>();
 
 app.MapControllers();
 
@@ -809,28 +833,62 @@ app.Use(async (context, next) =>
 });
 
 
-app.UseStaticFiles();
-List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();
+//app.UseStaticFiles();
+//List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();
 
-foreach (var item in staticFiles)
+//foreach (var item in staticFiles)
+//{
+//    app.UseStaticFiles(new StaticFileOptions()
+//    {
+//        FileProvider = new PhysicalFileProvider(item.PathFull),
+//        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+//    });
+
+
+//    app.UseDirectoryBrowser(new DirectoryBrowserOptions 
+//    {
+//        FileProvider = new PhysicalFileProvider(item.PathFull),
+//        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+//    });
+//}
+var tusStore = new TusDiskStore(Directory.GetCurrentDirectory());
+// config Tus dotnet
+app.UseTus(httpContext => new DefaultTusConfiguration
 {
-    app.UseStaticFiles(new StaticFileOptions()
+    Store = tusStore, // đường dẫn lưu temp file ( file chunk)
+
+    UrlPath = "/tus/upload-video", // path gọi api
+    Expiration = new AbsoluteExpiration(TimeSpan.FromHours(24)), // xóa upload không hoàn thành sau 24h
+
+    Events = new Events
     {
-        FileProvider = new PhysicalFileProvider(item.PathFull),
-        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-    });
+        OnFileCompleteAsync = async ctx =>
+        {
 
+            var file = await ctx.GetFileAsync();
+            if (file == null) return;
 
-    app.UseDirectoryBrowser(new DirectoryBrowserOptions 
-    {
-        FileProvider = new PhysicalFileProvider(item.PathFull),
-        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-    });
-}
+            var metadata = await file.GetMetadataAsync(ctx.CancellationToken);
 
-app.UseSerilogRequestLogging(); // log request
+            var fileName = metadata.ContainsKey("filename")
+                ? metadata["filename"].GetString(Encoding.UTF8)
+                : $"{file.Id}.bin";
 
-            //await tusStore.DeleteFileAsync(file.Id, ctx.CancellationToken);
+            //var destDir = @"\\192.168.1.190\Software\Test\UPLOADFILE\CourseLesson\Videos\";
+            //Directory.CreateDirectory(destDir);
+            //var destPath = Path.Combine(destDir, fileName);
+
+            var pathServer = metadata["pathServer"].GetString(Encoding.UTF8);
+            var destPath = Path.Combine(pathServer, fileName);
+            Directory.CreateDirectory(pathServer);
+            await using (var source = await file.GetContentAsync(ctx.CancellationToken))
+            {
+                await using (var target = System.IO.File.Create(destPath))
+                {
+                    await source.CopyToAsync(target);
+                }
+            }
+
         }
     }
 });
