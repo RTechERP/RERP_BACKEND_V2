@@ -315,7 +315,7 @@ namespace RERPAPI.Repo
                     p.Metadata.Name != "CreatedBy");
                 // Nếu không có thay đổi dữ liệu thật sự thì không save
                 if (!hasChanges)
-                    return 0;
+                    return 1; // Return 1 để biểu thị "cập nhật thành công nhưng không có thay đổi nào được lưu"
 
                 // 4. UpdatedDate auto
                 var updatedDateProp = entry.Properties
