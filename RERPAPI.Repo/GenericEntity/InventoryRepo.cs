@@ -18,13 +18,14 @@ namespace RERPAPI.Repo.GenericEntity
         {
             foreach (var detail in billImportDetail)
             {
-                bool exists = GetAll().Any(x => x.WarehouseID == billImport.WarehouseID && x.ProductSaleID == detail.ProductID);
+                bool exists = GetAll().Any(x => x.WarehouseID == billImport.WarehouseID && x.ProductSaleID == detail.ProductID && x.ProductGroupID == billImport.KhoTypeID);
                 if (!exists)
                 {
                     Inventory inventory = new Inventory
                     {
                         WarehouseID = billImport.WarehouseID,
                         ProductSaleID = detail.ProductID,
+                        ProductGroupID = billImport.KhoTypeID,
                         TotalQuantityFirst = 0,
                         TotalQuantityLast = 0,
                         Import = 0,
