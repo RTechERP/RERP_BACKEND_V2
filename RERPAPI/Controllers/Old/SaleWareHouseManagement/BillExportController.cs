@@ -1418,20 +1418,20 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [HttpPost("confirm-tem")]
-        public async Task<IActionResult> ConfirmTem(List<int> lstBillexportdetailID, bool status)
-        {
-            try
-            {
-                List<int> rs = await _billexportRepo.ConfirmTem(lstBillexportdetailID, status);
-                if (rs.Count > 0) return Ok(ApiResponseFactory.Success(rs, status == true ? "Xác nhận tem thành công!" : "Hủy xác nhận tem thành công!"));
-                else return BadRequest(ApiResponseFactory.Fail(null, "Xác nhận tem thất bại, không có chi tiết phiếu xuất nào được chọn"));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
+        //[HttpPost("confirm-tem")]
+        //public async Task<IActionResult> ConfirmTem(List<int> lstBillexportdetailID, bool status)
+        //{
+        //    try
+        //    {
+        //        List<int> rs = await _billexportRepo.ConfirmTem(lstBillexportdetailID, status);
+        //        if (rs.Count > 0) return Ok(ApiResponseFactory.Success(rs, status == true ? "Xác nhận tem thành công!" : "Hủy xác nhận tem thành công!"));
+        //        else return BadRequest(ApiResponseFactory.Fail(null, "Xác nhận tem thất bại, không có chi tiết phiếu xuất nào được chọn"));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
         [HttpPost("get-product-project-customer")]
         public IActionResult getproductProjectCustomer(GetListProductByProjectPram filter)
         {
