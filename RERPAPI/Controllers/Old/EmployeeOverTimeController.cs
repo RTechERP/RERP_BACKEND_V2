@@ -303,6 +303,8 @@ namespace RERPAPI.Controllers.Old
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
                 var firstDay = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
                 var lastDay = firstDay.AddMonths(1).AddDays(-1);
+                param.DateStart = param.DateStart.Value.ToLocalTime().Date;
+                param.DateEnd = param.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
                 var overTimes = SQLHelper<object>.ProcedureToList("spGetEmployeeOvertimeInWeb", new string[] { "@DateStart", "@DateEnd", "@Keyword", "@EmployeeID", "@IsApproved", "@Type" },
                                        new object[] { param.DateStart ?? firstDay, param.DateEnd ?? lastDay, param.KeyWord ?? "", currentUser.EmployeeID, param.IsApprove ?? 0, param.Type ?? 0 });
 
