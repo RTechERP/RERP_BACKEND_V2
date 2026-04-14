@@ -480,7 +480,6 @@ builder.Services.AddScoped<CourseAnswerRepo>();
 builder.Services.AddScoped<CourseExamPracticeRepo>();
 builder.Services.AddScoped<ExamResultRepo>();
 builder.Services.AddScoped<ExamResultDetailRepo>();
-builder.Services.AddScoped<Course_KPIPositionTypeRepo>();
 
 builder.Services.AddScoped<InventoryProjectProductSaleLinkRepo>();
 builder.Services.AddScoped<HandoverPersonalAssetRepo>();
@@ -516,19 +515,17 @@ builder.Services.AddScoped<HRRecruitmentApproveRepo>();
 builder.Services.AddScoped<JobPerfomanceEvaluationRepo>();
 builder.Services.AddScoped<JobPerfomanceEvaluationCriteriaRepo>();
 builder.Services.AddScoped<JobPerfomanceEvaluationApproveRepo>();
-builder.Services.AddScoped<PerformanceCriteriaRepo>();
 
 
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();
-builder.Services.AddScoped<Course_KPIEmployeeTeamLinkRepo>();
-builder.Services.AddScoped<Course_KPIEmployeeTeamMapRepo>();
-builder.Services.AddScoped<Course_KPIEmployeeTeamRepo>();
+builder.Services.AddScoped<CourseKPIEmployeeTeamLinkRepo>();
+builder.Services.AddScoped<CourseKPIEmployeeTeamMapRepo>();
+builder.Services.AddScoped<CourseKPIEmployeeTeamRepo>();
 
 #endregion
 
 #region Tủ đồ bảo hộ 
-builder.Services.AddScoped<Course_KPIEmployeeTeamRepo>();
 builder.Services.AddScoped<ProductGroupRTCRepo>();
 
 #endregion

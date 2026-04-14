@@ -44,7 +44,6 @@ namespace RERPAPI.Controllers.KHOAHOC
             CourseLessonRepo courseLessonRepo,
             ConfigSystemRepo configSystemRepo,
             CourseFilesRepo courseFilesRepo,
-            Course_KPIPositionTypeRepo course_KPIPositionTypeRepo,
            CourseKPIEmployeeTeamMapRepo course_KPIEmployeeTeamMapRepo,
            CourseKPIEmployeeTeamRepo course_KPIEmployeeTeamRepo
             )

@@ -186,6 +186,12 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<CourseFile> CourseFiles { get; set; }
 
+    public virtual DbSet<CourseKPIEmployeeTeam> CourseKPIEmployeeTeams { get; set; }
+
+    public virtual DbSet<CourseKPIEmployeeTeamLink> CourseKPIEmployeeTeamLinks { get; set; }
+
+    public virtual DbSet<CourseKPIEmployeeTeamMap> CourseKPIEmployeeTeamMaps { get; set; }
+
     public virtual DbSet<CourseLesson> CourseLessons { get; set; }
 
     public virtual DbSet<CourseLessonHistory> CourseLessonHistories { get; set; }
@@ -2769,17 +2775,70 @@ public partial class RTCContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-            entity.Property(e => e.NameFile).HasMaxLength(550);
             entity.Property(e => e.UpdatedBy)
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
+        modelBuilder.Entity<CourseKPIEmployeeTeam>(entity =>
+        {
+            entity.ToTable("CourseKPIEmployeeTeam");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.Name)
+                .HasMaxLength(200)
+                .IsFixedLength();
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<CourseKPIEmployeeTeamLink>(entity =>
+        {
+            entity.ToTable("CourseKPIEmployeeTeamLink");
+
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<CourseKPIEmployeeTeamMap>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__CourseKP__3214EC27012B67AC");
+
+            entity.ToTable("CourseKPIEmployeeTeamMap");
+
+            entity.Property(e => e.ID).HasComment("ID");
+            entity.Property(e => e.CourseID).HasComment("ID khoá học");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(150)
+                .HasComment("Người tạo");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo")
+                .HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false)
+                .HasComment("Trạng thái xoá");
+            entity.Property(e => e.KPIEmployeeTeamID).HasComment("ID Course KPI Employee Team");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(150)
+                .HasComment("Người update");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày update")
+                .HasColumnType("datetime");
+        });
+
         modelBuilder.Entity<CourseLesson>(entity =>
         {
             entity.ToTable("CourseLesson");
 
+            entity.Property(e => e.Chapters).HasComment("Phân đoạn video");
             entity.Property(e => e.Code)
                 .HasMaxLength(20)
                 .IsUnicode(false);
@@ -8965,14 +9024,18 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.PlanEndDate).HasColumnType("datetime");
             entity.Property(e => e.PlanStartDate).HasColumnType("datetime");
             entity.Property(e => e.ProjectTaskResult).HasComment("Kết quả công việc");
-            entity.Property(e => e.ProjectTaskTypeID).HasComment("Loại công việc");
+            entity.Property(e => e.ProjectTaskTypeID)
+                .HasDefaultValue(1)
+                .HasComment("Loại công việc");
             entity.Property(e => e.STT)
                 .HasMaxLength(50)
                 .IsUnicode(false);
+            entity.Property(e => e.Status).HasDefaultValue(0);
             entity.Property(e => e.TaskComplexity).HasComment("Độ phức tạp của công việc (1 - 5)");
             entity.Property(e => e.TimeSpan).HasColumnType("decimal(18, 1)");
             entity.Property(e => e.TotalDayActual).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.TotalDayPlan).HasColumnType("decimal(18, 1)");
+            entity.Property(e => e.TypeProjectItem).HasDefaultValue(1);
             entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
             entity.Property(e => e.UpdatedDateActual)
