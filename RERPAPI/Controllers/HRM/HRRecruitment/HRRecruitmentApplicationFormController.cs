@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using RERPAPI.Attributes;
 using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
@@ -32,6 +33,7 @@ namespace RERPAPI.Controllers.HRM
         private readonly JwtSettings _jwtSettings;
         private readonly CandidateJwtSettings _candidateJwtSettings;
         private readonly ConfigSystemRepo _configSystemRepo;
+        private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
 
         public HRRecruitmentApplicationFormController(
             EmployeeChucVuHDRepo employeeChucVuHDRepo,
@@ -44,7 +46,8 @@ namespace RERPAPI.Controllers.HRM
             HRHiringCandidateInformationFormRecruitmentInfoRepo hRHiringCandidateInformationFormRecruitmentInfoRepo,
             JwtSettings jwtSettings,
             CandidateJwtSettings candidateJwtSettings,
-            ConfigSystemRepo configSystemRepo)
+            ConfigSystemRepo configSystemRepo,
+            vUserGroupLinksRepo vUserGroupLinksRepo)
         {
             _employeeChucVuHDRepo = employeeChucVuHDRepo;
             _hRHiringCandidateInformationFormWorkingExperienceRepo = hRHiringCandidateInformationFormWorkingExperienceRepo;
@@ -57,6 +60,7 @@ namespace RERPAPI.Controllers.HRM
             _jwtSettings = jwtSettings;
             _candidateJwtSettings = candidateJwtSettings;
             _configSystemRepo = configSystemRepo;
+            _vUserGroupLinksRepo = vUserGroupLinksRepo;
         }
 
         //API lấy danh sách chức vụ ứng tuyển
@@ -75,17 +79,31 @@ namespace RERPAPI.Controllers.HRM
         }
         [Authorize]
         //API lấy danh sách tờ khai 
-        [RequiresPermission("N1,N2")]
         [HttpGet("get-all-application-form")]
         public IActionResult GetAllApplicationForm(string? filterText, int departmentID = 0)
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x =>
+          (x.Code == "N2" || x.Code == "N1" || currentUser.IsAdmin == true) &&
+          x.UserID == currentUser.ID);
+                int requestID;
+                if (vUserHR != null)
+                {
+                    requestID = 0;
+                }
+                else
+                {
+                    requestID = currentUser.EmployeeID;
+                }
                 //     var data = _hRHiringCandidateInformationFormRepo.GetAll(x => x.IsDeleted != true);
                 var applicationForm = SQLHelper<dynamic>.ProcedureToList(
                                    "spGetHRCandidateApplicationForm",
-                                   new[] { "@FilterText", "@DepartmentID" },
-                                   new object[] { filterText, departmentID });
+                                   new[] { "@FilterText", "@DepartmentID", "@RequestID" },
+                                   new object[] { filterText, departmentID,requestID });
                 var dataList = SQLHelper<dynamic>.GetListData(applicationForm, 0);
 
                 return Ok(ApiResponseFactory.Success(dataList, ""));
@@ -549,7 +567,7 @@ namespace RERPAPI.Controllers.HRM
         }
         [HttpGet("download-by-key")]
 
-        public IActionResult DownloadByKey([FromQuery] string key,[FromQuery] string? subPath,  [FromQuery] string fileName)
+        public IActionResult DownloadByKey([FromQuery] string key, [FromQuery] string? subPath, [FromQuery] string fileName)
         {
             try
             {
