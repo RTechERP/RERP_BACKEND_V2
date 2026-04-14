@@ -924,7 +924,7 @@ namespace RERPAPI.Controllers.CRM
         {
             try
             {
-                var result = _customerIndustriesRepo.GetAll(x => x.IsDeleted != true);
+                var result = _customerIndustriesRepo.GetAll(x => x.IsDeleted != true).OrderBy(p=>p.NumberOrder).ToList();
                 return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)

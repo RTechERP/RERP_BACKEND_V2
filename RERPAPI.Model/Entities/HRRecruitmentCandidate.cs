@@ -77,5 +77,8 @@ public partial class HRRecruitmentCandidate
     /// </summary>
     public DateTime? DeadlineFeedbackMail { get; set; }
 
+    /// <summary>
+    /// Người phỏng vấn
+    /// </summary>
     public int? InterviewerID { get; set; }
 }

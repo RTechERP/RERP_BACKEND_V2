@@ -133,4 +133,14 @@ public partial class ProjectItem
     /// Thời gian công việc phải hoàn thành
     /// </summary>
     public DateTime? Deadline { get; set; }
+
+    /// <summary>
+    /// Loại công việc
+    /// </summary>
+    public int? ProjectTaskTypeID { get; set; }
+
+    /// <summary>
+    /// Kết quả công việc
+    /// </summary>
+    public string? ProjectTaskResult { get; set; }
 }

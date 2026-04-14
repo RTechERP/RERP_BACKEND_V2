@@ -740,6 +740,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<PhasedAllocationPersonDetail> PhasedAllocationPersonDetails { get; set; }
 
+    public virtual DbSet<PinResetToken> PinResetTokens { get; set; }
+
     public virtual DbSet<PriceCheck> PriceChecks { get; set; }
 
     public virtual DbSet<ProductFilm> ProductFilms { get; set; }
@@ -869,6 +871,8 @@ public partial class RTCContext : DbContext
     public virtual DbSet<ProjectTaskGroup> ProjectTaskGroups { get; set; }
 
     public virtual DbSet<ProjectTaskLog> ProjectTaskLogs { get; set; }
+
+    public virtual DbSet<ProjectTaskSetting> ProjectTaskSettings { get; set; }
 
     public virtual DbSet<ProjectTaskType> ProjectTaskTypes { get; set; }
 
@@ -3017,6 +3021,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.IsDeleted)
                 .HasDefaultValue(false)
                 .HasComment("Cờ xóa mềm (0: hoạt động, 1: đã xóa)");
+            entity.Property(e => e.NumberOrder).HasDefaultValue(0);
             entity.Property(e => e.UpdatedBy)
                 .HasMaxLength(100)
                 .HasComment("Người cập nhật");
@@ -5603,7 +5608,9 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.DateRequest).HasColumnType("datetime");
-            entity.Property(e => e.HiringDeadline).HasColumnType("datetime");
+            entity.Property(e => e.HiringDeadline)
+                .HasComment("Hạn tuyển dụng")
+                .HasColumnType("datetime");
             entity.Property(e => e.HiringRequestCode).HasMaxLength(50);
             entity.Property(e => e.IsActiveExam).HasDefaultValue(false);
             entity.Property(e => e.PositionName)
@@ -5886,7 +5893,9 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.Weight)
                 .HasComment("Cân nặng (kg)")
                 .HasColumnType("decimal(18, 2)");
-            entity.Property(e => e.WorkExperienceLevel).HasDefaultValue(0);
+            entity.Property(e => e.WorkExperienceLevel)
+                .HasDefaultValue(0)
+                .HasComment("Kinh nghiệm ứng viên");
         });
 
         modelBuilder.Entity<HRRecruitmentCandidate>(entity =>
@@ -5908,6 +5917,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.FileCVName).HasMaxLength(500);
             entity.Property(e => e.FullName).HasMaxLength(255);
             entity.Property(e => e.HrHiringRequestID).HasComment("Đợt tuyển dụng");
+            entity.Property(e => e.InterviewerID).HasComment("Người phỏng vấn");
             entity.Property(e => e.Note).HasMaxLength(255);
             entity.Property(e => e.Password).HasMaxLength(255);
             entity.Property(e => e.PhoneNumber).HasMaxLength(255);
@@ -8364,6 +8374,39 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
+        modelBuilder.Entity<PinResetToken>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__PinReset__3214EC0787E04EEF");
+
+            entity.ToTable("PinResetToken");
+
+            entity.Property(e => e.Id).HasComment("Khóa chính, tự tăng");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.ExpiredAt)
+                .HasComment("Thời điểm hết hạn của token")
+                .HasColumnType("datetime");
+            entity.Property(e => e.IsUsed)
+                .HasDefaultValue(false)
+                .HasComment("Token đã được sử dụng hay chưa (0: chưa, 1: rồi)");
+            entity.Property(e => e.Token)
+                .HasMaxLength(255)
+                .HasComment("Mã token dùng để reset PIN");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người cập nhật gần nhất");
+            entity.Property(e => e.UpdatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasComment("Ngày cập nhật gần nhất")
+                .HasColumnType("datetime");
+            entity.Property(e => e.UserId).HasComment("ID người dùng yêu cầu reset PIN");
+        });
+
         modelBuilder.Entity<PriceCheck>(entity =>
         {
             entity.ToTable("PriceCheck");
@@ -8921,6 +8964,8 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.PercentageActual).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.PlanEndDate).HasColumnType("datetime");
             entity.Property(e => e.PlanStartDate).HasColumnType("datetime");
+            entity.Property(e => e.ProjectTaskResult).HasComment("Kết quả công việc");
+            entity.Property(e => e.ProjectTaskTypeID).HasComment("Loại công việc");
             entity.Property(e => e.STT)
                 .HasMaxLength(50)
                 .IsUnicode(false);
@@ -9796,6 +9841,35 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedBy)
                 .HasMaxLength(50)
                 .HasComment("Ngươì cập nhật bản ghi");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật bản ghi")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectTaskSetting>(entity =>
+        {
+            entity.ToTable("ProjectTaskSetting", tb => tb.HasComment("Bảng danh sách email không gửi mail"));
+
+            entity.Property(e => e.ID).HasComment("ID tự tăng");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .IsFixedLength()
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.EmployeeEmail)
+                .HasMaxLength(250)
+                .HasComment("Email công ty của nhân viên");
+            entity.Property(e => e.EmployeeID).HasComment("ID của bảng Employee");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái xóa mềm ");
+            entity.Property(e => e.SendApproveProjectTask).HasComment("Không gửi mai khi duyệt công việc");
+            entity.Property(e => e.SendFinishProjectTask).HasComment("Không gửi mai khi hoàn thành công việc");
+            entity.Property(e => e.SendMailCreateProjectTask).HasComment("Không gửi mai khi tạo công việc");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .IsFixedLength()
+                .HasComment("Người cập nhật bản ghi");
             entity.Property(e => e.UpdatedDate)
                 .HasComment("Ngày cập nhật bản ghi")
                 .HasColumnType("datetime");
@@ -11443,6 +11517,7 @@ public partial class RTCContext : DbContext
         {
             entity.ToTable("TSAssetAllocation");
 
+            entity.Property(e => e.AllocationID).HasComment("Id người cấp phát");
             entity.Property(e => e.Code)
                 .HasMaxLength(50)
                 .IsUnicode(false);
@@ -12295,6 +12370,9 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.MST).HasMaxLength(250);
             entity.Property(e => e.PassExpireDate).HasColumnType("datetime");
             entity.Property(e => e.PasswordHash).HasMaxLength(250);
+            entity.Property(e => e.PinPassword)
+                .HasMaxLength(550)
+                .HasComment("Mã PIN xem coonh lương");
             entity.Property(e => e.Position).HasMaxLength(50);
             entity.Property(e => e.PostalCode).HasMaxLength(50);
             entity.Property(e => e.Qualifications).HasMaxLength(250);

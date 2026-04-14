@@ -94,5 +94,10 @@ public partial class User
 
     public int? Leader { get; set; }
 
+    /// <summary>
+    /// Mã PIN xem coonh lương
+    /// </summary>
+    public string? PinPassword { get; set; }
+
     public virtual ICollection<RegisterOT> RegisterOTs { get; set; } = new List<RegisterOT>();
 }

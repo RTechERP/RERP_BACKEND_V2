@@ -49,4 +49,6 @@ public partial class CustomerIndustry
     /// Cờ xóa mềm (0: hoạt động, 1: đã xóa)
     /// </summary>
     public bool? IsDeleted { get; set; }
+
+    public int? NumberOrder { get; set; }
 }

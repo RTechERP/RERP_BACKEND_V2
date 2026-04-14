@@ -216,5 +216,8 @@ public partial class HRRecruitmentApplicationForm
     /// </summary>
     public string? PositionName { get; set; }
 
+    /// <summary>
+    /// Kinh nghiệm ứng viên
+    /// </summary>
     public int? WorkExperienceLevel { get; set; }
 }
