@@ -35,6 +35,7 @@ namespace RERPAPI.Controllers
         private readonly DepartmentRepo _departmentRepo;
         private readonly EmployeeRepo _employeeRepo;
         private readonly EmployeeChucVuHDRepo _employeeChucVuHDRepo;
+        private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
 
         public HRHiringRequestController(
             HRHiringRequestRepo hrHiringRequestRepo,
@@ -49,7 +50,8 @@ namespace RERPAPI.Controllers
             HRHiringAppearanceLinkRepo hiringAppearanceLinkRepo,
             DepartmentRepo departmentRepo,
             EmployeeRepo employeeRepo,
-            EmployeeChucVuHDRepo employeeChucVuHDRepo)
+            EmployeeChucVuHDRepo employeeChucVuHDRepo,
+            vUserGroupLinksRepo vUserGroupLinksRepo)
         {
             _hrHiringRequestRepo = hrHiringRequestRepo ?? throw new ArgumentNullException(nameof(hrHiringRequestRepo));
             _hiringRequestEducationLinkRepo = hiringRequestEducationLinkRepo ?? throw new ArgumentNullException(nameof(hiringRequestEducationLinkRepo));
@@ -64,6 +66,7 @@ namespace RERPAPI.Controllers
             _departmentRepo = departmentRepo ?? throw new ArgumentNullException(nameof(departmentRepo));
             _employeeRepo = employeeRepo ?? throw new ArgumentNullException(nameof(employeeRepo));
             _employeeChucVuHDRepo = employeeChucVuHDRepo ?? throw new ArgumentNullException(nameof(employeeChucVuHDRepo));
+            _vUserGroupLinksRepo = vUserGroupLinksRepo;
         }
 
         [HttpPost("savedata")]
@@ -83,12 +86,8 @@ namespace RERPAPI.Controllers
                 {
                     // CREATE - Tạo mới
                     model.HiringRequests.STT = _hrHiringRequestRepo.GetRequestCode().STT;
-                    model.HiringRequests.EmployeeRequestID = _currentUser.EmployeeID;
                     model.HiringRequests.HiringRequestCode = _hrHiringRequestRepo.GetRequestCode().HiringRequestCode;
-                    model.HiringRequests.CreatedDate = DateTime.Now;
-                    model.HiringRequests.IsDeleted = false;
                     model.HiringRequests.IsCompleted = false;
-                    model.HiringRequests.CreatedBy =  model.HiringRequests.UpdatedBy =  _currentUser.LoginName;
                     await _hrHiringRequestRepo.CreateAsync(model.HiringRequests);
                     hiringRequestId = model.HiringRequests.ID;
 
@@ -99,23 +98,19 @@ namespace RERPAPI.Controllers
                     // UPDATE hoặc SOFT DELETE
                     model.HiringRequests.UpdatedBy = _currentUser.LoginName;
                     await _hrHiringRequestRepo.UpdateAsync(model.HiringRequests);
-
                     // Nếu là soft delete, chỉ cần update main record và return
                     if (isSoftDelete)
                     {
                         return Ok(ApiResponseFactory.Success("", "Xóa yêu cầu tuyển dụng thành công!"));
                     }
-
                     // Nếu là update thường, xóa tất cả link records cũ trước khi tạo mới
                     await DeleteExistingLinkRecords(hiringRequestId);
                 }
-
                 // 2. Chỉ tạo link records khi không phải soft delete
                 if (!isSoftDelete)
                 {
                     await CreateLinkRecords(model, hiringRequestId);
                 }
-
                 string message = isUpdate ? "Cập nhật thành công!" : "Thêm mới thành công!";
                 return Ok(ApiResponseFactory.Success(model, message));
             }
@@ -414,11 +409,24 @@ namespace RERPAPI.Controllers
                 // Chuẩn hóa thời gian
                 var ds = dateStart.HasValue ? new DateTime(dateStart.Value.Year, dateStart.Value.Month, dateStart.Value.Day, 0, 0, 0) : (DateTime?)null;
                 var de = dateEnd.HasValue ? dateEnd.Value.Date.AddDays(1) : (DateTime?)null; // Đầu ngày tiếp theo
-
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x =>
+                 (x.Code == "N2" || x.Code == "N1" || currentUser.IsAdmin == true) &&
+                 x.UserID == currentUser.ID);
+                int requestID;
+                if (vUserHR != null)
+                {
+                    requestID = 0;
+                }
+                else
+                {
+                    requestID = currentUser.EmployeeID;
+                }
                 var dt = SQLHelper<object>.ProcedureToList(
                     "spGetHRHiringRequest",
-                    new string[] { "Keyword", "DepartmentID", "DateStart", "DateEnd", "ID" },
-                    new object[] { findText ?? "", departmentID, ds, de, id }
+                    new string[] { "Keyword", "DepartmentID", "DateStart", "DateEnd", "ID", "@EmployeeRequestID" },
+                    new object[] { findText ?? "", departmentID, ds, de, id,requestID }
                 );
                 var data = SQLHelper<object>.GetListData(dt, 0);
                 return Ok(ApiResponseFactory.Success(data, ""));
@@ -477,7 +485,20 @@ namespace RERPAPI.Controllers
                 int departmentID = request.DepartmentID;
                 string keyword = request.Keyword ?? "";
                 int id = request.Id;
-
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x =>
+                 (x.Code == "N2" || x.Code == "N1" || currentUser.IsAdmin == true) &&
+                 x.UserID == currentUser.ID);
+                int requestID;
+                if (vUserHR != null)
+                {
+                    requestID = 0;
+                }
+                else
+                {
+                    requestID = currentUser.EmployeeID;
+                }
                 // Parse dates
                 if (!string.IsNullOrEmpty(request.DateStart) && DateTime.TryParse(request.DateStart, out DateTime ds))
                 {
@@ -501,8 +522,8 @@ namespace RERPAPI.Controllers
 
                     var dt = SQLHelper<object>.ProcedureToList(
                         "spGetHRHiringRequest",
-                        new string[] { "Keyword", "DepartmentID", "DateStart", "DateEnd", "ID" },
-                        new object[] { keyword ?? "", departmentID, ds_formatted, de_formatted, 0 }
+                        new string[] { "Keyword", "DepartmentID", "DateStart", "DateEnd", "ID", "EmployeeRequestID" },
+                        new object[] { keyword ?? "", departmentID, ds_formatted, de_formatted, 0, requestID }
                     );
                     var data = SQLHelper<object>.GetListData(dt, 0);
                     return Ok(ApiResponseFactory.Success(new List<object> { data }, "Lấy danh sách thành công!"));
@@ -555,6 +576,7 @@ namespace RERPAPI.Controllers
                     mainRecord.JobDescription,
                     mainRecord.Note,
                     mainRecord.DateRequest,
+                    mainRecord.HiringDeadline,
                     DepartmentName = department?.Name ?? "",
                     EmployeeChucVuHDName = string.IsNullOrEmpty(mainRecord.PositionName) ? (chucVuHD?.Name ?? "") : mainRecord.PositionName,
                     EmployeeRequestCode = employee?.Code ?? "",
