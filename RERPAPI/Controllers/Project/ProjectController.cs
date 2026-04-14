@@ -1,4 +1,4 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -9,6 +9,7 @@ using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.Project;
 using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.Project;
 using System.Data;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 using static QRCoder.PayloadGenerator;
@@ -67,6 +68,12 @@ namespace RERPAPI.Controllers.Project
         //nhân công dự án
         private readonly ProjectWorkerVersionRepo _projectWorkerVersionRepo;
 
+        private readonly ProjectApplicationTypesRepo projectApplicationTypesRepo;
+        private readonly ProjectTechnologiesRepo projectTechnologiesRepo;
+        private readonly ProjectTypeApplicationLinkRepo projectTypeApplicationLinkRepo;
+        private readonly ProjectTypeTechnologyLinkRepo projectTypeTechnologyLinkRepo;
+
+        private readonly CustomerIndustriesRepo _customerIndustriesRepo;
 
         public ProjectController(
             ProjectRepo projectRepo,
@@ -99,7 +106,12 @@ namespace RERPAPI.Controllers.Project
             EmployeeWorkingProcessRepo employeeWorkingProcessRepo,
             UnitCountRepo unitCountRepo,
             EmployeeApproveRepo employeeApproveRepo,
-            ProjectWorkerVersionRepo projectWorkerVersionRepo
+            ProjectWorkerVersionRepo projectWorkerVersionRepo,
+            ProjectApplicationTypesRepo projectApplicationTypesRepo,
+            ProjectTechnologiesRepo projectTechnologiesRepo,
+            ProjectTypeApplicationLinkRepo projectTypeApplicationLinkRepo,
+            ProjectTypeTechnologyLinkRepo projectTypeTechnologyLinkRepo,
+            CustomerIndustriesRepo customerIndustriesRepo
         )
         {
             this.projectRepo = projectRepo;
@@ -140,6 +152,11 @@ namespace RERPAPI.Controllers.Project
             _unitCountRepo = unitCountRepo;
             _employeeApproRepo = employeeApproveRepo;
             _projectWorkerVersionRepo = projectWorkerVersionRepo;
+            this.projectApplicationTypesRepo = projectApplicationTypesRepo;
+            this.projectTechnologiesRepo = projectTechnologiesRepo;
+            this.projectTypeApplicationLinkRepo = projectTypeApplicationLinkRepo;
+            this.projectTypeTechnologyLinkRepo = projectTypeTechnologyLinkRepo;
+            _customerIndustriesRepo = customerIndustriesRepo;
         }
         #endregion
 
@@ -202,6 +219,20 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
+        // lấy dữ liệu lĩnh vực khách hàng 
+        [HttpGet("get-customer-industries")]
+        public async Task<IActionResult> GetCustomerIndustries()
+        {
+            try
+            {
+                List<CustomerIndustry> customerIndustries = _customerIndustriesRepo.GetAll().Where(x => x.IsDeleted == false).OrderByDescending(x => x.CreatedDate).ToList();
+                return Ok(ApiResponseFactory.Success(customerIndustries, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         // Danh sách nhân viên khi thêm dự án lấy table 2 phụ trách sale/ phụ trách kỹ thuật/ leader
         [HttpGet("get-users")]
         // [ApiKeyAuthorize]
@@ -1356,6 +1387,98 @@ namespace RERPAPI.Controllers.Project
 
         #endregion
 
+        [HttpGet("get-application-types")]
+        public async Task<IActionResult> GetApplicationTypes()
+        {
+            try
+            {
+                var data = projectApplicationTypesRepo.GetAll(x => x.IsDeleted != true).ToList();
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-technologies")]
+        public async Task<IActionResult> GetTechnologies()
+        {
+            try
+            {
+                var data = projectTechnologiesRepo.GetAll(x => x.IsDeleted != true).ToList();
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-type-application-links")]
+        public async Task<IActionResult> GetTypeApplicationLinks(int projectTypeLinkId)
+        {
+            try
+            {
+                var data = projectTypeApplicationLinkRepo.GetAll(x => x.ProjectTypeLinkID == projectTypeLinkId && x.IsDeleted != true).ToList();
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-type-technology-links")]
+        public async Task<IActionResult> GetTypeTechnologyLinks(int projectTypeLinkId)
+        {
+            try
+            {
+                var data = projectTypeTechnologyLinkRepo.GetAll(x => x.ProjectTypeLinkID == projectTypeLinkId && x.IsDeleted != true).ToList();
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Lấy danh sách kiểu ứng dụng đã được chọn theo từng Loại dự án của dự án hiện tại
+        /// </summary>
+        [HttpGet("get-project-application-links")]
+        public async Task<IActionResult> GetProjectApplicationLinks(int projectId)
+        {
+            try
+            {
+                var linkIds = projectTypeLinkRepo.GetAll().Where(x => x.ProjectID == projectId).Select(x => x.ID).ToList();
+                var data = projectTypeApplicationLinkRepo.GetAll().Where(x => linkIds.Contains(x.ProjectTypeLinkID ?? 0) && x.IsDeleted != true).ToList();
+                return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Lấy danh sách công nghệ đã được chọn theo từng Loại dự án của dự án hiện tại
+        /// </summary>
+        [HttpGet("get-project-technology-links")]
+        public async Task<IActionResult> GetProjectTechnologyLinks(int projectId)
+        {
+            try
+            {
+                var linkIds = projectTypeLinkRepo.GetAll().Where(x => x.ProjectID == projectId).Select(x => x.ID).ToList();
+                var data = projectTypeTechnologyLinkRepo.GetAll().Where(x => linkIds.Contains(x.ProjectTypeLinkID ?? 0) && x.IsDeleted != true).ToList();
+                return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         #region API POST
         [HttpPost("save-project")]
         public async Task<IActionResult> SaveProject([FromBody] ProjectDTO prj)
@@ -1395,7 +1518,7 @@ namespace RERPAPI.Controllers.Project
                     projectStatusLogRepo.CreateAsync(statusLog);
                 }
 
-                if (project.ID > 0) projectRepo.Update(project);
+                if (project.ID > 0) { project.UpdatedDate = DateTime.Now; projectRepo.Update(project); }
                 else
                 {
                     projectRepo.Create(project);
@@ -1440,7 +1563,7 @@ namespace RERPAPI.Controllers.Project
                             model.ProjectTypeID = projectTypeID;
                             model.IsLeader = true;
 
-                            if (model.ID > 0) projectEmployeeRepo.Update(model);
+                            if (model.ID > 0) { model.UpdatedDate = DateTime.Now; projectEmployeeRepo.Update(model); }
                             else
                             {
                                 var list = projectEmployeeRepo.GetAll().Where(x => x.ProjectID == projectId && x.IsDeleted != true);
@@ -1465,8 +1588,60 @@ namespace RERPAPI.Controllers.Project
                     prjTypeLink.ProjectTypeID = item.ID;
                     prjTypeLink.Selected = item.Selected;
 
-                    if (prjTypeLink.ID > 0) await projectTypeLinkRepo.UpdateAsync(prjTypeLink);
+                    if (prjTypeLink.ID > 0) { prjTypeLink.UpdatedDate = DateTime.Now; await projectTypeLinkRepo.UpdateAsync(prjTypeLink); }
                     else await projectTypeLinkRepo.CreateAsync(prjTypeLink);
+                    
+                    // Lưu thông tin đa lựa chọn cho kiểu ứng dụng và công nghệ sử dụng trên từng liên kết dự án (ProjectTypeLink)
+                    if (prjTypeLink.ID > 0)
+                    {
+                        // Lấy danh sách liên kết ứng dụng cũ hiện có của dòng loại dự án này và tiến hành xoá
+                        var oldApps = projectTypeApplicationLinkRepo.GetAll().Where(x => x.ProjectTypeLinkID == prjTypeLink.ID);
+                        foreach (var oa in oldApps)
+                        {
+                            oa.IsDeleted = true;
+                            oa.UpdatedDate = DateTime.Now;
+                            await projectTypeApplicationLinkRepo.UpdateAsync(oa);
+                        }
+
+                        // Lấy danh sách liên kết công nghệ cũ hiện có của dòng loại dự án này và tiến hành xoá
+                        var oldTechs = projectTypeTechnologyLinkRepo.GetAll().Where(x => x.ProjectTypeLinkID == prjTypeLink.ID);
+                        foreach (var ot in oldTechs)
+                        {
+                            ot.IsDeleted = true;
+                            ot.UpdatedDate = DateTime.Now;
+                            await projectTypeTechnologyLinkRepo.UpdateAsync(ot);
+                        }
+
+                        // Nếu có dữ liệu kiểu ứng dụng mới được gửi từ FE (ApplicationTypeIDs), thêm từng bản ghi tương ứng vào bảng Link
+                        if (item.ApplicationTypeIDs != null && item.ApplicationTypeIDs.Count > 0)
+                        {
+                            foreach (int appId in item.ApplicationTypeIDs)
+                            {
+                                var appLink = new ProjectTypeApplicationLink()
+                                {
+                                    ProjectTypeLinkID = prjTypeLink.ID,
+                                    ApplicationTypeID = appId,
+                                    CreatedDate = DateTime.Now
+                                };
+                                await projectTypeApplicationLinkRepo.CreateAsync(appLink);
+                            }
+                        }
+
+                        // Nếu có dữ liệu công nghệ mới được gửi từ FE (TechnologyIDs), thêm từng bản ghi tương ứng vào bảng Link
+                        if (item.TechnologyIDs != null && item.TechnologyIDs.Count > 0)
+                        {
+                            foreach (int techId in item.TechnologyIDs)
+                            {
+                                var techLink = new ProjectTypeTechnologyLink()
+                                {
+                                    ProjectTypeLinkID = prjTypeLink.ID,
+                                    TechnologyID = techId,
+                                    CreatedDate = DateTime.Now
+                                };
+                                await projectTypeTechnologyLinkRepo.CreateAsync(techLink);
+                            }
+                        }
+                    }
                 }
                 var lst = projectTypeLinkRepo.GetAll(x => x.ProjectID == projectId && x.Selected == true);
                 foreach (var l in lst)
