@@ -321,6 +321,7 @@ namespace RERPAPI.Controllers.Old.POKH
                 }
                 else
                 {
+                    dto.POKH.UpdatedDate = DateTime.Now;
                     await _pokhRepo.UpdateAsync(dto.POKH);
 
                 }
@@ -382,6 +383,7 @@ namespace RERPAPI.Controllers.Old.POKH
 
                         if (model.ID > 0)
                         {
+                            model.UpdatedDate = DateTime.Now;
                             await _pokhDetailRepo.UpdateAsync(model);
                         }
                         else

@@ -1750,7 +1750,7 @@ pokhDetailId);
                 }
 
                 // Kiểm tra và tạo Inventory
-                await EnsureInventoryExists(dto.billExport.WarehouseID ?? 0, detail.ProductID ?? 0,dto.billExport.KhoTypeID ?? 0);
+                await EnsureInventoryExists(dto.billExport.WarehouseID ?? 0, detail.ProductID ?? 0, dto.billExport.KhoTypeID ?? 0);
 
                 // Lưu InventoryProjectExport
                 if (dto.billExport.Status == 2 || dto.billExport.Status == 6)

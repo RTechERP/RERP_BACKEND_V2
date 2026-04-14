@@ -92,7 +92,7 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
         }
 
 
-        public async Task<int> Appoved(List<PaymentOrderDTO> payments)
+        public async Task<(int,string)> Appoved(List<PaymentOrderDTO> payments)
         {
             try
             {
@@ -171,7 +171,7 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                     if (actionStep == 0)
                     {
                         //messageFails.Add( $"Đề nghị [{item.Code}] không cần {dropdownButtonText.Trim().ToLower()} buttonText.Trim().ToLower()!");
-                        return 0;
+                        return (0,"");
                     }
 
                     if (actionStep == 2 && !_currentUser.IsAdmin) //Kiểm tra đề nghị có phải của tbp đó hay ko
@@ -234,7 +234,12 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
 
 
                     //Get quy trình duyệt
-                    var log = GetAll(x => x.PaymentOrderID == item.ID && x.Step == actionStep && x.IsDeleted != true).FirstOrDefault() ?? new PaymentOrderLog();
+                    var log = GetAll(x => x.PaymentOrderID == item.ID && x.Step == actionStep && x.IsDeleted != true).FirstOrDefault();
+
+                    if (log == null)
+                    {
+                        throw new Exception($"Không tìm thấy log cho đề nghị [{item.Code}] - step {actionStep}");
+                    }
                     if (item.PaymentOrderLog.IsApproved == 2)
                     {
                         if (string.IsNullOrWhiteSpace(item.ReasonCancel))
@@ -303,7 +308,7 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                             }
                         }
                         //int resultUpdate = await UpdateAsync(log);
-                        int resultUpdate = await SqlDapper<PaymentOrderLog>.ExecuteStoredProcedure("spUpdatePaymentOrderLog", new
+                        int resultUpdate = await SqlDapper<PaymentOrderLog>.ExecuteScalarStoredProcedure<int>("spUpdatePaymentOrderLog", new
                         {
                             ID = log.ID,
                             DateApproved = log.DateApproved,
@@ -316,13 +321,19 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                             ReasonRequestAppendFileHR = log.ReasonRequestAppendFileHR,
                             IsRequestAppendFileHR = log.IsRequestAppendFileHR
                         });
+                        if (resultUpdate <= 0)
+                        {
+                            messageFails.Add($"Cập nhập chưa thành công đề nghị [{item.Code}]!");
+                            continue;
+                        }
                     }
                 }
                 if (messageFails.Count > 0)
                 {
-                    throw new Exception(string.Join("\r\n", messageFails));
+                    //throw new Exception(string.Join("\r\n", messageFails));
+                    return (0, string.Join("\r\n", messageFails));
                 }
-                return 1;
+                return (1,"");
             }
             catch (Exception ex)
             {

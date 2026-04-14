@@ -112,4 +112,6 @@ public partial class ProjectPartlistPriceRequest
     /// hiệu lực
     /// </summary>
     public DateTime? EffectiveDate { get; set; }
+
+    public DateTime? QuoteExpectedDate { get; set; }
 }

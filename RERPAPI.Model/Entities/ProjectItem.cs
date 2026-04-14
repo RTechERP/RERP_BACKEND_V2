@@ -123,4 +123,14 @@ public partial class ProjectItem
     /// Phần trăm chênh lệch quá hạn
     /// </summary>
     public decimal? PercentOverTime { get; set; }
+
+    /// <summary>
+    /// Nguyên nhân/Phương án sử lý (sử dụng riêng với loại công việc là BUG)
+    /// </summary>
+    public string? DescriptionSolution { get; set; }
+
+    /// <summary>
+    /// Thời gian công việc phải hoàn thành
+    /// </summary>
+    public DateTime? Deadline { get; set; }
 }

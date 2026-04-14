@@ -32,7 +32,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 if (filter.checkAll == true) filter.productGroupID = 0;
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
                        //"spGetInventory", new string[] { "@ID", "@Find", "@WarehouseCode", "@IsStock" },
-                       "spGetInventory_New", new string[] { "@ID", "@Find", "@WarehouseCode", "@IsStock" },
+                       "spGetInventory_Test", new string[] { "@ID", "@Find", "@WarehouseCode", "@IsStock" },
                     new object[] { filter.productGroupID, filter.Find, filter.WarehouseCode, filter.IsStock == false ? 0 : 1 }
                    );
                 return Ok(new
