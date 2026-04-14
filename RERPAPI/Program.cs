@@ -270,6 +270,7 @@ builder.Services.AddScoped<UserTeamRepo>();
 builder.Services.AddScoped<WarehouseRepo>();
 builder.Services.AddScoped<WeekPlanRepo>();
 builder.Services.AddScoped<vUserGroupLinksRepo>();
+builder.Services.AddScoped<PinResetTokenRepo>();
 builder.Services.AddScoped<NotifyRepo>();
 
 // Project sub-namespace repos
@@ -492,6 +493,7 @@ builder.Services.AddScoped<FollowProjectBaseDetailRepo>();
 builder.Services.AddScoped<DailyReportAccountingRepo>();
 
 builder.Services.AddScoped<ProductSaleGroupWarehouseLinkRepo>();
+
 
 
 #region khóa học 
