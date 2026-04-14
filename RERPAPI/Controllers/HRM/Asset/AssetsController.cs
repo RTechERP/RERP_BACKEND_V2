@@ -1,4 +1,4 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Bibliography;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -94,6 +94,8 @@ namespace RERPAPI.Controllers.Old.Asset
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                request.DateStart = TextUtils.MinDate;
+                request.DateEnd = TextUtils.MaxDate;
                 var assets = SQLHelper<dynamic>.ProcedureToList("spGetTSAssetManagement",
                          new string[] { "@FilterText", "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@EmployeeID" },
                     new object[] { request.FilterText, request.PageNumber, request.PageSize, request.DateStart, request.DateEnd, currentUser.EmployeeID });
@@ -274,6 +276,15 @@ namespace RERPAPI.Controllers.Old.Asset
                     {
                         if (item.IsDeleted != true)
                         {
+                            if (item.ID <= 0 && !string.IsNullOrWhiteSpace(item.TSCodeNCC))
+                            {
+                                var existingAsset = _tsAssetManagementRepo.GetAll(x => x.TSCodeNCC == item.TSCodeNCC && x.IsDeleted != true).FirstOrDefault();
+                                if (existingAsset != null)
+                                {
+                                    item.ID = existingAsset.ID;
+                                }
+                            }
+
                             if (!_tsAssetManagementRepo.Validate(item, out string message))
                             {
                                 return BadRequest(ApiResponseFactory.Fail(null, message));
