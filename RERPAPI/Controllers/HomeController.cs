@@ -9,6 +9,7 @@ using RERPAPI.Model;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
+using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Model.Param.HRM.VehicleManagement;
@@ -43,10 +44,11 @@ namespace RERPAPI.Controllers
         private readonly EmployeeWFHRepo _wfhRepo;
         private readonly ConfigSystemRepo _configSystemRepo;
         private readonly EmailHelper _emailHelper;
+        private readonly UserRepo _userRepo;
 
         //IRabbitMqPublisher _publisher;
         public HomeController(IOptions<JwtSettings> jwtSettings, RTCContext context,
-            IConfiguration configuration, EmployeeOnLeaveRepo onLeaveRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeWFHRepo employeeWFHRepo, ConfigSystemRepo configSystemRepo, EmployeeOverTimeRepo employeeOverTimeRepo, RoleConfig roleConfig, EmployeePayrollDetailRepo employeePayrollDetailRepo, EmailHelper emailHelper)
+            IConfiguration configuration, EmployeeOnLeaveRepo onLeaveRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeWFHRepo employeeWFHRepo, ConfigSystemRepo configSystemRepo, EmployeeOverTimeRepo employeeOverTimeRepo, RoleConfig roleConfig, EmployeePayrollDetailRepo employeePayrollDetailRepo, EmailHelper emailHelper, UserRepo userRepo)
         {
             _jwtSettings = jwtSettings.Value;
             _context = context;
@@ -60,10 +62,11 @@ namespace RERPAPI.Controllers
             _employeePayrollDetailRepo = employeePayrollDetailRepo;
             //_publisher = publisher;
             _emailHelper = emailHelper;
+            _userRepo = userRepo;
         }
         [HttpPost("login")]
         public IActionResult Login([FromBody] User user)
-            {
+        {
             try
             {
                 if (string.IsNullOrWhiteSpace(user.LoginName) || string.IsNullOrWhiteSpace(user.PasswordHash))
@@ -217,6 +220,80 @@ namespace RERPAPI.Controllers
                 //CurrentUser currentUser = HttpContext.Session.GetObject<CurrentUser>(key);
 
                 //return Ok(ApiResponseFactory.Success(currentUser, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [Authorize]
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordParam param)
+        {
+            try
+            {
+                int result = 0;
+                if (param == null || string.IsNullOrWhiteSpace(param.OldPassword) || string.IsNullOrWhiteSpace(param.NewPassword))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Thông tin mật khẩu không được để trống!"));
+                }
+
+                if (param.NewPassword != param.ConfirmPassword)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Mật khẩu mới và mật khẩu xác nhận không khớp!"));
+                }
+
+                // 1. Lấy thông tin User hiện tại
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                if (currentUser == null || currentUser.ID == 0)
+                {
+                    return Unauthorized(ApiResponseFactory.Fail(null, "Không tìm thấy thông tin người dùng!"));
+                }
+
+                var user = _userRepo.GetByID(currentUser.ID);
+                if (user == null)
+                {
+                    return NotFound(ApiResponseFactory.Fail(null, "Người dùng không tồn tại!"));
+                }
+
+                // 2. Kiểm tra mật khẩu cũ
+                string oldPasswordHash = MaHoaMD5.EncryptPassword(param.OldPassword);
+                if (user.PasswordHash != oldPasswordHash)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Mật khẩu cũ không chính xác!"));
+                }
+
+                // 3. Cập nhật mật khẩu mới
+                user.PasswordHash = MaHoaMD5.EncryptPassword(param.NewPassword);
+
+
+                await _userRepo.UpdateAsync(user);
+
+                return Ok(ApiResponseFactory.Success(null, "Đổi mật khẩu thành công!"));
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, "Lỗi khi đổi mật khẩu: " + ex.Message));
+            }
+        }   
+        //API lấy thông tin cá nhân nhân viên
+        [Authorize]
+        [HttpGet("personal-information")]
+        public IActionResult GetPersonalInformation()
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                int employeeID = currentUser.EmployeeID;
+
+                var data = SQLHelper<EmployeeDTON60>.ProcedureToListModel("spGetEmployee",
+                    new string[] { "@Status", "@DepartmentID", "@Keyword", "@ID" },
+                    new object[] { -1, 0, "", employeeID });        
+                    return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {
