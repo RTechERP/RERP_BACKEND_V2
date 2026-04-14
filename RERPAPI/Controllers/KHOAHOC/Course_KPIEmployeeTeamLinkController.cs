@@ -11,8 +11,8 @@ namespace RERPAPI.Controllers.KHOAHOC
     public class Course_KPIEmployeeTeamLinkController : ControllerBase
     {
         #region Khai báo repository
-        private readonly Course_KPIEmployeeTeamLinkRepo _teamLinkRepo;
-        public Course_KPIEmployeeTeamLinkController(Course_KPIEmployeeTeamLinkRepo teamLinkRepo)
+        private readonly CourseKPIEmployeeTeamLinkRepo _teamLinkRepo;
+        public Course_KPIEmployeeTeamLinkController(CourseKPIEmployeeTeamLinkRepo teamLinkRepo)
         {
             this._teamLinkRepo = teamLinkRepo;
         }
@@ -47,7 +47,7 @@ namespace RERPAPI.Controllers.KHOAHOC
         #endregion
         #region Lưu dữ liệu
         [HttpPost("savedata")]
-        public async Task<IActionResult> SaveData([FromBody] List<Course_KPIEmployeeTeamLink> teamLinks)
+        public async Task<IActionResult> SaveData([FromBody] List<CourseKPIEmployeeTeamLink> teamLinks)
         {
             try
             {

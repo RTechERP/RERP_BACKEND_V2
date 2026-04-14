@@ -31,8 +31,8 @@ namespace RERPAPI.Controllers.KHOAHOC
         private readonly CourseFilesRepo _courseFilesRepo;
         private readonly ConfigSystemRepo _configSystemRepo;
         //private readonly Course_KPIPositionTypeRepo _course_KPIPositionTypeRepo;
-        private readonly Course_KPIEmployeeTeamMapRepo _course_KPIEmployeeTeamMapRepo;
-        private readonly Course_KPIEmployeeTeamRepo _course_KPIEmployeeTeamRepo;
+        private readonly CourseKPIEmployeeTeamMapRepo _course_KPIEmployeeTeamMapRepo;
+        private readonly CourseKPIEmployeeTeamRepo _course_KPIEmployeeTeamRepo;
 
         public CourseController(
             CourseCatalogRepo courseCatalogRepo,
@@ -45,8 +45,8 @@ namespace RERPAPI.Controllers.KHOAHOC
             ConfigSystemRepo configSystemRepo,
             CourseFilesRepo courseFilesRepo,
             Course_KPIPositionTypeRepo course_KPIPositionTypeRepo,
-           Course_KPIEmployeeTeamMapRepo course_KPIEmployeeTeamMapRepo,
-           Course_KPIEmployeeTeamRepo course_KPIEmployeeTeamRepo
+           CourseKPIEmployeeTeamMapRepo course_KPIEmployeeTeamMapRepo,
+           CourseKPIEmployeeTeamRepo course_KPIEmployeeTeamRepo
             )
         {
             _courseCatalogRepo = courseCatalogRepo;
@@ -612,7 +612,7 @@ namespace RERPAPI.Controllers.KHOAHOC
 
                         foreach (var kpiId in kpiIds)
                         {
-                            var newCourseKpi = new Course_KPIEmployeeTeam_Map
+                            var newCourseKpi = new CourseKPIEmployeeTeamMap
                             {
                                 CourseID = courseNew.ID,
                                 KPIEmployeeTeamID = kpiId,
@@ -748,7 +748,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                             else
                             {
                                 // tạo mới
-                                var newKpi = new Course_KPIEmployeeTeam_Map
+                                var newKpi = new CourseKPIEmployeeTeamMap
                                 {
                                     CourseID = courseUpdate.ID,
                                     KPIEmployeeTeamID = id,

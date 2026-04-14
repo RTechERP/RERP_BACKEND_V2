@@ -11,12 +11,12 @@ namespace RERPAPI.Controllers.KHOAHOC
     public class Course_KPIEmployeeTeamController : ControllerBase
     {
         #region Khai báo repository
-        Course_KPIEmployeeTeamRepo teamRepo;
+        CourseKPIEmployeeTeamRepo teamRepo;
         DepartmentRepo departmentRepo;
         EmployeeRepo employeeRepo;
-        Course_KPIEmployeeTeamRepo _course_KPIEmployeeTeamRepo;
-        Course_KPIEmployeeTeamLinkRepo _course_KPIEmployeeTeamLinkRepo;
-        public Course_KPIEmployeeTeamController(Course_KPIEmployeeTeamRepo teamRepo, EmployeeRepo employeeRepo, DepartmentRepo departmentRepo, Course_KPIEmployeeTeamRepo course_KPIEmployeeTeamRepo, Course_KPIEmployeeTeamLinkRepo course_KPIEmployeeTeamLinkRepo)
+        CourseKPIEmployeeTeamRepo _course_KPIEmployeeTeamRepo;
+        CourseKPIEmployeeTeamLinkRepo _course_KPIEmployeeTeamLinkRepo;
+        public Course_KPIEmployeeTeamController(CourseKPIEmployeeTeamRepo teamRepo, EmployeeRepo employeeRepo, DepartmentRepo departmentRepo, CourseKPIEmployeeTeamRepo course_KPIEmployeeTeamRepo, CourseKPIEmployeeTeamLinkRepo course_KPIEmployeeTeamLinkRepo)
         {
             this.teamRepo = teamRepo;
             this.employeeRepo = employeeRepo;
@@ -86,7 +86,7 @@ namespace RERPAPI.Controllers.KHOAHOC
         {
             try
             {
-                Course_KPIEmployeeTeam team = teamRepo.GetByID(id);
+                CourseKPIEmployeeTeam team = teamRepo.GetByID(id);
                 if (team.ID <= 0)
                 {
                     return Ok(new
@@ -114,7 +114,7 @@ namespace RERPAPI.Controllers.KHOAHOC
         #endregion
         #region Lưu dữ liệu
         [HttpPost("savedata")]
-        public async Task<IActionResult> SaveData([FromBody] Course_KPIEmployeeTeam team)
+        public async Task<IActionResult> SaveData([FromBody] CourseKPIEmployeeTeam team)
         {
             try
             {
