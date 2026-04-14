@@ -872,6 +872,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<ProjectTaskLog> ProjectTaskLogs { get; set; }
 
+    public virtual DbSet<ProjectTaskSetting> ProjectTaskSettings { get; set; }
+
     public virtual DbSet<ProjectTaskType> ProjectTaskTypes { get; set; }
 
     public virtual DbSet<ProjectTechnology> ProjectTechnologies { get; set; }
@@ -8962,6 +8964,8 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.PercentageActual).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.PlanEndDate).HasColumnType("datetime");
             entity.Property(e => e.PlanStartDate).HasColumnType("datetime");
+            entity.Property(e => e.ProjectTaskResult).HasComment("Kết quả công việc");
+            entity.Property(e => e.ProjectTaskTypeID).HasComment("Loại công việc");
             entity.Property(e => e.STT)
                 .HasMaxLength(50)
                 .IsUnicode(false);
@@ -9837,6 +9841,35 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedBy)
                 .HasMaxLength(50)
                 .HasComment("Ngươì cập nhật bản ghi");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật bản ghi")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectTaskSetting>(entity =>
+        {
+            entity.ToTable("ProjectTaskSetting", tb => tb.HasComment("Bảng danh sách email không gửi mail"));
+
+            entity.Property(e => e.ID).HasComment("ID tự tăng");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .IsFixedLength()
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.EmployeeEmail)
+                .HasMaxLength(250)
+                .HasComment("Email công ty của nhân viên");
+            entity.Property(e => e.EmployeeID).HasComment("ID của bảng Employee");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái xóa mềm ");
+            entity.Property(e => e.SendApproveProjectTask).HasComment("Không gửi mai khi duyệt công việc");
+            entity.Property(e => e.SendFinishProjectTask).HasComment("Không gửi mai khi hoàn thành công việc");
+            entity.Property(e => e.SendMailCreateProjectTask).HasComment("Không gửi mai khi tạo công việc");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .IsFixedLength()
+                .HasComment("Người cập nhật bản ghi");
             entity.Property(e => e.UpdatedDate)
                 .HasComment("Ngày cập nhật bản ghi")
                 .HasColumnType("datetime");
