@@ -39,4 +39,9 @@ public partial class TSAssetAllocation
     public DateTime? DateApprovedHR { get; set; }
 
     public bool? IsDeleted { get; set; }
+
+    /// <summary>
+    /// Id người cấp phát
+    /// </summary>
+    public int? AllocationID { get; set; }
 }
