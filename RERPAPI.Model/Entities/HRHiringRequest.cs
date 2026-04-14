@@ -55,4 +55,6 @@ public partial class HRHiringRequest
     public string? PositionName { get; set; }
 
     public bool? IsCompleted { get; set; }
+
+    public DateTime? HiringDeadline { get; set; }
 }

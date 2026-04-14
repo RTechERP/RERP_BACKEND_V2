@@ -215,4 +215,6 @@ public partial class HRRecruitmentApplicationForm
     /// Chức vụ cần tuyển
     /// </summary>
     public string? PositionName { get; set; }
+
+    public int? WorkExperienceLevel { get; set; }
 }
