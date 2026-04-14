@@ -163,5 +163,7 @@ namespace RERPAPI.Model.DTO.Project.Procedure
         /// Thời gian công việc phải hoàn thành
         /// </summary>
         public DateTime? Deadline { get; set; }
+        public int? ProjectTaskTypeID { get; set; }
+
     }
 }

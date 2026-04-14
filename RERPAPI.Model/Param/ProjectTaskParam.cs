@@ -135,7 +135,15 @@ namespace RERPAPI.Model.Param
         /// </summary>
         public DateTime? Deadline { get; set; }
 
-        
+        /// <summary>
+        /// Loại công việc
+        /// </summary>
+        public int? ProjectTaskTypeID { get; set; }
+
+        /// <summary>
+        /// Kết quả công việc
+        /// </summary>
+        public string? ProjectTaskResult { get; set; }
 
         public List<int>? Employee { get; set; }
         public List<int>? EmployeeRelate { get; set; }

@@ -483,6 +483,7 @@ builder.Services.AddScoped<ProjectTaskEmailBandRepo>();
 builder.Services.AddScoped<ProjectTaskAttendanceRepo>();
 builder.Services.AddTransient<ProjectTaskAttachmentRepo>();
 builder.Services.AddTransient<ProjectTaskAdditionalRepo>();
+builder.Services.AddTransient<ProjectTaskSettingRepo>();
 
 builder.Services.AddScoped<SendEmailReceiveProjectTaskClass>();
 
