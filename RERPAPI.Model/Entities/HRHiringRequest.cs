@@ -56,8 +56,5 @@ public partial class HRHiringRequest
 
     public bool? IsCompleted { get; set; }
 
-    /// <summary>
-    /// Hạn tuyển dụng
-    /// </summary>
     public DateTime? HiringDeadline { get; set; }
 }
