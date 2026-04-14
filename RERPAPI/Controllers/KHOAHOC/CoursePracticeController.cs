@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
+using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
+using System.Collections.Immutable;
 
 namespace RERPAPI.Controllers.KHOAHOC
 {
@@ -22,6 +24,7 @@ namespace RERPAPI.Controllers.KHOAHOC
         private readonly CourseExamEvaluateRepo _courseExamEvaluateRepo;
         private readonly CourseCatalogRepo _courseCatalogRepo;
         private readonly DepartmentRepo _departmentRepo;
+        private readonly CourseLessonRepo _courseLessonRepo;
         public CoursePracticeController(CourseExamRepo courseExamRepo,
             CourseLessonHistoryRepo courseLessonHistoryRepo,
             CourseExamResultRepo courseExamResultRepo,
@@ -31,7 +34,9 @@ namespace RERPAPI.Controllers.KHOAHOC
             CourseExamEvaluateRepo courseExamEvaluateRepo,
             CourseRepo courseRepo,
             CourseCatalogRepo courseCatalogRepo,
-            DepartmentRepo departmentRepo)
+            DepartmentRepo departmentRepo,
+            CourseLessonRepo courseLessonRepo
+            )
         {
             _courseExamRepo = courseExamRepo;
             _courseLessonHistoryRepo = courseLessonHistoryRepo;
@@ -43,6 +48,7 @@ namespace RERPAPI.Controllers.KHOAHOC
             _courseRepo = courseRepo;
             _courseCatalogRepo = courseCatalogRepo;
             _departmentRepo = departmentRepo;
+            _courseLessonRepo = courseLessonRepo;
         }
 
         [HttpGet("get-all-course-exam")]
@@ -71,10 +77,120 @@ namespace RERPAPI.Controllers.KHOAHOC
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 var data = SQLHelper<object>.ProcedureToList("spGetCourseLessonByCourseID",
                                               new string[] { "@CourseID", "@EmployeeID" },
-                                              new object[] { CourseID, currentUser.ID });
+                                              new object[] { CourseID, currentUser.EmployeeID });
                 return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0), ""));
             }
-            catch(Exception ex) 
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-lesson-history-by-lesson-id")]
+        public async Task<IActionResult> GetLessonHistoryByLessonIdAsync(int lessonId)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var data = _courseLessonHistoryRepo.GetAll(c => c.EmployeeId == currentUser.EmployeeID && c.LessonId == lessonId).FirstOrDefault();
+                if (data == null || data.ID <= 0)
+                {
+                    var lesson = _courseLessonRepo.GetByID(lessonId);
+
+
+                    var lessonHistory = new CourseLessonHistory()
+                    {
+                        Status = 0,
+                        LessonId = lessonId,
+                        EmployeeId = currentUser.EmployeeID,
+                        ViewDate = DateTime.Now,
+                        //VideoDuration = lesson.VideoDuration,
+                        WatchedPercent = 0,
+                        LastWatchedSecond = 0,
+                        MaxWatchedSecond = 0
+                    };
+
+                    await _courseLessonHistoryRepo.CreateAsync(lessonHistory);
+                    data = lessonHistory;
+                }
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-lesson-by-lesson-id")]
+        public async Task<IActionResult> GetLessonByLessonIdAsync(int lessonId)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var data = _courseLessonRepo.GetByID(lessonId);
+                if (data.ID <= 0)
+                {
+                    return Ok(ApiResponseFactory.Fail(null, "Không tìm thấy lesson"));
+                }
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
+
+
+        [HttpPost("save-lesson-history-progress")]
+        public async Task<IActionResult> SaveLessonHistoryProgress([FromBody] LessonHistoryProgressParam param)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                var exitLessonHistory = _courseLessonHistoryRepo.GetAll(x => x.LessonId == param.LessonID && x.EmployeeId == currentUser.EmployeeID).FirstOrDefault();
+                if (exitLessonHistory == null || exitLessonHistory.ID <= 0)
+                {
+                    var lessonHistory = new CourseLessonHistory()
+                    {
+                        Status = 0,
+                        LessonId = param.LessonID,
+                        EmployeeId = currentUser.EmployeeID,
+                        ViewDate = DateTime.Now,
+                        //VideoDuration = lesson.VideoDuration,
+                        WatchedPercent = 0,
+                        LastWatchedSecond = 0,
+                        MaxWatchedSecond = 0
+                    };
+
+                    await _courseLessonHistoryRepo.CreateAsync(lessonHistory);
+                    exitLessonHistory = lessonHistory;
+                }
+                decimal percent = 0;
+
+                if (param.MaxWatchedSecond > 0 && param.VideoDuration > 0)
+                {
+                    percent = Math.Round(
+                        (decimal)param.MaxWatchedSecond * 100 / param.VideoDuration,// tiến độ % video   // chia ép kiểu về decimal
+                        4
+                    );
+                }
+                exitLessonHistory.WatchedPercent = percent;
+                exitLessonHistory.LastWatchedSecond = param.LastWatchedSecond; // thời gian cuối cùng xem
+                exitLessonHistory.MaxWatchedSecond = param.MaxWatchedSecond; // thời gian max có thể xem
+                exitLessonHistory.VideoDuration = param.VideoDuration;
+                await _courseLessonHistoryRepo.UpdateAsync(exitLessonHistory);
+
+                return Ok(ApiResponseFactory.Success(exitLessonHistory, "Đã cập nhật thành công"));
+
+            }
+            catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
@@ -89,8 +205,8 @@ namespace RERPAPI.Controllers.KHOAHOC
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
-                var exitLessonHistory = _courseLessonHistoryRepo.GetAll(x => x.LessonId == lessonId && x.EmployeeId == currentUser.ID).FirstOrDefault();
-                if(exitLessonHistory != null && exitLessonHistory.ID > 0)
+                var exitLessonHistory = _courseLessonHistoryRepo.GetAll(x => x.LessonId == lessonId && x.EmployeeId == currentUser.EmployeeID).FirstOrDefault();
+                if (exitLessonHistory != null && exitLessonHistory.ID > 0)
                 {
                     if (completed)
                     {
@@ -100,7 +216,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                     {
                         exitLessonHistory.Status = 0;
                     }
-                 await  _courseLessonHistoryRepo.UpdateAsync(exitLessonHistory);
+                    await _courseLessonHistoryRepo.UpdateAsync(exitLessonHistory);
 
                 }
                 else
@@ -109,10 +225,10 @@ namespace RERPAPI.Controllers.KHOAHOC
                     {
                         Status = 1,
                         LessonId = lessonId,
-                        EmployeeId = currentUser.ID,
+                        EmployeeId = currentUser.EmployeeID,
                         ViewDate = DateTime.Now,
                     };
-                 await _courseLessonHistoryRepo.CreateAsync(lessonHistory);
+                    await _courseLessonHistoryRepo.CreateAsync(lessonHistory);
                 }
                 return Ok(ApiResponseFactory.Success(exitLessonHistory, "Đã cập nhật trạng thái bài học thành công"));
 
@@ -126,7 +242,7 @@ namespace RERPAPI.Controllers.KHOAHOC
         // API lấy lịch sử các bài thi trắc nghiệm 
 
         [HttpPost("get-exam-result")]
-        public async Task<IActionResult> GetExamResult (int courseID = 0, int lessonID = 0)
+        public async Task<IActionResult> GetExamResult(int courseID = 0, int lessonID = 0)
         {
             try
             {
@@ -145,9 +261,9 @@ namespace RERPAPI.Controllers.KHOAHOC
                 {
                     var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                     var currentUser = ObjectMapper.GetCurrentUser(claims);
-                    var data = SQLHelper<object>.ProcedureToList("spGetCourseExamResult2",
+                    var data = SQLHelper<object>.ProcedureToList("spGetCourseExamResult",
                                               new string[] { "@CourseExamID", "@EmployeeID", "@OrderNumber" },
-                                              new object[] { courseExam.ID, currentUser.ID, 0 });
+                                              new object[] { courseExam.ID, currentUser.EmployeeID, 0 });
                     return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0), ""));
                 }
                 return BadRequest(ApiResponseFactory.Fail(null, "Không tồn tại bài kiểm tra trong khóa học!"));
@@ -167,14 +283,14 @@ namespace RERPAPI.Controllers.KHOAHOC
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 var courseExamResult = new CourseExamResult();
                 courseExamResult.CourseExamId = courseExamID;
-                courseExamResult.EmployeeId = currentUser.ID;
+                courseExamResult.EmployeeId = currentUser.EmployeeID;
                 courseExamResult.TotalCorrect = 0;
                 courseExamResult.TotalIncorrect = 0;
                 courseExamResult.PercentageCorrect = 0;
                 courseExamResult.Status = 0;
                 await _courseExamResultRepo.CreateAsync(courseExamResult);
 
-                if(courseExamResult.ID > 0)
+                if (courseExamResult.ID > 0)
                 {
                     return Ok(ApiResponseFactory.Success(courseExamResult, "Tạo kết quả khóa học thành công!"));
                 }
@@ -192,9 +308,9 @@ namespace RERPAPI.Controllers.KHOAHOC
         {
             try
             {
-                if(lessonID > 0)
+                if (lessonID > 0)
                 {
-                    
+
 
                     var dataLessonExam = SQLHelper<object>.ProcedureToList("spCourseLessonQuestion",
                                                             new string[] { "@LessonID", "@CourseExamResultID", "@ExamType" },
@@ -251,7 +367,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                 {
                     CourseExamResultDetail detail = item;
                     await _courseExamResultDetailRepo.CreateAsync(detail);
-                    if(detail != null && detail.ID > 0)
+                    if (detail != null && detail.ID > 0)
                     {
                         questionId = (int)detail.CourseQuestionId;
                         listAnswerId.Add((int)detail.CourseAnswerId);
@@ -263,7 +379,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                     AnswerIds = listAnswerId
                 }, "Thành công"));
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
@@ -275,7 +391,7 @@ namespace RERPAPI.Controllers.KHOAHOC
             try
             {
                 var examResult = _courseExamResultRepo.GetByID(courseExamResultID);
-                var courseExam = _courseExamRepo.GetByID(examResult.CourseExamId??0);
+                var courseExam = _courseExamRepo.GetByID(examResult.CourseExamId ?? 0);
 
                 var courseQuestions = _courseQuestionRepo.GetAll(p => p.CourseExamId == courseExam.ID);
 
@@ -316,12 +432,13 @@ namespace RERPAPI.Controllers.KHOAHOC
 
                 _courseExamResultRepo.Update(examResult);
 
-                return Ok(ApiResponseFactory.Success(new { 
+                return Ok(ApiResponseFactory.Success(new
+                {
                     NumCorrectAnswers = numCorrectAnswers,
                     NumIncorrectAnswers = numIncorrectAnswers
                 }, "Lấy kết quả thi thành công thành công!"));
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
@@ -340,7 +457,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                 var listQuestionRight = SQLHelper<object>.ProcedureToList(
                     "spGetQuestionAnswerRight",
                     new string[] { "@EmployeeID", "@CourseResultID" },
-                    new object[] { currentUser.ID, courseExamResultId }
+                    new object[] { currentUser.EmployeeID, courseExamResultId }
                 );
 
                 return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(listQuestionRight, 0), ""));
@@ -365,7 +482,7 @@ namespace RERPAPI.Controllers.KHOAHOC
 
                 var data = SQLHelper<object>.ProcedureToList("spGetResultHistoryPractice",
                                                 new string[] { "@EmployeeId", "@CourseExamId" },
-                                                new object[] { currentUser.ID, courseExamId });
+                                                new object[] { currentUser.EmployeeID, courseExamId });
 
                 return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0), ""));
             }
@@ -383,13 +500,13 @@ namespace RERPAPI.Controllers.KHOAHOC
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 var courseExam = _courseExamResultRepo.GetByID(courseResultId);
-                var data = SQLHelper<object>.ProcedureToList("spGetResultHistoryByPractice", 
-                    new string[] { "@EmployeeId", "@CourseResultId", "@CourseExamId" }, 
-                    new object[] { currentUser.ID, courseResultId, courseExam.CourseExamId });
+                var data = SQLHelper<object>.ProcedureToList("spGetResultHistoryByPractice",
+                    new string[] { "@EmployeeId", "@CourseResultId", "@CourseExamId" },
+                    new object[] { currentUser.EmployeeID, courseResultId, courseExam.CourseExamId });
 
                 return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0), ""));
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
@@ -410,7 +527,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                 }
                 return true;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return false;
             }
@@ -427,7 +544,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                 _courseExamResultRepo.Update(examResult);
                 return Ok(ApiResponseFactory.Success(null, "Hoàn thành bài học!"));
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
@@ -442,7 +559,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                 return Ok(ApiResponseFactory.Success(data, "Lấy câu hỏi thực hành thành công"));
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
@@ -468,39 +585,39 @@ namespace RERPAPI.Controllers.KHOAHOC
                     Course = course,
                 }, ""));
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
 
-        //[HttpGet("load-course-category")]
-        //public async Task<IActionResult> GetDanhMuc()
-        //{
-        //    try
-        //    {
-        //        var listCourseCatalogs = _courseCatalogRepo.GetAll(c => c.DeleteFlag == true).OrderBy(x => x.STT);
-        //        var listCourseCatalogIds = listCourseCatalogs.Select(x => x.DepartmentID).Distinct().ToList();
-        //        var listDepartments = _departmentRepo.GetAll().Where(x => listCourseCatalogIds.Contains(x.ID));
+        [HttpGet("load-course-category")]
+        public async Task<IActionResult> GetDanhMuc()
+        {
+            try
+            {
+                var listCourseCatalogs = _courseCatalogRepo.GetAll(c => c.DeleteFlag == true).OrderBy(x => x.STT);
+                var listCourseCatalogIds = listCourseCatalogs.Select(x => x.DepartmentID).Distinct().ToList();
+                var listDepartments = _departmentRepo.GetAll().Where(x => listCourseCatalogIds.Contains(x.ID));
 
-        //        var data = SQLHelper<object>.ProcedureToList("spGetCourseCatalog",
-        //                                      new string[] { },
-        //                                      new object[] { });
-        //        return Ok(ApiResponseFactory.Success(new
-        //        {
-        //            Department = listDepartments,
-        //            CourseCatalog = SQLHelper<object>.GetListData(data, 0)
-        //        }, ""));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-        //    }
-        //}
+                var data = SQLHelper<object>.ProcedureToList("spGetCourseCatalog",
+                                              new string[] { },
+                                              new object[] { });
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    Department = listDepartments,
+                    CourseCatalog = SQLHelper<object>.GetListData(data, 0)
+                }, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         ////lấy danh sách khóa học
         [HttpGet("load-data-course")]
-        public async Task<IActionResult> LoadDataCourse(int courseCatalogID)
+        public async Task<IActionResult> LoadDataCourse(int courseCatalogID, int catalogType)
         {
             try
             {
@@ -508,29 +625,35 @@ namespace RERPAPI.Controllers.KHOAHOC
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
 
                 //var listCourseC
-
-                var data = SQLHelper<object>.ProcedureToList("spGetCourseNew",
-                                              new string[] { "@CourseCatalogID", "@EmployeeID", "@Status" },
-                                              new object[] { courseCatalogID, currentUser.ID, -1 });
+                var data = SQLHelper<object>.ProcedureToList("spGetCourseNew1",
+                                                   new string[] { "@CourseCatalogID", "@EmployeeID", "@Status", "@CatalogType" },
+                                                   new object[] { courseCatalogID, currentUser.EmployeeID, -1, catalogType });
                 var listCourseParent = SQLHelper<object>.GetListData(data, 0);
 
 
-                for (int i = 1; i < listCourseParent.Count; i++)
-                {
-                    var course = listCourseParent[i - 1];
+                //for (int i = 1; i < listCourseParent.Count; i++)
+                //{
+                //    var course = listCourseParent[i - 1];
 
-                    if (course.IsLearnInTurn ?? false )
-                    {
-                        if ((course.NumberLesson == course.TotalHistoryLession && course.Evaluate == 1) || currentUser.IsLeader > 0 || currentUser.IsAdmin || currentUser.ID == 55)
-                        {
-                            listCourseParent[i].Status = 1;
-                        }
-                        else
-                        {
-                            listCourseParent[i].Status = 0;
-                        }
-                    }
-                }
+                //    // Không override nếu đã bị khóa bởi khóa học bắt buộc
+                //    if (listCourseParent[i].Status == -1) continue;
+
+                //    if (course.IsLearnInTurn ?? false)
+                //    {
+                //        if ((course.NumberLesson == course.TotalHistoryLession
+                //             && course.Evaluate == 1)
+                //            || currentUser.IsLeader > 0
+                //            || currentUser.IsAdmin)
+                //        {
+                //            listCourseParent[i].Status = 1;
+                //        }
+                //        else
+                //        {
+                //            listCourseParent[i].Status = 0;
+                //        }
+                //    }
+                //}
+
                 return Ok(ApiResponseFactory.Success(listCourseParent, ""));
             }
             catch (Exception ex)
