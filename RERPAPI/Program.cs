@@ -493,7 +493,13 @@ builder.Services.AddScoped<FollowProjectBaseDetailRepo>();
 builder.Services.AddScoped<DailyReportAccountingRepo>();
 
 builder.Services.AddScoped<ProductSaleGroupWarehouseLinkRepo>();
-
+builder.Services.AddScoped<FiveSRatingDetailRepo>();
+builder.Services.AddScoped<FiveSRuleErrorRepo>();
+builder.Services.AddScoped<FiveSErrorRepo>();
+builder.Services.AddScoped<FiveSRatingRepo>();
+builder.Services.AddScoped<FiveSDepartmentRepo>();
+builder.Services.AddScoped<FiveSRatingTicketRepo>();
+builder.Services.AddScoped<FiveSBonusMinusRepo>();
 
 
 #region khóa học 
