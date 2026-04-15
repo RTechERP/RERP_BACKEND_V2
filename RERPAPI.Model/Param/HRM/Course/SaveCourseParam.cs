@@ -11,6 +11,7 @@ namespace RERPAPI.Model.Param.HRM.Course
         public int ID { get; set; }
 
         public int? STT { get; set; }
+        public int? EmployeeID { get; set; }
 
         public string? Code { get; set; }
 
@@ -35,5 +36,7 @@ namespace RERPAPI.Model.Param.HRM.Course
         public int? CourseTypeID { get; set; }
 
         public List<int>? IdeaIDs { get; set; }
+        public List<int>? KPIIDs { get; set; }
+
     }
 }
