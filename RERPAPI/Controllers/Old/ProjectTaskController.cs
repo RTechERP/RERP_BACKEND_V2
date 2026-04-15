@@ -1,5 +1,7 @@
-﻿using DocumentFormat.OpenXml.Office2010.ExcelAc;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Office2010.ExcelAc;
 using DocumentFormat.OpenXml.Office2013.Drawing.ChartStyle;
+using DocumentFormat.OpenXml.Spreadsheet;
 using MathNet.Numerics.Distributions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -102,7 +104,7 @@ namespace RERPAPI.Controllers.Project
                 dateStart = dateStart.Date;
                 dateEnd = dateEnd.Date.AddDays(1).AddSeconds(-1);
 
-                if (currentUser.IsAdmin)
+                if (currentUser.EmployeeID == 0)
                 {
                     var param1 = new
                     {
@@ -368,11 +370,19 @@ namespace RERPAPI.Controllers.Project
         // -- Get all project ---
 
         [HttpGet("get-all-project")]
-        public IActionResult getAllProject()
+        public async Task<IActionResult> getAllProject()
         {
             try
             {
-                var result = _projectRepo.GetAll(x => x.IsDeleted == false).OrderByDescending(x => x.ID);
+                DateTime minDate = new DateTime(DateTime.Now.Year - 1, 1, 1);
+
+                var param = new
+                {
+                    DateStart = minDate
+                };
+                var result = await SqlDapper<object>.ProcedureToListAsync("spGetProjectForProjectTask", param);
+
+                //var result = _projectRepo.GetAll(x => x.CreatedDate >= minDate && x.IsDeleted == false).OrderByDescending(x => x.ID);
                 return Ok(ApiResponseFactory.Success(result, ""));
             }
             catch (Exception ex)
@@ -424,7 +434,7 @@ namespace RERPAPI.Controllers.Project
                 {
                     ID = projectTaskID
                 };
-                var list = await SqlDapper<object>.ProcedureToListTAsync("spGetProjectTaskChild", param);
+                    var list = await SqlDapper<object>.ProcedureToListTAsync("spGetProjectTaskChild", param);
                 return Ok(ApiResponseFactory.Success(list));
             }
             catch (Exception ex)
@@ -461,7 +471,7 @@ namespace RERPAPI.Controllers.Project
                         ProjectID = item.ProjectID,
                         Mission = item.Mission,
                         PlanStartDate = item.PlanStartDate,
-                        PlanEndDate = item.PlanEndDate,
+                        PlanEndDate = item.PlanEndDate.HasValue ? item.PlanEndDate.Value.Date.AddDays(1).AddSeconds(-1) : (DateTime?)null,
                         ParentID = item.ParentID,
                         TypeProjectItem = item.TypeProjectItem,
                         EmployeeIDRequest = item.EmployeeIDRequest,
@@ -1065,7 +1075,7 @@ namespace RERPAPI.Controllers.Project
                     {
                         newProjectTaskLog.ContentLog += $"- {currentUser.FullName} đã thay đổi ngày kết thúc dự kiến từ {existingTask.PlanEndDate?.ToString("dd/MM/yyyy")} thành {projectTask.PlanEndDate?.ToString("dd/MM/yyyy")}. \\n";
                         changeTime++;
-                        existingTask.PlanEndDate = projectTask.PlanEndDate?.Date;
+                        existingTask.PlanEndDate = projectTask.PlanEndDate.HasValue ? projectTask.PlanEndDate.Value.Date.AddDays(1).AddSeconds(-1) : (DateTime?)null;
 
                     }
 
@@ -1470,6 +1480,7 @@ namespace RERPAPI.Controllers.Project
                 }
                 else
                 {
+                    var d = DateTime.Now.Date.AddDays(1).AddTicks(-1);
                     // tạo một đối tượng ProjectItem để lưu 
                     var newProjectTask = new ProjectItem
                     {
@@ -1484,7 +1495,7 @@ namespace RERPAPI.Controllers.Project
                         EmployeeIDRequest = projectTask.EmployeeIDRequest,
                         EmployeeCreateID = currentUser.EmployeeID,
                         PlanStartDate = projectTask.PlanStartDate,
-                        PlanEndDate = projectTask.PlanEndDate,
+                        PlanEndDate = projectTask.PlanEndDate.HasValue ? projectTask.PlanEndDate.Value.Date.AddDays(1).AddSeconds(-1) : null,
                         IsPersonalProject = projectTask.IsPersonalProject,
                         TypeProjectItem = projectTask.TypeProjectItem.HasValue && projectTask.TypeProjectItem > 0 ? projectTask.TypeProjectItem : 1,
                         IsAdditional = projectTask.IsAdditional,
@@ -1900,27 +1911,28 @@ namespace RERPAPI.Controllers.Project
                         return BadRequest(ApiResponseFactory.Fail(null, "Failed to approve project task."));
                     }
 
-                    if (isApproved)
+                    //if (isApproved)
+                    //{
+                    //    exitProjectTask.IsApproved = 2;
+                    //}
+                    //else
+                    //{
+                    //    exitProjectTask.IsApproved = 3;
+                    //}
+
+                    var dayActual = (exitProjectTask.ActualEndDate.Value.Date - exitProjectTask.ActualStartDate.Value.Date).TotalDays + 1;
+                    var dayPlan = (exitProjectTask.PlanEndDate.Value.Date - exitProjectTask.PlanStartDate.Value.Date).TotalDays + 1;
+                    if ((dayActual - dayPlan) > 0)
                     {
-                        exitProjectTask.IsApproved = 2;
+                        exitProjectTask.PercentOverTime = Math.Round((decimal)(dayActual - dayPlan) / (decimal)dayPlan, 2);
                     }
                     else
                     {
-                        exitProjectTask.IsApproved = 3;
+                        exitProjectTask.PercentOverTime = 0;
                     }
 
-                    if (exitProjectTask.Status <= 0)
-                    {
-                        if (exitProjectTask.ActualEndDate < DateTime.Now)
-                        {
-                            exitProjectTask.Status = 2;
-                        }
-                        else
-                        {
-                            exitProjectTask.Status = 1;
-                        }
-                    }
-                    exitProjectTask.UpdatedDate = DateTime.Now;
+
+                    exitProjectTask.UpdatedDate = exitProjectTask.UpdatedDate;
 
                     var newProjectTaskLog = new ProjectTaskLog
                     {
@@ -2086,7 +2098,7 @@ namespace RERPAPI.Controllers.Project
                         Status = 0,
                         IsApproved = 1,
                         PlanStartDate = item.PlanStartDate,
-                        PlanEndDate = item.PlanEndDate,
+                        PlanEndDate = item.PlanEndDate.HasValue ? item.PlanEndDate.Value.Date.AddDays(1).AddSeconds(-1) : (DateTime?)null,
                         EmployeeCreateID = currentUser.EmployeeID,
                         ProjectTaskTypeID = 1
                     };
