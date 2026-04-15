@@ -142,10 +142,17 @@ namespace RERPAPI.Controllers.HRM
                 var oldTokens = _pinResetTokenRepo.GetAll(x => x.UserId == userId && x.IsUsed == false);
                 foreach (var t in oldTokens)
                     t.IsUsed = true;
-                
+                //Sửa lỗi Update Entities
                 if (oldTokens.Any())
-                    await _pinResetTokenRepo.UpdateRangeAsync(oldTokens);
-
+                {
+                    foreach (var item in oldTokens)
+                    {
+                        item.UpdatedDate = DateTime.Now;
+                        await _pinResetTokenRepo.UpdateAsync(item);
+                    }
+                    
+                }    
+                    
                 // Create new OTP (6 digits)
                 string rawToken = new Random().Next(100000, 1000000).ToString();
                 var token = new PinResetToken
