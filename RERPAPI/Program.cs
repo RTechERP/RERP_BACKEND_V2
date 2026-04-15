@@ -125,7 +125,7 @@ builder.Services.AddScoped<EmployeeFoodOrderRepo>();
 builder.Services.AddScoped<EmployeeNoFingerprintRepo>();
 builder.Services.AddScoped<EmployeeOnLeaveMasterRepo>();
 builder.Services.AddScoped<EmployeeOnLeaveRepo>();
-//builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.HRM.EmployeeOnLeavePhaseRepo>();
+builder.Services.AddScoped<EmployeeOnLeavePhaseRepo>();
 builder.Services.AddScoped<EmployeeOverTimeRepo>();
 builder.Services.AddScoped<EmployeeProjectTypeRepo>();
 builder.Services.AddScoped<EmployeePurchaseRepo>();
@@ -583,7 +583,7 @@ builder.Services.AddScoped<KPIPositionEmployeeRepo>();
 builder.Services.AddScoped<KPIEmployeePointDetailRepo>();
 
 
-//builder.Services.AddScoped<ProjectTaskChecklist>();
+builder.Services.AddScoped<ProjectTaskChecklist>();
 builder.Services.AddScoped<ProjectTaskEmployeeRepo>();
 builder.Services.AddScoped<ProjectTaskApproveRepo>();
 builder.Services.AddScoped<ProjectTaskLogRepo>();
@@ -830,7 +830,7 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseCors("MyCors");
 app.UseAuthentication();
-//app.UseMiddleware<DynamicAuthorizationMiddleware>();
+app.UseMiddleware<DynamicAuthorizationMiddleware>();
 app.UseAuthorization();
 app.UseSession();
 
@@ -846,24 +846,24 @@ app.Use(async (context, next) =>
 });
 
 
-//app.UseStaticFiles();
-//List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();
+app.UseStaticFiles();
+List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();
 
-//foreach (var item in staticFiles)
-//{
-//    app.UseStaticFiles(new StaticFileOptions()
-//    {
-//        FileProvider = new PhysicalFileProvider(item.PathFull),
-//        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-//    });
+foreach (var item in staticFiles)
+{
+    app.UseStaticFiles(new StaticFileOptions()
+    {
+        FileProvider = new PhysicalFileProvider(item.PathFull),
+        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+    });
 
 
-//    app.UseDirectoryBrowser(new DirectoryBrowserOptions 
-//    {
-//        FileProvider = new PhysicalFileProvider(item.PathFull),
-//        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-//    });
-//}
+    app.UseDirectoryBrowser(new DirectoryBrowserOptions
+    {
+        FileProvider = new PhysicalFileProvider(item.PathFull),
+        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+    });
+}
 var tusStore = new TusDiskStore(Directory.GetCurrentDirectory());
 // config Tus dotnet
 app.UseTus(httpContext => new DefaultTusConfiguration
