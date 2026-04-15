@@ -620,6 +620,7 @@ builder.Services.AddScoped<HRRecruitmentQuestionImageRepo>();
 builder.Services.AddScoped<HRRecruitmentExamResultDetailRepo>();
 builder.Services.AddScoped<HRRecruitmentExamResultImageRepo>();
 builder.Services.AddScoped<HiringRequestExamRepo>();
+builder.Services.AddScoped<HRRecruitmentExamEvaluationFileRepo>();
 #endregion
 #region bình thêm
 //builder.Services.AddScoped<CourseRepo>();
