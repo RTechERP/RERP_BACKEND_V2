@@ -133,7 +133,7 @@ namespace RERPAPI.Repo.GenericEntity.HRM
                           .FirstOrDefault(x =>
                            (x.Code == "N1" || x.Code == "N2") &&
                            x.UserID == _currentUser.ID);
-                bool isSpecialPermission = _currentUser.IsAdmin==true||vUserHR!=null;
+                bool isSpecialPermission = _currentUser.IsAdmin == true || vUserHR != null;
                 // 1. Validate Overlaps against Database
                 foreach (var detail in dto.Details)
                 {
@@ -207,7 +207,7 @@ namespace RERPAPI.Repo.GenericEntity.HRM
 
                     // Check đăng ký ngày hiện tại
                     bool hasTodayRegistration = dto.Details.Any(d =>
-                        d.StartDate.HasValue && d.StartDate.Value.Date == today&&d.Type==2);
+                        d.StartDate.HasValue && d.StartDate.Value.Date == today && d.Type == 2);
 
                     if (hasTodayRegistration)
                     {
@@ -220,7 +220,7 @@ namespace RERPAPI.Repo.GenericEntity.HRM
                     if (now.Hour >= 19)
                     {
                         bool hasTomorrowRegistration = dto.Details.Any(d =>
-                            d.StartDate.HasValue && d.StartDate.Value.Date == tomorrow&&d.Type==2);
+                            d.StartDate.HasValue && d.StartDate.Value.Date == tomorrow && d.Type == 2);
 
                         if (hasTomorrowRegistration)
                         {
@@ -257,7 +257,7 @@ namespace RERPAPI.Repo.GenericEntity.HRM
         }
 
 
-    
+
 
     }
 }

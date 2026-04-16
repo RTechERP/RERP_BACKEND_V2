@@ -645,6 +645,7 @@ builder.Services.AddScoped<EmailHelper>();
 
 builder.Services.AddScoped<HistoryBorrowSaleLogRepo>();
 builder.Services.AddScoped<CommercialPriceRequestRepo>();
+builder.Services.AddScoped<PaymentOrderLogApprovedRepo>();
 
 
 builder.Services.AddScoped<CurrentUser>(provider =>

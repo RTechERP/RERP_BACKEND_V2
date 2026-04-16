@@ -732,6 +732,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<PaymentOrderLog> PaymentOrderLogs { get; set; }
 
+    public virtual DbSet<PaymentOrderLogApproved> PaymentOrderLogApproveds { get; set; }
+
     public virtual DbSet<PaymentOrderOrderType> PaymentOrderOrderTypes { get; set; }
 
     public virtual DbSet<PaymentOrderPO> PaymentOrderPOs { get; set; }
@@ -8357,6 +8359,29 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
+        modelBuilder.Entity<PaymentOrderLogApproved>(entity =>
+        {
+            entity.ToTable("PaymentOrderLogApproved");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.DateApproved).HasColumnType("datetime");
+            entity.Property(e => e.EmployeeApproveActualID).HasComment("Người duyệt thực tế");
+            entity.Property(e => e.EmployeeID).HasComment("Người được chỉ định duyệt");
+            entity.Property(e => e.IsApproved).HasComment("0:Chờ duyêt; 1:Đã duyệt; 2:Không duyệt");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.IsRequestAppendFileAC).HasComment("Kế toán yc bổ sung (1: Yc bổ sung file)");
+            entity.Property(e => e.IsRequestAppendFileHR).HasComment("HR yc bổ sung (1: Yc bổ sung file)");
+            entity.Property(e => e.ReasonRequestAppendFileAC)
+                .HasMaxLength(550)
+                .HasComment("Lý do Kế toán yc bổ sung file");
+            entity.Property(e => e.ReasonRequestAppendFileHR)
+                .HasMaxLength(550)
+                .HasComment("Lý do HR yc bổ sung file");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
         modelBuilder.Entity<PaymentOrderOrderType>(entity =>
         {
             entity.ToTable("PaymentOrderOrderType");
@@ -9895,9 +9920,11 @@ public partial class RTCContext : DbContext
                 .HasComment("Ngày tạo bản ghi")
                 .HasColumnType("datetime");
             entity.Property(e => e.EmployeeID).HasComment("ID của bảng Employee");
-            entity.Property(e => e.IsDeleted).HasComment("Trạng thái khóa mềm ");
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false)
+                .HasComment("Trạng thái khóa mềm ");
             entity.Property(e => e.ProjectTaskID).HasComment("ID của bảng ProjectItem");
-            entity.Property(e => e.Type).HasComment("1: assignee, 2: related");
+            entity.Property(e => e.Type).HasComment("1: người nhận việc, 2: người liên quan");
             entity.Property(e => e.UpdatedBy)
                 .HasMaxLength(50)
                 .HasComment("Người cập nhật bản ghi");
