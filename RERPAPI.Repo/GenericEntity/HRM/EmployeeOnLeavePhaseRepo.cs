@@ -207,7 +207,7 @@ namespace RERPAPI.Repo.GenericEntity.HRM
 
                     // Check đăng ký ngày hiện tại
                     bool hasTodayRegistration = dto.Details.Any(d =>
-                        d.StartDate.HasValue && d.StartDate.Value.Date == today);
+                        d.StartDate.HasValue && d.StartDate.Value.Date == today&&d.Type==2);
 
                     if (hasTodayRegistration)
                     {
@@ -220,7 +220,7 @@ namespace RERPAPI.Repo.GenericEntity.HRM
                     if (now.Hour >= 19)
                     {
                         bool hasTomorrowRegistration = dto.Details.Any(d =>
-                            d.StartDate.HasValue && d.StartDate.Value.Date == tomorrow);
+                            d.StartDate.HasValue && d.StartDate.Value.Date == tomorrow&&d.Type==2);
 
                         if (hasTomorrowRegistration)
                         {
