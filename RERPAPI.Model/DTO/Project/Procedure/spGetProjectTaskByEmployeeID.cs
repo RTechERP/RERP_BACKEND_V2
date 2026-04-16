@@ -164,6 +164,7 @@ namespace RERPAPI.Model.DTO.Project.Procedure
         /// </summary>
         public DateTime? Deadline { get; set; }
         public int? ProjectTaskTypeID { get; set; }
+        public bool? ApprovalStatus { get; set; }
 
     }
 }
