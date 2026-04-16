@@ -232,12 +232,12 @@ namespace RERPAPI.Controllers.Old.Technical
 
                         // item.CreatedDate = new DateTime(2026,3,23,19,49,26); // Theo yêu cầu: Comment lại vì không cần
                         itemsToUpdate.Add(item);
-                        
+
                         if (isTechnical && item.ProjectItemID.HasValue && projectItemDict.TryGetValue(item.ProjectItemID.Value, out var pItem))
                         {
                             UpdateProjectItemLogic(item, pItem);
                             if (!projectItemsToUpdate.Any(x => x.ID == pItem.ID)) projectItemsToUpdate.Add(pItem);
-                    }
+                        }
                     }
                     else
                     {
@@ -427,7 +427,7 @@ namespace RERPAPI.Controllers.Old.Technical
             try
             {
                 var dailyData = _dailyReportTechnicalRepo.GetByID(dailyID);
-                var dailyFileData = _dailyFileMar.GetAll(x => x.DailyReportID == dailyID && x.IsDeleted ==false);
+                var dailyFileData = _dailyFileMar.GetAll(x => x.DailyReportID == dailyID && x.IsDeleted == false);
                 return Ok(ApiResponseFactory.Success(new { dailyData, dailyFileData }, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
@@ -737,7 +737,7 @@ namespace RERPAPI.Controllers.Old.Technical
                 //    Receiver = receiverEmployeeId,
                 //};
                 //await _employeeSendEmailRepo.CreateAsync(emailEntity);
-                await _emailHelper.SendAsync(emailTo??"", subject, request.Body, true, emailCc??"");
+                await _emailHelper.SendAsync(emailTo ?? "", subject, request.Body, true, emailCc ?? "");
                 // ⑩ Trả về kết quả
                 return Ok(ApiResponseFactory.Success(new
                 {
@@ -855,13 +855,13 @@ namespace RERPAPI.Controllers.Old.Technical
                 {
                     // Trường hợp 1: Thực tập sinh Marketing (Position = 88)
                     // Gửi cho Marketing Manager
-                
+
                     if (marketingManager == null)
                     {
                         return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy thông tin Marketing Manager!"));
                     }
                     emailTo = marketingManager.EmailCongTy;
-                   // emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
+                    // emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
                     receiverEmployeeId = marketingManagerID;
                 }
                 else
@@ -880,7 +880,7 @@ namespace RERPAPI.Controllers.Old.Technical
                     {
                         emailTo = "marketing02@rtc.edu.vn";
                         //emailTo = "quanghung21hb@gmail.com";
-                       // emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
+                        // emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
                         await _emailHelper.SendAsync(emailTo, subject, request.Body, cc: emailCc);
                     }
                     //else if(currentUser.ID == 1502)
