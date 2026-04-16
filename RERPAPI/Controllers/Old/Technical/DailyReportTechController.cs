@@ -122,8 +122,9 @@ namespace RERPAPI.Controllers.Old.Technical
 
         // ham update hang muc cong viec
         [NonAction]
-        public async Task UpdateProjectItem(
-          DailyReportTechnical request)
+        public void UpdateProjectItemLogic(
+          DailyReportTechnical request,
+          ProjectItem projectItem)
         {
             try
             {
@@ -166,7 +167,7 @@ namespace RERPAPI.Controllers.Old.Technical
             }
             catch (Exception ex)
             {
-                throw new Exception("Lỗi khi bổ sung PO: " + ex.Message);
+                throw new Exception("Lỗi khi cập nhật hạng mục: " + ex.Message);
             }
         }
         [HttpPost("save-report-tech")]
@@ -189,17 +190,56 @@ namespace RERPAPI.Controllers.Old.Technical
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, validationMessage));
                 }
+
+                // --- BẮT ĐẦU TỐI ƯU HÓA BATCH ---
+                var itemsToUpdate = new List<DailyReportTechnical>();
+                var itemsToCreate = new List<DailyReportTechnical>();
+                var projectItemsToUpdate = new List<ProjectItem>();
+
+                // 2. Pre-load ProjectItems nếu là Technical
+                Dictionary<int, ProjectItem> projectItemDict = new Dictionary<int, ProjectItem>();
+                if (isTechnical)
+                {
+                    var projectItemIds = request
+                        .Where(x => x.ProjectItemID.HasValue && x.ProjectItemID > 0)
+                        .Select(x => x.ProjectItemID.Value)
+                        .Distinct()
+                        .ToList();
+
+                    if (projectItemIds.Any())
+                    {
+                        projectItemDict = _projectItemRepo.GetAll(x => projectItemIds.Contains(x.ID))
+                            .ToDictionary(x => x.ID, x => x);
+                    }
+                }
+
+                // 3. Pre-load báo cáo cũ để kiểm tra quyền sửa
+                var existingReportIds = request.Where(x => x.ID > 0).Select(x => x.ID).ToList();
+                var reportsInDb = _dailyReportTechnicalRepo.GetAll(x => existingReportIds.Contains(x.ID))
+                    .ToDictionary(x => x.ID, x => x);
+
                 foreach (var item in request)
                 {
                     if (item.ID > 0)
                     {
-                        var data = _dailyReportTechnicalRepo.GetByID(item.ID);
-                        if (data.UserReport != currentUser.ID)
+                        if (!reportsInDb.TryGetValue(item.ID, out var dbReport))
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy báo cáo ID {item.ID}"));
+                        }
+
+                        if (dbReport.UserReport != currentUser.ID)
                         {
                             return BadRequest(ApiResponseFactory.Fail(null, "Bạn không thể sửa báo cáo công việc của người khác!"));
                         }
-                        await _dailyReportTechnicalRepo.UpdateAsync(item);
-                        if(isTechnical) await UpdateProjectItem(item);
+
+                        // item.CreatedDate = new DateTime(2026,3,23,19,49,26); // Theo yêu cầu: Comment lại vì không cần
+                        itemsToUpdate.Add(item);
+                        
+                        if (isTechnical && item.ProjectItemID.HasValue && projectItemDict.TryGetValue(item.ProjectItemID.Value, out var pItem))
+                        {
+                            UpdateProjectItemLogic(item, pItem);
+                            if (!projectItemsToUpdate.Any(x => x.ID == pItem.ID)) projectItemsToUpdate.Add(pItem);
+                    }
                     }
                     else
                     {
@@ -215,15 +255,28 @@ namespace RERPAPI.Controllers.Old.Technical
                         item.OldProjectID = 0;
                         item.DeleteFlag = 0;
                         item.Confirm = false;
+                        item.UserReport = userId; // Gán userID cho báo cáo mới
                         item.CreatedDate = DateTime.Today.AddHours(23).AddMinutes(30);
                         await _dailyReportTechnicalRepo.CreateAsync(item);
                         if (isTechnical) await UpdateProjectItem(item);
 
+                        itemsToCreate.Add(item);
+
+                        if (isTechnical && item.ProjectItemID.HasValue && projectItemDict.TryGetValue(item.ProjectItemID.Value, out var pItem))
+                        {
+                            UpdateProjectItemLogic(item, pItem);
+                            if (!projectItemsToUpdate.Any(x => x.ID == pItem.ID)) projectItemsToUpdate.Add(pItem);
+                        }
                     }
                 }
-                return Ok(ApiResponseFactory.Success(null,
-                          "Lưu dữ liệu thành công"
-                      ));
+
+                // 4. Lưu dữ liệu hàng loạt
+                if (itemsToCreate.Any()) await _dailyReportTechnicalRepo.CreateRangeAsync(itemsToCreate);
+                if (itemsToUpdate.Any()) await _dailyReportTechnicalRepo.UpdateRangeAsync_Binh(itemsToUpdate);
+                if (projectItemsToUpdate.Any()) await _projectItemRepo.UpdateRangeAsync_Binh(projectItemsToUpdate);
+
+                return Ok(ApiResponseFactory.Success(null, "Lưu dữ liệu thành công"));
+                // --- KẾT THÚC TỐI ƯU HÓA ---
 
             }
             catch (Exception ex)
