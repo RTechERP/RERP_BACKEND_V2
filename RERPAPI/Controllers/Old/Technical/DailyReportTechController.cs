@@ -131,7 +131,6 @@ namespace RERPAPI.Controllers.Old.Technical
                 DateTime dateReport = request.DateReport.HasValue ? request.DateReport.Value.ToDateTime(TimeOnly.MinValue) : DateTime.Today;
 
                 DateTime currentDate = DateTime.Now;
-                var projectItem = _projectItemRepo.GetByID(request.ProjectItemID ?? 0);
                 if (projectItem != null)
                 {
                     if (request.PercentComplete == 100)
@@ -162,7 +161,6 @@ namespace RERPAPI.Controllers.Old.Technical
 
                     // Cập nhật % hoàn thành thực tế
                     projectItem.PercentageActual = request.PercentComplete;
-                    await _projectItemRepo.UpdateAsync(projectItem);
                 }
             }
             catch (Exception ex)
@@ -248,17 +246,11 @@ namespace RERPAPI.Controllers.Old.Technical
                         item.Type = 0;
                         item.ReportLate = 0;
                         item.StatusResult = 0;
-                        item.Type = 0; // Luôn set Type = 0 (không OT) khi tạo mới
-                        item.ReportLate = 0; // Set mặc định = 0, KHÔNG tính toán
                         item.WorkPlanDetailID = 0;
-                        item.OldProjectID = 0;
-                        item.OldProjectID = 0;
                         item.DeleteFlag = 0;
                         item.Confirm = false;
                         item.UserReport = userId; // Gán userID cho báo cáo mới
                         item.CreatedDate = DateTime.Today.AddHours(23).AddMinutes(30);
-                        await _dailyReportTechnicalRepo.CreateAsync(item);
-                        if (isTechnical) await UpdateProjectItem(item);
 
                         itemsToCreate.Add(item);
 
