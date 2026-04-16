@@ -202,14 +202,30 @@ namespace RERPAPI.Repo.GenericEntity.HRM
                 if (response.status == 1 && !isSpecialPermission)
                 {
                     var now = DateTime.Now;
+                    var today = DateTime.Today;
+                    var tomorrow = today.AddDays(1);
+
+                    // Check đăng ký ngày hiện tại
+                    bool hasTodayRegistration = dto.Details.Any(d =>
+                        d.StartDate.HasValue && d.StartDate.Value.Date == today);
+
+                    if (hasTodayRegistration)
+                    {
+                        response = ApiResponseFactory.Fail(null,
+                            "Không thể đăng ký nghỉ phép cho ngày hiện tại. Vui lòng kiểm tra lại.");
+                        return response;
+                    }
+
+                    // Check sau 19h không cho đăng ký ngày mai
                     if (now.Hour >= 19)
                     {
-                        var tomorrow = DateTime.Today.AddDays(1);
-                        bool hasTomorrowRegistration = dto.Details.Any(d => d.StartDate.HasValue && d.StartDate.Value.Date == tomorrow);
+                        bool hasTomorrowRegistration = dto.Details.Any(d =>
+                            d.StartDate.HasValue && d.StartDate.Value.Date == tomorrow);
 
                         if (hasTomorrowRegistration)
                         {
-                            response = ApiResponseFactory.Fail(null, "Sau 19:00 không thể đăng ký nghỉ phép cho ngày hôm sau. Vui lòng liên hệ HR hoặc Quản lý để được hỗ trợ.");
+                            response = ApiResponseFactory.Fail(null,
+                                "Sau 19:00 không thể đăng ký nghỉ phép cho ngày hôm sau. Vui lòng kiếm tra lại.");
                         }
                     }
                 }
