@@ -1170,7 +1170,21 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         {
             try
             {
-                var param = new { HiringRequestID = hiringRequestID };
+                // check thêm người phỏng vấn và người yêu câu tuyển dụng 
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var param = new
+                {
+                    HiringRequestID = hiringRequestID,
+                    @UserRequestID = (currentUser.IsAdmin || currentUser.Permissions
+    .Split(',')
+    .Select(p => p.Trim())
+    .Contains("N2")) ? 0 : currentUser.EmployeeID
+                };
+
+
+
                 var data = await SqlDapper<object>.ProcedureToListAsync("spGetCandidateScoreMatrixByHiringRequest", param);
                 return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu ma trận điểm thành công"));
             }
@@ -1203,7 +1217,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             .Select(p => p.Trim())
             .Contains("N2"))
         ? 0
-        : currentUser.ID),
+        : currentUser.EmployeeID),
                         InterviewID = currentUser.EmployeeID
                     };
 
