@@ -211,7 +211,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         dto.Inventory.TotalQuantityLast = 0;
                         dto.Inventory.MinQuantity = 0;
                         dto.Inventory.IsStock = false;
-                        dto.Inventory.ProductGroupID = dto.ProductSale.ProductGroupID;
+                        //dto.Inventory.ProductGroupID = dto.ProductSale.ProductGroupID;
 
                         await _inventoryRepo.CreateAsync(dto.Inventory);
                     }
