@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using RERPAPI.Entities;
 using RERPAPI.IRepo;
 using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
