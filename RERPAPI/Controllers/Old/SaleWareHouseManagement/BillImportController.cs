@@ -623,7 +623,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         var inventoryKey = (dto.billImport.WarehouseID, detail.ProductID);
                         bool existsInDb = inventoryList.Any(x =>
                             x.WarehouseID == dto.billImport.WarehouseID &&
-                            x.ProductSaleID == detail.ProductID && x.ProductGroupID == dto.billImport.KhoTypeID );
+                            x.ProductSaleID == detail.ProductID);//&& x.ProductGroupID == dto.billImport.KhoTypeID );
                         bool existsInCurrentBatch = createdProductIds.Contains(inventoryKey);
 
                         if (!existsInDb && !existsInCurrentBatch)
@@ -632,7 +632,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                             {
                                 WarehouseID = dto.billImport.WarehouseID,
                                 ProductSaleID = detail.ProductID,
-                                ProductGroupID = dto.billImport.KhoTypeID,
+                                //ProductGroupID = dto.billImport.KhoTypeID,
                                 TotalQuantityFirst = 0,
                                 TotalQuantityLast = 0,
                                 Import = 0,

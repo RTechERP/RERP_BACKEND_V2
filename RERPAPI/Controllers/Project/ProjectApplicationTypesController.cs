@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
@@ -8,6 +9,7 @@ namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ProjectApplicationTypesController : Controller
     {
         ProjectApplicationTypesRepo _projectApplicationType;
@@ -16,7 +18,7 @@ namespace RERPAPI.Controllers.Project
         {
             _projectApplicationType = projectApplicationTypeRepo;
         }
-
+      
         [HttpGet("project-application-type")]
         public async Task<IActionResult> GetProjectApplicationTypes(int? projectTypeID)
         {
@@ -36,7 +38,7 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-        //[RequiresPermission("N1,N2,N34,N89")]
+        [RequiresPermission("N1,N13,N27")]
         [HttpPost("save-project-application-type")]
         public async Task<IActionResult> SaveData([FromBody] ProjectApplicationType projectApplicationType)
         {
@@ -73,7 +75,7 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-
+        [RequiresPermission("N1,N13,N27")]
         [HttpPost("delete")]
         public async Task<IActionResult> Delete([FromBody] List<int> ids)
         {

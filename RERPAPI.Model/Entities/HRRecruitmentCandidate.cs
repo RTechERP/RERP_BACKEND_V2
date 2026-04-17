@@ -81,4 +81,6 @@ public partial class HRRecruitmentCandidate
     /// Người phỏng vấn
     /// </summary>
     public int? InterviewerID { get; set; }
+
+    public bool? IsActiveExam { get; set; }
 }

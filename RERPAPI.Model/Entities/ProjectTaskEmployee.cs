@@ -24,7 +24,7 @@ public partial class ProjectTaskEmployee
     public int? EmployeeID { get; set; }
 
     /// <summary>
-    /// 1: assignee, 2: related
+    /// 1: người nhận việc, 2: người liên quan
     /// </summary>
     public int? Type { get; set; }
 
