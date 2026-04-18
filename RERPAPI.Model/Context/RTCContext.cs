@@ -208,6 +208,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<Currency> Currencies { get; set; }
 
+    public virtual DbSet<CurrencyConfig> CurrencyConfigs { get; set; }
+
     public virtual DbSet<Customer> Customers { get; set; }
 
     public virtual DbSet<CustomerBase> CustomerBases { get; set; }
@@ -2968,6 +2970,25 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.NameEnglist).HasComment("Tên tiếng anh");
             entity.Property(e => e.NameVietNamese).HasComment("Tên tiếng việt");
             entity.Property(e => e.Note).HasComment("Ghi chú");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<CurrencyConfig>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Currency__3214EC07DD5C1C8D");
+
+            entity.Property(e => e.Id)
+                .HasMaxLength(10)
+                .IsUnicode(false);
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.SubUnit).HasMaxLength(50);
+            entity.Property(e => e.Text)
+                .HasMaxLength(10)
+                .IsUnicode(false);
+            entity.Property(e => e.Unit).HasMaxLength(50);
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
@@ -8362,6 +8383,10 @@ public partial class RTCContext : DbContext
         modelBuilder.Entity<PaymentOrderLogApproved>(entity =>
         {
             entity.ToTable("PaymentOrderLogApproved");
+
+            entity.HasIndex(e => e.PaymentOrderID, "idx_PaymentOrderID_PaymentOrderLogApproved");
+
+            entity.HasIndex(e => e.PaymentOrderLogID, "idx_PaymentOrderLogID_PaymentOrderLogApproved");
 
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
