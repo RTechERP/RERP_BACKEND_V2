@@ -8219,6 +8219,7 @@ public partial class RTCContext : DbContext
                 .HasColumnType("datetime");
             entity.Property(e => e.DeadlinePayment).HasColumnType("datetime");
             entity.Property(e => e.EndLocation).HasComment("Điểm đến");
+            entity.Property(e => e.HRNote).HasMaxLength(550);
             entity.Property(e => e.IsBill)
                 .HasDefaultValue(false)
                 .HasComment("Có hóa đơn");
