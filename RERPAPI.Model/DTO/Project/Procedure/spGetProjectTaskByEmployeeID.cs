@@ -128,6 +128,8 @@ namespace RERPAPI.Model.DTO.Project.Procedure
         public string? ProjectCode { get; set; }
         public string? ProjectName { get; set; }
 
+
+        // tên người giao việc
         public string? FullName { get; set; }
 
 
@@ -135,6 +137,8 @@ namespace RERPAPI.Model.DTO.Project.Procedure
         public string? ParentTitle { get; set; }
 
         public int? SecondEmployeeID { get; set; }
+
+        // tên người nhận việc hoặc người liên quan
         public string? SecondEmployeeFullName { get; set; }
         public int? SecondEmployeeType { get; set; }
         public string? ReviewDiscription { get; set; }
@@ -165,6 +169,15 @@ namespace RERPAPI.Model.DTO.Project.Procedure
         public DateTime? Deadline { get; set; }
         public int? ProjectTaskTypeID { get; set; }
         public bool? ApprovalStatus { get; set; }
+        /// <summary>
+        /// Độ ưu tiên dự án 1: Thấp, 2. Trung bình, 3. Cao, 4. Khẩn cấp
+        /// </summary>
+        public int? Priority { get; set; }
+
+        /// <summary>
+        /// Thời gian dự kiến (h)
+        /// </summary>
+        public decimal? EstimatedTime { get; set; }
 
     }
 }
