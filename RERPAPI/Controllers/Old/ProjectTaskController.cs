@@ -555,7 +555,7 @@ namespace RERPAPI.Controllers.Project
                             var newEmployeeRelate = new ProjectTaskEmployee
                             {
                                 ProjectTaskID = newProjectTask.ID,
-                                EmployeeID = leaders[0].LeaderID,
+                                EmployeeID = leaders[0].LeaderID ?? 0,
                                 Type = 2
                             };
                             await _projectTaskEmployeeRepo.CreateAsync(newEmployeeRelate);
