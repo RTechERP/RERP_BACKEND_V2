@@ -9071,13 +9071,23 @@ public partial class RTCContext : DbContext
 
             entity.ToTable("ProjectItem");
 
-            entity.Property(e => e.ActualEndDate).HasColumnType("datetime");
-            entity.Property(e => e.ActualStartDate).HasColumnType("datetime");
+            entity.Property(e => e.ID).HasComment("ID tự tăng");
+            entity.Property(e => e.ActualEndDate)
+                .HasComment("Ngày kết thúc thực tế")
+                .HasColumnType("datetime");
+            entity.Property(e => e.ActualStartDate)
+                .HasComment("Ngày bắt đầu thực tế")
+                .HasColumnType("datetime");
             entity.Property(e => e.Code)
                 .HasMaxLength(50)
-                .IsUnicode(false);
-            entity.Property(e => e.CreatedBy).HasMaxLength(50);
-            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+                .IsUnicode(false)
+                .HasComment("Mã công việc");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người tạo");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Thời gian tạo")
+                .HasColumnType("datetime");
             entity.Property(e => e.Deadline)
                 .HasComment("Thời gian công việc phải hoàn thành")
                 .HasColumnType("datetime");
@@ -9089,41 +9099,71 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.EmployeeRequestName)
                 .HasMaxLength(550)
                 .HasComment("lưu tên người yêu cầu lấy từ bảng Employee, nếu  = 0 thì là tên KH");
+            entity.Property(e => e.EstimatedTime)
+                .HasComment("Thời gian dự kiến (h)")
+                .HasColumnType("decimal(5, 2)");
             entity.Property(e => e.IsAdditional)
                 .HasDefaultValue(false)
                 .HasComment("Trạng thái đánh giá xem có phát sinh không ");
             entity.Property(e => e.IsApproved).HasComment("0: Chờ duyệt kế hoạch; 1:Leader duyệt kế hoạch; 2:Chờ duyệt thực tế; 3:Leader Duyệt thực tế");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái xóa");
             entity.Property(e => e.IsPersonalProject)
                 .HasDefaultValue(false)
                 .HasComment("Trạng thái đánh giá xem đây có phải là công việc cá nhân hay không");
             entity.Property(e => e.ItemLate).HasComment("1:Hạng mục quá hạn,\r\n0: Hạng mục đúng hạn");
-            entity.Property(e => e.Location).HasMaxLength(550);
+            entity.Property(e => e.Location)
+                .HasMaxLength(550)
+                .HasComment("Địa điểm làm việc");
+            entity.Property(e => e.Mission).HasComment("Title của công việc");
+            entity.Property(e => e.ParentID).HasComment("ID của công việc cha");
             entity.Property(e => e.PercentItem).HasColumnType("decimal(18, 1)");
             entity.Property(e => e.PercentOverTime)
                 .HasComment("Phần trăm chênh lệch quá hạn")
                 .HasColumnType("decimal(3, 2)");
-            entity.Property(e => e.PercentageActual).HasColumnType("decimal(18, 2)");
-            entity.Property(e => e.PlanEndDate).HasColumnType("datetime");
-            entity.Property(e => e.PlanStartDate).HasColumnType("datetime");
+            entity.Property(e => e.PercentageActual)
+                .HasComment("Phần trăm hoàn thành ")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.PlanEndDate)
+                .HasComment("Ngày kết thúc kế hoạch")
+                .HasColumnType("datetime");
+            entity.Property(e => e.PlanStartDate)
+                .HasComment("Ngày bắt đầu kế hoạch ")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Priority).HasComment("Độ ưu tiên dự án 1: Thấp, 2. Trung bình, 3. Cao, 4. Khẩn cấp");
+            entity.Property(e => e.ProjectID).HasComment("Dự án của công việc");
             entity.Property(e => e.ProjectTaskResult).HasComment("Kết quả công việc");
             entity.Property(e => e.ProjectTaskTypeID)
                 .HasDefaultValue(1)
                 .HasComment("Loại công việc");
             entity.Property(e => e.STT)
                 .HasMaxLength(50)
-                .IsUnicode(false);
-            entity.Property(e => e.Status).HasDefaultValue(0);
+                .IsUnicode(false)
+                .HasComment("Số thứ tự hạng mục công việc");
+            entity.Property(e => e.Status)
+                .HasDefaultValue(0)
+                .HasComment("Trạng thái công việc : 0: Chưa làm , 1: Đang làm, 2: Hoàn thành, 3: Pending");
             entity.Property(e => e.TaskComplexity).HasComment("Độ phức tạp của công việc (1 - 5)");
             entity.Property(e => e.TimeSpan).HasColumnType("decimal(18, 1)");
-            entity.Property(e => e.TotalDayActual).HasColumnType("decimal(18, 2)");
-            entity.Property(e => e.TotalDayPlan).HasColumnType("decimal(18, 1)");
-            entity.Property(e => e.TypeProjectItem).HasDefaultValue(1);
-            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
-            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+            entity.Property(e => e.TotalDayActual)
+                .HasComment("Tổng số ngày hoàn thành thực tế")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TotalDayPlan)
+                .HasComment("Tổng ngày kế hoạch")
+                .HasColumnType("decimal(18, 1)");
+            entity.Property(e => e.TypeProjectItem)
+                .HasDefaultValue(1)
+                .HasComment("Loại hạng mục công việc");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người cập nhật");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật")
+                .HasColumnType("datetime");
             entity.Property(e => e.UpdatedDateActual)
                 .HasComment("Ngày update kết thúc thực tế")
                 .HasColumnType("datetime");
             entity.Property(e => e.UpdatedDateReasonLate).HasColumnType("datetime");
+            entity.Property(e => e.UserID).HasComment("userID của người nhận việc");
         });
 
         modelBuilder.Entity<ProjectItemDetail>(entity =>
