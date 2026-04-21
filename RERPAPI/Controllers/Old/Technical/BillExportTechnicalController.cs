@@ -157,280 +157,116 @@ namespace RERPAPI.Controllers.Old.Technical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [HttpPost("export-bill-export-technical")]
-        public IActionResult ExportBillImportTechnical([FromBody] BillExportTechnicallExcelFullDTO dto)
-        {
-            try
-            {
-                var master = dto.Master;
-                var details = dto.Details;
+		[HttpPost("export-bill-export-technical")]
+		public IActionResult ExportBillImportTechnical([FromBody] BillExportTechnicallExcelFullDTO dto)
+		{
+			try
+			{
+				var master = dto.Master;
+				var details = dto.Details;
+				if (master == null || details == null || details.Count == 0)
+					return BadRequest("Dữ liệu phiếu xuất kỹ thuật không hợp lệ.");
 
-                if (master == null || details == null || details.Count == 0)
-                    return BadRequest("Dữ liệu phiếu nhập kỹ thuật không hợp lệ.");
-                ExcelPackage.License.SetNonCommercialOrganization("RTC Technology VietNam");
+				ExcelPackage.License.SetNonCommercialOrganization("RTC Technology VietNam");
+				string pahtServer = _configuration.GetValue<string>("PathTemplate");
+				string templatePath = Path.Combine(pahtServer, "ExportExcel", "BillExportTechnical.xlsx");
+				if (!System.IO.File.Exists(templatePath))
+					return NotFound("File mẫu không tồn tại.");
 
-                string pahtServer = _configuration.GetValue<string>("PathTemplate");
-                string templatePath = Path.Combine(pahtServer, "ExportExcel", "BillExportTechnical.xlsx");
-                if (!System.IO.File.Exists(templatePath))
-                    return NotFound("File mẫu không tồn tại.");
+				string fileName = $"PXKT_{master.Code}_{DateTime.Now:ddMMyyyy_HHmmss}.xlsx";
 
-                string fileName = $"PNKT_{master.Code}_{DateTime.Now:ddMMyyyy_HHmmss}.xlsx";
-                using var package = new ExcelPackage(new FileInfo(templatePath));
-                var ws = package.Workbook.Worksheets[0];
+				using var package = new ExcelPackage(new FileInfo(templatePath));
+				var ws = package.Workbook.Worksheets[0];
 
-                // Dữ liệu chung
-                DateTime createDate = master.CreatedDate ?? DateTime.Now;
-                string locationDate = $"Hà Nội, Ngày {createDate.Day} tháng {createDate.Month} năm {createDate.Year}";
-                string suplier = master.SupplierName?.Trim() ?? "";
-                string customer = master.CustomerName?.Trim() ?? "";
-                string deliver = master.Deliver?.Trim() ?? "";
-                string receiver = master.Receiver?.Trim() ?? "";
-                string dept = master.DepartmentName?.Trim() ?? "";
-                // Ghi dữ liệu vào file Excel
-                ws.Cells[16, 2].Value = locationDate;
-                ws.Cells[18, 4].Value = $"Số: {master.Code}";
-                ws.Cells[19, 3].Value = string.IsNullOrEmpty(suplier) ? customer : suplier;
-                ws.Cells[20, 7].Value = receiver;
-                ws.Cells[35, 5].Value = deliver;
-                // Ghi chi tiết
-                int startRow = 27;
-                int templateRow = 27;
+				// ── Dữ liệu chung ──────────────────────────────────────────────
+				DateTime createDate = master.CreatedDate ?? DateTime.Now;
+				string locationDate = $"Hà Nội, Ngày {createDate.Day} tháng {createDate.Month} năm {createDate.Year}";
 
-                if (details.Count > 1)
-                {
-                    ws.InsertRow(startRow + 1, details.Count - 1);
-                }
+				string supplierCode = master.SupplierName?.Trim() ?? "";
+				string customerName =  "";
+				string customerFullName = master.CustomerName?.Trim() ?? "";
+				string deliver = master.Deliver?.Trim() ?? "";
+				string receiver = master.Receiver?.Trim() ?? "";
+				int receiverID = master.ReceiverID ?? 0;
+				string dept = master.DepartmentName?.Trim() ?? "";
+				string address = master.Addres?.Trim() ?? "";
+                string projectName = master.ProjectName?.Trim() ?? "";
 
-                for (int i = 0; i < details.Count; i++)
-                {
-                    int currentRow = startRow + i;
-                    var row = details[i];
-                    if (i > 0)
-                    {
-                        for (int col = 1; col <= 10; col++)
-                        {
-                            ws.Cells[currentRow, col].StyleID = ws.Cells[templateRow, col].StyleID;
-                        }
-                    }
+				// ── Ghi header ─────────────────────────────────────────────────
+				// [14,2]  Địa danh + ngày
+				ws.Cells[16, 2].Value = locationDate;
 
-                    ws.Cells[currentRow, 2].Value = i + 1;
-                    ws.Cells[currentRow, 3].Value = row.ProductCode?.Trim() ?? "";
-                    ws.Cells[currentRow, 4].Value = row.ProductName?.Trim() ?? "";
-                    ws.Cells[currentRow, 5].Value = row.Quantity;
-                    ws.Cells[currentRow, 6].Value = row.UnitName?.Trim() ?? "";
-                    ws.Cells[currentRow, 7].Value = row.Maker?.Trim() ?? "";
-                    ws.Cells[currentRow, 8].Value = row.WarehouseType?.Trim() ?? "";
-                    ws.Cells[currentRow, 9].Value = row.ProductCodeRTC?.Trim() ?? "";
-                    ws.Cells[currentRow, 10].Value = row.Note?.Trim() ?? "";
-                }
+				// [16,4]  Số phiếu
+				ws.Cells[18, 4].Value = master.Code;
 
-                ws.DeleteRow(startRow + details.Count);
+				// [17,3]  Nhà cung cấp hoặc tên khách hàng đầy đủ
+				ws.Cells[19, 3].Value = string.IsNullOrEmpty(supplierCode) ? customerFullName : supplierCode;
 
+				// [17,7] + [39,5]  Người giao
+				ws.Cells[19, 5].Value = deliver;
+				ws.Cells[37, 3].Value = deliver;
+
+				// [18,3]  Tên dự án
+				//ws.Cells[18, 3].Value = projectName;
+
+				// [19,3]  Người nhận (kèm phòng ban hoặc tên khách hàng)
+				if (!string.IsNullOrEmpty(customerName))
+				{
+					ws.Cells[20, 3].Value = $"{receiver} - {customerName}";
+				}
+				else
+				{
+					ws.Cells[20, 3].Value = string.IsNullOrEmpty(dept)
+						? receiver
+						: $"{receiver} / Phòng {dept}";
+				}
+
+				// [20,3]  Địa chỉ
+				ws.Cells[21, 3].Value = address;
+
+				// [39,10] Người nhận (chữ ký cuối)
+				ws.Cells[37, 8].Value = receiver;
+				// ── Ghi chi tiết (logic giống code chuẩn: insert-from-bottom, delete template) ──
+				int startRow = 27; // dòng template detail
+
+				// Duyệt ngược từ cuối lên đầu, mỗi vòng insert 1 dòng rồi ghi
+				for (int i = details.Count - 1; i >= 0; i--)
+				{
+					var row = details[i];
+
+					ws.Cells[startRow, 2].Value = i + 1;
+					ws.Cells[startRow, 3].Value = row.ProductCode?.Trim() ?? "";
+					ws.Cells[startRow, 4].Value = row.ProductName?.Trim() ?? "";
+					ws.Cells[startRow, 5].Value = row.Quantity;
+					ws.Cells[startRow, 6].Value = row.UnitName?.Trim() ?? "";
+					ws.Cells[startRow, 7].Value = row.Maker?.Trim() ?? "";
+					ws.Cells[startRow, 8].Value = row.WarehouseType?.Trim() ?? "";
+					ws.Cells[startRow, 9].Value = row.ProductCodeRTC?.Trim() ?? "";
+					ws.Cells[startRow, 10].Value = row.Note?.Trim() ?? "";
+
+					ws.InsertRow(startRow, 1, startRow); // insert + copy style từ dòng vừa ghi
+				}
+
+				// Xóa dòng template thừa (dòng startRow bị đẩy xuống sau các lần insert)
+				ws.DeleteRow(startRow);
+                ws.DeleteRow(startRow+ details.Count);
+
+                // ── Xuất file ──────────────────────────────────────────────────
                 var stream = new MemoryStream();
-                package.SaveAs(stream);
-                stream.Position = 0;
+				package.SaveAs(stream);
+				stream.Position = 0;
 
-                return File(stream,
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    fileName);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-        //[HttpPost("save-export-data")]
-        //public async Task<IActionResult> SaveExportData([FromBody] BillExportTechnicalFullDTO product)
-        //{
-        //    try
-        //    {
-        //        if (product == null || product.billExportTechnical == null)
-        //        {
-        //            return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." });
-        //        }
+				return File(stream,
+					"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+					fileName);
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
 
-        //        var header = product.billExportTechnical;
-
-        //        // Check rỗng
-        //        if (string.IsNullOrWhiteSpace(header.Code))
-        //            return BadRequest(new { status = 0, message = "Xin hãy điền số phiếu." });
-
-        //        if (string.IsNullOrWhiteSpace(header.Deliver)) // txtLienHe
-        //            return BadRequest(new { status = 0, message = "Xin hãy chọn người liên hệ." });
-
-        //        if (string.IsNullOrWhiteSpace(header.Receiver)) // txtNguoiNhan
-        //            return BadRequest(new { status = 0, message = "Chưa có thông tin người nhận." });
-
-        //        // Check Loại phiếu
-        //        if (header.BillType < 0)
-        //            return BadRequest(new { status = 0, message = "Xin hãy chọn loại phiếu." });
-
-        //        if ((header.SupplierSaleID ?? 0) <= 0 && (header.CustomerID ?? 0) <= 0)
-        //        {
-        //            return BadRequest(new { status = 0, message = "Vui lòng chọn Nhà cung cấp hoặc Khách hàng!" });
-        //        }
-
-        //        if ((header.ApproverID ?? 0) <= 0)
-        //            return BadRequest(new { status = 0, message = "Xin hãy chọn Người duyệt." });
-
-        //        var duplicateItem = _billExportTechnicalRepo.GetAll(x =>
-        //            x.Code == header.Code.Trim() &&
-        //            x.ID != header.ID &&
-        //            x.WarehouseID == header.WarehouseID
-        //        ).FirstOrDefault();
-
-        //        if (duplicateItem != null)
-        //        {
-        //            return BadRequest(new { status = 0, message = $"Số phiếu {header.Code} đã tồn tại trong kho này." });
-        //        }
-        //        if (product.historyDeleteBill != null)
-        //        {
-        //            if (product.historyDeleteBill.ID <= 0)
-        //                await _historyDeleteBillRepo.CreateAsync(product.historyDeleteBill);
-        //            else
-        //                await _historyDeleteBillRepo.UpdateAsync(product.historyDeleteBill);
-        //        }
-
-        //        header.Code = header.Code.Trim(); // Trim code
-        //        if (header.ID <= 0)
-        //        {
-        //            header.Status = 0; // Mặc định
-        //            header.BillDocumentExportType = 2; // Gán mặc định theo logic cũ
-        //            await _billExportTechnicalRepo.CreateAsync(header);
-        //        }
-        //        else
-        //        {
-        //            await _billExportTechnicalRepo.UpdateAsync(header);
-        //        }
-
-        //        Dictionary<int, int> sttToDetailIdMap = new();
-        //        int? singleDetailId = null;
-
-        //        if (product.billExportDetailTechnicals != null && product.billExportDetailTechnicals.Any())
-        //        {
-        //            foreach (var item in product.billExportDetailTechnicals)
-        //            {
-        //                item.BillExportTechID = header.ID;
-        //                item.WarehouseID = header.WarehouseID; // Đồng bộ kho
-
-        //                if (item.IsDeleted && item.ID > 0)
-        //                {
-        //                    var detailToDelete = _billExportDetailTechnicalRepo.GetByID(item.ID);
-        //                    if (detailToDelete != null)
-        //                    {
-        //                        detailToDelete.IsDelete = true;
-        //                        // detailToDelete.UpdatedDate = DateTime.Now; 
-        //                        await _billExportDetailTechnicalRepo.UpdateAsync(detailToDelete);
-        //                    }
-        //                    continue; // Bỏ qua các bước bên dưới, chuyển sang item tiếp theo
-        //                }
-
-        //                // --- LOGIC THÊM / SỬA ---
-        //                if (!item.IsDeleted)
-        //                {
-        //                    if (item.ID <= 0)
-        //                    {
-        //                        await _billExportDetailTechnicalRepo.CreateAsync(item);
-
-        //                        if (product.billExportDetailTechnicals.Count(x => !x.IsDeleted) == 1)
-        //                            singleDetailId = item.ID;
-
-        //                        // Map STT
-        //                        if (item.STT.HasValue && item.STT.Value > 0 && !sttToDetailIdMap.ContainsKey(item.STT.Value))
-        //                        {
-        //                            sttToDetailIdMap[item.STT.Value] = item.ID;
-        //                        }
-        //                    }
-        //                    else
-        //                    {
-        //                        await _billExportDetailTechnicalRepo.UpdateAsync(item);
-
-        //                        if (product.billExportDetailTechnicals.Count(x => !x.IsDeleted) == 1)
-        //                            singleDetailId = item.ID;
-        //                    }
-
-        //                    // Logic InventoryDemo (Cập nhật tồn kho ảo - Logic từ WinForms)
-        //                    var existInv = _inventoryDemoRepo.GetAll(x => x.ProductRTCID == item.ProductID && x.WarehouseID == item.WarehouseID).FirstOrDefault();
-        //                    if (existInv == null)
-        //                    {
-        //                        var newInv = new Model.Entities.InventoryDemo // Hoặc Entity tương ứng
-        //                        {
-        //                            ProductRTCID = item.ProductID,
-        //                            WarehouseID = item.WarehouseID,
-        //                            // NumberInStore logic nếu cần
-        //                        };
-        //                        await _inventoryDemoRepo.CreateAsync(newInv);
-        //                    }
-        //                }
-        //            }
-        //        }
-
-        //        // Lưu Serial
-        //        List<BillExportTechDetailSerial> savedSerials = new();
-        //        if (product.billExportTechDetailSerials != null && product.billExportTechDetailSerials.Any())
-        //        {
-        //            foreach (var item in product.billExportTechDetailSerials)
-        //            {
-        //                // Map ID chi tiết vào Serial
-        //                if (singleDetailId.HasValue)
-        //                {
-        //                    item.BillExportTechDetailID = singleDetailId.Value;
-        //                }
-        //                else if (item.STT.HasValue && item.STT.Value > 0 && sttToDetailIdMap.TryGetValue(item.STT.Value, out int detailId))
-        //                {
-        //                    item.BillExportTechDetailID = detailId;
-        //                }
-
-        //                if (item.ID <= 0)
-        //                {
-        //                    await _billExportTechDetailSerialRepo.CreateAsync(item);
-        //                }
-        //                else
-        //                {
-        //                    await _billExportTechDetailSerialRepo.UpdateAsync(item);
-        //                }
-        //                savedSerials.Add(item);
-
-        //                // Logic cập nhật trạng thái QR Code (Thường là update bảng ProductRTCQRCode status = 3)
-        //                // if (!string.IsNullOrEmpty(item.SerialNumber)) 
-        //                //    await _productRTCQRCodeRepo.UpdateStatusAsync(item.SerialNumber, 3);
-        //            }
-        //        }
-
-        //        // Lưu HistoryProductRTC (Logic phiếu mượn)
-        //        if (product.historyProductRTCs != null && product.historyProductRTCs.Any())
-        //        {
-        //            foreach (var item in product.historyProductRTCs)
-        //            {
-        //                // Gán BillID nếu chưa có
-        //                if (item.BillExportTechnicalID <= 0) item.BillExportTechnicalID = header.ID;
-
-        //                if (item.ID <= 0)
-        //                    await _historyProductRTCRepo.CreateAsync(item);
-        //                else
-        //                    await _historyProductRTCRepo.UpdateAsync(item);
-
-        //                if (ProductRTCQRCodeID > 0)
-        //                {
-        //                    TextUtils.ExcuteProcedure(StoreProcedures.spUpdateStatusProductRTCQRCode,
-        //                                                new string[] { "@ProductRTCQRCodeID", "@Status", "@ProductRTCQRCode" },
-        //                                                new object[] { ProductRTCQRCodeID, 3, oHistoryModel.ProductRTCQRCode });
-        //                }
-        //        }
-
-        //        return Ok(new
-        //        {
-        //            status = 1,
-        //            data = savedSerials,
-        //            headerID = header.ID // Trả về ID phiếu để client biết
-        //        });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-        //    }
-        //}
-        [HttpGet("load-product")]
+		[HttpGet("load-product")]
         public IActionResult LoadProduct([FromQuery] int status, [FromQuery] int warehouseID, int warehouseType)
         {
             try
@@ -604,7 +440,7 @@ namespace RERPAPI.Controllers.Old.Technical
                                 new string[] { "@BillExportTechDetailID", "@WarehouseID" },
                                 new object[] { item.ID, product.billExportTechnical.WarehouseID ?? 1 });
 
-                            var productrtc = _productRTCRepo.GetByID(item.ProductID ?? 0);
+                            var c = _productRTCRepo.GetByID(item.ProductID ?? 0);
                             var data = SQLHelper<dynamic>.GetListData(dt, 0);
 
                             if (data.Count > 0)
@@ -625,7 +461,7 @@ namespace RERPAPI.Controllers.Old.Technical
                                     HistoryProductRTC historyProduct = _historyProductRTCRepo.GetAll(x =>
                                         x.ProductRTCID == item.ProductID &&
                                         x.BillExportTechnicalID == product.billExportTechnical.ID &&
-                                        x.ProductRTCQRCode == serialNumber)
+                                        x.ProductRTCQRCode == serialNumber && x.IsDelete==false)
                                         .FirstOrDefault() ?? new HistoryProductRTC();
 
                                     if (historyProduct.Status == 0) continue;
@@ -739,7 +575,6 @@ namespace RERPAPI.Controllers.Old.Technical
 
 
         [HttpPost("approve-bill")]
-        // [Authorize] // Bắt buộc phải có Token
         [RequiresPermission("N18,N19,N50,N52,N1,N80")]
         public async Task<IActionResult> ApproveBill([FromBody] ApproveBillDTO req)
         {
