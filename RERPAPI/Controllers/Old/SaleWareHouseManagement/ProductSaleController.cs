@@ -250,10 +250,10 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         var typeNo = (dto.ProductGroupTypeNo ?? "").Trim().ToLower();
                         var typeName = (dto.ProductGroupTypeName ?? "").Trim().ToLower();
 
-                        if (groupNo == typeNo)
-                        {
-                            return BadRequest(ApiResponseFactory.Fail(null, $"Loại vật tư [{typeNo}] trùng với nhóm [{groupNo}]!"));
-                        }
+                        //if (groupNo == typeNo)
+                        //{
+                        //    return BadRequest(ApiResponseFactory.Fail(null, $"Loại vật tư [{typeNo}] trùng với nhóm [{groupNo}]!"));
+                        //}
 
                         if (!string.IsNullOrWhiteSpace(groupName) || !string.IsNullOrWhiteSpace(groupNo))
                         {
