@@ -354,7 +354,7 @@ namespace RERPAPI.Controllers.Old
                                         </div>
                                   <p>
                                     </p>";
-                            var footer = _configuration["FooterMail:HR:Footer"] ?? "";
+                            var footer = _configuration["FooterMail:System:Footer"] ?? "";
 
                             await _emailHelper.SendAsync(
                                 mailTo,
