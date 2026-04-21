@@ -185,7 +185,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     //TN.Binh update 19/10/25
                     if (!CheckProductCode(dto))
                     {
-                        return BadRequest(new { status = 0, message = $"Mã sản phẩm [{dto.ProductSale.ProductCode}] đã tồn tại trong nhóm !" });
+                        //return BadRequest(new { status = 0, message = $"Mã sản phẩm [{dto.ProductSale.ProductCode}] đã tồn tại trong nhóm !" });
                     }
                     //end update 
                     if (dto.ProductSale.ID <= 0)
@@ -244,12 +244,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 {
                     try
                     {
-                        if (_productsaleRepo.CheckCode(dto))
-                        {
-                            duplicateCodes.Add(dto.ProductCode ?? "N/A");
-                            failCount++;
-                            continue; // Bỏ qua bản ghi trùng mã
-                        }
                         var groupName = (dto.ProductGroupName ?? "").Trim().ToLower();
                         var groupNo = (dto.ProductGroupNo ?? "").Trim().ToLower();
 
@@ -311,6 +305,13 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                                 dto.ProductGroupID = productGroupType.ID;
 
                             }
+                        }
+
+                        if (_productsaleRepo.CheckCode(dto))
+                        {
+                            duplicateCodes.Add(dto.ProductCode ?? "N/A");
+                            failCount++;
+                            continue; // Bỏ qua bản ghi trùng mã
                         }
 
                         if (!string.IsNullOrWhiteSpace(dto.FirmName))
