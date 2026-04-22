@@ -1941,8 +1941,9 @@ pokhDetailId);
                     ReciverID = dto.billExport.UserID,
                     Reciver = reciver?.FullName,
                     KhoTypeID = dto.billExport.KhoTypeID,
-                    SupplierID = dto.billExport.SupplierID,
-                    Suplier = supplier?.SupplierName,
+                    //SupplierID = dto.billExport.SupplierID,
+                    SupplierID = 1175,
+                    Suplier = "NHẬP NỘI BỘ",
                     GroupID = dto.billExport.GroupID,
                     DateRequestImport = DateTime.Now,
                     BillTypeNew = 4,
@@ -1951,7 +1952,8 @@ pokhDetailId);
                     CreatDate = dto.billExport.CreatDate,
                     Status = false,
                     IsDeleted = false,
-                    KhoType = productGroup?.ProductGroupName
+                    KhoType = productGroup?.ProductGroupName,
+                    RulePayID = 34
                 };
                 await _billImportRepo.CreateAsync(billImport);
 
