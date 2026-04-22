@@ -40,6 +40,7 @@ using RTCApi.Repo.GenericRepo;
 using Serilog;
 using System.Text;
 using tusdotnet;
+using tusdotnet.Helpers;
 using tusdotnet.Models;
 using tusdotnet.Models.Configuration;
 using tusdotnet.Models.Expiration;
@@ -674,7 +675,9 @@ builder.Services.AddCors(options =>
     {
         builder.AllowAnyOrigin()
                .AllowAnyMethod()
-               .AllowAnyHeader();
+               .AllowAnyHeader()
+               .WithExposedHeaders(CorsHelper.GetExposedHeaders()); // config cors tus dotnet
+        ;
 
     });
 });
