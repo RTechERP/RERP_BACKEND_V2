@@ -56,6 +56,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         private readonly EmployeeTeamSaleRepo _employeeTeamSaleRepo;
         private readonly EmployeeRepo _employeeRepo;
         private readonly EmployeeTeamSaleLinkRepo _employeeTeamSaleLinkRepo;
+        private readonly CurrencyConfigRepo _currencyConfigRepo;
 
         public PaymentOrderController(IConfiguration configuration, CurrentUser currentUser, RoleConfig roleConfig,
             PaymentOrderRepo paymentRepo,
@@ -84,7 +85,8 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             POKHDetailRepo pOKHDetailRepo,
             EmployeeTeamSaleRepo employeeTeamSaleRepo,
             EmployeeRepo employeeRepo,
-            EmployeeTeamSaleLinkRepo employeeTeamSaleLinkRepo
+            EmployeeTeamSaleLinkRepo employeeTeamSaleLinkRepo,
+            CurrencyConfigRepo currencyConfigRepo
 
             )
         {
@@ -119,6 +121,8 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             _employeeTeamSaleRepo = employeeTeamSaleRepo;
             _employeeRepo = employeeRepo;
             _employeeTeamSaleLinkRepo = employeeTeamSaleLinkRepo;
+            _employeeRepo = employeeRepo;
+            _currencyConfigRepo = currencyConfigRepo;
         }
 
 
@@ -590,7 +594,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-            
+
         }
 
         [HttpPost("appoved-kttt")]
@@ -613,7 +617,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-            
+
         }
 
         [HttpPost("appoved-ktt")]
@@ -909,6 +913,19 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 {
                     return Ok(ApiResponseFactory.Success(new List<object>()));
                 }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-currency-config")]
+        public async Task<IActionResult> GetCurrencyConfig()
+        {
+            try
+            {
+                var data = _currencyConfigRepo.GetAll(p=>!p.IsDeleted.Value).OrderBy(x => x.SortOrder);
+                return Ok(ApiResponseFactory.Success(data));
             }
             catch (Exception ex)
             {

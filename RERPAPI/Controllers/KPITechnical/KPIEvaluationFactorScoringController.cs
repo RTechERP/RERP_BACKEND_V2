@@ -313,7 +313,7 @@ namespace RERPAPI.Controllers.KPITechnical
                 KPIEmployeePoint master = _kpiEmployeePointRepo.GetByID(empPointID);
                 master.Status = 2;
                 master.TotalPercent = request.PercentRemaining;
-                //await _kpiEmployeePointRepo.UpdateAsync(master);
+                await _kpiEmployeePointRepo.UpdateAsync(master);
 
                 foreach (var item in request.lstKPIEmployeePointDetail)
                 {
@@ -326,16 +326,16 @@ namespace RERPAPI.Controllers.KPITechnical
                     detail.ThirdMonth = item.ThirdMonth;
                     detail.PercentBonus = item.PercentBonus;
                     detail.PercentRemaining = item.PercentRemaining;
-                    //if (detail.ID > 0)
-                    //{
-                    //    await _kpiEmployeePointDetailRepo.UpdateAsync(detail);
-                    //}
-                    //else
-                    //{
-                    //    await _kpiEmployeePointDetailRepo.CreateAsync(detail);
-                    //}
+                    if (detail.ID > 0)
+                    {
+                        await _kpiEmployeePointDetailRepo.UpdateAsync(detail);
+                    }
+                    else
+                    {
+                        await _kpiEmployeePointDetailRepo.CreateAsync(detail);
+                    }
                 }
-                return Ok(ApiResponseFactory.Success(null, "Lưu dữ liệu thành công"));
+                return Ok(ApiResponseFactory.Success(new {master, request.lstKPIEmployeePointDetail}, "Lưu dữ liệu thành công"));
             }
             catch (Exception ex)
             {

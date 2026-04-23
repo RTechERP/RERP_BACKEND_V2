@@ -40,6 +40,7 @@ using RTCApi.Repo.GenericRepo;
 using Serilog;
 using System.Text;
 using tusdotnet;
+using tusdotnet.Helpers;
 using tusdotnet.Models;
 using tusdotnet.Models.Configuration;
 using tusdotnet.Models.Expiration;
@@ -563,13 +564,17 @@ builder.Services.AddScoped<MenuAppUserGroupLinkRepo>();
 builder.Services.AddScoped<ProjectPartListPurchaseRequestApproveLogRepo>();
 builder.Services.AddScoped<EmployeeLuckyNumberRepo>();
 builder.Services.AddScoped<ProductGroupLinkRepo>();
-builder.Services.AddScoped<FcmTokenRepo>();
+
 //phần lĩnh vực và công nghệ dự án
 builder.Services.AddScoped<ProjectApplicationTypesRepo>();
 builder.Services.AddScoped<ProjectTechnologiesRepo>();
 builder.Services.AddScoped<ProjectTypeApplicationLinkRepo>();
 builder.Services.AddScoped<ProjectTypeTechnologyLinkRepo>();
 builder.Services.AddScoped<CustomerIndustriesRepo>();
+// mobile
+builder.Services.AddScoped<FcmTokenRepo>();
+builder.Services.AddScoped<NotificationTypeLinkRepo>();
+builder.Services.AddScoped<NotificationTypeRepo>();
 
 
 #region KPI
@@ -646,6 +651,7 @@ builder.Services.AddScoped<EmailHelper>();
 builder.Services.AddScoped<HistoryBorrowSaleLogRepo>();
 builder.Services.AddScoped<CommercialPriceRequestRepo>();
 builder.Services.AddScoped<PaymentOrderLogApprovedRepo>();
+builder.Services.AddScoped<CurrencyConfigRepo>();
 
 
 builder.Services.AddScoped<CurrentUser>(provider =>
@@ -673,7 +679,9 @@ builder.Services.AddCors(options =>
     {
         builder.AllowAnyOrigin()
                .AllowAnyMethod()
-               .AllowAnyHeader();
+               .AllowAnyHeader()
+               .WithExposedHeaders(CorsHelper.GetExposedHeaders()); // config cors tus dotnet
+        ;
 
     });
 });
@@ -871,7 +879,7 @@ app.UseTus(httpContext => new DefaultTusConfiguration
 {
     Store = tusStore, // đường dẫn lưu temp file ( file chunk)
 
-    UrlPath = "/tus/upload-video", // path gọi api
+    UrlPath = "/api/tus/upload-video", // path gọi api
     Expiration = new AbsoluteExpiration(TimeSpan.FromHours(24)), // xóa upload không hoàn thành sau 24h
 
     Events = new Events

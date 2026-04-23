@@ -1,4 +1,4 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
+    using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +15,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Project;
+using RERPAPI.SendService;
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 
@@ -33,9 +34,12 @@ namespace RERPAPI.Controllers.Old.Technical
         EmployeeRepo _employeeRepo;
         private IConfiguration _configuration;
         private readonly EmailHelper _emailHelper;
-        public DailyReportTechController(DailyReportTechnicalRepo dailyReportTechnicalRepo, ProjectItemRepo projectItemRepo, EmployeeSendEmailRepo employeeSendEmailRepo, DailyReportHRRepo dailyReportHRRepo, IConfiguration configuration, DailyReportMarketingFileRepo dailyFileMar, EmployeeRepo employeeRepo, EmailHelper emailHelper)
+        private readonly IFirebaseNotificationService _firebaseNotificationService;
+        
+        public DailyReportTechController(DailyReportTechnicalRepo dailyReportTechnicalRepo, ProjectItemRepo projectItemRepo, EmployeeSendEmailRepo employeeSendEmailRepo, DailyReportHRRepo dailyReportHRRepo, IConfiguration configuration, DailyReportMarketingFileRepo dailyFileMar, EmployeeRepo employeeRepo, EmailHelper emailHelper, IFirebaseNotificationService firebaseNotificationService)
         {
             _dailyReportTechnicalRepo = dailyReportTechnicalRepo;
+            _firebaseNotificationService = firebaseNotificationService;
             _projectItemRepo = projectItemRepo;
             _employeeSendEmailRepo = employeeSendEmailRepo;
             _dailyReportHRRepo = dailyReportHRRepo;
@@ -122,15 +126,15 @@ namespace RERPAPI.Controllers.Old.Technical
 
         // ham update hang muc cong viec
         [NonAction]
-        public void UpdateProjectItemLogic(
-          DailyReportTechnical request,
-          ProjectItem projectItem)
+        public async Task UpdateProjectItem(
+          DailyReportTechnical request)
         {
             try
             {
                 DateTime dateReport = request.DateReport.HasValue ? request.DateReport.Value.ToDateTime(TimeOnly.MinValue) : DateTime.Today;
 
                 DateTime currentDate = DateTime.Now;
+                var projectItem = _projectItemRepo.GetByID(request.ProjectItemID ?? 0);
                 if (projectItem != null)
                 {
                     if (request.PercentComplete == 100)
@@ -161,6 +165,7 @@ namespace RERPAPI.Controllers.Old.Technical
 
                     // Cập nhật % hoàn thành thực tế
                     projectItem.PercentageActual = request.PercentComplete;
+                    await _projectItemRepo.UpdateAsync(projectItem);
                 }
             }
             catch (Exception ex)
@@ -188,56 +193,17 @@ namespace RERPAPI.Controllers.Old.Technical
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, validationMessage));
                 }
-
-                // --- BẮT ĐẦU TỐI ƯU HÓA BATCH ---
-                var itemsToUpdate = new List<DailyReportTechnical>();
-                var itemsToCreate = new List<DailyReportTechnical>();
-                var projectItemsToUpdate = new List<ProjectItem>();
-
-                // 2. Pre-load ProjectItems nếu là Technical
-                Dictionary<int, ProjectItem> projectItemDict = new Dictionary<int, ProjectItem>();
-                if (isTechnical)
-                {
-                    var projectItemIds = request
-                        .Where(x => x.ProjectItemID.HasValue && x.ProjectItemID > 0)
-                        .Select(x => x.ProjectItemID.Value)
-                        .Distinct()
-                        .ToList();
-
-                    if (projectItemIds.Any())
-                    {
-                        projectItemDict = _projectItemRepo.GetAll(x => projectItemIds.Contains(x.ID))
-                            .ToDictionary(x => x.ID, x => x);
-                    }
-                }
-
-                // 3. Pre-load báo cáo cũ để kiểm tra quyền sửa
-                var existingReportIds = request.Where(x => x.ID > 0).Select(x => x.ID).ToList();
-                var reportsInDb = _dailyReportTechnicalRepo.GetAll(x => existingReportIds.Contains(x.ID))
-                    .ToDictionary(x => x.ID, x => x);
-
                 foreach (var item in request)
                 {
                     if (item.ID > 0)
                     {
-                        if (!reportsInDb.TryGetValue(item.ID, out var dbReport))
-                        {
-                            return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy báo cáo ID {item.ID}"));
-                        }
-
-                        if (dbReport.UserReport != currentUser.ID)
+                        var data = _dailyReportTechnicalRepo.GetByID(item.ID);
+                        if (data.UserReport != currentUser.ID)
                         {
                             return BadRequest(ApiResponseFactory.Fail(null, "Bạn không thể sửa báo cáo công việc của người khác!"));
                         }
-
-                        // item.CreatedDate = new DateTime(2026,3,23,19,49,26); // Theo yêu cầu: Comment lại vì không cần
-                        itemsToUpdate.Add(item);
-
-                        if (isTechnical && item.ProjectItemID.HasValue && projectItemDict.TryGetValue(item.ProjectItemID.Value, out var pItem))
-                        {
-                            UpdateProjectItemLogic(item, pItem);
-                            if (!projectItemsToUpdate.Any(x => x.ID == pItem.ID)) projectItemsToUpdate.Add(pItem);
-                        }
+                        await _dailyReportTechnicalRepo.UpdateAsync(item);
+                        if(isTechnical) await UpdateProjectItem(item);
                     }
                     else
                     {
@@ -247,29 +213,17 @@ namespace RERPAPI.Controllers.Old.Technical
                         item.ReportLate = 0;
                         item.StatusResult = 0;
                         item.WorkPlanDetailID = 0;
+                        item.OldProjectID = 0;
                         item.DeleteFlag = 0;
                         item.Confirm = false;
-                        item.UserReport = userId; // Gán userID cho báo cáo mới
                         item.CreatedDate = DateTime.Today.AddHours(23).AddMinutes(30);
-
-                        itemsToCreate.Add(item);
-
-                        if (isTechnical && item.ProjectItemID.HasValue && projectItemDict.TryGetValue(item.ProjectItemID.Value, out var pItem))
-                        {
-                            UpdateProjectItemLogic(item, pItem);
-                            if (!projectItemsToUpdate.Any(x => x.ID == pItem.ID)) projectItemsToUpdate.Add(pItem);
-                        }
+                        await _dailyReportTechnicalRepo.CreateAsync(item);
+                        if (isTechnical) await UpdateProjectItem(item);
                     }
                 }
-
-                // 4. Lưu dữ liệu hàng loạt
-                if (itemsToCreate.Any()) await _dailyReportTechnicalRepo.CreateRangeAsync(itemsToCreate);
-                if (itemsToUpdate.Any()) await _dailyReportTechnicalRepo.UpdateRangeAsync_Binh(itemsToUpdate);
-                if (projectItemsToUpdate.Any()) await _projectItemRepo.UpdateRangeAsync_Binh(projectItemsToUpdate);
-
-                return Ok(ApiResponseFactory.Success(null, "Lưu dữ liệu thành công"));
-                // --- KẾT THÚC TỐI ƯU HÓA ---
-
+                return Ok(ApiResponseFactory.Success(null,
+                          "Lưu dữ liệu thành công"
+                      ));
             }
             catch (Exception ex)
             {
@@ -550,7 +504,7 @@ namespace RERPAPI.Controllers.Old.Technical
                     Receiver = email.Receiver
                 };
                 //await _employeeSendEmailRepo.CreateAsync(emailEntity);
-                await _emailHelper.SendAsync(email.EmailTo, email.Subject, email.Body);
+                await _emailHelper.SendAsync (email.EmailTo, email.Subject, email.Body);
 
                 return Ok(ApiResponseFactory.Success(null, "Gửi email thành công!"));
             }

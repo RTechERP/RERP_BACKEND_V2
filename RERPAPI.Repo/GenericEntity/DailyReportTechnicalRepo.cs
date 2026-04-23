@@ -2,6 +2,7 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -235,11 +236,13 @@ namespace RERPAPI.Repo.GenericEntity
                     var minDate = dates.Min();
                     var maxDate = dates.Max();
 
-                    existingReports = GetAll(x =>
-                            x.UserReport == userId.Value &&
-                            x.DateReport >= minDate &&
-                            x.DateReport <= maxDate &&
-                            (x.DeleteFlag == null || x.DeleteFlag != 1))
+                    existingReports = db.Set<DailyReportTechnical>()
+                        .AsNoTracking()
+                        .Where(x =>
+                             x.UserReport == userId.Value &&
+                             x.DateReport >= minDate &&
+                             x.DateReport <= maxDate &&
+                             (x.DeleteFlag == null || x.DeleteFlag != 1))
                         .Select(x => new DailyReportTechnical
                         {
                             ID = x.ID,

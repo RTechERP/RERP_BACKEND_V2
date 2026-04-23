@@ -4,52 +4,49 @@ using System.Collections.Generic;
 namespace RERPAPI.Model.Entities;
 
 /// <summary>
-/// Bảng lưu nhân viên tham gia công việc của dự án
+/// Bảng liên kết giữa loại thông báo và người dùng
 /// </summary>
-public partial class ProjectTaskEmployee
+public partial class NotificationTypeLink
 {
     /// <summary>
-    /// ID tự tăng
+    /// Khóa chính
     /// </summary>
     public int ID { get; set; }
 
     /// <summary>
-    /// ID của bảng ProjectItem
+    /// ID loại thông báo
     /// </summary>
-    public int ProjectTaskID { get; set; }
+    public int? NotificationTypeID { get; set; }
 
     /// <summary>
-    /// ID của bảng Employee
+    /// ID người dùng
     /// </summary>
-    public int EmployeeID { get; set; }
+    public int? UserID { get; set; }
 
     /// <summary>
-    /// 1: người nhận việc, 2: người liên quan
-    /// </summary>
-    public int? Type { get; set; }
-
-    /// <summary>
-    /// Ngày tạo bản ghi
+    /// Ngày tạo
     /// </summary>
     public DateTime? CreatedDate { get; set; }
 
     /// <summary>
-    /// Người tạo bản ghi
+    /// Người tạo
     /// </summary>
     public string? CreatedBy { get; set; }
 
     /// <summary>
-    /// Ngày cập nhật bản ghi
+    /// Ngày cập nhật
     /// </summary>
     public DateTime? UpdatedDate { get; set; }
 
     /// <summary>
-    /// Người cập nhật bản ghi
+    /// Người cập nhật
     /// </summary>
     public string? UpdatedBy { get; set; }
 
     /// <summary>
-    /// Trạng thái khóa mềm 
+    /// Đánh dấu xóa mềm
     /// </summary>
     public bool? IsDeleted { get; set; }
+
+    public bool? IsSelected { get; set; }
 }

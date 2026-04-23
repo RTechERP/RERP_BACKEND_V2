@@ -508,7 +508,7 @@ namespace RERPAPI.Controllers
                     : $"{approved} thành công, bỏ qua {notProcessed.Count} bản ghi."
             ));
         }
-        [RequiresPermission("N85")]
+        [RequiresPermission("N85,N32")]
         [HttpPost("approve-senior-new")]
         public async Task<IActionResult> ApproveSenior([FromBody] ApproveRequestParam request)
         {
@@ -558,10 +558,10 @@ namespace RERPAPI.Controllers
                 notProcessed,
                 notProcessed.Count == 0
                 ? $"{approved} thành công."
-        : $"{approved} thành công, bỏ qua {notProcessed.Count} bản ghi."
+                : $"{approved} thành công, bỏ qua {notProcessed.Count} bản ghi."
             ));
         }
-        [RequiresPermission("N85")]
+        [RequiresPermission("N85,N32")]
         [HttpPost("decline-senior")]
         public async Task<IActionResult> DeclineSenior([FromBody] ApproveRequestParam request)
         {

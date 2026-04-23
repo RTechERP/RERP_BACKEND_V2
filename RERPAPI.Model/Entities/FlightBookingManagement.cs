@@ -3,72 +3,88 @@ using System.Collections.Generic;
 
 namespace RERPAPI.Model.Entities;
 
+/// <summary>
+/// Bảng quản lý booking vé máy bay
+/// </summary>
 public partial class FlightBookingManagement
 {
     /// <summary>
-    /// ID của bảng
+    /// ID bản ghi
     /// </summary>
     public int ID { get; set; }
 
     /// <summary>
-    /// Trạng thái (0: Đã check vé, 1: Đã đặt vé)
+    /// ID người đi
     /// </summary>
-    public int Status { get; set; }
+    public int? EmployeeID { get; set; }
 
     /// <summary>
-    /// ID nhân viên đặt vé
+    /// Mục đích
     /// </summary>
-    public int EmployeeID { get; set; }
+    public string? Reason { get; set; }
 
     /// <summary>
-    /// ID trưởng bộ phận duyệt
+    /// ID dự án
     /// </summary>
-    public int? ApproveID { get; set; }
+    public int? ProjectID { get; set; }
 
     /// <summary>
-    /// 0: Chưa duyệt, 1: Đã duyệt, 2: Không duyệt
+    /// Điểm đi
     /// </summary>
-    public int IsApprove { get; set; }
-
-    public string? DeclineReason { get; set; }
-
-    public DateTime? DepartureDate { get; set; }
-
-    public DateTime? DepartureDateActual { get; set; }
-
     public string? DepartureAddress { get; set; }
 
-    public string? DepartureAddressActual { get; set; }
+    /// <summary>
+    /// Điểm đến
+    /// </summary>
+    public string? ArrivesAddress { get; set; }
 
-    public bool IsRoundTrip { get; set; }
+    /// <summary>
+    /// Ngày đi
+    /// </summary>
+    public DateTime? DepartureDate { get; set; }
 
-    public DateTime? ReturnDate { get; set; }
+    /// <summary>
+    /// Giờ đi
+    /// </summary>
+    public DateTime? DepartureTime { get; set; }
 
-    public DateTime? ReturnDateActual { get; set; }
+    /// <summary>
+    /// ID người đặt
+    /// </summary>
+    public int? EmployeeBookerID { get; set; }
 
-    public string? ReturnAddress { get; set; }
+    /// <summary>
+    /// Ngày đặt
+    /// </summary>
+    public DateTime? BookedDate { get; set; }
 
-    public string? ReturnAddressActual { get; set; }
-
-    public bool IsBaggage { get; set; }
-
-    public decimal? BaggageWeight { get; set; }
-
-    public string? BaggageDescription { get; set; }
-
-    public decimal? TicketPrice { get; set; }
-
+    /// <summary>
+    /// Ghi chú
+    /// </summary>
     public string? Note { get; set; }
 
-    public bool IsSendMail { get; set; }
+    /// <summary>
+    /// Ngày tạo
+    /// </summary>
+    public DateTime? CreatedDate { get; set; }
 
-    public DateTime CreatedDate { get; set; }
-
+    /// <summary>
+    /// Người tạo
+    /// </summary>
     public string? CreatedBy { get; set; }
 
+    /// <summary>
+    /// Ngày cập nhật
+    /// </summary>
     public DateTime? UpdatedDate { get; set; }
 
+    /// <summary>
+    /// Người cập nhật
+    /// </summary>
     public string? UpdatedBy { get; set; }
 
-    public bool IsDeleted { get; set; }
+    /// <summary>
+    /// Trạng thái xóa mềm (0: chưa xóa, 1: đã xóa)
+    /// </summary>
+    public bool? IsDeleted { get; set; }
 }

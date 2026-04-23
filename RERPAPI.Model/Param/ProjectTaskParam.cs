@@ -145,6 +145,21 @@ namespace RERPAPI.Model.Param
         /// </summary>
         public string? ProjectTaskResult { get; set; }
 
+        /// <summary>
+        /// Độ ưu tiên dự án 1: Thấp, 2. Trung bình, 3. Cao, 4. Khẩn cấp
+        /// </summary>
+        public int? Priority { get; set; }
+
+        /// <summary>
+        /// Thời gian dự kiến (h)
+        /// </summary>
+        public decimal? EstimatedTime { get; set; }
+
+        /// <summary>
+        /// 1: Cần phê duyệt, 0: Không cần phê duyệt
+        /// </summary>
+        public bool? NeedApprove { get; set; }
+
         public List<int>? Employee { get; set; }
         public List<int>? EmployeeRelate { get; set; }
         public List<int>? Links { get; set; }

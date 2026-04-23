@@ -20,7 +20,11 @@ namespace RERPAPI.Repo.GenericEntity
         }
         public bool CheckCode(ProductSaleImportExcelDTO item)
         {
-            var existing = GetAll(x => x.ProductName.Trim().ToLower() == item.ProductName.Trim().ToLower() && x.ProductCode.Trim().ToLower() == item.ProductCode.Trim().ToLower() && x.IsDeleted == false);
+            var existing = GetAll(
+                x => x.ProductName.Trim().ToLower() == item.ProductName.Trim().ToLower() 
+                && x.ProductCode.Trim().ToLower() == item.ProductCode.Trim().ToLower() 
+                && x.IsDeleted == false 
+                && x.ProductGroupID == item.ProductGroupID);
 
             return existing.Any();
         }

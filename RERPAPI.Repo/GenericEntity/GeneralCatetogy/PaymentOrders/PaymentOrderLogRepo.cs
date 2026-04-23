@@ -333,7 +333,17 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                                 if (item.Action.ButtonActionName == "btnUpdateDocument") //log.IsRequestAppendFileAC = true;
                                     orderLogApproved.IsRequestAppendFileAC = true;
                             }
-                        }
+							// Lưu HRNote vào PaymentOrder khi HR duyệt
+							if (item.Action.ButtonActionGroup == "btnHR" && item.PaymentOrderLog.IsApproved == 1 && !string.IsNullOrEmpty(item.HRNote))
+							{
+								PaymentOrder paymentOrder = _paymentOrderRepo.GetByID(item.ID);
+								if (paymentOrder != null)
+								{
+									paymentOrder.HRNote = item.HRNote.Trim();
+									await _paymentOrderRepo.UpdateAsync(paymentOrder);
+								}
+							}
+						}
                         //int resultUpdate = await UpdateAsync(log);
                         //int resultUpdate = await SqlDapper<PaymentOrderLog>.ExecuteScalarStoredProcedure<int>("spUpdatePaymentOrderLog", new
                         //{
