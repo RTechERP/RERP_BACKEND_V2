@@ -555,7 +555,7 @@ namespace RERPAPI.Controllers.Project
                             var newEmployeeRelate = new ProjectTaskEmployee
                             {
                                 ProjectTaskID = newProjectTask.ID,
-                                EmployeeID = leaders[0].LeaderID ?? 0,
+                                EmployeeID = (int)leaders[0].LeaderID,
                                 Type = 2
                             };
                             await _projectTaskEmployeeRepo.CreateAsync(newEmployeeRelate);
@@ -1347,6 +1347,7 @@ namespace RERPAPI.Controllers.Project
                         existingTask.Mission = projectTask.Mission;
                     }
 
+
                     if (existingTask.Status != projectTask.Status)
                     {
                         var statusText = new Dictionary<int, string>
@@ -1462,8 +1463,19 @@ namespace RERPAPI.Controllers.Project
                         {
                             ProjectTaskID = existingTask.ID,
                             TypeLog = "Thay đổi loại hạng mục công việc",
-                            ContentLog = $"- {currentUser.FullName} đã thay đổi loại hạng mục công việc từ {oldTypeProjectItem} thành {newTypeProjectItem}. \\n"
+                            ContentLog = $"- {currentUser.FullName} đã thay đổi loại hạng mục công việc từ {oldTypeProjectItem.TypeName} thành {newTypeProjectItem.TypeName}. \\n"
                         };
+
+                        if(projectTask.TypeProjectItem == null || projectTask.TypeProjectItem <= 0)
+                        {
+                            newProjectTaskChangeTypeProjectItemLog.ContentLog = $"- {currentUser.FullName} đã xóa loại hạng mục công việc từ {oldTypeProjectItem.TypeName}. \\n";
+                            var param = new
+                            {
+                                Id = existingTask.ID,
+                                Col = "TypeProjectItem"
+                            };
+                            var result = await SqlDapper<UserTeam>.ExecuteStoredProcedure("spUpdateDateToNull", param);
+                        }
                         await _projectTaskLogRepo.CreateAsync(newProjectTaskChangeTypeProjectItemLog);
                         existingTask.TypeProjectItem = projectTask.TypeProjectItem;
                     }
@@ -1478,7 +1490,7 @@ namespace RERPAPI.Controllers.Project
                         {
                             ProjectTaskID = existingTask.ID,
                             TypeLog = "Thay đổi loại công việc",
-                            ContentLog = $"- {currentUser.FullName} đã thay đổi loại công việc từ {oldProjectTaskTypeID} thành {newProjectTaskTypeID}. \\n"
+                            ContentLog = $"- {currentUser.FullName} đã thay đổi loại công việc từ {oldProjectTaskTypeID.TypeName} thành {newProjectTaskTypeID.TypeName}. \\n"
                         };
                         await _projectTaskLogRepo.CreateAsync(newProjectTaskChangeProjectTaskTypeIDLog);
                         existingTask.ProjectTaskTypeID = projectTask.ProjectTaskTypeID;
@@ -1528,6 +1540,7 @@ namespace RERPAPI.Controllers.Project
                     existingTask.DescriptionSolution = projectTask.DescriptionSolution;
                     existingTask.ProjectTaskResult = projectTask.ProjectTaskResult;
                     existingTask.ProjectTaskTypeID = projectTask.ProjectTaskTypeID;
+                    existingTask.NeedApprove = projectTask.NeedApprove;
                     if (projectTask.Employee != null && projectTask.Employee.Count > 0)
                     {
                         Employee userAssignee = await _employeeRepo.GetByIDAsync(projectTask.Employee[0]);
@@ -1586,6 +1599,22 @@ namespace RERPAPI.Controllers.Project
                         var result = await SqlDapper<UserTeam>.ExecuteStoredProcedure("spUpdateDateToNull", param);
                     }
 
+                    if (!(projectTask.NeedApprove ?? true) && projectTask.Status == 2)
+                    {
+                        var newProjectTaskApprove = new ProjectTaskApprove
+                        {
+                            ProjectTaskID = existingTask.ID,
+                            IsApprove = true,
+                            EmployeeID = currentUser.EmployeeID,
+                            //Review = "Công việc cần được duyệt.",
+                            CompletionRating = 5
+                        };
+                        if (await _projectTaskApproveRepo.CreateAsync(newProjectTaskApprove) <= 0)
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null, "Failed to create project task approve."));
+                        }
+                    }
+
                     return Ok(ApiResponseFactory.Success(existingTask));
                 }
                 else
@@ -1606,7 +1635,7 @@ namespace RERPAPI.Controllers.Project
                         PlanStartDate = projectTask.PlanStartDate,
                         PlanEndDate = projectTask.PlanEndDate.HasValue ? projectTask.PlanEndDate.Value.Date.AddDays(1).AddSeconds(-1) : null,
                         IsPersonalProject = projectTask.IsPersonalProject,
-                        TypeProjectItem = projectTask.TypeProjectItem.HasValue && projectTask.TypeProjectItem > 0 ? projectTask.TypeProjectItem : 1,
+                        TypeProjectItem = projectTask.TypeProjectItem,
                         IsAdditional = projectTask.IsAdditional,
                         TaskComplexity = projectTask.TaskComplexity.HasValue && projectTask.TaskComplexity > 0 ? projectTask.TaskComplexity : 1,
                         ParentID = projectTask.ParentID,
@@ -1615,7 +1644,8 @@ namespace RERPAPI.Controllers.Project
                         ProjectTaskResult = projectTask.ProjectTaskResult,
                         ProjectTaskTypeID = projectTask.ProjectTaskTypeID.HasValue && projectTask.ProjectTaskTypeID > 0 ? projectTask.ProjectTaskTypeID : 1,
                         Priority = projectTask.Priority ?? 1,
-                        EstimatedTime = projectTask.EstimatedTime == null || projectTask.EstimatedTime == 0 ? null : projectTask.EstimatedTime
+                        EstimatedTime = projectTask.EstimatedTime == null || projectTask.EstimatedTime == 0 ? null : projectTask.EstimatedTime,
+                        NeedApprove = projectTask.NeedApprove ?? true
                     };
 
                     if (projectTask.Employee != null && projectTask.Employee.Count > 0)
@@ -1842,6 +1872,22 @@ namespace RERPAPI.Controllers.Project
 
                     await _projectTaskLogRepo.CreateAsync(newProjectTaskLog);
 
+                    if(!(projectTask.NeedApprove ?? true) && projectTask.Status == 2)
+                    {
+                        var newProjectTaskApprove = new ProjectTaskApprove
+                        {
+                            ProjectTaskID = newProjectTask.ID,
+                            IsApprove = true,
+                            EmployeeID = currentUser.EmployeeID,
+                            //Review = "Công việc cần được duyệt.",
+                            CompletionRating = 5
+                        };
+                        if (await _projectTaskApproveRepo.CreateAsync(newProjectTaskApprove) <= 0)
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null, "Failed to create project task approve."));
+                        }
+                    }
+
                     return Ok(ApiResponseFactory.Success(newProjectTask));
                 }
 
@@ -1852,6 +1898,30 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
+        [HttpPost("cancel-approve")]
+        public IActionResult CancelApprove([FromBody] int projectTaskID)
+        {
+            try
+            {
+                if(projectTaskID == null || projectTaskID <= 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Project task data is null."));
+                }
+                    
+                var dataExit =  _projectTaskApproveRepo.GetAll(x => x.ProjectTaskID == projectTaskID).FirstOrDefault();
+                if(dataExit == null || dataExit.ID <= 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Can't fount project task approve."));
+                }
+                dataExit.IsDeleted = true;
+                _projectTaskApproveRepo.UpdateAsync(dataExit);
+                return Ok(ApiResponseFactory.Success(dataExit));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, "Failed to approve project task."));
+            }
+        }
 
 
         [HttpPost("Approve")]
@@ -1883,7 +1953,7 @@ namespace RERPAPI.Controllers.Project
                     {
                         foreach (var emp in listEmployee)
                         {
-                            var employeeValue = await _employeeRepo.GetByIDAsync(emp);
+                            var employeeValue = await _employeeRepo.GetByIDAsync(emp??0);
 
                             if (emp != currentUser.EmployeeID)
                             {
@@ -1952,7 +2022,7 @@ namespace RERPAPI.Controllers.Project
                     var listEmployeeRelate2 = new List<string>();
                     foreach (var emp in listEmployeeRelate)
                     {
-                        var employeeValue = await _employeeRepo.GetByIDAsync(emp);
+                        var employeeValue = await _employeeRepo.GetByIDAsync(emp??0);
                         if (employeeValue != null)
                         {
                             listEmployeeRelate2.Add(employeeValue.EmailCongTy);
@@ -2077,6 +2147,8 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, "Failed to approve project task."));
             }
         }
+
+
 
         [HttpPost("import_excel")]
         public async Task<IActionResult> ImportExcell([FromBody] List<ImportExcellProjectTaskParam> request)
