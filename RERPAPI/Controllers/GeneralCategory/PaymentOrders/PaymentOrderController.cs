@@ -453,7 +453,92 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+		[HttpGet("approvers")]
+		public async Task<IActionResult> GetApprovers()
+		{
+			try
+			{
+				// 1. Lấy danh sách TBP từ Procedure
+				object paramApproved = new { Type = 3, ProjectID = 0, keyword = "" };
+				var approvedTBPs = await SqlDapper<object>.ProcedureToListTAsync("spGetEmployeeApprove", paramApproved);
 
+				// 2. Lấy danh sách nhân viên lọc theo Department
+				using (var connection = new SqlConnection(_configuration.GetValue<string>("ConnectionString") ?? ""))
+				{
+					var param = new { Status = 0 };
+					var employeeData = await connection.QueryMultipleAsync("spGetEmployee", param, commandType: System.Data.CommandType.StoredProcedure);
+					var employees = await employeeData.ReadAsync<EmployeeCommonDTO>();
+
+					var approverSales = employees.Where(x => x.DepartmentID == 3 || _roleConfig.EmployeeIDSaleApproveDNTTDBs.Contains(x.ID)).ToList();
+					var approverBGDs = employees.Where(x => x.DepartmentID == 1).ToList();
+
+					return Ok(ApiResponseFactory.Success(new
+					{
+						approvedTBPs,
+						approverSales,
+						approverBGDs
+					}));
+				}
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+		[HttpGet("procurement")]
+		public IActionResult GetProcurementData()
+		{
+			try
+			{
+				var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+				_currentUser = ObjectMapper.GetCurrentUser(claims);
+
+				DateTime updateDateSupplier = new DateTime(2024, 04, 04);
+				var supplierSales = _supplierSaleRepo.GetAll(x => x.UpdatedDate.Value.Date >= updateDateSupplier && x.IsDeleted != true)
+									.OrderByDescending(x => x.ID).ToList();
+
+				var poNCCs = _poNccRepo.GetAll(x => x.IsDeleted != true);
+				var registerContracts = _registerContractRepo.GetAll(x => x.EmployeeID == _currentUser.EmployeeID && x.IsDeleted != true);
+
+				return Ok(ApiResponseFactory.Success(new { supplierSales, poNCCs, registerContracts }));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+		[HttpGet("partners-projects")]
+		public IActionResult GetPartnersAndProjects()
+		{
+			try
+			{
+				var projects = _projectRepo.GetAll(x => x.IsDeleted != true);
+				var customers = _customerRepo.GetAll(x => x.IsDeleted != true).OrderByDescending(x => x.ID).ToList();
+				var pokhs = _poKHRepo.GetAll(x => x.IsDeleted != true).OrderByDescending(x => x.ID).ToList();
+				var pokhDetails = _pOKHDetailRepo.GetAll(x => x.IsDeleted != true).OrderByDescending(x => x.ID).ToList();
+
+				return Ok(ApiResponseFactory.Success(new { projects, customers, pokhs, pokhDetails }));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+		[HttpGet("metadata")]
+		public IActionResult GetMetadata()
+		{
+			try
+			{
+				var paymentOrderTypes = _orderTypeRepo.GetAll(x => x.IsDelete != true && x.IsSpecialOrder != true);
+				var steps = _approveFollowRepo.GetAll(x => x.IsDeleted != true);
+
+				return Ok(ApiResponseFactory.Success(new { paymentOrderTypes, steps }));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
         [HttpGet("get-data-combo")]
         public async Task<IActionResult> GetDataCombo()
         {

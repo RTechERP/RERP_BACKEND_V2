@@ -28,5 +28,7 @@
         public string Permissions { get; set; } = "";
         public string Name { get; set; } = "";
         public string PasswordHash { get; set; } = "";
+        public int LeaderID { get; set; }
+        public int TaxCompanyID { get; set; }
     }
 }
