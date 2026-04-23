@@ -1,4 +1,4 @@
-﻿using DocumentFormat.OpenXml.Office.CustomUI;
+using DocumentFormat.OpenXml.Office.CustomUI;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NPOI.SS.Formula.Functions;
@@ -27,7 +27,8 @@ namespace RERPAPI.Controllers.KPITechnical
         KPICriterionRepo _kpiCriterionRepo;
         KPIEmployeePointDetailRepo _kpiEmployeePointDetailRepo;
         KPISumaryEvaluationRepo _kpiSumaryEvaluationRepo;
-        public KPIEvaluationFactorScoringDetailsController(KPIEvaluationPointRepo kpiEvaluationPointRepo, KPISessionRepo kpiSessionRepo, KPIEmployeePointRepo kpiEmployeePointRepo, KPIPositionRepo kpiPositionRepo, KPIPositionEmployeeRepo kpiPositionEmployeeRepo, KPIEvaluationRuleRepo kpiEvaluationRuleRepo, KPIExamRepo kpiExamRepo, KPICriterionRepo kpiCriterionRepo, KPIEmployeePointDetailRepo kpiEmployeePointDetailRepo, KPISumaryEvaluationRepo kpiSumaryEvaluationRepo)
+        UserTeamRepo _userTeamRepo;
+        public KPIEvaluationFactorScoringDetailsController(KPIEvaluationPointRepo kpiEvaluationPointRepo, KPISessionRepo kpiSessionRepo, KPIEmployeePointRepo kpiEmployeePointRepo, KPIPositionRepo kpiPositionRepo, KPIPositionEmployeeRepo kpiPositionEmployeeRepo, KPIEvaluationRuleRepo kpiEvaluationRuleRepo, KPIExamRepo kpiExamRepo, KPICriterionRepo kpiCriterionRepo, KPIEmployeePointDetailRepo kpiEmployeePointDetailRepo, KPISumaryEvaluationRepo kpiSumaryEvaluationRepo, UserTeamRepo userTeamRepo)
         {
             _kpiEvaluationPointRepo = kpiEvaluationPointRepo;
             _kpiSessionRepo = kpiSessionRepo;
@@ -39,6 +40,7 @@ namespace RERPAPI.Controllers.KPITechnical
             _kpiCriterionRepo = kpiCriterionRepo;
             _kpiEmployeePointDetailRepo = kpiEmployeePointDetailRepo;
             _kpiSumaryEvaluationRepo = kpiSumaryEvaluationRepo;
+            _userTeamRepo = userTeamRepo;
         }
 
         #region lấy dữ liệu combobox bài đánh giá 
@@ -199,7 +201,7 @@ namespace RERPAPI.Controllers.KPITechnical
         [HttpGet("load-kpi-rule-and-team")]
         public async Task<IActionResult> LoadKPIRule(int kpiExamID, bool isAmdinConfirm, int employeeID, int sessionID)
         {
-          
+
             try
             {
                 //Get possition của nhân viên
@@ -573,5 +575,26 @@ namespace RERPAPI.Controllers.KPITechnical
             }
         }
         #endregion
+
+        #region LẤY USER TEAM
+        [HttpGet("get-team")]
+        public async Task<IActionResult> GetUserTeam()
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var data = _userTeamRepo.GetAll(x => x.LeaderID == currentUser.EmployeeID).FirstOrDefault();
+                return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        #endregion
     }
 }
+
+

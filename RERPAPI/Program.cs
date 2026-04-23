@@ -564,13 +564,17 @@ builder.Services.AddScoped<MenuAppUserGroupLinkRepo>();
 builder.Services.AddScoped<ProjectPartListPurchaseRequestApproveLogRepo>();
 builder.Services.AddScoped<EmployeeLuckyNumberRepo>();
 builder.Services.AddScoped<ProductGroupLinkRepo>();
-builder.Services.AddScoped<FcmTokenRepo>();
+
 //phần lĩnh vực và công nghệ dự án
 builder.Services.AddScoped<ProjectApplicationTypesRepo>();
 builder.Services.AddScoped<ProjectTechnologiesRepo>();
 builder.Services.AddScoped<ProjectTypeApplicationLinkRepo>();
 builder.Services.AddScoped<ProjectTypeTechnologyLinkRepo>();
 builder.Services.AddScoped<CustomerIndustriesRepo>();
+// mobile
+builder.Services.AddScoped<FcmTokenRepo>();
+builder.Services.AddScoped<NotificationTypeLinkRepo>();
+builder.Services.AddScoped<NotificationTypeRepo>();
 
 
 #region KPI
