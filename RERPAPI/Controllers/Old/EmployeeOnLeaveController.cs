@@ -1,15 +1,16 @@
 using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
+using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
-using RERPAPI.Model.DTO.HRM;
-using Microsoft.Extensions.Configuration;
+using RERPAPI.SendService;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -25,6 +26,8 @@ namespace RERPAPI.Controllers.Old
         private readonly EmployeeOnLeavePhaseRepo _employeeOnLeavePhaseRepo;
         private readonly EmailHelper _emailHelper;
         private readonly IConfiguration _configuration;
+        private readonly FcmTokenRepo _fcmTokenRepo;
+        private readonly IFirebaseNotificationService _firebaseNotificationService;
 
         public EmployeeOnLeaveController(
             EmployeeOnLeaveRepo employeeOnLeaveRepo,
@@ -33,7 +36,10 @@ namespace RERPAPI.Controllers.Old
             EmployeeSendEmailRepo employeeSendEmailRepo,
             EmployeeOnLeavePhaseRepo employeeOnLeavePhaseRepo,
             EmailHelper emailHelper,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            FcmTokenRepo fcmTokenRepo,
+            IFirebaseNotificationService firebaseNotificationService
+            )
         {
             _employeeOnLeaveRepo = employeeOnLeaveRepo;
             _employeeRepo = employeeRepo;
@@ -42,6 +48,8 @@ namespace RERPAPI.Controllers.Old
             _employeeOnLeavePhaseRepo = employeeOnLeavePhaseRepo;
             _emailHelper = emailHelper;
             _configuration = configuration;
+            _fcmTokenRepo = fcmTokenRepo;
+            _firebaseNotificationService = firebaseNotificationService;
         }
 
         [HttpPost]
@@ -323,9 +331,10 @@ namespace RERPAPI.Controllers.Old
                                         <p style='margin:2px 0'><b>Loại nghỉ:</b> {type}</p>
                                         <p style='margin:2px 0'><b>Lý do:</b> {detail.Reason}</p>
                                     </div>
-                                    <div style='border-top:1px solid #eee;'></div>";}
+                                    <div style='border-top:1px solid #eee;'></div>";
+                            }
 
-                                string body = $@"
+                            string body = $@"
                                     <div>
                                         <p style='font-weight:bold;color:red;'>[NO REPLY]</p>
                                             <p>Dear anh/chị {employeeTP.FullName},</p>
@@ -362,6 +371,27 @@ namespace RERPAPI.Controllers.Old
                                 body + footer,
                                 cc: ""
                             );
+                            // === Firebase FCM Push Notification ===
+                            // Gửi push notification tới người duyệt (ApprovedTP)
+                            // Lấy UserID của người duyệt qua EmployeeID
+                            if (employeeTP != null && employeeTP.UserID.HasValue)
+                            {
+                                var fcmTokens = _fcmTokenRepo.GetTokensByEmployeeID(dto.Details[0].ApprovedTP ?? 0);
+                                var checkNoti = _fcmTokenRepo.checkNotiUser(1, dto.Details[0].ApprovedTP ?? 0); // check thêm người đó có muốn nhận thông báo không 
+                                if (fcmTokens.Any() && checkNoti)
+                                {
+                                    string notifTitle = "Thông báo!";
+                                    string notifBody = $"Bạn có 1 đơn xin nghỉ từ \"{employee.FullName}\" cần duyệt";
+                                    var fcmData = new Dictionary<string, string>
+                                        {
+                                            { "type", "leave_request" },
+                                            { "employeeID", (dto.Details[0].EmployeeID ?? 0).ToString() }
+                                         };
+                                    // Fire-and-forget: không await, không fail request chính nếu FCM lỗi
+                                    _ = _firebaseNotificationService.SendMulticastNotificationAsync(
+                                        fcmTokens, notifTitle, notifBody, fcmData);
+                                }
+                            }
                         }
                     }
                 }
