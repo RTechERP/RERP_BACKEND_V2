@@ -23,6 +23,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Threading.Tasks;
 using ZXing;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
@@ -273,7 +274,8 @@ namespace RERPAPI.Controllers.Project
             [FromQuery] int departmentID = 0,
             [FromQuery] int teamID = 0,
             [FromQuery] int userID = 0,
-            [FromQuery] int projectID = 0
+            [FromQuery] int projectID = 0,
+            [FromQuery] string status = "0,1"
             )
         {
             try
@@ -289,7 +291,8 @@ namespace RERPAPI.Controllers.Project
                     DepartmentID = departmentID,
                     TeamID = teamID,
                     UserID = userID,
-                    ProjectID = projectID
+                    ProjectID = projectID,
+                    Status = status
                 };
                 var projectTasks = await SqlDapper<object>.ProcedureToListAsync("spGetProjectTaskTimeLineByTeam", param);
                 return Ok(ApiResponseFactory.Success(projectTasks));
