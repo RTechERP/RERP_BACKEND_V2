@@ -9220,6 +9220,7 @@ public partial class RTCContext : DbContext
                 .HasMaxLength(550)
                 .HasComment("Địa điểm làm việc");
             entity.Property(e => e.Mission).HasComment("Title của công việc");
+            entity.Property(e => e.NeedApprove).HasComment("1: Cần phê duyệt, 0: Không cần phê duyệt");
             entity.Property(e => e.ParentID).HasComment("ID của công việc cha");
             entity.Property(e => e.PercentItem).HasColumnType("decimal(18, 1)");
             entity.Property(e => e.PercentOverTime)

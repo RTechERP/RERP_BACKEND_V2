@@ -219,4 +219,9 @@ public partial class ProjectItem
     /// Thời gian dự kiến (h)
     /// </summary>
     public decimal? EstimatedTime { get; set; }
+
+    /// <summary>
+    /// 1: Cần phê duyệt, 0: Không cần phê duyệt
+    /// </summary>
+    public bool? NeedApprove { get; set; }
 }
