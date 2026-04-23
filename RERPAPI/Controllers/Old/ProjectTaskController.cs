@@ -275,7 +275,8 @@ namespace RERPAPI.Controllers.Project
             [FromQuery] int teamID = 0,
             [FromQuery] int userID = 0,
             [FromQuery] int projectID = 0,
-            [FromQuery] string status = "0,1"
+            [FromQuery] string status = "0,1",
+            [FromQuery] int typeSearch = 1
             )
         {
             try
@@ -292,7 +293,8 @@ namespace RERPAPI.Controllers.Project
                     TeamID = teamID,
                     UserID = userID,
                     ProjectID = projectID,
-                    Status = status
+                    Status = status,
+                    TypeSearch = typeSearch
                 };
                 var projectTasks = await SqlDapper<object>.ProcedureToListAsync("spGetProjectTaskTimeLineByTeam", param);
                 return Ok(ApiResponseFactory.Success(projectTasks));
