@@ -353,7 +353,7 @@ namespace RERPAPI.Controllers.KHOAHOC
             if (lesson == null || string.IsNullOrEmpty(lesson.VideoURL))
                 return NotFound();
 
-            var path = Path.Combine(lesson.VideoURL);
+            var path = lesson.VideoURL;
             if (!System.IO.File.Exists(path))
                 return NotFound();
 
