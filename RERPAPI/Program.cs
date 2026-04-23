@@ -875,7 +875,7 @@ app.UseTus(httpContext => new DefaultTusConfiguration
 {
     Store = tusStore, // đường dẫn lưu temp file ( file chunk)
 
-    UrlPath = "/tus/upload-video", // path gọi api
+    UrlPath = "/api/tus/upload-video", // path gọi api
     Expiration = new AbsoluteExpiration(TimeSpan.FromHours(24)), // xóa upload không hoàn thành sau 24h
 
     Events = new Events

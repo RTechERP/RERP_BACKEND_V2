@@ -2858,9 +2858,6 @@ public partial class RTCContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
-            entity.Property(e => e.VideoURL)
-                .HasMaxLength(300)
-                .IsUnicode(false);
         });
 
         modelBuilder.Entity<CourseLessonHistory>(entity =>
