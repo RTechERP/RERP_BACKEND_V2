@@ -47,7 +47,7 @@ namespace RERPAPI.Controllers.CRM
                 if(customerIndustry.ID <= 0)
                 {
                     var maxSTT = await _customerIndustryRepo.GetNextSTTAsync();
-                    customerIndustry.STT = maxSTT;
+                    customerIndustry.NumberOrder = maxSTT;
                     await _customerIndustryRepo.CreateAsync(customerIndustry);
                 }else
                 {

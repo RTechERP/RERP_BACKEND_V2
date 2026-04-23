@@ -19,7 +19,7 @@ namespace RERPAPI.Repo.GenericEntity
         {
             var maxSTT = await table
                 .Where(x => x.IsDeleted != true)
-                .MaxAsync(x => (int?)x.STT) ?? 0;
+                .MaxAsync(x => (int?)x.NumberOrder) ?? 0;
 
             return maxSTT + 1;
         }
