@@ -1953,7 +1953,7 @@ namespace RERPAPI.Controllers.Project
                     {
                         foreach (var emp in listEmployee)
                         {
-                            var employeeValue = await _employeeRepo.GetByIDAsync(emp??0);
+                            var employeeValue = await _employeeRepo.GetByIDAsync(emp);
 
                             if (emp != currentUser.EmployeeID)
                             {
@@ -2022,7 +2022,7 @@ namespace RERPAPI.Controllers.Project
                     var listEmployeeRelate2 = new List<string>();
                     foreach (var emp in listEmployeeRelate)
                     {
-                        var employeeValue = await _employeeRepo.GetByIDAsync(emp??0);
+                        var employeeValue = await _employeeRepo.GetByIDAsync(emp);
                         if (employeeValue != null)
                         {
                             listEmployeeRelate2.Add(employeeValue.EmailCongTy);
