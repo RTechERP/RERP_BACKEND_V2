@@ -16,15 +16,15 @@ public partial class ProjectTaskEmployee
     /// <summary>
     /// ID của bảng ProjectItem
     /// </summary>
-    public int? ProjectTaskID { get; set; }
+    public int ProjectTaskID { get; set; }
 
     /// <summary>
     /// ID của bảng Employee
     /// </summary>
-    public int? EmployeeID { get; set; }
+    public int EmployeeID { get; set; }
 
     /// <summary>
-    /// 1: assignee, 2: related
+    /// 1: người nhận việc, 2: người liên quan
     /// </summary>
     public int? Type { get; set; }
 

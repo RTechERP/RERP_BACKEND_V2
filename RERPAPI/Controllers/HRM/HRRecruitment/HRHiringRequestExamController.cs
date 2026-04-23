@@ -6,6 +6,7 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.HRM;
 using RERPAPI.Repo.GenericEntity.HRRecruitmentExamRepo;
 using System;
 using System.Collections.Generic;
@@ -20,10 +21,12 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
     {
         HiringRequestExamRepo _hiringRequestExamRepo;
         HRHiringRequestRepo _hiringRequestRepo;
-        public HRHiringRequestExamController(HiringRequestExamRepo hiringRequestExamRepo,HRHiringRequestRepo hRHiringRequestRepo)
+        HRRecruitmentCandidateRepo _hrRecruitmentCandidateRepo;
+        public HRHiringRequestExamController(HiringRequestExamRepo hiringRequestExamRepo, HRHiringRequestRepo hRHiringRequestRepo, HRRecruitmentCandidateRepo hrRecruitmentCandidateRepo)
         {
             _hiringRequestExamRepo = hiringRequestExamRepo;
             _hiringRequestRepo = hRHiringRequestRepo;
+            _hrRecruitmentCandidateRepo = hrRecruitmentCandidateRepo;
         }
 
         //[HttpGet("get-data")]
@@ -41,13 +44,26 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         //}
         [HttpGet("get-data-hiring-request")]
         [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
-        public async Task<IActionResult> GetDataHiringRequest()
+        public async Task<IActionResult> GetDataHiringRequest(DateTime dateStart, DateTime dateEnd, string? keyword) // thêm keyword, tìm kiếm theo ngày tạo 
         {
             try
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
-                var data = _hiringRequestRepo.GetAll(x =>x.IsDeleted == false && (currentUser.IsAdmin || x.EmployeeRequestID == currentUser.EmployeeID));
+                var keywordLower = keyword?.Trim().ToLower();
+                dateStart = dateStart.Date;
+                dateEnd = dateEnd.Date.AddDays(1);
+
+                var data = _hiringRequestRepo.GetAll(x =>!x.IsDeleted
+                                                       && (string.IsNullOrEmpty(keywordLower)
+                                                       || x.HiringRequestCode.ToLower().Contains(keywordLower)
+                                                       || x.PositionName.ToLower().Contains(keywordLower))
+                                                       && x.CreatedDate >= dateStart
+                                                       && x.CreatedDate <= dateEnd
+                                                       && (currentUser.DepartmentID == 6
+                                                       || currentUser.IsAdmin
+                                                       || x.EmployeeRequestID == currentUser.EmployeeID));
+                // phòng hr có thể xem tất cả, nhân viên thường chỉ xem được những yêu cầu tuyển dụng do mình tạo ra ( trừ admin
                 return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
@@ -86,7 +102,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
 
                 // Kiểm tra nếu cả hai danh sách đều rỗng, không có gì để xử lý( trừ trường hợp active bài thi)
                 if ((model.listHiringRequestIDExam == null || model.listHiringRequestIDExam.Count == 0) &&
-                    (model.deletedHiringRequestIDExam == null || model.deletedHiringRequestIDExam.Count == 0) && model.IsActiveExam==null)
+                    (model.deletedHiringRequestIDExam == null || model.deletedHiringRequestIDExam.Count == 0) && model.IsActiveExam == null)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Không có đề thi nào được gửi để thêm/cập nhật hoặc xóa."));
                 }
@@ -156,6 +172,45 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             {
                 // Placeholder logic
                 return Ok(ApiResponseFactory.Success(id, "Xóa dữ liệu thành công (Mock)"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        // lấy danh sách ưng viên tham gia kỳ tuyển dụng 
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [HttpPost("get-candidates")]
+        public async Task<IActionResult> GetCandidates(long hiringRequestId)
+        {
+            try
+            {
+                // trạng thái ứng viên được xem như là đã tham gia kỳ tuyển dụng, và phải chưa bị xóa mềm
+                var data = _hrRecruitmentCandidateRepo.GetAll(x => x.HrHiringRequestID == hiringRequestId && x.IsDeleted == false).ToList();
+                return Ok(ApiResponseFactory.Success(data, "Lấy danh sách ứng viên thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        //cập nhật khóa bài thi ứng viên có đang hoạt động hay không
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [HttpPost("update-active-exam-candidate")]
+        public async Task<IActionResult> UpdateActiveExamCandidate([FromQuery] List<int> ListCandidateId, [FromQuery] bool isActive)
+        {
+            try
+            {
+                var candidate = new HRRecruitmentCandidate();
+                foreach (var candidateId in ListCandidateId)
+                {
+                    candidate = _hrRecruitmentCandidateRepo.GetByID(candidateId);
+                    candidate.IsActiveExam = isActive;
+                    candidate.UpdatedDate = DateTime.Now;
+                    await _hrRecruitmentCandidateRepo.UpdateAsync(candidate);
+                }
+                return Ok(ApiResponseFactory.Success(candidate, $"Cập nhật trạng thái bài thi cho ứng viên thành công!"));
             }
             catch (Exception ex)
             {

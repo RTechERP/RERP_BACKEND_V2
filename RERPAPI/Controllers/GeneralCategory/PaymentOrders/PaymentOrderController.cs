@@ -56,6 +56,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         private readonly EmployeeTeamSaleRepo _employeeTeamSaleRepo;
         private readonly EmployeeRepo _employeeRepo;
         private readonly EmployeeTeamSaleLinkRepo _employeeTeamSaleLinkRepo;
+        private readonly CurrencyConfigRepo _currencyConfigRepo;
 
         public PaymentOrderController(IConfiguration configuration, CurrentUser currentUser, RoleConfig roleConfig,
             PaymentOrderRepo paymentRepo,
@@ -84,7 +85,8 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             POKHDetailRepo pOKHDetailRepo,
             EmployeeTeamSaleRepo employeeTeamSaleRepo,
             EmployeeRepo employeeRepo,
-            EmployeeTeamSaleLinkRepo employeeTeamSaleLinkRepo
+            EmployeeTeamSaleLinkRepo employeeTeamSaleLinkRepo,
+            CurrencyConfigRepo currencyConfigRepo
 
             )
         {
@@ -119,6 +121,8 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             _employeeTeamSaleRepo = employeeTeamSaleRepo;
             _employeeRepo = employeeRepo;
             _employeeTeamSaleLinkRepo = employeeTeamSaleLinkRepo;
+            _employeeRepo = employeeRepo;
+            _currencyConfigRepo = currencyConfigRepo;
         }
 
 
@@ -146,8 +150,8 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     PaymentOrderTypeID = p.PaymentOrderTypeID ?? 0,
                     DateStart = p.DateStart,
                     DateEnd = p.DateEnd,
-                    DepartmentID = p.DepartmentID,
-                    EmployeeID = p.EmployeeID,
+                    DepartmentID = p.DepartmentID ?? 0,
+                    EmployeeID = p.EmployeeID ?? 0,
                     Keyword = p.Keyword,
                     IsIgnoreHR = p.IsIgnoreHR ?? -1,
                     IsApproved = p.IsApproved ?? -1,
@@ -555,13 +559,13 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             try
             {
                 var reponse = await _logRepo.Appoved(payment);
-                if (reponse == 1)
+                if (reponse.Item1 == 1)
                 {
                     return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
                 }
                 else
                 {
-                    return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Cập nhật thất bại! {reponse.Item2}"));
                 }
             }
             catch (Exception ex)
@@ -574,60 +578,92 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         [RequiresPermission("N59,N56")]
         public async Task<IActionResult> ApprovedHR([FromBody] List<PaymentOrderDTO> payment)
         {
-            var reponse = await _logRepo.Appoved(payment);
-            if (reponse == 1)
+            try
             {
-                return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+                var reponse = await _logRepo.Appoved(payment);
+                if (reponse.Item1 == 1)
+                {
+                    return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+                }
+                else
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Cập nhật thất bại! {reponse.Item2}"));
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+
         }
 
         [HttpPost("appoved-kttt")]
         [RequiresPermission("N55")]
         public async Task<IActionResult> ApprovedKTTT([FromBody] List<PaymentOrderDTO> payment)
         {
-            var reponse = await _logRepo.Appoved(payment);
-            if (reponse == 1)
+            try
             {
-                return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+                var reponse = await _logRepo.Appoved(payment);
+                if (reponse.Item1 == 1)
+                {
+                    return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+                }
+                else
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Cập nhật thất bại! {reponse.Item2}"));
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+
         }
 
         [HttpPost("appoved-ktt")]
         [RequiresPermission("N61")]
         public async Task<IActionResult> ApprovedKTT([FromBody] List<PaymentOrderDTO> payment)
         {
-            var reponse = await _logRepo.Appoved(payment);
-            if (reponse == 1)
+            try
             {
-                return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+                var reponse = await _logRepo.Appoved(payment);
+                if (reponse.Item1 == 1)
+                {
+                    return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+                }
+                else
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Cập nhật thất bại! {reponse.Item2}"));
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+
         }
 
         [HttpPost("appoved-bgd")]
         [RequiresPermission("N58")]
         public async Task<IActionResult> ApprovedBGD([FromBody] List<PaymentOrderDTO> payment)
         {
-            var reponse = await _logRepo.Appoved(payment);
-            if (reponse == 1)
+            try
             {
-                return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+                var reponse = await _logRepo.Appoved(payment);
+                if (reponse.Item1 == 1)
+                {
+                    return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+                }
+                else
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Cập nhật thất bại! {reponse.Item2}"));
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+
         }
 
 
@@ -877,6 +913,19 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 {
                     return Ok(ApiResponseFactory.Success(new List<object>()));
                 }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-currency-config")]
+        public async Task<IActionResult> GetCurrencyConfig()
+        {
+            try
+            {
+                var data = _currencyConfigRepo.GetAll(p=>!p.IsDeleted.Value).OrderBy(x => x.SortOrder);
+                return Ok(ApiResponseFactory.Success(data));
             }
             catch (Exception ex)
             {

@@ -101,7 +101,7 @@ namespace RERPAPI.Controllers.Systems
                         {
                             result = await _updateVersionRepo.CreateAsync(item);
                         }
-                        if (result > 0)
+                            if (result > 0)
                         {
                             if (item.Status == 1)
                             {

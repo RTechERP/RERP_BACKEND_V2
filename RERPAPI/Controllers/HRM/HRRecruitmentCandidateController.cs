@@ -70,6 +70,23 @@ namespace RERPAPI.Controllers.HRM
             }
 
         }
+        [RequiresPermission("N1,N2")]
+        //Lấy UserName
+        [HttpGet("get-username-candidate")]
+        public IActionResult GetUserName()
+        {
+            try
+            {
+                var userName = _hrRecruitmentCandidateRepo.GenerateUserName();
+                return Ok(ApiResponseFactory.Success(userName, null));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+
+        }
+
 
         [HttpGet("hiring-request")]
         public async Task<IActionResult> GetHiringRequest()
@@ -439,7 +456,7 @@ namespace RERPAPI.Controllers.HRM
                         {
                             var hrRecruitmentCandidate = _hrRecruitmentCandidateRepo.GetByID(email.ID);
                             if (hrRecruitmentCandidate != null)
-                            {
+                            {   
                                 hrRecruitmentCandidate.StatusMail = email.StatusSend;
                                 hrRecruitmentCandidate.DateInterview = email.DateSend;
                                 hrRecruitmentCandidate.DeadlineFeedbackMail = email.DeadlineFeedbackMail;
@@ -451,7 +468,41 @@ namespace RERPAPI.Controllers.HRM
                                 await _hrRecruitmentCandidateRepo.UpdateAsync(hrRecruitmentCandidate);
                             }
                         }
-                        await _emailHelper.SendAsyncHr(email.EmailTo, email.Subject, email.Body + footer, cc: email.EmailCC);
+                        await _emailHelper.SendAsyncHr(email.EmailTo, email.Subject, email.Body + footer, cc: "dept_manager@rtc.edu.vn");
+                    }
+                }
+                return Ok(ApiResponseFactory.Success(null, "Gửi thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpPost("send-offer-letter-mail")]
+        [RequiresPermission("N1,N2")]
+        public async Task<IActionResult> SendEmailOferLetter([FromBody] List<EmployeeSendEmail> sendEmails)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser _currentUser = ObjectMapper.GetCurrentUser(claims);
+                var footer = _configuration["FooterMail:HR:Footer"];
+                string emailCC = "dept_manager@rtc.edu.vn";
+                if (sendEmails.Count() > 0)
+                {
+                    foreach (var email in sendEmails)
+                    {
+                        if (email.ID > 0)
+                        {
+                            var hrRecruitmentCandidate = _hrRecruitmentCandidateRepo.GetByID(email.ID);
+                            if (hrRecruitmentCandidate != null)
+                            {
+                                hrRecruitmentCandidate.StatusMail = email.StatusSend;
+                                hrRecruitmentCandidate.SendMailTime = DateTime.Now;
+                                await _hrRecruitmentCandidateRepo.UpdateAsync(hrRecruitmentCandidate);
+                            }
+                        }
+                        await _emailHelper.SendAsyncHr(email.EmailTo, email.Subject, email.Body + footer, cc: emailCC);
                     }
                 }
                 return Ok(ApiResponseFactory.Success(null, "Gửi thành công!"));

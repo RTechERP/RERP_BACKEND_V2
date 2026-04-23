@@ -1,4 +1,4 @@
-﻿using RERPAPI.Model.Common;
+using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
@@ -81,7 +81,28 @@ namespace RERPAPI.Repo.GenericEntity.HRM
                         }
                     }
                 }
-                // Work Experiences, Foreign Languages, Other Certificates: skipped by user request
+                // Experience Level Validation
+                if (mainForm.WorkExperienceLevel <= 0 || mainForm.WorkExperienceLevel == null)
+                    return ApiResponseFactory.Fail(null, "Vui lòng chọn Mức kinh nghiệm làm việc!");
+
+                // If experience level is NOT "No experience" (Value 1)
+                if (mainForm.WorkExperienceLevel > 1)
+                {
+                    var activeExperiences = data.WorkingExperiences?.Where(x => x.IsDeleted != true).ToList();
+                    if (activeExperiences == null || activeExperiences.Count == 0)
+                    {
+                        return ApiResponseFactory.Fail(null, "Vì bạn đã có kinh nghiệm, vui lòng nhập ít nhất 1 thông tin Quá trình công tác!");
+                    }
+                    foreach (var exp in activeExperiences)
+                    {
+                        if (string.IsNullOrWhiteSpace(exp.CompanyName) || string.IsNullOrWhiteSpace(exp.PositionName) || !exp.DateStart.HasValue)
+                        {
+                            return ApiResponseFactory.Fail(null, "Vui lòng nhập đầy đủ thông tin Tên công ty, Chức danh và Ngày bắt đầu trong Quá trình công tác!");
+                        }
+                    }
+                }
+
+                // Foreign Languages, Other Certificates: skipped by user request
                 return ApiResponseFactory.Success(null, "");
             }
             catch (Exception ex)

@@ -1,5 +1,7 @@
-﻿using DocumentFormat.OpenXml.Office2010.ExcelAc;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Office2010.ExcelAc;
 using DocumentFormat.OpenXml.Office2013.Drawing.ChartStyle;
+using DocumentFormat.OpenXml.Spreadsheet;
 using MathNet.Numerics.Distributions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -46,6 +48,7 @@ namespace RERPAPI.Controllers.Project
         ProjectItemRepo _projectItemRepo;
         ProjectTaskEmailBandRepo _projectTaskEmailBandRepo;
         ProjectTaskAttendanceRepo _projectTaskAttendanceRepo;
+        ProjectTaskSettingRepo _projectTaskSettingRepo;
         public ProjectTaskController(ProjectTaskRepo projectTaskRepo,
             ProjectTaskGroupRepo groupRepo,
             ProjectTaskChecklistRepo checklistRepo,
@@ -61,7 +64,8 @@ namespace RERPAPI.Controllers.Project
             DepartmentRepo departmentRepo,
             ProjectTaskEmailBandRepo projectTaskEmailBandRepo,
             ProjectItemRepo projectItemRepo,
-            ProjectTaskAttendanceRepo projectTaskAttendanceRepo
+            ProjectTaskAttendanceRepo projectTaskAttendanceRepo,
+            ProjectTaskSettingRepo projectTaskSettingRepo
             )
         {
             _projectTaskRepo = projectTaskRepo;
@@ -80,6 +84,7 @@ namespace RERPAPI.Controllers.Project
             _projectItemRepo = projectItemRepo;
             _projectTaskEmailBandRepo = projectTaskEmailBandRepo;
             _projectTaskAttendanceRepo = projectTaskAttendanceRepo;
+            _projectTaskSettingRepo = projectTaskSettingRepo;
         }
 
 
@@ -90,7 +95,7 @@ namespace RERPAPI.Controllers.Project
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetProjectTask(DateTime dateStart, DateTime dateEnd, int status)
+        public async Task<IActionResult> GetProjectTask(DateTime dateStart, DateTime dateEnd, int status, int viewNumber = 1)
         {
             try
             {
@@ -98,19 +103,62 @@ namespace RERPAPI.Controllers.Project
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 dateStart = dateStart.Date;
                 dateEnd = dateEnd.Date.AddDays(1).AddSeconds(-1);
+
+                if (currentUser.EmployeeID == 0)
+                {
+                    var param1 = new
+                    {
+                        EmployeeID = -1,
+                        //EmployeeID = 610,
+                        DateStart = dateStart,
+                        DateEnd = dateEnd,
+                        Status = status,
+                        ViewNumber = viewNumber
+                    };
+                    var projectTasksnew = await SqlDapper<spGetProjectTaskByEmployeeID>.ProcedureToListTAsync("spGetProjectTaskByEmployeeID", param1);
+                    return Ok(ApiResponseFactory.Success(new
+                    {
+                        ProjectTask = projectTasksnew.OrderByDescending(x => x.UpdatedDate),
+                        UserID = currentUser.EmployeeID
+                    }));
+                }
                 var param = new
                 {
                     EmployeeID = currentUser.EmployeeID,
                     //EmployeeID = 610,
                     DateStart = dateStart,
                     DateEnd = dateEnd,
-                    Status = status
+                    Status = status,
+                    ViewNumber = viewNumber
                 };
                 var projectTasks = await SqlDapper<spGetProjectTaskByEmployeeID>.ProcedureToListTAsync("spGetProjectTaskByEmployeeID", param);
                 return Ok(ApiResponseFactory.Success(new
                 {
                     ProjectTask = projectTasks.OrderByDescending(x => x.UpdatedDate),
                     UserID = currentUser.EmployeeID
+                }));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, "Failed to retrieve project tasks."));
+            }
+        }
+
+        [HttpGet("number-overdue")]
+        public async Task<IActionResult> GetCountOverdueProjectTasks()
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                var param = new
+                {
+                    EmployeeID = currentUser.EmployeeID
+                };
+                var result = await SqlDapper<object>.ProcedureToListTAsync("spGetCountOverdueProjectTasks", param);
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    result
                 }));
             }
             catch (Exception ex)
@@ -347,11 +395,19 @@ namespace RERPAPI.Controllers.Project
         // -- Get all project ---
 
         [HttpGet("get-all-project")]
-        public IActionResult getAllProject()
+        public async Task<IActionResult> getAllProject()
         {
             try
             {
-                var result = _projectRepo.GetAll(x => x.IsDeleted == false).OrderByDescending(x => x.ID);
+                DateTime minDate = new DateTime(DateTime.Now.Year - 1, 1, 1);
+
+                var param = new
+                {
+                    DateStart = minDate
+                };
+                var result = await SqlDapper<object>.ProcedureToListAsync("spGetProjectForProjectTask", param);
+
+                //var result = _projectRepo.GetAll(x => x.CreatedDate >= minDate && x.IsDeleted == false).OrderByDescending(x => x.ID);
                 return Ok(ApiResponseFactory.Success(result, ""));
             }
             catch (Exception ex)
@@ -393,6 +449,132 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, "Failed to create checklist item."));
             }
         }
+
+        [HttpGet("project-task-child")]
+        public async Task<IActionResult> GetProjectTaskChild(int projectTaskID)
+        {
+            try
+            {
+                var param = new
+                {
+                    ID = projectTaskID
+                };
+                var list = await SqlDapper<object>.ProcedureToListTAsync("spGetProjectTaskChild", param);
+                return Ok(ApiResponseFactory.Success(list));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, "Failed to retrieve project task child."));
+            }
+        }
+
+        [HttpPost("project-task-child")]
+        public async Task<IActionResult> AddProjectTaskChild([FromBody] ProjectTaskChildParam item)
+        {
+            try
+            {
+                if (item.ID > 0 && item.IsDeletedFromParent == true)
+                {
+                    var existingTask = await _projectItemRepo.GetByIDAsync(item.ID);
+                    if (existingTask == null || existingTask.ID <= 0)
+                    {
+                        return NotFound(ApiResponseFactory.Fail(null, "Project task not found."));
+                    }
+                    var param = new
+                    {
+                        Id = existingTask.ID,
+                        Col = "ParentID"
+                    };
+                    var result = await SqlDapper<UserTeam>.ExecuteStoredProcedure("spUpdateDateToNull", param);
+
+                    return Ok(ApiResponseFactory.Success());
+                }
+                else
+                {
+                    var newProjectTask = new ProjectItem
+                    {
+                        ProjectID = item.ProjectID,
+                        Mission = item.Mission,
+                        PlanStartDate = item.PlanStartDate,
+                        PlanEndDate = item.PlanEndDate.HasValue ? item.PlanEndDate.Value.Date.AddDays(1).AddSeconds(-1) : (DateTime?)null,
+                        ParentID = item.ParentID,
+                        TypeProjectItem = item.TypeProjectItem,
+                        EmployeeIDRequest = item.EmployeeIDRequest,
+                        TaskComplexity = item.TaskComplexity,
+                        ProjectTaskTypeID = item.ProjectTaskTypeID,
+                        Status = 0
+                    };
+
+                    // Tạo mã code cho công việc
+                    if (item.ProjectID != null && item.ProjectID > 0)
+                    {
+                        newProjectTask.Code = _projectItemRepo.GenerateProjectItemCode(item.ProjectID ?? 0).Trim();
+
+                    }
+                    else
+                    {
+                        //var employeeById = _employeeRepo.GetByID(currentUser.EmployeeID);
+                        newProjectTask.Code = _projectTaskRepo.GenerateProjectTaskCodeTime(item.ProjectTaskTypeID ?? 1).Trim();
+                    }
+
+                    if (item.EmployeeAssigneeID != null && item.EmployeeAssigneeID > 0)
+                    {
+                        Employee userAssignee = await _employeeRepo.GetByIDAsync(item.EmployeeAssigneeID ?? 0);
+                        newProjectTask.UserID = userAssignee.UserID;
+
+                        if (newProjectTask.UserID == null || newProjectTask.UserID < 0)
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null, "User Is Null, please chose user!"));
+                        }
+                    }
+
+
+
+                    if (await _projectItemRepo.CreateAsync(newProjectTask) > 0)
+                    {
+                        var newEmployee = new ProjectTaskEmployee
+                        {
+                            ProjectTaskID = newProjectTask.ID,
+                            EmployeeID = item.EmployeeAssigneeID ??0,
+                            Type = 1
+                        };
+
+
+                        await _projectTaskEmployeeRepo.CreateAsync(newEmployee);
+
+                        string usersString = string.Join(",", item.EmployeeAssigneeID);
+
+                        var param = new
+                        {
+                            p_UserID = usersString
+                        };
+                        var leaders = await SqlDapper<UserTeam>.ProcedureToListTAsync("spGetLeaderTeam", param);
+
+                        if (leaders.Count > 0)
+                        {
+                            var newEmployeeRelate = new ProjectTaskEmployee
+                            {
+                                ProjectTaskID = newProjectTask.ID,
+                                EmployeeID = leaders[0].LeaderID ?? 0,
+                                Type = 2
+                            };
+                            await _projectTaskEmployeeRepo.CreateAsync(newEmployeeRelate);
+                        }
+                        return Ok(ApiResponseFactory.Success(newProjectTask));
+
+                    }
+                    return BadRequest(ApiResponseFactory.Fail(null, "Failed to create child project task."));
+
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, "Failed to create child project task."));
+            }
+        }
+
+
+
 
         [HttpDelete("Checklists/{id}")]
         public async Task<IActionResult> DeleteChecklist(int id)
@@ -751,7 +933,7 @@ namespace RERPAPI.Controllers.Project
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
 
-                var data = _projectTaskEmailBandRepo.GetAll(x => x.EmployeeID == currentUser.EmployeeID).FirstOrDefault();
+                var data = _projectTaskSettingRepo.GetAll(x => x.EmployeeID == currentUser.EmployeeID).FirstOrDefault();
                 return Ok(ApiResponseFactory.Success(data));
             }
             catch (Exception ex)
@@ -761,42 +943,46 @@ namespace RERPAPI.Controllers.Project
         }
 
         [HttpPost("email-band")]
-        public async Task<IActionResult> SaveDataEmailBand(bool isActive)
+        public async Task<IActionResult> SaveDataEmailBand(bool SendMailCreateProjectTask = true, bool SendFinishProjectTask = true, bool SendApproveProjectTask = true)
         {
             try
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
 
-                var projectTaskEmailBand = _projectTaskEmailBandRepo.GetAll(x => x.EmployeeID == currentUser.EmployeeID).FirstOrDefault();
+                var projectTaskSetting = _projectTaskSettingRepo.GetAll(x => x.EmployeeID == currentUser.EmployeeID).FirstOrDefault();
 
 
-                if (projectTaskEmailBand != null && projectTaskEmailBand.ID > 0)
+                if (projectTaskSetting != null && projectTaskSetting.ID > 0)
                 {
 
-                    projectTaskEmailBand.IsActive = isActive;
-                    projectTaskEmailBand.UpdatedDate = DateTime.Now;
-                    if (await _projectTaskEmailBandRepo.UpdateAsync(projectTaskEmailBand) <= 0)
+                    projectTaskSetting.SendMailCreateProjectTask = SendMailCreateProjectTask;
+                    projectTaskSetting.SendFinishProjectTask = SendFinishProjectTask;
+                    projectTaskSetting.SendApproveProjectTask = SendApproveProjectTask;
+                    projectTaskSetting.UpdatedDate = DateTime.Now;
+                    if (await _projectTaskSettingRepo.UpdateAsync(projectTaskSetting) <= 0)
                     {
                         return BadRequest(ApiResponseFactory.Fail(null, "Failed to update email data."));
                     }
-                    return Ok(ApiResponseFactory.Success(projectTaskEmailBand));
+                    return Ok(ApiResponseFactory.Success(projectTaskSetting));
                 }
                 else
                 {
                     var existingEmail = _employeeRepo.GetByID(currentUser.EmployeeID)?.EmailCongTy;
-                    var newProjectTaskEmailBand = new ProjectTaskEmailBand
+                    var newProjectTaskSetting = new ProjectTaskSetting
                     {
                         EmployeeID = currentUser.EmployeeID,
                         EmployeeEmail = existingEmail,
-                        IsActive = isActive,
+                        SendMailCreateProjectTask = SendMailCreateProjectTask,
+                        SendFinishProjectTask = SendFinishProjectTask,
+                        SendApproveProjectTask = SendApproveProjectTask,
                         IsDeleted = false,
                     };
-                    if (await _projectTaskEmailBandRepo.CreateAsync(newProjectTaskEmailBand) <= 0)
+                    if (await _projectTaskSettingRepo.CreateAsync(newProjectTaskSetting) <= 0)
                     {
                         return BadRequest(ApiResponseFactory.Fail(null, "Failed to create email data."));
                     }
-                    return Ok(ApiResponseFactory.Success(newProjectTaskEmailBand));
+                    return Ok(ApiResponseFactory.Success(newProjectTaskSetting));
                 }
             }
             catch (Exception ex)
@@ -833,7 +1019,7 @@ namespace RERPAPI.Controllers.Project
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
 
-                var projectTaskAttendance = _projectTaskAttendanceRepo.GetAll(x => x.ProjectTaskID == projectTaskID && x.EmployeeID == currentUser.EmployeeID && (x.Date.HasValue && x.Date.Value.Date == DateTime.Now.Date) ).FirstOrDefault();
+                var projectTaskAttendance = _projectTaskAttendanceRepo.GetAll(x => x.ProjectTaskID == projectTaskID && x.EmployeeID == currentUser.EmployeeID && (x.Date.HasValue && x.Date.Value.Date == DateTime.Now.Date)).FirstOrDefault();
 
                 if (projectTaskAttendance != null && projectTaskAttendance.ID > 0)
                 {
@@ -895,7 +1081,7 @@ namespace RERPAPI.Controllers.Project
                     }
 
                     // tính % thời gian vượt so với kế hoạch nếu có sự thay đổi về ngày bắt đầu hoặc ngày kết thúc thực tế và trạng thái công việc là đã hoàn thành.
-                    if (projectTask.Status == 3 && projectTask.ActualEndDate.HasValue
+                    if (projectTask.Status == 2 && projectTask.ActualEndDate.HasValue
                         && projectTask.ActualStartDate.HasValue && projectTask.PlanEndDate.HasValue
                         && projectTask.PlanStartDate.HasValue && ((existingTask.PlanStartDate?.Date != projectTask.PlanStartDate?.Date)
                         || (existingTask.ActualStartDate?.Date != projectTask.ActualStartDate?.Date) || (existingTask.PlanEndDate?.Date != projectTask.PlanEndDate?.Date)
@@ -921,7 +1107,7 @@ namespace RERPAPI.Controllers.Project
                     };
                     // variable dùng để kiểm tra xem có thời gian nào thay đổi hay không. 
                     int changeTime = 0;
-
+                    
 
                     if (projectTask.PlanStartDate != null && existingTask.PlanStartDate?.Date != projectTask.PlanStartDate?.Date)
                     {
@@ -936,7 +1122,7 @@ namespace RERPAPI.Controllers.Project
                     {
                         newProjectTaskLog.ContentLog += $"- {currentUser.FullName} đã thay đổi ngày kết thúc dự kiến từ {existingTask.PlanEndDate?.ToString("dd/MM/yyyy")} thành {projectTask.PlanEndDate?.ToString("dd/MM/yyyy")}. \\n";
                         changeTime++;
-                        existingTask.PlanEndDate = projectTask.PlanEndDate?.Date;
+                        existingTask.PlanEndDate = projectTask.PlanEndDate.HasValue ? projectTask.PlanEndDate.Value.Date.AddDays(1).AddSeconds(-1) : (DateTime?)null;
 
                     }
 
@@ -956,29 +1142,32 @@ namespace RERPAPI.Controllers.Project
                         existingTask.ActualStartDate = projectTask.ActualStartDate?.Date;
                     }
 
-                    if (projectTask.ActualEndDate != null && existingTask.ActualEndDate?.Date != projectTask.ActualEndDate?.Date)
+                    var oldDate = existingTask.ActualEndDate?.Date;
+                    var newDate = projectTask.ActualEndDate?.Date;
+
+                    if (oldDate != newDate)
                     {
-                        if (existingTask.ActualEndDate == null)
+                        if (newDate != null && oldDate == null)
                         {
-                            newProjectTaskLog.ContentLog += $"- {currentUser.FullName} đã thay đổi ngày kết thúc thực tế thành {projectTask.ActualEndDate?.ToString("dd/MM/yyyy")}. \\n";
+                            newProjectTaskLog.ContentLog +=
+                                $"- {currentUser.FullName} đã thêm ngày kết thúc thực tế {newDate:dd/MM/yyyy}. \n";
+                            projectTask.Status = 2;
                         }
-                        else
+                        else if (newDate != null && oldDate != null)
                         {
-                            newProjectTaskLog.ContentLog += $"- {currentUser.FullName} đã thay đổi ngày kết thúc thực tế từ {existingTask.ActualEndDate?.ToString("dd/MM/yyyy")} thành {projectTask.ActualEndDate?.ToString("dd/MM/yyyy")}. \\n";
-
+                            newProjectTaskLog.ContentLog +=
+                                $"- {currentUser.FullName} đã thay đổi ngày kết thúc thực tế từ {oldDate:dd/MM/yyyy} thành {newDate:dd/MM/yyyy}. \n";
+                            projectTask.Status = 2;
                         }
-                        changeTime++;
-                        existingTask.ActualEndDate = projectTask.ActualEndDate?.Date;
-                        projectTask.Status = 3;
+                        else if (newDate == null && oldDate != null)
+                        {
+                            newProjectTaskLog.ContentLog +=
+                                $"- {currentUser.FullName} đã xóa ngày kết thúc thực tế. \n";
+                            projectTask.Status = 2;
+                        }
 
-                    }
-                    else if (projectTask.ActualEndDate == null && existingTask.ActualEndDate?.Date != projectTask.ActualEndDate?.Date)
-                    {
-                        newProjectTaskLog.ContentLog += $"- {currentUser.FullName} đã xóa ngày kết thúc thực tế. \\n";
                         changeTime++;
-                        existingTask.ActualEndDate = projectTask.ActualEndDate?.Date;
-                        projectTask.Status = 2;
-
+                        existingTask.ActualEndDate = newDate;
                     }
 
                     if (changeTime > 0)
@@ -1022,7 +1211,7 @@ namespace RERPAPI.Controllers.Project
                         leaders1 = await SqlDapper<UserTeam>.ProcedureToListTAsync("spGetLeaderTeam", param);
                     }
 
-
+                    
                     if (projectTask.EmployeeRelate != null && projectTask.EmployeeRelate.Count > 0)
                     {
                         if (!projectTask.EmployeeRelate.Contains(currentUser.EmployeeID) && !projectTask.Employee.Contains(currentUser.EmployeeID) && projectTask.EmployeeIDRequest != currentUser.EmployeeID)
@@ -1071,7 +1260,7 @@ namespace RERPAPI.Controllers.Project
                         }
                     }
 
-                    var listEmailBand = _projectTaskEmailBandRepo.GetAll(x => x.IsActive == false).Select(x => x.EmployeeEmail);
+                    var listEmailBand = _projectTaskSettingRepo.GetAll(x => x.SendFinishProjectTask == false).Select(x => x.EmployeeEmail);
 
                     var listemailRecive = listEmployeeRelate.Except(listEmailBand);
                     var listemailCC = listEmail1.Except(listEmailBand);
@@ -1081,7 +1270,7 @@ namespace RERPAPI.Controllers.Project
                     var employeeAsigner1 = await _employeeRepo.GetByIDAsync(existingTask.EmployeeIDRequest ?? 0);
 
 
-                    if (projectTask.Status == 3 && existingTask.Status != projectTask.Status && listToEmailString1.Count() > 0)
+                    if (projectTask.Status == 2 && existingTask.Status != projectTask.Status && listToEmailString1.Count() > 0)
                     {
                         SendEmailReceiveProjectTaskParam sendEmailContent1 = new SendEmailReceiveProjectTaskParam
                         {
@@ -1118,20 +1307,32 @@ namespace RERPAPI.Controllers.Project
                             if (existingTask.ProjectID != null && existingTask.ProjectID > 0)
                             {
                                 newProjectTaskChangeProjectLog.ContentLog = $"- {currentUser.FullName} đã thay đổi dự án từ {oldProject.ProjectName} thành {newProject.ProjectName}. \\n";
+                                existingTask.Code = _projectItemRepo.GenerateProjectItemCode(projectTask.ProjectID ?? 0).Trim();
                             }
                             else
                             {
                                 newProjectTaskChangeProjectLog.ContentLog = $"- {currentUser.FullName} đã thêm vào dự án {newProject.ProjectName}. \\n";
+                                existingTask.Code = _projectItemRepo.GenerateProjectItemCode(projectTask.ProjectID ?? 0).Trim();
                             }
                         }
                         else
                         {
                             newProjectTaskChangeProjectLog.ContentLog = $"- {currentUser.FullName} đã xóa dự án {oldProject.ProjectName}. \\n";
+                            existingTask.Code = _projectTaskRepo.GenerateProjectTaskCodeTime(projectTask.ProjectTaskTypeID ?? 1).Trim();
+
+                            var param = new
+                            {
+                                Id = existingTask.ID,
+                                Col = "ProjectID"
+                            };
+                            var result = await SqlDapper<UserTeam>.ExecuteStoredProcedure("spUpdateDateToNull", param);
+
                         }
                         await _projectTaskLogRepo.CreateAsync(newProjectTaskChangeProjectLog);
                         existingTask.ProjectID = projectTask.ProjectID;
 
                     }
+
 
                     // Log change mission
                     if (existingTask.Mission != projectTask.Mission)
@@ -1146,26 +1347,35 @@ namespace RERPAPI.Controllers.Project
                         existingTask.Mission = projectTask.Mission;
                     }
 
-                    // Log change status
                     if (existingTask.Status != projectTask.Status)
                     {
                         var statusText = new Dictionary<int, string>
                             {
-                                { 1, "Chưa làm" },
-                                { 2, "Đang làm" },
-                                { 3, "Hoàn thành" },
-                                { 4, "Pending" }
+                                { 0, "Chưa làm" },
+                                { 1, "Đang làm" },
+                                { 2, "Hoàn thành" },
+                                { 3, "Pending" }
                             };
+
+                        var oldStatus = statusText.ContainsKey(existingTask.Status ?? 0)
+                            ? statusText[existingTask.Status ?? 0]
+                            : "Không xác định";
+
+                        var newStatus = statusText.ContainsKey(projectTask.Status ?? 0)
+                            ? statusText[projectTask.Status ?? 0]
+                            : "Không xác định";
+
                         var newProjectTaskChangeStatusLog = new ProjectTaskLog
                         {
                             ProjectTaskID = existingTask.ID,
                             TypeLog = "Thay đổi trạng thái",
-                            ContentLog = $"- {currentUser.FullName} đã thay đổi trạng thái công việc từ {statusText[existingTask.Status ?? 1]} thành {statusText[existingTask.Status ?? 1]}. \\n"
+                            ContentLog = $"- {currentUser.FullName} đã thay đổi trạng thái công việc từ {oldStatus} thành {newStatus}. \n"
                         };
+
                         await _projectTaskLogRepo.CreateAsync(newProjectTaskChangeStatusLog);
+
                         existingTask.Status = projectTask.Status;
                     }
-
 
 
                     // Log change Asigner
@@ -1221,9 +1431,23 @@ namespace RERPAPI.Controllers.Project
                         var newProjectTaskChangeParentLog = new ProjectTaskLog
                         {
                             ProjectTaskID = existingTask.ID,
-                            TypeLog = "Thay đổi công việc cha",
-                            ContentLog = $"- {currentUser.FullName} đã thay đổi công việc cha từ {(oldParentTask != null ? oldParentTask.Mission : "không có")} thành {(newParentTask != null ? newParentTask.Mission : "không có")}. \\n"
+                            TypeLog = "Thay đổi công việc cha"
                         };
+                        if (projectTask.ParentID != null && projectTask.ParentID >= 0)
+                        {
+                            newProjectTaskChangeParentLog.ContentLog = $"- {currentUser.FullName} đã thay đổi công việc cha từ {(oldParentTask != null ? oldParentTask.Mission : "không có")} thành {(newParentTask != null ? newParentTask.Mission : "không có")}. \\n";
+                        }
+                        else
+                        {
+                            newProjectTaskChangeParentLog.ContentLog = $"- {currentUser.FullName} đã xóa công việc cha từ {(oldParentTask != null ? oldParentTask.Mission : "không có")}. \\n";
+                            var param = new
+                            {
+                                Id = existingTask.ID,
+                                Col = "ParentID"
+                            };
+                            var result = await SqlDapper<UserTeam>.ExecuteStoredProcedure("spUpdateDateToNull", param);
+                        }
+
                         await _projectTaskLogRepo.CreateAsync(newProjectTaskChangeParentLog);
                         existingTask.ParentID = projectTask.ParentID;
                     }
@@ -1237,11 +1461,27 @@ namespace RERPAPI.Controllers.Project
                         var newProjectTaskChangeTypeProjectItemLog = new ProjectTaskLog
                         {
                             ProjectTaskID = existingTask.ID,
-                            TypeLog = "Thay đổi loại công việc",
-                            ContentLog = $"- {currentUser.FullName} đã thay đổi loại công việc từ {oldTypeProjectItem} thành {newTypeProjectItem}. \\n"
+                            TypeLog = "Thay đổi loại hạng mục công việc",
+                            ContentLog = $"- {currentUser.FullName} đã thay đổi loại hạng mục công việc từ {oldTypeProjectItem} thành {newTypeProjectItem}. \\n"
                         };
                         await _projectTaskLogRepo.CreateAsync(newProjectTaskChangeTypeProjectItemLog);
                         existingTask.TypeProjectItem = projectTask.TypeProjectItem;
+                    }
+
+                    // log change project task type
+                    if (existingTask.ProjectTaskTypeID != projectTask.ProjectTaskTypeID)
+                    {
+                        var oldProjectTaskTypeID = _projectTaskTypeRepo.GetByID(existingTask.ProjectTaskTypeID ?? 1);
+                        var newProjectTaskTypeID = _projectTaskTypeRepo.GetByID(projectTask.ProjectTaskTypeID ?? 1);
+
+                        var newProjectTaskChangeProjectTaskTypeIDLog = new ProjectTaskLog
+                        {
+                            ProjectTaskID = existingTask.ID,
+                            TypeLog = "Thay đổi loại công việc",
+                            ContentLog = $"- {currentUser.FullName} đã thay đổi loại công việc từ {oldProjectTaskTypeID} thành {newProjectTaskTypeID}. \\n"
+                        };
+                        await _projectTaskLogRepo.CreateAsync(newProjectTaskChangeProjectTaskTypeIDLog);
+                        existingTask.ProjectTaskTypeID = projectTask.ProjectTaskTypeID;
                     }
 
                     // log change deadline
@@ -1257,18 +1497,45 @@ namespace RERPAPI.Controllers.Project
                         existingTask.Deadline = projectTask.Deadline;
                     }
 
+                    // log change Priority
+                    if (existingTask.Priority != projectTask.Priority)
+                    {
+                        var newProjectTaskChangePriority = new ProjectTaskLog
+                        {
+                            ProjectTaskID = existingTask.ID,
+                            TypeLog = "Thay đổi độ ưu tiên",
+                            ContentLog = $"- {currentUser.FullName} đã thay đổi độ ưu tiên từ {existingTask.Priority ?? 1} thành {projectTask.Priority ?? 1}. \\n"
+                        };
+                        await _projectTaskLogRepo.CreateAsync(newProjectTaskChangePriority);
+                        existingTask.Priority = projectTask.Priority;
+                    }
+
+                    // log change EstimatedTime
+                    if (existingTask.EstimatedTime != projectTask.EstimatedTime)
+                    {
+                        var newProjectTaskChangeEstimatedTime = new ProjectTaskLog
+                        {
+                            ProjectTaskID = existingTask.ID,
+                            TypeLog = "Thay đổi thời gian dự kiến",
+                            ContentLog = $"- {currentUser.FullName} đã thay đổi độ ưu tiên từ {existingTask.EstimatedTime} thành {projectTask.EstimatedTime}. \\n"
+                        };
+                        await _projectTaskLogRepo.CreateAsync(newProjectTaskChangeEstimatedTime);
+                        existingTask.EstimatedTime = projectTask.EstimatedTime;
+                    }
+
                     existingTask.IsAdditional = projectTask.IsAdditional;
                     existingTask.Description = projectTask.Description;
                     existingTask.DescriptionSolution = projectTask.DescriptionSolution;
+                    existingTask.ProjectTaskResult = projectTask.ProjectTaskResult;
+                    existingTask.ProjectTaskTypeID = projectTask.ProjectTaskTypeID;
                     if (projectTask.Employee != null && projectTask.Employee.Count > 0)
                     {
                         Employee userAssignee = await _employeeRepo.GetByIDAsync(projectTask.Employee[0]);
                         if (userAssignee.ID >= 0 && existingTask.UserID != userAssignee.UserID)
                         {
-                            existingTask.UserID = userAssignee.ID;
+                            existingTask.UserID = userAssignee.UserID;
                         }
                     }
-
 
                     if (existingTask.IsApproved == null || existingTask.IsApproved <= 1)
                     {
@@ -1276,27 +1543,45 @@ namespace RERPAPI.Controllers.Project
                         existingTask.IsApproved = 1; // Chờ duyệt,
 
                     }
+                    if (existingTask.UserID == null || existingTask.UserID < 0)
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, "User Is Null, please chose user!"));
+                    }
                     existingTask.UpdatedDate = DateTime.Now;
                     if (await _projectItemRepo.UpdateAsync(existingTask) <= 0)
                     {
                         return BadRequest(ApiResponseFactory.Fail(null, "Failed to update project task."));
                     }
 
-                    if(projectTask.ActualStartDate == null && existingTask.ActualStartDate?.Date != projectTask.ActualStartDate?.Date)
+                    // Xóa ngày bắt đầu thực tế
+                    if (projectTask.ActualStartDate == null && existingTask.ActualStartDate?.Date != projectTask.ActualStartDate?.Date)
                     {
                         var param = new
                         {
                             Id = existingTask.ID,
-                            TypeDate = 1 // 1: Ngày bắt đầu thực tế, 2: Ngày kết thúc thực tế
+                            Col = "ActualStartDate"
                         };
                         var result = await SqlDapper<UserTeam>.ExecuteStoredProcedure("spUpdateDateToNull", param);
                     }
-                    if(projectTask.ActualEndDate == null && existingTask.ActualEndDate?.Date != projectTask.ActualEndDate?.Date)
+
+                    // Xóa ngày kết thúc thực tế
+                    if (projectTask.ActualEndDate == null && existingTask.ActualEndDate?.Date != projectTask.ActualEndDate?.Date)
                     {
                         var param = new
                         {
                             Id = existingTask.ID,
-                            TypeDate = 2 // 1: Ngày bắt đầu thực tế, 2: Ngày kết thúc thực tế
+                            Col = "ActualEndDate"
+                        };
+                        var result = await SqlDapper<UserTeam>.ExecuteStoredProcedure("spUpdateDateToNull", param);
+                    }
+
+                    // Xóa số giờ dự kiến
+                    if ((projectTask.EstimatedTime == null || projectTask.EstimatedTime == 0) && existingTask.EstimatedTime != projectTask.EstimatedTime)
+                    {
+                        var param = new
+                        {
+                            Id = existingTask.ID,
+                            Col = "EstimatedTime"
                         };
                         var result = await SqlDapper<UserTeam>.ExecuteStoredProcedure("spUpdateDateToNull", param);
                     }
@@ -1305,7 +1590,7 @@ namespace RERPAPI.Controllers.Project
                 }
                 else
                 {
-                    // tạo một đối tượng ProjectItem để lưu 
+
                     var newProjectTask = new ProjectItem
                     {
                         ProjectID = projectTask.ProjectID,
@@ -1313,20 +1598,24 @@ namespace RERPAPI.Controllers.Project
                         Description = projectTask.Description,
                         ActualStartDate = projectTask.ActualStartDate,
                         ActualEndDate = projectTask.ActualEndDate,
-                        Status = projectTask.Status,
+                        Status = projectTask.Status ?? 0,
                         IsApproved = 1,
                         IsDeleted = false,
                         EmployeeIDRequest = projectTask.EmployeeIDRequest,
                         EmployeeCreateID = currentUser.EmployeeID,
                         PlanStartDate = projectTask.PlanStartDate,
-                        PlanEndDate = projectTask.PlanEndDate,
+                        PlanEndDate = projectTask.PlanEndDate.HasValue ? projectTask.PlanEndDate.Value.Date.AddDays(1).AddSeconds(-1) : null,
                         IsPersonalProject = projectTask.IsPersonalProject,
-                        TypeProjectItem = projectTask.TypeProjectItem ?? 1,
+                        TypeProjectItem = projectTask.TypeProjectItem.HasValue && projectTask.TypeProjectItem > 0 ? projectTask.TypeProjectItem : 1,
                         IsAdditional = projectTask.IsAdditional,
-                        TaskComplexity = projectTask.TaskComplexity,
+                        TaskComplexity = projectTask.TaskComplexity.HasValue && projectTask.TaskComplexity > 0 ? projectTask.TaskComplexity : 1,
                         ParentID = projectTask.ParentID,
                         Deadline = projectTask.Deadline,
-                        DescriptionSolution = projectTask.DescriptionSolution
+                        DescriptionSolution = projectTask.DescriptionSolution,
+                        ProjectTaskResult = projectTask.ProjectTaskResult,
+                        ProjectTaskTypeID = projectTask.ProjectTaskTypeID.HasValue && projectTask.ProjectTaskTypeID > 0 ? projectTask.ProjectTaskTypeID : 1,
+                        Priority = projectTask.Priority ?? 1,
+                        EstimatedTime = projectTask.EstimatedTime == null || projectTask.EstimatedTime == 0 ? null : projectTask.EstimatedTime
                     };
 
                     if (projectTask.Employee != null && projectTask.Employee.Count > 0)
@@ -1335,8 +1624,13 @@ namespace RERPAPI.Controllers.Project
                         newProjectTask.UserID = userAssignee.UserID;
                     }
 
+                    if (newProjectTask.UserID == null || newProjectTask.UserID < 0)
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, "User Is Null, please chose user!"));
+                    }
+
                     // Tính % quá hạn
-                    if (projectTask.Status == 3 && projectTask.ActualEndDate != null
+                    if (projectTask.Status == 2 && projectTask.ActualEndDate != null
                         && projectTask.ActualStartDate != null && projectTask.PlanEndDate != null
                         && projectTask.PlanStartDate != null)
                     {
@@ -1361,18 +1655,9 @@ namespace RERPAPI.Controllers.Project
                     else
                     {
                         //var employeeById = _employeeRepo.GetByID(currentUser.EmployeeID);
-                        newProjectTask.Code = _projectTaskRepo.GenerateProjectTaskCodeTime(projectTask.TypeProjectItem ?? 1).Trim();
+                        newProjectTask.Code = _projectTaskRepo.GenerateProjectTaskCodeTime(projectTask.ProjectTaskTypeID ?? 1).Trim();
                     }
 
-
-                    //if (projectTask.EmployeeIDRequest > 0)
-                    //{
-                    //    newProjectTask.IsApproved = 1; // Chờ duyệt,
-                    //}
-                    //else
-                    //{
-                    //    newProjectTask.IsApproved = 0; // chưa duyệt
-                    //}
 
                     // tạo mới công việc
                     if (await _projectItemRepo.CreateAsync(newProjectTask) <= 0)
@@ -1411,6 +1696,19 @@ namespace RERPAPI.Controllers.Project
                         }
                     }
 
+
+
+                    // Lấy danh sách người liên quan
+                    if (projectTask.EmployeeRelate != null && projectTask.EmployeeRelate.Count > 0)
+                    {
+
+                        // Thêm người tạo công việc vào người liên quan nếu người đó chưa lằm trong danh sách người liên quan + không lằm trong người nhận việc + không phải là người giao việc 
+                        if (!projectTask.EmployeeRelate.Contains(currentUser.EmployeeID) && (projectTask.Employee == null || !projectTask.Employee.Contains(currentUser.EmployeeID)) && projectTask.EmployeeIDRequest != currentUser.EmployeeID)
+                        {
+                            projectTask.EmployeeRelate.Add(currentUser.EmployeeID);
+                        }
+                    }
+
                     // Lấy danh sách leader trực tiếp của người nhận việc khi đó là công việc dự án
                     if (projectTask.IsPersonalProject != true)
                     {
@@ -1428,33 +1726,19 @@ namespace RERPAPI.Controllers.Project
                         };
                         leaders = await SqlDapper<UserTeam>.ProcedureToListTAsync("spGetLeaderTeam", param);
                     }
-
-
-                    // Lấy danh sách người liên quan
-                    if (projectTask.EmployeeRelate != null && projectTask.EmployeeRelate.Count > 0)
+                    // Thêm leader vào sách người liên quan
+                    if (leaders.Count > 0)
                     {
-
-                        // Thêm người tạo công việc vào người liên quan nếu người đó chưa lằm trong danh sách người liên quan + không lằm trong người nhận việc + không phải là người giao việc 
-                        if (!projectTask.EmployeeRelate.Contains(currentUser.EmployeeID) && (projectTask.Employee == null || !projectTask.Employee.Contains(currentUser.EmployeeID)) && projectTask.EmployeeIDRequest != currentUser.EmployeeID)
+                        foreach (var item in leaders)
                         {
-                            projectTask.EmployeeRelate.Add(currentUser.EmployeeID);
-                        }
-
-
-                        // Thêm leader vào sách người liên quan
-                        if (leaders.Count > 0)
-                        {
-                            foreach (var item in leaders)
+                            // Nếu leader chưa lằm trong danh sách người liên quan + không lằm trong người nhận việc + không phải là người giao việc thì thêm vào danh sách người liên quan
+                            if (item.LeaderID != null && (projectTask.EmployeeRelate == null || !projectTask.EmployeeRelate.Contains(item.LeaderID ?? -1)) && (projectTask.Employee == null || !projectTask.Employee.Contains(item.LeaderID ?? -1)) && projectTask.EmployeeIDRequest != item.LeaderID)
                             {
-                                // Nếu leader chưa lằm trong danh sách người liên quan + không lằm trong người nhận việc + không phải là người giao việc thì thêm vào danh sách người liên quan
-                                if (item.LeaderID != null && (projectTask.EmployeeRelate == null || !projectTask.EmployeeRelate.Contains(item.LeaderID ?? -1)) && (projectTask.Employee == null || !projectTask.Employee.Contains(item.LeaderID ?? -1)) && projectTask.EmployeeIDRequest != item.LeaderID)
+                                if (projectTask.EmployeeRelate == null)
                                 {
-                                    if (projectTask.EmployeeRelate == null)
-                                    {
-                                        projectTask.EmployeeRelate = new List<int>();
-                                    }
-                                    projectTask.EmployeeRelate.Add(item.LeaderID ?? 0);
+                                    projectTask.EmployeeRelate = new List<int>();
                                 }
+                                projectTask.EmployeeRelate.Add(item.LeaderID ?? 0);
                             }
                         }
                     }
@@ -1486,13 +1770,13 @@ namespace RERPAPI.Controllers.Project
                             }
                         }
                     }
-                    var listEmailBand = _projectTaskEmailBandRepo.GetAll(x => x.IsActive == false).Select(x => x.EmployeeEmail);
+                    var listEmailBand = _projectTaskSettingRepo.GetAll(x => x.SendMailCreateProjectTask == false).Select(x => x.EmployeeEmail);
 
-                    var listemailRecive = listEmployeeRelate.Except(listEmailBand);
-                    var listemailCC = listEmail.Except(listEmailBand);
+                    var listemailRecive = listEmail.Except(listEmailBand);
+                    var listemailCC = listEmployeeRelate.Except(listEmailBand);
 
-                    string listEmployeeRelateString = string.Join(",", listemailRecive.Distinct());
-                    string listToEmailString = string.Join(",", listemailCC.Distinct());
+                    string listToEmailString = string.Join(",", listemailRecive.Distinct());
+                    string listEmployeeRelateString = string.Join(",", listemailCC.Distinct());
                     var employeeAsigner = await _employeeRepo.GetByIDAsync(newProjectTask.EmployeeIDRequest ?? 0);
                     if (listToEmailString.Count() > 0)
                     {
@@ -1599,7 +1883,7 @@ namespace RERPAPI.Controllers.Project
                     {
                         foreach (var emp in listEmployee)
                         {
-                            var employeeValue = await _employeeRepo.GetByIDAsync(emp ?? 0);
+                            var employeeValue = await _employeeRepo.GetByIDAsync(emp);
 
                             if (emp != currentUser.EmployeeID)
                             {
@@ -1668,14 +1952,14 @@ namespace RERPAPI.Controllers.Project
                     var listEmployeeRelate2 = new List<string>();
                     foreach (var emp in listEmployeeRelate)
                     {
-                        var employeeValue = await _employeeRepo.GetByIDAsync(emp ?? 0);
+                        var employeeValue = await _employeeRepo.GetByIDAsync(emp);
                         if (employeeValue != null)
                         {
                             listEmployeeRelate2.Add(employeeValue.EmailCongTy);
                         }
                     }
 
-                    var listEmailBand = _projectTaskEmailBandRepo.GetAll(x => x.IsActive == false).Select(x => x.EmployeeEmail);
+                    var listEmailBand = _projectTaskSettingRepo.GetAll(x => x.SendApproveProjectTask == false).Select(x => x.EmployeeEmail);
 
                     var listemailRecive = listEmployeeRelate2.Except(listEmailBand);
                     var listemailCC = listEmail1.Except(listEmailBand);
@@ -1719,7 +2003,7 @@ namespace RERPAPI.Controllers.Project
                     {
                         return BadRequest(ApiResponseFactory.Fail(null, "Can't fount project task."));
                     }
-                    if (exitProjectTask.Status != 3)
+                    if (exitProjectTask.Status != 2)
                     {
                         continue; // chỉ duyệt những công việc chưa hoàn thành
                     }
@@ -1737,27 +2021,28 @@ namespace RERPAPI.Controllers.Project
                         return BadRequest(ApiResponseFactory.Fail(null, "Failed to approve project task."));
                     }
 
-                    if (isApproved)
+                    //if (isApproved)
+                    //{
+                    //    exitProjectTask.IsApproved = 2;
+                    //}
+                    //else
+                    //{
+                    //    exitProjectTask.IsApproved = 3;
+                    //}
+
+                    var dayActual = (exitProjectTask.ActualEndDate.Value.Date - exitProjectTask.ActualStartDate.Value.Date).TotalDays + 1;
+                    var dayPlan = (exitProjectTask.PlanEndDate.Value.Date - exitProjectTask.PlanStartDate.Value.Date).TotalDays + 1;
+                    if ((dayActual - dayPlan) > 0)
                     {
-                        exitProjectTask.IsApproved = 2;
+                        exitProjectTask.PercentOverTime = Math.Round((decimal)(dayActual - dayPlan) / (decimal)dayPlan, 2);
                     }
                     else
                     {
-                        exitProjectTask.IsApproved = 3;
+                        exitProjectTask.PercentOverTime = 0;
                     }
 
-                    if (exitProjectTask.Status <= 1)
-                    {
-                        if (exitProjectTask.ActualEndDate < DateTime.Now)
-                        {
-                            exitProjectTask.Status = 3;
-                        }
-                        else
-                        {
-                            exitProjectTask.Status = 2;
-                        }
-                    }
-                    exitProjectTask.UpdatedDate = DateTime.Now;
+
+                    exitProjectTask.UpdatedDate = exitProjectTask.UpdatedDate;
 
                     var newProjectTaskLog = new ProjectTaskLog
                     {
@@ -1920,12 +2205,24 @@ namespace RERPAPI.Controllers.Project
                         TypeProjectItem = 1,
                         ParentID = parentID,
                         TaskComplexity = item.TaskComplexity,
-                        Status = 1,
+                        Status = 0,
                         IsApproved = 1,
                         PlanStartDate = item.PlanStartDate,
-                        PlanEndDate = item.PlanEndDate,
-                        EmployeeCreateID = currentUser.EmployeeID
+                        PlanEndDate = item.PlanEndDate.HasValue ? item.PlanEndDate.Value.Date.AddDays(1).AddSeconds(-1) : (DateTime?)null,
+                        EmployeeCreateID = currentUser.EmployeeID,
+                        ProjectTaskTypeID = 1
                     };
+
+                    if (employeeAssigneeIDs != null && employeeAssigneeIDs.Count > 0)
+                    {
+                        Employee userAssignee = await _employeeRepo.GetByIDAsync(employeeAssigneeIDs[0]);
+                        createProjectTask.UserID = userAssignee.UserID;
+
+                        if (createProjectTask.UserID == null || createProjectTask.UserID < 0)
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null, "User Is Null, please chose user!"));
+                        }
+                    }
                     if (await _projectItemRepo.CreateAsync(createProjectTask) <= 0)
                     {
                         return BadRequest(ApiResponseFactory.Fail(null, $"Failed to create project task with TT {item.TT}"));

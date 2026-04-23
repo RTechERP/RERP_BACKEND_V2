@@ -304,14 +304,40 @@ namespace RERPAPI.Repo
                     }
                 }
 
+                // Kiểm tra có thay đổi dữ liệu thật sự hay không
+
+                // Bỏ qua các field audit UpdatedDate, UpdatedBy, CreatedDate, CreatedBy
+                var hasChanges = entry.Properties.Any(p =>
+                    p.IsModified &&
+                    p.Metadata.Name != "UpdatedDate" &&
+                    p.Metadata.Name != "UpdatedBy" &&
+                    p.Metadata.Name != "CreatedDate" &&
+                    p.Metadata.Name != "CreatedBy");
+                // Nếu không có thay đổi dữ liệu thật sự thì không save
+                if (!hasChanges)
+                    return 1; // Return 1 để biểu thị "cập nhật thành công nhưng không có thay đổi nào được lưu"
+
                 // 4. UpdatedDate auto
                 var updatedDateProp = entry.Properties
                     .FirstOrDefault(p => p.Metadata.Name == "UpdatedDate");
 
+                //if (updatedDateProp != null)
+                //{
+                //    updatedDateProp.CurrentValue = DateTime.Now;
+                //    updatedDateProp.IsModified = true;
+                //}
                 if (updatedDateProp != null)
                 {
-                    updatedDateProp.CurrentValue = DateTime.Now;
-                    updatedDateProp.IsModified = true;
+                    // Chỉ gán DateTime.Now nếu giá trị hiện tại là mặc định (null hoặc MinValue)
+                    // Hoặc nếu bạn muốn Controller có quyền quyết định:
+                    var currentValue = updatedDateProp.CurrentValue;
+
+                    if (currentValue == null || (DateTime)currentValue == default(DateTime))
+                    {
+                        updatedDateProp.CurrentValue = DateTime.Now;
+                        updatedDateProp.IsModified = true;
+                    }
+                    // Nếu Controller đã gán giá trị (như exist.UpdatedDate), ta giữ nguyên giá trị đó
                 }
 
                 var result = await db.SaveChangesAsync();
@@ -456,7 +482,7 @@ namespace RERPAPI.Repo
                 }
                 else
                 {
-                table.RemoveRange(items);
+                    table.RemoveRange(items);
                 }
                 return await db.SaveChangesAsync();
             }

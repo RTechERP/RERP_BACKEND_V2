@@ -179,7 +179,7 @@ namespace RERPAPI.Model.Param
 
 
                 // await _emailHelper.SendRangeAsync(sendEmail.emailRecive, "THÔNG BÁO THAM GIA CÔNG VIỆC", htmlBody, cc: sendEmail.emailCC);
-               await _emailHelper.SendRangeAsync(sendEmail.emailRecive, "THÔNG BÁO THAM GIA CÔNG VIỆC", htmlBody, cc: sendEmail.emailCC);
+               await _emailHelper.SendRangeAsync(sendEmail.emailRecive, "CV - THÔNG BÁO THAM GIA CÔNG VIỆC", htmlBody, cc: sendEmail.emailCC);
 
 
             }
@@ -384,7 +384,7 @@ namespace RERPAPI.Model.Param
 
 
                 // await _emailHelper.SendRangeAsync(sendEmail.emailRecive, "THÔNG BÁO THAM GIA CÔNG VIỆC", htmlBody, cc: sendEmail.emailCC);
-                await _emailHelper.SendRangeAsync(sendEmail.emailRecive, "THÔNG BÁO CÔNG VIỆC HOÀN THÀNH", htmlBody, cc: sendEmail.emailCC);
+                await _emailHelper.SendRangeAsync(sendEmail.emailRecive, "CV - THÔNG BÁO CÔNG VIỆC HOÀN THÀNH", htmlBody, cc: sendEmail.emailCC);
 
 
             }
@@ -476,7 +476,7 @@ namespace RERPAPI.Model.Param
 
 
                 // await _emailHelper.SendRangeAsync(sendEmail.emailRecive, "THÔNG BÁO THAM GIA CÔNG VIỆC", htmlBody, cc: sendEmail.emailCC);
-                await _emailHelper.SendRangeAsync(sendEmail.emailRecive, "THÔNG BÁO CÔNG VIỆC ĐÃ ĐƯỢC DUYỆT ", htmlBody, cc: sendEmail.emailCC);
+                await _emailHelper.SendRangeAsync(sendEmail.emailRecive, "CV - THÔNG BÁO CÔNG VIỆC ĐÃ ĐƯỢC DUYỆT ", htmlBody, cc: sendEmail.emailCC);
 
 
             }
@@ -707,7 +707,7 @@ namespace RERPAPI.Model.Param
 
 
                 // await _emailHelper.SendRangeAsync(sendEmail.emailRecive, "THÔNG BÁO THAM GIA CÔNG VIỆC", htmlBody, cc: sendEmail.emailCC);
-                await _emailHelper.SendRangeAsync(sendEmail.emailRecive, "THÔNG BÁO CÔNG VIỆC ĐÃ HỦY DUYỆT ", htmlBody, cc: sendEmail.emailCC);
+                await _emailHelper.SendRangeAsync(sendEmail.emailRecive, "CV - THÔNG BÁO CÔNG VIỆC ĐÃ HỦY DUYỆT ", htmlBody, cc: sendEmail.emailCC);
 
 
             }

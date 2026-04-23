@@ -14,6 +14,9 @@ namespace RERPAPI.Model.DTO.Asset
         public string EmployeeName { get; set; }
         public string Department { get; set; }
         public string Possition { get; set; }
+        public string EmployeeAllocationName { get; set; }
+        public string DepartmentAllocation { get; set; }
+        public string PosittionAllocation { get; set; }
         public string Note { get; set; }
 
         public bool IsApproved { get; set; }

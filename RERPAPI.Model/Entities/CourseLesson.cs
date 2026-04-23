@@ -40,4 +40,9 @@ public partial class CourseLesson
     public int? EmployeeID { get; set; }
 
     public decimal? RequiredWatchedPercent { get; set; }
+
+    /// <summary>
+    /// Phân đoạn video
+    /// </summary>
+    public string? Chapters { get; set; }
 }

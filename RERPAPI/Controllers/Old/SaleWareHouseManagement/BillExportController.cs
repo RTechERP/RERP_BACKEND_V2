@@ -13,6 +13,7 @@ using RERPAPI.Repo.GenericEntity.Technical;
 using System.Data;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Threading.Tasks;
 using ZXing;
 using ZXing.Common;
 
@@ -263,7 +264,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [HttpGet("by-billexport/{billExportID}")]
+        [HttpGet("by-billexport")]
         public async Task<IActionResult> GetByBillExportID(int billExportID)
         {
             try
@@ -806,7 +807,23 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpGet("get-view-export-detail/{billId}")]
+        public async Task<IActionResult> GetViewExportDetail(int billId)
+        {
+            try
+            {
 
+                var rs =await SqlDapper<object>.ProcedureToListTAsync("spGetBillExportDetail_Nhat", new
+                {
+                    BillID = billId
+                });
+                return Ok(ApiResponseFactory.Success(rs,"Lấy danh sách chi tiết phiếu xuất thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         // POST: api/BillExport/get-bill-import-detail
         [HttpPost("get-bill-import-detail")]
         public IActionResult GetBillImportDetail([FromBody] List<int> billImportIds)
@@ -1401,6 +1418,20 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        //[HttpPost("confirm-tem")]
+        //public async Task<IActionResult> ConfirmTem(List<int> lstBillexportdetailID, bool status)
+        //{
+        //    try
+        //    {
+        //        List<int> rs = await _billexportRepo.ConfirmTem(lstBillexportdetailID, status);
+        //        if (rs.Count > 0) return Ok(ApiResponseFactory.Success(rs, status == true ? "Xác nhận tem thành công!" : "Hủy xác nhận tem thành công!"));
+        //        else return BadRequest(ApiResponseFactory.Fail(null, "Xác nhận tem thất bại, không có chi tiết phiếu xuất nào được chọn"));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
         [HttpPost("get-product-project-customer")]
         public IActionResult getproductProjectCustomer(GetListProductByProjectPram filter)
         {

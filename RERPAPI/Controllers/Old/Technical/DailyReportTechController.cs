@@ -1,4 +1,4 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
+    using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +15,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Project;
+using RERPAPI.SendService;
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 
@@ -33,9 +34,12 @@ namespace RERPAPI.Controllers.Old.Technical
         EmployeeRepo _employeeRepo;
         private IConfiguration _configuration;
         private readonly EmailHelper _emailHelper;
-        public DailyReportTechController(DailyReportTechnicalRepo dailyReportTechnicalRepo, ProjectItemRepo projectItemRepo, EmployeeSendEmailRepo employeeSendEmailRepo, DailyReportHRRepo dailyReportHRRepo, IConfiguration configuration, DailyReportMarketingFileRepo dailyFileMar, EmployeeRepo employeeRepo, EmailHelper emailHelper)
+        private readonly IFirebaseNotificationService _firebaseNotificationService;
+        
+        public DailyReportTechController(DailyReportTechnicalRepo dailyReportTechnicalRepo, ProjectItemRepo projectItemRepo, EmployeeSendEmailRepo employeeSendEmailRepo, DailyReportHRRepo dailyReportHRRepo, IConfiguration configuration, DailyReportMarketingFileRepo dailyFileMar, EmployeeRepo employeeRepo, EmailHelper emailHelper, IFirebaseNotificationService firebaseNotificationService)
         {
             _dailyReportTechnicalRepo = dailyReportTechnicalRepo;
+            _firebaseNotificationService = firebaseNotificationService;
             _projectItemRepo = projectItemRepo;
             _employeeSendEmailRepo = employeeSendEmailRepo;
             _dailyReportHRRepo = dailyReportHRRepo;
@@ -166,7 +170,7 @@ namespace RERPAPI.Controllers.Old.Technical
             }
             catch (Exception ex)
             {
-                throw new Exception("Lỗi khi bổ sung PO: " + ex.Message);
+                throw new Exception("Lỗi khi cập nhật hạng mục: " + ex.Message);
             }
         }
         [HttpPost("save-report-tech")]
@@ -208,23 +212,18 @@ namespace RERPAPI.Controllers.Old.Technical
                         item.Type = 0;
                         item.ReportLate = 0;
                         item.StatusResult = 0;
-                        item.Type = 0; // Luôn set Type = 0 (không OT) khi tạo mới
-                        item.ReportLate = 0; // Set mặc định = 0, KHÔNG tính toán
                         item.WorkPlanDetailID = 0;
-                        item.OldProjectID = 0;
                         item.OldProjectID = 0;
                         item.DeleteFlag = 0;
                         item.Confirm = false;
                         item.CreatedDate = DateTime.Today.AddHours(23).AddMinutes(30);
                         await _dailyReportTechnicalRepo.CreateAsync(item);
                         if (isTechnical) await UpdateProjectItem(item);
-
                     }
                 }
                 return Ok(ApiResponseFactory.Success(null,
                           "Lưu dữ liệu thành công"
                       ));
-
             }
             catch (Exception ex)
             {
@@ -382,7 +381,7 @@ namespace RERPAPI.Controllers.Old.Technical
             try
             {
                 var dailyData = _dailyReportTechnicalRepo.GetByID(dailyID);
-                var dailyFileData = _dailyFileMar.GetAll(x => x.DailyReportID == dailyID && x.IsDeleted ==false);
+                var dailyFileData = _dailyFileMar.GetAll(x => x.DailyReportID == dailyID && x.IsDeleted == false);
                 return Ok(ApiResponseFactory.Success(new { dailyData, dailyFileData }, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
@@ -505,7 +504,7 @@ namespace RERPAPI.Controllers.Old.Technical
                     Receiver = email.Receiver
                 };
                 //await _employeeSendEmailRepo.CreateAsync(emailEntity);
-                await _emailHelper.SendAsync(email.EmailTo, email.Subject, email.Body);
+                await _emailHelper.SendAsync (email.EmailTo, email.Subject, email.Body);
 
                 return Ok(ApiResponseFactory.Success(null, "Gửi email thành công!"));
             }
@@ -692,7 +691,7 @@ namespace RERPAPI.Controllers.Old.Technical
                 //    Receiver = receiverEmployeeId,
                 //};
                 //await _employeeSendEmailRepo.CreateAsync(emailEntity);
-                await _emailHelper.SendAsync(emailTo??"", subject, request.Body, true, emailCc??"");
+                await _emailHelper.SendAsync(emailTo ?? "", subject, request.Body, true, emailCc ?? "");
                 // ⑩ Trả về kết quả
                 return Ok(ApiResponseFactory.Success(new
                 {
@@ -810,13 +809,13 @@ namespace RERPAPI.Controllers.Old.Technical
                 {
                     // Trường hợp 1: Thực tập sinh Marketing (Position = 88)
                     // Gửi cho Marketing Manager
-                
+
                     if (marketingManager == null)
                     {
                         return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy thông tin Marketing Manager!"));
                     }
                     emailTo = marketingManager.EmailCongTy;
-                   // emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
+                    // emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
                     receiverEmployeeId = marketingManagerID;
                 }
                 else
@@ -835,7 +834,7 @@ namespace RERPAPI.Controllers.Old.Technical
                     {
                         emailTo = "marketing02@rtc.edu.vn";
                         //emailTo = "quanghung21hb@gmail.com";
-                       // emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
+                        // emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
                         await _emailHelper.SendAsync(emailTo, subject, request.Body, cc: emailCc);
                     }
                     //else if(currentUser.ID == 1502)

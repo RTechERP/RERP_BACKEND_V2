@@ -1,3 +1,5 @@
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
@@ -22,6 +24,8 @@ using RERPAPI.Repo.GenericEntity.GeneralCatetogy.JobRequirements;
 using RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders;
 using RERPAPI.Repo.GenericEntity.HRM;
 using RERPAPI.Repo.GenericEntity.HRM.DepartmentRequire;
+using RERPAPI.Repo.GenericEntity.HRM.HRRecruitmentInterviewAssessment;
+using RERPAPI.Repo.GenericEntity.HRM.ProductProtectiveGear;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
 using RERPAPI.Repo.GenericEntity.HRRecruitmentExamRepo;
 using RERPAPI.Repo.GenericEntity.MeetingMinutesRepo;
@@ -33,11 +37,14 @@ using RERPAPI.Repo.GenericEntity.Technical.KPI;
 using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
 using RERPAPI.SendService;
 using RTCApi.Repo.GenericRepo;
-using System.Text;
-
-using FirebaseAdmin;
-using Google.Apis.Auth.OAuth2;
 using Serilog;
+using System.Text;
+using tusdotnet;
+using tusdotnet.Helpers;
+using tusdotnet.Models;
+using tusdotnet.Models.Configuration;
+using tusdotnet.Models.Expiration;
+using tusdotnet.Stores;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -118,7 +125,7 @@ builder.Services.AddScoped<EmployeeFoodOrderRepo>();
 builder.Services.AddScoped<EmployeeNoFingerprintRepo>();
 builder.Services.AddScoped<EmployeeOnLeaveMasterRepo>();
 builder.Services.AddScoped<EmployeeOnLeaveRepo>();
-builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.HRM.EmployeeOnLeavePhaseRepo>();
+builder.Services.AddScoped<EmployeeOnLeavePhaseRepo>();
 builder.Services.AddScoped<EmployeeOverTimeRepo>();
 builder.Services.AddScoped<EmployeeProjectTypeRepo>();
 builder.Services.AddScoped<EmployeePurchaseRepo>();
@@ -192,7 +199,7 @@ builder.Services.AddScoped<PONCCRulePayRepo>();
 builder.Services.AddScoped<PONCCHistoryRepo>();
 builder.Services.AddScoped<PositionContractRepo>();
 builder.Services.AddScoped<PositionInternalRepo>();
-builder.Services.AddScoped<ProductGroupRTCRepo>();
+//builder.Services.AddScoped<ProductGroupRTCRepo>();
 builder.Services.AddScoped<ProductGroupRepo>();
 builder.Services.AddScoped<ProductGroupWareHouseRepo>();
 builder.Services.AddScoped<ProductLocationRepo>();
@@ -270,6 +277,7 @@ builder.Services.AddScoped<UserTeamRepo>();
 builder.Services.AddScoped<WarehouseRepo>();
 builder.Services.AddScoped<WeekPlanRepo>();
 builder.Services.AddScoped<vUserGroupLinksRepo>();
+builder.Services.AddScoped<PinResetTokenRepo>();
 builder.Services.AddScoped<NotifyRepo>();
 
 // Project sub-namespace repos
@@ -439,6 +447,7 @@ builder.Services.AddScoped<TaxCompanyRepo>();
 builder.Services.AddScoped<HistoryErrorRepo>();
 builder.Services.AddScoped<HistoryProductRTCLogRepo>();
 builder.Services.AddScoped<BillImportTechnicalLogRepo>();
+builder.Services.AddScoped<BillImportDetailTechnicalRepo>();
 builder.Services.AddScoped<BillDocumentImportTechnicalRepo>();
 builder.Services.AddScoped<BillDocumentImportTechnicalLogRepo>();
 builder.Services.AddScoped<BillExportTechnicalLogRepo>();
@@ -483,6 +492,7 @@ builder.Services.AddScoped<ProjectTaskEmailBandRepo>();
 builder.Services.AddScoped<ProjectTaskAttendanceRepo>();
 builder.Services.AddTransient<ProjectTaskAttachmentRepo>();
 builder.Services.AddTransient<ProjectTaskAdditionalRepo>();
+builder.Services.AddTransient<ProjectTaskSettingRepo>();
 
 builder.Services.AddScoped<SendEmailReceiveProjectTaskClass>();
 
@@ -491,12 +501,34 @@ builder.Services.AddScoped<FollowProjectBaseDetailRepo>();
 builder.Services.AddScoped<DailyReportAccountingRepo>();
 
 builder.Services.AddScoped<ProductSaleGroupWarehouseLinkRepo>();
+builder.Services.AddScoped<FiveSRatingDetailRepo>();
+builder.Services.AddScoped<FiveSRuleErrorRepo>();
+builder.Services.AddScoped<FiveSErrorRepo>();
+builder.Services.AddScoped<FiveSRatingRepo>();
+builder.Services.AddScoped<FiveSDepartmentRepo>();
+builder.Services.AddScoped<FiveSRatingTicketRepo>();
+builder.Services.AddScoped<FiveSBonusMinusRepo>();
+
+builder.Services.AddScoped<HRRecruitmentInterviewAssessmentFormRepo>();
+builder.Services.AddScoped<HRRecruitmentApplicationFormRepo>();
+builder.Services.AddScoped<HRRecruitmentApproveRepo>();
+builder.Services.AddScoped<JobPerfomanceEvaluationRepo>();
+builder.Services.AddScoped<JobPerfomanceEvaluationCriteriaRepo>();
+builder.Services.AddScoped<JobPerfomanceEvaluationApproveRepo>();
 
 
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();
+builder.Services.AddScoped<CourseKPIEmployeeTeamLinkRepo>();
+builder.Services.AddScoped<CourseKPIEmployeeTeamMapRepo>();
+builder.Services.AddScoped<CourseKPIEmployeeTeamRepo>();
+
 #endregion
 
+#region Tủ đồ bảo hộ 
+builder.Services.AddScoped<ProductGroupRTCRepo>();
+
+#endregion
 #region Kế hoạch tuần
 builder.Services.AddScoped<WorkPlanRepo>();
 builder.Services.AddScoped<WorkPlanDetailRepo>();
@@ -532,6 +564,17 @@ builder.Services.AddScoped<MenuAppUserGroupLinkRepo>();
 builder.Services.AddScoped<ProjectPartListPurchaseRequestApproveLogRepo>();
 builder.Services.AddScoped<EmployeeLuckyNumberRepo>();
 builder.Services.AddScoped<ProductGroupLinkRepo>();
+
+//phần lĩnh vực và công nghệ dự án
+builder.Services.AddScoped<ProjectApplicationTypesRepo>();
+builder.Services.AddScoped<ProjectTechnologiesRepo>();
+builder.Services.AddScoped<ProjectTypeApplicationLinkRepo>();
+builder.Services.AddScoped<ProjectTypeTechnologyLinkRepo>();
+builder.Services.AddScoped<CustomerIndustriesRepo>();
+// mobile
+builder.Services.AddScoped<FcmTokenRepo>();
+builder.Services.AddScoped<NotificationTypeLinkRepo>();
+builder.Services.AddScoped<NotificationTypeRepo>();
 
 
 #region KPI
@@ -581,6 +624,7 @@ builder.Services.AddScoped<HRRecruitmentQuestionImageRepo>();
 builder.Services.AddScoped<HRRecruitmentExamResultDetailRepo>();
 builder.Services.AddScoped<HRRecruitmentExamResultImageRepo>();
 builder.Services.AddScoped<HiringRequestExamRepo>();
+builder.Services.AddScoped<HRRecruitmentExamEvaluationFileRepo>();
 #endregion
 #region bình thêm
 //builder.Services.AddScoped<CourseRepo>();
@@ -606,6 +650,8 @@ builder.Services.AddScoped<EmailHelper>();
 
 builder.Services.AddScoped<HistoryBorrowSaleLogRepo>();
 builder.Services.AddScoped<CommercialPriceRequestRepo>();
+builder.Services.AddScoped<PaymentOrderLogApprovedRepo>();
+builder.Services.AddScoped<CurrencyConfigRepo>();
 
 
 builder.Services.AddScoped<CurrentUser>(provider =>
@@ -633,7 +679,9 @@ builder.Services.AddCors(options =>
     {
         builder.AllowAnyOrigin()
                .AllowAnyMethod()
-               .AllowAnyHeader();
+               .AllowAnyHeader()
+               .WithExposedHeaders(CorsHelper.GetExposedHeaders()); // config cors tus dotnet
+        ;
 
     });
 });
@@ -785,15 +833,15 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-//app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 app.UseRouting();
 app.UseCors("MyCors");
 app.UseAuthentication();
+app.UseMiddleware<DynamicAuthorizationMiddleware>();
 app.UseAuthorization();
 app.UseSession();
-app.UseMiddleware<DynamicAuthorizationMiddleware>();
 
 app.MapControllers();
 
@@ -819,13 +867,53 @@ foreach (var item in staticFiles)
     });
 
 
-    app.UseDirectoryBrowser(new DirectoryBrowserOptions 
+    app.UseDirectoryBrowser(new DirectoryBrowserOptions
     {
         FileProvider = new PhysicalFileProvider(item.PathFull),
         RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
     });
 }
+var tusStore = new TusDiskStore(Directory.GetCurrentDirectory());
+// config Tus dotnet
+app.UseTus(httpContext => new DefaultTusConfiguration
+{
+    Store = tusStore, // đường dẫn lưu temp file ( file chunk)
 
+    UrlPath = "/api/tus/upload-video", // path gọi api
+    Expiration = new AbsoluteExpiration(TimeSpan.FromHours(24)), // xóa upload không hoàn thành sau 24h
+
+    Events = new Events
+    {
+        OnFileCompleteAsync = async ctx =>
+        {
+
+            var file = await ctx.GetFileAsync();
+            if (file == null) return;
+
+            var metadata = await file.GetMetadataAsync(ctx.CancellationToken);
+
+            var fileName = metadata.ContainsKey("filename")
+                ? metadata["filename"].GetString(Encoding.UTF8)
+                : $"{file.Id}.bin";
+
+            //var destDir = @"\\192.168.1.190\Software\Test\UPLOADFILE\CourseLesson\Videos\";
+            //Directory.CreateDirectory(destDir);
+            //var destPath = Path.Combine(destDir, fileName);
+
+            var pathServer = metadata["pathServer"].GetString(Encoding.UTF8);
+            var destPath = Path.Combine(pathServer, fileName);
+            Directory.CreateDirectory(pathServer);
+            await using (var source = await file.GetContentAsync(ctx.CancellationToken))
+            {
+                await using (var target = System.IO.File.Create(destPath))
+                {
+                    await source.CopyToAsync(target);
+                }
+            }
+
+        }
+    }
+});
 app.UseSerilogRequestLogging(); // log request
 
 app.Run();

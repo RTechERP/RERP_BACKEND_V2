@@ -133,7 +133,7 @@ namespace RERPAPI.Repo.GenericEntity.HRM
                           .FirstOrDefault(x =>
                            (x.Code == "N1" || x.Code == "N2") &&
                            x.UserID == _currentUser.ID);
-                bool isSpecialPermission = _currentUser.IsAdmin==true||vUserHR!=null;
+                bool isSpecialPermission = _currentUser.IsAdmin == true || vUserHR != null;
                 // 1. Validate Overlaps against Database
                 foreach (var detail in dto.Details)
                 {
@@ -202,14 +202,30 @@ namespace RERPAPI.Repo.GenericEntity.HRM
                 if (response.status == 1 && !isSpecialPermission)
                 {
                     var now = DateTime.Now;
+                    var today = DateTime.Today;
+                    var tomorrow = today.AddDays(1);
+
+                    // Check đăng ký ngày hiện tại
+                    bool hasTodayRegistration = dto.Details.Any(d =>
+                        d.StartDate.HasValue && d.StartDate.Value.Date == today && d.Type == 2);
+
+                    if (hasTodayRegistration)
+                    {
+                        response = ApiResponseFactory.Fail(null,
+                            "Không thể đăng ký nghỉ phép cho ngày hiện tại. Vui lòng kiểm tra lại.");
+                        return response;
+                    }
+
+                    // Check sau 19h không cho đăng ký ngày mai
                     if (now.Hour >= 19)
                     {
-                        var tomorrow = DateTime.Today.AddDays(1);
-                        bool hasTomorrowRegistration = dto.Details.Any(d => d.StartDate.HasValue && d.StartDate.Value.Date == tomorrow);
+                        bool hasTomorrowRegistration = dto.Details.Any(d =>
+                            d.StartDate.HasValue && d.StartDate.Value.Date == tomorrow && d.Type == 2);
 
                         if (hasTomorrowRegistration)
                         {
-                            response = ApiResponseFactory.Fail(null, "Sau 19:00 không thể đăng ký nghỉ phép cho ngày hôm sau. Vui lòng liên hệ HR hoặc Quản lý để được hỗ trợ.");
+                            response = ApiResponseFactory.Fail(null,
+                                "Sau 19:00 không thể đăng ký nghỉ phép cho ngày hôm sau. Vui lòng kiếm tra lại.");
                         }
                     }
                 }
@@ -241,7 +257,7 @@ namespace RERPAPI.Repo.GenericEntity.HRM
         }
 
 
-    
+
 
     }
 }

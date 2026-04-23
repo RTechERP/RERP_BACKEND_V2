@@ -102,4 +102,6 @@ public partial class PaymentOrder
     public string? EndLocation { get; set; }
 
     public int? RegisterContractID { get; set; }
+
+    public string? HRNote { get; set; }
 }

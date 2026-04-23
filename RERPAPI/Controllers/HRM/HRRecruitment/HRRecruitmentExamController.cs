@@ -31,8 +31,9 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         ConfigSystemRepo _configSystemRepo;
         HiringRequestExamRepo _hiringRequestExamRepo;
         HRHiringRequestRepo _hiringRequestRepo;
-        HRRecruitmentCandidateRepo _hrRecruitmentCandidateRepo; 
-        public HRRecruitmentExamController(HRRecruitmentQuestionRepo hrRecruitmentQuestionRepo, HRRecruitmentAnswersRepo hrRecruitmentAnswersRepo, HRRecruitmentRightAnswearsRepo hrRecruitmentRightAnswearsRepo, HRRecruitmentExamRepo hRRecruitmentExamRepo, HRRecruitmentExamResultRepo hrRecruitmentExamResultRepo, HRRecruitmentExamResultDetailRepo hrRecruitmentExamResultDetailRepo, HRRecruitmentExamResultImageRepo hrRecruitmentExamResultImageRepo, ConfigSystemRepo configSystemRepo, HiringRequestExamRepo hiringRequestExamRepo, HRHiringRequestRepo hiringRequestRepo, HRRecruitmentCandidateRepo hRRecruitmentCandidateRepo)
+        HRRecruitmentCandidateRepo _hrRecruitmentCandidateRepo;
+        HRRecruitmentExamEvaluationFileRepo _hrRecruitmentExamEvaluationFileRepo;
+        public HRRecruitmentExamController(HRRecruitmentQuestionRepo hrRecruitmentQuestionRepo, HRRecruitmentAnswersRepo hrRecruitmentAnswersRepo, HRRecruitmentRightAnswearsRepo hrRecruitmentRightAnswearsRepo, HRRecruitmentExamRepo hRRecruitmentExamRepo, HRRecruitmentExamResultRepo hrRecruitmentExamResultRepo, HRRecruitmentExamResultDetailRepo hrRecruitmentExamResultDetailRepo, HRRecruitmentExamResultImageRepo hrRecruitmentExamResultImageRepo, ConfigSystemRepo configSystemRepo, HiringRequestExamRepo hiringRequestExamRepo, HRHiringRequestRepo hiringRequestRepo, HRRecruitmentCandidateRepo hRRecruitmentCandidateRepo, HRRecruitmentExamEvaluationFileRepo hrRecruitmentExamEvaluationFileRepo)
         {
             _hrRecruitmentQuestionRepo = hrRecruitmentQuestionRepo;
             _hrRecruitmentAnswersRepo = hrRecruitmentAnswersRepo;
@@ -45,6 +46,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             _hiringRequestExamRepo = hiringRequestExamRepo;
             _hiringRequestRepo = hiringRequestRepo;
             _hrRecruitmentCandidateRepo = hRRecruitmentCandidateRepo;
+            _hrRecruitmentExamEvaluationFileRepo = hrRecruitmentExamEvaluationFileRepo;
         }
         #region load dữ liệu exam
         [Authorize]
@@ -824,7 +826,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         [HttpPost("submit-exam-result")]
         public async Task<IActionResult> SubmitExamResult([FromBody] SubmitExamRequestDTO request)
         {
-           //var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+            //var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
             var currentUser = _hrRecruitmentCandidateRepo.GetByID(request.hRRecruitmentCandidateID ?? 0);
 
             try
@@ -962,7 +964,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         #endregion
         #region Chấm điểm ứng viên
         [Authorize]
-        [RequiresPermission("N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")] // Permissions consistent with other HR recruitment tasks
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")] // Permissions consistent with other HR recruitment tasks
         [HttpGet("get-candidate-scores")]
         public async Task<IActionResult> GetCandidateScores(int recruitmentExamID)
         {
@@ -979,7 +981,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         }
 
         [Authorize]
-        [RequiresPermission("N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
         [HttpGet("get-candidate-answer-details")]
         public async Task<IActionResult> GetCandidateAnswerDetails(int examResultID)
         {
@@ -996,7 +998,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         }
 
         [Authorize]
-        [RequiresPermission("N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
         [HttpPost("grade-essay-answer")]
         public async Task<IActionResult> GradeEssayAnswer([FromBody] GradeEssayRequestDTO request)
         {
@@ -1027,7 +1029,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                         var allDetails = _hrRecruitmentExamResultDetailRepo
                             .GetAll(x => x.RecruitmentExamResultID == result.ID && x.IsDeleted == false)
                             .ToList();
-                        
+
                         var questionGroups = allDetails.GroupBy(x => x.RecruitmentQuestionID).ToList();
                         decimal totalScore = questionGroups.Sum(g => g.Max(x => x.Score ?? 0));
                         int totalCorrect = questionGroups.Count(g => g.Max(x => x.Score ?? 0) > 0);
@@ -1043,7 +1045,44 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                     }
                 }
 
-                return Ok(ApiResponseFactory.Success(null, "Chấm điểm thành công"));
+                // Cập nhật file đính kèm đánh giá của Giám khảo
+                if (request.EvaluationFiles != null && request.EvaluationFiles.Count > 0)
+                {
+                    var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                    var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                    foreach (var file in request.EvaluationFiles)
+                    {
+                        if (file.ID > 0)
+                        {
+                            if (file.IsDeleted == true)
+                            {
+                                var existingFile = _hrRecruitmentExamEvaluationFileRepo.GetByID(file.ID);
+                                if (existingFile != null)
+                                {
+                                    existingFile.IsDeleted = true;
+                                    existingFile.UpdatedBy = currentUser.LoginName;
+                                    existingFile.UpdatedDate = DateTime.Now;
+                                    await _hrRecruitmentExamEvaluationFileRepo.UpdateAsync(existingFile);
+                                }
+                            }
+                            // Trường hợp cập nhật thông tin file khác nếu cần (hiện tại thường là chỉ xóa hoặc thêm mới)
+                        }
+                        else
+                        {
+                            file.RecruitmentExamResultDetailID = request.ExamResultDetailID;
+                            file.CreatedBy = currentUser.LoginName;
+                            file.CreatedDate = DateTime.Now;
+                            file.IsDeleted = false;
+                            await _hrRecruitmentExamEvaluationFileRepo.CreateAsync(file);
+                        }
+                    }
+                }
+
+                // Lấy lại danh sách file mới nhất để trả về cho Frontend đồng bộ ID
+                var updatedFiles = _hrRecruitmentExamEvaluationFileRepo.GetAll(x => x.RecruitmentExamResultDetailID == request.ExamResultDetailID && (x.IsDeleted == false || x.IsDeleted == null)).ToList();
+
+                return Ok(ApiResponseFactory.Success(updatedFiles, "Chấm điểm thành công"));
             }
             catch (Exception ex)
             {
@@ -1052,7 +1091,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         }
 
         [Authorize]
-        [RequiresPermission("N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
         [HttpPost("finalize-grading")]
         public async Task<IActionResult> FinalizeGrading([FromBody] FinalizeGradingRequestDTO request)
         {
@@ -1098,7 +1137,8 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         #endregion
         #region Matrix View - Tổng quan điểm đa bài thi
         [Authorize]
-        [RequiresPermission("N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
         [HttpGet("get-exams-by-hiring-request")]
         public async Task<IActionResult> GetExamsByHiringRequest(int hiringRequestID)
         {
@@ -1124,13 +1164,27 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         }
 
         [Authorize]
-        [RequiresPermission("N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
         [HttpGet("get-candidate-score-matrix")]
         public async Task<IActionResult> GetCandidateScoreMatrix(int hiringRequestID)
         {
             try
             {
-                var param = new { HiringRequestID = hiringRequestID };
+                // check thêm người phỏng vấn và người yêu câu tuyển dụng 
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var param = new
+                {
+                    HiringRequestID = hiringRequestID,
+                    @UserRequestID = (currentUser.IsAdmin || currentUser.Permissions
+    .Split(',')
+    .Select(p => p.Trim())
+    .Contains("N2")) ? 0 : currentUser.EmployeeID
+                };
+
+
+
                 var data = await SqlDapper<object>.ProcedureToListAsync("spGetCandidateScoreMatrixByHiringRequest", param);
                 return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu ma trận điểm thành công"));
             }
@@ -1153,7 +1207,20 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                     var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                     var currentUser = ObjectMapper.GetCurrentUser(claims);
 
-                    var param = new { IsCompleted = isCompleted,EmployeeRequestID = (currentUser.IsAdmin == true ? 0 : currentUser.ID) };
+                    var param = new
+                    {
+                        IsCompleted = isCompleted,
+                        //thêm quyền n2 có quyền như admin
+                        EmployeeRequestID = ((currentUser.IsAdmin == true
+        || currentUser.Permissions
+            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(p => p.Trim())
+            .Contains("N2"))
+        ? 0
+        : currentUser.EmployeeID),
+                        InterviewID = currentUser.EmployeeID
+                    };
+
                     var data = await SqlDapper<object>.ProcedureToListAsync("spGetHiringRequestByEmID", param);
 
                     return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
@@ -1167,7 +1234,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         #endregion
         #region api đánh giá đạt/ hủy đạt kết quả thi của ứng viên (dành cho TBP)
         [Authorize]
-        [RequiresPermission("N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
         [HttpPost("evaluate-candidate-result")]
         public async Task<IActionResult> EvaluateCandidateResult([FromBody] EvaluateCandidateRequestDTO request)
         {
@@ -1177,10 +1244,10 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
 
                 var result = _hrRecruitmentExamResultRepo.GetAll(x => x.EmployeeID == request.HRRecruitmentCandidateID && x.IsDeleted == false).ToList();
-                
+
                 // Optionally check if results exist
                 // if (result.Count == 0) return BadRequest(ApiResponseFactory.Fail(null, "Ứng viên chưa làm bài thi nào!"));
-                
+
                 foreach (var item in result)
                 {
                     if (item.StatusResult != 2)
@@ -1193,7 +1260,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 {
                     return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy thông tin ứng viên."));
                 }
-                if(hrRecruitmentCandidate.Status > 5)
+                if (hrRecruitmentCandidate.Status > 5)
                 {
                     switch (hrRecruitmentCandidate.Status)
                     {

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
@@ -8,6 +9,7 @@ namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ProjectApplicationTypesController : Controller
     {
         ProjectApplicationTypesRepo _projectApplicationType;
@@ -16,9 +18,9 @@ namespace RERPAPI.Controllers.Project
         {
             _projectApplicationType = projectApplicationTypeRepo;
         }
-
+      
         [HttpGet("project-application-type")]
-        public async Task<IActionResult> GetProjectApplicationTypes( int? projectTypeID)
+        public async Task<IActionResult> GetProjectApplicationTypes(int? projectTypeID)
         {
             try
             {
@@ -36,20 +38,29 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-        //[RequiresPermission("N1,N2,N34,N89")]
+        [RequiresPermission("N1,N13,N27")]
         [HttpPost("save-project-application-type")]
         public async Task<IActionResult> SaveData([FromBody] ProjectApplicationType projectApplicationType)
         {
             try
             {
-
+                var exists = _projectApplicationType.GetAll(x =>
+                             x.ProjectTypeID == (projectApplicationType.ProjectTypeID ?? 0) &&
+                             x.ApplicationName == projectApplicationType.ApplicationName &&
+                             x.ID != projectApplicationType.ID && x.IsDeleted != true);
+                if (exists.Count > 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null,
+                        $"Loại ứng dụng: [{projectApplicationType.ApplicationName}] đã tồn tại!"));
+                }
                 if (projectApplicationType.ID <= 0)
                 {
+
                     await _projectApplicationType.CreateAsync(projectApplicationType);
                 }
                 else
                 {
-                    _projectApplicationType.UpdateAsync(projectApplicationType);
+                    await _projectApplicationType.UpdateAsync(projectApplicationType);
                 }
 
                 return Ok(new
@@ -64,7 +75,7 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-
+        [RequiresPermission("N1,N13,N27")]
         [HttpPost("delete")]
         public async Task<IActionResult> Delete([FromBody] List<int> ids)
         {

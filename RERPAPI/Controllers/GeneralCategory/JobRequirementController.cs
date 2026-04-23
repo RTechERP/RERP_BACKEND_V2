@@ -206,7 +206,7 @@ namespace RERPAPI.Controllers.GeneralCategory
                         JobRequirementDetail contents = detail.Where(x => x.STT == 1).FirstOrDefault() ?? new JobRequirementDetail();
                         JobRequirementDetail reason = detail.Where(x => x.STT == 3).FirstOrDefault() ?? new JobRequirementDetail();
 
-                        JobRequirementDetail deadline = detail.Where(x => x.STT == 7).FirstOrDefault() ?? new JobRequirementDetail();
+                        JobRequirementDetail deadline = detail.Where(x => x.STT == 8).FirstOrDefault() ?? new JobRequirementDetail();
                         string subject = $"YÊU CẦU CÔNG VIỆC - {_currentUser.FullName.ToUpper()} - {DateTime.Now.ToString("dd/MM/yyyy")}";
                         string toEmail = $"{employeeTP.EmailCongTy}";
                         //sendEmail.EmailCC = $"hanhchinh@rtc.edu.vn";

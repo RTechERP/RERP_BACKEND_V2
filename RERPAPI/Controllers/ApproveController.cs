@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
@@ -13,6 +15,7 @@ namespace RERPAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ApproveController : ControllerBase
     {
 
@@ -399,7 +402,7 @@ namespace RERPAPI.Controllers
             NightShift = 8,
             VehicleBooking = 9
         }
-
+        [RequiresPermission("N32")]
         [HttpPost("approve-tbp-new")]
         public async Task<IActionResult> ApproveTBPNew([FromBody] ApproveRequestParam request)
         {
@@ -452,6 +455,7 @@ namespace RERPAPI.Controllers
                     : $"{approved} thành công, bỏ qua {notProcessed.Count} bản ghi."
             ));
         }
+        [RequiresPermission("N1")]
         [HttpPost("approve-bgd-new")]
         public async Task<IActionResult> ApproveBGDNew([FromBody] ApproveRequestParam request)
         {
@@ -504,7 +508,7 @@ namespace RERPAPI.Controllers
                     : $"{approved} thành công, bỏ qua {notProcessed.Count} bản ghi."
             ));
         }
-
+        [RequiresPermission("N85,N32")]
         [HttpPost("approve-senior-new")]
         public async Task<IActionResult> ApproveSenior([FromBody] ApproveRequestParam request)
         {
@@ -554,10 +558,10 @@ namespace RERPAPI.Controllers
                 notProcessed,
                 notProcessed.Count == 0
                 ? $"{approved} thành công."
-        : $"{approved} thành công, bỏ qua {notProcessed.Count} bản ghi."
+                : $"{approved} thành công, bỏ qua {notProcessed.Count} bản ghi."
             ));
         }
-
+        [RequiresPermission("N85,N32")]
         [HttpPost("decline-senior")]
         public async Task<IActionResult> DeclineSenior([FromBody] ApproveRequestParam request)
         {

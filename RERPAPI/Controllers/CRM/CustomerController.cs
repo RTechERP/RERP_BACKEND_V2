@@ -23,7 +23,7 @@ namespace RERPAPI.Controllers.CRM
         //EmployeeRepo employeeRepo = new EmployeeRepo();
 
 
-        
+
 
         //[HttpGet("{id}")]
         //public IActionResult GetCustomerByID(int id)
@@ -416,7 +416,8 @@ namespace RERPAPI.Controllers.CRM
         private readonly BusinessFieldLinkRepo _businessFieldLinkRepo;
         private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
         private readonly ProvinceRepo _provinceRepo;
-        public CustomerController(AddressStockRepo addressStockRepo, CustomerContactRepo customerContactRepo, CustomerEmployeeRepo customerEmployeeRepo, EmployeeRepo employeeRepo, CustomerSpecializationRepo customerSpecializationRepo, BusinessFieldRepo businessFieldRepo, CustomerRepo customerRepo, BusinessFieldLinkRepo businessFieldLinkRepo, vUserGroupLinksRepo vUserGroupLinksRepo, ProvinceRepo provinceRepo)
+        private readonly CustomerIndustriesRepo _customerIndustriesRepo;
+        public CustomerController(AddressStockRepo addressStockRepo, CustomerContactRepo customerContactRepo, CustomerEmployeeRepo customerEmployeeRepo, EmployeeRepo employeeRepo, CustomerSpecializationRepo customerSpecializationRepo, BusinessFieldRepo businessFieldRepo, CustomerRepo customerRepo, BusinessFieldLinkRepo businessFieldLinkRepo, vUserGroupLinksRepo vUserGroupLinksRepo, ProvinceRepo provinceRepo, CustomerIndustriesRepo customerIndustriesRepo)
         {
             _addressStockRepo = addressStockRepo;
             _customerContactRepo = customerContactRepo;
@@ -428,6 +429,7 @@ namespace RERPAPI.Controllers.CRM
             _businessFieldLinkRepo = businessFieldLinkRepo;
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
             _provinceRepo = provinceRepo;
+            _customerIndustriesRepo = customerIndustriesRepo;
         }
         private static string json = System.IO.File.ReadAllText(@"jsonProvinces.txt");
         private static List<Provinces> provinces = JsonConvert.DeserializeObject<List<Provinces>>(json);
@@ -444,11 +446,11 @@ namespace RERPAPI.Controllers.CRM
         //    try
         //    {
         //        List<Customer> customers = _customerRepo.GetAll(x=>x.IsDeleted==false || x.IsDeleted ==null);
-                //return Ok(new
-                //{
-                //    status = 1,
-                //    data = customers
-                //});
+        //return Ok(new
+        //{
+        //    status = 1,
+        //    data = customers
+        //});
 
         [HttpGet("get-customers")]
         public IActionResult GetAll()
@@ -478,20 +480,22 @@ namespace RERPAPI.Controllers.CRM
 
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 object data;
-                 data = SQLHelper<dynamic>.GetListData(list, 0);
+                data = SQLHelper<dynamic>.GetListData(list, 0);
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
-                var vUser = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x => (x.Code == "N1" || x.Code == "N27" || x.Code == "N53"|| x.Code == "N31" || x.Code == "N69") && x.UserID == currentUser.ID);
+                var vUser = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x => (x.Code == "N1" || x.Code == "N27" || x.Code == "N53" || x.Code == "N31" || x.Code == "N69") && x.UserID == currentUser.ID);
 
-                if(vUser == null)
+                if (vUser == null)
                 {
                     data = ((List<dynamic>)data).Select(x => new
-                      {
-                          ID = x.ID,
-                          CustomerName = x.CustomerName,
-                          CustomerCode = x.CustomerCode,
-                          CustomerShortName = x.CustomerShortName,
-                          Address = x.Address
-                      }).ToList<dynamic>();
+                    {
+                        ID = x.ID,
+                        CustomerName = x.CustomerName,
+                        CustomerCode = x.CustomerCode,
+                        CustomerShortName = x.CustomerShortName,
+                        Address = x.Address,
+                        IndustriesNameEN = x.IndustriesNameEN,
+                        IndustriesNameVI = x.IndustriesNameVI,
+                    }).ToList<dynamic>();
                 }
                 var data1 = SQLHelper<dynamic>.GetListData(list, 1);
                 var data2 = SQLHelper<dynamic>.GetListData(list, 2);
@@ -716,6 +720,7 @@ namespace RERPAPI.Controllers.CRM
                 customer.TaxCode = dto.Customer.TaxCode;
                 customer.IsDeleted = dto.Customer.IsDeleted;
                 customer.BigAccount = dto.Customer.BigAccount;
+                customer.CustomerIndustriesID = dto.Customer.CustomerIndustriesID;
                 if (customer.ID > 0)
                 {
                     //customer.UpdatedBy =
@@ -776,6 +781,7 @@ namespace RERPAPI.Controllers.CRM
                         customerEmployee.EmployeeID = item.EmployeeID;
                         if (customerEmployee.ID > 0)
                         {
+                            customerEmployee.UpdatedDate = DateTime.Now;
                             await _customerEmployeeRepo.UpdateAsync(customerEmployee);
                         }
                         else
@@ -790,6 +796,7 @@ namespace RERPAPI.Controllers.CRM
                 business.BusinessFieldID = dto.BusinessFieldID;
                 if (business.ID > 0)
                 {
+                    business.UpdatedDate = DateTime.Now;
                     await _businessFieldLinkRepo.UpdateAsync(business);
                 }
                 else
@@ -885,8 +892,8 @@ namespace RERPAPI.Controllers.CRM
                         rowIndex++;
                     }
 
-                    worksheet.Columns().AdjustToContents(); 
-                    worksheet.Column(2).Width = 70; 
+                    worksheet.Columns().AdjustToContents();
+                    worksheet.Column(2).Width = 70;
                     worksheet.Column(3).Width = 70;
                     worksheet.Column(7).Width = 30;
                     worksheet.Column(8).Width = 30;
@@ -911,7 +918,19 @@ namespace RERPAPI.Controllers.CRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-
+        //lấy ra dữ liệu khách hàng 
+        [HttpGet("get-customer-industry")]
+        public async Task<IActionResult> getCustomerIndustries()
+        {
+            try
+            {
+                var result = _customerIndustriesRepo.GetAll(x => x.IsDeleted != true).OrderBy(p=>p.NumberOrder).ToList();
+                return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 }

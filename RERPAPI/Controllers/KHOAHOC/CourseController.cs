@@ -25,21 +25,28 @@ namespace RERPAPI.Controllers.KHOAHOC
         private readonly CourseCatalogProjectTypeRepo _courseCatalogProjectTypeRepo;
         private readonly DepartmentRepo _departmentRepo;
         private readonly KPIPositionTypeRepo _kpiPositionTypeRepo;
-        private readonly RegisterIdeaRepo _RegisterIdeaRepo;
-        private readonly CourseRepo _courseRepo;
         private readonly RegisterIdeaRepo _registerIdeaRepo;
-        private readonly CourseRegisterIdeaRepo _courseRegisterIdeaRepo;
+        private readonly CourseRepo _courseRepo;
         private readonly CourseLessonRepo _courseLessonRepo;
         private readonly CourseFilesRepo _courseFilesRepo;
-        public CourseController(CourseCatalogRepo courseCatalogRepo, 
+        private readonly ConfigSystemRepo _configSystemRepo;
+        //private readonly Course_KPIPositionTypeRepo _course_KPIPositionTypeRepo;
+        private readonly CourseKPIEmployeeTeamMapRepo _course_KPIEmployeeTeamMapRepo;
+        private readonly CourseKPIEmployeeTeamRepo _course_KPIEmployeeTeamRepo;
+
+        public CourseController(
+            CourseCatalogRepo courseCatalogRepo,
             CourseCatalogProjectTypeRepo courseCatalogProjectTypeRepo,
             DepartmentRepo departmentRepo,
             KPIPositionTypeRepo kpiPositionTypeRepo,
             CourseRepo courseRepo,
             RegisterIdeaRepo registerIdeaRepo,
-            CourseRegisterIdeaRepo courseRegisterIdeaRepo,
             CourseLessonRepo courseLessonRepo,
-            CourseFilesRepo courseFilesRepo)
+            ConfigSystemRepo configSystemRepo,
+            CourseFilesRepo courseFilesRepo,
+           CourseKPIEmployeeTeamMapRepo course_KPIEmployeeTeamMapRepo,
+           CourseKPIEmployeeTeamRepo course_KPIEmployeeTeamRepo
+            )
         {
             _courseCatalogRepo = courseCatalogRepo;
             _courseCatalogProjectTypeRepo = courseCatalogProjectTypeRepo;
@@ -47,9 +54,12 @@ namespace RERPAPI.Controllers.KHOAHOC
             _kpiPositionTypeRepo = kpiPositionTypeRepo;
             _courseRepo = courseRepo;
             _registerIdeaRepo = registerIdeaRepo;
-            _courseRegisterIdeaRepo = courseRegisterIdeaRepo;
             _courseLessonRepo = courseLessonRepo;
             _courseFilesRepo = courseFilesRepo;
+            _configSystemRepo = configSystemRepo;
+            //_course_KPIPositionTypeRepo = course_KPIPositionTypeRepo;
+            _course_KPIEmployeeTeamMapRepo = course_KPIEmployeeTeamMapRepo;
+            _course_KPIEmployeeTeamRepo = course_KPIEmployeeTeamRepo;
         }
 
         [HttpGet("get-course-summary")]
@@ -75,14 +85,60 @@ namespace RERPAPI.Controllers.KHOAHOC
         }
 
         [HttpGet("load-danhmuc")]
-        public async Task<IActionResult> GetDanhMuc()
+        public async Task<IActionResult> GetDanhMuc(int catalogType)
         {
             try
             {
-                var data = SQLHelper<object>.ProcedureToList("spGetCourseCatalog",
-                                              new string[] { },
-                                              new object[] { });
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                var data = SQLHelper<object>.ProcedureToList("spGetCourseCatalogNew1",
+                                              new string[] { "@CatalogType", "@UserID" },
+                                              new object[] { catalogType, currentUser.ID });
                 return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0), ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-stt-course-catalog")]
+        public async Task<IActionResult> GetSTTCourseCatalog(int TypeID, int DepartmentID)
+        {
+            try
+            {
+                var maxSTT = _courseCatalogRepo.GetAll(c => c.IsDeleted != true && c.CatalogType == TypeID && c.DepartmentID == DepartmentID).Max(c => c.STT);
+                maxSTT = maxSTT.HasValue ? maxSTT.Value + 1 : 1;
+                return Ok(ApiResponseFactory.Success(maxSTT, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        // get stt course
+        [HttpGet("get-stt-course")]
+        public async Task<IActionResult> GetSTTCourse(int CourseCatalogID, int CourseTypeID)
+        {
+            try
+            {
+                var maxSTT = _courseRepo.GetAll(c => c.CourseCatalogID == CourseCatalogID && c.CourseTypeID == CourseTypeID).Max(c => c.STT);
+                maxSTT = maxSTT.HasValue ? maxSTT.Value + 1 : 1;
+                return Ok(ApiResponseFactory.Success(maxSTT, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        // get stt lesson
+        [HttpGet("get-stt-lesson")]
+        public async Task<IActionResult> GetSTTLesson(int CourseID)
+        {
+            try
+            {
+                var maxSTT = _courseLessonRepo.GetAll(c => c.CourseID == CourseID && c.IsDeleted != true).Max(c => c.STT);
+                maxSTT = maxSTT.HasValue ? (maxSTT.Value + 1) : 1;
+                return Ok(ApiResponseFactory.Success(maxSTT, ""));
             }
             catch (Exception ex)
             {
@@ -97,10 +153,29 @@ namespace RERPAPI.Controllers.KHOAHOC
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
-                var data = SQLHelper<object>.ProcedureToList("spGetCourseNew",
-                                              new string[] { "@CourseCatalogID", "@EmployeeID", "@Status" },
-                                              new object[] { courseCatalogID, currentUser.ID, -1 });
-                    return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0), ""));
+                var data = SQLHelper<object>.ProcedureToList("spGetCourseNew1",
+                                             new string[] { "@CourseCatalogID", "@EmployeeID", "@Status" },
+                                             new object[] { courseCatalogID, currentUser.EmployeeID, -1 });
+                var data0 = SQLHelper<object>.GetListData(data, 0);
+                return Ok(ApiResponseFactory.Success(data0, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
+        //lấy danh sách bài học
+        [HttpGet("get-kpi-by-courseid")]
+        public async Task<IActionResult> getKPIByCourseID(int courseID)
+        {
+            try
+            {
+                //var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                //var currentUser = ObjectMapper.GetCurrentUser(claims);
+                var data = _course_KPIEmployeeTeamMapRepo.GetAll(c => c.CourseID == courseID && (c.IsDeleted == false || c.IsDeleted == null));
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {
@@ -118,8 +193,8 @@ namespace RERPAPI.Controllers.KHOAHOC
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 var data = SQLHelper<object>.ProcedureToList("spGetLesson",
                                               new string[] { "@CourseID" },
-                                              new object[] { courseID});
-                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data,0), ""));
+                                              new object[] { courseID });
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0), ""));
             }
             catch (Exception ex)
             {
@@ -134,8 +209,8 @@ namespace RERPAPI.Controllers.KHOAHOC
             try
             {
                 var lstTeam = SQLHelper<object>.ProcedureToList("spGetallProjectType",
-                                              new string[] {},
-                                              new object[] {});
+                                              new string[] { },
+                                              new object[] { });
                 return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(lstTeam, 0), ""));
             }
             catch (Exception ex)
@@ -156,7 +231,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 var data = SQLHelper<object>.ProcedureToList("spGetRegisterIdea",
                                               new string[] { "@EmployeeID", "@DepartmentID", "@AuthorID", "@DateStart", "@DateEnd", "@FilterText", "@PageNumber", "@PageSize", "@RegisterTypeID" },
-                                              new object[] { 0, 0, 0, TextUtils.MinDate, dateEnd, "", 1, 999999999, courseCategoryID });
+                                              new object[] { 0, 0, currentUser.EmployeeID, TextUtils.MinDate, dateEnd, "", 1, 999999999, courseCategoryID });
                 return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0), ""));
             }
             catch (Exception ex)
@@ -255,15 +330,49 @@ namespace RERPAPI.Controllers.KHOAHOC
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-        }
-
-        //lấy danh sách KPI Position Type
-        [HttpGet("load-kpipositiontype")]
-        public async Task<IActionResult> LoadKPIPositionType()
+        } // Lấy videoUrl để lưu
+        [HttpGet("get-path-server")]
+        public async Task<IActionResult> getPathServer(string subPath)
         {
             try
             {
-                var data = _kpiPositionTypeRepo.GetAll(x => x.IsDeleted == false);
+                var pathUpload = _configSystemRepo.GetUploadPathByKey("CourseLesson");
+                subPath = $"/{subPath}/";
+                string path = pathUpload + subPath;
+                return Ok(ApiResponseFactory.Success(path, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("stream/{lessonId}")]
+        public IActionResult StreamByLesson(int lessonId)
+        {
+            var lesson = _courseLessonRepo.GetByID(lessonId);
+            if (lesson == null || string.IsNullOrEmpty(lesson.VideoURL))
+                return NotFound();
+
+            var path = lesson.VideoURL;
+            if (!System.IO.File.Exists(path))
+                return NotFound();
+
+            return PhysicalFile(
+                path,
+                "video/mp4",
+                enableRangeProcessing: true
+            );
+        }
+        //lấy danh sách KPI emplpoyee team
+        [HttpGet("load-kpi-employee-team")]
+        public async Task<IActionResult> LoadKPIEmployeeTeam()
+        {
+            try
+            {
+
+                var data = SQLHelper<object>.ProcedureToList("spGetALLCourseKPIEmployeeTeam",
+                                                                new string[] { "@DepartmentID" },
+                                                                new object[] { 0 });
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
@@ -278,35 +387,37 @@ namespace RERPAPI.Controllers.KHOAHOC
         {
             try
             {
-                var exitCategory = _courseCatalogRepo.GetAll(x => ( x.Code.ToUpper().Trim() == model.Code.ToUpper().Trim()) && x.ID != model.ID && (!x.IsDeleted ?? true) ).FirstOrDefault();
+                var exitCategory = _courseCatalogRepo.GetAll(x => (x.Code.ToUpper().Trim() == model.Code.ToUpper().Trim()) && x.ID != model.ID && (!x.IsDeleted ?? true)).FirstOrDefault();
 
                 if (exitCategory != null && exitCategory.ID > 0)
                 {
-                    return BadRequest(ApiResponseFactory.Fail(null, "Mã danh mục đã tồn tại! Vui lòng kiểm tra lại."));
+                    return Ok(ApiResponseFactory.Fail(null, "Mã danh mục đã tồn tại! Vui lòng kiểm tra lại."));
                 }
 
-                
+
 
                 if (model.ID <= 0)
                 {
-                    var dept = _departmentRepo.GetAll(x => x.STT == model.DepartmentSTT).FirstOrDefault();
                     var courseCatalog = new CourseCatalog
                     {
                         ID = 0,
                         Name = model.Name,
                         CatalogType = model.CatalogType,
-                        DeleteFlag = model.DeleteFlag,
-                        DepartmentID = dept.ID,
+                        DepartmentID = model.DepartmentID,
                         STT = model.STT,
                         Code = model.Code,
-                        IsDeleted = model.IsDeleted,
                     };
 
 
 
-                     await _courseCatalogRepo.CreateAsync(courseCatalog);
-                    
-                    if(model.ProjectTypeIDs.Count > 0)
+                    await _courseCatalogRepo.CreateAsync(courseCatalog);
+                    if (courseCatalog.ID > 0)
+                    {
+                        courseCatalog.DeleteFlag = true;
+                        await _courseCatalogRepo.UpdateAsync(courseCatalog);
+                    }
+
+                    if (model.ProjectTypeIDs.Count > 0)
                     {
                         foreach (var item in model.ProjectTypeIDs)
                         {
@@ -322,22 +433,26 @@ namespace RERPAPI.Controllers.KHOAHOC
                 }
                 else
                 {
-                    var dept = _departmentRepo.GetAll(x => x.STT == model.DepartmentSTT).FirstOrDefault();
-
+                    var dept = _departmentRepo.GetAll(x => x.ID == model.DepartmentID).FirstOrDefault();
+                    int departmentID = 0;
+                    if (dept != null)
+                    {
+                        departmentID = dept.ID;
+                    }
                     var courseCatalog = _courseCatalogRepo.GetByID(model.ID);
                     courseCatalog.Name = model.Name;
                     courseCatalog.CatalogType = model.CatalogType;
-                    courseCatalog.DepartmentID = dept.ID;
+                    courseCatalog.DepartmentID = departmentID;
                     courseCatalog.STT = model.STT;
                     courseCatalog.IsDeleted = model.IsDeleted;
                     courseCatalog.DeleteFlag = model.DeleteFlag;
                     courseCatalog.Code = model.Code;
                     await _courseCatalogRepo.UpdateAsync(courseCatalog);
 
-                    var existingProjectTypes = _courseCatalogProjectTypeRepo.GetAll(x => x.CourseCatalogID == model.ID && (!x.IsDeleted ?? true)).ToList();
-                    if(existingProjectTypes.Count > 0 && !(existingProjectTypes.IsNullOrEmpty()))
+                    var existingProjectTypes = _courseCatalogProjectTypeRepo.GetAll(x => x.CourseCatalogID == model.ID && (x.IsDeleted == false)).ToList();
+                    if (existingProjectTypes.Count > 0 && !(existingProjectTypes.IsNullOrEmpty()))
                     {
-                        if(model.ProjectTypeIDs.Count <= 0 || model.ProjectTypeIDs.IsNullOrEmpty())
+                        if (model.ProjectTypeIDs.Count <= 0 || model.ProjectTypeIDs.IsNullOrEmpty())
                         {
                             foreach (var item in existingProjectTypes)
                             {
@@ -352,17 +467,14 @@ namespace RERPAPI.Controllers.KHOAHOC
                                 .Select(x => x.ProjectTypeID.Value)
                                 .ToList();
 
-                            // ❌ cần xóa
                             var idsToRemove = existingIds
                                 .Except(model.ProjectTypeIDs)
                                 .ToList();
 
-                            // ➕ cần thêm
                             var idsToAdd = model.ProjectTypeIDs
                                 .Except(existingIds)
                                 .ToList();
 
-                            // DELETE
                             foreach (var projectTypeId in idsToRemove)
                             {
                                 var entity = existingProjectTypes
@@ -400,9 +512,9 @@ namespace RERPAPI.Controllers.KHOAHOC
                     {
                         if (model.ProjectTypeIDs.Count > 0)
                         {
-                            foreach (var item in existingProjectTypes)
+                            foreach (var item in model.ProjectTypeIDs)
                             {
-                                var entity = _courseCatalogProjectTypeRepo.GetByID(item.ID);
+                                var entity = _courseCatalogProjectTypeRepo.GetByID(item);
                                 if (entity != null && entity.ID > 0)
                                 {
                                     entity.IsDeleted = true;
@@ -413,7 +525,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                                     var newEntity = new CourseCatalogProjectType
                                     {
                                         CourseCatalogID = courseCatalog.ID,
-                                        ProjectTypeID = item.ProjectTypeID
+                                        ProjectTypeID = item
                                     };
                                     await _courseCatalogProjectTypeRepo.CreateAsync(newEntity);
                                 }
@@ -450,7 +562,7 @@ namespace RERPAPI.Controllers.KHOAHOC
 
                 if (exitCoure != null && exitCoure.ID > 0)
                 {
-                    return BadRequest(ApiResponseFactory.Fail(null, "Mã khóa học đã tồn tại! Vui lòng kiểm tra lại."));
+                    return Ok(ApiResponseFactory.Fail(null, "Mã khóa học đã tồn tại! Vui lòng kiểm tra lại."));
                 }
 
                 if (model.ID <= 0)
@@ -465,35 +577,83 @@ namespace RERPAPI.Controllers.KHOAHOC
                         Code = model.Code,
                         NameCourse = model.NameCourse,
                         CourseCatalogID = model.CourseCatalogID,
-                        DeleteFlag = model.DeleteFlag,
                         QuestionCount = model.QuestionCount,
                         QuestionDuration = model.QuestionDuration,
                         LeadTime = model.LeadTime,
                         CourseCopyID = model.CourseCopyID,
                         CourseTypeID = model.CourseTypeID,
-                        EmployeeID = 0,
+                        EmployeeID = model.EmployeeID,
                         Instructor = currentUser.FullName,
                         FileCourseID = 0,
-                        IsPractice = false
+                        IsPractice = false,
                     };
-                    await _courseRepo.CreateAsync(courseNew);
 
-                    if(model.IdeaIDs != null && model.IdeaIDs.Count > 0)
+                    await _courseRepo.CreateAsync(courseNew);
+                    if (courseNew.ID > 0)
                     {
-                        foreach (var item in model.IdeaIDs)
+                        courseNew.DeleteFlag = true; // trạng thái hiển thị
+                        await _courseRepo.UpdateAsync(courseNew);
+                        if (model.IdeaIDs != null && model.IdeaIDs.Count > 0)
                         {
-                            var newCourseIdea = new CourseRegisterIdea
+                            foreach (var id in model.IdeaIDs)
+                            {
+                                var entity = _registerIdeaRepo.GetByID(id);
+                                if (entity != null || entity.ID > 0)
+                                {
+                                    entity.CourseID = courseNew.ID;
+                                    await _registerIdeaRepo.UpdateAsync(entity);
+
+                                }
+                            }
+                        }
+                        // thêm kpi 
+                        var kpiIds = model.KPIIDs ?? new List<int>();
+
+                        foreach (var kpiId in kpiIds)
+                        {
+                            var newCourseKpi = new CourseKPIEmployeeTeamMap
                             {
                                 CourseID = courseNew.ID,
-                                IdeaID = item
+                                KPIEmployeeTeamID = kpiId,
+                                IsDeleted = false
                             };
-                            await _courseRegisterIdeaRepo.CreateAsync(newCourseIdea);
+                            await _course_KPIEmployeeTeamMapRepo.CreateAsync(newCourseKpi);
                         }
+
                     }
                 }
                 else
                 {
+                    //var courseUpdate = _courseRepo.GetByID(model.ID);
+                    //courseUpdate.STT = model.STT;
+                    //courseUpdate.Code = model.Code;
+                    //courseUpdate.NameCourse = model.NameCourse;
+                    //courseUpdate.CourseCatalogID = model.CourseCatalogID;
+                    //courseUpdate.DeleteFlag = model.DeleteFlag;
+                    //courseUpdate.QuestionCount = model.QuestionCount;
+                    //courseUpdate.QuestionDuration = model.QuestionDuration;
+                    //courseUpdate.LeadTime = model.LeadTime;
+                    //courseUpdate.CourseCopyID = model.CourseCopyID;
+                    //courseUpdate.CourseTypeID = model.CourseTypeID;
+                    //if (await _courseRepo.UpdateAsync(courseUpdate) > 0)
+                    //{
+                    //    if (model.IdeaIDs != null && model.IdeaIDs.Count > 0)
+                    //    {
+                    //        foreach (var id in model.IdeaIDs)
+                    //        {
+                    //            var entity = _registerIdeaRepo.GetByID(id);
+                    //            if (entity != null || entity.ID > 0)
+                    //            {
+                    //                entity.CourseID = courseUpdate.ID;
+                    //                await _registerIdeaRepo.UpdateAsync(entity);
+
+                    //            }
+                    //        }
+                    //    }
+                    //}
+
                     var courseUpdate = _courseRepo.GetByID(model.ID);
+
                     courseUpdate.STT = model.STT;
                     courseUpdate.Code = model.Code;
                     courseUpdate.NameCourse = model.NameCourse;
@@ -504,85 +664,97 @@ namespace RERPAPI.Controllers.KHOAHOC
                     courseUpdate.LeadTime = model.LeadTime;
                     courseUpdate.CourseCopyID = model.CourseCopyID;
                     courseUpdate.CourseTypeID = model.CourseTypeID;
-                    await _courseRepo.UpdateAsync(courseUpdate);
+                    courseUpdate.EmployeeID = model.EmployeeID;
 
-                    var existingCourseIdeas = _courseRegisterIdeaRepo.GetAll(x => x.CourseID == model.ID && (!x.IsDeleted ?? true)).ToList();
-                    if (existingCourseIdeas.Count > 0 && !(existingCourseIdeas.IsNullOrEmpty()))
+                    if (await _courseRepo.UpdateAsync(courseUpdate) > 0)
                     {
-                        if (model.IdeaIDs == null || model.IdeaIDs.Count <= 0 || model.IdeaIDs.IsNullOrEmpty())
+                        //  luôn xử lý Idea (kể cả khi list rỗng)
+                        var newIdeaIds = model.IdeaIDs ?? new List<int>();
+
+                        var currentIdeas = _registerIdeaRepo
+                            .GetAll(x => x.CourseID == courseUpdate.ID)
+                            .ToList();
+
+                        foreach (var idea in currentIdeas.Where(x => !newIdeaIds.Contains(x.ID)))
                         {
-                            foreach (var item in existingCourseIdeas)
+                            idea.IsDeleted = true;
+                            //idea.CourseID = null;
+                            await _registerIdeaRepo.UpdateAsync(idea);
+                        }
+
+                        foreach (var id in newIdeaIds.Where(id => !currentIdeas.Any(x => x.ID == id)))
+                        {
+                            var entity = _registerIdeaRepo.GetByID(id);
+                            if (entity != null && entity.ID > 0)
                             {
-                                var courseIdea = existingCourseIdeas.Where(x => x.ID == item.ID).FirstOrDefault();
-                                courseIdea.IsDeleted = true;
-                                await _courseRegisterIdeaRepo.UpdateAsync(courseIdea);
+                                entity.CourseID = courseUpdate.ID;
+                                await _registerIdeaRepo.UpdateAsync(entity);
                             }
                         }
-                        else
+                        // KPI 
+                        //List<Course_KPIPositionType> course_KPIPositionTypes = _course_KPIPositionTypeRepo.GetAll(c=>c.CourseID == courseUpdate.ID);
+                        //foreach (var item in course_KPIPositionTypes)
+                        //{
+                        //    item.IsDeleted = !model.KPIIDs.Contains(item.KPIPositionTypeID);
+                        //   await _course_KPIPositionTypeRepo.UpdateAsync(item);
+                        //}
+                        //foreach (var item in model.KPIIDs)
+                        //{
+                        //    if (!course_KPIPositionTypes.Any(c=>c.KPIPositionTypeID==item))
+                        //    {
+                        //        var newCourse_KPIPositionTypeModel = new Course_KPIPositionType();
+                        //        newCourse_KPIPositionTypeModel.CourseID = courseUpdate.ID;
+                        //        newCourse_KPIPositionTypeModel.KPIPositionTypeID = item;
+                        //        newCourse_KPIPositionTypeModel.IsDeleted = false;
+                        //       await _course_KPIPositionTypeRepo.CreateAsync(newCourse_KPIPositionTypeModel);
+                        //    }
+                        //}
+
+                        // === SYNC KPI (UPDATE) ===
+                        // luôn xử lý KPI (kể cả khi list rỗng)
+                        var newKpiIds = model.KPIIDs ?? new List<int>();
+
+                        var currentKpis = _course_KPIEmployeeTeamMapRepo
+                            .GetAll(x => x.CourseID == courseUpdate.ID && x.IsDeleted == false)
+                            .ToList();
+
+
+                        // === REMOVE (soft delete + gỡ liên kết) ===
+                        foreach (var kpi in currentKpis.Where(x => !newKpiIds.Contains(TextUtils.ToInt32(x.KPIEmployeeTeamID))))
                         {
-                            var existCourseIdeaIDs = existingCourseIdeas
-                                .Select(x => x.IdeaID)
-                                .ToList();
-                            // ❌ cần xóa
-                            var idsToRemove = existCourseIdeaIDs
-                                .Except(model.IdeaIDs)
-                                .ToList();
-                            // ➕ cần thêm
-                            var idsToAdd = model.IdeaIDs
-                                .Except(existCourseIdeaIDs)
-                                .ToList();
-                            // DELETE
-                            foreach (var ideaId in idsToRemove)
-                            {
-                                var entity = existingCourseIdeas
-                                    .FirstOrDefault(x => x.IdeaID == ideaId);
-                                if (entity != null && entity.ID > 0)
-                                {
-                                    entity.IsDeleted = true;
-                                    await _courseRegisterIdeaRepo.UpdateAsync(entity);
-                                }
-                            }
-                            // INSERT
-                            foreach (var ideaId in idsToAdd)
-                            {
-                                var entity = _courseRegisterIdeaRepo.GetByID(ideaId);
-                                if(entity != null && entity.ID > 0)
-                                {
-                                    entity.IsDeleted = false;
-                                    await _courseRegisterIdeaRepo.UpdateAsync(entity);
-                                    continue;
-                                }
-                                else
-                                {
-                                    var newEntity = new CourseRegisterIdea
-                                    {
-                                        CourseID = courseUpdate.ID,
-                                        IdeaID = ideaId
-                                    };
-                                    await _courseRegisterIdeaRepo.CreateAsync(newEntity);
-                                }
-                            }
+                            kpi.IsDeleted = true;
+                            // nếu entity của bạn có CourseID nullable thì gỡ ra, còn không thì bỏ dòng này
+                            // kpi.CourseID = null;
+
+                            await _course_KPIEmployeeTeamMapRepo.UpdateAsync(kpi);
                         }
-                    }
-                    else
-                    {
-                        if (model.IdeaIDs != null && model.IdeaIDs.Count > 0)
+
+
+                        // === ADD NEW ===
+                        foreach (var id in newKpiIds.Where(id => !currentKpis.Any(x => x.KPIEmployeeTeamID == id)))
                         {
-                            foreach (var item in model.IdeaIDs)
+                            // kiểm tra đã tồn tại record soft delete chưa
+                            var existed = _course_KPIEmployeeTeamMapRepo
+                                .GetAll(x => x.CourseID == courseUpdate.ID && x.KPIEmployeeTeamID == id)
+                                .FirstOrDefault();
+
+                            if (existed != null)
                             {
-                                var entity = _courseRegisterIdeaRepo.GetByID(item);
-                                if (entity != null && entity.ID > 0)
-                                {
-                                    entity.IsDeleted = false;
-                                    await _courseRegisterIdeaRepo.UpdateAsync(entity);
-                                    continue;
-                                }
-                                var newEntity = new CourseRegisterIdea
+                                // restore lại
+                                existed.IsDeleted = false;
+                                await _course_KPIEmployeeTeamMapRepo.UpdateAsync(existed);
+                            }
+                            else
+                            {
+                                // tạo mới
+                                var newKpi = new CourseKPIEmployeeTeamMap
                                 {
                                     CourseID = courseUpdate.ID,
-                                    IdeaID = item
+                                    KPIEmployeeTeamID = id,
+                                    IsDeleted = false
                                 };
-                                await _courseRegisterIdeaRepo.CreateAsync(newEntity);
+
+                                await _course_KPIEmployeeTeamMapRepo.CreateAsync(newKpi);
                             }
                         }
                     }
@@ -601,13 +773,15 @@ namespace RERPAPI.Controllers.KHOAHOC
         {
             try
             {
+                var pathUpload = _configSystemRepo.GetUploadPathByKey("CourseLesson");
+                var subPath = "/pdfs/";
                 if (model == null)
                 {
-                    return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu gửi lên không hợp lệ."));
+                    return Ok(ApiResponseFactory.Fail(null, "Dữ liệu gửi lên không hợp lệ."));
                 }
-                if ( model.CourseLesson.IsDeleted ?? false)
+                if (model.CourseLesson.IsDeleted ?? false)
                 {
-                    if(model.CourseLesson.ID > 0)
+                    if (model.CourseLesson.ID > 0)
                     {
                         var exitLesson = _courseLessonRepo.GetByID(model.CourseLesson.ID);
                         exitLesson.IsDeleted = true;
@@ -621,13 +795,17 @@ namespace RERPAPI.Controllers.KHOAHOC
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Mã bài học đã tồn tại! Vui lòng kiểm tra lại."));
                 }
+                //if (exitLessonOld.VideoURL!=null)
+                //{
+                //    exitLessonOld.VideoURL = pathUpload + "/videos/"+
+                //}
 
                 if (model.CourseLesson.ID <= 0)
                 {
                     if (model.CoursePdf != null &&
                         !string.IsNullOrWhiteSpace(model.CoursePdf.NameFile))
                     {
-                        model.CourseLesson.UrlPDF = model.CoursePdf.NameFile;
+                        model.CourseLesson.UrlPDF = pathUpload + subPath + model.CoursePdf.NameFile;
                     }
 
                     await _courseLessonRepo.CreateAsync(model.CourseLesson);
@@ -647,9 +825,9 @@ namespace RERPAPI.Controllers.KHOAHOC
                 else
                 {
 
-                    if(model.CoursePdf != null && model.CoursePdf.NameFile != null)
+                    if (model.CoursePdf != null && model.CoursePdf.NameFile != null)
                     {
-                        model.CourseLesson.UrlPDF = model.CoursePdf.NameFile;
+                        model.CourseLesson.UrlPDF = pathUpload + subPath + model.CoursePdf.NameFile;
                     }
                     await _courseLessonRepo.UpdateAsync(model.CourseLesson);
 
@@ -670,9 +848,6 @@ namespace RERPAPI.Controllers.KHOAHOC
                         }
                     }
                 }
-
-
-
 
                 return Ok(ApiResponseFactory.Success(model, "Lưu bài học thành công"));
             }
@@ -695,7 +870,7 @@ namespace RERPAPI.Controllers.KHOAHOC
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi GET lesson file bay lesonId: {ex.Message}"));
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi GET lesson file by lesonId: {ex.Message}"));
             }
         }
 
@@ -708,7 +883,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                       .Select(id => int.Parse(id.Trim()))
                       .ToList();
 
-//                var newsletterFile = _newsletterFileRepo.GetAll(x => x.IsDeleted == false).Where(y => idList.Contains(y.ID));
+                //                var newsletterFile = _newsletterFileRepo.GetAll(x => x.IsDeleted == false).Where(y => idList.Contains(y.ID));
 
                 foreach (var item in idList)
                 {
