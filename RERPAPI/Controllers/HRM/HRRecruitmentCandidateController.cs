@@ -131,16 +131,19 @@ namespace RERPAPI.Controllers.HRM
                     DateStart = dateStart,
                     DateEnd = dateEnd,
                     FilterText = keyword?.Trim(),
+                    
+
                 };
                 var result = await SqlDapper<dynamic>.ProcedureToListAsync("spGetHrRecruitmentCandidate", param);
 
                 var dtMaster = ((IEnumerable<dynamic>)result).ToList();
 
-                if (!isHr)
+                if (!isHr)  
                 {
                     dtMaster = dtMaster
-                        .Where(x => x.EmployeeRequestID == _currentUser.EmployeeID)
+                        .Where(x => x.EmployeeRequestID == _currentUser.EmployeeID|| x.InterviewerID == _currentUser.EmployeeID)
                         .ToList();
+                   
                 }
 
                 return Ok(ApiResponseFactory.Success(dtMaster, null));

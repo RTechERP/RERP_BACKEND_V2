@@ -27,6 +27,7 @@ using RERPAPI.Repo.GenericEntity.HRM.DepartmentRequire;
 using RERPAPI.Repo.GenericEntity.HRM.HRRecruitmentInterviewAssessment;
 using RERPAPI.Repo.GenericEntity.HRM.ProductProtectiveGear;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
+using RERPAPI.Repo.GenericEntity.HRM.FlightBooking;
 using RERPAPI.Repo.GenericEntity.HRRecruitmentExamRepo;
 using RERPAPI.Repo.GenericEntity.MeetingMinutesRepo;
 using RERPAPI.Repo.GenericEntity.Project;
@@ -341,6 +342,8 @@ builder.Services.AddScoped<VehicleRepairHistoryFileRepo>();
 builder.Services.AddScoped<VehicleRepairHistoryRepo>();
 builder.Services.AddScoped<VehicleRepairRepo>();
 builder.Services.AddScoped<VehicleRepairTypeRepo>();
+builder.Services.AddScoped<FlightBookingManagementRepo>();
+builder.Services.AddScoped<FlightBookingProposalRepo>();
 
 builder.Services.AddScoped<HandoverApproveRepo>();
 builder.Services.AddScoped<HandoverAssetManagementRepo>();
@@ -435,8 +438,6 @@ builder.Services.AddScoped<AGVHistoryProductRepo>();
 #region YCCV
 builder.Services.AddScoped<JobRequirementRepo>();
 builder.Services.AddScoped<JobRequirementDetailRepo>();
-//builder.Services.AddScoped<JobRequirementApprovedRepo>();
-//builder.Services.AddScoped<DepartmentRequiredApprovalsRepo>();
 builder.Services.AddScoped<DepartmentRequiredRepo>();
 builder.Services.AddScoped<HCNSProposalsRepo>();
 #endregion
