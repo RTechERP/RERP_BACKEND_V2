@@ -597,7 +597,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 var employeeData = await connection.QueryMultipleAsync("spGetEmployee", param, commandType: System.Data.CommandType.StoredProcedure);
 
                 var employees = (await employeeData.ReadAsync<EmployeeCommonDTO>());
-                var approverSales = employees.Where(x => x.DepartmentID == 3 || _roleConfig.EmployeeIDSaleApproveDNTTDBs.Contains(x.ID)).ToList();
+                var approverSales = employees.Where(x => (x.DepartmentID == 28 || x.DepartmentID == 29 || x.DepartmentID == 30) || _roleConfig.EmployeeIDSaleApproveDNTTDBs.Contains(x.ID)).ToList();
                 var approverBGDs = employees.Where(x => x.DepartmentID == 1).ToList();
 
                 var steps = _approveFollowRepo.GetAll(x => x.IsDeleted != true);
