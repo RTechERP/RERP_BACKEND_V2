@@ -138,6 +138,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<BillImportQCDetailFile> BillImportQCDetailFiles { get; set; }
 
+    public virtual DbSet<BillImportSaleLog> BillImportSaleLogs { get; set; }
+
     public virtual DbSet<BillImportTechDetailSerial> BillImportTechDetailSerials { get; set; }
 
     public virtual DbSet<BillImportTechnical> BillImportTechnicals { get; set; }
@@ -2379,6 +2381,20 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.FileName).HasMaxLength(550);
             entity.Property(e => e.FileType).HasComment("1: Pur checksheet,2: Tech report");
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<BillImportSaleLog>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__BillImpo__CDEB13D8757DA39C");
+
+            entity.ToTable("BillImportSaleLog");
+
+            entity.Property(e => e.ContentLog).HasMaxLength(500);
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.TypeLog).HasMaxLength(255);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
