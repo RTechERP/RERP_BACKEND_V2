@@ -1,4 +1,4 @@
-﻿using ClosedXML.Excel;
+using ClosedXML.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
@@ -41,6 +41,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         private readonly ProductGroupWareHouseRepo _productGroupWareHouseRepo;
         private readonly ProductSaleGroupWarehouseLinkRepo _productSaleGroupWarehouseLinkRepo;
         private readonly ProductSaleRepo _productSaleRepo;
+        private readonly BillImportSaleLogRepo _billImportSaleLogRepo;
         //private readonly ProductSaleGroupWarehouseLink
 
 
@@ -60,7 +61,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             DocumentImportPONCCRepo documentImportPONCCRepo, EmployeeRepo employeeRepo
             , PONCCRepo pONCCRepo
             ,ProductSaleGroupWarehouseLinkRepo productSaleGroupWarehouseLinkRepo,
-            ProductGroupWareHouseRepo productGroupWareHouseRepo, ProductSaleRepo productSaleRepo)
+            ProductGroupWareHouseRepo productGroupWareHouseRepo, ProductSaleRepo productSaleRepo,
+            BillImportSaleLogRepo billImportSaleLogRepo)
         {
             _billImportRepo = billImportRepo;
             _billImportLogRepo = billImportLogRepo;
@@ -78,6 +80,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             _productGroupWareHouseRepo = productGroupWareHouseRepo;
             _productSaleGroupWarehouseLinkRepo = productSaleGroupWarehouseLinkRepo;
             _productSaleRepo = productSaleRepo;
+            _billImportSaleLogRepo = billImportSaleLogRepo;
         }
         /// <summary>
         /// lấy danh sách phiếu nhập
@@ -574,11 +577,32 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                             };
                             await _billDocumentImportRepo.CreateAsync(billDocumentImport);
                         }
+
+                        _billImportSaleLogRepo.Create(new BillImportSaleLog {
+                            BillImportID = billImportId,
+                            TypeLog = "TẠO MỚI PHIẾU",
+                            ContentLog = $"Tạo mới phiếu nhập",
+                            CreatedBy = currentUser.LoginName,
+                            CreatedDate = DateTime.Now
+                        });
                     }
                     else
                     {
+                        var existingMaster = _billImportRepo.GetSingleNoTracking(x => x.ID == dto.billImport.ID);
                         await _billImportRepo.UpdateAsync(dto.billImport);
                         billImportId = dto.billImport.ID;
+
+                        List<string> changeDetails = _billImportSaleLogRepo.GetEntityChanges(existingMaster, dto.billImport);
+                        if (changeDetails.Any())
+                        {
+                            _billImportSaleLogRepo.Create(new BillImportSaleLog {
+                                BillImportID = billImportId,
+                                TypeLog = "CẬP NHẬT PHIẾU",
+                                ContentLog = $"Cập nhật phiếu nhập: {string.Join(", ", changeDetails)}",
+                                CreatedBy = currentUser.LoginName,
+                                CreatedDate = DateTime.Now
+                            });
+                        }
                     }
 
                     // Xóa chi tiết cũ
@@ -596,6 +620,15 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                                 {
                                     await _invoiceLinkRepo.DeleteByAttributeAsync("BillImportDetailID", id);
                                 }
+
+                                var deletedProductName = _productSaleRepo.GetByID(item.ProductID ?? 0)?.ProductName ?? $"ID:{item.ProductID}";
+                                _billImportSaleLogRepo.Create(new BillImportSaleLog {
+                                    BillImportID = billImportId,
+                                    TypeLog = "XOÁ CHI TIẾT",
+                                    ContentLog = $"Xoá chi tiết phiếu nhập: {deletedProductName}",
+                                    CreatedBy = currentUser.LoginName,
+                                    CreatedDate = DateTime.Now
+                                });
                             }
                         }
                     }
@@ -607,6 +640,31 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         {
                             detail.IsDeleted = false;
                             await _billImportDetailRepo.CreateAsync(detail);
+
+                            var addedProductName = _productSaleRepo.GetByID(detail.ProductID ?? 0)?.ProductName ?? $"ID:{detail.ProductID}";
+                            var addedParts = new List<string>();
+                            if (detail.QtyRequest != null) addedParts.Add($"SL YC thực tế: {detail.QtyRequest}");
+                            if (detail.Qty != null) addedParts.Add($"SL thực tế: {detail.Qty}");
+                            if (!string.IsNullOrWhiteSpace(detail.UnitName)) addedParts.Add($"ĐVT: {detail.UnitName}");
+                            if (!string.IsNullOrWhiteSpace(detail.ProjectName)) addedParts.Add($"Dự án: {detail.ProjectName}");
+                            if (!string.IsNullOrWhiteSpace(detail.ProjectCode)) addedParts.Add($"Mã DA: {detail.ProjectCode}");
+                            if (!string.IsNullOrWhiteSpace(detail.SomeBill)) addedParts.Add($"Số HĐ: {detail.SomeBill}");
+                            if (detail.DateSomeBill != null) addedParts.Add($"Ngày HĐ: {detail.DateSomeBill:dd/MM/yyyy}");
+                            if (!string.IsNullOrWhiteSpace(detail.BillCodePO)) addedParts.Add($"Mã ĐMH: {detail.BillCodePO}");
+                            if (!string.IsNullOrWhiteSpace(detail.SerialNumber)) addedParts.Add($"Serial: {detail.SerialNumber}");
+                            if (detail.DPO != null) addedParts.Add($"Số ngày CN: {detail.DPO}");
+                            if (detail.DueDate != null) addedParts.Add($"Ngày tới hạn: {detail.DueDate:dd/MM/yyyy}");
+                            if (detail.TaxReduction != null && detail.TaxReduction != 0) addedParts.Add($"Thuế giảm: {detail.TaxReduction:N2}");
+                            if (detail.COFormE != null && detail.COFormE != 0) addedParts.Add($"Chi phí FE: {detail.COFormE:N2}");
+                            if (!string.IsNullOrWhiteSpace(detail.Note)) addedParts.Add($"Ghi chú: {detail.Note}");
+
+                            _billImportSaleLogRepo.Create(new BillImportSaleLog {
+                                BillImportID = billImportId,
+                                TypeLog = "THÊM CHI TIẾT",
+                                ContentLog = $"Thêm chi tiết phiếu nhập: [{addedProductName}] {string.Join(", ", addedParts)}",
+                                CreatedBy = currentUser.LoginName,
+                                CreatedDate = DateTime.Now
+                            });
                         }
                         else
                         {
@@ -614,6 +672,25 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                             var existingDetail = _billImportDetailRepo.GetByID(detail.ID);
                             if (existingDetail != null)
                             {
+                                List<string> changeDetails = _billImportSaleLogRepo.GetEntityChanges(existingDetail, detail);
+
+                                if (changeDetails.Any())
+                                {
+                                    bool isProductChanged = existingDetail.ProductID != detail.ProductID;
+                                    var updatedProductName = _productSaleRepo.GetByID(detail.ProductID ?? 0)?.ProductName ?? $"ID:{detail.ProductID}";
+                                    string contentLogPrefix = isProductChanged 
+                                        ? "Cập nhật chi tiết" 
+                                        : $"Cập nhật chi tiết [{updatedProductName}]";
+
+                                    _billImportSaleLogRepo.Create(new BillImportSaleLog {
+                                        BillImportID = billImportId,
+                                        TypeLog = "CẬP NHẬT CHI TIẾT",
+                                        ContentLog = $"{contentLogPrefix}: {string.Join(", ", changeDetails)}",
+                                        CreatedBy = currentUser.LoginName,
+                                        CreatedDate = DateTime.Now
+                                    });
+                                }
+
                                 _billImportDetailRepo.Update(detail);
                             }
                         }
@@ -623,7 +700,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         var inventoryKey = (dto.billImport.WarehouseID, detail.ProductID);
                         bool existsInDb = inventoryList.Any(x =>
                             x.WarehouseID == dto.billImport.WarehouseID &&
-                            x.ProductSaleID == detail.ProductID);//&& x.ProductGroupID == dto.billImport.KhoTypeID );
+                            x.ProductSaleID == detail.ProductID);
                         bool existsInCurrentBatch = createdProductIds.Contains(inventoryKey);
 
                         if (!existsInDb && !existsInCurrentBatch)
@@ -706,6 +783,26 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        
+
+
+
+        [HttpGet("get-sale-logs/{billImportId}")]
+        public IActionResult GetSaleLogs(int billImportId)
+        {
+            try
+            {
+                var logs = _billImportSaleLogRepo.GetAll(x => x.BillImportID == billImportId && x.IsDeleted != true)
+                                                .OrderByDescending(x => x.CreatedDate)
+                                                .ToList();
+                return Ok(ApiResponseFactory.Success(logs));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         //test
 
         [HttpGet("test")]
