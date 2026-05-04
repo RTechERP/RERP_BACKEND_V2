@@ -653,6 +653,7 @@ builder.Services.AddScoped<HistoryBorrowSaleLogRepo>();
 builder.Services.AddScoped<CommercialPriceRequestRepo>();
 builder.Services.AddScoped<PaymentOrderLogApprovedRepo>();
 builder.Services.AddScoped<CurrencyConfigRepo>();
+builder.Services.AddScoped<BillImportSaleLogRepo>();
 
 
 builder.Services.AddScoped<CurrentUser>(provider =>

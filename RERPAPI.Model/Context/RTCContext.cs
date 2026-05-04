@@ -2390,7 +2390,6 @@ public partial class RTCContext : DbContext
 
             entity.ToTable("BillImportSaleLog");
 
-            entity.Property(e => e.ContentLog).HasMaxLength(500);
             entity.Property(e => e.CreatedBy).HasMaxLength(50);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.TypeLog).HasMaxLength(255);
