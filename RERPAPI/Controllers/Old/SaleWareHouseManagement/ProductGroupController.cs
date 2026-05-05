@@ -104,7 +104,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 //end update 
                 if (dto.Productgroup.ID <= 0)
                 {
-                    int newId = await _productgroupRepo.CreateAsynC(dto.Productgroup);
+                    int newId = await _productgroupRepo.CreateReturnIDAsync(dto.Productgroup);
                     dto.ProductgroupWarehouse.ProductGroupID = newId;
                     await _productgroupwarehouseRepo.CreateAsync(dto.ProductgroupWarehouse);
 

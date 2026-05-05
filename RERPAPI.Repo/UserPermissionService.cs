@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using RERPAPI.IRepo;
+using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
+using RERPAPI.Model.DTO;
+using System.Security;
 
 namespace RERPAPI.Repo
 {
@@ -18,16 +21,31 @@ namespace RERPAPI.Repo
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<bool> HasPermissionAsync(string userId, string permission)
+        public async Task<bool> HasPermissionAsync(string userId, string permission, string permissionNew)
         {
             if (!int.TryParse(userId, out var id)) return false;
 
             var permissions = permission.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries); //NTA B update 051125
+            var permissionsNew = permissionNew.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries); //NTA B update 051125
+            permissions = permissions
+                .Concat(permissionsNew)
+                .Distinct()
+                .ToArray();
+            List<PermissionDTO> lstPermission = await SqlDapper<PermissionDTO>.ProcedureToListTAsync("spGetUserPermissions", new { UserID = id }); //NTA B update 051125
+            //foreach (var perm in permissions) //NTA B update 051125
+            //{
+            //    var hasPerm = lstPermission.Any(p => p.GroupCode == perm);
+            //    if (hasPerm) return true;
+            //    hasPerm = lstPermission.Any(p => p.FunctionCode == perm);
+            //    if (hasPerm) return true;
+            //}
+            var groupSet = new HashSet<string>(lstPermission.Select(p => p.GroupCode));
+            var funcSet = new HashSet<string>(lstPermission.Select(p => p.FunctionCode));
 
-            foreach (var perm in permissions) //NTA B update 051125
+            foreach (var perm in permissions)
             {
-                var hasPerm = await _dbContext.vUserGroupLinks.AnyAsync(p => p.UserID == id && p.Code == perm);
-                if (hasPerm) return true;
+                if (groupSet.Contains(perm) || funcSet.Contains(perm))
+                    return true;
             }
 
             //var isPermission = await _dbContext.vUserGroupLinks.AnyAsync(p => p.UserID == id && p.Code == permission);

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using NPOI.POIFS.Properties;
 using NPOI.SS.Formula.Functions;
+using RERPAPI.Attributes;
 using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -34,6 +35,7 @@ namespace RERPAPI.Controllers.Systems
         }
 
         [HttpGet("")]
+        [RequiresPermission(permissionFunction:"menuapp_view")]
         public async Task<IActionResult> GetAll(string keyword = "")
         {
             try

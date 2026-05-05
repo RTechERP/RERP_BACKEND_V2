@@ -7,9 +7,11 @@ namespace RERPAPI.Attributes
     public class RequiresPermissionAttribute:Attribute
     {
         public string permission;
-        public RequiresPermissionAttribute(string permission)
+        public string PermissionNew;
+        public RequiresPermissionAttribute(string permissionGroup = "", string permissionFunction = "")
         {
-            this.permission = permission;
+            this.permission = permissionGroup;
+            PermissionNew = permissionFunction;
         }
     }
 }
