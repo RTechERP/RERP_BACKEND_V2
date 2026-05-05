@@ -35,7 +35,6 @@ namespace RERPAPI.Controllers.Systems
         }
 
         [HttpGet("")]
-        [RequiresPermission(permissionFunction:"menuapp_view")]
         public async Task<IActionResult> GetAll(string keyword = "")
         {
             try

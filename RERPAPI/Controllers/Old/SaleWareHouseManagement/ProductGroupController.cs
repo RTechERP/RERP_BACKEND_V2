@@ -106,7 +106,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 {
                     int stt = _productgroupRepo.GetAll(x => x.STT > 0).Select(x => x.STT).Max() ?? 0 + 100;
                     dto.Productgroup.STT = stt;
-					int newId = await _productgroupRepo.CreateAsynC(dto.Productgroup);
+					int newId = await _productgroupRepo.CreateReturnIDAsync(dto.Productgroup);
                     dto.ProductgroupWarehouse.ProductGroupID = newId;
                     await _productgroupwarehouseRepo.CreateAsync(dto.ProductgroupWarehouse);
 
