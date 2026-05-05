@@ -386,7 +386,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
 
                 foreach (var file in files)
                 {
-                    var result = await FileHelper.UploadFile(file, pathUpload);
+                    var result = await FileHelper.UploadFileHoldName(file, pathUpload);
 
                     if (result.status == 1)
                     {
@@ -437,7 +437,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
 
                 foreach (var file in files)
                 {
-                    var result = await FileHelper.UploadFile(file, pathUpload);
+                    var result = await FileHelper.UploadFileHoldName(file, pathUpload);
 
                     if (result.status == 1)
                     {
