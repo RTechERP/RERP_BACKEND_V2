@@ -6,12 +6,12 @@ namespace RERPAPI.Attributes
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true)]
     public class RequiresPermissionAttribute:Attribute
     {
-        public string permission;
-        public string PermissionNew;
+        public string PermissionGroup;
+        public string PermissionFunction;
         public RequiresPermissionAttribute(string permissionGroup = "", string permissionFunction = "")
         {
-            this.permission = permissionGroup;
-            PermissionNew = permissionFunction;
+            PermissionGroup = permissionGroup;
+            PermissionFunction = permissionFunction;
         }
     }
 }
