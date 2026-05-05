@@ -42,5 +42,54 @@ namespace RERPAPI.Middleware
                 throw new Exception(ex.Message);
             }
         }
-    }
+		public static async Task<APIResponse> UploadFileHoldName(IFormFile file, string path, string newFileName = "")
+		{
+			try
+			{
+				// Tạo thư mục nếu chưa tồn tại
+				if (!Directory.Exists(path))
+				{
+					Directory.CreateDirectory(path);
+				}
+
+				if (file.Length > 0)
+				{
+					string fileExtension = Path.GetExtension(file.FileName);
+					string originalFileName = Path.GetFileNameWithoutExtension(file.FileName);
+
+					// Nếu có newFileName thì dùng, không thì dùng tên gốc
+					string baseFileName = !string.IsNullOrWhiteSpace(newFileName)
+						? Path.GetFileNameWithoutExtension(newFileName)
+						: originalFileName;
+
+					string finalFileName = baseFileName + fileExtension;
+					string fullPath = Path.Combine(path, finalFileName);
+
+					int count = 1;
+
+					// Nếu file đã tồn tại thì thêm (1), (2), ...
+					while (File.Exists(fullPath))
+					{
+						finalFileName = $"{baseFileName} ({count}){fileExtension}";
+						fullPath = Path.Combine(path, finalFileName);
+						count++;
+					}
+
+					// Lưu file
+					using (var stream = new FileStream(fullPath, FileMode.Create))
+					{
+						await file.CopyToAsync(stream);
+					}
+
+					return ApiResponseFactory.Success(finalFileName, "Upload thành công!");
+				}
+
+				return ApiResponseFactory.Fail(null, "");
+			}
+			catch (Exception ex)
+			{
+				throw new Exception(ex.Message);
+			}
+		}
+	}
 }
