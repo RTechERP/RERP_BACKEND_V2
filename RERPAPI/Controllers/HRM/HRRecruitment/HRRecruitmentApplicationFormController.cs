@@ -88,7 +88,7 @@ namespace RERPAPI.Controllers.HRM
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
 
                 var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x =>
-          (x.Code == "N2" || x.Code == "N1" || currentUser.IsAdmin == true) &&
+          (x.Code == "N2" || x.Code == "N1" || x.Code == "N94" || currentUser.IsAdmin == true) &&
           x.UserID == currentUser.ID);
                 int requestID;
                 if (vUserHR != null)
@@ -151,7 +151,7 @@ namespace RERPAPI.Controllers.HRM
             }
         }
         [Authorize]
-        [RequiresPermission("N1,N2")]
+        [RequiresPermission("N1,N2,N94")]
         //Xóa form thông tin ứng viên 
         [HttpGet("delete-application-form")]
         public async Task<IActionResult> DeleteApplicationForm([FromQuery]
