@@ -70,7 +70,7 @@ namespace RERPAPI.Controllers.HRM
             }
 
         }
-        [RequiresPermission("N1,N2")]
+        [RequiresPermission("N1,N2,N94",permissionFunction: "frmCandidate_View")]
         //Lấy UserName
         [HttpGet("get-username-candidate")]
         public IActionResult GetUserName()
@@ -120,7 +120,7 @@ namespace RERPAPI.Controllers.HRM
 
                 bool isHr = _currentUser.Permissions
                             .Split(',')
-                            .Any(p => p.Trim() == "N1" || p.Trim() == "N2") || _currentUser.IsAdmin;
+                            .Any(p => p.Trim() == "N1" || p.Trim() == "N2"||p.Trim()=="N94") || _currentUser.IsAdmin;
 
                 var param = new
                 {
@@ -157,7 +157,7 @@ namespace RERPAPI.Controllers.HRM
 
 
         [HttpPost("delete")]
-        [RequiresPermission("N1,N2")]
+        [RequiresPermission("N1,N2,N94")]
         public async Task<IActionResult> DeleteMultipleHr([FromBody] List<int> listIds)
         {
             try
@@ -197,7 +197,7 @@ namespace RERPAPI.Controllers.HRM
         }
 
         [HttpPost("update-status")]
-        [RequiresPermission("N1,N2")]
+        [RequiresPermission("N1,N2,N94")]
         public async Task<IActionResult> UpdateStatus([FromForm] HRRecruitmentCandidateDTO data)
         {
             try
@@ -272,7 +272,7 @@ namespace RERPAPI.Controllers.HRM
         }
 
         [HttpGet("download-file-cv")]
-        [RequiresPermission("N1,N2")]
+        [RequiresPermission("N1,N2,N94")]
         public IActionResult DownloadFileCv(int id)
         {
             try
@@ -323,7 +323,7 @@ namespace RERPAPI.Controllers.HRM
 
         [HttpPost("save-data")]
         [Consumes("multipart/form-data")]
-        [RequiresPermission("N1,N2")]
+        [RequiresPermission("N1,N2,N94")]
         public async Task<IActionResult> SaveData([FromForm] HRRecruitmentCandidateDTO data)
         {
             try
@@ -443,7 +443,7 @@ namespace RERPAPI.Controllers.HRM
         }
 
         [HttpPost("send-interview-mail")]
-        [RequiresPermission("N1,N2")]
+        [RequiresPermission("N1,N2,N94")]
         public async Task<IActionResult> SendEmail([FromBody] List<EmployeeSendEmailDTO> sendEmails)
         {
             try
@@ -482,7 +482,7 @@ namespace RERPAPI.Controllers.HRM
             }
         }
         [HttpPost("send-offer-letter-mail")]
-        [RequiresPermission("N1,N2")]
+        [RequiresPermission("N1,N2,N94")]
         public async Task<IActionResult> SendEmailOferLetter([FromBody] List<EmployeeSendEmail> sendEmails)
         {
             try
