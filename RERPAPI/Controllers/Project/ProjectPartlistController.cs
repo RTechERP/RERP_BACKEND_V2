@@ -52,7 +52,7 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                var dt = SQLHelper<dynamic>.ProcedureToList("spGetProjectPartList_Khanh", new string[] { "@ProjectID", "@PartListTypeID", "@IsDeleted", "@Keyword", "@IsApprovedTBP", "@IsApprovedPurchase", "@ProjectPartListVersionID" }, new object[] { param.ProjectID, param.PartlistTypeID, param.IsDeleted, param.Keywords, param.IsApprovedTBP, param.IsApprovedPurchase, param.ProjectPartListVersionID });
+                var dt = SQLHelper<dynamic>.ProcedureToList("spGetProjectPartList_Khanh", new string[] { "@ProjectID", "@PartListTypeID", "@IsDeleted", "@Keyword", "@IsApprovedTBP", "@IsApprovedPurchase", "@ProjectPartListVersionID", "@IsConsumable" }, new object[] { param.ProjectID, param.PartlistTypeID, param.IsDeleted, param.Keywords, param.IsApprovedTBP, param.IsApprovedPurchase, param.ProjectPartListVersionID, param.IsConsumable });
 
                 return Ok(ApiResponseFactory.Success(
                     SQLHelper<object>.GetListData(dt, 0),
@@ -248,7 +248,7 @@ namespace RERPAPI.Controllers.Project
                     {
                         return BadRequest(ApiResponseFactory.Fail(null, $"Lỗi: {messageError}"));
                     }
-                    if(item.StatusPriceRequest < 1)
+                    if (item.StatusPriceRequest < 1)
                     {
                         return BadRequest(ApiResponseFactory.Fail(null, $"Vật tư Stt [{item.STT}] chưa được báo giá lần nào.\nVui lòng chọn chức năng báo giá!"));
                     }
@@ -1086,14 +1086,72 @@ namespace RERPAPI.Controllers.Project
                     return BadRequest(ApiResponseFactory.Fail(null, result.Message));
 
                 // Có diff → yêu cầu người dùng chọn Excel hoặc Kho
+
+                string products = "";
+                foreach (var item in request.Items)
+                {
+                    #region Check sản phẩm kho vật tư tiêu hao
+                    if (request.IsConsumable == true)
+                    {
+                        string productCode = item.ProductCode?.Trim();
+                        switch (request.ProjectTypeID)
+                        {
+                            case 2: // cơ
+                                var checkProductVtthC = _productSaleRepo.GetAll(x =>
+                                    x.ProductCode == productCode &&
+                                    x.IsDeleted != true &&
+                                    x.ProductGroupID == 103
+                                ).Any();
+
+                                if (!checkProductVtthC)
+                                {
+                                    products += productCode + ",";
+                                    continue;
+                                }
+                                break;
+                            case 8: // điện
+                                var checkProductVtthD = _productSaleRepo.GetAll(x =>
+                                    x.ProductCode == productCode &&
+                                    x.IsDeleted != true &&
+                                    x.ProductGroupID == 83
+                                ).Any();
+
+                                if (!checkProductVtthD)
+                                {
+                                    products += productCode + ",";
+                                    continue;
+                                }
+                                break;
+                            case 17: // vtth
+                                var checkProductVtth = _productSaleRepo.GetAll(x =>
+                                    x.ProductCode.ToLower().Trim() == productCode.ToLower().Trim() &&
+                                    x.IsDeleted != true &&
+                                    x.ProductGroupID == 80
+                                    ).Any();
+
+                                if (!checkProductVtth)
+                                {
+                                    products += productCode + ",";
+                                    continue;
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    #endregion
+                }
+
+
                 return Ok(new
                 {
                     success = true,
                     message = result.Diffs.Any()
-                        ? "Phát hiện khác biệt với kho, vui lòng xác nhận!"
-                        : "Dữ liệu hợp lệ!",
+                    ? "Phát hiện khác biệt với kho, vui lòng xác nhận!"
+                    : "Dữ liệu hợp lệ!",
                     needConfirm = result.Diffs.Any(),
-                    diffs = result.Diffs
+                    diffs = result.Diffs,
+                    products = products
                 });
             }
             catch (Exception ex)
@@ -1207,6 +1265,7 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
+                string products = "";
                 // --- 1. Áp dụng diff vào dữ liệu Excel ---
                 if (request.Diffs != null && request.Diffs.Any())
                 {
@@ -1251,6 +1310,57 @@ namespace RERPAPI.Controllers.Project
                 {
                     if (string.IsNullOrEmpty(item.TT) || !regex.IsMatch(item.TT))
                         continue;
+
+                    #region Check sản phẩm kho vật tư tiêu hao
+                    if (request.IsConsumable == true)
+                    {
+                        string productCode = item.ProductCode?.Trim();
+                        switch (request.ProjectTypeID)
+                        {
+                            case 2: // cơ
+                                var checkProductVtthC = _productSaleRepo.GetAll(x =>
+                                    x.ProductCode == productCode &&
+                                    x.IsDeleted != true &&
+                                    x.ProductGroupID == 103
+                                ).Any();
+
+                                if (!checkProductVtthC)
+                                {
+                                    products += productCode + ",";
+                                    continue;
+                                }
+                                break;
+                            case 8: // điện
+                                var checkProductVtthD = _productSaleRepo.GetAll(x =>
+                                    x.ProductCode == productCode &&
+                                    x.IsDeleted != true &&
+                                    x.ProductGroupID == 83
+                                ).Any();
+
+                                if (!checkProductVtthD)
+                                {
+                                    products += productCode + ",";
+                                    continue;
+                                }
+                                break;
+                            case 17: // vtth
+                                var checkProductVtth = _productSaleRepo.GetAll(x =>
+                                    x.ProductCode.ToLower().Trim() == productCode.ToLower().Trim() &&
+                                    x.IsDeleted != true &&
+                                    x.ProductGroupID == 80
+                                    ).Any();
+
+                                if (!checkProductVtth)
+                                {
+                                    products += productCode + ",";
+                                    continue;
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    #endregion
 
                     // Tìm record cũ theo TT
                     var exist = oldItems.FirstOrDefault(x => x.TT == item.TT);
@@ -1346,10 +1456,13 @@ namespace RERPAPI.Controllers.Project
                     diffData = SQLHelper<object>.GetListData(dt2, 0);
                 }
 
+                //string message = string.IsNullOrWhiteSpace(products) ? "Nhập dữ liệu excel thành công!" : $"Nhập dữ liệu excel thành công những mã vật tư [{products.TrimEnd(',')}] tồn tại trong kho vật tư tiêu hao, sẽ được bỏ qua!";
+                string message = "Nhập dữ liệu excel thành công!";
                 return Ok(ApiResponseFactory.Success(new
                 {
-                    DiffData = diffData
-                }, "Nhập dữ liệu excel thành công"));
+                    DiffData = diffData,
+                    product = products
+                }, message));
             }
             catch (Exception ex)
             {
@@ -2366,6 +2479,7 @@ namespace RERPAPI.Controllers.Project
                     newVersion.ProjectSolutionID = versionModel.ProjectSolutionID;
                     newVersion.ProjectTypeID = versionModel.ProjectTypeID;
                     newVersion.ApprovedID = versionModel.ApprovedID;
+                    newVersion.IsConsumable = versionModel.IsConsumable;
 
                     await _partlistVersionRepo.CreateAsync(newVersion);
 
@@ -2487,5 +2601,4 @@ namespace RERPAPI.Controllers.Project
             }
         }
     }
-
 }
