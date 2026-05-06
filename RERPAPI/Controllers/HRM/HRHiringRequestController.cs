@@ -401,7 +401,9 @@ namespace RERPAPI.Controllers
           [FromQuery] string? findText = null,
           [FromQuery] DateTime? dateStart = null,
           [FromQuery] DateTime? dateEnd = null,
-          [FromQuery] int id = 0
+          [FromQuery] int id = 0,
+          [FromQuery] int IsCompleted = -1
+
       )
         {
             try
@@ -425,8 +427,8 @@ namespace RERPAPI.Controllers
                 }
                 var dt = SQLHelper<object>.ProcedureToList(
                     "spGetHRHiringRequest",
-                    new string[] { "Keyword", "DepartmentID", "DateStart", "DateEnd", "ID", "@EmployeeRequestID" },
-                    new object[] { findText ?? "", departmentID, ds, de, id,requestID }
+                    new string[] { "Keyword", "DepartmentID", "DateStart", "DateEnd", "ID", "@EmployeeRequestID", "@IsComplete" },
+                    new object[] { findText ?? "", departmentID, ds, de, id,requestID, IsCompleted }
                 );
                 var data = SQLHelper<object>.GetListData(dt, 0);
                 return Ok(ApiResponseFactory.Success(data, ""));
@@ -467,6 +469,7 @@ namespace RERPAPI.Controllers
             public int DepartmentID { get; set; } = 0;
             public string? Keyword { get; set; } = "";
             public int Id { get; set; } = 0;
+            public int IsComplete { get; set; } = -1;
         }
 
         [HttpPost("getdata")]
@@ -522,8 +525,8 @@ namespace RERPAPI.Controllers
 
                     var dt = SQLHelper<object>.ProcedureToList(
                         "spGetHRHiringRequest",
-                        new string[] { "Keyword", "DepartmentID", "DateStart", "DateEnd", "ID", "EmployeeRequestID" },
-                        new object[] { keyword ?? "", departmentID, ds_formatted, de_formatted, 0, requestID }
+                        new string[] { "Keyword", "DepartmentID", "DateStart", "DateEnd", "ID", "@EmployeeRequestID", "@IsComplete" },
+                        new object[] { keyword ?? "", departmentID, ds_formatted, de_formatted, 0, requestID, request.IsComplete }
                     );
                     var data = SQLHelper<object>.GetListData(dt, 0);
                     return Ok(ApiResponseFactory.Success(new List<object> { data }, "Lấy danh sách thành công!"));

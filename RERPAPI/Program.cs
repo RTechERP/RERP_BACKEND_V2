@@ -27,6 +27,7 @@ using RERPAPI.Repo.GenericEntity.HRM.DepartmentRequire;
 using RERPAPI.Repo.GenericEntity.HRM.HRRecruitmentInterviewAssessment;
 using RERPAPI.Repo.GenericEntity.HRM.ProductProtectiveGear;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
+using RERPAPI.Repo.GenericEntity.HRM.FlightBooking;
 using RERPAPI.Repo.GenericEntity.HRRecruitmentExamRepo;
 using RERPAPI.Repo.GenericEntity.MeetingMinutesRepo;
 using RERPAPI.Repo.GenericEntity.Project;
@@ -341,6 +342,8 @@ builder.Services.AddScoped<VehicleRepairHistoryFileRepo>();
 builder.Services.AddScoped<VehicleRepairHistoryRepo>();
 builder.Services.AddScoped<VehicleRepairRepo>();
 builder.Services.AddScoped<VehicleRepairTypeRepo>();
+builder.Services.AddScoped<FlightBookingManagementRepo>();
+builder.Services.AddScoped<FlightBookingProposalRepo>();
 
 builder.Services.AddScoped<HandoverApproveRepo>();
 builder.Services.AddScoped<HandoverAssetManagementRepo>();
@@ -435,8 +438,6 @@ builder.Services.AddScoped<AGVHistoryProductRepo>();
 #region YCCV
 builder.Services.AddScoped<JobRequirementRepo>();
 builder.Services.AddScoped<JobRequirementDetailRepo>();
-//builder.Services.AddScoped<JobRequirementApprovedRepo>();
-//builder.Services.AddScoped<DepartmentRequiredApprovalsRepo>();
 builder.Services.AddScoped<DepartmentRequiredRepo>();
 builder.Services.AddScoped<HCNSProposalsRepo>();
 #endregion
@@ -652,6 +653,7 @@ builder.Services.AddScoped<HistoryBorrowSaleLogRepo>();
 builder.Services.AddScoped<CommercialPriceRequestRepo>();
 builder.Services.AddScoped<PaymentOrderLogApprovedRepo>();
 builder.Services.AddScoped<CurrencyConfigRepo>();
+builder.Services.AddScoped<BillImportSaleLogRepo>();
 
 
 builder.Services.AddScoped<CurrentUser>(provider =>
@@ -686,10 +688,10 @@ builder.Services.AddCors(options =>
     });
 });
 // Chỉ khởi tạo 1 lần duy nhất khi chạy server
-//FirebaseApp.Create(new AppOptions()
-//{
-//    Credential = GoogleCredential.FromFile("firebase-adminsdk.json") // Thay bằng đường dẫn thực tế
-//});
+FirebaseApp.Create(new AppOptions()
+{
+    Credential = GoogleCredential.FromFile("firebase-adminsdk.json") // Thay bằng đường dẫn thực tế
+});
 
 
 builder.Services.AddSingleton<SseService>();

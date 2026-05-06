@@ -7,6 +7,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using System.Collections.Immutable;
+using System.Net.NetworkInformation;
 
 namespace RERPAPI.Controllers.KHOAHOC
 {
@@ -623,12 +624,59 @@ namespace RERPAPI.Controllers.KHOAHOC
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
-
+                var param = new
+                {
+                    CourseCatalogID = courseCatalogID,
+                    EmployeeID = currentUser.EmployeeID,
+                    Status = -1,
+                    CatalogType = catalogType
+                };
                 //var listCourseC
-                var data = SQLHelper<object>.ProcedureToList("spGetCourseNew1",
-                                                   new string[] { "@CourseCatalogID", "@EmployeeID", "@Status", "@CatalogType" },
-                                                   new object[] { courseCatalogID, currentUser.EmployeeID, -1, catalogType });
-                var listCourseParent = SQLHelper<object>.GetListData(data, 0);
+                var listCourseParent = await SqlDapper<CourseDTO>.ProcedureToListTAsync("spGetCourseNew1",
+                                                  param);
+
+                var listCourseChile = new List<CourseDTO>();
+
+
+                for (int i = 0; i < listCourseParent.Count; i++)
+                {
+
+                    if (i == 0) continue;
+
+                    CourseDTO course = listCourseParent[i - 1];
+
+                    if (course.CatalogType != 2)
+                    {
+                        if ((course.NumberLesson == course.TotalHistoryLession && course.Evaluate == 1) || currentUser.IsLeader > 0 || currentUser.IsAdmin  || currentUser.EmployeeID == 55)
+                        {
+                            listCourseParent[i].Status = 1;
+                        }
+                        else
+                        {
+                            listCourseParent[i].Status = 0;
+                        }
+                    }
+                }
+
+
+                if (!listCourseChile.Any(x => x.Evaluate <= 0))
+                {
+                    return Ok(ApiResponseFactory.Success(listCourseParent, ""));
+                }
+
+                var childIds = new HashSet<int>(listCourseChile.Select(c => c.ID));
+
+                foreach (var parent in listCourseParent)
+                {
+                    if (parent.Evaluate == 1 || childIds.Contains(parent.ID) || currentUser.IsLeader > 0 || currentUser.IsAdmin || currentUser.EmployeeID == 55)
+                    {
+                        parent.Status = 1; // Đạt hoặc nằm trong listCourseChild → có thể làm
+                    }
+                    else
+                    {
+                        parent.Status = 0; // Còn lại → không thể làm
+                    }
+                }
 
 
                 //for (int i = 1; i < listCourseParent.Count; i++)

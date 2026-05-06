@@ -117,7 +117,7 @@ namespace RERPAPI.Middleware
 
                     try
                     {
-                        var hasPermission = await permissionService.HasPermissionAsync(userId, attr.permission);
+                        var hasPermission = await permissionService.HasPermissionAsync(userId, attr.PermissionGroup,attr.PermissionFunction);
                         if (!hasPermission)
                         {
                             context.Response.StatusCode = StatusCodes.Status403Forbidden;

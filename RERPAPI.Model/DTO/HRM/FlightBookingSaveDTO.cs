@@ -1,22 +1,18 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using RERPAPI.Model.Entities;
 
-namespace RERPAPI.Model.Entities;
+namespace RERPAPI.Model.DTO.HRM;
 
 /// <summary>
-/// Bảng quản lý booking vé máy bay
+/// DTO để lưu thông tin đăng ký vé máy bay (hỗ trợ nhiều người đi cùng lúc)
 /// </summary>
-public partial class FlightBookingManagement
+public class FlightBookingSaveDTO
 {
     /// <summary>
-    /// ID bản ghi
+    /// ID 
     /// </summary>
     public int ID { get; set; }
-
-    /// <summary>
-    /// ID người đi
-    /// </summary>
-    public int? EmployeeID { get; set; }
 
     /// <summary>
     /// Mục đích
@@ -49,42 +45,22 @@ public partial class FlightBookingManagement
     public DateTime? DepartureTime { get; set; }
 
     /// <summary>
-    /// ID người đặt
-    /// </summary>
-    public int? EmployeeBookerID { get; set; }
-
-    /// <summary>
-    /// Ngày đặt
-    /// </summary>
-    public DateTime? BookedDate { get; set; }
-
-    /// <summary>
     /// Ghi chú
     /// </summary>
     public string? Note { get; set; }
 
     /// <summary>
-    /// Ngày tạo
+    /// ID người đặt vé
     /// </summary>
-    public DateTime? CreatedDate { get; set; }
+    public int? EmployeeBookerID { get; set; }
 
     /// <summary>
-    /// Người tạo
+    /// Danh sách người đi (Employee IDs)
     /// </summary>
-    public string? CreatedBy { get; set; }
+    public List<int> TravelerIDs { get; set; } = new List<int>();
 
     /// <summary>
-    /// Ngày cập nhật
+    /// Danh sách các phương án đề xuất
     /// </summary>
-    public DateTime? UpdatedDate { get; set; }
-
-    /// <summary>
-    /// Người cập nhật
-    /// </summary>
-    public string? UpdatedBy { get; set; }
-
-    /// <summary>
-    /// Trạng thái xóa mềm (0: chưa xóa, 1: đã xóa)
-    /// </summary>
-    public bool? IsDeleted { get; set; }
+    public List<FlightBookingProposal> Proposals { get; set; } = new List<FlightBookingProposal>();
 }

@@ -104,4 +104,6 @@ public partial class PaymentOrder
     public int? RegisterContractID { get; set; }
 
     public string? HRNote { get; set; }
+
+    public int? TaxCompanyID { get; set; }
 }

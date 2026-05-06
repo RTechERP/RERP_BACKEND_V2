@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
@@ -200,8 +200,8 @@ namespace RERPAPI.Controllers.Old
 
 
                             // Phụ cấp
-                            //employeePayrollDetail.ReferenceIndustry = decimal.Parse(row.GetString("Phụ cấp chuyên cần tham chiếu"));
-                            employeePayrollDetail.RealIndustry = row["RealIndustry"] != null ? Convert.ToDecimal(row["RealIndustry"].ToString()) : 0;
+                      //      employeePayrollDetail. = 0;
+                            employeePayrollDetail.RealIndustry = 0;
                             employeePayrollDetail.AllowanceMeal = row["AllowanceMeal"] != null ? Convert.ToDecimal(row["AllowanceMeal"].ToString()) : 0;
                             employeePayrollDetail.Allowance_OT_Early = row["Allowance_OT_Early"] != null ? Convert.ToDecimal(row["Allowance_OT_Early"].ToString()) : 0;
 

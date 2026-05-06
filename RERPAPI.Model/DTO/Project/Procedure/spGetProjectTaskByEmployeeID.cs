@@ -34,7 +34,7 @@ namespace RERPAPI.Model.DTO.Project.Procedure
 
         public DateTime? ActualEndDate { get; set; }
 
-        public string? Note { get; set; }
+        //public string? Note { get; set; }
 
         public decimal? TotalDayPlan { get; set; }
 
@@ -42,15 +42,15 @@ namespace RERPAPI.Model.DTO.Project.Procedure
 
         public int? ParentID { get; set; }
 
-        public decimal? TotalDayActual { get; set; }
+        //public decimal? TotalDayActual { get; set; }
 
         /// <summary>
         /// 1:Hạng mục quá hạn,
         /// 0: Hạng mục đúng hạn
         /// </summary>
-        public int? ItemLate { get; set; }
+        //public int? ItemLate { get; set; }
 
-        public decimal? TimeSpan { get; set; }
+        //public decimal? TimeSpan { get; set; }
 
         /// <summary>
         /// Loại công việc
@@ -72,7 +72,7 @@ namespace RERPAPI.Model.DTO.Project.Procedure
         /// <summary>
         /// 0: Chờ duyệt kế hoạch; 1:Leader duyệt kế hoạch; 2:Chờ duyệt thực tế; 3:Leader Duyệt thực tế // 1: Chờ duyệt, 2: Đã hoàn thành, 3: Chưa hoàn thành, default: chưa duyệt
         /// </summary>
-        public int? IsApproved { get; set; }
+        //public int? IsApproved { get; set; }
 
         public string? Code { get; set; }
 
@@ -86,25 +86,25 @@ namespace RERPAPI.Model.DTO.Project.Procedure
 
         public bool? IsUpdateLate { get; set; }
 
-        public string? ReasonLate { get; set; }
+        //public string? ReasonLate { get; set; }
 
-        public DateTime? UpdatedDateReasonLate { get; set; }
+        //public DateTime? UpdatedDateReasonLate { get; set; }
 
-        public bool? IsApprovedLate { get; set; }
+        //public bool? IsApprovedLate { get; set; }
 
         /// <summary>
         /// lưu ID người yêu cầu lấy từ bảng Employee, nếu  = 0 thì là tên KH
         /// </summary>
-        public int? EmployeeRequestID { get; set; }
+        //public int? EmployeeRequestID { get; set; }
 
         /// <summary>
         /// lưu tên người yêu cầu lấy từ bảng Employee, nếu  = 0 thì là tên KH
         /// </summary>
-        public string? EmployeeRequestName { get; set; }
+        //public string? EmployeeRequestName { get; set; }
 
         public bool? IsDeleted { get; set; }
 
-        public string? Location { get; set; }
+        //public string? Location { get; set; }
 
         public int? EmployeeCreateID { get; set; }
 

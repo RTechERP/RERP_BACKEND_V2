@@ -2,7 +2,7 @@
 {
     public interface IUserPermissionService
     {
-        Task<bool> HasPermissionAsync(string userId, string permission);
+        Task<bool> HasPermissionAsync(string userId, string permission,string permissionNew);
 
         Dictionary<string, string> GetClaims();
 
