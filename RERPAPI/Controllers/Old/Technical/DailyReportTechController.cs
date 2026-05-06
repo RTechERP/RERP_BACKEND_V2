@@ -181,7 +181,8 @@ namespace RERPAPI.Controllers.Old.Technical
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 int userId = currentUser.ID;
-                bool isTechnical = currentUser.DepartmentID == 2 ? true : false;
+                var technicalDepartments = new HashSet<int> { 2,24,25,26,27 };
+                bool isTechnical = technicalDepartments.Contains(currentUser.DepartmentID);
 
                 // 1. Kiểm tra request null hoặc empty
                 if (request == null || request.Count == 0)
