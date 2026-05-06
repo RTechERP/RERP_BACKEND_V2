@@ -279,19 +279,14 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     }
 
                     //Get log
-                    var logDb = _logRepo.GetAll(x => x.IsDeleted != true
-                                                    && x.PaymentOrderID == payment.ID
-                                                    && x.Step > 1
-                                                    && x.IsApproved != 0)
-                                        .OrderByDescending(x => x.Step)
-                                        .FirstOrDefault() ?? new PaymentOrderLog();
+
                     var logApproved = _paymentOrderLogApprovedRepo.GetAll(x => x.PaymentOrderID == payment.ID
-                                                      && x.PaymentOrderLogID == logDb.ID
-                                                      && x.IsApproved != 0)
-                                          .FirstOrDefault();
+                                                      //&& x.PaymentOrderLogID == logDb.ID
+                                                      && x.IsApproved != 0)?.OrderByDescending(x => x.ID)?.FirstOrDefault();
                     if (logApproved?.ID > 0)
                     {
-                        string isApprovedText = logDb.IsApproved == 1 ? "duyệt" : (logDb.IsApproved == 2 ? "hủy duyệt" : "yêu cầu bổ sung");
+                        var logDb = _logRepo.GetByID(logApproved?.PaymentOrderLogID ?? 0) ?? new PaymentOrderLog();
+                        string isApprovedText = logApproved.IsApproved == 1 ? "duyệt" : (logApproved.IsApproved == 2 ? "hủy duyệt" : "yêu cầu bổ sung");
                         return BadRequest(ApiResponseFactory.Fail(null, $"Đề nghị [{payment.Code}] đã được {logDb.StepName} {isApprovedText}. Bạn không thể cập nhật!"));
                     }
                 }

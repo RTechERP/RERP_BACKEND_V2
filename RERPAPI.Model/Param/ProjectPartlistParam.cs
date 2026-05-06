@@ -15,5 +15,6 @@ namespace RERPAPI.Model.Param
         public int IsApprovedTBP { get; set; }
         public int IsApprovedPurchase { get; set; }
         public int ProjectPartListVersionID { get; set; }
+        public bool IsConsumable { get; set; }
     }
 }

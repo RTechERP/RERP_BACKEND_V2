@@ -38,4 +38,6 @@ public partial class ProjectPartListVersion
     public bool? IsDeleted { get; set; }
 
     public string? ReasonDeleted { get; set; }
+
+    public bool? IsConsumable { get; set; }
 }

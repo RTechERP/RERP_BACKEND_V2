@@ -627,19 +627,7 @@ builder.Services.AddScoped<HRRecruitmentExamResultImageRepo>();
 builder.Services.AddScoped<HiringRequestExamRepo>();
 builder.Services.AddScoped<HRRecruitmentExamEvaluationFileRepo>();
 #endregion
-#region bình thêm
-//builder.Services.AddScoped<CourseRepo>();
-//builder.Services.AddScoped<CourseExamRepo>();
-//builder.Services.AddScoped<CourseLessonHistoryRepo>();
-//builder.Services.AddScoped<CourseExamResultRepo>();
-//builder.Services.AddScoped<CourseExamResultDetailRepo>();
-//builder.Services.AddScoped<CourseQuestionRepo>();
-//builder.Services.AddScoped<CourseRightAnswerRepo>();
-//builder.Services.AddScoped<CourseExamEvaluateRepo>();
-//builder.Services.AddScoped<CourseCatalogRepo>();
-//builder.Services.AddScoped<DepartmentRepo>();
-//builder.Services.AddScoped<CourseLessonRepo>();
-#endregion
+
 #region RabbitService
 //builder.Services.AddSingleton<RabbitMqConnection>();
 //builder.Services.AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>();

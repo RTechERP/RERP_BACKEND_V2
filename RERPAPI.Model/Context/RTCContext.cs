@@ -7877,6 +7877,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.GroupPO).HasMaxLength(550);
             entity.Property(e => e.IndexPO).HasMaxLength(150);
             entity.Property(e => e.IntoMoney).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.IsOder).HasDefaultValue(false);
             entity.Property(e => e.NetUnitPrice).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.NewRow).HasDefaultValue(0);
@@ -9473,6 +9474,7 @@ public partial class RTCContext : DbContext
                 .IsUnicode(false);
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsConsumable).HasDefaultValue(false);
             entity.Property(e => e.ReasonDeleted).HasMaxLength(550);
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
