@@ -10,6 +10,7 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using System.Globalization;
 using System.Text;
 
 namespace RERPAPI.Controllers.Old.KETOAN
@@ -534,6 +535,186 @@ namespace RERPAPI.Controllers.Old.KETOAN
             }
         }
 
+        [HttpPost("importexcel")]
+        public async Task<IActionResult> ImportExcel([FromBody] List<Dictionary<string, object>> rows)
+        {
+            try
+            {
+                if (rows == null || !rows.Any())
+                    return BadRequest(ApiResponseFactory.Fail(null, "Payload rỗng"));
+
+                int created = 0, skipped = 0;
+                var errors = new List<object>();
+
+                foreach (var row in rows)
+                {
+                    try
+                    {
+                        string companyText = row.GetString("Công ty") ?? "";
+                        string contractGroupText = row.GetString("Phân loại HĐ chính") ?? "";
+                        //string typeName = row.GetString("Loại HĐ") ?? "";
+                        //string partnerName = row.GetString("Tên khách hàng / Nhà cung cấp") ?? "";
+                        string typeCode = row.GetString("Mã loại HĐ") ?? "";
+                        string partnerCode = row.GetString("Mã khách hàng / Nhà cung cấp") ?? "";
+                        string employeeName = row.GetString("NV phụ trách") ?? "";
+
+                        string contractNumber = row.GetString("Số HĐ/PL") ?? "";
+                        string contractContent = row.GetString("Nội dung HĐ") ?? "";
+                        string contentPayment = row.GetString("Nội dung thanh toán") ?? "";
+                        string unit = row.GetString("ĐVT")?.ToUpper();
+                        string note = row.GetString("Thông tin thay đổi");
+
+                        DateTime? dateInput = row.GetNullableDate("Ngày nhập");
+                        DateTime? dateContract = row.GetNullableDate("Ngày HĐ");
+                        DateTime? dateExpired = row.GetNullableDate("Hiệu lực HĐ");
+                        DateTime? dateApprovedGroup = row.GetNullableDate("Ngày duyệt bản mềm");
+                        DateTime? dateReceived = row.GetNullableDate("Ngày trả hồ sơ gốc");
+
+                        decimal contractValue = row.GetDecimal("Giá trị HĐ") ?? 0;
+                        int quantityDocument = row.GetInt("Số lượng hồ sơ") ?? 0;
+
+                        bool isApproved = row.GetBool("Duyệt") ?? false;
+                        bool isReceivedContract = row.GetBool("Nhận hồ sơ gốc") ?? dateReceived.HasValue;
+
+                        int company = GetCompany(companyText);
+                        int contractGroup = GetContractGroup(contractGroupText);
+
+                        if (company <= 0)
+                            throw new Exception($"Không xác định được Công ty: {companyText}");
+
+                        if (contractGroup <= 0)
+                            throw new Exception($"Không xác định được Phân loại HĐ chính: {contractGroupText}");
+
+                        if (string.IsNullOrWhiteSpace(typeCode))
+                            throw new Exception("Thiếu Mã Loại HĐ");
+
+                        if (string.IsNullOrWhiteSpace(partnerCode))
+                            throw new Exception("Thiếu Mã khách hàng / Nhà cung cấp");
+
+                        if (string.IsNullOrWhiteSpace(contractNumber))
+                            throw new Exception("Thiếu Số HĐ/PL");
+
+                        if (string.IsNullOrWhiteSpace(contractContent))
+                            throw new Exception("Thiếu Nội dung HĐ");
+
+                        if (string.IsNullOrWhiteSpace(contentPayment))
+                            throw new Exception("Thiếu Nội dung thanh toán");
+
+                        if (string.IsNullOrWhiteSpace(employeeName))
+                            throw new Exception("Thiếu NV phụ trách");
+
+                        var contractType = _accountingContractTypeRepo.GetAll()
+                            .FirstOrDefault(x => x.TypeCode.Trim().ToLower() == typeCode.Trim().ToLower());
+
+                        if (contractType == null)
+                            throw new Exception($"Không tìm thấy Loại HĐ có mã: {typeCode}");
+
+                        int? customerId = null;
+                        int? supplierId = null;
+
+                        if (contractGroup == 1) // Hợp đồng mua vào
+                        {
+                            var supplier = _supplierSaleRepo.GetAll(x => x.IsDeleted != true)
+                                .FirstOrDefault(x => x.CodeNCC.Trim().ToLower() == partnerCode.Trim().ToLower());
+
+                            if (supplier == null)
+                                throw new Exception($"Không tìm thấy Nhà cung cấp có mã: {partnerCode}");
+
+                            supplierId = supplier.ID;
+                        }
+                        else if (contractGroup == 2) // Hợp đồng bán ra
+                        {
+                            var customer = _customerRepo.GetAll(x => x.IsDeleted != true)
+                                .FirstOrDefault(x => x.CustomerCode.Trim().ToLower() == partnerCode.Trim().ToLower());
+
+                            if (customer == null)
+                                throw new Exception($"Không tìm thấy Khách hàng: {partnerCode}");
+
+                            customerId = customer.ID;
+                        }
+
+                        var employees = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel(
+                            "spGetEmployee",
+                            new string[] { "@Keyword", "@Status" },
+                            new object[] { "", 0 });
+
+                        var employee = employees.FirstOrDefault(x =>
+                            x.FullName.Trim().ToLower() == employeeName.Trim().ToLower()
+                            || x.Code.Trim().ToLower() == employeeName.Trim().ToLower());
+
+                        if (employee == null)
+                            throw new Exception($"Không tìm thấy NV phụ trách: {employeeName}");
+
+                        if (contractType.IsContractValue == true)
+                        {
+                            if (contractValue <= 0)
+                                throw new Exception("Loại hợp đồng này yêu cầu Giá trị HĐ > 0");
+
+                            if (string.IsNullOrWhiteSpace(unit))
+                                throw new Exception("Loại hợp đồng này yêu cầu ĐVT");
+                        }
+
+                        if (isReceivedContract && quantityDocument <= 0)
+                            throw new Exception("Đã nhận hồ sơ gốc thì Số lượng hồ sơ phải > 0");
+
+                        var model = new AccountingContract
+                        {
+                            DateInput = dateInput ?? DateTime.Now,
+                            Company = company,
+                            ContractGroup = contractGroup,
+                            AccountingContractTypeID = contractType.ID,
+                            CustomerID = customerId,
+                            SupplierSaleID = supplierId,
+                            ContractNumber = contractNumber.Trim(),
+                            DateContract = dateContract,
+                            ContractContent = contractContent.Trim(),
+                            ContractValue = contractValue,
+                            ContentPayment = contentPayment.Trim(),
+                            Unit = unit,
+                            DateExpired = dateExpired,
+                            DateIsApprovedGroup = dateApprovedGroup,
+                            EmployeeID = employee.ID,
+                            Note = note,
+                            IsReceivedContract = isReceivedContract,
+                            DateReceived = dateReceived,
+                            QuantityDocument = quantityDocument,
+                            IsApproved = isApproved,
+                            ParentID = 0,
+                            IsDelete = false,
+                            CreatedBy = User.Identity?.Name ?? "System",
+                            CreatedDate = DateTime.Now,
+                            UpdatedBy = User.Identity?.Name ?? "System",
+                            UpdatedDate = DateTime.Now
+                        };
+
+                        await _accountingContractRepo.CreateAsync(model);
+                        created++;
+                    }
+                    catch (Exception ex)
+                    {
+                        skipped++;
+                        errors.Add(new
+                        {
+                            message = ex.Message,
+                            row
+                        });
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    created,
+                    skipped,
+                    errors
+                }, "Import Excel thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
         private void SaveLog(AccountingContract oldC, AccountingContract newC)
         {
             var compare = _accountingContractRepo.DeepEquals(oldC, newC);
@@ -634,6 +815,33 @@ namespace RERPAPI.Controllers.Old.KETOAN
             return null; // OK
         }
 
+        private int GetCompany(string company)
+        {
+            company = company?.Trim().ToUpper() ?? "";
+
+            return company switch
+            {
+                "RTC" => 1,
+                "MVI" => 2,
+                "APR" => 3,
+                "YONKO" => 4,
+                "R-TECH" => 5,
+                _ => 0
+            };
+        }
+
+        private int GetContractGroup(string text)
+        {
+            text = text?.Trim().ToLower() ?? "";
+
+            if (text.Contains("mua"))
+                return 1;
+
+            if (text.Contains("bán") || text.Contains("ban"))
+                return 2;
+
+            return 0;
+        }
 
         public class AccountingContractApprovalDTO
         {
@@ -646,6 +854,92 @@ namespace RERPAPI.Controllers.Old.KETOAN
             public AccountingContract accountingContract { get; set; }
 
 
+        }
+
+
+    }
+    static class ImportExtensions
+    {
+        public static string GetString(this Dictionary<string, object> row, string key)
+        {
+            if (row == null)
+                return null;
+            if (!row.TryGetValue(key, out var val) || val == null)
+                return null;
+            var s = val.ToString()?.Trim();
+            return string.IsNullOrEmpty(s) ? null : s;
+        }
+
+        public static DateTime? GetNullableDate(this Dictionary<string, object> row, string key)
+        {
+            if (row == null)
+                return null;
+            if (!row.TryGetValue(key, out var val) || val == null)
+                return null;
+
+            var str = val.ToString();
+
+            // ISO string
+            if (DateTime.TryParse(str, CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var iso))
+                return iso;
+
+            // dd/MM/yyyy
+            if (DateTime.TryParseExact(str, new[] { "dd/MM/yyyy", "d/M/yyyy" },
+                CultureInfo.InvariantCulture, DateTimeStyles.None, out var dmy))
+                return dmy;
+
+            // yyyy-MM-dd
+            if (DateTime.TryParseExact(str, "yyyy-MM-dd",
+                CultureInfo.InvariantCulture, DateTimeStyles.None, out var ymd))
+                return ymd;
+
+            // Excel serial number
+            if (double.TryParse(str, NumberStyles.Any, CultureInfo.InvariantCulture, out var serial))
+            {
+                var epoch = new DateTime(1899, 12, 30);
+                return epoch.AddDays(serial);
+            }
+
+            return null;
+        }
+
+        public static int? GetInt(this Dictionary<string, object> row, string key)
+        {
+            if (!row.TryGetValue(key, out var val) || val == null)
+                return null;
+
+            if (int.TryParse(val.ToString(), out var result))
+                return result;
+
+            return null;
+        }
+
+        public static decimal? GetDecimal(this Dictionary<string, object> row, string key)
+        {
+            if (!row.TryGetValue(key, out var val) || val == null)
+                return null;
+
+            if (decimal.TryParse(val.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
+                return result;
+
+            return null;
+        }
+
+        public static bool? GetBool(this Dictionary<string, object> row, string key)
+        {
+            if (!row.TryGetValue(key, out var val) || val == null)
+                return null;
+
+            var s = val.ToString()?.Trim().ToLower();
+
+            if (s == "có" || s == "co" || s == "yes" || s == "true" || s == "1")
+                return true;
+
+            if (s == "không" || s == "khong" || s == "no" || s == "false" || s == "0")
+                return false;
+
+            return null;
         }
     }
 }
