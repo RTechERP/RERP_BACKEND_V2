@@ -27,7 +27,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             _hrRecruitmentQuestionImageRepo = hrRecruitmentQuestionImageRepo;
         }
         #region lấy dữ liệu câu hỏi - đáp án
-        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpGet("get-data-question-answers")]
         public async Task<IActionResult> getDataQuestionAnswers(int examID)
         {
@@ -50,7 +50,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         }
         #endregion
         #region lấy đáp án đúng theo mã câu hỏi 
-        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpGet("get-data-right-answers")]
         public async Task<IActionResult> getDataRightAnswers(int questionID)
         {
@@ -71,7 +71,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         #endregion
 
         #region save data câu hỏi - đáp án
-        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpPost("save-data-question-answers")]
         public async Task<IActionResult> saveDataQuestionAnswers([FromBody] HRRecruitmentQuestionAnswersDTO item)
         {
@@ -227,7 +227,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         }
         #endregion
         #region delete câu hỏi
-        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpPost("delete-question")]
         public async Task<IActionResult> deleteQuestion(List<int> listQuestionID)
         {
@@ -269,7 +269,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         }
         #endregion
         #region lấy danh sách ảnh của câu hỏi
-        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpGet("get-question-images")]
         public async Task<IActionResult> getListImageByQuestionID(int questionID)
         {

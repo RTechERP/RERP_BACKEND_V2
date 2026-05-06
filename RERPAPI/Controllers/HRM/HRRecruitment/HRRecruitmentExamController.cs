@@ -50,7 +50,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         }
         #region load dữ liệu exam
         [Authorize]
-        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpGet("get-data-exam")]
         public async Task<IActionResult> getDataExam(int departmentID, string? filter)
         {
@@ -124,7 +124,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             }
         }
         [Authorize]
-        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpPost("save-data-exam")]
         public async Task<IActionResult> SaveDataExam([FromBody] HRRecruitmentExam request)
         {
@@ -189,7 +189,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
 
         #region delete exam
         [Authorize]
-        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpPost("delete-data-exam")]
         public async Task<IActionResult> DeleteDataExam(int examID)
         {
@@ -260,7 +260,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
 
         // copy câu hỏi 
         [Authorize]
-        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpPost("copy-question-answers")]
         public async Task<IActionResult> CopyQuestionAnswers([FromBody] CopyQuestionAnswersParam request)
         {
@@ -964,7 +964,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         #endregion
         #region Chấm điểm ứng viên
         [Authorize]
-        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")] // Permissions consistent with other HR recruitment tasks
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")] // Permissions consistent with other HR recruitment tasks
         [HttpGet("get-candidate-scores")]
         public async Task<IActionResult> GetCandidateScores(int recruitmentExamID)
         {
@@ -981,7 +981,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         }
 
         [Authorize]
-        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpGet("get-candidate-answer-details")]
         public async Task<IActionResult> GetCandidateAnswerDetails(int examResultID)
         {
@@ -998,7 +998,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         }
 
         [Authorize]
-        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpPost("grade-essay-answer")]
         public async Task<IActionResult> GradeEssayAnswer([FromBody] GradeEssayRequestDTO request)
         {
@@ -1091,7 +1091,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         }
 
         [Authorize]
-        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpPost("finalize-grading")]
         public async Task<IActionResult> FinalizeGrading([FromBody] FinalizeGradingRequestDTO request)
         {
@@ -1138,7 +1138,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         #region Matrix View - Tổng quan điểm đa bài thi
         [Authorize]
 
-        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpGet("get-exams-by-hiring-request")]
         public async Task<IActionResult> GetExamsByHiringRequest(int hiringRequestID)
         {
@@ -1164,7 +1164,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         }
 
         [Authorize]
-        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpGet("get-candidate-score-matrix")]
         public async Task<IActionResult> GetCandidateScoreMatrix(int hiringRequestID)
         {
@@ -1197,7 +1197,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
 
         #region lấy danh sách yêu cầu tuyển dụng chưa hoàn thành của phiên đăng nhập 
         [Authorize]
-        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpGet("get-data-hiring-request-iscompleted")]
         public async Task<IActionResult> GetHrRequestIsCompleted(bool isCompleted)
         {
@@ -1234,7 +1234,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         #endregion
         #region api đánh giá đạt/ hủy đạt kết quả thi của ứng viên (dành cho TBP)
         [Authorize]
-        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpPost("evaluate-candidate-result")]
         public async Task<IActionResult> EvaluateCandidateResult([FromBody] EvaluateCandidateRequestDTO request)
         {

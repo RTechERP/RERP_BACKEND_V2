@@ -43,7 +43,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         //    }
         //}
         [HttpGet("get-data-hiring-request")]
-        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         public async Task<IActionResult> GetDataHiringRequest(DateTime dateStart, DateTime dateEnd, string? keyword) // thêm keyword, tìm kiếm theo ngày tạo 
         {
             try
@@ -72,7 +72,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             }
         }
         [HttpGet("get-exam-by-requestID")]
-        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         public async Task<IActionResult> GetExamByRequestID(int hiringRequestID)
         {
             try
@@ -86,7 +86,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             }
         }
 
-        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] HRHiringRequestExamDTO model)
         {
@@ -164,7 +164,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             }
         }
 
-        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpPost("delete-data")]
         public async Task<IActionResult> DeleteData(long id)
         {
@@ -180,7 +180,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         }
 
         // lấy danh sách ưng viên tham gia kỳ tuyển dụng 
-        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpPost("get-candidates")]
         public async Task<IActionResult> GetCandidates(long hiringRequestId)
         {
@@ -196,7 +196,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             }
         }
         //cập nhật khóa bài thi ứng viên có đang hoạt động hay không
-        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86")]
+        [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpPost("update-active-exam-candidate")]
         public async Task<IActionResult> UpdateActiveExamCandidate([FromQuery] List<int> ListCandidateId, [FromQuery] bool isActive)
         {
