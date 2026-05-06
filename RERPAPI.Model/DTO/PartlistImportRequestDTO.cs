@@ -26,5 +26,7 @@ namespace RERPAPI.Model.DTO
         /// FE sẽ thêm trường Choose = "Excel" hoặc "Stock"
         /// </summary>
         public List<PartlistDiffDTO>? Diffs { get; set; } = new();
+
+        public bool? IsConsumable { get; set; }
     }
 }
