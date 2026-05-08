@@ -45,10 +45,11 @@ namespace RERPAPI.Controllers
         private readonly ConfigSystemRepo _configSystemRepo;
         private readonly EmailHelper _emailHelper;
         private readonly UserRepo _userRepo;
+        private readonly EmployeeRepo _employeeRepo;
 
         //IRabbitMqPublisher _publisher;
         public HomeController(IOptions<JwtSettings> jwtSettings, RTCContext context,
-            IConfiguration configuration, EmployeeOnLeaveRepo onLeaveRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeWFHRepo employeeWFHRepo, ConfigSystemRepo configSystemRepo, EmployeeOverTimeRepo employeeOverTimeRepo, RoleConfig roleConfig, EmployeePayrollDetailRepo employeePayrollDetailRepo, EmailHelper emailHelper, UserRepo userRepo)
+            IConfiguration configuration, EmployeeOnLeaveRepo onLeaveRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeWFHRepo employeeWFHRepo, ConfigSystemRepo configSystemRepo, EmployeeOverTimeRepo employeeOverTimeRepo, RoleConfig roleConfig, EmployeePayrollDetailRepo employeePayrollDetailRepo, EmailHelper emailHelper, UserRepo userRepo,EmployeeRepo employeeRepo)
         {
             _jwtSettings = jwtSettings.Value;
             _context = context;
@@ -63,6 +64,7 @@ namespace RERPAPI.Controllers
             //_publisher = publisher;
             _emailHelper = emailHelper;
             _userRepo = userRepo;
+            _employeeRepo = employeeRepo;
         }
         [HttpPost("login")]
         public IActionResult Login([FromBody] User user)
@@ -300,6 +302,8 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+     
         /// <summary>
         /// Upload file chung cho hệ thống
         /// </summary>
@@ -1370,12 +1374,12 @@ namespace RERPAPI.Controllers
                     DateStart = request.DateStart,
                     DateEnd = request.DateEnd,
                     IDApprovedTP = 0,
-                    Status = -1,
+                    Status = 0,
                     DeleteFlag = 0,
                     EmployeeID = 0,
                     TType = 0,
                     StatusHR = -1,
-                    StatusBGD = 0,
+                    StatusBGD = -1,
                     IsBGD = false,
                     UserTeamID = 0,
                     SeniorID = currentUser.EmployeeID,
@@ -1834,6 +1838,46 @@ namespace RERPAPI.Controllers
                     data = listFile
 
                 });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        //API cập nhật thông tin cá nhân nhân viên
+        [Authorize]
+        [HttpPost("update-personal-information")]
+        public async Task<IActionResult> UpdatePersonalInformation([FromBody] UpdatePersonalInformationParam param)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                if(currentUser.EmployeeID != param.EmployeeID)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Bạn không thể sửa thông tin của người khác, vui lòng kiểm tra lại!"));
+                }   
+                if (param == null || param.EmployeeID <= 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Thông tin không hợp lệ, vui lòng kiểm tra lại!"));
+                }
+                var employee = _employeeRepo.GetByID(param.EmployeeID);
+                if (employee == null)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy thông tin nhân viên!"));
+                }
+                employee.SDTCaNhan = param.SDTCaNhan;
+                employee.EmailCaNhan = param.EmailCaNhan;
+                int result = 0;
+                result =  await _employeeRepo.UpdateAsync(employee);
+                if(result>0)
+                {
+                    return Ok(ApiResponseFactory.Success(null, "Cập nhật thông tin cá nhân thành công!"));
+                }   
+                else
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thông tin cá nhân thất bại!"));
+                }    
             }
             catch (Exception ex)
             {
