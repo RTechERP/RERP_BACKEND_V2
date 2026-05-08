@@ -26,6 +26,7 @@ namespace RERPAPI.Controllers.KHOAHOC
         private readonly CourseCatalogRepo _courseCatalogRepo;
         private readonly DepartmentRepo _departmentRepo;
         private readonly CourseLessonRepo _courseLessonRepo;
+        private readonly ConfigSystemRepo _configSystemRepo;
         public CoursePracticeController(CourseExamRepo courseExamRepo,
             CourseLessonHistoryRepo courseLessonHistoryRepo,
             CourseExamResultRepo courseExamResultRepo,
@@ -36,7 +37,8 @@ namespace RERPAPI.Controllers.KHOAHOC
             CourseRepo courseRepo,
             CourseCatalogRepo courseCatalogRepo,
             DepartmentRepo departmentRepo,
-            CourseLessonRepo courseLessonRepo
+            CourseLessonRepo courseLessonRepo,
+            ConfigSystemRepo configSystemRepo
             )
         {
             _courseExamRepo = courseExamRepo;
@@ -50,6 +52,7 @@ namespace RERPAPI.Controllers.KHOAHOC
             _courseCatalogRepo = courseCatalogRepo;
             _departmentRepo = departmentRepo;
             _courseLessonRepo = courseLessonRepo;
+            _configSystemRepo = configSystemRepo;
         }
 
         [HttpGet("get-all-course-exam")]
@@ -703,6 +706,25 @@ namespace RERPAPI.Controllers.KHOAHOC
                 //}
 
                 return Ok(ApiResponseFactory.Success(listCourseParent, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-path-server")]
+        public IActionResult GetPathServer(string keyName)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(keyName))
+                {
+                    return Ok(ApiResponseFactory.Fail(null, "Key không hợp lệ!"));
+                }
+                var pathUpload = _configSystemRepo.GetUploadPathByKey(keyName);
+                string path = pathUpload ;
+                return Ok(ApiResponseFactory.Success(path, ""));
+
             }
             catch (Exception ex)
             {

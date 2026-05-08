@@ -784,6 +784,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                     if (model.CourseLesson.ID > 0)
                     {
                         var exitLesson = _courseLessonRepo.GetByID(model.CourseLesson.ID);
+
                         exitLesson.IsDeleted = true;
                         await _courseLessonRepo.UpdateAsync(exitLesson);
                     }
@@ -799,6 +800,11 @@ namespace RERPAPI.Controllers.KHOAHOC
                 //{
                 //    exitLessonOld.VideoURL = pathUpload + "/videos/"+
                 //}
+                if (!string.IsNullOrWhiteSpace(model.CourseLesson.VideoURL))
+                {
+                    model.CourseLesson.VideoURL =
+                        Path.ChangeExtension(model.CourseLesson.VideoURL, ".mp4");
+                }
 
                 if (model.CourseLesson.ID <= 0)
                 {
