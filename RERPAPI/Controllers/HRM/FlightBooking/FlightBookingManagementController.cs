@@ -139,6 +139,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                     master.DepartureTime = dto.DepartureTime;
                     master.Note = dto.Note;
                     master.EmployeeBookerID = _currentUser.EmployeeID;
+                    master.EmployeeRequestID = dto.EmployeeRequestID;
                     await _flightBookingManagementRepo.UpdateAsync(master);
                     // Cập nhật các phương án(Detail)
                     var oldProposals = _flightBookingProposalRepo.GetAll(x => x.FlightBookingManagementID == master.ID);
@@ -176,6 +177,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                             DepartureTime = dto.DepartureTime,
                             Note = dto.Note,
                             EmployeeBookerID = _currentUser.EmployeeID,
+                            EmployeeRequestID = dto.EmployeeRequestID,
                             BookedDate = DateTime.Now,
                         };
 
@@ -194,7 +196,10 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                                     Baggage = prop.Baggage,
                                     IsApprove = prop.IsApprove,
                                     ApproveID = prop.ApproveID,
-                                    HCNSProposal = prop.HCNSProposal
+                                    HCNSProposal = prop.HCNSProposal,
+                                    ReasonHCNSProposal = prop.ReasonHCNSProposal,
+                                    DepartureDate = prop.DepartureDate,
+                                    DepartureTime = prop.DepartureTime
                                 };
                                 await _flightBookingProposalRepo.CreateAsync(newProp);
                             }
@@ -288,11 +293,15 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                 int maxPA = groups.Max(g => g.Count());
                 if (maxPA < 2) maxPA = 2;
 
-                int diffCol = 12 + (maxPA * 4);
+                int hcnsReasonCol = 12 + maxPA; // 11 cột đầu + (maxPA cột/PA)
+                int diffCol = hcnsReasonCol + 1;
                 int totalCol = diffCol + 1;
-                int bookerCol = totalCol + 1;
+                int approverCol = totalCol + 1;
+                int bookerCol = approverCol + 1;
                 int bookedDateCol = bookerCol + 1;
                 int noteCol = bookedDateCol + 1;
+
+                int totalCols = noteCol;
 
                 using (var package = new OfficeOpenXml.ExcelPackage())
                 {
@@ -302,7 +311,6 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
 
                     // 1. Tiêu đề
                     sheet.Cells[1, 1].Value = "DANH SÁCH THEO DÕI ĐẶT VÉ MÁY BAY";
-                    int totalCols = 11 + (maxPA * 4) + 5; // Cột A-K (11) + các khối PA + Chênh lệch + Tổng + Người đặt + Ngày đặt + Ghi chú
                     sheet.Cells[1, 1, 1, totalCols].Merge = true;
                     using (var range = sheet.Cells[1, 1])
                     {
@@ -328,19 +336,23 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                     for (int i = 1; i <= maxPA; i++)
                     {
                         sheet.Cells[2, colIndex].Value = "Phương án " + i;
-                        sheet.Cells[2, colIndex, 2, colIndex + 3].Merge = true;
-                        sheet.Cells[3, colIndex].Value = "Hãng bay";
-                        sheet.Cells[3, colIndex + 1].Value = "Chi phí";
-                        sheet.Cells[3, colIndex + 2].Value = "Hành lý";
-                        sheet.Cells[3, colIndex + 3].Value = "HCNS đề xuất";
-                        colIndex += 4;
+                        sheet.Cells[2, colIndex, 3, colIndex].Merge = true;
+                        colIndex++;
                     }
 
-                    sheet.Cells[2, colIndex].Value = "Chênh lệch chi phí PA1 và PA2";
+                    sheet.Cells[2, colIndex].Value = "Lý do HCNS đề xuất";
+                    sheet.Cells[2, colIndex, 3, colIndex].Merge = true;
+                    colIndex++;
+
+                    sheet.Cells[2, colIndex].Value = "Chênh lệch\nchi phí";
                     sheet.Cells[2, colIndex, 3, colIndex].Merge = true;
                     colIndex++;
 
                     sheet.Cells[2, colIndex].Value = "Tổng tiền";
+                    sheet.Cells[2, colIndex, 3, colIndex].Merge = true;
+                    colIndex++;
+
+                    sheet.Cells[2, colIndex].Value = "Người duyệt";
                     sheet.Cells[2, colIndex, 3, colIndex].Merge = true;
                     colIndex++;
 
@@ -373,10 +385,6 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                     int row = 4;
                     int stt = 1;
 
-                    // Để theo dõi các nhóm gộp ô
-                    int startMergeRow = row;
-                    object lastEmployeeID = null;
-
                     var groupsList = groups.ToList();
                     for (int gIdx = 0; gIdx < groupsList.Count; gIdx++)
                     {
@@ -385,98 +393,98 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                         int groupCount = items.Count;
                         var first = items[0];
 
-                        bool isSameGroup = lastEmployeeID != null && Equals(first["EmployeeID"], lastEmployeeID);
+                        int startRow = row;
 
-                        if (!isSameGroup && lastEmployeeID != null)
-                        {
-                            // Gộp ô nhóm trước đó nếu có nhiều hơn 1 dòng
-                            if (row - 1 > startMergeRow)
-                            {
-                                int endRow = row - 1;
-                                int[] colsToMerge = { 2, 5, 6, 7, bookedDateCol };
-                                foreach (int col in colsToMerge)
-                                {
-                                    sheet.Cells[startMergeRow, col, endRow, col].Merge = true;
-                                }
-                            }
-                            startMergeRow = row;
-                        }
-
-                        lastEmployeeID = first["EmployeeID"];
-
-                        // Master columns (A-K)
-                        sheet.Cells[row, 1].Value = stt++;
-                        sheet.Cells[row, 2].Value = first["RequesterName"];
-                        sheet.Cells[row, 3].Value = first["Reason"];
-                        sheet.Cells[row, 4].Value = first["ProjectName"];
-                        sheet.Cells[row, 5].Value = first["PassengerName"];
-                        sheet.Cells[row, 6].Value = first["PositionName"];
-                        sheet.Cells[row, 7].Value = first["DepartmentName"];
-                        sheet.Cells[row, 8].Value = first["DepartureAddress"];
-                        sheet.Cells[row, 9].Value = first["ArrivesAddress"];
-                        sheet.Cells[row, 10].Value = first["DepartureTime"] != null ? ((DateTime)first["DepartureTime"]).ToString("HH:mm") : "";
-                        sheet.Cells[row, 11].Value = first["DepartureDate"] != null ? ((DateTime)first["DepartureDate"]).ToString("dd/MM/yyyy") : "";
-
-                        // Các cột PA
                         decimal pa1Price = 0;
                         decimal pa2Price = 0;
                         decimal totalApproved = 0;
+                        string approverName = "";
+                        
+                        string hcnsReason = "";
 
                         for (int i = 0; i < groupCount; i++)
                         {
                             var item = items[i];
-                            int paCol = 12 + (i * 4);
-                            sheet.Cells[row, paCol].Value = item["Airline"];
-                            sheet.Cells[row, paCol + 1].Value = item["Price"];
-                            sheet.Cells[row, paCol + 1].Style.Numberformat.Format = "#,##0";
-                            sheet.Cells[row, paCol + 2].Value = item["Baggage"];
 
-                            bool isHCNS = item["HCNSProposal"] != null && Convert.ToBoolean(item["HCNSProposal"]);
-                            if (isHCNS)
+                            if (i == 0)
                             {
-                                sheet.Cells[row, paCol + 3].Value = "✔";
-                                sheet.Cells[row, paCol + 3].Style.Font.Color.SetColor(System.Drawing.Color.Green);
-                                sheet.Cells[row, paCol + 3].Style.Font.Bold = true;
+                                sheet.Cells[startRow, 1].Value = stt++;
+                                sheet.Cells[startRow, 2].Value = first["RequesterName"];
+                                sheet.Cells[startRow, 3].Value = first["Reason"];
+                                sheet.Cells[startRow, 4].Value = first["ProjectName"];
+                                sheet.Cells[startRow, 5].Value = first["PassengerName"];
+                                sheet.Cells[startRow, 6].Value = first["PositionName"];
+                                sheet.Cells[startRow, 7].Value = first["DepartmentName"];
+                                sheet.Cells[startRow, 8].Value = first["DepartureAddress"];
+                                sheet.Cells[startRow, 9].Value = first["ArrivesAddress"];
                             }
 
-                            decimal price = item["Price"] != null ? Convert.ToDecimal(item["Price"]) : 0;
+                            sheet.Cells[row, 10].Value = item["DepartureTime"] != null && item["DepartureTime"] != DBNull.Value ? ((DateTime)item["DepartureTime"]).ToString("HH:mm") : "";
+                            sheet.Cells[row, 11].Value = item["DepartureDate"] != null && item["DepartureDate"] != DBNull.Value ? ((DateTime)item["DepartureDate"]).ToString("dd/MM/yyyy") : "";
+                            
+                            int paCol = 12 + i;
+                            string airline = item["Airline"] != null ? item["Airline"].ToString() : "";
+                            decimal priceVal = item["Price"] != null && item["Price"] != DBNull.Value ? Convert.ToDecimal(item["Price"]) : 0;
+                            string priceStr = priceVal > 0 ? priceVal.ToString("#,##0") : "";
+                            string baggage = item["Baggage"] != null ? item["Baggage"].ToString() : "";
+
+                            var lines = new List<string>();
+                            if (!string.IsNullOrEmpty(airline)) lines.Add(airline);
+                            if (!string.IsNullOrEmpty(priceStr)) lines.Add(priceStr);
+                            if (!string.IsNullOrEmpty(baggage)) lines.Add(baggage);
+
+                            sheet.Cells[row, paCol].Value = string.Join("\n", lines);
+                            sheet.Cells[row, paCol].Style.WrapText = true;
+
+                            bool isHCNS = item["HCNSProposal"] != null && item["HCNSProposal"] != DBNull.Value && Convert.ToBoolean(item["HCNSProposal"]);
+                            if (isHCNS)
+                            {
+                                string reasonStr = item["ReasonHCNSProposal"] != null ? item["ReasonHCNSProposal"].ToString() : "";
+                                hcnsReason = "Phương án " + (i + 1) + (string.IsNullOrEmpty(reasonStr) ? "" : ": " + reasonStr);
+                            }
+
+                            decimal price = priceVal;
                             if (i == 0) pa1Price = price;
                             if (i == 1) pa2Price = price;
                             
-                            int isApprove = item["IsApprove"] != null ? Convert.ToInt32(item["IsApprove"]) : 0;
-                            if (isApprove == 1) totalApproved += price;
+                            int isApprove = item["IsApprove"] != null && item["IsApprove"] != DBNull.Value ? Convert.ToInt32(item["IsApprove"]) : 0;
+                            if (isApprove == 1) 
+                            {
+                                totalApproved += price;
+                                if (item["ApproverName"] != null && item["ApproverName"] != DBNull.Value)
+                                {
+                                    approverName = item["ApproverName"].ToString();
+                                }
+                            }
+                            else if (string.IsNullOrEmpty(approverName) && item["ApproverName"] != null && item["ApproverName"] != DBNull.Value)
+                            {
+                                approverName = item["ApproverName"].ToString();
+                            }
+
+                            row++;
                         }
 
-                        // Cột chênh lệch
-                        sheet.Cells[row, diffCol].Value = Math.Abs(pa1Price - pa2Price);
-                        sheet.Cells[row, diffCol].Style.Numberformat.Format = "#,##0";
+                        int endRow = row - 1;
 
-                        // Cột tổng tiền
-                        sheet.Cells[row, totalCol].Value = totalApproved;
-                        sheet.Cells[row, totalCol].Style.Numberformat.Format = "#,##0";
+                        sheet.Cells[startRow, hcnsReasonCol].Value = hcnsReason;
 
-                        // Cột người đặt
-                        sheet.Cells[row, bookerCol].Value = first["BookerName"];
+                        sheet.Cells[startRow, diffCol].Value = Math.Abs(pa1Price - pa2Price);
+                        sheet.Cells[startRow, diffCol].Style.Numberformat.Format = "#,##0";
 
-                        // Cột ngày đặt
-                        sheet.Cells[row, bookedDateCol].Value = first["BookedDate"] != null ? ((DateTime)first["BookedDate"]).ToString("dd/MM/yyyy HH:mm") : "";
+                        sheet.Cells[startRow, totalCol].Value = totalApproved;
+                        sheet.Cells[startRow, totalCol].Style.Numberformat.Format = "#,##0";
 
-                        // Cột ghi chú
-                        sheet.Cells[row, noteCol].Value = first["Note"];
+                        sheet.Cells[startRow, approverCol].Value = approverName;
+                        sheet.Cells[startRow, bookerCol].Value = first["BookerName"];
+                        sheet.Cells[startRow, bookedDateCol].Value = first["BookedDate"] != null && first["BookedDate"] != DBNull.Value ? ((DateTime)first["BookedDate"]).ToString("dd/MM/yyyy HH:mm") : "";
+                        sheet.Cells[startRow, noteCol].Value = first["Note"];
 
-                        row++;
-
-                        // Xử lý gộp ô cho nhóm cuối cùng
-                        if (gIdx == groupsList.Count - 1)
+                        if (endRow > startRow)
                         {
-                            if (row - 1 > startMergeRow)
+                            int[] colsToMerge = { 1, 2, 3, 4, 5, 6, 7, 8, 9, hcnsReasonCol, diffCol, totalCol, approverCol, bookerCol, bookedDateCol, noteCol };
+                            foreach (int col in colsToMerge)
                             {
-                                int endRow = row - 1;
-                                int[] colsToMerge = { 2, 5, 6, 7, bookedDateCol };
-                                foreach (int col in colsToMerge)
-                                {
-                                    sheet.Cells[startMergeRow, col, endRow, col].Merge = true;
-                                }
+                                sheet.Cells[startRow, col, endRow, col].Merge = true;
                             }
                         }
                     }
@@ -509,12 +517,14 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                     sheet.Column(10).Width = 10; // Time
                     sheet.Column(11).Width = 12; // Date
 
-                    for (int i = 12; i < diffCol; i++)
+                    for (int i = 12; i < hcnsReasonCol; i++)
                     {
-                        sheet.Column(i).Width = 15;
+                        sheet.Column(i).Width = 20;
                     }
+                    sheet.Column(hcnsReasonCol).Width = 35;
                     sheet.Column(diffCol).Width = 20;
                     sheet.Column(totalCol).Width = 15;
+                    sheet.Column(approverCol).Width = 20;
                     sheet.Column(bookerCol).Width = 20;
                     sheet.Column(bookedDateCol).Width = 20;
                     sheet.Column(noteCol).Width = 30;
