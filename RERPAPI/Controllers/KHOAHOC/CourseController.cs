@@ -784,6 +784,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                     if (model.CourseLesson.ID > 0)
                     {
                         var exitLesson = _courseLessonRepo.GetByID(model.CourseLesson.ID);
+
                         exitLesson.IsDeleted = true;
                         await _courseLessonRepo.UpdateAsync(exitLesson);
                     }

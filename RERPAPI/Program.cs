@@ -513,8 +513,6 @@ builder.Services.AddScoped<FiveSBonusMinusRepo>();
 builder.Services.AddScoped<HRRecruitmentInterviewAssessmentFormRepo>();
 builder.Services.AddScoped<HRRecruitmentApplicationFormRepo>();
 builder.Services.AddScoped<HRRecruitmentApproveRepo>();
-builder.Services.AddScoped<JobPerfomanceEvaluationRepo>();
-builder.Services.AddScoped<JobPerfomanceEvaluationCriteriaRepo>();
 builder.Services.AddScoped<JobPerfomanceEvaluationApproveRepo>();
 
 
@@ -640,7 +638,7 @@ builder.Services.AddScoped<EmailHelper>();
 builder.Services.AddScoped<HistoryBorrowSaleLogRepo>();
 builder.Services.AddScoped<CommercialPriceRequestRepo>();
 builder.Services.AddScoped<PaymentOrderLogApprovedRepo>();
-builder.Services.AddScoped<CurrencyConfigRepo>();
+builder.Services.AddScoped<CurrencyConfigRepo>(); 
 builder.Services.AddScoped<BillImportSaleLogRepo>();
 
 
@@ -676,7 +674,7 @@ builder.Services.AddCors(options =>
     });
 });
 // Chỉ khởi tạo 1 lần duy nhất khi chạy server
-FirebaseApp.Create(new AppOptions()
+FirebaseApp.Create(new AppOptions() 
 {
     Credential = GoogleCredential.FromFile("firebase-adminsdk.json") // Thay bằng đường dẫn thực tế
 });
@@ -829,7 +827,7 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseCors("MyCors");
 app.UseAuthentication();
-app.UseMiddleware<DynamicAuthorizationMiddleware>();
+app.UseMiddleware<DynamicAuthorizationMiddleware>(); 
 app.UseAuthorization();
 app.UseSession();
 

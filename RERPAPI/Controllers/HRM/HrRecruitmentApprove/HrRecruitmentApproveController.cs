@@ -114,8 +114,9 @@ namespace RERPAPI.Controllers.HRM.HrRecruitmentApprove
         }
         bool IsApproved(int? approverId, string approverName)
         {
-            return (approverId.HasValue && approverId > 0)
-                || !string.IsNullOrEmpty(approverName);
+            //return (approverId.HasValue && approverId > 0)
+            //    || !string.IsNullOrWhiteSpace(approverName);
+            return !string.IsNullOrWhiteSpace(approverName);
         }
 
         [HttpPost("approve-hr-recruitment")]
@@ -144,7 +145,7 @@ namespace RERPAPI.Controllers.HRM.HrRecruitmentApprove
                                 .GetAll(c => lstID.Contains(c.ID))
                                 .ToList();
                 List<int?> lstIDNextStep = new List<int?>();
-                
+
                 foreach (var item in data)
                 {
                     switch (type)
@@ -183,12 +184,12 @@ namespace RERPAPI.Controllers.HRM.HrRecruitmentApprove
                     }
                 }
 
-                if ((await _hRRecruitmentApproveRepo.UpdateRangeAsync(data))<=0)
+                if ((await _hRRecruitmentApproveRepo.UpdateRangeAsync(data)) <= 0)
                 {
                     return Ok(ApiResponseFactory.Fail(null, "Có lỗi xảy ra, vui lòng thử lại sau!"));
                 }
 
-                if (lstIDNextStep.Count()>0)
+                if (lstIDNextStep.Count() > 0)
                 {
                     // lấy id cần next step sang thư mời nhận việc
                     var applicationForms = _hRRecruitmentApplicationFormRepo
@@ -212,14 +213,74 @@ namespace RERPAPI.Controllers.HRM.HrRecruitmentApprove
                         return Ok(ApiResponseFactory.Fail(null, "Có lỗi xảy ra, vui lòng thử lại sau!"));
                     }
                 }
-               
+
                 return Ok(ApiResponseFactory.Success(null, $"Duyệt thành công!"));
-              
+
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponseFactory.Fail(null,ex.Message));
+                return Ok(ApiResponseFactory.Fail(null, ex.Message));
 
+            }
+        }
+        [HttpPost("unapprove-hr-recruitment")]
+        public async Task<IActionResult> UnApproveHRRecruitment([FromBody] List<int> lstID, [FromQuery] string type, [FromQuery] string reason)
+        {
+            try
+            {
+                if (lstID == null || !lstID.Any())
+                {
+                    return Ok(ApiResponseFactory.Fail(null, "Danh sách ID không hợp lệ"));
+                }
+
+                if (string.IsNullOrEmpty(type))
+                {
+                    return Ok(ApiResponseFactory.Fail(null, "Thiếu loại duyệt"));
+                }
+
+                type = type.ToUpper().Trim();
+
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var data = _hRRecruitmentApproveRepo
+                                .GetAll(c => lstID.Contains(c.ID))
+                                .ToList();
+                foreach (var item in data)
+                {
+                    if (type == "TBP")
+                    {
+
+                        //item.TBPApprover = -1;
+                        item.TBPApproverName = $"Không duyệt";
+                        item.RejectionReason = $"{type} - {currentUser.FullName} không duyệt: {reason}"; 
+                    }
+                    if (type == "HCNS")
+                    {
+                        item.HCNSApprove = -1;
+                        item.HCNSApproveName = $"Không duyệt";
+                        item.RejectionReason = $"{type} - {currentUser.FullName} không duyệt: {reason}";
+                    }
+                    if (type == "BGD")
+                    {
+                        item.BGDApprover = -1;
+                        item.BGDApproverName = $"Không duyệt";
+                        item.RejectionReason = $"{type} - {currentUser.FullName} không duyệt: {reason}";
+                    }
+                }
+                var countSuccss = await _hRRecruitmentApproveRepo.UpdateRangeAsync(data);
+                if (countSuccss<=0)
+                {
+                    return Ok(ApiResponseFactory.Fail(null, "Không duyệt thất bại!"));
+
+                }
+                return Ok(ApiResponseFactory.Success(null, $"Không duyệt thành công {countSuccss} tờ trình!"));
+
+            }
+            catch (Exception ex)
+            {
+
+                return Ok(ApiResponseFactory.Fail(null, ex.Message));
             }
         }
 
@@ -228,8 +289,13 @@ namespace RERPAPI.Controllers.HRM.HrRecruitmentApprove
         {
             try
             {
+                if (HRRecruitmentApprove.HRRecruitmentApplicationFormID == null || HRRecruitmentApprove.HRRecruitmentApplicationFormID == 0)
+                {
+                    return Ok(ApiResponseFactory.Fail(null, $"Ứng viên chưa tạo tờ khai UV!"));
+                }
                 if (HRRecruitmentApprove.ID <= 0)
                 {
+
                     var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                     var currentUser = ObjectMapper.GetCurrentUser(claims);
                     HRRecruitmentApprove.EmployeeApprover = currentUser.EmployeeID;
@@ -237,22 +303,23 @@ namespace RERPAPI.Controllers.HRM.HrRecruitmentApprove
                     HRRecruitmentApprove.ProbationarySalary = HRRecruitmentApprove.BasicSalary * 90 / 100;
 
                     var result = await _hRRecruitmentApproveRepo.CreateAsync(HRRecruitmentApprove);
-                    if (result != 1)
+                    if (result < 1)
                     {
                         return Ok(ApiResponseFactory.Fail(null, "Thêm mới tờ trình thất bại!"));
                     }
-                    //var HRRecruitmentApplicationForm = await _hRRecruitmentApplicationFormRepo.GetByIDAsync(HRRecruitmentApprove.HRRecruitmentApplicationFormID??0);
-                    //var hRRecruitmentCandidate = await _hRRecruitmentCandidateRepo.GetByIDAsync(HRRecruitmentApplicationForm.HRRecruitmentCandidateID??0);
-                    //hRRecruitmentCandidate.Status = 6;
+                    var HRRecruitmentApplicationForms = await _hRRecruitmentApplicationFormRepo.GetByIDAsync(HRRecruitmentApprove.HRRecruitmentApplicationFormID ?? 0);
+                    var hRRecruitmentCandidates = await _hRRecruitmentCandidateRepo.GetByIDAsync(HRRecruitmentApplicationForms.HRRecruitmentCandidateID ?? 0);
+                    hRRecruitmentCandidates.Status = 6;
 
-                    //if ((await _hRRecruitmentCandidateRepo.UpdateAsync(hRRecruitmentCandidate)) !=1)
-                    //{
-                    //    return Ok(new
-                    //    {
-                    //        status = 0,
-                    //        message = "Cập nhật trạng thái đơn tuyển dụng thất bại!"
-                    //    });
-                    //}
+                    if ((await _hRRecruitmentCandidateRepo.UpdateAsync(hRRecruitmentCandidates)) < 1)
+                    {
+                        //return Ok(new
+                        //{
+                        //    status = 0,
+                        //    message = "Cập nhật trạng thái đơn tuyển dụng thất bại!"
+                        //});
+                        return Ok(ApiResponseFactory.Fail(null, $"Cập nhật trạng thái đơn tuyển dụng thất bại!"));
+                    }
                 }
                 else
                 {
