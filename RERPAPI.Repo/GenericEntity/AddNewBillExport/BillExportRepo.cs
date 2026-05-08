@@ -927,10 +927,10 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                     {
                         return (false, $"Phiếu nhập {billImports.BillImportCode} đã thay đổi trạng thái, không thể sửa!");
                     }
-                    else if (billImports.BillTypeNew != 0 && billExport.Status != 6)
-                    {
-                        return (false, $"Phiếu nhập {billImports.BillImportCode} chưa chuyển sang trạng thái [Nhập kho], không thể sửa!");
-                    }
+                    //else if (billImports.BillTypeNew != 0 && billExport.Status != 6)
+                    //{
+                    //    return (false, $"Phiếu nhập {billImports.BillImportCode} chưa chuyển sang trạng thái [Nhập kho], không thể sửa!");
+                    //}
 
                     if (dto.billExport.IsTransfer == false && billImports.Status == true)
                     {

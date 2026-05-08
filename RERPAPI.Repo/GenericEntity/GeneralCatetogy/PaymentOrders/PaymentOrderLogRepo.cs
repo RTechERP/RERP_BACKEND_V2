@@ -233,8 +233,15 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                             continue;
                         }
                     }
-
-
+                    PaymentOrderLogApproved? logUnApproved =  _paymentOrderLogApprovedRepo.GetAll(p => p.PaymentOrderID == item.ID && p.IsDeleted != true && p.IsApproved == 2)?.FirstOrDefault();
+                    if (logUnApproved != null && logUnApproved.ID>0)
+                    {
+                        PaymentOrderLog l = GetByID(logUnApproved.PaymentOrderLogID ?? 0);
+                        if (l.IsDeleted.HasValue && !l.IsDeleted.Value)
+                        {
+                            ApiResponseFactory.Fail(null, $"Đề nghị [{item.Code}] đã bị hủy duyệt ở bước [{l.StepName}] !");
+                        }
+                    }
                     //Get quy trình duyệt
                     var log = GetAll(x => x.PaymentOrderID == item.ID && x.Step == actionStep && x.IsDeleted != true).FirstOrDefault();
 
