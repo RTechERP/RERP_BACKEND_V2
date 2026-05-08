@@ -55,6 +55,11 @@ public class FlightBookingSaveDTO
     public int? EmployeeBookerID { get; set; }
 
     /// <summary>
+    /// ID người yêu cầu
+    /// </summary>
+    public int? EmployeeRequestID { get; set; }
+
+    /// <summary>
     /// Danh sách người đi (Employee IDs)
     /// </summary>
     public List<int> TravelerIDs { get; set; } = new List<int>();
