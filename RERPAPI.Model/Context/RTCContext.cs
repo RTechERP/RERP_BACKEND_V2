@@ -492,6 +492,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<HRRecruitmentApplicationForm> HRRecruitmentApplicationForms { get; set; }
 
+    public virtual DbSet<HRRecruitmentApprove> HRRecruitmentApproves { get; set; }
+
     public virtual DbSet<HRRecruitmentCandidate> HRRecruitmentCandidates { get; set; }
 
     public virtual DbSet<HRRecruitmentCandidateLog> HRRecruitmentCandidateLogs { get; set; }
@@ -505,6 +507,8 @@ public partial class RTCContext : DbContext
     public virtual DbSet<HRRecruitmentExamResultDetail> HRRecruitmentExamResultDetails { get; set; }
 
     public virtual DbSet<HRRecruitmentExamResultImage> HRRecruitmentExamResultImages { get; set; }
+
+    public virtual DbSet<HRRecruitmentInterviewAssessmentForm> HRRecruitmentInterviewAssessmentForms { get; set; }
 
     public virtual DbSet<HRRecruitmentQuestion> HRRecruitmentQuestions { get; set; }
 
@@ -581,6 +585,10 @@ public partial class RTCContext : DbContext
     public virtual DbSet<JobRequirementFile> JobRequirementFiles { get; set; }
 
     public virtual DbSet<JobRequirementLog> JobRequirementLogs { get; set; }
+
+    public virtual DbSet<JobRequirementRecommend> JobRequirementRecommends { get; set; }
+
+    public virtual DbSet<JobRequirementRecommendDetail> JobRequirementRecommendDetails { get; set; }
 
     public virtual DbSet<KPICriteriaDetail> KPICriteriaDetails { get; set; }
 
@@ -5211,6 +5219,7 @@ public partial class RTCContext : DbContext
                 .HasColumnType("datetime");
             entity.Property(e => e.EmployeeBookerID).HasComment("ID người đặt");
             entity.Property(e => e.EmployeeID).HasComment("ID người đi");
+            entity.Property(e => e.EmployeeRequestID).HasComment("ID người yêu cầu");
             entity.Property(e => e.IsDeleted)
                 .HasDefaultValue(false)
                 .HasComment("Trạng thái xóa mềm (0: chưa xóa, 1: đã xóa)");
@@ -5249,6 +5258,12 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedDate)
                 .HasComment("Ngày tạo")
                 .HasColumnType("datetime");
+            entity.Property(e => e.DepartureDate)
+                .HasComment("thời gian xuất phát")
+                .HasColumnType("datetime");
+            entity.Property(e => e.DepartureTime)
+                .HasComment("thời gian cần đến")
+                .HasColumnType("datetime");
             entity.Property(e => e.HCNSProposal).HasDefaultValue(false);
             entity.Property(e => e.IsApprove).HasComment("Trạng thái duyệt (0: chưa duyệt, 1: đã duyệt, 2: không duyệt)");
             entity.Property(e => e.IsDeleted)
@@ -5260,6 +5275,9 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.ReasonDecline)
                 .HasMaxLength(500)
                 .HasComment("Lý do không duyệt");
+            entity.Property(e => e.ReasonHCNSProposal)
+                .HasMaxLength(550)
+                .HasComment("Lí do hcns đề xuất");
             entity.Property(e => e.UpdatedBy)
                 .HasMaxLength(50)
                 .HasComment("Người cập nhật");
@@ -6052,6 +6070,61 @@ public partial class RTCContext : DbContext
                 .HasComment("Kinh nghiệm ứng viên");
         });
 
+        modelBuilder.Entity<HRRecruitmentApprove>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__HRRecrui__3214EC27F47C0855");
+
+            entity.ToTable("HRRecruitmentApprove", tb => tb.HasComment("Tờ trình phê duyệt tuyển dụng"));
+
+            entity.Property(e => e.ID).HasComment("ID");
+            entity.Property(e => e.BGDApprover).HasComment("BGD ký (EmployeeID)");
+            entity.Property(e => e.BGDApproverName)
+                .HasMaxLength(250)
+                .HasComment("Tên BGD Ký");
+            entity.Property(e => e.BasicSalary).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(150)
+                .HasComment("Người tạo");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo")
+                .HasColumnType("datetime");
+            entity.Property(e => e.DateOfIssue)
+                .HasComment("Ngày ban hành")
+                .HasColumnType("datetime");
+            entity.Property(e => e.DateStart)
+                .HasComment("Ngày bắt đầu thử việc")
+                .HasColumnType("datetime");
+            entity.Property(e => e.DepartmentID).HasComment("ID phòng ban");
+            entity.Property(e => e.EmployeeApprover).HasComment("Người lập ký (employeeID)");
+            entity.Property(e => e.EmployeeApproverName)
+                .HasMaxLength(250)
+                .HasComment("Tên người lập");
+            entity.Property(e => e.HCNSApprove).HasComment("Trưởng phòng HCNS ký(employeeID)");
+            entity.Property(e => e.HCNSApproveName)
+                .HasMaxLength(250)
+                .HasComment("Tên Trưởng phòng HCNS ký");
+            entity.Property(e => e.HRRecruitmentApplicationFormID).HasComment("ID đơn xin tuyển dụng nhân sự");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái xoá");
+            entity.Property(e => e.LocationOfIssue).HasComment("Địa điểm ban hành");
+            entity.Property(e => e.ProbationPeriod)
+                .HasMaxLength(500)
+                .HasComment("Thời gian thử việc");
+            entity.Property(e => e.ProbationarySalary)
+                .HasComment("Lương thử việc")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.RejectionReason).HasComment("Lý do huỷ duyệt");
+            entity.Property(e => e.TBPApprover).HasComment("TBP ký (employeeID)");
+            entity.Property(e => e.TBPApproverName)
+                .HasMaxLength(250)
+                .HasComment("Tên TBP Ký");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(150)
+                .HasComment("Người update");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày update")
+                .HasColumnType("datetime");
+        });
+
         modelBuilder.Entity<HRRecruitmentCandidate>(entity =>
         {
             entity.ToTable("HRRecruitmentCandidate");
@@ -6258,6 +6331,52 @@ public partial class RTCContext : DbContext
                 .HasMaxLength(150)
                 .HasComment("Người cập nhật bản ghi gần nhất");
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<HRRecruitmentInterviewAssessmentForm>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__HrRecrui__3214EC27E50A7DE4");
+
+            entity.ToTable("HRRecruitmentInterviewAssessmentForm", tb => tb.HasComment("Phiếu đánh giá kết quả phỏng vấn"));
+
+            entity.Property(e => e.ID).HasComment("ID");
+            entity.Property(e => e.ApplicantStatus).HasComment("Đánh giá sau phỏng vấn (1: phù hợp, 2:Có thể phù hợp, 3:không phù hợp");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(150)
+                .HasComment("Người tạo");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo")
+                .HasColumnType("datetime");
+            entity.Property(e => e.DateOfInterview)
+                .HasComment("Ngày phỏng vấn")
+                .HasColumnType("datetime");
+            entity.Property(e => e.DateSign)
+                .HasComment("Ngày ký")
+                .HasColumnType("datetime");
+            entity.Property(e => e.EmployeeID).HasComment("ID người phỏng vấn");
+            entity.Property(e => e.Experience).HasComment("Kinh nghiệm");
+            entity.Property(e => e.ExperienceNote).HasComment("Note kinh nghiệm");
+            entity.Property(e => e.HRRecruitmentCandidateID).HasComment("ID đơn ứng tuyển");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái xoá");
+            entity.Property(e => e.IsSign).HasComment("Trạng thái ký");
+            entity.Property(e => e.LanguageAndCommunication).HasComment("khả năng ngôn ngữ giao tiếp");
+            entity.Property(e => e.LanguageAndCommunicationNote).HasComment("Note ngôn ngữ giao tiếp");
+            entity.Property(e => e.Motivation).HasComment("Khả năng gắn bó");
+            entity.Property(e => e.MotivationNote).HasComment("Note khả năng gắn bó");
+            entity.Property(e => e.OtherComments).HasComment("Nhận xét khác");
+            entity.Property(e => e.OverrallImpression).HasComment("đánh giá chung");
+            entity.Property(e => e.OverrallImpressionNote).HasComment("Note đánh giá chung\n");
+            entity.Property(e => e.Qualifications).HasComment("Trình độ");
+            entity.Property(e => e.QualificationsNote).HasComment("Note trình độ\n");
+            entity.Property(e => e.Salary)
+                .HasComment("Mức lương đề xuất")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(150)
+                .HasComment("Người update");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày update")
+                .HasColumnType("datetime");
         });
 
         modelBuilder.Entity<HRRecruitmentQuestion>(entity =>
@@ -6953,6 +7072,80 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.DateLog).HasColumnType("datetime");
             entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<JobRequirementRecommend>(entity =>
+        {
+            entity.ToTable("JobRequirementRecommend", tb => tb.HasComment("Bảng lưu các đề xuất phương án tuyển dụng cho phiếu yêu cầu công việc"));
+
+            entity.Property(e => e.ID).HasComment("ID bản ghi");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false)
+                .HasComment("Trạng thái xóa mềm: 0 - Chưa xóa, 1 - Đã xóa");
+            entity.Property(e => e.JobRequirementID).HasComment("ID phiếu yêu cầu công việc");
+            entity.Property(e => e.RequestDate)
+                .HasComment("Ngày đề xuất phương án")
+                .HasColumnType("datetime");
+            entity.Property(e => e.RequesterID).HasComment("ID người đề xuất phương án");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người cập nhật bản ghi");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật bản ghi")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<JobRequirementRecommendDetail>(entity =>
+        {
+            entity.ToTable("JobRequirementRecommendDetail", tb => tb.HasComment("Bảng chi tiết các phương án đề xuất cho phiếu yêu cầu công việc"));
+
+            entity.Property(e => e.ID).HasComment("ID bản ghi");
+            entity.Property(e => e.ApprovalDate)
+                .HasComment("Ngày duyệt")
+                .HasColumnType("datetime");
+            entity.Property(e => e.ApproverID).HasComment("ID người duyệt");
+            entity.Property(e => e.Contact)
+                .HasMaxLength(500)
+                .HasComment("Thông tin liên hệ nhà cung cấp");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.DisapprovalReason)
+                .HasMaxLength(500)
+                .HasComment("Lý do không duyệt");
+            entity.Property(e => e.IsApproved).HasComment("Trạng thái duyệt: 0 - Chưa duyệt, 1 - Đã duyệt, 2 - Hủy duyệt");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái xóa mềm: 0 - Chưa xóa, 1 - Đã xóa");
+            entity.Property(e => e.JobRequirementRecommendID).HasComment("ID liên kết tới bảng JobRequirementRecommend");
+            entity.Property(e => e.Note)
+                .HasMaxLength(500)
+                .HasComment("Ghi chú thêm");
+            entity.Property(e => e.ProductName)
+                .HasMaxLength(500)
+                .HasComment("Tên dịch vụ / hạng mục đề xuất");
+            entity.Property(e => e.Supplier)
+                .HasMaxLength(500)
+                .HasComment("Tên nhà cung cấp");
+            entity.Property(e => e.TotalAmount)
+                .HasComment("Thành tiền")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.UnitPrice)
+                .HasComment("Đơn giá")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người cập nhật bản ghi");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật bản ghi")
+                .HasColumnType("datetime");
         });
 
         modelBuilder.Entity<KPICriteriaDetail>(entity =>

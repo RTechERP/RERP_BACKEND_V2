@@ -71,4 +71,19 @@ public partial class FlightBookingProposal
     public int? FlightBookingManagementID { get; set; }
 
     public bool? HCNSProposal { get; set; }
+
+    /// <summary>
+    /// Lí do hcns đề xuất
+    /// </summary>
+    public string? ReasonHCNSProposal { get; set; }
+
+    /// <summary>
+    /// thời gian xuất phát
+    /// </summary>
+    public DateTime? DepartureDate { get; set; }
+
+    /// <summary>
+    /// thời gian cần đến
+    /// </summary>
+    public DateTime? DepartureTime { get; set; }
 }

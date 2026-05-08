@@ -87,4 +87,9 @@ public partial class FlightBookingManagement
     /// Trạng thái xóa mềm (0: chưa xóa, 1: đã xóa)
     /// </summary>
     public bool? IsDeleted { get; set; }
+
+    /// <summary>
+    /// ID người yêu cầu
+    /// </summary>
+    public int? EmployeeRequestID { get; set; }
 }

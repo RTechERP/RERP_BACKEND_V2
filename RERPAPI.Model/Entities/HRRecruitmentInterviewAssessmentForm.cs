@@ -129,9 +129,4 @@ public partial class HRRecruitmentInterviewAssessmentForm
     /// ID đơn ứng tuyển
     /// </summary>
     public int? HRRecruitmentCandidateID { get; set; }
-
-    /// <summary>
-    /// Tên người ký
-    /// </summary>
-    public string? SignName { get; set; }
 }

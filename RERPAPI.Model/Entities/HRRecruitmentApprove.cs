@@ -114,4 +114,9 @@ public partial class HRRecruitmentApprove
     public string? HCNSApproveName { get; set; }
 
     public decimal? BasicSalary { get; set; }
+
+    /// <summary>
+    /// Lý do huỷ duyệt
+    /// </summary>
+    public string? RejectionReason { get; set; }
 }
