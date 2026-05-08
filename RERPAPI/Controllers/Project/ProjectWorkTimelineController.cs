@@ -69,7 +69,7 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                var data = userTeamRepo.GetAll(x => x.DepartmentID == depID);
+                var data = userTeamRepo.GetAll(x => x.DepartmentID == depID && x.IsDeleted != true);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)

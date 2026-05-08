@@ -52,7 +52,7 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                List<UserTeam> userTeams = userTeamRepo.GetAll(x => x.DepartmentID == depID);
+                List<UserTeam> userTeams = userTeamRepo.GetAll(x => x.DepartmentID == depID && x.IsDeleted != true);
                 return Ok(ApiResponseFactory.Success(userTeams, ""));
             }
             catch (Exception ex)
