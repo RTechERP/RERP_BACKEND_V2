@@ -513,11 +513,7 @@ builder.Services.AddScoped<FiveSBonusMinusRepo>();
 builder.Services.AddScoped<HRRecruitmentInterviewAssessmentFormRepo>();
 builder.Services.AddScoped<HRRecruitmentApplicationFormRepo>();
 builder.Services.AddScoped<HRRecruitmentApproveRepo>();
-//builder.Services.AddScoped<JobPerfomanceEvaluationRepo>();
-//builder.Services.AddScoped<JobPerfomanceEvaluationCriteriaRepo>();
 builder.Services.AddScoped<JobPerfomanceEvaluationApproveRepo>();
-//builder.Services.AddScoped<PerformanceCriteriaRepo>();
-//builder.Services.AddScoped<JobPerfomanceEvaluationNewRepo>();
 
 
 #region khóa học 
