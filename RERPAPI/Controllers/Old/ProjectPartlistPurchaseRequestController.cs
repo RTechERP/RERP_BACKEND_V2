@@ -614,15 +614,17 @@ namespace RERPAPI.Controllers.Old
                                 await _pOKHDetailRepo.UpdateAsync(detail);
                             }
                         }
-
                     }
 
                     _repo.UpdateData(item);
                     if (item.ID <= 0) await _repo.CreateAsync(item);
-                    else await _repo.UpdateAsync(item);
+					else
+					{
+						item.UpdatedDate = DateTime.Now;
+						await _repo.UpdateAsync(item);
+					}
 
                     await _projectPartListPurchaseRequestApproveLogRepo.CreateLogAsync(item.ID, PurchaseRequestApproveStatus.SaveData, currentUser.EmployeeID, currentUser.LoginName);
-
                 }
 
                 return Ok(ApiResponseFactory.Success(null, $"Đã lưu dữ liệu thành công"));
