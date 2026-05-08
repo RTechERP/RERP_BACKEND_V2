@@ -517,7 +517,7 @@ builder.Services.AddScoped<HRRecruitmentApproveRepo>();
 //builder.Services.AddScoped<JobPerfomanceEvaluationCriteriaRepo>();
 builder.Services.AddScoped<JobPerfomanceEvaluationApproveRepo>();
 //builder.Services.AddScoped<PerformanceCriteriaRepo>();
-builder.Services.AddScoped<JobPerfomanceEvaluationNewRepo>();
+//builder.Services.AddScoped<JobPerfomanceEvaluationNewRepo>();
 
 
 #region khóa học 

@@ -567,7 +567,7 @@ namespace RERPAPI.Controllers
                     mainRecord.HiringRequestCode,
                     mainRecord.DepartmentID,
                     mainRecord.EmployeeChucVuHDID,
-                    //mainRecord.PositionName,
+                    mainRecord.PositionName,
                     mainRecord.EmployeeRequestID,
                     mainRecord.QuantityHiring,
                     mainRecord.SalaryMin,
@@ -581,7 +581,7 @@ namespace RERPAPI.Controllers
                     mainRecord.DateRequest,
                     mainRecord.HiringDeadline,
                     DepartmentName = department?.Name ?? "",
-                    //EmployeeChucVuHDName = string.IsNullOrEmpty(mainRecord.PositionName) ? (chucVuHD?.Name ?? "") : mainRecord.PositionName,
+                    EmployeeChucVuHDName = string.IsNullOrEmpty(mainRecord.PositionName) ? (chucVuHD?.Name ?? "") : mainRecord.PositionName,
                     EmployeeRequestCode = employee?.Code ?? "",
                     EmployeeRequestName = employee?.FullName ?? ""
                 };
@@ -983,7 +983,7 @@ namespace RERPAPI.Controllers
                     HRHiringRequest hr = _hrHiringRequestRepo.GetByID(item.ID);
                     if (hr == null)
                         continue;
-                    //hr.IsCompleted = item.IsCompleted;
+                    hr.IsCompleted = item.IsCompleted;
                       int complete = await _hrHiringRequestRepo.UpdateAsync(hr);
                     if(complete>0)
                     {
