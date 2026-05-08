@@ -78,6 +78,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<AuditLog> AuditLogs { get; set; }
 
+    public virtual DbSet<BankList> BankLists { get; set; }
+
     public virtual DbSet<BillDocumentExport> BillDocumentExports { get; set; }
 
     public virtual DbSet<BillDocumentExportLog> BillDocumentExportLogs { get; set; }
@@ -1698,6 +1700,13 @@ public partial class RTCContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.UserName).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<BankList>(entity =>
+        {
+            entity.ToTable("BankList");
+
+            entity.Property(e => e.BankName).HasMaxLength(550);
         });
 
         modelBuilder.Entity<BillDocumentExport>(entity =>
@@ -9603,6 +9612,8 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.DatePriceRequest).HasColumnType("datetime");
             entity.Property(e => e.DeadlinePriceRequest).HasColumnType("datetime");
             entity.Property(e => e.ExpectedReturnDate).HasColumnType("datetime");
+            entity.Property(e => e.IsApprovedPurchase).HasDefaultValue(false);
+            entity.Property(e => e.IsApprovedTBP).HasDefaultValue(false);
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.LeadTime).HasMaxLength(100);
             entity.Property(e => e.NCCFinal).HasMaxLength(750);

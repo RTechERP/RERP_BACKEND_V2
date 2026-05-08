@@ -650,7 +650,7 @@ namespace RERPAPI.Controllers.KHOAHOC
 
                     if (course.CatalogType != 2)
                     {
-                        if ((course.NumberLesson == course.TotalHistoryLession && course.Evaluate == 1) || currentUser.IsLeader > 0 || currentUser.IsAdmin  || currentUser.EmployeeID == 55)
+                        if ((course.NumberLesson == course.TotalHistoryLession && course.Evaluate == 1) || currentUser.IsLeader > 0 || currentUser.IsAdmin  || currentUser.EmployeeID == 55 || currentUser.EmployeeID == 753)
                         {
                             listCourseParent[i].Status = 1;
                         }

@@ -310,7 +310,7 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                             //log.ReasonCancel = "";
                             //log.ContentLog += $"{DateTime.Now.ToString("dd/MM/yyyy")}: {_currentUser.FullName} {item.Action.ButtonActionText}\n";
                             orderLogApproved.IsRequestAppendFileAC = item.PaymentOrderLog.IsApproved == 3;
-                            orderLogApproved.ReasonRequestAppendFileAC = item.AccountingNote;
+                            orderLogApproved.ReasonRequestAppendFileAC = item.PaymentOrderLog.ReasonRequestAppendFileAC;
                             //log.IsRequestAppendFileAC = item.PaymentOrderLog.IsApproved == 3;
                             //log.ReasonRequestAppendFileAC = item.AccountingNote;
                             if (!string.IsNullOrEmpty(item.AccountingNote))
@@ -327,6 +327,7 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                         {
                             if (item.Action.ButtonActionName == "btnHRUpdateDocument" && !isRequestAppendFileHR)
                             {
+                                reasonRequestAppendFileHR = item.PaymentOrderLog.ReasonRequestAppendFileHR ?? "";
                                 orderLogApproved.ReasonRequestAppendFileHR = reasonRequestAppendFileHR;
                                 orderLogApproved.IsRequestAppendFileHR = isRequestAppendFileHR;
                                 //log.ReasonRequestAppendFileHR = reasonRequestAppendFileHR;
