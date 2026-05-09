@@ -820,6 +820,27 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+		//Lấy danh tổng hợp PO NCC kế toán
+		[HttpPost("get-po-ncc-summary-kt")]
+		public IActionResult GetPONCCSummaryKT([FromBody] PONCCSummaryRequestParam request)
+		{
+			try
+			{
+				var firstDay = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+				var lastDay = firstDay.AddMonths(1).AddDays(-1);
+				string procedureName = "sp_GetAllPONCCKT";
+				string[] paramNames = new string[] { "@FilterText", "@DateStart", "@DateEnd", "@SupplierID", "@Status", "@EmployeeID" };
+				object[] paramValues = new object[] { request.FilterText, request.DateStart ?? firstDay, request.DateEnd ?? lastDay, request.SupplierID, request.Status, request.EmployeeID };
+				var data = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
+				var propose = SQLHelper<object>.GetListData(data, 0);
+
+				return Ok(ApiResponseFactory.Success(propose, "Lấy dữ liệu thành công"));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
         #endregion
 
         [HttpGet("printpo")]
