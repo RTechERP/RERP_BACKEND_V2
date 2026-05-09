@@ -514,6 +514,7 @@ builder.Services.AddScoped<HRRecruitmentInterviewAssessmentFormRepo>();
 builder.Services.AddScoped<HRRecruitmentApplicationFormRepo>();
 builder.Services.AddScoped<HRRecruitmentApproveRepo>();
 builder.Services.AddScoped<JobPerfomanceEvaluationApproveRepo>();
+builder.Services.AddScoped<JobPerfomanceEvaluationNewRepo>();
 
 
 #region khóa học 
@@ -674,7 +675,7 @@ builder.Services.AddCors(options =>
     });
 });
 // Chỉ khởi tạo 1 lần duy nhất khi chạy server
-FirebaseApp.Create(new AppOptions() 
+FirebaseApp.Create(new AppOptions()
 {
     Credential = GoogleCredential.FromFile("firebase-adminsdk.json") // Thay bằng đường dẫn thực tế
 });
@@ -827,7 +828,7 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseCors("MyCors");
 app.UseAuthentication();
-app.UseMiddleware<DynamicAuthorizationMiddleware>(); 
+app.UseMiddleware<DynamicAuthorizationMiddleware>();
 app.UseAuthorization();
 app.UseSession();
 
