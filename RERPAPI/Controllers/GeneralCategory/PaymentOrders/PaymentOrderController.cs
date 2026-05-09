@@ -303,6 +303,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 payment.EmployeeID = _currentUser.EmployeeID;
                 payment.IsUrgent = payment.DeadlinePayment.HasValue;
                 if (payment.DeadlinePayment.HasValue) payment.DeadlinePayment = payment.DeadlinePayment.Value.ToLocalTime();
+                else payment.DeadlinePayment = null;
                 if (payment.DateOrder.HasValue) payment.DateOrder = payment.DateOrder.Value.ToLocalTime();
                 if (payment.DatePayment.HasValue) payment.DatePayment = payment.DatePayment.Value.ToLocalTime();
                 if (payment.IsSpecialOrder == true) payment.TypeOrder = 0;
@@ -321,7 +322,23 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
 
                     await _paymentRepo.CreateAsync(payment);
                 }
-                else await _paymentRepo.UpdateAsync(payment);
+                else
+                {
+                    if (string.IsNullOrEmpty(payment.Code?.Trim()))
+                    {
+                        payment.Code = _paymentRepo.GetCode(payment);
+
+                        var existCodes = _paymentRepo.GetAll(x => x.Code == payment.Code && x.IsDelete != true);
+                        if (existCodes.Count() > 0)
+                        {
+                            string newCode = _paymentRepo.GetCode(payment);
+                            message += $"\nSố ĐNTT [{payment.Code}] đã tồn tại. PM tự động đổi thành [{newCode}]";
+                            payment.Code = newCode;
+                            //return BadRequest(ApiResponseFactory.Fail(null, $"Số đề nghị [{payment.Code}] đã tồn tại!"));
+                        }
+                    }
+                    await _paymentRepo.UpdateAsync(payment);
+                }
 
                 //Update link pokh
                 await _paymentOrderPORepo.Create(payment);

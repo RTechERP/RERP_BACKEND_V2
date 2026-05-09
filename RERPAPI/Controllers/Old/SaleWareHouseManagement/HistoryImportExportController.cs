@@ -18,6 +18,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     filter.DateStart = new DateTime(1990, 01, 01);
                     filter.DateEnd = new DateTime(9999, 01, 01);
                 }
+                filter.DateStart = filter.DateStart.Date;
+                filter.DateEnd = filter.DateEnd.Date.AddDays(1).AddSeconds(-1);
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
                     "spGetHistoryImportExport_New",
                     new string[] { "@PageNumber", "@PageSize", "@FilterText", "@DateStart", "@DateEnd", "@Status", "@WarehouseCode" },
