@@ -572,6 +572,10 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<InvoiceLink> InvoiceLinks { get; set; }
 
+    public virtual DbSet<JobPerfomanceEvaluationApprove> JobPerfomanceEvaluationApproves { get; set; }
+
+    public virtual DbSet<JobPerfomanceEvaluationNew> JobPerfomanceEvaluationNews { get; set; }
+
     public virtual DbSet<JobRequirement> JobRequirements { get; set; }
 
     public virtual DbSet<JobRequirementApproved> JobRequirementApproveds { get; set; }
@@ -1707,6 +1711,11 @@ public partial class RTCContext : DbContext
             entity.ToTable("BankList");
 
             entity.Property(e => e.BankName).HasMaxLength(550);
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<BillDocumentExport>(entity =>
@@ -6968,6 +6977,215 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
+        modelBuilder.Entity<JobPerfomanceEvaluationApprove>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__JobPerfo__3214EC27E30F2094");
+
+            entity.ToTable("JobPerfomanceEvaluationApprove", tb => tb.HasComment("Duyệt đánh giá chuyển hợp đồng"));
+
+            entity.Property(e => e.ID).HasComment("ID");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(150)
+                .HasComment("Người tạo");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo")
+                .HasColumnType("datetime");
+            entity.Property(e => e.DateApproved)
+                .HasComment("Ngày duyệt/Huỷ duyệt")
+                .HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái xoá");
+            entity.Property(e => e.JobPerfomanceEvaluationID).HasComment("ID đánh giá chuyển hợp đồng");
+            entity.Property(e => e.Note).HasComment("Ghi chú");
+            entity.Property(e => e.ReasonUnApproved)
+                .HasMaxLength(550)
+                .HasComment("Lý do huỷ duyệt");
+            entity.Property(e => e.StatusApprove).HasComment("0:chờ duyệt, 1: Duyệt, 2:Huỷ duyệt");
+            entity.Property(e => e.Step).HasComment("1:Người lao động; 2:TBP ; 3:Phòng HR ; 4:BGD");
+            entity.Property(e => e.StepName)
+                .HasMaxLength(550)
+                .HasComment("Bước duyệt");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(150)
+                .HasComment("Người update");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày update")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<JobPerfomanceEvaluationNew>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__JobPerfo__3214EC2781E4A856");
+
+            entity.ToTable("JobPerfomanceEvaluationNew", tb => tb.HasComment("Đánh giá chuyển hợp đồng New"));
+
+            entity.Property(e => e.ID).HasComment("ID");
+            entity.Property(e => e.AreasForImprovement).HasComment("Điểm cần cải thiện");
+            entity.Property(e => e.Attendance)
+                .HasComment("C Chuyên cần (Đi làm đúng giờ, không nghỉ quá phép)")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.AttitudeAndResponsibility)
+                .HasComment("C Thái độ & tinh thần trách nhiệm")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.BGDApproveID).HasComment("BGD Duyệt");
+            entity.Property(e => e.BGDApproveName)
+                .HasMaxLength(255)
+                .HasComment("BGD Duyệt");
+            entity.Property(e => e.CollaborationAndSupport)
+                .HasComment("B Khả năng phối hợp & hỗ trợ phòng ban")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.CommunicationAndTeamwork)
+                .HasComment("B Kỹ năng giao tiếp & làm việc nhóm")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.CompanyCommitment)
+                .HasComment("D Mức độ gắn bó với Công ty")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.ComplianceWithRegulations)
+                .HasComment("C Tuân thủ nội quy, quy định Công ty & Phòng")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.ConclusionEmployeeLoaiHDID).HasComment("ID loại hợp đồng ( kết luận )");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(150)
+                .HasComment("Người tạo");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo")
+                .HasColumnType("datetime");
+            entity.Property(e => e.CulturalFitRTC)
+                .HasComment("D Mức độ phù hợp với văn hóa RTC")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.DateEnd)
+                .HasComment("Thời gian kết thúc đánh giá")
+                .HasColumnType("datetime");
+            entity.Property(e => e.DateEvaluation)
+                .HasDefaultValueSql("('')")
+                .HasComment("Ngày đánh giá")
+                .HasColumnType("datetime");
+            entity.Property(e => e.DateStart)
+                .HasComment("Thời gian bắt đầu đánh giá")
+                .HasColumnType("datetime");
+            entity.Property(e => e.DisciplineAndAttitude)
+                .HasComment("C Kỷ luật, tác phong & thái độ")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.EmployeeEvaluationID).HasComment("ID Người đánh giá");
+            entity.Property(e => e.EmployeeID).HasComment("ID người chuyển hợp đồng");
+            entity.Property(e => e.EvaluationEmployeeLoaiHDID).HasComment("ID loại hợp đồng ( Loại Đánh giá )");
+            entity.Property(e => e.EvaluationGrade).HasComment("Xếp loại cuối cùng");
+            entity.Property(e => e.HCNSApproveID).HasComment("HCNS Duyệt");
+            entity.Property(e => e.HCNSApproveName)
+                .HasMaxLength(255)
+                .HasComment("HCNS Duyệt");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái xoá");
+            entity.Property(e => e.LearningAndGrowthMindset)
+                .HasComment("D Tinh thần học hỏi & cầu tiến")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.LocationEvaluation)
+                .HasMaxLength(250)
+                .HasComment("Địa điểm đánh giá");
+            entity.Property(e => e.MainJobmainResponsibilities).HasComment("Công việc chính\r\n");
+            entity.Property(e => e.OtherConclusion).HasComment("Kết luận khác");
+            entity.Property(e => e.Proactiveness)
+                .HasComment("B Tính chủ động trong công việc")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.ProblemSolvingAbility)
+                .HasComment("A Khả năng xử lý tình huống")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.ProfessionalCompetency)
+                .HasComment("A Năng lực chuyên môn")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.ProfessionalKnowledge)
+                .HasComment("A Kiến thức chuyên môn nghiệp vụ")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.RecommendationsOrOther).HasComment("Kiến nghị/Khác");
+            entity.Property(e => e.Strengths).HasComment("Điểm mạnh");
+            entity.Property(e => e.TBPApproveID).HasComment("TBP duyệt");
+            entity.Property(e => e.TBPApproveName)
+                .HasMaxLength(255)
+                .HasComment("TBP duyệt");
+            entity.Property(e => e.TBPAttendance)
+                .HasComment("C Chuyên cần (Đi làm đúng giờ, không nghỉ quá phép)")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TBPAttitudeAndResponsibility)
+                .HasComment("C Thái độ & tinh thần trách nhiệm")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TBPCollaborationAndSupport)
+                .HasComment("B Khả năng phối hợp & hỗ trợ phòng ban")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TBPCommunicationAndTeamwork)
+                .HasComment("B Kỹ năng giao tiếp & làm việc nhóm")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TBPCompanyCommitment)
+                .HasComment("D Mức độ gắn bó với Công ty")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TBPComplianceWithRegulations)
+                .HasComment("C Tuân thủ nội quy, quy định Công ty & Phòng")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TBPCulturalFitRTC)
+                .HasComment("D Mức độ phù hợp với văn hóa RTC")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TBPDisciplineAndAttitude)
+                .HasComment("C Kỷ luật, tác phong & thái độ")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TBPEvaluationGrade)
+                .HasMaxLength(255)
+                .HasComment("Xếp loại cuối cùng");
+            entity.Property(e => e.TBPLearningAndGrowthMindset)
+                .HasComment("D Tinh thần học hỏi & cầu tiến")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TBPProactiveness)
+                .HasComment("B Tính chủ động trong công việc")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TBPProblemSolvingAbility)
+                .HasComment("A Khả năng xử lý tình huống")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TBPProfessionalCompetency)
+                .HasComment("A Năng lực chuyên môn")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TBPProfessionalKnowledge)
+                .HasComment("A Kiến thức chuyên môn nghiệp vụ")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TBPToolAndSystemSkills)
+                .HasComment("A Kỹ năng sử dụng công cụ, hệ thống")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TBPTotalScore)
+                .HasComment("Tổng điểm")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TBPWorkOutputKPI)
+                .HasComment("B Kết quả đầu ra công việc (Output/KPI chính)")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TBPWorkProgress)
+                .HasComment("A Tiến độ & khả năng đáp ứng công việc")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TBPWorkQuality)
+                .HasComment("A Chất lượng công việc (độ chính xác, ít sai sót)")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TBPWorkStyle)
+                .HasComment("C Tác phong làm việc (Chỉn chu, chuyên nghiệp)")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.ToolAndSystemSkills)
+                .HasComment("A Kỹ năng sử dụng công cụ, hệ thống")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TotalScore)
+                .HasComment("Tổng điểm")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(150)
+                .HasComment("Người update");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày update")
+                .HasColumnType("datetime");
+            entity.Property(e => e.WorkOutputKPI)
+                .HasComment("B Kết quả đầu ra công việc (Output/KPI chính)")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.WorkProgress)
+                .HasComment("A Tiến độ & khả năng đáp ứng công việc")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.WorkQuality)
+                .HasComment("A Chất lượng công việc (độ chính xác, ít sai sót)")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.WorkStyle)
+                .HasComment("C Tác phong làm việc (Chỉn chu, chuyên nghiệp)")
+                .HasColumnType("decimal(18, 2)");
+        });
+
         modelBuilder.Entity<JobRequirement>(entity =>
         {
             entity.ToTable("JobRequirement");
@@ -8255,7 +8473,6 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.FeeShip).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.IntoMoney).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.NameBill).HasMaxLength(250);
-            entity.Property(e => e.Note).HasMaxLength(500);
             entity.Property(e => e.OrderDate)
                 .HasComment("ngày yêu cầu giao hàng")
                 .HasColumnType("datetime");
@@ -8529,9 +8746,11 @@ public partial class RTCContext : DbContext
 
             entity.HasIndex(e => e.TypeOrder, "Index_PaymentOrder_TypeOrder");
 
+            entity.Property(e => e.BankListID).HasDefaultValue(0);
             entity.Property(e => e.Code)
                 .HasMaxLength(50)
                 .IsUnicode(false);
+            entity.Property(e => e.ContentBankTransferType).HasDefaultValue(2);
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.DateOrder)
@@ -11912,6 +12131,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.AddressDelivery).HasMaxLength(550);
             entity.Property(e => e.AddressNCC).HasMaxLength(500);
             entity.Property(e => e.BankCharge).HasMaxLength(550);
+            entity.Property(e => e.BankListID).HasDefaultValue(0);
             entity.Property(e => e.Brand).HasMaxLength(250);
             entity.Property(e => e.CodeNCC).HasMaxLength(500);
             entity.Property(e => e.Company).HasComment("1:RTC\r\n2:MVI\r\n3:APR\r\n4:YONKO");

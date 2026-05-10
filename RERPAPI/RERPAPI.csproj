@@ -4,6 +4,11 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+	  <WebPublishMethod>MSDeploy</WebPublishMethod>
+
+	  <LastUsedBuildConfiguration>Release</LastUsedBuildConfiguration>
+
+	  <EnvironmentName>Production</EnvironmentName>
   </PropertyGroup>
 
   <ItemGroup>

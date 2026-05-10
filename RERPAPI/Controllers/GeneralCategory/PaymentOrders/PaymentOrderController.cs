@@ -58,6 +58,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         private readonly EmployeeTeamSaleLinkRepo _employeeTeamSaleLinkRepo;
         private readonly CurrencyConfigRepo _currencyConfigRepo;
         private readonly PaymentOrderLogApprovedRepo _paymentOrderLogApprovedRepo;
+        private readonly BankListRepo _bankListRepo;
 
         public PaymentOrderController(IConfiguration configuration, CurrentUser currentUser, RoleConfig roleConfig,
             PaymentOrderRepo paymentRepo,
@@ -87,8 +88,9 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             EmployeeTeamSaleRepo employeeTeamSaleRepo,
             EmployeeRepo employeeRepo,
             EmployeeTeamSaleLinkRepo employeeTeamSaleLinkRepo,
-            CurrencyConfigRepo currencyConfigRepo
-            , PaymentOrderLogApprovedRepo paymentOrderLogApprovedRepo
+            CurrencyConfigRepo currencyConfigRepo,
+            PaymentOrderLogApprovedRepo paymentOrderLogApprovedRepo,
+            BankListRepo bankListRepo
 
             )
         {
@@ -126,6 +128,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             _employeeRepo = employeeRepo;
             _currencyConfigRepo = currencyConfigRepo;
             _paymentOrderLogApprovedRepo = paymentOrderLogApprovedRepo;
+            _bankListRepo = bankListRepo;
         }
 
 
@@ -299,7 +302,11 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                         return BadRequest(validate);
                     }
                 }
-
+                BankList bankList = _bankListRepo.GetByID(payment.BankListID ?? 0);
+                if (bankList != null && bankList.ID > 0)
+                {
+                    payment.Bank = bankList.BankName;
+                }
                 payment.EmployeeID = _currentUser.EmployeeID;
                 payment.IsUrgent = payment.DeadlinePayment.HasValue;
                 if (payment.DeadlinePayment.HasValue) payment.DeadlinePayment = payment.DeadlinePayment.Value.ToLocalTime();
@@ -339,6 +346,8 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     }
                     await _paymentRepo.UpdateAsync(payment);
                 }
+
+
 
                 //Update link pokh
                 await _paymentOrderPORepo.Create(payment);
@@ -1029,6 +1038,20 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             try
             {
                 var data = _currencyConfigRepo.GetAll(p => !p.IsDeleted.Value).OrderBy(x => x.SortOrder);
+                return Ok(ApiResponseFactory.Success(data));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-bank-list")]
+        public async Task<IActionResult> GetBankList()
+        {
+            try
+            {
+                var data = _bankListRepo.GetAll(p => !p.IsDeleted.Value).OrderBy(x => x.STT);
                 return Ok(ApiResponseFactory.Success(data));
             }
             catch (Exception ex)

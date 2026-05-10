@@ -641,6 +641,7 @@ builder.Services.AddScoped<CommercialPriceRequestRepo>();
 builder.Services.AddScoped<PaymentOrderLogApprovedRepo>();
 builder.Services.AddScoped<CurrencyConfigRepo>(); 
 builder.Services.AddScoped<BillImportSaleLogRepo>();
+builder.Services.AddScoped<BankListRepo>();
 
 
 builder.Services.AddScoped<CurrentUser>(provider =>

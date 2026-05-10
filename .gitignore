@@ -36,3 +36,4 @@ secrets.json
 /RERPAPI.Repo/GenericEntity/HRM/HRHiringCandidateInformationFormOtherCertificatesRepo.cs
 /RERPAPI/firebase-adminsdk.json
 /RERPAPI/logs/
+/RERPAPI/appsettings.Production.json
