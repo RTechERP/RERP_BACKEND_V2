@@ -1,8 +1,11 @@
 ﻿using DocumentFormat.OpenXml.VariantTypes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
+using NPOI.HPSF;
+using NPOI.SS.Formula.Functions;
 using OfficeOpenXml.ConditionalFormatting.Contracts;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
@@ -13,7 +16,6 @@ using RERPAPI.Repo.GenericEntity;
 using System.Data;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.AspNetCore.StaticFiles;
 
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -35,6 +37,8 @@ namespace RERPAPI.Controllers.Old.POKH
         private readonly ProductGroupRepo _productGroupRepo;
         private readonly ConfigSystemRepo _configSystemRepo;
         private readonly ProductSaleRepo _productSaleRepo;
+        private readonly POKHLogRepo _pokhLogRepo;
+        private readonly UserRepo _userRepo;
         public POKHController(
             IWebHostEnvironment environment,
             POKHRepo pokhRepo,
@@ -45,7 +49,9 @@ namespace RERPAPI.Controllers.Old.POKH
             CurrencyRepo currencyRepo,
             ProductGroupRepo productGroupRepo,
             ConfigSystemRepo configSystemRepo,
-            ProductSaleRepo productSaleRepo)
+            ProductSaleRepo productSaleRepo,
+            POKHLogRepo pokhLogRepo,
+            UserRepo userRepo)
         {
             _pokhRepo = pokhRepo;
             _pokhDetailRepo = pokhDetailRepo;
@@ -56,6 +62,8 @@ namespace RERPAPI.Controllers.Old.POKH
             _productGroupRepo = productGroupRepo;
             _configSystemRepo = configSystemRepo;
             _productSaleRepo = productSaleRepo;
+            _pokhLogRepo = pokhLogRepo;
+            _userRepo = userRepo;
 
             //_uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "POKH");
             //if (!Directory.Exists(_uploadPath))
@@ -147,7 +155,7 @@ namespace RERPAPI.Controllers.Old.POKH
                 var dataNew = SQLHelper<dynamic>.GetListData(list, 3);
                 dataNew.AddRange(dataOld);
                 var result = dataNew;
-                return Ok(ApiResponseFactory.Success(new {list, result}, ""));
+                return Ok(ApiResponseFactory.Success(new { list, result }, ""));
             }
             catch (Exception ex)
             {
@@ -279,16 +287,21 @@ namespace RERPAPI.Controllers.Old.POKH
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                POKHLog log = new POKHLog();
+                string logContent = "";
+
                 // Nếu request chỉ gửi flag (duyệt/hủy duyệt hoặc xóa po) mà không có detail thì bỏ qua ValidatePOKH
                 bool isFlagOnlyAction = dto?.POKH != null
                     && dto.POKH.ID > 0
                     && (dto.POKHDetails == null || dto.POKHDetails.Count == 0)
                     && (dto.POKHDetailsMoney == null || dto.POKHDetailsMoney.Count == 0)
                     && (dto.POKH.IsApproved.HasValue || dto.POKH.IsDeleted.HasValue);
+                var existingPO = _pokhRepo.GetByID(dto.POKH.ID);
 
                 if (isFlagOnlyAction)
                 {
-                    var existingPO = _pokhRepo.GetByID(dto.POKH.ID);
                     if (existingPO == null)
                         return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy POKH để cập nhật"));
 
@@ -300,16 +313,36 @@ namespace RERPAPI.Controllers.Old.POKH
 
                     existingPO.UpdatedDate = DateTime.Now;
                     await _pokhRepo.UpdateAsync(existingPO);
+                    log.TypeLog = "Cập nhật";
 
                     var msgs = new List<string>();
                     if (dto.POKH.IsApproved.HasValue)
-                        msgs.Add(dto.POKH.IsApproved.Value ? "Duyệt POKH thành công" : "Hủy duyệt POKH thành công");
-                    if (dto.POKH.IsDeleted.HasValue)
-                        msgs.Add("Xóa POKH thành công");
+                    {
+                        string msg = dto.POKH.IsApproved.Value ? "Duyệt POKH thành công" : "Hủy duyệt POKH thành công";
+                        msgs.Add(msg);
+                        logContent += $"- {currentUser.FullName} đã {msg.ToLower()} \\n";
 
+                    }
+                    if (dto.POKH.IsDeleted.HasValue)
+                    {
+                        msgs.Add("Xóa POKH thành công");
+                        logContent += $"- {currentUser.FullName} đã xóa phiếu \\n";
+                    }
+                    
+                    await _pokhLogRepo.AddLog(existingPO.ID, logContent, "Cập nhật");
                     return Ok(ApiResponseFactory.Success(new { id = existingPO.ID }, string.Join(" - ", msgs)));
                 }
                 var errors = ValidatePOKH(dto);
+
+                if (existingPO != null && dto.POKH != null && dto.POKH.ID > 0)
+                {
+                    string logUpdate = _pokhLogRepo.GenerateLog(existingPO, dto.POKH);
+                    if(!string.IsNullOrWhiteSpace(logUpdate))
+                    {
+                        logContent += $"- {currentUser.FullName} đã cập nhật phiếu: \\n{logUpdate} \\n";
+                    }
+                }
+
                 if (errors.Any())
                 {
                     return Ok(ApiResponseFactory.Fail(null, "Dữ liệu không hợp lệ", new { Errors = errors }));
@@ -318,13 +351,23 @@ namespace RERPAPI.Controllers.Old.POKH
                 if (dto.POKH.ID <= 0)
                 {
                     await _pokhRepo.CreateAsync(dto.POKH);
+                    logContent = $"- {currentUser.FullName} đã tạo mới phiếu \\n";
+                    //await _pokhLogRepo.AddLog(dto.POKH.ID, logContent, "Tạo mới");
+                    log.TypeLog = "Tạo mới";
                 }
                 else
                 {
                     dto.POKH.UpdatedDate = DateTime.Now;
                     await _pokhRepo.UpdateAsync(dto.POKH);
-
+                    //await _pokhLogRepo.AddLog(dto.POKH.ID, logContent, "Cập nhật");
+                    log.TypeLog = "Cập nhật";
                 }
+
+                //logContent = ""; // Reset log content để ghi lại chi tiết các dòng
+                var checkDetailDeleted = dto.POKHDetails.Where(x => x.IsDeleted == true && x.ID > 0).Count();
+                string productNameDeleted = "";
+                string productNameCreated = "";
+
                 var parentIdMapping = new Dictionary<int, int>();
                 if (dto.POKHDetails.Count > 0)
                 {
@@ -332,15 +375,18 @@ namespace RERPAPI.Controllers.Old.POKH
                     {
                         int idOld = item.ID;
                         int parentId = 0;
+                        var existing = _pokhDetailRepo.GetByID(idOld);
+                        var product = _productSaleRepo.GetByID(item.ProductID ?? (int)existing.ProductID);
 
                         if (item.IsDeleted == true && idOld > 0)
                         {
-                            var existing = _pokhDetailRepo.GetByID(idOld);
                             if (existing != null)
                             {
                                 existing.IsDeleted = true;
                                 await _pokhDetailRepo.UpdateAsync(existing);
                             }
+
+                            productNameDeleted += product != null ? product.ProductName + ", " : "";
                             continue;
                         }
 
@@ -348,9 +394,9 @@ namespace RERPAPI.Controllers.Old.POKH
                         {
                             parentId = parentIdMapping[item.ParentID.Value];
                         }
-
+                        var modelOld = idOld > 0 ? _pokhDetailRepo.GetByID(idOld) : null;
                         POKHDetail model = idOld > 0 ? _pokhDetailRepo.GetByID(idOld) ?? new POKHDetail() : new POKHDetail();
-                        // gán id và gán parent id
+
                         model.POKHID = dto.POKH.ID;
                         model.ParentID = parentId;
                         //
@@ -385,19 +431,49 @@ namespace RERPAPI.Controllers.Old.POKH
                         {
                             model.UpdatedDate = DateTime.Now;
                             await _pokhDetailRepo.UpdateAsync(model);
+                            string logUpdate = _pokhLogRepo.GenerateLogDetail(modelOld, model);
+                            if(!string.IsNullOrEmpty(logUpdate))
+                            {
+                                logContent += $"- {currentUser.FullName} đã cập nhật chi tiết sản phẩm [{product?.ProductName}]: \\n{logUpdate} \\n";
+                            }
                         }
                         else
                         {
+                            productNameCreated += model.ProductID > 0 ? product.ProductCode + ", " : "";
                             await _pokhDetailRepo.CreateAsync(model);
                         }
                         parentIdMapping.Add(item.ID, model.ID);
                     }
+
+                    if(checkDetailDeleted > 0)
+                    {
+                        productNameDeleted = productNameDeleted.TrimEnd(',', ' ');
+                        logContent += $"- {currentUser.FullName} đã xóa {checkDetailDeleted} sản phẩm '{productNameDeleted}' \\n";
+                    }
+
+                    if (!string.IsNullOrEmpty(productNameCreated))
+                    {
+                        productNameCreated = productNameCreated.TrimEnd(',', ' ');
+                        logContent += $"- {currentUser.FullName} đã thêm SP '{productNameCreated}' \\n";
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(logContent))
+                    {
+                        await _pokhLogRepo.AddLog(dto.POKH.ID, logContent, "Cập nhật");
+                    }
                 }
+
+                logContent = ""; // Reset log content để ghi lại chi tiết các dòng tiền
+                var checkUserDeleted = dto.POKHDetailsMoney.Where(x => x.IsDeleted == true && x.ID > 0);
+                string userNameDeleted = "";
+
                 if (dto.POKHDetailsMoney != null && dto.POKHDetailsMoney.Count > 0)
                 {
                     foreach (var item in dto.POKHDetailsMoney)
                     {
                         int idOld = item.ID;
+                        var user = _userRepo.GetByID(item.UserID ?? 0);
+                        var modelOld = idOld > 0 ? _pokhDetailMoneyRepo.GetByID(idOld) : null;
                         POKHDetailMoney detailMoney = idOld > 0 ? _pokhDetailMoneyRepo.GetByID(idOld) : new POKHDetailMoney();
                         detailMoney.POKHID = dto.POKH.ID;
                         detailMoney.POKHDetailID = 0;
@@ -412,23 +488,41 @@ namespace RERPAPI.Controllers.Old.POKH
                         detailMoney.CreatedDate = DateTime.Now;
                         detailMoney.IsDeleted = item.IsDeleted;
 
+                        if(item.IsDeleted == true && idOld > 0)
+                        {
+                            if (user != null)
+                            {
+                                userNameDeleted += user != null ? user.FullName + ", " : "";
+                            }
+                        }
+
                         if (idOld > 0)
                         {
+                            string logUpdate = _pokhLogRepo.GenerateLogUser(modelOld, detailMoney);
+                            if(!string.IsNullOrEmpty(logUpdate))
+                            {
+                                logContent += $"- {currentUser.FullName} đã cập nhật chi tiết [{user?.FullName}] phiếu: \\n{logUpdate} \\n";
+                            }
                             await _pokhDetailMoneyRepo.UpdateAsync(detailMoney);
                         }
                         else
                         {
+                            logContent += $"- {currentUser.FullName} đã thêm người [{user?.FullName}] \\n";
                             await _pokhDetailMoneyRepo.CreateAsync(detailMoney);
                         }
                     }
+
+                    if (checkUserDeleted != null && checkUserDeleted.Count() > 0)
+                    {
+                        userNameDeleted = userNameDeleted.TrimEnd(',', ' ');
+                        logContent += $"- {currentUser.FullName} đã xóa {checkUserDeleted.Count()} người [{userNameDeleted}] \\n";
+                    }
+                }
+                if (!string.IsNullOrWhiteSpace(logContent))
+                {
+                    await _pokhLogRepo.AddLog(dto.POKH.ID, logContent, log.TypeLog);
                 }
 
-                //return Ok(new
-                //{
-                //    status = 1,
-                //    message = "Success",
-                //    data = new { id = dto.POKH.ID }
-                //});
                 return Ok(ApiResponseFactory.Success(new { id = dto.POKH.ID }, ""));
             }
             catch (Exception ex)
@@ -580,6 +674,22 @@ namespace RERPAPI.Controllers.Old.POKH
             }
         }
 
+        #region Lấy API lịch sử thao tác
+        [HttpGet("log-activity")]
+        public IActionResult GetLogActivity(int pokhId)
+        {
+            try
+            {
+                var data = _pokhLogRepo.GetAll().Where(x => x.POKHID == pokhId).OrderByDescending(x => x.CreatedDate).ToList();
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        #endregion
+
         #region Hàm xử lí File và lưu bảng POKHFile
         [HttpPost("upload")]
         [DisableRequestSizeLimit]
@@ -589,6 +699,9 @@ namespace RERPAPI.Controllers.Old.POKH
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
                 var form = await Request.ReadFormAsync();
                 var key = form["key"].ToString();
                 var files = form.Files;
@@ -639,6 +752,7 @@ namespace RERPAPI.Controllers.Old.POKH
                     Directory.CreateDirectory(targetFolder);
 
                 var processedFile = new List<POKHFile>();
+                string fileString = "";
 
                 foreach (var file in files)
                 {
@@ -668,9 +782,16 @@ namespace RERPAPI.Controllers.Old.POKH
                         UpdatedBy = User.Identity?.Name ?? "System",
                         UpdatedDate = DateTime.Now
                     };
+                    fileString += originalFileName + ",";
 
                     await _pokhFilesRepo.CreateAsync(filePO);
                     processedFile.Add(filePO);
+                }
+
+                if (!string.IsNullOrWhiteSpace(fileString))
+                {
+                    string contentLog = $"- {currentUser.FullName} đã cập nhật file [{fileString}] \\n";
+                    await _pokhLogRepo.AddLog(po.ID, contentLog, "Cập nhật file");
                 }
 
                 return Ok(ApiResponseFactory.Success(processedFile, $"{processedFile.Count} tệp đã được tải lên thành công"));
@@ -964,7 +1085,7 @@ namespace RERPAPI.Controllers.Old.POKH
         }
 
         [HttpPost("import-excel-detail")]
-        
+
         public IActionResult ImportExcelDetail([FromBody] dynamic request)
         {
             try

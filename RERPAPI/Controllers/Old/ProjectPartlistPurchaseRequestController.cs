@@ -33,6 +33,7 @@ namespace RERPAPI.Controllers.Old
         ProjectPartListPurchaseRequestApproveLogRepo _projectPartListPurchaseRequestApproveLogRepo;
         List<PathStaticFile> _pathStaticFiles;
         ProductGroupRepo _productGroupRepo;
+        ProjectPartlistPriceRequestRepo _projectPartlistPriceRequestRepo;
 
         public ProjectPartlistPurchaseRequestController(
             ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo,
@@ -48,7 +49,8 @@ namespace RERPAPI.Controllers.Old
             ProductGroupRTCRepo productGroupRTCRepo,
             IConfiguration configuration,
             ProjectPartListPurchaseRequestApproveLogRepo projectPartListPurchaseRequestApproveLogRepo,
-            ProductGroupRepo productGroupRepo
+            ProductGroupRepo productGroupRepo,
+            ProjectPartlistPriceRequestRepo projectPartlistPriceRequestRepo
             )
         {
             _repo = projectPartlistPurchaseRequestRepo;
@@ -65,6 +67,7 @@ namespace RERPAPI.Controllers.Old
             _pathStaticFiles = configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();
             _projectPartListPurchaseRequestApproveLogRepo = projectPartListPurchaseRequestApproveLogRepo;
             _productGroupRepo = productGroupRepo;
+            _projectPartlistPriceRequestRepo = projectPartlistPriceRequestRepo;
         }
 
         #endregion Khai báo repository
@@ -559,7 +562,11 @@ namespace RERPAPI.Controllers.Old
                     {
                         _repo.UpdateData(item);
                         if (item.ID <= 0) await _repo.CreateAsync(item);
-                        else await _repo.UpdateAsync(item);
+                        else
+                        {
+                            item.UpdatedDate = DateTime.Now;
+                            await _repo.UpdateAsync(item);
+                        }
                         continue;
                     }
                     if (item.ProjectPartlistPurchaseRequestTypeID != 3 && item.ProjectPartlistPurchaseRequestTypeID != 4)
@@ -618,11 +625,11 @@ namespace RERPAPI.Controllers.Old
 
                     _repo.UpdateData(item);
                     if (item.ID <= 0) await _repo.CreateAsync(item);
-					else
-					{
-						item.UpdatedDate = DateTime.Now;
-						await _repo.UpdateAsync(item);
-					}
+                    else
+                    {
+                        item.UpdatedDate = DateTime.Now;
+                        await _repo.UpdateAsync(item);
+                    }
 
                     await _projectPartListPurchaseRequestApproveLogRepo.CreateLogAsync(item.ID, PurchaseRequestApproveStatus.SaveData, currentUser.EmployeeID, currentUser.LoginName);
                 }
@@ -675,6 +682,20 @@ namespace RERPAPI.Controllers.Old
                     int inventoryProjectID = Convert.ToInt32(item.InventoryProjectID);
                     if (inventoryProjectID > 0 && !inventoryProjects.Contains(inventoryProjectID))
                         inventoryProjects.Add(inventoryProjectID);
+
+                    if (item.ProjectPartlistPurchaseRequestTypeID == 8)
+                    {
+                        var purchaseRequest = _repo.GetByID(item.ID);
+                        if (purchaseRequest.ProjectPartlistPriceRequestID > 0)
+                        {
+                            var priceRequest = _projectPartlistPriceRequestRepo.GetByID((int)purchaseRequest.ProjectPartlistPriceRequestID);
+                            if (priceRequest != null)
+                            {
+                                priceRequest.IsDeleted = true;
+                                await _projectPartlistPriceRequestRepo.UpdateAsync(priceRequest);
+                            }
+                        }
+                    }
                 }
 
                 if (inventoryProjects.Count > 0)
@@ -686,6 +707,8 @@ namespace RERPAPI.Controllers.Old
                         await _inventoryProjectRepo.UpdateAsync(inventoryProject);
                     }
                 }
+
+
 
                 return Ok(ApiResponseFactory.Success(data, "Xóa yêu cầu mua hàng thành công!"));
             }
