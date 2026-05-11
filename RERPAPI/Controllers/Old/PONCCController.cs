@@ -321,7 +321,7 @@ namespace RERPAPI.Controllers.Old
                                                    new string[] { "@WarehouseID", "@ProductGroupID" },
                                                    new object[] { warehouseID, productGroupID });
 
-                        var productGroupWarehouse = SQLHelper<object>.GetListData(dt, 0);
+						var productGroupWarehouse = SQLHelper<object>.GetListData(productGroupWarehouses, 0);
 
                         bill.ReciverID = productGroupWarehouse.Count() > 0 ? Convert.ToInt32(productGroupWarehouse[0].UserID) : 0;
 

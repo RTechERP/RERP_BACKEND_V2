@@ -88,7 +88,19 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             }
         }
         #endregion
-
+		[HttpGet("gen-code")]
+		public IActionResult GenCode(int productgroupID)
+		{
+			try
+			{
+				string rs = GenerateProductNewCode(productgroupID);
+				return Ok(ApiResponseFactory.Success(rs, "Lấy dữ liệu thành công!"));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
         #region hàm sinh mã nội bộ (productnewcode) 
         //private string GenerateProductNewCode(int productGroupId)
         //{
