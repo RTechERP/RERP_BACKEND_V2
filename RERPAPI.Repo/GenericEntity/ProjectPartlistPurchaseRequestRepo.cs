@@ -410,7 +410,7 @@ namespace RERPAPI.Repo.GenericEntity
                 if (item.ProjectPartlistPurchaseRequestTypeID.HasValue)
                 {
                     int typeId = item.ProjectPartlistPurchaseRequestTypeID.Value;
-                    isAllowedType = typeId == 5 || typeId == 6 || typeId == 7;
+                    isAllowedType = typeId == 5 || typeId == 6 || typeId == 7 || typeId == 8;
                 }
                 else
                 {
