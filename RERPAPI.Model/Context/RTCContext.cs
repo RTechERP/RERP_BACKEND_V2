@@ -722,6 +722,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<POKHHistory> POKHHistories { get; set; }
 
+    public virtual DbSet<POKHLog> POKHLogs { get; set; }
+
     public virtual DbSet<PONCC> PONCCs { get; set; }
 
     public virtual DbSet<PONCCDetail> PONCCDetails { get; set; }
@@ -1005,6 +1007,8 @@ public partial class RTCContext : DbContext
     public virtual DbSet<RequestInvoiceDetail> RequestInvoiceDetails { get; set; }
 
     public virtual DbSet<RequestInvoiceFile> RequestInvoiceFiles { get; set; }
+
+    public virtual DbSet<RequestInvoiceLog> RequestInvoiceLogs { get; set; }
 
     public virtual DbSet<RequestInvoiceStatus> RequestInvoiceStatuses { get; set; }
 
@@ -8367,6 +8371,26 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.VAT).HasColumnType("decimal(18, 2)");
         });
 
+        modelBuilder.Entity<POKHLog>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__POKHLog__3214EC2793945238");
+
+            entity.ToTable("POKHLog");
+
+            entity.Property(e => e.ContentLog).HasComment("Nội dung log");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("người tạo");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo")
+                .HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái xóa");
+            entity.Property(e => e.POKHID).HasComment("ID pokh");
+            entity.Property(e => e.TypeLog)
+                .HasMaxLength(250)
+                .HasComment("Loại log(Created/Update/Delete)");
+        });
+
         modelBuilder.Entity<PONCC>(entity =>
         {
             entity.ToTable("PONCC");
@@ -11757,6 +11781,21 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.FileName).HasMaxLength(550);
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<RequestInvoiceLog>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__RequestI__3214EC27A9EC2956");
+
+            entity.ToTable("RequestInvoiceLog");
+
+            entity.Property(e => e.ContentLog).HasComment("Nội dung log");
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.RequestInvoiceID).HasComment("ID yêu cầu xuất hóa đơn");
+            entity.Property(e => e.TypeLog)
+                .HasMaxLength(250)
+                .HasComment("Loại log");
         });
 
         modelBuilder.Entity<RequestInvoiceStatus>(entity =>

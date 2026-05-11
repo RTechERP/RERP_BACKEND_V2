@@ -1274,7 +1274,7 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
 
 
             var approveQuery = _jobPerfomanceEvaluationApproveRepo
-    .GetAll(x => x.IsDeleted != true);
+            .GetAll(x => x.IsDeleted != true);
 
             var evalQuery = _jobPerfomanceEvaluationNewRepo
                 .GetAll(x => x.IsDeleted != true);

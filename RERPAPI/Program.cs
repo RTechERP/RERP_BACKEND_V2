@@ -643,6 +643,8 @@ builder.Services.AddScoped<CurrencyConfigRepo>();
 builder.Services.AddScoped<BillImportSaleLogRepo>();
 builder.Services.AddScoped<BankListRepo>();
 
+builder.Services.AddScoped<POKHLogRepo>();
+builder.Services.AddScoped<RequestInvoiceLogRepo>();
 
 builder.Services.AddScoped<CurrentUser>(provider =>
 {
