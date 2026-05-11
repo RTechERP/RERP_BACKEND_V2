@@ -32,4 +32,10 @@ public partial class ProjectWorkerVersion
     public int? StatusVersion { get; set; }
 
     public bool? IsDeleted { get; set; }
+
+    public bool? IsApprovedTBP { get; set; }
+
+    public DateTime? ApprovedTBPDate { get; set; }
+
+    public int? ApprovedTBPID { get; set; }
 }

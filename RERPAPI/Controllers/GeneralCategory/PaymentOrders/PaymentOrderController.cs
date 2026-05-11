@@ -302,10 +302,13 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                         return BadRequest(validate);
                     }
                 }
-                BankList bankList = _bankListRepo.GetByID(payment.BankListID ?? 0);
-                if (bankList != null && bankList.ID > 0)
+                if (string.IsNullOrEmpty(payment.Bank) && payment.BankListID > 0)
                 {
-                    payment.Bank = bankList.BankName;
+                    BankList bankList = _bankListRepo.GetByID(payment.BankListID ?? 0);
+                    if (bankList != null && bankList.ID > 0)
+                    {
+                        payment.Bank = bankList.BankName;
+                    }
                 }
                 payment.EmployeeID = _currentUser.EmployeeID;
                 payment.IsUrgent = payment.DeadlinePayment.HasValue;
@@ -810,7 +813,15 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     var logs = _logRepo.GetAll(x => x.PaymentOrderID == payment.ID && x.IsDeleted != true);
 
                     PaymentOrderLog log5 = logs.FirstOrDefault(x => x.Step == 5) ?? new PaymentOrderLog();
-                    if (log5.IsApproved != 1)
+                    if (log5.ID<=0)
+                    {
+                        message += $"Đề nghị {paymentOrder.Code} chưa được kế toán thanh toán!\r\n";
+                        continue;
+                    }
+                    PaymentOrderLogApproved paymentOrderLogApproved = _paymentOrderLogApprovedRepo.GetAll(x => x.PaymentOrderID == payment.ID
+                                                      && x.PaymentOrderLogID == log5.ID
+                                                      && x.IsApproved != 0)?.OrderByDescending(x => x.DateApproved)?.FirstOrDefault() ?? new PaymentOrderLogApproved();
+                    if (paymentOrderLogApproved.IsApproved != 1)
                     {
                         message += $"Đề nghị {paymentOrder.Code} chưa được kế toán thanh toán!\r\n";
                         continue;
@@ -818,7 +829,9 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
 
                     PaymentOrderLog log = logs.FirstOrDefault(x => x.Step == 6) ?? new PaymentOrderLog();
                     if (log.ID <= 0) continue;
-                    if (log.IsApproved == payment.PaymentOrderLog.IsApproved) continue;
+                    PaymentOrderLogApproved paymentOrderLog = _paymentOrderLogApprovedRepo.GetAll(x => x.PaymentOrderID == payment.ID
+                                                      && x.PaymentOrderLogID == log.ID)?.OrderByDescending(x => x.DateApproved)?.FirstOrDefault() ?? new PaymentOrderLogApproved();
+                    if (paymentOrderLog.IsApproved == payment.PaymentOrderLog.IsApproved) continue;
 
                     log.DateApproved = DateTime.Now;
                     log.EmployeeApproveActualID = _currentUser.EmployeeID;

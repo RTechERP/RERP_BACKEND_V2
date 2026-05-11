@@ -5,6 +5,7 @@ using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders;
 
 namespace RERPAPI.Controllers
 {
@@ -14,12 +15,16 @@ namespace RERPAPI.Controllers
     public class BankListController : ControllerBase
     {
         BankListRepo _bankListRepo;
-        public BankListController(BankListRepo bankListRepo)
+        PaymentOrderRepo _paymentOrderRepo;
+        SupplierSaleRepo _supplierSaleRepo;
+        public BankListController(BankListRepo bankListRepo, PaymentOrderRepo paymentOrderRepo, SupplierSaleRepo supplierSaleRepo)
         {
             _bankListRepo = bankListRepo;
+            _paymentOrderRepo = paymentOrderRepo;
+            _supplierSaleRepo = supplierSaleRepo;
         }
         [HttpGet]
-        
+
         public async Task<IActionResult> GetBankList()
         {
             try
@@ -88,6 +93,11 @@ namespace RERPAPI.Controllers
         {
             try
             {
+                bool hasPaymentOrders = _paymentOrderRepo.GetAll(p => p.BankListID == id && (!p.IsDelete.HasValue || !p.IsDelete.Value)).Any();
+                if (hasPaymentOrders)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không thể xóa bank list vì đã được sử dụng tại đề nghị thanh toán!"));
+                }
                 BankList bankList = _bankListRepo.GetByID(id);
                 if (bankList == null)
                 {

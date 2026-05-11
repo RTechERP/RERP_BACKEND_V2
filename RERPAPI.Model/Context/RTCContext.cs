@@ -260,6 +260,10 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<DocumentType> DocumentTypes { get; set; }
 
+    public virtual DbSet<Drawing> Drawings { get; set; }
+
+    public virtual DbSet<DrawingLog> DrawingLogs { get; set; }
+
     public virtual DbSet<EconomicContract> EconomicContracts { get; set; }
 
     public virtual DbSet<EconomicContractFile> EconomicContractFiles { get; set; }
@@ -825,6 +829,18 @@ public partial class RTCContext : DbContext
     public virtual DbSet<ProjectHistoryProblem> ProjectHistoryProblems { get; set; }
 
     public virtual DbSet<ProjectHistoryProblemDetail> ProjectHistoryProblemDetails { get; set; }
+
+    public virtual DbSet<ProjectHistoryProblemFile> ProjectHistoryProblemFiles { get; set; }
+
+    public virtual DbSet<ProjectHistoryProblemLog> ProjectHistoryProblemLogs { get; set; }
+
+    public virtual DbSet<ProjectHistoryProblemPartListLink> ProjectHistoryProblemPartListLinks { get; set; }
+
+    public virtual DbSet<ProjectHistoryProblemProjectItemLink> ProjectHistoryProblemProjectItemLinks { get; set; }
+
+    public virtual DbSet<ProjectHistoryProblemReceiverLink> ProjectHistoryProblemReceiverLinks { get; set; }
+
+    public virtual DbSet<ProjectHistoryProblemWorkerLink> ProjectHistoryProblemWorkerLinks { get; set; }
 
     public virtual DbSet<ProjectItem> ProjectItems { get; set; }
 
@@ -3425,6 +3441,39 @@ public partial class RTCContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.Name).HasMaxLength(200);
+        });
+
+        modelBuilder.Entity<Drawing>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__Drawing__3214EC27BB08B060");
+
+            entity.ToTable("Drawing");
+
+            entity.Property(e => e.ApprovedDate).HasColumnType("datetime");
+            entity.Property(e => e.CheckedDate).HasColumnType("datetime");
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.DesignDate).HasColumnType("datetime");
+            entity.Property(e => e.DrawingName).HasMaxLength(500);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.ServerPath).HasMaxLength(500);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+            entity.Property(e => e.Version).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<DrawingLog>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__DrawingL__3214EC2769207C0B");
+
+            entity.ToTable("DrawingLog");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.TypeLog).HasMaxLength(250);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<EconomicContract>(entity =>
@@ -9617,8 +9666,14 @@ public partial class RTCContext : DbContext
 
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.DateApproved_PM).HasColumnType("datetime");
+            entity.Property(e => e.DateApproved_PP).HasColumnType("datetime");
+            entity.Property(e => e.DateApproved_TP).HasColumnType("datetime");
             entity.Property(e => e.DateImplementation).HasColumnType("datetime");
             entity.Property(e => e.DateProblem).HasColumnType("datetime");
+            entity.Property(e => e.IsApproved_PM).HasDefaultValue(false);
+            entity.Property(e => e.IsApproved_PP).HasDefaultValue(false);
+            entity.Property(e => e.IsApproved_TP).HasDefaultValue(false);
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
@@ -9628,6 +9683,79 @@ public partial class RTCContext : DbContext
             entity.ToTable("ProjectHistoryProblemDetail");
 
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectHistoryProblemFile>(entity =>
+        {
+            entity.ToTable("ProjectHistoryProblemFile");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.FileName).HasMaxLength(550);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectHistoryProblemLog>(entity =>
+        {
+            entity.ToTable("ProjectHistoryProblemLog");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.TypeLog).HasMaxLength(250);
+        });
+
+        modelBuilder.Entity<ProjectHistoryProblemPartListLink>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ProjectH__3214EC27D60E1E52");
+
+            entity.ToTable("ProjectHistoryProblemPartListLink");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectHistoryProblemProjectItemLink>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ProjectH__3214EC27289D19F3");
+
+            entity.ToTable("ProjectHistoryProblemProjectItemLink");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectHistoryProblemReceiverLink>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ProjectH__3214EC27D70C48B0");
+
+            entity.ToTable("ProjectHistoryProblemReceiverLink");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectHistoryProblemWorkerLink>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ProjectH__3214EC278C97A24B");
+
+            entity.ToTable("ProjectHistoryProblemWorkerLink");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
@@ -10849,11 +10977,13 @@ public partial class RTCContext : DbContext
         {
             entity.ToTable("ProjectWorkerVersion");
 
+            entity.Property(e => e.ApprovedTBPDate).HasColumnType("datetime");
             entity.Property(e => e.Code)
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsApprovedTBP).HasDefaultValue(false);
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
