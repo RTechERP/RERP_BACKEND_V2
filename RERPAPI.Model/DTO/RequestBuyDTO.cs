@@ -32,6 +32,8 @@
         /// ProjectPartlistPriceRequestTypeID
         /// </summary>
         public int ProjectPartlistPriceRequestTypeID { get; set; } = 0;
+        public int WarehouseID { get; set; } = 0;
+        
     }
 
     public class RequestBuyProductDTO
@@ -64,6 +66,8 @@
         public string UnitName { get; set; } = "";
         public string Maker { get; set; } = "";
         public int? SupplierSaleID { get; set; }
+        public DateTime Deadline { get; set; }
+        public int ProjectPartlistPriceRequestID { get; set; } = 0;
     }
 
 }
