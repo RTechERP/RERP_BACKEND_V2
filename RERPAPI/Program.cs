@@ -201,8 +201,8 @@ builder.Services.AddScoped<PONCCHistoryRepo>();
 builder.Services.AddScoped<PositionContractRepo>();
 builder.Services.AddScoped<PositionInternalRepo>();
 //builder.Services.AddScoped<ProductGroupRTCRepo>();
-builder.Services.AddScoped<JobRequirementRecommendRepo>();
-builder.Services.AddScoped<JobRequirementRecommendDetailRepo>();
+//builder.Services.AddScoped<JobRequirementRecommendRepo>();
+//builder.Services.AddScoped<JobRequirementRecommendDetailRepo>();
 builder.Services.AddScoped<ProductGroupRepo>();
 builder.Services.AddScoped<ProductGroupWareHouseRepo>();
 builder.Services.AddScoped<ProductLocationRepo>();
@@ -589,8 +589,8 @@ builder.Services.AddScoped<CustomerIndustriesRepo>();
 builder.Services.AddScoped<FcmTokenRepo>();
 builder.Services.AddScoped<NotificationTypeLinkRepo>();
 builder.Services.AddScoped<NotificationTypeRepo>();
-builder.Services.AddScoped<JobRequirementLogRepo>();
-builder.Services.AddScoped<AssetLogRepo>();
+//builder.Services.AddScoped<JobRequirementLogRepo>();
+//builder.Services.AddScoped<AssetLogRepo>();
 
 
 #region KPI
