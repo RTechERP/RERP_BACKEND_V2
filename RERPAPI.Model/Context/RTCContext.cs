@@ -112,6 +112,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<BillExportLog> BillExportLogs { get; set; }
 
+    public virtual DbSet<BillExportSaleLog> BillExportSaleLogs { get; set; }
+
     public virtual DbSet<BillExportTechDetailSerial> BillExportTechDetailSerials { get; set; }
 
     public virtual DbSet<BillExportTechnical> BillExportTechnicals { get; set; }
@@ -2078,6 +2080,19 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.DateStatus).HasColumnType("datetime");
             entity.Property(e => e.StatusBill).HasComment("1: Nhận chứng từ hoặc đã nhận bill hoặc đã duyệt; 0: Chưa nhận hoặc là huỷ duyệt...");
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<BillExportSaleLog>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__BillExpo__CDEB13D82F848E7E");
+
+            entity.ToTable("BillExportSaleLog");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.TypeLog).HasMaxLength(255);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 

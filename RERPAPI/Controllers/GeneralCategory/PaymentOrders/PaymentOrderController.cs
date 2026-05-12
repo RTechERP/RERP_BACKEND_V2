@@ -813,7 +813,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     var logs = _logRepo.GetAll(x => x.PaymentOrderID == payment.ID && x.IsDeleted != true);
 
                     PaymentOrderLog log5 = logs.FirstOrDefault(x => x.Step == 5) ?? new PaymentOrderLog();
-                    if (log5.ID<=0)
+                    if (log5.ID <= 0)
                     {
                         message += $"Đề nghị {paymentOrder.Code} chưa được kế toán thanh toán!\r\n";
                         continue;
@@ -821,7 +821,15 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     PaymentOrderLogApproved paymentOrderLogApproved = _paymentOrderLogApprovedRepo.GetAll(x => x.PaymentOrderID == payment.ID
                                                       && x.PaymentOrderLogID == log5.ID
                                                       && x.IsApproved != 0)?.OrderByDescending(x => x.DateApproved)?.FirstOrDefault() ?? new PaymentOrderLogApproved();
-                    if (paymentOrderLogApproved.IsApproved != 1)
+                    if (paymentOrderLogApproved.ID > 0)
+                    {
+                        if (paymentOrderLogApproved.IsApproved != 1)
+                        {
+                            message += $"Đề nghị {paymentOrder.Code} chưa được kế toán thanh toán!\r\n";
+                            continue;
+                        }
+                    }
+                    else
                     {
                         message += $"Đề nghị {paymentOrder.Code} chưa được kế toán thanh toán!\r\n";
                         continue;
@@ -831,15 +839,19 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     if (log.ID <= 0) continue;
                     PaymentOrderLogApproved paymentOrderLog = _paymentOrderLogApprovedRepo.GetAll(x => x.PaymentOrderID == payment.ID
                                                       && x.PaymentOrderLogID == log.ID)?.OrderByDescending(x => x.DateApproved)?.FirstOrDefault() ?? new PaymentOrderLogApproved();
-                    if (paymentOrderLog.IsApproved == payment.PaymentOrderLog.IsApproved) continue;
+                    if (paymentOrderLog.ID > 0)
+                    {
+                        if (paymentOrderLog.IsApproved == payment.PaymentOrderLog.IsApproved) continue;
+                    }
+                    paymentOrderLog.PaymentOrderLogID = log.ID;
+                    paymentOrderLog.PaymentOrderID = payment.ID;
+                    paymentOrderLog.DateApproved = DateTime.Now;
+                    paymentOrderLog.EmployeeApproveActualID = _currentUser.EmployeeID;
+                    paymentOrderLog.IsApproved = payment.PaymentOrderLog.IsApproved;
+                    paymentOrderLog.ReasonCancel += $"{DateTime.Now.ToString("dd/MM/yyyy")}: " + payment.ReasonCancel + "\n";
+                    paymentOrderLog.ContentLog += $"{DateTime.Now.ToString("dd/MM/yyyy")}: {_currentUser.FullName} {payment.Action.ButtonActionText}\n";
 
-                    log.DateApproved = DateTime.Now;
-                    log.EmployeeApproveActualID = _currentUser.EmployeeID;
-                    log.IsApproved = payment.PaymentOrderLog.IsApproved;
-                    log.ReasonCancel += $"{DateTime.Now.ToString("dd/MM/yyyy")}: " + payment.ReasonCancel + "\n";
-                    log.ContentLog += $"{DateTime.Now.ToString("dd/MM/yyyy")}: {_currentUser.FullName} {payment.Action.ButtonActionText}\n";
-
-                    records += await _logRepo.UpdateAsync(log);
+                    records += await _paymentOrderLogApprovedRepo.CreateAsync(paymentOrderLog);
                 }
                 if (records > 0) return Ok(ApiResponseFactory.Success(payments, "Cập nhật thành công!"));
                 else return BadRequest(ApiResponseFactory.Fail(null, message, payments));
