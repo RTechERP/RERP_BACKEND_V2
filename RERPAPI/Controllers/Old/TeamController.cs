@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
@@ -85,11 +85,22 @@ namespace RERPAPI.Controllers.Old
                 }
                 if (userTeam.ID <= 0)
                 {
+                    // Thêm mới nhóm
                     await _userTeamRepo.CreateAsync(userTeam);
                 }
                 else
                 {
+                    // Cập nhật nhóm đã có
+                    var oldTeam = _userTeamRepo.GetByID(userTeam.ID);
+                    int? oldDeptID = oldTeam?.DepartmentID;
+
                     await _userTeamRepo.UpdateAsync(userTeam);
+
+                    // Nếu phòng ban thay đổi thì cập nhật đệ quy cho các nhóm con cấp dưới
+                    if (userTeam.DepartmentID != oldDeptID)
+                    {
+                        await UpdateDescendants(userTeam.ID, null, userTeam.DepartmentID);
+                    }
                 }
                 return Ok(ApiResponseFactory.Success("", "Cập nhật thành công"));
             }
@@ -115,8 +126,13 @@ namespace RERPAPI.Controllers.Old
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Team không tồn tại"));
                 }
+                // Đánh dấu xóa nhóm hiện tại
                 team.IsDeleted = true;
                 await _userTeamRepo.UpdateAsync(team);
+
+                // Tự động đánh dấu xóa cho toàn bộ các nhóm con cấp dưới
+                await UpdateDescendants(teamID, true, null);
+
                 return Ok(ApiResponseFactory.Success("", "Xóa team thành công."));
             }
             catch (Exception ex)
@@ -206,5 +222,44 @@ namespace RERPAPI.Controllers.Old
 
         }
 
+        /// <summary>
+        /// Cập nhật đệ quy các nhóm con khi nhóm cha thay đổi phòng ban hoặc bị xóa
+        /// </summary>
+        private async Task UpdateDescendants(int parentID, bool? isDeleted, int? departmentID)
+        {
+            // Lấy toàn bộ danh sách nhóm chưa bị xóa để duyệt cây
+            var allTeams = _userTeamRepo.GetAll(x => x.IsDeleted == false || x.IsDeleted == null);
+            var descendants = new List<UserTeam>();
+            
+            // Tìm tất cả các nhóm con, cháu... trực thuộc nhóm cha này
+            GetDescendants(parentID, allTeams, descendants);
+
+            if (descendants.Any())
+            {
+                // Cập nhật trạng thái xóa hoặc phòng ban cho từng nhóm con tìm được
+                foreach (var d in descendants)
+                {
+                    if (isDeleted.HasValue) d.IsDeleted = isDeleted.Value;
+                    if (departmentID.HasValue) d.DepartmentID = departmentID.Value;
+                }
+                // Lưu thay đổi hàng loạt xuống database
+                await _userTeamRepo.UpdateRangeAsync(descendants);
+            }
+        }
+
+        /// <summary>
+        /// Hàm hỗ trợ tìm kiếm đệ quy tất cả các nhóm cấp dưới
+        /// </summary>
+        private void GetDescendants(int parentID, List<UserTeam> allTeams, List<UserTeam> result)
+        {
+            // Lấy các nhóm con trực tiếp
+            var children = allTeams.Where(x => x.ParentID == parentID).ToList();
+            foreach (var child in children)
+            {
+                result.Add(child);
+                // Tiếp tục tìm các nhóm con của nhóm này
+                GetDescendants(child.ID, allTeams, result);
+            }
+        }
     }
 }
