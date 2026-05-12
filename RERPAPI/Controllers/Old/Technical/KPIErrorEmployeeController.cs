@@ -116,15 +116,15 @@ namespace RERPAPI.Controllers.Old.Technical
         }
 
         [HttpGet("load-data")]  
-        public IActionResult GetKPIErrorEmployeeData(DateTime startDate, DateTime endDate, int kpiErrorID, int employeeID, int typeID, int departmentID, string keywords = "")
+        public IActionResult GetKPIErrorEmployeeData(DateTime startDate, DateTime endDate, int kpiErrorID, int employeeID, int typeID, string departmentIDs = "", string keywords = "")
         {
             try
             {
                 DateTime dateStartLocal = startDate.ToLocalTime();
                 DateTime dateEndLocal = endDate.ToLocalTime();
                 var dataKpiError = SQLHelper<object>.ProcedureToList("spGetKPIErrorEmployee",
-                                                new string[] { "@StartDate", "@EndDate", "@KPIErrorID", "@EmployeeID", "@Keyword", "@TypeID", "@DepartmentID" },
-                                                new object[] { dateStartLocal, dateEndLocal, kpiErrorID, employeeID, keywords, typeID, departmentID });
+                                                new string[] { "@StartDate", "@EndDate", "@KPIErrorID", "@EmployeeID", "@Keyword", "@TypeID", "@DepartmentIDs" },
+                                                new object[] { dateStartLocal, dateEndLocal, kpiErrorID, employeeID, keywords, typeID, departmentIDs });
                 var data = SQLHelper<object>.GetListData(dataKpiError, 0);
 
                 return Ok(ApiResponseFactory.Success(data, ""));
@@ -298,7 +298,7 @@ namespace RERPAPI.Controllers.Old.Technical
         }
 
         [HttpPost("delete-kpi-error-employee")]
-        public IActionResult DeleteKPIErrorEmployee([FromBody] List<int> ids)
+        public async Task<IActionResult> DeleteKPIErrorEmployee([FromBody] List<int> ids)
         {
             try
             {
@@ -307,14 +307,21 @@ namespace RERPAPI.Controllers.Old.Technical
                     return BadRequest(ApiResponseFactory.Fail(null, "Danh sách ID không hợp lệ"));
                 }
 
-                foreach (var id in ids)
-                {
-                    var entity = _kpiErrorEmployeeRepo.GetByID(id);
-                    if (entity == null) continue;
+                var entities = _kpiErrorEmployeeRepo.GetAll()
+                    .Where(x => ids.Contains(x.ID))
+                    .ToList();
 
-                    entity.IsDelete = true;
-                    _kpiErrorEmployeeRepo.Update(entity);
+                if (!entities.Any())
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu để xóa"));
                 }
+
+                foreach (var entity in entities)
+                {
+                    entity.IsDelete = true;
+                }
+
+                await _kpiErrorEmployeeRepo.UpdateRangeAsync(entities);
 
                 return Ok(ApiResponseFactory.Success(null, "Xóa thành công"));
             }

@@ -27,21 +27,21 @@ namespace RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes
                 {
                     i++;
 
-                    if (string.IsNullOrEmpty(x.projectHistoryProblem.TypeProblem))
-                    {
-                        message = $"Vui lòng nhập Loại cho dòng thứ [{i}]";
-                        return false;
-                    }
+                    //if (string.IsNullOrEmpty(x.projectHistoryProblem.TypeProblem))
+                    //{
+                    //    message = $"Vui lòng nhập Loại cho dòng thứ [{i}]";
+                    //    return false;
+                    //}
                     if (string.IsNullOrEmpty(x.projectHistoryProblem.ContentError))
                     {
-                        message = $"Vui lòng nhập Nội dung cho dòng thứ [{i}]";
+                        message = $"Vui lòng nhập Nội dung phát sinh";
                         return false;
                     }
-                    if (string.IsNullOrEmpty(x.projectHistoryProblem.Reason))
-                    {
-                        message = $"Vui lòng nhập Nguyên nhân cho dòng thứ [{i}]";
-                        return false;
-                    }
+                    //if (string.IsNullOrEmpty(x.projectHistoryProblem.Reason))
+                    //{
+                    //    message = $"Vui lòng nhập Nguyên nhân cho dòng thứ [{i}]";
+                    //    return false;
+                    //}
                 }
             }
 

@@ -516,6 +516,14 @@ builder.Services.AddScoped<HRRecruitmentApproveRepo>();
 builder.Services.AddScoped<JobPerfomanceEvaluationApproveRepo>();
 builder.Services.AddScoped<JobPerfomanceEvaluationNewRepo>();
 
+builder.Services.AddScoped<ProjectHistoryProblemProjectItemLinkRepo>();
+builder.Services.AddScoped<ProjectHistoryProblemPartListLinkRepo>();
+builder.Services.AddScoped<ProjectHistoryProblemReceiverLinkRepo>();
+builder.Services.AddScoped<ProjectHistoryProblemWorkerLinkRepo>();
+builder.Services.AddScoped<ProjectHistoryProblemFileRepo>();
+builder.Services.AddScoped<ProjectHistoryProblemLogRepo>();
+builder.Services.AddScoped<DrawingRepo>();
+builder.Services.AddScoped<DrawingLogRepo>();
 
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();
