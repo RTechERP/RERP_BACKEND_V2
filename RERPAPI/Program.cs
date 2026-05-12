@@ -201,6 +201,8 @@ builder.Services.AddScoped<PONCCHistoryRepo>();
 builder.Services.AddScoped<PositionContractRepo>();
 builder.Services.AddScoped<PositionInternalRepo>();
 //builder.Services.AddScoped<ProductGroupRTCRepo>();
+builder.Services.AddScoped<JobRequirementRecommendRepo>();
+builder.Services.AddScoped<JobRequirementRecommendDetailRepo>();
 builder.Services.AddScoped<ProductGroupRepo>();
 builder.Services.AddScoped<ProductGroupWareHouseRepo>();
 builder.Services.AddScoped<ProductLocationRepo>();
@@ -295,7 +297,11 @@ builder.Services.AddScoped<VisitFactoryDetailRepo>();
 builder.Services.AddScoped<VisitGuestTypeRepo>();
 
 builder.Services.AddScoped<FormAndFunctionRepo>();
+builder.Services.AddScoped<FormAndFunctionGroupRepo>();
 builder.Services.AddScoped<UserGroupRepo>();
+builder.Services.AddScoped<UserGroupLinkRepo>();
+builder.Services.AddScoped<UserGroupRightDistributionRepo>();
+
 
 builder.Services.AddScoped<CategoriesRepo>();
 builder.Services.AddScoped<ProductRTCRepo>();
@@ -583,6 +589,8 @@ builder.Services.AddScoped<CustomerIndustriesRepo>();
 builder.Services.AddScoped<FcmTokenRepo>();
 builder.Services.AddScoped<NotificationTypeLinkRepo>();
 builder.Services.AddScoped<NotificationTypeRepo>();
+builder.Services.AddScoped<JobRequirementLogRepo>();
+builder.Services.AddScoped<AssetLogRepo>();
 
 
 #region KPI
