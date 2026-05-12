@@ -535,7 +535,25 @@ namespace RERPAPI.Controllers.Old.Technical
                 dateStart = new DateTime(dateStart.Year, dateStart.Month, dateStart.Day, 0, 0, 0);
                 dateEnd = new DateTime(dateEnd.Year, dateEnd.Month, dateEnd.Day, 23, 59, 59);
 
-                var data = SQLHelper<object>.ProcedureToList("spExportToExcelDRT",
+                //check có phải team AGV không thì gọi stored procedure khác để lấy dữ liệu
+                // Mặc định là dùng SP cũ
+                string spName = "spExportToExcelDRT";
+                if (!string.IsNullOrWhiteSpace(request.TeamID))
+                {
+                    // Cắt chuỗi lấy ID đầu tiên trong trường hợp gửi lên nhiều ID (vd: "9;10;11")
+                    var firstTeamIdStr = request.TeamID.Split(';').FirstOrDefault();
+
+                    if (int.TryParse(firstTeamIdStr, out var teamId) && teamId > 0)
+                    {
+                        var team = _userTeamRepo.GetByID(teamId);
+                        // Bắt buộc phải check team != null
+                        if (team != null && team.DepartmentID == 9)
+                        {
+                            spName = "spExportToExcelDRT_AGV";
+                        }
+                    }
+                }
+                var data = SQLHelper<object>.ProcedureToList(spName,
                     new string[] { "@DateStart", "@DateEnd", "@TeamID" },
                     new object[] { dateStart, dateEnd, request.TeamID ?? "" });
                 var listExport = SQLHelper<Object>.GetListData(data, 0);
