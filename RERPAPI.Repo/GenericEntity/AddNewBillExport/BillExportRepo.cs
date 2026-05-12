@@ -1,4 +1,4 @@
-﻿using RERPAPI.Model.Common;
+using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.Technical;
@@ -26,6 +26,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
         private readonly UserRepo _userRepo;
         private readonly SupplierRepo _supplierRepo;
         private readonly ProductGroupRepo _productGroupRepo;
+        private readonly BillExportSaleLogRepo _billExportSaleLogRepo;
 
         public BillExportRepo(
             CurrentUser currentUser,
@@ -46,7 +47,8 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
             HistoryDeleteBillRepo historyDeleteBillRepo,
             UserRepo userRepo,
             SupplierRepo supplierRepo,
-            ProductGroupRepo productGroupRepo
+            ProductGroupRepo productGroupRepo,
+            BillExportSaleLogRepo billExportSaleLogRepo
         ) : base(currentUser)
         {
             _currentUser = currentUser;
@@ -68,6 +70,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
             _userRepo = userRepo;
             _supplierRepo = supplierRepo;
             _productGroupRepo = productGroupRepo;
+            _billExportSaleLogRepo = billExportSaleLogRepo;
         }
 
         #region Bill Code Generation
@@ -870,7 +873,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
 
                 // 6. Xử lý xóa detail
                 if (dto.DeletedDetailIDs != null && dto.DeletedDetailIDs.Any())
-                    await HandleDeletedDetails(dto.DeletedDetailIDs);
+                    await HandleDeletedDetails(dto.DeletedDetailIDs, billExportId);
 
                 // 7. Lưu chi tiết
                 await SaveBillExportDetails(dto, billExportId);
@@ -1685,10 +1688,31 @@ pokhDetailId);
                 dto.billExport.CreatedBy = _currentUser.LoginName;
 
                 await CreateAsync(dto.billExport);
+
+                _billExportSaleLogRepo.Create(new BillExportSaleLog {
+                    BillExportID = dto.billExport.ID,
+                    TypeLog = "TẠO MỚI PHIẾU",
+                    ContentLog = $"Tạo mới phiếu xuất",
+                    CreatedBy = _currentUser.LoginName,
+                    CreatedDate = DateTime.Now
+                });
             }
             else
             {
+                var existingMaster = GetSingleNoTracking(x => x.ID == dto.billExport.ID);
                 await UpdateAsync(dto.billExport);
+
+                List<string> changeDetails = _billExportSaleLogRepo.GetEntityChanges(existingMaster, dto.billExport);
+                if (changeDetails.Any())
+                {
+                    _billExportSaleLogRepo.Create(new BillExportSaleLog {
+                        BillExportID = dto.billExport.ID,
+                        TypeLog = "CẬP NHẬT PHIẾU",
+                        ContentLog = $"Cập nhật phiếu xuất: {string.Join(", ", changeDetails)}",
+                        CreatedBy = _currentUser.LoginName,
+                        CreatedDate = DateTime.Now
+                    });
+                }
             }
             if (dto.billExport.IsTransfer == true)
             {
@@ -1698,7 +1722,7 @@ pokhDetailId);
             return dto.billExport.ID;
         }
 
-        private async Task HandleDeletedDetails(List<int> deletedDetailIDs)
+        private async Task HandleDeletedDetails(List<int> deletedDetailIDs, int billExportId)
         {
             foreach (var detailId in deletedDetailIDs)
             {
@@ -1709,6 +1733,15 @@ pokhDetailId);
                     detail.UpdatedBy = _currentUser.LoginName;
                     detail.UpdatedDate = DateTime.Now;
                     await _billExportDetailRepo.UpdateAsync(detail);
+
+                    var deletedProductName = detail.ProductFullName ?? $"ID:{detail.ProductID}";
+                    _billExportSaleLogRepo.Create(new BillExportSaleLog {
+                        BillExportID = billExportId,
+                        TypeLog = "XOÁ CHI TIẾT",
+                        ContentLog = $"Xoá chi tiết phiếu xuất: {deletedProductName}",
+                        CreatedBy = _currentUser.LoginName,
+                        CreatedDate = DateTime.Now
+                    });
                 }
 
                 // Xóa SerialNumber
@@ -1722,6 +1755,8 @@ pokhDetailId);
 
         private async Task SaveBillExportDetails(BillExportDTO dto, int billExportId)
         {
+            var existingDetailDtos = new List<BillExportDetailExtendedDTO>();
+
             foreach (var detail in dto.billExportDetail ?? new List<BillExportDetailExtendedDTO>())
             {
                 detail.BillID = billExportId;
@@ -1735,30 +1770,98 @@ pokhDetailId);
                     var newDetail = MapToEntity(detail);
                     await _billExportDetailRepo.CreateAsync(newDetail);
                     detail.ID = newDetail.ID;
+
+                    var addedProductName = detail.ProductName ?? $"ID:{detail.ProductID}";
+                    var addedParts = new List<string>();
+                    
+                    if (detail.Qty != null) addedParts.Add($"SL xuất: {detail.Qty}");
+                    if (!string.IsNullOrWhiteSpace(detail.ProjectName)) addedParts.Add($"Dự án: {detail.ProjectName}");
+                    if (!string.IsNullOrWhiteSpace(detail.Note)) addedParts.Add($"Ghi chú: {detail.Note}");
+                    if (!string.IsNullOrWhiteSpace(detail.GroupExport)) addedParts.Add($"Nhóm xuất: {detail.GroupExport}");
+                    if (!string.IsNullOrWhiteSpace(detail.InvoiceNumber)) addedParts.Add($"Số HĐ: {detail.InvoiceNumber}");
+                    if (!string.IsNullOrWhiteSpace(detail.SerialNumber)) addedParts.Add($"Serial: {detail.SerialNumber}");
+                    if (!string.IsNullOrWhiteSpace(detail.Specifications)) addedParts.Add($"Thông số/Model: {detail.Specifications}");
+
+                    _billExportSaleLogRepo.Create(new BillExportSaleLog {
+                        BillExportID = billExportId,
+                        TypeLog = "THÊM CHI TIẾT",
+                        ContentLog = $"Thêm chi tiết phiếu xuất: [{addedProductName}] {string.Join(", ", addedParts)}",
+                        CreatedBy = _currentUser.LoginName,
+                        CreatedDate = DateTime.Now
+                    });
+
+                    // Kiểm tra và tạo Inventory
+                    await EnsureInventoryExists(dto.billExport.WarehouseID ?? 0, detail.ProductID ?? 0);
+
+                    // Lưu InventoryProjectExport
+                    if (dto.billExport.Status == 2 || dto.billExport.Status == 6)
+                    {
+                        await SaveInventoryProjectExport(detail);
+                    }
                 }
                 else
                 {
-                    detail.UpdatedDate = DateTime.Now;
-                    detail.UpdatedBy = _currentUser.LoginName;
-
-                    var existingDetail = await _billExportDetailRepo.GetByIDAsync(detail.ID);
-                    if (existingDetail != null)
-                    {
-                        MapToExistingEntity(detail, existingDetail);
-                        await _billExportDetailRepo.UpdateAsync(existingDetail);
-                    }
-                }
-
-                // Kiểm tra và tạo Inventory
-                await EnsureInventoryExists(dto.billExport.WarehouseID ?? 0, detail.ProductID ?? 0);
-
-                // Lưu InventoryProjectExport
-                if (dto.billExport.Status == 2 || dto.billExport.Status == 6)
-                {
-                    await SaveInventoryProjectExport(detail);
+                    existingDetailDtos.Add(detail);
                 }
             }
 
+            // Xử lý cập nhật các chi tiết đã có
+            if (existingDetailDtos.Any())
+            {
+                var ids = existingDetailDtos.Select(d => d.ID).ToList();
+                // Lấy data cũ trước khi map để so sánh thay đổi log
+                var existingEntities = _billExportDetailRepo.GetAll(x => ids.Contains(x.ID)).ToList();
+                var entityMap = existingEntities.ToDictionary(e => e.ID);
+
+                foreach (var detail in existingDetailDtos)
+                {
+                    detail.UpdatedDate = DateTime.Now;
+                    detail.UpdatedBy = _currentUser.LoginName;
+                    detail.CreatedBy = _currentUser.LoginName;
+                    detail.CreatedDate = DateTime.Now;
+
+                    // Logic Log
+                    if (entityMap.TryGetValue(detail.ID, out var existingDetailForLog))
+                    {
+                        List<string> changeDetails = _billExportSaleLogRepo.GetEntityChanges<BillExportDetail>(existingDetailForLog, detail);
+                        
+                        if (changeDetails.Any())
+                        {
+                            bool isProductChanged = existingDetailForLog.ProductID != detail.ProductID;
+                            var updatedProductName = detail.ProductName ?? $"ID:{detail.ProductID}";
+                            string contentLogPrefix = isProductChanged 
+                                ? "Cập nhật chi tiết" 
+                                : $"Cập nhật chi tiết [{updatedProductName}]";
+
+                            _billExportSaleLogRepo.Create(new BillExportSaleLog {
+                                BillExportID = billExportId,
+                                TypeLog = "CẬP NHẬT CHI TIẾT",
+                                ContentLog = $"{contentLogPrefix}: {string.Join(", ", changeDetails)}",
+                                CreatedBy = _currentUser.LoginName,
+                                CreatedDate = DateTime.Now
+                            });
+                        }
+                    }
+
+                    // Update detail
+                    var existingDetail = await _billExportDetailRepo.GetByIDAsync(detail.ID);
+                    if (existingDetail != null)
+                    {
+                        // Map dữ liệu mới vào entity cũ
+                        MapToExistingEntity(detail, existingDetail);
+                        await _billExportDetailRepo.UpdateAsync(existingDetail);
+                    }
+
+                    // Kiểm tra và tạo Inventory
+                    await EnsureInventoryExists(dto.billExport.WarehouseID ?? 0, detail.ProductID ?? 0);
+
+                    // Lưu InventoryProjectExport
+                    if (dto.billExport.Status == 2 || dto.billExport.Status == 6)
+                    {
+                        await SaveInventoryProjectExport(detail);
+                    }
+                }
+            }
         }
 
         private BillExportDetail MapToEntity(BillExportDetailExtendedDTO dto)
