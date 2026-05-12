@@ -14,6 +14,7 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
 using RERPAPI.Repo.GenericEntity.Project;
 using RERPAPI.SendService;
 using System.ComponentModel.DataAnnotations;
@@ -32,12 +33,14 @@ namespace RERPAPI.Controllers.Old.Technical
         EmployeeSendEmailRepo _employeeSendEmailRepo;
         DailyReportMarketingFileRepo _dailyFileMar;
         EmployeeRepo _employeeRepo;
+        private readonly ProjectHistoryProblemRepo _projectHistoryProblemRepo;
+        private readonly ProjectHistoryProblemProjectItemLinkRepo _projectHistoryProblemProjectItemLinkRepo;
         UserTeamRepo _userTeamRepo;
         private IConfiguration _configuration;
         private readonly EmailHelper _emailHelper;
         private readonly IFirebaseNotificationService _firebaseNotificationService;
         
-        public DailyReportTechController(DailyReportTechnicalRepo dailyReportTechnicalRepo, ProjectItemRepo projectItemRepo, EmployeeSendEmailRepo employeeSendEmailRepo, DailyReportHRRepo dailyReportHRRepo, IConfiguration configuration, DailyReportMarketingFileRepo dailyFileMar, EmployeeRepo employeeRepo, EmailHelper emailHelper,UserTeamRepo userTeamRepo, IFirebaseNotificationService firebaseNotificationService)
+        public DailyReportTechController(DailyReportTechnicalRepo dailyReportTechnicalRepo, ProjectItemRepo projectItemRepo, EmployeeSendEmailRepo employeeSendEmailRepo, DailyReportHRRepo dailyReportHRRepo, IConfiguration configuration, DailyReportMarketingFileRepo dailyFileMar, EmployeeRepo employeeRepo, EmailHelper emailHelper, IFirebaseNotificationService firebaseNotificationService, ProjectHistoryProblemRepo projectHistoryProblemRepo, ProjectHistoryProblemProjectItemLinkRepo projectHistoryProblemProjectItemLinkRepo, UserTeamRepo userTeamRepo)
         {
             _dailyReportTechnicalRepo = dailyReportTechnicalRepo;
             _firebaseNotificationService = firebaseNotificationService;
@@ -49,6 +52,8 @@ namespace RERPAPI.Controllers.Old.Technical
             _employeeRepo = employeeRepo;
             _emailHelper = emailHelper;
             _userTeamRepo = userTeamRepo;   
+            _projectHistoryProblemRepo = projectHistoryProblemRepo;
+            _projectHistoryProblemProjectItemLinkRepo = projectHistoryProblemProjectItemLinkRepo;
         }
         [HttpPost("get-daily-report-tech")]
         public IActionResult GetDailyReportHr([FromBody] DailyReportTechParam request)
@@ -855,6 +860,54 @@ namespace RERPAPI.Controllers.Old.Technical
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi khi gửi email: {ex.Message}"));
             }
         }
+
+        [HttpGet("get-project-history-problem-by-project-item")]
+        public IActionResult GetProjectHistoryProblemByProjectItem(int projectItemId)
+        {
+            try
+            {
+                var data = _projectHistoryProblemRepo
+                    .GetAll(x => x.IsDeleted == false)
+                    .Join(_projectHistoryProblemProjectItemLinkRepo.GetAll(x => x.IsDeleted == false && x.ProjectItemID == projectItemId),
+                          ph => ph.ID,
+                          lk => lk.ProjectHistoryProblemID,
+                          (ph, lk) => ph)
+                    .OrderByDescending(x => x.DateProblem)
+                    .ThenByDescending(x => x.ID)
+                    .Select(x => new
+                    {
+                        x.ID,
+                        x.ProjectID,
+                        x.STT,
+                        x.ContentError,
+                        x.Reason,
+                        x.Remedies,
+                        x.IssueConclusion,
+                        x.DateProblem,
+                        x.DateImplementation,
+                        x.CreatorID,
+                        x.PerformerID,
+                        x.PriorityLevel,
+                        x.StatusProblem,
+                        x.IssueLogType,
+                        x.IsApproved_PM,
+                        x.DateApproved_PM,
+                        x.IsApproved_TP,
+                        x.DateApproved_TP,
+                        x.IsApproved_PP,
+                        x.DateApproved_PP
+                    })
+                    .Distinct()
+                    .ToList();
+
+                return Ok(ApiResponseFactory.Success(data, "Lấy danh sách ProjectHistoryProblem theo hạng mục thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         // ========================================
         // REQUEST DTO
         // ========================================
