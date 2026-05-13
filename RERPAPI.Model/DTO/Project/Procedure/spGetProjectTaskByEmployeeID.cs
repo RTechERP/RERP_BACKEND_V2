@@ -34,7 +34,7 @@ namespace RERPAPI.Model.DTO.Project.Procedure
 
         public DateTime? ActualEndDate { get; set; }
 
-        //public string? Note { get; set; }
+        public string? ProjectStatusName { get; set; }
 
         public decimal? TotalDayPlan { get; set; }
 
@@ -160,7 +160,7 @@ namespace RERPAPI.Model.DTO.Project.Procedure
         /// </summary>
         public int? ReviewCompletionRating { get; set; }
         /// <summary>
-        /// Trạng thái làm công việc
+        /// Điểm danh công việc
         /// </summary>
         public bool? IsCheck { get; set; }
         /// <summary>
