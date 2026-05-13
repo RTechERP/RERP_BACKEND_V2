@@ -672,7 +672,7 @@ namespace RERPAPI.Controllers.KHOAHOC
 
                 foreach (var parent in listCourseParent)
                 {
-                    if (parent.Evaluate == 1 || childIds.Contains(parent.ID) || currentUser.IsLeader > 0 || currentUser.IsAdmin || currentUser.EmployeeID == 55)
+                    if (parent.Evaluate == 1 || childIds.Contains(parent.ID) || currentUser.IsLeader > 0 || currentUser.IsAdmin || currentUser.EmployeeID == 55 || currentUser.EmployeeID == 753)
                     {
                         parent.Status = 1; // Đạt hoặc nằm trong listCourseChild → có thể làm
                     }
@@ -742,7 +742,7 @@ namespace RERPAPI.Controllers.KHOAHOC
 
                 foreach (var parent in listCourseParent)
                 {
-                    if (parent.Evaluate == 1 || childIds.Contains(parent.ID) || currentUser.IsLeader > 0 || currentUser.IsAdmin || currentUser.EmployeeID == 55)
+                    if (parent.Evaluate == 1 || childIds.Contains(parent.ID) || currentUser.IsLeader > 0 || currentUser.IsAdmin || currentUser.EmployeeID == 55 || currentUser.EmployeeID == 753)
                     {
                         parent.Status = 1; // Đạt hoặc nằm trong listCourseChild → có thể làm
                     }
