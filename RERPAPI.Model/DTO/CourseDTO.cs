@@ -19,6 +19,7 @@ namespace RERPAPI.Model.DTO
         public int Evaluate { get; set; }
         public string EvaluateText { get; set; }
         public string DepartmentName { get; set; }
+        public int DepartmentID { get; set; }
         public string NameCourseCatalog { get; set; }
         public int Status { get; set; }
         public int CatalogID { get; set; }
@@ -33,7 +34,9 @@ namespace RERPAPI.Model.DTO
         public decimal GoalExercise { get; set; }
         public int CatalogType { get; set; }
         public int CourseTypeID { get; set; }
+        public bool IsRequired { get; set; }
         public string CourseTypeName { get; set; }
         public bool IsLearnInTurn { get; set; }
+
     }
 }
