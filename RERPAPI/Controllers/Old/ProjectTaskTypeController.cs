@@ -1,4 +1,5 @@
 ﻿using DocumentFormat.OpenXml.Vml.Spreadsheet;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
@@ -11,6 +12,7 @@ namespace RERPAPI.Controllers.Old
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ProjectTaskTypeController : ControllerBase
     {
         private readonly ProjectTaskTypeRepo _projectTaskTypeRepo;

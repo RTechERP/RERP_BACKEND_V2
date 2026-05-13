@@ -31,6 +31,7 @@ namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ProjectTaskController : ControllerBase
     {
         ProjectTaskRepo _projectTaskRepo;
