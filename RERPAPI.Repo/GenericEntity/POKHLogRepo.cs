@@ -183,7 +183,7 @@ namespace RERPAPI.Repo.GenericEntity
             var changes = new List<string>();
             var props = typeof(POKHDetail).GetProperties();
 
-            var ignoreFields = new HashSet<string> { "CreatedDate", "UpdatedDate" };
+            var ignoreFields = new HashSet<string> { "CreatedDate", "UpdatedDate", "QuotationDetailID" };
 
 
             foreach (var prop in props)
@@ -193,6 +193,8 @@ namespace RERPAPI.Repo.GenericEntity
                 var oldVal = prop.GetValue(oldObj);
                 var newVal = prop.GetValue(newObj);
 
+                if (oldVal == null || newVal == null) continue;
+
                 if (Equals(oldVal, newVal)) continue;
 
                 string fieldName = GetDisplayNameDetail(prop.Name);
@@ -200,7 +202,7 @@ namespace RERPAPI.Repo.GenericEntity
                 string oldStr = FormatValueMaster(prop.Name, oldVal);
                 string newStr = FormatValueMaster(prop.Name, newVal);
 
-                changes.Add($"- thay đổi {fieldName} từ {oldStr} thành {newStr}.");
+                changes.Add($"+ thay đổi {fieldName} từ '{oldStr}' thành '{newStr}'");
             }
 
             return string.Join("\n", changes);
