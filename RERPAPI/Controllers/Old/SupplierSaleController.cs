@@ -126,6 +126,11 @@ namespace RERPAPI.Controllers.Old
                     return BadRequest(ApiResponseFactory.Fail(null, message));
                 }
 
+                if (!string.IsNullOrWhiteSpace(supplierSale.NameNCC))
+                {
+                    supplierSale.NameNCC = supplierSale.NameNCC.Trim().ToUpper();
+                }
+
                 if (supplierSale.ID <= 0)
                 {
                     if (supplierSale.EmployeeID == 0)
