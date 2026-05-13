@@ -122,7 +122,7 @@ namespace RERPAPI.Controllers.Old.Technical
             {
                 DateTime dateStartLocal = startDate.ToLocalTime();
                 DateTime dateEndLocal = endDate.ToLocalTime();
-                var dataKpiError = SQLHelper<object>.ProcedureToList("spGetKPIErrorEmployee",
+                var dataKpiError = SQLHelper<object>.ProcedureToList("spGetKPIErrorEmployee_New",
                                                 new string[] { "@StartDate", "@EndDate", "@KPIErrorID", "@EmployeeID", "@Keyword", "@TypeID", "@DepartmentIDs" },
                                                 new object[] { dateStartLocal, dateEndLocal, kpiErrorID, employeeID, keywords, typeID, departmentIDs });
                 var data = SQLHelper<object>.GetListData(dataKpiError, 0);
