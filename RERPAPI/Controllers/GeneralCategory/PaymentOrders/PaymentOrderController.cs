@@ -302,7 +302,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                         return BadRequest(validate);
                     }
                 }
-                if (string.IsNullOrEmpty(payment.Bank) && payment.BankListID > 0)
+                if (payment.BankListID > 0 && payment.BankListID != 187) // Nếu không phải loại khác thì lấy tên ngân hàng, nếu là loại khác thì đã có bank điền
                 {
                     BankList bankList = _bankListRepo.GetByID(payment.BankListID ?? 0);
                     if (bankList != null && bankList.ID > 0)
@@ -1083,6 +1083,39 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+        }
+
+
+        [HttpPost("download-zip")]
+        public async Task<IActionResult> DownloadZip([FromBody] DownloadPaymentOrderDTO file)
+        {
+            using var memoryStream = new MemoryStream();
+
+            using (var archive = new System.IO.Compression.ZipArchive(
+                memoryStream,
+                System.IO.Compression.ZipArchiveMode.Create,
+                true))
+            {
+                foreach (var path in file.FilePath)
+                {
+                    if (!System.IO.File.Exists(path)) continue;
+
+                    var fileName = Path.GetFileName(path);
+                    var entry = archive.CreateEntry(fileName);
+
+                    using var entryStream = entry.Open();
+                    using var fileStream = System.IO.File.OpenRead(path);
+                    await fileStream.CopyToAsync(entryStream);
+                }
+            }
+
+            memoryStream.Position = 0;
+
+            return File(
+                memoryStream.ToArray(),
+                "application/zip",
+                $"{file.PaymentOrderCode}_{DateTime.Now:yyyyMMddHHmmss}.zip"
+            );
         }
     }
 }

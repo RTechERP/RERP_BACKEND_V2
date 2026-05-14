@@ -2303,6 +2303,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.Price)
                 .HasComment("Đơn giá")
                 .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.ProcessedGoods).HasDefaultValue(0);
             entity.Property(e => e.ProductID).HasComment("ID sản phẩm");
             entity.Property(e => e.ProjectCode).HasComment("Mã sản phẩm theo dự án");
             entity.Property(e => e.ProjectID).HasComment("ID dự án");
