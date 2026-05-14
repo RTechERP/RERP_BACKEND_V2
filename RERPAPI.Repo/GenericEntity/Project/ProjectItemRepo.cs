@@ -35,6 +35,56 @@ namespace RERPAPI.Repo.GenericEntity.Project
                 throw new Exception($"Lỗi: {ex.Message}\r\n{ex.ToString()}");
             }
         }
+
+        public string GenerateProjectItemCodeNew(int projectId)
+        {
+            try
+            {
+                var project = _projectRepo.GetByID(projectId);
+                if (project.ID <= 0)
+                {
+                    throw new Exception($"Không có Project nào có ID là :{projectId}");
+                }
+                string prefix = project.ProjectCode + "_";
+                var projectItem = GetAll(x => x.ProjectID == projectId)
+                    .Where(x =>
+                        (x.Code ?? "").StartsWith(prefix) &&          // bắt đầu bằng "RTC.25.005_01."
+                        !(x.Code ?? "").Substring(prefix.Length)      // phần sau prefix
+                                          .Contains(".")                  // không chứa dấu chấm nào
+                    );
+
+                string newCode = $"{project.ProjectCode}_{projectItem.Count() + 1}";
+                return newCode;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi: {ex.Message}\r\n{ex.ToString()}");
+            }
+        }
+
+        public string GenerateChildProjectItemCode(int projectTaskID)
+        {
+            try
+            {
+                var projectTask = GetByID(projectTaskID);
+                string prefix = projectTask.Code + ".";    
+
+                int count = GetAll()
+                    .Where(x =>
+                        (x.Code ?? "").StartsWith(prefix) &&          // bắt đầu bằng "RTC.25.005_01."
+                        !(x.Code ?? "").Substring(prefix.Length)      // phần sau prefix
+                                          .Contains(".")                  // không chứa dấu chấm nào
+                    )
+                    .Count();
+
+                string newCode = $"{prefix}{count + 1}";
+                return newCode;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi: {ex.Message}\r\n{ex.ToString()}");
+            }
+        }
         public string GetMaxSTT(int? projectID)
         {
             if (projectID == null || projectID <= 0) return "1";
