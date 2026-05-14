@@ -351,19 +351,18 @@ namespace RERPAPI.Controllers.Old.POKH
                 if (dto.POKH.ID <= 0)
                 {
                     await _pokhRepo.CreateAsync(dto.POKH);
-                    logContent = $"- {currentUser.FullName} đã tạo mới phiếu \\n";
-                    //await _pokhLogRepo.AddLog(dto.POKH.ID, logContent, "Tạo mới");
-                    log.TypeLog = "Tạo mới";
+                    await _pokhLogRepo.AddLog(dto.POKH.ID, $"- {currentUser.FullName} đã tạo mới phiếu \\n", "Thêm mới");
+                    //log.TypeLog = "Tạo mới";
                 }
                 else
                 {
                     dto.POKH.UpdatedDate = DateTime.Now;
                     await _pokhRepo.UpdateAsync(dto.POKH);
-                    //await _pokhLogRepo.AddLog(dto.POKH.ID, logContent, "Cập nhật");
-                    log.TypeLog = "Cập nhật";
+                    await _pokhLogRepo.AddLog(dto.POKH.ID, logContent, "Cập nhật");
+                    //log.TypeLog = "Cập nhật";
                 }
 
-                //logContent = ""; // Reset log content để ghi lại chi tiết các dòng
+                logContent = ""; // Reset log content để ghi lại chi tiết các dòng
                 var checkDetailDeleted = dto.POKHDetails.Where(x => x.IsDeleted == true && x.ID > 0).Count();
                 string productNameDeleted = "";
                 string productNameCreated = "";
@@ -395,6 +394,15 @@ namespace RERPAPI.Controllers.Old.POKH
                             parentId = parentIdMapping[item.ParentID.Value];
                         }
                         var modelOld = idOld > 0 ? _pokhDetailRepo.GetByID(idOld) : null;
+                        if(modelOld.ID > 0)
+                        {
+                            string logUpdate = _pokhLogRepo.GenerateLogDetail(modelOld, item);
+                            if (!string.IsNullOrEmpty(logUpdate))
+                            {
+                                logContent += $"- {currentUser.FullName} đã cập nhật chi tiết sản phẩm \\n [{product?.ProductCode}]: \\n{logUpdate} \\n";
+                            }
+                        }
+
                         POKHDetail model = idOld > 0 ? _pokhDetailRepo.GetByID(idOld) ?? new POKHDetail() : new POKHDetail();
 
                         model.POKHID = dto.POKH.ID;
@@ -431,11 +439,6 @@ namespace RERPAPI.Controllers.Old.POKH
                         {
                             model.UpdatedDate = DateTime.Now;
                             await _pokhDetailRepo.UpdateAsync(model);
-                            string logUpdate = _pokhLogRepo.GenerateLogDetail(modelOld, model);
-                            if(!string.IsNullOrEmpty(logUpdate))
-                            {
-                                logContent += $"- {currentUser.FullName} đã cập nhật chi tiết sản phẩm [{product?.ProductName}]: \\n{logUpdate} \\n";
-                            }
                         }
                         else
                         {
@@ -454,7 +457,7 @@ namespace RERPAPI.Controllers.Old.POKH
                     if (!string.IsNullOrEmpty(productNameCreated))
                     {
                         productNameCreated = productNameCreated.TrimEnd(',', ' ');
-                        logContent += $"- {currentUser.FullName} đã thêm SP '{productNameCreated}' \\n";
+                        await _pokhLogRepo.AddLog(dto.POKH.ID, $"- {currentUser.FullName} đã thêm SP '{productNameCreated}' \\n", "Thêm mới");
                     }
 
                     if (!string.IsNullOrWhiteSpace(logContent))
