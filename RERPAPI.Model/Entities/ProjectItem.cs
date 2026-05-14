@@ -224,4 +224,9 @@ public partial class ProjectItem
     /// 1: Cần phê duyệt, 0: Không cần phê duyệt
     /// </summary>
     public bool? NeedApprove { get; set; }
+
+    /// <summary>
+    /// Lưu giá trị của ProjectWorker để tránh doublicate dữ liệu 
+    /// </summary>
+    public int? ProjectWorkerID { get; set; }
 }

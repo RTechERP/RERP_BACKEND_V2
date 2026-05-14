@@ -9868,6 +9868,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.ProjectTaskTypeID)
                 .HasDefaultValue(1)
                 .HasComment("Loại công việc");
+            entity.Property(e => e.ProjectWorkerID).HasComment("Lưu giá trị của ProjectWorker để tránh doublicate dữ liệu ");
             entity.Property(e => e.STT)
                 .HasMaxLength(50)
                 .IsUnicode(false)
@@ -10715,6 +10716,7 @@ public partial class RTCContext : DbContext
             entity.ToTable("ProjectTaskEmployee", tb => tb.HasComment("Bảng lưu nhân viên tham gia công việc của dự án"));
 
             entity.Property(e => e.ID).HasComment("ID tự tăng");
+            entity.Property(e => e.CanDelete).HasComment("1: Không thể xóa, 0: Có thể xóa");
             entity.Property(e => e.CreatedBy)
                 .HasMaxLength(50)
                 .HasComment("Người tạo bản ghi");

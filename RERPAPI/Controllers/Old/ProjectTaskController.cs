@@ -1892,7 +1892,7 @@ namespace RERPAPI.Controllers.Project
                             {
                                 ProjectTaskID = newProjectTask.ID,
                                 Type = 2, // 2: related 
-                                EmployeeID = item.LeaderID,
+                                EmployeeID = item.LeaderID ?? 0,
                                 IsDeleted = false,
                                 CanDelete = true
                             };
@@ -2088,7 +2088,7 @@ namespace RERPAPI.Controllers.Project
                     {
                         foreach (var emp in listEmployee)
                         {
-                            var employeeValue = await _employeeRepo.GetByIDAsync(emp??0);
+                            var employeeValue = await _employeeRepo.GetByIDAsync(emp);
 
                             if (emp != currentUser.EmployeeID)
                             {
@@ -2157,7 +2157,7 @@ namespace RERPAPI.Controllers.Project
                     var listEmployeeRelate2 = new List<string>();
                     foreach (var emp in listEmployeeRelate)
                     {
-                        var employeeValue = await _employeeRepo.GetByIDAsync(emp??0);
+                        var employeeValue = await _employeeRepo.GetByIDAsync(emp);
                         if (employeeValue != null)
                         {
                             listEmployeeRelate2.Add(employeeValue.EmailCongTy);
@@ -2560,7 +2560,7 @@ namespace RERPAPI.Controllers.Project
                     {
                         var newEmployeeRelate = new ProjectTaskEmployee()
                         {
-                            EmployeeID = item1.LeaderID,
+                            EmployeeID = item1.LeaderID ?? 0,
                             ProjectTaskID = newProjectTask.ID,
                             Type = 2,
                             CanDelete = true

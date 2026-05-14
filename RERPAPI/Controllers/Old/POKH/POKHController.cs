@@ -348,7 +348,7 @@ namespace RERPAPI.Controllers.Old.POKH
                     return Ok(ApiResponseFactory.Fail(null, "Dữ liệu không hợp lệ", new { Errors = errors }));
                 }
 
-                if (dto.POKH.ID <= 0)
+                if (dto?.POKH?.ID <= 0)
                 {
                     await _pokhRepo.CreateAsync(dto.POKH);
                     await _pokhLogRepo.AddLog(dto.POKH.ID, $"- {currentUser.FullName} đã tạo mới phiếu \\n", "Thêm mới");
@@ -394,7 +394,7 @@ namespace RERPAPI.Controllers.Old.POKH
                             parentId = parentIdMapping[item.ParentID.Value];
                         }
                         var modelOld = idOld > 0 ? _pokhDetailRepo.GetByID(idOld) : null;
-                        if(modelOld.ID > 0)
+                        if(modelOld?.ID > 0)
                         {
                             string logUpdate = _pokhLogRepo.GenerateLogDetail(modelOld, item);
                             if (!string.IsNullOrEmpty(logUpdate))
@@ -467,10 +467,10 @@ namespace RERPAPI.Controllers.Old.POKH
                 }
 
                 logContent = ""; // Reset log content để ghi lại chi tiết các dòng tiền
-                var checkUserDeleted = dto.POKHDetailsMoney.Where(x => x.IsDeleted == true && x.ID > 0);
+                var checkUserDeleted = dto?.POKHDetailsMoney?.Where(x => x.IsDeleted == true && x.ID > 0);
                 string userNameDeleted = "";
 
-                if (dto.POKHDetailsMoney != null && dto.POKHDetailsMoney.Count > 0)
+                if (dto?.POKHDetailsMoney != null && dto.POKHDetailsMoney.Count > 0)
                 {
                     foreach (var item in dto.POKHDetailsMoney)
                     {
