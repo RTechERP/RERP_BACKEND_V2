@@ -740,6 +740,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<PONCCHistory> PONCCHistories { get; set; }
 
+    public virtual DbSet<PONCCLog> PONCCLogs { get; set; }
+
     public virtual DbSet<PONCCRulePay> PONCCRulePays { get; set; }
 
     public virtual DbSet<Part> Parts { get; set; }
@@ -8646,6 +8648,26 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
             entity.Property(e => e.VAT).HasColumnType("decimal(18, 2)");
+        });
+
+        modelBuilder.Entity<PONCCLog>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__PONCCLog__3214EC278EAACF2C");
+
+            entity.ToTable("PONCCLog");
+
+            entity.Property(e => e.ContentLog).HasComment("Nội dung log");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("người tạo");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo")
+                .HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái xóa");
+            entity.Property(e => e.PONCCID).HasComment("ID poNCC");
+            entity.Property(e => e.TypeLog)
+                .HasMaxLength(250)
+                .HasComment("Loại log(Created/Update/Delete)");
         });
 
         modelBuilder.Entity<PONCCRulePay>(entity =>
