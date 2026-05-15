@@ -1,4 +1,4 @@
-﻿using Google.Apis.Util;
+using Google.Apis.Util;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Configuration;
@@ -580,6 +580,7 @@ namespace RERPAPI.Controllers
                     mainRecord.Note,
                     mainRecord.DateRequest,
                     mainRecord.HiringDeadline,
+                    mainRecord.LanguageNote,
                     DepartmentName = department?.Name ?? "",
                     EmployeeChucVuHDName = string.IsNullOrEmpty(mainRecord.PositionName) ? (chucVuHD?.Name ?? "") : mainRecord.PositionName,
                     EmployeeRequestCode = employee?.Code ?? "",

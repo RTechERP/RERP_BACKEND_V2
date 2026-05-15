@@ -530,6 +530,8 @@ builder.Services.AddScoped<ProjectHistoryProblemFileRepo>();
 builder.Services.AddScoped<ProjectHistoryProblemLogRepo>();
 builder.Services.AddScoped<DrawingRepo>();
 builder.Services.AddScoped<DrawingLogRepo>();
+builder.Services.AddScoped<JobRequirementRecommendRepo>();
+builder.Services.AddScoped<JobRequirementRecommendDetailRepo>();
 
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();
