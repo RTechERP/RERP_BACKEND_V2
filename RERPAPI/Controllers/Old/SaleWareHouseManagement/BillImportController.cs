@@ -632,6 +632,12 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                             }
                         }
                     }
+					var data = await SqlDapper<ProductGroupWarehouse>.ProcedureToListTAsync("spGetProductGroupWarehouse", new
+					{
+						WarehouseID = dto.billImport.WarehouseID,
+						ProductGroupID = dto.billImport.KhoTypeID
+					});
+					bool isNotKeep = data.FirstOrDefault()?.IsNotKeep ?? false;
                     foreach (var detail in dto.billImportDetail)
                     {
                         detail.BillImportID = billImportId;
@@ -694,7 +700,11 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                                 _billImportDetailRepo.Update(detail);
                             }
                         }
+
+						if (!isNotKeep)
+						{
                         await UpdateInventoryProject(detail, dto.billImport);
+						}
                         //await SyncProductSaleGroupWarehouseLink(dto.billImport, detail);
                         // Kiểm tra tồn kho
                         var inventoryKey = (dto.billImport.WarehouseID, detail.ProductID);
