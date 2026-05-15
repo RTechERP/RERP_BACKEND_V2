@@ -2284,13 +2284,13 @@ namespace RERPAPI.Controllers.Project
         //    }
         //}
         [HttpGet("get-project-work-reports")]
-        public async Task<IActionResult> GetProjectWorkReports(int page, int size, int projectId, string? keyword, int teamId)
+        public async Task<IActionResult> GetProjectWorkReports(int page, int size, int projectId, string? keyword, int departmentId, int teamId)
         {
             try
             {
                 var data = SQLHelper<object>.ProcedureToList("spGetDailyReportTechnical_New",
-                new string[] { "@ProjectID", "@FilterText", "@PageSize", "@PageNumber", "@TeamID" },
-                new object[] { projectId, keyword ?? "", size, page, teamId });
+                new string[] { "@ProjectID", "@FilterText", "@PageSize", "@PageNumber", "@DepartmentID", "@TeamID" },
+                new object[] { projectId, keyword ?? "", size, page, departmentId, teamId });
                 var projectwork = SQLHelper<object>.GetListData(data, 0);
                 return Ok(ApiResponseFactory.Success(projectwork, ""));
             }
