@@ -521,8 +521,254 @@ namespace RERPAPI.Controllers.Old
                 if (model.ID > 0) await _repo.UpdateAsync(model);
                 else await _repo.CreateAsync(model);
                 return Ok(ApiResponseFactory.Success(model));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+		[HttpPost("save-data-rtc-excel")]
+		public async Task<IActionResult> SaveDataRTCExcel(List<ImportExcelRtcDto> models)
+		{
 
+			try
+			{
+				if (!_repo.ValidateExcel(models, out string message))
+					return BadRequest(ApiResponseFactory.Fail(null, message));
 
+				var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+				CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
+				// =========================
+				// LOAD DATA 1 LẦN
+				// =========================
+
+				var allUnits = _unitCountKTRepo.GetAll();
+				var allFirms = _firmRepo.GetAll();
+				var allProducts = _productRTCRepo.GetAll();
+
+				// =========================
+				// DICTIONARY CACHE
+				// =========================
+
+				var unitDict = allUnits
+					.GroupBy(x => (x.UnitCountName ?? "").Trim().ToUpper())
+					.ToDictionary(x => x.Key, x => x.First());
+
+				var firmDict = allFirms
+					.GroupBy(x => (x.FirmName ?? "").Trim().ToUpper())
+					.ToDictionary(x => x.Key, x => x.First());
+
+				// =========================
+				// BATCH INSERT LIST
+				// =========================
+
+				List<UnitCountKT> newUnits = new();
+				List<ProductRTC> newProducts = new();
+
+				// =========================
+				// PHASE 1: UNIT + PRODUCT
+				// =========================
+
+				foreach (var model in models)
+				{
+					var unitName = (model.UnitName ?? "").Trim();
+					var unitKey = unitName.ToUpper();
+
+					// UNIT
+					if (!unitDict.TryGetValue(unitKey, out var unit))
+					{
+						unit = new UnitCountKT
+						{
+							UnitCountName = unitName,
+							UnitCountCode = unitName,
+							IsDeleted = false
+						};
+
+						newUnits.Add(unit);
+						unitDict[unitKey] = unit;
+					}
+
+					// FIRM
+					var maker = (model.Maker ?? "").Trim();
+					var makerKey = maker.ToUpper();
+
+					firmDict.TryGetValue(makerKey, out var firm);
+
+					// PRODUCT
+					var product = allProducts.FirstOrDefault(x =>
+						(x.ProductCode ?? "").Trim().ToUpper() == (model.ProductCode ?? "").Trim().ToUpper()
+						&& (x.ProductName ?? "").Trim().ToUpper() == (model.ProductName ?? "").Trim().ToUpper()
+						&& x.ProductGroupRTCID == model.ProductGroupRTCID
+						&& x.UnitCountID == unit.ID
+						&&
+						(
+							// ưu tiên FirmID
+							(firm != null && x.FirmID == firm.ID)
+
+							||
+
+							// fallback Maker
+							(
+								firm == null
+								&& (x.Maker ?? "").Trim().ToUpper() == makerKey
+							)
+						)
+					);
+
+					if (product == null)
+					{
+						product = new ProductRTC
+						{
+							ProductCode = model.ProductCode,
+							ProductName = model.ProductName,
+							Maker = model.Maker,
+							UnitCountID = unit.ID,
+							ProductGroupRTCID = model.ProductGroupRTCID,
+							ProductCodeRTC = _productRTCRepo.generateProductCode(model.ProductGroupRTCID),
+							FirmID = firm?.ID
+						};
+
+						newProducts.Add(product);
+						allProducts.Add(product);
+					}
+				}
+
+				// =========================
+				// SAVE UNIT
+				// =========================
+
+				if (newUnits.Any())
+				{
+					await _unitCountKTRepo.CreateRangeAsync(newUnits);
+				}
+
+				// reload units
+				allUnits = _unitCountKTRepo.GetAll();
+
+				unitDict = allUnits
+					.GroupBy(x => (x.UnitCountName ?? "").Trim().ToUpper())
+					.ToDictionary(x => x.Key, x => x.First());
+
+				// =========================
+				// UPDATE UNIT ID CHO PRODUCT
+				// =========================
+
+				foreach (var product in newProducts)
+				{
+					var unit = unitDict[
+						(allUnits.First(x => x.ID == product.UnitCountID).UnitCountName ?? "")
+						.Trim()
+						.ToUpper()
+					];
+
+					product.UnitCountID = unit.ID;
+				}
+
+				// =========================
+				// SAVE PRODUCT
+				// =========================
+
+				if (newProducts.Any())
+				{
+					await _productRTCRepo.CreateRangeAsync(newProducts);
+				}
+
+				// reload products
+				allProducts = _productRTCRepo.GetAll();
+
+				// =========================
+				// CREATE PURCHASE REQUEST
+				// =========================
+
+				List<ProjectPartlistPurchaseRequest> requests = new();
+
+				foreach (var model in models)
+				{
+					var unitKey = (model.UnitName ?? "").Trim().ToUpper();
+
+					var unit = unitDict[unitKey];
+
+					var makerKey = (model.Maker ?? "").Trim().ToUpper();
+
+					firmDict.TryGetValue(makerKey, out var firm);
+
+					var product = allProducts.FirstOrDefault(x =>
+						(x.ProductCode ?? "").Trim().ToUpper() == (model.ProductCode ?? "").Trim().ToUpper()
+						&& (x.ProductName ?? "").Trim().ToUpper() == (model.ProductName ?? "").Trim().ToUpper()
+						&& x.ProductGroupRTCID == model.ProductGroupRTCID
+						&& x.UnitCountID == unit.ID
+						&&
+						(
+							(firm != null && x.FirmID == firm.ID)
+
+							||
+
+							(
+								firm == null
+								&& (x.Maker ?? "").Trim().ToUpper() == makerKey
+							)
+						)
+					);
+
+					requests.Add(new ProjectPartlistPurchaseRequest
+					{
+						ProductCode = model.ProductCode,
+						ProductName = model.ProductName,
+						Quantity = model.Quantity,
+						UnitName = model.UnitName,
+						Maker = model.Maker,
+						//Note = model.Note,
+						ProductGroupRTCID = model.ProductGroupRTCID,
+						SupplierSaleID = model.SupplierSaleID,
+						DateReturnExpected = model.DateReturnExpected,
+						TicketType = model.TicketType,
+						IsTechBought = false,
+						ProjectPartListID = model.ProjectPartListID,
+						ProductRTCID = product?.ID ?? 0,
+						WarehouseID = model.WarehouseID,
+						StatusRequest = 1,
+						ProjectPartlistPurchaseRequestTypeID = model.TicketType == 1 ? 4 : 3,
+						EmployeeApproveID = 87,//Phạm Văn Quyền
+						EmployeeID = currentUser.EmployeeID,
+						DateRequest = DateTime.Now,
+					});
+				}
+
+				// =========================
+				// SAVE REQUEST
+				// =========================
+
+				await _repo.CreateRangeAsync(requests);
+				// =========================
+				// SAVE NOTE
+				// =========================
+
+				List<ProjectPartlistPurchaseRequestNote> requestNotes = new();
+
+				foreach (var request in requests)
+				{
+					// nếu không có note thì bỏ qua
+					if (string.IsNullOrWhiteSpace(request.Note))
+						continue;
+
+					requestNotes.Add(new ProjectPartlistPurchaseRequestNote
+					{
+						ProjectPartlistPurchaseRequestID = request.ID,
+						Note = request.Note,
+					});
+				}
+
+				if (requestNotes.Any())
+				{
+					await _projectPartlistPurchaseRequestNoteRepo
+						.CreateRangeAsync(requestNotes);
+				}
+
+				return Ok(ApiResponseFactory.Success(
+					requests,
+					$"Lưu thành công {requests.Count} dòng."
+				));
             }
             catch (Exception ex)
             {
