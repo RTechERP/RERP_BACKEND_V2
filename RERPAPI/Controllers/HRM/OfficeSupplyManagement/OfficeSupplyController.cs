@@ -15,10 +15,12 @@ namespace RERPAPI.Controllers.HRM.OfficeSupply
     public class OfficeSupplyController : ControllerBase
     {
         private readonly OfficeSupplyRepo _officesupplyRepo;
+        private readonly ProductSaleRepo _productSaleRepo;
 
-        public OfficeSupplyController(OfficeSupplyRepo officesupplyRepo)
+        public OfficeSupplyController(OfficeSupplyRepo officesupplyRepo, ProductSaleRepo productSaleRepo )
         {
             _officesupplyRepo = officesupplyRepo;
+            _productSaleRepo = productSaleRepo;
         }
 
         [HttpGet("get-office-supply")]
@@ -168,12 +170,22 @@ namespace RERPAPI.Controllers.HRM.OfficeSupply
                         return BadRequest(ApiResponseFactory.Fail(null, message));
                 }
                 if (officesupply.ID <= 0)
+
                 {
                     await _officesupplyRepo.CreateAsync(officesupply);
                 }
                 else
                 {
                     _officesupplyRepo.Update(officesupply);
+                    //var productSale = _productSaleRepo.GetAll(x => x.ProductCode == officesupply.CodeRTC && x.IsDeleted !=true).FirstOrDefault();
+                    var productSale = _productSaleRepo.GetSingleNoTracking(x => x.ProductCode == officesupply.CodeRTC && x.IsDeleted != true);
+
+                    if (productSale.ID>0)
+                    {
+                        productSale.ProductName = officesupply.NameNCC;
+                        await _productSaleRepo.UpdateAsync(productSale);
+                    }    
+             
                 }
                 return Ok(new
                 {
