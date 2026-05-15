@@ -25,7 +25,7 @@ namespace RERPAPI.Controllers.Systems
         }
 
 
-        [RequiresPermission(",", permissionFunction : "userPermissionForm")]
+        [RequiresPermission(permissionFunction : "userPermissionForm_View")]
         // Lấy tất cả danh sách nhóm chức năng
         [HttpGet("")]
         public IActionResult GetAll()
@@ -42,7 +42,7 @@ namespace RERPAPI.Controllers.Systems
         }
 
         // Lấy thông tin nhóm chức năng theo ID
-        [RequiresPermission(",", permissionFunction : "userPermissionForm")]
+        [RequiresPermission(permissionFunction : "userPermissionForm_View")]
         [HttpGet("get-by-id")]
         public IActionResult GetByID(int id)
         {
@@ -58,7 +58,7 @@ namespace RERPAPI.Controllers.Systems
         }
 
         // Lưu thông tin nhóm chức năng (Thêm mới hoặc Cập nhật)
-        [RequiresPermission(",", permissionFunction : "userPermissionForm")]
+        [RequiresPermission(permissionFunction : "userPermissionForm_Add")]
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] FormAndFunctionGroup model)
         {
@@ -93,7 +93,7 @@ namespace RERPAPI.Controllers.Systems
 
 
         // Lấy tất cả danh sách chức năng
-        [RequiresPermission(",", permissionFunction : "userPermissionForm")]
+        [RequiresPermission(permissionFunction : "userPermissionForm_View")]
         [HttpGet("get-functions")]
         public IActionResult GetAllFunctions()
         {
@@ -109,7 +109,7 @@ namespace RERPAPI.Controllers.Systems
         }
 
         // Lấy danh sách chức năng theo nhóm
-        [RequiresPermission(",", permissionFunction : "userPermissionForm")]
+        [RequiresPermission(permissionFunction : "userPermissionForm_View")]
         [HttpGet("get-by-group")]
         public IActionResult GetByGroup(int groupId)
         {
@@ -126,7 +126,7 @@ namespace RERPAPI.Controllers.Systems
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [RequiresPermission(",",permissionFunction : "userPermissionForm")]
+        [RequiresPermission(permissionFunction : "userPermissionForm_Add")]
         // Lưu thông tin chức năng (Thêm mới hoặc Cập nhật)
         [HttpPost("save-function")]
         public async Task<IActionResult> SaveFunction([FromBody] FormAndFunction model)
