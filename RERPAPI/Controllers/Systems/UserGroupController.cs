@@ -31,7 +31,7 @@ namespace RERPAPI.Controllers.Systems
         }
 
         // Lấy tất cả danh sách nhóm người dùng
-        [RequiresPermission("N1999")]
+        [RequiresPermission(",", permissionFunction: "userPermissionForm")]
         [HttpGet("getall")]
         public IActionResult GetAll(string keyword = "", int userId = 0)
         {
@@ -46,7 +46,7 @@ namespace RERPAPI.Controllers.Systems
             }
         }
         // Lấy danh sách liên kết người dùng trong nhóm
-        [RequiresPermission("N1999")]
+        [RequiresPermission(",", permissionFunction: "userPermissionForm")]
         [HttpGet("get-group-links")]
         public IActionResult GetGroupLinks(int userGroupId)
         {
@@ -61,7 +61,7 @@ namespace RERPAPI.Controllers.Systems
             }
         }
         // Lấy danh sách phân quyền của nhóm
-        [RequiresPermission("N1999")]
+        [RequiresPermission(",", permissionFunction: "userPermissionForm")]
         [HttpGet("get-rights-distribution")]
         public IActionResult GetRightsDistribution(int userGroupId)
         {
@@ -76,7 +76,7 @@ namespace RERPAPI.Controllers.Systems
             }
         }
         // Lấy cây phân quyền của nhóm
-        [RequiresPermission("N1999")]
+        [RequiresPermission(",", permissionFunction: "userPermissionForm")]
         [HttpGet("get-group-permission-tree")]
         public IActionResult GetGroupPermissionTree(int userGroupId)
         {
@@ -91,7 +91,7 @@ namespace RERPAPI.Controllers.Systems
             }
         }
         // Lấy danh sách quyền của người dùng theo tất cả nhóm
-        [RequiresPermission("N1999")]
+        [RequiresPermission(",", permissionFunction: "userPermissionForm")]
         [HttpGet("get-user-permissions")]
         public IActionResult GetUserPermissionsByUserID(int userId)
         {
@@ -106,7 +106,7 @@ namespace RERPAPI.Controllers.Systems
             }
         }
         // Lưu danh sách nhóm quyền cho người dùng
-        [RequiresPermission("N1999")]
+        [RequiresPermission(",", permissionFunction: "userPermissionForm")]
         [HttpPost("save-user-group-links")]
         public IActionResult SaveUserGroupLinks(int userId, string userGroupId = "")
         {
@@ -123,7 +123,7 @@ namespace RERPAPI.Controllers.Systems
             }
         }
         // Lưu thông tin phân quyền cho nhóm
-        [RequiresPermission("N1999")]
+        [RequiresPermission(",", permissionFunction: "userPermissionForm")]
         [HttpPost("save-group-permissions")]
         public async Task<IActionResult> SaveGroupPermissions([FromBody] SaveGroupPermissionRequest req)
         {
@@ -164,7 +164,7 @@ namespace RERPAPI.Controllers.Systems
             }
         }
         // Thêm danh sách người dùng vào nhóm
-        [RequiresPermission("N1999")]
+        [RequiresPermission(",", permissionFunction: "userPermissionForm")]
         [HttpPost("add-users-to-group")]
         public IActionResult AddUsersToGroup(string userIds, int userGroupId)
         {
@@ -179,7 +179,7 @@ namespace RERPAPI.Controllers.Systems
             }
         }
         // Lưu thông tin nhóm người dùng (Thêm mới hoặc Cập nhật)
-        [RequiresPermission("N1999")]
+        [RequiresPermission(",", permissionFunction: "userPermissionForm")]
         [HttpPost("save")]
         public async Task<IActionResult> Save(UserGroup item)
         {
@@ -208,7 +208,7 @@ namespace RERPAPI.Controllers.Systems
             }
         }
         // Xóa nhóm người dùng
-        [RequiresPermission("N1999")]
+        [RequiresPermission(",", permissionFunction: "userPermissionForm")]
         [HttpPost("delete")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -232,7 +232,7 @@ namespace RERPAPI.Controllers.Systems
             }
         }
         // Xóa liên kết người dùng trong nhóm
-        [RequiresPermission("N1999")]
+        [RequiresPermission(",", permissionFunction: "userPermissionForm")]
         [HttpPost("delete-link")]
         public async Task<IActionResult> DeleteLink(int id)
         {
@@ -247,7 +247,7 @@ namespace RERPAPI.Controllers.Systems
             }
         }
         // Lấy danh sách nhóm người dùng theo mã chức năng
-        [RequiresPermission("N1999")]
+        [RequiresPermission(",", permissionFunction: "userPermissionForm")]
         [HttpGet("get-user-group")]
         public IActionResult UserGroupByFormAndFunctionCode(string functionCode)
         {
@@ -268,7 +268,7 @@ namespace RERPAPI.Controllers.Systems
             }
         }
         // Lấy danh sách nhóm theo người dùng
-        [RequiresPermission("N1999")]
+        [RequiresPermission(",", permissionFunction: "userPermissionForm")]
         [HttpGet("get-groups-by-user")]
         public IActionResult GetGroupsByUser(int userId)
         {
@@ -289,7 +289,7 @@ namespace RERPAPI.Controllers.Systems
             public List<int> RoleIDs { get; set; }
         }
         // Sao chép danh sách nhóm quyền cho người dùng
-        [RequiresPermission("N1999")]
+        [RequiresPermission(",", permissionFunction: "userPermissionForm")]
         [HttpPost("copy-user-groups")]
         public async Task<IActionResult> CopyUserGroups([FromBody] CopyUserGroupRequest req)
         {
@@ -321,7 +321,7 @@ namespace RERPAPI.Controllers.Systems
         }
 
         // Lấy cây danh sách nhóm quyền và chi tiết quyền (Nhóm -> Quyền)
-        [RequiresPermission("N1999")]
+        [RequiresPermission(",", permissionFunction: "userPermissionForm")]
         [HttpGet("get-tree")]
         public IActionResult GetUserGroupTree()
         {
@@ -337,7 +337,7 @@ namespace RERPAPI.Controllers.Systems
         }
 
         // Lấy danh sách nhân viên trong nhóm quyền
-        [RequiresPermission("N1999")]
+        [RequiresPermission(",", permissionFunction : "userPermissionForm")]
         [HttpGet("get-employees-by-group")]
         public IActionResult GetEmployeesByGroup(int userGroupId)
         {

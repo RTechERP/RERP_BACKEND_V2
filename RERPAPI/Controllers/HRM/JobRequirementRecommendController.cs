@@ -1,5 +1,7 @@
 using ClosedXML.Excel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
@@ -12,6 +14,7 @@ namespace RERPAPI.Controllers.HRM
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class JobRequirementRecommendController : ControllerBase
     {
         private readonly JobRequirementRecommendRepo _masterRepo;
@@ -26,7 +29,7 @@ namespace RERPAPI.Controllers.HRM
             _detailRepo = detailRepo;
             _configuration = configuration;
         }
-
+        [RequiresPermission("N1,N2,N34")]
         [HttpPost("get-all")]
         public IActionResult GetAll([FromBody] JobRequirementRecommendParam param)
         {
@@ -47,7 +50,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2,N34")]
         [HttpGet("get-by-id/{id}")]
         public IActionResult GetByID(int id)
         {
@@ -64,7 +67,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2,N34")]
         [HttpGet("init-recommend/{jobRequirementID}")]
         public IActionResult InitRecommend(int jobRequirementID)
         {
@@ -82,7 +85,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2,N34")]
         [HttpGet("get-historical-suppliers")]
         public IActionResult GetHistoricalSuppliers()
         {
@@ -98,7 +101,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2,N34")]
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] JobRequirementRecommendDTO dto)
         {
@@ -155,7 +158,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2,N34")]
         [HttpPost("export-excel")]
         public IActionResult ExportExcel([FromBody] JobRequirementRecommendParam param)
         {
@@ -404,7 +407,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2,N34")]
         [HttpPost("delete")]
         public async Task<IActionResult> Delete(int id)
         {
