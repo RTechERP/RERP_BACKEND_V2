@@ -732,6 +732,7 @@ namespace RERPAPI.Controllers.Old
 						StatusRequest = 1,
 						ProjectPartlistPurchaseRequestTypeID = model.TicketType == 1 ? 4 : 3,
 						EmployeeApproveID = 87,//Phạm Văn Quyền
+						ApprovedTBP = 87,//Phạm Văn Quyền
 						EmployeeID = currentUser.EmployeeID,
 						DateRequest = DateTime.Now,
 					});
