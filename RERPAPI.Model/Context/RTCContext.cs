@@ -666,6 +666,14 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<MainIndex> MainIndices { get; set; }
 
+    public virtual DbSet<MakerTraining> MakerTrainings { get; set; }
+
+    public virtual DbSet<MakerTrainingDocument> MakerTrainingDocuments { get; set; }
+
+    public virtual DbSet<MakerTrainingEmployeeLink> MakerTrainingEmployeeLinks { get; set; }
+
+    public virtual DbSet<MakerTrainingType> MakerTrainingTypes { get; set; }
+
     public virtual DbSet<Manufacturer> Manufacturers { get; set; }
 
     public virtual DbSet<MeetingMinute> MeetingMinutes { get; set; }
@@ -7872,6 +7880,63 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.Result0).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.Result1).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.Result2).HasColumnType("decimal(18, 2)");
+        });
+
+        modelBuilder.Entity<MakerTraining>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__MakerTra__3214EC2760E65280");
+
+            entity.ToTable("MakerTraining");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(255);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.DateEnd).HasColumnType("datetime");
+            entity.Property(e => e.DateStart).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.Location).HasMaxLength(255);
+            entity.Property(e => e.TrainerName).HasMaxLength(255);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(255);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<MakerTrainingDocument>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__MakerTra__CDEB13D86A46754D");
+
+            entity.ToTable("MakerTrainingDocument");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(255);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.FileName).HasMaxLength(255);
+            entity.Property(e => e.FilePath).HasMaxLength(255);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(255);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<MakerTrainingEmployeeLink>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__MakerTra__3214EC27AA8F7947");
+
+            entity.ToTable("MakerTrainingEmployeeLink");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(255);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(255);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<MakerTrainingType>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__MakerTra__CDEB13D82ADD2D15");
+
+            entity.ToTable("MakerTrainingType");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(255);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.TypeCode).HasMaxLength(255);
+            entity.Property(e => e.TypeName).HasMaxLength(255);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(255);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<Manufacturer>(entity =>
