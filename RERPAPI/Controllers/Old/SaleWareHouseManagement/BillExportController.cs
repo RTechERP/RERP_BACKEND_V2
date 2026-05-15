@@ -50,6 +50,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         private readonly IConfiguration _configuration;
         private readonly POKHRepo _pokhRepo;
         private readonly POKHFilesRepo _pokhFilesRepo;
+        private readonly BillExportSaleLogRepo _billExportSaleLogRepo;
 
 
         public BillExportController(
@@ -64,7 +65,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             BillExportLogRepo billexportlogRepo,
             ProjectRepo projectRepo,
             HistoryDeleteBillRepo historyDeleteBillRepo,
-            WarehouseRepo warehouseRepo, InventoryProjectRepo inventoryProjectRepo, ProductSaleRepo productSaleRepo, Repo.GenericEntity.AddressStockRepo addressStockRepo, CustomerRepo customerRepo, SupplierSaleRepo supplierSaleRepo, UserRepo userRepo, IConfiguration configuration, DepartmentRepo departmentRepo, EmployeeRepo employeeRepo, POKHRepo pokhRepo, POKHFilesRepo pokhFilesRepo)
+            WarehouseRepo warehouseRepo, InventoryProjectRepo inventoryProjectRepo, ProductSaleRepo productSaleRepo, Repo.GenericEntity.AddressStockRepo addressStockRepo, CustomerRepo customerRepo, SupplierSaleRepo supplierSaleRepo, UserRepo userRepo, IConfiguration configuration, DepartmentRepo departmentRepo, EmployeeRepo employeeRepo, POKHRepo pokhRepo, POKHFilesRepo pokhFilesRepo, BillExportSaleLogRepo billExportSaleLogRepo)
         {
             _productgroupRepo = productgroupRepo;
             _billdocumentexportRepo = billdocumentexportRepo;
@@ -91,6 +92,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             _employeeRepo = employeeRepo;
             _pokhRepo = pokhRepo;
             _pokhFilesRepo = pokhFilesRepo;
+            _billExportSaleLogRepo = billExportSaleLogRepo;
         }
         [HttpGet("get-all-project")]
         public IActionResult getAllProject()
@@ -208,6 +210,22 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 //}
 
                 return Ok(ApiResponseFactory.Success(listPG, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-sale-logs/{billExportId}")]
+        public IActionResult GetSaleLogs(int billExportId)
+        {
+            try
+            {
+                var logs = _billExportSaleLogRepo.GetAll(x => x.BillExportID == billExportId && x.IsDeleted != true)
+                                                .OrderByDescending(x => x.CreatedDate)
+                                                .ToList();
+                return Ok(ApiResponseFactory.Success(logs));
             }
             catch (Exception ex)
             {

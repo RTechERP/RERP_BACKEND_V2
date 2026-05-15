@@ -106,4 +106,8 @@ public partial class PaymentOrder
     public string? HRNote { get; set; }
 
     public int? TaxCompanyID { get; set; }
+
+    public int? BankListID { get; set; }
+
+    public int? ContentBankTransferType { get; set; }
 }

@@ -18,7 +18,7 @@ namespace RERPAPI.Controllers.KHOAHOC
 {
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize]
+    [Authorize]
     public class CourseController : ControllerBase
     {
         private readonly CourseCatalogRepo _courseCatalogRepo;
@@ -346,6 +346,8 @@ namespace RERPAPI.Controllers.KHOAHOC
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        [HttpHead("stream/{lessonId}")]
         [HttpGet("stream/{lessonId}")]
         public IActionResult StreamByLesson(int lessonId)
         {

@@ -695,6 +695,20 @@ namespace RERPAPI.Controllers.CRM
                 if (validate.Province?.Length > 50)
                     errors.Add("Tỉnh/Thành phố (Province) không được vượt quá 50 ký tự");
 
+                var taxCode = validate.TaxCode?.Trim();
+
+                if (!string.IsNullOrWhiteSpace(taxCode))
+                {
+                    if (_customerRepo.GetAll(x =>
+                        x.TaxCode == taxCode
+                        && x.ID != validate.ID
+                        && (x.IsDeleted == false || x.IsDeleted == null)
+                    ).Any())
+                    {
+                        errors.Add("Mã số thuế đã tồn tại, vui lòng nhập lại!");
+                    }
+                }
+
                 if (errors.Any())
                 {
                     var errorMessage = "Dữ liệu không hợp lệ: " + string.Join("; ", errors);
@@ -702,10 +716,11 @@ namespace RERPAPI.Controllers.CRM
                 }
 
 
+
                 Customer customer = dto.Customer.ID > 0 ? _customerRepo.GetByID(dto.Customer.ID) : new Customer();
                 customer.Province = dto.Customer.Province;
                 customer.CustomerCode = dto.Customer.CustomerCode;
-                customer.CustomerName = dto.Customer.CustomerName;
+                customer.CustomerName = dto.Customer.CustomerName.ToUpper();
                 customer.CustomerShortName = dto.Customer.CustomerShortName;
                 customer.Address = dto.Customer.Address;
                 customer.CustomerType = dto.Customer.CustomerType;
@@ -717,7 +732,7 @@ namespace RERPAPI.Controllers.CRM
                 customer.CustomerSpecializationID = dto.Customer.CustomerSpecializationID;
                 customer.ClosingDateDebt = dto.Customer.ClosingDateDebt;
                 customer.Debt = dto.Customer.Debt;
-                customer.TaxCode = dto.Customer.TaxCode;
+                customer.TaxCode = taxCode;
                 customer.IsDeleted = dto.Customer.IsDeleted;
                 customer.BigAccount = dto.Customer.BigAccount;
                 customer.CustomerIndustriesID = dto.Customer.CustomerIndustriesID;

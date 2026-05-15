@@ -17,13 +17,16 @@ namespace RERPAPI.Controllers.Old
     {
         SupplierSaleRepo _supplierSaleRepo;
         EmployeeRepo _employeeRepo;
+        private readonly BankListRepo _bankListRepo;
         public SupplierSaleController(
             SupplierSaleRepo supplierSaleRepo,
-            EmployeeRepo employeeRepo
+            EmployeeRepo employeeRepo,
+            BankListRepo bankListRepo
         )
         {
             _supplierSaleRepo = supplierSaleRepo;
             _employeeRepo = employeeRepo;
+            _bankListRepo = bankListRepo;
         }
         #region Get
         // Danh sách supplier
@@ -123,6 +126,11 @@ namespace RERPAPI.Controllers.Old
                     return BadRequest(ApiResponseFactory.Fail(null, message));
                 }
 
+                if (!string.IsNullOrWhiteSpace(supplierSale.NameNCC))
+                {
+                    supplierSale.NameNCC = supplierSale.NameNCC.Trim().ToUpper();
+                }
+
                 if (supplierSale.ID <= 0)
                 {
                     if (supplierSale.EmployeeID == 0)
@@ -159,5 +167,18 @@ namespace RERPAPI.Controllers.Old
 
         }
         #endregion
+        [HttpGet("get-bank-list")]
+        public async Task<IActionResult> GetBankList()
+        {
+            try
+            {
+                var data = _bankListRepo.GetAll(p => !p.IsDeleted.Value).OrderBy(x => x.STT);
+                return Ok(ApiResponseFactory.Success(data));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 }

@@ -164,4 +164,6 @@ public partial class BillImportDetail
     /// Không giữ
     /// </summary>
     public bool? IsNotKeep { get; set; }
+
+    public int? ProcessedGoods { get; set; }
 }

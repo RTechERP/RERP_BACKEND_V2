@@ -1,4 +1,5 @@
 ﻿using Azure.Messaging;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RERPAPI.Attributes;
@@ -12,13 +13,16 @@ namespace RERPAPI.Controllers.HRM.OfficeSupply
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class OfficeSupplyController : ControllerBase
     {
         private readonly OfficeSupplyRepo _officesupplyRepo;
+        private readonly ProductSaleRepo _productSaleRepo;
 
-        public OfficeSupplyController(OfficeSupplyRepo officesupplyRepo)
+        public OfficeSupplyController(OfficeSupplyRepo officesupplyRepo, ProductSaleRepo productSaleRepo )
         {
             _officesupplyRepo = officesupplyRepo;
+            _productSaleRepo = productSaleRepo;
         }
 
         [HttpGet("get-office-supply")]
@@ -84,7 +88,7 @@ namespace RERPAPI.Controllers.HRM.OfficeSupply
             }
         }
 
-       
+        [RequiresPermission("N1,N2,N34")]
         [HttpPost("delete-office-supply")]
         public async Task<IActionResult> deleteOfficeSupply([FromBody] List<int> ids)
         {
@@ -156,7 +160,7 @@ namespace RERPAPI.Controllers.HRM.OfficeSupply
         }
 
         //cap nhat and them
-       
+        [RequiresPermission("N1,N2,N34")]
         [HttpPost("save-data")]
         public async Task<IActionResult> saveDataOfficeSupply([FromBody] RERPAPI.Model.Entities.OfficeSupply officesupply)
         {
@@ -168,12 +172,22 @@ namespace RERPAPI.Controllers.HRM.OfficeSupply
                         return BadRequest(ApiResponseFactory.Fail(null, message));
                 }
                 if (officesupply.ID <= 0)
+
                 {
                     await _officesupplyRepo.CreateAsync(officesupply);
                 }
                 else
                 {
                     _officesupplyRepo.Update(officesupply);
+                    //var productSale = _productSaleRepo.GetAll(x => x.ProductCode == officesupply.CodeRTC && x.IsDeleted !=true).FirstOrDefault();
+                    var productSale = _productSaleRepo.GetSingleNoTracking(x => x.ProductCode == officesupply.CodeRTC && x.IsDeleted != true);
+
+                    if (productSale.ID>0)
+                    {
+                        productSale.ProductName = officesupply.NameNCC;
+                        await _productSaleRepo.UpdateAsync(productSale);
+                    }    
+             
                 }
                 return Ok(new
                 {

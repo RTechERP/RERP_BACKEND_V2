@@ -73,6 +73,20 @@ namespace RERPAPI.Repo.GenericEntity
                 return false;
             }
 
+            //7. Validate trùng tên NCC
+            if (!string.IsNullOrWhiteSpace(item.MaSoThue))
+            {
+                if (GetAll(x =>
+                    x.MaSoThue == item.MaSoThue
+                    && x.ID != item.ID
+                    && (x.IsDeleted == false || x.IsDeleted == null)
+                ).Any())
+                {
+                    message = $"Mã số thuế đã tồn tại. Vui lòng nhập lại thông tin!";
+                    return false;
+                }    
+            }    
+
             return true;
         }
     }

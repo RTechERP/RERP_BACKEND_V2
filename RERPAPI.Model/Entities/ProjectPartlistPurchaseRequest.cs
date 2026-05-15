@@ -161,4 +161,6 @@ public partial class ProjectPartlistPurchaseRequest
     /// Đợi ghép sau
     /// </summary>
     public bool? IsPaidLater { get; set; }
+
+    public int? ProjectPartlistPriceRequestID { get; set; }
 }

@@ -239,7 +239,8 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                         PaymentOrderLog l = GetByID(logUnApproved.PaymentOrderLogID ?? 0);
                         if (l.IsDeleted.HasValue && !l.IsDeleted.Value)
                         {
-                            ApiResponseFactory.Fail(null, $"Đề nghị [{item.Code}] đã bị hủy duyệt ở bước [{l.StepName}] !");
+                            messageFails.Add($"Đề nghị [{item.Code}] đã bị hủy duyệt ở bước [{l.StepName}] !");
+                            continue;
                         }
                     }
                     //Get quy trình duyệt

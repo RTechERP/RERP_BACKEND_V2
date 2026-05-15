@@ -67,4 +67,9 @@ public partial class JobPerfomanceEvaluationApprove
     /// Trạng thái xoá
     /// </summary>
     public bool? IsDeleted { get; set; }
+
+    /// <summary>
+    /// 0:chờ duyệt, 1: Duyệt, 2:Huỷ duyệt
+    /// </summary>
+    public int? StatusApprove { get; set; }
 }

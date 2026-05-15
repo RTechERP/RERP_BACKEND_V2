@@ -11,7 +11,7 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
 {
     public class PaymentOrderRepo : GenericRepo<PaymentOrder>
     {
-        string[] PREFIX_CODES = new string[] { "", "ĐNTU", "ĐNTT" , "ĐNTT" };
+        string[] PREFIX_CODES = new string[] { "", "ĐNTU", "ĐNTT", "ĐNTT" };
         public PaymentOrderRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
@@ -71,7 +71,7 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
             try
             {
                 string code = string.Empty;
-                
+
 
                 //stt++;
                 //string sttText = stt.ToString().PadLeft(4, '0');
@@ -140,10 +140,16 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                     {
                         response = ApiResponseFactory.Fail(null, "Vui lòng nhập Số tài khoản!");
                     }
-
-                    if (string.IsNullOrWhiteSpace(payment.Bank))
+                    if (payment.BankListID <= 0)
                     {
-                        response = ApiResponseFactory.Fail(null, "Vui lòng nhập Ngân hàng!");
+                        response = ApiResponseFactory.Fail(null, "Vui lòng chọn Ngân hàng!");
+                    }
+                    else
+                    {
+                        if (string.IsNullOrWhiteSpace(payment.Bank) && payment.BankListID == 187)
+                        {
+                            response = ApiResponseFactory.Fail(null, "Vui lòng nhập Ngân hàng!");
+                        }
                     }
 
                     if (string.IsNullOrWhiteSpace(payment.ContentBankTransfer))
@@ -185,7 +191,7 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                             break;
                         }
                     }
-                    
+
                 }
 
                 return response;

@@ -201,6 +201,8 @@ builder.Services.AddScoped<PONCCHistoryRepo>();
 builder.Services.AddScoped<PositionContractRepo>();
 builder.Services.AddScoped<PositionInternalRepo>();
 //builder.Services.AddScoped<ProductGroupRTCRepo>();
+//builder.Services.AddScoped<JobRequirementRecommendRepo>();
+//builder.Services.AddScoped<JobRequirementRecommendDetailRepo>();
 builder.Services.AddScoped<ProductGroupRepo>();
 builder.Services.AddScoped<ProductGroupWareHouseRepo>();
 builder.Services.AddScoped<ProductLocationRepo>();
@@ -295,7 +297,11 @@ builder.Services.AddScoped<VisitFactoryDetailRepo>();
 builder.Services.AddScoped<VisitGuestTypeRepo>();
 
 builder.Services.AddScoped<FormAndFunctionRepo>();
+builder.Services.AddScoped<FormAndFunctionGroupRepo>();
 builder.Services.AddScoped<UserGroupRepo>();
+builder.Services.AddScoped<UserGroupLinkRepo>();
+builder.Services.AddScoped<UserGroupRightDistributionRepo>();
+
 
 builder.Services.AddScoped<CategoriesRepo>();
 builder.Services.AddScoped<ProductRTCRepo>();
@@ -514,7 +520,18 @@ builder.Services.AddScoped<HRRecruitmentInterviewAssessmentFormRepo>();
 builder.Services.AddScoped<HRRecruitmentApplicationFormRepo>();
 builder.Services.AddScoped<HRRecruitmentApproveRepo>();
 builder.Services.AddScoped<JobPerfomanceEvaluationApproveRepo>();
+builder.Services.AddScoped<JobPerfomanceEvaluationNewRepo>();
 
+builder.Services.AddScoped<ProjectHistoryProblemProjectItemLinkRepo>();
+builder.Services.AddScoped<ProjectHistoryProblemPartListLinkRepo>();
+builder.Services.AddScoped<ProjectHistoryProblemReceiverLinkRepo>();
+builder.Services.AddScoped<ProjectHistoryProblemWorkerLinkRepo>();
+builder.Services.AddScoped<ProjectHistoryProblemFileRepo>();
+builder.Services.AddScoped<ProjectHistoryProblemLogRepo>();
+builder.Services.AddScoped<DrawingRepo>();
+builder.Services.AddScoped<DrawingLogRepo>();
+builder.Services.AddScoped<JobRequirementRecommendRepo>();
+builder.Services.AddScoped<JobRequirementRecommendDetailRepo>();
 
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();
@@ -574,6 +591,8 @@ builder.Services.AddScoped<CustomerIndustriesRepo>();
 builder.Services.AddScoped<FcmTokenRepo>();
 builder.Services.AddScoped<NotificationTypeLinkRepo>();
 builder.Services.AddScoped<NotificationTypeRepo>();
+//builder.Services.AddScoped<JobRequirementLogRepo>();
+//builder.Services.AddScoped<AssetLogRepo>();
 
 
 #region KPI
@@ -640,7 +659,12 @@ builder.Services.AddScoped<CommercialPriceRequestRepo>();
 builder.Services.AddScoped<PaymentOrderLogApprovedRepo>();
 builder.Services.AddScoped<CurrencyConfigRepo>(); 
 builder.Services.AddScoped<BillImportSaleLogRepo>();
+builder.Services.AddScoped<BankListRepo>();
 
+builder.Services.AddScoped<POKHLogRepo>();
+builder.Services.AddScoped<RequestInvoiceLogRepo>();
+builder.Services.AddScoped<BillExportSaleLogRepo>();
+builder.Services.AddScoped<PONCCLogRepo>();
 
 builder.Services.AddScoped<CurrentUser>(provider =>
 {
@@ -674,7 +698,7 @@ builder.Services.AddCors(options =>
     });
 });
 // Chỉ khởi tạo 1 lần duy nhất khi chạy server
-FirebaseApp.Create(new AppOptions() 
+FirebaseApp.Create(new AppOptions()
 {
     Credential = GoogleCredential.FromFile("firebase-adminsdk.json") // Thay bằng đường dẫn thực tế
 });
@@ -827,7 +851,7 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseCors("MyCors");
 app.UseAuthentication();
-app.UseMiddleware<DynamicAuthorizationMiddleware>(); 
+app.UseMiddleware<DynamicAuthorizationMiddleware>();
 app.UseAuthorization();
 app.UseSession();
 

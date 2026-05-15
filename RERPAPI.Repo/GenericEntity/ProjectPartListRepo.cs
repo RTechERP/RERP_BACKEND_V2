@@ -14,14 +14,16 @@ namespace RERPAPI.Repo.GenericEntity
         private readonly ProductSaleRepo _productSaleRepo;
         private readonly ProjectPartlistVersionRepo _versionRepo;
         private readonly UnitCountRepo _unitCountRepo;
+        private readonly ProjectTypeRepo _projectTypeRepo;
 
-        public ProjectPartListRepo(CurrentUser currentUser, ProjectPartlistPriceRequestRepo projectPartlistPriceRequestRepo, ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo, ProductSaleRepo productSaleRepo, ProjectPartlistVersionRepo projectPartlistVersionRepo, UnitCountRepo unitCountRepo) : base(currentUser)
+        public ProjectPartListRepo(CurrentUser currentUser, ProjectPartlistPriceRequestRepo projectPartlistPriceRequestRepo, ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo, ProductSaleRepo productSaleRepo, ProjectPartlistVersionRepo projectPartlistVersionRepo, UnitCountRepo unitCountRepo, ProjectTypeRepo projectTypeRepo) : base(currentUser)
         {
             _priceRepo = projectPartlistPriceRequestRepo;
             _purchaseRepo = projectPartlistPurchaseRequestRepo;
             _productSaleRepo = productSaleRepo;
             _versionRepo = projectPartlistVersionRepo;
             _unitCountRepo = unitCountRepo;
+            _projectTypeRepo = projectTypeRepo;
         }
 
         public int getSTT(int projectVersionID)
@@ -460,9 +462,10 @@ namespace RERPAPI.Repo.GenericEntity
             ProjectPartList partlistexist = GetByID(partlist.ID);
 
             ProjectPartListVersion version = _versionRepo.GetByID(partlistexist.ProjectPartListVersionID ?? 0);
+            ProjectType projectType = _projectTypeRepo.GetByID(version.ProjectTypeID ?? 0);
             if (version.IsActive == false || version.IsActive == null)
             {
-                message = $"Vui lòng chọn sử dụng phiên bản [{version.Code}] trước!";
+                message = $"Vui lòng tích sử dụng phiên bản PO thuộc danh mục [{projectType.ProjectTypeName}] mã [{version.Code}] trước!";
                 return false;
             }
             if (partlist.IsDeleted == true)

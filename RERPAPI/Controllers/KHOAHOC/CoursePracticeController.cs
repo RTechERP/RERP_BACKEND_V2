@@ -619,6 +619,85 @@ namespace RERPAPI.Controllers.KHOAHOC
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        // API mới: Lấy tất cả khóa học theo phòng ban
+        [HttpGet("load-all-courses")]
+        public async Task<IActionResult> LoadAllCourses()
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                var param = new
+                {
+                    CourseCatalogID = 0,
+                    EmployeeID = currentUser.EmployeeID,
+                    Status = -1,
+                    CatalogType = 0  // Lấy tất cả các loại
+                };
+
+                //var listCourse = await SqlDapper<CourseDTO>.ProcedureToListTAsync("spGetCourseNew1", param);
+                var listCourseParent = await SqlDapper<CourseDTO>.ProcedureToListTAsync("spGetCourseNew1",
+                                                  param);
+
+                var listCourseChile = new List<CourseDTO>();
+
+
+                for (int i = 0; i < listCourseParent.Count; i++)
+                {
+
+                    if (i == 0) continue;
+
+                    CourseDTO course = listCourseParent[i - 1];
+
+                    if (course.CatalogType != 2)
+                    {
+                        if ((course.NumberLesson == course.TotalHistoryLession && course.Evaluate == 1) || currentUser.IsLeader > 0 || currentUser.IsAdmin || currentUser.EmployeeID == 55 || currentUser.EmployeeID == 753)
+                        {
+                            listCourseParent[i].Status = 1;
+                        }
+                        else
+                        {
+                            listCourseParent[i].Status = 0;
+                        }
+                    }
+                    if (course.ID == 21 || course.ID == 40)
+                    {
+                        listCourseParent[i - 1].Status = 1;
+                    }
+                }
+
+
+                if (!listCourseChile.Any(x => x.Evaluate <= 0))
+                {
+                    return Ok(ApiResponseFactory.Success(listCourseParent, ""));
+                }
+
+                var childIds = new HashSet<int>(listCourseChile.Select(c => c.ID));
+
+                foreach (var parent in listCourseParent)
+                {
+                    if (parent.Evaluate == 1 || childIds.Contains(parent.ID) || currentUser.IsLeader > 0 || currentUser.IsAdmin || currentUser.EmployeeID == 55 || currentUser.EmployeeID == 753)
+                    {
+                        parent.Status = 1; // Đạt hoặc nằm trong listCourseChild → có thể làm
+                    }
+                    else
+                    {
+                        parent.Status = 0; // Còn lại → không thể làm
+                    }
+                    if (parent.ID == 21 || parent.ID == 40)
+                    {
+                        parent.Status = 1;
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(listCourseParent, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         ////lấy danh sách khóa học
         [HttpGet("load-data-course")]
         public async Task<IActionResult> LoadDataCourse(int courseCatalogID, int catalogType)
@@ -671,7 +750,7 @@ namespace RERPAPI.Controllers.KHOAHOC
 
                 foreach (var parent in listCourseParent)
                 {
-                    if (parent.Evaluate == 1 || childIds.Contains(parent.ID) || currentUser.IsLeader > 0 || currentUser.IsAdmin || currentUser.EmployeeID == 55)
+                    if (parent.Evaluate == 1 || childIds.Contains(parent.ID) || currentUser.IsLeader > 0 || currentUser.IsAdmin || currentUser.EmployeeID == 55 || currentUser.EmployeeID == 753)
                     {
                         parent.Status = 1; // Đạt hoặc nằm trong listCourseChild → có thể làm
                     }

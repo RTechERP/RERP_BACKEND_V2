@@ -19,23 +19,21 @@ namespace RERPAPI.Controllers.Old
     {
         #region Khai báo repository
 
-		private ProjectPartlistPurchaseRequestRepo _repo;
-		private InventoryProjectRepo _inventoryProjectRepo;
-		private ProjectPartlistPurchaseRequestTypeRepo _typeRepo;
-		private ProjectRepo _projectRepo;
-		private POKHRepo _pokhRepo;
-		private FirmRepo _firmRepo;
-		private ProductSaleRepo _productSaleRepo;
-		private RequestInvoiceRepo _requestInvoiceRepo;
-		private POKHDetailRepo _pOKHDetailRepo;
-		private WarehouseRepo _warehouseRepo;
-		private ProductGroupRTCRepo _productGroupRTCRepo;
-		private ProjectPartListPurchaseRequestApproveLogRepo _projectPartListPurchaseRequestApproveLogRepo;
-		private List<PathStaticFile> _pathStaticFiles;
-		private ProductGroupRepo _productGroupRepo;
-		private ProductRTCRepo _productRTCRepo;
-		private UnitCountKTRepo _unitCountKTRepo;
-		private ProjectPartlistPurchaseRequestNoteRepo _projectPartlistPurchaseRequestNoteRepo;
+        ProjectPartlistPurchaseRequestRepo _repo;
+        InventoryProjectRepo _inventoryProjectRepo;
+        ProjectPartlistPurchaseRequestTypeRepo _typeRepo;
+        ProjectRepo _projectRepo;
+        POKHRepo _pokhRepo;
+        FirmRepo _firmRepo;
+        ProductSaleRepo _productSaleRepo;
+        RequestInvoiceRepo _requestInvoiceRepo;
+        POKHDetailRepo _pOKHDetailRepo;
+        WarehouseRepo _warehouseRepo;
+        ProductGroupRTCRepo _productGroupRTCRepo;
+        ProjectPartListPurchaseRequestApproveLogRepo _projectPartListPurchaseRequestApproveLogRepo;
+        List<PathStaticFile> _pathStaticFiles;
+        ProductGroupRepo _productGroupRepo;
+        ProjectPartlistPriceRequestRepo _projectPartlistPriceRequestRepo;
 
         public ProjectPartlistPurchaseRequestController(
             ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo,
@@ -51,10 +49,8 @@ namespace RERPAPI.Controllers.Old
             ProductGroupRTCRepo productGroupRTCRepo,
             IConfiguration configuration,
             ProjectPartListPurchaseRequestApproveLogRepo projectPartListPurchaseRequestApproveLogRepo,
-			ProductGroupRepo productGroupRepo,
-			ProductRTCRepo productRTCRepo,
-			UnitCountKTRepo unitCountKTRepo,
-			ProjectPartlistPurchaseRequestNoteRepo projectPartlistPurchaseRequestNoteRepo
+            ProductGroupRepo productGroupRepo,
+            ProjectPartlistPriceRequestRepo projectPartlistPriceRequestRepo
             )
         {
             _repo = projectPartlistPurchaseRequestRepo;
@@ -71,9 +67,7 @@ namespace RERPAPI.Controllers.Old
             _pathStaticFiles = configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();
             _projectPartListPurchaseRequestApproveLogRepo = projectPartListPurchaseRequestApproveLogRepo;
             _productGroupRepo = productGroupRepo;
-			_productRTCRepo = productRTCRepo;
-			_unitCountKTRepo = unitCountKTRepo;
-			_projectPartlistPurchaseRequestNoteRepo = projectPartlistPurchaseRequestNoteRepo;
+            _projectPartlistPriceRequestRepo = projectPartlistPriceRequestRepo;
         }
 
         #endregion Khai báo repository
@@ -814,7 +808,11 @@ namespace RERPAPI.Controllers.Old
                     {
                         _repo.UpdateData(item);
                         if (item.ID <= 0) await _repo.CreateAsync(item);
-                        else await _repo.UpdateAsync(item);
+                        else
+                        {
+                            item.UpdatedDate = DateTime.Now;
+                            await _repo.UpdateAsync(item);
+                        }
                         continue;
                     }
                     if (item.ProjectPartlistPurchaseRequestTypeID != 3 && item.ProjectPartlistPurchaseRequestTypeID != 4)
@@ -873,11 +871,11 @@ namespace RERPAPI.Controllers.Old
 
                     _repo.UpdateData(item);
                     if (item.ID <= 0) await _repo.CreateAsync(item);
-					else
-					{
-						item.UpdatedDate = DateTime.Now;
-						await _repo.UpdateAsync(item);
-					}
+                    else
+                    {
+                        item.UpdatedDate = DateTime.Now;
+                        await _repo.UpdateAsync(item);
+                    }
 
                     await _projectPartListPurchaseRequestApproveLogRepo.CreateLogAsync(item.ID, PurchaseRequestApproveStatus.SaveData, currentUser.EmployeeID, currentUser.LoginName);
                 }
@@ -930,6 +928,20 @@ namespace RERPAPI.Controllers.Old
                     int inventoryProjectID = Convert.ToInt32(item.InventoryProjectID);
                     if (inventoryProjectID > 0 && !inventoryProjects.Contains(inventoryProjectID))
                         inventoryProjects.Add(inventoryProjectID);
+
+                    if (item.ProjectPartlistPurchaseRequestTypeID == 8)
+                    {
+                        var purchaseRequest = _repo.GetByID(item.ID);
+                        if (purchaseRequest.ProjectPartlistPriceRequestID > 0)
+                        {
+                            var priceRequest = _projectPartlistPriceRequestRepo.GetByID((int)purchaseRequest.ProjectPartlistPriceRequestID);
+                            if (priceRequest != null)
+                            {
+                                priceRequest.IsDeleted = true;
+                                await _projectPartlistPriceRequestRepo.UpdateAsync(priceRequest);
+                            }
+                        }
+                    }
                 }
 
                 if (inventoryProjects.Count > 0)
@@ -941,6 +953,8 @@ namespace RERPAPI.Controllers.Old
                         await _inventoryProjectRepo.UpdateAsync(inventoryProject);
                     }
                 }
+
+
 
                 return Ok(ApiResponseFactory.Success(data, "Xóa yêu cầu mua hàng thành công!"));
             }

@@ -52,4 +52,9 @@ public partial class ProjectTaskEmployee
     /// Trạng thái khóa mềm 
     /// </summary>
     public bool? IsDeleted { get; set; }
+
+    /// <summary>
+    /// 1: Không thể xóa, 0: Có thể xóa
+    /// </summary>
+    public bool? CanDelete { get; set; }
 }

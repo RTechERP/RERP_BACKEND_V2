@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Middleware;
@@ -208,6 +208,31 @@ namespace RERPAPI.Controllers.HRM
             }
 
         }
+        //API thêm nhân viên vào phòng ban
+        [HttpGet("update-employee-department")]
+        public async Task<IActionResult> UpdateEmployeeDepartment([FromQuery] int employeeID, [FromQuery] int departmentID)
+        {
+            try
+            {
+                var employee = _employeeRepo.GetByID(employeeID);
+                if (employee == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy nhân viên"));
 
+                employee.DepartmentID = departmentID;
+                int result = await _employeeRepo.UpdateAsync(employee);
+                if (result > 0)
+                {
+                    return Ok(ApiResponseFactory.Success(null, "Cập nhật phòng ban thành công"));
+                }
+                else
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật phòng ban thất bại"));
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 }

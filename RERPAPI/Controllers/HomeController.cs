@@ -1,4 +1,5 @@
 using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -49,7 +50,7 @@ namespace RERPAPI.Controllers
 
         //IRabbitMqPublisher _publisher;
         public HomeController(IOptions<JwtSettings> jwtSettings, RTCContext context,
-            IConfiguration configuration, EmployeeOnLeaveRepo onLeaveRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeWFHRepo employeeWFHRepo, ConfigSystemRepo configSystemRepo, EmployeeOverTimeRepo employeeOverTimeRepo, RoleConfig roleConfig, EmployeePayrollDetailRepo employeePayrollDetailRepo, EmailHelper emailHelper, UserRepo userRepo,EmployeeRepo employeeRepo)
+            IConfiguration configuration, EmployeeOnLeaveRepo onLeaveRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeWFHRepo employeeWFHRepo, ConfigSystemRepo configSystemRepo, EmployeeOverTimeRepo employeeOverTimeRepo, RoleConfig roleConfig, EmployeePayrollDetailRepo employeePayrollDetailRepo, EmailHelper emailHelper, UserRepo userRepo, EmployeeRepo employeeRepo)
         {
             _jwtSettings = jwtSettings.Value;
             _context = context;
@@ -280,7 +281,7 @@ namespace RERPAPI.Controllers
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, "Lỗi khi đổi mật khẩu: " + ex.Message));
             }
-        }   
+        }
         //API lấy thông tin cá nhân nhân viên
         [Authorize]
         [HttpGet("personal-information")]
@@ -294,8 +295,8 @@ namespace RERPAPI.Controllers
 
                 var data = SQLHelper<EmployeeDTON60>.ProcedureToListModel("spGetEmployee",
                     new string[] { "@Status", "@DepartmentID", "@Keyword", "@ID" },
-                    new object[] { -1, 0, "", employeeID });        
-                    return Ok(ApiResponseFactory.Success(data, ""));
+                    new object[] { -1, 0, "", employeeID });
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {
@@ -303,7 +304,7 @@ namespace RERPAPI.Controllers
             }
         }
 
-     
+
         /// <summary>
         /// Upload file chung cho hệ thống
         /// </summary>
@@ -1853,10 +1854,10 @@ namespace RERPAPI.Controllers
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
-                if(currentUser.EmployeeID != param.EmployeeID)
+                if (currentUser.EmployeeID != param.EmployeeID)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Bạn không thể sửa thông tin của người khác, vui lòng kiểm tra lại!"));
-                }   
+                }
                 if (param == null || param.EmployeeID <= 0)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Thông tin không hợp lệ, vui lòng kiểm tra lại!"));
@@ -1869,20 +1870,40 @@ namespace RERPAPI.Controllers
                 employee.SDTCaNhan = param.SDTCaNhan;
                 employee.EmailCaNhan = param.EmailCaNhan;
                 int result = 0;
-                result =  await _employeeRepo.UpdateAsync(employee);
-                if(result>0)
+                result = await _employeeRepo.UpdateAsync(employee);
+                if (result > 0)
                 {
                     return Ok(ApiResponseFactory.Success(null, "Cập nhật thông tin cá nhân thành công!"));
-                }   
+                }
                 else
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thông tin cá nhân thất bại!"));
-                }    
+                }
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+
+        [Authorize]
+        [HttpGet("get-permission")]
+        public async Task<IActionResult> GetPermission()
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                var permissions = await SqlDapper<PermissionDTO>.ProcedureToListTAsync("spGetUserPermissions", new { UserID = currentUser.ID });
+                var listPermission = permissions.Where(x=>!string.IsNullOrEmpty( x.FunctionCode)).Select(x => x.FunctionCode).Distinct().ToList();
+                return Ok(ApiResponseFactory.Success(listPermission, "Lấy dữ liệu thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
     }
 }
