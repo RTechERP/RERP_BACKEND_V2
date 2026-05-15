@@ -1,4 +1,5 @@
 ﻿using Azure.Messaging;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RERPAPI.Attributes;
@@ -12,6 +13,7 @@ namespace RERPAPI.Controllers.HRM.OfficeSupply
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class OfficeSupplyController : ControllerBase
     {
         private readonly OfficeSupplyRepo _officesupplyRepo;
@@ -86,7 +88,7 @@ namespace RERPAPI.Controllers.HRM.OfficeSupply
             }
         }
 
-       
+        [RequiresPermission("N1,N2,N34")]
         [HttpPost("delete-office-supply")]
         public async Task<IActionResult> deleteOfficeSupply([FromBody] List<int> ids)
         {
@@ -158,7 +160,7 @@ namespace RERPAPI.Controllers.HRM.OfficeSupply
         }
 
         //cap nhat and them
-       
+        [RequiresPermission("N1,N2,N34")]
         [HttpPost("save-data")]
         public async Task<IActionResult> saveDataOfficeSupply([FromBody] RERPAPI.Model.Entities.OfficeSupply officesupply)
         {
