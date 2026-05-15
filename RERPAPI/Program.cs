@@ -660,6 +660,7 @@ builder.Services.AddScoped<PaymentOrderLogApprovedRepo>();
 builder.Services.AddScoped<CurrencyConfigRepo>(); 
 builder.Services.AddScoped<BillImportSaleLogRepo>();
 builder.Services.AddScoped<BankListRepo>();
+builder.Services.AddScoped<ProjectPartlistPurchaseRequestNoteRepo>();
 
 builder.Services.AddScoped<POKHLogRepo>();
 builder.Services.AddScoped<RequestInvoiceLogRepo>();
