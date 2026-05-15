@@ -60,4 +60,6 @@ public partial class HRHiringRequest
     /// Hạn tuyển dụng
     /// </summary>
     public DateTime? HiringDeadline { get; set; }
+
+    public string? LanguageNote { get; set; }
 }
