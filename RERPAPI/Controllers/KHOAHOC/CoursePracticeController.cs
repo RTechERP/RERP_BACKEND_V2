@@ -660,6 +660,10 @@ namespace RERPAPI.Controllers.KHOAHOC
                             listCourseParent[i].Status = 0;
                         }
                     }
+                    if (course.ID == 21 || course.ID == 40)
+                    {
+                        listCourseParent[i - 1].Status = 1;
+                    }
                 }
 
 
@@ -679,6 +683,10 @@ namespace RERPAPI.Controllers.KHOAHOC
                     else
                     {
                         parent.Status = 0; // Còn lại → không thể làm
+                    }
+                    if (parent.ID == 21 || parent.ID == 40)
+                    {
+                        parent.Status = 1;
                     }
                 }
 
