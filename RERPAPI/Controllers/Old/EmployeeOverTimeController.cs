@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
@@ -96,6 +96,32 @@ namespace RERPAPI.Controllers.Old
             return Ok(ApiResponseFactory.Success(new { data, summaryPerson, TotalPages }, ""));
 
         }
+
+
+        [HttpPost("get-summary-over-time-person-by-dept")]
+        public IActionResult GetEmployeeOverTimePersonByDept(EmployeeOverTimeSummaryPersonParam request)
+        {
+            try
+            {
+                var ds = request.DateStart.AddHours(0).AddMinutes(0).AddSeconds(0);   // 00:00:00
+                var de = request.DateEnd.AddHours(23).AddMinutes(59).AddSeconds(59);  // 23:59:59
+
+                var result = SQLHelper<object>.ProcedureToList(
+                    "spGetEmployeeOvertimeByDept",
+                    new string[] { "@FilterText", "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@DepartmentID", "@IDApprovedTP", "@Status", "@EmployeeID" },
+                    new object[] { request.FilterText ?? "", request.Page ?? 1, request.Size ?? 100000, ds, de, request.DepartmentID ?? 0, request.IDApprovedTP ?? 0, request.Status ?? -1, request.EmployeeID ?? 0 });
+
+                var data         = SQLHelper<object>.GetListData(result, 0); // danh sách có phân trang
+                var summaryPerson = SQLHelper<object>.GetListData(result, 1); // tổng hợp theo nhân viên
+
+                return Ok(ApiResponseFactory.Success(new { data, summaryPerson }, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpPost("save-data")]
         [RequiresPermission("N2,N1")]
         public async Task<IActionResult> SaveEmployeeOverTime([FromBody] EmployeeOverTimeDTO request)
@@ -247,8 +273,7 @@ namespace RERPAPI.Controllers.Old
             try
             {
                 var employeeOverTime = _employeeOverTimeRepo
-                .GetAll()
-                .Where(e => e.EmployeeID == employeeId && e.DateRegister.Value.Date == dateRegister.Date)
+                .GetAll(e => e.EmployeeID == employeeId && e.DateRegister.Value.Date == dateRegister.Date)
                 .OrderBy(x => x.TimeStart);
                 if (employeeOverTime == null)
                 {

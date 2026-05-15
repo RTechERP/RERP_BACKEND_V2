@@ -90,6 +90,38 @@ namespace RERPAPI.Controllers.Systems
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        // Lấy danh sách quyền của người dùng theo tất cả nhóm
+        [RequiresPermission("N1999")]
+        [HttpGet("get-user-permissions")]
+        public IActionResult GetUserPermissionsByUserID(int userId)
+        {
+            try
+            {
+                var datas = SQLHelper<object>.ProcedureToList("spGetUserPermissionsByUserID", new string[] { "@UserID" }, new object[] { userId });
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(datas, 0), ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        // Lưu danh sách nhóm quyền cho người dùng
+        [RequiresPermission("N1999")]
+        [HttpPost("save-user-group-links")]
+        public IActionResult SaveUserGroupLinks(int userId, string userGroupId = "")
+        {
+            try
+            {
+                // Đảm bảo truyền chuỗi rỗng khi không có nhóm nào được chọn
+                var groupIds = userGroupId ?? "";
+                SQLHelper<object>.ProcedureToList("spSaveUserGroupLinks", new string[] { "@UserID", "@ListUserGroupID" }, new object[] { userId, groupIds });
+                return Ok(ApiResponseFactory.Success(null, "Lưu thông tin thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         // Lưu thông tin phân quyền cho nhóm
         [RequiresPermission("N1999")]
         [HttpPost("save-group-permissions")]
@@ -287,6 +319,37 @@ namespace RERPAPI.Controllers.Systems
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-    }
 
+        // Lấy cây danh sách nhóm quyền và chi tiết quyền (Nhóm -> Quyền)
+        [RequiresPermission("N1999")]
+        [HttpGet("get-tree")]
+        public IActionResult GetUserGroupTree()
+        {
+            try
+            {
+                var datas = SQLHelper<object>.ProcedureToList("spGetUserGroupPermissionTree", new string[] { }, new object[] { });
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(datas, 0), ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        // Lấy danh sách nhân viên trong nhóm quyền
+        [RequiresPermission("N1999")]
+        [HttpGet("get-employees-by-group")]
+        public IActionResult GetEmployeesByGroup(int userGroupId)
+        {
+            try
+            {
+                var datas = SQLHelper<object>.ProcedureToList("spGetEmployeesByGroupId", new string[] { "@UserGroupID" }, new object[] { userGroupId });
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(datas, 0), ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+    }
 }
