@@ -27,7 +27,7 @@ namespace RERPAPI.Repo.GenericEntity
                 //}
                 return true; // Nếu IsDeleted = true, chỉ cần kiểm tra lý do xóa
             }
-            if (item.ID > 0)
+            if (item.ID >= 0)
             {
                 var existingSolutions = GetAll().Any(x => 
                     x.CodeSolution == item.CodeSolution && 
