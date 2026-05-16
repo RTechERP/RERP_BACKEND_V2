@@ -794,6 +794,18 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<PinResetToken> PinResetTokens { get; set; }
 
+    public virtual DbSet<PollForm> PollForms { get; set; }
+
+    public virtual DbSet<PollQuestion> PollQuestions { get; set; }
+
+    public virtual DbSet<PollQuestionOption> PollQuestionOptions { get; set; }
+
+    public virtual DbSet<PollResponse> PollResponses { get; set; }
+
+    public virtual DbSet<PollResponseAnswer> PollResponseAnswers { get; set; }
+
+    public virtual DbSet<PollSection> PollSections { get; set; }
+
     public virtual DbSet<PriceCheck> PriceChecks { get; set; }
 
     public virtual DbSet<ProductFilm> ProductFilms { get; set; }
@@ -8628,6 +8640,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.ExpectedDate).HasColumnType("datetime");
             entity.Property(e => e.FeeShip).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.IntoMoney).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.NameBill).HasMaxLength(250);
             entity.Property(e => e.OrderDate)
                 .HasComment("ngày yêu cầu giao hàng")
@@ -9266,6 +9279,80 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UserId).HasComment("ID người dùng yêu cầu reset PIN");
         });
 
+        modelBuilder.Entity<PollForm>(entity =>
+        {
+            entity.ToTable("PollForm");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.EndDate).HasColumnType("datetime");
+            entity.Property(e => e.IsPublic).HasDefaultValue(false);
+            entity.Property(e => e.StartDate).HasColumnType("datetime");
+            entity.Property(e => e.Title).HasMaxLength(550);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<PollQuestion>(entity =>
+        {
+            entity.ToTable("PollQuestion");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.DataSourceField).HasMaxLength(100);
+            entity.Property(e => e.DataSourceType).HasMaxLength(50);
+            entity.Property(e => e.FieldKey).HasMaxLength(100);
+            entity.Property(e => e.QuestionText).HasMaxLength(1000);
+            entity.Property(e => e.QuestionType).HasMaxLength(50);
+            entity.Property(e => e.SortOrder).HasDefaultValue(0);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<PollQuestionOption>(entity =>
+        {
+            entity.ToTable("PollQuestionOption");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.OptionText).HasMaxLength(500);
+            entity.Property(e => e.OptionValue).HasMaxLength(500);
+            entity.Property(e => e.SortOrder).HasDefaultValue(0);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<PollResponse>(entity =>
+        {
+            entity.ToTable("PollResponse");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<PollResponseAnswer>(entity =>
+        {
+            entity.ToTable("PollResponseAnswer");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<PollSection>(entity =>
+        {
+            entity.ToTable("PollSection");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.Title).HasMaxLength(500);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
         modelBuilder.Entity<PriceCheck>(entity =>
         {
             entity.ToTable("PriceCheck");
@@ -9345,6 +9432,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.IsNotKeep).HasDefaultValue(false);
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
@@ -10940,6 +11028,7 @@ public partial class RTCContext : DbContext
 
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.IsHide).HasDefaultValue(false);
+            entity.Property(e => e.IsHidePartlist).HasDefaultValue(false);
             entity.Property(e => e.ProjectTypeCode).HasMaxLength(250);
             entity.Property(e => e.ProjectTypeName).HasMaxLength(250);
             entity.Property(e => e.RootFolder).HasMaxLength(550);

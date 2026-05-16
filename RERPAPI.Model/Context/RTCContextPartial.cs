@@ -362,5 +362,14 @@ namespace RERPAPI.Model.Context
                 new JsonSerializerOptions { WriteIndented = true });
         }
 
+        partial void OnModelCreatingPartial(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<PollQuestion>(entity =>
+            {
+                entity.Property(e => e.DataSourceType).HasMaxLength(50);
+                entity.Property(e => e.DataSourceField).HasMaxLength(100);
+            });
+        }
+
     }
 }

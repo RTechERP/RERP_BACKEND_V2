@@ -3,15 +3,17 @@ using System.Collections.Generic;
 
 namespace RERPAPI.Model.Entities;
 
-public partial class ProductGroupWarehouse
+public partial class PollQuestionOption
 {
     public int ID { get; set; }
 
-    public int? ProductGroupID { get; set; }
+    public int? PollQuestionID { get; set; }
 
-    public int? WarehouseID { get; set; }
+    public string? OptionText { get; set; }
 
-    public int? EmployeeID { get; set; }
+    public string? OptionValue { get; set; }
+
+    public int? SortOrder { get; set; }
 
     public string? CreatedBy { get; set; }
 
@@ -20,8 +22,4 @@ public partial class ProductGroupWarehouse
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
-
-    public bool? IsDeleted { get; set; }
-
-    public bool? IsNotKeep { get; set; }
 }

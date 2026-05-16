@@ -124,4 +124,6 @@ public partial class PONCCDetail
     public string? ParentProductCode { get; set; }
 
     public bool? IsPurchase { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }

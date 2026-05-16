@@ -20,4 +20,6 @@ public partial class ProjectType
     public bool? IsDeleted { get; set; }
 
     public bool? IsHide { get; set; }
+
+    public bool? IsHidePartlist { get; set; }
 }
