@@ -2585,5 +2585,57 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+
+
+        [HttpGet("get-sumary-project-task-attendance")]
+        public async Task<IActionResult> GetSumaryProjectTaskAttendance
+            (   DateTime dateStart, 
+                DateTime dateEnd, 
+                int departmentID = -1,
+                int status = -1,
+                int employeeID = -1,
+                int teamID = -1, 
+                string keyword = ""
+            )
+        {
+            try
+            {
+                dateStart = dateStart.Date;
+                dateEnd = dateEnd.Date.AddDays(1).AddTicks(-1);
+                var param = new
+                {
+                    DateStart = dateStart.ToString("yyyy-MM-dd 00:00:00"),
+                    DateEnd = dateEnd.ToString("yyyy-MM-dd 23:59:59"),
+                    DepartmentID = departmentID,
+                    Status = status,
+                    EmployeeID = employeeID,
+                    TeamID = teamID,
+                    Keywords = keyword
+                };
+                var projectTasks = await SqlDapper<object>.ProcedureToListAsync("spGetSumaryProjectTaskAttendance", param);
+                return Ok(ApiResponseFactory.Success(projectTasks));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, "Failed to get project tasks view status."));
+            }
+        }
+
+        [HttpGet("get-check-project-task-attendance")]
+        public async Task<IActionResult> GetCheckProjectTaskAttendance (int EmployeeID = 0)
+        {
+            try
+            {
+                DateTime currentDate = DateTime.Now.Date;
+                List<ProjectTaskAttendance> listCheck = _projectTaskAttendanceRepo.GetAll().Where(x => x.EmployeeID == EmployeeID && x.Date == currentDate).ToList();
+                return Ok(ApiResponseFactory.Success(listCheck));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, "Failed to get project tasks view status."));
+            }
+        }
+
     }
 }
