@@ -94,7 +94,8 @@ namespace RERPAPI.Controllers.KHOAHOC
                 var data = SQLHelper<object>.ProcedureToList("spGetCourseCatalogNew1",
                                               new string[] { "@CatalogType", "@UserID" },
                                               new object[] { catalogType, currentUser.ID });
-                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0), ""));
+                var data0 = SQLHelper<object>.GetListData(data, 0);
+                return Ok(ApiResponseFactory.Success(data0, ""));
             }
             catch (Exception ex)
             {
@@ -346,25 +347,23 @@ namespace RERPAPI.Controllers.KHOAHOC
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        //[HttpGet("stream/{lessonId}")]
+        //public IActionResult StreamByLesson(int lessonId)
+        //{
+        //    var lesson = _courseLessonRepo.GetByID(lessonId);
+        //    if (lesson == null || string.IsNullOrEmpty(lesson.VideoURL))
+        //        return NotFound();
 
-        [HttpHead("stream/{lessonId}")]
-        [HttpGet("stream/{lessonId}")]
-        public IActionResult StreamByLesson(int lessonId)
-        {
-            var lesson = _courseLessonRepo.GetByID(lessonId);
-            if (lesson == null || string.IsNullOrEmpty(lesson.VideoURL))
-                return NotFound();
+        //    var path = lesson.VideoURL;
+        //    if (!System.IO.File.Exists(path))
+        //        return NotFound();
 
-            var path = lesson.VideoURL;
-            if (!System.IO.File.Exists(path))
-                return NotFound();
-
-            return PhysicalFile(
-                path,
-                "video/mp4",
-                enableRangeProcessing: true
-            );
-        }
+        //    return PhysicalFile(
+        //        path,
+        //        "video/mp4",
+        //        enableRangeProcessing: true
+        //    );
+        //}
         //lấy danh sách KPI emplpoyee team
         [HttpGet("load-kpi-employee-team")]
         public async Task<IActionResult> LoadKPIEmployeeTeam()
