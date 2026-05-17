@@ -48,8 +48,7 @@ namespace RERPAPI.Controllers.PollForm
             new() { FieldKey = nameof(Employee.StartWorking), Label = "Ngày vào làm", DataType = "date", SuggestedQuestionType = "Date" },
             new() { FieldKey = nameof(Employee.EndWorking), Label = "Ngày nghỉ việc", DataType = "date", SuggestedQuestionType = "Date" },
             new() { FieldKey = nameof(Employee.Status), Label = "Trạng thái nhân viên", DataType = "number", DisplayType = "lookup", LookupSource = "EmployeeStatus.StatusName" },
-            new() { FieldKey = nameof(Employee.GioiTinh), Label = "Giới tính", DataType = "number", DisplayType = "enum", LookupSource = "1:Nam;0:Nữ;3:Khác" },
-            new() { FieldKey = nameof(Employee.Sex), Label = "Giới tính cũ", DataType = "number", DisplayType = "enum", LookupSource = "1:Nam;0:Nữ;3:Khác" },
+            new() { FieldKey = nameof(Employee.GioiTinh), Label = "Giới tính", DataType = "number", DisplayType = "enum", LookupSource = "0:Nữ;1:Nam;3:Khác" },
             new() { FieldKey = nameof(Employee.DiaDiemLamViec), Label = "Địa điểm làm việc", DataType = "string" },
             new() { FieldKey = nameof(Employee.EmailCom), Label = "Email công ty", DataType = "string" },
             new() { FieldKey = nameof(Employee.EmailCongTy), Label = "Email công ty HR", DataType = "string" },
@@ -1841,9 +1840,9 @@ namespace RERPAPI.Controllers.PollForm
         {
             return value switch
             {
-                0 => "Nam",
-                1 => "Nữ",
-                2 => "Khác",
+                0 => "Nữ",
+                1 => "Nam",
+                3 => "Khác",
                 _ => value.ToString(CultureInfo.InvariantCulture)
             };
         }
