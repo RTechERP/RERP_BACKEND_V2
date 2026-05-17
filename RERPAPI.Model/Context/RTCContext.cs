@@ -1192,6 +1192,10 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<UserRightDistribution> UserRightDistributions { get; set; }
 
+    public virtual DbSet<UserSettingDefinition> UserSettingDefinitions { get; set; }
+
+    public virtual DbSet<UserSettingValue> UserSettingValues { get; set; }
+
     public virtual DbSet<UserTeam> UserTeams { get; set; }
 
     public virtual DbSet<UserTeamLink> UserTeamLinks { get; set; }
@@ -8957,6 +8961,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.IsDelete).HasDefaultValue(false);
             entity.Property(e => e.StartLocation).HasComment("Điểm đi");
             entity.Property(e => e.TotalMoney).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TransferType).HasDefaultValue(0);
             entity.Property(e => e.TypeBankTransfer).HasComment("1:Chuyển khoản RTC; 2:Chuyển khoản MVI;3:Chuyển khoản APR;4:Chuyển khoản Yonko;5:Chuyển khoản cá nhân");
             entity.Property(e => e.TypeOrder).HasComment("Loại đề nghị (1:Đề nghị tạm ứng; 2:Đề nghị thanh toán/quyết toán)");
             entity.Property(e => e.TypePayment).HasComment("Loại thanh toán(1:Chuyển khoản; 2:Tiền mặt)");
@@ -9326,6 +9331,11 @@ public partial class RTCContext : DbContext
         {
             entity.ToTable("PollResponse");
 
+            entity.HasIndex(e => new { e.PollFormID, e.EmployeeID }, "UX_PollResponse_PollForm_Employee")
+                .IsUnique()
+                .HasFilter("([PollFormID] IS NOT NULL AND [EmployeeID] IS NOT NULL)");
+
+            entity.Property(e => e.CompletedDate).HasColumnType("datetime");
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
@@ -9336,8 +9346,13 @@ public partial class RTCContext : DbContext
         {
             entity.ToTable("PollResponseAnswer");
 
+            entity.HasIndex(e => new { e.PollResponseID, e.PollQuestionID }, "UX_PollResponseAnswer_Response_Question")
+                .IsUnique()
+                .HasFilter("([PollResponseID] IS NOT NULL AND [PollQuestionID] IS NOT NULL)");
+
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.DisplayText).HasMaxLength(550);
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
@@ -13514,6 +13529,49 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreateDate).HasColumnType("datetime");
             entity.Property(e => e.ID).ValueGeneratedOnAdd();
             entity.Property(e => e.UpdateDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<UserSettingDefinition>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__UserSett__3214EC273C1BCBDE");
+
+            entity.ToTable("UserSettingDefinition");
+
+            entity.HasIndex(e => new { e.SettingGroup, e.SettingKey }, "UQ_UserSettingDefinition").IsUnique();
+
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.SettingGroup)
+                .HasMaxLength(100)
+                .IsUnicode(false);
+            entity.Property(e => e.SettingKey)
+                .HasMaxLength(150)
+                .IsUnicode(false);
+            entity.Property(e => e.SettingName).HasMaxLength(255);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+            entity.Property(e => e.ValueType)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasDefaultValue("string");
+        });
+
+        modelBuilder.Entity<UserSettingValue>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__UserSett__3214EC272DEAAD1E");
+
+            entity.ToTable("UserSettingValue");
+
+            entity.HasIndex(e => new { e.UserID, e.SettingDefinitionID }, "UQ_UserSettingValue").IsUnique();
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<UserTeam>(entity =>

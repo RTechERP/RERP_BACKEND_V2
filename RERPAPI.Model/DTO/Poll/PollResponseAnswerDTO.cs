@@ -7,6 +7,7 @@ namespace RERPAPI.Model.DTO.Poll
         public int? PollQuestionID { get; set; }
         public string? AnswerText { get; set; }
         public string? AnswerJson { get; set; }
+        public string? DisplayText { get; set; }
     }
 
     public class PollResponseAnswerCreateDTO
@@ -15,6 +16,7 @@ namespace RERPAPI.Model.DTO.Poll
         public int? PollQuestionID { get; set; }
         public string? AnswerText { get; set; }
         public string? AnswerJson { get; set; }
+        public string? DisplayText { get; set; }
     }
 
     public class SubmitPollResponseDTO
@@ -29,5 +31,6 @@ namespace RERPAPI.Model.DTO.Poll
         public int? QuestionID { get; set; }
         public string? AnswerText { get; set; }
         public string? AnswerJson { get; set; }
+        public string? DisplayText { get; set; }
     }
 }

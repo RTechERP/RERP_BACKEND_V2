@@ -1117,5 +1117,26 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 $"{file.PaymentOrderCode}_{DateTime.Now:yyyyMMddHHmmss}.zip"
             );
         }
+        [HttpPost("update-transfer-type")]
+        [RequiresPermission("N55,N61")]
+        public async Task<IActionResult> UpdateTranferType([FromBody] List<PaymentOrderDTO> payments)
+        {
+            try
+            {
+               
+                foreach (var payment in payments)
+                {
+                   PaymentOrder paymentOrder = _paymentRepo.GetByID(payment.ID);
+                    if (paymentOrder.ID <= 0) continue;
+                    paymentOrder.TransferType = payment.TransferType;
+                    await _paymentRepo.UpdateAsync(paymentOrder);
+                }
+                return Ok(ApiResponseFactory.Success(payments));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 }

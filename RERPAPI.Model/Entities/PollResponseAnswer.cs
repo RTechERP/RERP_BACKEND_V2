@@ -22,4 +22,6 @@ public partial class PollResponseAnswer
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
+
+    public string? DisplayText { get; set; }
 }

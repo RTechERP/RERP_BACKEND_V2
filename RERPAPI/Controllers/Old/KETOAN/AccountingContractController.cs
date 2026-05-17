@@ -647,8 +647,8 @@ namespace RERPAPI.Controllers.Old.KETOAN
 
                         if (contractType.IsContractValue == true)
                         {
-                            if (contractValue <= 0)
-                                throw new Exception("Loại hợp đồng này yêu cầu Giá trị HĐ > 0");
+                            //if (contractValue <= 0)
+                            //    throw new Exception("Loại hợp đồng này yêu cầu Giá trị HĐ > 0");
 
                             if (string.IsNullOrWhiteSpace(unit))
                                 throw new Exception("Loại hợp đồng này yêu cầu ĐVT");
