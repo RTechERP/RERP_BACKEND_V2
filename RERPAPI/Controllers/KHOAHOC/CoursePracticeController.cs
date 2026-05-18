@@ -635,62 +635,122 @@ namespace RERPAPI.Controllers.KHOAHOC
                     CatalogType = 0  // Lấy tất cả các loại
                 };
 
-                //var listCourse = await SqlDapper<CourseDTO>.ProcedureToListTAsync("spGetCourseNew1", param);
                 var listCourseParent = await SqlDapper<CourseDTO>.ProcedureToListTAsync("spGetCourseNew1",
                                                   param);
 
-                var listCourseChile = new List<CourseDTO>();
+                //var listCourseChile = new List<CourseDTO>();
 
 
-                for (int i = 0; i < listCourseParent.Count; i++)
+                //for (int i = 0; i < listCourseParent.Count; i++)
+                //{
+
+                //    if (i == 0) continue;
+
+                //    CourseDTO course = listCourseParent[i - 1];
+
+                //    if (course.CatalogType != 2)
+                //    {
+                //        if ((course.NumberLesson == course.TotalHistoryLession && course.Evaluate == 1) || currentUser.IsLeader > 0 || currentUser.IsAdmin || currentUser.EmployeeID == 55 || currentUser.EmployeeID == 753)
+                //        {
+                //            listCourseParent[i].Status = 1;
+                //        }
+                //        else
+                //        {
+                //            listCourseParent[i].Status = 0;
+                //        }
+                //    }
+                //    if (course.ID == 21 || course.ID == 40 || course.IsRequired)
+                //    {
+                //        listCourseParent[i - 1].Status = 1;
+                //    }
+                //}
+
+
+                //if (!listCourseChile.Any(x => x.Evaluate <= 0))
+                //{
+                //    return Ok(ApiResponseFactory.Success(listCourseParent, ""));
+                //}
+
+                //var childIds = new HashSet<int>(listCourseChile.Select(c => c.ID));
+
+                //foreach (var parent in listCourseParent)
+                //{
+                //    if (parent.Evaluate == 1 || childIds.Contains(parent.ID) || currentUser.IsLeader > 0 || currentUser.IsAdmin || currentUser.EmployeeID == 55)
+                //    {
+                //        parent.Status = 1; // Đạt hoặc nằm trong listCourseChild → có thể làm
+                //    }
+                //    else
+                //    {
+                //        parent.Status = 0; // Còn lại → không thể làm
+                //    }
+                //    if (parent.ID == 21 || parent.ID == 40)
+                //    {
+                //        parent.Status = 1;
+                //    }
+                //}
+
+                // Sắp xếp theo danh mục và thứ tự bài học
+                var orderedCourses = listCourseParent
+                    .OrderBy(c => c.DepartmentID)
+                    .ThenBy(c => c.CatalogType)
+                    .OrderByDescending(c => c.CatalogID)
+                    ////.ThenBy(c => c.ID)          
+                    .ToList();
+                // Theo dõi các danh mục đã hoàn thành toàn bộ bài
+                var completedCatalogs = new HashSet<int>();
+                bool hasUncompletedRequiredCourse = orderedCourses.Any(c =>
+                c.IsRequired
+                && !(c.NumberLesson == c.TotalHistoryLession && c.Evaluate == 1));
+                for (int i = 0; i < orderedCourses.Count; i++)
                 {
+                    var course = orderedCourses[i];
+                    var CatalogID = course.CatalogID; // hoặc course.CatalogID
 
-                    if (i == 0) continue;
 
-                    CourseDTO course = listCourseParent[i - 1];
+                    bool isRequiredCourse =  course.IsRequired;
 
-                    if (course.CatalogType != 2)
+                    if (hasUncompletedRequiredCourse && !isRequiredCourse)
                     {
-                        if ((course.NumberLesson == course.TotalHistoryLession && course.Evaluate == 1) || currentUser.IsLeader > 0 || currentUser.IsAdmin || currentUser.EmployeeID == 55 || currentUser.EmployeeID == 753)
-                        {
-                            listCourseParent[i].Status = 1;
-                        }
-                        else
-                        {
-                            listCourseParent[i].Status = 0;
-                        }
+                        course.Status = -1;
+                        continue;
                     }
-                    if (course.ID == 21 || course.ID == 40)
+
+                    if (isRequiredCourse || currentUser.EmployeeID == 55 || currentUser.EmployeeID == 753)
                     {
-                        listCourseParent[i - 1].Status = 1;
+                        course.Status = 1;
+                        continue;
                     }
-                }
+                    bool isFirstInCatalog = i == 0 || orderedCourses[i - 1].CatalogID != CatalogID;
 
-
-                if (!listCourseChile.Any(x => x.Evaluate <= 0))
-                {
-                    return Ok(ApiResponseFactory.Success(listCourseParent, ""));
-                }
-
-                var childIds = new HashSet<int>(listCourseChile.Select(c => c.ID));
-
-                foreach (var parent in listCourseParent)
-                {
-                    if (parent.Evaluate == 1 || childIds.Contains(parent.ID) || currentUser.IsLeader > 0 || currentUser.IsAdmin || currentUser.EmployeeID == 55 || currentUser.EmployeeID == 753)
+                    // Kiểm tra bài trước trong cùng danh mục đã hoàn thành chưa
+                    bool prevCompleted = true;
+                    if (!isFirstInCatalog)
                     {
-                        parent.Status = 1; // Đạt hoặc nằm trong listCourseChild → có thể làm
+                        var prevCourse = orderedCourses[i - 1];
+                        prevCompleted = prevCourse.NumberLesson >= prevCourse.TotalHistoryLession
+                                        && prevCourse.Evaluate == 1;
+                    }
+
+                    // Bài này mở khóa nếu:
+                    // 1. Là bài đầu danh mục HOẶC bài trước đã hoàn thành
+                    // 2. VÀ thỏa điều kiện hiện tại (Evaluate == 1, IsLeader, IsAdmin...)
+                    if ((isFirstInCatalog || prevCompleted)
+                        || ( currentUser.IsLeader > 0 || currentUser.IsAdmin))
+                    {
+                        course.Status = 1;
                     }
                     else
                     {
-                        parent.Status = 0; // Còn lại → không thể làm
+                        course.Status = 0; // Khóa vì bài trước chưa xong
                     }
-                    if (parent.ID == 21 || parent.ID == 40)
-                    {
-                        parent.Status = 1;
-                    }
+                    // Khóa học bắt buộc (ID == 21, 40, IsRequired) → luôn mở
+                    //if (course.ID == 21 || course.ID == 40 || course.IsRequired)
+                    //{
+                    //    course.Status = 1;
+                    //}
                 }
 
-                return Ok(ApiResponseFactory.Success(listCourseParent, ""));
+                return Ok(ApiResponseFactory.Success(orderedCourses, ""));
             }
             catch (Exception ex)
             {
@@ -729,7 +789,7 @@ namespace RERPAPI.Controllers.KHOAHOC
 
                     if (course.CatalogType != 2)
                     {
-                        if ((course.NumberLesson == course.TotalHistoryLession && course.Evaluate == 1) || currentUser.IsLeader > 0 || currentUser.IsAdmin  || currentUser.EmployeeID == 55 || currentUser.EmployeeID == 753)
+                        if ((course.NumberLesson == course.TotalHistoryLession && course.Evaluate == 1) || currentUser.IsLeader > 0 || currentUser.IsAdmin || currentUser.EmployeeID == 55 || currentUser.EmployeeID == 753)
                         {
                             listCourseParent[i].Status = 1;
                         }
@@ -801,7 +861,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                     return Ok(ApiResponseFactory.Fail(null, "Key không hợp lệ!"));
                 }
                 var pathUpload = _configSystemRepo.GetUploadPathByKey(keyName);
-                string path = pathUpload ;
+                string path = pathUpload;
                 return Ok(ApiResponseFactory.Success(path, ""));
 
             }
