@@ -194,52 +194,71 @@ namespace RERPAPI.Controllers.Purchase
 
                 var currentUsername = User.Identity?.Name ?? "system";
 
+                int rowIndex = 0;
                 foreach (var row in payload.Rows)
                 {
+                    rowIndex++;
+                    row.TryGetValue("STT", out object sttObj);
                     row.TryGetValue("Mã NV", out object maNvObj);
                     row.TryGetValue("Mã NCC", out object maNccObj);
                     row.TryGetValue("Mặt hàng", out object matHangObj);
                     row.TryGetValue("Ghi chú", out object ghiChuObj);
+
+                    string stt = sttObj?.ToString()?.Trim();
+                    string rowLabel = !string.IsNullOrEmpty(stt) ? $"Dòng STT {stt}" : $"Dòng thứ {rowIndex}";
 
                     string maNv = maNvObj?.ToString()?.Trim();
                     string maNcc = maNccObj?.ToString()?.Trim();
                     string matHang = matHangObj?.ToString()?.Trim();
                     string ghiChu = ghiChuObj?.ToString()?.Trim();
 
-                    if (string.IsNullOrEmpty(maNv) || string.IsNullOrEmpty(maNcc))
+                    // 1. Kiểm tra thiếu Mã NV
+                    if (string.IsNullOrEmpty(maNv))
                     {
                         skipped++;
-                        errors.Add($"Dòng thiếu Mã NV hoặc Mã NCC");
+                        errors.Add($"{rowLabel}: Chưa nhập Mã nhân viên");
                         continue;
                     }
 
+                    // 2. Kiểm tra thiếu Mã NCC
+                    if (string.IsNullOrEmpty(maNcc))
+                    {
+                        skipped++;
+                        errors.Add($"{rowLabel}: Chưa nhập Mã nhà cung cấp");
+                        continue;
+                    }
+
+                    // 3. Kiểm tra thiếu Mặt hàng
                     if (string.IsNullOrEmpty(matHang))
                     {
                         skipped++;
-                        // Không có mặt hàng thì bỏ qua
+                        errors.Add($"{rowLabel}: Chưa nhập Mặt hàng");
                         continue;
                     }
 
+                    // 4. Kiểm tra độ dài Mặt hàng hoặc Ghi chú > 550
                     if (matHang?.Length > 550 || ghiChu?.Length > 550)
                     {
                         skipped++;
-                        errors.Add($"Dòng bị bỏ qua do mặt hàng hoặc ghi chú vượt quá 550 ký tự");
+                        errors.Add($"{rowLabel}: Mặt hàng hoặc Ghi chú vượt quá 550 ký tự");
                         continue;
                     }
 
-                    var emp = allEmployees.FirstOrDefault(x => x.Code == maNv);
+                    // 5. Kiểm tra Mã nhân viên không tồn tại (so sánh không phân biệt hoa thường)
+                    var emp = allEmployees.FirstOrDefault(x => string.Equals(x.Code?.Trim(), maNv, StringComparison.OrdinalIgnoreCase));
                     if (emp == null)
                     {
                         skipped++;
-                        errors.Add($"Không tìm thấy nhân viên: {maNv}");
+                        errors.Add($"{rowLabel}: Mã nhân viên '{maNv}' không tồn tại");
                         continue;
                     }
 
-                    var supplier = allSuppliers.FirstOrDefault(x => x.CodeNCC == maNcc);
+                    // 6. Kiểm tra Mã nhà cung cấp không tồn tại (so sánh không phân biệt hoa thường)
+                    var supplier = allSuppliers.FirstOrDefault(x => string.Equals(x.CodeNCC?.Trim(), maNcc, StringComparison.OrdinalIgnoreCase));
                     if (supplier == null)
                     {
                         skipped++;
-                        errors.Add($"Không tìm thấy nhà cung cấp: {maNcc}");
+                        errors.Add($"{rowLabel}: Mã nhà cung cấp '{maNcc}' không tồn tại");
                         continue;
                     }
 

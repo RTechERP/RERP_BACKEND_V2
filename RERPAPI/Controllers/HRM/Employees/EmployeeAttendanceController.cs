@@ -46,6 +46,8 @@ namespace RERPAPI.Controllers
         {
             try
             {
+                dateStart = dateStart.ToLocalTime().Date;
+                dateEnd = dateEnd.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
                 DateTime ds = new DateTime(dateStart.Year, dateStart.Month, dateStart.Day, 0, 0, 0);
                 DateTime de = new DateTime(dateEnd.Year, dateEnd.Month, dateEnd.Day, 23, 59, 59);
                 var dt = SQLHelper<object>.ProcedureToList("spGetEmployeeAttendance",
