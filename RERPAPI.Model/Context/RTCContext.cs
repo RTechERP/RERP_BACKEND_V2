@@ -1086,6 +1086,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<SupplierSaleContact> SupplierSaleContacts { get; set; }
 
+    public virtual DbSet<SupplierSaleLink> SupplierSaleLinks { get; set; }
+
     public virtual DbSet<TSAllocationAssetPersonal> TSAllocationAssetPersonals { get; set; }
 
     public virtual DbSet<TSAllocationAssetPersonalDetail> TSAllocationAssetPersonalDetails { get; set; }
@@ -12546,6 +12548,27 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.SupplierName).HasMaxLength(550);
             entity.Property(e => e.SupplierPhone).HasMaxLength(500);
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<SupplierSaleLink>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__Supplier__3214EC27BFC39EB3");
+
+            entity.ToTable("SupplierSaleLink", tb => tb.HasComment("Bảng liên kết SupplierSale và EmployeePurchase"));
+
+            entity.Property(e => e.ID).HasComment("ID bản ghi");
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.EmployeePurchaseID).HasComment("ID bảng EmployeePurchase");
+            entity.Property(e => e.MatHang)
+                .HasMaxLength(550)
+                .HasComment("Mặt hàng");
+            entity.Property(e => e.Note)
+                .HasMaxLength(550)
+                .HasComment("Ghi chú");
+            entity.Property(e => e.SupplierSaleID).HasComment("ID bảng SupplierSale");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
