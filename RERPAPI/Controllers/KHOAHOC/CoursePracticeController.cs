@@ -603,7 +603,7 @@ namespace RERPAPI.Controllers.KHOAHOC
             {
                 var listCourseCatalogs = _courseCatalogRepo.GetAll(c => c.DeleteFlag == true).OrderBy(x => x.STT);
                 var listCourseCatalogIds = listCourseCatalogs.Select(x => x.DepartmentID).Distinct().ToList();
-                var listDepartments = _departmentRepo.GetAll().Where(x => listCourseCatalogIds.Contains(x.ID));
+                var listDepartments = _departmentRepo.GetAll(x => listCourseCatalogIds.Contains(x.ID));
 
                 var data = SQLHelper<object>.ProcedureToList("spGetCourseCatalog",
                                               new string[] { },

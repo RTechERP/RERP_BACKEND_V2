@@ -79,7 +79,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         {
             try
             {
-                List<ProductSale> rs = _productsaleRepo.GetAll().Where(x => x.ProductGroupID == productgroupID).ToList();
+				List<ProductSale> rs = _productsaleRepo.GetAll(x => x.ProductGroupID == productgroupID);
                 return Ok(ApiResponseFactory.Success(rs, "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
@@ -137,7 +137,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return string.Empty;
 
             // 2️⃣ Xác định nhóm CHA
-            var parentGroup = currentGroup.ParentID>0
+			var parentGroup = currentGroup.ParentID > 0
                 ? _productgroupRepo.GetByID(currentGroup.ParentID.Value)
                 : currentGroup;
 

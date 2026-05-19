@@ -128,7 +128,7 @@ namespace RERPAPI.Controllers.Old
                     {
                         employeeEarlyLate.DateEnd = DateTime.SpecifyKind(employeeEarlyLate.DateEnd.Value, DateTimeKind.Utc);
                     }
-                    var exisingEmployeeEarlyLate = _employeeEarlyLateRepo.GetAll().Where(x => x.EmployeeID == employeeEarlyLate.EmployeeID &&
+                    var exisingEmployeeEarlyLate = _employeeEarlyLateRepo.GetAll(x => x.EmployeeID == employeeEarlyLate.EmployeeID &&
                                                                                                  x.DateRegister.Value.Date == employeeEarlyLate.DateRegister.Value.Date &&
                                                                                                     x.Type == employeeEarlyLate.Type &&
                                                                                                      x.ID != employeeEarlyLate.ID

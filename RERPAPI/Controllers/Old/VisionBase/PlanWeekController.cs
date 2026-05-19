@@ -258,7 +258,7 @@ namespace RERPAPI.Controllers.Old.VisionBase
         {
             try
             {
-                List<WeekPlan> weekPlans = _weekPlanRepo.GetAll().Where(x => x.UserID == dto.userId && x.DatePlan == dto.datePlan).ToList();
+                List<WeekPlan> weekPlans = _weekPlanRepo.GetAll(x => x.UserID == dto.userId && x.DatePlan == dto.datePlan).ToList();
 
                 if (!weekPlans.Any())
                     return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy kế hoạch để xoá!"));
