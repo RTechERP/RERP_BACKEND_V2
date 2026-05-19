@@ -495,6 +495,7 @@ namespace RERPAPI.Controllers.CRM
                         Address = x.Address,
                         IndustriesNameEN = x.IndustriesNameEN,
                         IndustriesNameVI = x.IndustriesNameVI,
+                        STT = x.STT
                     }).ToList<dynamic>();
                 }
                 var data1 = SQLHelper<dynamic>.GetListData(list, 1);
