@@ -426,7 +426,7 @@ namespace RERPAPI.Controllers.KhoBaseManager
             try
             {
                 //var data = SQLHelper<object>.Select("SELECT * FROM Customer");
-                var data = _customerRepo.GetAll().Where(x => x.IsDeleted != true);
+                var data = _customerRepo.GetAll(x => x.IsDeleted != true);
                 return Ok(new
                 {
                     status = 1,

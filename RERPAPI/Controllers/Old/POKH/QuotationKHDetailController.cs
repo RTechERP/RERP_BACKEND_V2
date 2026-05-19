@@ -56,7 +56,7 @@ namespace RERPAPI.Controllers.Old.POKH
         {
             try
             {
-                var list = _customerContactRepo.GetAll().Where(x => x.CustomerID == id).Select(x => new
+                var list = _customerContactRepo.GetAll(x => x.CustomerID == id).Select(x => new
                 {
                     x.ContactPhone,
                     x.ContactEmail,
@@ -76,8 +76,7 @@ namespace RERPAPI.Controllers.Old.POKH
             try
             {
                 // Lấy tên viết tắt khách hàng
-                string? customer = _customerRepo.GetAll()
-                    .Where(x => x.ID == customerId)
+                string? customer = _customerRepo.GetAll(x => x.ID == customerId)
                     .Select(x => x.CustomerShortName)
                     .FirstOrDefault();
 
@@ -92,8 +91,7 @@ namespace RERPAPI.Controllers.Old.POKH
                 }
 
                 // Lấy danh sách các báo giá có mã chứa tên khách hàng
-                var quotations = _quotationKHRepo.GetAll()
-                    .Where(x => !string.IsNullOrEmpty(x.QuotationCode) && x.QuotationCode.Contains(customer))
+                var quotations = _quotationKHRepo.GetAll(x => !string.IsNullOrEmpty(x.QuotationCode) && x.QuotationCode.Contains(customer))
                     .OrderByDescending(x => x.ID)
                     .ToList();
 

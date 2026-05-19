@@ -21,7 +21,7 @@ namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
         {
             try
             {
-                List<OfficeSupplyUnit> data = _officesupplyunitRepo.GetAll().Where(x => x.IsDeleted != true).OrderByDescending(x => x.CreatedDate).ToList();
+                List<OfficeSupplyUnit> data = _officesupplyunitRepo.GetAll(x => x.IsDeleted != true).OrderByDescending(x => x.CreatedDate).ToList();
                 return Ok(new
                 {
                     status = 1,

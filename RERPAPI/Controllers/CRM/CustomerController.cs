@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -514,9 +513,9 @@ namespace RERPAPI.Controllers.CRM
         {
             try
             {
-                var contact = _customerContactRepo.GetAll().Where(x => x.CustomerID == customerId).ToList();
-                var address = _addressStockRepo.GetAll().Where(x => x.CustomerID == customerId).ToList();
-                var customerEmployee = _customerEmployeeRepo.GetAll().Where(x => x.CustomerID == customerId).ToList();
+				var contact = _customerContactRepo.GetAll(x => x.CustomerID == customerId).ToList();
+				var address = _addressStockRepo.GetAll(x => x.CustomerID == customerId).ToList();
+				var customerEmployee = _customerEmployeeRepo.GetAll(x => x.CustomerID == customerId).ToList();
                 var employees = _employeeRepo.GetAll().ToList();
                 var employee = (from ce in customerEmployee
                                 join e in employees on ce.EmployeeID equals e.ID
@@ -591,11 +590,11 @@ namespace RERPAPI.Controllers.CRM
 
                     if (model.CustomerCode.Trim().Length >= 3) provinceCode = model.CustomerCode.Substring(0, 3);
                 }
-                var business = _businessFieldLinkRepo.GetAll().FirstOrDefault(x => x.CustomerID == id);
-                var addressStock = _addressStockRepo.GetAll().Where(x => x.CustomerID == id);
-                var customerContact = _customerContactRepo.GetAll().Where(x => x.CustomerID == id);
-                var customerEmployee = _customerEmployeeRepo.GetAll().Where(x => x.CustomerID == id).ToList();
-                var employees = _employeeRepo.GetAll().ToList();
+				var business = _businessFieldLinkRepo.GetSingleNoTracking(x => x.CustomerID == id);
+				var addressStock = _addressStockRepo.GetAll(x => x.CustomerID == id);
+				var customerContact = _customerContactRepo.GetAll(x => x.CustomerID == id);
+				var customerEmployee = _customerEmployeeRepo.GetAll(x => x.CustomerID == id);
+				var employees = _employeeRepo.GetAll();
                 var customerEmployeeWithName = (from ce in customerEmployee
                                                 join e in employees on ce.EmployeeID equals e.ID
                                                 select new
@@ -939,7 +938,7 @@ namespace RERPAPI.Controllers.CRM
         {
             try
             {
-                var result = _customerIndustriesRepo.GetAll(x => x.IsDeleted != true).OrderBy(p=>p.NumberOrder).ToList();
+				var result = _customerIndustriesRepo.GetAll(x => x.IsDeleted != true).OrderBy(p => p.NumberOrder).ToList();
                 return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)

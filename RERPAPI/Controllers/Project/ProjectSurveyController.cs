@@ -146,7 +146,7 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                var data = projectSurveyFileRepo.GetAll().Where(x => x.ProjectSurveyID == projectSurveyId && x.IsDeleted == false);
+				var data = projectSurveyFileRepo.GetAll(x => x.ProjectSurveyID == projectSurveyId && x.IsDeleted == false);
 
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
@@ -440,7 +440,7 @@ namespace RERPAPI.Controllers.Project
                 {
                     return BadRequest();
                 }
-                List<ProjectSurveyFile> files = projectSurveyFileRepo.GetAll().Where(x => x.ProjectSurveyDetailID == projectSurveyDetailId).ToList();
+				List<ProjectSurveyFile> files = projectSurveyFileRepo.GetAll(x => x.ProjectSurveyDetailID == projectSurveyDetailId).ToList();
 
                 var data = new
                 {

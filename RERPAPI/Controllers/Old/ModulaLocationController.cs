@@ -54,7 +54,7 @@ namespace RERPAPI.Controllers.Old
             {
 
                 keyword = keyword ?? "";
-                List<ModulaLocation> listLocations = locationRepo.GetAll().Where(x => x.IsDeleted == false)
+                List<ModulaLocation> listLocations = locationRepo.GetAll(x => x.IsDeleted == false)
                                                                           .OrderBy(x => x.STT)
                                                                           .ToList();
                 List<List<dynamic>> locationdetails = SQLHelper<object>.ProcedureToList("spGetModulaLocationDetail", new string[] { "@Keyword" }, new object[] { keyword.Trim() });
