@@ -1,4 +1,4 @@
-﻿using DocumentFormat.OpenXml.Office2010.Excel;
+using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -301,6 +301,75 @@ namespace RERPAPI.Controllers.Old.KETOAN
                 _accountingContractRepo.Update(model);
 
                 return Ok(ApiResponseFactory.Success(null, "Hủy chứng từ hợp đồng thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("bulk-receive-contract")]
+        public IActionResult BulkReceiveContract([FromBody] BulkReceiveContractDTO dto)
+        {
+            try
+            {
+                if (dto.ContractIds == null || dto.ContractIds.Count <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Chưa có hợp đồng nào để nhận chứng từ"));
+
+                if (!dto.DateReceived.HasValue)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng nhập Ngày trả hồ sơ gốc"));
+
+                if (dto.QuantityDocument <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng nhập SL hồ sơ > 0"));
+
+                int successCount = 0;
+                var errors = new List<string>();
+
+                foreach (int id in dto.ContractIds)
+                {
+                    if (id <= 0) continue;
+
+                    var model = _accountingContractRepo.GetByID(id);
+                    if (model == null)
+                    {
+                        errors.Add($"Không tìm thấy hợp đồng ID={id}");
+                        continue;
+                    }
+
+                    // Log thay đổi
+                    var logContent = new StringBuilder();
+                    logContent.AppendLine("NGÀY TRẢ HỒ SƠ GỐC:");
+                    logContent.AppendLine($"từ {(model.DateReceived.HasValue ? model.DateReceived.Value.ToString("dd/MM/yyyy") : "")}");
+                    logContent.AppendLine($"thành {dto.DateReceived.Value:dd/MM/yyyy}");
+                    logContent.AppendLine();
+                    logContent.AppendLine("SỐ LƯỢNG HỒ SƠ:");
+                    logContent.AppendLine($"từ {model.QuantityDocument}");
+                    logContent.AppendLine($"thành {dto.QuantityDocument}");
+                    logContent.AppendLine();
+                    logContent.AppendLine("NHẬN CHỨNG TỪ GỐC:");
+                    logContent.AppendLine($"từ {(model.IsReceivedContract == true ? "Đã nhận hồ sơ gốc" : "Huỷ/Chưa nhận hồ sơ gốc")}");
+                    logContent.AppendLine("thành Đã nhận hồ sơ gốc");
+
+                    var log = new AccountingContractLog()
+                    {
+                        AccountingContractID = model.ID,
+                        DateLog = DateTime.Now,
+                        IsReceivedContract = true,
+                        ContentLog = logContent.ToString()
+                    };
+                    _accountingContractLogRepo.Create(log);
+
+                    model.DateReceived = dto.DateReceived;
+                    model.QuantityDocument = dto.QuantityDocument;
+                    model.IsReceivedContract = true;
+                    _accountingContractRepo.Update(model);
+                    successCount++;
+                }
+
+                if (errors.Count > 0)
+                    return Ok(ApiResponseFactory.Success(null, $"Nhận chứng từ thành công {successCount}/{dto.ContractIds.Count} hợp đồng. Lỗi: {string.Join("; ", errors)}"));
+
+                return Ok(ApiResponseFactory.Success(null, $"Nhận chứng từ thành công {successCount} hợp đồng"));
             }
             catch (Exception ex)
             {
@@ -852,8 +921,13 @@ namespace RERPAPI.Controllers.Old.KETOAN
         public class AccountingContractSaveDTO
         {
             public AccountingContract accountingContract { get; set; }
+        }
 
-
+        public class BulkReceiveContractDTO
+        {
+            public List<int> ContractIds { get; set; }
+            public DateTime? DateReceived { get; set; }
+            public int QuantityDocument { get; set; }
         }
 
 
