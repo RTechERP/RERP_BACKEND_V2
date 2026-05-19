@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
@@ -207,7 +207,6 @@ namespace RERPAPI.Controllers.Old.Technical
             try
             {
                 var userTeams = _userTeamRepo.GetAll();
-                string teamIds = string.Join(";", userTeams.Select(x => x.ID));
 
                 DateTime dateStart = new DateTime(
                     request.StartDate.Year,
@@ -234,13 +233,54 @@ namespace RERPAPI.Controllers.Old.Technical
                     ? dateEndNow
                     : dateEndInput;
 
-                var dataStore = SQLHelper<object>.ProcedureToList(
+                string teamIds = string.Join(";", userTeams.Select(x => x.ID));
+                bool hasAgvTeams = userTeams.Any(x => x.DepartmentID == 9);
+
+                var data = new List<object>();
+
+                // Gọi SP thường cho tất cả team
+                var normalStore = SQLHelper<object>.ProcedureToList(
                     "spExportToExcelDRT",
                     new string[] { "DateStart", "DateEnd", "TeamID" },
                     new object[] { dateStart, dateEnd, teamIds }
                 );
+                var normalData = SQLHelper<object>.GetListData(normalStore, 1);
 
-                var data = SQLHelper<object>.GetListData(dataStore, 1);
+                if (hasAgvTeams)
+                {
+                    // Gọi SP AGV để lấy dữ liệu với rule riêng
+                    string agvTeamIds = string.Join(";", userTeams.Where(x => x.DepartmentID == 9).Select(x => x.ID));
+                    var agvStore = SQLHelper<object>.ProcedureToList(
+                        "spExportToExcelDRT_AGV",
+                        new string[] { "DateStart", "DateEnd", "TeamID" },
+                        new object[] { dateStart, dateEnd, agvTeamIds }
+                    );
+                    var agvData = SQLHelper<object>.GetListData(agvStore, 1);
+
+                    // Lấy danh sách EmployeeID từ kết quả AGV để loại trừ khỏi SP thường (tránh trùng)
+                    var agvEmployeeIds = new HashSet<int>();
+                    foreach (var agvItem in agvData)
+                    {
+                        var agvRow = agvItem as IDictionary<string, object>;
+                        if (agvRow != null)
+                            agvEmployeeIds.Add(Convert.ToInt32(agvRow["EmployeeID"]));
+                    }
+
+                    // Lọc SP thường: bỏ những employee đã có trong kết quả AGV
+                    foreach (var normalItem in normalData)
+                    {
+                        var normalRow = normalItem as IDictionary<string, object>;
+                        if (normalRow != null && !agvEmployeeIds.Contains(Convert.ToInt32(normalRow["EmployeeID"])))
+                            data.Add(normalItem);
+                    }
+
+                    // Thêm kết quả AGV (đã tính theo rule riêng)
+                    data.AddRange(agvData);
+                }
+                else
+                {
+                    data.AddRange(normalData);
+                }
 
                 List<KPIErrorEmployee> insertList = new();
 
