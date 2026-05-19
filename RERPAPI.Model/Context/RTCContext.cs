@@ -7197,6 +7197,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.TBPApproveName)
                 .HasMaxLength(255)
                 .HasComment("TBP duyệt");
+            entity.Property(e => e.TBPAreasForImprovement).HasComment("TBP Điểm cần cải thiện");
             entity.Property(e => e.TBPAttendance)
                 .HasComment("C Chuyên cần (Đi làm đúng giờ, không nghỉ quá phép)")
                 .HasColumnType("decimal(18, 2)");
@@ -7215,6 +7216,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.TBPComplianceWithRegulations)
                 .HasComment("C Tuân thủ nội quy, quy định Công ty & Phòng")
                 .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TBPConclusionEmployeeLoaiHDID).HasComment("TBP ID loại hợp đồng ( kết luận )");
             entity.Property(e => e.TBPCulturalFitRTC)
                 .HasComment("D Mức độ phù hợp với văn hóa RTC")
                 .HasColumnType("decimal(18, 2)");
@@ -7239,6 +7241,8 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.TBPProfessionalKnowledge)
                 .HasComment("A Kiến thức chuyên môn nghiệp vụ")
                 .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TBPRecommendationsOrOther).HasComment("TBP Kiến nghị/Khác");
+            entity.Property(e => e.TBPStrengths).HasComment("TBP điểm mạnh");
             entity.Property(e => e.TBPToolAndSystemSkills)
                 .HasComment("A Kỹ năng sử dụng công cụ, hệ thống")
                 .HasColumnType("decimal(18, 2)");

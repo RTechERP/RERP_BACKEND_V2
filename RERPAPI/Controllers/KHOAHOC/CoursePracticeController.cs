@@ -715,7 +715,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                         continue;
                     }
 
-                    if (isRequiredCourse || currentUser.EmployeeID == 55 || currentUser.EmployeeID == 753)
+                    if (isRequiredCourse || currentUser.EmployeeID == 55)
                     {
                         course.Status = 1;
                         continue;

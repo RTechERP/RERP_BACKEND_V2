@@ -1061,14 +1061,14 @@ namespace RERPAPI.Controllers.PollForm
 
                 var fixedHeaders = new[]
                 {
-                    "STT",
-                    "Response ID",
-                    "Employee ID",
-                    "Ma nhan vien",
-                    "Ho ten",
-                    "Trang thai",
-                    "Ngay hoan thanh",
-                    "Ngay tao"
+                    "STT"
+                    //"Response ID",
+                    //"Employee ID",
+                    //"Ma nhan vien",
+                    //"Ho ten",
+                    //"Trang thai",
+                    //"Ngay hoan thanh",
+                    //"Ngay tao"
                 };
 
                 for (var i = 0; i < fixedHeaders.Length; i++)
@@ -1342,7 +1342,7 @@ namespace RERPAPI.Controllers.PollForm
 
         private static bool CanManagePoll(PollFormEntity pollForm, CurrentUser currentUser)
         {
-            if (currentUser.IsAdmin)
+            if (currentUser.IsAdmin || currentUser.Permissions.Contains("N99"))
                 return true;
 
             return !string.IsNullOrWhiteSpace(pollForm.CreatedBy) &&
