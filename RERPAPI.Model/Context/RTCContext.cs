@@ -148,6 +148,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<BillImportTechnical> BillImportTechnicals { get; set; }
 
+    public virtual DbSet<BillImportTechnicalAuditLog> BillImportTechnicalAuditLogs { get; set; }
+
     public virtual DbSet<BillImportTechnicalLog> BillImportTechnicalLogs { get; set; }
 
     public virtual DbSet<BillSale> BillSales { get; set; }
@@ -2540,6 +2542,19 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.WarehouseType)
                 .HasMaxLength(100)
                 .HasComment("Loại kho (1:demo;2:agv)");
+        });
+
+        modelBuilder.Entity<BillImportTechnicalAuditLog>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__BillImpo__3214EC27DF1BA04F");
+
+            entity.ToTable("BillImportTechnicalAuditLog");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.TypeLog).HasMaxLength(255);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<BillImportTechnicalLog>(entity =>
@@ -9301,6 +9316,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.IsPublic).HasDefaultValue(false);
             entity.Property(e => e.StartDate).HasColumnType("datetime");
             entity.Property(e => e.Title).HasMaxLength(550);
+            entity.Property(e => e.TitleColor).HasMaxLength(50);
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });

@@ -24,11 +24,12 @@ using RERPAPI.Repo.GenericEntity.GeneralCatetogy.JobRequirements;
 using RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders;
 using RERPAPI.Repo.GenericEntity.HRM;
 using RERPAPI.Repo.GenericEntity.HRM.DepartmentRequire;
+using RERPAPI.Repo.GenericEntity.HRM.FlightBooking;
 using RERPAPI.Repo.GenericEntity.HRM.HRRecruitmentInterviewAssessment;
 using RERPAPI.Repo.GenericEntity.HRM.ProductProtectiveGear;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
-using RERPAPI.Repo.GenericEntity.HRM.FlightBooking;
 using RERPAPI.Repo.GenericEntity.HRRecruitmentExamRepo;
+using RERPAPI.Repo.GenericEntity.MakerTrainingFirm;
 using RERPAPI.Repo.GenericEntity.MeetingMinutesRepo;
 using RERPAPI.Repo.GenericEntity.Project;
 using RERPAPI.Repo.GenericEntity.Systems;
@@ -669,11 +670,18 @@ builder.Services.AddScoped<PollQuestionOptionRepo>();
 builder.Services.AddScoped<PollResponseRepo>();
 builder.Services.AddScoped<PollResponseAnswerRepo>();
 builder.Services.AddScoped<PollBranchingRuleEvaluator>();
+builder.Services.AddScoped<MakerTrainingRepo>();
+builder.Services.AddScoped<MakerTrainingEmployeeLinkRepo>();
+builder.Services.AddScoped<MakerTrainingDocumentRepo>();
+builder.Services.AddScoped<MakerTrainingTypeRepo>();
 
+#region DI LOG
 builder.Services.AddScoped<POKHLogRepo>();
 builder.Services.AddScoped<RequestInvoiceLogRepo>();
 builder.Services.AddScoped<BillExportSaleLogRepo>();
 builder.Services.AddScoped<PONCCLogRepo>();
+builder.Services.AddScoped<BillImportTechnicalAuditLogRepo>();
+#endregion
 
 builder.Services.AddScoped<CurrentUser>(provider =>
 {

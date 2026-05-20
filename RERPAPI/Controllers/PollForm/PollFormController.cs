@@ -233,6 +233,7 @@ namespace RERPAPI.Controllers.PollForm
                 {
                     ID = pollForm.ID,
                     Title = pollForm.Title,
+                    TitleColor = pollForm.TitleColor,
                     Description = pollForm.Description,
                     BackgroundImagePath = pollForm.BackgroundImagePath,
                     StartDate = pollForm.StartDate,
@@ -337,6 +338,7 @@ namespace RERPAPI.Controllers.PollForm
                 var pollForm = new PollFormEntity
                 {
                     Title = dto.Title,
+                    TitleColor = NormalizePollTitleColor(dto.TitleColor),
                     Description = dto.Description,
                     BackgroundImagePath = NormalizePollBackgroundImagePath(dto.BackgroundImagePath),
                     StartDate = dto.StartDate,
@@ -379,6 +381,8 @@ namespace RERPAPI.Controllers.PollForm
                     return manageFailure;
 
                 pollForm.Title = dto.Title ?? pollForm.Title;
+                if (dto.TitleColor != null)
+                    pollForm.TitleColor = NormalizePollTitleColor(dto.TitleColor);
                 pollForm.Description = dto.Description ?? pollForm.Description;
                 if (dto.BackgroundImagePath != null)
                     pollForm.BackgroundImagePath = NormalizePollBackgroundImagePath(dto.BackgroundImagePath);
@@ -1850,6 +1854,13 @@ namespace RERPAPI.Controllers.PollForm
             return string.IsNullOrWhiteSpace(backgroundImagePath)
                 ? null
                 : backgroundImagePath.Trim();
+        }
+
+        private static string? NormalizePollTitleColor(string? titleColor)
+        {
+            return string.IsNullOrWhiteSpace(titleColor)
+                ? null
+                : titleColor.Trim();
         }
 
         private static string SanitizeFileName(string? fileName)

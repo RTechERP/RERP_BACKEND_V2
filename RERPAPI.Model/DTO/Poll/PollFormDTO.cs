@@ -1,9 +1,13 @@
+using System.Text.Json.Serialization;
+
 namespace RERPAPI.Model.DTO.Poll
 {
     public class PollFormDTO
     {
         public int ID { get; set; }
         public string? Title { get; set; }
+        [JsonPropertyName("titleColor")]
+        public string? TitleColor { get; set; }
         public string? Description { get; set; }
         public string? BackgroundImagePath { get; set; }
         public DateTime? StartDate { get; set; }
@@ -19,6 +23,8 @@ namespace RERPAPI.Model.DTO.Poll
     public class PollFormCreateDTO
     {
         public string? Title { get; set; }
+        [JsonPropertyName("titleColor")]
+        public string? TitleColor { get; set; }
         public string? Description { get; set; }
         public string? BackgroundImagePath { get; set; }
         public DateTime? StartDate { get; set; }
@@ -30,6 +36,8 @@ namespace RERPAPI.Model.DTO.Poll
     {
         public int ID { get; set; }
         public string? Title { get; set; }
+        [JsonPropertyName("titleColor")]
+        public string? TitleColor { get; set; }
         public string? Description { get; set; }
         public string? BackgroundImagePath { get; set; }
         public DateTime? StartDate { get; set; }
