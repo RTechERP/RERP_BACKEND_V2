@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
+using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -26,7 +27,9 @@ namespace RERPAPI.Controllers.Old.Technical
         private readonly InventoryDemoRepo _inventoryDemoRepo;
         private readonly PONCCRepo _pONCCRepo;
         private readonly DocumentImportRepo _documentImportRepo;
-        public BillImportTechnicalController(HistoryDeleteBillRepo historyDeleteBillRepo, BillImportTechnicalRepo billImportTechnicalRepo, BillImportTechnicalDetailRepo billImportTechnicalDetailRepo, BillImportTechDetailSerialRepo billImportTechDetailSerialRepo, RulePayRepo rulePayRepo, IConfiguration configuration, BillImportTechnicalLogRepo billImportTechnicalLogRepo, BillDocumentImportTechnicalRepo billDocumentImportTechnicalRepo, BillDocumentImportTechnicalLogRepo billDocumentImportTechnicalLogRepo, InventoryDemoRepo inventoryDemoRepo, PONCCRepo pONCCRepo, DocumentImportRepo documentImportRepo)
+        private readonly BillImportTechnicalAuditLogRepo _billImportTechnicalAuditLogRepo;
+        private readonly ProductRTCRepo _productRTCRepo;
+        public BillImportTechnicalController(HistoryDeleteBillRepo historyDeleteBillRepo, BillImportTechnicalRepo billImportTechnicalRepo, BillImportTechnicalDetailRepo billImportTechnicalDetailRepo, BillImportTechDetailSerialRepo billImportTechDetailSerialRepo, RulePayRepo rulePayRepo, IConfiguration configuration, BillImportTechnicalLogRepo billImportTechnicalLogRepo, BillDocumentImportTechnicalRepo billDocumentImportTechnicalRepo, BillDocumentImportTechnicalLogRepo billDocumentImportTechnicalLogRepo, InventoryDemoRepo inventoryDemoRepo, PONCCRepo pONCCRepo, DocumentImportRepo documentImportRepo, BillImportTechnicalAuditLogRepo billImportTechnicalAuditLogRepo, ProductRTCRepo productRTCRepo)
         {
             _historyDeleteBillRepo = historyDeleteBillRepo;
             _billImportTechnicalRepo = billImportTechnicalRepo;
@@ -40,6 +43,8 @@ namespace RERPAPI.Controllers.Old.Technical
             _inventoryDemoRepo = inventoryDemoRepo;
             _pONCCRepo = pONCCRepo;
             _documentImportRepo = documentImportRepo;
+            _billImportTechnicalAuditLogRepo = billImportTechnicalAuditLogRepo;
+            _productRTCRepo = productRTCRepo;
         }
         [HttpGet("get-rulepay")]
         public IActionResult GetRulepay()
@@ -229,6 +234,24 @@ namespace RERPAPI.Controllers.Old.Technical
             }
         }
 
+
+
+        [HttpGet("get-technical-logs/{billImportId}")]
+        public IActionResult GetTechnicalLogs(int billImportId)
+        {
+            try
+            {
+                var logs = _billImportTechnicalAuditLogRepo.GetAll(x => x.BillImportTechnicalID == billImportId && x.IsDeleted != true)
+                                                .OrderByDescending(x => x.CreatedDate)
+                                                .ToList();
+                return Ok(ApiResponseFactory.Success(logs));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpPost("export-bill-import-technical")]
         public IActionResult ExportBillImportTechnical([FromBody] BillExportTechnicallExcelFullDTO dto)
         {
@@ -317,6 +340,10 @@ namespace RERPAPI.Controllers.Old.Technical
         {
             try
             {
+                int billImportId;
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
                 if (product == null)
                 {
                     return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." });
@@ -349,9 +376,31 @@ namespace RERPAPI.Controllers.Old.Technical
                     {
                         product.billImportTechnical.IsDeleted = false;
                         await _billImportTechnicalRepo.CreateAsync(product.billImportTechnical);
+                        billImportId = product.billImportTechnical.ID;
                     }
                     else
+                    {
+                        var existingMaster = _billImportTechnicalRepo.GetSingleNoTracking(x => x.ID == product.billImportTechnical.ID);
                         await _billImportTechnicalRepo.UpdateAsync(product.billImportTechnical);
+                        billImportId = product.billImportTechnical.ID;
+
+                        List<string> changeDetails = _billImportTechnicalAuditLogRepo.GetEntityChanges(existingMaster, product.billImportTechnical);
+                        if (changeDetails.Any())
+                        {
+                            _billImportTechnicalAuditLogRepo.Create(new BillImportTechnicalAuditLog
+                            {
+                                BillImportTechnicalID = billImportId,
+                                TypeLog = "CẬP NHẬT PHIẾU",
+                                ContentLog = $"Cập nhật phiếu nhập: {string.Join(", ", changeDetails)}",
+                                CreatedBy = currentUser.LoginName,
+                                CreatedDate = DateTime.Now
+                            });
+                        }
+                    }
+                }
+                else
+                {
+                    billImportId = product.billImportDetailTechnicals?.FirstOrDefault()?.BillImportTechID ?? 0;
                 }
 
                 // Map STT -> ID sau khi insert chi tiết phiếu
@@ -362,11 +411,34 @@ namespace RERPAPI.Controllers.Old.Technical
                 {
                     foreach (var item in product.billImportDetailTechnicals)
                     {
-                        item.BillImportTechID = product.billImportTechnical.ID;
+                        item.BillImportTechID = billImportId;
 
                         if (item.ID <= 0)
                         {
                             await _billImportTechnicalDetailRepo.CreateAsync(item);
+
+                            var addedProductName = _productRTCRepo.GetByID(item.ProductID ?? 0)?.ProductName ?? $"ID:{item.ProductID}";
+                            var addedParts = new List<string>();
+                            if (item.QtyRequest != null) addedParts.Add($"SL YC: {item.QtyRequest}");
+                            if (item.Quantity != null) addedParts.Add($"SL: {item.Quantity}");
+                            if (!string.IsNullOrWhiteSpace(item.UnitName)) addedParts.Add($"ĐVT: {item.UnitName}");
+                            if (!string.IsNullOrWhiteSpace(item.ProjectCode)) addedParts.Add($"Mã DA: {item.ProjectCode}");
+                            if (!string.IsNullOrWhiteSpace(item.SomeBill)) addedParts.Add($"Số HĐ: {item.SomeBill}");
+                            if (item.DateSomeBill != null) addedParts.Add($"Ngày HĐ: {item.DateSomeBill:dd/MM/yyyy}");
+                            if (!string.IsNullOrWhiteSpace(item.BillCodePO)) addedParts.Add($"Mã ĐMH: {item.BillCodePO}");
+                            if (item.DPO != null) addedParts.Add($"Số ngày CN: {item.DPO}");
+                            if (item.DueDate != null) addedParts.Add($"Ngày tới hạn: {item.DueDate:dd/MM/yyyy}");
+                            if (item.TaxReduction != null && item.TaxReduction != 0) addedParts.Add($"Thuế giảm: {item.TaxReduction:N2}");
+                            if (item.COFormE != null && item.COFormE != 0) addedParts.Add($"Chi phí FE: {item.COFormE:N2}");
+                            if (!string.IsNullOrWhiteSpace(item.Note)) addedParts.Add($"Ghi chú: {item.Note}");
+
+                            _billImportTechnicalAuditLogRepo.Create(new BillImportTechnicalAuditLog {
+                                BillImportTechnicalID = billImportId,
+                                TypeLog = "THÊM CHI TIẾT",
+                                ContentLog = $"Thêm chi tiết phiếu nhập: [{addedProductName}] {string.Join(", ", addedParts)}",
+                                CreatedBy = currentUser.LoginName,
+                                CreatedDate = DateTime.Now
+                            });
 
                             if (product.billImportDetailTechnicals.Count == 1)
                                 singleDetailId = item.ID;
@@ -378,6 +450,39 @@ namespace RERPAPI.Controllers.Old.Technical
                         }
                         else
                         {
+                            if (item.IsDeleted == true)
+                            {
+                                _billImportTechnicalAuditLogRepo.Create(new BillImportTechnicalAuditLog {
+                                    BillImportTechnicalID = billImportId,
+                                    TypeLog = "XOÁ CHI TIẾT",
+                                    ContentLog = $"Xoá chi tiết phiếu nhập: ID:{item.ProductID}",
+                                    CreatedBy = currentUser.LoginName,
+                                    CreatedDate = DateTime.Now
+                                });
+                            }
+                            else
+                            {
+                                var existingDetail = _billImportTechnicalDetailRepo.GetByID(item.ID);
+                                if (existingDetail != null)
+                                {
+                                    List<string> changeDetails = _billImportTechnicalAuditLogRepo.GetEntityChanges(existingDetail, item);
+
+                                    if (changeDetails.Any())
+                                    {
+                                        //bool isProductChanged = existingDetail.ProductID != item.ProductID;
+                                        string contentLogPrefix = "Cập nhật chi tiết";
+
+                                        _billImportTechnicalAuditLogRepo.Create(new BillImportTechnicalAuditLog {
+                                            BillImportTechnicalID = billImportId,
+                                            TypeLog = "CẬP NHẬT CHI TIẾT",
+                                            ContentLog = $"{contentLogPrefix}: {string.Join(", ", changeDetails)}",
+                                            CreatedBy = currentUser.LoginName,
+                                            CreatedDate = DateTime.Now
+                                        });
+                                    }
+                                }
+                            }
+
                             await _billImportTechnicalDetailRepo.UpdateAsync(item);
 
                             if (product.billImportDetailTechnicals.Count == 1)
