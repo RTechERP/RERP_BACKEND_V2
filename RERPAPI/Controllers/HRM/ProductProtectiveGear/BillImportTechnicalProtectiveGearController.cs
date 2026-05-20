@@ -287,26 +287,19 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
         //    }
         //}
         [HttpGet("get-bill-code")]
-        public async Task<IActionResult> GenerateBillCode(string billCode, int id)
+        public async Task<IActionResult> GenerateBillCode(int billCode)
         {
-            var exp1 = new Expression("BillCode", billCode);
-            var exp2 = new Expression("ID", id, "<>");
+            var listBillImports = _billImportTechnicalRepo.GetBillCode( billCode)??"";
 
-            var listBillImports = _billImportTechnicalRepo.GetAll(c => c.BillCode == billCode && c.ID != id);
             //var listBillImports = SQLHelper<BillImportTechnical>.FindByExpression(exp1.And(exp2));
-            bool status = false;
-            if (listBillImports.Count() >= 0)
-            {
-                status = true;
-
-
-            }
+            
             return Ok(new
             {
                 status = 1,
-                data = status
+                data = listBillImports
             });
         }
+
         [HttpGet("validate-bill-code")]
         public async Task<IActionResult> ValidateBillCode([FromQuery] int billtype)
         {
