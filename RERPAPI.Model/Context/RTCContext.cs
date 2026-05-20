@@ -9294,6 +9294,7 @@ public partial class RTCContext : DbContext
         {
             entity.ToTable("PollForm");
 
+            entity.Property(e => e.BackgroundImagePath).HasMaxLength(1000);
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.EndDate).HasColumnType("datetime");

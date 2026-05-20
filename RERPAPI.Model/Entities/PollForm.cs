@@ -26,4 +26,6 @@ public partial class PollForm
     public bool? IsPublic { get; set; }
 
     public bool? IsDeleted { get; set; }
+
+    public string? BackgroundImagePath { get; set; }
 }

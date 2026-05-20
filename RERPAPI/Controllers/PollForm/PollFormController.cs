@@ -3,6 +3,7 @@ using ClosedXML.Excel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
@@ -29,8 +30,22 @@ namespace RERPAPI.Controllers.PollForm
         private readonly PollResponseRepo _pollResponseRepo;
         private readonly PollResponseAnswerRepo _pollResponseAnswerRepo;
         private readonly EmployeeRepo _employeeRepo;
+        private readonly ConfigSystemRepo _configSystemRepo;
         private readonly PollBranchingRuleEvaluator _pollBranchingRuleEvaluator;
+        private readonly List<PathStaticFile> _pathStaticFiles;
         private const string EmployeeDataSourceType = "Employee";
+        private const string PollFormBackgroundConfigKey = "PollForm_Background";
+        private const long PollFormBackgroundMaxFileSize = 10 * 1024 * 1024;
+
+        private static readonly HashSet<string> PollFormBackgroundAllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".gif",
+            ".bmp",
+            ".webp"
+        };
 
         private static readonly List<PollEmployeeFieldOptionDTO> EmployeeFieldOptions = new()
         {
@@ -78,7 +93,9 @@ namespace RERPAPI.Controllers.PollForm
             PollResponseRepo pollResponseRepo,
             PollResponseAnswerRepo pollResponseAnswerRepo,
             EmployeeRepo employeeRepo,
-            PollBranchingRuleEvaluator pollBranchingRuleEvaluator)
+            ConfigSystemRepo configSystemRepo,
+            PollBranchingRuleEvaluator pollBranchingRuleEvaluator,
+            IOptions<List<PathStaticFile>> pathStaticFiles)
         {
             _pollFormRepo = pollFormRepo;
             _pollSectionRepo = pollSectionRepo;
@@ -87,7 +104,9 @@ namespace RERPAPI.Controllers.PollForm
             _pollResponseRepo = pollResponseRepo;
             _pollResponseAnswerRepo = pollResponseAnswerRepo;
             _employeeRepo = employeeRepo;
+            _configSystemRepo = configSystemRepo;
             _pollBranchingRuleEvaluator = pollBranchingRuleEvaluator;
+            _pathStaticFiles = pathStaticFiles.Value ?? new List<PathStaticFile>();
         }
 
         /// <summary>
@@ -119,6 +138,64 @@ namespace RERPAPI.Controllers.PollForm
         public IActionResult GetEmployeeFieldOptions()
         {
             return Ok(ApiResponseFactory.Success(EmployeeFieldOptions, ""));
+        }
+
+        /// <summary>
+        /// Upload background image for poll forms
+        /// </summary>
+        [HttpPost("background/upload")]
+        [Consumes("multipart/form-data")]
+        [DisableRequestSizeLimit]
+        public async Task<IActionResult> UploadPollFormBackground(IFormFile file)
+        {
+            try
+            {
+                if (file == null || file.Length == 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "File không được để trống!"));
+
+                if (file.Length > PollFormBackgroundMaxFileSize)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Dung lượng ảnh không được vượt quá 10MB!"));
+
+                var fileExtension = Path.GetExtension(file.FileName);
+                if (string.IsNullOrWhiteSpace(fileExtension) ||
+                    !PollFormBackgroundAllowedExtensions.Contains(fileExtension))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Chỉ được upload file ảnh (jpg, jpeg, png, gif, bmp, webp)!"));
+                }
+
+                var uploadPath = _configSystemRepo.GetUploadPathByKey(PollFormBackgroundConfigKey);
+                if (string.IsNullOrWhiteSpace(uploadPath))
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: {PollFormBackgroundConfigKey}"));
+
+                Directory.CreateDirectory(uploadPath);
+
+                var safeOriginalFileName = SanitizeFileName(Path.GetFileNameWithoutExtension(file.FileName));
+                var savedFileName = $"{safeOriginalFileName}_{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid().ToString("N")[..8]}{fileExtension.ToLowerInvariant()}";
+                var fullPath = Path.Combine(uploadPath, savedFileName);
+
+                await using (var stream = new FileStream(fullPath, FileMode.CreateNew))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                var backgroundImagePath = BuildStaticFileRequestPath(uploadPath, savedFileName) ?? fullPath;
+                var result = new PollFormBackgroundUploadResultDTO
+                {
+                    OriginalFileName = file.FileName,
+                    SavedFileName = savedFileName,
+                    BackgroundImagePath = backgroundImagePath,
+                    FilePath = fullPath,
+                    FileSize = file.Length,
+                    ContentType = file.ContentType,
+                    UploadTime = DateTime.Now
+                };
+
+                return Ok(ApiResponseFactory.Success(result, "Upload ảnh nền bình chọn thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi upload ảnh nền bình chọn: {ex.Message}"));
+            }
         }
 
         /// <summary>
@@ -157,6 +234,7 @@ namespace RERPAPI.Controllers.PollForm
                     ID = pollForm.ID,
                     Title = pollForm.Title,
                     Description = pollForm.Description,
+                    BackgroundImagePath = pollForm.BackgroundImagePath,
                     StartDate = pollForm.StartDate,
                     EndDate = pollForm.EndDate,
                     IsPublic = pollForm.IsPublic,
@@ -260,6 +338,7 @@ namespace RERPAPI.Controllers.PollForm
                 {
                     Title = dto.Title,
                     Description = dto.Description,
+                    BackgroundImagePath = NormalizePollBackgroundImagePath(dto.BackgroundImagePath),
                     StartDate = dto.StartDate,
                     EndDate = dto.EndDate,
                     IsPublic = dto.IsPublic ?? false,
@@ -301,6 +380,8 @@ namespace RERPAPI.Controllers.PollForm
 
                 pollForm.Title = dto.Title ?? pollForm.Title;
                 pollForm.Description = dto.Description ?? pollForm.Description;
+                if (dto.BackgroundImagePath != null)
+                    pollForm.BackgroundImagePath = NormalizePollBackgroundImagePath(dto.BackgroundImagePath);
                 pollForm.StartDate = dto.StartDate ?? pollForm.StartDate;
                 pollForm.EndDate = dto.EndDate ?? pollForm.EndDate;
                 pollForm.IsPublic = dto.IsPublic ?? pollForm.IsPublic;
@@ -1762,6 +1843,82 @@ namespace RERPAPI.Controllers.PollForm
             var displayValue = ResolveEmployeeLookupDisplayValue(fieldKey, rawValue, dbContext) ?? rawValue;
 
             return new EmployeeFieldResolvedValue(rawValue, displayValue);
+        }
+
+        private static string? NormalizePollBackgroundImagePath(string? backgroundImagePath)
+        {
+            return string.IsNullOrWhiteSpace(backgroundImagePath)
+                ? null
+                : backgroundImagePath.Trim();
+        }
+
+        private static string SanitizeFileName(string? fileName)
+        {
+            var safeFileName = string.IsNullOrWhiteSpace(fileName)
+                ? "poll_background"
+                : fileName.Trim();
+
+            foreach (var invalidChar in Path.GetInvalidFileNameChars())
+            {
+                safeFileName = safeFileName.Replace(invalidChar, '_');
+            }
+
+            return string.IsNullOrWhiteSpace(safeFileName)
+                ? "poll_background"
+                : safeFileName;
+        }
+
+        private string? BuildStaticFileRequestPath(string uploadPath, string savedFileName)
+        {
+            var normalizedUploadPath = NormalizeDirectoryPath(uploadPath);
+            var staticRoot = _pathStaticFiles
+                .Where(x => !string.IsNullOrWhiteSpace(x.PathName) && !string.IsNullOrWhiteSpace(x.PathFull))
+                .Select(x => new
+                {
+                    StaticFile = x,
+                    NormalizedPathFull = NormalizeDirectoryPath(x.PathFull)
+                })
+                .Where(x => IsSameOrChildDirectory(normalizedUploadPath, x.NormalizedPathFull))
+                .OrderByDescending(x => x.NormalizedPathFull.Length)
+                .FirstOrDefault();
+
+            if (staticRoot == null)
+                return null;
+
+            var relativeFolder = normalizedUploadPath.Length == staticRoot.NormalizedPathFull.Length
+                ? ""
+                : normalizedUploadPath[(staticRoot.NormalizedPathFull.Length + 1)..];
+
+            var segments = new List<string>
+            {
+                "api",
+                "share",
+                staticRoot.StaticFile.PathName.Trim().ToLowerInvariant()
+            };
+
+            if (!string.IsNullOrWhiteSpace(relativeFolder))
+            {
+                segments.AddRange(relativeFolder.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries));
+            }
+
+            segments.Add(savedFileName);
+            return "/" + string.Join("/", segments.Select(Uri.EscapeDataString));
+        }
+
+        private static string NormalizeDirectoryPath(string path)
+        {
+            return Path.GetFullPath(path.Trim())
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        }
+
+        private static bool IsSameOrChildDirectory(string path, string rootPath)
+        {
+            if (path.Equals(rootPath, StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            return path.StartsWith(rootPath, StringComparison.OrdinalIgnoreCase) &&
+                path.Length > rootPath.Length &&
+                (path[rootPath.Length] == Path.DirectorySeparatorChar || path[rootPath.Length] == Path.AltDirectorySeparatorChar);
         }
 
         private string? ResolveEmployeeLookupDisplayValue(string fieldKey, string? rawValue, RTCContext? dbContext = null)
