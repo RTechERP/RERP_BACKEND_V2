@@ -128,8 +128,16 @@ namespace RERPAPI.Controllers.Old.Technical
         {
             try
             {
-                var data = _kpiSessionRepo.GetAll(x => x.IsDeleted == false && x.DepartmentID == departmentId);
-
+                var data = new List<KPISession>();
+                if(departmentId != 10 || departmentId != 9)
+                {
+                     data = _kpiSessionRepo.GetAll(x => x.IsDeleted == false);
+                }
+                else
+                {
+                    data = _kpiSessionRepo.GetAll(x => x.IsDeleted == false && x.DepartmentID == departmentId);
+                }
+                   
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
