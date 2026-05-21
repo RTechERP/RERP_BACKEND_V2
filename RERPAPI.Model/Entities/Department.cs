@@ -34,4 +34,9 @@ public partial class Department
     public int? STT { get; set; }
 
     public bool? IsDeleted { get; set; }
+
+    /// <summary>
+    /// ID phòng ban cha
+    /// </summary>
+    public int? ParentID { get; set; }
 }

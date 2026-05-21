@@ -3381,6 +3381,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.PId)
                 .HasMaxLength(50)
                 .IsUnicode(false);
+            entity.Property(e => e.ParentID).HasComment("ID phòng ban cha");
             entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
@@ -7415,6 +7416,9 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedBy).HasMaxLength(50);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.DateLog).HasColumnType("datetime");
+            entity.Property(e => e.TypeLog)
+                .HasMaxLength(250)
+                .HasComment("Loại thay đổi");
             entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
