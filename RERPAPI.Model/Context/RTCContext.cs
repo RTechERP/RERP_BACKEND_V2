@@ -790,6 +790,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<PercentMainIndexUser> PercentMainIndexUsers { get; set; }
 
+    public virtual DbSet<PerformanceCriterion> PerformanceCriteria { get; set; }
+
     public virtual DbSet<PhasedAllocationPerson> PhasedAllocationPeople { get; set; }
 
     public virtual DbSet<PhasedAllocationPersonDetail> PhasedAllocationPersonDetails { get; set; }
@@ -7618,6 +7620,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.ErrorDate).HasColumnType("datetime");
+            entity.Property(e => e.IsAutoAdd).HasDefaultValue(false);
             entity.Property(e => e.TotalMoney).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
@@ -9240,6 +9243,42 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.PercentIndex).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<PerformanceCriterion>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__Performa__3214EC27E6203E94");
+
+            entity.ToTable(tb => tb.HasComment("Tiêu chí đánh giá"));
+
+            entity.Property(e => e.ID).HasComment("ID");
+            entity.Property(e => e.Code)
+                .HasMaxLength(200)
+                .HasComment("Mã tiêu chí đánh giá");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(150)
+                .HasComment("Người tạo");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo")
+                .HasColumnType("datetime");
+            entity.Property(e => e.DescriptionEN).HasComment("Mô tả tiếng anh");
+            entity.Property(e => e.DescriptionVI).HasComment("Mô tả tiếng việt");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái xoá");
+            entity.Property(e => e.NameEN)
+                .HasMaxLength(500)
+                .HasComment("Tên tiêu chí bằng tiếng anh");
+            entity.Property(e => e.NameVI)
+                .HasMaxLength(500)
+                .HasComment("Tên tiêu chí đánh giá bằng tiếng việt");
+            entity.Property(e => e.STT).HasComment("STT");
+            entity.Property(e => e.SubTitleEN).HasMaxLength(500);
+            entity.Property(e => e.SubTitleVI).HasMaxLength(500);
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(150)
+                .HasComment("Người update");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày update")
+                .HasColumnType("datetime");
         });
 
         modelBuilder.Entity<PhasedAllocationPerson>(entity =>

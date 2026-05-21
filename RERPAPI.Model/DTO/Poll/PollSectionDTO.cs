@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace RERPAPI.Model.DTO.Poll
 {
     public class PollSectionDTO
@@ -47,6 +49,14 @@ namespace RERPAPI.Model.DTO.Poll
         public int? SectionID { get; set; }
         public int? EmployeeID { get; set; }
         public List<AnswerItemDTO>? Answers { get; set; }
+        [JsonPropertyName("hiddenSectionIds")]
+        public List<int>? HiddenSectionIds { get; set; }
+        [JsonPropertyName("hiddenQuestionIds")]
+        public List<int>? HiddenQuestionIds { get; set; }
+        [JsonPropertyName("clearSectionIds")]
+        public List<int>? ClearSectionIds { get; set; }
+        [JsonPropertyName("clearQuestionIds")]
+        public List<int>? ClearQuestionIds { get; set; }
     }
 
     public class SubmitPollSectionResultDTO

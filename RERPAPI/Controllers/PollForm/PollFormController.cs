@@ -885,6 +885,33 @@ namespace RERPAPI.Controllers.PollForm
                 using var dbContext = CreateDbContext(currentUser);
                 using var transaction = dbContext.Database.BeginTransaction();
 
+                var allSections = dbContext.PollSections
+                    .Where(x => x.PollFormID == pollFormId && x.IsDeleted != true)
+                    .OrderBy(x => x.SortOrder)
+                    .ThenBy(x => x.ID)
+                    .ToList();
+                var allQuestions = dbContext.PollQuestions.Where(x => x.PollFormID == pollFormId).ToList();
+                var clearQuestionIds = ResolveResponseClearQuestionIds(
+                    dto,
+                    allSections,
+                    allQuestions,
+                    sectionQuestions,
+                    out var invalidClearSectionIds,
+                    out var invalidClearQuestionIds);
+
+                if (invalidClearSectionIds.Count > 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Clear section ids contain sections outside this poll form", invalidClearSectionIds));
+
+                if (invalidClearQuestionIds.Count > 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Clear question ids contain questions outside this poll form", invalidClearQuestionIds));
+
+                var answersForSave = dto.Answers?
+                    .Where(x => !x.QuestionID.HasValue || !clearQuestionIds.Contains(x.QuestionID.Value))
+                    .ToList() ?? new List<AnswerItemDTO>();
+                var effectiveSectionQuestions = sectionQuestions
+                    .Where(x => !clearQuestionIds.Contains(x.ID))
+                    .ToList();
+
                 PollResponse response;
                 if (dto.PollResponseID.HasValue)
                 {
@@ -917,19 +944,15 @@ namespace RERPAPI.Controllers.PollForm
                     }
                 }
 
-                var answers = AddEmployeeMappedAnswers(dto.Answers, sectionQuestions, currentEmployee, dbContext);
-                if (!TryValidateAnswers(answers, sectionQuestions, dbContext, out var validationMessage, out var validationData))
+                ClearResponseAnswers(dbContext, response.ID, clearQuestionIds);
+
+                var answers = AddEmployeeMappedAnswers(answersForSave, effectiveSectionQuestions, currentEmployee, dbContext);
+                if (!TryValidateAnswers(answers, effectiveSectionQuestions, dbContext, out var validationMessage, out var validationData))
                     return BadRequest(ApiResponseFactory.Fail(null, validationMessage, validationData));
 
                 var savedAnswerCount = SaveResponseAnswers(dbContext, response.ID, answers, currentUser);
                 dbContext.SaveChanges();
 
-                var allSections = dbContext.PollSections
-                    .Where(x => x.PollFormID == pollFormId && x.IsDeleted != true)
-                    .OrderBy(x => x.SortOrder)
-                    .ThenBy(x => x.ID)
-                    .ToList();
-                var allQuestions = dbContext.PollQuestions.Where(x => x.PollFormID == pollFormId).ToList();
                 var allResponseAnswers = dbContext.PollResponseAnswers.Where(x => x.PollResponseID == response.ID).ToList();
                 var answerMap = BuildAnswerMap(allQuestions, allResponseAnswers);
                 var nextSectionId = _pollBranchingRuleEvaluator.ResolveNextSectionId(section, allSections, answerMap);
@@ -1094,7 +1117,6 @@ namespace RERPAPI.Controllers.PollForm
                     .ToList();
 
                 var responses = _pollResponseRepo.GetAll(x => x.PollFormID == pollFormId)
-                    .Where(x => includeIncomplete || x.IsCompleted == true)
                     .OrderBy(x => x.EmployeeID ?? 0)
                     .ThenBy(x => x.CreatedDate)
                     .ThenBy(x => x.ID)
@@ -1511,8 +1533,15 @@ namespace RERPAPI.Controllers.PollForm
         private int SaveResponseAnswers(RTCContext dbContext, int responseId, List<AnswerItemDTO> answers, CurrentUser currentUser)
         {
             var savedAnswerCount = 0;
+            var emptyQuestionIds = answers
+                .Where(x => x.QuestionID.HasValue && IsEmptyAnswer(x))
+                .Select(x => x.QuestionID!.Value)
+                .ToHashSet();
+            ClearResponseAnswers(dbContext, responseId, emptyQuestionIds);
+
             var submittedAnswers = answers
                 .Where(x => x.QuestionID.HasValue)
+                .Where(x => !emptyQuestionIds.Contains(x.QuestionID!.Value))
                 .GroupBy(x => x.QuestionID!.Value)
                 .Select(x => x.Last())
                 .ToList();
@@ -1551,6 +1580,78 @@ namespace RERPAPI.Controllers.PollForm
             }
 
             return savedAnswerCount;
+        }
+
+        private static int ClearResponseAnswers(RTCContext dbContext, int responseId, IReadOnlyCollection<int> questionIds)
+        {
+            if (responseId <= 0 || questionIds.Count == 0)
+                return 0;
+
+            var answersToDelete = dbContext.PollResponseAnswers
+                .Where(x => x.PollResponseID == responseId &&
+                    x.PollQuestionID.HasValue &&
+                    questionIds.Contains(x.PollQuestionID.Value))
+                .ToList();
+
+            if (answersToDelete.Count == 0)
+                return 0;
+
+            dbContext.PollResponseAnswers.RemoveRange(answersToDelete);
+            return answersToDelete.Count;
+        }
+
+        private static HashSet<int> ResolveResponseClearQuestionIds(
+            SubmitPollSectionDTO dto,
+            IReadOnlyCollection<PollSection> pollSections,
+            IReadOnlyCollection<PollQuestion> pollQuestions,
+            IReadOnlyCollection<PollQuestion> currentSectionQuestions,
+            out List<int> invalidSectionIds,
+            out List<int> invalidQuestionIds)
+        {
+            var pollSectionIds = pollSections.Select(x => x.ID).ToHashSet();
+            var pollQuestionIds = pollQuestions.Select(x => x.ID).ToHashSet();
+            var currentSectionQuestionIds = currentSectionQuestions.Select(x => x.ID).ToHashSet();
+
+            var clearSectionIds = GetDistinctPositiveIds(dto.ClearSectionIds);
+            clearSectionIds.UnionWith(GetDistinctPositiveIds(dto.HiddenSectionIds));
+
+            var explicitClearQuestionIds = GetDistinctPositiveIds(dto.ClearQuestionIds);
+            explicitClearQuestionIds.UnionWith(GetDistinctPositiveIds(dto.HiddenQuestionIds));
+
+            invalidSectionIds = clearSectionIds
+                .Where(x => !pollSectionIds.Contains(x))
+                .ToList();
+            invalidQuestionIds = explicitClearQuestionIds
+                .Where(x => !pollQuestionIds.Contains(x))
+                .ToList();
+
+            var clearQuestionIds = explicitClearQuestionIds
+                .Where(x => pollQuestionIds.Contains(x))
+                .ToHashSet();
+
+            foreach (var sectionId in clearSectionIds.Where(x => pollSectionIds.Contains(x)))
+            {
+                foreach (var questionId in pollQuestions.Where(x => x.PollSectionID == sectionId).Select(x => x.ID))
+                    clearQuestionIds.Add(questionId);
+            }
+
+            var emptySubmittedQuestionIds = dto.Answers?
+                .Where(x => x.QuestionID.HasValue && IsEmptyAnswer(x))
+                .Select(x => x.QuestionID!.Value)
+                .Where(x => pollQuestionIds.Contains(x) && !currentSectionQuestionIds.Contains(x))
+                .ToList() ?? new List<int>();
+
+            foreach (var questionId in emptySubmittedQuestionIds)
+                clearQuestionIds.Add(questionId);
+
+            return clearQuestionIds;
+        }
+
+        private static HashSet<int> GetDistinctPositiveIds(IEnumerable<int>? ids)
+        {
+            return ids?
+                .Where(x => x > 0)
+                .ToHashSet() ?? new HashSet<int>();
         }
 
         private static bool TryValidateAnswers(

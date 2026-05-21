@@ -674,6 +674,7 @@ builder.Services.AddScoped<MakerTrainingRepo>();
 builder.Services.AddScoped<MakerTrainingEmployeeLinkRepo>();
 builder.Services.AddScoped<MakerTrainingDocumentRepo>();
 builder.Services.AddScoped<MakerTrainingTypeRepo>();
+builder.Services.AddScoped<PerformanceCriteriaRepo>();
 
 #region DI LOG
 builder.Services.AddScoped<POKHLogRepo>();
