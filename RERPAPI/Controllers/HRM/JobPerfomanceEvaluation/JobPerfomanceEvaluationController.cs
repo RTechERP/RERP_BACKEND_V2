@@ -140,8 +140,12 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
         {
             try
             {
-                var data = await _jobPerfomanceEvaluationNewRepo.GetByIDAsync(id);
-                return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công!"));
+                //var data = await _jobPerfomanceEvaluationNewRepo.GetByIDAsync(id);
+                var data = await SqlDapper<object>.ProcedureToListTAsync("spGetContractTransferDetail", new
+                {
+                    ID = id
+                });
+                return Ok(ApiResponseFactory.Success(data[0], "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
@@ -1222,7 +1226,7 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                         .FirstOrDefault();
 
 
-                    await _emailHelper.SendAsyncHr(
+                    await _emailHelper.SendAsyncHrm(
                         email.EmailTo, email.Subject,
                         email.Body + footer, cc: email.EmailCC);
 
