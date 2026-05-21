@@ -31,17 +31,17 @@ namespace RERPAPI.Controllers.Old
 
         [HttpPost]
         [RequiresPermission("N2,N1")]
-        public IActionResult GetEmployeeOverTime([FromBody] EmployeeOverTimeParam param)
+        public IActionResult GetEmployeeOverTime([FromBody] EmployeeOverTimeSummaryParam param)
         {
             try
             {
                 //var dateStart = param.dateStart.Date; // 00:00:00
                 //var dateEnd = param.dateEnd.Date.AddDays(1).AddSeconds(-1);
-                param.dateStart = param.dateStart.ToLocalTime().Date;
-                param.dateEnd = param.dateEnd.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
-                var arrParamName = new string[] { "@FilterText", "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@DepartmentID", "@IDApprovedTP", "@Status" };
-                var arrParamValue = new object[] { param.keyWord ?? "", param.pageNumber, param.pageSize, param.dateStart, param.dateEnd, param.departmentId, param.idApprovedTp, param.status };
-                var employeeOverTime = SQLHelper<object>.ProcedureToList("spGetEmployeeOvertime", arrParamName, arrParamValue);
+                param.DateStart = param.DateStart.ToLocalTime().Date;
+                param.DateEnd = param.DateEnd.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
+                var arrParamName = new string[] { "@DateStart", "@DateEnd", "@Keyword", "@EmployeeID", "@IsApproved", "@Type", "@DepartmentID" };
+                var arrParamValue = new object[] { param.DateStart, param.DateEnd, param.Keyword??"", param.EmployeeID??0, param.IsApproved, param.Type, param.DepartmentID??0};
+                var employeeOverTime = SQLHelper<object>.ProcedureToList("spGetEmployeeOvertimeInWeb_New", arrParamName, arrParamValue);
                 return Ok(new
                 {
                     data = SQLHelper<object>.GetListData(employeeOverTime, 0),
