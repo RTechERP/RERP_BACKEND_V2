@@ -160,6 +160,21 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        [HttpGet("get-bill-code")]
+        public async Task<IActionResult> GenerateBillCode(int billCode)
+        {
+            var listBillImports = _billExportTechnicalRepo.GetBillCode(billCode) ?? "";
+
+            //var listBillImports = SQLHelper<BillImportTechnical>.FindByExpression(exp1.And(exp2));
+
+            return Ok(new
+            {
+                status = 1,
+                data = listBillImports
+            });
+        }
+
         [HttpPost("delete-data")]
         public async Task<IActionResult> PostDeleteDataAsync([FromBody] int id)
         {

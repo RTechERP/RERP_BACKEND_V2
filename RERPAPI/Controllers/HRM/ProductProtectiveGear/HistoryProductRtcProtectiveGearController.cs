@@ -86,22 +86,23 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                     item.Status = 1;
 
                     item.AdminConfirm = true;
+                    // lưu log 
+                    HistoryProductRTCLog logModel = new HistoryProductRTCLog();
+                    logModel.HistoryProductRTCID = item.ID;
+                    logModel.DateReturnExpected = item.DateReturnExpected;
+                    var result = await _historyProductRTCLogRepo.CreateAsync(logModel);
+
+                    if (result <= 0)
+                    {
+                        return Ok(ApiResponseFactory.Fail(null, "Không thể lưu History Product RTC Log!"));
+                    }
                 }
                 else
                 {
                     item.Status = 8;
                 }
                 _historyProductRTCRepo.Update(item);
-                // lưu log 
-                HistoryProductRTCLog logModel = new HistoryProductRTCLog();
-                logModel.HistoryProductRTCID = item.ID;
-                logModel.DateReturnExpected = item.DateReturnExpected;
-                var result = await _historyProductRTCLogRepo.CreateAsync(logModel);
-
-                if (result <= 0)
-                {
-                    return Ok(ApiResponseFactory.Fail(null, "Không thể lưu History Product RTC Log!"));
-                }
+               
                 return Ok(ApiResponseFactory.Success(item, ""));
             }
             catch (Exception ex)
