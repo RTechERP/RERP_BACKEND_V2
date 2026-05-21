@@ -130,6 +130,7 @@ namespace RERPAPI.Controllers.Old
             {
                 foreach (var employeeOvertime in request.EmployeeOvertimes ?? new List<EmployeeOvertime>())
                 {
+                    AdjustDateTimeTimeZone(employeeOvertime);
                     EmployeeOvertime existingOvertime = null;
                     if (employeeOvertime.ID > 0)
                     {
@@ -359,6 +360,7 @@ namespace RERPAPI.Controllers.Old
 
                 foreach (var item in dto.EmployeeOvertimes)
                 {
+                    AdjustDateTimeTimeZone(item);
                     var validate = _employeeOverTimeRepo.Validate(item);
                     if (validate.status == 0 && item.IsDeleted != true) return BadRequest(validate);
                     if (item.ID <= 0)
@@ -406,6 +408,39 @@ namespace RERPAPI.Controllers.Old
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+        }
+
+        private void AdjustDateTimeTimeZone(EmployeeOvertime employeeOvertime)
+        {
+            if (employeeOvertime == null) return;
+
+            int clientOffsetMinutes = 420; // Default to UTC+7
+            if (Request.Headers.TryGetValue("TimeZoneOffset", out var headerValues))
+            {
+                if (int.TryParse(headerValues.FirstOrDefault(), out var offset))
+                {
+                    clientOffsetMinutes = offset;
+                }
+            }
+
+            employeeOvertime.DateRegister = AdjustToClientLocal(employeeOvertime.DateRegister, clientOffsetMinutes);
+            employeeOvertime.TimeStart = AdjustToClientLocal(employeeOvertime.TimeStart, clientOffsetMinutes);
+            employeeOvertime.EndTime = AdjustToClientLocal(employeeOvertime.EndTime, clientOffsetMinutes);
+        }
+
+        private DateTime? AdjustToClientLocal(DateTime? dateTime, int clientOffsetMinutes)
+        {
+            if (!dateTime.HasValue) return null;
+            if (dateTime.Value.Kind == DateTimeKind.Unspecified)
+            {
+                return dateTime;
+            }
+
+            DateTime utcDateTime = dateTime.Value.Kind == DateTimeKind.Utc
+                ? dateTime.Value
+                : dateTime.Value.ToUniversalTime();
+
+            return DateTime.SpecifyKind(utcDateTime.AddMinutes(clientOffsetMinutes), DateTimeKind.Unspecified);
         }
 
     }

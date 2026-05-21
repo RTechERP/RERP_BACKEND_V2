@@ -593,7 +593,7 @@ builder.Services.AddScoped<CustomerIndustriesRepo>();
 builder.Services.AddScoped<FcmTokenRepo>();
 builder.Services.AddScoped<NotificationTypeLinkRepo>();
 builder.Services.AddScoped<NotificationTypeRepo>();
-//builder.Services.AddScoped<JobRequirementLogRepo>();
+builder.Services.AddScoped<JobRequirementLogRepo>();
 //builder.Services.AddScoped<AssetLogRepo>();
 
 
@@ -716,10 +716,10 @@ builder.Services.AddCors(options =>
     });
 });
 // Chỉ khởi tạo 1 lần duy nhất khi chạy server
-FirebaseApp.Create(new AppOptions()
-{
-    Credential = GoogleCredential.FromFile("firebase-adminsdk.json") // Thay bằng đường dẫn thực tế
-});
+//FirebaseApp.Create(new AppOptions()
+//{
+//    Credential = GoogleCredential.FromFile("firebase-adminsdk.json") // Thay bằng đường dẫn thực tế
+//});
 
 
 builder.Services.AddSingleton<SseService>();
