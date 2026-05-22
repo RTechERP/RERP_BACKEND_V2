@@ -60,6 +60,8 @@ namespace RERPAPI.Controllers.KhoBaseManager
         {
             try
             {
+                //DateTime dateStartLocal = param.dateStart.ToLocalTime();
+                //DateTime dateEndLocal = param.endDate.ToLocalTime();
                 var data = SQLHelper<object>.ProcedureToList(
                 "spGetFollowProjectBase",
                     new string[]
