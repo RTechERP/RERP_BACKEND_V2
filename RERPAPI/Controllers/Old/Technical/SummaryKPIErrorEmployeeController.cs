@@ -92,17 +92,17 @@ namespace RERPAPI.Controllers.Old.Technical
         {
             try
             {
-                var dataRaw1 = SQLHelper<object>.ProcedureToList("spGetSummaryKPIErrorEmployee",
+                var dataRaw1 = SQLHelper<object>.ProcedureToList("spGetSummaryKPIErrorEmployee_NTA",
                                                 new string[] { "@Month", "@Year", "@KPIErrorID", "@EmployeeID", "@Keyword", "@TypeID", "@DepartmentIDs" },
                                                 new object[] { month, year, kpiErrorId, employeeId, keywords, 0, departmentIDs });
                 var data1 = SQLHelper<object>.GetListData(dataRaw1, 0);
 
-                var dataRaw2 = SQLHelper<object>.ProcedureToList("spGetSummaryKPIErrorEmployee",
+                var dataRaw2 = SQLHelper<object>.ProcedureToList("spGetSummaryKPIErrorEmployee_NTA",
                                 new string[] { "@Month", "@Year", "@KPIErrorID", "@EmployeeID", "@Keyword", "@TypeID", "@DepartmentIDs" },
                                 new object[] { month, year, kpiErrorId, employeeId, keywords, 3, departmentIDs });
                 var data2 = SQLHelper<object>.GetListData(dataRaw2, 0);
 
-                var dataRaw3 = SQLHelper<object>.ProcedureToList("spGetSummaryKPIErrorEmployee",
+                var dataRaw3 = SQLHelper<object>.ProcedureToList("spGetSummaryKPIErrorEmployee_NTA",
                                 new string[] { "@Month", "@Year", "@KPIErrorID", "@EmployeeID", "@Keyword", "@TypeID", "@DepartmentIDs" },
                                 new object[] { month, year, kpiErrorId, employeeId, keywords, 9, departmentIDs });
                 var data3 = SQLHelper<object>.GetListData(dataRaw3, 0);
@@ -121,7 +121,7 @@ namespace RERPAPI.Controllers.Old.Technical
         {
             try
             {
-                var dataRaw1 = SQLHelper<object>.ProcedureToList("spGetSummaryKPIErrorEmployee",
+                var dataRaw1 = SQLHelper<object>.ProcedureToList("spGetSummaryKPIErrorEmployee_NTA",
                                                 new string[] { "@Month", "@Year", "@KPIErrorID", "@EmployeeID", "@Keyword", "@TypeID", "@DepartmentIDs" },
                                                 new object[] { month, year, kpiErrorId, employeeId, keywords, typeId, departmentIDs });
                 var datafile = SQLHelper<object>.GetListData(dataRaw1, 1);
