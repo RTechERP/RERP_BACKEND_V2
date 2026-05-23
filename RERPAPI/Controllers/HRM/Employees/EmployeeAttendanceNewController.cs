@@ -29,6 +29,94 @@ namespace RERPAPI.Controllers
             _employeeAttendanceNewRepo = employeeAttendanceNewRepo;
         }
 
+        //[HttpPost("save-attendance")]
+        //public async Task<IActionResult> saveAttendance([FromBody] List<EmployeeAttendanceNewDTO> data)
+        //{
+        //    try
+        //    {
+        //        if (data == null || data.Count == 0)
+        //            return Ok(ApiResponseFactory.Success(null, "Không có dữ liệu"));
+
+        //        var groups = data
+        //            .Where(x => !string.IsNullOrWhiteSpace(x.employeeNoString))
+        //            .GroupBy(x => x.employeeNoString.Trim().ToLower());
+
+        //        foreach (var group in groups)
+        //        {
+        //            string employeeCode = group.Key;
+
+        //            var emp = _employeeRepo
+        //                .GetAll(x => x.IDChamCongMoi.ToLower() == employeeCode)
+        //                .FirstOrDefault();
+
+        //            if (emp == null) continue;
+
+        //            DateTime checkInTime = group.Min(x => x.time);
+        //            DateTime checkOutTime = group.Max(x => x.time);
+
+        //            DateTime attendanceDate = checkInTime.Date;
+        //            string dayOfWeek = GetVietnameseDayOfWeek(checkInTime.DayOfWeek);
+        //            var comp = ComputeAttendance(0, attendanceDate, checkInTime, checkOutTime);
+
+        //            var checkExist = _employeeAttendanceNewRepo.GetAll(x => x.EmployeeID == emp.ID && x.AttendanceDate == attendanceDate).FirstOrDefault();
+        //            if (checkExist != null)
+        //            {
+        //                checkExist.CheckOutDate = checkOutTime;
+        //                checkExist.CheckOut = checkOutTime.ToString("HH:mm:ss");
+        //                checkExist.UpdatedDate = DateTime.Now;
+        //                checkExist.IsLate = comp.IsLate;
+        //                checkExist.TimeLate = comp.TimeLate;
+        //                checkExist.IsEarly = comp.IsEarly;
+        //                checkExist.TimeEarly = comp.TimeEarly;
+        //                checkExist.TotalHour = comp.TotalHour;
+        //                checkExist.TotalDay = comp.TotalDay;
+        //                checkExist.IsLunch = comp.IsLunch;
+        //                await _employeeAttendanceNewRepo.UpdateAsync(checkExist);
+        //                continue;
+        //            }
+
+        //            EmployeeAttendanceNew attendance = new EmployeeAttendanceNew
+        //            {
+        //                STT = 0,
+        //                EmployeeID = emp.ID,
+        //                IDChamCongMoi = emp.IDChamCongMoi,
+
+        //                AttendanceDate = attendanceDate,
+        //                DayWeek = dayOfWeek,
+
+        //                Interval = "(00:00:00-23:59:00)",
+
+        //                // giờ vào - giờ ra dạng string
+        //                CheckIn = checkInTime.ToString("HH:mm:ss"),
+        //                CheckOut = checkOutTime.ToString("HH:mm:ss"),
+
+        //                // datetime đầy đủ
+        //                CheckInDate = checkInTime,
+        //                CheckOutDate = checkOutTime,
+
+        //                CreatedDate = DateTime.Now,
+        //                UpdatedDate = DateTime.Now,
+        //                IsLate = comp.IsLate,
+        //                TimeLate = comp.TimeLate,
+        //                IsEarly = comp.IsEarly,
+        //                TimeEarly = comp.TimeEarly,
+        //                TotalHour = comp.TotalHour,
+        //                TotalDay = comp.TotalDay,
+        //                IsLunch = comp.IsLunch,
+        //            };
+
+        //            await _employeeAttendanceNewRepo.CreateAsync(attendance);
+        //        }
+
+        //        return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
+
+
         [HttpPost("save-attendance")]
         public async Task<IActionResult> saveAttendance([FromBody] List<EmployeeAttendanceNewDTO> data)
         {
@@ -58,11 +146,11 @@ namespace RERPAPI.Controllers
                     string dayOfWeek = GetVietnameseDayOfWeek(checkInTime.DayOfWeek);
                     var comp = ComputeAttendance(0, attendanceDate, checkInTime, checkOutTime);
 
-                    var checkExist = _employeeAttendanceNewRepo.GetAll(x => x.EmployeeID == emp.ID && x.AttendanceDate == attendanceDate).FirstOrDefault();
+                    var checkExist = _employeeAttendanceRepo.GetAll(x => x.EmployeeID == emp.ID && x.AttendanceDate == attendanceDate).FirstOrDefault();
                     if (checkExist != null)
                     {
                         checkExist.CheckOutDate = checkOutTime;
-                        checkExist.CheckOut = checkOutTime.ToString("HH:mm");
+                        checkExist.CheckOut = checkOutTime.ToString("HH:mm:ss");
                         checkExist.UpdatedDate = DateTime.Now;
                         checkExist.IsLate = comp.IsLate;
                         checkExist.TimeLate = comp.TimeLate;
@@ -71,11 +159,11 @@ namespace RERPAPI.Controllers
                         checkExist.TotalHour = comp.TotalHour;
                         checkExist.TotalDay = comp.TotalDay;
                         checkExist.IsLunch = comp.IsLunch;
-                        await _employeeAttendanceNewRepo.UpdateAsync(checkExist);
+                        await _employeeAttendanceRepo.UpdateAsync(checkExist);
                         continue;
                     }
 
-                    EmployeeAttendanceNew attendance = new EmployeeAttendanceNew
+                    EmployeeAttendance attendance = new EmployeeAttendance
                     {
                         STT = 0,
                         EmployeeID = emp.ID,
@@ -87,8 +175,8 @@ namespace RERPAPI.Controllers
                         Interval = "(00:00:00-23:59:00)",
 
                         // giờ vào - giờ ra dạng string
-                        CheckIn = checkInTime.ToString("HH:mm"),
-                        CheckOut = checkOutTime.ToString("HH:mm"),
+                        CheckIn = checkInTime.ToString("HH:mm:ss"),
+                        CheckOut = checkOutTime.ToString("HH:mm:ss"),
 
                         // datetime đầy đủ
                         CheckInDate = checkInTime,
@@ -105,7 +193,7 @@ namespace RERPAPI.Controllers
                         IsLunch = comp.IsLunch,
                     };
 
-                    await _employeeAttendanceNewRepo.CreateAsync(attendance);
+                    await _employeeAttendanceRepo.CreateAsync(attendance);
                 }
 
                 return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
@@ -120,13 +208,13 @@ namespace RERPAPI.Controllers
         {
             return day switch
             {
-                DayOfWeek.Monday => "Thứ hai",
-                DayOfWeek.Tuesday => "Thứ ba",
-                DayOfWeek.Wednesday => "Thứ tư",
-                DayOfWeek.Thursday => "Thứ năm",
-                DayOfWeek.Friday => "Thứ sáu",
-                DayOfWeek.Saturday => "Thứ bảy",
-                DayOfWeek.Sunday => "Chủ nhật",
+                DayOfWeek.Monday => "Hai",
+                DayOfWeek.Tuesday => "Ba",
+                DayOfWeek.Wednesday => "Tư",
+                DayOfWeek.Thursday => "Năm",
+                DayOfWeek.Friday => "Sáu",
+                DayOfWeek.Saturday => "Bảy",
+                DayOfWeek.Sunday => "CN",
                 _ => ""
             };
         }
