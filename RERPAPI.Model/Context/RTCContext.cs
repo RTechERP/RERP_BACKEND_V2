@@ -282,6 +282,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<EmployeeAttendance> EmployeeAttendances { get; set; }
 
+    public virtual DbSet<EmployeeAttendanceNew> EmployeeAttendanceNews { get; set; }
+
     public virtual DbSet<EmployeeBussiness> EmployeeBussinesses { get; set; }
 
     public virtual DbSet<EmployeeBussinessFile> EmployeeBussinessFiles { get; set; }
@@ -3765,6 +3767,37 @@ public partial class RTCContext : DbContext
             entity.HasIndex(e => e.AttendanceDate, "Index_EmployeeAttendance_AttendanceDate");
 
             entity.HasIndex(e => e.IDChamCongMoi, "Index_EmployeeAttendance_IDChamCongMoi");
+
+            entity.Property(e => e.AttendanceDate).HasColumnType("datetime");
+            entity.Property(e => e.CheckIn)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.CheckInDate).HasColumnType("datetime");
+            entity.Property(e => e.CheckOut)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.CheckOutDate).HasColumnType("datetime");
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.DayWeek).HasMaxLength(100);
+            entity.Property(e => e.IDChamCongMoi).HasMaxLength(550);
+            entity.Property(e => e.Interval)
+                .HasMaxLength(50)
+                .HasComment("Khoảng thời gian trong ngày(0h - 24h)");
+            entity.Property(e => e.Note).HasMaxLength(550);
+            entity.Property(e => e.TimeEarly).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TimeLate).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TotalDay).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TotalHour).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<EmployeeAttendanceNew>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__Employee__3214EC27D3FCB89A");
+
+            entity.ToTable("EmployeeAttendanceNew");
 
             entity.Property(e => e.AttendanceDate).HasColumnType("datetime");
             entity.Property(e => e.CheckIn)
