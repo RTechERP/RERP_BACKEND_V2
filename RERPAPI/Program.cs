@@ -41,6 +41,7 @@ using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
 using RERPAPI.SendService;
 using RTCApi.Repo.GenericRepo;
 using Serilog;
+using Serilog.Events;
 using System.Text;
 using tusdotnet;
 using tusdotnet.Helpers;
@@ -847,7 +848,7 @@ Log.Logger = new LoggerConfiguration()
     .Enrich.WithThreadId()
     .WriteTo.Console()
     .WriteTo.Async(a => a.File(
-        "logs/log-.txt",
+         @"D:\RERPLogs\api\log-.txt",
         rollingInterval: RollingInterval.Day,
         retainedFileCountLimit: 7,
         outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss:fff} [{Level}] {Message}{NewLine}{Exception}"
@@ -866,10 +867,26 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseSerilogRequestLogging(options =>
+{
+    options.MessageTemplate =
+        "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
+
+    options.GetLevel = (httpContext, elapsed, ex) =>
+    {
+        if (ex != null) return LogEventLevel.Error;
+        if (httpContext.Response.StatusCode >= 500) return LogEventLevel.Error;
+        if (elapsed > 3000) return LogEventLevel.Warning;
+
+        return LogEventLevel.Information;
+    };
+});
+
 
 app.UseHttpsRedirection();
 
 app.UseStaticFiles();
+
 app.UseRouting();
 app.UseCors("MyCors");
 app.UseAuthentication();
@@ -948,6 +965,35 @@ app.UseTus(httpContext => new DefaultTusConfiguration
         }
     }
 });
-app.UseSerilogRequestLogging(); // log request
+//app.Use(async (context, next) =>
+//{
+//    var sw = System.Diagnostics.Stopwatch.StartNew();
+
+//    try
+//    {
+//        await next();
+//    }
+//    finally
+//    {
+//        sw.Stop();
+
+//        if (sw.ElapsedMilliseconds > 3000)
+//        {
+//            var logger = context.RequestServices
+//                .GetRequiredService<ILoggerFactory>()
+//                .CreateLogger("SlowRequest");
+
+//            logger.LogWarning(
+//                "Slow request: {Method} {Path}{QueryString} took {Elapsed}ms, StatusCode={StatusCode}",
+//                context.Request.Method,
+//                context.Request.Path,
+//                context.Request.QueryString,
+//                sw.ElapsedMilliseconds,
+//                context.Response.StatusCode
+//            );
+//        }
+//    }
+//});
+//app.UseSerilogRequestLogging(); // log request
 
 app.Run();
