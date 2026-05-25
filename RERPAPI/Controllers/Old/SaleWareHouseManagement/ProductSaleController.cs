@@ -197,7 +197,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     //TN.Binh update 19/10/25
                     if (!CheckProductCode(dto))
                     {
-                        //return BadRequest(new { status = 0, message = $"Mã sản phẩm [{dto.ProductSale.ProductCode}] đã tồn tại trong nhóm !" });
+						return BadRequest(ApiResponseFactory.Fail(null, $"Mã sản phẩm [{dto.ProductSale.ProductCode}] đã tồn tại trong nhóm !"));
                     }
                     //end update 
                     if (dto.ProductSale.ID <= 0)
@@ -410,7 +410,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             bool check = true;
             var exists = _productsaleRepo.GetAll(x => x.ProductCode == dto.ProductSale.ProductCode
                             //&& x.ProductGroupID == dto.ProductSale.ProductGroupID
-                            && x.ID != dto.ProductSale.ID && dto.ProductSale.IsDeleted == false);
+							&& x.ID != dto.ProductSale.ID && x.IsDeleted == false);
             if (exists.Count > 0) check = false;
             return check;
         }
