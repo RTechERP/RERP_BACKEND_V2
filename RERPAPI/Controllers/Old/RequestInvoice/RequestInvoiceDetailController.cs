@@ -7,6 +7,8 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using System.Threading.Tasks;
+using System.Linq;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -27,7 +29,8 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
         private readonly ProductSaleRepo _productSaleRepo;
         private readonly ProjectRepo _projectRepo;
         private readonly ConfigSystemRepo _configSystemRepo;
-        
+        private readonly RequestInvoiceLogRepo _requestInvoiceLogRepo;
+        private readonly AccountingContractTypeRepo _accountingContractTypeRepo;
 
         public RequestInvoiceDetailController(
             RequestInvoiceRepo requestInvoiceRepo,
@@ -37,7 +40,9 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
             ProductSaleRepo productSaleRepo,
             ProjectRepo projectRepo,
             ConfigSystemRepo configSystemRepo,
-            RequestInvoiceStatusLinkRepo requestInvoiceStatusLinkRepo
+            RequestInvoiceStatusLinkRepo requestInvoiceStatusLinkRepo,
+            RequestInvoiceLogRepo requestInvoiceLogRepo,
+            AccountingContractTypeRepo accountingContractTypeRepo
 
             )
         {
@@ -54,6 +59,8 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
             _projectRepo = projectRepo;
             _configSystemRepo = configSystemRepo;
             _requestInvoiceStatusLinkRepo = requestInvoiceStatusLinkRepo;
+            _requestInvoiceLogRepo = requestInvoiceLogRepo;
+            _accountingContractTypeRepo = accountingContractTypeRepo;
         }
 
         [HttpGet("get-employee")]
@@ -61,10 +68,10 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
         {
             try
             {
-          
+
                 var data = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
-                                                new string[] {"@Status" },
-                                                new object[] {0 });
+                                                new string[] { "@Status" },
+                                                new object[] { 0 });
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
@@ -85,6 +92,21 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        [HttpGet("get-accouting-contract-types")]
+        public IActionResult GetAccountingContractTypes()
+        {
+            try
+            {
+                var data = _accountingContractTypeRepo.GetAll().OrderByDescending(x => x.CreatedDate).ToList();
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpGet("get-project")]
         public IActionResult GetProject()
         {
@@ -139,6 +161,12 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                RequestInvoiceLog log = new RequestInvoiceLog();
+
+                string logContent = "";
+
                 if (dto.RequestInvoices.IsDeleted == true)
                 {
                     var updatedRequestInvoice = new Model.Entities.RequestInvoice
@@ -147,12 +175,9 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                         IsDeleted = dto.RequestInvoices.IsDeleted
                     };
                     await _requestInvoiceRepo.UpdateAsync(updatedRequestInvoice);
-                    //return Ok(new
-                    //{
-                    //    status = 1,
-                    //    message = "Đã xóa thành công",
-                    //    data = new { id = dto.RequestInvoices.ID }
-                    //});
+                    logContent += $"- {currentUser.FullName} đã xóa phiếu\\n";
+                    await _requestInvoiceLogRepo.AddLog(dto.RequestInvoices.ID, logContent, "Xóa");
+
                     return Ok(ApiResponseFactory.Success(new { id = dto.RequestInvoices.ID }, ""));
                 }
                 if (dto.RequestInvoices.CustomerID == null || dto.RequestInvoices.CustomerID <= 0)
@@ -171,6 +196,10 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                 {
                     throw new Exception("Vui lòng thêm ít nhất 1 sản phẩm");
                 }
+                if (dto.RequestInvoices == null || dto.RequestInvoices.EmployeeRequestID < 0)
+                {
+                    throw new Exception("Xin hãy chọn người yêu cầu.");
+                }
                 foreach (var item in dto.RequestInvoiceDetails)
                 {
                     if (item.ProductSaleID == 0 || item.ProductSaleID == null)
@@ -183,6 +212,41 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                     }
                 }
 
+                //var pokhDetailIds = dto.RequestInvoiceDetails
+                //    .Where(x => x.POKHDetailID != null && x.POKHDetailID > 0)
+                //    .Select(x => x.POKHDetailID.Value)
+                //    .Distinct()
+                //    .ToList();
+
+                //if (pokhDetailIds.Any())
+                //{
+                //    var ids = string.Join(",", pokhDetailIds);
+
+                //    var invalidRows = await SqlDapper<RequestInvoiceCompanyTextCheckResultDTO>
+                //        .ProcedureToListTAsync("spCheckRequestInvoiceCompanyText", new { POKHDetailIDs = ids });
+
+                //    if (invalidRows.Any())
+                //    {
+                //        var invalidPokhDetailIds = invalidRows
+                //            .Select(x => x.POKHDetailID)
+                //            .ToHashSet();
+
+                //        var errorRows = dto.RequestInvoiceDetails
+                //            .Where(x => x.POKHDetailID != null && invalidPokhDetailIds.Contains(x.POKHDetailID.Value))
+                //            .Select(x =>
+                //            {
+                //                var stt = x.STT > 0 ? x.STT.ToString() : "?";
+
+                //                return $"{stt}";
+                //            })
+                //            .Distinct()
+                //            .ToList();
+
+                //        throw new Exception($"Các dòng có STT sau chưa có Công ty nhập: {string.Join(", ", errorRows)}. Vui lòng bổ sung thông tin cho PONCC và thử lại!");
+                //    }
+
+                //}
+
                 // Kiểm tra trùng mã phiếu
                 var code = dto.RequestInvoices.Code.Trim();
                 int id = dto.RequestInvoices.ID;
@@ -191,12 +255,15 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                     .FirstOrDefault();
                 if (exist != null)
                 {
-                    throw new Exception("Số phiếu này đã tồn tại!");
+                    throw new Exception("Số phiếu này đã tồn tại, vui lòng bấm làm mới số phiếu!");
                 }
 
                 if (dto.RequestInvoices.ID <= 0)
                 {
                     await _requestInvoiceRepo.CreateAsync(dto.RequestInvoices);
+
+                    logContent = $"- {currentUser.FullName} đã tạo mới phiếu \\n";
+                    await _requestInvoiceLogRepo.AddLog(dto.RequestInvoices.ID, logContent, "Thêm mới");
 
                     RequestInvoiceStatusLink statusLinkModelDefault = new RequestInvoiceStatusLink();
                     statusLinkModelDefault.RequestInvoiceID = dto.RequestInvoices.ID;
@@ -207,44 +274,81 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                 }
                 else
                 {
+                    var oldRequest = _requestInvoiceRepo.GetByID(dto.RequestInvoices.ID);
+                    logContent += _requestInvoiceLogRepo.GenerateLog(oldRequest, dto.RequestInvoices);
+
                     await _requestInvoiceRepo.UpdateAsync(dto.RequestInvoices);
-                }
-                if (dto.DeletedDetailIds != null && dto.DeletedDetailIds.Count > 0)
-                {
-                    foreach (var item in dto.DeletedDetailIds)
+
+                    if (!string.IsNullOrWhiteSpace(logContent))
                     {
-                        if(item > 0)
-                        {
-                            var detailToDelete = _requestInvoiceDetailRepo.GetByID(item);
-                            if (detailToDelete != null && detailToDelete.ID > 0)
-                            {
-                                detailToDelete.IsDeleted = true;
-                                await _requestInvoiceDetailRepo.UpdateAsync(detailToDelete);
-                            }
-                        }    
+                        await _requestInvoiceLogRepo.AddLog(dto.RequestInvoices.ID, $"- {currentUser.FullName} đã cập nhật: \\n{logContent} \\n", "Cập nhật");
+                        logContent = "";
                     }
                 }
+
+                if (dto.DeletedDetailIds != null && dto.DeletedDetailIds.Count > 0)
+                {
+                    string deleteProducts = "";
+                    foreach (var item in dto.DeletedDetailIds)
+                    {
+                        var detailToDelete = _requestInvoiceDetailRepo.GetByID(item);
+                        if (detailToDelete != null)
+                        {
+                            //detailToDelete.IsDeleted = true;
+                            //detailToDelete.UpdatedBy = User.Identity.Name; // Mở comment nếu có phân quyền người dùng
+                            detailToDelete.UpdatedDate = DateTime.Now;
+                            await _requestInvoiceDetailRepo.UpdateAsync(detailToDelete);
+
+                            var productSale = _productSaleRepo.GetByID((int)detailToDelete.ProductSaleID);
+
+                            deleteProducts += productSale.ProductName + ", ";
+                        }
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(deleteProducts))
+                    {
+                        logContent += $"- {currentUser.FullName} đã xóa SP [{deleteProducts}] \\n";
+                        await _requestInvoiceLogRepo.AddLog(dto.RequestInvoices.ID, logContent, "Cập nhật");
+                    }
+                }
+
+                logContent = "";
+
                 if (dto.RequestInvoiceDetails.Count > 0)
                 {
+                    string productCreate = "";
+                    string productUpdate = "";
+
                     foreach (var item in dto.RequestInvoiceDetails)
                     {
+                        var productSale = _productSaleRepo.GetByID((int)item.ProductSaleID);
                         if (item.ID <= 0)
                         {
+                            productCreate += productSale.ProductName + ',';
                             item.RequestInvoiceID = dto.RequestInvoices.ID;
                             await _requestInvoiceDetailRepo.CreateAsync(item);
                         }
                         else
                         {
+                            var requestDetailOld = _requestInvoiceDetailRepo.GetByID(item.ID);
+                            logContent += _requestInvoiceLogRepo.GenerateLogDetail(requestDetailOld, item);
+
                             await _requestInvoiceDetailRepo.UpdateAsync(item);
                         }
                     }
+
+                    if (!string.IsNullOrWhiteSpace(productCreate))
+                    {
+                        await _requestInvoiceLogRepo.AddLog(dto.RequestInvoices.ID, $"- {currentUser.FullName} đã thêm SP [{productCreate}] \\n", "Cập nhật");
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(logContent))
+                    {
+                        await _requestInvoiceLogRepo.AddLog(dto.RequestInvoices.ID, $"- {currentUser.FullName} đã cập nhật SP: \\n {logContent} \\n", "Cập nhật");
+                    }
+
+
                 }
-                //return Ok(new
-                //{
-                //    status = 1,
-                //    message = "Success",
-                //    data = new { id = dto.RequestInvoices.ID }
-                //});
                 return Ok(ApiResponseFactory.Success(new { id = dto.RequestInvoices.ID }, ""));
             }
             catch (Exception ex)
@@ -324,12 +428,16 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
 
         [HttpPost("upload")]
         [DisableRequestSizeLimit]
-        //[RequiresPermission("N27,N36,N1,N31")]
-
         public async Task<IActionResult> Upload(int requestInvoiceId, int fileType)
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                RequestInvoiceLog log = new RequestInvoiceLog();
+
+                string fileUpload = "";
+
                 var form = await Request.ReadFormAsync();
                 var key = form["key"].ToString();
                 var files = form.Files;
@@ -376,8 +484,8 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                     targetFolder = Path.Combine(uploadPath, $"YCXHD_ID_{ri.ID}");
                 }
 
-                if (!Directory.Exists(targetFolder))
-                    Directory.CreateDirectory(targetFolder);
+                //if (!Directory.Exists(targetFolder))
+                //    Directory.CreateDirectory(targetFolder);
 
                 var processedFile = new List<RequestInvoiceFile>();
 
@@ -392,10 +500,10 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                     var fullPath = Path.Combine(targetFolder, uniqueFileName);
 
                     // Lưu file trực tiếp vào targetFolder (không tạo file tạm khác)
-                    using (var stream = new FileStream(fullPath, FileMode.Create))
-                    {
-                        await file.CopyToAsync(stream);
-                    }
+                    //using (var stream = new FileStream(fullPath, FileMode.Create))
+                    //{
+                    //    await file.CopyToAsync(stream);
+                    //}
 
                     var filePO = new RequestInvoiceFile
                     {
@@ -413,9 +521,18 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
 
                     await _requestInvoiceFileRepo.CreateAsync(filePO);
                     processedFile.Add(filePO);
+
+                    fileUpload += originalFileName;
                 }
 
-                return Ok(ApiResponseFactory.Success(processedFile, $"{processedFile.Count} tệp đã được tải lên thành công"));
+                if (!String.IsNullOrWhiteSpace(fileUpload))
+                {
+                    var request = _requestInvoiceRepo.GetByID(requestInvoiceId);
+                    await _requestInvoiceLogRepo.AddLog(requestInvoiceId, $"- {currentUser.FullName} đã bổ sung file [{fileUpload}] \\n", "Cập nhật");
+                }
+
+                //return Ok(ApiResponseFactory.Success(processedFile, $"{processedFile.Count} tệp đã được tải lên thành công"));
+                return Ok(ApiResponseFactory.Success($" tệp đã được tải lên thành công"));
             }
             catch (Exception ex)
             {
@@ -426,19 +543,23 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
 
 
         [HttpPost("delete-file")]
-        public IActionResult DeleteFile([FromBody] List<int> fileIds)
+        public async Task<IActionResult> DeleteFile([FromBody] List<int> fileIds)
         {
             if (fileIds == null || !fileIds.Any())
                 throw new Exception("Danh sách file ID không được trống");
 
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                string fileName = "";
+                int requestInvoiceId = 0;
                 var results = new List<object>();
 
                 foreach (var fileId in fileIds)
                 {
                     var file = _requestInvoiceFileRepo.GetByID(fileId);
-
+                    requestInvoiceId = file.RequestInvoiceID ?? 0;
                     // Cập nhật database
                     file.IsDeleted = true;
                     //file.UpdatedBy = User.Identity?.Name ?? "System";
@@ -446,11 +567,17 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                     _requestInvoiceFileRepo.Update(file);
 
                     // Xóa file vật lý
-                    var physicalPath = Path.Combine(file.ServerPath, file.FileName);
-                    if (System.IO.File.Exists(physicalPath))
-                        System.IO.File.Delete(physicalPath);
+                    //var physicalPath = Path.Combine(file.ServerPath, file.FileName);
+                    //if (System.IO.File.Exists(physicalPath))
+                    //    System.IO.File.Delete(physicalPath);
 
+                    fileName += file.FileName;
                     results.Add(new { fileId, success = true, message = "Xóa thành công" });
+                }
+
+                if (!String.IsNullOrWhiteSpace(fileName))
+                {
+                    await _requestInvoiceLogRepo.AddLog(requestInvoiceId, $"- {currentUser.FullName} đã xóa file [{fileName}] \\n", "Cập nhật");
                 }
 
                 return Ok(ApiResponseFactory.Success(results, ""));

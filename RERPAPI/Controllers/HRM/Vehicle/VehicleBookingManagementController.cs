@@ -759,9 +759,9 @@ namespace RERPAPI.Controllers
                     var file = _vehicleBookingFileRepo.GetByID(id);
                     if (file == null) continue;
 
-                    string fullPath = Path.Combine(file.ServerPath, file.FileName);
-                    if (System.IO.File.Exists(fullPath))
-                        System.IO.File.Delete(fullPath);
+                    //string fullPath = Path.Combine(file.ServerPath, file.FileName);
+                    //if (System.IO.File.Exists(fullPath))
+                    //    System.IO.File.Delete(fullPath);
 
                     await _vehicleBookingFileRepo.DeleteAsync(id);
                 }

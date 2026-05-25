@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,7 +21,7 @@ namespace RERPAPI.Repo.GenericEntity
         {
             try
             {
-                var hrHirings = GetAll(x => x.IsDeleted == true);
+                var hrHirings = GetAll(x => x.IsDeleted == false);
                 int stt = hrHirings.Count() <= 0 ? 1 : Convert.ToInt32(hrHirings.Max(x => x.STT)) + 1;
                 return stt;
             }
@@ -39,11 +39,12 @@ namespace RERPAPI.Repo.GenericEntity
                 string requestCodePrefex = "YCTD_";
                 string dateRequest = DateTime.Now.ToString("yyyyMMdd_");
 
-                var hrHirings = GetAll(x => x.IsDeleted == true);
+                var hrHirings = GetAll(x => x.IsDeleted == false);
                 int stt = hrHirings.Count() <= 0 ? 1 : Convert.ToInt32(hrHirings.Max(x => x.STT)) + 1;
 
-                var hrHiringCodes = hrHirings.Where(x => x.DateRequest.Value.Year == DateTime.Now.Year &&
-                                                        x.DateRequest.Value.Month == DateTime.Now.Month &&
+                var hrHiringCodes = hrHirings.Where(x => x.DateRequest.HasValue && 
+                                                        x.DateRequest.Value.Year == DateTime.Now.Year &&
+                                                        x.DateRequest.Value.Month == DateTime.Now.Month && 
                                                         x.DateRequest.Value.Date == DateTime.Now.Date)
                                             .Select(x => new
                                             {
@@ -51,7 +52,6 @@ namespace RERPAPI.Repo.GenericEntity
                                                 Code = x.HiringRequestCode,
                                                 STT = string.IsNullOrWhiteSpace(x.HiringRequestCode) ? 0 : Convert.ToInt32(x.HiringRequestCode.Substring(x.HiringRequestCode.Length - 3)),
                                             }).ToList();
-
                 string numberCodeText = "000";
                 int numberCode = hrHiringCodes.Count <= 0 ? 0 : hrHiringCodes.Max(x => x.STT);
                 numberCodeText = (++numberCode).ToString();

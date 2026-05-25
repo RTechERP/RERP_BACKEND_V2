@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using System.Security.Principal;
 
 namespace RERPAPI.Controllers.Old.Technical
 {
@@ -21,7 +22,9 @@ namespace RERPAPI.Controllers.Old.Technical
         private readonly ConfigSystemRepo _configSystemRepo;
         private readonly KPIErrorRepo _kpiErrorRepo;
         private readonly EmployeeRepo _employeeRepo;
-        public KPIErrorEmployeeController(DepartmentRepo departmentRepo, KPIErrorTypeRepo kpiErrorTypeRepo, KPIErrorEmployeeRepo kpiErrorEmployeeRepo, KPIErrorEmployeeFileRepo kpiErrorEmployeeFileRepo, UserTeamRepo userTeamRepo, ConfigSystemRepo configSystemRepo, KPIErrorRepo kpiErrorRepo, EmployeeRepo employeeRepo)
+        private readonly EmployeeOverTimeRepo _employeeOvertimeRepo;
+        private readonly DailyReportTechnicalRepo _dailyReportTechnicalRepo;
+        public KPIErrorEmployeeController(DepartmentRepo departmentRepo, KPIErrorTypeRepo kpiErrorTypeRepo, KPIErrorEmployeeRepo kpiErrorEmployeeRepo, KPIErrorEmployeeFileRepo kpiErrorEmployeeFileRepo, UserTeamRepo userTeamRepo, ConfigSystemRepo configSystemRepo, KPIErrorRepo kpiErrorRepo, EmployeeRepo employeeRepo, EmployeeOverTimeRepo employeeOvertimeRepo, DailyReportTechnicalRepo dailyReportTechnicalRepo)
         {
             _departmentRepo = departmentRepo;
             _kpiErrorTypeRepo = kpiErrorTypeRepo;
@@ -31,6 +34,8 @@ namespace RERPAPI.Controllers.Old.Technical
             _configSystemRepo = configSystemRepo;
             _kpiErrorRepo = kpiErrorRepo;
             _employeeRepo = employeeRepo;
+            _employeeOvertimeRepo = employeeOvertimeRepo;
+            _dailyReportTechnicalRepo = dailyReportTechnicalRepo;
         }
 
         [HttpGet("get-department")]
@@ -116,15 +121,15 @@ namespace RERPAPI.Controllers.Old.Technical
         }
 
         [HttpGet("load-data")]  
-        public IActionResult GetKPIErrorEmployeeData(DateTime startDate, DateTime endDate, int kpiErrorID, int employeeID, int typeID, int departmentID, string keywords = "")
+        public IActionResult GetKPIErrorEmployeeData(DateTime startDate, DateTime endDate, int kpiErrorID, int employeeID, int typeID, string departmentIDs = "", string keywords = "")
         {
             try
             {
-                DateTime dateStartLocal = startDate.ToLocalTime();
-                DateTime dateEndLocal = endDate.ToLocalTime();
-                var dataKpiError = SQLHelper<object>.ProcedureToList("spGetKPIErrorEmployee",
-                                                new string[] { "@StartDate", "@EndDate", "@KPIErrorID", "@EmployeeID", "@Keyword", "@TypeID", "@DepartmentID" },
-                                                new object[] { dateStartLocal, dateEndLocal, kpiErrorID, employeeID, keywords, typeID, departmentID });
+                //DateTime dateStartLocal = startDate.ToLocalTime();
+                //DateTime dateEndLocal = endDate.ToLocalTime();
+                var dataKpiError = SQLHelper<object>.ProcedureToList("spGetKPIErrorEmployee_New",
+                                                new string[] { "@StartDate", "@EndDate", "@KPIErrorID", "@EmployeeID", "@Keyword", "@TypeID", "@DepartmentIDs" },
+                                                new object[] { startDate, endDate, kpiErrorID, employeeID, keywords, typeID, departmentIDs });
                 var data = SQLHelper<object>.GetListData(dataKpiError, 0);
 
                 return Ok(ApiResponseFactory.Success(data, ""));
@@ -207,7 +212,6 @@ namespace RERPAPI.Controllers.Old.Technical
             try
             {
                 var userTeams = _userTeamRepo.GetAll();
-                string teamIds = string.Join(";", userTeams.Select(x => x.ID));
 
                 DateTime dateStart = new DateTime(
                     request.StartDate.Year,
@@ -234,13 +238,54 @@ namespace RERPAPI.Controllers.Old.Technical
                     ? dateEndNow
                     : dateEndInput;
 
-                var dataStore = SQLHelper<object>.ProcedureToList(
+                string teamIds = string.Join(";", userTeams.Select(x => x.ID));
+                bool hasAgvTeams = userTeams.Any(x => x.DepartmentID == 9);
+
+                var data = new List<object>();
+
+                // Gọi SP thường cho tất cả team
+                var normalStore = SQLHelper<object>.ProcedureToList(
                     "spExportToExcelDRT",
                     new string[] { "DateStart", "DateEnd", "TeamID" },
                     new object[] { dateStart, dateEnd, teamIds }
                 );
+                var normalData = SQLHelper<object>.GetListData(normalStore, 1);
 
-                var data = SQLHelper<object>.GetListData(dataStore, 1);
+                if (hasAgvTeams)
+                {
+                    // Gọi SP AGV để lấy dữ liệu với rule riêng
+                    string agvTeamIds = string.Join(";", userTeams.Where(x => x.DepartmentID == 9).Select(x => x.ID));
+                    var agvStore = SQLHelper<object>.ProcedureToList(
+                        "spExportToExcelDRT_AGV",
+                        new string[] { "DateStart", "DateEnd", "TeamID" },
+                        new object[] { dateStart, dateEnd, agvTeamIds }
+                    );
+                    var agvData = SQLHelper<object>.GetListData(agvStore, 1);
+
+                    // Lấy danh sách EmployeeID từ kết quả AGV để loại trừ khỏi SP thường (tránh trùng)
+                    var agvEmployeeIds = new HashSet<int>();
+                    foreach (var agvItem in agvData)
+                    {
+                        var agvRow = agvItem as IDictionary<string, object>;
+                        if (agvRow != null)
+                            agvEmployeeIds.Add(Convert.ToInt32(agvRow["EmployeeID"]));
+                    }
+
+                    // Lọc SP thường: bỏ những employee đã có trong kết quả AGV
+                    foreach (var normalItem in normalData)
+                    {
+                        var normalRow = normalItem as IDictionary<string, object>;
+                        if (normalRow != null && !agvEmployeeIds.Contains(Convert.ToInt32(normalRow["EmployeeID"])))
+                            data.Add(normalItem);
+                    }
+
+                    // Thêm kết quả AGV (đã tính theo rule riêng)
+                    data.AddRange(agvData);
+                }
+                else
+                {
+                    data.AddRange(normalData);
+                }
 
                 List<KPIErrorEmployee> insertList = new();
 
@@ -277,6 +322,7 @@ namespace RERPAPI.Controllers.Old.Technical
                         Note = "",
                         TotalMoney = 10000,
                         IsDelete = false,
+                        IsAutoAdd = true,
                         CreatedDate = DateTime.Now
                     });
                 }
@@ -286,9 +332,71 @@ namespace RERPAPI.Controllers.Old.Technical
                     _kpiErrorEmployeeRepo.CreateRange(insertList);
                 }
 
+                // NTA B update xóa bản ghi lỗi đã thêm do duyệt muộn
+                var autoErrors = _kpiErrorEmployeeRepo.GetAll(x =>
+                    x.IsAutoAdd == true &&
+                    x.IsDelete != true &&
+                    x.ErrorDate.HasValue &&
+                    x.ErrorDate.Value.Date >= dateStart.Date &&
+                    x.ErrorDate.Value.Date <= dateEnd.Date &&
+                    (x.KPIErrorID == 1 || x.KPIErrorID == 3)
+                ).ToList();
+
+                var deleteList = new List<KPIErrorEmployee>();
+
+                foreach (var err in autoErrors)
+                {
+                    if (!err.EmployeeID.HasValue || !err.ErrorDate.HasValue)
+                        continue;
+
+                    DateTime errorDate = err.ErrorDate.Value.Date;
+
+                    var employee = _employeeRepo.GetByID(err.EmployeeID.Value);
+                    if (employee == null || !employee.UserID.HasValue)
+                        continue;
+
+                    bool hasApprovedOT = _employeeOvertimeRepo.GetAll(x =>
+                        x.EmployeeID == err.EmployeeID.Value &&
+                        x.DateRegister.HasValue &&
+                        x.DateRegister.Value.Date == errorDate &&
+                        x.IsApproved == true
+                    ).Any();
+
+                    if (!hasApprovedOT)
+                        continue;
+
+                    DateOnly errorDateOnly = DateOnly.FromDateTime(errorDate);
+                    DateTime nextDay9AM = errorDate.AddDays(1).AddHours(9);
+
+                    bool hasValidReportBefore9AM = _dailyReportTechnicalRepo.GetAll(x =>
+                        x.UserReport == employee.UserID.Value &&
+                        x.DateReport.HasValue &&
+                        x.DateReport.Value == errorDateOnly &&
+                        x.CreatedDate.HasValue &&
+                        x.CreatedDate.Value <= nextDay9AM &&
+                        x.DeleteFlag != 1 &&
+                        x.ProjectID != null &&
+                        x.ProjectID > 0
+                    ).Any();
+
+                    if (!hasValidReportBefore9AM)
+                        continue;
+
+                    err.IsDelete = true;
+                    err.UpdatedDate = DateTime.Now;
+                    deleteList.Add(err);
+                }
+
+                foreach (var err in deleteList)
+                {
+                    _kpiErrorEmployeeRepo.Update(err);
+                }
+                // NTA B end update
+
                 return Ok(ApiResponseFactory.Success(new
                 {
-                    Inserted = insertList.Count
+                    Inserted = insertList.Count,
+                    Deleted = deleteList.Count
                 }, "Cập nhật thành công"));
             }
             catch (Exception ex)
@@ -298,7 +406,7 @@ namespace RERPAPI.Controllers.Old.Technical
         }
 
         [HttpPost("delete-kpi-error-employee")]
-        public IActionResult DeleteKPIErrorEmployee([FromBody] List<int> ids)
+        public async Task<IActionResult> DeleteKPIErrorEmployee([FromBody] List<int> ids)
         {
             try
             {
@@ -307,14 +415,21 @@ namespace RERPAPI.Controllers.Old.Technical
                     return BadRequest(ApiResponseFactory.Fail(null, "Danh sách ID không hợp lệ"));
                 }
 
-                foreach (var id in ids)
-                {
-                    var entity = _kpiErrorEmployeeRepo.GetByID(id);
-                    if (entity == null) continue;
+                var entities = _kpiErrorEmployeeRepo.GetAll()
+                    .Where(x => ids.Contains(x.ID))
+                    .ToList();
 
-                    entity.IsDelete = true;
-                    _kpiErrorEmployeeRepo.Update(entity);
+                if (!entities.Any())
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu để xóa"));
                 }
+
+                foreach (var entity in entities)
+                {
+                    entity.IsDelete = true;
+                }
+
+                await _kpiErrorEmployeeRepo.UpdateRangeAsync(entities);
 
                 return Ok(ApiResponseFactory.Success(null, "Xóa thành công"));
             }
@@ -447,9 +562,9 @@ namespace RERPAPI.Controllers.Old.Technical
                     _kpiErrorEmployeeFileRepo.Delete(fileId);
 
                     // Xóa file vật lý
-                    var physicalPath = Path.Combine(file.ServerPath, file.FileName);
-                    if (System.IO.File.Exists(physicalPath))
-                        System.IO.File.Delete(physicalPath);
+                    //var physicalPath = Path.Combine(file.ServerPath, file.FileName);
+                    //if (System.IO.File.Exists(physicalPath))
+                    //    System.IO.File.Delete(physicalPath);
 
                     results.Add(new { fileId, success = true, message = "Xóa thành công" });
                 }

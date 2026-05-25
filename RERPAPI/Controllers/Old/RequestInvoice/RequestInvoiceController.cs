@@ -19,11 +19,13 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
         private readonly RequestInvoiceRepo _requestInvoiceRepo;
         private readonly POKHFilesRepo _pokhFileRepo;
         private readonly ConfigSystemRepo _configSystemRepo;
-        public RequestInvoiceController(RequestInvoiceRepo requestInvoiceRepo, POKHFilesRepo pokhFileRepo, ConfigSystemRepo configSystemRepo)
+        private readonly RequestInvoiceLogRepo _requestInvoiceLogRepo;
+        public RequestInvoiceController(RequestInvoiceRepo requestInvoiceRepo, POKHFilesRepo pokhFileRepo, ConfigSystemRepo configSystemRepo, RequestInvoiceLogRepo requestInvoiceLogRepo)
         {
             _requestInvoiceRepo = requestInvoiceRepo;
             _pokhFileRepo = pokhFileRepo;
             _configSystemRepo = configSystemRepo;
+            _requestInvoiceLogRepo = requestInvoiceLogRepo;
         }
         [HttpGet]
         public IActionResult Get(DateTime dateStart, DateTime dateEnd, int warehouseId, string keyWords = "")
@@ -113,5 +115,21 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+
+        [HttpGet("log-activity-request-invoice")]
+        public IActionResult GetLogActivityRequestInvoice(int requestInvoiceId)
+        {
+            try
+            {
+                var data = _requestInvoiceLogRepo.GetAll(x => x.RequestInvoiceID == requestInvoiceId).OrderByDescending(x => x.CreatedDate).ToList();
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
     }
 }

@@ -22,4 +22,8 @@ public partial class WeekPlan
     public DateTime? UpdatedDate { get; set; }
 
     public string? UpdatedBy { get; set; }
+
+    public string? Problem { get; set; }
+
+    public int? CustomerID { get; set; }
 }

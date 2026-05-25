@@ -95,14 +95,20 @@ namespace RERPAPI.Model.DTO
         //public int STT { get; set; }
 
         //public string DepartureDateText { get; set; }
-        public string VehicleInformation { get; set; }
+
+
+
+
+
+
+        //public string VehicleInformation { get; set; }
         public string CategoryText { get; set; }
-        public string StatusText { get; set; }
-        public string ApprovedTBPText { get; set; }
-        public DateTime DepartureDateText { get; set; }
-        public string DepartureAddressText { get; set; }
-        public string ProjectFullName { get; set; }
+        //public string StatusText { get; set; }
+        //public string ApprovedTBPText { get; set; }
+        //public DateTime DepartureDateText { get; set; }
+        //public string DepartureAddressText { get; set; }
+        //public string ProjectFullName { get; set; }
         public List<VehicleBookingManagement> EmployeeAttaches { get; set; }
-        public string VehicleTypeText { get; set; }
+        //public string VehicleTypeText { get; set; }
     }
 }

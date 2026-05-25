@@ -96,7 +96,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                var data = _productSaleRepo.GetAll().Where(x => x.IsDeleted != true);
+                var data = _productSaleRepo.GetAll(x => x.IsDeleted != true);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
@@ -171,8 +171,7 @@ namespace RERPAPI.Controllers.Old
 
                 var now = DateTime.Now;
 
-                var bill = _billImportQCRepo.GetAll()
-                    .Where(x =>
+                var bill = _billImportQCRepo.GetAll(x =>
                         x.CreatedDate.HasValue &&
                         x.CreatedDate.Value.Year == now.Year &&
                         x.CreatedDate.Value.Month == now.Month &&
@@ -312,7 +311,7 @@ namespace RERPAPI.Controllers.Old
                     foreach (BillImportQC billImportQC in billImportQCs)
                     {
                         // Thêm khóa cho bảng BillImportQCDetail
-                        List<BillImportQCDetail> lsDetail = _billImportQCDetailRepo.GetAll().Where(x => x.BillImportQCID == billImportQC.ID).ToList();
+                        List<BillImportQCDetail> lsDetail = _billImportQCDetailRepo.GetAll(x => x.BillImportQCID == billImportQC.ID).ToList();
                         if (lsDetail.Any(x => x.Status != 0) && !(currentUser.IsAdmin && currentUser.EmployeeID <= 0))
                         {
                             return BadRequest(ApiResponseFactory.Fail(
@@ -531,8 +530,8 @@ namespace RERPAPI.Controllers.Old
                     {
                         List<BillImportQCDetail> dtr = dto.billImportQCDetails.Where(x => x.LeaderTechID == leaderID).ToList();
 
-                        string emailEmRequest = _employeeRepo.GetByID(leaderID).EmailCongTy;
-                        _billImportQCRepo.SetInforEmail(emailCCs, emailEmRequest, leaderID, dtr, emRequestName, (DateTime)dto.billImportQC.Dealine);
+                        var leader = _employeeRepo.GetByID(leaderID);
+                        _billImportQCRepo.SetInforEmail(emailCCs, leader?.EmailCongTy ?? "", leader?.FullName ?? "", dtr, emRequestName, (DateTime)dto.billImportQC.Dealine);
                     }
                 }
                 #endregion

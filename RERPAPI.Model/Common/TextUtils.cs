@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -172,5 +173,43 @@ namespace RERPAPI.Model.Common
             }
         }
 
+        public static DateTime? ParseDateTime(string? datePart, string? hourPart)
+        {
+            if (string.IsNullOrWhiteSpace(datePart))
+                return null;
+
+            if (!DateTime.TryParseExact(
+                    datePart.Trim(),
+                    "yyyy-MM-dd",
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.None,
+                    out var date))
+            {
+                return null;
+            }
+
+            if (string.IsNullOrWhiteSpace(hourPart))
+                return date.Date;
+
+            var hourFormats = new[]
+            {
+        "H'h'mm",
+        "H:mm",
+        "h:mm tt",
+        "h:mmtt"
+    };
+            if (DateTime.TryParseExact(
+                    hourPart.Trim(),
+                    hourFormats,
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.None,
+                    out var time))
+            {
+                return date.Date.Add(time.TimeOfDay);
+            }
+            return date.Date;
+        }
     }
+
 }
+

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OfficeOpenXml;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -16,10 +17,12 @@ namespace RERPAPI.Controllers.Old
     {
         private EmployeeContractRepo _employeeContractRepo;
         private readonly IWebHostEnvironment _environment;
-        public EmployeeContractController(EmployeeContractRepo employeeContractRepo, IWebHostEnvironment environment)
+        private IConfiguration _configuration;
+        public EmployeeContractController(EmployeeContractRepo employeeContractRepo, IWebHostEnvironment environment, IConfiguration configuration)
         {
             _employeeContractRepo = employeeContractRepo;
             _environment = environment;
+            _configuration = configuration;
         }
 
 
@@ -190,6 +193,12 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
+                ExcelPackage.License.SetNonCommercialOrganization("RTC");
+                var templateFolder = _configuration.GetValue<string>("PathTemplate");
+                if(templateFolder==null)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy đường dẫn File trên sever"));
+                }    
                 // Determine template path and output filename based on LoaiHDLDID
                 string templatePath;
                 string outputFileName;
@@ -197,17 +206,17 @@ namespace RERPAPI.Controllers.Old
 
                 if (data.EmployeeLoaiHDLDID == 1) // HĐTV
                 {
-                    templatePath = Path.Combine(_environment.WebRootPath, "templates", "(Mau)_HDTV.docx");
+                     templatePath = Path.Combine(templateFolder, "ExportExcel", "(Mau)_HDTV_Company.docx");
                     outputFileName = $"{contractNumber}.docx";
                 }
                 else if (data.EmployeeLoaiHDLDID == 4) // HĐLĐ 12T
                 {
-                    templatePath = Path.Combine(_environment.WebRootPath, "templates", "(Mau)_HDLD.docx");
+                    templatePath = Path.Combine(templateFolder, "ExportExcel", "(Mau)_HDLD.docx");
                     outputFileName = $"{contractNumber}_12T.docx";
                 }
                 else // HĐLĐ không xác định thời hạn
                 {
-                    templatePath = Path.Combine(_environment.WebRootPath, "templates", "(Mau)_HDLD.docx");
+                    templatePath = Path.Combine(templateFolder, "ExportExcel", "(Mau)_HDLD.docx");
                     outputFileName = $"{contractNumber}.docx";
                 }
 

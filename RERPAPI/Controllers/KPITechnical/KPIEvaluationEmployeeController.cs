@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using NPOI.HSSF.Record.Chart;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
+using RERPAPI.Model.DTO.KPITech;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
 using RERPAPI.Repo.GenericEntity.Technical.KPI;
@@ -23,7 +24,8 @@ namespace RERPAPI.Controllers.KPITechnical
         KPIPositionRepo _kpiPositionRepo;
         KPIPositionEmployeeRepo _kpiPositionEmployeeRepo;
         KPIEvaluationRuleRepo _kpiEvaluationRuleRepo;
-        public KPIEvaluationEmployeeController(KPIEvaluationPointRepo kpiEvaluationPointRepo, KPISessionRepo kpiSessionRepo, KPIEmployeePointRepo kpiEmployeePointRepo, KPIPositionRepo kpiPositionRepo, KPIPositionEmployeeRepo kpiPositionEmployeeRepo, KPIEvaluationRuleRepo kpiEvaluationRuleRepo)
+        KPIEmployeePointDetailRepo _kpiEmployeePointDetailRepo;
+        public KPIEvaluationEmployeeController(KPIEvaluationPointRepo kpiEvaluationPointRepo, KPISessionRepo kpiSessionRepo, KPIEmployeePointRepo kpiEmployeePointRepo, KPIPositionRepo kpiPositionRepo, KPIPositionEmployeeRepo kpiPositionEmployeeRepo, KPIEvaluationRuleRepo kpiEvaluationRuleRepo, KPIEmployeePointDetailRepo kpiEmployeePointDetailRepo)
         {
             _kpiEvaluationPointRepo = kpiEvaluationPointRepo;
             _kpiSessionRepo = kpiSessionRepo;
@@ -31,6 +33,7 @@ namespace RERPAPI.Controllers.KPITechnical
             _kpiPositionRepo = kpiPositionRepo;
             _kpiPositionEmployeeRepo = kpiPositionEmployeeRepo;
             _kpiEvaluationRuleRepo = kpiEvaluationRuleRepo;
+            _kpiEmployeePointDetailRepo = kpiEmployeePointDetailRepo;
         }
         #region load dữ liệu combobox team 
         [HttpGet("get-combobox-team")]
@@ -446,15 +449,16 @@ namespace RERPAPI.Controllers.KPITechnical
                     KPIEmployeePointID = kpiEmpPoint.ID,
                     IsPublic = isPublic,
                 };
-                var data2 = await SqlDapper<object>.ProcedureToListAsync("spGetEmployeeRulePointByKPIEmpPointIDNew", param2);
+                var data2 = await SqlDapper<spGetEmployeeRulePointByKPIEmpPointIDNewResultDTO>.ProcedureToListTAsync("spGetEmployeeRulePointByKPIEmpPointIDNew", param2);
                 //  var data2 = SQLHelper<object>.ProcedureToList("spGetEmployeeRulePointByKPIEmpPointIDNew"
                 //, new string[] { "@KPIEmployeePointID", "@IsPublic" }
                 //, new object[] { kpiEmpPoint.ID, isPublic });
+                List<KPIEmployeePointDetail> lst = _kpiEmployeePointDetailRepo.GetAll(x=>x.KPIEmployeePointID == empPoint.ID);
 
                 var dtTeam = data1;
                 var dtKpiRule = data2;
 
-                return Ok(ApiResponseFactory.Success(new { dtTeam, dtKpiRule }, "Lấy dữ liệu thành công"));
+                return Ok(ApiResponseFactory.Success(new { dtTeam, dtKpiRule, lst }, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
             {
@@ -560,6 +564,44 @@ namespace RERPAPI.Controllers.KPITechnical
                 //  , new string[] { "@KPIEmployeePointID", "@IsPublic" }
                 //  , new object[] { kpiEmployeePointID, isPublic });
                 return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        #endregion
+        #region load point rule last month
+        [HttpGet("load-point-rule-last-month")]
+        public async Task<IActionResult> LoadPointRuleLastMonthNew(int kpiExamID, bool isPublic, int employeeID, int sessionID)
+        {
+            try
+            {
+                //Get possition của nhân viên
+                List<KPIPosition> kpiPositions = _kpiPositionRepo.GetAll(x => x.KPISessionID == sessionID && x.IsDeleted == false);
+                List<KPIPositionEmployee> kpiPositionEmployees = _kpiPositionEmployeeRepo.GetAll(x => x.EmployeeID == employeeID && x.IsDeleted == false);
+
+                var empPosition = (from p in kpiPositions
+                                   join pe in kpiPositionEmployees on p.ID equals pe.KPIPosiotionID
+                                   select pe)
+
+                     .FirstOrDefault() ?? new KPIPositionEmployee();
+
+                KPIEvaluationRule rule = _kpiEvaluationRuleRepo.GetAll(x => x.KPISessionID == sessionID && x.KPIPositionID == (empPosition.KPIPosiotionID > 0 ? empPosition.KPIPosiotionID : 1) && x.IsDeleted == false)
+                    .FirstOrDefault() ?? new KPIEvaluationRule(); // 1 là kỹ thuật
+
+                int empPointId = await GetKPIEmployeePointID(rule.ID, employeeID);
+                KPIEmployeePoint empPoint = _kpiEmployeePointRepo.GetByID(empPointId);
+                var param = new
+                {
+                    KPIEmployeePointID = empPoint.ID,
+                    IsPublic = isPublic
+                };
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetSumarizebyKPIEmpPointIDNew", param);
+                //var data = SQLHelper<object>.ProcedureToList("spGetEmployeeRulePointByKPIEmpPointIDNew"
+                //  , new string[] { "@KPIEmployeePointID", "@IsPublic" }
+                //  , new object[] { kpiEmployeePointID, isPublic });
+                return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công last month thành công!"));
             }
             catch (Exception ex)
             {

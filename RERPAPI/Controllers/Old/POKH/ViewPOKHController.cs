@@ -98,8 +98,7 @@ namespace RERPAPI.Controllers.Old.POKH
         {
             try
             {
-                var list = _customerViewPOKHRepo.GetAll()
-                           .Where(x => x.IsDeleted != true).OrderByDescending(x => x.CreatedDate).ToList();
+                var list = _customerViewPOKHRepo.GetAll(x => x.IsDeleted != true).OrderByDescending(x => x.CreatedDate).ToList();
                 return Ok(ApiResponseFactory.Success(list, ""));
             }
             catch (Exception ex)
@@ -125,7 +124,7 @@ namespace RERPAPI.Controllers.Old.POKH
         {
             try
             {
-                var list = _employeeTeamSaleRepo.GetAll().Where(x=>x.ParentID == 0).ToList();
+                var list = _employeeTeamSaleRepo.GetAll(x=>x.ParentID == 0).ToList();
                 return Ok(ApiResponseFactory.Success(list, ""));
             }
             catch (Exception ex)

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
@@ -88,6 +88,12 @@ namespace RERPAPI.Controllers.Systems
                     int result = 0;
                     if (item != null)
                     {
+                        var existCode = _updateVersionRepo.GetAll(x => x.Code.Trim().ToLower() == item.Code.Trim().ToLower() && x.ID != item.ID && x.IsDeleted != true).FirstOrDefault();
+                        if (existCode != null)
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null, "Mã phiên bản đã tồn tại!"));
+                        }
+
                         if (item.ID > 0)
                         {
                             if(item.Status==1)
@@ -101,7 +107,7 @@ namespace RERPAPI.Controllers.Systems
                         {
                             result = await _updateVersionRepo.CreateAsync(item);
                         }
-                        if(result>0)
+                            if (result > 0)
                         {
                             if (item.Status == 1)
                             {
@@ -111,7 +117,7 @@ namespace RERPAPI.Controllers.Systems
                                     {
                                         id = item.ID,
                                         code = item.Code,
-                                        content=item.Content,
+                                        content = item.Content,
                                         status = item.Status,
                                         message = "Phiên bản đã được publish",
                                         time = DateTime.Now
@@ -120,13 +126,12 @@ namespace RERPAPI.Controllers.Systems
                             }
 
                             return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
-                            
-                        }  
+
+                        }
                         else
-                        {   
+                        {
                             return BadRequest(ApiResponseFactory.Fail(null, "Lưu dữ liệu không thành công"));
-                        }    
-                      
+                        }
                     }
                     return BadRequest(ApiResponseFactory.Fail(null, "Lưu dữ liệu không thành công"));
                 }

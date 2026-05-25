@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
@@ -166,13 +166,13 @@ namespace RERPAPI.Controllers.Old.Asset
                     if (!string.IsNullOrEmpty(detail.DepartmentName)) departments.Add(detail.DepartmentName);
                 }
 
-                ws.Cells[8, 3].Value = string.Join(", ", names);
-                ws.Cells[9, 3].Value = string.Join(", ", positions);
-                ws.Cells[10, 3].Value = string.Join(", ", departments);
+                ws.Cells[8, 3].Value = master.EmployeeAllocationName;
+                ws.Cells[9, 3].Value =  master.PosittionAllocation;
+                ws.Cells[10, 3].Value = master.DepartmentAllocation;
 
-                ws.Cells[13, 3].Value = master.EmployeeName;
-                ws.Cells[14, 3].Value = master.Possition;
-                ws.Cells[15, 3].Value = master.Department;
+                ws.Cells[13, 3].Value =  string.Join(", ", names);
+                ws.Cells[14, 3].Value =  string.Join(", ", positions);
+                ws.Cells[15, 3].Value = string.Join(", ", departments);
                 ws.Cells[17, 3].Value = master.Note;
 
 
@@ -216,11 +216,17 @@ namespace RERPAPI.Controllers.Old.Asset
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
                 if (allocations == null) { return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." }); }
                 if (allocations.tSAssetAllocation != null)
                 {
                     if (allocations.tSAssetAllocation.ID <= 0)
+                    {
+                        allocations.tSAssetAllocation.AllocationID = currentUser.EmployeeID;
                         await _tSAssetAllocationRepo.CreateAsync(allocations.tSAssetAllocation);
+                    }
                     else
                         await _tSAssetAllocationRepo.UpdateAsync(allocations.tSAssetAllocation);
                 }
@@ -272,11 +278,17 @@ namespace RERPAPI.Controllers.Old.Asset
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
                 if (allocations == null) { return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." }); }
                 if (allocations.tSAssetAllocation != null)
                 {
                     if (allocations.tSAssetAllocation.ID <= 0)
+                    {
+                        allocations.tSAssetAllocation.AllocationID = currentUser.ID;
                         await _tSAssetAllocationRepo.CreateAsync(allocations.tSAssetAllocation);
+                    }
                     else
                         await _tSAssetAllocationRepo.UpdateAsync(allocations.tSAssetAllocation);
                 }
@@ -328,11 +340,17 @@ namespace RERPAPI.Controllers.Old.Asset
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
                 if (allocations == null) { return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." }); }
                 if (allocations.tSAssetAllocation != null)
                 {
                     if (allocations.tSAssetAllocation.ID <= 0)
+                    {
+                        allocations.tSAssetAllocation.AllocationID = currentUser.ID;
                         await _tSAssetAllocationRepo.CreateAsync(allocations.tSAssetAllocation);
+                    }
                     else
                         await _tSAssetAllocationRepo.UpdateAsync(allocations.tSAssetAllocation);
                 }

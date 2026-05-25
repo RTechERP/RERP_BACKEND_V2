@@ -77,5 +77,7 @@ public partial class Customer
 
     public string? Province { get; set; }
 
+    public int? CustomerIndustriesID { get; set; }
+
     public virtual ICollection<RegisterOT> RegisterOTs { get; set; } = new List<RegisterOT>();
 }

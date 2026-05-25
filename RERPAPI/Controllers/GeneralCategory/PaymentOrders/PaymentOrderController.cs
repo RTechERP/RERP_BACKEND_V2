@@ -55,7 +55,10 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         private readonly POKHDetailRepo _pOKHDetailRepo;
         private readonly EmployeeTeamSaleRepo _employeeTeamSaleRepo;
         private readonly EmployeeRepo _employeeRepo;
-
+        private readonly EmployeeTeamSaleLinkRepo _employeeTeamSaleLinkRepo;
+        private readonly CurrencyConfigRepo _currencyConfigRepo;
+        private readonly PaymentOrderLogApprovedRepo _paymentOrderLogApprovedRepo;
+        private readonly BankListRepo _bankListRepo;
 
         public PaymentOrderController(IConfiguration configuration, CurrentUser currentUser, RoleConfig roleConfig,
             PaymentOrderRepo paymentRepo,
@@ -83,7 +86,12 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             POKHRepo poKHRepo,
             POKHDetailRepo pOKHDetailRepo,
             EmployeeTeamSaleRepo employeeTeamSaleRepo,
-            EmployeeRepo employeeRepo
+            EmployeeRepo employeeRepo,
+            EmployeeTeamSaleLinkRepo employeeTeamSaleLinkRepo,
+            CurrencyConfigRepo currencyConfigRepo,
+            PaymentOrderLogApprovedRepo paymentOrderLogApprovedRepo,
+            BankListRepo bankListRepo
+
             )
         {
             _configuration = configuration;
@@ -116,6 +124,11 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             _pOKHDetailRepo = pOKHDetailRepo;
             _employeeTeamSaleRepo = employeeTeamSaleRepo;
             _employeeRepo = employeeRepo;
+            _employeeTeamSaleLinkRepo = employeeTeamSaleLinkRepo;
+            _employeeRepo = employeeRepo;
+            _currencyConfigRepo = currencyConfigRepo;
+            _paymentOrderLogApprovedRepo = paymentOrderLogApprovedRepo;
+            _bankListRepo = bankListRepo;
         }
 
 
@@ -137,26 +150,73 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
 
                 var param = new
                 {
-                    PageNumber = p.PageNumber,
-                    PageSize = p.PageSize,
-                    TypeOrder = p.TypeOrder,
-                    PaymentOrderTypeID = p.PaymentOrderTypeID,
+                    //PageNumber = p.PageNumber,
+                    //PageSize = p.PageSize,
+                    TypeOrder = p.TypeOrder ?? 0,
+                    PaymentOrderTypeID = p.PaymentOrderTypeID ?? 0,
+                    DateStart = p.DateStart,
+                    DateEnd = p.DateEnd,
+                    DepartmentID = p.DepartmentID ?? 0,
+                    EmployeeID = p.EmployeeID ?? 0,
+                    Keyword = p.Keyword,
+                    IsIgnoreHR = p.IsIgnoreHR ?? -1,
+                    IsApproved = p.IsApproved ?? -1,
+                    IsSpecialOrder = p.IsSpecialOrder,
+                    ApprovedTBPID = p.ApprovedTBPID,
+                    Step = p.Step ?? 0,
+                    //IsShowTable = 0,
+                    Statuslog = p.Statuslog ?? 0,
+                    IsDelete = p.IsDelete,
+                };
+
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetPaymentOrder_New2", param);
+
+                //return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0)));
+                return Ok(ApiResponseFactory.Success(data));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpPost("special")]
+        public async Task<IActionResult> GetAllSpecial([FromBody] PaymentOrderParam p)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                _currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                p.DateStart = p.DateStart.Value.ToLocalTime().Date;
+                p.DateEnd = p.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
+
+                //var data = SQLHelper<object>.ProcedureToList("spGetPaymentOrder_New",
+                //            new string[] { "@PageNumber", "@PageSize", "@TypeOrder", "@PaymentOrderTypeID", "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@Keyword", "@IsIgnoreHR", "@IsApproved", "@IsSpecialOrder", "@ApprovedTBPID", "@Step", "@IsShowTable", "@Statuslog", "@IsDelete" },
+                //            new object[] { p.PageNumber, p.PageSize, p.TypeOrder, p.PaymentOrderTypeID, p.DateStart, p.DateEnd, p.DepartmentID, p.EmployeeID, p.Keyword, p.IsIgnoreHR, p.IsApproved, p.IsSpecialOrder, p.ApprovedTBPID, p.Step, p.IsShowTable, p.Statuslog, p.IsDelete });
+
+
+                var param = new
+                {
+                    //PageNumber = p.PageNumber,
+                    //PageSize = p.PageSize,
+                    TypeOrder = p.TypeOrder ?? 0,
+                    PaymentOrderTypeID = p.PaymentOrderTypeID ?? 0,
                     DateStart = p.DateStart,
                     DateEnd = p.DateEnd,
                     DepartmentID = p.DepartmentID,
                     EmployeeID = p.EmployeeID,
                     Keyword = p.Keyword,
-                    IsIgnoreHR = p.IsIgnoreHR,
+                    IsIgnoreHR = p.IsIgnoreHR ?? -1,
                     IsApproved = p.IsApproved ?? -1,
                     IsSpecialOrder = p.IsSpecialOrder,
                     ApprovedTBPID = p.ApprovedTBPID,
                     Step = p.Step ?? 0,
-                    IsShowTable = p.IsShowTable,
-                    Statuslog = p.Statuslog,
+                    //IsShowTable = 0,
+                    Statuslog = p.Statuslog ?? 0,
                     IsDelete = p.IsDelete,
                 };
 
-                var data = await SqlDapper<object>.ProcedureToListAsync("spGetPaymentOrder_New", param);
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetPaymentOrder_New_Special", param);
 
                 //return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0)));
                 return Ok(ApiResponseFactory.Success(data));
@@ -173,7 +233,8 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             try
             {
                 //Get chi tiết đề nghị
-                var dataDetail = SQLHelper<object>.ProcedureToList("spGetPaymentOrderByID", new string[] { "@ID" }, new object[] { id });
+                //var dataDetail = SQLHelper<object>.ProcedureToList("spGetPaymentOrderByID", new string[] { "@ID" }, new object[] { id });
+                var dataDetail = SQLHelper<object>.ProcedureToList("spGetPaymentOrderByID_Test", new string[] { "@ID" }, new object[] { id });
 
                 var paymentOrder = SQLHelper<object>.GetListData(dataDetail, 0);
                 var details = SQLHelper<object>.GetListData(dataDetail, 1);
@@ -203,12 +264,12 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] PaymentOrderDTO payment)
         {
-            
+
             try
             {
                 //_currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
-
-                string message = "Cập nhật thành công!";
+                string saveText = payment.ID > 0 ? "Cập nhật" : "Tạo mới";
+                string message = $"{saveText} thành công!";
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 _currentUser = ObjectMapper.GetCurrentUser(claims);
 
@@ -221,15 +282,14 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     }
 
                     //Get log
-                    var logDb = _logRepo.GetAll(x => x.IsDeleted != true
-                                                    && x.PaymentOrderID == payment.ID
-                                                    && x.Step > 1
-                                                    && x.IsApproved != 0)
-                                        .OrderByDescending(x => x.Step)
-                                        .FirstOrDefault() ?? new PaymentOrderLog();
-                    if (logDb.ID > 0)
+
+                    var logApproved = _paymentOrderLogApprovedRepo.GetAll(x => x.PaymentOrderID == payment.ID
+                                                      //&& x.PaymentOrderLogID == logDb.ID
+                                                      && x.IsApproved != 0)?.OrderByDescending(x => x.ID)?.FirstOrDefault();
+                    if (logApproved?.ID > 0)
                     {
-                        string isApprovedText = logDb.IsApproved == 1 ? "duyệt" : (logDb.IsApproved == 2 ? "hủy duyệt" : "yêu cầu bổ sung");
+                        var logDb = _logRepo.GetByID(logApproved?.PaymentOrderLogID ?? 0) ?? new PaymentOrderLog();
+                        string isApprovedText = logApproved.IsApproved == 1 ? "duyệt" : (logApproved.IsApproved == 2 ? "hủy duyệt" : "yêu cầu bổ sung");
                         return BadRequest(ApiResponseFactory.Fail(null, $"Đề nghị [{payment.Code}] đã được {logDb.StepName} {isApprovedText}. Bạn không thể cập nhật!"));
                     }
                 }
@@ -242,10 +302,18 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                         return BadRequest(validate);
                     }
                 }
-
+                if (payment.BankListID > 0 && payment.BankListID != 187) // Nếu không phải loại khác thì lấy tên ngân hàng, nếu là loại khác thì đã có bank điền
+                {
+                    BankList bankList = _bankListRepo.GetByID(payment.BankListID ?? 0);
+                    if (bankList != null && bankList.ID > 0)
+                    {
+                        payment.Bank = bankList.BankName;
+                    }
+                }
                 payment.EmployeeID = _currentUser.EmployeeID;
                 payment.IsUrgent = payment.DeadlinePayment.HasValue;
                 if (payment.DeadlinePayment.HasValue) payment.DeadlinePayment = payment.DeadlinePayment.Value.ToLocalTime();
+                else payment.DeadlinePayment = null;
                 if (payment.DateOrder.HasValue) payment.DateOrder = payment.DateOrder.Value.ToLocalTime();
                 if (payment.DatePayment.HasValue) payment.DatePayment = payment.DatePayment.Value.ToLocalTime();
                 if (payment.IsSpecialOrder == true) payment.TypeOrder = 0;
@@ -264,7 +332,25 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
 
                     await _paymentRepo.CreateAsync(payment);
                 }
-                else await _paymentRepo.UpdateAsync(payment);
+                else
+                {
+                    if (string.IsNullOrEmpty(payment.Code?.Trim()))
+                    {
+                        payment.Code = _paymentRepo.GetCode(payment);
+
+                        var existCodes = _paymentRepo.GetAll(x => x.Code == payment.Code && x.IsDelete != true);
+                        if (existCodes.Count() > 0)
+                        {
+                            string newCode = _paymentRepo.GetCode(payment);
+                            message += $"\nSố ĐNTT [{payment.Code}] đã tồn tại. PM tự động đổi thành [{newCode}]";
+                            payment.Code = newCode;
+                            //return BadRequest(ApiResponseFactory.Fail(null, $"Số đề nghị [{payment.Code}] đã tồn tại!"));
+                        }
+                    }
+                    await _paymentRepo.UpdateAsync(payment);
+                }
+
+
 
                 //Update link pokh
                 await _paymentOrderPORepo.Create(payment);
@@ -324,7 +410,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
 
                 foreach (var file in files)
                 {
-                    var result = await FileHelper.UploadFile(file, pathUpload);
+                    var result = await FileHelper.UploadFileHoldName(file, pathUpload);
 
                     if (result.status == 1)
                     {
@@ -375,7 +461,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
 
                 foreach (var file in files)
                 {
-                    var result = await FileHelper.UploadFile(file, pathUpload);
+                    var result = await FileHelper.UploadFileHoldName(file, pathUpload);
 
                     if (result.status == 1)
                     {
@@ -398,7 +484,92 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpGet("approvers")]
+        public async Task<IActionResult> GetApprovers()
+        {
+            try
+            {
+                // 1. Lấy danh sách TBP từ Procedure
+                object paramApproved = new { Type = 3, ProjectID = 0, keyword = "" };
+                var approvedTBPs = await SqlDapper<object>.ProcedureToListTAsync("spGetEmployeeApprove", paramApproved);
 
+                // 2. Lấy danh sách nhân viên lọc theo Department
+                using (var connection = new SqlConnection(_configuration.GetValue<string>("ConnectionString") ?? ""))
+                {
+                    var param = new { Status = 0 };
+                    var employeeData = await connection.QueryMultipleAsync("spGetEmployee", param, commandType: System.Data.CommandType.StoredProcedure);
+                    var employees = await employeeData.ReadAsync<EmployeeCommonDTO>();
+
+                    var approverSales = employees.Where(x => x.DepartmentID == 3 || _roleConfig.EmployeeIDSaleApproveDNTTDBs.Contains(x.ID)).ToList();
+                    var approverBGDs = employees.Where(x => x.DepartmentID == 1).ToList();
+
+                    return Ok(ApiResponseFactory.Success(new
+                    {
+                        approvedTBPs,
+                        approverSales,
+                        approverBGDs
+                    }));
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("procurement")]
+        public IActionResult GetProcurementData()
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                _currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                DateTime updateDateSupplier = new DateTime(2024, 04, 04);
+                var supplierSales = _supplierSaleRepo.GetAll(x => x.UpdatedDate.Value.Date >= updateDateSupplier && x.IsDeleted != true)
+                                    .OrderByDescending(x => x.ID).ToList();
+
+                var poNCCs = _poNccRepo.GetAll(x => x.IsDeleted != true);
+                var registerContracts = _registerContractRepo.GetAll(x => x.EmployeeID == _currentUser.EmployeeID && x.IsDeleted != true);
+
+                return Ok(ApiResponseFactory.Success(new { supplierSales, poNCCs, registerContracts }));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("partners-projects")]
+        public IActionResult GetPartnersAndProjects()
+        {
+            try
+            {
+                var projects = _projectRepo.GetAll(x => x.IsDeleted != true);
+                var customers = _customerRepo.GetAll(x => x.IsDeleted != true).OrderByDescending(x => x.ID).ToList();
+                var pokhs = _poKHRepo.GetAll(x => x.IsDeleted != true).OrderByDescending(x => x.ID).ToList();
+                var pokhDetails = _pOKHDetailRepo.GetAll(x => x.IsDeleted != true).OrderByDescending(x => x.ID).ToList();
+
+                return Ok(ApiResponseFactory.Success(new { projects, customers, pokhs, pokhDetails }));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("metadata")]
+        public IActionResult GetMetadata()
+        {
+            try
+            {
+                var paymentOrderTypes = _orderTypeRepo.GetAll(x => x.IsDelete != true && x.IsSpecialOrder != true);
+                var steps = _approveFollowRepo.GetAll(x => x.IsDeleted != true);
+
+                return Ok(ApiResponseFactory.Success(new { paymentOrderTypes, steps }));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [HttpGet("get-data-combo")]
         public async Task<IActionResult> GetDataCombo()
         {
@@ -410,7 +581,14 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 _currentUser = ObjectMapper.GetCurrentUser(claims);
 
                 var paymentOrderTypes = _orderTypeRepo.GetAll(x => x.IsDelete != true && x.IsSpecialOrder != true);
-                var approvedTBPs = _approvedRepo.GetAll(x => x.Type == 3 && x.IsDeleted != true);
+                //var approvedTBPs = _approvedRepo.GetAll(x => x.Type == 3 && x.IsDeleted != true);
+                object paramApproved = new
+                {
+                    Type = 3,
+                    ProjectID = 0,
+                    keyword = ""
+                };
+                var approvedTBPs = await SqlDapper<object>.ProcedureToListTAsync("spGetEmployeeApprove", paramApproved);
 
                 DateTime updateDateSupplier = new DateTime(2024, 04, 04);
                 var supplierSales = _supplierSaleRepo.GetAll(x => x.UpdatedDate.Value.Date >= updateDateSupplier && x.IsDeleted != true)
@@ -443,7 +621,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 var employeeData = await connection.QueryMultipleAsync("spGetEmployee", param, commandType: System.Data.CommandType.StoredProcedure);
 
                 var employees = (await employeeData.ReadAsync<EmployeeCommonDTO>());
-                var approverSales = employees.Where(x => x.DepartmentID == 3 || _roleConfig.EmployeeIDSaleApproveDNTTDBs.Contains(x.ID)).ToList();
+                var approverSales = employees.Where(x => (x.DepartmentID == 28 || x.DepartmentID == 29 || x.DepartmentID == 30) || _roleConfig.EmployeeIDSaleApproveDNTTDBs.Contains(x.ID)).ToList();
                 var approverBGDs = employees.Where(x => x.DepartmentID == 1).ToList();
 
                 var steps = _approveFollowRepo.GetAll(x => x.IsDeleted != true);
@@ -475,6 +653,21 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             }
         }
 
+        [HttpGet("get-step")]
+        public async Task<IActionResult> GetStep()
+        {
+            try
+            {
+                //_currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
+                var steps = _approveFollowRepo.GetAll(x => x.IsDeleted != true);
+                return Ok(ApiResponseFactory.Success(steps));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpPost("appoved-tbp")]
         [RequiresPermission("N57,N83")]
         public async Task<IActionResult> ApprovedTBP([FromBody] List<PaymentOrderDTO> payment)
@@ -482,13 +675,13 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             try
             {
                 var reponse = await _logRepo.Appoved(payment);
-                if (reponse == 1)
+                if (reponse.Item1 == 1)
                 {
                     return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
                 }
                 else
                 {
-                    return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Cập nhật thất bại! {reponse.Item2}"));
                 }
             }
             catch (Exception ex)
@@ -501,60 +694,92 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         [RequiresPermission("N59,N56")]
         public async Task<IActionResult> ApprovedHR([FromBody] List<PaymentOrderDTO> payment)
         {
-            var reponse = await _logRepo.Appoved(payment);
-            if (reponse == 1)
+            try
             {
-                return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+                var reponse = await _logRepo.Appoved(payment);
+                if (reponse.Item1 == 1)
+                {
+                    return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+                }
+                else
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Cập nhật thất bại! {reponse.Item2}"));
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+
         }
 
         [HttpPost("appoved-kttt")]
         [RequiresPermission("N55")]
         public async Task<IActionResult> ApprovedKTTT([FromBody] List<PaymentOrderDTO> payment)
         {
-            var reponse = await _logRepo.Appoved(payment);
-            if (reponse == 1)
+            try
             {
-                return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+                var reponse = await _logRepo.Appoved(payment);
+                if (reponse.Item1 == 1)
+                {
+                    return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+                }
+                else
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Cập nhật thất bại! {reponse.Item2}"));
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+
         }
 
         [HttpPost("appoved-ktt")]
         [RequiresPermission("N61")]
         public async Task<IActionResult> ApprovedKTT([FromBody] List<PaymentOrderDTO> payment)
         {
-            var reponse = await _logRepo.Appoved(payment);
-            if (reponse == 1)
+            try
             {
-                return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+                var reponse = await _logRepo.Appoved(payment);
+                if (reponse.Item1 == 1)
+                {
+                    return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+                }
+                else
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Cập nhật thất bại! {reponse.Item2}"));
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+
         }
 
         [HttpPost("appoved-bgd")]
         [RequiresPermission("N58")]
         public async Task<IActionResult> ApprovedBGD([FromBody] List<PaymentOrderDTO> payment)
         {
-            var reponse = await _logRepo.Appoved(payment);
-            if (reponse == 1)
+            try
             {
-                return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+                var reponse = await _logRepo.Appoved(payment);
+                if (reponse.Item1 == 1)
+                {
+                    return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
+                }
+                else
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Cập nhật thất bại! {reponse.Item2}"));
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+
         }
 
 
@@ -588,7 +813,23 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     var logs = _logRepo.GetAll(x => x.PaymentOrderID == payment.ID && x.IsDeleted != true);
 
                     PaymentOrderLog log5 = logs.FirstOrDefault(x => x.Step == 5) ?? new PaymentOrderLog();
-                    if (log5.IsApproved != 1)
+                    if (log5.ID <= 0)
+                    {
+                        message += $"Đề nghị {paymentOrder.Code} chưa được kế toán thanh toán!\r\n";
+                        continue;
+                    }
+                    PaymentOrderLogApproved paymentOrderLogApproved = _paymentOrderLogApprovedRepo.GetAll(x => x.PaymentOrderID == payment.ID
+                                                      && x.PaymentOrderLogID == log5.ID
+                                                      && x.IsApproved != 0)?.OrderByDescending(x => x.DateApproved)?.FirstOrDefault() ?? new PaymentOrderLogApproved();
+                    if (paymentOrderLogApproved.ID > 0)
+                    {
+                        if (paymentOrderLogApproved.IsApproved != 1)
+                        {
+                            message += $"Đề nghị {paymentOrder.Code} chưa được kế toán thanh toán!\r\n";
+                            continue;
+                        }
+                    }
+                    else
                     {
                         message += $"Đề nghị {paymentOrder.Code} chưa được kế toán thanh toán!\r\n";
                         continue;
@@ -596,15 +837,21 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
 
                     PaymentOrderLog log = logs.FirstOrDefault(x => x.Step == 6) ?? new PaymentOrderLog();
                     if (log.ID <= 0) continue;
-                    if (log.IsApproved == payment.PaymentOrderLog.IsApproved) continue;
+                    PaymentOrderLogApproved paymentOrderLog = _paymentOrderLogApprovedRepo.GetAll(x => x.PaymentOrderID == payment.ID
+                                                      && x.PaymentOrderLogID == log.ID)?.OrderByDescending(x => x.DateApproved)?.FirstOrDefault() ?? new PaymentOrderLogApproved();
+                    if (paymentOrderLog.ID > 0)
+                    {
+                        if (paymentOrderLog.IsApproved == payment.PaymentOrderLog.IsApproved) continue;
+                    }
+                    paymentOrderLog.PaymentOrderLogID = log.ID;
+                    paymentOrderLog.PaymentOrderID = payment.ID;
+                    paymentOrderLog.DateApproved = DateTime.Now;
+                    paymentOrderLog.EmployeeApproveActualID = _currentUser.EmployeeID;
+                    paymentOrderLog.IsApproved = payment.PaymentOrderLog.IsApproved;
+                    paymentOrderLog.ReasonCancel += $"{DateTime.Now.ToString("dd/MM/yyyy")}: " + payment.ReasonCancel + "\n";
+                    paymentOrderLog.ContentLog += $"{DateTime.Now.ToString("dd/MM/yyyy")}: {_currentUser.FullName} {payment.Action.ButtonActionText}\n";
 
-                    log.DateApproved = DateTime.Now;
-                    log.EmployeeApproveActualID = _currentUser.EmployeeID;
-                    log.IsApproved = payment.PaymentOrderLog.IsApproved;
-                    log.ReasonCancel += $"{DateTime.Now.ToString("dd/MM/yyyy")}: " + payment.ReasonCancel + "\n";
-                    log.ContentLog += $"{DateTime.Now.ToString("dd/MM/yyyy")}: {_currentUser.FullName} {payment.Action.ButtonActionText}\n";
-
-                    records += await _logRepo.UpdateAsync(log);
+                    records += await _paymentOrderLogApprovedRepo.CreateAsync(paymentOrderLog);
                 }
                 if (records > 0) return Ok(ApiResponseFactory.Success(payments, "Cập nhật thành công!"));
                 else return BadRequest(ApiResponseFactory.Fail(null, message, payments));
@@ -729,6 +976,162 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 }
 
                 return Ok(ApiResponseFactory.Success(payments, message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("get-payment-order-team")]
+        [RequiresPermission("N88")]
+        public async Task<IActionResult> GetPaymentOrderTeam([FromBody] PaymentOrderTeamParam p)
+        {
+            try
+            {
+                var param = new
+                {
+                    PageNumber = p.PageNumber,
+                    PageSize = p.PageSize,
+                    TypeOrder = p.TypeOrder ?? 0,
+                    PaymentOrderTypeID = p.PaymentOrderTypeID ?? 0,
+                    DateStart = p.DateStart,
+                    DateEnd = p.DateEnd,
+                    DepartmentID = p.DepartmentID,
+                    ListEmployeeID = p.ListEmployeeID,
+                    Keyword = p.Keyword,
+                    IsIgnoreHR = p.IsIgnoreHR,
+                    IsApproved = p.IsApproved ?? -1,
+                    IsSpecialOrder = p.IsSpecialOrder,
+                    ApprovedTBPID = p.ApprovedTBPID,
+                    Step = p.Step ?? 0,
+                    IsShowTable = 0,
+                    Statuslog = p.Statuslog,
+                    IsDelete = p.IsDelete,
+                };
+                List<object> listEmployee = await SqlDapper<object>.ProcedureToListTAsync("spGetPaymentOrder_New_Team", param);
+                return Ok(ApiResponseFactory.Success(listEmployee));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+
+        }
+        [HttpGet("get-team-sale/{employeeId}")]
+        [RequiresPermission("N88")]
+        public async Task<IActionResult> GetTeamSale(int employeeId)
+        {
+            try
+            {
+
+                EmployeeTeamSaleLink empTeamLink = _employeeTeamSaleLinkRepo.GetAll(x => x.EmployeeID == employeeId)?.FirstOrDefault() ?? new();
+
+                if (empTeamLink.ID > 0)
+                {
+                    EmployeeTeamSale sale = _employeeTeamSaleRepo.GetByID(empTeamLink.EmployeeTeamSaleID);
+
+                    // tìm tổ tông
+                    while (sale != null && sale.ParentID > 0)
+                    {
+                        sale = _employeeTeamSaleRepo.GetByID(sale.ParentID);
+                    }
+
+                    var param = new
+                    {
+                        EmployeeTeamSaleID = sale.ID
+                    };
+
+                    List<object> listEmployee =
+                        await SqlDapper<object>.ProcedureToListTAsync("spGetEmployeebyTeamSale", param);
+
+                    return Ok(ApiResponseFactory.Success(listEmployee));
+                }
+                else
+                {
+                    return Ok(ApiResponseFactory.Success(new List<object>()));
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-currency-config")]
+        public async Task<IActionResult> GetCurrencyConfig()
+        {
+            try
+            {
+                var data = _currencyConfigRepo.GetAll(p => !p.IsDeleted.Value).OrderBy(x => x.SortOrder);
+                return Ok(ApiResponseFactory.Success(data));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-bank-list")]
+        public async Task<IActionResult> GetBankList()
+        {
+            try
+            {
+                var data = _bankListRepo.GetAll(p => !p.IsDeleted.Value).OrderBy(x => x.STT);
+                return Ok(ApiResponseFactory.Success(data));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
+        [HttpPost("download-zip")]
+        public async Task<IActionResult> DownloadZip([FromBody] DownloadPaymentOrderDTO file)
+        {
+            using var memoryStream = new MemoryStream();
+
+            using (var archive = new System.IO.Compression.ZipArchive(
+                memoryStream,
+                System.IO.Compression.ZipArchiveMode.Create,
+                true))
+            {
+                foreach (var path in file.FilePath)
+                {
+                    if (!System.IO.File.Exists(path)) continue;
+
+                    var fileName = Path.GetFileName(path);
+                    var entry = archive.CreateEntry(fileName);
+
+                    using var entryStream = entry.Open();
+                    using var fileStream = System.IO.File.OpenRead(path);
+                    await fileStream.CopyToAsync(entryStream);
+                }
+            }
+
+            memoryStream.Position = 0;
+
+            return File(
+                memoryStream.ToArray(),
+                "application/zip",
+                $"{file.PaymentOrderCode}_{DateTime.Now:yyyyMMddHHmmss}.zip"
+            );
+        }
+        [HttpPost("update-transfer-type")]
+        [RequiresPermission("N55,N61")]
+        public async Task<IActionResult> UpdateTranferType([FromBody] List<PaymentOrderDTO> payments)
+        {
+            try
+            {
+               
+                foreach (var payment in payments)
+                {
+                   PaymentOrder paymentOrder = _paymentRepo.GetByID(payment.ID);
+                    if (paymentOrder.ID <= 0) continue;
+                    paymentOrder.TransferType = payment.TransferType;
+                    await _paymentRepo.UpdateAsync(paymentOrder);
+                }
+                return Ok(ApiResponseFactory.Success(payments));
             }
             catch (Exception ex)
             {

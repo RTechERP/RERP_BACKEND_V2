@@ -16,4 +16,6 @@ public partial class ProductGroup
     public int? EmployeeID { get; set; }
 
     public int? ParentID { get; set; }
+
+    public int? STT { get; set; }
 }

@@ -31,6 +31,11 @@ namespace RERPAPI.Repo.GenericEntity.HRM
             _hrRecruitmentCandidateLogRepo = hRRecruitmentCandidateLogRepo;
             _smtp = smtp.Value;
         }
+        public string GenerateUserName()
+        {
+            int stt = GetAll().Count+1;
+            return $"UV000{stt}";
+        }
 
         public bool Validate(HRRecruitmentCandidateDTO data, out string message)
         {

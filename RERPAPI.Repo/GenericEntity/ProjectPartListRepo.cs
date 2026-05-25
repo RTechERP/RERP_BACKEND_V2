@@ -1,11 +1,9 @@
 ﻿using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System.Text.RegularExpressions;
-
-using RERPAPI.Model.Param;
 using System.Globalization;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace RERPAPI.Repo.GenericEntity
 {
@@ -16,14 +14,16 @@ namespace RERPAPI.Repo.GenericEntity
         private readonly ProductSaleRepo _productSaleRepo;
         private readonly ProjectPartlistVersionRepo _versionRepo;
         private readonly UnitCountRepo _unitCountRepo;
+        private readonly ProjectTypeRepo _projectTypeRepo;
 
-        public ProjectPartListRepo(CurrentUser currentUser, ProjectPartlistPriceRequestRepo projectPartlistPriceRequestRepo, ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo, ProductSaleRepo productSaleRepo, ProjectPartlistVersionRepo projectPartlistVersionRepo, UnitCountRepo unitCountRepo) : base(currentUser)
+        public ProjectPartListRepo(CurrentUser currentUser, ProjectPartlistPriceRequestRepo projectPartlistPriceRequestRepo, ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo, ProductSaleRepo productSaleRepo, ProjectPartlistVersionRepo projectPartlistVersionRepo, UnitCountRepo unitCountRepo, ProjectTypeRepo projectTypeRepo) : base(currentUser)
         {
             _priceRepo = projectPartlistPriceRequestRepo;
             _purchaseRepo = projectPartlistPurchaseRequestRepo;
             _productSaleRepo = productSaleRepo;
             _versionRepo = projectPartlistVersionRepo;
             _unitCountRepo = unitCountRepo;
+            _projectTypeRepo = projectTypeRepo;
         }
 
         public int getSTT(int projectVersionID)
@@ -338,7 +338,7 @@ namespace RERPAPI.Repo.GenericEntity
 
                 //check đã có yc mua hàng chưa
                 var purchaseRequestDeletes = _purchaseRepo.GetAll(x => x.ProjectPartListID == item.ID && x.IsDeleted == false);
-                var purchaseRequestCancels = _purchaseRepo.GetAll(x => x.ProjectPartListID == item.ID && x.StatusRequest != 2);
+                var purchaseRequestCancels = _purchaseRepo.GetAll(x => x.ProjectPartListID == item.ID && x.StatusRequest != 2 && x.IsDeleted == false);
                 if (purchaseRequestDeletes.Count > 0 && purchaseRequestCancels.Count > 0)
                 {
                     message = $"Thiết bị mã [{item.ProductCode}] đã yêu cầu mua. Bạn không thể sửa.\nVui lòng liên hệ nhân viên mua hàng hoặc PM để hủy YÊU CẦU MUA HÀNG trước";
@@ -462,9 +462,10 @@ namespace RERPAPI.Repo.GenericEntity
             ProjectPartList partlistexist = GetByID(partlist.ID);
 
             ProjectPartListVersion version = _versionRepo.GetByID(partlistexist.ProjectPartListVersionID ?? 0);
+            ProjectType projectType = _projectTypeRepo.GetByID(version.ProjectTypeID ?? 0);
             if (version.IsActive == false || version.IsActive == null)
             {
-                message = $"Vui lòng chọn sử dụng phiên bản [{version.Code}] trước!";
+                message = $"Vui lòng tích sử dụng phiên bản PO thuộc danh mục [{projectType.ProjectTypeName}] mã [{version.Code}] trước!";
                 return false;
             }
             if (partlist.IsDeleted == true)
@@ -477,7 +478,7 @@ namespace RERPAPI.Repo.GenericEntity
                 message = $"Không thể {isAprrovedText} vì vật tư thứ tự [{partlist.STT}] đã được Yêu cầu mua!";
                 return false;
             }
-            
+
             //validate product sale
             //List<ProductSale> prdSale = _productSaleRepo.GetAll(x => x.ProductCode == partlist.ProductCode && x.IsDeleted == false);
             //if (prdSale.Count <= 0)
@@ -538,7 +539,7 @@ namespace RERPAPI.Repo.GenericEntity
                     return false;
                 }
             }
-           if(isFix == true)
+            if (isFix == true)
             {
                 // 2. Tìm bản ghi đã FIX
                 var fixedProduct = prdSale.FirstOrDefault(x => x.IsFix == true);
@@ -588,7 +589,7 @@ namespace RERPAPI.Repo.GenericEntity
                 }
             }
 
-           
+
 
             return true;
         }
@@ -1205,7 +1206,7 @@ namespace RERPAPI.Repo.GenericEntity
                     $"Mã thiết bị [{item.ProductCode}] đã có TÍCH XANH.\n" +
                     $"Các trường không khớp:\n {string.Join("", errors)}\n" +
                     $"Vui lòng kiểm tra lại!";
-               
+
                 return false;
             }
 
@@ -1250,7 +1251,7 @@ namespace RERPAPI.Repo.GenericEntity
             int pokhDetailID = 0;
 
             string tt = partList.TT ?? "";
-            string productnewCode = partList.ProductNewCode ?? ""; 
+            string productnewCode = partList.ProductNewCode ?? "";
             string projectCode = partList.ProjectCode ?? " ";
 
 
@@ -1280,7 +1281,7 @@ namespace RERPAPI.Repo.GenericEntity
 
             return true;
         }
-        public int GetParentIDAdditionalPO(string tt, int versionId,bool isProblem)
+        public int GetParentIDAdditionalPO(string tt, int versionId, bool isProblem)
         {
             int parentId = 0;
             if (!tt.Contains(".")) return parentId;
@@ -1292,14 +1293,14 @@ namespace RERPAPI.Repo.GenericEntity
             var exp2 = new Expression("ProjectPartListVersionID", versionId);
             var exp3 = new Expression("IsDeleted", 1, "<>");
             var exp4 = new Expression("IsProblem", isProblemValue);
-            ProjectPartList parent = GetAll(x =>x.TT == parentTt && x.ProjectPartListVersionID == versionId && x.IsDeleted != true && x.IsProblem == isProblem).FirstOrDefault() ?? new ProjectPartList();
+            ProjectPartList parent = GetAll(x => x.TT == parentTt && x.ProjectPartListVersionID == versionId && x.IsDeleted != true && x.IsProblem == isProblem).FirstOrDefault() ?? new ProjectPartList();
             if (parent != null && parent.ID > 0)
             {
                 parentId = parent.ID;
             }
             return parentId;
         }
-      
 
-}
+
+    }
 }

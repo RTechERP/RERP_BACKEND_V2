@@ -267,67 +267,201 @@ namespace RERPAPI.Controllers.Old.KPISALE
             }
         }
 
+        //[HttpPost("save-data")]
+        //public async Task<IActionResult> Save(DailyReportSaleDTO dto)
+        //{
+        //    try
+        //    {
+        //        var today = DateTime.Now.Date;
+        //        var minAllowedDate = today.AddDays(-2);
+        //        var reportDate = dto.dateStart.Date;
+
+        //        // Ngày bắt đầu áp dụng validate
+        //        var validateStartDate = new DateTime(2026, 3, 7);
+
+        //        // Lấy bản ghi cũ nếu đang sửa
+        //        DailyReportSale? existing = dto.ID > 0 ? _dailyReportSaleRepo.GetByID(dto.ID) : null;
+
+        //        // Chỉ validate từ ngày 07/03 trở đi
+        //        if (today >= validateStartDate)
+        //        {
+        //            // === 1. Validate dateStart trong 3 ngày gần nhất ===
+        //            if (dto.ID <= 0)
+        //            {
+        //                // Tạo mới
+        //                if (reportDate < minAllowedDate || reportDate > today)
+        //                {
+        //                    return BadRequest(ApiResponseFactory.Fail(null,
+        //                        $"Chỉ được báo cáo trong 3 ngày gần nhất ({minAllowedDate:dd/MM/yyyy} - {today:dd/MM/yyyy})"));
+        //                }
+        //            }
+        //            else
+        //            {
+        //                // Sửa: chỉ validate nếu user đổi dateStart
+        //                if (existing != null && existing.DateStart?.Date != reportDate)
+        //                {
+        //                    if (reportDate < minAllowedDate || reportDate > today)
+        //                    {
+        //                        return BadRequest(ApiResponseFactory.Fail(null,
+        //                            $"Chỉ được đổi sang ngày trong 3 ngày gần nhất ({minAllowedDate:dd/MM/yyyy} - {today:dd/MM/yyyy})"));
+        //                    }
+        //                }
+        //            }
+        //        }
+
+        //        //  Validate tối đa 10 bản ghi/ngày (không tính bản ghi đã xóa)
+        //        //Chỉ check khi thêm mới vì sửa không cần check
+        //        //if (dto.ID <= 0)
+        //        //{
+        //        //    var countInDay = _dailyReportSaleRepo
+        //        //        .GetAll(x => x.UserID == dto.userId
+        //        //            && x.DateStart.HasValue
+        //        //            && x.DateStart.Value.Date == reportDate
+        //        //            && x.DeleteFlag != 1)
+        //        //        .Count();
+        //        //    if (countInDay >= 10)
+        //        //    {
+        //        //        return BadRequest(ApiResponseFactory.Fail(null,
+        //        //            $"Mỗi ngày chỉ được báo cáo tối đa 10 bản ghi. Ngày {reportDate:dd/MM/yyyy} đã có {countInDay} bản ghi."));
+        //        //    }
+        //        //}
+
+
+        //        DailyReportSale model = dto.ID > 0 ? _dailyReportSaleRepo.GetByID(dto.ID) : new DailyReportSale();
+        //            model.UserID = dto.userId;
+        //            model.DateEnd = dto.dateEnd;
+        //            model.BigAccount = dto.bigAccount;
+        //            model.CustomerID = dto.customerId;
+        //            model.ContacID = dto.contactId;
+        //            model.Content = dto.content;
+        //            model.Result = dto.result;
+        //            model.ProblemBacklog = dto.problemBacklog;
+        //            model.PlanNext = dto.planNext;
+        //            //model.Note = dto.note; // bị ẩn
+        //            model.GroupType = dto.groupTypeId;
+        //            model.Month = dto.dateEnd?.Month;
+        //            model.Year = DateTime.Now.Year;
+        //            model.EndUser = dto.partId;
+        //            model.DateStart = dto.dateStart;
+        //            //model.RequestOfCustomer = dto.requestofcustomer //bị ẩn
+        //            model.ProductOfCustomer = dto.productOfCustomer;
+        //            model.ProjectID = dto.projectId;
+        //            model.FirmBaseID = dto.firmId;
+        //            model.ProjectTypeBaseID = dto.projectTypeId;
+        //            model.SaleOpportunity = dto.saleOpportunity;
+        //            model.WarehouseID = dto.warehouseId;
+
+        //            if (dto.ID > 0)
+        //            {
+        //                await _dailyReportSaleRepo.UpdateAsync(model);
+        //            }
+        //            else
+        //            {
+        //                await _dailyReportSaleRepo.CreateAsync(model);
+        //            }
+
+        //            RERPAPI.Model.Entities.Project project = await _projectRepo.GetByIDAsync(dto.projectId);
+        //            FollowProjectBase followProjectBase = _followProjectBaseRepo.GetAll(x => x.ProjectID == project.ID).OrderByDescending(x => x.ID).FirstOrDefault() ?? new FollowProjectBase();
+        //            followProjectBase.ProjectID = project.ID;
+        //            followProjectBase.CustomerBaseID = dto.customerId;
+        //            followProjectBase.EndUserID = project.EndUser;
+        //            //followProjectBase.ProjectStatusBaseID = project.ProjectStatus;
+        //            followProjectBase.ProjectStartDate = project.CreatedDate;
+        //            followProjectBase.WarehouseID = dto.warehouseId;
+        //            followProjectBase.FirmBaseID = model.FirmBaseID;
+        //            followProjectBase.ProjectTypeBaseID = model.ProjectTypeBaseID;
+        //            followProjectBase.ProjectStatusBaseID = dto.projectStatusBaseId;
+
+        //            if (followProjectBase.ID > 0)
+        //            {
+        //                await _followProjectBaseRepo.UpdateAsync(followProjectBase);
+        //            }
+        //            else
+        //            {
+        //                await _followProjectBaseRepo.CreateAsync(followProjectBase);
+        //            }
+        //            FollowProjectBaseDetail detail = new FollowProjectBaseDetail()
+        //            {
+        //                FollowProjectBaseID = followProjectBase.ID,
+        //                ProjectID = project.ID,
+        //                UserID = dto.userId,
+        //                ImplementationDate = dto.dateStart,
+        //                ExpectedDate = dto.dateEnd,
+        //                WorkDone = dto.content.Trim(),
+        //                WorkWillDo = dto.planNext.Trim(),
+        //                Results = dto.result.Trim(),
+        //                ProblemBacklog = dto.problemBacklog.Trim(),
+        //            };
+        //            await _followProjectBaseDetailRepo.CreateAsync(detail);
+
+        //        //Updateproject 
+        //        if (project.ID > 0)
+        //            {
+        //                project.ProjectStatus = dto.projectStatusBaseId;
+        //                await _projectRepo.UpdateAsync(project);
+
+        //                if (dto.projectStatusOld != project.ProjectStatus)
+        //                {
+        //                    ProjectStatusLog statuslog = new ProjectStatusLog()
+        //                    {
+        //                        ProjectID = project.ID,
+        //                        ProjectStatusID = project.ProjectStatus,
+        //                        EmployeeID = dto.employeeId ?? 0,
+        //                        DateLog = dto.dateStatusLog.ToLocalTime(),
+        //                    };
+        //                    await _projectStatusLogRepo.CreateAsync(statuslog);
+        //                }
+        //            }
+
+        //            return Ok(ApiResponseFactory.Success(null, ""));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
+
         [HttpPost("save-data")]
-        public async Task<IActionResult> Save(DailyReportSaleDTO dto)
+        public async Task<IActionResult> Save(List<DailyReportSaleDTO> dtos)
         {
             try
             {
                 var today = DateTime.Now.Date;
                 var minAllowedDate = today.AddDays(-2);
-                var reportDate = dto.dateStart.Date;
-
-                // Ngày bắt đầu áp dụng validate
                 var validateStartDate = new DateTime(2026, 3, 7);
 
-                // Lấy bản ghi cũ nếu đang sửa
-                DailyReportSale? existing = dto.ID > 0 ? _dailyReportSaleRepo.GetByID(dto.ID) : null;
-
-                // Chỉ validate từ ngày 07/03 trở đi
-                if (today >= validateStartDate)
+                foreach (var dto in dtos)
                 {
-                    // === 1. Validate dateStart trong 3 ngày gần nhất ===
-                    if (dto.ID <= 0)
+                    var reportDate = dto.dateStart.Date;
+
+                    // Lấy bản ghi cũ nếu đang sửa
+                    DailyReportSale? existing = dto.ID > 0 ? _dailyReportSaleRepo.GetByID(dto.ID) : null;
+
+                    if (today >= validateStartDate)
                     {
-                        // Tạo mới
-                        if (reportDate < minAllowedDate || reportDate > today)
-                        {
-                            return BadRequest(ApiResponseFactory.Fail(null,
-                                $"Chỉ được báo cáo trong 3 ngày gần nhất ({minAllowedDate:dd/MM/yyyy} - {today:dd/MM/yyyy})"));
-                        }
-                    }
-                    else
-                    {
-                        // Sửa: chỉ validate nếu user đổi dateStart
-                        if (existing != null && existing.DateStart?.Date != reportDate)
+                        if (dto.ID <= 0)
                         {
                             if (reportDate < minAllowedDate || reportDate > today)
                             {
                                 return BadRequest(ApiResponseFactory.Fail(null,
-                                    $"Chỉ được đổi sang ngày trong 3 ngày gần nhất ({minAllowedDate:dd/MM/yyyy} - {today:dd/MM/yyyy})"));
+                                    $"Chỉ được báo cáo trong 3 ngày gần nhất ({minAllowedDate:dd/MM/yyyy} - {today:dd/MM/yyyy})"));
+                            }
+                        }
+                        else
+                        {
+                            if (existing != null && existing.DateStart?.Date != reportDate)
+                            {
+                                if (reportDate < minAllowedDate || reportDate > today)
+                                {
+                                    return BadRequest(ApiResponseFactory.Fail(null,
+                                        $"Chỉ được đổi sang ngày trong 3 ngày gần nhất ({minAllowedDate:dd/MM/yyyy} - {today:dd/MM/yyyy})"));
+                                }
                             }
                         }
                     }
-                }
 
-                //  Validate tối đa 10 bản ghi/ngày (không tính bản ghi đã xóa)
-                //Chỉ check khi thêm mới vì sửa không cần check
-                //if (dto.ID <= 0)
-                //{
-                //    var countInDay = _dailyReportSaleRepo
-                //        .GetAll(x => x.UserID == dto.userId
-                //            && x.DateStart.HasValue
-                //            && x.DateStart.Value.Date == reportDate
-                //            && x.DeleteFlag != 1)
-                //        .Count();
-                //    if (countInDay >= 10)
-                //    {
-                //        return BadRequest(ApiResponseFactory.Fail(null,
-                //            $"Mỗi ngày chỉ được báo cáo tối đa 10 bản ghi. Ngày {reportDate:dd/MM/yyyy} đã có {countInDay} bản ghi."));
-                //    }
-                //}
+                    DailyReportSale model = dto.ID > 0 ? _dailyReportSaleRepo.GetByID(dto.ID) : new DailyReportSale();
 
-
-                DailyReportSale model = dto.ID > 0 ? _dailyReportSaleRepo.GetByID(dto.ID) : new DailyReportSale();
                     model.UserID = dto.userId;
                     model.DateEnd = dto.dateEnd;
                     model.BigAccount = dto.bigAccount;
@@ -337,13 +471,11 @@ namespace RERPAPI.Controllers.Old.KPISALE
                     model.Result = dto.result;
                     model.ProblemBacklog = dto.problemBacklog;
                     model.PlanNext = dto.planNext;
-                    //model.Note = dto.note; // bị ẩn
                     model.GroupType = dto.groupTypeId;
                     model.Month = dto.dateEnd?.Month;
                     model.Year = DateTime.Now.Year;
                     model.EndUser = dto.partId;
                     model.DateStart = dto.dateStart;
-                    //model.RequestOfCustomer = dto.requestofcustomer //bị ẩn
                     model.ProductOfCustomer = dto.productOfCustomer;
                     model.ProjectID = dto.projectId;
                     model.FirmBaseID = dto.firmId;
@@ -360,12 +492,16 @@ namespace RERPAPI.Controllers.Old.KPISALE
                         await _dailyReportSaleRepo.CreateAsync(model);
                     }
 
-                    RERPAPI.Model.Entities.Project project = await _projectRepo.GetByIDAsync(dto.projectId);
-                    FollowProjectBase followProjectBase = _followProjectBaseRepo.GetAll(x => x.ProjectID == project.ID).OrderByDescending(x => x.ID).FirstOrDefault() ?? new FollowProjectBase();
+                    var project = await _projectRepo.GetByIDAsync(dto.projectId);
+
+                    FollowProjectBase followProjectBase = _followProjectBaseRepo
+                        .GetAll(x => x.ProjectID == project.ID)
+                        .OrderByDescending(x => x.ID)
+                        .FirstOrDefault() ?? new FollowProjectBase();
+
                     followProjectBase.ProjectID = project.ID;
                     followProjectBase.CustomerBaseID = dto.customerId;
                     followProjectBase.EndUserID = project.EndUser;
-                    //followProjectBase.ProjectStatusBaseID = project.ProjectStatus;
                     followProjectBase.ProjectStartDate = project.CreatedDate;
                     followProjectBase.WarehouseID = dto.warehouseId;
                     followProjectBase.FirmBaseID = model.FirmBaseID;
@@ -380,6 +516,7 @@ namespace RERPAPI.Controllers.Old.KPISALE
                     {
                         await _followProjectBaseRepo.CreateAsync(followProjectBase);
                     }
+
                     FollowProjectBaseDetail detail = new FollowProjectBaseDetail()
                     {
                         FollowProjectBaseID = followProjectBase.ID,
@@ -387,15 +524,15 @@ namespace RERPAPI.Controllers.Old.KPISALE
                         UserID = dto.userId,
                         ImplementationDate = dto.dateStart,
                         ExpectedDate = dto.dateEnd,
-                        WorkDone = dto.content.Trim(),
-                        WorkWillDo = dto.planNext.Trim(),
-                        Results = dto.result.Trim(),
-                        ProblemBacklog = dto.problemBacklog.Trim(),
+                        WorkDone = dto.content?.Trim(),
+                        WorkWillDo = dto.planNext?.Trim(),
+                        Results = dto.result?.Trim(),
+                        ProblemBacklog = dto.problemBacklog?.Trim(),
                     };
+
                     await _followProjectBaseDetailRepo.CreateAsync(detail);
 
-                //Updateproject 
-                if (project.ID > 0)
+                    if (project.ID > 0)
                     {
                         project.ProjectStatus = dto.projectStatusBaseId;
                         await _projectRepo.UpdateAsync(project);
@@ -409,11 +546,13 @@ namespace RERPAPI.Controllers.Old.KPISALE
                                 EmployeeID = dto.employeeId ?? 0,
                                 DateLog = dto.dateStatusLog.ToLocalTime(),
                             };
+
                             await _projectStatusLogRepo.CreateAsync(statuslog);
                         }
                     }
+                }
 
-                    return Ok(ApiResponseFactory.Success(null, ""));
+                return Ok(ApiResponseFactory.Success(null, ""));
             }
             catch (Exception ex)
             {

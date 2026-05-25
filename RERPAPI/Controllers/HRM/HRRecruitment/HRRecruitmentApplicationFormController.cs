@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using RERPAPI.Attributes;
 using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
@@ -30,17 +31,23 @@ namespace RERPAPI.Controllers.HRM
         private readonly HRHiringCandidateInformationFormForeignLanguageSkillsRepo _hRHiringCandidateInformationFormForeignLanguageSkillsRepo;
         private readonly HRHiringCandidateInformationFormRecruitmentInfoRepo _hRHiringCandidateInformationFormRecruitmentInfoRepo;
         private readonly JwtSettings _jwtSettings;
+        private readonly CandidateJwtSettings _candidateJwtSettings;
+        private readonly ConfigSystemRepo _configSystemRepo;
+        private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
 
         public HRRecruitmentApplicationFormController(
-            EmployeeChucVuHDRepo employeeChucVuHDRepo, 
-            HRHiringCandidateInformationFormWorkingExperienceRepo hRHiringCandidateInformationFormWorkingExperienceRepo, 
-            HRHiringCandidateInformationFormOtherCertificateRepo hRHiringCandidateInformationFormOtherCertificateRepo, 
-            HRHiringCandidateInformationFormEducationRepo hRHiringCandidateInformationFormEducationRepo, 
+            EmployeeChucVuHDRepo employeeChucVuHDRepo,
+            HRHiringCandidateInformationFormWorkingExperienceRepo hRHiringCandidateInformationFormWorkingExperienceRepo,
+            HRHiringCandidateInformationFormOtherCertificateRepo hRHiringCandidateInformationFormOtherCertificateRepo,
+            HRHiringCandidateInformationFormEducationRepo hRHiringCandidateInformationFormEducationRepo,
             HRHiringCandidateInformationFormRepo hRHiringCandidateInformationFormRepo,
             HRHiringCandidateInformationEmergencyContactRepo hRHiringCandidateInformationEmergencyContactRepo,
             HRHiringCandidateInformationFormForeignLanguageSkillsRepo hRHiringCandidateInformationFormForeignLanguageSkillsRepo,
             HRHiringCandidateInformationFormRecruitmentInfoRepo hRHiringCandidateInformationFormRecruitmentInfoRepo,
-            JwtSettings jwtSettings)
+            JwtSettings jwtSettings,
+            CandidateJwtSettings candidateJwtSettings,
+            ConfigSystemRepo configSystemRepo,
+            vUserGroupLinksRepo vUserGroupLinksRepo)
         {
             _employeeChucVuHDRepo = employeeChucVuHDRepo;
             _hRHiringCandidateInformationFormWorkingExperienceRepo = hRHiringCandidateInformationFormWorkingExperienceRepo;
@@ -51,6 +58,9 @@ namespace RERPAPI.Controllers.HRM
             _hRHiringCandidateInformationFormForeignLanguageSkillsRepo = hRHiringCandidateInformationFormForeignLanguageSkillsRepo;
             _hRHiringCandidateInformationFormRecruitmentInfoRepo = hRHiringCandidateInformationFormRecruitmentInfoRepo;
             _jwtSettings = jwtSettings;
+            _candidateJwtSettings = candidateJwtSettings;
+            _configSystemRepo = configSystemRepo;
+            _vUserGroupLinksRepo = vUserGroupLinksRepo;
         }
 
         //API lấy danh sách chức vụ ứng tuyển
@@ -67,98 +77,115 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-                        //API lấy danh sách tờ khai 
-                        [HttpGet("get-all-application-form")]
-                        public IActionResult GetAllApplicationForm(int chucVuID, string? filterText)
-                        {
-                            try
-                            {
-                           //     var data = _hRHiringCandidateInformationFormRepo.GetAll(x => x.IsDeleted != true);
+        [Authorize]
+        //API lấy danh sách tờ khai 
+        [HttpGet("get-all-application-form")]
+        public IActionResult GetAllApplicationForm(string? filterText, int departmentID = 0)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x =>
+          (x.Code == "N2" || x.Code == "N1" || x.Code == "N94" || currentUser.IsAdmin == true) &&
+          x.UserID == currentUser.ID);
+                int requestID;
+                if (vUserHR != null)
+                {
+                    requestID = 0;
+                }
+                else
+                {
+                    requestID = currentUser.EmployeeID;
+                }
+                //     var data = _hRHiringCandidateInformationFormRepo.GetAll(x => x.IsDeleted != true);
                 var applicationForm = SQLHelper<dynamic>.ProcedureToList(
                                    "spGetHRCandidateApplicationForm",
-                                   new[] { "@ChucVuHDID", "@FilterText" },
-                                   new object[] { chucVuID, filterText });
+                                   new[] { "@FilterText", "@DepartmentID", "@RequestID" },
+                                   new object[] { filterText, departmentID,requestID });
                 var dataList = SQLHelper<dynamic>.GetListData(applicationForm, 0);
 
                 return Ok(ApiResponseFactory.Success(dataList, ""));
-                            }
-                            catch (Exception ex)
-                            {
-                                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-                            }           
-                        }
-                        //API lấy danh sách tờ khai 
-                        [HttpGet("get-all-application-form-detail")]
-                        public IActionResult GetAllApplicationFormDetail(int hRRecruitmentCandidateID)
-                        {
-                            try
-                            {
-
-                                var candidate = SQLHelper<dynamic>.ProcedureToList(
-                                   "spGetHRRecruitmentApplicationForm",
-                                   new[] { "@HRRecruitmentCandidateID" },
-                                   new object[] { hRRecruitmentCandidateID });
-                                //Lấy thông tin ứng viên
-                                var applicationForm = SQLHelper<dynamic>.GetListData(candidate, 0);
-                                var workingExperiences = SQLHelper<dynamic>.GetListData(candidate, 1);
-                                var otherCertificates = SQLHelper<dynamic>.GetListData(candidate, 2);
-                                var educations = SQLHelper<dynamic>.GetListData(candidate, 3);
-                                var emergencyContacts = SQLHelper<dynamic>.GetListData(candidate, 4);
-                                var foreignLanguageSkills = SQLHelper<dynamic>.GetListData(candidate, 5);
-                                var recruitmentInfo = SQLHelper<dynamic>.GetListData(candidate, 6);
-
-                                return Ok(ApiResponseFactory.Success(new
-                                {
-                                    applicationForm,
-                                    workingExperiences,
-                                    otherCertificates,
-                                    educations,
-                                    emergencyContacts,
-                                    foreignLanguageSkills,
-                                    recruitmentInfo
-                                }, "Lấy dữ liệu thành công"));
-                            }
-
-                            catch (Exception ex)
-                            {
-                                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-                            }
-                        }
-
-        
-            //Xóa form thông tin ứng viên 
-            [HttpGet("delete-application-form")]
-            public async Task<IActionResult> DeleteApplicationForm([FromQuery]  
-        List<int> ids)
+            }
+            catch (Exception ex)
             {
-                try
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        //API lấy danh sách tờ khai 
+        [HttpGet("get-all-application-form-detail")]
+        public IActionResult GetAllApplicationFormDetail(int hRRecruitmentCandidateID)
+        {
+            try
+            {
+
+                var candidate = SQLHelper<dynamic>.ProcedureToList(
+                   "spGetHRRecruitmentApplicationForm",
+                   new[] { "@HRRecruitmentCandidateID" },
+                   new object[] { hRRecruitmentCandidateID });
+                //Lấy thông tin ứng viên
+                var applicationForm = SQLHelper<dynamic>.GetListData(candidate, 0);
+                var workingExperiences = SQLHelper<dynamic>.GetListData(candidate, 1);
+                var otherCertificates = SQLHelper<dynamic>.GetListData(candidate, 2);
+                var educations = SQLHelper<dynamic>.GetListData(candidate, 3);
+                var emergencyContacts = SQLHelper<dynamic>.GetListData(candidate, 4);
+                var foreignLanguageSkills = SQLHelper<dynamic>.GetListData(candidate, 5);
+                var recruitmentInfo = SQLHelper<dynamic>.GetListData(candidate, 6);
+
+                return Ok(ApiResponseFactory.Success(new
                 {
-                    int count = 0;
+                    applicationForm,
+                    workingExperiences,
+                    otherCertificates,
+                    educations,
+                    emergencyContacts,
+                    foreignLanguageSkills,
+                    recruitmentInfo
+                }, "Lấy dữ liệu thành công"));
+            }
 
-                    foreach (var id in ids)
-                    {
-                        var application = _hRHiringCandidateInformationFormRepo.GetByID(id);
-                        if (application != null)
-                        {
-                            application.IsDeleted = true;
-                            count += await _hRHiringCandidateInformationFormRepo.UpdateAsync(application);
-                        }
-                    }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [Authorize]
+        [RequiresPermission("N1,N2,N94")]
+        //Xóa form thông tin ứng viên 
+        [HttpGet("delete-application-form")]
+        public async Task<IActionResult> DeleteApplicationForm([FromQuery]
+        List<int> ids)
+        {
+            try
+            {
+                int count = 0;
 
-                    if (count > 0)
+                foreach (var id in ids)
+                {
+                    var application = _hRHiringCandidateInformationFormRepo.GetByID(id);
+                    if (application != null)
                     {
-                        return Ok(ApiResponseFactory.Success(count, $"Xóa thành công {count} bản ghi"));
-                    }
-                    else
-                    {
-                        return BadRequest(ApiResponseFactory.Fail(null, "Không có bản ghi nào được xóa"));
+                        application.IsDeleted = true;
+                        var result = await _hRHiringCandidateInformationFormRepo.UpdateAsync(application);
+                        if (result > 0) count++;
                     }
                 }
-                catch (Exception ex)
+
+                if (count > 0)
                 {
-                    return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+                    return Ok(ApiResponseFactory.Success(count, $"Xóa thành công {count} bản ghi"));
+                }
+                else
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không có bản ghi nào được xóa"));
                 }
             }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         //API đăng nhập ứng viên
         [HttpPost("login-candidate")]
         public IActionResult LoginCandidate([FromBody] HRRecruitmentCandidate user)
@@ -172,7 +199,7 @@ namespace RERPAPI.Controllers.HRM
 
                 //1. Check user
                 string loginName = user.UserName ?? "";
-                string password = user.Password??"";
+                string password = user.Password ?? "";
                 //password = user.PasswordHash;
                 var login = SQLHelper<object>.ProcedureToList("spLoginCandidate", new string[] { "@LoginName", "@Password" }, new object[] { loginName, password });
                 var hasUsers = SQLHelper<object>.GetListData(login, 0);
@@ -189,29 +216,28 @@ namespace RERPAPI.Controllers.HRM
                     {
                         new Claim(JwtRegisteredClaimNames.Sub,hasUser.ID.ToString()),
                         new Claim(JwtRegisteredClaimNames.UniqueName,hasUser.FullName ?? ""),
+                        new Claim("candidateid", hasUser.ID.ToString()),
+                        new Claim("iscandidate", _candidateJwtSettings.IsCandidate.ToString().ToLower())
                     };
-
                 var dictionary = (IDictionary<string, object>)hasUser;
+
                 foreach (var item in dictionary)
                 {
-                    if (item.Key.ToLower() == "passwordhash") continue;
+                    if (item.Key.ToLower() == "passwordhash" || item.Key.ToLower() == "id" || item.Key.ToLower() == "fullname") continue; // Already added or sensitive
 
-                    // Sửa: Đổi tên claim 'id' thành 'candidateid' để phân biệt với UserID của hệ thống
-                    string claimKey = item.Key.ToLower() == "id" ? "candidateid" : item.Key.ToLower();
-                    var claim = new Claim(claimKey, item.Value?.ToString() ?? "");
-                    claims.Add(claim);
+                    string claimKey = "app_" + item.Key.ToLower();
+                    claims.Add(new Claim(claimKey, item.Value?.ToString() ?? ""));
                 }
 
-
                 //3. Tạo token
-                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_candidateJwtSettings.SecretKey));
                 var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
                 var token = new JwtSecurityToken(
-                    issuer: _jwtSettings.Issuer,
-                    audience: _jwtSettings.Audience,
+                    issuer: _candidateJwtSettings.Issuer,
+                    audience: _candidateJwtSettings.Audience,
                     claims: claims.ToArray(),
-                    expires: DateTime.UtcNow.AddMinutes(_jwtSettings.ExpireMinutes),
+                    expires: DateTime.UtcNow.AddMinutes(_candidateJwtSettings.ExpireMinutes),
                     signingCredentials: creds
                 );
 
@@ -258,10 +284,12 @@ namespace RERPAPI.Controllers.HRM
                 // Lấy thông tin ứng viên từ claims
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentCandidate = ObjectMapper.GetCurrentCandidate(claims);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
 
-                if (currentCandidate == null || currentCandidate.ID == 0)
+                // Phải có ít nhất một thông tin đăng nhập (Ứng viên hoặc Nhân viên hệ thống)
+                if ((currentCandidate == null || currentCandidate.ID == 0) && (currentUser == null || currentUser.ID == 0))
                 {
-                    return Unauthorized(ApiResponseFactory.Fail(null, "Không tìm thấy thông tin ứng viên đăng nhập (Vui lòng đăng nhập lại)"));
+                    return Unauthorized(ApiResponseFactory.Fail(null, "Không tìm thấy thông tin đăng nhập (Vui lòng đăng nhập lại)"));
                 }
 
                 // 0. Validate data
@@ -274,8 +302,16 @@ namespace RERPAPI.Controllers.HRM
                 // 1. Lưu tờ khai chính
                 var mainForm = data.HRRecruitmentApplicationForm;
 
-                // Gán ID ứng viên đang đăng nhập để đảm bảo tính an toàn dữ liệu
-                mainForm.HRRecruitmentCandidateID = currentCandidate.ID;
+                // Nếu là ứng viên đang đăng nhập, gán ID ứng viên để đảm bảo tính an toàn dữ liệu
+                // Nếu là nhân viên hệ thống (HR), giữ nguyên ID từ payload (hoặc check quyền ở đây)
+                if (currentCandidate != null && currentCandidate.ID > 0)
+                {
+                    mainForm.HRRecruitmentCandidateID = currentCandidate.ID;
+                }
+                else if (mainForm.HRRecruitmentCandidateID <= 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy ID ứng viên trong dữ liệu gửi lên"));
+                }
 
                 if (mainForm.ID > 0)
                 {
@@ -361,7 +397,7 @@ namespace RERPAPI.Controllers.HRM
         }
         [HttpPost("save-form-auto")]
         public async Task<IActionResult> SaveFormAuto([FromBody] HRRecruitmentApplicationFullDTO data)
-            {
+        {
             try
             {
                 if (data == null || data.HRRecruitmentApplicationForm == null)
@@ -372,16 +408,23 @@ namespace RERPAPI.Controllers.HRM
                 // Lấy thông tin ứng viên từ claims
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentCandidate = ObjectMapper.GetCurrentCandidate(claims);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
 
-                if (currentCandidate == null || currentCandidate.ID == 0)
+                if ((currentCandidate == null || currentCandidate.ID == 0) && (currentUser == null || currentUser.ID == 0))
                 {
-                    return Unauthorized(ApiResponseFactory.Fail(null, "Không tìm thấy thông tin ứng viên đăng nhập (Vui lòng đăng nhập lại)"));
+                    return Unauthorized(ApiResponseFactory.Fail(null, "Không tìm thấy thông tin đăng nhập (Vui lòng đăng nhập lại)"));
                 }
                 // 1. Lưu tờ khai chính
                 var mainForm = data.HRRecruitmentApplicationForm;
 
-                // Gán ID ứng viên đang đăng nhập để đảm bảo tính an toàn dữ liệu
-                mainForm.HRRecruitmentCandidateID = currentCandidate.ID;
+                if (currentCandidate != null && currentCandidate.ID > 0)
+                {
+                    mainForm.HRRecruitmentCandidateID = currentCandidate.ID;
+                }
+                else if (mainForm.HRRecruitmentCandidateID <= 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy ID ứng viên trong dữ liệu gửi lên"));
+                }
 
                 if (mainForm.ID > 0)
                 {
@@ -488,10 +531,10 @@ namespace RERPAPI.Controllers.HRM
         ///Lấy thông tin ứng viên
         [HttpGet("get-candidate-infomation")]
         public IActionResult GetCandidateInfomation(int hRRecruitmentCandidateID)
-                {
+        {
             try
             {
-                
+
                 var candidate = SQLHelper<dynamic>.ProcedureToList(
                    "spGetHRRecruitmentApplicationForm",
                    new[] { "@HRRecruitmentCandidateID" },
@@ -505,7 +548,9 @@ namespace RERPAPI.Controllers.HRM
                 var foreignLanguageSkills = SQLHelper<dynamic>.GetListData(candidate, 5);
                 var recruitmentInfo = SQLHelper<dynamic>.GetListData(candidate, 6);
 
-                return Ok(ApiResponseFactory.Success(new {applicationForm,
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    applicationForm,
                     workingExperiences,
                     otherCertificates,
                     educations,
@@ -518,6 +563,79 @@ namespace RERPAPI.Controllers.HRM
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("download-by-key")]
+
+        public IActionResult DownloadByKey([FromQuery] string key, [FromQuery] string? subPath, [FromQuery] string fileName)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(key))
+                    return BadRequest(ApiResponseFactory.Fail(null, "Key không được để trống!"));
+
+                if (string.IsNullOrWhiteSpace(fileName))
+                    return BadRequest(ApiResponseFactory.Fail(null, "FileName không được để trống!"));
+
+                // Lấy đường dẫn gốc theo key
+                var uploadPath = _configSystemRepo.GetUploadPathByKey(key);
+                if (string.IsNullOrWhiteSpace(uploadPath))
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: {key}"));
+
+                // Chuẩn hóa subPath giống UploadMultipleFiles
+                string targetFolder = uploadPath;
+                if (!string.IsNullOrWhiteSpace(subPath))
+                {
+                    var separator = Path.DirectorySeparatorChar;
+                    var segments = subPath
+                        .Replace('/', separator)
+                        .Replace('\\', separator)
+                        .Split(separator, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(seg =>
+                        {
+                            var invalidChars = Path.GetInvalidFileNameChars();
+                            var cleaned = new string(seg.Where(c => !invalidChars.Contains(c)).ToArray());
+                            cleaned = cleaned.Replace("..", "").Trim(); // chống leo thư mục
+                            return cleaned;
+                        })
+                        .Where(s => !string.IsNullOrWhiteSpace(s))
+                        .ToArray();
+                    if (segments.Length > 0)
+                        targetFolder = Path.Combine(uploadPath, Path.Combine(segments));
+                }
+                // Chuẩn hóa tên file
+                var safeFileName = new string(fileName.Where(c => !Path.GetInvalidFileNameChars().Contains(c)).ToArray())
+                    .Replace("..", "")
+                    .Trim();
+                var fullPath = Path.Combine(targetFolder, safeFileName);
+                // Đảm bảo đường dẫn nằm trong root uploadPath
+                var rootNormalized = Path.GetFullPath(uploadPath);
+                var fullNormalized = Path.GetFullPath(fullPath);
+                if (!fullNormalized.StartsWith(rootNormalized, StringComparison.OrdinalIgnoreCase))
+                    return BadRequest(ApiResponseFactory.Fail(null, "Đường dẫn không hợp lệ"));
+                // Nếu không tồn tại và tên file không có extension -> thử dò fileName.*
+                if (!System.IO.File.Exists(fullPath) && string.IsNullOrWhiteSpace(Path.GetExtension(safeFileName)))
+                {
+                    var match = Directory.GetFiles(targetFolder, safeFileName + ".*").FirstOrDefault();
+                    if (match != null)
+                        fullPath = match;
+                }
+                if (!System.IO.File.Exists(fullPath))
+                    return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy file"));
+
+                // Xác định content-type
+                var provider = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
+                if (!provider.TryGetContentType(fullPath, out var contentType))
+                    contentType = "application/octet-stream";
+
+                var stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                var downloadName = Path.GetFileName(fullPath);
+
+                return File(stream, contentType, downloadName);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi download file: {ex.Message}"));
             }
         }
     }

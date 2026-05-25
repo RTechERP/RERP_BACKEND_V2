@@ -293,4 +293,9 @@ public partial class Employee
     public string? MoiQuanHe2 { get; set; }
 
     public string? SDTNguoiThan2 { get; set; }
+
+    /// <summary>
+    /// 1.Có nhận lương, 0.Không nhận lương
+    /// </summary>
+    public bool? IsExcludedFromSalary { get; set; }
 }

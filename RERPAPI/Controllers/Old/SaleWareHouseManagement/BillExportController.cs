@@ -13,6 +13,7 @@ using RERPAPI.Repo.GenericEntity.Technical;
 using System.Data;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Threading.Tasks;
 using ZXing;
 using ZXing.Common;
 
@@ -49,6 +50,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         private readonly IConfiguration _configuration;
         private readonly POKHRepo _pokhRepo;
         private readonly POKHFilesRepo _pokhFilesRepo;
+        private readonly BillExportSaleLogRepo _billExportSaleLogRepo;
 
 
         public BillExportController(
@@ -63,7 +65,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             BillExportLogRepo billexportlogRepo,
             ProjectRepo projectRepo,
             HistoryDeleteBillRepo historyDeleteBillRepo,
-            WarehouseRepo warehouseRepo, InventoryProjectRepo inventoryProjectRepo, ProductSaleRepo productSaleRepo, Repo.GenericEntity.AddressStockRepo addressStockRepo, CustomerRepo customerRepo, SupplierSaleRepo supplierSaleRepo, UserRepo userRepo, IConfiguration configuration, DepartmentRepo departmentRepo, EmployeeRepo employeeRepo, POKHRepo pokhRepo, POKHFilesRepo pokhFilesRepo)
+            WarehouseRepo warehouseRepo, InventoryProjectRepo inventoryProjectRepo, ProductSaleRepo productSaleRepo, Repo.GenericEntity.AddressStockRepo addressStockRepo, CustomerRepo customerRepo, SupplierSaleRepo supplierSaleRepo, UserRepo userRepo, IConfiguration configuration, DepartmentRepo departmentRepo, EmployeeRepo employeeRepo, POKHRepo pokhRepo, POKHFilesRepo pokhFilesRepo, BillExportSaleLogRepo billExportSaleLogRepo)
         {
             _productgroupRepo = productgroupRepo;
             _billdocumentexportRepo = billdocumentexportRepo;
@@ -90,6 +92,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             _employeeRepo = employeeRepo;
             _pokhRepo = pokhRepo;
             _pokhFilesRepo = pokhFilesRepo;
+            _billExportSaleLogRepo = billExportSaleLogRepo;
         }
         [HttpGet("get-all-project")]
         public IActionResult getAllProject()
@@ -150,7 +153,27 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             try
             {
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
-                       "spGetInventory", new string[] { "@ID", "@Find", "@WarehouseCode" },
+                       //"spGetInventory", new string[] { "@ID", "@Find", "@WarehouseCode" },
+                       "spGetInventory_Test", new string[] { "@ID", "@Find", "@WarehouseCode" },
+                    new object[] { productGroupID, "", warehouseCode }
+                   );
+                var data = SQLHelper<object>.GetListData(result, 0);
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-product-new")]
+        public IActionResult getOptionProductNew(string warehouseCode, int productGroupID)
+        {
+            try
+            {
+                List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
+                       //"spGetInventory", new string[] { "@ID", "@Find", "@WarehouseCode" },
+                       "spGetInventory_New", new string[] { "@ID", "@Find", "@WarehouseCode" },
                     new object[] { productGroupID, "", warehouseCode }
                    );
                 var data = SQLHelper<object>.GetListData(result, 0);
@@ -187,6 +210,22 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 //}
 
                 return Ok(ApiResponseFactory.Success(listPG, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-sale-logs/{billExportId}")]
+        public IActionResult GetSaleLogs(int billExportId)
+        {
+            try
+            {
+                var logs = _billExportSaleLogRepo.GetAll(x => x.BillExportID == billExportId && x.IsDeleted != true)
+                                                .OrderByDescending(x => x.CreatedDate)
+                                                .ToList();
+                return Ok(ApiResponseFactory.Success(logs));
             }
             catch (Exception ex)
             {
@@ -243,7 +282,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [HttpGet("by-billexport/{billExportID}")]
+        [HttpGet("by-billexport")]
         public async Task<IActionResult> GetByBillExportID(int billExportID)
         {
             try
@@ -786,7 +825,23 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpGet("get-view-export-detail/{billId}")]
+        public async Task<IActionResult> GetViewExportDetail(int billId)
+        {
+            try
+            {
 
+                var rs =await SqlDapper<object>.ProcedureToListTAsync("spGetBillExportDetail_Nhat", new
+                {
+                    BillID = billId
+                });
+                return Ok(ApiResponseFactory.Success(rs,"Lấy danh sách chi tiết phiếu xuất thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         // POST: api/BillExport/get-bill-import-detail
         [HttpPost("get-bill-import-detail")]
         public IActionResult GetBillImportDetail([FromBody] List<int> billImportIds)
@@ -1375,6 +1430,42 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
                 }
 
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        //[HttpPost("confirm-tem")]
+        //public async Task<IActionResult> ConfirmTem(List<int> lstBillexportdetailID, bool status)
+        //{
+        //    try
+        //    {
+        //        List<int> rs = await _billexportRepo.ConfirmTem(lstBillexportdetailID, status);
+        //        if (rs.Count > 0) return Ok(ApiResponseFactory.Success(rs, status == true ? "Xác nhận tem thành công!" : "Hủy xác nhận tem thành công!"));
+        //        else return BadRequest(ApiResponseFactory.Fail(null, "Xác nhận tem thất bại, không có chi tiết phiếu xuất nào được chọn"));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
+        [HttpPost("get-product-project-customer")]
+        public IActionResult getproductProjectCustomer(GetListProductByProjectPram filter)
+        {
+            try
+            {
+                List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
+                    "spGetListProductImportExportByProjectID_New_Nhat",
+					new string[] { "@projectId", "@WarehouseCode", "@CustomerID" },
+					new object[] { filter.projectID, filter.WarehouseCode, filter.CustomerID }
+                    );
+                var dt = SQLHelper<object>.GetListData(result, 0);
+                return Ok(new
+                {
+                    status = 1,
+                    data = SQLHelper<object>.GetListData(result, 0)
+                });
             }
             catch (Exception ex)
             {

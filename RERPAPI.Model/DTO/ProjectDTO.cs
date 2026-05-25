@@ -1,4 +1,4 @@
-﻿using RERPAPI.Model.Entities;
+using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,5 +23,7 @@ namespace RERPAPI.Model.DTO
     {
         public int EmployeeID { get; set; }
         public int ProjectTypeLinkID { get; set; }
+        public List<int>? ApplicationTypeIDs { get; set; }
+        public List<int>? TechnologyIDs { get; set; }
     }
 }

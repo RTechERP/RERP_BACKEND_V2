@@ -67,4 +67,9 @@ public partial class Inventory
     /// Nhân viên thêm stock
     /// </summary>
     public int? EmployeeStock { get; set; }
+
+    /// <summary>
+    /// Link với productgroup
+    /// </summary>
+    public int? ProductGroupID { get; set; }
 }

@@ -247,7 +247,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                                 x.DayWork.HasValue &&
                                 x.DayWork.Value.Date == dayWorkDate.Date &&
                                 x.Type == type
-                                //&& x.IsDelete == false
+                                && x.IsDeleted !=true
                                 );
 
                 if (existENF.Any())

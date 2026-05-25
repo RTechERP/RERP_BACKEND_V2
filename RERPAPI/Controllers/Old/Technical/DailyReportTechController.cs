@@ -1,4 +1,4 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
+﻿    using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -14,7 +14,9 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
 using RERPAPI.Repo.GenericEntity.Project;
+using RERPAPI.SendService;
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 
@@ -31,11 +33,17 @@ namespace RERPAPI.Controllers.Old.Technical
         EmployeeSendEmailRepo _employeeSendEmailRepo;
         DailyReportMarketingFileRepo _dailyFileMar;
         EmployeeRepo _employeeRepo;
+        private readonly ProjectHistoryProblemRepo _projectHistoryProblemRepo;
+        private readonly ProjectHistoryProblemProjectItemLinkRepo _projectHistoryProblemProjectItemLinkRepo;
+        UserTeamRepo _userTeamRepo;
         private IConfiguration _configuration;
         private readonly EmailHelper _emailHelper;
-        public DailyReportTechController(DailyReportTechnicalRepo dailyReportTechnicalRepo, ProjectItemRepo projectItemRepo, EmployeeSendEmailRepo employeeSendEmailRepo, DailyReportHRRepo dailyReportHRRepo, IConfiguration configuration, DailyReportMarketingFileRepo dailyFileMar, EmployeeRepo employeeRepo, EmailHelper emailHelper)
+        private readonly IFirebaseNotificationService _firebaseNotificationService;
+        
+        public DailyReportTechController(DailyReportTechnicalRepo dailyReportTechnicalRepo, ProjectItemRepo projectItemRepo, EmployeeSendEmailRepo employeeSendEmailRepo, DailyReportHRRepo dailyReportHRRepo, IConfiguration configuration, DailyReportMarketingFileRepo dailyFileMar, EmployeeRepo employeeRepo, EmailHelper emailHelper, IFirebaseNotificationService firebaseNotificationService, ProjectHistoryProblemRepo projectHistoryProblemRepo, ProjectHistoryProblemProjectItemLinkRepo projectHistoryProblemProjectItemLinkRepo, UserTeamRepo userTeamRepo)
         {
             _dailyReportTechnicalRepo = dailyReportTechnicalRepo;
+            _firebaseNotificationService = firebaseNotificationService;
             _projectItemRepo = projectItemRepo;
             _employeeSendEmailRepo = employeeSendEmailRepo;
             _dailyReportHRRepo = dailyReportHRRepo;
@@ -43,6 +51,9 @@ namespace RERPAPI.Controllers.Old.Technical
             _dailyFileMar = dailyFileMar;
             _employeeRepo = employeeRepo;
             _emailHelper = emailHelper;
+            _userTeamRepo = userTeamRepo;   
+            _projectHistoryProblemRepo = projectHistoryProblemRepo;
+            _projectHistoryProblemProjectItemLinkRepo = projectHistoryProblemProjectItemLinkRepo;
         }
         [HttpPost("get-daily-report-tech")]
         public IActionResult GetDailyReportHr([FromBody] DailyReportTechParam request)
@@ -166,7 +177,7 @@ namespace RERPAPI.Controllers.Old.Technical
             }
             catch (Exception ex)
             {
-                throw new Exception("Lỗi khi bổ sung PO: " + ex.Message);
+                throw new Exception("Lỗi khi cập nhật hạng mục: " + ex.Message);
             }
         }
         [HttpPost("save-report-tech")]
@@ -177,7 +188,8 @@ namespace RERPAPI.Controllers.Old.Technical
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 int userId = currentUser.ID;
-                bool isTechnical = currentUser.DepartmentID == 2 ? true : false;
+                var technicalDepartments = new HashSet<int> { 2,24,25,26,27,9,10 };
+                bool isTechnical = technicalDepartments.Contains(currentUser.DepartmentID);
 
                 // 1. Kiểm tra request null hoặc empty
                 if (request == null || request.Count == 0)
@@ -208,23 +220,18 @@ namespace RERPAPI.Controllers.Old.Technical
                         item.Type = 0;
                         item.ReportLate = 0;
                         item.StatusResult = 0;
-                        item.Type = 0; // Luôn set Type = 0 (không OT) khi tạo mới
-                        item.ReportLate = 0; // Set mặc định = 0, KHÔNG tính toán
                         item.WorkPlanDetailID = 0;
-                        item.OldProjectID = 0;
                         item.OldProjectID = 0;
                         item.DeleteFlag = 0;
                         item.Confirm = false;
                         item.CreatedDate = DateTime.Today.AddHours(23).AddMinutes(30);
                         await _dailyReportTechnicalRepo.CreateAsync(item);
                         if (isTechnical) await UpdateProjectItem(item);
-
                     }
                 }
                 return Ok(ApiResponseFactory.Success(null,
                           "Lưu dữ liệu thành công"
                       ));
-
             }
             catch (Exception ex)
             {
@@ -382,7 +389,7 @@ namespace RERPAPI.Controllers.Old.Technical
             try
             {
                 var dailyData = _dailyReportTechnicalRepo.GetByID(dailyID);
-                var dailyFileData = _dailyFileMar.GetAll(x => x.DailyReportID == dailyID && x.IsDeleted ==false);
+                var dailyFileData = _dailyFileMar.GetAll(x => x.DailyReportID == dailyID && x.IsDeleted == false);
                 return Ok(ApiResponseFactory.Success(new { dailyData, dailyFileData }, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
@@ -504,8 +511,8 @@ namespace RERPAPI.Controllers.Old.Technical
                     EmployeeID = email.EmployeeID,
                     Receiver = email.Receiver
                 };
-                await _employeeSendEmailRepo.CreateAsync(emailEntity);
-
+                //await _employeeSendEmailRepo.CreateAsync(emailEntity);
+                await _emailHelper.SendAsync (email.EmailTo, email.Subject, email.Body);
 
                 return Ok(ApiResponseFactory.Success(null, "Gửi email thành công!"));
             }
@@ -514,7 +521,6 @@ namespace RERPAPI.Controllers.Old.Technical
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi khi gửi email: {ex.Message}"));
             }
         }
-
         [HttpPost("export-to-excel")]
         public IActionResult ExportToExcel([FromBody] ExportExcelDailyReportTechRequest request)
         {
@@ -534,7 +540,25 @@ namespace RERPAPI.Controllers.Old.Technical
                 dateStart = new DateTime(dateStart.Year, dateStart.Month, dateStart.Day, 0, 0, 0);
                 dateEnd = new DateTime(dateEnd.Year, dateEnd.Month, dateEnd.Day, 23, 59, 59);
 
-                var data = SQLHelper<object>.ProcedureToList("spExportToExcelDRT",
+                //check có phải team AGV không thì gọi stored procedure khác để lấy dữ liệu
+                // Mặc định là dùng SP cũ
+                string spName = "spExportToExcelDRT";
+                if (!string.IsNullOrWhiteSpace(request.TeamID))
+                {
+                    // Cắt chuỗi lấy ID đầu tiên trong trường hợp gửi lên nhiều ID (vd: "9;10;11")
+                    var firstTeamIdStr = request.TeamID.Split(';').FirstOrDefault();
+
+                    if (int.TryParse(firstTeamIdStr, out var teamId) && teamId > 0)
+                    {
+                        var team = _userTeamRepo.GetByID(teamId);
+                        // Bắt buộc phải check team != null
+                        if (team != null && team.DepartmentID == 9)
+                        {
+                            spName = "spExportToExcelDRT_AGV";
+                        }
+                    }
+                }
+                var data = SQLHelper<object>.ProcedureToList(spName,
                     new string[] { "@DateStart", "@DateEnd", "@TeamID" },
                     new object[] { dateStart, dateEnd, request.TeamID ?? "" });
                 var listExport = SQLHelper<Object>.GetListData(data, 0);
@@ -630,6 +654,134 @@ namespace RERPAPI.Controllers.Old.Technical
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi khi xuất Excel: {ex.Message}"));
             }
         }
+
+        //[HttpPost("export-to-excel")]
+        //public IActionResult ExportToExcel([FromBody] ExportExcelDailyReportTechRequest request)
+        //{
+        //    try
+        //    {
+        //        var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+        //        var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+        //        if (request == null)
+        //        {
+        //            return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu request không hợp lệ!"));
+        //        }
+
+        //        var dateStart = request.DateStart ?? DateTime.Now.AddDays(-30);
+        //        var dateEnd = request.DateEnd ?? DateTime.Now;
+
+        //        dateStart = new DateTime(dateStart.Year, dateStart.Month, dateStart.Day, 0, 0, 0);
+        //        dateEnd = new DateTime(dateEnd.Year, dateEnd.Month, dateEnd.Day, 23, 59, 59);
+
+        //        //check có phải team AGV không thì gọi stored procedure khác để lấy dữ liệu
+        //        // Mặc định là dùng SP cũ
+        //        string spName = "spExportToExcelDRT";
+        //        if (!string.IsNullOrWhiteSpace(request.TeamID))
+        //        {
+        //            // Cắt chuỗi lấy ID đầu tiên trong trường hợp gửi lên nhiều ID (vd: "9;10;11")
+        //            var firstTeamIdStr = request.TeamID.Split(';').FirstOrDefault();
+
+        //            if (int.TryParse(firstTeamIdStr, out var teamId) && teamId > 0)
+        //            {
+        //                var team = _userTeamRepo.GetByID(teamId);
+        //                // Bắt buộc phải check team != null
+        //                if (team != null && team.DepartmentID == 9)
+        //                {
+        //                    spName = "spExportToExcelDRT_AGV";
+        //                }
+        //            }
+        //        }
+        //        var data = SQLHelper<object>.ProcedureToList(spName,
+        //            new string[] { "@DateStart", "@DateEnd", "@TeamID" },
+        //            new object[] { dateStart, dateEnd, request.TeamID ?? "" });
+        //        var listExport = SQLHelper<Object>.GetListData(data, 0);
+
+        //        string teamName = request.TeamName ?? "All";
+        //        teamName = Regex.Replace(teamName, @"[^\w\-_\.]", "_");
+        //        string fileName = $"DanhSachBaoCaoCongViec_{teamName}_{dateStart:ddMMyyyy}_{dateEnd:ddMMyyyy}.xlsx";
+
+        //        string sheetNewName = $"Tháng {dateStart.Month} - {dateEnd.Year}";
+
+        //        string templatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DS_DailyReport.xlsx");
+
+        //        if (!System.IO.File.Exists(templatePath))
+        //            return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy file mẫu: {templatePath}"));
+
+        //        // ✅ Set license giống API ExportAllocationAssetReport
+        //        ExcelPackage.License.SetNonCommercialOrganization("RTC");
+
+        //        using var stream = new FileStream(templatePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        //        using var package = new ExcelPackage(stream);
+        //        var ws = package.Workbook.Worksheets[0];
+
+        //        ws.Name = sheetNewName;
+
+        //        int startRow = 4;
+
+        //        var firstItem = listExport.Count > 0 ? listExport[0] as IDictionary<string, object> : null;
+        //        var columnKeys = firstItem?.Keys.ToList() ?? new List<string>();
+        //        int colCount = columnKeys.Count;
+
+        //        for (int i = 0; i < listExport.Count; i++)
+        //        {
+        //            var row = listExport[i] as IDictionary<string, object>;
+        //            if (row == null) continue;
+
+        //            int currentRow = startRow + i;
+
+        //            for (int j = 0; j < columnKeys.Count; j++)
+        //            {
+        //                string columnKey = columnKeys[j];
+        //                var value = row.ContainsKey(columnKey) ? row[columnKey] : null;
+
+        //                if (value == null || value == DBNull.Value)
+        //                {
+        //                    ws.Cells[currentRow, j + 1].Value = "";
+        //                }
+        //                else
+        //                {
+        //                    if (value is DateTime)
+        //                    {
+        //                        ws.Cells[currentRow, j + 1].Value = ((DateTime)value).ToString("dd/MM/yyyy");
+        //                    }
+        //                    else if (value is DateTime?)
+        //                    {
+        //                        var dateValue = (DateTime?)value;
+        //                        ws.Cells[currentRow, j + 1].Value = dateValue.HasValue ? dateValue.Value.ToString("dd/MM/yyyy") : "";
+        //                    }
+        //                    else
+        //                    {
+        //                        ws.Cells[currentRow, j + 1].Value = value.ToString();
+        //                    }
+        //                }
+        //            }
+        //        }
+
+        //        if (listExport.Count > 0)
+        //        {
+        //            int endRow = startRow + listExport.Count - 1;
+
+        //            if (colCount > 0)
+        //            {
+        //                ws.Cells[startRow, 1, endRow, colCount].Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+        //                ws.Cells[startRow, 1, endRow, colCount].Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+        //                ws.Cells[startRow, 1, endRow, colCount].Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+        //                ws.Cells[startRow, 1, endRow, colCount].Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+        //            }
+        //        }
+
+        //        var outputStream = new MemoryStream();
+        //        package.SaveAs(outputStream);
+        //        outputStream.Position = 0;
+
+        //        return File(outputStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi khi xuất Excel: {ex.Message}"));
+        //    }
+        //}
         /// <summary>
         /// API endpoint để gửi email báo cáo công việc Marketing
         /// </summary>
@@ -680,22 +832,24 @@ namespace RERPAPI.Controllers.Old.Technical
                     emailCc = "nguyenvan.sao@rtc.edu.vn,sales.manager@rtc.edu.vn";
                     receiverEmployeeId = 2; // ID của Nguyễn Văn Thắng
                 }
-                var emailEntity = new EmployeeSendEmail
-                {
-                    Subject = subject,
-                    Body = request.Body,
-                    EmailTo = emailTo,
-                    EmailCC = emailCc,
-                    StatusSend = 1, // 1 = Đã đưa vào queue
-                    DateSend = DateTime.Now,
-                    EmployeeID = currentUser.EmployeeID,
-                    Receiver = receiverEmployeeId,
-                };
-                await _employeeSendEmailRepo.CreateAsync(emailEntity);
+                //var emailEntity = new EmployeeSendEmail
+                //{
+                //    Subject = subject,
+                //    Body = request.Body,
+                //    EmailTo = emailTo,
+                //    EmailCC = emailCc,
+                //    StatusSend = 1, // 1 = Đã đưa vào queue
+                //    DateSend = DateTime.Now,
+                //    EmployeeID = currentUser.EmployeeID,
+                //    Receiver = receiverEmployeeId,
+                //};
+                //await _employeeSendEmailRepo.CreateAsync(emailEntity);
+                await _emailHelper.SendAsync(emailTo ?? "", subject, request.Body, true, emailCc ?? "");
                 // ⑩ Trả về kết quả
                 return Ok(ApiResponseFactory.Success(new
                 {
-                    EmailId = emailEntity.ID,
+                    //EmailId = emailEntity.ID,
+                    EmailId = 1, // dùng hàm send email trực tiếp nên không có ID trong DB, tạm set = 1 để trả về
                     SentTo = emailTo,
                     SentCc = emailCc,
                     Subject = subject
@@ -706,6 +860,54 @@ namespace RERPAPI.Controllers.Old.Technical
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi khi gửi email: {ex.Message}"));
             }
         }
+
+        [HttpGet("get-project-history-problem-by-project-item")]
+        public IActionResult GetProjectHistoryProblemByProjectItem(int projectItemId)
+        {
+            try
+            {
+                var data = _projectHistoryProblemRepo
+                    .GetAll(x => x.IsDeleted == false)
+                    .Join(_projectHistoryProblemProjectItemLinkRepo.GetAll(x => x.IsDeleted == false && x.ProjectItemID == projectItemId),
+                          ph => ph.ID,
+                          lk => lk.ProjectHistoryProblemID,
+                          (ph, lk) => ph)
+                    .OrderByDescending(x => x.DateProblem)
+                    .ThenByDescending(x => x.ID)
+                    .Select(x => new
+                    {
+                        x.ID,
+                        x.ProjectID,
+                        x.STT,
+                        x.ContentError,
+                        x.Reason,
+                        x.Remedies,
+                        x.IssueConclusion,
+                        x.DateProblem,
+                        x.DateImplementation,
+                        x.CreatorID,
+                        x.PerformerID,
+                        x.PriorityLevel,
+                        x.StatusProblem,
+                        x.IssueLogType,
+                        x.IsApproved_PM,
+                        x.DateApproved_PM,
+                        x.IsApproved_TP,
+                        x.DateApproved_TP,
+                        x.IsApproved_PP,
+                        x.DateApproved_PP
+                    })
+                    .Distinct()
+                    .ToList();
+
+                return Ok(ApiResponseFactory.Success(data, "Lấy danh sách ProjectHistoryProblem theo hạng mục thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         // ========================================
         // REQUEST DTO
         // ========================================
@@ -808,13 +1010,13 @@ namespace RERPAPI.Controllers.Old.Technical
                 {
                     // Trường hợp 1: Thực tập sinh Marketing (Position = 88)
                     // Gửi cho Marketing Manager
-                
+
                     if (marketingManager == null)
                     {
                         return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy thông tin Marketing Manager!"));
                     }
                     emailTo = marketingManager.EmailCongTy;
-                   // emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
+                    // emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
                     receiverEmployeeId = marketingManagerID;
                 }
                 else
@@ -833,7 +1035,7 @@ namespace RERPAPI.Controllers.Old.Technical
                     {
                         emailTo = "marketing02@rtc.edu.vn";
                         //emailTo = "quanghung21hb@gmail.com";
-                       // emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
+                        // emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
                         await _emailHelper.SendAsync(emailTo, subject, request.Body, cc: emailCc);
                     }
                     //else if(currentUser.ID == 1502)

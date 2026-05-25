@@ -1,4 +1,5 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -9,6 +10,7 @@ using RERPAPI.Model;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
+using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Model.Param.HRM.VehicleManagement;
@@ -43,10 +45,12 @@ namespace RERPAPI.Controllers
         private readonly EmployeeWFHRepo _wfhRepo;
         private readonly ConfigSystemRepo _configSystemRepo;
         private readonly EmailHelper _emailHelper;
+        private readonly UserRepo _userRepo;
+        private readonly EmployeeRepo _employeeRepo;
 
         //IRabbitMqPublisher _publisher;
         public HomeController(IOptions<JwtSettings> jwtSettings, RTCContext context,
-            IConfiguration configuration, EmployeeOnLeaveRepo onLeaveRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeWFHRepo employeeWFHRepo, ConfigSystemRepo configSystemRepo, EmployeeOverTimeRepo employeeOverTimeRepo, RoleConfig roleConfig, EmployeePayrollDetailRepo employeePayrollDetailRepo, EmailHelper emailHelper)
+            IConfiguration configuration, EmployeeOnLeaveRepo onLeaveRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeWFHRepo employeeWFHRepo, ConfigSystemRepo configSystemRepo, EmployeeOverTimeRepo employeeOverTimeRepo, RoleConfig roleConfig, EmployeePayrollDetailRepo employeePayrollDetailRepo, EmailHelper emailHelper, UserRepo userRepo, EmployeeRepo employeeRepo)
         {
             _jwtSettings = jwtSettings.Value;
             _context = context;
@@ -60,6 +64,8 @@ namespace RERPAPI.Controllers
             _employeePayrollDetailRepo = employeePayrollDetailRepo;
             //_publisher = publisher;
             _emailHelper = emailHelper;
+            _userRepo = userRepo;
+            _employeeRepo = employeeRepo;
         }
         [HttpPost("login")]
         public IActionResult Login([FromBody] User user)
@@ -90,6 +96,7 @@ namespace RERPAPI.Controllers
                     {
                         new Claim(JwtRegisteredClaimNames.Sub,hasUser.ID.ToString()),
                         new Claim(JwtRegisteredClaimNames.UniqueName,hasUser.LoginName ?? ""),
+                        new Claim("iscandidate", _jwtSettings.IsCandidate.ToString().ToLower())
                     };
 
                 var dictionary = (IDictionary<string, object>)hasUser;
@@ -222,6 +229,82 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        [Authorize]
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordParam param)
+        {
+            try
+            {
+                int result = 0;
+                if (param == null || string.IsNullOrWhiteSpace(param.OldPassword) || string.IsNullOrWhiteSpace(param.NewPassword))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Thông tin mật khẩu không được để trống!"));
+                }
+
+                if (param.NewPassword != param.ConfirmPassword)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Mật khẩu mới và mật khẩu xác nhận không khớp!"));
+                }
+
+                // 1. Lấy thông tin User hiện tại
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                if (currentUser == null || currentUser.ID == 0)
+                {
+                    return Unauthorized(ApiResponseFactory.Fail(null, "Không tìm thấy thông tin người dùng!"));
+                }
+
+                var user = _userRepo.GetByID(currentUser.ID);
+                if (user == null)
+                {
+                    return NotFound(ApiResponseFactory.Fail(null, "Người dùng không tồn tại!"));
+                }
+
+                // 2. Kiểm tra mật khẩu cũ
+                string oldPasswordHash = MaHoaMD5.EncryptPassword(param.OldPassword);
+                if (user.PasswordHash != oldPasswordHash)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Mật khẩu cũ không chính xác!"));
+                }
+
+                // 3. Cập nhật mật khẩu mới
+                user.PasswordHash = MaHoaMD5.EncryptPassword(param.NewPassword);
+
+
+                await _userRepo.UpdateAsync(user);
+
+                return Ok(ApiResponseFactory.Success(null, "Đổi mật khẩu thành công!"));
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, "Lỗi khi đổi mật khẩu: " + ex.Message));
+            }
+        }
+        //API lấy thông tin cá nhân nhân viên
+        [Authorize]
+        [HttpGet("personal-information")]
+        public IActionResult GetPersonalInformation()
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                int employeeID = currentUser.EmployeeID;
+
+                var data = SQLHelper<EmployeeDTON60>.ProcedureToListModel("spGetEmployee",
+                    new string[] { "@Status", "@DepartmentID", "@Keyword", "@ID" },
+                    new object[] { -1, 0, "", employeeID });
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
         /// <summary>
         /// Upload file chung cho hệ thống
         /// </summary>
@@ -1254,15 +1337,14 @@ namespace RERPAPI.Controllers
         [Authorize]
         public IActionResult GetAllTeamNew(int deID)
         {
-
             try
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
-                var orgCharts = SQLHelper<dynamic>.ProcedureToList("spGetOrganizationalChart",
+                var orgCharts = SQLHelper<dynamic>.ProcedureToList("spGetOrganizationalChart_New",
                                                                             new string[] { "@TaxCompanyID", "@DepartmentID", "@Keyword" },
                                                                             new object[] { 1, deID, "" });
-                var orgdChart = SQLHelper<dynamic>.ProcedureToList("spGetOrganizationalChartDetail", new string[] { "@ID" }, new object[] { 0 });
+                var orgdChart = SQLHelper<dynamic>.ProcedureToList("spGetOrganizationalChartDetail_New", new string[] { "@ID" }, new object[] { 0 });
                 var dt = SQLHelper<object>.GetListData(orgCharts, 0);
                 var dtDetail = SQLHelper<object>.GetListData(orgdChart, 0);
 
@@ -1293,12 +1375,12 @@ namespace RERPAPI.Controllers
                     DateStart = request.DateStart,
                     DateEnd = request.DateEnd,
                     IDApprovedTP = 0,
-                    Status = -1,
+                    Status = 0,
                     DeleteFlag = 0,
                     EmployeeID = 0,
                     TType = 0,
                     StatusHR = -1,
-                    StatusBGD = 0,
+                    StatusBGD = -1,
                     IsBGD = false,
                     UserTeamID = 0,
                     SeniorID = currentUser.EmployeeID,
@@ -1696,5 +1778,132 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+
+        [HttpGet("get-config-autoupdate")]
+        public IActionResult GetConfigAutoUpdate()
+        {
+            try
+            {
+                var config = _configuration.GetSection("ConfigAutoUpdate");
+
+                var data = new Dictionary<string, string>();
+
+                foreach (var item in config.GetChildren())
+                {
+                    //if (item.Key == "LinkFileUpdate" && !string.IsNullOrWhiteSpace(item.Value))
+                    //{
+                    //    item.Value = $"{item.Value}?path={Uri.EscapeDataString(config.GetValue<string>("PathUpdate") ?? "")}";
+                    //}
+                    data.Add(item.Key, item.Value ?? "");
+                }
+
+                string linkFileUpdate = config.GetValue<string>("LinkFileUpdate") ?? "";
+                string pathFileUpdate = config.GetValue<string>("PathUpdate") ?? "";
+                string linkFileUpdateNew = $"{linkFileUpdate}?path={Uri.EscapeDataString(pathFileUpdate)}";
+                data["LinkFileUpdate"] = linkFileUpdateNew;
+                return Ok(ApiResponseFactory.Success(data));
+            }
+            catch (Exception ex)
+            {
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("listfile")]
+        public IActionResult GetFiles(string path)
+        {
+            try
+            {
+                DirectoryInfo info = new DirectoryInfo(path);
+                List<FileInfo> listfile = info.GetFiles().OrderByDescending(x => TextUtils.ToInt32(Path.GetFileNameWithoutExtension(x.FullName))).ToList();
+                string newVersion = listfile.FirstOrDefault().FullName;
+
+                //List<FileInfoDTO> listFile = new List<FileInfoDTO>();
+                List<object> listFile = new List<object>();
+                foreach (var item in listfile)
+                {
+                    var fileInfo = new
+                    {
+                        Name = item.Name,
+                        Path = item.FullName
+                    };
+                    listFile.Add(fileInfo);
+                }
+
+                //return Ok(ApiResponseFactory.Success(listFile));
+                return Ok(new
+                {
+                    status = 1,
+                    newVersion = newVersion,
+                    data = listFile
+
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        //API cập nhật thông tin cá nhân nhân viên
+        [Authorize]
+        [HttpPost("update-personal-information")]
+        public async Task<IActionResult> UpdatePersonalInformation([FromBody] UpdatePersonalInformationParam param)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                if (currentUser.EmployeeID != param.EmployeeID)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Bạn không thể sửa thông tin của người khác, vui lòng kiểm tra lại!"));
+                }
+                if (param == null || param.EmployeeID <= 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Thông tin không hợp lệ, vui lòng kiểm tra lại!"));
+                }
+                var employee = _employeeRepo.GetByID(param.EmployeeID);
+                if (employee == null)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy thông tin nhân viên!"));
+                }
+                employee.SDTCaNhan = param.SDTCaNhan;
+                employee.EmailCaNhan = param.EmailCaNhan;
+                int result = 0;
+                result = await _employeeRepo.UpdateAsync(employee);
+                if (result > 0)
+                {
+                    return Ok(ApiResponseFactory.Success(null, "Cập nhật thông tin cá nhân thành công!"));
+                }
+                else
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thông tin cá nhân thất bại!"));
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
+        [Authorize]
+        [HttpGet("get-permission")]
+        public async Task<IActionResult> GetPermission()
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                var permissions = await SqlDapper<PermissionDTO>.ProcedureToListTAsync("spGetUserPermissions", new { UserID = currentUser.ID });
+                var listPermission = permissions.Where(x=>!string.IsNullOrEmpty( x.FunctionCode)).Select(x => x.FunctionCode).Distinct().ToList();
+                return Ok(ApiResponseFactory.Success(listPermission, "Lấy dữ liệu thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
     }
 }

@@ -20,4 +20,8 @@ public partial class ProductGroupWarehouse
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
+
+    public bool? IsDeleted { get; set; }
+
+    public bool? IsNotKeep { get; set; }
 }

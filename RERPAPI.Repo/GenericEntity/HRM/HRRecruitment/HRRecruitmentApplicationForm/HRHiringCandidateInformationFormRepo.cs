@@ -1,4 +1,4 @@
-﻿using RERPAPI.Model.Common;
+using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
@@ -55,11 +55,15 @@ namespace RERPAPI.Repo.GenericEntity.HRM
                 }
                 foreach (var contact in data.EmergencyContacts)
                 {
-                    if (string.IsNullOrWhiteSpace(contact.FullName) || string.IsNullOrWhiteSpace(contact.Relation) ||
-                        string.IsNullOrWhiteSpace(contact.Tel) || string.IsNullOrWhiteSpace(contact.Address))
+                    if(contact.IsDeleted!=true)
                     {
-                        return ApiResponseFactory.Fail(null, "Vui lòng nhập đầy đủ thông tin cho Người liên hệ khẩn cấp!");
-                    }
+                        if (string.IsNullOrWhiteSpace(contact.FullName) || string.IsNullOrWhiteSpace(contact.Relation) ||
+                       string.IsNullOrWhiteSpace(contact.Tel) || string.IsNullOrWhiteSpace(contact.Address))
+                        {
+                            return ApiResponseFactory.Fail(null, "Vui lòng nhập đầy đủ thông tin cho Người liên hệ khẩn cấp!");
+                        }
+                    }    
+                   
                 }
                 // Check Educations (at least 1)
                 if (data.Educations == null || data.Educations.Count < 1)
@@ -68,13 +72,37 @@ namespace RERPAPI.Repo.GenericEntity.HRM
                 }
                 foreach (var edu in data.Educations)
                 {
-                    if (string.IsNullOrWhiteSpace(edu.NameOfSchool) || string.IsNullOrWhiteSpace(edu.Major) ||
-                        string.IsNullOrWhiteSpace(edu.GraduatedTime) || edu.QualificationLevel <= 0)
+                    if(edu.IsDeleted!=true)
                     {
-                        return ApiResponseFactory.Fail(null, "Vui lòng nhập đầy đủ thông tin cho Trình độ học vấn!");
+                        if (string.IsNullOrWhiteSpace(edu.NameOfSchool) || string.IsNullOrWhiteSpace(edu.Major) ||
+                     string.IsNullOrWhiteSpace(edu.GraduatedTime) || edu.QualificationLevel <= 0)
+                        {
+                            return ApiResponseFactory.Fail(null, "Vui lòng nhập đầy đủ thông tin cho Trình độ học vấn!");
+                        }
                     }
                 }
-                // Work Experiences, Foreign Languages, Other Certificates: skipped by user request
+                // Experience Level Validation
+                if (mainForm.WorkExperienceLevel <= 0 || mainForm.WorkExperienceLevel == null)
+                    return ApiResponseFactory.Fail(null, "Vui lòng chọn Mức kinh nghiệm làm việc!");
+
+                // If experience level is NOT "No experience" (Value 1)
+                if (mainForm.WorkExperienceLevel > 1)
+                {
+                    var activeExperiences = data.WorkingExperiences?.Where(x => x.IsDeleted != true).ToList();
+                    if (activeExperiences == null || activeExperiences.Count == 0)
+                    {
+                        return ApiResponseFactory.Fail(null, "Vì bạn đã có kinh nghiệm, vui lòng nhập ít nhất 1 thông tin Quá trình công tác!");
+                    }
+                    foreach (var exp in activeExperiences)
+                    {
+                        if (string.IsNullOrWhiteSpace(exp.CompanyName) || string.IsNullOrWhiteSpace(exp.PositionName) || !exp.DateStart.HasValue)
+                        {
+                            return ApiResponseFactory.Fail(null, "Vui lòng nhập đầy đủ thông tin Tên công ty, Chức danh và Ngày bắt đầu trong Quá trình công tác!");
+                        }
+                    }
+                }
+
+                // Foreign Languages, Other Certificates: skipped by user request
                 return ApiResponseFactory.Success(null, "");
             }
             catch (Exception ex)

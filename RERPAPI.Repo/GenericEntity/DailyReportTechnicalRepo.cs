@@ -1,7 +1,8 @@
-﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,7 +22,8 @@ namespace RERPAPI.Repo.GenericEntity
             out string message,
             List<DailyReportTechnical> existingReports = null,
             int? userId = null,
-            bool isTechnical = true)
+            bool isTechnical = true,
+            Dictionary<int, string> projectDict = null)
         {
             string projectCode = string.Empty;
             message = string.Empty;
@@ -60,8 +62,15 @@ namespace RERPAPI.Repo.GenericEntity
             // Lấy projectCode để hiển thị trong message lỗi
             if (data.ProjectID.HasValue && data.ProjectID > 0)
             {
-                var project = projectRepo.GetByID(data.ProjectID.Value);
-                projectCode = project?.ProjectCode ?? string.Empty;
+                if (projectDict != null && projectDict.TryGetValue(data.ProjectID.Value, out var code))
+                {
+                    projectCode = code;
+                }
+                else
+                {
+                    var project = projectRepo.GetByID(data.ProjectID.Value);
+                    projectCode = project?.ProjectCode ?? string.Empty;
+                }
             }
 
             // Tạo prefix cho message: Dự án [ABC] hoặc để trống nếu không có projectCode
@@ -203,88 +212,125 @@ namespace RERPAPI.Repo.GenericEntity
         }
 
         public bool ValidateDailyReportTechnicalList(
-           List<DailyReportTechnical> dataList,
-           out string message,
-           List<DailyReportTechnical> existingReports = null,
-           int? userId = null,
-           bool isTechnical = true)
+     List<DailyReportTechnical> dataList,
+     out string message,
+     List<DailyReportTechnical> existingReports = null,
+     int? userId = null,
+     bool isTechnical = true)
         {
             message = string.Empty;
 
-            // Kiểm tra null hoặc empty
+            // 1. Validate null / empty
             if (dataList == null || dataList.Count == 0)
             {
                 message = "Danh sách báo cáo không được rỗng!";
                 return false;
             }
 
-            // Tự động lấy existingReports nếu chưa có và có userId
-            // Điều này giúp Controller không cần query trước
+            // 2. Load existingReports (chỉ lấy field cần thiết và lọc theo khoảng ngày có trong request)
             if (existingReports == null && userId.HasValue)
             {
-                existingReports = GetAll().Where(x =>
-                    x.UserReport == userId.Value &&
-                    (x.DeleteFlag == null || x.DeleteFlag != 1)).ToList();
+                var dates = dataList.Where(x => x.DateReport.HasValue).Select(x => x.DateReport.Value).Distinct().ToList();
+                if (dates.Any())
+                {
+                    var minDate = dates.Min();
+                    var maxDate = dates.Max();
+
+                    existingReports = db.Set<DailyReportTechnical>()
+                        .AsNoTracking()
+                        .Where(x =>
+                             x.UserReport == userId.Value &&
+                             x.DateReport >= minDate &&
+                             x.DateReport <= maxDate &&
+                             (x.DeleteFlag == null || x.DeleteFlag != 1))
+                        .Select(x => new DailyReportTechnical
+                        {
+                            ID = x.ID,
+                            DateReport = x.DateReport,
+                            ProjectID = x.ProjectID,
+                            ProjectItemID = x.ProjectItemID,
+                            TotalHours = x.TotalHours,
+                            TotalHourOT = x.TotalHourOT,
+                            UserReport = x.UserReport
+                        })
+                        .ToList();
+                }
+                else
+                {
+                    existingReports = new List<DailyReportTechnical>();
+                }
             }
 
-            // Validate từng item
-            for (int i = 0; i < dataList.Count; i++)
+            // =============================
+            // 3. PRELOAD PROJECT (1 query duy nhất)
+            // =============================
+            var projectIds = dataList
+                .Where(x => x.ProjectID.HasValue && x.ProjectID > 0)
+                .Select(x => x.ProjectID.Value)
+                .Distinct()
+                .ToList();
+
+            var projectDict = projectRepo.GetAll(p => projectIds.Contains(p.ID))
+                .ToDictionary(p => p.ID, p => p.ProjectCode);
+
+            // 4. Validate từng item (Sử dụng projectDict đã preload)
+            foreach (var item in dataList)
             {
-                var item = dataList[i];
-                if (!ValidateDailyReportTechnical(item, out string itemMessage, existingReports, userId, isTechnical))
+                if (!ValidateDailyReportTechnical(item, out string itemMessage, existingReports, userId, isTechnical, projectDict))
                 {
                     message = itemMessage;
                     return false;
                 }
             }
 
-            // Validate theo dự án: Tổng số giờ hành chính của tất cả hạng mục trong cùng 1 dự án <= 8
-            if (isTechnical && dataList.Count > 1)
-            {
-                var groupedByProjectAndDate = dataList
-                    .Where(x => x.DateReport.HasValue && x.ProjectID.HasValue && x.ProjectID > 0)
-                    .GroupBy(x => new
-                    {
-                        ProjectID = x.ProjectID.Value,
-                        DateReport = x.DateReport.Value
-                    });
+            if (!isTechnical)
+                return true;
 
-                foreach (var group in groupedByProjectAndDate)
+            // (Đã preload ở phần trên)
+
+            // =============================
+            // 5. VALIDATE THEO PROJECT + DATE
+            // =============================
+            var groupedByProjectAndDate = dataList
+                .Where(x => x.DateReport.HasValue && x.ProjectID.HasValue && x.ProjectID > 0)
+                .GroupBy(x => new
                 {
-                    // Lấy projectCode
-                    var project = projectRepo.GetByID(group.Key.ProjectID);
-                    string projectCode = project?.ProjectCode ?? $"ID: {group.Key.ProjectID}";
+                    ProjectID = x.ProjectID.Value,
+                    DateReport = x.DateReport
+                });
 
-                    decimal sumTotalHours = group.Sum(x => x.TotalHours ?? 0);
-                    decimal sumTotalHourOT = group.Sum(x => x.TotalHourOT ?? 0);
-                    decimal totalWorkingHours = sumTotalHours - sumTotalHourOT;
+            foreach (var group in groupedByProjectAndDate)
+            {
+                decimal totalWorkingHours = group.Sum(x =>
+                    (x.TotalHours ?? 0) - (x.TotalHourOT ?? 0));
 
-                    if (totalWorkingHours > 8)
-                    {
-                        message = $"Dự án [{projectCode}]:Tổng [Số giờ] - Tổng [Số giờ OT] trong 1 ngày KHÔNG được lớn hơn 8h.\nVui lòng kiểm tra lại!";
-                        return false;
-                    }
+                if (totalWorkingHours > 8)
+                {
+                    string projectCode = projectDict.TryGetValue(group.Key.ProjectID, out var code)
+                        ? code
+                        : $"ID: {group.Key.ProjectID}";
+
+                    message = $"Dự án [{projectCode}]: Tổng giờ làm việc trong 1 ngày không được lớn hơn 8h.";
+                    return false;
                 }
             }
 
-            // Validate theo ngày: Tổng số giờ hành chính trong toàn bộ ngày <= 8
-            if (isTechnical && dataList.Count > 1)
+            // =============================
+            // 6. VALIDATE THEO NGÀY
+            // =============================
+            var groupedByDate = dataList
+                .Where(x => x.DateReport.HasValue)
+                .GroupBy(x => x.DateReport);
+
+            foreach (var group in groupedByDate)
             {
-                var groupedByDate = dataList
-                    .Where(x => x.DateReport.HasValue)
-                    .GroupBy(x => x.DateReport.Value);
+                decimal totalWorkingHours = group.Sum(x =>
+                    (x.TotalHours ?? 0) - (x.TotalHourOT ?? 0));
 
-                foreach (var group in groupedByDate)
+                if (totalWorkingHours > 8)
                 {
-                    decimal sumTotalHours = group.Sum(x => x.TotalHours ?? 0);
-                    decimal sumTotalHourOT = group.Sum(x => x.TotalHourOT ?? 0);
-                    decimal totalWorkingHours = sumTotalHours - sumTotalHourOT;
-
-                    if (totalWorkingHours > 8)
-                    {
-                        message = $"Tổng [Số giờ] - Tổng [Số giờ OT] trong 1 ngày KHÔNG được lớn hơn 8h.\nVui lòng kiểm tra lại!";
-                        return false;
-                    }
+                    message = "Tổng giờ làm việc trong 1 ngày không được lớn hơn 8h.";
+                    return false;
                 }
             }
 

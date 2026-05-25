@@ -22,19 +22,22 @@ namespace RERPAPI.Controllers
         public RegisterContractRepo _registerContractRepo;
         public EmployeeSendEmailRepo _employeeSendEmailRepo;
         public EmployeeRepo _employeeRepo;
+        private readonly EmailHelper _emailHelper;
 
         public RegisterContractController(
            DocumentTypeRepo documentTypeRepo,
            TaxCompanyRepo taxCompanyRepo,
            RegisterContractRepo registerContractRepo,
            EmployeeSendEmailRepo employeeSendEmailRepo,
-           EmployeeRepo employeeRepo)
+           EmployeeRepo employeeRepo,
+           EmailHelper emailHelper)
         {
             _documentTypeRepo = documentTypeRepo;
             _taxCompanyRepo = taxCompanyRepo;
             _registerContractRepo = registerContractRepo;
             _employeeSendEmailRepo = employeeSendEmailRepo;
             _employeeRepo = employeeRepo;
+            _emailHelper = emailHelper;
         }
 
         [HttpPost("get-all-data")]
@@ -267,19 +270,21 @@ namespace RERPAPI.Controllers
                 string subject = $"{currentUser.FullName.ToUpper()} - THÔNG BÁO {statusText} ĐĂNG KÝ HỢP ĐỒNG - {contract.DocumentName}";
 
                 // Tạo entity email
-                var emailEntity = new EmployeeSendEmail
-                {
-                    Subject = subject,
-                    Body = emailBody,
-                    EmailTo = employeeRegister.EmailCongTy ?? employeeRegister.EmailCaNhan ?? "nhubinh2104@gmail.com",
-                    EmailCC = "",
-                    StatusSend = 1, // 1: Đã gửi
-                    DateSend = DateTime.Now,
-                    EmployeeID = currentUser.EmployeeID, // Người gửi (người xác nhận/hủy)
-                    Receiver = employeeRegister.ID        // Người nhận (người đăng ký)
-                };
+                //var emailEntity = new EmployeeSendEmail
+                //{
+                //    Subject = subject,
+                //    Body = emailBody,
+                //    EmailTo = employeeRegister.EmailCongTy ?? employeeRegister.EmailCaNhan ?? "nhubinh2104@gmail.com",
+                //    EmailCC = "",
+                //    StatusSend = 1, // 1: Đã gửi
+                //    DateSend = DateTime.Now,
+                //    EmployeeID = currentUser.EmployeeID, // Người gửi (người xác nhận/hủy)
+                //    Receiver = employeeRegister.ID        // Người nhận (người đăng ký)
+                //};
+                //await _employeeSendEmailRepo.CreateAsync(emailEntity);
 
-                await _employeeSendEmailRepo.CreateAsync(emailEntity);
+                string emailTo = employeeRegister.EmailCongTy ?? employeeRegister.EmailCaNhan ?? "nhubinh2104@gmail.com";
+                await _emailHelper.SendAsync(emailTo, subject, emailBody);
 
                 return Ok(ApiResponseFactory.Success(null, "Gửi email thông báo thành công!"));
             }
@@ -357,7 +362,9 @@ namespace RERPAPI.Controllers
                     Receiver = employeeReciver.ID         // Người nhận (người được giao xử lý)
                 };
 
-                await _employeeSendEmailRepo.CreateAsync(emailEntity);
+                //await _employeeSendEmailRepo.CreateAsync(emailEntity);
+                string emailTo = employeeReciver.EmailCongTy ?? employeeReciver.EmailCaNhan ?? "nhubinh2104@gmail.com";
+                await _emailHelper.SendAsync(emailTo, subject, emailBody);
 
                 return Ok(ApiResponseFactory.Success(null, "Gửi email thông báo thành công!"));
             }

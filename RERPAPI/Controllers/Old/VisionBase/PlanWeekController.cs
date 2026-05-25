@@ -14,17 +14,26 @@ namespace RERPAPI.Controllers.Old.VisionBase
     [Authorize]
     public class PlanWeekController : ControllerBase
     {
-        WeekPlanRepo _weekPlanRepo;
-        DepartmentRepo _departmentRepo;
+        private readonly WeekPlanRepo _weekPlanRepo;
+        private readonly CustomerRepo _customerRepo;
+        private readonly DepartmentRepo _departmentRepo;
+        private readonly EmployeeTeamSaleLinkRepo _employeeTeamSaleLinkRepo;
+        private readonly EmployeeTeamSaleRepo _employeeTeamSaleRepo;
         public PlanWeekController(WeekPlanRepo weekPlanRepo,
-            DepartmentRepo departmentRepo)
+            DepartmentRepo departmentRepo,
+            CustomerRepo customerRepo,
+            EmployeeTeamSaleLinkRepo employeeTeamSaleLinkRepo,
+            EmployeeTeamSaleRepo employeeTeamSaleRepo)
         {
             _weekPlanRepo = weekPlanRepo;
             _departmentRepo = departmentRepo;
+            _customerRepo = customerRepo;
+            _employeeTeamSaleLinkRepo = employeeTeamSaleLinkRepo;
+            _employeeTeamSaleRepo = employeeTeamSaleRepo;
         }
 
 
-        [HttpGet]
+        [HttpGet("get-data")]
         public IActionResult Get(DateTime dateStart, DateTime dateEnd, int departmentId, int userId, int groupSaleId)
         {
             try
@@ -41,6 +50,25 @@ namespace RERPAPI.Controllers.Old.VisionBase
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        [HttpGet("get-data-team-shark")]
+        public IActionResult GetDataPlanWeekShark(DateTime dateStart, DateTime dateEnd, int departmentId, int userId, int groupSaleId)
+        {
+            try
+            {
+                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetPlanWeek_Shark",
+                                        new string[] { "@DateStart", "@DateEnd", "@Department", "@UserID", "@GroupSaleID" },
+                                        new object[] { dateStart, dateEnd, departmentId, userId, groupSaleId });
+                var data = SQLHelper<dynamic>.GetListData(list, 0);
+                var data1 = SQLHelper<dynamic>.GetListData(list, 1);
+                return Ok(ApiResponseFactory.Success(new { data, data1 }, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpGet("get-department")]
         public IActionResult GetDepartment()
         {
@@ -68,6 +96,95 @@ namespace RERPAPI.Controllers.Old.VisionBase
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpGet("get-customers")]
+        public IActionResult GetCustomers()
+        {
+            try
+            {
+                var result = _customerRepo.GetAll(x => x.IsDeleted != true).Select(e => new
+                {
+                    CustomerName = e.CustomerName,
+                    CustomerCode = e.CustomerCode,
+                    ID = e.ID,
+                });
+
+                return Ok(ApiResponseFactory.Success(result, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-root-teams")]
+        public IActionResult GetRootTeams()
+        {
+            try
+            {
+                var result = _employeeTeamSaleRepo
+                    .GetAll(x => x.ParentID == 0 && x.IsDeleted != 1)
+                    .Select(t => new
+                    {
+                        TeamSaleID = t.ID,
+                        TeamSaleName = t.Name
+                    })
+                    .OrderBy(t => t.TeamSaleName)
+                    .ToList();
+
+                return Ok(ApiResponseFactory.Success(result, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-my-root-team")]
+        public IActionResult GetMyRootTeam(int employeeId)
+        {
+            try
+            {
+                // 1. Tìm team của employee thuộc về
+                var teamLink = _employeeTeamSaleLinkRepo
+                    .GetAll(x => x.EmployeeID == employeeId)
+                    .FirstOrDefault();
+
+                if (teamLink == null)
+                {
+                    return Ok(ApiResponseFactory.Success(new { TeamSaleID = 0 }, "Nhân viên chưa thuộc team nào"));
+                }
+
+                // 2. tìm root team (ParentID = 0)
+                int currentTeamId = teamLink.EmployeeTeamSaleID;
+                var visitedIds = new HashSet<int>();
+
+                while (currentTeamId > 0 && !visitedIds.Contains(currentTeamId))
+                {
+                    visitedIds.Add(currentTeamId);
+                    var team = _employeeTeamSaleRepo.GetByID(currentTeamId);
+
+                    if (team == null || team.IsDeleted == 1) break;
+
+                    if (team.ParentID == 0)
+                    {
+                        return Ok(ApiResponseFactory.Success(new
+                        {
+                            TeamSaleID = team.ID,
+                            TeamSaleName = team.Name
+                        }, ""));
+                    }
+
+                    currentTeamId = team.ParentID;
+                }
+
+                return Ok(ApiResponseFactory.Success(new { TeamSaleID = 0 }, "Không tìm thấy root team"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> Save(List<WeekPlan> model)
         {
@@ -80,11 +197,12 @@ namespace RERPAPI.Controllers.Old.VisionBase
 
                     List<string> errors = new List<string>();
 
-                    if (validate.Result?.Length > 500)
-                        errors.Add("Kết quả mong đợi không được vượt quá 500 ký tự");
-                    if (validate.ContentPlan?.Length > 500)
-                        errors.Add("Nội dung không được vượt quá 500 ký tự");
-
+                    //if (validate.Result?.Length > 500)
+                    //    errors.Add("Kết quả mong đợi không được vượt quá 500 ký tự");
+                    //if (validate.ContentPlan?.Length > 500)
+                    //    errors.Add("Nội dung không được vượt quá 500 ký tự");
+                    if (validate.Problem?.Length > 500)
+                        errors.Add("Khó khăn không được vượt quá 500 ký tự");
 
                     if (errors.Any())
                     {
@@ -98,13 +216,21 @@ namespace RERPAPI.Controllers.Old.VisionBase
                     weekPlan.UserID = item.UserID;
                     weekPlan.ContentPlan = item.ContentPlan;
                     weekPlan.Result = item.Result;
-                    weekPlan.CreatedDate = item.CreatedDate;
-                    weekPlan.CreatedBy = item.CreatedBy;
-                    weekPlan.UpdatedDate = DateTime.Now;
-                    weekPlan.UpdatedBy = item.UpdatedBy;
-                    if (string.IsNullOrWhiteSpace(weekPlan.ContentPlan) && string.IsNullOrWhiteSpace(weekPlan.Result))
+                    weekPlan.CustomerID = item.CustomerID;
+                    weekPlan.Problem = item.Problem;
+                    //weekPlan.CreatedDate = item.CreatedDate;
+                    //weekPlan.CreatedBy = item.CreatedBy;
+                    //weekPlan.UpdatedDate = DateTime.Now;
+                    //weekPlan.UpdatedBy = item.UpdatedBy;
+                    if (string.IsNullOrWhiteSpace(weekPlan.ContentPlan) &&
+                        string.IsNullOrWhiteSpace(weekPlan.Result) &&
+                        string.IsNullOrWhiteSpace(weekPlan.Problem))
                     {
-                        await _weekPlanRepo.DeleteAsync(weekPlan.ID);
+                        if (weekPlan.ID > 0) 
+                        {
+                            await _weekPlanRepo.DeleteAsync(weekPlan.ID);
+                        }
+                        continue; 
                     }
                     else
                     {
@@ -132,7 +258,7 @@ namespace RERPAPI.Controllers.Old.VisionBase
         {
             try
             {
-                List<WeekPlan> weekPlans = _weekPlanRepo.GetAll().Where(x => x.UserID == dto.userId && x.DatePlan == dto.datePlan).ToList();
+                List<WeekPlan> weekPlans = _weekPlanRepo.GetAll(x => x.UserID == dto.userId && x.DatePlan == dto.datePlan).ToList();
 
                 if (!weekPlans.Any())
                     return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy kế hoạch để xoá!"));

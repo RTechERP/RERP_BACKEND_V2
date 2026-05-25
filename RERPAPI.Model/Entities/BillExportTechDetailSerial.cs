@@ -14,4 +14,6 @@ public partial class BillExportTechDetailSerial
     public string? SerialNumber { get; set; }
 
     public int? WarehouseID { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }

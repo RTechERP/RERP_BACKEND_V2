@@ -8,4 +8,8 @@ public partial class FcmToken
     public int ID { get; set; }
 
     public string? Token { get; set; }
+
+    public int? EmployeeID { get; set; }
+
+    public string? DeviceID { get; set; }
 }

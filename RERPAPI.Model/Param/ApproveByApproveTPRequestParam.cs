@@ -23,6 +23,7 @@ namespace RERPAPI.Model.Param
         public int? IsBGD { get; set; }
         public int? UserTeamID { get; set; } = 0;
         public int? SeniorID { get; set; } = 0;
+        public int? StatusDecilineSenior { get; set; } = -1;
 
     }
 }

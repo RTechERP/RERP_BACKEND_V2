@@ -4,6 +4,11 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+	  <WebPublishMethod>MSDeploy</WebPublishMethod>
+
+	  <LastUsedBuildConfiguration>Release</LastUsedBuildConfiguration>
+
+	  <EnvironmentName>Production</EnvironmentName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -57,7 +62,6 @@
     <Compile Remove="Controllers\Old\VisionBase\CustomerController.cs" />
     <Compile Remove="Controllers\PONCCController.cs" />
     <Compile Remove="Controllers\Project\ProjectPartlistPurchaseRequestController.cs" />
-    <Compile Remove="Controllers\Systems\UpdateVersionController.cs" />
     <Compile Remove="Controllers\UsersController.cs" />
     <Compile Remove="Controllers\WareHouseController.cs" />
   </ItemGroup>
@@ -67,9 +71,13 @@
     <PackageReference Include="Dapper" Version="2.1.66" />
     <PackageReference Include="DocX" Version="5.0.0" />
     <PackageReference Include="EPPlus" Version="8.2.1" />
+    <PackageReference Include="FirebaseAdmin" Version="3.5.0" />
+    <PackageReference Include="iTextSharp" Version="5.5.13.5" />
     <PackageReference Include="MailKit" Version="4.14.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.5" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.5" />
+    <PackageReference Include="Microsoft.Data.SqlClient.SNI.runtime" Version="6.0.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.5">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -78,8 +86,15 @@
     <PackageReference Include="NPOI" Version="2.7.5" />
     <PackageReference Include="QRCoder" Version="1.6.0" />
     <PackageReference Include="RabbitMQ.Client" Version="7.2.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+    <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" />
+    <PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0" />
+    <PackageReference Include="Serilog.Sinks.Async" Version="2.1.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageReference Include="System.Drawing.Common" Version="9.0.6" />
+    <PackageReference Include="tusdotnet" Version="2.11.1" />
     <PackageReference Include="ZXing.Net" Version="0.16.10" />
   </ItemGroup>
 
@@ -89,6 +104,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Controllers\HRM\HRRecruitmentInterviewAssessment\" />
     <Folder Include="Controllers\Old\ProjectManager\" />
     <Folder Include="Controllers\SaleWareHouseManagement\" />
     <Folder Include="Controllers\Sale\" />

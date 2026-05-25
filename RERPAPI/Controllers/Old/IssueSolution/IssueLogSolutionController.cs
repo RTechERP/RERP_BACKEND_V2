@@ -88,7 +88,7 @@ namespace RERPAPI.Controllers.Old.IssueSolution
         {
             try
             {
-                var statuses = _issueSolutionStatusRepo.GetAll().Where(x=>x.IsDeleted != true);
+                var statuses = _issueSolutionStatusRepo.GetAll(x=>x.IsDeleted != true);
                 return Ok(ApiResponseFactory.Success(statuses, ""));
             }
             catch (Exception ex)
@@ -101,7 +101,7 @@ namespace RERPAPI.Controllers.Old.IssueSolution
         {
             try
             {
-                var causes = _issueCauseRepo.GetAll().Where(x => x.IsDeleted != true);
+                var causes = _issueCauseRepo.GetAll(x => x.IsDeleted != true);
                 return Ok(ApiResponseFactory.Success(causes, ""));
             }
             catch (Exception ex)
@@ -152,8 +152,7 @@ namespace RERPAPI.Controllers.Old.IssueSolution
                 var issueSolutionId = dto.issueSolutionLogs.ID;
                 if(dto.issueSolutionCauseLink != null)
                 {
-                    var oldCauses = _issueSolutionCauseLinkRepo.GetAll()
-                        .Where(x => x.IssueSolutionID == issueSolutionId && (x.IsDeleted == null || x.IsDeleted == false)).ToList();
+                    var oldCauses = _issueSolutionCauseLinkRepo.GetAll(x => x.IssueSolutionID == issueSolutionId && (x.IsDeleted == null || x.IsDeleted == false)).ToList();
 
                     foreach (var item in oldCauses)
                     {
@@ -167,8 +166,7 @@ namespace RERPAPI.Controllers.Old.IssueSolution
                 }
                 if(dto.issueSolutionStatusLink != null)
                 {
-                    var oldStatus = _issueSolutionStatusLinkRepo.GetAll()
-                        .Where(x => x.IssueSolutionID == issueSolutionId && (x.IsDeleted == null || x.IsDeleted == false)).ToList();
+                    var oldStatus = _issueSolutionStatusLinkRepo.GetAll(x => x.IssueSolutionID == issueSolutionId && (x.IsDeleted == null || x.IsDeleted == false)).ToList();
 
                     foreach (var item in oldStatus)
                     {
@@ -183,8 +181,7 @@ namespace RERPAPI.Controllers.Old.IssueSolution
                 if(dto.issueSolutionDocuments != null && dto.issueSolutionDocuments.Count > 0)
                 {
 
-                    var oldDocuments = _issueSolutionDocumentRepo.GetAll()
-                        .Where(x => x.IssueSolutionID == issueSolutionId && (x.IsDeleted == null || x.IsDeleted == false)).ToList();
+                    var oldDocuments = _issueSolutionDocumentRepo.GetAll(x => x.IssueSolutionID == issueSolutionId && (x.IsDeleted == null || x.IsDeleted == false)).ToList();
 
                     foreach (var item in oldDocuments)
                     {

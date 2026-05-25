@@ -78,4 +78,6 @@ public partial class SupplierSale
     public string? Description { get; set; }
 
     public string? RuleIncoterm { get; set; }
+
+    public int? BankListID { get; set; }
 }

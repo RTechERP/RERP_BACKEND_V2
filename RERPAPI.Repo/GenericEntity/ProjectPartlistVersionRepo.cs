@@ -97,17 +97,23 @@ namespace RERPAPI.Repo.GenericEntity
             }
             if (item.StatusVersion == 2)
             {
-                var existsPO = GetAll()
-                .Any(x => x.ProjectTypeID == item.ProjectTypeID
-                 && x.ProjectSolutionID == item.ProjectSolutionID
-                 && x.StatusVersion == 2
-                 && x.IsDeleted == false
-                 && x.ID != item.ID);
+                var exists = GetAll().Any(x =>
+                    x.ProjectTypeID == item.ProjectTypeID
+                    && x.ProjectSolutionID == item.ProjectSolutionID
+                    && x.StatusVersion == 2
+                    && x.IsDeleted == false
+                    && x.ID != item.ID
+                    && x.IsConsumable == item.IsConsumable
+                );
 
-                if (existsPO)
+                if (exists)
                 {
                     var current = _projectTypeRepo.GetByID(item.ProjectTypeID ?? 0);
-                    message = $"Danh mục [{current.ProjectTypeName}] đã có phiên bản PO!";
+
+                    message = item.IsConsumable == true
+                        ? $"Danh mục [{current.ProjectTypeName}] đã có phiên bản PO VTTH!"
+                        : $"Danh mục [{current.ProjectTypeName}] đã có phiên bản PO tiêu chuẩn!";
+
                     return false;
                 }
             }

@@ -205,4 +205,19 @@ public partial class HRRecruitmentApplicationForm
     public bool? HasTaxCode { get; set; }
 
     public string? TaxCode { get; set; }
+
+    /// <summary>
+    /// 0.Chưa hoàn thành 1.Hoàn thành
+    /// </summary>
+    public bool? IsComplete { get; set; }
+
+    /// <summary>
+    /// Chức vụ cần tuyển
+    /// </summary>
+    public string? PositionName { get; set; }
+
+    /// <summary>
+    /// Kinh nghiệm ứng viên
+    /// </summary>
+    public int? WorkExperienceLevel { get; set; }
 }

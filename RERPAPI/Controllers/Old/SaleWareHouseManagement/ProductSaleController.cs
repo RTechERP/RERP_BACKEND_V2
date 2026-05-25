@@ -79,7 +79,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         {
             try
             {
-                List<ProductSale> rs = _productsaleRepo.GetAll().Where(x => x.ProductGroupID == productgroupID).ToList();
+				List<ProductSale> rs = _productsaleRepo.GetAll(x => x.ProductGroupID == productgroupID);
                 return Ok(ApiResponseFactory.Success(rs, "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
@@ -88,7 +88,19 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             }
         }
         #endregion
-
+		[HttpGet("gen-code")]
+		public IActionResult GenCode(int productgroupID)
+		{
+			try
+			{
+				string rs = GenerateProductNewCode(productgroupID);
+				return Ok(ApiResponseFactory.Success(rs, "Lấy dữ liệu thành công!"));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
         #region hàm sinh mã nội bộ (productnewcode) 
         //private string GenerateProductNewCode(int productGroupId)
         //{
@@ -125,7 +137,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return string.Empty;
 
             // 2️⃣ Xác định nhóm CHA
-            var parentGroup = currentGroup.ParentID.HasValue
+			var parentGroup = currentGroup.ParentID > 0
                 ? _productgroupRepo.GetByID(currentGroup.ParentID.Value)
                 : currentGroup;
 
@@ -185,7 +197,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     //TN.Binh update 19/10/25
                     if (!CheckProductCode(dto))
                     {
-                        return BadRequest(new { status = 0, message = $"Mã sản phẩm [{dto.ProductSale.ProductCode}] đã tồn tại trong nhóm !" });
+                        //return BadRequest(new { status = 0, message = $"Mã sản phẩm [{dto.ProductSale.ProductCode}] đã tồn tại trong nhóm !" });
                     }
                     //end update 
                     if (dto.ProductSale.ID <= 0)
@@ -211,6 +223,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         dto.Inventory.TotalQuantityLast = 0;
                         dto.Inventory.MinQuantity = 0;
                         dto.Inventory.IsStock = false;
+                        //dto.Inventory.ProductGroupID = dto.ProductSale.ProductGroupID;
 
                         await _inventoryRepo.CreateAsync(dto.Inventory);
                     }
@@ -243,22 +256,16 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 {
                     try
                     {
-                        if (_productsaleRepo.CheckCode(dto))
-                        {
-                            duplicateCodes.Add(dto.ProductCode ?? "N/A");
-                            failCount++;
-                            continue; // Bỏ qua bản ghi trùng mã
-                        }
                         var groupName = (dto.ProductGroupName ?? "").Trim().ToLower();
                         var groupNo = (dto.ProductGroupNo ?? "").Trim().ToLower();
 
                         var typeNo = (dto.ProductGroupTypeNo ?? "").Trim().ToLower();
                         var typeName = (dto.ProductGroupTypeName ?? "").Trim().ToLower();
 
-                        if (groupNo == typeNo)
-                        {
-                            return BadRequest(ApiResponseFactory.Fail(null, $"Loại vật tư [{typeNo}] trùng với nhóm [{groupNo}]!"));
-                        }
+                        //if (groupNo == typeNo)
+                        //{
+                        //    return BadRequest(ApiResponseFactory.Fail(null, $"Loại vật tư [{typeNo}] trùng với nhóm [{groupNo}]!"));
+                        //}
 
                         if (!string.IsNullOrWhiteSpace(groupName) || !string.IsNullOrWhiteSpace(groupNo))
                         {
@@ -310,6 +317,13 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                                 dto.ProductGroupID = productGroupType.ID;
 
                             }
+                        }
+
+                        if (_productsaleRepo.CheckCode(dto))
+                        {
+                            duplicateCodes.Add(dto.ProductCode ?? "N/A");
+                            failCount++;
+                            continue; // Bỏ qua bản ghi trùng mã
                         }
 
                         if (!string.IsNullOrWhiteSpace(dto.FirmName))

@@ -62,19 +62,33 @@ namespace RERPAPI.Repo.GenericEntity.HRM
 
 
             var date = item.DateWFH.Value.Date;
+            //  Check trùng: cùng EmployeeID + DateWFH + TimeWFH, khác ID hiện tại
+            var query = GetAll(x =>
+          x.EmployeeID == item.EmployeeID
+          && x.DateWFH.HasValue
+          && x.DateWFH.Value.Date == date
+          && x.ID != item.ID
+          && x.IsDeleted != true
+      );
+            bool exists = false;
 
-            // 5. Check trùng: cùng EmployeeID + DateWFH + TimeWFH, khác ID hiện tại
-            var exists = GetAll(x =>
-                    x.EmployeeID == item.EmployeeID
-                    && x.DateWFH.HasValue
-                    && x.DateWFH.Value.Date == date
-                    && x.TimeWFH == item.TimeWFH
-                    && x.ID != item.ID
-                ).Any();
+            if (item.TimeWFH == 3) // cả ngày
+            {
+                // chỉ cần có bất kỳ bản ghi nào là trùng
+                exists = query.Any();
+            }
+            else if (item.TimeWFH == 1) // sáng
+            {
+                exists = query.Any(x => x.TimeWFH == 1 || x.TimeWFH == 3);
+            }
+            else if (item.TimeWFH == 2) // chiều
+            {
+                exists = query.Any(x => x.TimeWFH == 2 || x.TimeWFH == 3);
+            }
 
             if (exists)
             {
-                message = $"Nhân viên  đã đăng ký WFH cho ngày {item.DateWFH}!";
+                message = $"Nhân viên đã đăng ký WFH trùng thời gian trong ngày {date:dd/MM/yyyy}!";
                 return false;
             }
 

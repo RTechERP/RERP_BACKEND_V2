@@ -10,7 +10,7 @@ namespace RERPAPI.Repo.GenericEntity
         {
         }
 
-        public async Task<int> CreateAsynC(ProductGroup item)
+        public async Task<int> CreateReturnIDAsync(ProductGroup item)
         {
             await CreateAsync(item);
             return item.ID;

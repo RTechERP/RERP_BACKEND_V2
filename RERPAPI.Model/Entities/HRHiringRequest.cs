@@ -46,4 +46,20 @@ public partial class HRHiringRequest
     public DateTime? UpdatedDate { get; set; }
 
     public bool IsDeleted { get; set; }
+
+    public bool? IsActiveExam { get; set; }
+
+    /// <summary>
+    /// Chức vụ cần tuyển
+    /// </summary>
+    public string? PositionName { get; set; }
+
+    public bool? IsCompleted { get; set; }
+
+    /// <summary>
+    /// Hạn tuyển dụng
+    /// </summary>
+    public DateTime? HiringDeadline { get; set; }
+
+    public string? LanguageNote { get; set; }
 }

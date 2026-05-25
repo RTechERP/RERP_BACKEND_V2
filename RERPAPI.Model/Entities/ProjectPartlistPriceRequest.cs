@@ -97,4 +97,21 @@ public partial class ProjectPartlistPriceRequest
     public string? ReasonUnPrice { get; set; }
 
     public int? EmployeeIDUnPrice { get; set; }
+
+    /// <summary>
+    /// LeadTime cần hàng (Kỹ thuật)
+    /// </summary>
+    public int? LeadTimeTechnical { get; set; }
+
+    /// <summary>
+    /// Giá target
+    /// </summary>
+    public decimal? TargetPrice { get; set; }
+
+    /// <summary>
+    /// hiệu lực
+    /// </summary>
+    public DateTime? EffectiveDate { get; set; }
+
+    public DateTime? QuoteExpectedDate { get; set; }
 }

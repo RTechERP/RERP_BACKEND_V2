@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -7,6 +9,8 @@ using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
+using RERPAPI.Model.Param;
 using RERPAPI.Repo;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
@@ -20,7 +24,12 @@ using RERPAPI.Repo.GenericEntity.GeneralCatetogy.JobRequirements;
 using RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders;
 using RERPAPI.Repo.GenericEntity.HRM;
 using RERPAPI.Repo.GenericEntity.HRM.DepartmentRequire;
+using RERPAPI.Repo.GenericEntity.HRM.FlightBooking;
+using RERPAPI.Repo.GenericEntity.HRM.HRRecruitmentInterviewAssessment;
+using RERPAPI.Repo.GenericEntity.HRM.ProductProtectiveGear;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
+using RERPAPI.Repo.GenericEntity.HRRecruitmentExamRepo;
+using RERPAPI.Repo.GenericEntity.MakerTrainingFirm;
 using RERPAPI.Repo.GenericEntity.MeetingMinutesRepo;
 using RERPAPI.Repo.GenericEntity.Project;
 using RERPAPI.Repo.GenericEntity.Systems;
@@ -28,9 +37,16 @@ using RERPAPI.Repo.GenericEntity.TB;
 using RERPAPI.Repo.GenericEntity.Technical;
 using RERPAPI.Repo.GenericEntity.Technical.KPI;
 using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
-//using RERPAPI.SendService;
+using RERPAPI.SendService;
 using RTCApi.Repo.GenericRepo;
+using Serilog;
 using System.Text;
+using tusdotnet;
+using tusdotnet.Helpers;
+using tusdotnet.Models;
+using tusdotnet.Models.Configuration;
+using tusdotnet.Models.Expiration;
+using tusdotnet.Stores;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,6 +64,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserPermissionService, UserPermissionService>();
 builder.Services.AddScoped<RTCContext>();
 builder.Services.AddScoped<RoleConfig>();
+builder.Services.AddScoped<IFirebaseNotificationService, FirebaseNotificationService>();
 
 builder.Services.AddScoped<EmployeeOnLeaveRepo>();
 builder.Services.AddScoped<RERPAPI.Repo.GenericEntity.AddressStockRepo>();
@@ -104,10 +121,13 @@ builder.Services.AddScoped<EmployeeCurricularRepo>();
 builder.Services.AddScoped<EmployeeEarlyLateRepo>();
 builder.Services.AddScoped<EmployeeEducationLevelRepo>();
 builder.Services.AddScoped<EmployeeErrorRepo>();
+builder.Services.AddScoped<EmployeePayrollDeductionRepo>();
+builder.Services.AddScoped<EmployeeDeductionTypeRepo>();
 builder.Services.AddScoped<EmployeeFoodOrderRepo>();
 builder.Services.AddScoped<EmployeeNoFingerprintRepo>();
 builder.Services.AddScoped<EmployeeOnLeaveMasterRepo>();
 builder.Services.AddScoped<EmployeeOnLeaveRepo>();
+builder.Services.AddScoped<EmployeeOnLeavePhaseRepo>();
 builder.Services.AddScoped<EmployeeOverTimeRepo>();
 builder.Services.AddScoped<EmployeeProjectTypeRepo>();
 builder.Services.AddScoped<EmployeePurchaseRepo>();
@@ -181,7 +201,9 @@ builder.Services.AddScoped<PONCCRulePayRepo>();
 builder.Services.AddScoped<PONCCHistoryRepo>();
 builder.Services.AddScoped<PositionContractRepo>();
 builder.Services.AddScoped<PositionInternalRepo>();
-builder.Services.AddScoped<ProductGroupRTCRepo>();
+//builder.Services.AddScoped<ProductGroupRTCRepo>();
+//builder.Services.AddScoped<JobRequirementRecommendRepo>();
+//builder.Services.AddScoped<JobRequirementRecommendDetailRepo>();
 builder.Services.AddScoped<ProductGroupRepo>();
 builder.Services.AddScoped<ProductGroupWareHouseRepo>();
 builder.Services.AddScoped<ProductLocationRepo>();
@@ -259,6 +281,7 @@ builder.Services.AddScoped<UserTeamRepo>();
 builder.Services.AddScoped<WarehouseRepo>();
 builder.Services.AddScoped<WeekPlanRepo>();
 builder.Services.AddScoped<vUserGroupLinksRepo>();
+builder.Services.AddScoped<PinResetTokenRepo>();
 builder.Services.AddScoped<NotifyRepo>();
 
 // Project sub-namespace repos
@@ -275,7 +298,11 @@ builder.Services.AddScoped<VisitFactoryDetailRepo>();
 builder.Services.AddScoped<VisitGuestTypeRepo>();
 
 builder.Services.AddScoped<FormAndFunctionRepo>();
+builder.Services.AddScoped<FormAndFunctionGroupRepo>();
 builder.Services.AddScoped<UserGroupRepo>();
+builder.Services.AddScoped<UserGroupLinkRepo>();
+builder.Services.AddScoped<UserGroupRightDistributionRepo>();
+
 
 builder.Services.AddScoped<CategoriesRepo>();
 builder.Services.AddScoped<ProductRTCRepo>();
@@ -322,6 +349,8 @@ builder.Services.AddScoped<VehicleRepairHistoryFileRepo>();
 builder.Services.AddScoped<VehicleRepairHistoryRepo>();
 builder.Services.AddScoped<VehicleRepairRepo>();
 builder.Services.AddScoped<VehicleRepairTypeRepo>();
+builder.Services.AddScoped<FlightBookingManagementRepo>();
+builder.Services.AddScoped<FlightBookingProposalRepo>();
 
 builder.Services.AddScoped<HandoverApproveRepo>();
 builder.Services.AddScoped<HandoverAssetManagementRepo>();
@@ -361,6 +390,7 @@ builder.Services.AddScoped<DocumentExportRepo>();
 builder.Services.AddScoped<InventoryProjectExportRepo>();
 builder.Services.AddScoped<InvoiceLinkRepo>();
 builder.Services.AddScoped<SupplierSaleRepo>();
+builder.Services.AddScoped<SupplierSaleLinkRepo>();
 builder.Services.AddScoped<SupplierSaleContactRepo>();
 builder.Services.AddScoped<ProjectFieldRepo>();
 
@@ -377,6 +407,8 @@ builder.Services.AddScoped<HRHiringRequestHealthLinkRepo>();
 builder.Services.AddScoped<HRHiringRequestLanguageLinkRepo>();
 builder.Services.AddScoped<ProjectWorkerRepo>();
 builder.Services.AddScoped<ProjectRequestFileRepo>();
+builder.Services.AddScoped<FollowProjectBaseDetailRepo>();
+
 
 builder.Services.AddScoped<TaxCompanyRepo>();
 builder.Services.AddScoped<ProjectPartlistPurchaseRequestTypeRepo>();
@@ -414,8 +446,6 @@ builder.Services.AddScoped<AGVHistoryProductRepo>();
 #region YCCV
 builder.Services.AddScoped<JobRequirementRepo>();
 builder.Services.AddScoped<JobRequirementDetailRepo>();
-//builder.Services.AddScoped<JobRequirementApprovedRepo>();
-//builder.Services.AddScoped<DepartmentRequiredApprovalsRepo>();
 builder.Services.AddScoped<DepartmentRequiredRepo>();
 builder.Services.AddScoped<HCNSProposalsRepo>();
 #endregion
@@ -426,6 +456,7 @@ builder.Services.AddScoped<TaxCompanyRepo>();
 builder.Services.AddScoped<HistoryErrorRepo>();
 builder.Services.AddScoped<HistoryProductRTCLogRepo>();
 builder.Services.AddScoped<BillImportTechnicalLogRepo>();
+builder.Services.AddScoped<BillImportDetailTechnicalRepo>();
 builder.Services.AddScoped<BillDocumentImportTechnicalRepo>();
 builder.Services.AddScoped<BillDocumentImportTechnicalLogRepo>();
 builder.Services.AddScoped<BillExportTechnicalLogRepo>();
@@ -445,21 +476,77 @@ builder.Services.AddScoped<CourseCatalogProjectTypeRepo>();
 builder.Services.AddScoped<KPIPositionTypeRepo>();
 builder.Services.AddScoped<CourseRepo>();
 builder.Services.AddScoped<CourseRegisterIdeaRepo>();
+builder.Services.AddScoped<CourseLessonRepo>();
+builder.Services.AddScoped<CourseFilesRepo>();
+builder.Services.AddScoped<CourseExamRepo>();
+builder.Services.AddScoped<CourseLessonHistoryRepo>();
+builder.Services.AddScoped<CourseExamResultRepo>();
+builder.Services.AddScoped<CourseExamResultDetailRepo>();
+builder.Services.AddScoped<CourseQuestionRepo>();
+builder.Services.AddScoped<CourseRightAnswerRepo>();
+builder.Services.AddScoped<CourseExamEvaluateRepo>();
+builder.Services.AddScoped<CourseAnswerRepo>();
+builder.Services.AddScoped<CourseExamPracticeRepo>();
+builder.Services.AddScoped<ExamResultRepo>();
+builder.Services.AddScoped<ExamResultDetailRepo>();
 
 builder.Services.AddScoped<InventoryProjectProductSaleLinkRepo>();
 builder.Services.AddScoped<HandoverPersonalAssetRepo>();
 builder.Services.AddScoped<UpdateVersionRepo>();
 
+builder.Services.AddScoped<ProjectTaskRepo>();
+builder.Services.AddScoped<ProjectTaskGroupRepo>();
+builder.Services.AddScoped<ProjectTaskChecklistRepo>();
+builder.Services.AddScoped<ProjectTaskEmailBandRepo>();
+builder.Services.AddScoped<ProjectTaskAttendanceRepo>();
+builder.Services.AddTransient<ProjectTaskAttachmentRepo>();
+builder.Services.AddTransient<ProjectTaskAdditionalRepo>();
+builder.Services.AddTransient<ProjectTaskSettingRepo>();
+
+builder.Services.AddScoped<SendEmailReceiveProjectTaskClass>();
+
+
 builder.Services.AddScoped<FollowProjectBaseDetailRepo>();
+builder.Services.AddScoped<DailyReportAccountingRepo>();
 
+builder.Services.AddScoped<ProductSaleGroupWarehouseLinkRepo>();
+builder.Services.AddScoped<FiveSRatingDetailRepo>();
+builder.Services.AddScoped<FiveSRuleErrorRepo>();
+builder.Services.AddScoped<FiveSErrorRepo>();
+builder.Services.AddScoped<FiveSRatingRepo>();
+builder.Services.AddScoped<FiveSDepartmentRepo>();
+builder.Services.AddScoped<FiveSRatingTicketRepo>();
+builder.Services.AddScoped<FiveSBonusMinusRepo>();
 
+builder.Services.AddScoped<HRRecruitmentInterviewAssessmentFormRepo>();
+builder.Services.AddScoped<HRRecruitmentApplicationFormRepo>();
+builder.Services.AddScoped<HRRecruitmentApproveRepo>();
+builder.Services.AddScoped<JobPerfomanceEvaluationApproveRepo>();
+builder.Services.AddScoped<JobPerfomanceEvaluationNewRepo>();
 
-
+builder.Services.AddScoped<ProjectHistoryProblemProjectItemLinkRepo>();
+builder.Services.AddScoped<ProjectHistoryProblemPartListLinkRepo>();
+builder.Services.AddScoped<ProjectHistoryProblemReceiverLinkRepo>();
+builder.Services.AddScoped<ProjectHistoryProblemWorkerLinkRepo>();
+builder.Services.AddScoped<ProjectHistoryProblemFileRepo>();
+builder.Services.AddScoped<ProjectHistoryProblemLogRepo>();
+builder.Services.AddScoped<DrawingRepo>();
+builder.Services.AddScoped<DrawingLogRepo>();
+builder.Services.AddScoped<JobRequirementRecommendRepo>();
+builder.Services.AddScoped<JobRequirementRecommendDetailRepo>();
 
 #region khóa học 
 builder.Services.AddScoped<CoureTypeRepo>();
+builder.Services.AddScoped<CourseKPIEmployeeTeamLinkRepo>();
+builder.Services.AddScoped<CourseKPIEmployeeTeamMapRepo>();
+builder.Services.AddScoped<CourseKPIEmployeeTeamRepo>();
+
 #endregion
 
+#region Tủ đồ bảo hộ 
+builder.Services.AddScoped<ProductGroupRTCRepo>();
+
+#endregion
 #region Kế hoạch tuần
 builder.Services.AddScoped<WorkPlanRepo>();
 builder.Services.AddScoped<WorkPlanDetailRepo>();
@@ -494,6 +581,20 @@ builder.Services.AddScoped<MenuAppRepo>();
 builder.Services.AddScoped<MenuAppUserGroupLinkRepo>();
 builder.Services.AddScoped<ProjectPartListPurchaseRequestApproveLogRepo>();
 builder.Services.AddScoped<EmployeeLuckyNumberRepo>();
+builder.Services.AddScoped<ProductGroupLinkRepo>();
+
+//phần lĩnh vực và công nghệ dự án
+builder.Services.AddScoped<ProjectApplicationTypesRepo>();
+builder.Services.AddScoped<ProjectTechnologiesRepo>();
+builder.Services.AddScoped<ProjectTypeApplicationLinkRepo>();
+builder.Services.AddScoped<ProjectTypeTechnologyLinkRepo>();
+builder.Services.AddScoped<CustomerIndustriesRepo>();
+// mobile
+builder.Services.AddScoped<FcmTokenRepo>();
+builder.Services.AddScoped<NotificationTypeLinkRepo>();
+builder.Services.AddScoped<NotificationTypeRepo>();
+builder.Services.AddScoped<JobRequirementLogRepo>();
+//builder.Services.AddScoped<AssetLogRepo>();
 
 
 #region KPI
@@ -504,6 +605,17 @@ builder.Services.AddScoped<KPIPositionRepo>();
 builder.Services.AddScoped<KPIEvaluationRuleRepo>();
 builder.Services.AddScoped<KPIPositionEmployeeRepo>();
 builder.Services.AddScoped<KPIEmployeePointDetailRepo>();
+
+
+builder.Services.AddScoped<ProjectTaskChecklist>();
+builder.Services.AddScoped<ProjectTaskEmployeeRepo>();
+builder.Services.AddScoped<ProjectTaskApproveRepo>();
+builder.Services.AddScoped<ProjectTaskLogRepo>();
+builder.Services.AddScoped<ProjectTaskTypeRepo>();
+
+
+
+
 builder.Services.AddScoped<KPIEvaluationRuleDetailRepo>();
 builder.Services.AddScoped<KPIExamRepo>();
 builder.Services.AddScoped<KPISumaryEvaluationRepo>();
@@ -522,6 +634,19 @@ builder.Services.AddScoped<HRHiringCandidateInformationFormForeignLanguageSkills
 builder.Services.AddScoped<HRHiringCandidateInformationFormRecruitmentInfoRepo>();
 #endregion
 
+#region đề thi ứng tuyển 
+builder.Services.AddScoped<HRRecruitmentExamRepo>();
+builder.Services.AddScoped<HRRecruitmentQuestionRepo>();
+builder.Services.AddScoped<HRRecruitmentAnswersRepo>();
+builder.Services.AddScoped<HRRecruitmentRightAnswearsRepo>();
+builder.Services.AddScoped<HRRecruitmentExamResultRepo>();
+builder.Services.AddScoped<HRRecruitmentQuestionImageRepo>();
+builder.Services.AddScoped<HRRecruitmentExamResultDetailRepo>();
+builder.Services.AddScoped<HRRecruitmentExamResultImageRepo>();
+builder.Services.AddScoped<HiringRequestExamRepo>();
+builder.Services.AddScoped<HRRecruitmentExamEvaluationFileRepo>();
+#endregion
+
 #region RabbitService
 //builder.Services.AddSingleton<RabbitMqConnection>();
 //builder.Services.AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>();
@@ -531,14 +656,42 @@ builder.Services.AddScoped<EmailHelper>();
 
 #endregion
 
+builder.Services.AddScoped<HistoryBorrowSaleLogRepo>();
+builder.Services.AddScoped<CommercialPriceRequestRepo>();
+builder.Services.AddScoped<PaymentOrderLogApprovedRepo>();
+builder.Services.AddScoped<CurrencyConfigRepo>(); 
+builder.Services.AddScoped<BillImportSaleLogRepo>();
+builder.Services.AddScoped<BankListRepo>();
+builder.Services.AddScoped<ProjectPartlistPurchaseRequestNoteRepo>();
+builder.Services.AddScoped<PollFormRepo>();
+builder.Services.AddScoped<PollSectionRepo>();
+builder.Services.AddScoped<PollQuestionRepo>();
+builder.Services.AddScoped<PollQuestionOptionRepo>();
+builder.Services.AddScoped<PollResponseRepo>();
+builder.Services.AddScoped<PollResponseAnswerRepo>();
+builder.Services.AddScoped<PollBranchingRuleEvaluator>();
+builder.Services.AddScoped<MakerTrainingRepo>();
+builder.Services.AddScoped<MakerTrainingEmployeeLinkRepo>();
+builder.Services.AddScoped<MakerTrainingDocumentRepo>();
+builder.Services.AddScoped<MakerTrainingTypeRepo>();
+builder.Services.AddScoped<PerformanceCriteriaRepo>(); 
+builder.Services.AddScoped<EmployeeAttendanceNewRepo>();
+
+
+#region DI LOG
+builder.Services.AddScoped<POKHLogRepo>();
+builder.Services.AddScoped<RequestInvoiceLogRepo>();
+builder.Services.AddScoped<BillExportSaleLogRepo>();
+builder.Services.AddScoped<PONCCLogRepo>();
+builder.Services.AddScoped<BillImportTechnicalAuditLogRepo>();
+#endregion
 
 builder.Services.AddScoped<CurrentUser>(provider =>
 {
     var context = provider.GetRequiredService<IHttpContextAccessor>().HttpContext;
-    var claims = context?.User.Claims.ToDictionary(x => x.Type, x => x.Value);
+    var claims = context?.User?.Claims?.ToDictionary(x => x.Type, x => x.Value) ?? new Dictionary<string, string>();
     CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
     return currentUser;
-
 });
 
 
@@ -558,9 +711,16 @@ builder.Services.AddCors(options =>
     {
         builder.AllowAnyOrigin()
                .AllowAnyMethod()
-               .AllowAnyHeader();
+               .AllowAnyHeader()
+               .WithExposedHeaders(CorsHelper.GetExposedHeaders()); // config cors tus dotnet
+        ;
 
     });
+});
+// Chỉ khởi tạo 1 lần duy nhất khi chạy server
+FirebaseApp.Create(new AppOptions()
+{
+    Credential = GoogleCredential.FromFile("firebase-adminsdk.json") // Thay bằng đường dẫn thực tế
 });
 
 
@@ -595,6 +755,12 @@ builder.Services.Configure<JwtSettings>(jwtSection);
 var jwtSettings = jwtSection.Get<JwtSettings>() ?? new JwtSettings();
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<JwtSettings>>().Value);
 
+// Load Candidate JWT settings
+var candidateJwtSection = builder.Configuration.GetSection("CandidateJwtSettings");
+builder.Services.Configure<CandidateJwtSettings>(candidateJwtSection);
+var candidateJwtSettings = candidateJwtSection.Get<CandidateJwtSettings>() ?? new CandidateJwtSettings();
+builder.Services.AddSingleton(candidateJwtSettings);
+
 builder.Services.AddAuthentication("Bearer")
                 .AddJwtBearer("Bearer", options =>
                 {
@@ -605,9 +771,13 @@ builder.Services.AddAuthentication("Bearer")
                         ValidateLifetime = true,
                         ValidateIssuerSigningKey = true,
 
-                        ValidIssuer = jwtSettings.Issuer,
-                        ValidAudience = jwtSettings.Audience,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
+                        ValidIssuers = new[] { jwtSettings.Issuer, candidateJwtSettings.Issuer },
+                        ValidAudiences = new[] { jwtSettings.Audience, candidateJwtSettings.Audience },
+                        IssuerSigningKeys = new[]
+                        {
+                            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
+                            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(candidateJwtSettings.SecretKey))
+                        },
                         NameClaimType = "sub" // Để Middleware lấy đúng UserID
                     };
                 });
@@ -616,6 +786,7 @@ builder.Services.AddAuthentication();
 
 //Get SmtpSetting
 var smtpSettings = builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+builder.Services.Configure<SmtpSettingsHr>(builder.Configuration.GetSection("SmtpSettingsHr"));
 
 
 //Get list static file
@@ -649,21 +820,42 @@ builder.Services.Configure<ModulaConfig>(builder.Configuration.GetSection("Modul
 
 // Nếu bạn muốn inject trực tiếp:
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<ModulaConfig>>().Value);
+//builder.Services.AddHostedService<PersistentTcpClientService>();
+//builder.Services.AddSingleton(sp =>
+//{
+//    var config = sp.GetRequiredService<ModulaConfig>();
 
-builder.Services.AddSingleton(sp =>
-{
-    var config = sp.GetRequiredService<ModulaConfig>();
+//    return new PersistentTcpClientService(
+//        config.IpAddress,
+//        config.Port,
+//        connectTimeoutMs: 3000,
+//        sendTimeoutMs: 3000,
+//        receiveTimeoutMs: 3000,
+//        maxReconnectAttempts: 3,
+//        reconnectDelayMs: 1000
+//    );
+//});
 
-    return new PersistentTcpClientService(
-        config.IpAddress,
-        config.Port,
-        connectTimeoutMs: 3000,
-        sendTimeoutMs: 3000,
-        receiveTimeoutMs: 3000,
-        maxReconnectAttempts: 3,
-        reconnectDelayMs: 1000
-    );
-});
+//Add logger
+// 👉 cấu hình Serilog
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .Enrich.FromLogContext()
+    .Enrich.WithMachineName()
+    .Enrich.WithThreadId()
+    .WriteTo.Console()
+    .WriteTo.Async(a => a.File(
+        "logs/log-.txt",
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 7,
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss:fff} [{Level}] {Message}{NewLine}{Exception}"
+    ))
+    .CreateLogger();
+
+// 👉 replace logger mặc định
+builder.Host.UseSerilog();
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -673,15 +865,15 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-//app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 app.UseRouting();
 app.UseCors("MyCors");
-//app.UseAuthentication();
+app.UseAuthentication();
+app.UseMiddleware<DynamicAuthorizationMiddleware>();
 app.UseAuthorization();
 app.UseSession();
-app.UseMiddleware<DynamicAuthorizationMiddleware>();
 
 app.MapControllers();
 
@@ -707,11 +899,53 @@ foreach (var item in staticFiles)
     });
 
 
-    app.UseDirectoryBrowser(new DirectoryBrowserOptions 
+    app.UseDirectoryBrowser(new DirectoryBrowserOptions
     {
         FileProvider = new PhysicalFileProvider(item.PathFull),
         RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
     });
 }
+var tusStore = new TusDiskStore(Directory.GetCurrentDirectory());
+// config Tus dotnet
+app.UseTus(httpContext => new DefaultTusConfiguration
+{
+    Store = tusStore, // đường dẫn lưu temp file ( file chunk)
+
+    UrlPath = "/api/tus/upload-video", // path gọi api
+    Expiration = new AbsoluteExpiration(TimeSpan.FromHours(24)), // xóa upload không hoàn thành sau 24h
+
+    Events = new Events
+    {
+        OnFileCompleteAsync = async ctx =>
+        {
+
+            var file = await ctx.GetFileAsync();
+            if (file == null) return;
+
+            var metadata = await file.GetMetadataAsync(ctx.CancellationToken);
+
+            var fileName = metadata.ContainsKey("filename")
+                ? metadata["filename"].GetString(Encoding.UTF8)
+                : $"{file.Id}.bin";
+
+            //var destDir = @"\\192.168.1.190\Software\Test\UPLOADFILE\CourseLesson\Videos\";
+            //Directory.CreateDirectory(destDir);
+            //var destPath = Path.Combine(destDir, fileName);
+
+            var pathServer = metadata["pathServer"].GetString(Encoding.UTF8);
+            var destPath = Path.Combine(pathServer, fileName);
+            Directory.CreateDirectory(pathServer);
+            await using (var source = await file.GetContentAsync(ctx.CancellationToken))
+            {
+                await using (var target = System.IO.File.Create(destPath))
+                {
+                    await source.CopyToAsync(target);
+                }
+            }
+
+        }
+    }
+});
+app.UseSerilogRequestLogging(); // log request
 
 app.Run();

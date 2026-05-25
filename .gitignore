@@ -34,3 +34,7 @@ secrets.json
 /RERPAPI/Properties/PublishProfiles/IISProfile1.pubxml
 /RERPAPI/appsettings.Development.json
 /RERPAPI.Repo/GenericEntity/HRM/HRHiringCandidateInformationFormOtherCertificatesRepo.cs
+/RERPAPI/firebase-adminsdk.json
+/RERPAPI/logs/
+/RERPAPI/appsettings.Production.json
+/RERPAPI/appsettings.Test.json

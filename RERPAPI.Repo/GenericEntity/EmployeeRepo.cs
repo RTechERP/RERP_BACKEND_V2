@@ -22,7 +22,7 @@ namespace RERPAPI.Repo.GenericEntity
             message = "";
             bool exits = GetAll()
                 .Any(x => x.Code.Trim().ToLower() == item.Code.Trim().ToLower()
-                    && x.ID != item.ID);
+                    && x.ID != item.ID&&x.Status!=1);
             if (exits)
             {
                 message = "Mã nhân viên này đã được sử dụng!";
@@ -41,7 +41,7 @@ namespace RERPAPI.Repo.GenericEntity
             {
                 bool exitsChamCong = GetAll()
                 .Any(x => x.IDChamCongMoi.Trim().ToLower() == item.IDChamCongMoi.Trim().ToLower()
-                    && x.ID != item.ID);
+                    && x.ID != item.ID && x.Status != 1);
 
                 if (exitsChamCong)
                 {

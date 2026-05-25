@@ -40,4 +40,28 @@ public partial class ProjectHistoryProblem
     public int? EmployeeID { get; set; }
 
     public bool? IsDeleted { get; set; }
+
+    public int? IssueLogType { get; set; }
+
+    public int? CreatorID { get; set; }
+
+    public int? PriorityLevel { get; set; }
+
+    public int? PerformerID { get; set; }
+
+    public int? StatusProblem { get; set; }
+
+    public string? IssueConclusion { get; set; }
+
+    public bool? IsApproved_PM { get; set; }
+
+    public DateTime? DateApproved_PM { get; set; }
+
+    public bool? IsApproved_TP { get; set; }
+
+    public DateTime? DateApproved_TP { get; set; }
+
+    public bool? IsApproved_PP { get; set; }
+
+    public DateTime? DateApproved_PP { get; set; }
 }

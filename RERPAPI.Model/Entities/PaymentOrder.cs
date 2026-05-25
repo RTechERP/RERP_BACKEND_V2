@@ -102,4 +102,14 @@ public partial class PaymentOrder
     public string? EndLocation { get; set; }
 
     public int? RegisterContractID { get; set; }
+
+    public string? HRNote { get; set; }
+
+    public int? TaxCompanyID { get; set; }
+
+    public int? BankListID { get; set; }
+
+    public int? ContentBankTransferType { get; set; }
+
+    public int? TransferType { get; set; }
 }

@@ -21,12 +21,14 @@ namespace RERPAPI.Repo.GenericEntity
         ProjectRepo _projectRepo;
         EmployeeSendEmailRepo _employeeSendEmailRepo;
         CurrentUser _currentUser;
+        private readonly EmailHelper _emailHelper;
         public BillImportQCRepo(
-            CurrentUser currentUser, 
-            EmployeeRepo employeeRepo, 
-            ProductSaleRepo productSaleRepo, 
+            CurrentUser currentUser,
+            EmployeeRepo employeeRepo,
+            ProductSaleRepo productSaleRepo,
             ProjectRepo projectRepo,
-            EmployeeSendEmailRepo employeeSendEmailRepo
+            EmployeeSendEmailRepo employeeSendEmailRepo,
+            EmailHelper emailHelper
             ) : base(currentUser)
         {
             _employeeRepo = employeeRepo;
@@ -34,6 +36,7 @@ namespace RERPAPI.Repo.GenericEntity
             _projectRepo = projectRepo;
             _employeeSendEmailRepo = employeeSendEmailRepo;
             _currentUser = currentUser;
+            _emailHelper = emailHelper;
         }
 
         public List<T>? DeserializeList<T>(IFormCollection form, string key)
@@ -77,17 +80,16 @@ namespace RERPAPI.Repo.GenericEntity
                     ContentType = files[i].ContentType,
                     BillImportQCDetailId = metaObj!.BillImportQCDetailId,
                     FileType = fileType,
-                    File = files[i] 
+                    File = files[i]
                 });
             }
 
             return result;
         }
 
-        public async void SetInforEmail(string emailCCs, string emailEmRequest, int receivedEmID, List<BillImportQCDetail> dtr, string emRequestName, DateTime deadline) 
+        public async void SetInforEmail(string emailCCs, string emailEmRequest, string leaderFullName, List<BillImportQCDetail> dtr, string emRequestName, DateTime deadline)
         {
             string subject = $"YÊU CẦU QC SẢN PHẨM";
-            string leaderFullName = _employeeRepo.GetByID(receivedEmID).FullName;
 
             StringBuilder tableContent = new StringBuilder();
 
@@ -132,13 +134,14 @@ namespace RERPAPI.Repo.GenericEntity
 					<p> {emRequestName} </p>
 				</div>";
 
-            _employeeSendEmailRepo.SendMail(
-                _currentUser.EmployeeID,
-                receivedEmID,
-                subject,
-                body,
-                emailCCs
-            );
+            //_employeeSendEmailRepo.SendMail(
+            //    _currentUser.EmployeeID,
+            //    receivedEmID,
+            //    subject,
+            //    body,
+            //    emailCCs
+            //);
+            _emailHelper.SendAsync(emailEmRequest, subject, body, true, emailCCs);
         }
     }
 }

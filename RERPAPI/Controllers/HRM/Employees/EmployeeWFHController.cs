@@ -22,14 +22,16 @@ namespace RERPAPI.Controllers
         private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
         EmployeeRepo _employeeRepo;
         EmployeeSendEmailRepo _employeeSendEmailRepo;
+        private readonly EmailHelper _emailHelper;
 
-        public EmployeeWFHController(EmployeeWFHRepo employeeWFHRepo, DepartmentRepo departmentRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeRepo employeeRepo, EmployeeSendEmailRepo employeeSendEmailRepo)
+        public EmployeeWFHController(EmployeeWFHRepo employeeWFHRepo, DepartmentRepo departmentRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeRepo employeeRepo, EmployeeSendEmailRepo employeeSendEmailRepo, EmailHelper emailHelper)
         {
             _employeeWFHRepo = employeeWFHRepo;
             _departmentRepo = departmentRepo;
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
             _employeeRepo = employeeRepo;
             _employeeSendEmailRepo = employeeSendEmailRepo;
+            _emailHelper = emailHelper;
         }
 
         //[RequiresPermission("N1,N2")]
@@ -171,7 +173,10 @@ namespace RERPAPI.Controllers
                                       "<p>Anh/chị duyệt giúp em với ạ. Em cảm ơn!</p> </div>" +
                                       "<div style=\"margin-top: 30px;\"> <p>Thanks</p> <p>" + employee.FullName + "</p> </div>";
 
-                        _employeeSendEmailRepo.SendMail(employeeWFH.EmployeeID ?? 0, employeeWFH.ApprovedID ?? 0, subject, body, "");
+                        //_employeeSendEmailRepo.SendMail(employeeWFH.EmployeeID ?? 0, employeeWFH.ApprovedID ?? 0, subject, body, "");
+
+                        string cc = string.IsNullOrEmpty(employee.EmailCongTy) ? (employee.EmailCaNhan ?? "") : employee.EmailCongTy;
+                        _emailHelper.SendAsync(employeeTP?.EmailCongTy ?? "", subject, body, true, cc);
                     }    
                 }
                 else
@@ -269,17 +274,13 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
         [HttpGet("check-duplicate-wfh/{id}/{employeeId}/{date}/{timeWFH}")]
         public IActionResult CheckDuplicateWFH(int id, int employeeId, string date, int timeWFH)
         {
             try
             {
-                bool isDuplicate = false;
-
-                // Chuyển đổi chuỗi ngày sang DateTime
-                DateTime dateWFH;
-                if (!DateTime.TryParse(date, out dateWFH))
+                // Parse date
+                if (!DateTime.TryParse(date, out DateTime dateWFH))
                 {
                     return BadRequest(new
                     {
@@ -288,18 +289,26 @@ namespace RERPAPI.Controllers
                     });
                 }
 
-                var existWFH = _employeeWFHRepo.GetAll()
+                var query = _employeeWFHRepo.GetAll()
                     .Where(x => x.ID != id &&
                                 x.EmployeeID == employeeId &&
                                 x.DateWFH.HasValue &&
                                 x.DateWFH.Value.Date == dateWFH.Date &&
-                                x.TimeWFH == timeWFH
-                                //&& x.IsDelete == false
-                                );
+                                x.IsDeleted != true);
 
-                if (existWFH.Any())
+                bool isDuplicate = false;
+
+                if (timeWFH == 3) // đăng ký cả ngày
                 {
-                    isDuplicate = true;
+                    isDuplicate = query.Any();
+                }
+                else if (timeWFH == 1) // sáng
+                {
+                    isDuplicate = query.Any(x => x.TimeWFH == 1 || x.TimeWFH == 3);
+                }
+                else if (timeWFH == 2) // chiều
+                {
+                    isDuplicate = query.Any(x => x.TimeWFH == 2 || x.TimeWFH == 3);
                 }
 
                 return Ok(new

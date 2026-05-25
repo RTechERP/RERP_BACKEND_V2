@@ -77,9 +77,9 @@ namespace RERPAPI.Controllers.Old.KPISALE
                 if(existsTeam != null)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null,"Mã Team đã tồn tại!"));
-                }   
+                }
 
-                if(model.ID > 0)
+                if (model.ID > 0)
                 {
                     _employeeTeamSaleRepo.Update(model);
                 }
@@ -138,6 +138,24 @@ namespace RERPAPI.Controllers.Old.KPISALE
                     };
                     _employeeTeamSaleLinkRepo.Create(newModel);
                 }    
+                return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("delete-employee-link")]
+        public async Task<IActionResult> DeleteEmployeeTeamSaleLink(int id)
+        {
+            try
+            {
+                if(id <= 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Hãy chọn 1 nhân viên để xóa"));
+                }
+                await _employeeTeamSaleLinkRepo.DeleteAsync(id);
                 return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
             }
             catch (Exception ex)

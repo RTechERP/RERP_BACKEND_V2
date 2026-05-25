@@ -50,4 +50,14 @@ public partial class EmployeeNoFingerprint
     public int? ApprovedSeniorID { get; set; }
 
     public DateTime? DateApprovedSenior { get; set; }
+
+    /// <summary>
+    /// Lý do Senior từ chối duyệt
+    /// </summary>
+    public string? ReasonDecilineSenior { get; set; }
+
+    /// <summary>
+    /// Trạng thái từ chối duyệt của Senior
+    /// </summary>
+    public int? DecilineApproveSenior { get; set; }
 }

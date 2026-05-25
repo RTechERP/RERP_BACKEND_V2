@@ -1,4 +1,4 @@
-﻿using RERPAPI.Model.Common;
+using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using System;
@@ -86,183 +86,92 @@ namespace RERPAPI.Repo.GenericEntity
         {
             try
             {
-                APIResponse response = new APIResponse();
+                APIResponse response = ApiResponseFactory.Success(null, "Thao tác thành công!");
                 foreach (var actionApproved in actionApproveds)
                 {
                     var approves = GetAll(x => x.HRHiringRequestID == actionApproved.HRHiringRequestID && x.IsDeleted == false);
                     int nextStep = actionApproved.Step + 1;
-                    switch (actionApproved.Step)
+
+                    // Lấy bản ghi hiện tại hoặc khởi tạo mới (Upsert logic - CHỐNG LỖI ID 0 NOT FOUND)
+                    var approve = approves.FirstOrDefault(x => x.Step == actionApproved.Step);
+                    bool isNew = false;
+                    if (approve == null)
                     {
-                        case 1: //Nếu là TBP
-                            if (actionApproved.IsApprove == 1) //Nếu là duyệt
-                            {
-                                var approve = approves.FirstOrDefault(x => x.Step == actionApproved.Step) ?? new HRHiringRequestApproveLink();
-                                approve.ApproveID = currentUser.EmployeeID;
-                                approve.IsApprove = actionApproved.IsApprove;
-                                approve.DateApprove = DateTime.Now;
-                                approve.ReasonUnApprove = actionApproved.ReasonUnApprove;
-                                approve.Note = actionApproved.Note;
-                                approve.UpdatedBy = currentUser.LoginName;
-                                await UpdateAsync(approve);
-                                response = ApiResponseFactory.Success(null, "Duyệt thành công!");
-                            }
-                            else if (actionApproved.IsApprove == 2) //Nếu là hủy duyệt
-                            {
-                                // Kiểm tra HR đã hủy duyệt chưa
-                                var approveHR = approves.FirstOrDefault(x => x.Step == nextStep) ?? new HRHiringRequestApproveLink();
-                                if (approveHR.IsApprove == 1)
-                                {
-                                    response = ApiResponseFactory.Fail(null, "HR đã duyệt. Vui lòng hủy duyệt ở HR trước!");
-                                }
-                                else
-                                {
-                                    var approve = approves.FirstOrDefault(x => x.Step == actionApproved.Step) ?? new HRHiringRequestApproveLink();
-                                    approve.ApproveID = currentUser.EmployeeID;
-                                    approve.IsApprove = actionApproved.IsApprove;
-                                    approve.DateApprove = DateTime.Now;
-                                    approve.ReasonUnApprove = actionApproved.ReasonUnApprove;
-                                    approve.Note = actionApproved.Note;
-                                    approve.UpdatedBy = currentUser.LoginName;
-                                    await UpdateAsync(approve);
-                                    response = ApiResponseFactory.Success(null, "Hủy duyệt thành công!");
-                                }
-                            }
-                            break;
-                        case 2: //Nếu là HR
-                            if (actionApproved.IsApprove == 1) //Nếu là duyệt
-                            {
-                                //Kiểm tra TBP đã duyệt chưa
-                                var approveTBP = approves.FirstOrDefault(x => x.Step == actionApproved.Step - 1) ?? new HRHiringRequestApproveLink();
-                                if (approveTBP.IsApprove != 1)
-                                {
-                                    response = ApiResponseFactory.Fail(null, "TBP chưa duyệt. Vui lòng duyệt ở TBP trước!");
-                                }
-                                else
-                                {
-                                    var approve = approves.FirstOrDefault(x => x.Step == actionApproved.Step) ?? new HRHiringRequestApproveLink();
-                                    approve.ApproveID = currentUser.EmployeeID;
-                                    approve.IsApprove = actionApproved.IsApprove;
-                                    approve.DateApprove = DateTime.Now;
-                                    approve.ReasonUnApprove = actionApproved.ReasonUnApprove;
-                                    approve.Note = actionApproved.Note;
-                                    approve.UpdatedBy = currentUser.LoginName;
-                                    await UpdateAsync(approve);
-                                    response = ApiResponseFactory.Success(approve, "Duyệt thành công!");
-                                }
+                        isNew = true;
+                        approve = new HRHiringRequestApproveLink
+                        {
+                            HRHiringRequestID = actionApproved.HRHiringRequestID,
+                            Step = actionApproved.Step,
+                            StepName = GetStepName(actionApproved.Step),
+                            CreatedBy = currentUser.LoginName,
+                            IsDeleted = false
+                        };
+                    }
 
-                            }
-                            else if (actionApproved.IsApprove == 2) //Nếu là hủy duyệt
-                            {
-                                // Kiểm tra BGĐ đã hủy duyệt chưa
-                                var approveHR = approves.FirstOrDefault(x => x.Step == nextStep) ?? new HRHiringRequestApproveLink();
-                                if (approveHR.IsApprove == 1)
-                                {
-                                    response = ApiResponseFactory.Fail(null, "BGĐ đã duyệt. Vui lòng hủy duyệt ở BGĐ trước!");
-                                }
-                                else
-                                {
-                                    var approve = approves.FirstOrDefault(x => x.Step == actionApproved.Step) ?? new HRHiringRequestApproveLink();
-                                    approve.ApproveID = currentUser.EmployeeID;
-                                    approve.IsApprove = actionApproved.IsApprove;
-                                    approve.DateApprove = DateTime.Now;
-                                    approve.ReasonUnApprove = actionApproved.ReasonUnApprove;
-                                    approve.Note = actionApproved.Note;
-                                    approve.UpdatedBy = currentUser.LoginName;
-                                    await UpdateAsync(approve);
-                                    response = ApiResponseFactory.Success(null, "Hủy duyệt thành công!");
-                                }
-                            }
-                            break;
+                    // 1=Duyệt, 2=Không duyệt, 0=Hủy duyệt
+                    if (actionApproved.IsApprove == 1 || actionApproved.IsApprove == 2)
+                    {
+                        var next = approves.FirstOrDefault(x => x.Step == nextStep);
+                        if (next != null && next.IsApprove == 1)
+                        {
+                            response = ApiResponseFactory.Fail(null, "Cấp sau đã duyệt. Bạn không thể thay đổi trạng thái ở bước này!");
+                            continue;
+                        }
 
-                        case 3: //Nếu là TBP HR 
-                            if (actionApproved.IsApprove == 1) //Nếu là duyệt
+                        if (actionApproved.Step > 1)
+                        {
+                            var prev = approves.FirstOrDefault(x => x.Step == actionApproved.Step - 1);
+                            if (prev == null || prev.IsApprove != 1)
                             {
-                                //var approve = approves.FirstOrDefault(x => x.Step == actionApproved.Step) ?? new HRHiringRequestApproveLink();
-                                //approve.ApproveID = currentUser.EmployeeID;
-                                //approve.IsApprove = actionApproved.IsApprove;
-                                //approve.DateApprove = DateTime.Now;
-                                //approve.ReasonUnApprove = actionApproved.ReasonUnApprove;
-                                //approve.Note = actionApproved.Note;
-                                //approve.UpdatedBy = currentUser.LoginName;
-                                //await UpdateAsync(approve);
-                                //response = ApiResponseFactory.Success(null, "Duyệt thành công!");
-                                var approveTBP = approves.FirstOrDefault(x => x.Step == actionApproved.Step - 1) ?? new HRHiringRequestApproveLink();
-                                if (approveTBP.IsApprove != 1)
-                                {
-                                    response = ApiResponseFactory.Fail(null, "Nhân viên HR  chưa duyệt. Vui lòng duyệt ở HR trước!");
-                                }
-                                else
-                                {
-                                    var approve = approves.FirstOrDefault(x => x.Step == actionApproved.Step) ?? new HRHiringRequestApproveLink();
-                                    approve.ApproveID = currentUser.EmployeeID;
-                                    approve.IsApprove = actionApproved.IsApprove;
-                                    approve.DateApprove = DateTime.Now;
-                                    approve.ReasonUnApprove = actionApproved.ReasonUnApprove;
-                                    approve.Note = actionApproved.Note;
-                                    approve.UpdatedBy = currentUser.LoginName;
-                                    await UpdateAsync(approve);
-                                    response = ApiResponseFactory.Success(approve, "Duyệt thành công!");
-                                }
+                                response = ApiResponseFactory.Fail(null, "Cấp trước chưa duyệt. Vui lòng kiểm tra lại!");
+                                continue;
                             }
-                            else if (actionApproved.IsApprove == 2) //Nếu là hủy duyệt
-                            {
-                                // Kiểm tra BGD đã hủy duyệt chưa
-                                var approveHR = approves.FirstOrDefault(x => x.Step == nextStep) ?? new HRHiringRequestApproveLink();
-                                if (approveHR.IsApprove == 1)
-                                {
-                                    response = ApiResponseFactory.Fail(null, "BGD đã duyệt. Vui lòng hủy duyệt ở BGD trước!");
-                                }
-                                else
-                                {
-                                    var approve = approves.FirstOrDefault(x => x.Step == actionApproved.Step) ?? new HRHiringRequestApproveLink();
-                                    approve.ApproveID = currentUser.EmployeeID;
-                                    approve.IsApprove = actionApproved.IsApprove;
-                                    approve.DateApprove = DateTime.Now;
-                                    approve.ReasonUnApprove = actionApproved.ReasonUnApprove;
-                                    approve.Note = actionApproved.Note;
-                                    approve.UpdatedBy = currentUser.LoginName;
-                                    await UpdateAsync(approve);
-                                    response = ApiResponseFactory.Success(null, "Hủy duyệt thành công!");
-                                }
-                            }
-                            break;
-                        case 4: //Nếu là BGĐ
-                            if (actionApproved.IsApprove == 1) //Nếu là duyệt
-                            {
-                                //Kiểm tra TBP HR đã duyệt chưa
-                                var approveBGD = approves.FirstOrDefault(x => x.Step == actionApproved.Step - 1) ?? new HRHiringRequestApproveLink();
-                                if (approveBGD.IsApprove != 1)
-                                {
-                                    response = ApiResponseFactory.Fail(null, "TBP HR chưa duyệt. Vui lòng duyệt ở HR trước!");
-                                }
-                                else
-                                {
-                                    var approve = approves.FirstOrDefault(x => x.Step == actionApproved.Step) ?? new HRHiringRequestApproveLink();
-                                    approve.ApproveID = currentUser.EmployeeID;
-                                    approve.IsApprove = actionApproved.IsApprove;
-                                    approve.DateApprove = DateTime.Now;
-                                    approve.ReasonUnApprove = actionApproved.ReasonUnApprove;
-                                    approve.Note = actionApproved.Note;
-                                    approve.UpdatedBy = currentUser.LoginName;
-                                    await UpdateAsync(approve);
-                                    response = ApiResponseFactory.Success(approve, "Duyệt thành công!");
-                                }
-
-                            }
-                            break;
-
-                        default:
-                            break;
+                        }
+                        await SaveApproval(approve, actionApproved, currentUser, isNew);
+                    }
+                    else if (actionApproved.IsApprove == 0) // Hủy duyệt
+                    {
+                        var next = approves.FirstOrDefault(x => x.Step == nextStep);
+                        if (next != null && next.IsApprove == 1)
+                        {
+                            response = ApiResponseFactory.Fail(null, "Cấp sau đã duyệt. Bạn không thể hủy duyệt ở bước này!");
+                            continue;
+                        }
+                        await SaveApproval(approve, actionApproved, currentUser, isNew);
                     }
                 }
-
                 return response;
-
             }
             catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
+        }
+
+        private async Task SaveApproval(HRHiringRequestApproveLink approve, HRHiringRequestApproveLink action, CurrentUser currentUser, bool isNew)
+        {
+            approve.ApproveID = currentUser.EmployeeID;
+            approve.IsApprove = action.IsApprove;
+            approve.DateApprove = (action.IsApprove == 1 || action.IsApprove == 2) ? DateTime.Now : (DateTime?)null;
+            approve.ReasonUnApprove = action.ReasonUnApprove;
+            approve.Note = action.Note;
+            approve.UpdatedBy = currentUser.LoginName;
+            approve.UpdatedDate = DateTime.Now;
+
+            if (isNew) await CreateAsync(approve);
+            else await UpdateAsync(approve);
+        }
+
+        private string GetStepName(int step)
+        {
+            return step switch
+            {
+                1 => "TBP xác nhận",
+                2 => "HR xác nhận",
+                3 => "TBP HR xác nhận",
+                4 => "BGĐ xác nhận",
+                _ => $"Bước {step}"
+            };
         }
     }
 }
