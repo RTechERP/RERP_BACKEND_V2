@@ -484,8 +484,8 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                     targetFolder = Path.Combine(uploadPath, $"YCXHD_ID_{ri.ID}");
                 }
 
-                //if (!Directory.Exists(targetFolder))
-                //    Directory.CreateDirectory(targetFolder);
+                if (!Directory.Exists(targetFolder))
+                    Directory.CreateDirectory(targetFolder);
 
                 var processedFile = new List<RequestInvoiceFile>();
 
@@ -500,10 +500,10 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                     var fullPath = Path.Combine(targetFolder, uniqueFileName);
 
                     // Lưu file trực tiếp vào targetFolder (không tạo file tạm khác)
-                    //using (var stream = new FileStream(fullPath, FileMode.Create))
-                    //{
-                    //    await file.CopyToAsync(stream);
-                    //}
+                    using (var stream = new FileStream(fullPath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
 
                     var filePO = new RequestInvoiceFile
                     {

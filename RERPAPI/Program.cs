@@ -29,6 +29,7 @@ using RERPAPI.Repo.GenericEntity.HRM.HRRecruitmentInterviewAssessment;
 using RERPAPI.Repo.GenericEntity.HRM.ProductProtectiveGear;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
 using RERPAPI.Repo.GenericEntity.HRRecruitmentExamRepo;
+using RERPAPI.Repo.GenericEntity.KPISale;
 using RERPAPI.Repo.GenericEntity.MakerTrainingFirm;
 using RERPAPI.Repo.GenericEntity.MeetingMinutesRepo;
 using RERPAPI.Repo.GenericEntity.Project;
@@ -598,6 +599,7 @@ builder.Services.AddScoped<JobRequirementLogRepo>();
 
 
 #region KPI
+builder.Services.AddScoped<KPISaleRepo>();
 builder.Services.AddScoped<KPIEvaluationPointRepo>();
 builder.Services.AddScoped<KPISessionRepo>();
 builder.Services.AddScoped<KPIEmployeePointRepo>();
@@ -787,7 +789,7 @@ builder.Services.AddAuthentication();
 //Get SmtpSetting
 var smtpSettings = builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.Configure<SmtpSettingsHr>(builder.Configuration.GetSection("SmtpSettingsHr"));
-
+builder.Services.Configure < SmtpSettingsHrm>(builder.Configuration.GetSection("SmtpSettingsHrm"));
 
 //Get list static file
 builder.Services.Configure<List<PathStaticFile>>(builder.Configuration.GetSection("PathStaticFiles"));

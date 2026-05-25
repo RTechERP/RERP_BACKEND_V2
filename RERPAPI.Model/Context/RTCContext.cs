@@ -656,6 +656,34 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<KPIPositionType> KPIPositionTypes { get; set; }
 
+    public virtual DbSet<KPISaleAllowedColumn> KPISaleAllowedColumns { get; set; }
+
+    public virtual DbSet<KPISaleAllowedTable> KPISaleAllowedTables { get; set; }
+
+    public virtual DbSet<KPISaleDataSource> KPISaleDataSources { get; set; }
+
+    public virtual DbSet<KPISaleIndex> KPISaleIndices { get; set; }
+
+    public virtual DbSet<KPISaleIndexDataMapping> KPISaleIndexDataMappings { get; set; }
+
+    public virtual DbSet<KPISaleIndexFormulaItem> KPISaleIndexFormulaItems { get; set; }
+
+    public virtual DbSet<KPISaleMappingFilterCondition> KPISaleMappingFilterConditions { get; set; }
+
+    public virtual DbSet<KPISaleMappingFilterGroup> KPISaleMappingFilterGroups { get; set; }
+
+    public virtual DbSet<KPISalePeriod> KPISalePeriods { get; set; }
+
+    public virtual DbSet<KPISaleResult> KPISaleResults { get; set; }
+
+    public virtual DbSet<KPISaleScoringRule> KPISaleScoringRules { get; set; }
+
+    public virtual DbSet<KPISaleSystemParameter> KPISaleSystemParameters { get; set; }
+
+    public virtual DbSet<KPISaleTarget> KPISaleTargets { get; set; }
+
+    public virtual DbSet<KPISaleTemplate> KPISaleTemplates { get; set; }
+
     public virtual DbSet<KPISession> KPISessions { get; set; }
 
     public virtual DbSet<KPISpecializationType> KPISpecializationTypes { get; set; }
@@ -7856,6 +7884,245 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.TypeName).HasMaxLength(550);
             entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<KPISaleAllowedColumn>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__KPISaleA__3214EC2781EDB4D1");
+
+            entity.ToTable("KPISaleAllowedColumn");
+
+            entity.Property(e => e.CanFilter).HasDefaultValue(true);
+            entity.Property(e => e.ColumnName).HasMaxLength(128);
+            entity.Property(e => e.DataType)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.DisplayName).HasMaxLength(255);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+        });
+
+        modelBuilder.Entity<KPISaleAllowedTable>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__KPISaleA__3214EC27FAC7F4C3");
+
+            entity.ToTable("KPISaleAllowedTable");
+
+            entity.Property(e => e.DisplayName).HasMaxLength(255);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.SchemaName)
+                .HasMaxLength(128)
+                .HasDefaultValue("dbo");
+            entity.Property(e => e.TableName).HasMaxLength(128);
+        });
+
+        modelBuilder.Entity<KPISaleDataSource>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__KPISaleD__3214EC27D3EEA085");
+
+            entity.ToTable("KPISaleDataSource");
+
+            entity.Property(e => e.DateColumn).HasMaxLength(128);
+            entity.Property(e => e.EmployeeColumn).HasMaxLength(128);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.SourceCode)
+                .HasMaxLength(100)
+                .IsUnicode(false);
+            entity.Property(e => e.SourceName).HasMaxLength(255);
+            entity.Property(e => e.ValueColumn).HasMaxLength(128);
+        });
+
+        modelBuilder.Entity<KPISaleIndex>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__KPISaleI__3214EC27E6ECC4FF");
+
+            entity.ToTable("KPISaleIndex");
+
+            entity.HasIndex(e => new { e.TemplateID, e.SortOrder }, "IX_KpiIndex_Template");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate).HasDefaultValueSql("(sysdatetime())");
+            entity.Property(e => e.IndexCode)
+                .HasMaxLength(100)
+                .IsUnicode(false);
+            entity.Property(e => e.IndexName).HasMaxLength(255);
+            entity.Property(e => e.IndexType)
+                .HasMaxLength(30)
+                .IsUnicode(false);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.QuarterGoalCalculateType)
+                .HasMaxLength(30)
+                .IsUnicode(false)
+                .HasDefaultValue("SUM_MONTH");
+            entity.Property(e => e.QuarterResultCalculateType)
+                .HasMaxLength(30)
+                .IsUnicode(false)
+                .HasDefaultValue("SUM_MONTH");
+            entity.Property(e => e.UnitType)
+                .HasMaxLength(30)
+                .IsUnicode(false);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            entity.Property(e => e.WeightPercent).HasColumnType("decimal(10, 2)");
+        });
+
+        modelBuilder.Entity<KPISaleIndexDataMapping>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__KPISaleI__3214EC27D657D825");
+
+            entity.ToTable("KPISaleIndexDataMapping");
+
+            entity.Property(e => e.AggregateType)
+                .HasMaxLength(30)
+                .IsUnicode(false);
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate).HasDefaultValueSql("(sysdatetime())");
+            entity.Property(e => e.DistinctColumn).HasMaxLength(128);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            entity.Property(e => e.ValueColumn).HasMaxLength(128);
+        });
+
+        modelBuilder.Entity<KPISaleIndexFormulaItem>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__KPISaleI__3214EC2728A1F082");
+
+            entity.ToTable("KPISaleIndexFormulaItem");
+
+            entity.Property(e => e.Operator)
+                .HasMaxLength(10)
+                .IsUnicode(false)
+                .HasDefaultValue("+");
+        });
+
+        modelBuilder.Entity<KPISaleMappingFilterCondition>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__KPISaleM__3214EC2727CAF0C7");
+
+            entity.ToTable("KPISaleMappingFilterCondition");
+
+            entity.HasIndex(e => e.FilterGroupID, "IX_KpiMapping_FilterCondition_Group");
+
+            entity.Property(e => e.ColumnName).HasMaxLength(128);
+            entity.Property(e => e.DataType)
+                .HasMaxLength(30)
+                .IsUnicode(false)
+                .HasDefaultValue("STRING");
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.Operator)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+            entity.Property(e => e.Value1).HasMaxLength(500);
+            entity.Property(e => e.Value2).HasMaxLength(500);
+            entity.Property(e => e.ValueType)
+                .HasMaxLength(30)
+                .IsUnicode(false)
+                .HasDefaultValue("STATIC");
+        });
+
+        modelBuilder.Entity<KPISaleMappingFilterGroup>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__KPISaleM__3214EC271DCADE3A");
+
+            entity.ToTable("KPISaleMappingFilterGroup");
+
+            entity.HasIndex(e => e.MappingID, "IX_KpiMapping_FilterGroup_Mapping");
+
+            entity.Property(e => e.LogicOperator)
+                .HasMaxLength(10)
+                .IsUnicode(false)
+                .HasDefaultValue("AND");
+        });
+
+        modelBuilder.Entity<KPISalePeriod>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__KPISaleP__3214EC278EAC2E00");
+
+            entity.ToTable("KPISalePeriod");
+
+            entity.HasIndex(e => new { e.PeriodType, e.DateStart, e.DateEnd }, "IX_KpiPeriod_Type_Date");
+
+            entity.Property(e => e.CreatedDate).HasDefaultValueSql("(sysdatetime())");
+            entity.Property(e => e.PeriodCode)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.PeriodName).HasMaxLength(255);
+            entity.Property(e => e.PeriodType)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+        });
+
+        modelBuilder.Entity<KPISaleResult>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__KPISaleR__3214EC27D9A4F47C");
+
+            entity.ToTable("KPISaleResult");
+
+            entity.HasIndex(e => new { e.EmployeeID, e.PeriodID, e.KpiIndexID }, "IX_KpiResult_Employee_Period_Index");
+
+            entity.Property(e => e.AchievedPercent).HasColumnType("decimal(18, 4)");
+            entity.Property(e => e.CalculatedDate).HasDefaultValueSql("(sysdatetime())");
+            entity.Property(e => e.FinalScore).HasColumnType("decimal(18, 4)");
+            entity.Property(e => e.GoalValue).HasColumnType("decimal(18, 4)");
+            entity.Property(e => e.ResultValue).HasColumnType("decimal(18, 4)");
+            entity.Property(e => e.WeightPercent).HasColumnType("decimal(10, 2)");
+        });
+
+        modelBuilder.Entity<KPISaleScoringRule>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__KPISaleS__3214EC27F8ADE450");
+
+            entity.ToTable("KPISaleScoringRule");
+
+            entity.Property(e => e.MaxAchievedPercent).HasColumnType("decimal(18, 4)");
+            entity.Property(e => e.ScoreType)
+                .HasMaxLength(30)
+                .IsUnicode(false);
+        });
+
+        modelBuilder.Entity<KPISaleSystemParameter>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__KPISaleS__3214EC27C64FB842");
+
+            entity.ToTable("KPISaleSystemParameter");
+
+            entity.Property(e => e.DataType)
+                .HasMaxLength(30)
+                .IsUnicode(false);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.ParamCode)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.ParamName).HasMaxLength(255);
+        });
+
+        modelBuilder.Entity<KPISaleTarget>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__KPISaleT__3214EC270F158C3A");
+
+            entity.ToTable("KPISaleTarget");
+
+            entity.HasIndex(e => new { e.EmployeeID, e.PeriodID, e.KpiIndexID }, "IX_KpiTarget_Employee_Period_Index");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate).HasDefaultValueSql("(sysdatetime())");
+            entity.Property(e => e.GoalValue).HasColumnType("decimal(18, 4)");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<KPISaleTemplate>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__KPISaleT__3214EC27D58386FF");
+
+            entity.ToTable("KPISaleTemplate");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate).HasDefaultValueSql("(sysdatetime())");
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.TemplateCode)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.TemplateName).HasMaxLength(255);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
         });
 
         modelBuilder.Entity<KPISession>(entity =>
