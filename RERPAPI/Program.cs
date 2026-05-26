@@ -501,9 +501,9 @@ builder.Services.AddScoped<ProjectTaskGroupRepo>();
 builder.Services.AddScoped<ProjectTaskChecklistRepo>();
 builder.Services.AddScoped<ProjectTaskEmailBandRepo>();
 builder.Services.AddScoped<ProjectTaskAttendanceRepo>();
-builder.Services.AddTransient<ProjectTaskAttachmentRepo>();
-builder.Services.AddTransient<ProjectTaskAdditionalRepo>();
-builder.Services.AddTransient<ProjectTaskSettingRepo>();
+builder.Services.AddScoped<ProjectTaskAttachmentRepo>();
+builder.Services.AddScoped<ProjectTaskAdditionalRepo>();
+builder.Services.AddScoped<ProjectTaskSettingRepo>();
 
 builder.Services.AddScoped<SendEmailReceiveProjectTaskClass>();
 
@@ -679,7 +679,8 @@ builder.Services.AddScoped<MakerTrainingDocumentRepo>();
 builder.Services.AddScoped<MakerTrainingTypeRepo>();
 builder.Services.AddScoped<PerformanceCriteriaRepo>(); 
 builder.Services.AddScoped<EmployeeAttendanceNewRepo>();
-
+builder.Services.AddScoped<ProjectTaskWorkRepo>();
+builder.Services.AddScoped<ProjectTaskStatusRepo>();
 
 #region DI LOG
 builder.Services.AddScoped<POKHLogRepo>();
