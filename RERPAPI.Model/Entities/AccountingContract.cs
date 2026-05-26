@@ -46,6 +46,9 @@ public partial class AccountingContract
 
     public int? EmployeeID { get; set; }
 
+    /// <summary>
+    /// Nội dung thay đổi
+    /// </summary>
     public string? Note { get; set; }
 
     /// <summary>
@@ -73,4 +76,14 @@ public partial class AccountingContract
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
+
+    /// <summary>
+    /// Ghi chú (kế toán)
+    /// </summary>
+    public string? AccountingNote { get; set; }
+
+    /// <summary>
+    /// 1: Họp đồng không thời hạn; 0: Hợp đồng có thời hạn
+    /// </summary>
+    public bool? IsUnlimitedContract { get; set; }
 }
