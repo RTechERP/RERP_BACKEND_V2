@@ -974,6 +974,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<ProjectTaskChecklist> ProjectTaskChecklists { get; set; }
 
+    public virtual DbSet<ProjectTaskDifficulty> ProjectTaskDifficulties { get; set; }
+
     public virtual DbSet<ProjectTaskEmailBand> ProjectTaskEmailBands { get; set; }
 
     public virtual DbSet<ProjectTaskEmployee> ProjectTaskEmployees { get; set; }
@@ -984,7 +986,13 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<ProjectTaskSetting> ProjectTaskSettings { get; set; }
 
+    public virtual DbSet<ProjectTaskStatus> ProjectTaskStatuses { get; set; }
+
     public virtual DbSet<ProjectTaskType> ProjectTaskTypes { get; set; }
+
+    public virtual DbSet<ProjectTaskWeight> ProjectTaskWeights { get; set; }
+
+    public virtual DbSet<ProjectTaskWork> ProjectTaskWorks { get; set; }
 
     public virtual DbSet<ProjectTechnology> ProjectTechnologies { get; set; }
 
@@ -11218,6 +11226,41 @@ public partial class RTCContext : DbContext
                 .HasColumnType("datetime");
         });
 
+        modelBuilder.Entity<ProjectTaskDifficulty>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ProjectT__CDEB13D88EA7DABE");
+
+            entity.ToTable("ProjectTaskDifficulty");
+
+            entity.Property(e => e.ID).HasComment("ID tự tăng");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Description)
+                .HasMaxLength(225)
+                .HasComment("Mô tả độ khó");
+            entity.Property(e => e.Factor)
+                .HasComment("Yếu tố ")
+                .HasColumnType("decimal(5, 3)");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái khóa mềm ");
+            entity.Property(e => e.Level).HasComment("Mức độ của độ khó");
+            entity.Property(e => e.Name)
+                .HasMaxLength(50)
+                .HasComment("Tên độ khó");
+            entity.Property(e => e.SuggestedReview)
+                .HasMaxLength(225)
+                .HasComment("Gợi ý đánh giá độ khó cho công việc");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Ngươì cập nhật bản ghi");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật bản ghi")
+                .HasColumnType("datetime");
+        });
+
         modelBuilder.Entity<ProjectTaskEmailBand>(entity =>
         {
             entity.ToTable("ProjectTaskEmailBand", tb => tb.HasComment("Bảng danh sách email không gửi mail"));
@@ -11334,6 +11377,44 @@ public partial class RTCContext : DbContext
                 .HasColumnType("datetime");
         });
 
+        modelBuilder.Entity<ProjectTaskStatus>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ProjectT__CDEB13D8210EADB1");
+
+            entity.ToTable("ProjectTaskStatus");
+
+            entity.Property(e => e.ID)
+                .ValueGeneratedNever()
+                .HasComment("ID tự tăng");
+            entity.Property(e => e.ColorBackground)
+                .HasMaxLength(255)
+                .HasComment("Màu nền của trạng thái");
+            entity.Property(e => e.ColorFont)
+                .HasMaxLength(255)
+                .HasComment("Màu chữ của trạng thái");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Description)
+                .HasMaxLength(225)
+                .HasComment("Mô tả trạng thái");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái khóa mềm ");
+            entity.Property(e => e.No).HasComment("Vị trí của trạng thái");
+            entity.Property(e => e.Title)
+                .HasMaxLength(50)
+                .HasComment("Tiêu đề trạng thái");
+            entity.Property(e => e.Type).HasComment("Loại trạng thái");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Ngươì cập nhật bản ghi");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật bản ghi")
+                .HasColumnType("datetime");
+        });
+
         modelBuilder.Entity<ProjectTaskType>(entity =>
         {
             entity.HasKey(e => e.ID).HasName("PK__ProjectT__3214EC27C9103EFC");
@@ -11362,6 +11443,71 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedBy)
                 .HasMaxLength(50)
                 .HasComment("Người cập nhật bản ghi");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật bản ghi")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectTaskWeight>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ProjectT__CDEB13D82CBE042A");
+
+            entity.ToTable("ProjectTaskWeight");
+
+            entity.Property(e => e.ID).HasComment("ID tự tăng");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Description)
+                .HasMaxLength(225)
+                .HasComment("Mô tả trọng số");
+            entity.Property(e => e.Factor)
+                .HasComment("Yếu tố trọng số ")
+                .HasColumnType("decimal(5, 3)");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái khóa mềm ");
+            entity.Property(e => e.Name)
+                .HasMaxLength(50)
+                .HasComment("Tên trọng số");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Ngươì cập nhật bản ghi");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Weight).HasComment("Trọng số của công việc");
+        });
+
+        modelBuilder.Entity<ProjectTaskWork>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ProjectT__CDEB13D8679F344C");
+
+            entity.ToTable("ProjectTaskWork");
+
+            entity.Property(e => e.ID).HasComment("ID tự tăng");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Date)
+                .HasComment("Ngày làm việc")
+                .HasColumnType("datetime");
+            entity.Property(e => e.EstimatedTime)
+                .HasComment("Thời gian dự kiến (h)")
+                .HasColumnType("decimal(6, 2)");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái khóa mềm ");
+            entity.Property(e => e.IsWork).HasComment("Có làm việc hay không");
+            entity.Property(e => e.Location)
+                .HasMaxLength(550)
+                .HasComment("Địa điểm làm việc");
+            entity.Property(e => e.ProjectTaskID).HasComment("ID của Công việc (ProjectItem)");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Ngươì cập nhật bản ghi");
             entity.Property(e => e.UpdatedDate)
                 .HasComment("Ngày cập nhật bản ghi")
                 .HasColumnType("datetime");

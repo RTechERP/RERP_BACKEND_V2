@@ -73,4 +73,6 @@ public partial class AccountingContract
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
+
+    public string? Comment { get; set; }
 }
