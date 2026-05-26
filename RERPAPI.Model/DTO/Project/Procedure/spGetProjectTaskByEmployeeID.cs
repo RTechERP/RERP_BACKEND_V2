@@ -11,6 +11,7 @@ namespace RERPAPI.Model.DTO.Project.Procedure
         public int ID { get; set; }
 
         public int? Status { get; set; }
+        public bool IsApprove { get; set; }
 
         public string? STT { get; set; }
 

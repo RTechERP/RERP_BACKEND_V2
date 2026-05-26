@@ -1,32 +1,13 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using DocumentFormat.OpenXml.Office2010.ExcelAc;
-using DocumentFormat.OpenXml.Office2013.Drawing.ChartStyle;
-using DocumentFormat.OpenXml.Spreadsheet;
-using MathNet.Numerics.Distributions;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.IdentityModel.Tokens;
-using NPOI.HSSF.Record.Chart;
-using NPOI.SS.Formula.Functions;
-using OfficeOpenXml.Style.XmlAccess;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.Project.Procedure;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Project;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Net.NetworkInformation;
-using System.Threading.Tasks;
-using ZXing;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
@@ -52,6 +33,8 @@ namespace RERPAPI.Controllers.Project
         ProjectTaskAttendanceRepo _projectTaskAttendanceRepo;
         ProjectTaskSettingRepo _projectTaskSettingRepo;
         ProjectWorkerVersionRepo _projectWorkerVersionRepo;
+        ProjectTaskWorkRepo _projectTaskWorkRepo;
+        ProjectTaskStatusRepo _projectTaskStatusRepo;
         public ProjectTaskController(ProjectTaskRepo projectTaskRepo,
             ProjectTaskGroupRepo groupRepo,
             ProjectTaskChecklistRepo checklistRepo,
@@ -69,7 +52,9 @@ namespace RERPAPI.Controllers.Project
             ProjectItemRepo projectItemRepo,
             ProjectTaskAttendanceRepo projectTaskAttendanceRepo,
             ProjectTaskSettingRepo projectTaskSettingRepo,
-            ProjectWorkerVersionRepo projectWorkerVersionRepo
+            ProjectWorkerVersionRepo projectWorkerVersionRepo,
+            ProjectTaskWorkRepo projectTaskWorkRepo,
+            ProjectTaskStatusRepo projectTaskStatusRepo
             )
         {
             _projectTaskRepo = projectTaskRepo;
@@ -90,6 +75,8 @@ namespace RERPAPI.Controllers.Project
             _projectTaskAttendanceRepo = projectTaskAttendanceRepo;
             _projectTaskSettingRepo = projectTaskSettingRepo;
             _projectWorkerVersionRepo = projectWorkerVersionRepo;
+            _projectTaskWorkRepo = projectTaskWorkRepo;
+            _projectTaskStatusRepo = projectTaskStatusRepo;
         }
 
 
@@ -100,7 +87,7 @@ namespace RERPAPI.Controllers.Project
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetProjectTask(DateTime dateStart, DateTime dateEnd, int status, int viewNumber = 1)
+        public async Task<IActionResult> GetProjectTask(DateTime dateStart, DateTime dateEnd, string status, int isApprove, int viewNumber = 1)
         {
             try
             {
@@ -118,6 +105,7 @@ namespace RERPAPI.Controllers.Project
                         DateStart = dateStart,
                         DateEnd = dateEnd,
                         Status = status,
+                        IsApprove = isApprove,
                         ViewNumber = viewNumber
                     };
                     var projectTasksnew = await SqlDapper<spGetProjectTaskByEmployeeID>.ProcedureToListTAsync("spGetProjectTaskByEmployeeID", param1);
@@ -134,6 +122,7 @@ namespace RERPAPI.Controllers.Project
                     DateStart = dateStart,
                     DateEnd = dateEnd,
                     Status = status,
+                    IsApprove = isApprove,
                     ViewNumber = viewNumber
                 };
                 var projectTasks = await SqlDapper<spGetProjectTaskByEmployeeID>.ProcedureToListTAsync("spGetProjectTaskByEmployeeID", param);
@@ -367,6 +356,34 @@ namespace RERPAPI.Controllers.Project
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, "Failed to get project tasks time line."));
+            }
+        }
+
+        // -- Lấy danh sách nhân viên có ít nhất 1 ngày không có công việc
+        [HttpGet("project-task-timeline-null-task")]
+        public async Task<IActionResult> GetProjectTaskTimeLineNullTask( [FromQuery] DateTime dateStart,
+                                                                          [FromQuery] DateTime dateEnd,
+                                                                          [FromQuery] string departmentID = "-1")
+
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                dateStart = dateStart.Date;
+                dateEnd = dateEnd.Date.AddDays(1).AddSeconds(-1);
+                var param = new
+                {
+                    DateStart = dateStart,
+                    DateEnd = dateEnd,
+                    DepartmentID = departmentID
+                };
+                var projectTasks = await SqlDapper<object>.ProcedureToListAsync("spGetProjectTaskTimeLineNullTask", param);
+                return Ok(ApiResponseFactory.Success(projectTasks));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, "Failed to get project tasks time line null."));
             }
         }
 
@@ -1392,19 +1409,19 @@ namespace RERPAPI.Controllers.Project
 
 
                         // Log change project
-                        if (projectTask.ProjectID != null || projectTask.ProjectID > 0)
+                        if (projectTask.ProjectID != null && projectTask.ProjectID > 0)
                         {
 
                             if (existingTask.ProjectID != null && existingTask.ProjectID > 0)
                             {
                                 newProjectTaskChangeProjectLog.ContentLog = $"- {currentUser.FullName} đã thay đổi dự án từ {oldProject.ProjectName} thành {newProject.ProjectName}. \\n";
-                                existingTask.Code = _projectItemRepo.GenerateProjectItemCodeNew(projectTask.ProjectID ?? 0).Trim();
                             }
                             else
                             {
                                 newProjectTaskChangeProjectLog.ContentLog = $"- {currentUser.FullName} đã thêm vào dự án {newProject.ProjectName}. \\n";
-                                existingTask.Code = _projectItemRepo.GenerateProjectItemCodeNew(projectTask.ProjectID ?? 0).Trim();
                             }
+                            existingTask.Code = _projectItemRepo.GenerateProjectItemCodeNew(projectTask.ProjectID ?? 0).Trim();
+
                         }
                         else
                         {
@@ -1441,21 +1458,22 @@ namespace RERPAPI.Controllers.Project
 
                     if (existingTask.Status != projectTask.Status)
                     {
-                        var statusText = new Dictionary<int, string>
-                            {
-                                { 0, "Chưa làm" },
-                                { 1, "Đang làm" },
-                                { 2, "Hoàn thành" },
-                                { 3, "Pending" },
-                                { 4, "Cancel" },
-                            };
+                        var statusText = new Dictionary<int, string>();
 
-                        var oldStatus = statusText.ContainsKey(existingTask.Status ?? 0)
-                            ? statusText[existingTask.Status ?? 0]
+                        List<ProjectTaskStatus> projectTaskStatuses = _projectTaskStatusRepo.GetAll(x => x.IsDeleted != true && x.Type == 1).ToList();
+
+                        foreach (var p in projectTaskStatuses)
+                        {
+                            if (!statusText.ContainsKey(p.No ?? 0))
+                                statusText[p.No ?? 0] = p.Title;
+                        }
+
+                        var oldStatus = statusText.ContainsKey(existingTask.Status ?? -1)
+                            ? statusText[existingTask.Status ?? -1]
                             : "Không xác định";
 
-                        var newStatus = statusText.ContainsKey(projectTask.Status ?? 0)
-                            ? statusText[projectTask.Status ?? 0]
+                        var newStatus = statusText.ContainsKey(projectTask.Status ?? -1)
+                            ? statusText[projectTask.Status ?? -1]
                             : "Không xác định";
 
                         var newProjectTaskChangeStatusLog = new ProjectTaskLog
@@ -1513,6 +1531,20 @@ namespace RERPAPI.Controllers.Project
                         };
                         await _projectTaskLogRepo.CreateAsync(newProjectTaskChangeStatusComplexityLog);
                         existingTask.TaskComplexity = projectTask.TaskComplexity;
+
+                    }
+
+                    // log change location of task
+                    if (existingTask.Location != projectTask.Location)
+                    {
+                        var newProjectTaskChangeStatusLocationLog = new ProjectTaskLog
+                        {
+                            ProjectTaskID = existingTask.ID,
+                            TypeLog = "Thay đổi địa điểm làm việc",
+                            ContentLog = $"- {currentUser.FullName} đã thay đổi địa điểm làm việc từ {existingTask.Location ?? "Chưa có"} thành {projectTask.Location}. \\n"
+                        };
+                        await _projectTaskLogRepo.CreateAsync(newProjectTaskChangeStatusLocationLog);
+                        existingTask.Location = projectTask.Location;
 
                     }
 
@@ -1651,7 +1683,7 @@ namespace RERPAPI.Controllers.Project
                         {
                             ProjectTaskID = existingTask.ID,
                             TypeLog = "Thay đổi thời gian dự kiến",
-                            ContentLog = $"- {currentUser.FullName} đã thay đổi độ ưu tiên từ {existingTask.EstimatedTime} thành {projectTask.EstimatedTime}. \\n"
+                            ContentLog = $"- {currentUser.FullName} đã thay đổi thời gian dự kiến từ {existingTask.EstimatedTime} thành {projectTask.EstimatedTime}. \\n"
                         };
                         await _projectTaskLogRepo.CreateAsync(newProjectTaskChangeEstimatedTime);
                         existingTask.EstimatedTime = projectTask.EstimatedTime;
@@ -1759,7 +1791,7 @@ namespace RERPAPI.Controllers.Project
                         IsPersonalProject = projectTask.IsPersonalProject,
                         TypeProjectItem = projectTask.TypeProjectItem,
                         IsAdditional = projectTask.IsAdditional,
-                        TaskComplexity = projectTask.TaskComplexity.HasValue && projectTask.TaskComplexity > 0 ? projectTask.TaskComplexity : 1,
+                        TaskComplexity = projectTask.TaskComplexity ?? 1,
                         ParentID = projectTask.ParentID,
                         Deadline = projectTask.Deadline,
                         DescriptionSolution = projectTask.DescriptionSolution,
@@ -1767,7 +1799,8 @@ namespace RERPAPI.Controllers.Project
                         ProjectTaskTypeID = projectTask.ProjectTaskTypeID.HasValue && projectTask.ProjectTaskTypeID > 0 ? projectTask.ProjectTaskTypeID : 1,
                         Priority = projectTask.Priority ?? 1,
                         EstimatedTime = projectTask.EstimatedTime,
-                        NeedApprove = projectTask.NeedApprove ?? true
+                        NeedApprove = projectTask.NeedApprove ?? true,
+                        Location = projectTask.Location
                     };
 
                     if (projectTask.Employee != null && projectTask.Employee.Count > 0)
@@ -2585,5 +2618,284 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        [HttpPost("Efficiency-Task")]
+        public async Task<IActionResult> EfficiencyByTask([FromQuery] DateTime dateStart,
+            [FromQuery] DateTime dateEnd,
+            [FromQuery] int departmentID = 0,
+            [FromQuery] int teamID = 0,
+            [FromQuery] int employeeID = 0,
+            [FromQuery] int projectID = 0,
+            [FromQuery] string status = "0,1"
+            )
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                dateStart = dateStart.Date;
+                dateEnd = dateEnd.Date.AddDays(1).AddSeconds(-1);
+                var param = new
+                {
+                    DateStart = dateStart,
+                    DateEnd = dateEnd,
+                    DepartmentID = departmentID,
+                    TeamID = teamID,
+                    EmployeeID = employeeID,
+                    ProjectID = projectID,
+                    Status = status
+                };
+                var projectTasks = await SqlDapper<object>.ProcedureToListAsync("spProjectTaskEfficiencyByTask", param);
+                return Ok(ApiResponseFactory.Success(projectTasks));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, "Failed to get project tasks efficiency by task."));
+            }
+        }
+
+        [HttpPost("efficiency-task-project")]
+        public async Task<IActionResult> EfficiencyByTaskProject([FromQuery] DateTime dateStart,
+            [FromQuery] DateTime dateEnd,
+            [FromQuery] int departmentID = 0,
+            [FromQuery] int teamID = 0,
+            [FromQuery] int employeeID = 0,
+            [FromQuery] int projectID = 0,
+            [FromQuery] string status = "0,1"
+            )
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                dateStart = dateStart.Date;
+                dateEnd = dateEnd.Date.AddDays(1).AddSeconds(-1);
+                var param = new
+                {
+                    DateStart = dateStart,
+                    DateEnd = dateEnd,
+                    DepartmentID = departmentID,
+                    TeamID = teamID,
+                    EmployeeID = employeeID,
+                    ProjectID = projectID,
+                    Status = status
+                };
+                var projectTasks = await SqlDapper<object>.ProcedureToListAsync("spProjectTaskEfficiencyByProject", param);
+                return Ok(ApiResponseFactory.Success(projectTasks));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, "Failed to get project tasks efficiency by project."));
+            }
+        }
+
+        // lấy danh sách ngày nghỉ 
+        [HttpPost("day-off")]
+        public async Task<IActionResult> ProjectTaskGetDayOff([FromQuery] DateTime dateStart,
+            [FromQuery] DateTime dateEnd
+            )
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                dateStart = dateStart.Date;
+                dateEnd = dateEnd.Date.AddDays(1).AddSeconds(-1);
+                var param = new
+                {
+                    DateStart = dateStart,
+                    DateEnd = dateEnd
+                };
+                var projectTasks = await SqlDapper<object>.ProcedureToListAsync("spProjectTaskGetDayOff", param);
+                return Ok(ApiResponseFactory.Success(projectTasks));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, "Failed to get day off."));
+            }
+        }
+
+        // Lấy danh sách lịch làm việc theo projectTask
+
+        [HttpGet("project-task-work")]
+        public async Task<IActionResult> GetListProjectTaskWork(int projectTaskID)
+        {
+            try
+            {
+                var exitProjectTaskWork =  _projectTaskWorkRepo.GetAll(x => x.ProjectTaskID == projectTaskID && x.IsDeleted != true).ToList();
+                if (exitProjectTaskWork == null || !exitProjectTaskWork.Any())
+                {
+                    return NotFound(ApiResponseFactory.Fail(null, "Project task work not found."));
+                }
+
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    exitProjectTaskWork
+                }));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, "Failed to get list project task work."));
+            }
+        }
+
+        // thêm hoặc sửa lịch làm việc 
+        [HttpPost("project-task-work")]
+        public async Task<IActionResult> PostListProjectTaskWork([FromBody] List<ProjectTaskWork> projectTaskWorks)
+        {
+            try
+            {
+
+                if(projectTaskWorks == null)
+                {
+                   return BadRequest(ApiResponseFactory.Fail(null, "Project task work is null."));
+                }
+                foreach (var projectTaskWork in projectTaskWorks)
+                {
+                    if (projectTaskWork.ProjectTaskID == null || projectTaskWork.ProjectTaskID <= 0)
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, "Project task ID is invalid."));
+                    }
+                    if (projectTaskWork.Date == null)
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, "Work date is null."));
+                    }
+                    if (projectTaskWork.ID <= 0)
+                    {
+                        var existProjectTask = _projectTaskWorkRepo.GetAll(x => x.ProjectTaskID == projectTaskWork.ProjectTaskID && x.Date == projectTaskWork.Date).FirstOrDefault();
+                        if (existProjectTask != null && existProjectTask.ID > 0)
+                        {
+                            existProjectTask.IsDeleted = false;
+                            existProjectTask.IsWork = projectTaskWork.IsWork;
+                            existProjectTask.Location = projectTaskWork.Location;
+                            existProjectTask.EstimatedTime = projectTaskWork.EstimatedTime;
+                            await _projectTaskWorkRepo.UpdateAsync(existProjectTask);
+                            continue;
+                        }
+                        projectTaskWork.CreatedDate = DateTime.Now;
+                        await _projectTaskWorkRepo.CreateAsync(projectTaskWork);
+                        continue;
+                    }
+                    else
+                    {
+                        var exitProjectTaskWork = await _projectTaskWorkRepo.GetByIDAsync(projectTaskWork.ID);
+                        if (exitProjectTaskWork == null)
+                        {
+                            return NotFound(ApiResponseFactory.Fail(null, "Project task work not found."));
+                        }
+                        exitProjectTaskWork.IsWork = projectTaskWork.IsWork;
+                        exitProjectTaskWork.Location = projectTaskWork.Location;
+                        exitProjectTaskWork.IsDeleted = projectTaskWork.IsDeleted;
+                        exitProjectTaskWork.EstimatedTime = projectTaskWork.EstimatedTime;
+                        exitProjectTaskWork.UpdatedDate = DateTime.Now;
+                        await _projectTaskWorkRepo.UpdateAsync(exitProjectTaskWork);
+                        continue;
+                    }
+                }
+                return Ok(ApiResponseFactory.Success("Lưu danh sách lịch làm việc thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, "Failed to save data."));
+            }
+        }
+
+        // Lấy danh sách trạng thái công việc theo projectTask
+        [HttpGet("project-task-status")]
+        public async Task<IActionResult> GetListProjectTaskStatus()
+        {
+            try
+            {
+                var projectTaskStatuses = _projectTaskStatusRepo.GetAll(x => x.IsDeleted != true).ToList();
+                if (projectTaskStatuses == null || !projectTaskStatuses.Any())
+                {
+                    return NotFound(ApiResponseFactory.Fail(null, "Project task status not found."));
+                }
+
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    projectTaskStatuses
+                }));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, "Failed to get list project task status."));
+            }
+        }
+
+        // update trạng thái của công việc
+
+        [HttpPut("change-status")]
+        public IActionResult ChangeProjectTaskStatus(int status, int projectTaskID, string? reason)
+        {
+            try
+            {
+                // Validate input parameters
+                if (projectTaskID <= 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Project task ID is invalid."));
+                }
+
+                if(status < 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Status is invalid."));
+                }
+
+                var projectTaskExit = _projectItemRepo.GetByID(projectTaskID);
+                if(projectTaskExit.Status == status)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Project task already has this status."));
+                }
+                if(projectTaskExit == null || projectTaskExit.ID <= 0)
+                {
+                    return NotFound(ApiResponseFactory.Fail(null, "Project task not found."));
+                }
+
+                if((status == 1 || status == 2) && (projectTaskExit.PlanEndDate == null || projectTaskExit.ActualStartDate == null))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Can't change status to In Progress because Plan End Date and Actual Start Date is required."));
+                }
+
+                if(status > 2 && string.IsNullOrEmpty(reason))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Reason is required for this status change."));
+                }
+
+                var projectTaskApprove = _projectTaskApproveRepo.GetAll(x => x.ProjectTaskID == projectTaskID && x.IsDeleted != true).FirstOrDefault();
+
+                if(projectTaskApprove != null && projectTaskApprove.ID > 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "This project task has already been approved or rejected."));
+                }
+
+                projectTaskExit.Status = status;
+                projectTaskExit.UpdatedDate = DateTime.Now;
+                if(status == 2)
+                {
+                    projectTaskExit.ActualEndDate = DateTime.Now;
+                }
+                _projectItemRepo.Update(projectTaskExit);
+
+                if (status > 2)
+                {
+                    _projectTaskAdditionalRepo.Create(new ProjectTaskAdditional
+                    {
+                        ProjectTaskID = projectTaskID,
+                        Description = reason,
+                        IsDeleted = false,
+                        CreatedDate = DateTime.Now
+                     });
+                }
+
+                return Ok(ApiResponseFactory.Success("Project task status updated successfully."));
+
+
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, "Failed to change project task status."));
+            }
+        }
+
     }
 }
