@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using ClosedXML.Excel;
+using System.IO;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -74,6 +76,90 @@ namespace RERPAPI.Controllers.Old.POKH
             }
         }
 
+        [HttpGet("export-excel")]
+        [AllowAnonymous]
+        public IActionResult ExportExcel(int pokhDetailId)
+        {
+            try
+            {
+                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetHistoryMoneyPONew",
+                         new string[] { "@POKHDetailID" },
+                         new object[] { pokhDetailId });
+                var data = SQLHelper<dynamic>.GetListData(list, 0);
+
+                using (var workbook = new XLWorkbook())
+                {
+                    var worksheet = workbook.Worksheets.Add("LichSuTienVe");
+
+                    // Headers
+                    worksheet.Cell(1, 1).Value = "STT";
+                    worksheet.Cell(1, 2).Value = "Ngày tiền về";
+                    worksheet.Cell(1, 3).Value = "Số tiền";
+                    worksheet.Cell(1, 4).Value = "Ghi chú";
+                    worksheet.Cell(1, 5).Value = "Ngân hàng";
+                    worksheet.Cell(1, 6).Value = "Số hóa đơn";
+                    worksheet.Cell(1, 7).Value = "Người phụ trách";
+                    worksheet.Cell(1, 8).Value = "Team";
+                    worksheet.Cell(1, 9).Value = "VAT (%)";
+                    worksheet.Cell(1, 10).Value = "Tiền trước VAT";
+
+                    int row = 2;
+                    foreach (var item in data)
+                    {
+                        var dict = item as IDictionary<string, object>;
+                        worksheet.Cell(row, 1).Value = dict.ContainsKey("STT") && dict["STT"] != null ? dict["STT"].ToString() : (row - 1).ToString();
+                        
+                        if (dict.ContainsKey("MoneyDate") && dict["MoneyDate"] != null)
+                        {
+                            if (DateTime.TryParse(dict["MoneyDate"].ToString(), out DateTime date))
+                                worksheet.Cell(row, 2).Value = date.ToString("dd/MM/yyyy");
+                        }
+                        
+                        worksheet.Cell(row, 3).Value = dict.ContainsKey("Money") && dict["Money"] != null ? Convert.ToDecimal(dict["Money"]) : 0;
+                        worksheet.Cell(row, 4).Value = dict.ContainsKey("Note") && dict["Note"] != null ? dict["Note"].ToString() : "";
+                        worksheet.Cell(row, 5).Value = dict.ContainsKey("BankName") && dict["BankName"] != null ? dict["BankName"].ToString() : "";
+                        worksheet.Cell(row, 6).Value = dict.ContainsKey("InvoiceNo") && dict["InvoiceNo"] != null ? dict["InvoiceNo"].ToString() : "";
+                        worksheet.Cell(row, 7).Value = dict.ContainsKey("EmployeeName") && dict["EmployeeName"] != null ? dict["EmployeeName"].ToString() : "";
+                        worksheet.Cell(row, 8).Value = dict.ContainsKey("TeamSaleName") && dict["TeamSaleName"] != null ? dict["TeamSaleName"].ToString() : "";
+                        worksheet.Cell(row, 9).Value = dict.ContainsKey("VAT") && dict["VAT"] != null ? Convert.ToDecimal(dict["VAT"]) : 0;
+                        worksheet.Cell(row, 10).Value = dict.ContainsKey("MoneyVAT") && dict["MoneyVAT"] != null ? Convert.ToDecimal(dict["MoneyVAT"]) : 0;
+                        
+                        row++;
+                    }
+
+                    var rngHeaders = worksheet.Range("A1:J1");
+                    rngHeaders.Style.Font.Bold = true;
+                    rngHeaders.Style.Fill.BackgroundColor = XLColor.LightGray;
+
+                    var rngTable = worksheet.Range($"A1:J{Math.Max(row - 1, 1)}");
+                    rngTable.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                    rngTable.Style.Border.TopBorder = XLBorderStyleValues.Thin;
+                    rngTable.Style.Border.LeftBorder = XLBorderStyleValues.Thin;
+                    rngTable.Style.Border.RightBorder = XLBorderStyleValues.Thin;
+
+                    // Format money columns
+                    if (row > 2)
+                    {
+                        worksheet.Range($"C2:C{row - 1}").Style.NumberFormat.Format = "#,##0";
+                        worksheet.Range($"J2:J{row - 1}").Style.NumberFormat.Format = "#,##0";
+                    }
+
+                    worksheet.Columns().AdjustToContents();
+
+                    using (var stream = new MemoryStream())
+                    {
+                        workbook.SaveAs(stream);
+                        var content = stream.ToArray();
+                        return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"LichSuTienVe_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpPost("save")]
         public async Task<IActionResult> SaveHistoryMoney(HistoryMoneyPODTO dto)
         {
@@ -109,6 +195,7 @@ namespace RERPAPI.Controllers.Old.POKH
                     model.Note = item.Note;
                     model.ProductID = item.ProductID;
                     model.IsFilm = item.IsFilm;
+                    model.UserID = item.UserID;
 
                     // Update RecivedMoneyDate
                     if (model.MoneyDate.HasValue)
