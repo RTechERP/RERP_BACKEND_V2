@@ -1731,6 +1731,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.IsContractValue).HasComment("0: Không có giá trị; 1:Có giá trị");
+            entity.Property(e => e.IsHideRequestInvoice).HasDefaultValue(false);
             entity.Property(e => e.TypeCode)
                 .HasMaxLength(50)
                 .IsUnicode(false);
