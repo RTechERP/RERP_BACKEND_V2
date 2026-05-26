@@ -98,7 +98,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
         {
             try
             {
-                var data = _accountingContractTypeRepo.GetAll().OrderByDescending(x => x.CreatedDate).ToList();
+                var data = _accountingContractTypeRepo.GetAll(x => x.IsHideRequestInvoice == false).OrderByDescending(x => x.CreatedDate).ToList();
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
