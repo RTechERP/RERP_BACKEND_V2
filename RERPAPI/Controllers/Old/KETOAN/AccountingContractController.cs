@@ -448,6 +448,9 @@ namespace RERPAPI.Controllers.Old.KETOAN
                 contract.IsReceivedContract = req.accountingContract.DateReceived.HasValue;
                 contract.DateContract = req.accountingContract.DateContract;
 
+                contract.AccountingNote = req.accountingContract.AccountingNote?.Trim();
+                contract.IsUnlimitedContract = req.accountingContract.IsUnlimitedContract ?? false;
+
                 // SAVE
                 if (req.accountingContract.ID > 0)
                 {
@@ -635,9 +638,27 @@ namespace RERPAPI.Controllers.Old.KETOAN
 
                         DateTime? dateInput = row.GetNullableDate("Ngày nhập");
                         DateTime? dateContract = row.GetNullableDate("Ngày HĐ");
-                        DateTime? dateExpired = row.GetNullableDate("Hiệu lực HĐ");
+                        //DateTime? dateExpired = row.GetNullableDate("Hiệu lực HĐ");
                         DateTime? dateApprovedGroup = row.GetNullableDate("Ngày duyệt bản mềm");
                         DateTime? dateReceived = row.GetNullableDate("Ngày trả hồ sơ gốc");
+
+                        // --- 1. CẬP NHẬT Ở ĐÂY: XỬ LÝ HIỆU LỰC HĐ (KHÔNG THỜI HẠN) ---
+                        string dateExpiredStr = row.GetString("Hiệu lực HĐ")?.Trim();
+                        bool isUnlimitedContract = false;
+                        DateTime? dateExpired = null;
+                        if (!string.IsNullOrEmpty(dateExpiredStr))
+                        {
+                            if (dateExpiredStr.Equals("Không thời hạn", StringComparison.OrdinalIgnoreCase) ||
+                                dateExpiredStr.Equals("không thời hạn", StringComparison.OrdinalIgnoreCase))
+                            {
+                                isUnlimitedContract = true;
+                            }
+                            else
+                            {
+                                dateExpired = row.GetNullableDate("Hiệu lực HĐ");
+                            }
+                        }
+                        // -------------------------------------------------------------
 
                         decimal contractValue = row.GetDecimal("Giá trị HĐ") ?? 0;
                         int quantityDocument = row.GetInt("Số lượng hồ sơ") ?? 0;
@@ -753,7 +774,8 @@ namespace RERPAPI.Controllers.Old.KETOAN
                             CreatedBy = User.Identity?.Name ?? "System",
                             CreatedDate = DateTime.Now,
                             UpdatedBy = User.Identity?.Name ?? "System",
-                            UpdatedDate = DateTime.Now
+                            UpdatedDate = DateTime.Now,
+                            IsUnlimitedContract = isUnlimitedContract,
                         };
 
                         await _accountingContractRepo.CreateAsync(model);
