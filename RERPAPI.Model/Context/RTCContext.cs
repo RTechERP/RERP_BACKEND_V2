@@ -76,6 +76,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<AdminMarketingDetail> AdminMarketingDetails { get; set; }
 
+    public virtual DbSet<AssetLog> AssetLogs { get; set; }
+
     public virtual DbSet<AuditLog> AuditLogs { get; set; }
 
     public virtual DbSet<BankList> BankLists { get; set; }
@@ -1784,6 +1786,34 @@ public partial class RTCContext : DbContext
 
             entity.Property(e => e.CompletionRate).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.PercentActual).HasColumnType("decimal(18, 2)");
+        });
+
+        modelBuilder.Entity<AssetLog>(entity =>
+        {
+            entity.ToTable("AssetLog", tb => tb.HasComment("Bảng lưu lịch sử thay đổi/tracking tài sản"));
+
+            entity.Property(e => e.ID).HasComment("Khóa chính, tự tăng");
+            entity.Property(e => e.AssetID).HasComment("ID tài sản");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Thời gian tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.DateLog)
+                .HasComment("Thời gian ghi nhận log")
+                .HasColumnType("datetime");
+            entity.Property(e => e.EmployeeID).HasComment("ID nhân viên liên quan");
+            entity.Property(e => e.LogContent).HasComment("Nội dung log (mô tả thay đổi)");
+            entity.Property(e => e.TypeLog)
+                .HasMaxLength(255)
+                .HasComment("Loại log (ví dụ: bàn giao, thu hồi, sửa chữa...)");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người cập nhật");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Thời gian cập nhật")
+                .HasColumnType("datetime");
         });
 
         modelBuilder.Entity<AuditLog>(entity =>
@@ -9277,6 +9307,7 @@ public partial class RTCContext : DbContext
 
             entity.HasIndex(e => e.TypeOrder, "Index_PaymentOrder_TypeOrder");
 
+            entity.Property(e => e.AccountingLeaderNote).HasMaxLength(550);
             entity.Property(e => e.BankListID).HasDefaultValue(0);
             entity.Property(e => e.Code)
                 .HasMaxLength(50)
@@ -9369,6 +9400,7 @@ public partial class RTCContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.TotalMoney).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TotalMoneyWithInvoice).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.TotalPaymentAmount).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.Unit).HasMaxLength(50);
             entity.Property(e => e.UnitPrice).HasColumnType("decimal(18, 2)");
@@ -9516,6 +9548,7 @@ public partial class RTCContext : DbContext
 
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsBill).HasDefaultValue(false);
             entity.Property(e => e.TypeCode)
                 .HasMaxLength(50)
                 .IsUnicode(false);

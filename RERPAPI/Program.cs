@@ -681,6 +681,7 @@ builder.Services.AddScoped<PerformanceCriteriaRepo>();
 builder.Services.AddScoped<EmployeeAttendanceNewRepo>();
 builder.Services.AddScoped<ProjectTaskWorkRepo>();
 builder.Services.AddScoped<ProjectTaskStatusRepo>();
+builder.Services.AddScoped<PaymentOrderOrderTypeRepo>();
 
 #region DI LOG
 builder.Services.AddScoped<POKHLogRepo>();
@@ -688,6 +689,8 @@ builder.Services.AddScoped<RequestInvoiceLogRepo>();
 builder.Services.AddScoped<BillExportSaleLogRepo>();
 builder.Services.AddScoped<PONCCLogRepo>();
 builder.Services.AddScoped<BillImportTechnicalAuditLogRepo>();
+builder.Services.AddScoped<AssetLogRepo>();
+
 #endregion
 
 builder.Services.AddScoped<CurrentUser>(provider =>

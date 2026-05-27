@@ -26,4 +26,6 @@ public partial class PaymentOrderType
     public bool? IsDelete { get; set; }
 
     public bool? IsSpecialOrder { get; set; }
+
+    public bool? IsBill { get; set; }
 }
