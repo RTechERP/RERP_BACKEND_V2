@@ -1697,6 +1697,7 @@ public partial class RTCContext : DbContext
                 .HasComment("Ngày nhận hồ sơ gốc")
                 .HasColumnType("datetime");
             entity.Property(e => e.IsReceivedContract).HasComment("1: đã nhận hđ gốc; 0: chưa nhận");
+            entity.Property(e => e.IsUnlimitedContract).HasDefaultValue(false);
             entity.Property(e => e.Unit).HasMaxLength(50);
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
@@ -10346,6 +10347,12 @@ public partial class RTCContext : DbContext
 
             entity.ToTable("ProjectItem");
 
+            entity.HasIndex(e => e.ParentID, "idx_ProjectItem_ParentID");
+
+            entity.HasIndex(e => e.ProjectID, "idx_ProjectItem_ProjectID");
+
+            entity.HasIndex(e => e.UserID, "idx_ProjectItem_UserID");
+
             entity.Property(e => e.ID).HasComment("ID tự tăng");
             entity.Property(e => e.ActualEndDate)
                 .HasComment("Ngày kết thúc thực tế")
@@ -11104,6 +11111,8 @@ public partial class RTCContext : DbContext
 
             entity.ToTable("ProjectTaskAdditional", tb => tb.HasComment("Bảng lưu phát sinh cho công việc của dự án"));
 
+            entity.HasIndex(e => e.ProjectTaskID, "idx_ProjectTaskAdditional_ProjectTaskID");
+
             entity.Property(e => e.ID).HasComment("ID tự tăng");
             entity.Property(e => e.CreatedBy)
                 .HasMaxLength(50)
@@ -11179,6 +11188,8 @@ public partial class RTCContext : DbContext
         {
             entity.ToTable("ProjectTaskAttendance");
 
+            entity.HasIndex(e => e.ProjectTaskID, "idx_ProjectTaskAttendance_ProjectTaskID");
+
             entity.Property(e => e.ID).HasComment("ID tự tăng");
             entity.Property(e => e.CreatedBy)
                 .HasMaxLength(50)
@@ -11206,6 +11217,8 @@ public partial class RTCContext : DbContext
         modelBuilder.Entity<ProjectTaskChecklist>(entity =>
         {
             entity.ToTable("ProjectTaskChecklist", tb => tb.HasComment("Bảng lưu chi tiết checklist công việc của dự án"));
+
+            entity.HasIndex(e => e.ProjectTaskID, "idx_ProjectTaskChecklist_ProjectTaskID");
 
             entity.Property(e => e.ID).HasComment("ID tự tăng");
             entity.Property(e => e.ChecklistTitle).HasComment("Nội dung của checklist ");
@@ -11293,6 +11306,12 @@ public partial class RTCContext : DbContext
         {
             entity.ToTable("ProjectTaskEmployee", tb => tb.HasComment("Bảng lưu nhân viên tham gia công việc của dự án"));
 
+            entity.HasIndex(e => e.EmployeeID, "idx_ProjectTaskEmployee_EmployeeID");
+
+            entity.HasIndex(e => e.ProjectTaskID, "idx_ProjectTaskEmployee_ProjectTaskID");
+
+            entity.HasIndex(e => e.Type, "idx_ProjectTaskEmployee_Type");
+
             entity.Property(e => e.ID).HasComment("ID tự tăng");
             entity.Property(e => e.CanDelete).HasComment("1: Không thể xóa, 0: Có thể xóa");
             entity.Property(e => e.CreatedBy)
@@ -11327,6 +11346,8 @@ public partial class RTCContext : DbContext
         modelBuilder.Entity<ProjectTaskLog>(entity =>
         {
             entity.ToTable("ProjectTaskLog", tb => tb.HasComment("Bảng lưu chi tiết log khi thay đổi thông tin công việc của dự án"));
+
+            entity.HasIndex(e => e.ProjectTaskID, "idx_ProjectTaskLog_ProjectTaskID");
 
             entity.Property(e => e.ID).HasComment("ID tự tăng");
             entity.Property(e => e.ContentLog).HasComment("Nội dung chi tiết log");

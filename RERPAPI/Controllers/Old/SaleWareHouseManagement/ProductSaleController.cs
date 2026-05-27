@@ -409,8 +409,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         {
             bool check = true;
             var exists = _productsaleRepo.GetAll(x => x.ProductCode == dto.ProductSale.ProductCode
-                            //&& x.ProductGroupID == dto.ProductSale.ProductGroupID
-							&& x.ID != dto.ProductSale.ID && x.IsDeleted == false);
+                            && x.ProductGroupID == dto.ProductSale.ProductGroupID
+                            && x.ID != dto.ProductSale.ID && x.IsDeleted == false);
             if (exists.Count > 0) check = false;
             return check;
         }
