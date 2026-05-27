@@ -86,4 +86,6 @@ public partial class AccountingContract
     /// 1: Họp đồng không thời hạn; 0: Hợp đồng có thời hạn
     /// </summary>
     public bool? IsUnlimitedContract { get; set; }
+
+    public string? Comment { get; set; }
 }

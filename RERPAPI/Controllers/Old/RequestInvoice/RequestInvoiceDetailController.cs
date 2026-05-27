@@ -98,7 +98,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
         {
             try
             {
-                var data = _accountingContractTypeRepo.GetAll().OrderByDescending(x => x.CreatedDate).ToList();
+                var data = _accountingContractTypeRepo.GetAll(x => x.IsHideRequestInvoice == false).OrderByDescending(x => x.CreatedDate).ToList();
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
@@ -484,8 +484,8 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                     targetFolder = Path.Combine(uploadPath, $"YCXHD_ID_{ri.ID}");
                 }
 
-                //if (!Directory.Exists(targetFolder))
-                //    Directory.CreateDirectory(targetFolder);
+                if (!Directory.Exists(targetFolder))
+                    Directory.CreateDirectory(targetFolder);
 
                 var processedFile = new List<RequestInvoiceFile>();
 
@@ -500,10 +500,10 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                     var fullPath = Path.Combine(targetFolder, uniqueFileName);
 
                     // Lưu file trực tiếp vào targetFolder (không tạo file tạm khác)
-                    //using (var stream = new FileStream(fullPath, FileMode.Create))
-                    //{
-                    //    await file.CopyToAsync(stream);
-                    //}
+                    using (var stream = new FileStream(fullPath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
 
                     var filePO = new RequestInvoiceFile
                     {
