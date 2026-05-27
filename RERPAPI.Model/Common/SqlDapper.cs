@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using RERPAPI.Model.DTO;
 using System;
@@ -112,6 +112,25 @@ namespace RERPAPI.Model.Common
                 multi.Read<T2>().AsList()
             );
         }
+
+        public static async Task<(List<T1>, List<T2>, List<T3>)> QueryMultipleAsync<T1, T2, T3>(
+         string procedureName,
+         object? parameters = null,
+         IDbTransaction? transaction = null)
+        {
+            var connection = new SqlConnection(connectionString);
+            using var multi = await connection.QueryMultipleAsync(
+                procedureName,
+                parameters,
+                transaction,
+                commandType: CommandType.StoredProcedure);
+
+            return (
+                multi.Read<T1>().AsList(),
+                multi.Read<T2>().AsList(),
+                multi.Read<T3>().AsList()
+            );
+        }
         public static async Task<int> ExecuteStoredProcedure(
         string procedureName,
         object parameters = null,
@@ -146,7 +165,6 @@ namespace RERPAPI.Model.Common
                 );
             }
         }
-
 
     }
 }
