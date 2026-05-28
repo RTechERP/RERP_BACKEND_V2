@@ -649,7 +649,8 @@ namespace RERPAPI.Controllers.Old.KETOAN
                         if (!string.IsNullOrEmpty(dateExpiredStr))
                         {
                             if (dateExpiredStr.Equals("Không thời hạn", StringComparison.OrdinalIgnoreCase) ||
-                                dateExpiredStr.Equals("không thời hạn", StringComparison.OrdinalIgnoreCase))
+                                dateExpiredStr.Equals("không thời hạn", StringComparison.OrdinalIgnoreCase) ||
+                                dateExpiredStr.Contains("#"))
                             {
                                 isUnlimitedContract = true;
                             }
