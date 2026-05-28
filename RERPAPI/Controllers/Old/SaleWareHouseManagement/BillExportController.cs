@@ -1168,8 +1168,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         //}
 
         // GET: api/BillExport/download-pokh-file/{poNumber}/{fileName}
-        [HttpGet("download-pokh-file/{poNumber}/{fileName}")]
-        public IActionResult DownloadPOKHFile(string poNumber, string fileName)
+		[HttpGet("download-pokh-file/{poNumber}")]
+		public IActionResult DownloadPOKHFile(string poNumber, [FromQuery] string fileName)
         {
             try
             {
