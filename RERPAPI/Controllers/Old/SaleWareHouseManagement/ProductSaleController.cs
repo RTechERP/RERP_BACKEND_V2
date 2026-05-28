@@ -224,7 +224,12 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         dto.Inventory.MinQuantity = 0;
                         dto.Inventory.IsStock = false;
                         //dto.Inventory.ProductGroupID = dto.ProductSale.ProductGroupID;
-
+                        int prdGroupID = dto.ProductSale.ProductGroupID ?? 0;
+                        if (prdGroupID == 83 || prdGroupID == 84) // Nam per update 28/05/2026 nhờ khánh push lên 
+                        {
+                            dto.Inventory.WarehouseID = 6;
+                            dto.Inventory.ProductGroupID = dto.ProductSale.ProductGroupID;
+                        }
                         await _inventoryRepo.CreateAsync(dto.Inventory);
                     }
                     else
