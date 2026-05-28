@@ -120,6 +120,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<BillExportTechnical> BillExportTechnicals { get; set; }
 
+    public virtual DbSet<BillExportTechnicalAuditLog> BillExportTechnicalAuditLogs { get; set; }
+
     public virtual DbSet<BillExportTechnicalLog> BillExportTechnicalLogs { get; set; }
 
     public virtual DbSet<BillFilm> BillFilms { get; set; }
@@ -2263,6 +2265,20 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.WarehouseTypeBill)
                 .HasDefaultValue(1)
                 .HasComment("1: Kho Demo; 2: Kho AGV");
+        });
+
+        modelBuilder.Entity<BillExportTechnicalAuditLog>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__BillExpo__3214EC27AC7C11B4");
+
+            entity.ToTable("BillExportTechnicalAuditLog");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.TypeLog).HasMaxLength(255);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<BillExportTechnicalLog>(entity =>

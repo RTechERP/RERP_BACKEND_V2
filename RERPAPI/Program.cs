@@ -690,6 +690,7 @@ builder.Services.AddScoped<BillExportSaleLogRepo>();
 builder.Services.AddScoped<PONCCLogRepo>();
 builder.Services.AddScoped<BillImportTechnicalAuditLogRepo>();
 builder.Services.AddScoped<AssetLogRepo>();
+builder.Services.AddScoped<BillExportTechnicalAuditLogRepo>();
 
 #endregion
 
