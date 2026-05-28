@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using RERPAPI.Model.Entities;
+using RERPAPI.Model.Entities.ESL;
 
 namespace RERPAPI.Model.Context;
 
@@ -11,6 +12,16 @@ public partial class RTCContext : DbContext
         : base(options)
     {
     }
+
+    public virtual DbSet<ESLConfig> ESLConfigs { get; set; }
+
+    public virtual DbSet<ESLTestTable> ESLTestTables { get; set; }
+
+    public virtual DbSet<ESLTestTableRegistration> ESLTestTableRegistrations { get; set; }
+
+    public virtual DbSet<ESLTestTableRegistrationDetail> ESLTestTableRegistrationDetails { get; set; }
+
+    public virtual DbSet<ESLTestTableRegistrationLog> ESLTestTableRegistrationLogs { get; set; }
 
     public virtual DbSet<AGVBillDocumentExport> AGVBillDocumentExports { get; set; }
 

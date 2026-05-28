@@ -36,6 +36,8 @@ using RERPAPI.Repo.GenericEntity.TB;
 using RERPAPI.Repo.GenericEntity.Technical;
 using RERPAPI.Repo.GenericEntity.Technical.KPI;
 using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
+using RERPAPI.Repo.GenericEntity.ESL;
+using RERPAPI.Controllers.ESL;
 using RERPAPI.SendService;
 using RTCApi.Repo.GenericRepo;
 using Serilog;
@@ -414,6 +416,14 @@ builder.Services.AddScoped<ProjectPartlistPurchaseRequestTypeRepo>();
 builder.Services.AddScoped<ProjectPartlistPriceRequestTypeRepo>();
 builder.Services.AddScoped<ProjectPartlistPriceRequestNoteRepo>();
 builder.Services.AddScoped<InventoryStockRepo>();
+
+// ESL
+builder.Services.AddScoped<ESLConfigRepo>();
+builder.Services.AddScoped<ESLTestTableRepo>();
+builder.Services.AddScoped<ESLTestTableRegistrationRepo>();
+builder.Services.AddScoped<ESLTestTableRegistrationLogRepo>();
+builder.Services.AddScoped<ESLTestTableRegistrationDetailRepo>();
+builder.Services.AddHttpClient<IESLBindService, ESLBindService>();
 #endregion
 #region EmployeePayroll
 
@@ -707,10 +717,10 @@ builder.Services.AddCors(options =>
     });
 });
 // Chỉ khởi tạo 1 lần duy nhất khi chạy server
-FirebaseApp.Create(new AppOptions()
-{
-    Credential = GoogleCredential.FromFile("firebase-adminsdk.json") // Thay bằng đường dẫn thực tế
-});
+//FirebaseApp.Create(new AppOptions()
+//{
+//    Credential = GoogleCredential.FromFile("firebase-adminsdk.json") // Thay bằng đường dẫn thực tế
+//});
 
 
 builder.Services.AddSingleton<SseService>();
