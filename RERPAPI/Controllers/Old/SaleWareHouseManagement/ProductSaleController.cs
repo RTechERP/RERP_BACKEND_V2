@@ -4,7 +4,6 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
-using System.Linq;
 
 namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 {
@@ -177,7 +176,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
             int nextSTT = maxSTT + 1;
 
-            // 6️⃣ Format số (đủ 9 ký tự)
+			// 6️ Format số (đủ 9 ký tự)
             string numberCodeText = nextSTT
                 .ToString()
                 .PadLeft(9 - parentGroupCode.Length, '0');
@@ -235,6 +234,11 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     else
                     {
                         // Cập nhật
+						var product = _productsaleRepo.GetSingleNoTracking(x => x.ID == dto.ProductSale.ID);
+						if (product.ProductGroupID != dto.ProductSale.ProductGroupID)
+						{
+							dto.ProductSale.ProductNewCode = GenerateProductNewCode(dto.ProductSale.ProductGroupID ?? 0);
+						}
                         _productsaleRepo.Update(dto.ProductSale);
                     }
                 }
