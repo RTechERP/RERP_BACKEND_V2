@@ -697,6 +697,20 @@ namespace RERPAPI.Controllers.CRM
 
                 var taxCode = validate.TaxCode?.Trim();
 
+                var customerShortName = validate.CustomerShortName?.Trim().ToUpper();
+
+                if (!string.IsNullOrWhiteSpace(customerShortName))
+                {
+                    if (_customerRepo.GetAll(x =>
+                        (x.CustomerShortName ?? "").Trim().ToUpper() == customerShortName
+                        && x.ID != validate.ID
+                        && (x.IsDeleted == false || x.IsDeleted == null)
+                    ).Any())
+                    {
+                        errors.Add("Tên kí hiệu đã tồn tại, vui lòng nhập lại!");
+                    }
+                }
+
                 if (!string.IsNullOrWhiteSpace(taxCode))
                 {
                     if (_customerRepo.GetAll(x =>
@@ -721,7 +735,7 @@ namespace RERPAPI.Controllers.CRM
                 customer.Province = dto.Customer.Province;
                 customer.CustomerCode = dto.Customer.CustomerCode;
                 customer.CustomerName = dto.Customer.CustomerName.ToUpper();
-                customer.CustomerShortName = dto.Customer.CustomerShortName;
+                customer.CustomerShortName = dto.Customer.CustomerShortName?.Trim().ToUpper();
                 customer.Address = dto.Customer.Address;
                 customer.CustomerType = dto.Customer.CustomerType;
                 customer.ProductDetails = dto.Customer.ProductDetails;
