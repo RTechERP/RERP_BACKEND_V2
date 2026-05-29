@@ -1,4 +1,4 @@
-﻿using RERPAPI.Model.Context;
+using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using System;
@@ -21,10 +21,10 @@ namespace RERPAPI.Repo.GenericEntity.Technical
         private static readonly HashSet<string> _ignoredProperties = new(StringComparer.OrdinalIgnoreCase)
         {
             // Audit & system fields
-            "ID", "BillImportID", "CreatedDate", "UpdatedDate",
-            "CreatedBy", "UpdatedBy", "IsDeleted", "STT",
+            "ID", "BillImportID", "ExpectedDate", "UpdatedDate",
+            "CreatedBy", "UpdatedBy", "IsDeleted", "STT", "UnitID",
             // Internal tracking fields
-            "Code", "CustomerID", "Image",
+            "CustomerID", "Image",
             "WarehouseID", "SupplierSaleID", "BillDocumentExportType",
             "WarehouseTypeBill", "BillExportTechID", "TotalQuantity","internalcode",
             "HistoryProductRTCID", "ProductRTCQRCodeID", "BillImportDetailTechnicalID","Deliver"
@@ -40,7 +40,7 @@ namespace RERPAPI.Repo.GenericEntity.Technical
             ["SupplierSaleID"] = "Nhà cung cấp",
             ["DeliverID"] = "Liên hệ",
             ["BillType"] = "Loại",
-            ["ExpectedDate"] = "Ngày xuất",
+            ["CreatedDate"] = "Ngày xuất",
             ["ProjectName"] = "Dự án",
             ["ReceiverID"] = "Người nhận",
             ["Receiver"] = "Tên người nhận",
@@ -70,6 +70,9 @@ namespace RERPAPI.Repo.GenericEntity.Technical
             foreach (var prop in properties)
             {
                 if (_ignoredProperties.Contains(prop.Name)) continue;
+
+                // Bỏ qua CreatedDate nếu đây là entity chi tiết (chỉ theo dõi thay đổi CreatedDate ở master)
+                if (prop.Name == "CreatedDate" && typeof(T).Name.Contains("Detail")) continue;
 
                 var oldVal = prop.GetValue(oldObj);
                 var newVal = prop.GetValue(newObj);
