@@ -76,6 +76,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<AdminMarketingDetail> AdminMarketingDetails { get; set; }
 
+    public virtual DbSet<AssetAllocationLog> AssetAllocationLogs { get; set; }
+
     public virtual DbSet<AssetLog> AssetLogs { get; set; }
 
     public virtual DbSet<AuditLog> AuditLogs { get; set; }
@@ -1788,6 +1790,19 @@ public partial class RTCContext : DbContext
 
             entity.Property(e => e.CompletionRate).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.PercentActual).HasColumnType("decimal(18, 2)");
+        });
+
+        modelBuilder.Entity<AssetAllocationLog>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__AssetAll__3214EC27BABAB936");
+
+            entity.ToTable("AssetAllocationLog");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.TypeLog).HasMaxLength(255);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<AssetLog>(entity =>
