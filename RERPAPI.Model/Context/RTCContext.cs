@@ -176,6 +176,10 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<CommercialPriceRequest> CommercialPriceRequests { get; set; }
 
+    public virtual DbSet<ConfigNotificationKey> ConfigNotificationKeys { get; set; }
+
+    public virtual DbSet<ConfigNotificationKeyLink> ConfigNotificationKeyLinks { get; set; }
+
     public virtual DbSet<ConfigPrice> ConfigPrices { get; set; }
 
     public virtual DbSet<ConfigSystem> ConfigSystems { get; set; }
@@ -2805,6 +2809,50 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.Vat)
                 .HasDefaultValue(0m)
                 .HasColumnType("decimal(18, 4)");
+        });
+
+        modelBuilder.Entity<ConfigNotificationKey>(entity =>
+        {
+            entity.ToTable("ConfigNotificationKey", tb => tb.HasComment("Bảng khai báo các key cấu hình nhận email"));
+
+            entity.Property(e => e.ID).HasComment("ID bản ghi");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người tạo");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasComment("Ngày tạo")
+                .HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false)
+                .HasComment("Trạng thái xóa mềm: 0-Chưa xóa, 1-Đã xóa");
+            entity.Property(e => e.KeyCode)
+                .HasMaxLength(200)
+                .HasComment("Mã Key");
+            entity.Property(e => e.KeyContent)
+                .HasMaxLength(550)
+                .HasComment("Mô tả key");
+            entity.Property(e => e.KeyName)
+                .HasMaxLength(500)
+                .HasComment("Tên key");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người cập nhật");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ConfigNotificationKeyLink>(entity =>
+        {
+            entity.ToTable("ConfigNotificationKeyLink", tb => tb.HasComment("Bảng liên kết nhân viên và cấu hình nhận email"));
+
+            entity.Property(e => e.ID).HasComment("ID bản ghi");
+            entity.Property(e => e.ConfigNotificationKeyID).HasComment("ID cấu hình nhận email");
+            entity.Property(e => e.EmployeeID).HasComment("ID nhân viên");
+            entity.Property(e => e.IsActive)
+                .HasDefaultValue(true)
+                .HasComment("Trạng thái gửi mail: 0-Không nhận mail, 1-Nhận mail");
         });
 
         modelBuilder.Entity<ConfigPrice>(entity =>
