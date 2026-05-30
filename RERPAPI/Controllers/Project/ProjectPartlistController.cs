@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using NPOI.SS.Formula.Functions;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -972,6 +973,112 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        [HttpPost("clone-projectpartlist")]
+        public async Task<IActionResult> clonePartList(List<ProjectPartList> partLists)
+        {
+            try
+            {
+                if (partLists.Count() <= 0) return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu hợp lệ"));
+                if (!_projectPartlistRepo.Validates(partLists, out string message))
+                    return BadRequest(ApiResponseFactory.Fail(null, message));
+
+                foreach (ProjectPartList partList in partLists)
+                {
+                    var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                    var currentUser = ObjectMapper.GetCurrentUser(claims);
+                    // 1. Trim string fields
+                    partList.TT = partList.TT?.Trim();
+                    partList.ProductCode = partList.ProductCode?.Trim() ?? "";
+                    partList.SpecialCode = partList.SpecialCode?.Trim() ?? "";
+                    partList.GroupMaterial = partList.GroupMaterial?.Trim() ?? "";
+                    partList.Manufacturer = partList.Manufacturer?.Trim() ?? "";
+                    partList.Model = partList.Model?.Trim() ?? "";
+                    partList.Unit = partList.Unit?.Trim() ?? "";
+                    partList.ReasonProblem = partList.ReasonProblem?.Trim() ?? "";
+                    partList.Note = partList.Note?.Trim() ?? "";
+
+                    // 2. Validate
+                    //if (isLeaf)
+                    //{
+                    //    if (!_projectPartlistRepo.ValidateUpdate(partList, out string message))
+                    //        return BadRequest(ApiResponseFactory.Fail(null, message));
+                    //}
+                    //else
+                    //{
+                    //    if (!_projectPartlistRepo.Validate(partList, out string message))
+                    //        return BadRequest(ApiResponseFactory.Fail(null, message));
+                    //}
+
+                    // ===== 3. Validate TÍCH XANH nếu KHÔNG override =====
+                    //if (!overrideFix)
+                    //{
+                    //    if (!_projectPartlistRepo.ValidateFixProduct(partList, out string fixMessage))
+                    //    {
+                    //        var fixedProduct = _productSaleRepo.GetAll(x =>
+                    //                            x.IsDeleted != true &&
+                    //                            x.ProductCode == partList.ProductCode &&
+                    //                            x.IsFix == true
+                    //                            ).FirstOrDefault();
+                    //        return Ok(ApiResponseFactory.Fail(null, fixMessage, fixedProduct));
+                    //    }
+                    //}
+
+                    // 3. Get ProjectTypeID from Version
+                    var version = _partlistVersionRepo.GetByID(partList.ProjectPartListVersionID ?? 0);
+                    if (version == null || version.ID <= 0)
+                        return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy phiên bản!"));
+                    partList.ProjectTypeID = version.ProjectTypeID;
+
+                    // 4. Calculate ParentID & STT
+                    partList.ParentID = _projectPartlistRepo.GetParentID(partList.TT, partList.ProjectTypeID ?? 0, partList.ProjectPartListVersionID ?? 0);
+                    if (partList.STT == null || partList.STT <= 0)
+                        partList.STT = _projectPartlistRepo.getSTT(partList.ProjectPartListVersionID ?? 0);
+
+                    // 5. INSERT or UPDATE
+                    if (partList.ID <= 0)
+                    {
+                        // INSERT
+                        partList.IsApprovedPurchase = false;
+                        partList.IsApprovedTBP = false;
+                        await _projectPartlistRepo.CreateAsync(partList);
+                    }
+                    else
+                    {
+                        // UPDATE
+                        var partlistOld = _projectPartlistRepo.GetSingleNoTracking(x => x.ID == partList.ID);
+                        if (partlistOld == null) return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu!"));
+
+                        // Nếu chuyển sang IsProblem = true → INSERT new record
+                        if (partList.IsProblem == true && partlistOld.IsProblem != true)
+                        {
+                            partList.ID = 0;
+                            partList.IsApprovedPurchase = false;
+                            partList.IsApprovedTBP = false;
+                            partList.StatusPriceRequest = 0;
+                            partList.DatePriceRequest = null;
+                            partList.DeadlinePriceRequest = null;
+                            partList.RequestDate = null;
+                            partList.ExpectedReturnDate = null;
+                            partList.Status = 2;
+                            await _projectPartlistRepo.CreateAsync(partList);
+                        }
+                        else
+                        {
+                            await _projectPartlistRepo.UpdateAsync(partList);
+                            await UpdateRequestQuoteAsync(partList, partlistOld, currentUser);
+                        }
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(null, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         private async Task UpdateRequestQuoteAsync(
      ProjectPartList partListNew,
      ProjectPartList partListOld,
@@ -2602,5 +2709,71 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        #region Check vật tư tiêu hao
+        [HttpPost("check-partlist-consumable")]
+        public async Task<IActionResult> CheckPartlistConsumable(List<ProjectPartList> partLists, int projectTypeID)
+        {
+            try
+            {
+                if (partLists.Count() <= 0) return BadRequest(ApiResponseFactory.Fail(null, "Lỗi dữ liệu không hợp lệ"));
+                string products = "";
+                foreach (ProjectPartList item in partLists)
+                {
+                    string productCode = item.ProductCode?.Trim();
+                    switch (projectTypeID)
+                    {
+                        case 2: // cơ
+                            var checkProductVtthC = _productSaleRepo.GetAll(x =>
+                                x.ProductCode == productCode &&
+                                x.IsDeleted != true &&
+                                x.ProductGroupID == 103
+                            ).Any();
+
+                            if (!checkProductVtthC)
+                            {
+                                products += productCode + ",";
+                                continue;
+                            }
+                            break;
+                        case 8: // điện
+                            var checkProductVtthD = _productSaleRepo.GetAll(x =>
+                                x.ProductCode == productCode &&
+                                x.IsDeleted != true &&
+                                x.ProductGroupID == 83
+                            ).Any();
+
+                            if (!checkProductVtthD)
+                            {
+                                products += productCode + ",";
+                                continue;
+                            }
+                            break;
+                        case 17: // vtth
+                            var checkProductVtth = _productSaleRepo.GetAll(x =>
+                                x.ProductCode.ToLower().Trim() == productCode.ToLower().Trim() &&
+                                x.IsDeleted != true &&
+                                x.ProductGroupID == 80
+                                ).Any();
+
+                            if (!checkProductVtth)
+                            {
+                                products += productCode + ",";
+                                continue;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(products, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        #endregion
     }
 }
