@@ -371,6 +371,8 @@ namespace RERPAPI.Controllers.Old.POKH
                     foreach (var item in dto.POKHDetails)
                     {
                         int idOld = item.ID;
+                        if (item.IsDeleted == true && idOld <= 0)
+                            continue;
                         int parentId = 0;
                         var existing = _pokhDetailRepo.GetByID(idOld);
                         var product = _productSaleRepo.GetByID(item.ProductID ?? (int)existing.ProductID);
@@ -440,7 +442,10 @@ namespace RERPAPI.Controllers.Old.POKH
                         }
                         else
                         {
-                            productNameCreated += model.ProductID > 0 ? product.ProductCode + ", " : "";
+                            if (model.ProductID > 0 && product != null)
+                            {
+                                productNameCreated += product.ProductCode + ", ";
+                            }
                             await _pokhDetailRepo.CreateAsync(model);
                         }
                         parentIdMapping.Add(item.ID, model.ID);
@@ -474,7 +479,7 @@ namespace RERPAPI.Controllers.Old.POKH
                     {
                         int idOld = item.ID;
                         var user = _userRepo.GetByID(item.UserID ?? 0);
-                        var modelOld = idOld > 0 ? _pokhDetailMoneyRepo.GetByID(idOld) : null;
+                        var modelOld = idOld > 0 ? _pokhDetailMoneyRepo.GetByID(idOld) : new POKHDetailMoney();
                         POKHDetailMoney detailMoney = idOld > 0 ? _pokhDetailMoneyRepo.GetByID(idOld) : new POKHDetailMoney();
                         detailMoney.POKHID = dto.POKH.ID;
                         detailMoney.POKHDetailID = 0;
@@ -521,7 +526,7 @@ namespace RERPAPI.Controllers.Old.POKH
                 }
                 if (!string.IsNullOrWhiteSpace(logContent))
                 {
-                    await _pokhLogRepo.AddLog(dto.POKH.ID, logContent, log.TypeLog);
+                    await _pokhLogRepo.AddLog(dto.POKH.ID , logContent, log.TypeLog ?? "");
                 }
 
                 return Ok(ApiResponseFactory.Success(new { id = dto.POKH.ID }, ""));

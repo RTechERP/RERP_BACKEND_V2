@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -15,9 +16,11 @@ namespace RERPAPI.Controllers.Old.Technical
     public class KPISyntheticYearsController : ControllerBase
     {
         private readonly DepartmentRepo _departmentRepo;
-        public KPISyntheticYearsController(DepartmentRepo departmentRepo)
+        private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
+        public KPISyntheticYearsController(DepartmentRepo departmentRepo, vUserGroupLinksRepo vUserGroupLinksRepo)
         {
             _departmentRepo = departmentRepo;
+            _vUserGroupLinksRepo = vUserGroupLinksRepo;
         }
         [HttpGet("get-department")]
         public IActionResult GetDepartment()
@@ -38,11 +41,15 @@ namespace RERPAPI.Controllers.Old.Technical
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
 
                 var data = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
                                                 new string[] { "@Status" },
                                                 new object[] { 0 });
-                return Ok(ApiResponseFactory.Success(data, ""));
+
+                var vUserGroupLinks = _vUserGroupLinksRepo.GetAll(x => x.UserID == currentUser.ID && x.Code == "N38");
+                return Ok(ApiResponseFactory.Success(new { data, vUserGroupLinks }, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
             {

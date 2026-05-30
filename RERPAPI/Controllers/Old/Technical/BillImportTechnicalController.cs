@@ -822,6 +822,7 @@ namespace RERPAPI.Controllers.Old.Technical
                     billDetail.DueDate = dueDate;
                     billDetail.TaxReduction = item.TaxReduction;
                     billDetail.COFormE = item.COFormE;
+                    billDetail.DPO = item.DPO;
 
                     await _billImportTechnicalDetailRepo.UpdateAsync(billDetail);
 

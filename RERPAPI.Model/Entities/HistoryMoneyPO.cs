@@ -56,4 +56,6 @@ public partial class HistoryMoneyPO
     public DateTime? UpdatedDate { get; set; }
 
     public bool? IsDelivered { get; set; }
+
+    public int? UserID { get; set; }
 }

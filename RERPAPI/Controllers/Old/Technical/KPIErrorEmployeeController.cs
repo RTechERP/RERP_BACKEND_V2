@@ -658,6 +658,67 @@ namespace RERPAPI.Controllers.Old.Technical
         }
 
 
+
+
+        //[HttpGet("get-image")]
+        //[AllowAnonymous]
+        //public IActionResult GetImage(string fileName)
+        //{
+        //    try
+        //    {
+        //        var file = _kpiErrorEmployeeFileRepo.GetAll(x => x.FileName == fileName).FirstOrDefault();
+        //        if (file == null)
+        //            return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy file trong cơ sở dữ liệu."));
+
+        //        var physicalPath = Path.Combine(file.ServerPath, file.FileName);
+        //        if (!System.IO.File.Exists(physicalPath))
+        //            return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy file trên server."));
+
+        //        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        //        var mimeType = "application/octet-stream";
+        //        if (ext == ".jpg" || ext == ".jpeg") mimeType = "image/jpeg";
+        //        else if (ext == ".png") mimeType = "image/png";
+        //        else if (ext == ".gif") mimeType = "image/gif";
+        //        else if (ext == ".pdf") mimeType = "application/pdf";
+
+        //        var stream = new FileStream(physicalPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        //        return File(stream, mimeType);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
+
+        [HttpGet("get-image")]
+        public IActionResult GetImage(string fileName)
+        {
+            try
+            {
+                var file = _kpiErrorEmployeeFileRepo.GetAll(x => x.FileName == fileName).FirstOrDefault();
+                if (file == null)
+                    return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy file trong cơ sở dữ liệu."));
+
+                var physicalPath = Path.Combine(file.ServerPath, file.FileName);
+                if (!System.IO.File.Exists(physicalPath))
+                    return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy file trên server."));
+
+                var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+                var mimeType = "application/octet-stream";
+                if (ext == ".jpg" || ext == ".jpeg") mimeType = "image/jpeg";
+                else if (ext == ".png") mimeType = "image/png";
+                else if (ext == ".gif") mimeType = "image/gif";
+                else if (ext == ".pdf") mimeType = "application/pdf";
+
+                var stream = new FileStream(physicalPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                return File(stream, mimeType);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         public class AutoAddKPIErrorRequest
         {
             public DateTime StartDate { get; set; }

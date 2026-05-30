@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using ClosedXML.Excel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
@@ -123,6 +123,50 @@ namespace RERPAPI.Controllers.PollForm
                     .OrderByDescending(x => x.CreatedDate)
                     .ToList();
                 return Ok(ApiResponseFactory.Success(pollForms, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Get the count of pending poll forms for the current employee (no response or not completed)
+        /// </summary>
+        [HttpGet("pending-count")]
+        public IActionResult GetPendingPollCount()
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var now = DateTime.Now;
+
+                // Active polls: not deleted, public, and within date range
+                var activePolls = _pollFormRepo.GetAll(x => x.IsDeleted != true && x.IsPublic == true)
+                    .Where(x => (x.StartDate == null || x.StartDate <= now) &&
+                                (x.EndDate == null || x.EndDate >= now))
+                    .Select(x => x.ID)
+                    .ToList();
+
+                if (activePolls.Count == 0)
+                    return Ok(ApiResponseFactory.Success(0, ""));
+
+                var responses = _pollResponseRepo.GetAll(x => x.EmployeeID == currentUser.EmployeeID && x.PollFormID.HasValue && activePolls.Contains(x.PollFormID.Value))
+                    .ToList();
+
+                int pendingCount = 0;
+                foreach (var pollId in activePolls)
+                {
+                    var response = responses.OrderByDescending(r => r.CreatedDate).FirstOrDefault(r => r.PollFormID == pollId);
+                    if (response == null || response.IsCompleted != true)
+                    {
+                        pendingCount++;
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(pendingCount, ""));
             }
             catch (Exception ex)
             {
@@ -1057,24 +1101,68 @@ namespace RERPAPI.Controllers.PollForm
         /// <summary>
         /// Get all responses for a poll form
         /// </summary>
+        //[HttpGet("{pollFormId}/responses")]
+        //public IActionResult GetPollResponses(int pollFormId)
+        //{
+        //    try
+        //    {
+        //        var currentUser = GetCurrentUser();
+        //        var pollForm = _pollFormRepo.GetByID(pollFormId);
+        //        if (pollForm == null || pollForm.ID <= 0 || pollForm.IsDeleted == true)
+        //            return NotFound(ApiResponseFactory.Fail(null, "Poll form not found"));
+
+        //        if (!CanManagePoll(pollForm, currentUser))
+        //            return ForbiddenResponse("You do not have permission to view poll responses");
+
+        //        var responses = _pollResponseRepo.GetAll(x => x.PollFormID == pollFormId)
+        //            .OrderByDescending(x => x.CreatedDate)
+        //            .ToList();
+
+        //        var responseList = responses.Select(MapResponseDetail).ToList();
+
+        //        return Ok(ApiResponseFactory.Success(responseList, ""));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
         [HttpGet("{pollFormId}/responses")]
-        public IActionResult GetPollResponses(int pollFormId)
+        public IActionResult GetPollResponses(int pollFormId, string keyword = "")
         {
             try
             {
                 var currentUser = GetCurrentUser();
                 var pollForm = _pollFormRepo.GetByID(pollFormId);
+
                 if (pollForm == null || pollForm.ID <= 0 || pollForm.IsDeleted == true)
                     return NotFound(ApiResponseFactory.Fail(null, "Poll form not found"));
 
                 if (!CanManagePoll(pollForm, currentUser))
                     return ForbiddenResponse("You do not have permission to view poll responses");
 
+                keyword = keyword?.Trim().ToLower();
+
                 var responses = _pollResponseRepo.GetAll(x => x.PollFormID == pollFormId)
                     .OrderByDescending(x => x.CreatedDate)
                     .ToList();
 
                 var responseList = responses.Select(MapResponseDetail).ToList();
+
+                if (!string.IsNullOrWhiteSpace(keyword))
+                {
+                    responseList = responseList
+                        .Where(x =>
+                            x.EmployeeID.ToString().Contains(keyword)
+                            || x.CreatedBy?.ToLower().Contains(keyword) == true
+                            || x.Answers.Any(a =>
+                                a.AnswerText?.ToLower().Contains(keyword) == true
+                                || a.DisplayText?.ToLower().Contains(keyword) == true
+                                || a.AnswerJson?.ToLower().Contains(keyword) == true
+                            )
+                        )
+                        .ToList();
+                }
 
                 return Ok(ApiResponseFactory.Success(responseList, ""));
             }
@@ -1083,7 +1171,6 @@ namespace RERPAPI.Controllers.PollForm
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
         /// <summary>
         /// Export poll responses to Excel. Each employee response is one row.
         /// </summary>

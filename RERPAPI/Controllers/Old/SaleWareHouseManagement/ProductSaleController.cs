@@ -4,7 +4,6 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
-using System.Linq;
 
 namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 {
@@ -177,7 +176,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
             int nextSTT = maxSTT + 1;
 
-            // 6️⃣ Format số (đủ 9 ký tự)
+			// 6️ Format số (đủ 9 ký tự)
             string numberCodeText = nextSTT
                 .ToString()
                 .PadLeft(9 - parentGroupCode.Length, '0');
@@ -224,12 +223,22 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         dto.Inventory.MinQuantity = 0;
                         dto.Inventory.IsStock = false;
                         //dto.Inventory.ProductGroupID = dto.ProductSale.ProductGroupID;
-
+                        int prdGroupID = dto.ProductSale.ProductGroupID ?? 0;
+                        if (prdGroupID == 83 || prdGroupID == 84) // Nam per update 28/05/2026 nhờ khánh push lên 
+                        {
+                            dto.Inventory.WarehouseID = 6;
+                            dto.Inventory.ProductGroupID = dto.ProductSale.ProductGroupID;
+                        }
                         await _inventoryRepo.CreateAsync(dto.Inventory);
                     }
                     else
                     {
                         // Cập nhật
+						var product = _productsaleRepo.GetSingleNoTracking(x => x.ID == dto.ProductSale.ID);
+						if (product.ProductGroupID != dto.ProductSale.ProductGroupID)
+						{
+							dto.ProductSale.ProductNewCode = GenerateProductNewCode(dto.ProductSale.ProductGroupID ?? 0);
+						}
                         _productsaleRepo.Update(dto.ProductSale);
                     }
                 }
@@ -410,7 +419,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             bool check = true;
             var exists = _productsaleRepo.GetAll(x => x.ProductCode == dto.ProductSale.ProductCode
                             && x.ProductGroupID == dto.ProductSale.ProductGroupID
-                            && x.ID != dto.ProductSale.ID && dto.ProductSale.IsDeleted == false);
+                            && x.ID != dto.ProductSale.ID && x.IsDeleted == false);
             if (exists.Count > 0) check = false;
             return check;
         }

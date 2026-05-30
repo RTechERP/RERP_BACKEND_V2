@@ -209,8 +209,8 @@ namespace RERPAPI.Controllers.Project
                         DateRequest = DateTime.Now,
                         Deadline = item.DeadlinePriceRequest,
                         Quantity = item.QtyFull,
-                        //LeadTimeTechnical = item.LeadTimeTechnical,
-                        //TargetPrice = item.TargetPrice,
+						LeadTimeTechnical = item.LeadTimeTechnical,
+						TargetPrice = item.TargetPrice,
                         IsDeleted = false
                     };
                     await _priceRequestRepo.CreateAsync(priceRequest);
@@ -292,6 +292,8 @@ namespace RERPAPI.Controllers.Project
                         Deadline = item.DeadlinePriceRequest,
                         Quantity = item.QtyFull,
                         IsDeleted = false,
+                        LeadTimeTechnical= item.LeadTimeTechnical,
+                        TargetPrice = item.TargetPrice,
                         //Note = item.Note
                     };
                     await _priceRequestRepo.CreateAsync(priceRequest);
