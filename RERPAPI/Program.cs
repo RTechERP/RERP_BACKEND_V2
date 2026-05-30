@@ -682,6 +682,8 @@ builder.Services.AddScoped<EmployeeAttendanceNewRepo>();
 builder.Services.AddScoped<ProjectTaskWorkRepo>();
 builder.Services.AddScoped<ProjectTaskStatusRepo>();
 builder.Services.AddScoped<PaymentOrderOrderTypeRepo>();
+builder.Services.AddScoped<ConfigNotificationKeyRepo>();
+builder.Services.AddScoped<ConfigNotificationKeyLinkRepo>();
 
 #region DI LOG
 builder.Services.AddScoped<POKHLogRepo>();
