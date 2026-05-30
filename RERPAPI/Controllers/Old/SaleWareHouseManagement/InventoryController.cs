@@ -250,5 +250,32 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
 			}
 		}
-	}
+
+        [HttpPost("inventory-overaged")]
+        public IActionResult getInventorynew(InventoryPram filter)
+        {
+            try
+            {
+                if (filter.checkAll == true) filter.productGroupID = 0;
+                List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
+                       "spGetInventoryNew_Nam", new string[] { "@ID", "@Find", "@WarehouseCode", "@IsStock" },
+                    new object[] { filter.productGroupID, filter.Find, filter.WarehouseCode, filter.IsStock == false ? 0 : 1 }
+                   );
+                return Ok(new
+                {
+                    status = 1,
+                    data = SQLHelper<object>.GetListData(result, 0)
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
+        }
+    }
 }
