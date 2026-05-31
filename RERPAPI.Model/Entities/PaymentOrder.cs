@@ -116,5 +116,6 @@ public partial class PaymentOrder
     public string? AccountingLeaderNote { get; set; }
 
     public string? SupplierAccCode { get; set; }
+
     public string? InvoiceAccNumber { get; set; }
 }

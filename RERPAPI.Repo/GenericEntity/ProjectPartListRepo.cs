@@ -729,7 +729,157 @@ namespace RERPAPI.Repo.GenericEntity
             }
         }
 
+        public bool Validates(List<ProjectPartList> projectPartLists, out string message)
+        {
+            var errors = new List<string>();
 
+            string pattern = @"^[^àáảãạâầấẩẫậăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵÀÁẢÃẠÂẦẤẨẪẬĂẰẮẲẴẶÈÉẺẼẸÊỀẾỂỄỆÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴ]+$";
+            Regex regex = new Regex(pattern);
+
+            var duplicateTTs = new HashSet<string>();
+            var duplicateProblemTTs = new HashSet<string>();
+            var duplicateSpecialCodes = new HashSet<string>();
+
+            foreach (var item in projectPartLists)
+            {
+                #region Validate cơ bản
+
+                if (item.ProjectID <= 0)
+                    errors.Add("Vui lòng nhập Dự án!");
+
+                if (item.ProjectPartListVersionID <= 0)
+                    errors.Add("Vui lòng nhập Phiên bản!");
+
+                #endregion
+
+                #region Validate TT
+
+                var tt = (item.TT ?? "").Trim();
+
+                if (string.IsNullOrWhiteSpace(tt))
+                {
+                    errors.Add("Vui lòng nhập TT!");
+                }
+                else
+                {
+                    // Check TT thường
+                    var existsTT = GetAll(x =>
+                        x.ProjectPartListVersionID == item.ProjectPartListVersionID
+                        && (x.TT ?? "").Trim() == tt
+                        && x.ID != item.ID
+                        && x.IsDeleted != true
+                        && x.IsProblem != true);
+
+                    if (existsTT.Count > 0 && item.IsProblem == false)
+                    {
+                        duplicateTTs.Add(tt);
+                    }
+
+                    // Check TT phát sinh
+                    var existsProblemTT = GetAll(x =>
+                        x.ProjectPartListVersionID == item.ProjectPartListVersionID
+                        && (x.TT ?? "").Trim() == tt
+                        && x.ID != item.ID
+                        && x.IsDeleted != true
+                        && x.IsProblem == true);
+
+                    if (existsProblemTT.Count > 0 && item.IsProblem == false)
+                    {
+                        duplicateProblemTTs.Add(tt);
+                    }
+                }
+
+                #endregion
+
+                #region Validate SpecialCode
+
+                if (!string.IsNullOrWhiteSpace(item.SpecialCode))
+                {
+                    var specialCode = GetAll(x =>
+                        x.SpecialCode == item.SpecialCode
+                        && x.ID != item.ID
+                        && x.IsDeleted != true);
+
+                    if (specialCode.Count > 0)
+                    {
+                        duplicateSpecialCodes.Add(item.SpecialCode);
+                    }
+                }
+
+                #endregion
+
+                #region Validate thông tin thiết bị
+
+                var listChilds = GetAll(x =>
+                    x.IsDeleted != true
+                    && x.ParentID == item.ParentID);
+
+                // FIX: Count < 0 => sai
+                if (listChilds.Count == 0)
+                {
+                    if (string.IsNullOrWhiteSpace((item.ProductCode ?? "").Trim()))
+                    {
+                        errors.Add($"TT [{tt}] chưa nhập Mã thiết bị!");
+                    }
+                    else
+                    {
+                        bool isCheck = regex.IsMatch((item.ProductCode ?? "").Trim());
+
+                        if (!isCheck)
+                        {
+                            errors.Add($"TT [{tt}] - Mã thiết bị chứa ký tự tiếng Việt!");
+                        }
+                    }
+
+                    if (string.IsNullOrWhiteSpace((item.GroupMaterial ?? "").Trim()))
+                    {
+                        errors.Add($"TT [{tt}] chưa nhập Tên thiết bị!");
+                    }
+
+                    if (item.IsProblem == true &&
+                        string.IsNullOrWhiteSpace((item.ReasonProblem ?? "").Trim()))
+                    {
+                        errors.Add($"TT [{tt}] chưa nhập Lý do phát sinh!");
+                    }
+                }
+
+                #endregion
+            }
+
+            #region Gom lỗi duplicate
+
+            if (duplicateTTs.Any())
+            {
+                errors.Add(
+                    $"Các TT đã tồn tại: {string.Join(", ", duplicateTTs.Select(x => $"[{x}]"))}");
+            }
+
+            if (duplicateProblemTTs.Any())
+            {
+                errors.Add(
+                    $"Các TT phát sinh đã tồn tại: {string.Join(", ", duplicateProblemTTs.Select(x => $"[{x}]"))}");
+            }
+
+            if (duplicateSpecialCodes.Any())
+            {
+                errors.Add(
+                    $"Các mã đặc biệt đã tồn tại: {string.Join(", ", duplicateSpecialCodes.Select(x => $"[{x}]"))}");
+            }
+
+            #endregion
+
+            // Distinct để tránh trùng message
+            errors = errors.Distinct().ToList();
+
+            if (errors.Any())
+            {
+                message = string.Join(Environment.NewLine, errors);
+                return false;
+            }
+
+            message = string.Empty;
+            return true;
+        }
 
         #region validate import excel
         public bool ValidateImportExcel(PartlistImportRequestDTO request, out string message)

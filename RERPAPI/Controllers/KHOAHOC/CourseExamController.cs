@@ -24,11 +24,14 @@ namespace RERPAPI.Controllers.KHOAHOC
         private readonly CourseRightAnswerRepo _courseRightAnswerRepo;
         private readonly CourseQuestionRepo _courseQuestionRepo;
         private readonly CourseLessonRepo _courseeLessonRepo;
+        private readonly ConfigSystemRepo _configSystemRepo;
         public CourseExamController(CourseExamRepo courseExamRepo,
             CourseAnswerRepo courseAnswerRepo,
             CourseRightAnswerRepo courseRightAnswerRepo,
             CourseQuestionRepo courseQuestionRepo,
-            CourseLessonRepo courseLessonRepo
+            CourseLessonRepo courseLessonRepo,
+            ConfigSystemRepo configSystemRepo
+
             )
         {
             _courseExamRepo = courseExamRepo;
@@ -36,6 +39,7 @@ namespace RERPAPI.Controllers.KHOAHOC
             _courseRightAnswerRepo = courseRightAnswerRepo;
             _courseQuestionRepo = courseQuestionRepo;
             _courseeLessonRepo = courseLessonRepo;
+            _configSystemRepo = configSystemRepo;
         }
 
         // load khóa học
@@ -103,8 +107,9 @@ namespace RERPAPI.Controllers.KHOAHOC
                 var data = SQLHelper<object>.ProcedureToList("spGetCourseQuestion",
                                                 new string[] { "@ExamID" },
                                                 new object[] { examID });
+                var data0 = SQLHelper<object>.GetListData(data, 1);
 
-                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 1), ""));
+                return Ok(ApiResponseFactory.Success(data0, ""));
             }
             catch (Exception ex)
             {
@@ -474,8 +479,11 @@ namespace RERPAPI.Controllers.KHOAHOC
                 if (data.Question.ID <= 0) return BadRequest(ApiResponseFactory.Fail(null, "Đã có lỗi sảy ra khi tạo câu hỏi!"));
 
                 // delete right answers
-                await _courseRightAnswerRepo.DeleteByAttributeAsync("CourseQuestionID", data.Question.ID);
-
+                //await _courseRightAnswerRepo.DeleteByAttributeAsync("CourseQuestionID", data.Question.ID);
+                // hàm cũ xoá lỗi
+                // xoá câu trả lời đúng cũ
+                var oldCourseRightAnswer = _courseRightAnswerRepo.GetAll(c => c.CourseQuestionID == data.Question.ID);
+                var countRecordeleted = await _courseRightAnswerRepo.DeleteRangeAsync(oldCourseRightAnswer);
                 // delete answers
                 if (data.DeleteAnswerIds != null && data.DeleteAnswerIds.Count > 0)
                 {
@@ -545,6 +553,25 @@ namespace RERPAPI.Controllers.KHOAHOC
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi xóa danh sách câu hỏi: {ex.Message}"));
+            }
+        }
+        [HttpGet("get-path-server")]
+        public IActionResult GetPathServer(string keyName)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(keyName))
+                {
+                    return Ok(ApiResponseFactory.Fail(null, "Key không hợp lệ!"));
+                }
+                var pathUpload = _configSystemRepo.GetUploadPathByKey(keyName);
+                string path = pathUpload;
+                return Ok(ApiResponseFactory.Success(path, ""));
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 

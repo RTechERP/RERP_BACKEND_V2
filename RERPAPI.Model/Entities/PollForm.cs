@@ -30,4 +30,6 @@ public partial class PollForm
     public string? BackgroundImagePath { get; set; }
 
     public string? TitleColor { get; set; }
+
+    public bool? IsNotifycation { get; set; }
 }
