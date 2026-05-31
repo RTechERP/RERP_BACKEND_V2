@@ -942,7 +942,31 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, "Failed to upload file."));
             }
         }
-
+        // lấy danh sách ngày nghỉ 
+        [HttpPost("day-off")]
+        public async Task<IActionResult> ProjectTaskGetDayOff([FromQuery] DateTime dateStart,
+            [FromQuery] DateTime dateEnd
+            )
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                dateStart = dateStart.Date;
+                dateEnd = dateEnd.Date.AddDays(1).AddSeconds(-1);
+                var param = new
+                {
+                    DateStart = dateStart,
+                    DateEnd = dateEnd
+                };
+                var projectTasks = await SqlDapper<object>.ProcedureToListAsync("spProjectTaskGetDayOff", param);
+                return Ok(ApiResponseFactory.Success(projectTasks));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, "Failed to get day off."));
+            }
+        }
         // --- Project Task Employee ---
 
         // -- Update or Add employee to project task (When user check for chose user, tick or untick (assignee or related) or user change assignee front end will call this api) ---

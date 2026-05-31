@@ -20,4 +20,6 @@ public partial class UnitCount
     public DateTime? UpdatedDate { get; set; }
 
     public string? UpdatedBy { get; set; }
+
+    public string? UnitDescription { get; set; }
 }
