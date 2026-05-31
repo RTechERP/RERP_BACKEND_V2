@@ -388,6 +388,27 @@ namespace RERPAPI.Controllers.KHOAHOC
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpPost("delete-exam")]
+        public async Task<IActionResult> DeleteExam(int courseExamResultID)
+        {
+            try
+            {
+                var examResult = _courseExamResultRepo.GetByID(courseExamResultID);
+                if (examResult == null)
+                {
+
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy bài kiểm tra!"));
+                }
+                var result = _courseExamResultRepo.Delete(examResult.ID);
+                return Ok(ApiResponseFactory.Success("","Xoá thành công!"));
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
 
         [HttpPost("submit-exam")]
         public async Task<IActionResult> SubmitExam(int courseExamResultID)
@@ -707,7 +728,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                     var CatalogID = course.CatalogID; // hoặc course.CatalogID
 
 
-                    bool isRequiredCourse =  course.IsRequired;
+                    bool isRequiredCourse = course.IsRequired;
 
                     if (hasUncompletedRequiredCourse && !isRequiredCourse)
                     {
@@ -735,7 +756,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                     // 1. Là bài đầu danh mục HOẶC bài trước đã hoàn thành
                     // 2. VÀ thỏa điều kiện hiện tại (Evaluate == 1, IsLeader, IsAdmin...)
                     if ((isFirstInCatalog || prevCompleted)
-                        || ( currentUser.IsLeader > 0 || currentUser.IsAdmin))
+                        || (currentUser.IsLeader > 0 || currentUser.IsAdmin))
                     {
                         course.Status = 1;
                     }
