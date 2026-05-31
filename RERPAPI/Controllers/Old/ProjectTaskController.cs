@@ -2592,7 +2592,7 @@ namespace RERPAPI.Controllers.Project
         public async Task<IActionResult> GetSumaryProjectTaskAttendance
             (   DateTime dateStart, 
                 DateTime dateEnd, 
-                int departmentID = -1,
+                string departmentID = "",
                 int status = -1,
                 int employeeID = -1,
                 int teamID = -1, 

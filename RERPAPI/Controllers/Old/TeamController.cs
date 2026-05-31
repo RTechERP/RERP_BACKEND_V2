@@ -261,5 +261,24 @@ namespace RERPAPI.Controllers.Old
                 GetDescendants(child.ID, allTeams, result);
             }
         }
+
+
+        [HttpGet("employee-by-department-string")]
+        public async Task<IActionResult> GetTeamByDepartmentString(string departmentString = "")
+        {
+            try
+            {
+                var param = new
+                {
+                    DepartmentString = departmentString
+                };
+                var lstTeam = await SqlDapper<object>.ProcedureToListAsync("spGetTeamByDepartmentString", param);
+                return Ok(ApiResponseFactory.Success(lstTeam));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 }
