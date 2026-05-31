@@ -2779,6 +2779,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.AdminSentAt).HasColumnType("datetime");
             entity.Property(e => e.CreatedAt).HasColumnType("datetime");
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.Leadtime).HasMaxLength(500);
             entity.Property(e => e.MarginRate).HasColumnType("decimal(18, 4)");
             entity.Property(e => e.Moq).HasColumnType("decimal(18, 4)");
