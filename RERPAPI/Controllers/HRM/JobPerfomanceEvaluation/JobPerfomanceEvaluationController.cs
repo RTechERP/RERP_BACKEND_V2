@@ -140,7 +140,12 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
         {
             try
             {
-                return Ok(ApiResponseFactory.Success(await _jobPerfomanceEvaluationNewRepo.GetByIDAsync(id), "Lấy dữ liệu thành công!"));
+                //var data = await _jobPerfomanceEvaluationNewRepo.GetByIDAsync(id);
+                var data = await SqlDapper<object>.ProcedureToListTAsync("spGetContractTransferDetail", new
+                {
+                    ID = id
+                });
+                return Ok(ApiResponseFactory.Success(data[0], "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
@@ -315,6 +320,12 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                     entity.DateEvaluation = model.DateEvaluation;
                     entity.LocationEvaluation = model.LocationEvaluation;
 
+                    entity.TBPStrengths = model.TBPStrengths;
+                    entity.TBPAreasForImprovement = model.TBPAreasForImprovement;
+                    entity.TBPConclusionEmployeeLoaiHDID = model.TBPConclusionEmployeeLoaiHDID;
+                    entity.TBPRecommendationsOrOther = model.TBPRecommendationsOrOther;
+
+
                     // Audit
                     entity.UpdatedBy = model.UpdatedBy;
                     entity.UpdatedDate = DateTime.Now;
@@ -324,6 +335,7 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                         return Ok(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
 
                     // cập nhật trạng thái tờ phiếu
+                    var currentUser = ObjectMapper.GetCurrentUser(User.Claims.ToDictionary(x => x.Type, x => x.Value));
                     if (!string.IsNullOrWhiteSpace(model.Role) && model.ID > 0)
                     {
                         if (model.Role.Equals("employee", StringComparison.OrdinalIgnoreCase))
@@ -343,7 +355,8 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                             }
                         }
                         else if (model.Role.Equals("tbp", StringComparison.OrdinalIgnoreCase)
-                              || model.Role.Equals("manager", StringComparison.OrdinalIgnoreCase))
+                              || model.Role.Equals("manager", StringComparison.OrdinalIgnoreCase)
+                              || (model.Role.Equals("hr", StringComparison.OrdinalIgnoreCase) && model.TBPApproveID == currentUser.EmployeeID))
                         {
                             // Option B: chỉ chuyển "TBP: Chờ xác nhận" khi TBP đã nhập đủ dữ liệu bắt buộc
                             bool hasEnoughTbpData =
@@ -494,6 +507,11 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                         DateEvaluation = null,
                         LocationEvaluation = model.LocationEvaluation,
 
+                        TBPStrengths = model.TBPStrengths,
+                        TBPAreasForImprovement = model.TBPAreasForImprovement,
+                        TBPConclusionEmployeeLoaiHDID = model.TBPConclusionEmployeeLoaiHDID,
+                        TBPRecommendationsOrOther = model.TBPRecommendationsOrOther,
+
                         // Audit
                         CreatedBy = model.CreatedBy,
                         CreatedDate = DateTime.Now,
@@ -515,7 +533,7 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                     });
                     stepName = "HR: Chờ gửi mail";
                 }
-                var data = new {ID = entity.ID,StepName = stepName };
+                var data = new { ID = entity.ID, StepName = stepName };
 
                 return Ok(ApiResponseFactory.Success(data, "Lưu dữ liệu thành công!"));
             }
@@ -991,7 +1009,7 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                     {
                         record.StatusApprove = 2;
                         record.DateApproved = DateTime.Now;
-                        record.ReasonUnApproved =  $"{info.curName} - {currentUser.FullName} không xác nhận: {req.Reason}";
+                        record.ReasonUnApproved = $"{info.curName} - {currentUser.FullName} không xác nhận: {req.Reason}";
                         record.StepName = info.curName + $": Không xác nhận";
                         await _jobPerfomanceEvaluationApproveRepo.UpdateAsync(record);
                         successCount++;
@@ -1017,6 +1035,7 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                             }
                         }
                         successCount++;
+
                     }
 
                     // ── Cập nhật approve names vào master entity ─────────────────────
@@ -1024,7 +1043,7 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                     var masterOld = await _jobPerfomanceEvaluationNewRepo.GetByIDAsync(id);
                     if (masterOld != null)
                     {
-                        ApplyApproveNames(masterOld, record.Step??0, req.IsApprove, currentUserId, currentFullName);
+                        ApplyApproveNames(masterOld, record.Step ?? 0, req.IsApprove, currentUserId, currentFullName);
                         await _jobPerfomanceEvaluationNewRepo.UpdateAsync(masterOld);
                     }
                     else
@@ -1033,7 +1052,7 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                         var masterNew = await _jobPerfomanceEvaluationNewRepo.GetByIDAsync(id);
                         if (masterNew != null)
                         {
-                            ApplyApproveNamesNew(masterNew, record.Step??0, req.IsApprove, currentUserId, currentFullName);
+                            ApplyApproveNamesNew(masterNew, record.Step ?? 0, req.IsApprove, currentUserId, currentFullName);
                             await _jobPerfomanceEvaluationNewRepo.UpdateAsync(masterNew);
                         }
                     }
@@ -1190,8 +1209,9 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
         {
             try
             {
-                var footer = _configuration["FooterMail:HR:Footer"];
-                string emailCC = "dept_manager@rtc.edu.vn";
+                var footer = _configuration["FooterMail:HR:FooterContract"];
+                ////string emailCC = "dept_manager@rtc.edu.vn";
+                //string emailCC = "";
 
                 foreach (var email in sendEmails)
                 {
@@ -1201,21 +1221,21 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                     var waitingRecord = _jobPerfomanceEvaluationApproveRepo
                         .GetAll(c => c.JobPerfomanceEvaluationID == email.ID
                                   && c.Step == 1
-                                  && c.StatusApprove == 0
+                                  && c.StatusApprove == 0 && c.StepName == "HR: Chờ gửi mail"
                                   && c.IsDeleted != true)
                         .FirstOrDefault();
 
 
-                    await _emailHelper.SendAsyncHr(
+                    await _emailHelper.SendAsyncHrm(
                         email.EmailTo, email.Subject,
-                        email.Body + footer, cc: emailCC + ";" + email.EmailCC);
+                        email.Body + footer, cc: email.EmailCC);
 
                     if (waitingRecord == null) continue;  // Đã gửi rồi, gửi lại thì không cập nhật trạng thái
 
                     waitingRecord.StatusApprove = 0;
                     waitingRecord.StepName = "HR: Đã gửi mail";
                     waitingRecord.DateApproved = DateTime.Now;
-                    if (await _jobPerfomanceEvaluationApproveRepo.UpdateAsync(waitingRecord)>0)
+                    if (await _jobPerfomanceEvaluationApproveRepo.UpdateAsync(waitingRecord) > 0)
                     {
                         await _jobPerfomanceEvaluationApproveRepo.CreateAsync(new JobPerfomanceEvaluationApprove
                         {
@@ -1278,11 +1298,14 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
 
             var evalQuery = _jobPerfomanceEvaluationNewRepo
                 .GetAll(x => x.IsDeleted != true);
-
+            var latestApproveQuery = _jobPerfomanceEvaluationApproveRepo
+    .GetAll(x => x.IsDeleted != true)
+    .GroupBy(x => x.JobPerfomanceEvaluationID)
+    .Select(g => g.OrderByDescending(x => x.Step).FirstOrDefault());
             // NV tự đánh giá
-            int asEmployee = approveQuery.Count(a =>
+            int asEmployee = latestApproveQuery.Count(a =>
                 a.Step == 1 &&
-                a.StatusApprove == -1 &&
+                a.StatusApprove == 0 &&
                 evalQuery.Any(j => j.ID == a.JobPerfomanceEvaluationID && j.EmployeeID == empId)
             );
 
@@ -1306,7 +1329,7 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                 a.Step == 3 &&
                 a.StatusApprove == 0 &&
                 a.StepName == "HR: Chờ xác nhận" &&
-                evalQuery.Any(j => j.ID == a.JobPerfomanceEvaluationID && vUserGroupHR!=null)
+                evalQuery.Any(j => j.ID == a.JobPerfomanceEvaluationID && vUserGroupHR != null)
             );
             // BGD
             int asBGD = approveQuery.Count(a =>

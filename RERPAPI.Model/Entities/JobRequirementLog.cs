@@ -22,4 +22,9 @@ public partial class JobRequirementLog
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
+
+    /// <summary>
+    /// Loại thay đổi
+    /// </summary>
+    public string? TypeLog { get; set; }
 }

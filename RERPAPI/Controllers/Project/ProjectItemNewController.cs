@@ -15,8 +15,7 @@ using RERPAPI.Model.Param.Project;
 using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.Project;
 using System.Net.WebSockets;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+
 
 namespace RERPAPI.Controllers.Project
 {

@@ -37,3 +37,4 @@ secrets.json
 /RERPAPI/firebase-adminsdk.json
 /RERPAPI/logs/
 /RERPAPI/appsettings.Production.json
+/RERPAPI/appsettings.Test.json

@@ -658,5 +658,19 @@ namespace RERPAPI.Repo
         {
             return table.AsNoTracking().FirstOrDefault(predicate) ?? new T();
         }
+		public async Task<int> PatchAsync(Expression<Func<T, bool>> predicate, Action<T> updateAction)
+		{
+			var entities = await table.Where(predicate).ToListAsync();
+
+			if (!entities.Any())
+				return 0;
+
+			foreach (var entity in entities)
+			{
+				updateAction(entity);
+			}
+
+			return await db.SaveChangesAsync();
+		}
     }
 }

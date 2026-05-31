@@ -1,10 +1,15 @@
+using System.Text.Json.Serialization;
+
 namespace RERPAPI.Model.DTO.Poll
 {
     public class PollFormDTO
     {
         public int ID { get; set; }
         public string? Title { get; set; }
+        [JsonPropertyName("titleColor")]
+        public string? TitleColor { get; set; }
         public string? Description { get; set; }
+        public string? BackgroundImagePath { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public bool? IsPublic { get; set; }
@@ -18,7 +23,10 @@ namespace RERPAPI.Model.DTO.Poll
     public class PollFormCreateDTO
     {
         public string? Title { get; set; }
+        [JsonPropertyName("titleColor")]
+        public string? TitleColor { get; set; }
         public string? Description { get; set; }
+        public string? BackgroundImagePath { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public bool? IsPublic { get; set; } = true;
@@ -28,7 +36,10 @@ namespace RERPAPI.Model.DTO.Poll
     {
         public int ID { get; set; }
         public string? Title { get; set; }
+        [JsonPropertyName("titleColor")]
+        public string? TitleColor { get; set; }
         public string? Description { get; set; }
+        public string? BackgroundImagePath { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public bool? IsPublic { get; set; }
@@ -38,5 +49,16 @@ namespace RERPAPI.Model.DTO.Poll
     {
         public List<PollQuestionDetailDTO>? Questions { get; set; }
         public List<PollSectionDetailDTO>? Sections { get; set; }
+    }
+
+    public class PollFormBackgroundUploadResultDTO
+    {
+        public string? OriginalFileName { get; set; }
+        public string? SavedFileName { get; set; }
+        public string? BackgroundImagePath { get; set; }
+        public string? FilePath { get; set; }
+        public long FileSize { get; set; }
+        public string? ContentType { get; set; }
+        public DateTime UploadTime { get; set; }
     }
 }

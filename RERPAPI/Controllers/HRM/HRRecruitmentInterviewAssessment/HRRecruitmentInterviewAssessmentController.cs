@@ -24,14 +24,16 @@ namespace RERPAPI.Controllers.HRM.HRRecruitmentInterviewAssessment
         HRRecruitmentInterviewAssessmentFormRepo _hRRecruitmentInterviewAssessmentFormRepo;
         HRRecruitmentCandidateRepo _hRRecruitmentCandidateRepo;
         HRRecruitmentApproveRepo _hRRecruitmentApproveRepo;
+        PerformanceCriteriaRepo _performanceCriteriaRepo;
         public HRRecruitmentInterviewAssessmentController(
             HRRecruitmentApplicationFormRepo hRRecruitmentApplicationFormRepo,
             HRRecruitmentInterviewAssessmentFormRepo hRRecruitmentInterviewAssessmentFormRepo,
             HRRecruitmentCandidateRepo hRRecruitmentCandidateRepo,
-            HRRecruitmentApproveRepo hRRecruitmentApproveRepo
+            HRRecruitmentApproveRepo hRRecruitmentApproveRepo,
+            PerformanceCriteriaRepo performanceCriteriaRepo
             )
         {
-
+            _performanceCriteriaRepo = performanceCriteriaRepo;
             _hRRecruitmentApplicationFormRepo = hRRecruitmentApplicationFormRepo;
             _hRRecruitmentInterviewAssessmentFormRepo = hRRecruitmentInterviewAssessmentFormRepo;
             _hRRecruitmentCandidateRepo = hRRecruitmentCandidateRepo;
@@ -45,6 +47,26 @@ namespace RERPAPI.Controllers.HRM.HRRecruitmentInterviewAssessment
             {
 
                 var data = await SqlDapper<object>.ProcedureToListTAsync("spGetHRRecruitmentDataInterview", new { HRRecruitmentCandidateID = HRRecruitmentCandidateID });
+                //return Ok(new
+                //{
+                //    status = 1,
+                //    data = data,
+                //    message = "Lấy dữ liệu thành công!"
+                //});
+                return Ok(ApiResponseFactory.Success(data, $"Lấy dữ liệu thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return Ok(ApiResponseFactory.Fail(null, ex.Message));
+
+            }
+        }
+        [HttpGet("get-performance-criteria")]
+        public IActionResult GetPerformanceCriteria()
+        {
+            try
+            {
+                var data = _performanceCriteriaRepo.GetAll(c => c.IsDeleted != true && c.IsPublish == true);
                 //return Ok(new
                 //{
                 //    status = 1,

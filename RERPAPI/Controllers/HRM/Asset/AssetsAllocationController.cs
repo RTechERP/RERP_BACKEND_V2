@@ -4,6 +4,7 @@ using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.Asset;
+using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Asset;
@@ -21,14 +22,16 @@ namespace RERPAPI.Controllers.Old.Asset
         TSAssetAllocationRepo _tSAssetAllocationRepo;
         TSAssetAllocationDetailRepo _tSAssetAllocationDetailRepo;
         TSAllocationEvictionAssetRepo _tSAllocationEvictionAssetRepo;
+        AssetAllocationLogRepo _assetAllocationLogRepo;
         private IConfiguration _configuration;
-        public AssetsAllocationController(TSAssetManagementRepo tSAssetManagementRepo, TSAssetAllocationRepo tSAssetAllocationRepo, TSAssetAllocationDetailRepo tSAssetAllocationDetailRepo, TSAllocationEvictionAssetRepo tSAllocationEvictionAssetRepo, vUserGroupLinksRepo vUserGroupLinksRepo,IConfiguration configuration )
+        public AssetsAllocationController(TSAssetManagementRepo tSAssetManagementRepo, TSAssetAllocationRepo tSAssetAllocationRepo, TSAssetAllocationDetailRepo tSAssetAllocationDetailRepo, TSAllocationEvictionAssetRepo tSAllocationEvictionAssetRepo, vUserGroupLinksRepo vUserGroupLinksRepo, AssetAllocationLogRepo assetAllocationLogRepo,IConfiguration configuration )
         {
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
             _tsAssetManagementRepo = tSAssetManagementRepo;
             _tSAssetAllocationRepo = tSAssetAllocationRepo;
             _tSAssetAllocationDetailRepo = tSAssetAllocationDetailRepo;
           _tSAllocationEvictionAssetRepo = tSAllocationEvictionAssetRepo;
+            _assetAllocationLogRepo = assetAllocationLogRepo;
             _configuration = configuration;
         }
 
@@ -116,6 +119,20 @@ namespace RERPAPI.Controllers.Old.Asset
                 status = 1,
                 data = newCode
             });
+        }
+
+        [HttpGet("get-asset-allocation-log/{assetId}")]
+        public IActionResult GetAllocationLog(int assetId)
+        {
+            try
+            {
+                var assetLogs = _assetAllocationLogRepo.GetAll(x => x.AssetAllocationID == assetId).OrderByDescending(x => x.CreatedDate).ToList();
+                return Ok(ApiResponseFactory.Success(assetLogs));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
         }
 
 
@@ -216,6 +233,7 @@ namespace RERPAPI.Controllers.Old.Asset
         {
             try
             {
+                int assetId = 0;
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
 
@@ -228,7 +246,28 @@ namespace RERPAPI.Controllers.Old.Asset
                         await _tSAssetAllocationRepo.CreateAsync(allocations.tSAssetAllocation);
                     }
                     else
+                    {
+                        var existingMaster = _tSAssetAllocationRepo.GetSingleNoTracking(x => x.ID == allocations.tSAssetAllocation.ID);
+                        allocations.tSAssetAllocation.AllocationID = existingMaster?.AllocationID;
+                        
                         await _tSAssetAllocationRepo.UpdateAsync(allocations.tSAssetAllocation);
+                        assetId = allocations.tSAssetAllocation.ID;
+
+                        List<string> changeDetails = _assetAllocationLogRepo.GetEntityChanges(existingMaster, allocations.tSAssetAllocation);
+                        if (changeDetails.Any())
+                        {
+                            await _assetAllocationLogRepo.CreateAsync(new AssetAllocationLog
+                            {
+                                AssetAllocationID = assetId,
+                                EmployeeID = currentUser.EmployeeID,
+                                TypeLog = "CẬP NHẬT TÀI SẢN CẤP PHÁT",
+                                ContentLog = $"Cập nhật tài sản cấp phát: {string.Join(", ", changeDetails)}",
+                                CreatedBy = currentUser.LoginName,
+                                CreatedDate = DateTime.Now
+                            });
+                        }
+                    }
+                       
                 }
 
                 if (allocations.tSAssetAllocationDetails != null && allocations.tSAssetAllocationDetails.Any())
@@ -236,32 +275,119 @@ namespace RERPAPI.Controllers.Old.Asset
                     foreach (var item in allocations.tSAssetAllocationDetails)
                     {
                         item.TSAssetAllocationID = allocations.tSAssetAllocation.ID;
+                        
+                        var existingDetail = item.ID > 0 ? _tSAssetAllocationDetailRepo.GetSingleNoTracking(x => x.ID == item.ID) : null;
+                        int? assetIdLookup = item.AssetManagementID > 0 ? item.AssetManagementID : existingDetail?.AssetManagementID;
+                        var master = assetIdLookup > 0 ? _tsAssetManagementRepo.GetSingleNoTracking(x => x.ID == assetIdLookup) : null;
+                        string code = master?.TSCodeNCC ?? "Trống";
+
                         if (item.ID <= 0)
+                        {
                             await _tSAssetAllocationDetailRepo.CreateAsync(item);
+                            await _assetAllocationLogRepo.CreateAsync(new AssetAllocationLog
+                            {
+                                AssetAllocationID = allocations.tSAssetAllocation.ID,
+                                EmployeeID = currentUser.EmployeeID,
+                                TypeLog = "THÊM CHI TIẾT CẤP PHÁT",
+                                ContentLog = $"Thêm chi tiết cấp phát (Mã tài sản: {code}). Số lượng: {item.Quantity}. Ghi chú: {item.Note}",
+                                CreatedBy = currentUser.LoginName,
+                                CreatedDate = DateTime.Now
+                            });
+                        }
                         else
+                        {
                             await _tSAssetAllocationDetailRepo.UpdateAsync(item);
+
+                            if (item.IsDeleted == true && existingDetail?.IsDeleted != true)
+                            {
+                                await _assetAllocationLogRepo.CreateAsync(new AssetAllocationLog
+                                {
+                                    AssetAllocationID = allocations.tSAssetAllocation.ID,
+                                    EmployeeID = currentUser.EmployeeID,
+                                    TypeLog = "XÓA CHI TIẾT CẤP PHÁT",
+                                    ContentLog = $"Xóa tài sản khỏi cấp phát (Mã tài sản: {code})",
+                                    CreatedBy = currentUser.LoginName,
+                                    CreatedDate = DateTime.Now
+                                });
+                            }
+                            else if (existingDetail != null)
+                            {
+                                List<string> changeDetails = _assetAllocationLogRepo.GetEntityChanges(existingDetail, item);
+                                if (changeDetails.Any())
+                                {
+                                    await _assetAllocationLogRepo.CreateAsync(new AssetAllocationLog
+                                    {
+                                        AssetAllocationID = allocations.tSAssetAllocation.ID,
+                                        EmployeeID = currentUser.EmployeeID,
+                                        TypeLog = "CẬP NHẬT CHI TIẾT CẤP PHÁT",
+                                        ContentLog = $"Cập nhật chi tiết cấp phát (Mã tài sản: {code}): {string.Join(", ", changeDetails)}",
+                                        CreatedBy = currentUser.LoginName,
+                                        CreatedDate = DateTime.Now
+                                    });
+                                }
+                            }
+                        }
                     }
                 }
                 if (allocations.tSAssetManagements != null && allocations.tSAssetManagements.Any())
                 {
                     foreach (var item in allocations.tSAssetManagements)
                     {
-
                         if (item.ID <= 0)
+                        {
                             await _tsAssetManagementRepo.CreateAsync(item);
+                        }
                         else
+                        {
                             await _tsAssetManagementRepo.UpdateAsync(item);
+                        }
                     }
                 }
                 if (allocations.tSAllocationEvictionAssets != null && allocations.tSAllocationEvictionAssets.Any())
                 {
                     foreach (var item in allocations.tSAllocationEvictionAssets)
                     {
-
-                        if (item.ID <= 0)
+                        bool isNew = item.ID <= 0;
+                        if (isNew)
+                        {
                             await _tSAllocationEvictionAssetRepo.CreateAsync(item);
+                        }
                         else
+                        {
+                            var existingEviction = _tSAllocationEvictionAssetRepo.GetSingleNoTracking(x => x.ID == item.ID);
                             await _tSAllocationEvictionAssetRepo.UpdateAsync(item);
+
+                            List<string> changeDetails = _assetAllocationLogRepo.GetEntityChanges(existingEviction, item);
+                            if (changeDetails.Any())
+                            {
+                                await _assetAllocationLogRepo.CreateAsync(new AssetAllocationLog
+                                {
+                                    AssetAllocationID = allocations.tSAssetAllocation.ID,
+                                    EmployeeID = currentUser.EmployeeID,
+                                    TypeLog = "CẬP NHẬT CẤP PHÁT / THU HỒI",
+                                    ContentLog = $"Cập nhật trạng thái cấp phát/thu hồi: {string.Join(", ", changeDetails)}",
+                                    CreatedBy = currentUser.LoginName,
+                                    CreatedDate = DateTime.Now
+                                });
+                            }
+                        }
+
+                        if (isNew)
+                        {
+                            var master = _tsAssetManagementRepo.GetSingleNoTracking(x => x.ID == item.AssetManagementID);
+                            string code = master?.TSCodeNCC ?? "Trống";
+                            string action = item.Status == "Đang sử dụng" ? "Cấp phát" : "Thu hồi";
+
+                            await _assetAllocationLogRepo.CreateAsync(new AssetAllocationLog
+                            {
+                                AssetAllocationID = allocations.tSAssetAllocation.ID,
+                                EmployeeID = currentUser.EmployeeID,
+                                TypeLog = $"{action.ToUpper()} TÀI SẢN",
+                                ContentLog = $"{action} tài sản. Mã: {code}. Ghi chú: {item.Note}",
+                                CreatedBy = currentUser.LoginName,
+                                CreatedDate = DateTime.Now
+                            });
+                        }
                     }
                 }
                 return Ok(ApiResponseFactory.Success(allocations, "Lưu dữ liệu thành công"));

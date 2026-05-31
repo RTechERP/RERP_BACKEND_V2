@@ -18,4 +18,8 @@ public partial class PollResponse
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
+
+    public bool? IsCompleted { get; set; }
+
+    public DateTime? CompletedDate { get; set; }
 }

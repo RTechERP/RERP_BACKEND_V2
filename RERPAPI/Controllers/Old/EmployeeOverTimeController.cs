@@ -31,17 +31,17 @@ namespace RERPAPI.Controllers.Old
 
         [HttpPost]
         [RequiresPermission("N2,N1")]
-        public IActionResult GetEmployeeOverTime([FromBody] EmployeeOverTimeParam param)
+        public IActionResult GetEmployeeOverTime([FromBody] EmployeeOverTimeSummaryParam param)
         {
             try
             {
                 //var dateStart = param.dateStart.Date; // 00:00:00
                 //var dateEnd = param.dateEnd.Date.AddDays(1).AddSeconds(-1);
-                param.dateStart = param.dateStart.ToLocalTime().Date;
-                param.dateEnd = param.dateEnd.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
-                var arrParamName = new string[] { "@FilterText", "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@DepartmentID", "@IDApprovedTP", "@Status" };
-                var arrParamValue = new object[] { param.keyWord ?? "", param.pageNumber, param.pageSize, param.dateStart, param.dateEnd, param.departmentId, param.idApprovedTp, param.status };
-                var employeeOverTime = SQLHelper<object>.ProcedureToList("spGetEmployeeOvertime", arrParamName, arrParamValue);
+                param.DateStart = param.DateStart.ToLocalTime().Date;
+                param.DateEnd = param.DateEnd.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
+                var arrParamName = new string[] { "@DateStart", "@DateEnd", "@Keyword", "@EmployeeID", "@IsApproved", "@Type", "@DepartmentID" };
+                var arrParamValue = new object[] { param.DateStart, param.DateEnd, param.Keyword??"", param.EmployeeID??0, param.IsApproved, param.Type, param.DepartmentID??0};
+                var employeeOverTime = SQLHelper<object>.ProcedureToList("spGetEmployeeOvertimeInWeb_New", arrParamName, arrParamValue);
                 return Ok(new
                 {
                     data = SQLHelper<object>.GetListData(employeeOverTime, 0),
@@ -130,6 +130,7 @@ namespace RERPAPI.Controllers.Old
             {
                 foreach (var employeeOvertime in request.EmployeeOvertimes ?? new List<EmployeeOvertime>())
                 {
+                    AdjustDateTimeTimeZone(employeeOvertime);
                     EmployeeOvertime existingOvertime = null;
                     if (employeeOvertime.ID > 0)
                     {
@@ -359,6 +360,7 @@ namespace RERPAPI.Controllers.Old
 
                 foreach (var item in dto.EmployeeOvertimes)
                 {
+                    AdjustDateTimeTimeZone(item);
                     var validate = _employeeOverTimeRepo.Validate(item);
                     if (validate.status == 0 && item.IsDeleted != true) return BadRequest(validate);
                     if (item.ID <= 0)
@@ -406,6 +408,39 @@ namespace RERPAPI.Controllers.Old
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+        }
+
+        private void AdjustDateTimeTimeZone(EmployeeOvertime employeeOvertime)
+        {
+            if (employeeOvertime == null) return;
+
+            int clientOffsetMinutes = 420; // Default to UTC+7
+            if (Request.Headers.TryGetValue("TimeZoneOffset", out var headerValues))
+            {
+                if (int.TryParse(headerValues.FirstOrDefault(), out var offset))
+                {
+                    clientOffsetMinutes = offset;
+                }
+            }
+
+            employeeOvertime.DateRegister = AdjustToClientLocal(employeeOvertime.DateRegister, clientOffsetMinutes);
+            employeeOvertime.TimeStart = AdjustToClientLocal(employeeOvertime.TimeStart, clientOffsetMinutes);
+            employeeOvertime.EndTime = AdjustToClientLocal(employeeOvertime.EndTime, clientOffsetMinutes);
+        }
+
+        private DateTime? AdjustToClientLocal(DateTime? dateTime, int clientOffsetMinutes)
+        {
+            if (!dateTime.HasValue) return null;
+            if (dateTime.Value.Kind == DateTimeKind.Unspecified)
+            {
+                return dateTime;
+            }
+
+            DateTime utcDateTime = dateTime.Value.Kind == DateTimeKind.Utc
+                ? dateTime.Value
+                : dateTime.Value.ToUniversalTime();
+
+            return DateTime.SpecifyKind(utcDateTime.AddMinutes(clientOffsetMinutes), DateTimeKind.Unspecified);
         }
 
     }

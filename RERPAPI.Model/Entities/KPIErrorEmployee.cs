@@ -30,4 +30,6 @@ public partial class KPIErrorEmployee
     public DateTime? UpdatedDate { get; set; }
 
     public decimal? TotalMoney { get; set; }
+
+    public bool? IsAutoAdd { get; set; }
 }

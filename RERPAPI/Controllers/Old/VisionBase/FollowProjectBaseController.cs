@@ -60,6 +60,8 @@ namespace RERPAPI.Controllers.KhoBaseManager
         {
             try
             {
+                //DateTime dateStartLocal = param.dateStart.ToLocalTime();
+                //DateTime dateEndLocal = param.endDate.ToLocalTime();
                 var data = SQLHelper<object>.ProcedureToList(
                 "spGetFollowProjectBase",
                     new string[]
@@ -426,7 +428,7 @@ namespace RERPAPI.Controllers.KhoBaseManager
             try
             {
                 //var data = SQLHelper<object>.Select("SELECT * FROM Customer");
-                var data = _customerRepo.GetAll().Where(x => x.IsDeleted != true);
+                var data = _customerRepo.GetAll(x => x.IsDeleted != true);
                 return Ok(new
                 {
                     status = 1,

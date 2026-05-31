@@ -47,4 +47,6 @@ public partial class PaymentOrderDetail
     public decimal? PaymentPercentage { get; set; }
 
     public bool? IsDeleted { get; set; }
+
+    public decimal? TotalMoneyWithInvoice { get; set; }
 }

@@ -333,4 +333,24 @@ public partial class JobPerfomanceEvaluationNew
     /// Xếp loại cuối cùng
     /// </summary>
     public string? TBPEvaluationGrade { get; set; }
+
+    /// <summary>
+    /// TBP điểm mạnh
+    /// </summary>
+    public string? TBPStrengths { get; set; }
+
+    /// <summary>
+    /// TBP Điểm cần cải thiện
+    /// </summary>
+    public string? TBPAreasForImprovement { get; set; }
+
+    /// <summary>
+    /// TBP ID loại hợp đồng ( kết luận )
+    /// </summary>
+    public int? TBPConclusionEmployeeLoaiHDID { get; set; }
+
+    /// <summary>
+    /// TBP Kiến nghị/Khác
+    /// </summary>
+    public string? TBPRecommendationsOrOther { get; set; }
 }

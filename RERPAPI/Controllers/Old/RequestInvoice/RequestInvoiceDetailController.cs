@@ -8,6 +8,7 @@ using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using System.Threading.Tasks;
+using System.Linq;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -29,7 +30,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
         private readonly ProjectRepo _projectRepo;
         private readonly ConfigSystemRepo _configSystemRepo;
         private readonly RequestInvoiceLogRepo _requestInvoiceLogRepo;
-
+        private readonly AccountingContractTypeRepo _accountingContractTypeRepo;
 
         public RequestInvoiceDetailController(
             RequestInvoiceRepo requestInvoiceRepo,
@@ -40,7 +41,8 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
             ProjectRepo projectRepo,
             ConfigSystemRepo configSystemRepo,
             RequestInvoiceStatusLinkRepo requestInvoiceStatusLinkRepo,
-            RequestInvoiceLogRepo requestInvoiceLogRepo
+            RequestInvoiceLogRepo requestInvoiceLogRepo,
+            AccountingContractTypeRepo accountingContractTypeRepo
 
             )
         {
@@ -58,6 +60,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
             _configSystemRepo = configSystemRepo;
             _requestInvoiceStatusLinkRepo = requestInvoiceStatusLinkRepo;
             _requestInvoiceLogRepo = requestInvoiceLogRepo;
+            _accountingContractTypeRepo = accountingContractTypeRepo;
         }
 
         [HttpGet("get-employee")]
@@ -89,6 +92,21 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        [HttpGet("get-accouting-contract-types")]
+        public IActionResult GetAccountingContractTypes()
+        {
+            try
+            {
+                var data = _accountingContractTypeRepo.GetAll(x => x.IsHideRequestInvoice == false).OrderByDescending(x => x.CreatedDate).ToList();
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpGet("get-project")]
         public IActionResult GetProject()
         {
@@ -178,6 +196,10 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                 {
                     throw new Exception("Vui lòng thêm ít nhất 1 sản phẩm");
                 }
+                if (dto.RequestInvoices == null || dto.RequestInvoices.EmployeeRequestID < 0)
+                {
+                    throw new Exception("Xin hãy chọn người yêu cầu.");
+                }
                 foreach (var item in dto.RequestInvoiceDetails)
                 {
                     if (item.ProductSaleID == 0 || item.ProductSaleID == null)
@@ -190,6 +212,41 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                     }
                 }
 
+                //var pokhDetailIds = dto.RequestInvoiceDetails
+                //    .Where(x => x.POKHDetailID != null && x.POKHDetailID > 0)
+                //    .Select(x => x.POKHDetailID.Value)
+                //    .Distinct()
+                //    .ToList();
+
+                //if (pokhDetailIds.Any())
+                //{
+                //    var ids = string.Join(",", pokhDetailIds);
+
+                //    var invalidRows = await SqlDapper<RequestInvoiceCompanyTextCheckResultDTO>
+                //        .ProcedureToListTAsync("spCheckRequestInvoiceCompanyText", new { POKHDetailIDs = ids });
+
+                //    if (invalidRows.Any())
+                //    {
+                //        var invalidPokhDetailIds = invalidRows
+                //            .Select(x => x.POKHDetailID)
+                //            .ToHashSet();
+
+                //        var errorRows = dto.RequestInvoiceDetails
+                //            .Where(x => x.POKHDetailID != null && invalidPokhDetailIds.Contains(x.POKHDetailID.Value))
+                //            .Select(x =>
+                //            {
+                //                var stt = x.STT > 0 ? x.STT.ToString() : "?";
+
+                //                return $"{stt}";
+                //            })
+                //            .Distinct()
+                //            .ToList();
+
+                //        throw new Exception($"Các dòng có STT sau chưa có Công ty nhập: {string.Join(", ", errorRows)}. Vui lòng bổ sung thông tin cho PONCC và thử lại!");
+                //    }
+
+                //}
+
                 // Kiểm tra trùng mã phiếu
                 var code = dto.RequestInvoices.Code.Trim();
                 int id = dto.RequestInvoices.ID;
@@ -198,7 +255,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                     .FirstOrDefault();
                 if (exist != null)
                 {
-                    throw new Exception("Số phiếu này đã tồn tại!");
+                    throw new Exception("Số phiếu này đã tồn tại, vui lòng bấm làm mới số phiếu!");
                 }
 
                 if (dto.RequestInvoices.ID <= 0)

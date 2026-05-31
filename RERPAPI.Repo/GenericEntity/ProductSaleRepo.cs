@@ -1,4 +1,4 @@
-﻿using RERPAPI.Model.Common;
+using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 
@@ -51,6 +51,18 @@ namespace RERPAPI.Repo.GenericEntity
             productSale.AddressBox = loc.LocationName;
             Update(productSale);
             return true;
+        }
+
+        public string GetMaxProductNewCode(int productGroupId, string productGroupCode)
+        {
+            return table.Where(x => x.ProductGroupID == productGroupId &&
+                                    x.ProductNewCode != null &&
+                                    x.ProductNewCode != "" &&
+                                    x.ProductNewCode.StartsWith(productGroupCode))
+                        .Select(x => x.ProductNewCode)
+                        .OrderByDescending(x => x.Length)
+                        .ThenByDescending(x => x)
+                        .FirstOrDefault();
         }
     }
 }

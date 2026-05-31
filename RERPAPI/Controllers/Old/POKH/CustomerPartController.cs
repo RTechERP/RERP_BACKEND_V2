@@ -49,7 +49,7 @@ namespace RERPAPI.Controllers.Old.POKH
         {
             try
             {
-                List<Customer> list = _customerRepo.GetAll().Where(x => x.IsDeleted == false).ToList();
+                List<Customer> list = _customerRepo.GetAll(x => x.IsDeleted == false).ToList();
                 return Ok(ApiResponseFactory.Success(list, ""));
 
             }

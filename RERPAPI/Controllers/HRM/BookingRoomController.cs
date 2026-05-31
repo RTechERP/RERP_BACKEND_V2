@@ -21,13 +21,12 @@ namespace RERPAPI.Controllers.HRM
         {
             _bookingRoomRepo = bookingRoomRepo;
         }
-
         [HttpPost("get-booking-room")]
         public IActionResult GetBookingRoom(DateTime DateStart, DateTime DateEnd, bool IsShowWeb)
         {
             try
             {
-                string procedureName = "spGetBookingRoom";
+                string procedureName = "spGetBookingRoom_New";
                 string[] paramNames = new string[] { "@StartDate", "@EndDate", "@IsShowWeb" };
                 object[] paramValues = new object[] { DateStart, DateEnd,1 };
                 var data = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);

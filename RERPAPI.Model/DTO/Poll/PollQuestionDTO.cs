@@ -47,6 +47,7 @@ namespace RERPAPI.Model.DTO.Poll
     {
         public string? DataSourceLabel { get; set; }
         public string? DataSourceValue { get; set; }
+        public string? DataSourceDisplayValue { get; set; }
         public bool IsAutoFilled { get; set; }
         public List<PollQuestionOptionDTO>? Options { get; set; }
     }

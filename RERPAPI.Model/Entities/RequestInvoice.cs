@@ -54,4 +54,6 @@ public partial class RequestInvoice
     public string? AmendReason { get; set; }
 
     public bool? IsCustomsDeclared { get; set; }
+
+    public int? AccountingContractTypeID { get; set; }
 }

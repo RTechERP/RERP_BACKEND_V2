@@ -24,11 +24,13 @@ using RERPAPI.Repo.GenericEntity.GeneralCatetogy.JobRequirements;
 using RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders;
 using RERPAPI.Repo.GenericEntity.HRM;
 using RERPAPI.Repo.GenericEntity.HRM.DepartmentRequire;
+using RERPAPI.Repo.GenericEntity.HRM.FlightBooking;
 using RERPAPI.Repo.GenericEntity.HRM.HRRecruitmentInterviewAssessment;
 using RERPAPI.Repo.GenericEntity.HRM.ProductProtectiveGear;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
-using RERPAPI.Repo.GenericEntity.HRM.FlightBooking;
 using RERPAPI.Repo.GenericEntity.HRRecruitmentExamRepo;
+using RERPAPI.Repo.GenericEntity.KPISale;
+using RERPAPI.Repo.GenericEntity.MakerTrainingFirm;
 using RERPAPI.Repo.GenericEntity.MeetingMinutesRepo;
 using RERPAPI.Repo.GenericEntity.Project;
 using RERPAPI.Repo.GenericEntity.Systems;
@@ -39,6 +41,7 @@ using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
 using RERPAPI.SendService;
 using RTCApi.Repo.GenericRepo;
 using Serilog;
+using Serilog.Events;
 using System.Text;
 using tusdotnet;
 using tusdotnet.Helpers;
@@ -389,6 +392,7 @@ builder.Services.AddScoped<DocumentExportRepo>();
 builder.Services.AddScoped<InventoryProjectExportRepo>();
 builder.Services.AddScoped<InvoiceLinkRepo>();
 builder.Services.AddScoped<SupplierSaleRepo>();
+builder.Services.AddScoped<SupplierSaleLinkRepo>();
 builder.Services.AddScoped<SupplierSaleContactRepo>();
 builder.Services.AddScoped<ProjectFieldRepo>();
 
@@ -497,9 +501,9 @@ builder.Services.AddScoped<ProjectTaskGroupRepo>();
 builder.Services.AddScoped<ProjectTaskChecklistRepo>();
 builder.Services.AddScoped<ProjectTaskEmailBandRepo>();
 builder.Services.AddScoped<ProjectTaskAttendanceRepo>();
-builder.Services.AddTransient<ProjectTaskAttachmentRepo>();
-builder.Services.AddTransient<ProjectTaskAdditionalRepo>();
-builder.Services.AddTransient<ProjectTaskSettingRepo>();
+builder.Services.AddScoped<ProjectTaskAttachmentRepo>();
+builder.Services.AddScoped<ProjectTaskAdditionalRepo>();
+builder.Services.AddScoped<ProjectTaskSettingRepo>();
 
 builder.Services.AddScoped<SendEmailReceiveProjectTaskClass>();
 
@@ -591,11 +595,12 @@ builder.Services.AddScoped<CustomerIndustriesRepo>();
 builder.Services.AddScoped<FcmTokenRepo>();
 builder.Services.AddScoped<NotificationTypeLinkRepo>();
 builder.Services.AddScoped<NotificationTypeRepo>();
-//builder.Services.AddScoped<JobRequirementLogRepo>();
+builder.Services.AddScoped<JobRequirementLogRepo>();
 //builder.Services.AddScoped<AssetLogRepo>();
 
 
 #region KPI
+builder.Services.AddScoped<KPISaleRepo>();
 builder.Services.AddScoped<KPIEvaluationPointRepo>();
 builder.Services.AddScoped<KPISessionRepo>();
 builder.Services.AddScoped<KPIEmployeePointRepo>();
@@ -668,11 +673,28 @@ builder.Services.AddScoped<PollQuestionOptionRepo>();
 builder.Services.AddScoped<PollResponseRepo>();
 builder.Services.AddScoped<PollResponseAnswerRepo>();
 builder.Services.AddScoped<PollBranchingRuleEvaluator>();
+builder.Services.AddScoped<MakerTrainingRepo>();
+builder.Services.AddScoped<MakerTrainingEmployeeLinkRepo>();
+builder.Services.AddScoped<MakerTrainingDocumentRepo>();
+builder.Services.AddScoped<MakerTrainingTypeRepo>();
+builder.Services.AddScoped<PerformanceCriteriaRepo>(); 
+builder.Services.AddScoped<EmployeeAttendanceNewRepo>();
+builder.Services.AddScoped<ProjectTaskWorkRepo>();
+builder.Services.AddScoped<ProjectTaskStatusRepo>();
+builder.Services.AddScoped<PaymentOrderOrderTypeRepo>();
+builder.Services.AddScoped<ConfigNotificationKeyRepo>();
+builder.Services.AddScoped<ConfigNotificationKeyLinkRepo>();
 
+#region DI LOG
 builder.Services.AddScoped<POKHLogRepo>();
 builder.Services.AddScoped<RequestInvoiceLogRepo>();
 builder.Services.AddScoped<BillExportSaleLogRepo>();
 builder.Services.AddScoped<PONCCLogRepo>();
+builder.Services.AddScoped<BillImportTechnicalAuditLogRepo>();
+builder.Services.AddScoped<AssetLogRepo>();
+builder.Services.AddScoped<BillExportTechnicalAuditLogRepo>();
+
+#endregion
 
 builder.Services.AddScoped<CurrentUser>(provider =>
 {
@@ -775,7 +797,7 @@ builder.Services.AddAuthentication();
 //Get SmtpSetting
 var smtpSettings = builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.Configure<SmtpSettingsHr>(builder.Configuration.GetSection("SmtpSettingsHr"));
-
+builder.Services.Configure < SmtpSettingsHrm>(builder.Configuration.GetSection("SmtpSettingsHrm"));
 
 //Get list static file
 builder.Services.Configure<List<PathStaticFile>>(builder.Configuration.GetSection("PathStaticFiles"));
@@ -833,7 +855,7 @@ Log.Logger = new LoggerConfiguration()
     .Enrich.WithThreadId()
     .WriteTo.Console()
     .WriteTo.Async(a => a.File(
-        "logs/log-.txt",
+         @"D:\RERPLogs\api\log-.txt",
         rollingInterval: RollingInterval.Day,
         retainedFileCountLimit: 7,
         outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss:fff} [{Level}] {Message}{NewLine}{Exception}"
@@ -852,10 +874,26 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseSerilogRequestLogging(options =>
+{
+    options.MessageTemplate =
+        "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
+
+    options.GetLevel = (httpContext, elapsed, ex) =>
+    {
+        if (ex != null) return LogEventLevel.Error;
+        if (httpContext.Response.StatusCode >= 500) return LogEventLevel.Error;
+        if (elapsed > 3000) return LogEventLevel.Warning;
+
+        return LogEventLevel.Information;
+    };
+});
+
 
 app.UseHttpsRedirection();
 
 app.UseStaticFiles();
+
 app.UseRouting();
 app.UseCors("MyCors");
 app.UseAuthentication();
@@ -934,6 +972,35 @@ app.UseTus(httpContext => new DefaultTusConfiguration
         }
     }
 });
-app.UseSerilogRequestLogging(); // log request
+//app.Use(async (context, next) =>
+//{
+//    var sw = System.Diagnostics.Stopwatch.StartNew();
+
+//    try
+//    {
+//        await next();
+//    }
+//    finally
+//    {
+//        sw.Stop();
+
+//        if (sw.ElapsedMilliseconds > 3000)
+//        {
+//            var logger = context.RequestServices
+//                .GetRequiredService<ILoggerFactory>()
+//                .CreateLogger("SlowRequest");
+
+//            logger.LogWarning(
+//                "Slow request: {Method} {Path}{QueryString} took {Elapsed}ms, StatusCode={StatusCode}",
+//                context.Request.Method,
+//                context.Request.Path,
+//                context.Request.QueryString,
+//                sw.ElapsedMilliseconds,
+//                context.Response.StatusCode
+//            );
+//        }
+//    }
+//});
+//app.UseSerilogRequestLogging(); // log request
 
 app.Run();

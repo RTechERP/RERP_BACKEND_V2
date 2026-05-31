@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
@@ -88,6 +88,12 @@ namespace RERPAPI.Controllers.Systems
                     int result = 0;
                     if (item != null)
                     {
+                        var existCode = _updateVersionRepo.GetAll(x => x.Code.Trim().ToLower() == item.Code.Trim().ToLower() && x.ID != item.ID && x.IsDeleted != true).FirstOrDefault();
+                        if (existCode != null)
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null, "Mã phiên bản đã tồn tại!"));
+                        }
+
                         if (item.ID > 0)
                         {
                             if(item.Status==1)

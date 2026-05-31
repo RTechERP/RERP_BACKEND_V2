@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -495,6 +494,7 @@ namespace RERPAPI.Controllers.CRM
                         Address = x.Address,
                         IndustriesNameEN = x.IndustriesNameEN,
                         IndustriesNameVI = x.IndustriesNameVI,
+                        STT = x.STT
                     }).ToList<dynamic>();
                 }
                 var data1 = SQLHelper<dynamic>.GetListData(list, 1);
@@ -514,9 +514,9 @@ namespace RERPAPI.Controllers.CRM
         {
             try
             {
-                var contact = _customerContactRepo.GetAll().Where(x => x.CustomerID == customerId).ToList();
-                var address = _addressStockRepo.GetAll().Where(x => x.CustomerID == customerId).ToList();
-                var customerEmployee = _customerEmployeeRepo.GetAll().Where(x => x.CustomerID == customerId).ToList();
+				var contact = _customerContactRepo.GetAll(x => x.CustomerID == customerId).ToList();
+				var address = _addressStockRepo.GetAll(x => x.CustomerID == customerId).ToList();
+				var customerEmployee = _customerEmployeeRepo.GetAll(x => x.CustomerID == customerId).ToList();
                 var employees = _employeeRepo.GetAll().ToList();
                 var employee = (from ce in customerEmployee
                                 join e in employees on ce.EmployeeID equals e.ID
@@ -591,11 +591,11 @@ namespace RERPAPI.Controllers.CRM
 
                     if (model.CustomerCode.Trim().Length >= 3) provinceCode = model.CustomerCode.Substring(0, 3);
                 }
-                var business = _businessFieldLinkRepo.GetAll().FirstOrDefault(x => x.CustomerID == id);
-                var addressStock = _addressStockRepo.GetAll().Where(x => x.CustomerID == id);
-                var customerContact = _customerContactRepo.GetAll().Where(x => x.CustomerID == id);
-                var customerEmployee = _customerEmployeeRepo.GetAll().Where(x => x.CustomerID == id).ToList();
-                var employees = _employeeRepo.GetAll().ToList();
+				var business = _businessFieldLinkRepo.GetSingleNoTracking(x => x.CustomerID == id);
+				var addressStock = _addressStockRepo.GetAll(x => x.CustomerID == id);
+				var customerContact = _customerContactRepo.GetAll(x => x.CustomerID == id);
+				var customerEmployee = _customerEmployeeRepo.GetAll(x => x.CustomerID == id);
+				var employees = _employeeRepo.GetAll();
                 var customerEmployeeWithName = (from ce in customerEmployee
                                                 join e in employees on ce.EmployeeID equals e.ID
                                                 select new
@@ -697,6 +697,20 @@ namespace RERPAPI.Controllers.CRM
 
                 var taxCode = validate.TaxCode?.Trim();
 
+                var customerShortName = validate.CustomerShortName?.Trim().ToUpper();
+
+                if (!string.IsNullOrWhiteSpace(customerShortName))
+                {
+                    if (_customerRepo.GetAll(x =>
+                        (x.CustomerShortName ?? "").Trim().ToUpper() == customerShortName
+                        && x.ID != validate.ID
+                        && (x.IsDeleted == false || x.IsDeleted == null)
+                    ).Any())
+                    {
+                        errors.Add("Tên kí hiệu đã tồn tại, vui lòng nhập lại!");
+                    }
+                }
+
                 if (!string.IsNullOrWhiteSpace(taxCode))
                 {
                     if (_customerRepo.GetAll(x =>
@@ -721,7 +735,7 @@ namespace RERPAPI.Controllers.CRM
                 customer.Province = dto.Customer.Province;
                 customer.CustomerCode = dto.Customer.CustomerCode;
                 customer.CustomerName = dto.Customer.CustomerName.ToUpper();
-                customer.CustomerShortName = dto.Customer.CustomerShortName;
+                customer.CustomerShortName = dto.Customer.CustomerShortName?.Trim().ToUpper();
                 customer.Address = dto.Customer.Address;
                 customer.CustomerType = dto.Customer.CustomerType;
                 customer.ProductDetails = dto.Customer.ProductDetails;
@@ -939,7 +953,7 @@ namespace RERPAPI.Controllers.CRM
         {
             try
             {
-                var result = _customerIndustriesRepo.GetAll(x => x.IsDeleted != true).OrderBy(p=>p.NumberOrder).ToList();
+				var result = _customerIndustriesRepo.GetAll(x => x.IsDeleted != true).OrderBy(p => p.NumberOrder).ToList();
                 return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)

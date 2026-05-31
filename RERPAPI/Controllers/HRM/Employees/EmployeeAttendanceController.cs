@@ -46,6 +46,8 @@ namespace RERPAPI.Controllers
         {
             try
             {
+                dateStart = dateStart.ToLocalTime().Date;
+                dateEnd = dateEnd.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
                 DateTime ds = new DateTime(dateStart.Year, dateStart.Month, dateStart.Day, 0, 0, 0);
                 DateTime de = new DateTime(dateEnd.Year, dateEnd.Month, dateEnd.Day, 23, 59, 59);
                 var dt = SQLHelper<object>.ProcedureToList("spGetEmployeeAttendance",
@@ -427,6 +429,131 @@ namespace RERPAPI.Controllers
             }
             return (isLate, timeLate, isEarly, timeEarly, totalHour, totalDay, isLunch);
         }
+        [RequiresPermission("N1,N2")]
+        [HttpPost("save-attendance")]
+        public async Task<IActionResult> UpsertSingleAttendance([FromBody] UpsertSingleAttendanceRequest request)
+        {
+            if (request == null)
+                return BadRequest(ApiResponseFactory.Fail(null, "Request không được null."));
+
+            if (string.IsNullOrWhiteSpace(request.Code))
+                return BadRequest(ApiResponseFactory.Fail(null, "Mã nhân viên không được để trống."));
+
+            try
+            {
+                // 1. Tìm nhân viên theo code
+                var emp = _employeeRepo.GetAll(e => e.Code == request.Code).FirstOrDefault();
+                if (emp == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy nhân viên với mã '{request.Code}'."));
+
+                if (string.IsNullOrWhiteSpace(emp.IDChamCongMoi))
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Nhân viên mã '{request.Code}' không có IDChamCongMoi."));
+
+              
+                DateTime date = request.AttendanceDate.Date;
+                DateTime? inDt = ParseTimeOnDate(date, request.CheckIn);
+                DateTime? outDt = ParseTimeOnDate(date, request.CheckOut);
+
+               
+                var comp = ComputeAttendance(emp.DepartmentID ?? 0, date, inDt, outDt);
+
+                string message;
+
+                if (request.ID > 0)
+                {
+                    //  UPDATE existing 
+                    var existing = _employeeAttendanceRepo.GetAll(x => x.ID == request.ID).FirstOrDefault();
+                    if (existing == null)
+                        return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy bản ghi chấm công ID={request.ID}."));
+
+                    existing.IDChamCongMoi = emp.IDChamCongMoi;
+                    existing.EmployeeID = emp.ID;
+                    existing.AttendanceDate = date;
+                    existing.DayWeek = request.DayWeek ?? "";
+                    existing.CheckIn = inDt?.ToString("HH:mm");
+                    existing.CheckOut = outDt?.ToString("HH:mm");
+                    existing.CheckInDate = inDt;
+                    existing.CheckOutDate = outDt;
+                    existing.IsLate = comp.IsLate;
+                    existing.TimeLate = comp.TimeLate;
+                    existing.IsEarly = comp.IsEarly;
+                    existing.TimeEarly = comp.TimeEarly;
+                    existing.TotalHour = comp.TotalHour;
+                    existing.TotalDay = comp.TotalDay;
+                    existing.IsLunch = comp.IsLunch;
+                    existing.UpdatedDate = DateTime.Now;
+
+                    await _employeeAttendanceRepo.UpdateAsync(existing);
+                    message = "Cập nhật chấm công thành công.";
+                }
+                else
+                {
+                
+                    var existingByKey = _employeeAttendanceRepo.GetAll(ea =>
+                        ea.IDChamCongMoi == emp.IDChamCongMoi &&
+                        ea.AttendanceDate.HasValue &&
+                        ea.AttendanceDate.Value.Date == date
+                    ).FirstOrDefault();
+
+                    if (existingByKey != null)
+                    {
+                        
+                        existingByKey.EmployeeID = emp.ID;
+                        existingByKey.DayWeek = request.DayWeek ?? "";
+                        existingByKey.CheckIn = inDt?.ToString("HH:mm");
+                        existingByKey.CheckOut = outDt?.ToString("HH:mm");
+                        existingByKey.CheckInDate = inDt;
+                        existingByKey.CheckOutDate = outDt;
+                        existingByKey.IsLate = comp.IsLate;
+                        existingByKey.TimeLate = comp.TimeLate;
+                        existingByKey.IsEarly = comp.IsEarly;
+                        existingByKey.TimeEarly = comp.TimeEarly;
+                        existingByKey.TotalHour = comp.TotalHour;
+                        existingByKey.TotalDay = comp.TotalDay;
+                        existingByKey.IsLunch = comp.IsLunch;
+                        existingByKey.UpdatedDate = DateTime.Now;
+
+                        await _employeeAttendanceRepo.UpdateAsync(existingByKey);
+                        message = "Đã cập nhật bản ghi chấm công trùng lặp.";
+                    }
+                    else
+                    {
+                        
+                        var newRecord = new EmployeeAttendance
+                        {
+                            EmployeeID = emp.ID,
+                            IDChamCongMoi = emp.IDChamCongMoi,
+                            AttendanceDate = date,
+                            DayWeek = request.DayWeek ?? "",
+                            Interval = "(00:00:00-23:59:00)",
+                            CheckIn = inDt?.ToString("HH:mm"),
+                            CheckOut = outDt?.ToString("HH:mm"),
+                            CheckInDate = inDt,
+                            CheckOutDate = outDt,
+                            IsLate = comp.IsLate,
+                            TimeLate = comp.TimeLate,
+                            IsEarly = comp.IsEarly,
+                            TimeEarly = comp.TimeEarly,
+                            TotalHour = comp.TotalHour,
+                            TotalDay = comp.TotalDay,
+                            IsLunch = comp.IsLunch,
+                            CreatedDate = DateTime.Now,
+                            UpdatedDate = DateTime.Now
+                        };
+
+                        await _employeeAttendanceRepo.CreateAsync(newRecord);
+                        message = "Thêm chấm công thành công.";
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(null, message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi server: {ex.Message}"));
+            }
+        }
+
         [HttpPost("delete-attendance")]
         public async Task<IActionResult> Delete(List<int> ids)
         {

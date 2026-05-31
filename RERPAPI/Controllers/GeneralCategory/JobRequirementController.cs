@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NPOI.HSSF.Record.Chart;
@@ -30,8 +30,9 @@ namespace RERPAPI.Controllers.GeneralCategory
         private vUserGroupLinksRepo _vUserGroupLinksRepo;
         private JobRequirementDetailRepo _jobRequirementDetailRepo;
         private readonly EmailHelper _emailHelper;
+        private JobRequirementLogRepo _jobRequirementLogRepo;
 
-        public JobRequirementController(IConfiguration configuration, CurrentUser currentUser, JobRequirementRepo jobRepo, JobRequirementDetailRepo detailRepo, JobRequirementFileRepo jobRequirementFileRepo, JobRequirementApprovedRepo approvedRepo, EmployeeRepo employeeRepo, JobRequirementCommentRepo commentRepo, vUserGroupLinksRepo userLinkRepo, JobRequirementDetailRepo jobRequirementDetailRepo, EmailHelper emailHelper)
+        public JobRequirementController(IConfiguration configuration, CurrentUser currentUser, JobRequirementRepo jobRepo, JobRequirementDetailRepo detailRepo, JobRequirementFileRepo jobRequirementFileRepo, JobRequirementApprovedRepo approvedRepo, EmployeeRepo employeeRepo, JobRequirementCommentRepo commentRepo, vUserGroupLinksRepo userLinkRepo, JobRequirementDetailRepo jobRequirementDetailRepo, EmailHelper emailHelper, JobRequirementLogRepo jobRequirementLogRepo)
         {
             _configuration = configuration;
             _currentUser = currentUser;
@@ -44,6 +45,7 @@ namespace RERPAPI.Controllers.GeneralCategory
             _vUserGroupLinksRepo = userLinkRepo;
             _jobRequirementDetailRepo = jobRequirementDetailRepo;
             _emailHelper = emailHelper;
+            _jobRequirementLogRepo = jobRequirementLogRepo;
         }
 
 
@@ -172,12 +174,37 @@ namespace RERPAPI.Controllers.GeneralCategory
                     job.NumberRequest = $"{list.Count + 1}.{currentYear}.PYC-RTC";
                     var result = await _jobRepo.CreateAsync(job);
 
+                    _jobRequirementLogRepo.Create(new JobRequirementLog {
+                        JobRequirementID = job.ID,
+                        EmployeeID = currentUser.EmployeeID,
+                        TypeLog = "TẠO MỚI PHIẾU",
+                        LogContent = "Tạo mới yêu cầu công việc",
+                        CreatedBy = currentUser.LoginName,
+                        DateLog = DateTime.Now
+                    });
                 }
                 else if (job.EmployeeID != currentUser.EmployeeID)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Bạn không thể sửa phiếu của người khác"));
                 }
-                else await _jobRepo.UpdateAsync(job);
+                else
+                {
+                    var existingMaster = _jobRepo.GetSingleNoTracking(x => x.ID == job.ID);
+                    await _jobRepo.UpdateAsync(job);
+
+                    var changeDetails = _jobRequirementLogRepo.GetEntityChanges(existingMaster, job);
+                    if (changeDetails.Any())
+                    {
+                        _jobRequirementLogRepo.Create(new JobRequirementLog {
+                            JobRequirementID = job.ID,
+                            TypeLog = "CẬP NHẬT PHIẾU",
+                            EmployeeID = currentUser.EmployeeID,
+                            LogContent = $"Cập nhật: {string.Join(", ", changeDetails)}",
+                            CreatedBy = currentUser.LoginName,
+                            DateLog = DateTime.Now
+                        });
+                    }
+                }
                 await _approvedRepo.CreateJobRequirementApproved(job.ApprovedTBPID ?? 0, job);
                 // Thêm detail
                 foreach (var item in job.JobRequirementDetails)
@@ -258,6 +285,15 @@ namespace RERPAPI.Controllers.GeneralCategory
                     }
                     jobRe.IsDeleted = true;
                     await _jobRepo.UpdateAsync(jobRe);
+
+                    _jobRequirementLogRepo.Create(new JobRequirementLog {
+                        JobRequirementID = jobRe.ID,
+                        TypeLog = "XÓA PHIẾU",
+                        EmployeeID = currentUser.EmployeeID,
+                        LogContent = "Xóa phiếu yêu cầu công việc",
+                        CreatedBy = currentUser.LoginName,
+                        DateLog = DateTime.Now
+                    });
                 }
                 return Ok(ApiResponseFactory.Success(ids, "Xóa thành công"));
             }
@@ -266,6 +302,23 @@ namespace RERPAPI.Controllers.GeneralCategory
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        [HttpGet("get-job-logs/{id}")]
+        public IActionResult GetJobLogs(int id)
+        {
+            try
+            {
+                var logs = _jobRequirementLogRepo.GetAll(x => x.JobRequirementID == id)
+                                                .OrderByDescending(x => x.CreatedDate ?? x.DateLog)
+                                                .ToList();
+                return Ok(ApiResponseFactory.Success(logs));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpPost("approve")]
         public async Task<IActionResult> Approve([FromBody] List<JobRequirementApproveDTO> list)
         {
@@ -343,6 +396,15 @@ namespace RERPAPI.Controllers.GeneralCategory
                     currentApprove.ApprovedActualID = currentUser.EmployeeID;
 
                     await _approvedRepo.UpdateAsync(currentApprove);
+
+                    _jobRequirementLogRepo.Create(new JobRequirementLog {
+                        JobRequirementID = job.ID,
+                        EmployeeID = currentUser.EmployeeID,
+                        TypeLog = param.Status == 2 ? "TỪ CHỐI" : "DUYỆT",
+                        LogContent = param.Status == 2 ? $"Từ chối duyệt bước {param.Step}. Lý do: {param.ReasonCancel}" : $"Duyệt bước {param.Step}",
+                        CreatedBy = currentUser.LoginName,
+                        DateLog = DateTime.Now
+                    });
 
                     result.Add(new { job.ID, Success = true });
                 }

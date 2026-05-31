@@ -331,7 +331,8 @@ namespace RERPAPI.Controllers.Old.Technical
         {
             var param = new
             {
-                KPIExamID = 0
+                KPIExamID = 0,
+                KPISessionID = sessionKPI.ID
             };
 
             var positions = await SqlDapper<dynamic>
@@ -355,7 +356,7 @@ namespace RERPAPI.Controllers.Old.Technical
                     ExamName = $"KPI {positionName} Q{sessionKPI.QuarterEvaluation}-{sessionKPI.YearEvaluation}",
                     IsDeleted = false,
                     IsActive = true,
-                    Deadline = DateTime.Now.AddMonths(1)
+                    Deadline = DateTime.Now.Date.AddHours(23).AddMinutes(59).AddSeconds(59)
                 };
 
                 await _kpiExamRepo.CreateAsync(exam);
@@ -372,7 +373,7 @@ namespace RERPAPI.Controllers.Old.Technical
 
         private async Task CreateAutoKPIRule(KPISession sessionKPI)
         {
-            var param = new { KPIExamID = 0 };
+            var param = new { KPIExamID = 0, KPISessionID = sessionKPI.ID };
 
             var positions = await SqlDapper<dynamic>
                 .ProcedureToListAsync("spGetKPIPositionByExamID", param) as List<dynamic>;

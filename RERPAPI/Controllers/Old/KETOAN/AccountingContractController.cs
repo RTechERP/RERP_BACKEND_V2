@@ -1,4 +1,4 @@
-﻿using DocumentFormat.OpenXml.Office2010.Excel;
+using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -308,6 +308,75 @@ namespace RERPAPI.Controllers.Old.KETOAN
             }
         }
 
+        [HttpPost("bulk-receive-contract")]
+        public IActionResult BulkReceiveContract([FromBody] BulkReceiveContractDTO dto)
+        {
+            try
+            {
+                if (dto.ContractIds == null || dto.ContractIds.Count <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Chưa có hợp đồng nào để nhận chứng từ"));
+
+                if (!dto.DateReceived.HasValue)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng nhập Ngày trả hồ sơ gốc"));
+
+                if (dto.QuantityDocument <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng nhập SL hồ sơ > 0"));
+
+                int successCount = 0;
+                var errors = new List<string>();
+
+                foreach (int id in dto.ContractIds)
+                {
+                    if (id <= 0) continue;
+
+                    var model = _accountingContractRepo.GetByID(id);
+                    if (model == null)
+                    {
+                        errors.Add($"Không tìm thấy hợp đồng ID={id}");
+                        continue;
+                    }
+
+                    // Log thay đổi
+                    var logContent = new StringBuilder();
+                    logContent.AppendLine("NGÀY TRẢ HỒ SƠ GỐC:");
+                    logContent.AppendLine($"từ {(model.DateReceived.HasValue ? model.DateReceived.Value.ToString("dd/MM/yyyy") : "")}");
+                    logContent.AppendLine($"thành {dto.DateReceived.Value:dd/MM/yyyy}");
+                    logContent.AppendLine();
+                    logContent.AppendLine("SỐ LƯỢNG HỒ SƠ:");
+                    logContent.AppendLine($"từ {model.QuantityDocument}");
+                    logContent.AppendLine($"thành {dto.QuantityDocument}");
+                    logContent.AppendLine();
+                    logContent.AppendLine("NHẬN CHỨNG TỪ GỐC:");
+                    logContent.AppendLine($"từ {(model.IsReceivedContract == true ? "Đã nhận hồ sơ gốc" : "Huỷ/Chưa nhận hồ sơ gốc")}");
+                    logContent.AppendLine("thành Đã nhận hồ sơ gốc");
+
+                    var log = new AccountingContractLog()
+                    {
+                        AccountingContractID = model.ID,
+                        DateLog = DateTime.Now,
+                        IsReceivedContract = true,
+                        ContentLog = logContent.ToString()
+                    };
+                    _accountingContractLogRepo.Create(log);
+
+                    model.DateReceived = dto.DateReceived;
+                    model.QuantityDocument = dto.QuantityDocument;
+                    model.IsReceivedContract = true;
+                    _accountingContractRepo.Update(model);
+                    successCount++;
+                }
+
+                if (errors.Count > 0)
+                    return Ok(ApiResponseFactory.Success(null, $"Nhận chứng từ thành công {successCount}/{dto.ContractIds.Count} hợp đồng. Lỗi: {string.Join("; ", errors)}"));
+
+                return Ok(ApiResponseFactory.Success(null, $"Nhận chứng từ thành công {successCount} hợp đồng"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpGet("get-accounting-contract-detail")]
         public IActionResult GetAccountingContractDetail(int accountingContractId)
         {
@@ -378,6 +447,9 @@ namespace RERPAPI.Controllers.Old.KETOAN
                 contract.QuantityDocument = req.accountingContract.QuantityDocument;
                 contract.IsReceivedContract = req.accountingContract.DateReceived.HasValue;
                 contract.DateContract = req.accountingContract.DateContract;
+
+                contract.AccountingNote = req.accountingContract.AccountingNote?.Trim();
+                contract.IsUnlimitedContract = req.accountingContract.IsUnlimitedContract ?? false;
 
                 // SAVE
                 if (req.accountingContract.ID > 0)
@@ -566,9 +638,28 @@ namespace RERPAPI.Controllers.Old.KETOAN
 
                         DateTime? dateInput = row.GetNullableDate("Ngày nhập");
                         DateTime? dateContract = row.GetNullableDate("Ngày HĐ");
-                        DateTime? dateExpired = row.GetNullableDate("Hiệu lực HĐ");
+                        //DateTime? dateExpired = row.GetNullableDate("Hiệu lực HĐ");
                         DateTime? dateApprovedGroup = row.GetNullableDate("Ngày duyệt bản mềm");
                         DateTime? dateReceived = row.GetNullableDate("Ngày trả hồ sơ gốc");
+
+                        // --- 1. CẬP NHẬT Ở ĐÂY: XỬ LÝ HIỆU LỰC HĐ (KHÔNG THỜI HẠN) ---
+                        string dateExpiredStr = row.GetString("Hiệu lực HĐ")?.Trim();
+                        bool isUnlimitedContract = false;
+                        DateTime? dateExpired = null;
+                        if (!string.IsNullOrEmpty(dateExpiredStr))
+                        {
+                            if (dateExpiredStr.Equals("Không thời hạn", StringComparison.OrdinalIgnoreCase) ||
+                                dateExpiredStr.Equals("không thời hạn", StringComparison.OrdinalIgnoreCase) ||
+                                dateExpiredStr.Contains("#"))
+                            {
+                                isUnlimitedContract = true;
+                            }
+                            else
+                            {
+                                dateExpired = row.GetNullableDate("Hiệu lực HĐ");
+                            }
+                        }
+                        // -------------------------------------------------------------
 
                         decimal contractValue = row.GetDecimal("Giá trị HĐ") ?? 0;
                         int quantityDocument = row.GetInt("Số lượng hồ sơ") ?? 0;
@@ -647,8 +738,8 @@ namespace RERPAPI.Controllers.Old.KETOAN
 
                         if (contractType.IsContractValue == true)
                         {
-                            if (contractValue <= 0)
-                                throw new Exception("Loại hợp đồng này yêu cầu Giá trị HĐ > 0");
+                            //if (contractValue <= 0)
+                            //    throw new Exception("Loại hợp đồng này yêu cầu Giá trị HĐ > 0");
 
                             if (string.IsNullOrWhiteSpace(unit))
                                 throw new Exception("Loại hợp đồng này yêu cầu ĐVT");
@@ -684,7 +775,8 @@ namespace RERPAPI.Controllers.Old.KETOAN
                             CreatedBy = User.Identity?.Name ?? "System",
                             CreatedDate = DateTime.Now,
                             UpdatedBy = User.Identity?.Name ?? "System",
-                            UpdatedDate = DateTime.Now
+                            UpdatedDate = DateTime.Now,
+                            IsUnlimitedContract = isUnlimitedContract,
                         };
 
                         await _accountingContractRepo.CreateAsync(model);
@@ -852,8 +944,13 @@ namespace RERPAPI.Controllers.Old.KETOAN
         public class AccountingContractSaveDTO
         {
             public AccountingContract accountingContract { get; set; }
+        }
 
-
+        public class BulkReceiveContractDTO
+        {
+            public List<int> ContractIds { get; set; }
+            public DateTime? DateReceived { get; set; }
+            public int QuantityDocument { get; set; }
         }
 
 

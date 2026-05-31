@@ -110,4 +110,8 @@ public partial class PaymentOrder
     public int? BankListID { get; set; }
 
     public int? ContentBankTransferType { get; set; }
+
+    public int? TransferType { get; set; }
+
+    public string? AccountingLeaderNote { get; set; }
 }
