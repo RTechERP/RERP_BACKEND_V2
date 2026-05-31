@@ -114,4 +114,8 @@ public partial class PaymentOrder
     public int? TransferType { get; set; }
 
     public string? AccountingLeaderNote { get; set; }
+
+    public string? SupplierAccCode { get; set; }
+
+    public string? InvoiceAccNumber { get; set; }
 }

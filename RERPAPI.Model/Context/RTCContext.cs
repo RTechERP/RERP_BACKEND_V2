@@ -184,6 +184,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<ConfigSystem> ConfigSystems { get; set; }
 
+    public virtual DbSet<CostCategory> CostCategories { get; set; }
+
     public virtual DbSet<Course> Courses { get; set; }
 
     public virtual DbSet<CourseAnswer> CourseAnswers { get; set; }
@@ -2916,6 +2918,19 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedBy)
                 .HasMaxLength(50)
                 .IsUnicode(false);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<CostCategory>(entity =>
+        {
+            entity.ToTable("CostCategory");
+
+            entity.Property(e => e.CostCategory1)
+                .HasMaxLength(250)
+                .HasColumnName("CostCategory");
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
@@ -9404,11 +9419,13 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.DeadlinePayment).HasColumnType("datetime");
             entity.Property(e => e.EndLocation).HasComment("Điểm đến");
             entity.Property(e => e.HRNote).HasMaxLength(550);
+            entity.Property(e => e.InvoiceAccNumber).HasMaxLength(250);
             entity.Property(e => e.IsBill)
                 .HasDefaultValue(false)
                 .HasComment("Có hóa đơn");
             entity.Property(e => e.IsDelete).HasDefaultValue(false);
             entity.Property(e => e.StartLocation).HasComment("Điểm đi");
+            entity.Property(e => e.SupplierAccCode).HasMaxLength(250);
             entity.Property(e => e.TotalMoney).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.TransferType).HasDefaultValue(0);
             entity.Property(e => e.TypeBankTransfer).HasComment("1:Chuyển khoản RTC; 2:Chuyển khoản MVI;3:Chuyển khoản APR;4:Chuyển khoản Yonko;5:Chuyển khoản cá nhân");
@@ -9626,6 +9643,7 @@ public partial class RTCContext : DbContext
 
             entity.HasIndex(e => e.ID, "IX_PaymentOrderType");
 
+            entity.Property(e => e.AccountingAccount).HasMaxLength(150);
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.IsBill).HasDefaultValue(false);

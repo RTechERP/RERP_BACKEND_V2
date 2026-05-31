@@ -28,4 +28,6 @@ public partial class PaymentOrderType
     public bool? IsSpecialOrder { get; set; }
 
     public bool? IsBill { get; set; }
+
+    public string? AccountingAccount { get; set; }
 }
