@@ -257,7 +257,7 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                List<ProjectType> projectTypes = projectTypeRepo.GetAll().Where(x => x.ID != 4).ToList();
+                List<ProjectType> projectTypes = projectTypeRepo.GetAll().Where(x => x.ID != 4 && x.IsDeleted ==false && x.IsHide !=true).ToList();
                 return Ok(ApiResponseFactory.Success(projectTypes, ""));
             }
             catch (Exception ex)
@@ -1584,7 +1584,7 @@ namespace RERPAPI.Controllers.Project
                     if (projectTypeLinkID > 0) prjTypeLink = projectTypeLinkRepo.GetByID(projectTypeLinkID);
 
                     prjTypeLink.ProjectID = project.ID;
-                    prjTypeLink.LeaderID = item.LeaderID;
+                    prjTypeLink.LeaderID = item.EmployeeID;
                     prjTypeLink.ProjectTypeID = item.ID;
                     prjTypeLink.Selected = item.Selected;
 

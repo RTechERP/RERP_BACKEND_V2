@@ -44,11 +44,25 @@ namespace RERPAPI.Controllers.Project
             try
             {
                 var dtx = projectRepo.GetAll();
-                DateTime ds = new DateTime(dateStart.Year, dateStart.Month, dateStart.Day, 0, 0, 0);
+                int currentUserID = 0;
+                // thêm check phiên đăng nhập để lấy CurrentUserID
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                if (currentUser.IsAdmin == true ||
+                currentUser.Permissions?.Split(',').Contains("N21") == true)
+                {
+                    currentUserID = 0;
+                }
+                else
+                {
+                    currentUserID = currentUser.ID;
+                }
+
+                    DateTime ds = new DateTime(dateStart.Year, dateStart.Month, dateStart.Day, 0, 0, 0);
                 DateTime de = new DateTime(dateEnd.Year, dateEnd.Month, dateEnd.Day, 23, 59, 59);
                 var dt = SQLHelper<object>.ProcedureToList("spGetProjectSurvey",
-                                                    new string[] { "@DateStart", "@DateEnd", "@ProjectID", "@EmployeeRequestID", "@EmployeeTechID", "@Keyword" },
-                                                    new object[] { ds, de, projectId, saleId, technicalId, keyword ?? "" });
+                                                    new string[] { "@DateStart", "@DateEnd", "@ProjectID", "@EmployeeRequestID", "@EmployeeTechID", "@Keyword", "@CurrentEmployeeID" },
+                                                    new object[] { ds, de, projectId, saleId, technicalId, keyword ?? "", currentUserID });
                 var data = SQLHelper<object>.GetListData(dt, 0);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }

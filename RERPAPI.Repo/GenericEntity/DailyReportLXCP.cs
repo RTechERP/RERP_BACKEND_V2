@@ -33,7 +33,7 @@ namespace RERPAPI.Repo.GenericEntity
                 if (item.ID <= 0) // Chỉ check trùng khi thêm mới
                 {
                     // 1. Check trùng lặp ngày báo cáo
-                    var exists = this.GetAll().Any(x => x.EmployeeID == employeeID && x.DateReport == item.DateReport && x.IsDeleted ==false);
+                    var exists = this.GetAll(x => x.EmployeeID == employeeID && x.DateReport == item.DateReport && x.IsDeleted == false).Any();
                     if (exists)
                     {
                         message = $"Bạn đã báo cáo công việc cho ngày {item.DateReport?.ToString("dd/MM/yyyy")}.\nVui lòng kiểm tra lại!";

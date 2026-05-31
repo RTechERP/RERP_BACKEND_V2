@@ -363,9 +363,22 @@ namespace RERPAPI.Controllers
                 };
 
                 //await _employeeSendEmailRepo.CreateAsync(emailEntity);
-                string emailTo = employeeReciver.EmailCongTy ?? employeeReciver.EmailCaNhan ?? "nhubinh2104@gmail.com";
-                await _emailHelper.SendAsync(emailTo, subject, emailBody);
+                string emailTo = employeeReciver.EmailCongTy ?? employeeReciver.EmailCaNhan ?? "";
+                //await _emailHelper.SendAsync(emailTo, subject, emailBody);
 
+                //return Ok(ApiResponseFactory.Success(null, "Gửi email thông báo thành công!"));
+                // Đẩy việc gửi mail chạy ngầm
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await _emailHelper.SendAsync(emailTo, subject, emailBody);
+                    }
+                    catch (Exception ex)
+                    {
+                        Serilog.Log.Error(ex, "Lỗi gửi email new contract ngầm cho {EmailTo} - {Subject}", emailTo, subject);
+                    }
+                });
                 return Ok(ApiResponseFactory.Success(null, "Gửi email thông báo thành công!"));
             }
             catch (Exception ex)
