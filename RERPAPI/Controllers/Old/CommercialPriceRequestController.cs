@@ -175,6 +175,43 @@ namespace RERPAPI.Controllers.CommercialPriceRequest
         //            DateTimeStyles.None,
         //            out var result) ? result : null;
         //    }
+
+        [HttpPost("deleted-commercial-price-request")]
+        [RequiresPermission("N35,N33,N1")]
+        public async Task<IActionResult> deletedCommercialPriceRequest([FromBody] List<int> lstDTO)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                if (lstDTO.Count() <= 0) return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu không hợp lệ!"));
+
+                foreach (int id in lstDTO)
+                {
+                    var entity = _commercialPriceRequestRepo.GetByID(id);
+                    if (entity != null)
+                    {
+                        if (entity.PicPurID != currentUser.EmployeeID) continue;
+                        else
+                        {
+                            entity.IsDeleted = true;
+                            await _commercialPriceRequestRepo.UpdateAsync(entity);
+                        }
+                    }
+
+                }
+                return Ok(new
+                {
+                    status = 1,
+                    message = "Cập nhật thành công!"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 
 }
