@@ -1,3 +1,4 @@
+using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
@@ -8,6 +9,7 @@ using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using System.Threading.Tasks;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.HRM
 {
@@ -39,7 +41,7 @@ namespace RERPAPI.Controllers.HRM
             try
             {
 
-                departmentid = departmentid ?? 0;
+                departmentid = departmentid ?? 0; 
                 keyword = string.IsNullOrWhiteSpace(keyword) ? "" : keyword;
                 status = status ?? 0;
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
@@ -228,6 +230,27 @@ namespace RERPAPI.Controllers.HRM
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật phòng ban thất bại"));
                 }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
+        //API thêm nhân viên vào phòng ban
+        [HttpGet("get-employee-by-department-string")]
+        public async Task<IActionResult> GetEmployeeByDepartmentString(string departmentString = "", int teamID = -1)
+        {
+            try
+            {
+                var param = new
+                {
+                    DepartmentString = departmentString,
+                    TeamID = teamID
+                };
+                var lstEmp = await SqlDapper<object>.ProcedureToListAsync("spGetEmployeeByDepartmentString", param);
+                return Ok(ApiResponseFactory.Success(lstEmp));
             }
             catch (Exception ex)
             {
