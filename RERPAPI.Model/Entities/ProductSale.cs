@@ -53,4 +53,6 @@ public partial class ProductSale
     /// Trường tích xanh (cho phép dữ liệu có được sửa hay không)
     /// </summary>
     public bool? IsFix { get; set; }
+
+    public int? UnitCountID { get; set; }
 }

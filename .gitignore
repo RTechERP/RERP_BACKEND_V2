@@ -38,3 +38,4 @@ secrets.json
 /RERPAPI/logs/
 /RERPAPI/appsettings.Production.json
 /RERPAPI/appsettings.Test.json
+/RERPAPI/UpdateModel.txt

@@ -89,4 +89,8 @@ public partial class POKHDetail
     public bool? IsDelivered { get; set; }
 
     public bool? IsDeleted { get; set; }
+
+    public decimal? DiscountAmount { get; set; }
+
+    public decimal? IntoMoneyAfterDiscount { get; set; }
 }
