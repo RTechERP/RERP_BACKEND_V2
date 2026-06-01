@@ -844,12 +844,31 @@ namespace RERPAPI.Controllers.Old.Technical
                 //    Receiver = receiverEmployeeId,
                 //};
                 //await _employeeSendEmailRepo.CreateAsync(emailEntity);
+                //await _emailHelper.SendAsync(emailTo ?? "", subject, request.Body, true, emailCc ?? "");
+                //// ⑩ Trả về kết quả
+                //return Ok(ApiResponseFactory.Success(new
+                //{
+                //    //EmailId = emailEntity.ID,
+                //    EmailId = 1, // dùng hàm send email trực tiếp nên không có ID trong DB, tạm set = 1 để trả về
+                //    SentTo = emailTo,
+                //    SentCc = emailCc,
+                //    Subject = subject
+                //}, "Gửi email báo cáo thành công!"));
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
                 await _emailHelper.SendAsync(emailTo ?? "", subject, request.Body, true, emailCc ?? "");
-                // ⑩ Trả về kết quả
+                    }
+                    catch (Exception ex)
+                    {
+                        Serilog.Log.Error(ex, "Lỗi gửi email marketing report ngầm cho {EmailTo} - {Subject}", emailTo, subject);
+                    }
+                });
+                // ⑩ Trả về kết quả ngay
                 return Ok(ApiResponseFactory.Success(new
                 {
-                    //EmailId = emailEntity.ID,
-                    EmailId = 1, // dùng hàm send email trực tiếp nên không có ID trong DB, tạm set = 1 để trả về
+                    EmailId = 1,
                     SentTo = emailTo,
                     SentCc = emailCc,
                     Subject = subject
