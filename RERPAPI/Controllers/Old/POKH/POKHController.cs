@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Data.SqlClient;
@@ -413,6 +413,8 @@ namespace RERPAPI.Controllers.Old.POKH
                         model.KHID = item.KHID ?? 0;
                         model.GuestCode = item.GuestCode;
                         model.Qty = item.Qty ?? 0;
+						model.DiscountAmount = item.DiscountAmount ?? 0;
+						model.IntoMoneyAfterDiscount = item.IntoMoneyAfterDiscount ?? 0;
                         model.FilmSize = item.FilmSize;
                         model.UnitPrice = item.UnitPrice ?? 0;
                         model.IntoMoney = item.IntoMoney ?? 0;

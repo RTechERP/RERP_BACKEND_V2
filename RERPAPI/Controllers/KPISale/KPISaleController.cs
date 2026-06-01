@@ -1411,6 +1411,7 @@ namespace RERPAPI.Controllers.KPISale
                         period.PeriodName,
                         result.KpiIndexID,
                         index.TemplateID,
+                        index.ParentID,
                         index.IndexCode,
                         index.IndexName,
                         index.UnitType,
@@ -1531,6 +1532,7 @@ namespace RERPAPI.Controllers.KPISale
                 return new KPISaleCalculateResult
                 {
                     KpiIndexID = index.ID,
+                    //ParentID = index.ParentID,
                     IndexCode = index.IndexCode,
                     IndexName = index.IndexName,
                     GoalValue = goalValue,
