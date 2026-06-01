@@ -25,7 +25,10 @@ namespace RERPAPI.Model.Common
         public static string? CopyFile(string? sourcePath, string destinationFolder)
         {
             if (string.IsNullOrWhiteSpace(sourcePath))
+            {
+
                 return null;
+            }
 
             if (string.IsNullOrWhiteSpace(destinationFolder))
                 return null;
@@ -34,7 +37,37 @@ namespace RERPAPI.Model.Common
             sourcePath = sourcePath.Replace("/", "\\");
 
             if (!File.Exists(sourcePath))
-                return null;
+            {
+                string filename = GetFileNameWithExtension(sourcePath);
+
+                if (string.IsNullOrWhiteSpace(filename))
+                    return null;
+
+                var oldFolders = new List<string>
+    {
+        @"\\192.168.1.190\Software\ftp\Upload\Course\PDFFileLesson\pdfs",
+        @"\\192.168.1.190\Software\ftp\Upload\Course\PDFFileLesson\files",
+        @"\\192.168.1.190\Software\ftp\Upload\Course\PDFFileLesson"
+    };
+
+                string? foundPath = null;
+
+                foreach (var folder in oldFolders)
+                {
+                    var checkPath = Path.Combine(folder, filename).Replace("/", "\\");
+
+                    if (File.Exists(checkPath))
+                    {
+                        foundPath = checkPath;
+                        break;
+                    }
+                }
+
+                if (string.IsNullOrWhiteSpace(foundPath))
+                    return null;
+
+                sourcePath = foundPath;
+            }
 
             if (!Directory.Exists(destinationFolder))
                 Directory.CreateDirectory(destinationFolder);
@@ -59,6 +92,7 @@ namespace RERPAPI.Model.Common
                 return null;
 
             if (string.IsNullOrWhiteSpace(oldFolder))
+
                 return null;
 
             if (string.IsNullOrWhiteSpace(newFolder))

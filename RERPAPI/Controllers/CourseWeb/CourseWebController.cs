@@ -14,7 +14,7 @@ namespace RERPAPI.Controllers.CourseWeb
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class CourseWebController : ControllerBase
     {
         private readonly CourseCatalogRepo _courseCatalogRepo;
@@ -896,6 +896,7 @@ namespace RERPAPI.Controllers.CourseWeb
 
                         foreach (var oldExam in oldCourseExams)
                         {
+
                             var copyExamResult = await CopyExamFullAsync(
                                 oldExam: oldExam,
                                 newCourseId: newCourse.ID,
@@ -922,7 +923,7 @@ namespace RERPAPI.Controllers.CourseWeb
                     }
 
                     var oldLessons = _courseLessonOldWebRepo
-                        .GetAll(l => l.CourseID == oldCourse.ID)
+                        .GetAll(l => l.CourseID == oldCourse.ID && l.IsDeleted !=true)
                         .OrderBy(l => l.STT)
                         .ToList();
 
@@ -1015,14 +1016,14 @@ namespace RERPAPI.Controllers.CourseWeb
                         if (model.CopyExams)
                         {
                             var oldLessonExams = _courseExamOldWebRepo
-                                .GetAll(e => e.LessonID == oldLesson.ID)
+                                .GetAll(e => e.LessonID == oldLesson.ID )
                                 .ToList();
 
                             foreach (var oldExam in oldLessonExams)
                             {
                                 var copyExamResult = await CopyExamFullAsync(
                                     oldExam: oldExam,
-                                    newCourseId: newCourse.ID,
+                                    newCourseId: -1,
                                     newLessonId: newLesson.ID,
                                     examIdMap: examIdMap,
                                     questionIdMap: questionIdMap,
