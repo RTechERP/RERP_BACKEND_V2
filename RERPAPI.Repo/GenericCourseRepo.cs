@@ -1,0 +1,662 @@
+using Microsoft.EntityFrameworkCore;
+using RERPAPI.IRepo;
+using RERPAPI.Model.Context;
+using RERPAPI.Model.DTO;
+using System.Linq.Expressions;
+
+namespace RERPAPI.Repo
+{
+    public class GenericCourseRepo<T> : IGenericRepo<T> where T : class, new()
+    {
+        protected RTCCourseDbContext db { get; set; }
+        protected DbSet<T> table;
+
+        //public GenericRepo()
+        //{
+        //    db = new RTCContext();
+        //    table = db.Set<T>();
+        //}
+
+
+        public GenericCourseRepo(CurrentUser currentUser)
+        {
+            db = new RTCCourseDbContext();
+            db.CurrentUser = currentUser;
+            table = db.Set<T>();
+        }
+
+        public GenericCourseRepo(RTCCourseDbContext db, CurrentUser currentUser)
+        {
+            this.db = db;
+            table = db.Set<T>();
+            db.CurrentUser = currentUser;
+        }
+
+        public List<T> GetAll(Expression<Func<T, bool>> predicate = null)
+        {
+            try
+            {
+                if (predicate == null) return table.ToList() ?? new List<T>();
+                else return table.Where(predicate).ToList() ?? new List<T>(); ; // EF sẽ dịch sang SQL WHERE
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public T GetByID(int id)
+        {
+            try
+            {
+                T model = table.Find(id) ?? new T();
+                return model;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<T> GetByIDAsync(int id)
+        {
+            try
+            {
+                T model = await table.FindAsync(id) ?? new T();
+                return model;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public int Create(T item)
+        {
+            try
+            {
+                table.Add(item);
+                return db.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public int CreateRange(List<T> items)
+        {
+            try
+            {
+                table.AddRange(items);
+                return db.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.ToString());
+            }
+        }
+
+
+
+        public int Update(T item)
+        {
+
+            try
+            {
+                var fieldValues = new Dictionary<string, object>();
+                int id = 0;
+                var propid = typeof(T).GetProperty("ID");
+                if (propid != null) id = Convert.ToInt32(propid.GetValue(item));
+
+                var properties = typeof(T).GetProperties();
+                foreach (var prop in properties)
+                {
+                    // Bỏ qua thuộc tính ID hoặc các thuộc tính không cần cập nhật
+                    if (prop.Name != "ID" && prop.CanRead)
+                    {
+                        var value = prop.GetValue(item);
+                        if (value != null) // Chỉ thêm nếu giá trị không null
+                        {
+                            fieldValues.Add(prop.Name, value);
+                        }
+                    }
+                }
+
+                // Tìm entity theo ID
+                var entity = db.Set<T>().Find(id);
+                if (entity == null)
+                {
+                    throw new Exception($"Entity with ID {id} not found.");
+                }
+
+                // Lấy type của entity
+                Type type = typeof(T);
+
+                // Cập nhật các trường động
+                foreach (var field in fieldValues)
+                {
+                    // Kiểm tra thuộc tính
+                    var property = type.GetProperty(field.Key);
+                    if (property == null || !property.CanWrite)
+                    {
+                        throw new Exception($"Property {field.Key} not found or is not writable.");
+                    }
+
+                    // Gán giá trị cho thuộc tính (xử lý null)
+                    property.SetValue(entity, field.Value == null ? null : field.Value);
+                }
+
+                //Gán lại giá trị updatedDate = null để sử lý khi SaveChangesAsync
+                var updatedDate = entity.GetType().GetProperty("UpdatedDate");
+                var updatedDateValue = fieldValues.ContainsKey("UpdatedDate") ? fieldValues["UpdatedDate"] : null;
+                if (updatedDateValue == null) //trường UpdatedDate có value thì thôi
+                {
+                    if (updatedDate != null) updatedDate.SetValue(entity, null);
+                }
+
+                // Lưu thay đổi vào cơ sở dữ liệu
+                db.Entry(entity).State = EntityState.Modified;
+                return db.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error updating entity: {ex.Message}", ex);
+            }
+        }
+
+
+        public int Delete(int id)
+        {
+            try
+            {
+                T model = table.Find(id) ?? new T();
+                table.Remove(model);
+                return db.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<int> CreateAsync(T item)
+        {
+            try
+            {
+                await table.AddAsync(item);
+                return await db.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        //public async Task<int> UpdateAsync(T item)
+        //{
+
+        //    try
+        //    {
+        //        //var claims = _userPermissionService.GetClaims();
+        //        var fieldValues = new Dictionary<string, object>();
+        //        int id = 0;
+        //        var propid = typeof(T).GetProperty("ID");
+        //        if (propid != null) id = Convert.ToInt32(propid.GetValue(item));
+
+        //        var properties = typeof(T).GetProperties();
+        //        foreach (var prop in properties)
+        //        {
+        //            // Bỏ qua thuộc tính ID hoặc các thuộc tính không cần cập nhật
+        //            if (prop.Name != "ID" && prop.CanRead)
+        //            {
+        //                var value = prop.GetValue(item);
+        //                if (value != null) // Chỉ thêm nếu giá trị không null
+        //                {
+        //                    fieldValues.Add(prop.Name, value);
+        //                }
+        //            }
+        //        }
+
+        //        // Tìm entity theo ID
+        //        var entity = db.Set<T>().Find(id);
+        //        if (entity == null)
+        //        {
+        //            throw new Exception($"Entity with ID {id} not found.");
+        //        }
+
+        //        // Lấy type của entity
+        //        Type type = typeof(T);
+
+        //        // Cập nhật các trường động
+        //        foreach (var field in fieldValues)
+        //        {
+        //            // Kiểm tra thuộc tính
+        //            var property = type.GetProperty(field.Key);
+        //            if (property == null || !property.CanWrite)
+        //            {
+        //                throw new Exception($"Property {field.Key} not found or is not writable.");
+        //            }
+
+        //            // Gán giá trị cho thuộc tính (xử lý null)
+        //            property.SetValue(entity, field.Value == null ? null : field.Value);
+        //        }
+
+        //        //Gán lại giá trị updatedDate = null để sử lý khi SaveChangesAsync
+        //        var updatedDate = entity.GetType().GetProperty("UpdatedDate");
+        //        var updatedDateValue = fieldValues.ContainsKey("UpdatedDate") ? fieldValues["UpdatedDate"] : null;
+        //        if (updatedDateValue == null) //trường UpdatedDate có value thì thôi
+        //        {
+        //            if (updatedDate != null) updatedDate.SetValue(entity, null);
+        //        }
+
+        //        db.Entry(entity).State = EntityState.Modified;
+        //        // Lưu thay đổi vào cơ sở dữ liệu
+        //        var result = await db.SaveChangesAsync();
+        //        if (result == 0)
+        //        {
+        //            throw new Exception("Update failed: no rows affected.");
+        //        }
+        //        return result;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw new Exception($"Error updating entity: {ex.Message}", ex);
+        //    }
+        //}
+        public async Task<int> UpdateAsync(T item)
+        {
+            if (item == null)
+                throw new ArgumentNullException(nameof(item));
+
+            try
+            {
+                var entryDto = db.Entry(item);
+
+                // Lấy ID
+                var idProp = entryDto.Properties.FirstOrDefault(p => p.Metadata.IsPrimaryKey());
+                if (idProp == null)
+                    throw new Exception("Entity must have primary key");
+
+                var id = idProp.CurrentValue;
+
+                // 1. Lấy entity thật từ DB (QUAN TRỌNG)
+                var entity = await db.Set<T>().FindAsync(id);
+                if (entity == null)
+                    throw new Exception($"Entity with ID {id} not found");
+
+                var entry = db.Entry(entity);
+
+                // 2. Copy value nhanh bằng EF (KHÔNG loop reflection thủ công)
+                entry.CurrentValues.SetValues(item);
+
+                // 3. Không overwrite null (điểm quan trọng nhất)
+                foreach (var prop in entry.Properties)
+                {
+                    if (prop.Metadata.IsPrimaryKey())
+                        continue;
+
+                    var newValue = entryDto.Property(prop.Metadata.Name).CurrentValue;
+
+                    if (newValue == null)
+                    {
+                        prop.IsModified = false;
+                    }
+                }
+
+                // Kiểm tra có thay đổi dữ liệu thật sự hay không
+
+                // Bỏ qua các field audit UpdatedDate, UpdatedBy, CreatedDate, CreatedBy
+                var hasChanges = entry.Properties.Any(p =>
+                    p.IsModified &&
+                    p.Metadata.Name != "UpdatedDate" &&
+                    p.Metadata.Name != "UpdatedBy" &&
+                    p.Metadata.Name != "CreatedDate" &&
+                    p.Metadata.Name != "CreatedBy");
+                // Nếu không có thay đổi dữ liệu thật sự thì không save
+                if (!hasChanges)
+                    return 1; // Return 1 để biểu thị "cập nhật thành công nhưng không có thay đổi nào được lưu"
+
+                // 4. UpdatedDate auto
+                var updatedDateProp = entry.Properties
+                    .FirstOrDefault(p => p.Metadata.Name == "UpdatedDate");
+
+                //if (updatedDateProp != null)
+                //{
+                //    updatedDateProp.CurrentValue = DateTime.Now;
+                //    updatedDateProp.IsModified = true;
+                //}
+                if (updatedDateProp != null)
+                {
+                    // Chỉ gán DateTime.Now nếu giá trị hiện tại là mặc định (null hoặc MinValue)
+                    // Hoặc nếu bạn muốn Controller có quyền quyết định:
+                    var currentValue = updatedDateProp.CurrentValue;
+
+                    if (currentValue == null || (DateTime)currentValue == default(DateTime))
+                    {
+                        updatedDateProp.CurrentValue = DateTime.Now;
+                        updatedDateProp.IsModified = true;
+                    }
+                    // Nếu Controller đã gán giá trị (như exist.UpdatedDate), ta giữ nguyên giá trị đó
+                }
+
+                var result = await db.SaveChangesAsync();
+
+                if (result == 0)
+                    throw new Exception("Update failed: no rows affected");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error updating {typeof(T).Name}: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<int> UpdateRangeAsync(List<T> items)
+        {
+            try
+            {
+                //var claims = _userPermissionService.GetClaims();
+                int records = 0;
+                foreach (var item in items)
+                {
+                    var fieldValues = new Dictionary<string, object>();
+                    int id = 0;
+                    var propid = typeof(T).GetProperty("ID");
+                    if (propid != null) id = Convert.ToInt32(propid.GetValue(item));
+
+                    var properties = typeof(T).GetProperties();
+                    foreach (var prop in properties)
+                    {
+                        // Bỏ qua thuộc tính ID hoặc các thuộc tính không cần cập nhật
+                        if (prop.Name != "ID" && prop.CanRead)
+                        {
+                            var value = prop.GetValue(item);
+                            if (value != null) // Chỉ thêm nếu giá trị không null
+                            {
+                                fieldValues.Add(prop.Name, value);
+                            }
+                        }
+                    }
+
+                    // Tìm entity theo ID
+                    var entity = db.Set<T>().Find(id);
+                    if (entity == null)
+                    {
+                        throw new Exception($"Entity with ID {id} not found.");
+                    }
+
+                    // Lấy type của entity
+                    Type type = typeof(T);
+
+                    // Cập nhật các trường động
+                    foreach (var field in fieldValues)
+                    {
+                        // Kiểm tra thuộc tính
+                        var property = type.GetProperty(field.Key);
+                        if (property == null || !property.CanWrite)
+                        {
+                            throw new Exception($"Property {field.Key} not found or is not writable.");
+                        }
+
+                        // Gán giá trị cho thuộc tính (xử lý null)
+                        property.SetValue(entity, field.Value == null ? null : field.Value);
+                    }
+
+                    //Gán lại giá trị updatedDate = null để sử lý khi SaveChangesAsync
+                    var updatedDate = entity.GetType().GetProperty("UpdatedDate");
+                    var updatedDateValue = fieldValues.ContainsKey("UpdatedDate") ? fieldValues["UpdatedDate"] : null;
+                    if (updatedDateValue == null) //trường UpdatedDate có value thì thôi
+                    {
+                        if (updatedDate != null) updatedDate.SetValue(entity, null);
+                    }
+
+                    db.Entry(entity).State = EntityState.Modified;
+                    // Lưu thay đổi vào cơ sở dữ liệu
+                    records += await db.SaveChangesAsync();
+                }
+                return records;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error updating entity: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<int> DeleteAsync(int id)
+        {
+            try
+            {
+                T model = await table.FindAsync(id) ?? new T();
+                table.Remove(model);
+                return await db.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<int> CreateRangeAsync(List<T> items)
+        {
+            try
+            {
+                await table.AddRangeAsync(items);
+                return await db.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public int DeleteRange(List<T> items)
+        {
+            try
+            {
+                table.RemoveRange(items);
+                return db.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<int> DeleteRangeAsync(List<T> items)
+        {
+            try
+            {
+                var isDeletedProp = typeof(T).GetProperty("IsDeleted");
+                if (isDeletedProp != null && isDeletedProp.CanWrite)
+                {
+                    foreach (var item in items)
+                    {
+                        var propType = isDeletedProp.PropertyType;
+                        if (propType == typeof(bool) || propType == typeof(bool?))
+                            isDeletedProp.SetValue(item, true);
+                        else if (propType == typeof(int) || propType == typeof(int?))
+                            isDeletedProp.SetValue(item, 1);
+                    }
+                    table.UpdateRange(items);
+                }
+                else
+                {
+                    table.RemoveRange(items);
+                }
+                return await db.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.ToString());
+            }
+        }
+        public async Task<int> DeleteByAttributeAsync(string propertyName, object value)
+        {
+            try
+            {
+                // Tạo tham số x
+                var parameter = Expression.Parameter(typeof(T), "x");
+                var property = Expression.Property(parameter, propertyName);
+
+                // Ép kiểu value về đúng kiểu của property (xử lý nullable)
+                var propertyType = property.Type;
+                if (propertyType.IsGenericType && propertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                {
+                    // Nullable<T> → ép sang kiểu T?
+                    var underlyingType = Nullable.GetUnderlyingType(propertyType);
+                    value = value == null ? null : Convert.ChangeType(value, underlyingType);
+                }
+                else
+                {
+                    // Kiểu thường
+                    value = Convert.ChangeType(value, propertyType);
+                }
+
+                var constant = Expression.Constant(value, propertyType);
+
+                // x => x.PropertyName == value
+                var equal = Expression.Equal(property, constant);
+                var lambda = Expression.Lambda<Func<T, bool>>(equal, parameter);
+
+                // Lấy bản ghi đầu tiên thỏa điều kiện
+                var entityToDelete = await table.FirstOrDefaultAsync(lambda);
+
+                if (entityToDelete == null)
+                {
+                    return 0; // Không có bản ghi nào cần xóa
+                }
+
+                // Xóa và lưu
+                table.Remove(entityToDelete);
+                return await db.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error deleting by attribute: {ex.Message}", ex);
+            }
+        }
+        public async Task<int> UpdateRangeAsync<TValue>(Expression<Func<T, bool>> predicate, Dictionary<Expression<Func<T, object>>, TValue> updatedFields)
+        {
+            try
+            {
+                var entities = await table.Where(predicate).ToListAsync();
+                if (!entities.Any()) return 0;
+
+                //public void SetClaim(Dictionary<string, string> claim)
+                //{
+                //    db.Claim = claim;
+                //}
+                foreach (var entity in entities)
+                {
+                    foreach (var field in updatedFields)
+                    {
+                        var propertyName = ((MemberExpression)(field.Key.Body is UnaryExpression u
+                            ? u.Operand
+                            : field.Key.Body)).Member.Name;
+
+                        var property = typeof(T).GetProperty(propertyName);
+                        if (property != null && property.CanWrite)
+                        {
+                            property.SetValue(entity, field.Value);
+                        }
+                    }
+                }
+
+                table.UpdateRange(entities);
+                return await db.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error updating entities by attribute: {ex.Message}", ex);
+            }
+        }
+
+
+        public int UpdateFieldByAttribute<TValue>(Expression<Func<T, bool>> predicate, Dictionary<Expression<Func<T, object>>, TValue> updatedFields)
+        {
+            try
+            {
+                var entities = table.Where(predicate).ToList();
+                if (!entities.Any()) return 0;
+
+                foreach (var entity in entities)
+                {
+                    foreach (var field in updatedFields)
+                    {
+                        var propertyName = ((MemberExpression)(field.Key.Body is UnaryExpression u ? u.Operand : field.Key.Body)).Member.Name;
+                        var property = typeof(T).GetProperty(propertyName);
+                        if (property != null && property.CanWrite)
+                        {
+                            property.SetValue(entity, field.Value);
+                        }
+                    }
+                }
+
+                return db.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error updating fields: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<int> UpdateFieldByAttributeAsync<TValue>(Expression<Func<T, bool>> predicate, Dictionary<Expression<Func<T, object>>, TValue> updatedFields)
+        {
+            try
+            {
+                var entities = await table.Where(predicate).ToListAsync();
+                if (!entities.Any()) return 0;
+
+                foreach (var entity in entities)
+                {
+                    foreach (var field in updatedFields)
+                    {
+                        var propertyName = ((MemberExpression)(field.Key.Body is UnaryExpression u ? u.Operand : field.Key.Body)).Member.Name;
+                        var property = typeof(T).GetProperty(propertyName);
+                        if (property != null && property.CanWrite)
+                        {
+                            property.SetValue(entity, field.Value);
+                        }
+                    }
+                }
+
+                return await db.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error updating fields: {ex.Message}", ex);
+            }
+        }
+        public async Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await table.AnyAsync(predicate);
+        }
+
+        //public void SetClaim(Dictionary<string, string> claim)
+        //{
+        //    db.Claim = claim;
+        //}
+
+        public async Task<int> UpdateRangeAsync_Binh(IEnumerable<T> items)
+        {
+            try
+            {
+                // EF Core sẽ tự động theo dõi các thay đổi trên các 'items' này
+                table.UpdateRange(items);
+
+                // Gửi TẤT CẢ các thay đổi đến database trong MỘT LẦN DUY NHẤT
+                return await db.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error updating range of entities: {ex.Message}", ex);
+            }
+        }
+
+        public T GetSingleNoTracking(Expression<Func<T, bool>> predicate)
+        {
+            return table.AsNoTracking().FirstOrDefault(predicate) ?? new T();
+        }
+    }
+}
