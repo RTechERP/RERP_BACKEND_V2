@@ -2072,7 +2072,7 @@ pokhDetailId);
                 existingImport.Reciver = reciver?.FullName;
                 existingImport.ReciverID = dto.billExport.UserID;
                 existingImport.KhoTypeID = dto.billExport.KhoTypeID;
-                existingImport.SupplierID = dto.billExport.SupplierID;
+                //existingImport.SupplierID = dto.billExport.SupplierID;
                 existingImport.GroupID = dto.billExport.GroupID;
                 existingImport.WarehouseID = dto.billExport.WareHouseTranferID ?? 0;
                 existingImport.CreatDate = dto.billExport.CreatDate;
@@ -2213,7 +2213,7 @@ pokhDetailId);
                     TotalPrice = 0,
                     ProjectID = exportDetail.ProjectID,
                     ProjectName = exportDetail.ProjectName,
-                    ProjectCode = exportDetail.ProjectName,
+                    ProjectCode = exportDetail.ProductFullName,
                     SomeBill = "",
                     Note = dto.billExport.Code,
                     STT = exportDetail.STT,
