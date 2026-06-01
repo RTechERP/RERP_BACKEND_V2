@@ -1536,19 +1536,16 @@ namespace RERPAPI.Controllers.Project
                         {
                             newProjectTaskLog.ContentLog +=
                                 $"- {currentUser.FullName} đã thêm ngày kết thúc thực tế {newDate:dd/MM/yyyy}. \n";
-                            projectTask.Status = 2;
                         }
                         else if (newDate != null && oldDate != null)
                         {
                             newProjectTaskLog.ContentLog +=
                                 $"- {currentUser.FullName} đã thay đổi ngày kết thúc thực tế từ {oldDate:dd/MM/yyyy} thành {newDate:dd/MM/yyyy}. \n";
-                            projectTask.Status = 2;
                         }
                         else if (newDate == null && oldDate != null)
                         {
                             newProjectTaskLog.ContentLog +=
                                 $"- {currentUser.FullName} đã xóa ngày kết thúc thực tế. \n";
-                            projectTask.Status = 2;
                         }
 
                         changeTime++;
