@@ -984,7 +984,7 @@ namespace RERPAPI.Controllers.Project
             [FromQuery] int teamID = 0,
             [FromQuery] int employeeID = 0,
             [FromQuery] int projectID = 0,
-            [FromQuery] string status = "0,1"
+            [FromQuery] string status = "-1"
             )
         {
             try
@@ -2946,5 +2946,57 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, "Failed to get project tasks view status."));
             }
         }
-}
+
+        [HttpPost("efficiency-task-project-total")]
+        public async Task<IActionResult> EfficiencyByTaskProjectTotal([FromQuery] DateTime dateStart,
+            [FromQuery] DateTime dateEnd,
+            [FromQuery] int projectID = 0
+            )
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                dateStart = dateStart.Date;
+                dateEnd = dateEnd.Date.AddDays(1).AddSeconds(-1);
+                var param = new
+                {
+                    DateStart = dateStart,
+                    DateEnd = dateEnd,
+                    ProjectID = projectID
+                };
+                var projectTasks = await SqlDapper<object>.ProcedureToListAsync("spProjectTaskEfficiencyByEmployee", param);
+                return Ok(ApiResponseFactory.Success(projectTasks));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, "Failed to get project tasks efficiency by project total."));
+            }
+        }
+
+        // Kiểm tra công việc đã đầy đủ thông tin để báo cáo hay chưa
+        [HttpGet("check-information-report")]
+        public async Task<IActionResult> CheckInformationReport(int projectTaskID)
+        {
+            try
+            {
+                var projectTaskExit = await _projectItemRepo.GetByIDAsync(projectTaskID);
+                if (projectTaskExit == null || !(projectTaskExit.ID > 0))
+                {
+                    return NotFound(ApiResponseFactory.Fail(null, "Project task not found."));
+                }
+
+                if (projectTaskExit.PlanEndDate == null || projectTaskExit.PlanEndDate == null || projectTaskExit.ActualStartDate == null)
+                {
+                    return Ok(ApiResponseFactory.Success(false));
+                }
+
+                return Ok(ApiResponseFactory.Success(true));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, "Failed to get Project task."));
+            }
+        }
+    }
 }
