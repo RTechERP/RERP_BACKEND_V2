@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericCourseEntity
 {
-    public class CourseExamResultRepo : GenericCourseRepo<CourseExamResult>
+    public class CourseExamResultRepo : GenericCourseRepo<RERPAPI.Model.Entities.RTCCourse.CourseExamResult>
     {
         public CourseExamResultRepo(CurrentUser currentUser) : base(currentUser)
         {

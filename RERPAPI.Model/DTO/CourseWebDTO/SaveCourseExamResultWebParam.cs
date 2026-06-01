@@ -11,6 +11,6 @@ namespace RERPAPI.Model.DTO.CourseWebDTO
     {
         public int CourseId { get; set; }
         public int ExamType { get; set; }
-        public CourseExamResult CourseExamResult { get; set; } = new CourseExamResult();
+        public RERPAPI.Model.Entities.RTCCourse.CourseExamResult CourseExamResult { get; set; } = new RERPAPI.Model.Entities.RTCCourse.CourseExamResult();
     }
 }

@@ -57,8 +57,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
+builder.Services.AddSwaggerGen(options =>
+{
+    options.CustomSchemaIds(type => type.FullName);
+});
 
 builder.Services.AddHttpContextAccessor();
 
@@ -693,6 +695,34 @@ builder.Services.AddScoped<PONCCLogRepo>();
 builder.Services.AddScoped<BillImportTechnicalAuditLogRepo>();
 builder.Services.AddScoped<AssetLogRepo>();
 builder.Services.AddScoped<BillExportTechnicalAuditLogRepo>();
+builder.Services.AddScoped<AssetAllocationLogRepo>();
+
+#endregion
+
+
+//Config connect databaseCourse
+Config.ConnectionStringCourse = builder.Configuration.GetValue<string>("ConnectionStringCourse") ?? "";
+builder.Services.AddDbContext<RTCCourseDbContext>(o => o.UseSqlServer(Config.ConnectionStringCourse));
+
+#region DI Khoá học web
+builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.CourseCatalogRepo>();
+builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.CourseAnswersRepo>();
+builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.CourseExamEvaluateRepo>();
+builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.CourseExamRepo>();
+builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.CourseExamResultDetailRepo>();
+builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.CourseExamResultRepo>();
+builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.CourseFileRepo>();
+builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.CourseLessonHistoryRepo>();
+builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.CourseLessonRepo>();
+builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.CourseQuestionRepo>();
+builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.CourseRepo>();
+builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.CourseRightAnswersRepo>();
+builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.CourseTypeRepo>();
+builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.ConfigSystemRepo>();
+builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.UserRepo>();
+builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.EmployeeRepo>();
+builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.CourseExamPracticeRepo>();
+builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.CourseCatalogTypeRepo>();
 
 #endregion
 
@@ -780,7 +810,6 @@ builder.Services.AddAuthentication("Bearer")
                         ValidateAudience = true,
                         ValidateLifetime = true,
                         ValidateIssuerSigningKey = true,
-
                         ValidIssuers = new[] { jwtSettings.Issuer, candidateJwtSettings.Issuer },
                         ValidAudiences = new[] { jwtSettings.Audience, candidateJwtSettings.Audience },
                         IssuerSigningKeys = new[]

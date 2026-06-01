@@ -67,8 +67,6 @@ public partial class User
 
     public int? MainViewID { get; set; }
 
-    public string? Position { get; set; }
-
     public bool? IsSetupFunction { get; set; }
 
     public string? ImagePath { get; set; }
@@ -92,4 +90,19 @@ public partial class User
     public int? Leader { get; set; }
 
     public string? PinPassword { get; set; }
+
+    /// <summary>
+    /// Đơn vị công tác
+    /// </summary>
+    public string? Organization { get; set; }
+
+    /// <summary>
+    /// Vị trí
+    /// </summary>
+    public string? Position { get; set; }
+
+    /// <summary>
+    /// Nguồn giới thiệu
+    /// </summary>
+    public string? ReferralSource { get; set; }
 }

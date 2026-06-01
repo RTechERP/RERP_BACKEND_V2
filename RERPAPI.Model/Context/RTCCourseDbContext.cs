@@ -52,7 +52,7 @@ public partial class RTCCourseDbContext : DbContext
     {
         modelBuilder.Entity<ConfigSystem>(entity =>
         {
-            entity.HasKey(e => e.ID).HasName("PK__ConfigSy__3214EC279D66AA65");
+            entity.HasKey(e => e.ID).HasName("PK__ConfigSy__3214EC2786C53E80");
 
             entity.ToTable("ConfigSystem");
 
@@ -79,7 +79,7 @@ public partial class RTCCourseDbContext : DbContext
 
         modelBuilder.Entity<Course>(entity =>
         {
-            entity.HasKey(e => e.ID).HasName("PK__Course__3214EC271B172364");
+            entity.HasKey(e => e.ID).HasName("PK__Course__3214EC27D0F3F0C7");
 
             entity.ToTable("Course");
 
@@ -103,7 +103,7 @@ public partial class RTCCourseDbContext : DbContext
 
         modelBuilder.Entity<CourseAnswer>(entity =>
         {
-            entity.HasKey(e => e.ID).HasName("PK__CourseAn__3214EC270E29A3BC");
+            entity.HasKey(e => e.ID).HasName("PK__CourseAn__3214EC27AA15EF34");
 
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
@@ -113,7 +113,7 @@ public partial class RTCCourseDbContext : DbContext
 
         modelBuilder.Entity<CourseCatalog>(entity =>
         {
-            entity.HasKey(e => e.ID).HasName("PK__CourseCa__3214EC27DF7AA4BC");
+            entity.HasKey(e => e.ID).HasName("PK__CourseCa__3214EC27792EF0E6");
 
             entity.ToTable("CourseCatalog");
 
@@ -133,7 +133,7 @@ public partial class RTCCourseDbContext : DbContext
 
         modelBuilder.Entity<CourseCatalogType>(entity =>
         {
-            entity.HasKey(e => e.ID).HasName("PK__CourseCa__3214EC27CA2644FB");
+            entity.HasKey(e => e.ID).HasName("PK__CourseCa__3214EC27C707AA9E");
 
             entity.ToTable("CourseCatalogType");
 
@@ -153,7 +153,7 @@ public partial class RTCCourseDbContext : DbContext
 
         modelBuilder.Entity<CourseExam>(entity =>
         {
-            entity.HasKey(e => e.ID).HasName("PK__CourseEx__3214EC27E2DC27FA");
+            entity.HasKey(e => e.ID).HasName("PK__CourseEx__3214EC2785017680");
 
             entity.ToTable("CourseExam");
 
@@ -169,7 +169,7 @@ public partial class RTCCourseDbContext : DbContext
 
         modelBuilder.Entity<CourseExamEvaluate>(entity =>
         {
-            entity.HasKey(e => e.ID).HasName("PK__CourseEx__3214EC271239B65A");
+            entity.HasKey(e => e.ID).HasName("PK__CourseEx__3214EC27B68FCEFF");
 
             entity.ToTable("CourseExamEvaluate");
 
@@ -185,7 +185,7 @@ public partial class RTCCourseDbContext : DbContext
 
         modelBuilder.Entity<CourseExamPractice>(entity =>
         {
-            entity.HasKey(e => e.ID).HasName("PK__CourseEx__3214EC27074C3220");
+            entity.HasKey(e => e.ID).HasName("PK__CourseEx__3214EC277610CE72");
 
             entity.ToTable("CourseExamPractice");
 
@@ -200,7 +200,7 @@ public partial class RTCCourseDbContext : DbContext
 
         modelBuilder.Entity<CourseExamResult>(entity =>
         {
-            entity.HasKey(e => e.ID).HasName("PK__CourseEx__3214EC2779401D97");
+            entity.HasKey(e => e.ID).HasName("PK__CourseEx__3214EC278C4A1CF6");
 
             entity.ToTable("CourseExamResult");
 
@@ -215,7 +215,7 @@ public partial class RTCCourseDbContext : DbContext
 
         modelBuilder.Entity<CourseExamResultDetail>(entity =>
         {
-            entity.HasKey(e => e.ID).HasName("PK__CourseEx__3214EC2798935EC2");
+            entity.HasKey(e => e.ID).HasName("PK__CourseEx__3214EC278CB786B6");
 
             entity.ToTable("CourseExamResultDetail");
 
@@ -227,7 +227,7 @@ public partial class RTCCourseDbContext : DbContext
 
         modelBuilder.Entity<CourseFile>(entity =>
         {
-            entity.HasKey(e => e.ID).HasName("PK__CourseFi__3214EC270F8A4850");
+            entity.HasKey(e => e.ID).HasName("PK__CourseFi__3214EC27ED22B6A2");
 
             entity.ToTable("CourseFile");
 
@@ -243,7 +243,7 @@ public partial class RTCCourseDbContext : DbContext
 
         modelBuilder.Entity<CourseLesson>(entity =>
         {
-            entity.HasKey(e => e.ID).HasName("PK__CourseLe__3214EC27B3E35AEA");
+            entity.HasKey(e => e.ID).HasName("PK__CourseLe__3214EC27826C96A7");
 
             entity.ToTable("CourseLesson");
 
@@ -264,7 +264,7 @@ public partial class RTCCourseDbContext : DbContext
 
         modelBuilder.Entity<CourseLessonHistory>(entity =>
         {
-            entity.HasKey(e => e.ID).HasName("PK__CourseLe__3214EC27BB11B0AB");
+            entity.HasKey(e => e.ID).HasName("PK__CourseLe__3214EC275E202016");
 
             entity.ToTable("CourseLessonHistory");
 
@@ -274,7 +274,7 @@ public partial class RTCCourseDbContext : DbContext
 
         modelBuilder.Entity<CourseQuestion>(entity =>
         {
-            entity.HasKey(e => e.ID).HasName("PK__CourseQu__3214EC27FE04910F");
+            entity.HasKey(e => e.ID).HasName("PK__CourseQu__3214EC277C3803E0");
 
             entity.ToTable("CourseQuestion");
 
@@ -286,7 +286,7 @@ public partial class RTCCourseDbContext : DbContext
 
         modelBuilder.Entity<CourseRightAnswer>(entity =>
         {
-            entity.HasKey(e => e.ID).HasName("PK__CourseRi__3214EC27098CCF56");
+            entity.HasKey(e => e.ID).HasName("PK__CourseRi__3214EC27A46ADA13");
 
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
@@ -296,7 +296,7 @@ public partial class RTCCourseDbContext : DbContext
 
         modelBuilder.Entity<CourseType>(entity =>
         {
-            entity.HasKey(e => e.ID).HasName("PK__CourseTy__3214EC2729925C9C");
+            entity.HasKey(e => e.ID).HasName("PK__CourseTy__3214EC27AACDB440");
 
             entity.ToTable("CourseType");
 
@@ -316,7 +316,7 @@ public partial class RTCCourseDbContext : DbContext
 
         modelBuilder.Entity<Employee>(entity =>
         {
-            entity.HasKey(e => e.ID).HasName("PK__Employee__3214EC270CFD6ECD");
+            entity.HasKey(e => e.ID).HasName("PK__Employee__3214EC27042D00D3");
 
             entity.ToTable("Employee");
 
@@ -424,7 +424,7 @@ public partial class RTCCourseDbContext : DbContext
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.ID).HasName("PK__Users__3214EC27AAD814E3");
+            entity.HasKey(e => e.ID).HasName("PK__Users__3214EC2783EB53AE");
 
             entity.Property(e => e.BHXH).HasMaxLength(250);
             entity.Property(e => e.BHYT).HasMaxLength(250);
@@ -446,12 +446,20 @@ public partial class RTCCourseDbContext : DbContext
             entity.Property(e => e.JobDescription).HasMaxLength(200);
             entity.Property(e => e.LoginName).HasMaxLength(50);
             entity.Property(e => e.MST).HasMaxLength(250);
+            entity.Property(e => e.Organization)
+                .HasMaxLength(550)
+                .HasComment("Đơn vị công tác");
             entity.Property(e => e.PassExpireDate).HasColumnType("datetime");
             entity.Property(e => e.PasswordHash).HasMaxLength(250);
             entity.Property(e => e.PinPassword).HasMaxLength(255);
-            entity.Property(e => e.Position).HasMaxLength(50);
+            entity.Property(e => e.Position)
+                .HasMaxLength(550)
+                .HasComment("Vị trí");
             entity.Property(e => e.PostalCode).HasMaxLength(50);
             entity.Property(e => e.Qualifications).HasMaxLength(250);
+            entity.Property(e => e.ReferralSource)
+                .HasMaxLength(550)
+                .HasComment("Nguồn giới thiệu");
             entity.Property(e => e.Resident).HasMaxLength(100);
             entity.Property(e => e.StartWorking).HasColumnType("datetime");
             entity.Property(e => e.Telephone).HasMaxLength(100);

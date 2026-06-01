@@ -354,7 +354,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                     return BadRequest(ApiResponseFactory.Fail(null, $"Dề thi loại [{examTypeName}] không tồn tại!"));
                 }
 
-                var courseExamResult = await _courseExamResultRepo.GetByIDAsync(paramData.CourseExamResult.ID) ?? new CourseExamResult();
+                var courseExamResult = await _courseExamResultRepo.GetByIDAsync(paramData.CourseExamResult.ID) ?? new RERPAPI.Model.Entities.RTCCourse.CourseExamResult();
                 courseExamResult.CourseExamId = paramData.CourseExamResult.CourseExamId;
                 courseExamResult.EmployeeId = paramData.CourseExamResult.EmployeeId;
                 courseExamResult.PracticePoints = paramData.CourseExamResult.PracticePoints;
