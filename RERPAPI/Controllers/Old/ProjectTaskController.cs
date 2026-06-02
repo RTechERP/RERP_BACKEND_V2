@@ -2983,7 +2983,7 @@ namespace RERPAPI.Controllers.Project
                     return NotFound(ApiResponseFactory.Fail(null, "Project task not found."));
                 }
 
-                if (projectTaskExit.PlanEndDate == null || projectTaskExit.PlanEndDate == null || projectTaskExit.ActualStartDate == null)
+                if (projectTaskExit.PlanEndDate == null || projectTaskExit.Deadline == null)
                 {
                     return Ok(ApiResponseFactory.Success(false));
                 }
