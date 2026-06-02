@@ -36,7 +36,7 @@ namespace RERPAPI.Controllers.TrainingFirm
             _makertrainingTypeRepo = makertrainingTypeRepo;
         }
 
-        [RequiresPermission("N13,N1,N27,N31")]
+        [RequiresPermission("N85,N32")]
         [HttpPost("get-maker-training")]
         public async Task<IActionResult> GetMakerTraining([FromBody] MakerTrainingRequestParam request)
         {
