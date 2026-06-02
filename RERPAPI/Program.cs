@@ -1,5 +1,3 @@
-using FirebaseAdmin;
-using Google.Apis.Auth.OAuth2;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
@@ -664,7 +662,7 @@ builder.Services.AddScoped<EmailHelper>();
 builder.Services.AddScoped<HistoryBorrowSaleLogRepo>();
 builder.Services.AddScoped<CommercialPriceRequestRepo>();
 builder.Services.AddScoped<PaymentOrderLogApprovedRepo>();
-builder.Services.AddScoped<CurrencyConfigRepo>(); 
+builder.Services.AddScoped<CurrencyConfigRepo>();
 builder.Services.AddScoped<BillImportSaleLogRepo>();
 builder.Services.AddScoped<BankListRepo>();
 builder.Services.AddScoped<ProjectPartlistPurchaseRequestNoteRepo>();
@@ -679,7 +677,7 @@ builder.Services.AddScoped<MakerTrainingRepo>();
 builder.Services.AddScoped<MakerTrainingEmployeeLinkRepo>();
 builder.Services.AddScoped<MakerTrainingDocumentRepo>();
 builder.Services.AddScoped<MakerTrainingTypeRepo>();
-builder.Services.AddScoped<PerformanceCriteriaRepo>(); 
+builder.Services.AddScoped<PerformanceCriteriaRepo>();
 builder.Services.AddScoped<EmployeeAttendanceNewRepo>();
 builder.Services.AddScoped<ProjectTaskWorkRepo>();
 builder.Services.AddScoped<ProjectTaskStatusRepo>();
@@ -728,10 +726,10 @@ builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.CourseCatalogTypeRep
 
 builder.Services.AddScoped<CurrentUser>(provider =>
 {
-    var context = provider.GetRequiredService<IHttpContextAccessor>().HttpContext;
-    var claims = context?.User?.Claims?.ToDictionary(x => x.Type, x => x.Value) ?? new Dictionary<string, string>();
-    CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
-    return currentUser;
+	var context = provider.GetRequiredService<IHttpContextAccessor>().HttpContext;
+	var claims = context?.User?.Claims?.ToDictionary(x => x.Type, x => x.Value) ?? new Dictionary<string, string>();
+	CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+	return currentUser;
 });
 
 
@@ -747,21 +745,21 @@ builder.Services.AddMvc().AddJsonOptions(opt => opt.JsonSerializerOptions.Proper
 //Config CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("MyCors", builder =>
-    {
-        builder.AllowAnyOrigin()
-               .AllowAnyMethod()
-               .AllowAnyHeader()
-               .WithExposedHeaders(CorsHelper.GetExposedHeaders()); // config cors tus dotnet
-        ;
+	options.AddPolicy("MyCors", builder =>
+	{
+		builder.AllowAnyOrigin()
+			   .AllowAnyMethod()
+			   .AllowAnyHeader()
+			   .WithExposedHeaders(CorsHelper.GetExposedHeaders()); // config cors tus dotnet
+		;
 
-    });
+	});
 });
 // Chỉ khởi tạo 1 lần duy nhất khi chạy server
-FirebaseApp.Create(new AppOptions()
-{
-    Credential = GoogleCredential.FromFile("firebase-adminsdk.json") // Thay bằng đường dẫn thực tế
-});
+//FirebaseApp.Create(new AppOptions()
+//{
+//    Credential = GoogleCredential.FromFile("firebase-adminsdk.json") // Thay bằng đường dẫn thực tế
+//});
 
 
 builder.Services.AddSingleton<SseService>();
@@ -826,7 +824,7 @@ builder.Services.AddAuthentication();
 //Get SmtpSetting
 var smtpSettings = builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.Configure<SmtpSettingsHr>(builder.Configuration.GetSection("SmtpSettingsHr"));
-builder.Services.Configure < SmtpSettingsHrm>(builder.Configuration.GetSection("SmtpSettingsHrm"));
+builder.Services.Configure<SmtpSettingsHrm>(builder.Configuration.GetSection("SmtpSettingsHrm"));
 
 //Get list static file
 builder.Services.Configure<List<PathStaticFile>>(builder.Configuration.GetSection("PathStaticFiles"));
@@ -834,17 +832,17 @@ builder.Services.Configure<List<PathStaticFile>>(builder.Configuration.GetSectio
 //Config session
 builder.Services.AddSession(opt =>
 {
-    opt.IdleTimeout = TimeSpan.FromMinutes(jwtSettings.ExpireMinutes);
-    opt.Cookie.HttpOnly = true;
-    opt.Cookie.IsEssential = true;
-    opt.Cookie.Name = "r-erp";
+	opt.IdleTimeout = TimeSpan.FromMinutes(jwtSettings.ExpireMinutes);
+	opt.Cookie.HttpOnly = true;
+	opt.Cookie.IsEssential = true;
+	opt.Cookie.Name = "r-erp";
 });
 
 
 
 builder.Services.AddRouting(options =>
 {
-    options.LowercaseUrls = true; // Chuyển tất cả URL thành chữ thường
+	options.LowercaseUrls = true; // Chuyển tất cả URL thành chữ thường
 });
 
 var roleConfigSection = builder.Configuration.GetSection("RoleConfig");
@@ -854,7 +852,7 @@ builder.Services.Configure<RoleConfig>(roleConfigSection);
 
 // Đăng ký singleton để inject trực tiếp RoleConfig
 builder.Services.AddSingleton(sp =>
-    sp.GetRequiredService<IOptions<RoleConfig>>().Value);
+	sp.GetRequiredService<IOptions<RoleConfig>>().Value);
 builder.Services.Configure<ModulaConfig>(builder.Configuration.GetSection("ModulaConfig"));
 
 // Nếu bạn muốn inject trực tiếp:
@@ -878,18 +876,18 @@ builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<ModulaConfig>
 //Add logger
 // 👉 cấu hình Serilog
 Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Information()
-    .Enrich.FromLogContext()
-    .Enrich.WithMachineName()
-    .Enrich.WithThreadId()
-    .WriteTo.Console()
-    .WriteTo.Async(a => a.File(
-         @"D:\RERPLogs\api\log-.txt",
-        rollingInterval: RollingInterval.Day,
-        retainedFileCountLimit: 7,
-        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss:fff} [{Level}] {Message}{NewLine}{Exception}"
-    ))
-    .CreateLogger();
+	.MinimumLevel.Information()
+	.Enrich.FromLogContext()
+	.Enrich.WithMachineName()
+	.Enrich.WithThreadId()
+	.WriteTo.Console()
+	.WriteTo.Async(a => a.File(
+		 @"D:\RERPLogs\api\log-.txt",
+		rollingInterval: RollingInterval.Day,
+		retainedFileCountLimit: 7,
+		outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss:fff} [{Level}] {Message}{NewLine}{Exception}"
+	))
+	.CreateLogger();
 
 // 👉 replace logger mặc định
 builder.Host.UseSerilog();
@@ -900,22 +898,22 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+	app.UseSwagger();
+	app.UseSwaggerUI();
 }
 app.UseSerilogRequestLogging(options =>
 {
-    options.MessageTemplate =
-        "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
+	options.MessageTemplate =
+		"HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
 
-    options.GetLevel = (httpContext, elapsed, ex) =>
-    {
-        if (ex != null) return LogEventLevel.Error;
-        if (httpContext.Response.StatusCode >= 500) return LogEventLevel.Error;
-        if (elapsed > 3000) return LogEventLevel.Warning;
+	options.GetLevel = (httpContext, elapsed, ex) =>
+	{
+		if (ex != null) return LogEventLevel.Error;
+		if (httpContext.Response.StatusCode >= 500) return LogEventLevel.Error;
+		if (elapsed > 3000) return LogEventLevel.Warning;
 
-        return LogEventLevel.Information;
-    };
+		return LogEventLevel.Information;
+	};
 });
 
 
@@ -937,8 +935,8 @@ app.MapControllers();
 
 app.Use(async (context, next) =>
 {
-    context.Request.Path = context.Request.Path.Value?.ToLower();
-        await next();
+	context.Request.Path = context.Request.Path.Value?.ToLower();
+	await next();
 });
 
 
@@ -947,59 +945,59 @@ List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticF
 
 foreach (var item in staticFiles)
 {
-    app.UseStaticFiles(new StaticFileOptions()
-    {
-        FileProvider = new PhysicalFileProvider(item.PathFull),
-        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-    });
+	app.UseStaticFiles(new StaticFileOptions()
+	{
+		FileProvider = new PhysicalFileProvider(item.PathFull),
+		RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+	});
 
 
-    app.UseDirectoryBrowser(new DirectoryBrowserOptions
-    {
-        FileProvider = new PhysicalFileProvider(item.PathFull),
-        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-    });
+	app.UseDirectoryBrowser(new DirectoryBrowserOptions
+	{
+		FileProvider = new PhysicalFileProvider(item.PathFull),
+		RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+	});
 }
 var tusStore = new TusDiskStore(Directory.GetCurrentDirectory());
 // config Tus dotnet
 app.UseTus(httpContext => new DefaultTusConfiguration
 {
-    Store = tusStore, // đường dẫn lưu temp file ( file chunk)
+	Store = tusStore, // đường dẫn lưu temp file ( file chunk)
 
-    UrlPath = "/api/tus/upload-video", // path gọi api
-    Expiration = new AbsoluteExpiration(TimeSpan.FromHours(24)), // xóa upload không hoàn thành sau 24h
+	UrlPath = "/api/tus/upload-video", // path gọi api
+	Expiration = new AbsoluteExpiration(TimeSpan.FromHours(24)), // xóa upload không hoàn thành sau 24h
 
-    Events = new Events
-    {
-        OnFileCompleteAsync = async ctx =>
-        {
+	Events = new Events
+	{
+		OnFileCompleteAsync = async ctx =>
+		{
 
-            var file = await ctx.GetFileAsync();
-            if (file == null) return;
+			var file = await ctx.GetFileAsync();
+			if (file == null) return;
 
-            var metadata = await file.GetMetadataAsync(ctx.CancellationToken);
+			var metadata = await file.GetMetadataAsync(ctx.CancellationToken);
 
-            var fileName = metadata.ContainsKey("filename")
-                ? metadata["filename"].GetString(Encoding.UTF8)
-                : $"{file.Id}.bin";
+			var fileName = metadata.ContainsKey("filename")
+				? metadata["filename"].GetString(Encoding.UTF8)
+				: $"{file.Id}.bin";
 
-            //var destDir = @"\\192.168.1.190\Software\Test\UPLOADFILE\CourseLesson\Videos\";
-            //Directory.CreateDirectory(destDir);
-            //var destPath = Path.Combine(destDir, fileName);
+			//var destDir = @"\\192.168.1.190\Software\Test\UPLOADFILE\CourseLesson\Videos\";
+			//Directory.CreateDirectory(destDir);
+			//var destPath = Path.Combine(destDir, fileName);
 
-            var pathServer = metadata["pathServer"].GetString(Encoding.UTF8);
-            var destPath = Path.Combine(pathServer, fileName);
-            Directory.CreateDirectory(pathServer);
-            await using (var source = await file.GetContentAsync(ctx.CancellationToken))
-            {
-                await using (var target = System.IO.File.Create(destPath))
-                {
-                    await source.CopyToAsync(target);
-                }
-            }
+			var pathServer = metadata["pathServer"].GetString(Encoding.UTF8);
+			var destPath = Path.Combine(pathServer, fileName);
+			Directory.CreateDirectory(pathServer);
+			await using (var source = await file.GetContentAsync(ctx.CancellationToken))
+			{
+				await using (var target = System.IO.File.Create(destPath))
+				{
+					await source.CopyToAsync(target);
+				}
+			}
 
-        }
-    }
+		}
+	}
 });
 //app.Use(async (context, next) =>
 //{
