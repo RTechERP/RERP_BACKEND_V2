@@ -13,10 +13,8 @@ using RERPAPI.Repo.GenericEntity.Technical;
 using System.Data;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Threading.Tasks;
 using ZXing;
 using ZXing.Common;
-
 
 namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 {
@@ -51,7 +49,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         private readonly POKHRepo _pokhRepo;
         private readonly POKHFilesRepo _pokhFilesRepo;
         private readonly BillExportSaleLogRepo _billExportSaleLogRepo;
-
 
         public BillExportController(
             ProductGroupRepo productgroupRepo,
@@ -94,6 +91,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             _pokhFilesRepo = pokhFilesRepo;
             _billExportSaleLogRepo = billExportSaleLogRepo;
         }
+
         [HttpGet("get-all-project")]
         public IActionResult getAllProject()
         {
@@ -107,13 +105,13 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("")]
         [RequiresPermission("N27,N29,N50,N1,N36,N52,N35,N33,N34,N69")]
         public IActionResult getBillExport([FromBody] BillExportParamRequest filter)
         {
             try
             {
-
                 if (filter.checkedAll == true)
                 {
                     filter.DateStart = new DateTime(1990, 01, 01);
@@ -133,8 +131,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     }
                 }
 
-
-
                 return Ok(new
                 {
                     status = 1,
@@ -147,6 +143,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-product")]
         public IActionResult getOptionProduct(string warehouseCode, int productGroupID)
         {
@@ -166,6 +163,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-product-new")]
         public IActionResult getOptionProductNew(string warehouseCode, int productGroupID)
         {
@@ -185,6 +183,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-product-group")]
         public IActionResult getProductGroup(bool isAdmin, int departmentID)
         {
@@ -234,7 +233,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpPost("save-data")]
-        //[RequiresPermission("N27,N1,N33,N34,N69")]
         public async Task<IActionResult> SaveDataBillExport([FromBody] BillExportDTO dto)
         {
             try
@@ -282,6 +280,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("by-billexport")]
         public async Task<IActionResult> GetByBillExportID(int billExportID)
         {
@@ -294,9 +293,9 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-
             }
         }
+
         [HttpPost("delete-bill-export")]
         [RequiresPermission("N27,N1,N33,N34,N69")]
         public async Task<IActionResult> DeleteBillExport([FromBody] BillExport billExport)
@@ -317,7 +316,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         [HttpPost("approved")]
         [RequiresPermission("N11,N50,N1,N18")]
@@ -349,17 +347,20 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #region
-        [HttpGet("get-bill-code")]
 
+        #region
+
+        [HttpGet("get-bill-code")]
         public ActionResult<string> LoadBillNumber(int billTypeId, int? billId = null, int? currentStatus = null, string currentCode = null)
         {
             string billCode = _billexportRepo.GetBillCode(billTypeId);
 
             return Ok(new { data = billCode });
         }
+
         #endregion
-        //đã xuất kho 
+
+        //đã xuất kho
         [HttpPost("shipped-out")]
         public async Task<IActionResult> ExportWareHouse([FromBody] BillExport billExport)
         {
@@ -376,7 +377,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     {
                         status = 0,
                         message = $"Vui lòng kiểm tra lại trạng thái phiếu xuất {billExport.Code} "
-
                     });
                 }
                 return Ok(new
@@ -390,8 +390,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [HttpGet("BillImportID/{billIDs}")]
 
+        [HttpGet("BillImportID/{billIDs}")]
         public IActionResult GetdetailByIDS(string billIDs)
         {
             try
@@ -405,6 +405,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         private static string GetString(IDictionary<string, object> row, string key)
         {
             if (!row.ContainsKey(key) || row[key] == null || row[key] == DBNull.Value)
@@ -425,7 +426,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return 0;
             return Convert.ToDecimal(row[key]);
         }
-
 
         [HttpPost("export-excel")]
         public IActionResult ExportExcel([FromBody] List<int> listId, int type)
@@ -599,7 +599,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         {
             try
             {
-
                 if (filter.checkedAll == true)
                 {
                     filter.DateStart = new DateTime(1990, 01, 01);
@@ -621,7 +620,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
 
         [HttpGet("scan")]
@@ -682,10 +680,9 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             }
         }
 
-        // hàm lấy danh sách vật tư theo dự án 
+        // hàm lấy danh sách vật tư theo dự án
 
         [HttpPost("get-product-project")]
-
         public IActionResult getproductProject(GetListProductByProjectPram filter)
         {
             try
@@ -825,23 +822,24 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-view-export-detail/{billId}")]
         public async Task<IActionResult> GetViewExportDetail(int billId)
         {
             try
             {
-
-                var rs =await SqlDapper<object>.ProcedureToListTAsync("spGetBillExportDetail_Nhat", new
+                var rs = await SqlDapper<object>.ProcedureToListTAsync("spGetBillExportDetail_Nhat", new
                 {
                     BillID = billId
                 });
-                return Ok(ApiResponseFactory.Success(rs,"Lấy danh sách chi tiết phiếu xuất thành công"));
+                return Ok(ApiResponseFactory.Success(rs, "Lấy danh sách chi tiết phiếu xuất thành công"));
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // POST: api/BillExport/get-bill-import-detail
         [HttpPost("get-bill-import-detail")]
         public IActionResult GetBillImportDetail([FromBody] List<int> billImportIds)
@@ -887,6 +885,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-all-inventorProjects")]
         public IActionResult GetInventoryProject(int warehouseId, int productId, int projectId = 0, int pokhDetailId = 0)
         {
@@ -911,6 +910,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // GET: api/BillExport/get-inventory-project
         [HttpGet("get-inventory-project")]
         public IActionResult GetInventoryProject(int warehouseId, int productId, int projectId = 0, int pokhDetailId = 0, int billExportDetailId = 0)
@@ -1008,6 +1008,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("excel-kt")]
         public IActionResult ExportExcelKT(int id, string warehouseCode)
         {
@@ -1153,6 +1154,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //[HttpGet("{id:int}")]
         //public IActionResult GetWarehouses(int id)
         //{
@@ -1168,8 +1170,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         //}
 
         // GET: api/BillExport/download-pokh-file/{poNumber}/{fileName}
-		[HttpGet("download-pokh-file/{poNumber}")]
-		public IActionResult DownloadPOKHFile(string poNumber, [FromQuery] string fileName)
+        [HttpGet("download-pokh-file/{poNumber}")]
+        public IActionResult DownloadPOKHFile(string poNumber, [FromQuery] string fileName)
         {
             try
             {
@@ -1206,6 +1208,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-inventory-project-import-export")]
         public IActionResult GetInventoryProjectImportExport(
     int warehouseId,
@@ -1280,6 +1283,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 _ => "application/octet-stream"
             };
         }
+
         [HttpPost("check-bill-code")]
         public IActionResult CheckBillCode([FromBody] string billCode)
         {
@@ -1293,7 +1297,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         [HttpGet("export-excel-file")]
         public async Task<IActionResult> ExportFile(int billExportId)
@@ -1427,15 +1430,14 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         string fileName = $"Phiếu xuất.xlsx";
                         return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
                     }
-
                 }
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //[HttpPost("confirm-tem")]
         //public async Task<IActionResult> ConfirmTem(List<int> lstBillexportdetailID, bool status)
         //{
@@ -1457,8 +1459,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             {
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
                     "spGetListProductImportExportByProjectID_New_Nhat",
-					new string[] { "@projectId", "@WarehouseCode", "@CustomerID" },
-					new object[] { filter.projectID, filter.WarehouseCode, filter.CustomerID }
+                    new string[] { "@projectId", "@WarehouseCode", "@CustomerID" },
+                    new object[] { filter.projectID, filter.WarehouseCode, filter.CustomerID }
                     );
                 var dt = SQLHelper<object>.GetListData(result, 0);
                 return Ok(new
@@ -1473,6 +1475,4 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             }
         }
     }
-
-
 }

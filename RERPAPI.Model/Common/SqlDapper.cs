@@ -1,23 +1,14 @@
-using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Configuration;
-using RERPAPI.Model.DTO;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Dapper;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+using Microsoft.Data.SqlClient;
 using System.Data;
-using System.Dynamic;
-using System.Data.Common;
 
 namespace RERPAPI.Model.Common
 {
     public static class SqlDapper<T> where T : class, new()
     {
-        static string connectionString = Config.ConnectionString;
-        static int commandTimeout = 200;
+        private static string connectionString = Config.ConnectionString;
+        private static int commandTimeout = 200;
+
         public static async Task<object> ProcedureToListAsync(string procedureName, object param)
         {
             //var connection = new SqlConnection(connectionString);
@@ -55,7 +46,6 @@ namespace RERPAPI.Model.Common
                 throw new Exception(ex.Message);
             }
         }
-
 
         public static async Task<List<T>> ProcedureToListTAsync(string procedureName, object param)
         {
@@ -131,6 +121,7 @@ namespace RERPAPI.Model.Common
                 multi.Read<T3>().AsList()
             );
         }
+
         public static async Task<int> ExecuteStoredProcedure(
         string procedureName,
         object parameters = null,
@@ -148,6 +139,7 @@ namespace RERPAPI.Model.Common
                 );
             }
         }
+
         public static async Task<T> ExecuteScalarStoredProcedure<T>(
         string procedureName,
         object parameters = null,
@@ -165,6 +157,5 @@ namespace RERPAPI.Model.Common
                 );
             }
         }
-
     }
 }

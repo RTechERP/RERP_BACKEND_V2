@@ -10,10 +10,12 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     public class ProductGroupWareHouseController : ControllerBase
     {
         private readonly ProductGroupWareHouseRepo _productgroupwarehouseRepo;
+
         public ProductGroupWareHouseController(ProductGroupWareHouseRepo productgroupwarehouseRepo)
         {
             _productgroupwarehouseRepo = productgroupwarehouseRepo;
         }
+
         [HttpGet("")]
         public IActionResult getDataProductGroupWareHours(int? warehouseID, int? productgroupID)
         {

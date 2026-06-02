@@ -1,11 +1,4 @@
-﻿using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.DTO
+﻿namespace RERPAPI.Model.DTO
 {
     public class ProjectPartListExportDTO
     {
@@ -13,6 +6,7 @@ namespace RERPAPI.Model.DTO
 
         // Các field từ TreeListNode (UI) - BẮT BUỘC
         public decimal RemainQuantity { get; set; }      // Số lượng còn lại có thể xuất
+
         public decimal QuantityReturn { get; set; }      // Số lượng trả (MỚI THÊM)
         public decimal QtyFull { get; set; }             // Số lượng đầy đủ
         public string ProductNewCode { get; set; }       // Mã nội bộ
@@ -23,6 +17,7 @@ namespace RERPAPI.Model.DTO
 
         // Các field khác nếu cần cho ValidateKeep
         public int ProductID { get; set; }
+
         public int WarehouseID { get; set; }
         public int ProjectID { get; set; }
     }

@@ -1,17 +1,13 @@
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
 using System.Data.Entity;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
     public class DailyReportTechnicalRepo : GenericRepo<DailyReportTechnical>
     {
-        ProjectRepo projectRepo;
+        private ProjectRepo projectRepo;
+
         public DailyReportTechnicalRepo(CurrentUser currentUser, ProjectRepo projectRepo) : base(currentUser)
         {
             this.projectRepo = projectRepo;
@@ -161,7 +157,7 @@ namespace RERPAPI.Repo.GenericEntity
                     : $"{projectPrefix}: Vui lòng nhập Nội dung công việc!";
                 return false;
             }
-            //kiểm tra nơi làm việc 
+            //kiểm tra nơi làm việc
             if (string.IsNullOrEmpty(data.Location))
             {
                 message = string.IsNullOrEmpty(projectPrefix)
@@ -362,7 +358,7 @@ namespace RERPAPI.Repo.GenericEntity
                     : $"{projectPrefix}: Vui lòng nhập Nội dung công việc!";
                 return false;
             }
-            ////kiểm tra nơi làm việc 
+            ////kiểm tra nơi làm việc
             //if (string.IsNullOrEmpty(data.Location))
             //{
             //    message = string.IsNullOrEmpty(projectPrefix)
@@ -392,4 +388,3 @@ namespace RERPAPI.Repo.GenericEntity
         }
     }
 }
-

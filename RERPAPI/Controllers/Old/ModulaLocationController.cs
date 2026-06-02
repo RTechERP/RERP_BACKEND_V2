@@ -1,12 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualBasic;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Technical;
-using RERPAPI.Services;
 using static RERPAPI.Model.DTO.ModulaLocationDTO;
 
 namespace RERPAPI.Controllers.Old
@@ -15,26 +12,24 @@ namespace RERPAPI.Controllers.Old
     [ApiController]
     public class ModulaLocationController : ControllerBase
     {
-        ModulaLocationRepo locationRepo;
-        ModulaLocationDetailRepo detailRepo;
+        private ModulaLocationRepo locationRepo;
+        private ModulaLocationDetailRepo detailRepo;
 
-        BillImportDetailSerialNumberRepo importDetailSerialNumberRepo;
-        BillExportDetailSerialNumberRepo exportDetailSerialNumberRepo;
-        BillImportDetailSerialNumberModulaLocationRepo serialNumberImportModulaRepo;
-        BillExportDetailSerialNumberModulaLocationRepo serialNumberExportModulaRepo;
-
-
+        private BillImportDetailSerialNumberRepo importDetailSerialNumberRepo;
+        private BillExportDetailSerialNumberRepo exportDetailSerialNumberRepo;
+        private BillImportDetailSerialNumberModulaLocationRepo serialNumberImportModulaRepo;
+        private BillExportDetailSerialNumberModulaLocationRepo serialNumberExportModulaRepo;
 
         private readonly PersistentTcpClientService _tcpClient;
 
-        string _statusModula = "11|1001|STATUS\r";
-        string _callModula = "11|8328|CALL|@|1\r";
-        string _returnModula = "11|1111|RETURN|1\r";
-        string _lazerGoModula = "11|7777|LASER_GO|1|x|y\r";
-        string _lazerOnModula = "11|3333|LASER_ON\r";
-        string _lazerOffModula = "11|5555|LASER_OFF\r";
-        string _displayClearModula = "11|6666|DISPLAY_CLEAR\r";
-        string _displayShowModula = "11|2222|DISPLAY_SHOW|message|10|0\r";
+        private string _statusModula = "11|1001|STATUS\r";
+        private string _callModula = "11|8328|CALL|@|1\r";
+        private string _returnModula = "11|1111|RETURN|1\r";
+        private string _lazerGoModula = "11|7777|LASER_GO|1|x|y\r";
+        private string _lazerOnModula = "11|3333|LASER_ON\r";
+        private string _lazerOffModula = "11|5555|LASER_OFF\r";
+        private string _displayClearModula = "11|6666|DISPLAY_CLEAR\r";
+        private string _displayShowModula = "11|2222|DISPLAY_SHOW|message|10|0\r";
 
         public ModulaLocationController(PersistentTcpClientService tcpClient, ModulaLocationRepo locationRepo, ModulaLocationDetailRepo detailRepo, BillImportDetailSerialNumberRepo importDetailSerialNumberRepo, BillExportDetailSerialNumberRepo exportDetailSerialNumberRepo)
         {
@@ -52,7 +47,6 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-
                 keyword = keyword ?? "";
                 List<ModulaLocation> listLocations = locationRepo.GetAll(x => x.IsDeleted == false)
                                                                           .OrderBy(x => x.STT)
@@ -95,20 +89,16 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
-
         [HttpGet("getproducts")]
         public IActionResult GetProducts(int? billtype, string? billcode)
         {
             try
             {
-
-
                 billtype = billtype ?? 0;
                 billcode = billcode ?? "";
                 List<List<dynamic>> data = SQLHelper<object>.ProcedureToList("spGetProductImportExport",
                                                                 new string[] { "@BillType", "@BillCode" },
                                                                 new object[] { billtype, billcode });
-
 
                 List<dynamic> importDetails = new List<dynamic>();
                 List<dynamic> exportDetails = new List<dynamic>();
@@ -133,13 +123,11 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
-
         [HttpGet("get-location-detail")]
         public IActionResult GetLocationByID(int id)
         {
             try
             {
-
                 List<List<dynamic>> locations = SQLHelper<object>.ProcedureToList("spGetModulaLocationDetailByID",
                                                                 new string[] { "@ID" },
                                                                 new object[] { id });
@@ -264,7 +252,6 @@ namespace RERPAPI.Controllers.Old
                     }
                 }
 
-
                 return Ok(new
                 {
                     status = 1,
@@ -282,13 +269,11 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
-
         [HttpPost("savelocation")]
         public async Task<IActionResult> SaveLocation([FromBody] ModulaLocationDTO modulaLocation)
         {
             try
             {
-
                 if (modulaLocation.ID <= 0)
                 {
                     modulaLocation.CreatedDate = modulaLocation.UpdatedDate = DateTime.Now;
@@ -325,8 +310,6 @@ namespace RERPAPI.Controllers.Old
                 });
             }
         }
-
-
 
         //[HttpPost("call-modula")]
         //public async Task<IActionResult> CallModula([FromBody] CallModula model)
@@ -374,9 +357,7 @@ namespace RERPAPI.Controllers.Old
 
         //        await _tcpClient.SendStringAsync(_lazerOnModula);
 
-
         //        string resultLazerOn = await _tcpClient.ReceiveStringAsync(4096);
-
 
         //        string messageShow = _displayShowModula.Replace("message", model.Name);
 
@@ -392,7 +373,6 @@ namespace RERPAPI.Controllers.Old
         //    }
 
         //}
-
 
         //[HttpGet("return-modula")]
         //public async Task<IActionResult> ReturnModula()

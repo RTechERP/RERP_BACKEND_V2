@@ -3,14 +3,11 @@ using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
-using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Model.Param.HRM;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.AddNewBillExport;
 using RERPAPI.Repo.GenericEntity.HRM;
-using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -19,9 +16,10 @@ namespace RERPAPI.Controllers.Old
     [Route("api/[controller]")]
     public class EmployeeOverTimeController : ControllerBase
     {
-        EmployeeOverTimeRepo _employeeOverTimeRepo;
-        EmployeeTypeOverTimeRepo _employeeTypeOvertimeRepo;
-        EmployeeOvertimeFileRepo _employeeOvertimeFileRepo;
+        private EmployeeOverTimeRepo _employeeOverTimeRepo;
+        private EmployeeTypeOverTimeRepo _employeeTypeOvertimeRepo;
+        private EmployeeOvertimeFileRepo _employeeOvertimeFileRepo;
+
         public EmployeeOverTimeController(EmployeeOverTimeRepo employeeOverTimeRepo, EmployeeTypeOverTimeRepo employeeTypeOvertimeRepo, EmployeeOvertimeFileRepo employeeOvertimeFileRepo)
         {
             _employeeOverTimeRepo = employeeOverTimeRepo;
@@ -40,7 +38,7 @@ namespace RERPAPI.Controllers.Old
                 param.DateStart = param.DateStart.ToLocalTime().Date;
                 param.DateEnd = param.DateEnd.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
                 var arrParamName = new string[] { "@DateStart", "@DateEnd", "@Keyword", "@EmployeeID", "@IsApproved", "@Type", "@DepartmentID" };
-                var arrParamValue = new object[] { param.DateStart, param.DateEnd, param.Keyword??"", param.EmployeeID??0, param.IsApproved, param.Type, param.DepartmentID??0};
+                var arrParamValue = new object[] { param.DateStart, param.DateEnd, param.Keyword ?? "", param.EmployeeID ?? 0, param.IsApproved, param.Type, param.DepartmentID ?? 0 };
                 var employeeOverTime = SQLHelper<object>.ProcedureToList("spGetEmployeeOvertimeInWeb_New", arrParamName, arrParamValue);
                 return Ok(new
                 {
@@ -60,7 +58,6 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost("list-summary-employee-over-time")]
-
         public IActionResult ListSummaryEmployeeOnleavePerson(EmployeeOverTimeSummaryParam request)
         {
             try
@@ -68,7 +65,7 @@ namespace RERPAPI.Controllers.Old
                 var ds = request.DateStart.AddHours(00).AddMinutes(00).AddSeconds(00); // 00:00:00
                 var de = request.DateEnd.AddHours(23).AddMinutes(59).AddSeconds(59); // 23:59:59
                 var employeeOverTimeSummary = SQLHelper<object>.ProcedureToList("spGetEmployeeOnLeaveInWeb", new string[] { "@Keyword", "@DateStart", "@DateEnd", "@IsApproved", "@Type", "@DepartmentID", "@EmployeeID" },
-               new object[] { request.Keyword ?? "", ds, de , request.IsApproved, request.Type, request.DepartmentID ?? 0, request.EmployeeID ?? 0 });
+               new object[] { request.Keyword ?? "", ds, de, request.IsApproved, request.Type, request.DepartmentID ?? 0, request.EmployeeID ?? 0 });
 
                 var data = SQLHelper<object>.GetListData(employeeOverTimeSummary, 0);
                 var TotalPages = SQLHelper<object>.GetListData(employeeOverTimeSummary, 1);
@@ -81,12 +78,11 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost("get-summary-over-time-person")]
-
         public IActionResult GetEmployeeOverTimePerson(EmployeeOverTimeSummaryPersonParam request)
         {
             var ds = request.DateStart.AddHours(00).AddMinutes(00).AddSeconds(00); // 00:00:00
             var de = request.DateEnd.AddHours(23).AddMinutes(59).AddSeconds(59); // 23:59:59
-            var employeeOverTimeSummary = SQLHelper<object>.ProcedureToList("spGetEmployeeOvertime", 
+            var employeeOverTimeSummary = SQLHelper<object>.ProcedureToList("spGetEmployeeOvertime",
                new string[] { "@FilterText", "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@DepartmentID", "@IDApprovedTP", "@Status", "@EmployeeID", "@TeamID" },
                new object[] { request.FilterText ?? "", request.Page ?? 1, request.Size ?? 100000, ds, de, request.DepartmentID ?? 0, request.IDApprovedTP ?? 0, request.Status ?? -1, request.EmployeeID ?? 0, request.TeamID ?? 0 });
 
@@ -94,9 +90,7 @@ namespace RERPAPI.Controllers.Old
             var summaryPerson = SQLHelper<object>.GetListData(employeeOverTimeSummary, 1);
             var TotalPages = SQLHelper<object>.GetListData(employeeOverTimeSummary, 2);
             return Ok(ApiResponseFactory.Success(new { data, summaryPerson, TotalPages }, ""));
-
         }
-
 
         [HttpPost("get-summary-over-time-person-by-dept")]
         public IActionResult GetEmployeeOverTimePersonByDept(EmployeeOverTimeSummaryPersonParam request)
@@ -111,7 +105,7 @@ namespace RERPAPI.Controllers.Old
                     new string[] { "@FilterText", "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@DepartmentID", "@IDApprovedTP", "@Status", "@EmployeeID" },
                     new object[] { request.FilterText ?? "", request.Page ?? 1, request.Size ?? 100000, ds, de, request.DepartmentID ?? 0, request.IDApprovedTP ?? 0, request.Status ?? -1, request.EmployeeID ?? 0 });
 
-                var data         = SQLHelper<object>.GetListData(result, 0); // danh sách có phân trang
+                var data = SQLHelper<object>.GetListData(result, 0); // danh sách có phân trang
                 var summaryPerson = SQLHelper<object>.GetListData(result, 1); // tổng hợp theo nhân viên
 
                 return Ok(ApiResponseFactory.Success(new { data, summaryPerson }, ""));
@@ -158,8 +152,6 @@ namespace RERPAPI.Controllers.Old
                     employeeOverTime.IsProblem = false;
                     //employeeOverTime.IsDeleted = employeeOvertime.IsDeleted;
 
-
-
                     // Calculate TimeReality
                     if (employeeOverTime.TimeStart.HasValue && employeeOverTime.EndTime.HasValue)
                     {
@@ -184,7 +176,6 @@ namespace RERPAPI.Controllers.Old
 
                     if (employeeOverTime.ID > 0)
                     {
-
                         await _employeeOverTimeRepo.UpdateAsync(employeeOverTime);
                     }
                     else
@@ -203,7 +194,6 @@ namespace RERPAPI.Controllers.Old
                 //    await _employeeOverTimeRepo.DeleteByIdsAsync(request.ListId);
                 //}
 
-
                 return Ok(new
                 {
                     status = 1,
@@ -220,6 +210,7 @@ namespace RERPAPI.Controllers.Old
                 });
             }
         }
+
         [HttpPost("approve-overtime-hr")]
         [RequiresPermission("N2,N1")]
         public async Task<IActionResult> SaveApproveHR([FromBody] EmployeeOverTimeDTO request)
@@ -228,10 +219,8 @@ namespace RERPAPI.Controllers.Old
             {
                 foreach (var employeeOvertime in request.EmployeeOvertimes ?? new List<EmployeeOvertime>())
                 {
-                   
                     if (employeeOvertime.ID > 0)
                     {
-
                         await _employeeOverTimeRepo.UpdateAsync(employeeOvertime);
                     }
                     else
@@ -250,7 +239,6 @@ namespace RERPAPI.Controllers.Old
                 //    await _employeeOverTimeRepo.DeleteByIdsAsync(request.ListId);
                 //}
 
-
                 return Ok(new
                 {
                     status = 1,
@@ -267,6 +255,7 @@ namespace RERPAPI.Controllers.Old
                 });
             }
         }
+
         [HttpGet("detail")]
         [RequiresPermission("N2,N1")]
         public IActionResult GetEmployeeOverTimeDetail(int employeeId, DateTime dateRegister)
@@ -319,8 +308,8 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [HttpPost("get-over-time-by-employee")]
 
+        [HttpPost("get-over-time-by-employee")]
         public IActionResult GetOverTimeByEmployee(OverTimeByEmployeeRequestParam param)
         {
             try
@@ -351,6 +340,7 @@ namespace RERPAPI.Controllers.Old
                 });
             }
         }
+
         [HttpPost("save-data-employee")]
         public async Task<IActionResult> SaveDataEmployee([FromBody] EmployeeOverTimeDTO dto)
         {
@@ -365,7 +355,6 @@ namespace RERPAPI.Controllers.Old
                     if (validate.status == 0 && item.IsDeleted != true) return BadRequest(validate);
                     if (item.ID <= 0)
                     {
-
                         await _employeeOverTimeRepo.CreateAsync(item);
                         dto.employeeOvertimeFile.EmployeeOvertimeID = item.ID;
                     }
@@ -373,14 +362,11 @@ namespace RERPAPI.Controllers.Old
                     {
                         await _employeeOverTimeRepo.UpdateAsync(item);
                     }
-
-
                 }
                 if (dto.employeeOvertimeFile != null)
                 {
                     if (dto.employeeOvertimeFile.ID <= 0)
                     {
-
                         await _employeeOvertimeFileRepo.CreateAsync(dto.employeeOvertimeFile);
                     }
                     else
@@ -394,8 +380,8 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [HttpGet("get-by-id")]
 
+        [HttpGet("get-by-id")]
         public IActionResult GetByID(int ID)
         {
             try
@@ -442,6 +428,5 @@ namespace RERPAPI.Controllers.Old
 
             return DateTime.SpecifyKind(utcDateTime.AddMinutes(clientOffsetMinutes), DateTimeKind.Unspecified);
         }
-
     }
 }

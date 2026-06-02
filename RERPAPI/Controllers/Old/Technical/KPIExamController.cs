@@ -1,11 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Technical.KPI;
-using static RERPAPI.Controllers.Old.KPIEmployeeTeamController;
 
 namespace RERPAPI.Controllers.Old.Technical
 {
@@ -18,6 +16,7 @@ namespace RERPAPI.Controllers.Old.Technical
         private readonly KPIExamRepo _kpiExamRepo;
         private readonly KPIExamPositionRepo _kpiExamPositionRepo;
         private readonly KPIEvaluationFactorRepo _kpiEvaluationFactorRepo;
+
         public KPIExamController(KPISessionRepo kPISessionRepo, KPIExamRepo kPIExamRepo, KPIExamPositionRepo kPIExamPositionRepo, KPIEvaluationFactorRepo kpiEvaluationFactorRepo)
         {
             _kpiSessionRepo = kPISessionRepo;
@@ -25,7 +24,6 @@ namespace RERPAPI.Controllers.Old.Technical
             _kpiExamPositionRepo = kPIExamPositionRepo;
             _kpiEvaluationFactorRepo = kpiEvaluationFactorRepo;
         }
-
 
         [HttpGet("get-data-position")]
         public async Task<IActionResult> LoadDataPosition(int kpiExamId, int kpiSessionID)
@@ -67,30 +65,30 @@ namespace RERPAPI.Controllers.Old.Technical
             try
             {
                 //Validate
-                if(dto.KPIExam.ExamCode == null || dto.KPIExam.ExamCode.Trim() == "")
+                if (dto.KPIExam.ExamCode == null || dto.KPIExam.ExamCode.Trim() == "")
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Mã bài đánh giá không được để trống"));
                 }
-                if(dto.KPIExam.ExamName == null || dto.KPIExam.ExamName.Trim() == "")
+                if (dto.KPIExam.ExamName == null || dto.KPIExam.ExamName.Trim() == "")
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Tên bài đánh giá không được để trống"));
                 }
-                if(dto.KPIExam.KPISessionID <= 0)
+                if (dto.KPIExam.KPISessionID <= 0)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng chọn kỳ đánh giá"));
                 }
-                if(dto.positionIds.Count <= 0)
+                if (dto.positionIds.Count <= 0)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng ít nhất 1 vị trí"));
-                }    
+                }
                 List<KPIExam> list = _kpiExamRepo.GetAll(x => x.IsDeleted != true && x.ExamCode == dto.KPIExam.ExamCode && x.ID != dto.KPIExam.ID && x.KPISessionID == dto.KPIExam.KPISessionID);
-                if(list.Count > 0)
+                if (list.Count > 0)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, $"Mã bài đánh giá [{dto.KPIExam.ExamCode}] đã được sử dụng!"));
                 }
                 //End validate
 
-                if(dto.KPIExam.ID > 0)
+                if (dto.KPIExam.ID > 0)
                 {
                     await _kpiExamRepo.UpdateAsync(dto.KPIExam);
                 }
@@ -100,11 +98,11 @@ namespace RERPAPI.Controllers.Old.Technical
                 }
 
                 var dataDel = _kpiExamPositionRepo.GetAll(x => x.KPIExamID == dto.KPIExam.ID);
-                if(dataDel.Count > 0)
+                if (dataDel.Count > 0)
                 {
                     await _kpiExamPositionRepo.DeleteRangeAsync(dataDel);
                 }
-                foreach(var positionId in dto.positionIds)
+                foreach (var positionId in dto.positionIds)
                 {
                     KPIExamPosition kPIExamPosition = new KPIExamPosition
                     {
@@ -112,7 +110,7 @@ namespace RERPAPI.Controllers.Old.Technical
                         KPIPositionID = positionId
                     };
                     await _kpiExamPositionRepo.CreateAsync(kPIExamPosition);
-                }    
+                }
                 return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
             }
             catch (Exception ex)
@@ -129,15 +127,15 @@ namespace RERPAPI.Controllers.Old.Technical
             try
             {
                 var data = new List<KPISession>();
-                if(departmentId != 10 || departmentId != 9)
+                if (departmentId != 10 || departmentId != 9)
                 {
-                     data = _kpiSessionRepo.GetAll(x => x.IsDeleted == false);
+                    data = _kpiSessionRepo.GetAll(x => x.IsDeleted == false);
                 }
                 else
                 {
                     data = _kpiSessionRepo.GetAll(x => x.IsDeleted == false && x.DepartmentID == departmentId);
                 }
-                   
+
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
@@ -173,11 +171,10 @@ namespace RERPAPI.Controllers.Old.Technical
             {
                 //if (dto.SourceExamId <= 0 || dto.TargetExamId <= 0)
                 //    return BadRequest(ApiResponseFactory.Fail(null, "Exam không hợp lệ"));
-                if(dto.SourceExamId <= 0)
+                if (dto.SourceExamId <= 0)
                     return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng chọn bài thi muốn sao chép"));
                 if (dto.TargetExamId <= 0)
                     return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng chọn bài thi muốn sao chép tới"));
-
 
                 if (dto.SourceExamId == dto.TargetExamId)
                     return BadRequest(ApiResponseFactory.Fail(null, "Không thể copy trùng bài thi"));
@@ -258,7 +255,6 @@ namespace RERPAPI.Controllers.Old.Technical
                     map[model.STT] = model.ID;
                 }
 
-
                 return Ok(ApiResponseFactory.Success(null, "Copy thành công"));
             }
             catch (Exception ex)
@@ -304,6 +300,5 @@ namespace RERPAPI.Controllers.Old.Technical
             public int TargetExamId { get; set; }   // cboExamValue
             public bool Overwrite { get; set; }     // true = ghi đè
         }
-
     }
 }

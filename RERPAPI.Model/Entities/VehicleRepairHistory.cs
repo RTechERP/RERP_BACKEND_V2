@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace RERPAPI.Model.Entities;
+﻿namespace RERPAPI.Model.Entities;
 
 /// <summary>
 /// Danh sách sửa chữa của xe sau khi phê duyệt đề xuất

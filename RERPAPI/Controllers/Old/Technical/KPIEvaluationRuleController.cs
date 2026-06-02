@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
@@ -24,11 +23,11 @@ namespace RERPAPI.Controllers.Old.Technical
         private readonly KPICriterionRepo _kpiCriteriaRepo;
         private readonly KPICriteriaDetailRepo _kpiCriteriaDetailRepo;
 
-        public KPIEvaluationRuleController(DepartmentRepo departmentRepo, 
-                                           KPIPositionRepo kPIPositionRepo, 
-                                           KPISessionRepo kpiSessionRepo, 
-                                           KPIEvaluationRuleRepo kpiEvaluationRuleRepo, 
-                                           KPIEvaluationRuleDetailRepo kPIEvaluationRuleDetailRepo, 
+        public KPIEvaluationRuleController(DepartmentRepo departmentRepo,
+                                           KPIPositionRepo kPIPositionRepo,
+                                           KPISessionRepo kpiSessionRepo,
+                                           KPIEvaluationRuleRepo kpiEvaluationRuleRepo,
+                                           KPIEvaluationRuleDetailRepo kPIEvaluationRuleDetailRepo,
                                            KPIExamRepo kpiExamRepo,
                                            KPIExamPositionRepo kpiExamPositionRepo,
                                            KPIEvaluationFactorRepo kpiEvaluationFactorRepo,
@@ -103,7 +102,6 @@ namespace RERPAPI.Controllers.Old.Technical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         [HttpGet("get-position")]
         public IActionResult GetPosition()
@@ -182,7 +180,6 @@ namespace RERPAPI.Controllers.Old.Technical
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
 
         [HttpPost("delete-rule")]
@@ -217,7 +214,6 @@ namespace RERPAPI.Controllers.Old.Technical
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
 
         [HttpPost("save-kpi-session")]
@@ -522,7 +518,6 @@ namespace RERPAPI.Controllers.Old.Technical
                             }
                         }
                     }
-
                 }
 
                 // ===== 6. Copy Criteria =====
@@ -554,7 +549,6 @@ namespace RERPAPI.Controllers.Old.Technical
                 await _kpiCriteriaRepo.UpdateAsync(item);
             }
 
-
             // ===== 2. Copy criteria từ session cũ =====
             var criteria = _kpiCriteriaRepo.GetAll(x =>
                     x.IsDeleted == false &&
@@ -579,7 +573,6 @@ namespace RERPAPI.Controllers.Old.Technical
                     d.KPICriteriaID = c.ID;
                     await _kpiCriteriaDetailRepo.CreateAsync(d);
                 }
-
             }
         }
 
@@ -810,7 +803,6 @@ namespace RERPAPI.Controllers.Old.Technical
             return Ok(ApiResponseFactory.Success($"{rootCount + 1}", ""));
         }
 
-
         [HttpPost("save-rule-detail")]
         public async Task<IActionResult> SaveRuleDetail([FromBody] KPIEvaluationRuleDetail model)
         {
@@ -910,18 +902,17 @@ namespace RERPAPI.Controllers.Old.Technical
         public class SaveKPISessionRequest
         {
             public KPISession model { get; set; }
-            public bool IsCopy { get; set; }    
+            public bool IsCopy { get; set; }
             public bool IsForce { get; set; }    // user đã xác nhận ghi đè hay chưa
         }
+
         public class SaveKPIRuleRequest
         {
             public KPIEvaluationRule Model { get; set; }
-            public bool IsCopy { get; set; }  
+            public bool IsCopy { get; set; }
             public bool IsForce { get; set; }  // user đã confirm ghi đè
             public int FromRuleID { get; set; } // rule nguồn khi copy
         }
-
-
 
         public class CopyKPISessionRequest
         {
@@ -933,7 +924,5 @@ namespace RERPAPI.Controllers.Old.Technical
             public string Name { get; set; }
             public bool IsForce { get; set; }        // confirm ghi đè
         }
-
-
     }
 }

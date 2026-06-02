@@ -1,9 +1,4 @@
 ﻿using RERPAPI.Model.Common;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Model.Param
 {
@@ -24,6 +19,5 @@ namespace RERPAPI.Model.Param
         public int? UserTeamID { get; set; } = 0;
         public int? SeniorID { get; set; } = 0;
         public int? StatusDecilineSenior { get; set; } = -1;
-
     }
 }

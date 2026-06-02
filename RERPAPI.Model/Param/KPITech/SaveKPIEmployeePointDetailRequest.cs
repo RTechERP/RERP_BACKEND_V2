@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.Param.KPITech
+﻿namespace RERPAPI.Model.Param.KPITech
 {
     public class SaveKPIEmployeePointDetailRequest
     {
@@ -15,6 +9,7 @@ namespace RERPAPI.Model.Param.KPITech
         public int KPIEvaluationRuleID { get; set; }
         public List<KPIEmployeePointDetailParam> lstKPIEmployeePointDetail { get; set; } = new List<KPIEmployeePointDetailParam>();
     }
+
     public class KPIEmployeePointDetailParam
     {
         public int? EmpPointDetailID { get; set; }

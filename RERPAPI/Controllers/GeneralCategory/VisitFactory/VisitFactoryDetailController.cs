@@ -10,6 +10,7 @@ namespace RERPAPI.Controllers
     public class VisitFactoryDetailController : ControllerBase
     {
         private readonly VisitFactoryDetailRepo _repo;
+
         public VisitFactoryDetailController(VisitFactoryDetailRepo repo)
         {
             _repo = repo;
@@ -180,5 +181,3 @@ namespace RERPAPI.Controllers
         }
     }
 }
-
-

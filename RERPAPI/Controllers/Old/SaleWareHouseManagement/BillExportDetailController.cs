@@ -10,20 +10,20 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     public class BillExportDetailController : ControllerBase
     {
         [HttpGet("BillExportID/{billExportID}")]
-        public IActionResult getBillExportDetailByBillID(int billExportID )
+        public IActionResult getBillExportDetailByBillID(int billExportID)
         {
             try
             {
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
-                       "spGetBillExportDetail", new string[] { "@BillID"},
-                    new object[] {billExportID}
+                       "spGetBillExportDetail", new string[] { "@BillID" },
+                    new object[] { billExportID }
                    );
                 List<dynamic> billDetail = result[0]; // dữ liệu chi tiết hóa đơn
                 int totalPage = 0;
                 return Ok(new
                 {
                     status = 1,
-                    data = billDetail, 
+                    data = billDetail,
                 });
             }
             catch (Exception ex)

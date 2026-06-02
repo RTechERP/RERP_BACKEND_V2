@@ -1,8 +1,5 @@
-using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
@@ -141,7 +138,7 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-    
+
         [HttpPost("list-summary-employee-on-leave-person")]
         public IActionResult ListSummaryEmployeeOnleavePerson(EmployeeOnleaveSummaryParam request)
         {
@@ -301,7 +298,7 @@ namespace RERPAPI.Controllers.Old
                     {
                         string mailTo = employeeTP.EmailCongTy ?? employeeTP.EmailCom
                                        ?? employeeTP.EmailCaNhan ?? employeeTP.Email ?? "";
-                      //  string mailTo = "rtcmodula@gmail.com";
+                        //  string mailTo = "rtcmodula@gmail.com";
 
                         if (!string.IsNullOrWhiteSpace(mailTo))
                         {
@@ -346,15 +343,15 @@ namespace RERPAPI.Controllers.Old
                                             <p style='margin-top:20px;'>Anh/chị duyệt giúp em với ạ. Em cảm ơn!</p>
                                         </div>
                                   <p>
-                                    Bấm vào 
-                                    <a href='{approveUrl}' 
+                                    Bấm vào
+                                    <a href='{approveUrl}'
                                        style='
                                            color:#1890ff;
                                            font-weight:bold;
                                            text-decoration:underline;
                                        '>
                                        đây
-                                    </a> 
+                                    </a>
                                     để duyệt
                                 </p>
                                         <div style='margin-top:20px;'>
@@ -377,7 +374,7 @@ namespace RERPAPI.Controllers.Old
                             if (employeeTP != null && employeeTP.UserID.HasValue)
                             {
                                 var fcmTokens = _fcmTokenRepo.GetTokensByEmployeeID(dto.Details[0].ApprovedTP ?? 0);
-                                var checkNoti = _fcmTokenRepo.checkNotiUser(1, dto.Details[0].ApprovedTP ?? 0); // check thêm người đó có muốn nhận thông báo không 
+                                var checkNoti = _fcmTokenRepo.checkNotiUser(1, dto.Details[0].ApprovedTP ?? 0); // check thêm người đó có muốn nhận thông báo không
                                 if (fcmTokens.Any() && checkNoti)
                                 {
                                     string notifTitle = "Thông báo!";
@@ -417,14 +414,15 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-            [HttpGet("get-approve-id")]
+
+        [HttpGet("get-approve-id")]
         public IActionResult GetApproveID([FromQuery] int employeeID, [FromQuery] string tableName)
         {
             try
             {
                 var approve = SQLHelper<object>.ProcedureToList("spGetApproveID", new string[] { "@EmployeeID", "@TableName" },
                new object[] { employeeID, tableName });
-          //     var approveID = SQLHelper<object>.GetListData(approve, 1);
+                //     var approveID = SQLHelper<object>.GetListData(approve, 1);
                 return Ok(ApiResponseFactory.Success(approve[0][0], ""));
             }
             catch (Exception ex)

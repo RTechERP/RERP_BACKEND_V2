@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NPOI.SS.Formula.Functions;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -17,20 +16,21 @@ namespace RERPAPI.Controllers.Project
     [Authorize]
     public class ProjectPartlistController : ControllerBase
     {
-        ProductSaleRepo _productSaleRepo;
-        FirmRepo _firmRepo;
-        UnitCountRepo _unitCountRepo;
-        ProductRTCRepo _productRTCRepo;
-        ProjectPartlistPriceRequestRepo _priceRequestRepo;
-        ProjectPartlistVersionRepo _partlistVersionRepo;
-        ProjectPartlistPurchaseRequestRepo _partlistPurchaseRequestRepo;
+        private ProductSaleRepo _productSaleRepo;
+        private FirmRepo _firmRepo;
+        private UnitCountRepo _unitCountRepo;
+        private ProductRTCRepo _productRTCRepo;
+        private ProjectPartlistPriceRequestRepo _priceRequestRepo;
+        private ProjectPartlistVersionRepo _partlistVersionRepo;
+        private ProjectPartlistPurchaseRequestRepo _partlistPurchaseRequestRepo;
         private readonly ProjectPartListRepo _projectPartlistRepo;
         private readonly WarehouseRepo _warehouseRepo;
         private readonly BillExportRepo _billExportRepo;
         private readonly ProductGroupRepo _productGroupRepo;
         private readonly InventoryStockRepo _inventoryStockRepo;
-        ProjectPartlistPriceRequestNoteRepo _projectPartlistPriceRequestNoteRepo;
-        UnitCountKTRepo _unitCountKTRepo;
+        private ProjectPartlistPriceRequestNoteRepo _projectPartlistPriceRequestNoteRepo;
+        private UnitCountKTRepo _unitCountKTRepo;
+
         public ProjectPartlistController(ProjectPartListRepo projectPartlistRepo, ProductSaleRepo productSaleRepo, FirmRepo firmRepo, UnitCountRepo unitCountRepo, ProductRTCRepo productRTCRepo, ProjectPartlistPriceRequestRepo priceRequestRepo, ProjectPartlistVersionRepo partlistVersionRepo, ProjectPartlistPurchaseRequestRepo partlistPurchaseRequestRepo, UnitCountKTRepo unitCountKTRepo, WarehouseRepo warehouseRepo, BillExportRepo billExportRepo, ProductGroupRepo productGroupRepo, InventoryStockRepo inventoryStockRepo, ProjectPartlistPriceRequestNoteRepo projectPartlistPriceRequestNoteRepo)
         {
             _projectPartlistRepo = projectPartlistRepo;
@@ -48,6 +48,7 @@ namespace RERPAPI.Controllers.Project
             _inventoryStockRepo = inventoryStockRepo;
             _projectPartlistPriceRequestNoteRepo = projectPartlistPriceRequestNoteRepo;
         }
+
         [HttpPost("get-all")]
         public IActionResult GetAll(ProjectPartlistParam param)
         {
@@ -68,6 +69,7 @@ namespace RERPAPI.Controllers.Project
                 ));
             }
         }
+
         [HttpGet("get-suggestion")]
         public IActionResult GetSuggestion()
         {
@@ -77,12 +79,14 @@ namespace RERPAPI.Controllers.Project
             var data = SQLHelper<dynamic>.GetListData(dt, 0);
             return Ok(ApiResponseFactory.Success(data, ""));
         }
+
         [HttpGet("get-stt")]
         public IActionResult getSTT(int versionID)
         {
             int stt = _projectPartlistRepo.getSTT(versionID);
             return Ok(ApiResponseFactory.Success(stt, ""));
         }
+
         [HttpPost("approvedTBP")]
         public async Task<IActionResult> AppprovedTBP([FromBody] ApprovedTBPRequest request)
         {
@@ -98,7 +102,6 @@ namespace RERPAPI.Controllers.Project
                         return BadRequest(ApiResponseFactory.Fail(null, "Không thể duyệt vì vật tư thứ TT []"));
                     }
 
-
                     var productSales = _productSaleRepo.GetAll(x => x.IsDeleted == false
                        && x.ProductCode == pjPL.ProductCode && x.IsFix == true).FirstOrDefault();
 
@@ -109,7 +112,6 @@ namespace RERPAPI.Controllers.Project
                             return Ok(new { status = 2, message = messageErr });
                         }
                     }
-
 
                     if (!_projectPartlistRepo.ValidateApproveTBP(pjPL, request.Approved, out messageError))
                     {
@@ -131,6 +133,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi:{ex.Message}"));
             }
         }
+
         [HttpPost("price-request")]
         public async Task<IActionResult> PriceRequest([FromBody] List<ProjectPartlistDTO> request)
         {
@@ -210,8 +213,8 @@ namespace RERPAPI.Controllers.Project
                         DateRequest = DateTime.Now,
                         Deadline = item.DeadlinePriceRequest,
                         Quantity = item.QtyFull,
-						LeadTimeTechnical = item.LeadTimeTechnical,
-						TargetPrice = item.TargetPrice,
+                        LeadTimeTechnical = item.LeadTimeTechnical,
+                        TargetPrice = item.TargetPrice,
                         IsDeleted = false
                     };
                     await _priceRequestRepo.CreateAsync(priceRequest);
@@ -230,7 +233,9 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi: {ex.Message}"));
             }
         }
+
         #region yêu cầu báo giá lại
+
         [HttpPost("price-request-again")]
         public async Task<IActionResult> PriceRequestAgain([FromBody] List<ProjectPartlistDTO> request)
         {
@@ -257,7 +262,6 @@ namespace RERPAPI.Controllers.Project
                     {
                         return BadRequest(ApiResponseFactory.Fail(null, $"Vật tư Stt [{item.STT}] chưa được TBP duyệt mới.\nVui lòng kiểm tra lại!"));
                     }
-
                 }
 
                 // ===== LOOP 2: XỬ LÝ =====
@@ -293,7 +297,7 @@ namespace RERPAPI.Controllers.Project
                         Deadline = item.DeadlinePriceRequest,
                         Quantity = item.QtyFull,
                         IsDeleted = false,
-                        LeadTimeTechnical= item.LeadTimeTechnical,
+                        LeadTimeTechnical = item.LeadTimeTechnical,
                         TargetPrice = item.TargetPrice,
                         //Note = item.Note
                     };
@@ -313,7 +317,8 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi: {ex.Message}"));
             }
         }
-        #endregion
+
+        #endregion yêu cầu báo giá lại
 
         [HttpPost("cancel-price-request")]
         public async Task<IActionResult> CancelPriceRequest([FromBody] List<ProjectPartlistDTO> request)
@@ -360,6 +365,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi:{ex.Message}"));
             }
         }
+
         //lấy giá lịch sử
         [HttpPost("get-price-history")]
         public async Task<IActionResult> GetPriceHistory([FromBody] List<ProjectPartlistDTO> request)
@@ -382,7 +388,6 @@ namespace RERPAPI.Controllers.Project
                     data.Price = unitPriceHistory;
                     data.Amount = amount;
                     await _projectPartlistRepo.UpdateAsync(data);
-
                 }
                 return Ok(ApiResponseFactory.Success(null, "Lấy giá lịch sử thành công!"));
             }
@@ -391,8 +396,9 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi:{ex.Message}"));
             }
         }
+
         //end
-        //khôi phục partlist 
+        //khôi phục partlist
         [HttpPost("restore-delete")]
         public async Task<IActionResult> RestoreDelete([FromBody] List<ProjectPartlistDTO> request)
         {
@@ -403,7 +409,6 @@ namespace RERPAPI.Controllers.Project
                     ProjectPartList data = _projectPartlistRepo.GetByID(item.ID);
                     data.IsDeleted = false;
                     await _projectPartlistRepo.UpdateAsync(data);
-
                 }
                 return Ok(ApiResponseFactory.Success(null, "Khôi phục thành công!"));
             }
@@ -540,7 +545,6 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-
         [HttpPost("approved-newcode")]
         public async Task<IActionResult> ApprovedNewCode(bool isApprovedNew, [FromBody] List<ProjectPartlistDTO> request)
         {
@@ -674,7 +678,8 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi: {ex.Message}"));
             }
         }
-        //duyệt tích xanh 
+
+        //duyệt tích xanh
         [HttpPost("approved-fix")]
         public async Task<IActionResult> ApprovedIsFix([FromBody] List<ProjectPartlistDTO> request, bool isFix)
         {
@@ -707,7 +712,6 @@ namespace RERPAPI.Controllers.Project
                 var firms = _firmRepo.GetAll(x => x.FirmType == 1).ToList();
                 var firmDemos = _firmRepo.GetAll(x => x.FirmType == 2).ToList();
 
-
                 foreach (var item in request)
                 {
                     if (!item.IsLeaf) continue;
@@ -725,7 +729,6 @@ namespace RERPAPI.Controllers.Project
                         ?? new Firm();
                     foreach (var product in productSale)
                     {
-
                         if (isFix)
                         {
                             // Giống WinForm UpdateProductSale
@@ -747,14 +750,13 @@ namespace RERPAPI.Controllers.Project
             }
             catch (Exception ex)
             {
-
                 return BadRequest(ApiResponseFactory.Fail(ex,
                     $"Lỗi: {ex.Message}"));
             }
-
         }
+
         //end
-        //get gợi ý cho tên thiết bị và hãng sản xuất 
+        //get gợi ý cho tên thiết bị và hãng sản xuất
         [HttpGet("get-suggestion-name-maker")]
         public async Task<IActionResult> GetSuggestionNameMaker()
         {
@@ -774,8 +776,8 @@ namespace RERPAPI.Controllers.Project
                 return Ok(ApiResponseFactory.Success(result, " lấy dữ liệu thành công!")); // Sửa message động
             }
             catch (Exception ex) { return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi: {ex.Message}")); }
-
         }
+
         //end
         [HttpGet("get-partlist-by-id")]
         public async Task<IActionResult> GetPartListByID(int partlistID)
@@ -786,8 +788,8 @@ namespace RERPAPI.Controllers.Project
                 return Ok(ApiResponseFactory.Success(result, " lấy dữ liệu thành công!")); // Sửa message động
             }
             catch (Exception ex) { return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi: {ex.Message}")); }
-
         }
+
         [HttpPost("save-projectpartlist")]
         public async Task<IActionResult> SaveDataAsync(ProjectPartList partList, bool overrideFix = false)
         {
@@ -877,6 +879,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("update-projectpartlist")]
         public async Task<IActionResult> updatePartList(ProjectPartList partList, bool overrideFix = false, bool isLeaf = false)
         {
@@ -1200,6 +1203,7 @@ namespace RERPAPI.Controllers.Project
                 foreach (var item in request.Items)
                 {
                     #region Check sản phẩm kho vật tư tiêu hao
+
                     if (request.IsConsumable == true)
                     {
                         string productCode = item.ProductCode?.Trim();
@@ -1218,6 +1222,7 @@ namespace RERPAPI.Controllers.Project
                                     continue;
                                 }
                                 break;
+
                             case 8: // điện
                                 var checkProductVtthD = _productSaleRepo.GetAll(x =>
                                     x.ProductCode == productCode &&
@@ -1231,6 +1236,7 @@ namespace RERPAPI.Controllers.Project
                                     continue;
                                 }
                                 break;
+
                             case 17: // vtth
                                 var checkProductVtth = _productSaleRepo.GetAll(x =>
                                     x.ProductCode.ToLower().Trim() == productCode.ToLower().Trim() &&
@@ -1244,13 +1250,14 @@ namespace RERPAPI.Controllers.Project
                                     continue;
                                 }
                                 break;
+
                             default:
                                 break;
                         }
                     }
-                    #endregion
-                }
 
+                    #endregion Check sản phẩm kho vật tư tiêu hao
+                }
 
                 return Ok(new
                 {
@@ -1268,6 +1275,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("check-tontai")]
         public async Task<IActionResult> checkTonTai([FromBody] PartlistImportRequestDTO request)
         {
@@ -1281,6 +1289,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("over-write-data")]
         public async Task<IActionResult> OverWriteData([FromBody] PartlistImportRequestDTO request)
         {
@@ -1302,6 +1311,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("check-exits-import")]
         public async Task<IActionResult> CheckExistImport([FromBody] PartlistImportRequestDTO request)
         {
@@ -1369,6 +1379,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("apply-diff2")]
         public async Task<IActionResult> ApplyDiff([FromBody] PartlistImportRequestDTO request)
         {
@@ -1399,7 +1410,6 @@ namespace RERPAPI.Controllers.Project
                     x.IsDeleted != true
                 );
 
-
                 List<string> listParentTT = oldItems
                     .Where(x => x.TT.Contains("."))
                     .Select(x => x.TT.Substring(0, x.TT.LastIndexOf(".")))
@@ -1421,6 +1431,7 @@ namespace RERPAPI.Controllers.Project
                         continue;
 
                     #region Check sản phẩm kho vật tư tiêu hao
+
                     if (request.IsConsumable == true)
                     {
                         string productCode = item.ProductCode?.Trim();
@@ -1439,6 +1450,7 @@ namespace RERPAPI.Controllers.Project
                                     continue;
                                 }
                                 break;
+
                             case 8: // điện
                                 var checkProductVtthD = _productSaleRepo.GetAll(x =>
                                     x.ProductCode == productCode &&
@@ -1452,6 +1464,7 @@ namespace RERPAPI.Controllers.Project
                                     continue;
                                 }
                                 break;
+
                             case 17: // vtth
                                 var checkProductVtth = _productSaleRepo.GetAll(x =>
                                     x.ProductCode.ToLower().Trim() == productCode.ToLower().Trim() &&
@@ -1465,15 +1478,17 @@ namespace RERPAPI.Controllers.Project
                                     continue;
                                 }
                                 break;
+
                             default:
                                 break;
                         }
                     }
-                    #endregion
+
+                    #endregion Check sản phẩm kho vật tư tiêu hao
 
                     // Tìm record cũ theo TT
                     var exist = oldItems.FirstOrDefault(x => x.TT == item.TT);
-                    if (exist != null) continue; // TN.Binh update 24/12 tự bỏ qua vật tư trung TT 
+                    if (exist != null) continue; // TN.Binh update 24/12 tự bỏ qua vật tư trung TT
 
                     if (request.IsProblem)
                     {
@@ -1578,7 +1593,9 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         #region update stock nhập excel
+
         [HttpPost("update-stock")]
         public async Task<IActionResult> UpdateStock([FromBody] PartlistImportRequestDTO request)
         {
@@ -1754,7 +1771,7 @@ namespace RERPAPI.Controllers.Project
 
                         if (productSale == null || productSale.ID <= 0) continue;
 
-                        decimal minQuantity = item.QtyFull ?? 0; // 
+                        decimal minQuantity = item.QtyFull ?? 0; //
 
                         InventoryStock inventory = _inventoryStockRepo.GetAll(x =>
                             x.ProductSaleID == productSale.ID
@@ -1792,9 +1809,10 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-        #endregion
+        #endregion update stock nhập excel
+
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="request"></param>
         /// <param name="status =2 theo kho, =1 theo partlist"></param>
@@ -1828,7 +1846,7 @@ namespace RERPAPI.Controllers.Project
                         string maker = item.MakerStock;
                         string unit = item.UnitStock;
                         string productName = item.ProductNameStock;
-                        if (string.IsNullOrWhiteSpace(maker) && string.IsNullOrWhiteSpace(unit) && string.IsNullOrWhiteSpace(productName)) continue; // bỏ qua 
+                        if (string.IsNullOrWhiteSpace(maker) && string.IsNullOrWhiteSpace(unit) && string.IsNullOrWhiteSpace(productName)) continue; // bỏ qua
 
                         if (string.IsNullOrWhiteSpace(maker)) maker = item.Maker;
                         if (string.IsNullOrWhiteSpace(unit)) unit = item.Unit;
@@ -1847,7 +1865,6 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         [HttpPost("delete-partlist")]
         public async Task<IActionResult> DeletePartList([FromBody] List<ProjectPartList> listItem)
@@ -1874,6 +1891,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //// yêu cầu xuất kho
         [HttpPost("request-export")]
         public async Task<IActionResult> RequestExport([FromBody] RequestExportRequestDTO request)
@@ -2097,6 +2115,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // yêu cầu xuất kho new
         //[HttpPost("request-export")]
         //public async Task<IActionResult> RequestExport([FromBody] RequestExportRequestDTO request)
@@ -2144,7 +2163,6 @@ namespace RERPAPI.Controllers.Project
         //                }
         //            }
         //        }
-
 
         //        // Sau vòng lặp, kiểm tra nếu không có sản phẩm hợp lệ nào
         //        if (validIds.Count <= 0)
@@ -2339,7 +2357,6 @@ namespace RERPAPI.Controllers.Project
             int projectID,
             string reasonProblem)
         {
-
             try
             {
                 // Lấy danh sách Partlist version cũ
@@ -2440,20 +2457,14 @@ namespace RERPAPI.Controllers.Project
 
                 if (!hasInsert)
                     throw new Exception("Không có vật tư mới nào được bổ sung. Tất cả đều đã tồn tại trong PO.");
-
             }
             catch (Exception ex)
             {
-
                 throw new Exception("Lỗi khi bổ sung PO: " + ex.Message);
             }
         }
 
-
-
-
-
-        //lịch sử giá + sản phẩm trong kho 
+        //lịch sử giá + sản phẩm trong kho
         [HttpPost("history-partlist")]
         public async Task<IActionResult> HistoryPartList([FromBody] HistoryPartListRequestParam request)
         {
@@ -2479,13 +2490,11 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-
         [HttpPost("additional-partlist-po")]
         public async Task<IActionResult> AdditionalPartListPO([FromBody] AdditionPartlistPoDTO request)
         {
             try
             {
-
                 if (request.ListItem.Count <= 0)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng chọn parartlist cần bổ sung"));
@@ -2593,8 +2602,6 @@ namespace RERPAPI.Controllers.Project
                     await _partlistVersionRepo.CreateAsync(newVersion);
 
                     await UpdatePartList(newVersion.ID, versionModel.ID, request.ProjectID ?? 0);
-
-
                 }
                 return Ok(ApiResponseFactory.Success(null, "Đã xử lý thành công!"));
             }
@@ -2629,7 +2636,6 @@ namespace RERPAPI.Controllers.Project
 
                     partList.ParentID = _projectPartlistRepo.GetParentIDAdditionalPO(stt, newVersionID, false);
 
-
                     partList.ProjectTypeID = item.ProjectTypeID;
                     partList.ProjectPartListVersionID = newVersionID;
 
@@ -2663,7 +2669,6 @@ namespace RERPAPI.Controllers.Project
                     if (partList.ID > 0)
                     {
                         await _projectPartlistRepo.UpdateAsync(partList);
-
                     }
                     else
                     {
@@ -2680,7 +2685,6 @@ namespace RERPAPI.Controllers.Project
             {
                 throw new Exception("Lỗi khi update dữ liệu PO: " + ex.Message);
             }
-
         }
 
         [HttpPost("check-approve-newcode")]
@@ -2711,6 +2715,7 @@ namespace RERPAPI.Controllers.Project
         }
 
         #region Check vật tư tiêu hao
+
         [HttpPost("check-partlist-consumable")]
         public async Task<IActionResult> CheckPartlistConsumable(List<ProjectPartList> partLists, int projectTypeID)
         {
@@ -2736,6 +2741,7 @@ namespace RERPAPI.Controllers.Project
                                 continue;
                             }
                             break;
+
                         case 8: // điện
                             var checkProductVtthD = _productSaleRepo.GetAll(x =>
                                 x.ProductCode == productCode &&
@@ -2749,6 +2755,7 @@ namespace RERPAPI.Controllers.Project
                                 continue;
                             }
                             break;
+
                         case 17: // vtth
                             var checkProductVtth = _productSaleRepo.GetAll(x =>
                                 x.ProductCode.ToLower().Trim() == productCode.ToLower().Trim() &&
@@ -2762,6 +2769,7 @@ namespace RERPAPI.Controllers.Project
                                 continue;
                             }
                             break;
+
                         default:
                             break;
                     }
@@ -2774,6 +2782,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion Check vật tư tiêu hao
     }
 }

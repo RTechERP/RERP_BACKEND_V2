@@ -1,11 +1,5 @@
-﻿using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
+﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.JobRequirements
 {
@@ -15,6 +9,7 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.JobRequirements
         private JobRequirementDetailRepo _jobRequirementDetailRepo;
         private CurrentUser _currentUser;
         private EmployeeSendEmailRepo _employeeSendEmailRepo;
+
         public JobRequirementRepo(CurrentUser currentUser, JobRequirementDetailRepo jobRequirementDetailRepo, EmployeeRepo employeeRepo, EmployeeSendEmailRepo employeeSendEmailRepo) : base(currentUser)
         {
             _jobRequirementDetailRepo = jobRequirementDetailRepo;
@@ -22,6 +17,7 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.JobRequirements
             _employeeRepo = employeeRepo;
             _employeeSendEmailRepo = employeeSendEmailRepo;
         }
+
         //public void SendMail(JobRequirement job)
         //{
         //    //todo send mail

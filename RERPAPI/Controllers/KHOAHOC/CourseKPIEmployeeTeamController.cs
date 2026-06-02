@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -11,11 +10,13 @@ namespace RERPAPI.Controllers.KHOAHOC
     public class CourseKPIEmployeeTeamController : ControllerBase
     {
         #region Khai báo repository
-        CourseKPIEmployeeTeamRepo teamRepo;
-        DepartmentRepo departmentRepo;
-        EmployeeRepo employeeRepo;
-        CourseKPIEmployeeTeamRepo _course_KPIEmployeeTeamRepo;
-        CourseKPIEmployeeTeamLinkRepo _course_KPIEmployeeTeamLinkRepo;
+
+        private CourseKPIEmployeeTeamRepo teamRepo;
+        private DepartmentRepo departmentRepo;
+        private EmployeeRepo employeeRepo;
+        private CourseKPIEmployeeTeamRepo _course_KPIEmployeeTeamRepo;
+        private CourseKPIEmployeeTeamLinkRepo _course_KPIEmployeeTeamLinkRepo;
+
         public CourseKPIEmployeeTeamController(CourseKPIEmployeeTeamRepo teamRepo, EmployeeRepo employeeRepo, DepartmentRepo departmentRepo, CourseKPIEmployeeTeamRepo course_KPIEmployeeTeamRepo, CourseKPIEmployeeTeamLinkRepo course_KPIEmployeeTeamLinkRepo)
         {
             this.teamRepo = teamRepo;
@@ -24,8 +25,11 @@ namespace RERPAPI.Controllers.KHOAHOC
             _course_KPIEmployeeTeamRepo = course_KPIEmployeeTeamRepo;
             _course_KPIEmployeeTeamLinkRepo = course_KPIEmployeeTeamLinkRepo;
         }
-        #endregion
+
+        #endregion Khai báo repository
+
         #region lấy ra tất cả team
+
         /// <summary>
         /// lấy team theo từng quý, nawmg, phòng ban
         /// </summary>
@@ -34,13 +38,12 @@ namespace RERPAPI.Controllers.KHOAHOC
         /// <param name="departmentID"></param>
         /// <returns></returns>
         [HttpGet("getall")]
-        public IActionResult GetAll( int departmentID)
+        public IActionResult GetAll(int departmentID)
         {
-
             try
             {
                 var teams = SQLHelper<object>.ProcedureToList("spGetALLCourseKPIEmployeeTeam",
-                                                                new string[] {  "@DepartmentID" },
+                                                                new string[] { "@DepartmentID" },
                                                                 new object[] { departmentID });
                 return Ok(new
                 {
@@ -57,7 +60,6 @@ namespace RERPAPI.Controllers.KHOAHOC
                     error = ex.ToString()
                 });
             }
-
         }
 
         [HttpGet("get-employee-in-team")]
@@ -79,8 +81,11 @@ namespace RERPAPI.Controllers.KHOAHOC
                 });
             }
         }
-        #endregion
+
+        #endregion lấy ra tất cả team
+
         #region lấy theo ID
+
         [HttpGet("getbyid")]
         public IActionResult FindByID(int id)
         {
@@ -111,14 +116,16 @@ namespace RERPAPI.Controllers.KHOAHOC
                 });
             }
         }
-        #endregion
+
+        #endregion lấy theo ID
+
         #region Lưu dữ liệu
+
         [HttpPost("savedata")]
         public async Task<IActionResult> SaveData([FromBody] CourseKPIEmployeeTeam team)
         {
             try
             {
-
                 if (team.ID <= 0) await teamRepo.CreateAsync(team);
                 else await teamRepo.UpdateAsync(team);
 
@@ -139,6 +146,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                 });
             }
         }
-        #endregion
+
+        #endregion Lưu dữ liệu
     }
 }

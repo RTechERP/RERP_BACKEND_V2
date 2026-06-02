@@ -10,11 +10,11 @@ namespace RERPAPI.Controllers.Old.TB
     public class UnitCountKTController : ControllerBase
     {
         private readonly UnitCountKTRepo _unitCountKTRepo;
+
         public UnitCountKTController(UnitCountKTRepo unitCountKTRepo)
         {
             _unitCountKTRepo = unitCountKTRepo;
         }
-
 
         [HttpGet("get-all")]
         public IActionResult GetUnitCount()
@@ -23,7 +23,6 @@ namespace RERPAPI.Controllers.Old.TB
             {
                 var rs = _unitCountKTRepo.GetAll(x => x.IsDeleted == false);
                 return Ok(ApiResponseFactory.Success(rs, ""));
-
             }
             catch (Exception ex)
             {
@@ -44,7 +43,6 @@ namespace RERPAPI.Controllers.Old.TB
                 }
 
                 return Ok(ApiResponseFactory.Success(unitCounts, ""));
-
             }
             catch (Exception ex)
             {

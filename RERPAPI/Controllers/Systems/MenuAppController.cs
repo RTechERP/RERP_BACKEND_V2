@@ -1,17 +1,10 @@
 ﻿using Dapper;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
-using NPOI.POIFS.Properties;
-using NPOI.SS.Formula.Functions;
-using RERPAPI.Attributes;
-using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Repo.GenericEntity.Systems;
-using System.Threading.Tasks;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.Systems
 {
@@ -43,7 +36,7 @@ namespace RERPAPI.Controllers.Systems
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 _currentUser = ObjectMapper.GetCurrentUser(claims);
                 var connection = new SqlConnection(_configuration.GetValue<string>("ConnectionString") ?? "");
-                var param = new { Keyword = keyword, UserID = _currentUser .ID};
+                var param = new { Keyword = keyword, UserID = _currentUser.ID };
                 var data = await connection.QueryMultipleAsync("spGetMenuApp", param, commandType: System.Data.CommandType.StoredProcedure);
 
                 var menus = (await data.ReadAsync()).ToList();
@@ -78,10 +71,8 @@ namespace RERPAPI.Controllers.Systems
         {
             try
             {
-
                 if (menu.IsDeleted != true)
                 {
-
                     var validate = _menuRepo.Validate(menu);
                     if (validate.status == 0)
                     {

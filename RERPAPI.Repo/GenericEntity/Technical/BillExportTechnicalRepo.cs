@@ -1,11 +1,6 @@
 ﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RTCApi.Repo.GenericRepo
 {
@@ -21,8 +16,8 @@ namespace RTCApi.Repo.GenericRepo
             DateTime billDate = DateTime.Now;
 
             string preCode = "PXKD";
-       
-            List<BillExportTechnical> billExports = GetAll(a => a.IsDeleted==false).Where(x => (x.Code ?? "").Contains(billDate.ToString("yyMMdd"))).ToList();
+
+            List<BillExportTechnical> billExports = GetAll(a => a.IsDeleted == false).Where(x => (x.Code ?? "").Contains(billDate.ToString("yyMMdd"))).ToList();
 
             var listCode = billExports.Select(x => new
             {

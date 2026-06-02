@@ -1,11 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.ValueGeneration.Internal;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.Param
+﻿namespace RERPAPI.Model.Param
 {
     public class EmployeeBussinessInWebRequestParam
     {
@@ -16,8 +9,7 @@ namespace RERPAPI.Model.Param
         public string? Keyword { get; set; }
         public int? Type { get; set; }
         public int? VehicleID { get; set; }
-        public  int? NotCheckIn { get; set; }
+        public int? NotCheckIn { get; set; }
         public int? DepartmentID { get; set; }
-
     }
 }

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace RERPAPI.Model.Entities;
+﻿namespace RERPAPI.Model.Entities;
 
 /// <summary>
 /// Bảng liên kết nhân viên và cấu hình nhận email

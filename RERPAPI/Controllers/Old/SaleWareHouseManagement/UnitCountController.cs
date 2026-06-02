@@ -20,7 +20,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         [HttpGet("")]
         public IActionResult getUnitCount()
         {
-
             try
             {
                 List<UnitCount> dataUnit = _unitcountRepo.GetAll(x => x.IsDeleted != true);
@@ -60,7 +59,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 {
                     status = 1,
                     message = "Thêm đơn vị tính thành công!",
-
                 });
             }
             catch (Exception ex)
@@ -73,6 +71,5 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 });
             }
         }
-
     }
 }

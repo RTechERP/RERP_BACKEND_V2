@@ -1,9 +1,4 @@
 ﻿using RERPAPI.Model.Common;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Model.Param.HRM.DepartmentRequired
 {
@@ -16,6 +11,5 @@ namespace RERPAPI.Model.Param.HRM.DepartmentRequired
         public int DepartmentID { get; set; }
         public DateTime DateStart { get; set; } = TextUtils.MinDate;
         public DateTime DateEnd { get; set; } = TextUtils.MaxDate;
-
     }
 }

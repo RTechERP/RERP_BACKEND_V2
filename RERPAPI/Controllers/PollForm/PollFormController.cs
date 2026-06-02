@@ -1,8 +1,7 @@
-using Microsoft.AspNetCore.Authorization;
 using ClosedXML.Excel;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
@@ -12,7 +11,6 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using System.Globalization;
 using System.Reflection;
-using System.Security.Claims;
 using System.Text.Json;
 using PollFormEntity = RERPAPI.Model.Entities.PollForm;
 
@@ -1171,6 +1169,7 @@ namespace RERPAPI.Controllers.PollForm
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         /// <summary>
         /// Export poll responses to Excel. Each employee response is one row.
         /// </summary>
@@ -1419,8 +1418,8 @@ namespace RERPAPI.Controllers.PollForm
                                 OptionId = o.ID,
                                 OptionText = o.OptionText,
                                 OptionValue = o.OptionValue,
-                                Count = _pollResponseAnswerRepo.GetAll(x => 
-                                    x.PollQuestionID == q.ID && 
+                                Count = _pollResponseAnswerRepo.GetAll(x =>
+                                    x.PollQuestionID == q.ID &&
                                     x.AnswerText == o.OptionValue)
                                     .Count()
                             })
@@ -2360,8 +2359,10 @@ namespace RERPAPI.Controllers.PollForm
             {
                 case JsonValueKind.String:
                     return FormatChoiceValueForExport(element.GetString(), options);
+
                 case JsonValueKind.Number:
                     return FormatChoiceValueForExport(element.ToString(), options);
+
                 case JsonValueKind.Object:
                     if (element.TryGetProperty("optionText", out var optionText))
                         return optionText.ToString();
@@ -2376,9 +2377,11 @@ namespace RERPAPI.Controllers.PollForm
                     if (element.TryGetProperty("id", out var id))
                         return FormatChoiceValueForExport(id.ToString(), options);
                     return element.ToString();
+
                 case JsonValueKind.True:
                 case JsonValueKind.False:
                     return element.GetBoolean() ? "true" : "false";
+
                 default:
                     return element.ToString();
             }

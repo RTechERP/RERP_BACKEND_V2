@@ -1,10 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Model.DTO
 {
@@ -20,9 +14,5 @@ namespace RERPAPI.Model.DTO
         public List<int>? DeletedFile { get; set; }
 
         //public IFormFile[]? Files { get; set; } = Array.Empty<IFormFile>();
-
-
-
     }
-
 }

@@ -1,19 +1,10 @@
-using Google.Apis.Util;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
 using RERPAPI.Attributes;
-using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System.Threading.Tasks;
-using ZXing;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers
 {
@@ -91,7 +82,7 @@ namespace RERPAPI.Controllers
                     await _hrHiringRequestRepo.CreateAsync(model.HiringRequests);
                     hiringRequestId = model.HiringRequests.ID;
 
-                    await _hiringRequestApproveLinkRepo.CreateApprove(model.HiringRequests,_currentUser);
+                    await _hiringRequestApproveLinkRepo.CreateApprove(model.HiringRequests, _currentUser);
                 }
                 else
                 {
@@ -428,7 +419,7 @@ namespace RERPAPI.Controllers
                 var dt = SQLHelper<object>.ProcedureToList(
                     "spGetHRHiringRequest",
                     new string[] { "Keyword", "DepartmentID", "DateStart", "DateEnd", "ID", "@EmployeeRequestID", "@IsComplete" },
-                    new object[] { findText ?? "", departmentID, ds, de, id,requestID, IsCompleted }
+                    new object[] { findText ?? "", departmentID, ds, de, id, requestID, IsCompleted }
                 );
                 var data = SQLHelper<object>.GetListData(dt, 0);
                 return Ok(ApiResponseFactory.Success(data, ""));
@@ -888,6 +879,7 @@ namespace RERPAPI.Controllers
         }
 
         #region Duyệt yêu cầu
+
         [RequiresPermission("N57")]
         [HttpPost("approved-tbp")]
         public async Task<IActionResult> ApprovedTBP([FromBody] List<HRHiringRequestApproveLink> approveds)
@@ -900,7 +892,6 @@ namespace RERPAPI.Controllers
                 var result = await _hiringRequestApproveLinkRepo.Approved(approveds, currentUser);
                 if (result.status == 1) return Ok(result);
                 else return BadRequest(result);
-
             }
             catch (Exception ex)
             {
@@ -920,13 +911,13 @@ namespace RERPAPI.Controllers
                 var result = await _hiringRequestApproveLinkRepo.Approved(approveds, currentUser);
                 if (result.status == 1) return Ok(result);
                 else return BadRequest(result);
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N56")]
         [HttpPost("approved-tbp-hr")]
         public async Task<IActionResult> ApprovedTBPHR([FromBody] List<HRHiringRequestApproveLink> approveds)
@@ -939,13 +930,13 @@ namespace RERPAPI.Controllers
                 var result = await _hiringRequestApproveLinkRepo.Approved(approveds, currentUser);
                 if (result.status == 1) return Ok(result);
                 else return BadRequest(result);
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N58")]
         [HttpPost("approved-bgd")]
         public async Task<IActionResult> ApprovedBGD([FromBody] List<HRHiringRequestApproveLink> approveds)
@@ -958,19 +949,21 @@ namespace RERPAPI.Controllers
                 var result = await _hiringRequestApproveLinkRepo.Approved(approveds, currentUser);
                 if (result.status == 1) return Ok(result);
                 else return BadRequest(result);
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion Duyệt yêu cầu
+
         public class UpdateComplete
         {
             public int ID { get; set; }
             public bool IsCompleted { get; set; }
         }
+
         //API update trạng thái hoàn thành của phiếu yêu cầu tuyển dụng
         [RequiresPermission("N1,N2,N94")]
         [HttpPost("update-completed")]
@@ -985,27 +978,25 @@ namespace RERPAPI.Controllers
                     if (hr == null)
                         continue;
                     hr.IsCompleted = item.IsCompleted;
-                      int complete = await _hrHiringRequestRepo.UpdateAsync(hr);
-                    if(complete>0)
+                    int complete = await _hrHiringRequestRepo.UpdateAsync(hr);
+                    if (complete > 0)
                     {
                         result++;
-                    }    
+                    }
                 }
-                if(result>0)
+                if (result > 0)
                 {
                     return Ok(ApiResponseFactory.Success(null, "Cập nhật trạng thái thành công"));
-                }    
+                }
                 else
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Không có bản ghi để cập nhật"));
-                }    
+                }
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-       
-
     }
 }

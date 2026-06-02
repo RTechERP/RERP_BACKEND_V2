@@ -17,7 +17,7 @@ namespace RERPAPI.Controllers.HRM.Employees
         {
             _employeeTypeBussinessRepo = employeeTypeBussinessRepo;
         }
-     
+
         [HttpGet]
         public IActionResult GetEmployeeTypeBussiness()
         {

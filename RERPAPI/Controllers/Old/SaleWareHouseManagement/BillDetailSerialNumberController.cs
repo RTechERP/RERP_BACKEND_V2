@@ -1,9 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Model.DTO;
-using RERPAPI.Model.Entities;
-using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.AddNewBillExport;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Repo.GenericEntity.Technical;
 
 namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
@@ -14,6 +9,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     {
         private readonly BillExportDetailSerialNumberRepo _billExportDetailSerialNumberRepo;
         private readonly BillImportDetailSerialNumberRepo _billImportDetailSerialNumberRepo;
+
         public BillDetailSerialNumberController(
             BillExportDetailSerialNumberRepo billExportDetailSerialNumberRepo,
             BillImportDetailSerialNumberRepo billImportDetailSerialNumberRepo
@@ -47,7 +43,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     }
                     else
                     {
-                        data =  _billExportDetailSerialNumberRepo.GetByID(id);
+                        data = _billExportDetailSerialNumberRepo.GetByID(id);
                     }
 
                     if (data != null)
@@ -82,6 +78,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             public List<int> Ids { get; set; }
             public int Type { get; set; }
         }
+
         //[HttpPost("save-data")]
         //public async Task<IActionResult> SaveDataBillExportDetailSerialNumber([FromBody] BillDetailSerialNumberDTO dto)
         //{

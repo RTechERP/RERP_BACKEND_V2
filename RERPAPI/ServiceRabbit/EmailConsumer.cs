@@ -1,6 +1,7 @@
 ﻿using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Services;
+
 public class EmailConsumer
     : RabbitMqConsumer<EmployeeSendEmail>
 {
@@ -20,4 +21,3 @@ public class EmailConsumer
         return Task.CompletedTask;
     }
 }
-

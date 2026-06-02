@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace RERPAPI.Model.Entities;
+﻿namespace RERPAPI.Model.Entities;
 
 /// <summary>
 /// Bảng lưu các đề xuất phương án tuyển dụng cho phiếu yêu cầu công việc

@@ -13,4 +13,3 @@ namespace RERPAPI.Model.DTO
         public int TotalCount { get; set; }
     }
 }
-    

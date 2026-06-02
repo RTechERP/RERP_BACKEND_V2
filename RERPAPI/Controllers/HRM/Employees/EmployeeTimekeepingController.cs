@@ -1,18 +1,15 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
+
 namespace RERPAPI.Controllers.HRM.Employees
 {
     [Route("api/[controller]")]
     [ApiController]
-    
     public class EmployeeTimekeepingController : ControllerBase
     {
         private readonly EmployeeChamCongMasterRepo _employeeChamCongMaster;
@@ -31,18 +28,17 @@ namespace RERPAPI.Controllers.HRM.Employees
             _departmentRepo = departmentRepo;
             _employeeRepo = employeeRepo;
         }
+
         [RequiresPermission("N1,N2")]
         [HttpGet("get-employee-timekeeping")]
         public IActionResult GetEmployeeTimekeeping(int year, string? keyword)
         {
-
             try
             {
                 var dt = SQLHelper<object>.ProcedureToList("spGetEmployeeChamCongMaster",
                     new string[] { "@Year", "@Keyword" },
                     new object[] { year, keyword ?? "" });
 
-              
                 return Ok(ApiResponseFactory.Success(dt, "Lấy dữ lệu thành công"));
             }
             catch (Exception ex)
@@ -50,6 +46,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2")]
         [HttpGet("get-employee-timekeeping/{id}")]
         public IActionResult GetEmployeeTimekeepingID(int id)
@@ -67,27 +64,24 @@ namespace RERPAPI.Controllers.HRM.Employees
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
-
         }
-        [RequiresPermission("N1,N2")]
 
+        [RequiresPermission("N1,N2")]
         [HttpPost("savedata")]
         public async Task<IActionResult> SaveData([FromBody] EmployeeChamCongMaster employeeTimekeeping)
         {
             try
             {
-
                 if (employeeTimekeeping.ID <= 0) await _employeeChamCongMaster.CreateAsync(employeeTimekeeping);
                 else await _employeeChamCongMaster.UpdateAsync(employeeTimekeeping);
                 return Ok(ApiResponseFactory.Success(employeeTimekeeping, "Cập nhật thành công!"));
             }
             catch (Exception ex)
             {
-
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2")]
         [HttpGet("check-duplicate-employeetimekeeping/{id}/{month}/{year}")]
         public IActionResult CheckDuplicateEmployeeTimekeeping(int id, int month, int year)
@@ -112,6 +106,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2")]
         [HttpGet("get-department")]
         public IActionResult GetDepartment()
@@ -129,13 +124,13 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2")]
         [HttpGet("get-employee")]
         public IActionResult GetEmployee()
         {
             try
             {
-               
                 var employees = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
                                                 new string[] { "@Status" },
                                                 new object[] { 0 });
@@ -147,6 +142,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2")]
         [HttpGet("get-timekeeping-data")]
         public IActionResult GetTimekeepingData(
@@ -176,7 +172,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 // 0) Bảng chính
                 var data = Table(0);
 
-                // 1) Lịch ngày trong tháng (pivot D1..D31) 
+                // 1) Lịch ngày trong tháng (pivot D1..D31)
                 var weekdays = Table(1).FirstOrDefault();
 
                 // 2) Tổng ngày công chuẩn (1 dòng 1 cột: TotalWorkday)
@@ -220,6 +216,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2")]
         [HttpGet("get-timekeeping-detail-data")]
         public IActionResult GetTimekeepingDetailData(
@@ -238,12 +235,10 @@ namespace RERPAPI.Controllers.HRM.Employees
                     new object[] { month, year, departmentId, employeeId, keyword ?? "" }
                 );
 
-
                 return Ok(new
                 {
                     status = 1,
                     data = ds
-
                 });
             }
             catch (Exception ex)
@@ -251,6 +246,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2")]
         [HttpPost("update-all")]
         public IActionResult UpdateAll(
@@ -274,7 +270,6 @@ namespace RERPAPI.Controllers.HRM.Employees
                     new object[] { masterId, month, year, 0, loginName ?? "" }
                 );
 
-
                 return Ok(ApiResponseFactory.Success(null, "Cập nhật toàn bộ bảng công thành công"));
             }
             catch (Exception ex)
@@ -282,6 +277,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2")]
         [HttpPost("update-one")]
         public IActionResult UpdateOne(
@@ -304,7 +300,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 //    new object[] { masterId, employeeId }
                 //);
                 var existDetails = _employeeChamCongDetail.GetAll(x => x.MasterID == masterId && x.EmployeeID == employeeId && x.IsDeleted == false);
-                foreach (var detail in existDetails)    
+                foreach (var detail in existDetails)
                 {
                     detail.IsDeleted = true;
                     _employeeChamCongDetail.Update(detail);
@@ -315,7 +311,6 @@ namespace RERPAPI.Controllers.HRM.Employees
                     new[] { "@MasterID", "@Month", "@Year", "@EmployeeID", "@LoginName" },
                     new object[] { masterId, month, year, employeeId, loginName ?? "" }
                 );
-
 
                 return Ok(ApiResponseFactory.Success(null, "Cập nhật công nhân viên thành công"));
             }

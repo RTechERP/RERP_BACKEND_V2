@@ -7,13 +7,14 @@ namespace RERPAPI.Services;
 public class RabbitMqPublisher : IRabbitMqPublisher
 {
     private readonly RabbitMqConnection _connection;
+
     public RabbitMqPublisher(RabbitMqConnection connection)
     {
         _connection = connection;
     }
 
     public async Task PublishAsync<T>(
-     
+
         T message,
            string queue = "send-email",
         CancellationToken cancellationToken = default)
@@ -47,4 +48,3 @@ public class RabbitMqPublisher : IRabbitMqPublisher
         );
     }
 }
-

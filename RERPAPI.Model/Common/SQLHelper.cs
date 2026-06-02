@@ -6,9 +6,8 @@ namespace RERPAPI.Model.Common
 {
     public static class SQLHelper<T> where T : class, new()
     {
-
-        static string connectionString = Config.ConnectionString;
-        static int commandTimeout = 2000;
+        private static string connectionString = Config.ConnectionString;
+        private static int commandTimeout = 2000;
 
         public static T ProcedureToModel(string procedureName, string[] paramName, object[] paramValue)
         {
@@ -79,7 +78,6 @@ namespace RERPAPI.Model.Common
             return lst;
         }
 
-
         //TN.Bình update 01/08/25
         public static void ExcuteProcedure(string storeProcedureName, string[] paramName, object[] paramValue)
         {
@@ -110,10 +108,7 @@ namespace RERPAPI.Model.Common
             {
                 cn.Close();
             }
-
         }
-
-
 
         public static List<List<dynamic>> ProcedureToList(string procedureName, string[] paramName, object[] paramValue)
         {
@@ -170,13 +165,8 @@ namespace RERPAPI.Model.Common
             }
             finally
             {
-
             }
         }
-
-
-
-
 
         public static List<dynamic> GetListData(List<List<dynamic>> dynamics, int tableIndex)
         {
@@ -192,8 +182,5 @@ namespace RERPAPI.Model.Common
                 throw new Exception(ex.Message);
             }
         }
-
-
-
     }
 }

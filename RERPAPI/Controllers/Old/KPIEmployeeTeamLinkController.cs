@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -11,13 +10,18 @@ namespace RERPAPI.Controllers.Old
     public class KPIEmployeeTeamLinkController : ControllerBase
     {
         #region Khai báo repository
+
         private readonly KPIEmployeeTeamLinkRepo _teamLinkRepo;
+
         public KPIEmployeeTeamLinkController(KPIEmployeeTeamLinkRepo teamLinkRepo)
         {
             this._teamLinkRepo = teamLinkRepo;
         }
-        #endregion  
+
+        #endregion Khai báo repository
+
         #region Lấy tất cả nhân viên trong team
+
         [HttpGet("getall")]
         public IActionResult GetKPIEmployeeTeamLink(int kpiEmployeeteamID, int departmentID, int yearValue, int quarterValue)
         {
@@ -26,7 +30,6 @@ namespace RERPAPI.Controllers.Old
                 var teamlinks = SQLHelper<object>.ProcedureToList("spGetKPIEmployeeTeamLink_New",
                                                                 new string[] { "@KPIEmployeeteamID", "@DepartmentID", "@YearValue", "@QuarterValue" },
                                                                 new object[] { kpiEmployeeteamID, departmentID, yearValue, quarterValue });
-
 
                 return Ok(new
                 {
@@ -44,8 +47,11 @@ namespace RERPAPI.Controllers.Old
                 });
             }
         }
-        #endregion
+
+        #endregion Lấy tất cả nhân viên trong team
+
         #region Lưu dữ liệu
+
         [HttpPost("savedata")]
         public async Task<IActionResult> SaveData([FromBody] List<KPIEmployeeTeamLink> teamLinks)
         {
@@ -59,7 +65,7 @@ namespace RERPAPI.Controllers.Old
                     }
                     else await _teamLinkRepo.UpdateAsync(item);
                 }
-                return Ok(new {data=teamLinks, status = 1, message = "Cập nhật thành công." });
+                return Ok(new { data = teamLinks, status = 1, message = "Cập nhật thành công." });
             }
             catch (Exception ex)
             {
@@ -71,6 +77,7 @@ namespace RERPAPI.Controllers.Old
                 });
             }
         }
-        #endregion
+
+        #endregion Lưu dữ liệu
     }
 }

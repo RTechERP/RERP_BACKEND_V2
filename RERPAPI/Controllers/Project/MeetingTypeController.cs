@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
@@ -13,11 +12,14 @@ namespace RERPAPI.Controllers.Project
     public class MeetingTypeController : ControllerBase
     {
         private readonly MeetingTypeRepo _meetingTypeRepo;
+
         public MeetingTypeController(MeetingTypeRepo meetingTypeRepo)
         {
             _meetingTypeRepo = meetingTypeRepo;
         }
+
         #region hoang hai
+
         /// <summary>
         /// Lấy danh sách tất cả loại cuộc họp
         /// </summary>
@@ -40,7 +42,6 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-
                 if (meetingtype.ID <= 0)
                 {
                     meetingtype.IsDelete = false;
@@ -76,7 +77,9 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion hoang hai
+
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] List<MeetingType> data)
         {
@@ -104,7 +107,6 @@ namespace RERPAPI.Controllers.Project
                     {
                         await _meetingTypeRepo.CreateAsync(dto);
                     }
-
                 }
                 return Ok(ApiResponseFactory.Success(null, "Lưu loại cuộc họp thành công!"));
             }

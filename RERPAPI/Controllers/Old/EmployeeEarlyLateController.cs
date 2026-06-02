@@ -1,12 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
-using System.ComponentModel;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -17,8 +15,8 @@ namespace RERPAPI.Controllers.Old
     {
         private readonly EmployeeEarlyLateRepo _employeeEarlyLateRepo;
         private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
-        EmployeeSendEmailRepo _employeeSendEmailRepo;
-        EmployeeRepo _employeeRepo;
+        private EmployeeSendEmailRepo _employeeSendEmailRepo;
+        private EmployeeRepo _employeeRepo;
         private readonly EmailHelper _emailHelper;
 
         public EmployeeEarlyLateController(EmployeeEarlyLateRepo employeeEarlyLateRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeSendEmailRepo employeeSendEmailRepo, EmployeeRepo employeeRepo, EmailHelper emailHelper)
@@ -31,7 +29,6 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost]
-        //[RequiresPermission("N2,N1")]
         public IActionResult GetEmployeeEarlyLate(EmployeeEarlyLateParam param)
         {
             try
@@ -61,7 +58,6 @@ namespace RERPAPI.Controllers.Old
                     data = SQLHelper<object>.GetListData(employeeEarlyLate, 0),
                     status = 1
                 });
-
             }
             catch (Exception ex)
             {
@@ -73,8 +69,8 @@ namespace RERPAPI.Controllers.Old
                 });
             }
         }
-        [HttpPost("get-employee-early-late-person")]
 
+        [HttpPost("get-employee-early-late-person")]
         public IActionResult GetEmployeeEarlyLatePerson(EmployeeOnLeavePersonParam request)
         {
             try
@@ -93,7 +89,6 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost("list-summary-employee-early-late")]
-
         public IActionResult ListSummaryEmployeeOnleavePerson(EmployeeEarlyLateSummaryParam request)
         {
             try
@@ -112,12 +107,10 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost("save-data")]
-        //[RequiresPermission("N2,N1")]
         public async Task<IActionResult> SaveEmployeeEarlyLate([FromBody] EmployeeEarlyLate employeeEarlyLate)
         {
             try
             {
-
                 if (employeeEarlyLate.ID <= 0)
                 {
                     if (employeeEarlyLate.DateStart.HasValue)
@@ -132,7 +125,7 @@ namespace RERPAPI.Controllers.Old
                                                                                                  x.DateRegister.Value.Date == employeeEarlyLate.DateRegister.Value.Date &&
                                                                                                     x.Type == employeeEarlyLate.Type &&
                                                                                                      x.ID != employeeEarlyLate.ID
-                                                                                                     &&x.IsDeleted!=true);
+                                                                                                     && x.IsDeleted != true);
                     if (exisingEmployeeEarlyLate.Any())
                     {
                         return BadRequest(new

@@ -1,13 +1,10 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using ClosedXML.Excel;
-using System.IO;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers.Old.POKH
 {
@@ -16,9 +13,10 @@ namespace RERPAPI.Controllers.Old.POKH
     [Authorize]
     public class HistoryMoneyPOController : ControllerBase
     {
-        HistoryMoneyPORepo _historyMoneyPORepo;
-        POKHDetailRepo _pokhDetailRepo;
-        POKHRepo _pokhRepo;
+        private HistoryMoneyPORepo _historyMoneyPORepo;
+        private POKHDetailRepo _pokhDetailRepo;
+        private POKHRepo _pokhRepo;
+
         public HistoryMoneyPOController(HistoryMoneyPORepo historyMoneyPORepo, POKHDetailRepo pokhDetailRepo, POKHRepo pokhRepo)
         {
             _historyMoneyPORepo = historyMoneyPORepo;
@@ -108,13 +106,13 @@ namespace RERPAPI.Controllers.Old.POKH
                     {
                         var dict = item as IDictionary<string, object>;
                         worksheet.Cell(row, 1).Value = dict.ContainsKey("STT") && dict["STT"] != null ? dict["STT"].ToString() : (row - 1).ToString();
-                        
+
                         if (dict.ContainsKey("MoneyDate") && dict["MoneyDate"] != null)
                         {
                             if (DateTime.TryParse(dict["MoneyDate"].ToString(), out DateTime date))
                                 worksheet.Cell(row, 2).Value = date.ToString("dd/MM/yyyy");
                         }
-                        
+
                         worksheet.Cell(row, 3).Value = dict.ContainsKey("Money") && dict["Money"] != null ? Convert.ToDecimal(dict["Money"]) : 0;
                         worksheet.Cell(row, 4).Value = dict.ContainsKey("Note") && dict["Note"] != null ? dict["Note"].ToString() : "";
                         worksheet.Cell(row, 5).Value = dict.ContainsKey("BankName") && dict["BankName"] != null ? dict["BankName"].ToString() : "";
@@ -123,7 +121,7 @@ namespace RERPAPI.Controllers.Old.POKH
                         worksheet.Cell(row, 8).Value = dict.ContainsKey("TeamSaleName") && dict["TeamSaleName"] != null ? dict["TeamSaleName"].ToString() : "";
                         worksheet.Cell(row, 9).Value = dict.ContainsKey("VAT") && dict["VAT"] != null ? Convert.ToDecimal(dict["VAT"]) : 0;
                         worksheet.Cell(row, 10).Value = dict.ContainsKey("MoneyVAT") && dict["MoneyVAT"] != null ? Convert.ToDecimal(dict["MoneyVAT"]) : 0;
-                        
+
                         row++;
                     }
 
@@ -168,23 +166,20 @@ namespace RERPAPI.Controllers.Old.POKH
 
             try
             {
-
-                if(dto.listIdsDel.Count > 0)
+                if (dto.listIdsDel.Count > 0)
                 {
-                    foreach(int id in dto.listIdsDel)
+                    foreach (int id in dto.listIdsDel)
                     {
                         HistoryMoneyPO modelDel = await _historyMoneyPORepo.GetByIDAsync(id);
                         modelDel.IsDeleted = true;
                         modelDel.UpdatedDate = DateTime.Now;
                         await _historyMoneyPORepo.UpdateAsync(modelDel);
                     }
-                }   
-                
+                }
+
                 foreach (var item in dto.historyMoneyPOs)
                 {
-
                     HistoryMoneyPO model = item.ID > 0 ? await _historyMoneyPORepo.GetByIDAsync(item.ID) : new HistoryMoneyPO();
-                    
 
                     model.Money = item.Money;
                     model.MoneyVAT = item.MoneyVAT;
@@ -225,7 +220,7 @@ namespace RERPAPI.Controllers.Old.POKH
                 if (po == null)
                     return BadRequest("Không tìm thấy POKH.");
 
-                decimal totalReceive = _historyMoneyPORepo.GetAll(x=>x.POKHID == dto.pokhId).Sum(x => x.Money ?? 0);
+                decimal totalReceive = _historyMoneyPORepo.GetAll(x => x.POKHID == dto.pokhId).Sum(x => x.Money ?? 0);
 
                 po.ReceiveMoney = totalReceive;
 
@@ -269,15 +264,12 @@ namespace RERPAPI.Controllers.Old.POKH
 
                 decimal totalMoneyRemaining = totalMoney - totalReceive;
 
-
-                return Ok(ApiResponseFactory.Success( new { TotalMoneyRemaining = totalMoneyRemaining }, "Lưu thành công"));
-
+                return Ok(ApiResponseFactory.Success(new { TotalMoneyRemaining = totalMoneyRemaining }, "Lưu thành công"));
             }
             catch (Exception ex)
             {
                 return StatusCode(500, new { Success = false, Error = ex.Message });
             }
         }
-
     }
 }

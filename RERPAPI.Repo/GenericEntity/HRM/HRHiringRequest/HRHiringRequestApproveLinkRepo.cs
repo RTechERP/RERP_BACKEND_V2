@@ -1,11 +1,6 @@
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
@@ -15,7 +10,7 @@ namespace RERPAPI.Repo.GenericEntity
         {
         }
 
-        public async Task CreateApprove(HRHiringRequest hrHiring,CurrentUser currentUser)
+        public async Task CreateApprove(HRHiringRequest hrHiring, CurrentUser currentUser)
         {
             try
             {
@@ -70,17 +65,14 @@ namespace RERPAPI.Repo.GenericEntity
                         }
                     };
 
-
-                   await  CreateRangeAsync(approveLinks);
+                    await CreateRangeAsync(approveLinks);
                 }
-
             }
             catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
         }
-
 
         public async Task<APIResponse> Approved(List<HRHiringRequestApproveLink> actionApproveds, CurrentUser currentUser)
         {

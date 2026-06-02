@@ -6,12 +6,13 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class BillExportDetailSerialNumberModulaLocationRepo : GenericRepo<BillExportDetailSerialNumberModulaLocation>
     {
-        BillExportTechDetailSerialRepo _exportDetailSerialNumberRepo;
+        private BillExportTechDetailSerialRepo _exportDetailSerialNumberRepo;
 
         public BillExportDetailSerialNumberModulaLocationRepo(CurrentUser currentUser, BillExportTechDetailSerialRepo exportDetailSerialNumberRepo) : base(currentUser)
         {
             _exportDetailSerialNumberRepo = exportDetailSerialNumberRepo;
         }
+
         public async Task SaveDataAsync(ModulaLocationDTO.SerialNumberModulaLocation item, int index)
         {
             BillExportTechDetailSerial serialNumber = _exportDetailSerialNumberRepo.GetAll().FirstOrDefault(x => x.SerialNumber == item.SerialNumber) ?? new BillExportTechDetailSerial();

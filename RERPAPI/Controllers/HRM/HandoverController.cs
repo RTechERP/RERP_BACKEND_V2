@@ -1,11 +1,7 @@
-﻿using Azure.Core;
-using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Bibliography;
+﻿using ClosedXML.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NPOI.Util;
 using OfficeOpenXml;
-using Org.BouncyCastle.Asn1.Ocsp;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
@@ -14,7 +10,6 @@ using RERPAPI.Model.Param.Handover;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.BBNV;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers
 {
@@ -80,8 +75,6 @@ namespace RERPAPI.Controllers
                 employeeID = currentUser.EmployeeID;
             }
 
-
-
             //int employeeID = 0;
             //int approverID = 0;
             //if (vUserHR != null)
@@ -125,10 +118,10 @@ namespace RERPAPI.Controllers
                     status = 0,
                     message = ex.Message,
                     error = ex.ToString()
-
                 });
             }
         }
+
         [HttpPost("get-handover-data")]
         public IActionResult GetHandoverData([FromBody] HandoverDataRequestParam request)
         {
@@ -159,7 +152,7 @@ namespace RERPAPI.Controllers
                 //    var handoverPersonalAsset = _handoverPersonalAssetRepo.GetAll(x => x.HandoverID == request.HandoverID&& x.IsDeleted !=true);
                 var handoverPersonalAssset = SQLHelper<dynamic>.ProcedureToList("spGetHandoverAssetPerson",
                   new string[] { "@HandoverID" },
-                  new object[] { request.HandoverID}
+                  new object[] { request.HandoverID }
               );
                 var handoverSubordinates = SQLHelper<dynamic>.ProcedureToList("spGetHandoverSubordinates",
                   new string[] { "@LeaderID" },
@@ -177,9 +170,6 @@ namespace RERPAPI.Controllers
                 var HandoverReceiver = SQLHelper<dynamic>.GetListData(handoverReceiver, 0);
                 var HandoverApprove = SQLHelper<dynamic>.GetListData(handoverApprove, 0);
                 var handoverPersonalAsset = SQLHelper<dynamic>.GetListData(handoverPersonalAssset, 0);
-
-
-
 
                 // Trả về dữ liệu tổng hợp
                 return Ok(new
@@ -210,7 +200,6 @@ namespace RERPAPI.Controllers
         }
 
         [HttpGet("get-departments")]
-
         public IActionResult GetDepartment()
         {
             try
@@ -234,7 +223,6 @@ namespace RERPAPI.Controllers
         }
 
         [HttpGet("get-position")]
-
         public IActionResult GetPosition()
         {
             try
@@ -257,13 +245,11 @@ namespace RERPAPI.Controllers
             }
         }
 
-
         [HttpPost("get-employees")]
         public IActionResult GetEmployee([FromBody] AllEmployeeRequestParam employeerequest)
         {
             try
             {
-
                 var employees = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
                                                 new string[] { "@Status" },
                                                 new object[] { 0 });
@@ -273,9 +259,7 @@ namespace RERPAPI.Controllers
                     data = new
                     {
                         asset = employees
-
                     }
-
                 });
             }
             catch (Exception ex)
@@ -290,12 +274,10 @@ namespace RERPAPI.Controllers
         }
 
         [HttpGet("get-all-employees")]
-
         public IActionResult GetListEmployee()
         {
             try
             {
-
                 var employees = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
                                                 new string[] { "@Status" },
                                                 new object[] { 0 });
@@ -304,21 +286,18 @@ namespace RERPAPI.Controllers
                 {
                     status = 1,
                     data = employees,
-
                 });
             }
             catch (Exception ex)
             {
                 return Ok(new
                 {
-
                     status = 0,
                     message = ex.Message,
                     error = ex.ToString()
                 });
             }
         }
-
 
         [HttpGet("get-handover/{id}")]
         public IActionResult getHandover(int id)
@@ -362,7 +341,6 @@ namespace RERPAPI.Controllers
             }
         }
 
-
         [HttpPost("save-data-handover")]
         public async Task<IActionResult> SaveData([FromBody] HandoverDTO dto)
         {
@@ -377,8 +355,6 @@ namespace RERPAPI.Controllers
                 }
 
                 int handoverID = 0;
-
-
 
                 // Master
                 if (dto.Handover.ID <= 0)
@@ -414,7 +390,6 @@ namespace RERPAPI.Controllers
                         return BadRequest(new { status = 0, message = "Dữ liệu không hợp lệ" });
                     }
 
-
                     dto.Handover.CreatedBy = currentUser.LoginName;
                     dto.Handover.UpdatedBy = currentUser.LoginName;
                     await _handoverRepo.CreateAsync(dto.Handover);
@@ -422,7 +397,6 @@ namespace RERPAPI.Controllers
                 }
                 else
                 {
-
                     dto.Handover.UpdatedBy = currentUser.LoginName;
                     _handoverRepo.Update(dto.Handover);
                     handoverID = dto.Handover.ID;
@@ -451,7 +425,6 @@ namespace RERPAPI.Controllers
                             employeeReceiver.STT = sttEmployeeCounter;
                             await _handoverReceiverRepo.CreateAsync(employeeReceiver);
                         }
-
                         else
                             _handoverReceiverRepo.Update(employeeReceiver);
                     }
@@ -488,7 +461,6 @@ namespace RERPAPI.Controllers
                             itemWork.CreatedDate = DateTime.Now;
                             await _handoverWorkRepo.CreateAsync(itemWork);
                         }
-
                         else
                             _handoverWorkRepo.Update(itemWork);
                     }
@@ -518,30 +490,24 @@ namespace RERPAPI.Controllers
                         var existing = _handoverAssetManagementRepo.GetAll()
                .FirstOrDefault(x => x.HandoverID == handoverID && x.TSAssetCode == itemAsset.TSAssetCode);
 
-
                         if (existing == null || itemAsset.ID <= 0)
                         {
-
                             sttHandoverAsset++;
                             itemAsset.STT = sttHandoverAsset;
                             itemAsset.CreatedDate = DateTime.Now;
                             await _handoverAssetManagementRepo.CreateAsync(itemAsset);
                         }
-
                         else
                         {
                             itemAsset.EmployeeID = itemAsset.EmployeeID;
 
                             _handoverAssetManagementRepo.Update(itemAsset);
                         }
-
                     }
                 }
                 // Tài sản cá nhân bàn giao
                 if (dto.handoverPersonalAsset != null && dto.handoverPersonalAsset.Any())
                 {
-
-
                     foreach (var itemAsset in dto.handoverPersonalAsset)
                     {
                         itemAsset.HandoverID = handoverID;
@@ -553,7 +519,6 @@ namespace RERPAPI.Controllers
                         {
                             _handoverPersonalAssetRepo.Update(itemAsset);
                         }
-
                     }
                 }
                 if (dto.DeletedPersonalAsset != null && dto.DeletedPersonalAsset.Any())
@@ -591,7 +556,6 @@ namespace RERPAPI.Controllers
                             itemWarehouseAsset.CreatedDate = DateTime.Now;
                             await _handoverWarehouseAssetRepo.CreateAsync(itemWarehouseAsset);
                         }
-
                         else
                             _handoverWarehouseAssetRepo.Update(itemWarehouseAsset);
                     }
@@ -619,7 +583,6 @@ namespace RERPAPI.Controllers
                             itemFinance.CreatedDate = DateTime.Now;
                             await _handoverFinanceRepo.CreateAsync(itemFinance);
                         }
-
                         else
                             _handoverFinanceRepo.Update(itemFinance);
                     }
@@ -656,7 +619,6 @@ namespace RERPAPI.Controllers
                             itemSub.CreatedDate = DateTime.Now;
                             await _handoverSubordinateRepo.CreateAsync(itemSub);
                         }
-
                         else
                             _handoverSubordinateRepo.Update(itemSub);
                     }
@@ -684,12 +646,10 @@ namespace RERPAPI.Controllers
                             itemApprove.CreatedDate = DateTime.Now;
                             await _approveRepo.CreateAsync(itemApprove);
                         }
-
                         else
                             _approveRepo.Update(itemApprove);
                     }
                 }
-
 
                 return Ok(new
                 {
@@ -755,6 +715,7 @@ namespace RERPAPI.Controllers
                 return StatusCode(500, new { status = 0, Message = $"Upload file thất bại! ({ex.Message})" });
             }
         }
+
         private void CopyRowStyle(IXLWorksheet sheet, int sourceRow, int targetRow)
         {
             var lastCol = sheet.LastColumnUsed().ColumnNumber();
@@ -764,6 +725,7 @@ namespace RERPAPI.Controllers
                 sheet.Cell(targetRow, col).Style = sheet.Cell(sourceRow, col).Style;
             }
         }
+
         [HttpGet("export-excel/{id}")]
         public IActionResult ExportExcel(int id)
         {
@@ -797,10 +759,10 @@ namespace RERPAPI.Controllers
                   new string[] { "@EmployeeID", "@HandoverID" },
                   new object[] { leaderID, id }
                 );
-              //  var handoverAssetManagement = SQLHelper<dynamic>.ProcedureToList("spGetHandoverPersonalAsset",
-              //    new string[] { "@EmployeeID", "@HandoverID" },
-              //    new object[] { request.EmployeeID, request.HandoverID }
-              //);
+                //  var handoverAssetManagement = SQLHelper<dynamic>.ProcedureToList("spGetHandoverPersonalAsset",
+                //    new string[] { "@EmployeeID", "@HandoverID" },
+                //    new object[] { request.EmployeeID, request.HandoverID }
+                //);
                 //Lấy danh sách tài sản kho bàn giao
                 List<List<dynamic>> detailAssetWarehouseList = SQLHelper<dynamic>.ProcedureToList(
                   "spGetHandoverWarehouseAsset",
@@ -840,7 +802,6 @@ namespace RERPAPI.Controllers
                 var approveData = SQLHelper<dynamic>.GetListData(detailApproveList, 0);
                 var personalAssetData = SQLHelper<dynamic>.GetListData(detailPersonalAssetList, 0);
 
-
                 ExcelPackage.License.SetNonCommercialOrganization("RTC");
 
                 //string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "BienBanBanGiao.xlsx");
@@ -879,7 +840,6 @@ namespace RERPAPI.Controllers
 
                         sheet.Cell("J1").Value = code;
                     }
-
 
                     // Row 2: Điền ngày tháng năm vào A2 (xây dựng chuỗi đầy đủ)
                     string dateStr = $"Hôm nay ngày {dateMinutes.Day} / {dateMinutes.Month} / {dateMinutes.Year} , tại Văn phòng Công ty Cổ phần RTC Technology Việt Nam. Chúng tôi gồm:";
@@ -1087,7 +1047,6 @@ namespace RERPAPI.Controllers
                         sheet.Row(rowIdx).Height = Math.Max(18, finalLines * 18);
                     }
 
-
                     // Clear thừa
                     //for (int i = workData.Count; i < maxWorkRows; i++)
                     //{
@@ -1209,7 +1168,7 @@ namespace RERPAPI.Controllers
                         }
                         sheet.Cell(rowIdx, 7).Value = statusText;
                         //   sheet.Cell(rowIdx, 10).Value = rowData.ContainsKey("ReceiverName") ? rowData["ReceiverName"]?.ToString() ?? "" : "";
-                        string receiverName =rowData.ContainsKey("ReceiverName")? rowData["ReceiverName"]?.ToString() ?? ""  : "";
+                        string receiverName = rowData.ContainsKey("ReceiverName") ? rowData["ReceiverName"]?.ToString() ?? "" : "";
                         var receiverCell = sheet.Cell(rowIdx, 10);
                         receiverCell.Value = receiverName;
                         receiverCell.Style.Alignment.WrapText = true;
@@ -1217,8 +1176,6 @@ namespace RERPAPI.Controllers
                         receiverCell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
 
                         sheet.Cell(rowIdx, 11).Value = rowData.ContainsKey("IsSigned") && rowData["IsSigned"] is bool signed ? (signed ? "✓" : "") : "";
-
-
 
                         // 🔥 nếu row này đã có height từ cột khác → chỉ lấy MAX
                         int nameCharPerLine = 35;
@@ -1471,10 +1428,6 @@ namespace RERPAPI.Controllers
                     //    }
                     //}
 
-
-
-
-
                     // Lưu file vào stream
                     using (var stream = new MemoryStream())
                     {
@@ -1490,6 +1443,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("approved")]
         public async Task<IActionResult> HandoverApproved([FromBody] List<HandoverApprove> actionApproveds)
         {
@@ -1618,7 +1572,6 @@ namespace RERPAPI.Controllers
                         handover.UpdatedDate = DateTime.Now;
                         await _handoverRepo.UpdateAsync(handover);
                     }
-
                 }
 
                 return Ok(ApiResponseFactory.Success(null, "Duyệt theo trình tự thành công!"));
@@ -1650,9 +1603,5 @@ namespace RERPAPI.Controllers
                 }
             }
         }
-
-
-
-
     }
 }

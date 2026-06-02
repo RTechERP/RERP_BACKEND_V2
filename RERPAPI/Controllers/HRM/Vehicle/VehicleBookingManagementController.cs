@@ -1,17 +1,12 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using System.Linq;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.HRM.VehicleManagement;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
-using ZXing;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers
 {
@@ -19,9 +14,9 @@ namespace RERPAPI.Controllers
     [ApiController]
     public class VehicleBookingManagementController : ControllerBase
     {
-        VehicleBookingManagementRepo _vehicleBookingManagementRepo;
-        VehicleBookingFileRepo _vehicleBookingFileRepo;
-        List<PathStaticFile> _vehicleBookingFilePaths;
+        private VehicleBookingManagementRepo _vehicleBookingManagementRepo;
+        private VehicleBookingFileRepo _vehicleBookingFileRepo;
+        private List<PathStaticFile> _vehicleBookingFilePaths;
         private IConfiguration _configuration;
 
         private readonly EmployeeRepo _employeeRepo;
@@ -70,8 +65,8 @@ namespace RERPAPI.Controllers
                 // 1. Chuẩn bị tham số
                 string procedureName = "spGetVehicleBookingManagement";
                 string[] paramNames = new string[] { "@StartDate", "@EndDate", "@Keyword", "@Category", "@EmployeeID", "@DriverEmployeeID", "@Status", "@IsCancel" };
-                object[] paramValues = new object[] { request.StartDate, request.EndDate, request.Keyword.Trim(), request.Category, request.EmployeeId, request.DriverEmployeeId, request.Status, request.IsCancel,};
-                // 2. Gọi procedure thông qua helper    
+                object[] paramValues = new object[] { request.StartDate, request.EndDate, request.Keyword.Trim(), request.Category, request.EmployeeId, request.DriverEmployeeId, request.Status, request.IsCancel, };
+                // 2. Gọi procedure thông qua helper
                 var data = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
                 // 3. Xử lý kết quả
                 var result = SQLHelper<object>.GetListData(data, 0);
@@ -100,15 +95,13 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                if(vehicleBookingManagement.DepartureDateActual==null)
+                if (vehicleBookingManagement.DepartureDateActual == null)
                 {
                     var booking = _vehicleBookingManagementRepo.GetByID(vehicleBookingManagement.ID);
                     vehicleBookingManagement.DepartureDateActual = booking.DepartureDate;
-                    
-                }    
+                }
                 if (vehicleBookingManagement.ID > 0)
                 {
-
                     await _vehicleBookingManagementRepo.UpdateAsync(vehicleBookingManagement);
                 }
                 else
@@ -129,7 +122,6 @@ namespace RERPAPI.Controllers
         {
             try
             {
-
                 // 1. Chuẩn bị tham số
                 string procedureName = "spGetVehicleBookingManagementExcel";
                 string[] paramNames = new string[] { "@DateStart", "@DateEnd" };
@@ -155,7 +147,6 @@ namespace RERPAPI.Controllers
             }
         }
 
-
         [HttpPost("get-list-image")]
         public IActionResult GetListImage([FromBody] List<VehicleBookingFileImageDTO> vehicleBookingFileImageDTO)
         {
@@ -170,8 +161,6 @@ namespace RERPAPI.Controllers
 
                     if (fileImage.Any())
                     {
-
-
                         var first = fileImage.First();
 
                         item.CreatdDate = first.CreatedDate;
@@ -195,7 +184,6 @@ namespace RERPAPI.Controllers
                         var timeRecive = item.TimeNeedPresent.Value.ToString("dd/MM/yyyyy HH:mm");
                         string title = $"Người nhận:[{item.ReceiverName}] - Thời gian nhận:[{timeRecive}]";
                         item.Title = title;
-
 
                         //public string? ReceiverPhoneNumber { get; set; }
                         //public string? PackageName { get; set; }
@@ -228,11 +216,9 @@ namespace RERPAPI.Controllers
                     }
                     else
                     {
-
                         vehicleBookingFileImageDTO.RemoveAt(i);
                     }
                 }
-
 
                 //return Ok(new
                 //{
@@ -256,7 +242,6 @@ namespace RERPAPI.Controllers
         {
             try
             {
-
                 string procedureName = "spGetVehicleManagement";
                 string[] paramNames = new string[] { };
                 object[] paramValues = new object[] { };
@@ -264,7 +249,6 @@ namespace RERPAPI.Controllers
                 var data = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
 
                 var result = SQLHelper<object>.GetListData(data, 0);
-
 
                 //return Ok(new
                 //{
@@ -423,13 +407,12 @@ namespace RERPAPI.Controllers
                 //                    ? "đến lấy"
                 //                    : "giao đến";
 
-
-                //  Validate thời gian cần đến 
+                //  Validate thời gian cần đến
                 if (!vehicleBooking.TimeNeedPresent.HasValue)
                     return BadRequest(ApiResponseFactory.Fail(null, $"Vui lòng nhập Thời gian cần {cateText}!"));
 
                 DateTime timeNeed = vehicleBooking.TimeNeedPresent.Value;
-                if (timeNeed <= dateRegister&& currentUser.EmployeeID!=395)
+                if (timeNeed <= dateRegister && currentUser.EmployeeID != 395)
                     return BadRequest(ApiResponseFactory.Fail(null, "Thời gian cần đến phải lớn hơn thời gian hiện tại!"));
 
                 if (vehicleBooking.TimeReturn.HasValue)
@@ -438,7 +421,7 @@ namespace RERPAPI.Controllers
                         return BadRequest(ApiResponseFactory.Fail(null, "Thời gian cần về phải lớn hơn thời gian cần đến!"));
                 }
                 // Validate thời gian xuất phát
-                if (vehicleBooking.Category != 2 && vehicleBooking.Category != 6 && vehicleBooking.Category != 7 && vehicleBooking.Category != 8&& currentUser.EmployeeID !=395)
+                if (vehicleBooking.Category != 2 && vehicleBooking.Category != 6 && vehicleBooking.Category != 7 && vehicleBooking.Category != 8 && currentUser.EmployeeID != 395)
                 {
                     if (!vehicleBooking.DepartureDate.HasValue)
                         return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng nhập Thời gian xuất phát!"));
@@ -450,7 +433,7 @@ namespace RERPAPI.Controllers
                         return BadRequest(ApiResponseFactory.Fail(null, "Thời gian xuất phát phải nhỏ hơn thời gian cần đến!"));
                 }
 
-                // Validate địa điểm 
+                // Validate địa điểm
                 if (string.IsNullOrWhiteSpace(vehicleBooking.CompanyNameArrives))
                     return BadRequest(ApiResponseFactory.Fail(null, $"Vui lòng nhập Công ty {cateText}!"));
 
@@ -460,7 +443,7 @@ namespace RERPAPI.Controllers
                 if (string.IsNullOrWhiteSpace(vehicleBooking.SpecificDestinationAddress))
                     return BadRequest(ApiResponseFactory.Fail(null, $"Vui lòng nhập Địa chỉ cụ thể {cateText}!"));
 
-                //  Validate phát sinh 
+                //  Validate phát sinh
                 if (isProblem && vehicleBooking.Category != 5)
                 {
                     if (vehicleBooking.ApprovedTBP == 0)
@@ -470,7 +453,7 @@ namespace RERPAPI.Controllers
                         return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng nhập Vấn đề phát sinh!"));
                 }
 
-                // Validate người đi / người nhận 
+                // Validate người đi / người nhận
                 if (vehicleBooking.Category == 1 || vehicleBooking.Category == 4 || vehicleBooking.Category == 5)
                 {
                     if (string.IsNullOrWhiteSpace(vehicleBooking.PassengerName))
@@ -493,7 +476,6 @@ namespace RERPAPI.Controllers
 
                 if (vehicleBooking.ProjectID == 0)
                     return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng chọn Dự án!"));
-
 
                 // Gán dữ liệu
                 vehicleBooking.Status = vehicleBooking.Category == 4 ? 4 : 1;
@@ -537,7 +519,7 @@ namespace RERPAPI.Controllers
                                 Note = vehicleBooking.Note,
                                 ProjectID = vehicleBooking.ProjectID,
 
-                                //FIELD KHÁC CHO PHIẾU VỀ 
+                                //FIELD KHÁC CHO PHIẾU VỀ
                                 ParentID = vehicleBooking.ID,
                                 Category = 5,
                                 Status = 1,
@@ -553,8 +535,6 @@ namespace RERPAPI.Controllers
                                 PackageSize = vehicleBooking.PackageSize,
                                 PackageQuantity = vehicleBooking.PackageQuantity,
                                 PackageName = vehicleBooking.PackageName,
-                                
-                                
 
                                 CompanyNameArrives = vehicleBooking.DepartureAddress,
                                 DepartureAddress = vehicleBooking.CompanyNameArrives,
@@ -564,12 +544,11 @@ namespace RERPAPI.Controllers
                                 Province = vehicleBooking.Province,
                                 SpecificDestinationAddress = vehicleBooking.SpecificDestinationAddress,
 
-                                //  FLAG 
+                                //  FLAG
                                 IsCancel = false,
                                 IsSend = false,
                                 IsNotifiled = false,
                                 IsProblemArises = vehicleBooking.IsProblemArises,
-
                             };
 
                             _vehicleBookingManagementRepo.Create(returnBooking);
@@ -649,6 +628,7 @@ namespace RERPAPI.Controllers
         //}
 
         #region Upload file Vehicle Booking
+
         [HttpPost("upload-file")]
         [DisableRequestSizeLimit]
         public async Task<IActionResult> UploadVehicleBookingFile(int vehicleBookingId)
@@ -746,8 +726,8 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi upload file: {ex.Message}"));
             }
         }
-        #endregion
 
+        #endregion Upload file Vehicle Booking
 
         [HttpPost("remove-file")]
         public async Task<IActionResult> RemoveFile([FromBody] List<int> fileIds)
@@ -801,7 +781,7 @@ namespace RERPAPI.Controllers
 
                     foreach (var id in passengers)
                     {
-                        if(_currentUser.EmployeeID == id)
+                        if (_currentUser.EmployeeID == id)
                             continue;
                         _vehicleBookingManagementRepo.SendEmail(booking, id, "ĐĂNG KÝ XE");
                     }
@@ -825,7 +805,5 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-
     }
 }

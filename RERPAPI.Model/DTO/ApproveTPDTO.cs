@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.DTO
+﻿namespace RERPAPI.Model.DTO
 {
     public class ApproveTPDTO
     {
@@ -26,17 +20,17 @@ namespace RERPAPI.Model.DTO
             public bool? IsApprovedBGD { get; set; }
             public int? IsCancelRegister { get; set; }
             public string? ReasonDeciline { get; set; }
-            public int? TType { get; set; }           
+            public int? TType { get; set; }
 
             public bool? IsSeniorApproved { get; set; }
-          public int? ApprovedSeniorID { get; set; }
+            public int? ApprovedSeniorID { get; set; }
             public int? DecilineApproveSenior { get; set; }
             public string? ReasonDecilineSenior { get; set; }
         }
 
         public class ApproveRequestParam
         {
-            public bool? IsApproved { get; set; }               
+            public bool? IsApproved { get; set; }
             public List<ApproveItemParam>? Items { get; set; } = new();
         }
 

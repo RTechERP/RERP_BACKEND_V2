@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace RERPAPI.Model.Entities;
+﻿namespace RERPAPI.Model.Entities;
 
 public partial class BillImport
 {
@@ -92,7 +89,7 @@ public partial class BillImport
     /// 2: Phiếu trả nội bộ
     /// 3: Phiếu mượn NCC
     /// 4: Yêu cầu nhập kho
-    /// 
+    ///
     /// </summary>
     public int? BillTypeNew { get; set; }
 

@@ -1,12 +1,7 @@
-﻿using Azure.Core;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.HRM.VehicleManagement;
-using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
 
 namespace RERPAPI.Controllers.HRM.Vehicle
@@ -25,6 +20,7 @@ namespace RERPAPI.Controllers.HRM.Vehicle
             _proposeVehicleRepairRepo = proposeVehicleRepairRepo;
             _proposeVehicleRepairDetailRepo = proposeVehicleRepairDetailRepo;
         }
+
         //Lấy danh sách sửa chữa, bảo dưỡng
         [HttpPost("get-propose-vehicles-repair")]
         public IActionResult GetProposeVehicleRepair([FromBody] VehicleRepairRequestParam request)
@@ -46,6 +42,7 @@ namespace RERPAPI.Controllers.HRM.Vehicle
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //Lấy danh sách chi tiết của đề xuất
         [HttpGet("get-propose-vehicle-repair-detail")]
         public IActionResult GetVehicleRepairType(int proposerVehicleRepairID)
@@ -64,11 +61,13 @@ namespace RERPAPI.Controllers.HRM.Vehicle
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         public class ProposeVehicleRepairDTO
         {
             public ProposeVehicleRepair? proposeVehicleRepair { get; set; }
             public List<ProposeVehicleRepairDetail>? proposeVehicleRepairDetails { get; set; }
         }
+
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] ProposeVehicleRepairDTO dto)
         {
@@ -78,28 +77,25 @@ namespace RERPAPI.Controllers.HRM.Vehicle
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu "));
                 }
-           
+
                 if (dto.proposeVehicleRepair != null)
                 {
-                    if(dto.proposeVehicleRepair.IsDeleted==false||dto.proposeVehicleRepair.IsDeleted==null)
+                    if (dto.proposeVehicleRepair.IsDeleted == false || dto.proposeVehicleRepair.IsDeleted == null)
                     {
                         if (!_proposeVehicleRepairRepo.Validate(dto.proposeVehicleRepair, out string message))
                         {
-                            return BadRequest(ApiResponseFactory.Fail(  null, message));
+                            return BadRequest(ApiResponseFactory.Fail(null, message));
                         }
-                    }    
-                 
+                    }
 
                     if (dto.proposeVehicleRepair.ID <= 0)
                     {
-                        var maxSTT = _proposeVehicleRepairRepo.GetAll().Max(x => x.STT) + 1??0 ;
+                        var maxSTT = _proposeVehicleRepairRepo.GetAll().Max(x => x.STT) + 1 ?? 0;
                         dto.proposeVehicleRepair.STT = maxSTT;
                         await _proposeVehicleRepairRepo.CreateAsync(dto.proposeVehicleRepair);
-                    }          
+                    }
                     else
                         await _proposeVehicleRepairRepo.UpdateAsync(dto.proposeVehicleRepair);
-
-
                 }
                 if (dto.proposeVehicleRepairDetails != null && dto.proposeVehicleRepairDetails.Any())
                 {
@@ -114,7 +110,6 @@ namespace RERPAPI.Controllers.HRM.Vehicle
                         {
                             await _proposeVehicleRepairDetailRepo.UpdateAsync(item);
                         }
-
                     }
                 }
                 return Ok(ApiResponseFactory.Success(null, " Lưu dữ liệu thành công"));
@@ -124,26 +119,24 @@ namespace RERPAPI.Controllers.HRM.Vehicle
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-approve")]
         public async Task<IActionResult> SaveApprove([FromBody] List<ProposeVehicleRepairDetail>? proposeVehicleRepairDetails)
         {
             try
             {
-               
                 if (proposeVehicleRepairDetails != null && proposeVehicleRepairDetails.Any())
                 {
                     foreach (var item in proposeVehicleRepairDetails)
                     {
                         if (item.ID <= 0)
                         {
-                          
                             await _proposeVehicleRepairDetailRepo.CreateAsync(item);
                         }
                         else
                         {
                             await _proposeVehicleRepairDetailRepo.UpdateAsync(item);
                         }
-
                     }
                 }
                 return Ok(ApiResponseFactory.Success(null, " Lưu dữ liệu thành công"));
@@ -153,7 +146,5 @@ namespace RERPAPI.Controllers.HRM.Vehicle
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-
     }
 }

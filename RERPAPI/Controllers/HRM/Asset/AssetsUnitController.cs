@@ -50,7 +50,6 @@ namespace RERPAPI.Controllers.Old.Asset
                     {
                         if (item.ID > 0) await _unitRepo.UpdateAsync(item);
                         else await _unitRepo.CreateAsync(item);
-
                     }
                 }
                 return Ok(new { status = 1 });

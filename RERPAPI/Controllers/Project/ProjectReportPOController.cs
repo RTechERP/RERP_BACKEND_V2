@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 
 namespace RERPAPI.Controllers.Project
 {
@@ -96,15 +94,19 @@ namespace RERPAPI.Controllers.Project
                     case "monthly-nopo":
                         chartData = ProcessChartData(SQLHelper<object>.GetListData(rawData, 0));
                         break;
+
                     case "monthly-withpo":
                         chartData = ProcessChartData(SQLHelper<object>.GetListData(rawData, 1));
                         break;
+
                     case "quarterly-nopo":
                         chartData = ProcessChartData(SQLHelper<object>.GetListData(rawData, 2));
                         break;
+
                     case "quarterly-withpo":
                         chartData = ProcessChartData(SQLHelper<object>.GetListData(rawData, 3));
                         break;
+
                     default:
                         return BadRequest(ApiResponseFactory.Fail(null, "Loại biểu đồ không hợp lệ!"));
                 }

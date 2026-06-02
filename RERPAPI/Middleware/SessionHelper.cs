@@ -9,7 +9,7 @@ namespace RERPAPI.Middleware
             session.SetString(key, JsonSerializer.Serialize(value));
         }
 
-        public static T GetObject<T>(this ISession session,string key)
+        public static T GetObject<T>(this ISession session, string key)
         {
             var value = session.GetString(key);
             return value == null ? Activator.CreateInstance<T>() : JsonSerializer.Deserialize<T>(value);

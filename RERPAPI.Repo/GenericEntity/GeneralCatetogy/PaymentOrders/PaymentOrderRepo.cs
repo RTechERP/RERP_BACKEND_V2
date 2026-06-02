@@ -1,17 +1,13 @@
 ﻿using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
 {
     public class PaymentOrderRepo : GenericRepo<PaymentOrder>
     {
-        string[] PREFIX_CODES = new string[] { "", "ĐNTU", "ĐNTT", "ĐNTT" };
+        private string[] PREFIX_CODES = new string[] { "", "ĐNTU", "ĐNTT", "ĐNTT" };
+
         public PaymentOrderRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
@@ -65,13 +61,11 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
         //    }
         //}
 
-
         public string GetCode(PaymentOrder payment)
         {
             try
             {
                 string code = string.Empty;
-
 
                 //stt++;
                 //string sttText = stt.ToString().PadLeft(4, '0');
@@ -89,7 +83,6 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
 
         public APIResponse Validate(PaymentOrderDTO payment)
         {
-
             try
             {
                 var response = ApiResponseFactory.Success(null, "");
@@ -191,7 +184,6 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
                             break;
                         }
                     }
-
                 }
 
                 return response;

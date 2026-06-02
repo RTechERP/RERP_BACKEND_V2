@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Model.DTO.HRM;
@@ -10,7 +8,7 @@ namespace RERPAPI.Model.DTO.HRM;
 public class FlightBookingSaveDTO
 {
     /// <summary>
-    /// ID 
+    /// ID
     /// </summary>
     public int ID { get; set; }
 

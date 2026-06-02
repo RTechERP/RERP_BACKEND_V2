@@ -1,11 +1,6 @@
 ﻿using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
@@ -14,7 +9,7 @@ namespace RERPAPI.Repo.GenericEntity
         public EmployeeOverTimeRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
-    
+
         public APIResponse Validate(EmployeeOvertime item)
         {
             try
@@ -51,7 +46,7 @@ namespace RERPAPI.Repo.GenericEntity
                 var registerDate = item.DateRegister.Value.Date;
                 var time20h = registerDate.AddHours(20);
 
-                if (item.EndTime < time20h&& item.Overnight ==true)
+                if (item.EndTime < time20h && item.Overnight == true)
                 {
                     return ApiResponseFactory.Fail(
                         null,

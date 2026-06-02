@@ -1,7 +1,6 @@
 ﻿using RabbitMQ.Client;
+
 namespace RERPAPI.Services;
-
-
 
 public sealed class RabbitMqConnection : IAsyncDisposable
 {

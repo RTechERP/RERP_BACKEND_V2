@@ -1,10 +1,4 @@
-﻿using RERPAPI.Model.DTO.Project;
-using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Model.DTO
 {
@@ -12,6 +6,6 @@ namespace RERPAPI.Model.DTO
     {
         public List<ProjectItem> projectItem { get; set; }
         public int ProjectID { get; set; }
-        public List<int>? DeletedIdsprojectItem {  get; set; }
+        public List<int>? DeletedIdsprojectItem { get; set; }
     }
 }

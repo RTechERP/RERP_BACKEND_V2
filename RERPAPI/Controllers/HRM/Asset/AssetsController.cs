@@ -1,27 +1,12 @@
-using DocumentFormat.OpenXml.Bibliography;
-using DocumentFormat.OpenXml.Spreadsheet;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using NPOI.SS.Formula.Functions;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.Asset;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.Asset;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Asset;
-using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
-using RERPAPI.Repo.GenericEntity.Technical;
-using RTCApi.Repo.GenericRepo;
-using System;
-using System.Text.Json;
-using ZXing;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers.Old.Asset
 {
@@ -85,7 +70,6 @@ namespace RERPAPI.Controllers.Old.Asset
             {
                 return Ok(new
                 {
-
                     status = 0,
                     message = ex.Message,
                     error = ex.ToString()
@@ -104,7 +88,6 @@ namespace RERPAPI.Controllers.Old.Asset
                 var assets = SQLHelper<dynamic>.ProcedureToList("spGetTSAssetManagement",
                          new string[] { "@FilterText", "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@EmployeeID" },
                     new object[] { request.FilterText, request.PageNumber, request.PageSize, request.DateStart, request.DateEnd, currentUser.EmployeeID });
-
 
                 return Ok(ApiResponseFactory.Success(assets));
             }
@@ -146,10 +129,8 @@ namespace RERPAPI.Controllers.Old.Asset
             }
             catch (Exception ex)
             {
-
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
         [HttpGet("get-allocation-detail")]
         public IActionResult GetAllocation(string? id)
@@ -173,7 +154,6 @@ namespace RERPAPI.Controllers.Old.Asset
             {
                 return Ok(new
                 {
-
                     status = 0,
                     message = ex.Message,
                     error = ex.ToString()
@@ -216,7 +196,6 @@ namespace RERPAPI.Controllers.Old.Asset
         [HttpGet("get-asset-code")]
         public IActionResult GenerateAssetCode([FromQuery] DateTime? assetDate)
         {
-
             if (assetDate == null)
                 return BadRequest("AssetDate is required.");
 
@@ -255,13 +234,14 @@ namespace RERPAPI.Controllers.Old.Asset
         }
 
         [HttpGet("get-asset-log/{assetId}")]
-        public IActionResult GetAssetLog(int assetId) {
+        public IActionResult GetAssetLog(int assetId)
+        {
             try
             {
                 var assetLogs = _assetLogRepo.GetAll(x => x.AssetID == assetId).OrderByDescending(x => x.CreatedDate).ToList();
                 return Ok(ApiResponseFactory.Success(assetLogs));
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
@@ -306,14 +286,11 @@ namespace RERPAPI.Controllers.Old.Asset
 
                         if (item.ID <= 0)
                         {
-
                             item.StatusID = 1;
                             item.Status = "Chưa sử dụng";
 
                             await _tsAssetManagementRepo.CreateAsync(item);
-
                         }
-
                         else
                         {
                             var existingMaster = _tsAssetManagementRepo.GetSingleNoTracking(x => x.ID == item.ID);
@@ -321,8 +298,8 @@ namespace RERPAPI.Controllers.Old.Asset
                             assetId = item.ID;
 
                             List<string> changeDetails = _assetLogRepo.GetEntityChanges(existingMaster, item);
-                            
-                            bool isSpecialAction = 
+
+                            bool isSpecialAction =
                                 (asset.tSLostReportAsset != null && asset.tSLostReportAsset.ID <= 0) ||
                                 (asset.tSReportBrokenAsset != null && asset.tSReportBrokenAsset.ID <= 0) ||
                                 (asset.tSLiQuidationAsset != null && asset.tSLiQuidationAsset.ID <= 0) ||
@@ -336,14 +313,13 @@ namespace RERPAPI.Controllers.Old.Asset
                                     AssetID = assetId,
                                     EmployeeID = currentUser.EmployeeID,
                                     TypeLog = "CẬP NHẬT TÀI SẢN",
-                                    LogContent = $"Cập nhật tài sản: {string.Join(", ", changeDetails)}",                                  
+                                    LogContent = $"Cập nhật tài sản: {string.Join(", ", changeDetails)}",
                                     CreatedBy = currentUser.LoginName,
                                     CreatedDate = DateTime.Now,
                                     DateLog = DateTime.Now
                                 });
                             }
-
-                        } 
+                        }
 
                         string productCode = item.Model ?? "";
                         var codeExist = _productsaleRepo.GetSingleNoTracking(x => x.ProductCode == productCode && x.ProductGroupID == groupID);
@@ -383,7 +359,7 @@ namespace RERPAPI.Controllers.Old.Asset
                             string code = master?.TSCodeNCC ?? "Trống";
                             string action = item.Status == "Đang sử dụng" ? "Cấp phát" : "Thu hồi";
 
-                            bool isSideEffectOfOtherReport = 
+                            bool isSideEffectOfOtherReport =
                                 (asset.tSLostReportAsset != null && asset.tSLostReportAsset.ID <= 0) ||
                                 (asset.tSReportBrokenAsset != null && asset.tSReportBrokenAsset.ID <= 0) ||
                                 (asset.tSLiQuidationAsset != null && asset.tSLiQuidationAsset.ID <= 0) ||
@@ -509,7 +485,6 @@ namespace RERPAPI.Controllers.Old.Asset
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-
             }
         }
         private string GenerateProductNewCode(int productGroupId)
@@ -541,11 +516,10 @@ namespace RERPAPI.Controllers.Old.Asset
         }
 
         [HttpPost("change-status-asset")]
-        public IActionResult ChangeStatusAsset([FromBody]  PersonalPropertyDTO asset)
+        public IActionResult ChangeStatusAsset([FromBody] PersonalPropertyDTO asset)
         {
             try
             {
-
                 var repoDictionary = new Dictionary<int, dynamic>
                     {
                       { 0,_tSAssetTransferRepo },

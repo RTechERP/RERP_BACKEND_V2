@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities.RTCCourse;
 using RERPAPI.Repo.GenericCourseEntity;
-using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.CourseWeb
 {
@@ -13,11 +11,13 @@ namespace RERPAPI.Controllers.CourseWeb
     [Authorize]
     public class CourseCatalogTypeController : ControllerBase
     {
-        CourseCatalogTypeRepo _courseCatalogTypeRepo;
+        private CourseCatalogTypeRepo _courseCatalogTypeRepo;
+
         public CourseCatalogTypeController(CourseCatalogTypeRepo courseCatalogTypeRepo)
         {
             _courseCatalogTypeRepo = courseCatalogTypeRepo;
         }
+
         [HttpGet("get-all")]
         public async Task<IActionResult> getAllData()
         {
@@ -74,8 +74,6 @@ namespace RERPAPI.Controllers.CourseWeb
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
-
         }
     }
 }

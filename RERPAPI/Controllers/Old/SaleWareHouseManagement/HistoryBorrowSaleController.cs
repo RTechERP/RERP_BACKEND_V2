@@ -1,15 +1,10 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using DocumentFormat.OpenXml.Office2010.Excel;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NPOI.SS.Formula.Functions;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 {
@@ -68,7 +63,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
         //đã, hủy trả
         [HttpPost("approved-returned")]
-
         public async Task<IActionResult> ApprovedReturned([FromBody] List<int> billExportDetailIds, bool isApproved)
         {
             try
@@ -116,6 +110,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 });
             }
         }
+
         [HttpGet("get-summary-return")]
         public IActionResult GetSummaryReturn(int exportID)
         {
@@ -142,6 +137,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-user")]
         public IActionResult GetUser()
         {
@@ -164,6 +160,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         #region Gia hạn mượn
+
         [HttpPost("extend-product")]
         public async Task<IActionResult> ExtendProduct([FromBody] List<int> billExportDetailIds, DateTime extendDate)
         {
@@ -193,11 +190,9 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     log.UpdatedBy = currentUser.LoginName;
                     await _historyBorrowSaleLogRepo.CreateAsync(log);
 
-
                     //BillExportDetail model = _billExportDetailRepo.GetByID(id);
                     //model.ExpectReturnDate = extendDate;
                     //await _billExportDetailRepo.UpdateAsync(model);
-
                 }
                 return Ok(ApiResponseFactory.Success(null, ""));
             }
@@ -206,9 +201,11 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion Gia hạn mượn
 
         #region Duyệt gia hạn
+
         [HttpPost("approved-extend-product")]
         public async Task<IActionResult> ApprovedExtendProduct([FromBody] List<int> billExportDetailIds, bool isApproved)
         {
@@ -236,11 +233,9 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         log.UpdatedBy = currentUser.LoginName;
                         await _historyBorrowSaleLogRepo.UpdateAsync(log);
 
-
                         BillExportDetail model = _billExportDetailRepo.GetByID(id);
                         model.ExpectReturnDate = log.ExpectedReturnDate;
                         await _billExportDetailRepo.UpdateAsync(model);
-
                     }
                 }
 
@@ -251,9 +246,11 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion Duyệt gia hạn
 
         #region Lấy số lượng đang mượn quá hạn/tới hạn
+
         [HttpGet("quantity-borrow-sale-persional")]
         public async Task<IActionResult> getQuantityBorrowSalePersional()
         {
@@ -262,7 +259,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             var currentUser = ObjectMapper.GetCurrentUser(claims);
             try
             {
-
                 var param = new
                 {
                     PageNumber = 1,
@@ -288,7 +284,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     quantityBorrowExpriedSale = dtMaster.Where(x => x.DualDate == 2).Count();
                 }
 
-
                 var dataRs = new
                 {
                     quantityBorrowSale = quantityBorrowSale,
@@ -302,6 +297,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion Lấy số lượng đang mượn quá hạn/tới hạn
     }
 }

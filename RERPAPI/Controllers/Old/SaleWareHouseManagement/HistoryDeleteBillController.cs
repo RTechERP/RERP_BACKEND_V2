@@ -11,6 +11,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     public class HistoryDeleteBillController : ControllerBase
     {
         private readonly HistoryDeleteBillRepo _historyDeleteBillRepo;
+
         public HistoryDeleteBillController(HistoryDeleteBillRepo historyDeleteBillRepo)
         {
             _historyDeleteBillRepo = historyDeleteBillRepo;
@@ -37,6 +38,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 });
             }
         }
+
         [HttpPost("get-by-billtype")]
         public IActionResult getByBillType([FromBody] HistoryBillDeleteParamRequest filter)
         {
@@ -90,6 +92,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 });
             }
         }
+
         [HttpGet("{id}")]
         public IActionResult getDataByID(int id)
         {

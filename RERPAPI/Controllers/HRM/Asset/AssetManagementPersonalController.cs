@@ -1,23 +1,12 @@
-﻿using Azure.Core;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.Asset;
-using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Model.Param.Asset;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Asset;
-using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
-using System;
-using ZXing;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers.Old.Asset
 {
@@ -25,13 +14,13 @@ namespace RERPAPI.Controllers.Old.Asset
     [ApiController]
     public class AssetManagementPersonalController : ControllerBase
     {
-        TSAllocationAssetPersonalRepo _tSAllocationAssetPersonalRepo;
-        TSAllocationAssetPersonalDetailRepo _tSAssetAllocationDetailRepo;
-        TSRecoveryAssetPersonalDetailRepo _tSRecoveryAssetPersonalDetailRepo;
-        TSRecoveryAssetPersonalRepo _tSRecoveryAssetPersonalRepo;
-        TSAssetManagementPersonalRepo _tSAssetManagementPersonalRepo;
-        TSTypeAssetPersonalRepo _typeAssetPersonalRepo;
-        vUserGroupLinksRepo _vUserGroupLinksRepo;
+        private TSAllocationAssetPersonalRepo _tSAllocationAssetPersonalRepo;
+        private TSAllocationAssetPersonalDetailRepo _tSAssetAllocationDetailRepo;
+        private TSRecoveryAssetPersonalDetailRepo _tSRecoveryAssetPersonalDetailRepo;
+        private TSRecoveryAssetPersonalRepo _tSRecoveryAssetPersonalRepo;
+        private TSAssetManagementPersonalRepo _tSAssetManagementPersonalRepo;
+        private TSTypeAssetPersonalRepo _typeAssetPersonalRepo;
+        private vUserGroupLinksRepo _vUserGroupLinksRepo;
 
         public AssetManagementPersonalController(TSAllocationAssetPersonalRepo tSAllocationAssetPersonalRepo, TSAllocationAssetPersonalDetailRepo tSAssetAllocationDetailRepo, TSRecoveryAssetPersonalDetailRepo tSRecoveryAssetPersonalDetailRepo, TSRecoveryAssetPersonalRepo tSRecoveryAssetPersonalRepo, TSAssetManagementPersonalRepo tSAssetManagementPersonalRepo, TSTypeAssetPersonalRepo typeAssetPersonalRepo, vUserGroupLinksRepo vUserGroupLinksRepo)
         {
@@ -43,8 +32,6 @@ namespace RERPAPI.Controllers.Old.Asset
             _typeAssetPersonalRepo = typeAssetPersonalRepo;
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
         }
-
-
 
         //Lấy danh sách loại tài sản
         [RequiresPermission("N23,N52,N1,N67,N36")]
@@ -61,6 +48,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-all-asset-management-personal")]
         public IActionResult GetAllTSAssetManagementPersonal()
         {
@@ -76,6 +64,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("get-asset-allocation-personal")]
         public async Task<ActionResult> GetAssetAllocationPersonal([FromBody] AssetAllocationRequestParam request)
         {
@@ -110,6 +99,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-asset-allocation-personal-detail")]
         public IActionResult GetAssetAllocationPersonalDetail(int? TSAllocationAssetPersonalID, int? EmployeeID)
         {
@@ -133,12 +123,12 @@ namespace RERPAPI.Controllers.Old.Asset
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("get-asset-recovery-personal")]
         public async Task<ActionResult> GetAssetsRecoveryPerson(AssetRecoveryRequestParam request)
         {
             try
             {
-
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
 
@@ -169,6 +159,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-asset-recovery-personal-detail")]
         public IActionResult GetAssetsRecoveryPersonalDetail(int? TSAssetRecoveryPersonID)
         {
@@ -195,6 +186,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-allocation-personal-code")]
         public IActionResult GenerateAllocationPersonalCode([FromQuery] DateTime? allocationDate)
         {
@@ -210,8 +202,8 @@ namespace RERPAPI.Controllers.Old.Asset
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
+
         [HttpGet("get-recovery-personal-code")]
         public IActionResult GenerateRecoveryPersonalCode([FromQuery] DateTime? recoveryDate)
         {
@@ -227,8 +219,8 @@ namespace RERPAPI.Controllers.Old.Asset
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
+
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] TSAssetManagementPersonalFullDTO dto)
         {
@@ -266,7 +258,6 @@ namespace RERPAPI.Controllers.Old.Asset
                 }
                 if (dto.tSAllocationAssetPersonal != null)
                 {
-
                     if (dto.tSAllocationAssetPersonal.ID <= 0)
                     {
                         var maxSTT = _tSAllocationAssetPersonalRepo.GetAll().Max(x => x.STT) + 1 ?? 0;
@@ -281,7 +272,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 }
                 if (dto.tSRecoveryAssetPersonal != null)
                 {
-                    var maxSTT = _tSRecoveryAssetPersonalRepo.GetAll().Max(x => x.STT)??0 + 1 ;
+                    var maxSTT = _tSRecoveryAssetPersonalRepo.GetAll().Max(x => x.STT) ?? 0 + 1;
                     dto.tSRecoveryAssetPersonal.STT = maxSTT;
                     if (dto.tSRecoveryAssetPersonal.ID <= 0)
                     {
@@ -305,7 +296,6 @@ namespace RERPAPI.Controllers.Old.Asset
                 }
                 if (dto.tSAllocationAssetPersonalDetails != null && dto.tSAllocationAssetPersonalDetails.Any())
                 {
-
                     foreach (var item in dto.tSAllocationAssetPersonalDetails)
                     {
                         item.TSAllocationAssetPersonalID = dto.tSAllocationAssetPersonal.ID;
@@ -322,6 +312,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-approve")]
         [RequiresPermission("N23")]
         public async Task<IActionResult> SaveApprove([FromBody] TSAssetPersonalApproveDTO dto)
@@ -355,7 +346,6 @@ namespace RERPAPI.Controllers.Old.Asset
                 }
                 if (dto.tSRecoveryAssetPersonal != null)
                 {
-
                     if (dto.tSRecoveryAssetPersonal.ID > 0)
                     {
                         if (dto.tSRecoveryAssetPersonal.EmployeeReturnID != currentUser.EmployeeID && dto.tSRecoveryAssetPersonal.IsApprovedPersonalProperty != null)
@@ -379,7 +369,6 @@ namespace RERPAPI.Controllers.Old.Asset
         }
 
         [HttpPost("save-approve-person")]
-        //[RequiresPermission("N23")]
         public async Task<IActionResult> SaveApprovePerson([FromBody] TSAssetPersonalApproveDTO dto)
         {
             try
@@ -411,7 +400,6 @@ namespace RERPAPI.Controllers.Old.Asset
                 }
                 if (dto.tSRecoveryAssetPersonal != null)
                 {
-
                     if (dto.tSRecoveryAssetPersonal.ID > 0)
                     {
                         if (dto.tSRecoveryAssetPersonal.EmployeeReturnID != currentUser.EmployeeID && dto.tSRecoveryAssetPersonal.IsApprovedPersonalProperty != null)

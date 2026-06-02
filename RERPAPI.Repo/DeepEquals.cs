@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Repo
+﻿namespace RERPAPI.Repo
 {
     public static class DeepEquals
     {
@@ -24,6 +18,7 @@ namespace RERPAPI.Repo
             }
             return true;
         }
+
         /// <summary>
         /// So sánh 2 object
         /// </summary>
@@ -32,7 +27,6 @@ namespace RERPAPI.Repo
         /// <returns></returns>
         public static object DeepEqual(object obj, object another)
         {
-
             if (ReferenceEquals(obj, another)) return true;
             if ((obj == null) || (another == null)) return false;
             //So sánh class của 2 object, nếu khác nhau thì trả fail

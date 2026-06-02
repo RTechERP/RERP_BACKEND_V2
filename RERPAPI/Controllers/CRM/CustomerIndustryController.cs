@@ -4,8 +4,6 @@ using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System.Reflection.Metadata.Ecma335;
-
 
 namespace RERPAPI.Controllers.CRM
 {
@@ -14,7 +12,7 @@ namespace RERPAPI.Controllers.CRM
     [Authorize]
     public class CustomerIndustryController : Controller
     {
-        CustomerIndustriesRepo _customerIndustryRepo;
+        private CustomerIndustriesRepo _customerIndustryRepo;
 
         public CustomerIndustryController(CustomerIndustriesRepo customerIndustryRepo)
         {
@@ -33,7 +31,8 @@ namespace RERPAPI.Controllers.CRM
                     status = 1,
                     data = customer
                 });
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
@@ -41,15 +40,17 @@ namespace RERPAPI.Controllers.CRM
 
         [RequiresPermission("N13,N1,N27,N31")]
         [HttpPost()]
-        public async Task<IActionResult> SaveData ([FromBody] CustomerIndustry customerIndustry ) {
+        public async Task<IActionResult> SaveData([FromBody] CustomerIndustry customerIndustry)
+        {
             try
             {
-                if(customerIndustry.ID <= 0)
+                if (customerIndustry.ID <= 0)
                 {
                     var maxSTT = await _customerIndustryRepo.GetNextSTTAsync();
                     customerIndustry.NumberOrder = maxSTT;
                     await _customerIndustryRepo.CreateAsync(customerIndustry);
-                }else
+                }
+                else
                 {
                     await _customerIndustryRepo.UpdateAsync(customerIndustry);
                 }
@@ -58,7 +59,8 @@ namespace RERPAPI.Controllers.CRM
                     Status = 1,
                     message = "Lưu thành công"
                 });
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
@@ -76,11 +78,9 @@ namespace RERPAPI.Controllers.CRM
                     return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng chọn lĩnh vực để xóa"));
                 foreach (var item in ids)
                 {
-
                     var project = _customerIndustryRepo.GetByID(item);
                     project.IsDeleted = true;
                     await _customerIndustryRepo.UpdateAsync(project);
-
                 }
                 return Ok(ApiResponseFactory.Success(ids, "Xóa thành công"));
             }

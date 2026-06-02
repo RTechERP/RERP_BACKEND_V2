@@ -1,15 +1,10 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System.Threading.Tasks;
-using System.Linq;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -22,6 +17,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
     {
         //private readonly string _uploadPath;
         private readonly RequestInvoiceRepo _requestInvoiceRepo;
+
         private readonly RequestInvoiceDetailRepo _requestInvoiceDetailRepo;
         private readonly RequestInvoiceFileRepo _requestInvoiceFileRepo;
         private readonly RequestInvoiceStatusLinkRepo _requestInvoiceStatusLinkRepo;
@@ -68,7 +64,6 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
         {
             try
             {
-
                 var data = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
                                                 new string[] { "@Status" },
                                                 new object[] { 0 });
@@ -79,6 +74,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-productsale")]
         public IActionResult GetProductSale()
         {
@@ -120,6 +116,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("generate-bill-number")]
         public IActionResult GenerateBillNumber(int? requestInvoiceId = 0)
         {
@@ -346,8 +343,6 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                     {
                         await _requestInvoiceLogRepo.AddLog(dto.RequestInvoices.ID, $"- {currentUser.FullName} đã cập nhật SP: \\n {logContent} \\n", "Cập nhật");
                     }
-
-
                 }
                 return Ok(ApiResponseFactory.Success(new { id = dto.RequestInvoices.ID }, ""));
             }
@@ -358,6 +353,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
         }
 
         #region Hàm xử lí File và lưu bảng RequestInvoiceFile
+
         //[HttpPost("upload")]
         //public async Task<IActionResult> Upload(int RequestInvoiceID, [FromForm] List<IFormFile> files)
         //{
@@ -424,7 +420,6 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
         //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
         //    }
         //}
-
 
         [HttpPost("upload")]
         [DisableRequestSizeLimit]
@@ -540,8 +535,6 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
             }
         }
 
-
-
         [HttpPost("delete-file")]
         public async Task<IActionResult> DeleteFile([FromBody] List<int> fileIds)
         {
@@ -587,7 +580,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
 
+        #endregion Hàm xử lí File và lưu bảng RequestInvoiceFile
     }
 }

@@ -1,11 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.Warehouse.AGV
 {
@@ -16,6 +13,7 @@ namespace RERPAPI.Controllers.Warehouse.AGV
     {
         private readonly IConfiguration _configuration;
         private readonly AGVProductGroupLinkRepo _groupLinkRepo;
+
         public AGVProductGroupLinkController(IConfiguration configuration, AGVProductGroupLinkRepo groupLinkRepo)
         {
             _configuration = configuration;
@@ -62,7 +60,6 @@ namespace RERPAPI.Controllers.Warehouse.AGV
             {
                 var validate = _groupLinkRepo.Validate(groupLinks);
                 if (validate.status == 0) return BadRequest(validate);
-                
 
                 foreach (var groupLink in groupLinks)
                 {

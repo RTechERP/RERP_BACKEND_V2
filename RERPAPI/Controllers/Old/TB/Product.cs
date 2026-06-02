@@ -1,9 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Model.DTO;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Entities;
 
 using RERPAPI.Repo.GenericEntity.TB;
+
 namespace RERPAPI.Controllers.Old.TB
 {
     [Route("api/[controller]")]
@@ -18,6 +17,7 @@ namespace RERPAPI.Controllers.Old.TB
             _categoriesRepo = categoriesRepo;
             _productsRepo = productsRepo;
         }
+
         //API getall Lấy danh sách danh mục sản phẩm
         [HttpGet("get-all-category")]
         public IActionResult GetAll()
@@ -44,6 +44,7 @@ namespace RERPAPI.Controllers.Old.TB
                 });
             }
         }
+
         //API getall Lấy danh sách detail của danh mục sản phẩm
         [HttpGet("get-detail-category")]
         public IActionResult GetDetailCategory(int id)

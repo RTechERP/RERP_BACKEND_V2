@@ -1,14 +1,12 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 {
     [Route("api/[controller]")]
     [ApiController]
     public class BillDocumentExportLogController : ControllerBase
-    {   
+    {
         [HttpGet("get-by-BdeID/{bdeID}")]
         public IActionResult getDataByBillDocumentExportID(int bdeID)
         {

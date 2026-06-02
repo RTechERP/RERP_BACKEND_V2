@@ -8,6 +8,4 @@
         public bool Overwrite { get; set; } = true;
         public List<Dictionary<string, object>> Rows { get; set; } = new();
     }
-
-
 }

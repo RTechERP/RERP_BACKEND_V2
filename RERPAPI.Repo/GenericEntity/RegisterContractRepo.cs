@@ -1,10 +1,6 @@
 ﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
@@ -12,8 +8,8 @@ namespace RERPAPI.Repo.GenericEntity
     {
         public RegisterContractRepo(CurrentUser currentUser) : base(currentUser)
         {
-
         }
+
         public bool Validate(
          RegisterContract data,
          out string message)
@@ -122,9 +118,11 @@ namespace RERPAPI.Repo.GenericEntity
 
             return sb.ToString();
         }
-        #endregion
+
+        #endregion Build Email Body
 
         #region
+
         /// <summary>
         /// Tạo nội dung email khi XÁC NHẬN hoặc HỦY
         /// </summary>
@@ -192,7 +190,6 @@ namespace RERPAPI.Repo.GenericEntity
             return sb.ToString();
         }
     }
+
     #endregion
 }
-
-

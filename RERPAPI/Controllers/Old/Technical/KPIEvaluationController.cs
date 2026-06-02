@@ -1,5 +1,4 @@
-﻿using DocumentFormat.OpenXml.Packaging;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
@@ -22,6 +21,7 @@ namespace RERPAPI.Controllers
             _kpiEvaluationRepo = kpiEvaluationRepo;
             _kpiEvaluationErrorRepo = kpiEvaluationErrorRepo;
         }
+
         [HttpGet("get-kpievaluation")]
         public IActionResult GetKPIEvaluation(int departmentID)
         {
@@ -33,7 +33,6 @@ namespace RERPAPI.Controllers
                 var data = SQLHelper<object>.GetListData(kpievaluations, 0);
 
                 return Ok(ApiResponseFactory.Success(data, ""));
-
             }
             catch (Exception ex)
             {
@@ -46,7 +45,6 @@ namespace RERPAPI.Controllers
         {
             try
             {
-
                 if (kpievaluation.ID <= 0) await _kpiEvaluationRepo.CreateAsync(kpievaluation);
                 else await _kpiEvaluationRepo.UpdateAsync(kpievaluation);
 
@@ -109,15 +107,12 @@ namespace RERPAPI.Controllers
             }
         }
 
-
         [HttpGet("check-duplicate-kpie/{id}/{EvaluationCode}")]
         public IActionResult CheckDuplicateKPIE(int id, string EvaluationCode)
         {
             try
             {
                 bool isDuplicate = false;
-
-
 
                 var existKPIE = _kpiEvaluationRepo.GetAll(x => x.ID != id &&
                                 x.EvaluationCode == EvaluationCode &&
@@ -169,7 +164,7 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                if(id <= 0)
+                if (id <= 0)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng chọn mã rule cần xóa"));
                 }
@@ -207,16 +202,16 @@ namespace RERPAPI.Controllers
         {
             try
             {
-                if(string.IsNullOrWhiteSpace(dto.model.EvaluationCode))
+                if (string.IsNullOrWhiteSpace(dto.model.EvaluationCode))
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng nhập mã nội dung"));
                 }
                 var list = _kpiEvaluationRepo.GetAll(x => x.EvaluationCode == dto.model.EvaluationCode && x.ID != dto.model.ID && x.DepartmentID == dto.departmentId);
-                if(list.Count > 0)
+                if (list.Count > 0)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, $"Mã nội dung [{dto.model.EvaluationCode.Trim()}] đã được sử dụng!"));
-                }    
-                if(dto.model.ID > 0)
+                }
+                if (dto.model.ID > 0)
                 {
                     await _kpiEvaluationRepo.UpdateAsync(dto.model);
                 }
@@ -225,11 +220,11 @@ namespace RERPAPI.Controllers
                     await _kpiEvaluationRepo.CreateAsync(dto.model);
                 }
                 var listDel = _kpiEvaluationErrorRepo.GetAll(x => x.KPIEvaluationID == dto.model.ID);
-                foreach(var itemDel in listDel)
+                foreach (var itemDel in listDel)
                 {
                     _kpiEvaluationErrorRepo.Delete(itemDel.ID);
-                }    
-                foreach(int id in dto.listErrorIds)
+                }
+                foreach (int id in dto.listErrorIds)
                 {
                     KPIEvaluationError newChild = new KPIEvaluationError()
                     {
@@ -237,7 +232,7 @@ namespace RERPAPI.Controllers
                         KPIEvaluationID = dto.model.ID
                     };
                     await _kpiEvaluationErrorRepo.CreateAsync(newChild);
-                }    
+                }
 
                 return Ok(ApiResponseFactory.Success("", "Xóa thành công"));
             }
@@ -246,14 +241,12 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         public class SaveKPIEvaluationRequest
         {
             public KPIEvaluation model { get; set; }
             public List<int> listErrorIds { get; set; }
             public int departmentId { get; set; }
         }
-
-
-
     }
 }

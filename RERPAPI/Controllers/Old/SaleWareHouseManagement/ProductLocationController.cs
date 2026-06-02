@@ -10,10 +10,12 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     public class ProductLocationController : ControllerBase
     {
         private readonly LocationRepo _productLocationRepo;
+
         public ProductLocationController(LocationRepo productLocationRepo)
         {
             _productLocationRepo = productLocationRepo;
         }
+
         [HttpPost("get-product-locations")]
         public IActionResult getProductLocations()
         {

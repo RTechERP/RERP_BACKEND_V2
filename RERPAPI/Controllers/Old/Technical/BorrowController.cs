@@ -14,11 +14,12 @@ namespace RERPAPI.Controllers
     [Authorize]
     public class BorrowController : ControllerBase
     {
-        HistoryProductRTCRepo historyProductRTCRepo;
-        HistoryErrorRepo historyErrorRepo;
-        HistoryProductRTCLogRepo historyProductRTCLogRepo;
-        BillExportDetailTechnicalRepo billExportDetailTechnicalRepo;
-        BillExportTechnicalRepo billExportTechnicalRepo;
+        private HistoryProductRTCRepo historyProductRTCRepo;
+        private HistoryErrorRepo historyErrorRepo;
+        private HistoryProductRTCLogRepo historyProductRTCLogRepo;
+        private BillExportDetailTechnicalRepo billExportDetailTechnicalRepo;
+        private BillExportTechnicalRepo billExportTechnicalRepo;
+
         public BorrowController(HistoryProductRTCRepo historyProductRTCRepo, HistoryErrorRepo historyErrorRepo, HistoryProductRTCLogRepo historyProductRTCLogRepo, BillExportDetailTechnicalRepo billExportDetailTechnicalRepo, BillExportTechnicalRepo billExportTechnicalRepo)
         {
             this.historyProductRTCRepo = historyProductRTCRepo;
@@ -40,7 +41,6 @@ namespace RERPAPI.Controllers
                 var data = SQLHelper<object>.GetListData(productHistory, 0);
 
                 return Ok(ApiResponseFactory.Success(data, ""));
-
             }
             catch (Exception ex)
             {
@@ -53,18 +53,17 @@ namespace RERPAPI.Controllers
         {
             try
             {
-
                 var data = SQLHelper<object>.ProcedureToList("spGetUsersHistoryProductRTC", new string[] { "@UsersID", "@Status" }, new object[] { userId, status });
                 var dt = SQLHelper<object>.GetListData(data, 0);
                 return Ok(ApiResponseFactory.Success(dt, ""))
                 ;
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-history-product-borrow-detail")]
         public async Task<IActionResult> GetHistoryProductBorrowDetail(int historyId)
         {
@@ -88,6 +87,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-productrtc-detail")]
         public async Task<IActionResult> GetProductrtcDetail(int ProductGroupID, string? Keyword, int CheckAll, string? Filter, int WarehouseID, int WarehouseType)
         {
@@ -99,14 +99,12 @@ namespace RERPAPI.Controllers
                 var dt = SQLHelper<object>.GetListData(data, 0);
                 return Ok(ApiResponseFactory.Success(dt, ""))
                 ;
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         [HttpGet("get-employee-team-and-department")]
         public async Task<IActionResult> GetEmployeeTeamAndDepartment()
@@ -122,6 +120,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-personal-history-error")]
         public IActionResult GetPersonalHistoryError(int Id)
         {
@@ -165,6 +164,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-history-product-rtc-by-id")]
         public async Task<IActionResult> GetHistoryProductrtcById(int productHistoryID)
         {
@@ -201,7 +201,6 @@ namespace RERPAPI.Controllers
             }
         }
 
-
         [HttpGet("get-bill-number")]
         public IActionResult GetBillNumber(int billType)
         {
@@ -221,7 +220,6 @@ namespace RERPAPI.Controllers
             }
         }
 
-
         [HttpPost("save-history-productrtc")]
         public async Task<IActionResult> SaveHistoryProductrtc(ModulaLocationDTO.SerialNumberModulaLocation item)
         {
@@ -229,7 +227,6 @@ namespace RERPAPI.Controllers
             {
                 await historyProductRTCRepo.SaveDataAsync(item);
                 return Ok(ApiResponseFactory.Success(item, ""));
-
             }
             catch (Exception ex)
             {
@@ -249,7 +246,6 @@ namespace RERPAPI.Controllers
                 else
                 {
                     historyProductRTCRepo.Update(item);
-
                 }
                 return Ok(ApiResponseFactory.Success(item, ""));
             }
@@ -258,6 +254,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("delete")]
         public async Task<IActionResult> DeleteHistoryProduct(List<int> items)
         {
@@ -277,6 +274,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-bill-export-technical")]
         public async Task<IActionResult> SaveBillExportTechnical(BillExportTechnical item)
         {
@@ -289,7 +287,6 @@ namespace RERPAPI.Controllers
                 else
                 {
                     billExportTechnicalRepo.Update(item);
-
                 }
                 return Ok(ApiResponseFactory.Success(item, ""));
             }
@@ -298,6 +295,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-bill-export-detail-technical")]
         public async Task<IActionResult> SaveBillExportTechnical(BillExportDetailTechnical item)
         {
@@ -310,7 +308,6 @@ namespace RERPAPI.Controllers
                 else
                 {
                     billExportDetailTechnicalRepo.Update(item);
-
                 }
                 return Ok(ApiResponseFactory.Success(item, ""));
             }
@@ -319,6 +316,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-history-product-log")]
         public async Task<IActionResult> SaveHistoryProductLog(HistoryProductRTCLog item)
         {
@@ -331,7 +329,6 @@ namespace RERPAPI.Controllers
                 else
                 {
                     historyProductRTCLogRepo.Update(item);
-
                 }
                 return Ok(new
                 {
@@ -344,13 +341,13 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         public sealed class ReturnProductRtcRequest
         {
             public int HistoryId { get; set; }
             public int ModulaLocationDetailID { get; set; }
             public bool IsAdmin { get; set; }
         }
-
 
         [HttpPost("return-productrtc")]
         public IActionResult ReturnProductRtc([FromBody] ReturnProductRtcRequest req)
@@ -440,6 +437,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-history-error")]
         public async Task<IActionResult> SaveHistoryError(HistoryError historyError)
         {
@@ -502,13 +500,11 @@ namespace RERPAPI.Controllers
                 };
 
                 return Ok(ApiResponseFactory.Success(result, ""));
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

@@ -9,7 +9,8 @@ namespace RERPAPI.Repo.GenericEntity
         public ProjectPartListPurchaseRequestApproveLogRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
-        public async Task CreateLogAsync( int projectPartlistPurchaseRequestId,PurchaseRequestApproveStatus status, int? employeeId,string? userName)
+
+        public async Task CreateLogAsync(int projectPartlistPurchaseRequestId, PurchaseRequestApproveStatus status, int? employeeId, string? userName)
         {
             var log = new ProjectPartListPurchaseRequestApproveLog
             {

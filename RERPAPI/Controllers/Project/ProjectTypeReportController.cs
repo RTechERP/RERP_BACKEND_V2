@@ -37,6 +37,7 @@ namespace RERPAPI.Controllers.Project
                 });
             }
         }
+
         [HttpGet("projectbytype")]
         public IActionResult GetProjectByType(int projectTypeId, DateTime dateStart, DateTime dateEnd, int status)
         {

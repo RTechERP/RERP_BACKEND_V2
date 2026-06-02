@@ -1,27 +1,22 @@
 ﻿using Microsoft.AspNetCore.Http;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
     public class BillImportQCRepo : GenericRepo<BillImportQC>
     {
-        EmployeeRepo _employeeRepo;
-        ProductSaleRepo _productSaleRepo;
-        ProjectRepo _projectRepo;
-        EmployeeSendEmailRepo _employeeSendEmailRepo;
-        CurrentUser _currentUser;
+        private EmployeeRepo _employeeRepo;
+        private ProductSaleRepo _productSaleRepo;
+        private ProjectRepo _projectRepo;
+        private EmployeeSendEmailRepo _employeeSendEmailRepo;
+        private CurrentUser _currentUser;
         private readonly EmailHelper _emailHelper;
+
         public BillImportQCRepo(
             CurrentUser currentUser,
             EmployeeRepo employeeRepo,

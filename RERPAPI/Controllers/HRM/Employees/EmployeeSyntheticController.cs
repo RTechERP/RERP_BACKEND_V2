@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 
@@ -10,7 +9,6 @@ namespace RERPAPI.Controllers.HRM.Employees
     [Authorize]
     public class EmployeeSyntheticController : ControllerBase
     {
-
         [HttpGet("get-employee-synthetic")]
         public IActionResult GetEmployeeSynthetic(int month = 0, int year = 0, int departmentId = 0, int employeeId = 0)
         {

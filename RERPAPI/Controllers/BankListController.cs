@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
@@ -14,17 +13,18 @@ namespace RERPAPI.Controllers
     [Authorize]
     public class BankListController : ControllerBase
     {
-        BankListRepo _bankListRepo;
-        PaymentOrderRepo _paymentOrderRepo;
-        SupplierSaleRepo _supplierSaleRepo;
+        private BankListRepo _bankListRepo;
+        private PaymentOrderRepo _paymentOrderRepo;
+        private SupplierSaleRepo _supplierSaleRepo;
+
         public BankListController(BankListRepo bankListRepo, PaymentOrderRepo paymentOrderRepo, SupplierSaleRepo supplierSaleRepo)
         {
             _bankListRepo = bankListRepo;
             _paymentOrderRepo = paymentOrderRepo;
             _supplierSaleRepo = supplierSaleRepo;
         }
-        [HttpGet]
 
+        [HttpGet]
         public async Task<IActionResult> GetBankList()
         {
             try
@@ -39,6 +39,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBankListById(int id)
         {
@@ -57,6 +58,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-data")]
         [RequiresPermission("N33,N35,N36,N55,N27")]
         public async Task<IActionResult> SaveData(BankList bankList)
@@ -87,6 +89,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpDelete("{id}")]
         [RequiresPermission("N33,N35,N36,N55,N27")]
         public async Task<IActionResult> DeleteBankList(int id)
@@ -120,6 +123,5 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

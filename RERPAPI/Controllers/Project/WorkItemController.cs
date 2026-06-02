@@ -1,7 +1,4 @@
-﻿using Azure.Core;
-using MathNet.Numerics.Distributions;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO.HRM;
@@ -46,7 +43,7 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-        //load người phụ trách 
+        //load người phụ trách
         [HttpGet("get-user")]
         public async Task<IActionResult> GetUser()
         {
@@ -63,7 +60,8 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        //load loại dự án 
+
+        //load loại dự án
         [HttpGet("get-type-project-item")]
         public IActionResult GetTypeProject()
         {
@@ -80,6 +78,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //load người giao việc
         [HttpGet("get-employee-request")]
         public IActionResult GetEmployeeRequest()
@@ -97,17 +96,17 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        //load người yêu cầu 
+
+        //load người yêu cầu
         [HttpGet("get-employee-request-name")]
         public IActionResult GetEmployeeRequestName()
         {
             try
             {
+                var rows = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
+                                                new string[] { "@Status" },
+                                                new object[] { 0 });
 
-   var rows = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
-                                   new string[] { "@Status"},
-                                   new object[] {0 });
-          
                 return Ok(ApiResponseFactory.Success(rows, ""));
             }
             catch (Exception ex)
@@ -115,6 +114,5 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

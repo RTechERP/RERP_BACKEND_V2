@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace RERPAPI.Model.Entities;
+﻿namespace RERPAPI.Model.Entities;
 
 public partial class ProjectItem
 {
@@ -36,7 +33,7 @@ public partial class ProjectItem
     public string? Mission { get; set; }
 
     /// <summary>
-    /// Ngày bắt đầu kế hoạch 
+    /// Ngày bắt đầu kế hoạch
     /// </summary>
     public DateTime? PlanStartDate { get; set; }
 
@@ -88,7 +85,7 @@ public partial class ProjectItem
     public int? TypeProjectItem { get; set; }
 
     /// <summary>
-    /// Phần trăm hoàn thành 
+    /// Phần trăm hoàn thành
     /// </summary>
     public decimal? PercentageActual { get; set; }
 
@@ -176,7 +173,7 @@ public partial class ProjectItem
     public bool? IsPersonalProject { get; set; }
 
     /// <summary>
-    /// Trạng thái đánh giá xem có phát sinh không 
+    /// Trạng thái đánh giá xem có phát sinh không
     /// </summary>
     public bool? IsAdditional { get; set; }
 
@@ -226,7 +223,7 @@ public partial class ProjectItem
     public bool? NeedApprove { get; set; }
 
     /// <summary>
-    /// Lưu giá trị của ProjectWorker để tránh doublicate dữ liệu 
+    /// Lưu giá trị của ProjectWorker để tránh doublicate dữ liệu
     /// </summary>
     public int? ProjectWorkerID { get; set; }
 }

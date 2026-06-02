@@ -1,9 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
@@ -27,8 +24,8 @@ namespace RERPAPI.Controllers.Project
             _projectPartListRepo = projectPartListRepo;
             _projectHistoryProblemRepo = projectHistoryProblemRepo;
             _projectHistoryProblemPartListLinkRepo = projectHistoryProblemPartListLinkRepo;
-
         }
+
         [HttpGet("get-all")]
         public IActionResult GetAll(int projectSolutionId, bool isPO)
         {
@@ -53,6 +50,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] SaveProjectPartListVersionRequest request)
         {
@@ -81,7 +79,6 @@ namespace RERPAPI.Controllers.Project
                             {
                                 { x => x.IsApprovedTBP, false },
                                 { x => x.IsApprovedPurchase, false }
-
                             };
                     await _projectPartListRepo.UpdateFieldByAttributeAsync(x => x.ProjectPartListVersionID == ID, // Bây giờ mới có ID đúng
         myDict);
@@ -229,10 +226,10 @@ namespace RERPAPI.Controllers.Project
             }
         }
     }
+
     public class SaveProjectPartListVersionRequest
     {
         public ProjectPartListVersion ProjectPartListVersion { get; set; }
         public List<int>? ProjectHistoryProblemIDs { get; set; }
     }
-
 }

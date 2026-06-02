@@ -1,19 +1,16 @@
 ﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class InventoryRepo:GenericRepo<Inventory>
+    public class InventoryRepo : GenericRepo<Inventory>
     {
         public InventoryRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
+
         #region kiểm tra tồn kho cho phiếu nhập
+
         public async Task CheckInventoryForImport(List<BillImportDetail> billImportDetail, BillImport billImport)
         {
             foreach (var detail in billImportDetail)
@@ -34,8 +31,8 @@ namespace RERPAPI.Repo.GenericEntity
                     await CreateAsync(inventory);
                 }
             }
-           
         }
-        #endregion
+
+        #endregion kiểm tra tồn kho cho phiếu nhập
     }
 }

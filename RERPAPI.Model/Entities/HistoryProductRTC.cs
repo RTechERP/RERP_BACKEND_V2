@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace RERPAPI.Model.Entities;
+﻿namespace RERPAPI.Model.Entities;
 
 public partial class HistoryProductRTC
 {
@@ -69,7 +66,7 @@ public partial class HistoryProductRTC
     public bool AdminConfirm { get; set; }
 
     /// <summary>
-    /// ID phiếu xuất 
+    /// ID phiếu xuất
     /// </summary>
     public int? BillExportTechnicalID { get; set; }
 

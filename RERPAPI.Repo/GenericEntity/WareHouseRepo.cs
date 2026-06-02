@@ -1,11 +1,6 @@
 ﻿using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
@@ -14,6 +9,7 @@ namespace RERPAPI.Repo.GenericEntity
         public WarehouseRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
+
         public APIResponse Validate(Warehouse item)
         {
             try
@@ -25,7 +21,7 @@ namespace RERPAPI.Repo.GenericEntity
                 }
                 return ApiResponseFactory.Success(null, "");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return ApiResponseFactory.Fail(ex, ex.Message);
             }

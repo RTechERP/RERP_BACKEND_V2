@@ -1,13 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Attributes;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO.ProjectAGV;
 using RERPAPI.Model.Entities;
-using RERPAPI.Model.Param.HRM.VehicleManagement;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.Asset;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -15,10 +10,10 @@ namespace RERPAPI.Controllers.Old
     [ApiController]
     public class InventoryProjectController : ControllerBase
     {
-        ProjectRepo _projectRepo;
-        InventoryProjectRepo _inventoryProjecRepo;
-        WarehouseRepo _wareHouseRepo;
-        InventoryProjectProductSaleLinkRepo _inventoryProjectProductSaleLinkRepo;
+        private ProjectRepo _projectRepo;
+        private InventoryProjectRepo _inventoryProjecRepo;
+        private WarehouseRepo _wareHouseRepo;
+        private InventoryProjectProductSaleLinkRepo _inventoryProjectProductSaleLinkRepo;
 
         public InventoryProjectController(ProjectRepo projectRepo, InventoryProjectRepo inventoryProjecRepo, WarehouseRepo wareHouseRepo
             , InventoryProjectProductSaleLinkRepo inventoryProjectProductSaleLink)
@@ -60,6 +55,7 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-warehouse-by-name")]
         public IActionResult GetWareHouseByName(string wareHouseName = "")
         {
@@ -73,13 +69,13 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //Lấy danh sách hàng nhả giữ
         [HttpPost("get-inventory-project")]
         public IActionResult GetInventoryProject([FromBody] InventoryProjectRequestParam request)
         {
             try
             {
-
                 string procedureName = "spGetInventoryProject";
                 string[] paramNames = new string[] { "@ProjectID", "@EmployeeID", "@ProductSaleID", "@Keyword" };
                 object[] paramValues = new object[] { request.ProjectID ?? 0, request.EmployeeID ?? 0, 0, request.KeyWord ?? "" };
@@ -93,6 +89,7 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-POKH")]
         public IActionResult GetPOKH(int productSaleID)
         {
@@ -110,6 +107,7 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-project")]
         public IActionResult GetProject()
         {
@@ -137,7 +135,6 @@ namespace RERPAPI.Controllers.Old
 
                 if (inventory.ID <= 0)
                 {
-
                     await _inventoryProjecRepo.CreateAsync(inventory);
                 }
                 else
@@ -155,6 +152,5 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

@@ -1,20 +1,18 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Repo.GenericEntity;
-using System.Reflection.Metadata;
 
 namespace RERPAPI.Controllers.Old.Technical
 {
     [Route("api/[controller]")]
-    [ApiController] 
+    [ApiController]
     [Authorize]
     public class SummaryKPIErrorEmployeeMonthController : ControllerBase
     {
-
         private readonly DepartmentRepo _departmentRepo;
         private readonly KPIErrorTypeRepo _kpiErrorTypeRepo;
+
         public SummaryKPIErrorEmployeeMonthController(DepartmentRepo departmentRepo, KPIErrorTypeRepo kpiErrorTypeRepo)
         {
             _departmentRepo = departmentRepo;
@@ -60,7 +58,6 @@ namespace RERPAPI.Controllers.Old.Technical
                 var data = SQLHelper<object>.GetListData(dataKpiError, 0);
 
                 return Ok(ApiResponseFactory.Success(data, ""));
-
             }
             catch (Exception ex)
             {
@@ -81,13 +78,11 @@ namespace RERPAPI.Controllers.Old.Technical
                 var data = SQLHelper<object>.GetListData(dataKpiError, 0);
 
                 return Ok(ApiResponseFactory.Success(data, ""));
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

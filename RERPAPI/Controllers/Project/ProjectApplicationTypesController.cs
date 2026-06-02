@@ -12,13 +12,13 @@ namespace RERPAPI.Controllers.Project
     [Authorize]
     public class ProjectApplicationTypesController : Controller
     {
-        ProjectApplicationTypesRepo _projectApplicationType;
+        private ProjectApplicationTypesRepo _projectApplicationType;
 
         public ProjectApplicationTypesController(ProjectApplicationTypesRepo projectApplicationTypeRepo)
         {
             _projectApplicationType = projectApplicationTypeRepo;
         }
-      
+
         [HttpGet("project-application-type")]
         public async Task<IActionResult> GetProjectApplicationTypes(int? projectTypeID)
         {
@@ -55,7 +55,6 @@ namespace RERPAPI.Controllers.Project
                 }
                 if (projectApplicationType.ID <= 0)
                 {
-
                     await _projectApplicationType.CreateAsync(projectApplicationType);
                 }
                 else
@@ -87,11 +86,9 @@ namespace RERPAPI.Controllers.Project
                     return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng chọn loại ứng dụng dự án để xóa"));
                 foreach (var item in ids)
                 {
-
                     var project = _projectApplicationType.GetByID(item);
                     project.IsDeleted = true;
                     await _projectApplicationType.UpdateAsync(project);
-
                 }
                 return Ok(ApiResponseFactory.Success(ids, "Xóa thành công"));
             }

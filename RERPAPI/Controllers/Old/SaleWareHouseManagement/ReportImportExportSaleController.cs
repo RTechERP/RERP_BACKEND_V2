@@ -9,7 +9,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     public class ReportImportExportSaleController : ControllerBase
     {
         [HttpPost("")]
-
         public IActionResult getReport(ReportImportExportParam filter)
         {
             try
@@ -46,7 +45,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         {
             try
             {
-
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
                     "spGetHistoryImportExportInventory",
                     new string[] { "@ProductSaleID", "@WarehouseCode" },

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace RERPAPI.Model.Entities;
+﻿namespace RERPAPI.Model.Entities;
 
 public partial class BillImportTechnical
 {
@@ -80,7 +77,7 @@ public partial class BillImportTechnical
     public int? WarehouseID { get; set; }
 
     /// <summary>
-    /// ID nhà cung cấp 
+    /// ID nhà cung cấp
     /// </summary>
     public int? SupplierSaleID { get; set; }
 

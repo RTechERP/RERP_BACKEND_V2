@@ -1,9 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
 
 namespace RERPAPI.Controllers
@@ -25,6 +23,7 @@ namespace RERPAPI.Controllers
             _vehicleCategoryRepo = vehicleCategoryRepo;
             _employeeRepo = employeeRepo;
         }
+
         // GET: /api/vehiclemanagement
         [HttpGet("get-vehicles")]
         public IActionResult GetVehicles()
@@ -43,13 +42,14 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // GET: api/vehiclemanagement/vehiclecategory
         [HttpGet("get-vehicle-category")]
         public IActionResult GetVehicleCategory()
         {
             try
             {
-                var data = _vehicleCategoryRepo.GetAll(x=>x.IsDelete!=true).ToList();
+                var data = _vehicleCategoryRepo.GetAll(x => x.IsDelete != true).ToList();
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
@@ -57,6 +57,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // GET: /api/vehiclemanagement/employee
         [HttpGet("get-employee")]
         public IActionResult GetEmployee()
@@ -69,7 +70,6 @@ namespace RERPAPI.Controllers
                 var data = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
                 var result = SQLHelper<object>.GetListData(data, 0);
 
-
                 return Ok(new
                 {
                     data = result,
@@ -81,13 +81,14 @@ namespace RERPAPI.Controllers
                 return Ok(new { status = 0, message = ex.Message, error = ex.ToString() });
             }
         }
+
         // GET: /api/vehiclemanagement/employee
         [HttpGet("EmployeeSDT")]
         public IActionResult GetEmployeeSDT(int id)
         {
             try
             {
-                var employee = _employeeRepo.GetByID(id); 
+                var employee = _employeeRepo.GetByID(id);
                 return Ok(ApiResponseFactory.Success(employee, ""));
             }
             catch (Exception ex)
@@ -95,6 +96,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // POST: api/vehiclemanagement
         [HttpPost("save-vehicle")]
         public async Task<IActionResult> SaveVehicle([FromBody] VehicleManagement vehicle)
@@ -122,6 +124,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // POST: api/vehiclemanagement/vehiclecategory
         [HttpPost("save-vehicle-category")]
         public async Task<IActionResult> SaveDataVehicleCategoryAsync([FromBody] VehicleCategory vehicleCategory)

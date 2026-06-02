@@ -2,14 +2,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.HRM.Employees
 {
@@ -26,13 +21,14 @@ namespace RERPAPI.Controllers.HRM.Employees
             _employeeDeductionTypeRepo = employeeDeductionTypeRepo;
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
         }
-       //API lấy danh sách tiền phatjt
+
+        //API lấy danh sách tiền phatjt
         [HttpGet("get-all")]
         public IActionResult GetAll()
         {
             try
             {
-                var data = _employeeDeductionTypeRepo.GetAll(x=>x.IsDeleted!=true).ToList();
+                var data = _employeeDeductionTypeRepo.GetAll(x => x.IsDeleted != true).ToList();
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
@@ -40,6 +36,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //API lấy dữ liệu để sửa
         [RequiresPermission("N1,N2")]
         [HttpGet("get-by-id/{id}")]
@@ -55,6 +52,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //API lưu loại tiền phạt
         [RequiresPermission("N1,N2")]
         [HttpPost("save")]
@@ -64,13 +62,12 @@ namespace RERPAPI.Controllers.HRM.Employees
             {
                 if (model.ID == 0)
                 {
-               
-                  await _employeeDeductionTypeRepo.CreateAsync(model);
+                    await _employeeDeductionTypeRepo.CreateAsync(model);
                 }
                 else
                 {
                     var existing = _employeeDeductionTypeRepo.GetByID(model.ID);
-                    if (existing == null) return NotFound(ApiResponseFactory.Fail(null,"Không tìm thấy dữ liệu"));
+                    if (existing == null) return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu"));
                     existing.DeductionTypeCode = model.DeductionTypeCode;
                     existing.DeductionTypeName = model.DeductionTypeName;
                     existing.MoneyLevel1 = model.MoneyLevel1;
@@ -85,6 +82,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //API xóa loại phạt
         [RequiresPermission("N1,N2")]
         [HttpDelete("delete/{id}")]
@@ -95,7 +93,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 var existing = _employeeDeductionTypeRepo.GetByID(id);
                 if (existing == null) return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu"));
                 existing.IsDeleted = true;
-              await  _employeeDeductionTypeRepo.UpdateAsync(existing);
+                await _employeeDeductionTypeRepo.UpdateAsync(existing);
                 return Ok(ApiResponseFactory.Success(null, "Xóa thành công"));
             }
             catch (Exception ex)
@@ -103,6 +101,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //API check tiền phạt theo chức vụ
         [RequiresPermission("N1,N2")]
         [HttpGet("check-amount-level")]
@@ -120,7 +119,6 @@ namespace RERPAPI.Controllers.HRM.Employees
                     status = 1,
                     data = result
                 });
-
             }
             catch (Exception ex)
             {

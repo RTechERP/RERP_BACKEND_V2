@@ -1,20 +1,14 @@
 ﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class CoureTypeRepo: GenericRepo<CourseType>
+    public class CoureTypeRepo : GenericRepo<CourseType>
     {
         public CoureTypeRepo(CurrentUser currentUser) : base(currentUser)
         {
-
-
         }
+
         public bool ValidateCourseType(CourseType data, out string message)
         {
             message = string.Empty;
@@ -24,7 +18,7 @@ namespace RERPAPI.Repo.GenericEntity
                 message = $"Không có dữ liệu. Vui lòng kiểm tra lại!";
                 return false;
             }
-            if(string.IsNullOrWhiteSpace(data.CourseTypeCode))
+            if (string.IsNullOrWhiteSpace(data.CourseTypeCode))
             {
                 message = $"Vui lòng nhập mã loại khóa học!";
                 return false;

@@ -10,11 +10,10 @@ namespace RERPAPI.Controllers.Old
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
-
     public class EmployeeApproveController : ControllerBase
     {
-
         private EmployeeApprovedRepo _employeeApprovedRepo;
+
         private class EmployeeApproveSelected
         {
             public int EmployeeID { get; set; }
@@ -24,21 +23,19 @@ namespace RERPAPI.Controllers.Old
 
         private EmployeeApproveRepo _employeeApproveRepo;
         private EmployeeRepo _employeeRepo;
+
         public EmployeeApproveController(EmployeeApproveRepo employeeApproveRepo, EmployeeRepo employeeRepo)
         {
             _employeeApproveRepo = employeeApproveRepo;
             _employeeRepo = employeeRepo;
         }
 
-
-
         [HttpGet]
-        //[RequiresPermission("N1")]
         public async Task<IActionResult> GetEmployeeApprove()
         {
             try
             {
-                List<EmployeeApprove> employeeApprovals = _employeeApproveRepo.GetAll(x=> x.IsPassed == true);
+                List<EmployeeApprove> employeeApprovals = _employeeApproveRepo.GetAll(x => x.IsPassed == true);
                 //return Ok(new
                 //{
                 //    status = 1,
@@ -183,11 +180,8 @@ namespace RERPAPI.Controllers.Old
                 //    error = ex.ToString()
                 //});
 
-
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-
     }
 }

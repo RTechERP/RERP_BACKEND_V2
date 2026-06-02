@@ -18,15 +18,13 @@ namespace RERPAPI.Controllers.Old
         private EmployeeContractRepo _employeeContractRepo;
         private readonly IWebHostEnvironment _environment;
         private IConfiguration _configuration;
+
         public EmployeeContractController(EmployeeContractRepo employeeContractRepo, IWebHostEnvironment environment, IConfiguration configuration)
         {
             _employeeContractRepo = employeeContractRepo;
             _environment = environment;
             _configuration = configuration;
         }
-
-
-
 
         //[HttpGet]
         //public IActionResult GetAll()
@@ -51,7 +49,6 @@ namespace RERPAPI.Controllers.Old
         //    }
         //}
 
-
         [HttpGet]
         [RequiresPermission("N1,N2,N60")]
         public IActionResult GetEmployeeContract(int employeeID, int? employeeContractTypeID, string? filterText)
@@ -68,7 +65,6 @@ namespace RERPAPI.Controllers.Old
                 //    data = SQLHelper<object>.GetListData(employeeContracts, 0)
                 //});
                 return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(employeeContracts, 0), ""));
-
             }
             catch (Exception ex)
             {
@@ -111,7 +107,6 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
-
         [HttpPost]
         [RequiresPermission("N1,N2,N60")]
         public async Task<IActionResult> SaveEmployeeContract([FromBody] EmployeeContract employeeContract)
@@ -128,7 +123,6 @@ namespace RERPAPI.Controllers.Old
                 //    message = "Lưu thành công"
                 //});
                 return Ok(ApiResponseFactory.Success(employeeContract, ""));
-
             }
             catch (Exception ex)
             {
@@ -142,8 +136,6 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-
 
         [HttpGet("{id}/print-contract")]
         [RequiresPermission("N1,N2,N60")]
@@ -186,7 +178,6 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
-
         [HttpPost("generate")]
         [RequiresPermission("N1,N2,N60")]
         public IActionResult GenerateContract([FromBody] ContractDTO data)
@@ -195,10 +186,10 @@ namespace RERPAPI.Controllers.Old
             {
                 ExcelPackage.License.SetNonCommercialOrganization("RTC");
                 var templateFolder = _configuration.GetValue<string>("PathTemplate");
-                if(templateFolder==null)
+                if (templateFolder == null)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy đường dẫn File trên sever"));
-                }    
+                }
                 // Determine template path and output filename based on LoaiHDLDID
                 string templatePath;
                 string outputFileName;
@@ -206,7 +197,7 @@ namespace RERPAPI.Controllers.Old
 
                 if (data.EmployeeLoaiHDLDID == 1) // HĐTV
                 {
-                     templatePath = Path.Combine(templateFolder, "ExportExcel", "(Mau)_HDTV_Company.docx");
+                    templatePath = Path.Combine(templateFolder, "ExportExcel", "(Mau)_HDTV_Company.docx");
                     outputFileName = $"{contractNumber}.docx";
                 }
                 else if (data.EmployeeLoaiHDLDID == 4) // HĐLĐ 12T
@@ -270,7 +261,6 @@ namespace RERPAPI.Controllers.Old
                         doc.ReplaceText("#PhoneCom", data.PhoneNumberCom ?? "");
                         doc.ReplaceText("#DirectorCom", data.DirectorCom ?? "");
                         doc.ReplaceText("#PosCom", data.PositionCom ?? "");
-
 
                         // Save document
                         doc.SaveAs(outputStream);

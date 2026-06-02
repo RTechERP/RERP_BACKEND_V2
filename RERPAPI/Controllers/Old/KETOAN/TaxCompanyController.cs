@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using static System.Runtime.CompilerServices.RuntimeHelpers;
 
 namespace RERPAPI.Controllers.Old.KETOAN
 {
@@ -14,7 +12,7 @@ namespace RERPAPI.Controllers.Old.KETOAN
     public class TaxCompanyController : ControllerBase
     {
         private readonly TaxCompanyRepo _taxCompanyRepo;
-        
+
         public TaxCompanyController(TaxCompanyRepo taxCompanyRepo)
         {
             _taxCompanyRepo = taxCompanyRepo;
@@ -44,7 +42,7 @@ namespace RERPAPI.Controllers.Old.KETOAN
                 if (string.IsNullOrEmpty(model.Code))
                     return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng nhập Mã công ty"));
 
-                var models = _taxCompanyRepo.GetAll( x => x.Code == model.Code.Trim() && x.IsDeleted != true && x.ID != model.ID);
+                var models = _taxCompanyRepo.GetAll(x => x.Code == model.Code.Trim() && x.IsDeleted != true && x.ID != model.ID);
                 if (models.Count > 0)
                     return BadRequest(ApiResponseFactory.Fail(null, "Mã công ty đã tồn tại"));
 
@@ -55,7 +53,7 @@ namespace RERPAPI.Controllers.Old.KETOAN
                 else
                 {
                     var exist = _taxCompanyRepo.GetAll(x => x.Code == model.Code.Trim() && x.ID != model.ID && x.IsDeleted == true).FirstOrDefault();
-                    if(exist != null)
+                    if (exist != null)
                     {
                         return Ok(new
                         {

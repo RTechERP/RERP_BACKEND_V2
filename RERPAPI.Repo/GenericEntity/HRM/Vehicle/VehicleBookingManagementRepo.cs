@@ -1,12 +1,6 @@
 ﻿using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity.HRM.Vehicle
 {
@@ -16,6 +10,7 @@ namespace RERPAPI.Repo.GenericEntity.HRM.Vehicle
         private readonly EmployeeRepo _employeeRepo;
         private readonly CurrentUser _currentUser;
         private readonly EmailHelper _emailHelper;
+
         public VehicleBookingManagementRepo(CurrentUser currentUser, EmployeeRepo employeeRepo, EmployeeSendEmailRepo employeeSendEmailRepo, EmailHelper emailHelper) : base(currentUser)
         {
             this._currentUser = currentUser;
@@ -24,7 +19,7 @@ namespace RERPAPI.Repo.GenericEntity.HRM.Vehicle
             _emailHelper = emailHelper;
         }
 
-        public async void SendEmail( VehicleBookingManagementDTO vehicleBooking, int receiver, string subject)
+        public async void SendEmail(VehicleBookingManagementDTO vehicleBooking, int receiver, string subject)
         {
             //string status = isAdd ? "ĐĂNG KÝ" : "CẬP NHẬT";
             //string startTime = timeStart.ToString("HH:mm");
@@ -53,16 +48,13 @@ namespace RERPAPI.Repo.GenericEntity.HRM.Vehicle
                 {
                     emailCongTy = TextUtils.ToString(row.EmailCongTy);
                 }
-
             }
 
             e.Subject = $"{subject.ToUpper()} - {_currentUser.FullName.ToUpper()} - {DateTime.Now.ToString("dd/MM/yyyy")}";
             e.EmailTo = emailCongTy;
 
-
             string timeNeed = !vehicleBooking.TimeNeedPresent.HasValue ? "" : vehicleBooking.TimeNeedPresent.Value.ToString("dd/MM/yyyy HH:mm");
             string departureDate = !vehicleBooking.DepartureDate.HasValue ? "" : vehicleBooking.DepartureDate.Value.ToString("dd/MM/yyyy HH:mm");
-
 
             if (vehicleBooking.ApprovedTBP > 0)
             {
@@ -83,7 +75,6 @@ namespace RERPAPI.Repo.GenericEntity.HRM.Vehicle
             }
             else
             {
-
                 e.Body = $@"<div> <p style=""font-weight: bold; color: red;"">[NO REPLY]</p> <p> Dear {employee.FullName}</p ></div >
                             <div style = ""margin-top: 30px;"">
                             <p> {_currentUser.FullName} đã đăng ký xe cho bạn:</p>
@@ -100,14 +91,12 @@ namespace RERPAPI.Repo.GenericEntity.HRM.Vehicle
                         </div>";
             }
 
-
-
             e.StatusSend = 1;
             e.EmployeeID = _currentUser.EmployeeID;
             e.Receiver = employee.ID;
 
             //_sendEmailRepo.Create(e);
-            await _emailHelper.SendAsync(e.EmailTo??"", e.Subject, e.Body, true, e.EmailCC??"");
+            await _emailHelper.SendAsync(e.EmailTo ?? "", e.Subject, e.Body, true, e.EmailCC ?? "");
         }
 
         public bool IsProblem(VehicleBookingManagement vehicleBooking)
@@ -143,6 +132,5 @@ namespace RERPAPI.Repo.GenericEntity.HRM.Vehicle
                 return false;
             }
         }
-
     }
 }

@@ -1,31 +1,29 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.HRM;
+
 //using RERPAPI.SendService;
 
 namespace RERPAPI.Controllers.Systems
 {
     [Route("api/[controller]")]
     [ApiController]
- 
     public class UpdateVersionController : ControllerBase
     {
         private readonly UpdateVersionRepo _updateVersionRepo;
         private readonly SseService _sseService;
         private CurrentUser _currentUser;
+
         public UpdateVersionController(UpdateVersionRepo updateVersionRepo, SseService sseService, CurrentUser currentUser)
         {
             _updateVersionRepo = updateVersionRepo;
             _sseService = sseService;
             _currentUser = currentUser;
         }
+
         //lấy danh sách update phiên bản
         //[RequiresPermission("N1,N34")]
         [HttpGet("get-update-version")]
@@ -35,7 +33,7 @@ namespace RERPAPI.Controllers.Systems
             try
             {
                 var year = DateTime.Now.Year;
-                var data = _updateVersionRepo.GetAll(x => x.IsDeleted != true).OrderByDescending(x=>x.CreatedDate);
+                var data = _updateVersionRepo.GetAll(x => x.IsDeleted != true).OrderByDescending(x => x.CreatedDate);
                 var dataNextCode = _updateVersionRepo.GetAll().OrderByDescending(x => x.CreatedDate);
                 var nextCode = $"{year}.{dataNextCode.Count(x => x.CreatedDate?.Year == year) + 1}";
                 return Ok(ApiResponseFactory.Success(new { data, nextCode }, "Lấy dữ liệu thành công"));
@@ -45,6 +43,7 @@ namespace RERPAPI.Controllers.Systems
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-current-version")]
         [Authorize]
         public IActionResult GetLastVersion()
@@ -52,9 +51,9 @@ namespace RERPAPI.Controllers.Systems
             try
             {
                 var year = DateTime.Now.Year;
-                var data = _updateVersionRepo.GetAll(x => x.IsDeleted != true&& x.Status==1).OrderByDescending(x => x.CreatedDate).FirstOrDefault()?? new UpdateVersion();
+                var data = _updateVersionRepo.GetAll(x => x.IsDeleted != true && x.Status == 1).OrderByDescending(x => x.CreatedDate).FirstOrDefault() ?? new UpdateVersion();
                 var currentVersion = data.Code;
-              
+
                 return Ok(ApiResponseFactory.Success(currentVersion, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
@@ -62,6 +61,7 @@ namespace RERPAPI.Controllers.Systems
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //lưu phiên bản
 
         [Authorize]
@@ -96,18 +96,17 @@ namespace RERPAPI.Controllers.Systems
 
                         if (item.ID > 0)
                         {
-                            if(item.Status==1)
+                            if (item.Status == 1)
                             {
                                 item.PublicDate = DateTime.Now;
-                            }    
+                            }
                             result = await _updateVersionRepo.UpdateAsync(item);
-                           
                         }
                         else
                         {
                             result = await _updateVersionRepo.CreateAsync(item);
                         }
-                            if (result > 0)
+                        if (result > 0)
                         {
                             if (item.Status == 1)
                             {
@@ -126,7 +125,6 @@ namespace RERPAPI.Controllers.Systems
                             }
 
                             return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
-
                         }
                         else
                         {

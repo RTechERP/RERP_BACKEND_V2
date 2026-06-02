@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
@@ -41,6 +39,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //load phiên bản giải pháp
         [HttpGet("get-solution-version/{projectSolutionId}")]
         public async Task<IActionResult> GetSolutionVersion(int projectSolutionId)
@@ -57,7 +56,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        
+
         //load phiên bản po
         [HttpGet("get-version-po/{projectSolutionId}")]
         public async Task<IActionResult> GetVersionPO(int projectSolutionId)
@@ -74,7 +73,8 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        //load nhân công 
+
+        //load nhân công
         [HttpPost("get-project-worker")]
         public async Task<IActionResult> GetProjectWorker([FromBody] ProjectWorkerParamRequest param)
         {
@@ -90,6 +90,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //load file giải pháp
         [HttpGet("get-project-solution-file")]
         public async Task<IActionResult> GetProjectSolutionFile(int projectSolutionID)
@@ -104,6 +105,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //phần chi tiết
         [HttpGet("get-project-type")]
         public async Task<IActionResult> GetProjectType()
@@ -118,9 +120,9 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //save nhân công
         [HttpPost("save-project-worker")]
-      
         public async Task<IActionResult> SaveProjectWorker([FromBody] List<ProjectWorker> data)
         {
             try
@@ -136,7 +138,6 @@ namespace RERPAPI.Controllers.Project
                                 status = 2,
                                 message = "TT đã tồn tại, vui lòng kiểm tra lại!"
                             });
-
                         }
                     }
                     int parentId = projectWorkerRepo.FindParentIdByTT(pw.TT, pw.ProjectWorkerVersionID ?? 0);

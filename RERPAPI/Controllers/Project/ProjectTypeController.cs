@@ -11,10 +11,12 @@ namespace RERPAPI.Controllers.Project
     public class ProjectTypeController : ControllerBase
     {
         private ProjectTypeRepo _projectTypeRepo;
+
         public ProjectTypeController(ProjectTypeRepo projectTypeRepo)
         {
             _projectTypeRepo = projectTypeRepo;
         }
+
         [HttpGet]
         public IActionResult GetAllProjectType()
         {

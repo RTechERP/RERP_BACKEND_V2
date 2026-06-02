@@ -1,11 +1,6 @@
 ﻿using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity.Warehouses.AGV
 {
@@ -14,7 +9,6 @@ namespace RERPAPI.Repo.GenericEntity.Warehouses.AGV
         public AGVProductRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
-
 
         public APIResponse Validate(AGVProduct product)
         {
@@ -40,7 +34,6 @@ namespace RERPAPI.Repo.GenericEntity.Warehouses.AGV
                 {
                     response = ApiResponseFactory.Fail(null, "Vui lòng nhập Tên sản phẩm!");
                 }
-
 
                 return response;
             }

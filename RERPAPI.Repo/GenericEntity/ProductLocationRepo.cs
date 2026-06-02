@@ -5,7 +5,8 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class ProductLocationRepo : GenericRepo<ProductLocation>
     {
-       private readonly ProductRTCRepo _productRtcRepo;
+        private readonly ProductRTCRepo _productRtcRepo;
+
         public ProductLocationRepo(CurrentUser currentUser, ProductRTCRepo productRtcRepo) : base(currentUser)
         {
             _productRtcRepo = productRtcRepo;
@@ -30,7 +31,6 @@ namespace RERPAPI.Repo.GenericEntity
             }
         }
 
-
         public bool Validate(ProductLocation location, out string message)
         {
             message = string.Empty;
@@ -47,12 +47,14 @@ namespace RERPAPI.Repo.GenericEntity
             }
             return true;
         }
+
         public int GetSTT(int warehouseID)
         {
             var listLocations = GetAll(x => x.WarehouseID == warehouseID);
             int stt = listLocations.Max(x => x.STT ?? 0) + 1;
             return stt;
         }
+
         public bool CheckLocationInUse(int id)
         {
             var exist = _productRtcRepo.GetAll(x => x.ProductLocationID == id);

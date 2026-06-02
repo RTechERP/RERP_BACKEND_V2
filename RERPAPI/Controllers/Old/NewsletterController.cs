@@ -1,13 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.HRM;
-using System.Linq;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -114,7 +111,6 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
-
         [HttpPost]
         public IActionResult GetNewsletter(NewsletterParam param)
         {
@@ -125,7 +121,7 @@ namespace RERPAPI.Controllers.Old
 
                 var newsletters = SQLHelper<object>.ProcedureToList("sp_GetNewsletters",
                     new string[] { "@Keyword", "@TypeId", "@FromDate", "@ToDate", "@IsPublish" },
-                    new object[] { param.Keyword, param.TypeId, ds, de,param.IsPublish });
+                    new object[] { param.Keyword, param.TypeId, ds, de, param.IsPublish });
 
                 var newslettersResult = SQLHelper<object>.GetListData(newsletters, 0) as List<dynamic>;
 
@@ -190,7 +186,6 @@ namespace RERPAPI.Controllers.Old
                                         UpdatedBy = GetStringValue(f.UpdatedBy),
                                         UpdatedDate = GetDateTimeValue(f.UpdatedDate),
                                         IsDeleted = GetBoolValue(f.IsDeleted),
-
                                     });
                                 }
                             }
@@ -328,7 +323,6 @@ namespace RERPAPI.Controllers.Old
                 // Lưu danh sách files nếu có
                 if (dto.NewsletterFiles != null && dto.NewsletterFiles.Any())
                 {
-
                     foreach (var file in dto.NewsletterFiles)
                     {
                         // Gán NewsletterID cho file
@@ -353,7 +347,5 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi lưu newsletter: {ex.Message}"));
             }
         }
-
-
     }
 }

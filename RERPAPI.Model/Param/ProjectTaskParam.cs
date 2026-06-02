@@ -1,11 +1,4 @@
-﻿using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.Param
+﻿namespace RERPAPI.Model.Param
 {
     public class ProjectTaskParam
     {
@@ -16,7 +9,7 @@ namespace RERPAPI.Model.Param
         public string? STT { get; set; }
 
         /// <summary>
-        /// Người phụ trách 
+        /// Người phụ trách
         /// </summary>
         public int? UserID { get; set; }
 
@@ -125,11 +118,11 @@ namespace RERPAPI.Model.Param
         /// </summary>
         public decimal? PercentOverTime { get; set; }
 
-
         /// <summary>
         /// Nguyên nhân/Phương án sử lý (sử dụng riêng với loại công việc là BUG)
         /// </summary>
         public string? DescriptionSolution { get; set; }
+
         /// <summary>
         /// Thời gian công việc phải hoàn thành
         /// </summary>
@@ -164,7 +157,7 @@ namespace RERPAPI.Model.Param
         public List<int>? EmployeeRelate { get; set; }
         public List<int>? Links { get; set; }
         public List<int>? Files { get; set; }
-        public List<int>? ProjectTaskChecklists { get; set; } 
-        public List<int>? ProjectTaskAdditionals { get; set; } 
+        public List<int>? ProjectTaskChecklists { get; set; }
+        public List<int>? ProjectTaskAdditionals { get; set; }
     }
 }

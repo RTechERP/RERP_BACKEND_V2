@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace RERPAPI.Model.Entities;
+﻿namespace RERPAPI.Model.Entities;
 
 public partial class EmployeeOnLeaveMaster
 {
@@ -15,7 +12,7 @@ public partial class EmployeeOnLeaveMaster
     public decimal? TotalDayInYear { get; set; }
 
     /// <summary>
-    /// Số ngày đã nghỉ phép 
+    /// Số ngày đã nghỉ phép
     /// </summary>
     public decimal? TotalDayOnLeave { get; set; }
 

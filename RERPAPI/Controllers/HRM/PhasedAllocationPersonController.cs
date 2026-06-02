@@ -1,21 +1,16 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.HRM
 {
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-
     public class PhasedAllocationPersonController : ControllerBase
     {
         private readonly IConfiguration _configuration;
@@ -82,7 +77,6 @@ namespace RERPAPI.Controllers.HRM
 
                 if (phased.ID <= 0)
                 {
-
                     await _phasedRepo.CreateAsync(phased);
                 }
                 else await _phasedRepo.UpdateAsync(phased);
@@ -99,7 +93,6 @@ namespace RERPAPI.Controllers.HRM
         {
             try
             {
-
                 List<string> employeeFails = new List<string>();
                 int phasedAllocationPersonID = 0;
                 int record = 0;
@@ -116,13 +109,12 @@ namespace RERPAPI.Controllers.HRM
                         var detail = _phasedDetailRepo.GetAll(x => x.PhasedAllocationPersonID == item.PhasedAllocationPersonID && x.EmployeeID == employee.ID).FirstOrDefault() ?? new PhasedAllocationPersonDetail();
                         if (detail.ID <= 0)
                         {
-                          var result =   await _phasedDetailRepo.CreateAsync(item);
+                            var result = await _phasedDetailRepo.CreateAsync(item);
                             if (result > 0)
                             {
                                 record++;
                             }
                         }
-
                         else
                         {
                             detail.DateReceive = DateTime.Now;

@@ -1,10 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO.Project.Procedure;
-using RERPAPI.Model.Entities;
-using RERPAPI.Model.Param;
-using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -101,7 +97,6 @@ namespace RERPAPI.Controllers.Old
         //            var listExistingProductInforEmployees = _projectInforEmployee.GetAll(e => e.ProjectInfoID == existingProjectInfor.ID && (!e.IsDeleted ?? true));
         //            if (listExistingProductInforEmployees != null && listExistingProductInforEmployees.Count >= 0)
         //            {
-                        
         //                if(param.projectInforEmployees == null || param.projectInforEmployees.Count <= 0)
         //                {
         //                    foreach (var item in listExistingProductInforEmployees)

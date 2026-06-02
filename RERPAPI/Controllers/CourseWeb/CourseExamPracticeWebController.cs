@@ -1,19 +1,10 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using DocumentFormat.OpenXml.Wordprocessing;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using NPOI.SS.Formula.Functions;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.CourseWebDTO;
 using RERPAPI.Model.Entities.RTCCourse;
-using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericCourseEntity;
-using SkiaSharp;
-using System.Net;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers.KHOAHOC
 {
@@ -27,10 +18,13 @@ namespace RERPAPI.Controllers.KHOAHOC
         private readonly CourseRightAnswersRepo _courseRightAnswerRepo;
         private readonly CourseQuestionRepo _courseQuestionRepo;
         private readonly CourseLessonRepo _courseeLessonRepo;
+
         //
         private readonly CourseExamPracticeRepo _courseExamPracticeRepo;
+
         private readonly CourseExamResultRepo _courseExamResultRepo;
         private readonly CourseExamEvaluateRepo _courseExamEvaluateRepo;
+
         public CourseExamPracticeWebController(CourseExamRepo courseExamRepo,
             CourseAnswersRepo courseAnswerRepo,
             CourseRightAnswersRepo courseRightAnswerRepo,
@@ -51,7 +45,6 @@ namespace RERPAPI.Controllers.KHOAHOC
             _courseExamEvaluateRepo = courseExamEvaluateRepo;
         }
 
-
         // load khóa học
         [HttpGet("get-course-data")]
         public IActionResult GetCourseData(int? employeeID)
@@ -62,7 +55,6 @@ namespace RERPAPI.Controllers.KHOAHOC
                 var data = SQLCourseHelper<object>.ProcedureToList("spGetDataCourse",
                                                 new string[] { "@EmployeeID" },
                                                 new object[] { employeeID });
-
 
                 return Ok(ApiResponseFactory.Success(SQLCourseHelper<object>.GetListData(data, 0), ""));
             }
@@ -204,7 +196,6 @@ namespace RERPAPI.Controllers.KHOAHOC
         [HttpPost("course-exam-results-evaluate")]
         public IActionResult CourseRxamResultsEvaluate(string lstId, bool evaluate)
         {
-
             SQLCourseHelper<object>.ExcuteProcedure(
                 "spUpdateEvaluate",
                 new[] { "@LstID", "@Evaluate" },
@@ -280,7 +271,7 @@ namespace RERPAPI.Controllers.KHOAHOC
             }
         }
 
-        // 
+        //
         [HttpGet("get-check-lesson-exam")]
         public IActionResult GetCheckLessonExam(int? lessonID)
         {
@@ -302,7 +293,6 @@ namespace RERPAPI.Controllers.KHOAHOC
             }
         }
 
-
         // curd kết quả thị khóa học: TH, BT
 
         [HttpGet("get-course-new")]
@@ -313,10 +303,9 @@ namespace RERPAPI.Controllers.KHOAHOC
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
 
-
                 var data = SQLCourseHelper<object>.ProcedureToList("spGetCourseNew",
                                                 new string[] { "@UserID", "@Status" },
-                                                new object[] { currentUser.ID, -1});
+                                                new object[] { currentUser.ID, -1 });
 
                 return Ok(ApiResponseFactory.Success(SQLCourseHelper<object>.GetListData(data, 0), ""));
             }
@@ -325,7 +314,6 @@ namespace RERPAPI.Controllers.KHOAHOC
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         // Thêm sửa kết quả thi: TH, BT
         [HttpPost("save-course-exam-practice")]
@@ -523,7 +511,5 @@ namespace RERPAPI.Controllers.KHOAHOC
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-
     }
 }

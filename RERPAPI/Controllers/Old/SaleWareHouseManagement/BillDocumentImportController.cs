@@ -1,10 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.Entities;
-using RERPAPI.Repo.GenericEntity.AddNewBillExport;
-using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
+using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 {
@@ -25,6 +23,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             _billImportRepo = billImportRepo;
             _billDocumentImportLogRepo = billDocumentImportLogRepo;
         }
+
         [HttpGet("")]
         public IActionResult getData()
         {
@@ -42,8 +41,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(new { status = 0, ex.Message });
             }
         }
-        [HttpGet("get-by-billID/{billID}")]
 
+        [HttpGet("get-by-billID/{billID}")]
         public IActionResult getDatabyBillID(int billID)
         {
             try
@@ -77,27 +76,27 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 if (dtos == null || !dtos.Any())
                     return BadRequest(new { status = 0, error = "Danh sách rỗng." });
 
-             /*   // Validation
-                foreach (var dto in dtos)
-                {
-                    if (dto.DocumentStatus <= 0)
-                    {
-                        return BadRequest(new
-                        {
-                            status = 0,
-                            error = $"Vui lòng nhập Trạng thái của chứng từ [{dto.DocumentImportID ?? "N/A"}]."
-                        });
-                    }
-                    if (dto.DocumentStatus == 2 && string.IsNullOrEmpty(dto.ReasonCancel))
-                    {
-                        return BadRequest(new
-                        {
-                            status = 0,
-                            error = $"Vui lòng nhập Lý do hủy của chứng từ [{dto.DocumentImportID ?? "N/A"}]."
-                        });
-                    }
-                }
-*/
+                /*   // Validation
+                   foreach (var dto in dtos)
+                   {
+                       if (dto.DocumentStatus <= 0)
+                       {
+                           return BadRequest(new
+                           {
+                               status = 0,
+                               error = $"Vui lòng nhập Trạng thái của chứng từ [{dto.DocumentImportID ?? "N/A"}]."
+                           });
+                       }
+                       if (dto.DocumentStatus == 2 && string.IsNullOrEmpty(dto.ReasonCancel))
+                       {
+                           return BadRequest(new
+                           {
+                               status = 0,
+                               error = $"Vui lòng nhập Lý do hủy của chứng từ [{dto.DocumentImportID ?? "N/A"}]."
+                           });
+                       }
+                   }
+   */
                 bool isStatus2 = false;
                 int billImportID = 0;
 
@@ -123,7 +122,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     existing.DocumentStatus = dto.BillDocuments.DocumentStatus;
                     existing.Note = dto.note?.Trim(); // Map ReasonCancel to Note
                     existing.LogDate = DateTime.Now;
-                  
 
                     await _billDocumentImportRepo.UpdateAsync(existing);
 

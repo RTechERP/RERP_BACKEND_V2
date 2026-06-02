@@ -1,8 +1,5 @@
-using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using NPOI.HSSF.Record.Chart;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
@@ -11,16 +8,12 @@ using RERPAPI.Model.Param.Project;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Project;
 using System.Data;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
-using static QRCoder.PayloadGenerator;
 
 namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-
-    // [ApiKeyAuthorize]
     public class ProjectController : ControllerBase
     {
         #region Khai báo biến
@@ -46,8 +39,6 @@ namespace RERPAPI.Controllers.Project
         private readonly ProjectCostRepo projectCostRepo;
         private readonly ProjectPriorityLinkRepo projectPriorityLinkRepo;
 
-
-
         private readonly ProjectCurrentSituationRepo projectCurrentSituationRepo;
 
         private readonly ProjectPriorityRepo projectPriorityRepo;
@@ -58,6 +49,7 @@ namespace RERPAPI.Controllers.Project
 
         // Added repos for employee status and curricular
         private readonly EmployeeStatusRepo _employeeStatusRepo;
+
         private readonly EmployeeCurricularRepo _employeeCurricularRepo;
         private readonly EmployeeRepo _employeeRepo;
         private readonly PositionInternalRepo _positionInternalRepo;
@@ -158,7 +150,8 @@ namespace RERPAPI.Controllers.Project
             this.projectTypeTechnologyLinkRepo = projectTypeTechnologyLinkRepo;
             _customerIndustriesRepo = customerIndustriesRepo;
         }
-        #endregion
+
+        #endregion Khai báo biến
 
         #region Hàm dùng chung
 
@@ -168,10 +161,12 @@ namespace RERPAPI.Controllers.Project
             var pms = SQLHelper<object>.ProcedureToList("spGetEmployeeForProject", new string[] { }, new object[] { });
             return pms[numberTable];
         }
-        #endregion
+
+        #endregion Hàm dùng chung
 
         #region API GET
-        // Lấy danh sách thư mục 
+
+        // Lấy danh sách thư mục
         // [ApiKeyAuthorize]
         [HttpGet("get-folders")]
         public async Task<IActionResult> GetFolders()
@@ -189,7 +184,6 @@ namespace RERPAPI.Controllers.Project
 
         // Danh sách nhân viên khi thêm dự án lấy table 1
         [HttpGet("get-pms")]
-        //[ApiKeyAuthorize]
         public async Task<IActionResult> GetPms()
         {
             try
@@ -205,7 +199,6 @@ namespace RERPAPI.Controllers.Project
 
         // Lấy danh sách khách hàng
         [HttpGet("get-customers")]
-        //  [ApiKeyAuthorize]
         public async Task<IActionResult> GetCustomers()
         {
             try
@@ -219,7 +212,7 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-        // lấy dữ liệu lĩnh vực khách hàng 
+        // lấy dữ liệu lĩnh vực khách hàng
         [HttpGet("get-customer-industries")]
         public async Task<IActionResult> GetCustomerIndustries()
         {
@@ -233,9 +226,9 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // Danh sách nhân viên khi thêm dự án lấy table 2 phụ trách sale/ phụ trách kỹ thuật/ leader
         [HttpGet("get-users")]
-        // [ApiKeyAuthorize]
         public async Task<IActionResult> GetUsers()
         {
             try
@@ -248,16 +241,16 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //dành cho kiểu dự án
 
-        // Danh sách loại dự án 
+        // Danh sách loại dự án
         [HttpGet("get-project-types")]
-        //   [ApiKeyAuthorize]
         public async Task<IActionResult> GetProjectTypes()
         {
             try
             {
-                List<ProjectType> projectTypes = projectTypeRepo.GetAll().Where(x => x.ID != 4 && x.IsDeleted ==false && x.IsHide !=true).ToList();
+                List<ProjectType> projectTypes = projectTypeRepo.GetAll().Where(x => x.ID != 4 && x.IsDeleted == false && x.IsHide != true).ToList();
                 return Ok(ApiResponseFactory.Success(projectTypes, ""));
             }
             catch (Exception ex)
@@ -265,11 +258,11 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //Lưu folder trong mục project type
         [HttpPost("save-folder-project")]
         public async Task<IActionResult> Savefolder([FromBody] ProjectTreeFolderDTO prjFolder)
         {
-
             try
             {
                 if (prjFolder.ID > 0)
@@ -307,10 +300,10 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("delete-project-folder")]
         public async Task<IActionResult> DeleteFolder([FromBody] ProjectTreeFolderDTO prjFolder)
         {
-
             try
             {
                 prjFolder.IsDeleted = true;
@@ -336,7 +329,6 @@ namespace RERPAPI.Controllers.Project
         [HttpPost("saveprojecttype")]
         public async Task<IActionResult> saveprojecttype([FromBody] ProjectTypeDTO prjType)
         {
-
             try
             {
                 List<ProjectType> check = projectTypeRepo.GetAll(x => x.ProjectTypeCode == prjType.ProjectTypeCode && x.ID != prjType.ID && x.IsDeleted == false);
@@ -391,6 +383,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //hàm lấy kiểu dự án theo id
         [HttpGet("get-project-types/{id}")]
         public async Task<IActionResult> getprojecttypes(int id)
@@ -414,7 +407,8 @@ namespace RERPAPI.Controllers.Project
                 });
             }
         }
-        //hàm lấy kiểu dự án cha 
+
+        //hàm lấy kiểu dự án cha
         [HttpGet("get-parent-project-types")]
         public async Task<IActionResult> getparentprojecttypes()
         {
@@ -428,6 +422,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("getprojecttypesbycondition")]
         public async Task<IActionResult> getprojecttypesbycondition([FromQuery] string keyword = "")
         {
@@ -441,6 +436,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //Danh sách thư mục theo loại dự án
         [HttpGet("getfoldersbyprojecttypes/{id}")]
         public async Task<IActionResult> getfoldersbyprojecttypes(int id)
@@ -462,7 +458,6 @@ namespace RERPAPI.Controllers.Project
 
         // Danh sách loại dự án ProjectTypeLink
         [HttpGet("get-project-type-links")]
-        //   [ApiKeyAuthorize]
         public async Task<IActionResult> GetProjectTypeLinks(int id)
         {
             try
@@ -481,7 +476,6 @@ namespace RERPAPI.Controllers.Project
 
         // Load Hạng mục công việc
         [HttpGet("get-project-items")]
-        //   [ApiKeyAuthorize]
         public async Task<IActionResult> GetProjectItems(int id)
         {
             try
@@ -499,10 +493,8 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-
-        // Danh sách trạng thái dự án 
+        // Danh sách trạng thái dự án
         [HttpGet("get-project-status")]
-        //   [ApiKeyAuthorize]
         public async Task<IActionResult> GetProjectStatus()
         {
             try
@@ -518,7 +510,6 @@ namespace RERPAPI.Controllers.Project
 
         // Danh sách lĩnh vực kinh doanh
         [HttpGet("get-business-fields")]
-        // [ApiKeyAuthorize]
         public async Task<IActionResult> GetBusinessFields()
         {
             try
@@ -532,9 +523,8 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-        // Danh sách dự án 
+        // Danh sách dự án
         [HttpGet("get-projects")]
-        //  [ApiKeyAuthorize]
         public async Task<IActionResult> GetProjects(int size, int page,
             DateTime dateTimeS, DateTime dateTimeE, string? projectType,
             int pmID, int leaderID, int bussinessFieldID, string? projectStatus,
@@ -569,7 +559,6 @@ namespace RERPAPI.Controllers.Project
 
                 if (isAGV == false) projectStatus = "";
 
-
                 var projects = SQLHelper<object>.ProcedureToList("spGetProject",
                     new string[] {
                         "@PageSize", "@PageNumber", "@DateStart", "@DateEnd", "@FilterText", "@CustomerID", "@UserID",
@@ -602,12 +591,12 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // Lấy danh sách dự án chi tiết ở dưới
         [HttpGet("get-project-details")]
-        //  [ApiKeyAuthorize]
         public async Task<IActionResult> GetProjectDetails(int id)
         {
-            // Update store spGetProjectDetail p.Note => p.Note AS ProjectNote 
+            // Update store spGetProjectDetail p.Note => p.Note AS ProjectNote
             try
             {
                 //List<ProjectDetailDTO> projectDetails = SQLHelper<ProjectDetailDTO>
@@ -619,12 +608,10 @@ namespace RERPAPI.Controllers.Project
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
-
         }
+
         // Lấy danh sách dự án chi tiết ở dưới
         [HttpGet("get-project")]
-        //  [ApiKeyAuthorize]
         public async Task<IActionResult> GetProject(int id)
         {
             try
@@ -638,9 +625,8 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-        // Lấy hiện trạng dự án 
+        // Lấy hiện trạng dự án
         [HttpGet("get-project-current-situation")]
-        //[ApiKeyAuthorize]
         public async Task<IActionResult> GetProjectCurrentSituation(int projectId, int employeeId)
         {
             try
@@ -650,9 +636,7 @@ namespace RERPAPI.Controllers.Project
                     .OrderByDescending(x => x.DateSituation).FirstOrDefault();
                 projectDetail = projectDetail ?? new ProjectCurrentSituation();
 
-
                 return Ok(ApiResponseFactory.Success(projectDetail.ContentSituation, ""));
-
             }
             catch (Exception ex)
             {
@@ -660,10 +644,8 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-
         // modal lấy danh sách nhóm file
         [HttpGet("get-group-files")]
-        // [ApiKeyAuthorize]
         public async Task<IActionResult> GetGroupFiles()
         {
             try
@@ -679,7 +661,6 @@ namespace RERPAPI.Controllers.Project
 
         // modal lấy danh sách FirmBase
         [HttpGet("get-firm-bases")]
-        //  [ApiKeyAuthorize]
         public async Task<IActionResult> GetFirmBases()
         {
             try
@@ -692,9 +673,9 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // modal lấy kiểu dự án Base
         [HttpGet("get-project-type-bases")]
-        //  [ApiKeyAuthorize]
         public async Task<IActionResult> GetProjectTypeBases()
         {
             try
@@ -708,9 +689,8 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-        // modal lấy người dùng dự án 
+        // modal lấy người dùng dự án
         [HttpGet("get-project-users")]
-        //  [ApiKeyAuthorize]
         public async Task<IActionResult> GetProjectUsers(int id)
         {
             try
@@ -726,7 +706,6 @@ namespace RERPAPI.Controllers.Project
 
         //modal lấy dữ liệu FollowProjectBase
         [HttpGet("get-follow-project-bases")]
-        //   [ApiKeyAuthorize]
         public async Task<IActionResult> GetFollowProjectBases(int id)
         {
             try
@@ -744,7 +723,6 @@ namespace RERPAPI.Controllers.Project
 
         //modal lấy dữ liệu PriorityType
         [HttpGet("get-priority-type")]
-        // [ApiKeyAuthorize]
         public async Task<IActionResult> GetPriorityType()
         {
             try
@@ -760,7 +738,6 @@ namespace RERPAPI.Controllers.Project
 
         //modal lấy dữ liệu PriorityType
         [HttpGet("get-project-priority-detail")]
-        // [ApiKeyAuthorize]
         public async Task<IActionResult> GetProjectPriorityDetail(int id)
         {
             try
@@ -776,7 +753,6 @@ namespace RERPAPI.Controllers.Project
 
         //modal lấy dữ liệu priorytipersion
         [HttpGet("get-personal-priority")]
-        // [ApiKeyAuthorize]
         public async Task<IActionResult> GetPersonalPriority(int projectId, int userId)
         {
             try
@@ -794,6 +770,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //  lấy danh sách leader của loại dự án
         [HttpGet("getemployeeprojecttype/{projectTypeId}")]
         public async Task<IActionResult> getemployeeprojecttype(int projectTypeId)
@@ -812,6 +789,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-project-employee-filter/{departmentID}")]
         public async Task<IActionResult> getprojectemployeefilter(int departmentID)
         {
@@ -826,9 +804,9 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //modal kiểm tra mã ưu tiê
         [HttpGet("check-project-priority")]
-        //  [ApiKeyAuthorize]
         public async Task<IActionResult> CheckProjectPriority(int id, string code)
         {
             try
@@ -846,7 +824,6 @@ namespace RERPAPI.Controllers.Project
 
         // Xóa dữ liệu project
         [HttpGet("deleted-project")]
-        //  [ApiKeyAuthorize]
         public async Task<IActionResult> DeletedProject(string ids)
         {
             try
@@ -859,7 +836,6 @@ namespace RERPAPI.Controllers.Project
                         var item = projectRepo.GetByID(id);
                         item.IsDeleted = true;
                         await projectRepo.UpdateAsync(item);
-
                     }
                 }
                 return Ok(ApiResponseFactory.Success(null, "Xóa dự án thành công"));
@@ -901,7 +877,6 @@ namespace RERPAPI.Controllers.Project
         }
 
         [HttpGet("save-change-project")]
-        //  [ApiKeyAuthorize]
         public async Task<IActionResult> SaveChangeProject(int projectIdOld, int projectIdNew)
         {
             try
@@ -917,9 +892,8 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-        // lấy trạng thái dự án 
+        // lấy trạng thái dự án
         [HttpGet("get-project-statuss")]
-        // [ApiKeyAuthorize]
         public async Task<IActionResult> GetProjectStatus(int projectId)
         {
             try
@@ -939,7 +913,7 @@ namespace RERPAPI.Controllers.Project
         //{
         //    try
         //    {
-        //        // Cho vào hàm chung sau 
+        //        // Cho vào hàm chung sau
         //        string pathLocation = @"\\192.168.1.190\duan\Projects"; //Thư mục trên server
         //        if (/*Config.IsOnline*/ false && string.IsNullOrEmpty(Config.ConnectionString)) pathLocation = @"\\14.232.152.154\duan\Projects";
         //        else if (!string.IsNullOrEmpty(Config.ConnectionString)) pathLocation = @"D:\LeTheAnh\RTC\Project"; //Thư mục test local
@@ -958,7 +932,7 @@ namespace RERPAPI.Controllers.Project
         //            }
         //        }
 
-        //        // lấy trạng thái dự án 
+        //        // lấy trạng thái dự án
         //        [HttpGet("get-project-statuss")]
         //        // [ApiKeyAuthorize]
         //        public async Task<IActionResult> GetProjectStatus(int projectId)
@@ -998,7 +972,6 @@ namespace RERPAPI.Controllers.Project
         //            {
         //                for (int i = 0; i < listProjectTypeID.Count; i++)
         //                {
-
         //                    var dt = SQLHelper<object>.GetListData(SQLHelper<object>.ProcedureToList("sp_GetProjectTypeTreeFolder",
         //                                                            new string[] { "@ProjectTypeID" },
         //                                                            new object[] { listProjectTypeID[i] }), 0);
@@ -1065,7 +1038,6 @@ namespace RERPAPI.Controllers.Project
 
         // modal loadProjectCode
         [HttpGet("get-project-code-modal")]
-        //[ApiKeyAuthorize]
         public async Task<IActionResult> GePprojectCodeModal(int projectId, string customerShortName, int projectType)
         {
             try
@@ -1125,12 +1097,12 @@ namespace RERPAPI.Controllers.Project
                     else if (projectType == 3)
                     {
                         returnProjectCode = $"F.{returnProjectCode}";
-                    }else if(projectType == 4)
+                    }
+                    else if (projectType == 4)
                     {
                         returnProjectCode = $"NB.{returnProjectCode}";
                     }
                 }
-
 
                 return Ok(ApiResponseFactory.Success(returnProjectCode == "" ? projectCode : returnProjectCode, ""));
             }
@@ -1170,6 +1142,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-project-modal2")]
         public async Task<IActionResult> GetProjectModal2(int? dateS, int? dateE)
         {
@@ -1198,7 +1171,6 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         // Lấy danh sách ưu tiên dự án
         [HttpGet("get-project-priority-modal")]
@@ -1229,8 +1201,6 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-
 
         // Lấy chi tiết tổng hợp báo cáo công việc
         [HttpGet("get-project-work-report")]
@@ -1265,12 +1235,12 @@ namespace RERPAPI.Controllers.Project
         }
 
         #region Chức năng gười tham gia dự án
+
         [HttpGet("get-project-employee")]
         public async Task<IActionResult> GetProjectEmployee(int status)
         {
             try
             {
-
                 var employees = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
                                                 new string[] { "@Status" },
                                                 new object[] { status });
@@ -1343,6 +1313,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-employee-permission")]
         public async Task<IActionResult> GetEmployeePermission(int projectId, int employeeId)
         {
@@ -1367,7 +1338,6 @@ namespace RERPAPI.Controllers.Project
                     }
                 }
 
-
                 Model.Entities.Project project = projectRepo.GetByID(projectId);
 
                 //Check quyền sau khi có phân quyền
@@ -1382,10 +1352,10 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
 
+        #endregion Chức năng gười tham gia dự án
 
-        #endregion
+        #endregion API GET
 
         [HttpGet("get-application-types")]
         public async Task<IActionResult> GetApplicationTypes()
@@ -1480,6 +1450,7 @@ namespace RERPAPI.Controllers.Project
         }
 
         #region API POST
+
         [HttpPost("save-project")]
         public async Task<IActionResult> SaveProject([FromBody] ProjectDTO prj)
         {
@@ -1507,7 +1478,6 @@ namespace RERPAPI.Controllers.Project
                 project.UpdatedDate = DateTime.Now;
                 project.CurrentState = prj.project.CurrentState;
 
-
                 if (statusOld != project.ProjectStatus)
                 {
                     ProjectStatusLog statusLog = new ProjectStatusLog();
@@ -1531,7 +1501,6 @@ namespace RERPAPI.Controllers.Project
                     new string[] { "@ProjectID", "@ProjectStatusID" },
                     new object[] { projectId, project.ProjectStatus });
 
-
                 // Lưu thông tin kiểu và leader tham gia
                 var projectTypeLinks = prj.projectTypeLinks;
                 if (projectTypeLinks.Count() > 0)
@@ -1544,7 +1513,7 @@ namespace RERPAPI.Controllers.Project
 
                         if (isSelect || leaderID > 0)
                         {
-                            // Lưu người tham gia dự án 
+                            // Lưu người tham gia dự án
                             ProjectEmployee model = new ProjectEmployee();
 
                             int employeeID = item.EmployeeID;
@@ -1571,9 +1540,6 @@ namespace RERPAPI.Controllers.Project
                                 projectEmployeeRepo.Create(model);
                             }
                         }
-
-
-
                     }
                 }
                 List<int> selectedProjectTypeLink = new List<int>();
@@ -1590,7 +1556,7 @@ namespace RERPAPI.Controllers.Project
 
                     if (prjTypeLink.ID > 0) { prjTypeLink.UpdatedDate = DateTime.Now; await projectTypeLinkRepo.UpdateAsync(prjTypeLink); }
                     else await projectTypeLinkRepo.CreateAsync(prjTypeLink);
-                    
+
                     // Lưu thông tin đa lựa chọn cho kiểu ứng dụng và công nghệ sử dụng trên từng liên kết dự án (ProjectTypeLink)
                     if (prjTypeLink.ID > 0)
                     {
@@ -1733,7 +1699,6 @@ namespace RERPAPI.Controllers.Project
                     }
                 }
 
-
                 List<ProjectPriorityLink> projectPriorityLink = projectPriorityLinkRepo.GetAll().Where(x => x.ProjectID == projectId).ToList();
                 if (projectPriorityLink.Count() > 0)
                 {
@@ -1752,7 +1717,7 @@ namespace RERPAPI.Controllers.Project
                     }
                 }
 
-                return Ok(ApiResponseFactory.Success(new {project, selectedProjectTypeLink}, "Lưu dự án thành công"));
+                return Ok(ApiResponseFactory.Success(new { project, selectedProjectTypeLink }, "Lưu dự án thành công"));
             }
             catch (Exception ex)
             {
@@ -1760,7 +1725,7 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-        // lưu trạng thái dự án 
+        // lưu trạng thái dự án
 
         [HttpPost("save-project-status")]
         public async Task<IActionResult> SaveProjectStatus(int Stt, string statusName)
@@ -1786,10 +1751,9 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-
                 if (prjTypeLink.ProjectID > 0)
                 {
-                    //update trạng thái dự án 
+                    //update trạng thái dự án
                     Model.Entities.Project project = projectRepo.GetByID(prjTypeLink.ProjectID);
                     project.ProjectStatus = prjTypeLink.ProjectStatus;
                     projectRepo.Update(project);
@@ -1822,7 +1786,6 @@ namespace RERPAPI.Controllers.Project
                     // Thêm dữ liệu vào bảng người tham gia
                     foreach (var item in prjTypeLink.prjTypeLinks)
                     {
-
                         if (item.LeaderID <= 0)
                             continue;
 
@@ -1868,7 +1831,6 @@ namespace RERPAPI.Controllers.Project
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-
             }
         }
 
@@ -1901,7 +1863,6 @@ namespace RERPAPI.Controllers.Project
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-
             }
         }
 
@@ -1974,7 +1935,6 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-
         // Lưu độ ưu tiên cá nhân
         [HttpPost("save-project-personal-priority")]
         public async Task<IActionResult> SaveProjectPersonalPriority([FromBody] ProjectPersonalPriotityDTO projectPP)
@@ -2004,7 +1964,7 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-        // Lưu độ ưu chuyển hạng mục công việc 
+        // Lưu độ ưu chuyển hạng mục công việc
         [HttpPost("save-project-work-report")]
         public async Task<IActionResult> SaveProjectWorkReport([FromBody] ProjectWorkReportDTO projectPersonalPriotity)
         {
@@ -2061,7 +2021,6 @@ namespace RERPAPI.Controllers.Project
                             ToList();
 
                         if (projectEmployee.Count() <= 0)
-
 
                         {
                             ProjectEmployee prjEm = new ProjectEmployee();
@@ -2192,9 +2151,10 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-        #endregion
+        #endregion Employee Related Endpoints
 
         #region
+
         [HttpPost("save-firm-base")]
         public async Task<IActionResult> SaveFirmBase([FromBody] FirmBase firmBase)
         {
@@ -2223,8 +2183,8 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
 
+        #endregion API POST
 
         //  lấy danh sách leader của loại dự án
         //[HttpGet("getemployeeprojecttype/{projectTypeId}")]
@@ -2262,13 +2222,13 @@ namespace RERPAPI.Controllers.Project
                 }
 
                 return Ok(ApiResponseFactory.Success(employeeProjectType, ""));
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //[HttpGet("get-project-employee-filter/{departmentID}")]
         //public async Task<IActionResult> getprojectemployeefilter(int departmentID)
         //{
@@ -2299,6 +2259,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //leader dự án danh mục
         [HttpGet("get-project-leader/{keyword?}")]
         public async Task<IActionResult> GetProjectLeader(string? keyword)
@@ -2321,6 +2282,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-project-id")]
         public async Task<IActionResult> GetDataByID(int id)
         {
@@ -2331,13 +2293,13 @@ namespace RERPAPI.Controllers.Project
                   data,
                    "Lấy dữ liệu thành công"
                ));
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //save leader dự án
         [HttpPost("save-data-project-leader")]
         public async Task<IActionResult> SaveDataProjectLeader(List<EmployeeApprove> empA)
@@ -2368,17 +2330,15 @@ namespace RERPAPI.Controllers.Project
                     }
                 }
 
-
                 return Ok(ApiResponseFactory.Success(true, ""));
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-
             }
         }
 
-        #region cây thư mục 
+        #region cây thư mục
         /*   [HttpGet("open/{projectId}")]
            public IActionResult OpenProjectFolder(int projectId)
            {
@@ -2412,6 +2372,7 @@ namespace RERPAPI.Controllers.Project
                    return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
                }
            }*/
+
         [HttpPost("create-tree")]
         public IActionResult CreateProjectTree([FromBody] CreateTreeRequestDTO request)
         {
@@ -2461,7 +2422,6 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-
         private void CreateFolderFromModel(List<ProjectTreeFolder> rows, string basePath)
         {
             // Lấy các thư mục gốc
@@ -2489,6 +2449,7 @@ namespace RERPAPI.Controllers.Project
                 CreateChildFolders(rows, child.ID, folder);
             }
         }
+
         private void CreateCommonFolders(string basePath)
         {
             try
@@ -2524,8 +2485,10 @@ namespace RERPAPI.Controllers.Project
                 throw new Exception($"Lỗi tạo thư mục TaiLieuChung/DanhMucVatTu: {ex.Message}");
             }
         }
-        #endregion
-        //update status 
+
+        #endregion cây thư mục
+
+        //update status
         [HttpPost("update-status")]
         public async Task<IActionResult> UpdateStatus(int projectID, int projectStatusID, DateTime dateLog)
         {
@@ -2541,7 +2504,7 @@ namespace RERPAPI.Controllers.Project
                 var updateStatus = SQLHelper<object>.ProcedureToList("spUpdateProjectStatus",
                                                     new string[] { "@ProjectID", "@ProjectStatusID" },
                                                     new object[] { projectID, project.ProjectStatus });
-                //update lịch sử trạng thái 
+                //update lịch sử trạng thái
                 ProjectStatusLog statusLog = new ProjectStatusLog()
                 {
                     ProjectID = project.ID,
@@ -2551,16 +2514,15 @@ namespace RERPAPI.Controllers.Project
                 };
                 await projectStatusLogRepo.CreateAsync(statusLog);
 
-
                 return Ok(ApiResponseFactory.Success(null, "Cập nhật trạng thái thành công!"));
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-
             }
         }
-        // lấy nhân viên theo team 
+
+        // lấy nhân viên theo team
         [HttpGet("get-employee-by-userTeam")]
         public async Task<IActionResult> getEmployeeByUserTeam(int userTeamID)
         {
@@ -2576,7 +2538,8 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        //get data tổng hợp tham gia dự án 
+
+        //get data tổng hợp tham gia dự án
         [HttpPost("get-summary-project-join")]
         public async Task<IActionResult> GetDataProjectJoin([FromBody] ProjectJoinReqeestParam request)
         {
@@ -2597,10 +2560,8 @@ namespace RERPAPI.Controllers.Project
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-
             }
         }
-
     }
 
     #endregion

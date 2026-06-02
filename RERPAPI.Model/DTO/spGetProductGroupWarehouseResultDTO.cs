@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace RERPAPI.Model.DTO
+﻿namespace RERPAPI.Model.DTO
 {
     // Generated from procedure: spGetProductGroupWarehouse
     public class spGetProductGroupWarehouseResultDTO

@@ -8,6 +8,7 @@ namespace RERPAPI.Repo.GenericEntity
         public ProductGroupRTCRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
+
         public string GenerateCode(int warehouseType)
         {
             var dt = GetAll(x => x.WarehouseType == warehouseType && x.IsDeleted == false);
@@ -39,6 +40,5 @@ namespace RERPAPI.Repo.GenericEntity
 
             return $"{prefix}{nextNumber:D2}";
         }
-
     }
 }

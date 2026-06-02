@@ -1,5 +1,3 @@
-using System;
-
 namespace RERPAPI.Model.DTO
 {
     public class FiveSMinusDetailDto

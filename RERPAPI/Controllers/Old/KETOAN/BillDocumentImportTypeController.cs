@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 
@@ -10,7 +9,6 @@ namespace RERPAPI.Controllers.Old.KETOAN
     [Authorize]
     public class BillDocumentImportTypeController : ControllerBase
     {
-
         [HttpGet("get-data")]
         public IActionResult Get(int page, int size, DateTime dateStart, DateTime dateEnd, int billDocumentImportType, string keyword = "")
         {

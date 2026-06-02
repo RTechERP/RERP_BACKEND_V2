@@ -1,10 +1,5 @@
 ﻿using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Model.DTO
 {
@@ -12,6 +7,7 @@ namespace RERPAPI.Model.DTO
     {
         [NotMapped]
         public int? ApproveStatus { get; set; } // 1: Báo giá, 2: PO
+
         [NotMapped]
         public bool? IsApproveAction { get; set; } // true: Duyệt, false: Hủy duyệt
 

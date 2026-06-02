@@ -13,6 +13,7 @@ namespace RERPAPI.Repo.GenericEntity.HRRecruitmentExamRepo
         public HRRecruitmentExamRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
+
         public bool CheckValidate(HRRecruitmentExam item, out string message)
         {
             message = string.Empty;
@@ -36,7 +37,7 @@ namespace RERPAPI.Repo.GenericEntity.HRRecruitmentExamRepo
                 return false;
             }
             var checkCode = GetAll(x => x.CodeExam == item.CodeExam && x.ID != item.ID).FirstOrDefault();
-            if(checkCode != null)
+            if (checkCode != null)
             {
                 message = $"Mã đề thi [{item.CodeExam}] đã tồn tại!";
                 return false;

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.DTO.Asset
+﻿namespace RERPAPI.Model.DTO.Asset
 {
     public class TranferAssetDetailExportDto
     {
@@ -15,5 +9,4 @@ namespace RERPAPI.Model.DTO.Asset
         public string Status { get; set; }
         public string Note { get; set; }
     }
-
 }

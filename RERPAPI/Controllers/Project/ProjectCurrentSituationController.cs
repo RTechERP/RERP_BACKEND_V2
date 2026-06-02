@@ -1,9 +1,6 @@
-﻿using DocumentFormat.OpenXml.Office.CustomUI;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.Project
@@ -14,6 +11,7 @@ namespace RERPAPI.Controllers.Project
     public class ProjectCurrentSituationController : ControllerBase
     {
         private readonly ProjectCurrentSituationRepo _projectCurrentSituationRepo;
+
         public ProjectCurrentSituationController(
           ProjectCurrentSituationRepo projectCurrentSituation)
         {
@@ -59,7 +57,6 @@ namespace RERPAPI.Controllers.Project
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
 
         [HttpGet("get-data-by-projectID")]
@@ -69,7 +66,7 @@ namespace RERPAPI.Controllers.Project
             var currentUser = ObjectMapper.GetCurrentUser(claims);
             try
             {
-                var data = _projectCurrentSituationRepo.GetAll(x=>x.ProjectID == projectID && x.EmployeeID == currentUser.EmployeeID).OrderByDescending(x=>x.DateSituation).FirstOrDefault();
+                var data = _projectCurrentSituationRepo.GetAll(x => x.ProjectID == projectID && x.EmployeeID == currentUser.EmployeeID).OrderByDescending(x => x.DateSituation).FirstOrDefault();
                 return Ok(ApiResponseFactory.Success(data, "Lấy dữu liệu thành công"));
             }
             catch (Exception ex)

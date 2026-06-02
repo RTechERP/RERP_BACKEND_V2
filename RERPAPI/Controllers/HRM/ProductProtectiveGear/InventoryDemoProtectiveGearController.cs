@@ -1,7 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.HRM.ProductProtectiveGear;
 using RERPAPI.Repo.GenericEntity;
 
@@ -15,10 +13,9 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
 
         public InventoryDemoProtectiveGearController(ProductGroupRTCRepo productGroupRTCRepo)
         {
-
             _productGroupRTCRepo = productGroupRTCRepo;
-
         }
+
         [HttpGet("get-product-group")]
         public IActionResult GetProductGroup(int warehouseID)
         {
@@ -32,6 +29,7 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-inventory-demo")]
         public IActionResult GetInventoryDemo([FromQuery] InventoryDemoParam param)
         {

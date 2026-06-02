@@ -10,6 +10,7 @@ namespace RERPAPI.Controllers.Project
     public class SynthesisOfGeneratedMaterialsController : ControllerBase
     {
         #region Load partList vật tư
+
         [HttpGet("get-data")]
         public async Task<IActionResult> getData(int pageNumber, int pageSize, DateTime dateStart, DateTime dateEnd, int projectId, string? keyword)
         {
@@ -23,14 +24,14 @@ namespace RERPAPI.Controllers.Project
                 // Lấy từng bảng trong DataSet
                 var dt = SQLHelper<object>.GetListData(data, 0);
                 var totalpage = SQLHelper<object>.GetListData(data, 1);
-                return Ok(ApiResponseFactory.Success(new {dt, totalpage}, ""));
+                return Ok(ApiResponseFactory.Success(new { dt, totalpage }, ""));
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
 
+        #endregion Load partList vật tư
     }
 }

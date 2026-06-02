@@ -1,10 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
-using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.Old.Technical
@@ -12,10 +9,8 @@ namespace RERPAPI.Controllers.Old.Technical
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-
     public class SummaryKPIErrorEmployeeController : ControllerBase
     {
-
         private readonly DepartmentRepo _departmentRepo;
         private readonly KPIErrorTypeRepo _kpiErrorTypeRepo;
         public SummaryKPIErrorEmployeeController(DepartmentRepo departmentRepo, KPIErrorTypeRepo kpiErrorTypeRepo)
@@ -58,12 +53,11 @@ namespace RERPAPI.Controllers.Old.Technical
             try
             {
                 var dataKpiError = SQLHelper<object>.ProcedureToList("spGetKPIError",
-                                                new string[] {"@TypeID"},
+                                                new string[] { "@TypeID" },
                                                 new object[] { typeId });
                 var data = SQLHelper<object>.GetListData(dataKpiError, 0);
 
                 return Ok(ApiResponseFactory.Success(data, ""));
-
             }
             catch (Exception ex)
             {
@@ -108,7 +102,6 @@ namespace RERPAPI.Controllers.Old.Technical
                 var data3 = SQLHelper<object>.GetListData(dataRaw3, 0);
 
                 return Ok(ApiResponseFactory.Success(new { data1, data2, data3 }, ""));
-
             }
             catch (Exception ex)
             {
@@ -126,7 +119,6 @@ namespace RERPAPI.Controllers.Old.Technical
                                                 new object[] { month, year, kpiErrorId, employeeId, keywords, typeId, departmentIDs });
                 var datafile = SQLHelper<object>.GetListData(dataRaw1, 1);
                 return Ok(ApiResponseFactory.Success(datafile, ""));
-
             }
             catch (Exception ex)
             {

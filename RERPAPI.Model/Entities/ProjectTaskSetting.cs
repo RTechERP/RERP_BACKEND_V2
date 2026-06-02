@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace RERPAPI.Model.Entities;
+﻿namespace RERPAPI.Model.Entities;
 
 /// <summary>
 /// Bảng danh sách email không gửi mail
@@ -59,7 +56,7 @@ public partial class ProjectTaskSetting
     public string? UpdatedBy { get; set; }
 
     /// <summary>
-    /// Trạng thái xóa mềm 
+    /// Trạng thái xóa mềm
     /// </summary>
     public bool? IsDeleted { get; set; }
 }

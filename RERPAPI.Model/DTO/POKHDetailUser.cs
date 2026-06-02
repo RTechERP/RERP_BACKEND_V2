@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.DTO
+﻿namespace RERPAPI.Model.DTO
 {
     public class POKHDetailUser
     {
@@ -29,7 +23,5 @@ namespace RERPAPI.Model.DTO
         public int Year { get; set; }
 
         public int POKHID { get; set; }
-
     }
 }
-

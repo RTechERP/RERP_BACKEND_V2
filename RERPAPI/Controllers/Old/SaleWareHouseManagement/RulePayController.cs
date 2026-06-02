@@ -30,7 +30,6 @@ namespace RERPAPI.Controllers.PurchasingManagement
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, "Có lỗi xảy ra khi lấy danh sách RulePay."));
-
             }
         }
 
@@ -118,7 +117,5 @@ namespace RERPAPI.Controllers.PurchasingManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, "Lỗi không xác định."));
             }
         }
-
-
     }
 }

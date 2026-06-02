@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -16,13 +15,13 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         private CurrentUser _currentUser;
 
         private readonly PaymentOrderTypeRepo _orderTypeRepo;
+
         public PaymentOrderTypeController(IConfiguration configuration, CurrentUser currentUser, PaymentOrderTypeRepo orderTypeRepo)
         {
             _configuration = configuration;
             _currentUser = currentUser;
             _orderTypeRepo = orderTypeRepo;
         }
-
 
         [HttpGet("")]
         public IActionResult GetAll()

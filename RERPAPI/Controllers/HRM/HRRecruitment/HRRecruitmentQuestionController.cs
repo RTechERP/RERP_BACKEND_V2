@@ -13,11 +13,12 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
     [Authorize]
     public class HRRecruitmentQuestionController : ControllerBase
     {
-        HRRecruitmentExamRepo _hrRecruitmentExamRepo;
-        HRRecruitmentQuestionRepo _hrRecruitmentQuestionRepo;
-        HRRecruitmentAnswersRepo _hrRecruitmentAnswersRepo;
-        HRRecruitmentRightAnswearsRepo _hrRecruitmentRightAnswearsRepo;
-        HRRecruitmentQuestionImageRepo _hrRecruitmentQuestionImageRepo;
+        private HRRecruitmentExamRepo _hrRecruitmentExamRepo;
+        private HRRecruitmentQuestionRepo _hrRecruitmentQuestionRepo;
+        private HRRecruitmentAnswersRepo _hrRecruitmentAnswersRepo;
+        private HRRecruitmentRightAnswearsRepo _hrRecruitmentRightAnswearsRepo;
+        private HRRecruitmentQuestionImageRepo _hrRecruitmentQuestionImageRepo;
+
         public HRRecruitmentQuestionController(HRRecruitmentQuestionRepo hrRecruitmentQuestionRepo, HRRecruitmentAnswersRepo hrRecruitmentAnswersRepo, HRRecruitmentRightAnswearsRepo hrRecruitmentRightAnswearsRepo, HRRecruitmentExamRepo hRRecruitmentExamRepo, HRRecruitmentQuestionImageRepo hrRecruitmentQuestionImageRepo)
         {
             _hrRecruitmentQuestionRepo = hrRecruitmentQuestionRepo;
@@ -26,7 +27,9 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             _hrRecruitmentExamRepo = hRRecruitmentExamRepo;
             _hrRecruitmentQuestionImageRepo = hrRecruitmentQuestionImageRepo;
         }
+
         #region lấy dữ liệu câu hỏi - đáp án
+
         [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpGet("get-data-question-answers")]
         public async Task<IActionResult> getDataQuestionAnswers(int examID)
@@ -48,8 +51,11 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
-        #region lấy đáp án đúng theo mã câu hỏi 
+
+        #endregion lấy dữ liệu câu hỏi - đáp án
+
+        #region lấy đáp án đúng theo mã câu hỏi
+
         [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpGet("get-data-right-answers")]
         public async Task<IActionResult> getDataRightAnswers(int questionID)
@@ -68,9 +74,11 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion lấy đáp án đúng theo mã câu hỏi
 
         #region save data câu hỏi - đáp án
+
         [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpPost("save-data-question-answers")]
         public async Task<IActionResult> saveDataQuestionAnswers([FromBody] HRRecruitmentQuestionAnswersDTO item)
@@ -120,10 +128,10 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                         }
                     }
                 }
-                //xóa ảnh câu hỏi nếu có 
-                if(item.listImageIDDelete != null && item.listImageIDDelete.Any())
+                //xóa ảnh câu hỏi nếu có
+                if (item.listImageIDDelete != null && item.listImageIDDelete.Any())
                 {
-                    foreach( var i in item.listImageIDDelete)
+                    foreach (var i in item.listImageIDDelete)
                     {
                         var ImageDelete = _hrRecruitmentQuestionImageRepo.GetByID(i);
                         ImageDelete.IsDeleted = true;
@@ -144,7 +152,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                     HRRecruitmentAnswer answer = new HRRecruitmentAnswer();
                     answer.AnswersText = a.AnswersText;
                     answer.RecruitmentQuestionID = question.ID;
-                   answer.ImageLink = a.ImageLink;
+                    answer.ImageLink = a.ImageLink;
                     answer.AnswersNumber = a.AnswersNumber;
                     if (a.ID > 0)
                     {
@@ -179,9 +187,11 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
-  
-        #region danh cho fill dữ liệu sửa  
+
+        #endregion save data câu hỏi - đáp án
+
+        #region danh cho fill dữ liệu sửa
+
         //lấy STT lớn nhất của câu hỏi trong 1 đề thi
         [HttpGet("get-max-stt-question")]
         public int getMaxSTTQuestion(int examID)
@@ -193,7 +203,8 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             }
             return 0;
         }
-        //load dữ liệu câu hỏi 
+
+        //load dữ liệu câu hỏi
         [HttpGet("get-data-question-by-id")]
         public async Task<IActionResult> getDataQuestionByID(int questionID)
         {
@@ -207,6 +218,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //load dữ liệu đáp án của câu hỏi
         [HttpGet("get-data-answers-by-question-id")]
         public async Task<IActionResult> getDataAnswersByQuestionID(int questionID)
@@ -225,8 +237,11 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion danh cho fill dữ liệu sửa
+
         #region delete câu hỏi
+
         [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpPost("delete-question")]
         public async Task<IActionResult> deleteQuestion(List<int> listQuestionID)
@@ -267,8 +282,11 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion delete câu hỏi
+
         #region lấy danh sách ảnh của câu hỏi
+
         [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpGet("get-question-images")]
         public async Task<IActionResult> getListImageByQuestionID(int questionID)
@@ -283,8 +301,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
 
-
+        #endregion lấy danh sách ảnh của câu hỏi
     }
 }

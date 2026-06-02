@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.DTO
+﻿namespace RERPAPI.Model.DTO
 {
     public class ProjectPartlistImportRowDto
     {
@@ -13,7 +7,7 @@ namespace RERPAPI.Model.DTO
         public string ProductCode { get; set; }        // F3 - Mã thiết bị
         public string OrderCode { get; set; }          // F4 - Mã đặt hàng / OrderCode
         public string Manufacturer { get; set; }       // F5 - Hãng
-        public string? SpecialCode { get;set; }          // F6- Mã đặc biệt 
+        public string? SpecialCode { get; set; }          // F6- Mã đặc biệt
         public string Model { get; set; }              // F7 - Model
         public decimal? QtyMin { get; set; }           // F8 - Số lượng / 1 máy
         public decimal? QtyFull { get; set; }          // F9 - Số lượng tổng

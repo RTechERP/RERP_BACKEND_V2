@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace RERPAPI.Model.Entities;
+﻿namespace RERPAPI.Model.Entities;
 
 /// <summary>
 /// Bảng lưu trữ chi tiết kết quả của từng câu hỏi trong một bài kiểm tra tuyển dụng của một ứng viên.

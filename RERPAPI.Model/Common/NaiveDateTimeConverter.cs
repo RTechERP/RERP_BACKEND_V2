@@ -1,4 +1,3 @@
-using System;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -24,7 +23,7 @@ namespace RERPAPI.Model.Common
 
                 // Parse the face-value directly without converting or shifting time zones
                 string cleanVal = val;
-                
+
                 int zIndex = val.IndexOf('Z');
                 if (zIndex > 0)
                 {

@@ -1,13 +1,9 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
-using System.Linq.Expressions;
 
 namespace RERPAPI.Controllers.Project
 {
@@ -21,7 +17,6 @@ namespace RERPAPI.Controllers.Project
         {
             _repo = repo;
         }
-       
 
         [HttpPost("approved-active")]
         public async Task<IActionResult> ApprovedActive([FromBody] ApprovedActiveRequestParam request)
@@ -58,7 +53,6 @@ namespace RERPAPI.Controllers.Project
                 {
                     await _repo.CreateAsync(request);
                 }
-
 
                 return Ok(ApiResponseFactory.Success(request, ""));
             }

@@ -12,6 +12,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
     {
         private readonly PaymentOrderRepo _paymentOrderRepo;
         private readonly PaymentOrderLogRepo _paymentOrderLogRepo;
+
         public PaymentOrderLogController(PaymentOrderRepo paymentOrderRepo, PaymentOrderLogRepo paymentOrderLogRepo)
         {
             _paymentOrderRepo = paymentOrderRepo;
@@ -31,6 +32,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-data")]
         public async Task<IActionResult> GetData(int paymentOrderId)
         {
@@ -48,6 +50,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-data-new")]
         public async Task<IActionResult> GetDataNew(int paymentOrderId)
         {

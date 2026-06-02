@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using RERPAPI.Middleware;
@@ -22,9 +21,11 @@ namespace RERPAPI.Controllers.AppMobile
         private readonly JwtSettings _jwtSettings;
         private readonly RTCContext _context;
         private readonly IConfiguration _configuration;
-        EmployeeOverTimeRepo _employeeOverTimeRepo;
+        private EmployeeOverTimeRepo _employeeOverTimeRepo;
+
         //UserRepo _userRepo = new UserRepo();
-        vUserGroupLinksRepo _vUserGroupLinksRepo;
+        private vUserGroupLinksRepo _vUserGroupLinksRepo;
+
         private readonly RoleConfig _roleConfig;
         private readonly EmployeePayrollDetailRepo _employeePayrollDetailRepo;
 
@@ -52,6 +53,7 @@ namespace RERPAPI.Controllers.AppMobile
             _emailHelper = emailHelper;
             _fcmTokenRepo = fcmTokenRepo;
         }
+
         [HttpPost("login-mobile")]
         public async Task<IActionResult> Login([FromBody] UserMobileDTO user)
         {
@@ -105,7 +107,6 @@ namespace RERPAPI.Controllers.AppMobile
                     }
                 }
 
-
                 //2. Tạo Claims
                 var claims = new List<Claim>()
                     {
@@ -122,7 +123,6 @@ namespace RERPAPI.Controllers.AppMobile
                     claims.Add(claim);
                 }
 
-
                 //3. Tạo token
                 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
                 var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -135,7 +135,6 @@ namespace RERPAPI.Controllers.AppMobile
                     signingCredentials: creds
                 );
                 var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
-
 
                 return Ok(new
                 {

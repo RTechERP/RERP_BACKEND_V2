@@ -1,17 +1,8 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using DocumentFormat.OpenXml.Wordprocessing;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using NPOI.SS.Formula.Functions;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
-using SkiaSharp;
-using System.Net;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers.KHOAHOC
 {
@@ -25,6 +16,7 @@ namespace RERPAPI.Controllers.KHOAHOC
         private readonly CourseQuestionRepo _courseQuestionRepo;
         private readonly CourseLessonRepo _courseeLessonRepo;
         private readonly ConfigSystemRepo _configSystemRepo;
+
         public CourseExamController(CourseExamRepo courseExamRepo,
             CourseAnswerRepo courseAnswerRepo,
             CourseRightAnswerRepo courseRightAnswerRepo,
@@ -154,6 +146,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //
         [HttpGet("get-course-new")]
         public IActionResult GetCourseNew()
@@ -555,6 +548,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi xóa danh sách câu hỏi: {ex.Message}"));
             }
         }
+
         [HttpGet("get-path-server")]
         public IActionResult GetPathServer(string keyName)
         {
@@ -567,13 +561,11 @@ namespace RERPAPI.Controllers.KHOAHOC
                 var pathUpload = _configSystemRepo.GetUploadPathByKey(keyName);
                 string path = pathUpload;
                 return Ok(ApiResponseFactory.Success(path, ""));
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

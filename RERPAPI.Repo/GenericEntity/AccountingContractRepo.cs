@@ -1,19 +1,11 @@
 ﻿using RERPAPI.Model.Common;
-using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
     public class AccountingContractRepo : GenericRepo<AccountingContract>
     {
-       
         public AccountingContractRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
@@ -47,10 +39,8 @@ namespace RERPAPI.Repo.GenericEntity
             return result;
         }
 
-
         //public object DeepEquals(object obj, object another)
         //{
-
         //    if (ReferenceEquals(obj, another)) return true;
         //    if ((obj == null) || (another == null)) return false;
         //    //So sánh class của 2 object, nếu khác nhau thì trả fail
@@ -97,6 +87,5 @@ namespace RERPAPI.Repo.GenericEntity
             public bool Equal { get; set; }
             public List<string> ChangedProperties { get; set; } = new();
         }
-
     }
 }

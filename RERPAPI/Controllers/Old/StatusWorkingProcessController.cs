@@ -9,10 +9,12 @@ namespace RERPAPI.Controllers.Old
     public class StatusWorkingProcessController : Controller
     {
         private StatusWorkingProcessRepo _statusWorkingProcessRepo;
+
         public StatusWorkingProcessController(StatusWorkingProcessRepo statusWorkingProcessRepo)
         {
             _statusWorkingProcessRepo = statusWorkingProcessRepo;
         }
+
         [HttpGet]
         public IActionResult GetAll()
         {
@@ -35,6 +37,7 @@ namespace RERPAPI.Controllers.Old
                 });
             }
         }
+
         [HttpPost]
         public async Task<IActionResult> SaveStatusWorkingProcess([FromBody] EmployeeStatus statusWorkingProcess)
         {
@@ -75,7 +78,5 @@ namespace RERPAPI.Controllers.Old
                 });
             }
         }
-
-
     }
 }

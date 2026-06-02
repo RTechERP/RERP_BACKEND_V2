@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace RERPAPI.Model.Entities;
+﻿namespace RERPAPI.Model.Entities;
 
 /// <summary>
 /// Bảng lưu chi tiết đính kèm (ảnh, video, link) công việc của dự án
@@ -9,7 +6,7 @@ namespace RERPAPI.Model.Entities;
 public partial class ProjectTaskAttachment
 {
     /// <summary>
-    /// ID tự tăng 
+    /// ID tự tăng
     /// </summary>
     public int ID { get; set; }
 
@@ -64,7 +61,7 @@ public partial class ProjectTaskAttachment
     public string? UpdatedBy { get; set; }
 
     /// <summary>
-    /// Trạng thái xóa mềm 
+    /// Trạng thái xóa mềm
     /// </summary>
     public bool? IsDeleted { get; set; }
 }

@@ -1,28 +1,22 @@
 ﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.Technical;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
     public class BillImportDetailSerialNumberModulaLocationRepo : GenericRepo<BillImportDetailSerialNumberModulaLocation>
     {
-        BillImportTechDetailSerialRepo _importDetailSerialNumberRepo;
-        ProductRTCQRCodeRepo _qrCodeRepo;
+        private BillImportTechDetailSerialRepo _importDetailSerialNumberRepo;
+        private ProductRTCQRCodeRepo _qrCodeRepo;
+
         public BillImportDetailSerialNumberModulaLocationRepo(CurrentUser currentUser, BillImportTechDetailSerialRepo billImportTechDetailSerialRepo, ProductRTCQRCodeRepo productRTCQRCodeRepo) : base(currentUser)
         {
             _importDetailSerialNumberRepo = billImportTechDetailSerialRepo;
             _qrCodeRepo = productRTCQRCodeRepo;
         }
 
+        private const int WARE_HOUSE_ID = 1;
 
-
-        const int WARE_HOUSE_ID = 1;
         public async Task<string> SaveDataAsync(ModulaLocationDTO.SerialNumberModulaLocation item, int index)
         {
             //if (string.IsNullOrWhiteSpace(item.SerialNumber)) continue;

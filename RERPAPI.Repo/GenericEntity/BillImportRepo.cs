@@ -5,14 +5,17 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class BillImportRepo : GenericRepo<BillImport>
     {
-        DocumentImportRepo _documentImportRepo;
-        CurrentUser _currentUser;
+        private DocumentImportRepo _documentImportRepo;
+        private CurrentUser _currentUser;
+
         public BillImportRepo(CurrentUser currentUser, DocumentImportRepo documentImportRepo) : base(currentUser)
         {
             _documentImportRepo = documentImportRepo;
             _currentUser = currentUser;
         }
+
         #region lấy mã phiếu nhập
+
         public string GetBillCode(int billtype)
         {
             string billCode = "";
@@ -54,9 +57,11 @@ namespace RERPAPI.Repo.GenericEntity
 
             return billCode;
         }
-        #endregion
+
+        #endregion lấy mã phiếu nhập
 
         #region lưu dữ liệu phiếu nhập
+
         public async Task<int> SaveBillImport(BillImport billImport)
         {
             if (billImport == null) return 0;
@@ -74,7 +79,9 @@ namespace RERPAPI.Repo.GenericEntity
             }
             return billImport.ID;
         }
-        #endregion
+
+        #endregion lưu dữ liệu phiếu nhập
+
         public bool ApproveDocument(List<BillImportApproveDocumentDTO> models, bool status, out string message)
         {
             message = "";
@@ -127,6 +134,5 @@ namespace RERPAPI.Repo.GenericEntity
             message = $"Cập nhật thành công {updated}/{total} phiếu. Bỏ qua {skipped} phiếu không hợp lệ hoặc không có quyền!";
             return true;
         }
-
     }
 }

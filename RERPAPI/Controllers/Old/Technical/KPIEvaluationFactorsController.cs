@@ -1,8 +1,5 @@
-﻿using DocumentFormat.OpenXml.Office2010.Excel;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NPOI.POIFS.Properties;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -24,6 +21,7 @@ namespace RERPAPI.Controllers.Old.Technical
         private readonly KPIExamPositionRepo _kpiExamPositionRepo;
         private readonly KPIEvaluationRuleRepo _kpiEvaluationRuleRepo;
         private readonly KPISpecializationTypeRepo _kpiSpecializationTypeRepo;
+
         public KPIEvaluationFactorsController(DepartmentRepo departmentRepo, KPISessionRepo kPISessionRepo, KPIEvaluationFactorRepo kPIEvaluationFactorRepo, KPIExamRepo kpiExamRepo, KPIPositionRepo kpiPositionRepo, KPIExamPositionRepo kpiExamPositionRepo, KPIEvaluationRuleRepo kpiEvaluationRuleRepo, KPISpecializationTypeRepo kpiSpecializationTypeRepo)
         {
             _departmentRepo = departmentRepo;
@@ -81,7 +79,6 @@ namespace RERPAPI.Controllers.Old.Technical
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
 
         [HttpGet("load-kpi-evaluation")]
@@ -109,13 +106,12 @@ namespace RERPAPI.Controllers.Old.Technical
                     EvaluationType = 3
                 };
                 var data3 = await SqlDapper<object>.ProcedureToListAsync("spGetAllKPIEvaluationByYearAndQuarter", param3);
-                return Ok(ApiResponseFactory.Success(new { data, data2, data3}, ""));
+                return Ok(ApiResponseFactory.Success(new { data, data2, data3 }, ""));
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
 
         [HttpPost("delete-evaluation-factors")]
@@ -123,7 +119,7 @@ namespace RERPAPI.Controllers.Old.Technical
         {
             try
             {
-                if(id <= 0)
+                if (id <= 0)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Bản ghi xóa không hợp lệ"));
                 }
@@ -134,7 +130,6 @@ namespace RERPAPI.Controllers.Old.Technical
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
 
         [HttpPost("delete-session")]
@@ -155,7 +150,6 @@ namespace RERPAPI.Controllers.Old.Technical
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
 
         [HttpPost("delete-exam")]
@@ -176,7 +170,6 @@ namespace RERPAPI.Controllers.Old.Technical
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
 
         [HttpGet("get-evaluation-factor-by-id")]
@@ -526,7 +519,7 @@ namespace RERPAPI.Controllers.Old.Technical
 
         public class SaveKPIEvaluationFactorRequest
         {
-            public int ID { get; set; }              
+            public int ID { get; set; }
             public int KPIExamID { get; set; }
             public int ParentID { get; set; }
             public int EvaluationType { get; set; }
@@ -539,8 +532,7 @@ namespace RERPAPI.Controllers.Old.Technical
             public int Coefficient { get; set; }
             public string Unit { get; set; }
 
-            public int DepartmentID { get; set; }  
+            public int DepartmentID { get; set; }
         }
-
     }
 }

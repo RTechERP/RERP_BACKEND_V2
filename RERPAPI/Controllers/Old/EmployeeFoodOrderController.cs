@@ -1,5 +1,4 @@
-﻿    using DocumentFormat.OpenXml.Office.CustomUI;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
@@ -8,7 +7,6 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
-using ZXing;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -19,8 +17,8 @@ namespace RERPAPI.Controllers.Old
     {
         private readonly EmployeeFoodOrderRepo _employeeFoodOrderRepo;
         private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
-        PhasedAllocationPersonRepo _phaseRepo;
-        PhasedAllocationPersonDetailRepo _phaseDetailRepo;
+        private PhasedAllocationPersonRepo _phaseRepo;
+        private PhasedAllocationPersonDetailRepo _phaseDetailRepo;
 
         public EmployeeFoodOrderController(EmployeeFoodOrderRepo employeeFoodOrderRepo, vUserGroupLinksRepo vUserGroupLinksRepo, PhasedAllocationPersonRepo phaseRepo, PhasedAllocationPersonDetailRepo phasedAllocationPersonDetailRepo
 )
@@ -32,7 +30,6 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet("day-of-week")]
-        //[RequiresPermission("N2,N23,N34,N1,N52,N80")]
         public IActionResult GetDayOfWeek(int month, int year)
         {
             try
@@ -48,9 +45,7 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
-
         [HttpPost]
-        //[RequiresPermission("N2,N23,N34,N1,N80")]
         public IActionResult GetEmployeeFoodOrder(EmployeeFoodOrderParam param)
         {
             try
@@ -94,7 +89,6 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost("food-order")]
-        //[RequiresPermission("N2,N23,N34,N1,N80")]
         public IActionResult GetEmployeeFoodOrderByMonth(EmployeeFoodOrderByMonthParam param)
         {
             try
@@ -130,7 +124,6 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost("report-order")]
-        //[RequiresPermission("N2,N23,N34,N1,N80")]
         public IActionResult GetReportFoodOrderByMonth(EmployeeFoodOrderByMonthParam param)
         {
             try
@@ -165,9 +158,7 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
-
         [HttpPost("save-data")]
-        //[RequiresPermission("N2,N23,N34,N1,N80")]
         public async Task<IActionResult> SaveData([FromBody] EmployeeFoodOrder foodOrder)
         {
             try
@@ -199,7 +190,7 @@ namespace RERPAPI.Controllers.Old
                           && x.IsDeleted != true)
                 .FirstOrDefault();
 
-                if (checkExist != null&& foodOrder.IsDeleted != true && foodOrder.ID==0)
+                if (checkExist != null && foodOrder.IsDeleted != true && foodOrder.ID == 0)
                 {
                     foodOrder.ID = checkExist.ID;
                     foodOrder.Quantity = foodOrder.Quantity + checkExist.Quantity;
@@ -222,8 +213,8 @@ namespace RERPAPI.Controllers.Old
                         ));
                     }
                 }
-                if (foodOrder.ID <= 0 && foodOrder.EmployeeID !=0&&foodOrder.EmployeeID!=null) await _employeeFoodOrderRepo.CreateAsync(foodOrder);
-                else 
+                if (foodOrder.ID <= 0 && foodOrder.EmployeeID != 0 && foodOrder.EmployeeID != null) await _employeeFoodOrderRepo.CreateAsync(foodOrder);
+                else
                 {
                     if (foodOrder.ID > 0 && vUserHR == null && foodOrder.DateOrder.HasValue && foodOrder.EmployeeID != 0)
                     {
@@ -253,6 +244,7 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N2,N23,N34,N1,N80")]
         [HttpPost("save-approve")]
         public async Task<IActionResult> SaveApprove([FromBody] List<EmployeeFoodOrder> foodOrders)

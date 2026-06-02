@@ -1,11 +1,8 @@
-﻿using Azure.Core;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -24,6 +21,7 @@ namespace RERPAPI.Controllers.Old.POKH
             _PPPRRepo = pPPRRepo;
             _unitCountRepo = unitCountRepo;
         }
+
         [HttpPost("save-data")]
         public async Task<IActionResult> Save([FromBody] List<ProjectPartlistPurchaseRequest> request)
         {
@@ -96,6 +94,7 @@ namespace RERPAPI.Controllers.Old.POKH
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         private UnitCount GetUnitCountByName(string unitName)
         {
             try

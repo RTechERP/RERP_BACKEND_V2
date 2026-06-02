@@ -2,9 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
-using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System.Linq;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -23,6 +21,7 @@ namespace RERPAPI.Controllers.Old.POKH
             _productGroupRepo = productGroupRepo;
             _warehouseRepo = warehouseRepo;
         }
+
         [HttpGet("get-pokh-export-request")]
         public IActionResult GetPOKHExportRequest(int warehouseId, int customerId, int projectId, int productGroupId, string keyword = "")
         {
@@ -30,7 +29,7 @@ namespace RERPAPI.Controllers.Old.POKH
             {
                 List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetPOKHRequestExport",
                     new string[] { "@WarehouseID", "@CustomerID", "@ProjectID", "@ProductGroupID", "@Keyword" },
-                    new object[] { warehouseId, customerId, projectId, productGroupId, keyword});
+                    new object[] { warehouseId, customerId, projectId, productGroupId, keyword });
                 var data = SQLHelper<dynamic>.GetListData(list, 0);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
@@ -39,6 +38,7 @@ namespace RERPAPI.Controllers.Old.POKH
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-productgroup")]
         public IActionResult GetProductGroup()
         {
@@ -52,6 +52,7 @@ namespace RERPAPI.Controllers.Old.POKH
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-warehouse")]
         public IActionResult GetWarehouse()
         {
@@ -154,7 +155,7 @@ namespace RERPAPI.Controllers.Old.POKH
                     .OrderBy(x => x.QuantityRequestExport)
                     .ToList();
 
-                //Tính tổng QuantityRequestExport cho mỗi ProductID 
+                //Tính tổng QuantityRequestExport cho mỗi ProductID
                 Dictionary<int, decimal> productRequestedTotals = new Dictionary<int, decimal>();
                 foreach (var item in sortedItems)
                 {
@@ -170,7 +171,7 @@ namespace RERPAPI.Controllers.Old.POKH
                         productRequestedTotals[productID] = item.QuantityRequestExport;
                 }
 
-                // Validate từng item theo thứ tự đã sắp xếp 
+                // Validate từng item theo thứ tự đã sắp xếp
                 Dictionary<int, decimal> totalQuantityRequest = new Dictionary<int, decimal>();
                 Dictionary<int, decimal> totalQuantityStock = new Dictionary<int, decimal>();
                 Dictionary<int, decimal> productRemainingStock = new Dictionary<int, decimal>();
@@ -230,7 +231,7 @@ namespace RERPAPI.Controllers.Old.POKH
                     else
                         totalQuantityStock[productID] = quantityStock;
 
-                    // Kiểm tra diffKeys 
+                    // Kiểm tra diffKeys
                     var diffKeys = totalQuantityRequest.Keys
                         .Intersect(totalQuantityStock.Keys)
                         .Where(k => totalQuantityRequest[k] > totalQuantityStock[k]);

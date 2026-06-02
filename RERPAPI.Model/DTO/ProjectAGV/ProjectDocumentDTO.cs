@@ -1,16 +1,9 @@
-﻿using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
 
 namespace RERPAPI.Model.DTO
 {
     public class ProjectDocumentDTO
     {
-
         [JsonPropertyName("id")]
         public int? ID { get; set; }
 

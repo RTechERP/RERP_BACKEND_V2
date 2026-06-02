@@ -1,9 +1,4 @@
 ﻿using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Model.DTO
 {
@@ -12,7 +7,7 @@ namespace RERPAPI.Model.DTO
         public List<dynamic> ModulaLocationDetails { get; set; } = new List<dynamic>();
         public List<ModulaLocationDetail> LocationDetails { get; set; } = new List<ModulaLocationDetail>();
 
-        public class SerialNumberModulaLocation: HistoryProductRTC
+        public class SerialNumberModulaLocation : HistoryProductRTC
         {
             public int ModulaLocationDetailID { get; set; }
             public int BillImportDetailID { get; set; }
@@ -29,9 +24,9 @@ namespace RERPAPI.Model.DTO
             /// 3: Phiếu mượn
             /// </summary>
             public int BillType { get; set; }
+
             public int HistoryProductRTCID { get; set; }
         }
-
 
         public class CallModula
         {
@@ -49,7 +44,6 @@ namespace RERPAPI.Model.DTO
             /// Tọa độ X của vị trí
             /// </summary>
             public int AxisX { get; set; } = 0;
-
 
             /// <summary>
             /// Tọa độ Y của vị trí

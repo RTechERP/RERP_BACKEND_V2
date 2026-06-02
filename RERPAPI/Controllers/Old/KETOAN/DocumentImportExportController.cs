@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -101,24 +99,20 @@ namespace RERPAPI.Controllers.Old.KETOAN
             }
         }
 
-
         [HttpPost("save-document-import-export")]
         public IActionResult Save(int documentType, string code, string name, int? id = null)
         {
             try
             {
-
                 if (string.IsNullOrWhiteSpace(code))
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng nhập Mã chứng từ"));
                 }
 
-
                 if (string.IsNullOrWhiteSpace(name))
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng nhập Tên chứng từ"));
                 }
-
 
                 if (documentType == 1)
                 {
@@ -152,7 +146,6 @@ namespace RERPAPI.Controllers.Old.KETOAN
                         _documentImportRepo.Create(model);
                     }
                 }
-
                 else if (documentType == 2)
                 {
                     var Exist = _documentExportRepo.GetAll(x => x.Code == code.Trim() && x.ID != id && x.IsDeleted != true);
@@ -197,7 +190,5 @@ namespace RERPAPI.Controllers.Old.KETOAN
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-
     }
 }

@@ -19,9 +19,7 @@ namespace RERPAPI.Controllers.Old
             _holidayRepo = holidayRepo;
         }
 
-
         [HttpGet]
-        //[RequiresPermission("N1,N2")]
         public IActionResult GetHoliday(int month, int year)
         {
             try
@@ -37,8 +35,6 @@ namespace RERPAPI.Controllers.Old
                 };
 
                 return Ok(ApiResponseFactory.Success(data, ""));
-
-
             }
             catch (Exception ex)
             {
@@ -67,14 +63,13 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
-
         [HttpPost("delete-holiday")]
         [RequiresPermission("N1,N2")]
         public async Task<IActionResult> DeleteHoliday([FromBody] int holidayId)
         {
             try
             {
-                if(holidayId <= 0) return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy ID xóa phòng ban!"));
+                if (holidayId <= 0) return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy ID xóa phòng ban!"));
                 await _holidayRepo.DeleteAsync(holidayId);
                 return Ok(ApiResponseFactory.Success(null, "Đã xóa ngày nghỉ!"));
             }
@@ -83,6 +78,5 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

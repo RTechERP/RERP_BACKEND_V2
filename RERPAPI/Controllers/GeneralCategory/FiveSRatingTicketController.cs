@@ -4,9 +4,6 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.GeneralCategory
 {
@@ -69,7 +66,7 @@ namespace RERPAPI.Controllers.GeneralCategory
             {
                 if (item == null)
                     return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu"));
-                
+
                 int result = 0;
                 if (item.ID > 0)
                 {
@@ -167,7 +164,7 @@ namespace RERPAPI.Controllers.GeneralCategory
             {
                 if (item == null)
                     return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu"));
-                
+
                 item.IsDeleted = true;
                 int result = await _ticketRepo.UpdateAsync(item);
 

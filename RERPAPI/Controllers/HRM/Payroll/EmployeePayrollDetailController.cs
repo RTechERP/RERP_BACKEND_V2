@@ -12,9 +12,9 @@ namespace RERPAPI.Controllers.Old
     [ApiController]
     public class EmployeePayrollDetailController : ControllerBase
     {
-        EmployeePayrollDetailRepo _employeePayrollDetailRepo;
-        EmployeePayrollRepo _employeePayrollRepo;
-        EmployeeRepo _employeeRepo;
+        private EmployeePayrollDetailRepo _employeePayrollDetailRepo;
+        private EmployeePayrollRepo _employeePayrollRepo;
+        private EmployeeRepo _employeeRepo;
 
         public EmployeePayrollDetailController(EmployeePayrollDetailRepo employeePayrollDetailRepo, EmployeePayrollRepo employeePayrollRepo, EmployeeRepo employeeRepo)
         {
@@ -70,8 +70,6 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
-
-
         [HttpGet("update-employee-payroll-detail")]
         [RequiresPermission("N2,N1,N52")]
         public async Task<IActionResult> getupdateemployeepayrolldetail(int payrollID, int year, int month, int employeeID, string loginName, int type)
@@ -108,7 +106,7 @@ namespace RERPAPI.Controllers.Old
                     foreach (int id in listID)
                     {
                         EmployeePayrollDetail payrollDetail = _employeePayrollDetailRepo.GetByID(id);
-                        if (payrollDetail.ID >0)
+                        if (payrollDetail.ID > 0)
                         {
                             payrollDetail.IsPublish = isPublish;
                             await _employeePayrollDetailRepo.UpdateAsync(payrollDetail);
@@ -152,7 +150,6 @@ namespace RERPAPI.Controllers.Old
                             ? Convert.ToDecimal(row["BasicSalary"].ToString())
                             : null;
 
-
                         EmployeePayrollDetail employeePayrollDetail = new EmployeePayrollDetail();
                         var employee = _employeeRepo.GetAll(c => c.Code == code);
 
@@ -185,8 +182,6 @@ namespace RERPAPI.Controllers.Old
                             employeePayrollDetail.TotalSalaryByDay = row["TotalSalaryByDay"] != null ? Convert.ToDecimal(row["TotalSalaryByDay"].ToString()) : 0;
                             employeePayrollDetail.SalaryOneHour = row["SalaryOneHour"] != null ? Convert.ToDecimal(row["SalaryOneHour"].ToString()) : 0;
 
-
-
                             // Làm thêm
                             employeePayrollDetail.OT_Hour_WD = row["OT_Hour_WD"] != null ? Convert.ToDecimal(row["OT_Hour_WD"].ToString()) : 0;
                             employeePayrollDetail.OT_Money_WD = row["OT_Money_WD"] != null ? Convert.ToDecimal(row["OT_Money_WD"].ToString()) : 0;
@@ -197,15 +192,11 @@ namespace RERPAPI.Controllers.Old
                             employeePayrollDetail.OT_Hour_HD = row["OT_Hour_HD"] != null ? Convert.ToDecimal(row["OT_Hour_HD"].ToString()) : 0;
                             employeePayrollDetail.OT_Money_HD = row["OT_Money_HD"] != null ? Convert.ToDecimal(row["OT_Money_HD"].ToString()) : 0;
 
-
-
                             // Phụ cấp
-                      //      employeePayrollDetail. = 0;
+                            //      employeePayrollDetail. = 0;
                             employeePayrollDetail.RealIndustry = 0;
                             employeePayrollDetail.AllowanceMeal = row["AllowanceMeal"] != null ? Convert.ToDecimal(row["AllowanceMeal"].ToString()) : 0;
                             employeePayrollDetail.Allowance_OT_Early = row["Allowance_OT_Early"] != null ? Convert.ToDecimal(row["Allowance_OT_Early"].ToString()) : 0;
-
-
 
                             //employeePayrollDetail.TotalAllowance = decimal.Parse(row.GetString("Tổng tiền PC"));
 
@@ -216,14 +207,10 @@ namespace RERPAPI.Controllers.Old
                             employeePayrollDetail.Bonus = row["Bonus"] != null ? Convert.ToDecimal(row["Bonus"].ToString()) : 0;
                             employeePayrollDetail.Other = row["Other"] != null ? Convert.ToDecimal(row["Other"].ToString()) : 0;
 
-
-
                             //employeePayrollDetail.TotalBonus = decimal.Parse(row.GetString("Tổng cộng"));
 
                             // Tổng thu nhập
                             employeePayrollDetail.RealSalary = row["RealSalary"] != null ? Convert.ToDecimal(row["RealSalary"].ToString()) : 0;
-
-
 
                             // Các khoản phải trừ
                             //employeePayrollDetail.SocialInsurance = decimal.Parse(row.GetString("Mức đóng"));
@@ -236,12 +223,10 @@ namespace RERPAPI.Controllers.Old
                             employeePayrollDetail.MealUse = row["MealUse"] != null ? Convert.ToInt32(row["MealUse"].ToString()) : 0;
                             employeePayrollDetail.OtherDeduction = row["OtherDeduction"] != null ? Convert.ToDecimal(row["OtherDeduction"].ToString()) : 0;
 
-
                             //employeePayrollDetail.TotalDeduction = decimal.Parse(row.GetString("Tổng cộng các khoản phải trừ"));
 
                             // Thực lĩnh
                             employeePayrollDetail.ActualAmountReceived = row["ActualAmountReceived"] != null ? Convert.ToDecimal(row["ActualAmountReceived"].ToString()) : 0;
-
 
                             // Ghi chú
                             employeePayrollDetail.Note = row["Note"]?.ToString();
@@ -287,10 +272,8 @@ namespace RERPAPI.Controllers.Old
             }
             catch (Exception ex)
             {
-
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
 
         [HttpPost("save-employee-payroll-detail")]
@@ -314,7 +297,6 @@ namespace RERPAPI.Controllers.Old
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
     }
 }

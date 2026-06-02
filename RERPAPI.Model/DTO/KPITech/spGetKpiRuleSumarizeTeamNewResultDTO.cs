@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace RERPAPI.Model.DTO.KPITech
+﻿namespace RERPAPI.Model.DTO.KPITech
 {
     // Generated from procedure: spGetKpiRuleSumarizeTeamNew
     public class spGetKpiRuleSumarizeTeamNewResultDTO

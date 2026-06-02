@@ -8,10 +8,6 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.HRM.FlightBookingManagement;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM.FlightBooking;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.HRM.FlightBooking
 {
@@ -40,6 +36,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
             _projectRepo = projectRepo;
             _currentUser = currentUser;
         }
+
         [RequiresPermission("N1,N2,N34")]
         [HttpGet("get-employees")]
         public IActionResult GetEmployees()
@@ -55,6 +52,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2,N34")]
         [HttpGet("get-projects")]
         public IActionResult GetProjects()
@@ -70,6 +68,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2,N34")]
         [HttpPost("get-list")]
         public IActionResult GetList([FromBody] FlightBookingRequestParam request)
@@ -79,10 +78,10 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                 string procedureName = "spGetFlightBookingManagement";
                 string[] paramNames = new string[] { "@StartDate", "@EndDate", "@Keyword", "@EmployeeID", "@ProjectID" };
                 object[] paramValues = new object[] { request.StartDate, request.EndDate, request.Keyword ?? "", request.EmployeeID ?? 0, request.ProjectID ?? 0 };
-                
+
                 var data = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
                 var result = SQLHelper<object>.GetListData(data, 0);
-                
+
                 return Ok(ApiResponseFactory.Success(result, ""));
             }
             catch (Exception ex)
@@ -90,6 +89,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2,N34")]
         [HttpGet("get-by-id")]
         public IActionResult GetByID(int id)
@@ -99,11 +99,11 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                 string procedureName = "spGetFlightBookingManagementByID";
                 string[] paramNames = new string[] { "@ID" };
                 object[] paramValues = new object[] { id };
-                
+
                 var data = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
                 var master = SQLHelper<object>.GetListData(data, 0).FirstOrDefault();
                 var proposals = SQLHelper<object>.GetListData(data, 1);
-                
+
                 return Ok(ApiResponseFactory.Success(new { master, proposals }, ""));
             }
             catch (Exception ex)
@@ -111,6 +111,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2,N34")]
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] FlightBookingSaveDTO dto)
@@ -147,7 +148,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                     {
                         p.IsDeleted = true;
                         p.UpdatedDate = DateTime.Now;
-                       
+
                         await _flightBookingProposalRepo.UpdateAsync(p);
                     }
 
@@ -223,7 +224,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                 var master = _flightBookingManagementRepo.GetByID(id);
                 if (master != null)
                 {
-                    master.IsDeleted = true;               
+                    master.IsDeleted = true;
                     await _flightBookingManagementRepo.UpdateAsync(master);
                 }
                 return Ok(ApiResponseFactory.Success(null, "Xóa thông tin thành công"));
@@ -254,6 +255,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("ExportExcel")]
         public IActionResult ExportExcel([FromBody] FlightBookingRequestParam request)
         {
@@ -261,17 +263,17 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
             {
                 OfficeOpenXml.ExcelPackage.License.SetNonCommercialOrganization("RTC");
 
-                string selectedIDsStr = request.SelectedIDs != null && request.SelectedIDs.Any() 
-                    ? string.Join(",", request.SelectedIDs) 
+                string selectedIDsStr = request.SelectedIDs != null && request.SelectedIDs.Any()
+                    ? string.Join(",", request.SelectedIDs)
                     : "";
 
                 var dt = SQLHelper<dynamic>.ProcedureToList(
                     "spGetFlightBookingExportExcel",
                     new string[] { "@StartDate", "@EndDate", "@Keyword", "@ProjectID", "@SelectedIDs" },
-                    new object[] { 
-                        request.StartDate ?? (object)DBNull.Value, 
-                        request.EndDate ?? (object)DBNull.Value, 
-                        request.Keyword ?? "", 
+                    new object[] {
+                        request.StartDate ?? (object)DBNull.Value,
+                        request.EndDate ?? (object)DBNull.Value,
+                        request.Keyword ?? "",
                         request.ProjectID ?? 0,
                         selectedIDsStr
                     }
@@ -399,7 +401,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                         decimal pa2Price = 0;
                         decimal totalApproved = 0;
                         string approverName = "";
-                        
+
                         string hcnsReason = "";
 
                         for (int i = 0; i < groupCount; i++)
@@ -421,7 +423,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
 
                             sheet.Cells[row, 10].Value = item["DepartureTime"] != null && item["DepartureTime"] != DBNull.Value ? ((DateTime)item["DepartureTime"]).ToString("HH:mm") : "";
                             sheet.Cells[row, 11].Value = item["DepartureDate"] != null && item["DepartureDate"] != DBNull.Value ? ((DateTime)item["DepartureDate"]).ToString("dd/MM/yyyy") : "";
-                            
+
                             int paCol = 12 + i;
                             string airline = item["Airline"] != null ? item["Airline"].ToString() : "";
                             decimal priceVal = item["Price"] != null && item["Price"] != DBNull.Value ? Convert.ToDecimal(item["Price"]) : 0;
@@ -446,9 +448,9 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                             decimal price = priceVal;
                             if (i == 0) pa1Price = price;
                             if (i == 1) pa2Price = price;
-                            
+
                             int isApprove = item["IsApprove"] != null && item["IsApprove"] != DBNull.Value ? Convert.ToInt32(item["IsApprove"]) : 0;
-                            if (isApprove == 1) 
+                            if (isApprove == 1)
                             {
                                 totalApproved += price;
                                 if (item["ApproverName"] != null && item["ApproverName"] != DBNull.Value)
@@ -494,7 +496,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                     allRange.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
                     allRange.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
                     allRange.Style.WrapText = true;
-                    
+
                     // Kẻ khung cho tất cả các ô dữ liệu
                     using (var range = sheet.Cells[4, 1, row - 1, totalCols])
                     {

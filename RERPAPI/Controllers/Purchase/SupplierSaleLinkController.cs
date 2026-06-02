@@ -1,15 +1,10 @@
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Model.DTO;
-using Microsoft.AspNetCore.Authorization;
-using RERPAPI.Attributes;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Linq;
 
 namespace RERPAPI.Controllers.Purchase
 {
@@ -23,7 +18,6 @@ namespace RERPAPI.Controllers.Purchase
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-
     public class SupplierSaleLinkController : ControllerBase
     {
         private readonly SupplierSaleLinkRepo _supplierSaleLinkRepo;
@@ -39,30 +33,29 @@ namespace RERPAPI.Controllers.Purchase
             _employeeRepo = employeeRepo;
             _supplierSaleRepo = supplierSaleRepo;
         }
-        
+
         [HttpGet("getall")]
         public IActionResult GetAll(string keyword = "", int employeePurchaseID = 0)
         {
             try
             {
-                
-                var datas = SQLHelper<object>.ProcedureToList("spGetSupplierSaleLink", 
-                    new string[] { "@EmployeePurchaseID", "@KeyWord" }, 
+                var datas = SQLHelper<object>.ProcedureToList("spGetSupplierSaleLink",
+                    new string[] { "@EmployeePurchaseID", "@KeyWord" },
                     new object[] { employeePurchaseID, keyword ?? "" });
-                
+
                 var result = SQLHelper<object>.GetListData(datas, 0);
                 return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }   
+            }
         }
 
         /// <summary>
         /// Lấy danh sách NCC kèm theo trạng thái đã được chọn của nhân viên
         /// </summary>
-        /// 
+        ///
         [RequiresPermission("N33,N1")]
         [HttpGet("get-with-selection")]
         public async Task<IActionResult> GetWithSelection(int employeePurchaseID = 0, string keyword = "", int pageNumber = 1, int pageSize = 50)
@@ -76,9 +69,9 @@ namespace RERPAPI.Controllers.Purchase
                     PageNumber = pageNumber,
                     PageSize = pageSize
                 };
-                
+
                 var data = await SqlDapper<SupplierSaleWithSelectionDTO>.ProcedureToListTAsync("spGetSupplierSaleWithSelection", param);
-                
+
                 return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
@@ -92,7 +85,7 @@ namespace RERPAPI.Controllers.Purchase
         /// </summary>
         /// <param name="items">Danh sách liên kết cần lưu</param>
         /// <returns>Trạng thái thành công</returns>
-        /// 
+        ///
         [RequiresPermission("N33,N1")]
         [HttpPost("save")]
         public async Task<IActionResult> Save(List<SupplierSaleLink> items)
@@ -102,10 +95,10 @@ namespace RERPAPI.Controllers.Purchase
                 if (items == null) return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu không hợp lệ"));
 
                 // Nếu danh sách rỗng, ta vẫn cần xóa hết các liên kết cũ của nhân viên đó
-                // Tuy nhiên, ta cần biết EmployeePurchaseID. 
+                // Tuy nhiên, ta cần biết EmployeePurchaseID.
                 // Ở frontend, ta luôn gửi ít nhất một item hoặc ta có thể truyền EmployeePurchaseID riêng.
                 // Giả sử frontend luôn gửi payload hợp lệ.
-                
+
                 if (items.Count > 0)
                 {
                     foreach (var item in items)
@@ -117,20 +110,20 @@ namespace RERPAPI.Controllers.Purchase
                     }
 
                     int employeeID = items[0].EmployeePurchaseID;
-                    
+
                     // Xóa các liên kết cũ của nhân viên này
                     var oldLinks = _supplierSaleLinkRepo.GetAll(x => x.EmployeePurchaseID == employeeID);
                     if (oldLinks.Count > 0)
                     {
                         _supplierSaleLinkRepo.DeleteRange(oldLinks);
                     }
-                    
+
                     // Thêm các liên kết mới
                     await _supplierSaleLinkRepo.CreateRangeAsync(items);
                 }
                 else
                 {
-                    // Nếu items rỗng, có thể là user đã bỏ tích hết. 
+                    // Nếu items rỗng, có thể là user đã bỏ tích hết.
                     // Nhưng frontend hiện tại chặn save nếu không chọn item nào.
                     // Nếu muốn hỗ trợ bỏ tích hết, ta cần truyền EmployeeID riêng.
                 }
@@ -148,7 +141,7 @@ namespace RERPAPI.Controllers.Purchase
         /// </summary>
         /// <param name="id">ID hoặc danh sách ID của liên kết cần xóa</param>
         /// <returns>Trạng thái thành công</returns>
-        /// 
+        ///
         [RequiresPermission("N33,N1")]
         [HttpPost("delete")]
         public async Task<IActionResult> Delete(string id)
@@ -165,7 +158,7 @@ namespace RERPAPI.Controllers.Purchase
                         await _supplierSaleLinkRepo.DeleteAsync(intId);
                     }
                 }
-                
+
                 return Ok(ApiResponseFactory.Success(null, "Xóa dữ liệu thành công!"));
             }
             catch (Exception ex)
@@ -271,7 +264,7 @@ namespace RERPAPI.Controllers.Purchase
                         existLink.Note = ghiChu;
                         existLink.UpdatedDate = DateTime.Now;
                         existLink.UpdatedBy = currentUsername;
-                        
+
                         await _supplierSaleLinkRepo.UpdateAsync(existLink);
                         updated++;
                     }
@@ -287,7 +280,7 @@ namespace RERPAPI.Controllers.Purchase
                             CreatedDate = DateTime.Now,
                             CreatedBy = currentUsername
                         };
-                        
+
                         await _supplierSaleLinkRepo.CreateAsync(newLink);
                         allLinks.Add(newLink);
                         created++;

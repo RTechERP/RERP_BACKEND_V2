@@ -1,10 +1,5 @@
 ﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity.HRM.Vehicle
 {
@@ -23,7 +18,7 @@ namespace RERPAPI.Repo.GenericEntity.HRM.Vehicle
                 message = "Ngày bắt đầu phải nhỏ hơn ngày kết thúc";
                 return false;
             }
-         
+
             if (item.ProposeContent == null || item.ProposeContent == "")
             {
                 message = "Nội dung đề xuất không được để trống";

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.Param.Technical
+﻿namespace RERPAPI.Model.Param.Technical
 {
     public class InventoryDemoRequestParam
     {
@@ -14,6 +8,5 @@ namespace RERPAPI.Model.Param.Technical
         public int? WarehouseID { get; set; }
         public int? ProductRTCID { get; set; }
         public int? WarehouseType { get; set; }
-
     }
 }

@@ -1,12 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json.Linq;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.DocumentManager;
-using ZXing;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -15,7 +11,7 @@ namespace RERPAPI.Controllers.Old
     [Authorize]
     public class TaxCompanyController : ControllerBase
     {
-        TaxCompanyRepo _taxCompanyRepo;
+        private TaxCompanyRepo _taxCompanyRepo;
 
         public TaxCompanyController(
             TaxCompanyRepo taxCompanyRepo
@@ -38,6 +34,5 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

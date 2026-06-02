@@ -1,14 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
-using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
-using System.Reflection;
 using static RERPAPI.Model.DTO.ApproveTPDTO;
 
 namespace RERPAPI.Controllers
@@ -18,7 +16,6 @@ namespace RERPAPI.Controllers
     [Authorize]
     public class ApproveController : ControllerBase
     {
-
         private readonly RTCContext _context;
         private readonly IConfiguration _configuration;
 
@@ -28,8 +25,10 @@ namespace RERPAPI.Controllers
         private readonly EmployeeBussinessRepo _employeeBussinessRepo;            // Type 4
         private readonly EmployeeWFHRepo _wfhRepo;                                // Type 5
         private readonly EmployeeNoFingerprintRepo _employeeNoFingerprintRepo;    // Type 6
-                                                                                  //  private readonly EmployeeSalaryAdvanceRepo _employeeSalaryAdvance;            // Type 7
+
+        //  private readonly EmployeeSalaryAdvanceRepo _employeeSalaryAdvance;            // Type 7
         private readonly EmployeeNightShiftRepo _employeeNightShiftRepo;          // Type 8
+
         private readonly VehicleBookingManagementRepo _vehicleBookingManagementRepo; // Type 9
 
         private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
@@ -188,9 +187,7 @@ namespace RERPAPI.Controllers
                     _vehicleBookingManagementRepo.UpdateAsync(
                         MapDeclineSenior<VehicleBookingManagement>(item))
             };
-
         }
-
 
         private static T MapApproveSenior<T>(ApproveItemParam item) where T : class, new()
         {
@@ -259,7 +256,8 @@ namespace RERPAPI.Controllers
 
             return e;
         }
-        private static T MapApproveTP<T>(ApproveItemParam item, bool isApproved)where T : class, new()
+
+        private static T MapApproveTP<T>(ApproveItemParam item, bool isApproved) where T : class, new()
         {
             var e = new T();
             var type = typeof(T);
@@ -296,7 +294,7 @@ namespace RERPAPI.Controllers
             {
                 type.GetProperty("ReasonDeciline")?.SetValue(e, item.ReasonDeciline);
             }
-            if (!string.IsNullOrWhiteSpace(item.EvaluateResults)&&item.TType==5)
+            if (!string.IsNullOrWhiteSpace(item.EvaluateResults) && item.TType == 5)
             {
                 type.GetProperty("EvaluateResults")?.SetValue(e, item.EvaluateResults);
             }
@@ -304,6 +302,7 @@ namespace RERPAPI.Controllers
             SetApproveEither(e, isApproved);
             return e;
         }
+
         private static T MapApproveBGD<T>(ApproveItemParam item, bool isApproved)
       where T : class, new()
         {
@@ -315,6 +314,7 @@ namespace RERPAPI.Controllers
 
             return e;
         }
+
         private static void SetApproveValue<T>(T entity, string propName, bool? value)
         {
             if (value == null) return;
@@ -327,6 +327,7 @@ namespace RERPAPI.Controllers
             else if (prop.PropertyType == typeof(int) || prop.PropertyType == typeof(int?))
                 prop.SetValue(entity, value.Value ? 1 : 0);
         }
+
         private static void SetApproveEither<T>(T entity, bool value)
         {
             SetApproveValue(entity, "IsApproved", value);
@@ -341,9 +342,6 @@ namespace RERPAPI.Controllers
 
             if (item.IsApprovedHR != true)
                 return $"Nhân viên [{item.FullName}] chưa được HR duyệt.";
-
-
-
 
             return null;
         }
@@ -360,14 +358,13 @@ namespace RERPAPI.Controllers
             if (item.IsApprovedBGD == true)
                 return $"Nhân viên [{item.FullName}] đã được BGĐ duyệt.";
 
-
-
             //// Hủy duyệt mà chưa từng Senior duyệt
             //if (isApproved==false && (item.IsSeniorApproved != true))
             //    return $"Nhân viên [{item.FullName}] chưa được Senior duyệt, không thể hủy duyệt.";
 
             return null;
         }
+
         private string? ValidateTBP(ApproveItemParam item, bool isApproved)
         {
             if ((item.ID ?? 0) <= 0)
@@ -375,8 +372,6 @@ namespace RERPAPI.Controllers
 
             if (item.DeleteFlag ?? false)
                 return $"Nhân viên [{item.FullName}] đã tự xoá khai báo, không thể duyệt / hủy duyệt.";
-
-
 
             if ((item.IsCancelRegister ?? 0) > 0)
                 return $"Nhân viên [{item.FullName}] đã đăng ký hủy, không thể duyệt / hủy duyệt.";
@@ -402,6 +397,7 @@ namespace RERPAPI.Controllers
             NightShift = 8,
             VehicleBooking = 9
         }
+
         [RequiresPermission("N32")]
         [HttpPost("approve-tbp-new")]
         public async Task<IActionResult> ApproveTBPNew([FromBody] ApproveRequestParam request)
@@ -417,7 +413,6 @@ namespace RERPAPI.Controllers
             {
                 try
                 {
-
                     var error = ValidateTBP(item, request.IsApproved ?? false);
                     if (error != null)
                     {
@@ -455,6 +450,7 @@ namespace RERPAPI.Controllers
                     : $"{approved} thành công, bỏ qua {notProcessed.Count} bản ghi."
             ));
         }
+
         [RequiresPermission("N1")]
         [HttpPost("approve-bgd-new")]
         public async Task<IActionResult> ApproveBGDNew([FromBody] ApproveRequestParam request)
@@ -489,7 +485,6 @@ namespace RERPAPI.Controllers
                     }
 
                     await approveAction(item, request.IsApproved ?? false);
-
                 }
                 catch (Exception ex)
                 {
@@ -508,6 +503,7 @@ namespace RERPAPI.Controllers
                     : $"{approved} thành công, bỏ qua {notProcessed.Count} bản ghi."
             ));
         }
+
         [RequiresPermission("N85,N32")]
         [HttpPost("approve-senior-new")]
         public async Task<IActionResult> ApproveSenior([FromBody] ApproveRequestParam request)
@@ -561,6 +557,7 @@ namespace RERPAPI.Controllers
                 : $"{approved} thành công, bỏ qua {notProcessed.Count} bản ghi."
             ));
         }
+
         [RequiresPermission("N85,N32")]
         [HttpPost("decline-senior")]
         public async Task<IActionResult> DeclineSenior([FromBody] ApproveRequestParam request)
@@ -617,4 +614,3 @@ namespace RERPAPI.Controllers
         }
     }
 }
-

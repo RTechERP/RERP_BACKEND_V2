@@ -1,9 +1,6 @@
-﻿using DocumentFormat.OpenXml.Office2010.Excel;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
-using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.Old.IssueSolution
@@ -40,14 +37,15 @@ namespace RERPAPI.Controllers.Old.IssueSolution
             _issueCauseRepo = issueCauseRepo;
             _issueSolutionStatusRepo = issueSolutionStatusRepo;
         }
-        List<List<dynamic>> listDocuments = SQLHelper<dynamic>.ProcedureToList("spGetDocumentIssue", new string[] { }, new object[] { });
+
+        private List<List<dynamic>> listDocuments = SQLHelper<dynamic>.ProcedureToList("spGetDocumentIssue", new string[] { }, new object[] { });
 
         [HttpGet()]
         public IActionResult GetAllIssueSolution(string? keyword, int? issueSolutionType)
         {
             try
             {
-                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetAllIssueLogSolution", new string[] { "@Keyword" , "@IssueSolutionType" }, new object[] { keyword, issueSolutionType });
+                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetAllIssueLogSolution", new string[] { "@Keyword", "@IssueSolutionType" }, new object[] { keyword, issueSolutionType });
                 //List<dynamic> listPart = list[0];
                 return Ok(ApiResponseFactory.Success(SQLHelper<dynamic>.GetListData(list, 0), ""));
             }
@@ -56,10 +54,11 @@ namespace RERPAPI.Controllers.Old.IssueSolution
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-detail")]
         public IActionResult GetIssueSolutionDetail(int id)
         {
-            try 
+            try
             {
                 List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetIssueLogSolutionDetail", new string[] { "@IssueSolutionID" }, new object[] { id });
                 var mainData = SQLHelper<dynamic>.GetListData(list, 0);
@@ -71,6 +70,7 @@ namespace RERPAPI.Controllers.Old.IssueSolution
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-documents")]
         public IActionResult GetAllDocuments()
         {
@@ -83,12 +83,13 @@ namespace RERPAPI.Controllers.Old.IssueSolution
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-statuses")]
         public IActionResult GetAllStatuses()
         {
             try
             {
-                var statuses = _issueSolutionStatusRepo.GetAll(x=>x.IsDeleted != true);
+                var statuses = _issueSolutionStatusRepo.GetAll(x => x.IsDeleted != true);
                 return Ok(ApiResponseFactory.Success(statuses, ""));
             }
             catch (Exception ex)
@@ -96,6 +97,7 @@ namespace RERPAPI.Controllers.Old.IssueSolution
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-causes")]
         public IActionResult GetAllCause()
         {
@@ -109,6 +111,7 @@ namespace RERPAPI.Controllers.Old.IssueSolution
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-all-customers")]
         public IActionResult GetAllCustomers(int id)
         {
@@ -123,6 +126,7 @@ namespace RERPAPI.Controllers.Old.IssueSolution
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-projects")]
         public IActionResult GetProject()
         {
@@ -136,6 +140,7 @@ namespace RERPAPI.Controllers.Old.IssueSolution
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save")]
         public async Task<IActionResult> Save(IssueSolutionDTO dto)
         {
@@ -150,7 +155,7 @@ namespace RERPAPI.Controllers.Old.IssueSolution
                     await _issueLogSolutionRepo.UpdateAsync(dto.issueSolutionLogs);
                 }
                 var issueSolutionId = dto.issueSolutionLogs.ID;
-                if(dto.issueSolutionCauseLink != null)
+                if (dto.issueSolutionCauseLink != null)
                 {
                     var oldCauses = _issueSolutionCauseLinkRepo.GetAll(x => x.IssueSolutionID == issueSolutionId && (x.IsDeleted == null || x.IsDeleted == false)).ToList();
 
@@ -162,9 +167,8 @@ namespace RERPAPI.Controllers.Old.IssueSolution
 
                     dto.issueSolutionCauseLink.IssueSolutionID = dto.issueSolutionLogs.ID;
                     await _issueSolutionCauseLinkRepo.CreateAsync(dto.issueSolutionCauseLink);
-                    
                 }
-                if(dto.issueSolutionStatusLink != null)
+                if (dto.issueSolutionStatusLink != null)
                 {
                     var oldStatus = _issueSolutionStatusLinkRepo.GetAll(x => x.IssueSolutionID == issueSolutionId && (x.IsDeleted == null || x.IsDeleted == false)).ToList();
 
@@ -175,12 +179,10 @@ namespace RERPAPI.Controllers.Old.IssueSolution
                     }
                     dto.issueSolutionStatusLink.IssueSolutionID = dto.issueSolutionLogs.ID;
                     await _issueSolutionStatusLinkRepo.CreateAsync(dto.issueSolutionStatusLink);
-                    
                 }
 
-                if(dto.issueSolutionDocuments != null && dto.issueSolutionDocuments.Count > 0)
+                if (dto.issueSolutionDocuments != null && dto.issueSolutionDocuments.Count > 0)
                 {
-
                     var oldDocuments = _issueSolutionDocumentRepo.GetAll(x => x.IssueSolutionID == issueSolutionId && (x.IsDeleted == null || x.IsDeleted == false)).ToList();
 
                     foreach (var item in oldDocuments)
@@ -191,8 +193,8 @@ namespace RERPAPI.Controllers.Old.IssueSolution
 
                     foreach (var document in dto.issueSolutionDocuments)
                     {
-                            document.IssueSolutionID = dto.issueSolutionLogs.ID;
-                            await _issueSolutionDocumentRepo.CreateAsync(document);
+                        document.IssueSolutionID = dto.issueSolutionLogs.ID;
+                        await _issueSolutionDocumentRepo.CreateAsync(document);
                     }
                 }
 

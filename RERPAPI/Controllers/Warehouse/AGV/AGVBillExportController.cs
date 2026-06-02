@@ -1,9 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO.Warehouses.AGV;
-using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
 
 namespace RERPAPI.Controllers.Warehouse.AGV
@@ -23,7 +21,6 @@ namespace RERPAPI.Controllers.Warehouse.AGV
             _billExportRepo = billExportRepo;
             _detailRepo = detailRepo;
         }
-
 
         [HttpGet()]
         public IActionResult GetAll()
@@ -63,7 +60,6 @@ namespace RERPAPI.Controllers.Warehouse.AGV
 
                 if (billExport.ID <= 0)
                 {
-
                     billExport.BillCode = _billExportRepo.GetBillCode(Convert.ToInt32(billExport.BillType));
                     await _billExportRepo.CreateAsync(billExport);
                 }
@@ -78,7 +74,6 @@ namespace RERPAPI.Controllers.Warehouse.AGV
                     }
                     else await _detailRepo.UpdateAsync(item);
                 }
-
 
                 return Ok(ApiResponseFactory.Success(billExport, "Cập nhật thành công!"));
             }

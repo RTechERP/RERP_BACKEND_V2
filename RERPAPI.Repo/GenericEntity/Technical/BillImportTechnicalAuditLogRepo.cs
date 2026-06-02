@@ -1,16 +1,11 @@
 using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity.Technical
 {
-    public class BillImportTechnicalAuditLogRepo: GenericRepo<BillImportTechnicalAuditLog>
+    public class BillImportTechnicalAuditLogRepo : GenericRepo<BillImportTechnicalAuditLog>
     {
         public BillImportTechnicalAuditLogRepo(CurrentUser currentUser) : base(currentUser)
         {
@@ -29,9 +24,10 @@ namespace RERPAPI.Repo.GenericEntity.Technical
             "DeadlineReturnNCC", "EmployeIDBorrow", "BillCodePO", "PONCCDetailID", "QtyRequest", "IsBorrowSupplier", "InternalCode",
              "ProjectName", "ProjectCode",
         };
-        #endregion
 
-        #region  Tên hiển thị tiếng Việt cho các property (thay vì tên cột DB)
+        #endregion Các trường hệ thống/nội bộ không cần ghi log thay đổi
+
+        #region Tên hiển thị tiếng Việt cho các property (thay vì tên cột DB)
 
         private static readonly Dictionary<string, string> _propertyLabels = new()
         {
@@ -58,7 +54,8 @@ namespace RERPAPI.Repo.GenericEntity.Technical
             ["DateSomeBill"] = "Ngày hóa đơn",
             ["TaxReduction"] = "Giảm thuế",
         };
-        #endregion
+
+        #endregion Tên hiển thị tiếng Việt cho các property (thay vì tên cột DB)
 
         #region So sánh 2 entity cùng loại, trả về danh sách mô tả thay đổi (tiếng Việt, resolve FK)
 
@@ -166,7 +163,6 @@ namespace RERPAPI.Repo.GenericEntity.Technical
                     var rulePayIds = new HashSet<int>();
                     var customerIds = new HashSet<int>();
 
-
                     foreach (var (name, oldVal, newVal) in fkChanges)
                     {
                         CollectFkId(name, oldVal, productIds, employeeIds, supplierIds, warehouseIds, projectIds, rulePayIds, approverIds, customerIds);
@@ -177,7 +173,8 @@ namespace RERPAPI.Repo.GenericEntity.Technical
                     var products = productIds.Count > 0
                         ? db.ProductRTCs
                             .Where(p => productIds.Contains(p.ID))
-                            .Select(p => new {
+                            .Select(p => new
+                            {
                                 p.ID,
                                 p.ProductCode,
                                 p.ProductName,
@@ -247,7 +244,8 @@ namespace RERPAPI.Repo.GenericEntity.Technical
 
             return changes;
         }
-        #endregion
+
+        #endregion So sánh 2 entity cùng loại, trả về danh sách mô tả thay đổi (tiếng Việt, resolve FK)
 
         #region Phân loại ID vào đúng HashSet theo tên property (để batch query)
 
@@ -267,10 +265,10 @@ namespace RERPAPI.Repo.GenericEntity.Technical
                 case "ProjectID": projectIds.Add(id); break;
                 case "RulePayID": rulePayIds.Add(id); break;
                 case "CustomerID": customerIds.Add(id); break;
-
             }
         }
-        #endregion
+
+        #endregion Phân loại ID vào đúng HashSet theo tên property (để batch query)
 
         #region Resolve FK ID thành tên hiển thị từ dictionary đã batch-load
 
@@ -298,7 +296,8 @@ namespace RERPAPI.Repo.GenericEntity.Technical
                 _ => text
             };
         }
-        #endregion
+
+        #endregion Resolve FK ID thành tên hiển thị từ dictionary đã batch-load
 
         #region Map BillTypeNew (int) → tên loại phiếu tiếng Việt
 
@@ -318,6 +317,7 @@ namespace RERPAPI.Repo.GenericEntity.Technical
                 _ => v.ToString()
             };
         }
-        #endregion
+
+        #endregion Map BillTypeNew (int) → tên loại phiếu tiếng Việt
     }
 }

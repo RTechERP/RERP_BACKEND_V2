@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Repo.GenericEntity;
@@ -12,6 +11,7 @@ namespace RERPAPI.Controllers.Old.KETOAN
     public class HistoryApprovedBillLogController : ControllerBase
     {
         private readonly UserRepo _userRepo;
+
         public HistoryApprovedBillLogController(UserRepo userRepo)
         {
             _userRepo = userRepo;

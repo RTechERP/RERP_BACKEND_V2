@@ -1,25 +1,17 @@
-﻿using DocumentFormat.OpenXml.Drawing;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
-using RERPAPI.Model.Param.TB;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.AddNewBillExport;
-using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.Technical;
-
 
 namespace RERPAPI.Controllers.Old.TB.QRCode
 {
     [Route("api/[controller]")]
     [ApiController]
-
     public class AddQRCodeController : ControllerBase
     {
-
-        ProductRTCRepo _productRTCRepo;
-        ProductRTCQRCodeRepo _productRTCQRCodeRepo;
+        private ProductRTCRepo _productRTCRepo;
+        private ProductRTCQRCodeRepo _productRTCQRCodeRepo;
 
         public AddQRCodeController(ProductRTCRepo productRTCRepo, ProductRTCQRCodeRepo productRTCQRCodeRepo)
         {
@@ -48,13 +40,13 @@ namespace RERPAPI.Controllers.Old.TB.QRCode
             {
                 return Ok(new
                 {
-
                     status = 0,
                     message = ex.Message,
                     error = ex.ToString()
                 });
             }
         }
+
         [HttpPost("get-location-modula")]
         public IActionResult GetLocationModula()
         {
@@ -72,6 +64,7 @@ namespace RERPAPI.Controllers.Old.TB.QRCode
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-product-and-qrcode")]
         public IActionResult GetQRCode(int? wareHouseID, string? filterText = "")
         {
@@ -89,6 +82,7 @@ namespace RERPAPI.Controllers.Old.TB.QRCode
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-product")]
         public IActionResult GetProDuct()
         {
@@ -96,13 +90,13 @@ namespace RERPAPI.Controllers.Old.TB.QRCode
             {
                 var productRTC = _productRTCRepo.GetAll(x => x.IsDelete != true);
                 return Ok(ApiResponseFactory.Success(new { productRTC }, "Lấy danh sách QRCode thành công"));
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] List<ProductRTCQRCode> qrCodes)
         {
@@ -110,7 +104,6 @@ namespace RERPAPI.Controllers.Old.TB.QRCode
             {
                 if (qrCodes != null && qrCodes.Any())
                 {
-
                     foreach (var item in qrCodes)
                     {
                         if (item.IsDeleted != true)
@@ -134,6 +127,7 @@ namespace RERPAPI.Controllers.Old.TB.QRCode
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-location")]
         public async Task<IActionResult> SaveLocation([FromBody] List<ProductRTCQRCode> qrCodes)
         {
@@ -141,17 +135,12 @@ namespace RERPAPI.Controllers.Old.TB.QRCode
             {
                 if (qrCodes != null && qrCodes.Any())
                 {
-
                     foreach (var item in qrCodes)
                     {
-
-
                         if (item.ID <= 0)
                         {
                             await _productRTCQRCodeRepo.CreateAsync(item);
                         }
-
-
                         else
                             await _productRTCQRCodeRepo.UpdateAsync(item);
                     }
@@ -163,6 +152,5 @@ namespace RERPAPI.Controllers.Old.TB.QRCode
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

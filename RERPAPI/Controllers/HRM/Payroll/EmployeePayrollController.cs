@@ -2,10 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using ZXing;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -80,7 +78,7 @@ namespace RERPAPI.Controllers.Old
             try
             {
                 //var data = SQLHelper<object>.ExcuteScalar($"SELECT TOP 1 ID FROM dbo.EmployeePayroll WHERE [_Year] = {year} AND [_Month] = {month} AND ID <> {id}  AND ISNULL(IsDeleted, 0) = 0");
-                var data = employeePayrollRepo.GetAll(x=> x._Year == year && x._Month == month && x.ID != id && x.IsDeleted == false);
+                var data = employeePayrollRepo.GetAll(x => x._Year == year && x._Month == month && x.ID != id && x.IsDeleted == false);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
@@ -138,7 +136,6 @@ namespace RERPAPI.Controllers.Old
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
     }
 }

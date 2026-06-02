@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.Param.HRM.Course
+﻿namespace RERPAPI.Model.Param.HRM.Course
 {
     public class SaveCourseParam
     {
@@ -21,9 +15,9 @@ namespace RERPAPI.Model.Param.HRM.Course
 
         public bool? DeleteFlag { get; set; }
 
-//        public int? FileCourseID { get; set; }
+        //        public int? FileCourseID { get; set; }
 
-//        public bool? IsPractice { get; set; }
+        //        public bool? IsPractice { get; set; }
 
         public decimal? QuestionCount { get; set; }
 
@@ -37,6 +31,5 @@ namespace RERPAPI.Model.Param.HRM.Course
 
         public List<int>? IdeaIDs { get; set; }
         public List<int>? KPIIDs { get; set; }
-
     }
 }

@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
 using RERPAPI.IRepo;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
-using System.Security;
 
 namespace RERPAPI.Repo
 {
@@ -62,7 +60,6 @@ namespace RERPAPI.Repo
         //    return await _dbContext.vUserGroupLinks
         //        .AnyAsync(p => p.UserID == id && permissions.Contains(p.Code));
         //}
-
 
         public Dictionary<string, string> GetClaims()
         {

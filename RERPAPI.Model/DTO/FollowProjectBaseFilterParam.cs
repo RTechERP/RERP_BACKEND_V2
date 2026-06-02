@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.DTO
+﻿namespace RERPAPI.Model.DTO
 {
     public class FollowProjectBaseFilterParam
     {
@@ -18,6 +12,5 @@ namespace RERPAPI.Model.DTO
         public string? pm { get; set; }              // @PM
         public int? warehouseID { get; set; }       // @WarehouseID
         public int? groupSaleID { get; set; }       // @GroupSaleID
-
     }
 }

@@ -3,22 +3,18 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Model.Context
 {
     public partial class RTCCourseDbContext
     {
         public CurrentUser CurrentUser { get; set; } = new CurrentUser();
+
         public RTCCourseDbContext()
         {
-            
         }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
       => optionsBuilder.UseSqlServer(Config.ConnectionStringCourse);
 
@@ -78,7 +74,6 @@ namespace RERPAPI.Model.Context
 
                 if (item.State == EntityState.Modified)
                 {
-
                     if (updatedBy != null && updatedBy.CanWrite) updatedBy.SetValue(item.Entity, loginName);
                     if (updatedDate != null && updatedDate.CanWrite)
                     {
@@ -154,7 +149,6 @@ namespace RERPAPI.Model.Context
 
         //            if (item.State == EntityState.Modified)
         //            {
-
         //                if (updatedBy != null && updatedBy.CanWrite) updatedBy.SetValue(item.Entity, loginName);
         //                if (updatedDate != null && updatedDate.CanWrite)
         //                {
@@ -174,7 +168,6 @@ namespace RERPAPI.Model.Context
         //    }
         //    catch (Exception ex)
         //    {
-
         //        throw new Exception(ex.ToString());
         //    }
         //}
@@ -271,12 +264,12 @@ namespace RERPAPI.Model.Context
                     ControlName = ""
                 };
 
-
                 logs.Add(log);
             }
 
             //ActivityLogs.AddRange(logs);
         }
+
         private void SetDefaultDeleteFlag(object entity, Type type)
         {
             var props = new[] { "IsDeleted", "IsDelete" };
@@ -294,6 +287,7 @@ namespace RERPAPI.Model.Context
                     prop.SetValue(entity, 0);
             }
         }
+
         private List<ActivityLog> BuildAuditLogs()
         {
             return ChangeTracker.Entries()
@@ -314,6 +308,7 @@ namespace RERPAPI.Model.Context
                 })
                 .ToList();
         }
+
         private async Task SaveAuditLogsAsync(List<ActivityLog> logs)
         {
             try
@@ -327,6 +322,7 @@ namespace RERPAPI.Model.Context
                 // Có thể log file nếu cần
             }
         }
+
         private string GetDetails(EntityEntry entry)
         {
             var oldValues = new Dictionary<string, object?>();
@@ -355,7 +351,7 @@ namespace RERPAPI.Model.Context
                 new JsonSerializerOptions { WriteIndented = true });
         }
 
-        partial void OnModelCreatingPartial(ModelBuilder modelBuilder)
+        private partial void OnModelCreatingPartial(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<PollQuestion>(entity =>
             {

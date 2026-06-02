@@ -9,10 +9,12 @@ namespace RERPAPI.Controllers.Old
     public class BusinessFieldController : ControllerBase
     {
         private BusinessFieldRepo _businessFieldRepo;
+
         public BusinessFieldController(BusinessFieldRepo businessFieldRepo)
         {
             _businessFieldRepo = businessFieldRepo;
         }
+
         [HttpGet()]
         public IActionResult GetAll()
         {
@@ -35,6 +37,5 @@ namespace RERPAPI.Controllers.Old
                 });
             }
         }
-
     }
 }

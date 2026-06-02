@@ -1,13 +1,8 @@
-﻿using DocumentFormat.OpenXml.Office2010.Excel;
-using DocumentFormat.OpenXml.VariantTypes;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
-using System.Diagnostics.Contracts;
-using ZXing;
 
 namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 {
@@ -28,6 +23,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             _billExportRepo = billExportRepo;
             _billDocumentExportLogRepo = billDocumentExportLogRepo;
         }
+
         [HttpGet("")]
         public IActionResult getData()
         {
@@ -45,8 +41,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(new { status = 0, ex.Message });
             }
         }
-        [HttpGet("get-by-billID/{billID}")]
 
+        [HttpGet("get-by-billID/{billID}")]
         public IActionResult getDatabyBillID(int billID)
         {
             try
@@ -144,6 +140,5 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 });
             }
         }
-
     }
 }

@@ -1,5 +1,4 @@
 using RERPAPI.Model.Common;
-using System;
 
 namespace RERPAPI.Model.Param.HRM
 {

@@ -18,6 +18,7 @@ namespace RERPAPI.Controllers.Old.TinhGia
         private readonly UnitCountRepo _unitCountRepo;
         private readonly ProjectRepo _projectRepo;
         private readonly CustomerRepo _customerRepo;
+
         public TradePriceController(TradePriceRepo tradePriceRepo, TradePriceDetailRepo tradePriceDetailRepo, UnitCountRepo unitCountRepo, ProjectRepo projectRepo, CustomerRepo customerRepo)
         {
             _tradePriceRepo = tradePriceRepo;
@@ -45,6 +46,7 @@ namespace RERPAPI.Controllers.Old.TinhGia
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-details")]
         public IActionResult GetDetails(int id)
         {
@@ -188,6 +190,7 @@ namespace RERPAPI.Controllers.Old.TinhGia
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("export-excel/{id}")]
         public IActionResult ExportExcel(int id)
         {
@@ -269,7 +272,6 @@ namespace RERPAPI.Controllers.Old.TinhGia
                         sheet.Cell(7, 1).Value = $"{customer.ContactName}_{project.ProjectCode}_{project.ProjectName}";
                         sheet.Cell(7, 27).Value = Convert.ToDecimal(rowData["TotalPriceLabor"] ?? 0);
                         sheet.Cell(7, 28).Value = Convert.ToDecimal(rowData["TotalPriceRTCVision"] ?? 0);
-
                     }
                     using (var stream = new MemoryStream())
                     {

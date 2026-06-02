@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.DTO.KPITech
+﻿namespace RERPAPI.Model.DTO.KPITech
 {
     public class spGetEmployeeRulePointByKPIEmpPointIDNewResultDTO
     {
@@ -12,7 +6,7 @@ namespace RERPAPI.Model.DTO.KPITech
         public string? STT { get; set; }
         public int? ParentID { get; set; }
         public string? RuleContent { get; set; }
-        public string? FormulaCode { get; set; } 
+        public string? FormulaCode { get; set; }
         public decimal? MaxPercentageAdjustment { get; set; }
         public decimal? MaxPercent { get; set; }
         public decimal? PercentageAdjustment { get; set; }

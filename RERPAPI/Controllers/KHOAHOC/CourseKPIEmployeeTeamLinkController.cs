@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -11,22 +10,26 @@ namespace RERPAPI.Controllers.KHOAHOC
     public class CourseKPIEmployeeTeamLinkController : ControllerBase
     {
         #region Khai báo repository
+
         private readonly CourseKPIEmployeeTeamLinkRepo _teamLinkRepo;
+
         public CourseKPIEmployeeTeamLinkController(CourseKPIEmployeeTeamLinkRepo teamLinkRepo)
         {
             this._teamLinkRepo = teamLinkRepo;
         }
-        #endregion  
+
+        #endregion Khai báo repository
+
         #region Lấy tất cả nhân viên trong team
+
         [HttpGet("getall")]
         public IActionResult GetKPIEmployeeTeamLink(int kpiEmployeeteamID, int departmentID)
         {
             try
             {
                 var teamlinks = SQLHelper<object>.ProcedureToList("spGetCourseKPIEmployeeTeamLink_New",
-                                                                new string[] { "@KPIEmployeeteamID", "@DepartmentID"},
+                                                                new string[] { "@KPIEmployeeteamID", "@DepartmentID" },
                                                                 new object[] { kpiEmployeeteamID, 0 });
-
 
                 return Ok(new
                 {
@@ -44,8 +47,11 @@ namespace RERPAPI.Controllers.KHOAHOC
                 });
             }
         }
-        #endregion
+
+        #endregion Lấy tất cả nhân viên trong team
+
         #region Lưu dữ liệu
+
         [HttpPost("savedata")]
         public async Task<IActionResult> SaveData([FromBody] List<CourseKPIEmployeeTeamLink> teamLinks)
         {
@@ -71,6 +77,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                 });
             }
         }
-        #endregion
+
+        #endregion Lưu dữ liệu
     }
 }

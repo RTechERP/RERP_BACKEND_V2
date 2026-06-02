@@ -1,17 +1,9 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
-using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.AddNewBillExport;
-using RERPAPI.Repo.GenericEntity.Asset;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
 {
@@ -21,10 +13,11 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
     public class OfficeSupplyRequestsController : ControllerBase
     {
         private readonly OfficeSupplyRequestsRepo officesupplyrequests;
-        OfficeSupplyRequestsDetailRepo _officeSupplyRequestsDetailRepo;
+        private OfficeSupplyRequestsDetailRepo _officeSupplyRequestsDetailRepo;
 
         private readonly DepartmentRepo _departmentRepo;
         private readonly RoleConfig _roleConfig;
+
         public OfficeSupplyRequestsController(RoleConfig roleConfig,
             OfficeSupplyRequestsRepo officesupplyrequests,
             OfficeSupplyRequestsDetailRepo officeSupplyRequestsDetailRepo,
@@ -35,7 +28,6 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
             _roleConfig = roleConfig;
             _officeSupplyRequestsDetailRepo = officeSupplyRequestsDetailRepo;
         }
-
 
         [HttpGet("get-data-department")]
         public IActionResult GetdataDepartment()
@@ -65,7 +57,6 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
             }
         }
 
-
         /// <summary>
         /// hàm lấy dữ liệu danh sách đăng ký VPP
         /// </summary>
@@ -75,7 +66,7 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
         /// <param tháng="monthInput"></param>
         /// <returns></returns>
         [HttpGet("get-office-supply-request")]
-        public IActionResult GetOfficeSupplyRequests(string? keyword,DateTime? monthInput, int? departmentID) 
+        public IActionResult GetOfficeSupplyRequests(string? keyword, DateTime? monthInput, int? departmentID)
         {
             try
             {
@@ -104,7 +95,7 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
                         effectiveDepartmentId = currentUser.DepartmentID;
                     }
                 }
-              
+
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
                     "spGetOfficeSupplyRequests",
                     new[] { "@MonthInput", "@KeyWord", "@EmployeeID", "@DepartmentID" },
@@ -154,7 +145,6 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
 
         //        if (isPowerUser)
         //        {
-
         //            if (xemAll)
         //            {
         //                effectiveDepartmentId = 0;
@@ -307,7 +297,6 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
                     error = ex.ToString()
                 });
             }
-
         }
 
         [HttpPost("is-approved")]
@@ -345,6 +334,7 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
                 });
             }
         }
+
         [HttpPost("un-is-approved")]
         public IActionResult UnIsApproved([FromBody] List<int> ids)
         {
@@ -421,7 +411,6 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
         {
             try
             {
-
                 if (dto == null) { return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." }); }
 
                 if (dto.officeSupplyRequest != null)
@@ -451,8 +440,6 @@ namespace RERPAPI.Controllers.HRM.OfficeSupplyManagement
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
-
     }
 }

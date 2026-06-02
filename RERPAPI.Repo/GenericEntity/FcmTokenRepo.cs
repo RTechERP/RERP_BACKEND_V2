@@ -1,13 +1,12 @@
 ﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace RERPAPI.Repo.GenericEntity
 {
     public class FcmTokenRepo : GenericRepo<FcmToken>
     {
-        NotificationTypeLinkRepo notificationTypeLinkRepo;
+        private NotificationTypeLinkRepo notificationTypeLinkRepo;
+
         public FcmTokenRepo(CurrentUser currentUser, NotificationTypeLinkRepo notificationTypeLinkRepo) : base(currentUser)
         {
             this.notificationTypeLinkRepo = notificationTypeLinkRepo;
@@ -24,6 +23,7 @@ namespace RERPAPI.Repo.GenericEntity
               .Distinct()
               .ToList();
         }
+
         public bool checkNotiUser(int notiID, int user)
         {
             var notiLink = notificationTypeLinkRepo.GetAll(t => t.NotificationTypeID == notiID && t.UserID == user).FirstOrDefault();

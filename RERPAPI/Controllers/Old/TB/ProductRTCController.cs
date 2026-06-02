@@ -8,7 +8,6 @@ using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Technical;
 using System.Net.Mime;
 
-
 namespace RERPAPI.Controllers.Old.TB
 {
     [Route("api/[controller]")]
@@ -16,8 +15,7 @@ namespace RERPAPI.Controllers.Old.TB
     [Authorize]
     public class ProductRTCController : ControllerBase
     {
-
-        const int WAREHOUSEID = 1;
+        private const int WAREHOUSEID = 1;
         private readonly ProductGroupRTCRepo _productGroupRTCRepo;
         private readonly ProductRTCRepo _productRTCRepo;
         private readonly ProductLocationRepo _productLocationRepo;
@@ -40,7 +38,6 @@ namespace RERPAPI.Controllers.Old.TB
             _inventoryDemoRepo = inventoryDemoRepo;
             _unitCountKTRepo = unitCountKTRepo;
         }
-
 
         [HttpPost("get-productRTC")]
         public IActionResult GetAll([FromBody] ProductRTCRequetParam request)
@@ -71,7 +68,6 @@ namespace RERPAPI.Controllers.Old.TB
             {
                 //return Ok(new
                 //{
-
                 //    status = 0,
                 //    message = ex.Message,
                 //    error = ex.ToString()
@@ -80,6 +76,7 @@ namespace RERPAPI.Controllers.Old.TB
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-productRTC-group/{warehouseType}")]
         public IActionResult GetAll(int warehouseType = 1)
         {
@@ -109,6 +106,7 @@ namespace RERPAPI.Controllers.Old.TB
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //[HttpPost("upload")]
         //public IActionResult Upload(IFormFile file, string path)
         //{
@@ -180,6 +178,7 @@ namespace RERPAPI.Controllers.Old.TB
             public IFormFile file { get; set; }
             public string path { get; set; }
         }
+
         [HttpPost("upload")]
         [Consumes("multipart/form-data")]
         public IActionResult Upload([FromForm] UploadRequest req)
@@ -201,8 +200,8 @@ namespace RERPAPI.Controllers.Old.TB
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
+
         [HttpGet("get-location")]
         public IActionResult GetLocation(int? warehouseID, int locationType)
         {
@@ -221,7 +220,6 @@ namespace RERPAPI.Controllers.Old.TB
         [HttpGet("get-product-code")]
         public IActionResult GenerateProductCode(int productGroupID)
         {
-
             try
             {
                 string newCode = _productRTCRepo.generateProductCode(productGroupID);
@@ -238,6 +236,7 @@ namespace RERPAPI.Controllers.Old.TB
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("preveiw")]
         public IActionResult GetPreview([FromQuery] string full)
         {
@@ -278,6 +277,7 @@ namespace RERPAPI.Controllers.Old.TB
 
             return File(System.IO.File.OpenRead(normalized), mime);
         }
+
         [HttpPost("save-data-excel")]
         public async Task<IActionResult> SaveDataExcel([FromBody] List<ProductRTCImportExcelDTO> product)
         {
@@ -451,6 +451,7 @@ namespace RERPAPI.Controllers.Old.TB
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] ProductRTCFullDTO product)
         {
@@ -534,13 +535,13 @@ namespace RERPAPI.Controllers.Old.TB
             {
                 var rs = _productRTCRepo.GetByID(productRtcId);
                 return Ok(ApiResponseFactory.Success(rs, ""));
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //[HttpPost("save-data")]
         //public async Task<IActionResult> SaveData([FromBody] ProductRTCFullDTO product)
         //{
@@ -561,7 +562,6 @@ namespace RERPAPI.Controllers.Old.TB
 
         //        if (product.productGroupRTC != null)
         //        {
-
         //            if (product.productGroupRTC.ID <= 0)
         //                await _productGroupRTCRepo.CreateAsync(product.productGroupRTC);
         //            else
@@ -621,6 +621,7 @@ namespace RERPAPI.Controllers.Old.TB
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-unitcount-kt")]
         public IActionResult GetUnitCount()
         {
@@ -628,13 +629,13 @@ namespace RERPAPI.Controllers.Old.TB
             {
                 var rs = _unitCountKTRepo.GetAll();
                 return Ok(ApiResponseFactory.Success(rs, ""));
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-by-qrcode")]
         public IActionResult GetProductByQrCode(string qrCode)
         {
@@ -655,8 +656,6 @@ namespace RERPAPI.Controllers.Old.TB
                     var products = SQLHelper<object>.GetListData(datas, 1);
                     return Ok(ApiResponseFactory.Success(products, $""));
                 }
-
-
             }
             catch (Exception ex)
             {

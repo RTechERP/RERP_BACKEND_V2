@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -29,6 +28,7 @@ namespace RERPAPI.Controllers.HRM
         private readonly ConfigSystemRepo _configSystemRepo;
         private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
         private readonly NotifyRepo _notifyRepo;
+
         public TrackingMarksController(CurrentUser currentUser,
             TaxCompanyRepo taxCompanyRepo,
             DocumentTypeRepo documentTypeRepo,
@@ -90,6 +90,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
@@ -172,7 +173,6 @@ namespace RERPAPI.Controllers.HRM
                     _trackingMarksRepo.Create(entity);
 
                     isCreate = true;
-
                 }
 
                 _trackingMarksSealRepo.CreateListByTrackingMarkId(
@@ -198,7 +198,6 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         [HttpPost("delete-tracking-marks")]
         public IActionResult Delete(int id)
@@ -287,7 +286,6 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         //[HttpPost("upload-file")]
         //public async Task<IActionResult> UploadFile(int id, [FromForm] List<IFormFile> files)
@@ -457,8 +455,6 @@ namespace RERPAPI.Controllers.HRM
             }
         }
 
-
-
         [HttpGet("download-file")]
         public IActionResult DownloadFile(int id, string fileName)
         {
@@ -547,6 +543,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         public class TrackingMarksDTO : TrackingMark
         {
             public List<TrackingMarksSeal> ListSeal { get; set; }

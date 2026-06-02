@@ -1,12 +1,10 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.Old.HandoverMinutes
 {
@@ -40,11 +38,10 @@ namespace RERPAPI.Controllers.Old.HandoverMinutes
         {
             try
             {
-                
                 List<Model.Entities.Department> departments = _departmentRepo.GetAll().ToList();
                 var employees = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
                                 new string[] { "@Keyword" },
-                                new object[] {  "" });
+                                new object[] { "" });
                 var result = employees.Select(e => new
                 {
                     Employee = e,
@@ -85,6 +82,7 @@ namespace RERPAPI.Controllers.Old.HandoverMinutes
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] HandoverMinutesDTO dto)
         {
@@ -176,6 +174,7 @@ namespace RERPAPI.Controllers.Old.HandoverMinutes
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         private string GetNextCodeNumber()
         {
             string prefix = $"BBBG.{DateTime.Now:yy}.{DateTime.Now:MMdd}.";

@@ -1,19 +1,13 @@
 ﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
     public class ProjectTaskRepo : GenericRepo<ProjectTask>
     {
-
-        ProjectRepo _projectRepo;
-        ProjectTaskTypeRepo _projectTaskTypeRepo;
+        private ProjectRepo _projectRepo;
+        private ProjectTaskTypeRepo _projectTaskTypeRepo;
 
         public ProjectTaskRepo(CurrentUser currentUser, ProjectRepo projectRepo, ProjectTaskTypeRepo projectTaskTypeRepo) : base(currentUser)
         {
@@ -83,7 +77,6 @@ namespace RERPAPI.Repo.GenericEntity
             var nodeMap = new Dictionary<int, ProjectTaskTreeNodeParam>();
             var roots = new List<ProjectTaskTreeNodeParam>();
 
-
             // Tạo các node và lưu vào map
 
             foreach (var item in list)
@@ -118,6 +111,5 @@ namespace RERPAPI.Repo.GenericEntity
 
             return roots;
         }
-
-    } 
+    }
 }

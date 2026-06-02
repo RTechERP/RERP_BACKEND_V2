@@ -1,24 +1,21 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using NPOI.HSSF.Record.Chart;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
-using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize]
     public class ProjectJoinSummaryController : ControllerBase
     {
         private CurrentUser _currentUser;
+
         public ProjectJoinSummaryController(CurrentUser currentUser)
         {
             _currentUser = currentUser;
         }
 
-        [HttpGet("get-project-join-summary")]   
+        [HttpGet("get-project-join-summary")]
         public IActionResult GetProjectJoinSummary(int employeeId, int userId, DateTime dateStart, DateTime dateEnd)
         {
             try

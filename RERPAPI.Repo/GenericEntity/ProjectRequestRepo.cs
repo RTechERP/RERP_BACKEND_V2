@@ -1,5 +1,4 @@
-﻿using Azure.Core;
-using RERPAPI.Model.DTO;
+﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Repo.GenericEntity
@@ -16,6 +15,7 @@ namespace RERPAPI.Repo.GenericEntity
             int stt = requestByProject.Count > 0 ? requestByProject.Max(x => (x.STT ?? 0)) + 1 : 1;
             return $"PRQ{requestByProject.Count + 1}";
         }
+
         public bool Validate(ProjectRequest request, out string message)
         {
             message = string.Empty;

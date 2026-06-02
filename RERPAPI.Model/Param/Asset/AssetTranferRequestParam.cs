@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.Param.Asset
+﻿namespace RERPAPI.Model.Param.Asset
 {
     public class AssetTransferRequestParam
     {
@@ -18,4 +12,3 @@ namespace RERPAPI.Model.Param.Asset
         public int PageNumber { get; set; } = 10000;
     }
 }
-

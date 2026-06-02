@@ -8,8 +8,9 @@ namespace RERPAPI.Controllers.Warehouse.Demo
     [ApiController]
     public class ProductRTCQRCodeController : ControllerBase
     {
-        const int WAREHOUSEID = 1;
-        ProductRTCQRCodeRepo qrCodeRepo;
+        private const int WAREHOUSEID = 1;
+        private ProductRTCQRCodeRepo qrCodeRepo;
+
         public ProductRTCQRCodeController(ProductRTCQRCodeRepo qrCodeRepo)
         {
             this.qrCodeRepo = qrCodeRepo;

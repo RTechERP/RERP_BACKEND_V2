@@ -1,30 +1,21 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using DocumentFormat.OpenXml.Office2010.Excel;
-using DocumentFormat.OpenXml.Wordprocessing;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Attributes;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
-using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
 using RERPAPI.Repo.GenericEntity.HRM.HRRecruitmentInterviewAssessment;
-using ZXing;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.HRM.HRRecruitmentInterviewAssessment
 {
     [Route("api/[controller]")]
     [ApiController]
-    
     public class HRRecruitmentInterviewAssessmentController : ControllerBase
     {
-        HRRecruitmentApplicationFormRepo _hRRecruitmentApplicationFormRepo;
-        HRRecruitmentInterviewAssessmentFormRepo _hRRecruitmentInterviewAssessmentFormRepo;
-        HRRecruitmentCandidateRepo _hRRecruitmentCandidateRepo;
-        HRRecruitmentApproveRepo _hRRecruitmentApproveRepo;
-        PerformanceCriteriaRepo _performanceCriteriaRepo;
+        private HRRecruitmentApplicationFormRepo _hRRecruitmentApplicationFormRepo;
+        private HRRecruitmentInterviewAssessmentFormRepo _hRRecruitmentInterviewAssessmentFormRepo;
+        private HRRecruitmentCandidateRepo _hRRecruitmentCandidateRepo;
+        private HRRecruitmentApproveRepo _hRRecruitmentApproveRepo;
+        private PerformanceCriteriaRepo _performanceCriteriaRepo;
+
         public HRRecruitmentInterviewAssessmentController(
             HRRecruitmentApplicationFormRepo hRRecruitmentApplicationFormRepo,
             HRRecruitmentInterviewAssessmentFormRepo hRRecruitmentInterviewAssessmentFormRepo,
@@ -39,13 +30,12 @@ namespace RERPAPI.Controllers.HRM.HRRecruitmentInterviewAssessment
             _hRRecruitmentCandidateRepo = hRRecruitmentCandidateRepo;
             _hRRecruitmentApproveRepo = hRRecruitmentApproveRepo;
         }
-       
+
         [HttpGet("get-data-hr-recruitment-application-form")]
         public async Task<IActionResult> GetDataHRRecruitmentApplicationFormAsync(int HRRecruitmentCandidateID)
         {
             try
             {
-
                 var data = await SqlDapper<object>.ProcedureToListTAsync("spGetHRRecruitmentDataInterview", new { HRRecruitmentCandidateID = HRRecruitmentCandidateID });
                 //return Ok(new
                 //{
@@ -58,9 +48,9 @@ namespace RERPAPI.Controllers.HRM.HRRecruitmentInterviewAssessment
             catch (Exception ex)
             {
                 return Ok(ApiResponseFactory.Fail(null, ex.Message));
-
             }
         }
+
         [HttpGet("get-performance-criteria")]
         public IActionResult GetPerformanceCriteria()
         {
@@ -78,15 +68,14 @@ namespace RERPAPI.Controllers.HRM.HRRecruitmentInterviewAssessment
             catch (Exception ex)
             {
                 return Ok(ApiResponseFactory.Fail(null, ex.Message));
-
             }
         }
+
         [HttpGet("get-data-by-hr-recruit-candidate-id")]
         public async Task<IActionResult> GetDataHRRecruitmentApplicationFormByIDAsync(int HRRecruitmentCandidateID)
         {
             try
             {
-
                 var data = _hRRecruitmentInterviewAssessmentFormRepo.GetAll(c => c.HRRecruitmentCandidateID == HRRecruitmentCandidateID).FirstOrDefault() ?? new HRRecruitmentInterviewAssessmentForm();
                 //return Ok(new
                 //{
@@ -99,9 +88,9 @@ namespace RERPAPI.Controllers.HRM.HRRecruitmentInterviewAssessment
             catch (Exception ex)
             {
                 return Ok(ApiResponseFactory.Fail(null, ex.Message));
-
             }
         }
+
         //[HttpGet("get-data-to-hr-recruit-approve")]
         //public async Task<IActionResult> GetDataToHRRecruitmentApproveAsync(int HRRecruitmentCandidateID)
         //{
@@ -150,7 +139,6 @@ namespace RERPAPI.Controllers.HRM.HRRecruitmentInterviewAssessment
         //    }
         //}
 
-
         [HttpPost("save-data-after-interview")]
         public async Task<IActionResult> PostSaveData([FromBody] HRRecruitmentInterviewAssessmentForm HRRecruitmentInterviewAssessmentForm)
         {
@@ -168,9 +156,8 @@ namespace RERPAPI.Controllers.HRM.HRRecruitmentInterviewAssessment
                         //    message = "Thêm mới phiếu đánh giá phỏng vấn thất bại!"
                         //});
 
-                    return Ok(ApiResponseFactory.Fail(null, "Thêm mới phiếu đánh giá phỏng vấn thất bại!"));
+                        return Ok(ApiResponseFactory.Fail(null, "Thêm mới phiếu đánh giá phỏng vấn thất bại!"));
                     }
-
                 }
                 else
                 {
@@ -182,11 +169,11 @@ namespace RERPAPI.Controllers.HRM.HRRecruitmentInterviewAssessment
                         //    status = 0,
                         //    message = "Cập nhật phiếu đánh giá phỏng vấn thất bại!"
                         //});
-                    return Ok(ApiResponseFactory.Fail(null, "Cập nhật phiếu đánh giá phỏng vấn thất bại!"));
+                        return Ok(ApiResponseFactory.Fail(null, "Cập nhật phiếu đánh giá phỏng vấn thất bại!"));
                     }
                 }
                 var hRRecruitmentCandidate = await _hRRecruitmentCandidateRepo.GetByIDAsync(HRRecruitmentInterviewAssessmentForm.HRRecruitmentCandidateID ?? 0);
-                if (HRRecruitmentInterviewAssessmentForm.ApplicantStatus == 1) // nếu phù hợp thì cập nhật trạng thái tờ khai 
+                if (HRRecruitmentInterviewAssessmentForm.ApplicantStatus == 1) // nếu phù hợp thì cập nhật trạng thái tờ khai
                 {
                     // status = 5: kết quả đạt
                     hRRecruitmentCandidate.Status = 5;
@@ -216,9 +203,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitmentInterviewAssessment
             catch (Exception ex)
             {
                 return Ok(ApiResponseFactory.Fail(null, ex.Message));
-
             }
         }
-
     }
 }

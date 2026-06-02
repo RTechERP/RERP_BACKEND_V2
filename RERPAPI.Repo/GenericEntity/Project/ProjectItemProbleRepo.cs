@@ -1,21 +1,18 @@
 ﻿using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity.Project
 {
     public class ProjectItemProblemRepo : GenericRepo<ProjectItemProblem>
     {
-        ProjectItemRepo _projectItemRepo;
+        private ProjectItemRepo _projectItemRepo;
+
         public ProjectItemProblemRepo(CurrentUser currentUser, ProjectItemRepo projectItemRepo) : base(currentUser)
         {
             _projectItemRepo = projectItemRepo;
         }
+
         public bool CanEdit(ProjectItem item, CurrentUser user)
         {
             var check = SQLHelper<dynamic>.ProcedureToList("spGetProjectEmployeePermisstion",
@@ -27,6 +24,7 @@ namespace RERPAPI.Repo.GenericEntity.Project
                 || user.IsAdmin == true
                 || item.EmployeeIDRequest == user.EmployeeID;
         }
+
         public string UpdateReasonLateProjectItem(int projectItemID, string loginName, int isUpdateProjectItem)
         {
             string reasonLate = "";

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace RERPAPI.Model.Entities;
+﻿namespace RERPAPI.Model.Entities;
 
 public partial class ProjectTaskDifficulty
 {
@@ -21,7 +18,7 @@ public partial class ProjectTaskDifficulty
     public string? Name { get; set; }
 
     /// <summary>
-    /// Yếu tố 
+    /// Yếu tố
     /// </summary>
     public decimal? Factor { get; set; }
 
@@ -56,7 +53,7 @@ public partial class ProjectTaskDifficulty
     public string? UpdatedBy { get; set; }
 
     /// <summary>
-    /// Trạng thái khóa mềm 
+    /// Trạng thái khóa mềm
     /// </summary>
     public bool? IsDeleted { get; set; }
 }

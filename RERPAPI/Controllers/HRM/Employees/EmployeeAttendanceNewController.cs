@@ -1,15 +1,8 @@
-
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NPOI.SS.Formula.Functions;
-using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System;
-using System.Globalization;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers
 {
@@ -21,6 +14,7 @@ namespace RERPAPI.Controllers
         private readonly EmployeeAttendanceRepo _employeeAttendanceRepo;
         private readonly DepartmentRepo _departmentRepo;
         private readonly EmployeeAttendanceNewRepo _employeeAttendanceNewRepo;
+
         public EmployeeAttendanceNewController(EmployeeRepo employeeRepo, EmployeeAttendanceRepo employeeAttendanceRepo, DepartmentRepo departmentRepo, EmployeeAttendanceNewRepo employeeAttendanceNewRepo)
         {
             _employeeRepo = employeeRepo;
@@ -154,7 +148,6 @@ namespace RERPAPI.Controllers
         //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
         //    }
         //}
-
 
         [HttpPost("save-attendance")]
         public async Task<IActionResult> saveAttendance([FromBody] List<EmployeeAttendanceNewDTO> data)
@@ -297,7 +290,7 @@ namespace RERPAPI.Controllers
             };
         }
 
-        static (bool IsLate, int TimeLate, bool IsEarly, int TimeEarly, decimal TotalHour, decimal TotalDay, bool IsLunch)
+        private static (bool IsLate, int TimeLate, bool IsEarly, int TimeEarly, decimal TotalHour, decimal TotalDay, bool IsLunch)
             ComputeAttendance(int departmentId, DateTime date, DateTime? inDt, DateTime? outDt)
         {
             bool isLate = false, isEarly = false, isLunch = false;

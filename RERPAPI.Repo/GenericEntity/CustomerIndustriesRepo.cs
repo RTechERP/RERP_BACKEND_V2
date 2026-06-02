@@ -1,15 +1,10 @@
-﻿using RERPAPI.Model.DTO;
+﻿using Microsoft.EntityFrameworkCore;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class CustomerIndustriesRepo:GenericRepo<CustomerIndustry>
+    public class CustomerIndustriesRepo : GenericRepo<CustomerIndustry>
     {
         public CustomerIndustriesRepo(CurrentUser currentUser) : base(currentUser)
         {

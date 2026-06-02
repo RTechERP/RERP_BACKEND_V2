@@ -1,15 +1,7 @@
-﻿using RERPAPI.Model.Common;
-using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Model.DTO
 {
-   
     public class ProductsSaleDTO
     {
         public ProductSale ProductSale { get; set; }

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.Param.Project
+﻿namespace RERPAPI.Model.Param.Project
 {
     public class ProjectDerpartmentSummaryParamRequest
     {
@@ -15,6 +9,5 @@ namespace RERPAPI.Model.Param.Project
         public string? projectTypeID { get; set; }
         public string? keyword { get; set; }
         public int userTeamID { get; set; }
-       
     }
 }

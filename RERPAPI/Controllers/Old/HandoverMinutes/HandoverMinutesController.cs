@@ -1,11 +1,8 @@
 ﻿using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -26,6 +23,7 @@ namespace RERPAPI.Controllers.Old.HandoverMinutes
             _handoverMinutesRepo = handoverMinutesRepo;
             _handoverMinutesDetailRepo = handoverMinutesDetailRepo;
         }
+
         [HttpGet]
         public IActionResult Get(DateTime dateStart, DateTime dateEnd, string keyWords = "")
         {
@@ -61,7 +59,6 @@ namespace RERPAPI.Controllers.Old.HandoverMinutes
         {
             try
             {
-
                 DateTime start = new DateTime(2000, 1, 1);
                 DateTime end = new DateTime(2099, 12, 31);
                 List<List<dynamic>> handoverList = SQLHelper<dynamic>.ProcedureToList(
@@ -154,12 +151,11 @@ namespace RERPAPI.Controllers.Old.HandoverMinutes
                         }
                     }
 
-
                     // Điền thông tin xác nhận
                     int finalRow = startRow + detailData.Count;
                     sheet.Cell(finalRow + 7, 4).Value = handoverData.AdminWarehouseName?.ToString() ?? "";
                     sheet.Cell(finalRow + 7, 6).Value = handoverData.FullName?.ToString() ?? "";
-                    var receiverCell = sheet.Cell(finalRow + 7, 11); 
+                    var receiverCell = sheet.Cell(finalRow + 7, 11);
                     receiverCell.Value = $"{handoverData.Receiver?.ToString() ?? ""}-{handoverData.ReceiverPhone?.ToString() ?? ""}";
 
                     if (detailData.Count == 1)
@@ -210,5 +206,3 @@ namespace RERPAPI.Controllers.Old.HandoverMinutes
         }
     }
 }
-
-

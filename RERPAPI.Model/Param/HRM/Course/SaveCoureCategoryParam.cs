@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.Param.HRM.Course
+﻿namespace RERPAPI.Model.Param.HRM.Course
 {
     public class SaveCoureCategoryParam
     {
@@ -21,7 +15,5 @@ namespace RERPAPI.Model.Param.HRM.Course
         public int CatalogType { get; set; }
         public List<int> ProjectTypeIDs { get; set; }
         public bool IsDeleted { get; set; }
-
-
     }
 }

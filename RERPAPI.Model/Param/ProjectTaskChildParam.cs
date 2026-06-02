@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.Param
+﻿namespace RERPAPI.Model.Param
 {
     public class ProjectTaskChildParam
     {
@@ -18,6 +12,7 @@ namespace RERPAPI.Model.Param
 
         public DateTime? PlanEndDate { get; set; }
         public int? ParentID { get; set; }
+
         /// <summary>
         /// Loại hạng mục công việc
         /// </summary>
@@ -33,7 +28,6 @@ namespace RERPAPI.Model.Param
         /// </summary>
         public int? EmployeeAssigneeID { get; set; }
 
-
         /// <summary>
         /// Độ phức tạp của công việc (1 - 5)
         /// </summary>
@@ -45,6 +39,5 @@ namespace RERPAPI.Model.Param
         public int? ProjectTaskTypeID { get; set; }
 
         public bool? IsDeletedFromParent { get; set; }
-
     }
 }

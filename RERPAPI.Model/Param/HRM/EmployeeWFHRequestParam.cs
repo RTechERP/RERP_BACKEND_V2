@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace RERPAPI.Model.Param.HRM
+﻿namespace RERPAPI.Model.Param.HRM
 {
     public class EmployeeWFHRequestParam
     {

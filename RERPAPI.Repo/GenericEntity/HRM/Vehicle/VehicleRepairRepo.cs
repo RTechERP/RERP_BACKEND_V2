@@ -1,14 +1,9 @@
 ﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity.HRM.Vehicle
 {
-    public class VehicleRepairRepo:GenericRepo<VehicleRepair>
+    public class VehicleRepairRepo : GenericRepo<VehicleRepair>
     {
         public VehicleRepairRepo(CurrentUser currentUser) : base(currentUser)
         {
@@ -41,7 +36,6 @@ namespace RERPAPI.Repo.GenericEntity.HRM.Vehicle
                 message = "Vui lòng chọn ngày báo cáo sửa chữa";
                 return false;
             }
-         
 
             if (item.CostRepairEstimate != null && !item.CostRepairEstimate.HasValue)
             {
@@ -51,6 +45,5 @@ namespace RERPAPI.Repo.GenericEntity.HRM.Vehicle
 
             return true;
         }
-
     }
 }

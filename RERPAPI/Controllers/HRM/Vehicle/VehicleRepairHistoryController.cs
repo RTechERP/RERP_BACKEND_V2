@@ -1,10 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
-using RERPAPI.Model.Param.HRM.VehicleManagement;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
-using static RERPAPI.Controllers.HRM.Vehicle.ProposeVehicleRepairController;
 
 namespace RERPAPI.Controllers.HRM.Vehicle
 {
@@ -34,7 +31,7 @@ namespace RERPAPI.Controllers.HRM.Vehicle
                 object[] paramValues = new object[] { managementVehicleID };
                 var repairHistory = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
                 var dataList = SQLHelper<dynamic>.GetListData(repairHistory, 0);
-               
+
                 return Ok(ApiResponseFactory.Success(new { dataList }, "Lấy danh sách theo dõi thành công"));
             }
             catch (Exception ex)
@@ -42,6 +39,7 @@ namespace RERPAPI.Controllers.HRM.Vehicle
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //Lấy danh sách file  theo dõi sửa chữa theo xe nội bộ
         [HttpGet("get-vehicle-repair-history-file")]
         public IActionResult GetVehicleRepairHistoryFile(int vehicleRepairHistoryID)
@@ -61,12 +59,14 @@ namespace RERPAPI.Controllers.HRM.Vehicle
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //Khởi tạo DTO truyền vào hàm save
         public class VehicleRepairHistoryDTO
         {
             public VehicleRepairHistory? vehicleRepairHistory { get; set; }
             public List<VehicleRepairHistoryFile>? vehicleRepairHistoryFiles { get; set; }
         }
+
         //Lưu dữ liệu
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] VehicleRepairHistoryDTO dto)
@@ -95,8 +95,6 @@ namespace RERPAPI.Controllers.HRM.Vehicle
                     }
                     else
                         await _vehicleRepairHistoryRepo.UpdateAsync(dto.vehicleRepairHistory);
-
-
                 }
                 if (dto.vehicleRepairHistoryFiles != null && dto.vehicleRepairHistoryFiles.Any())
                 {
@@ -104,14 +102,12 @@ namespace RERPAPI.Controllers.HRM.Vehicle
                     {
                         if (item.ID <= 0)
                         {
-                           
                             await _vsehicleRepairHistoryFileRepo.CreateAsync(item);
                         }
                         else
                         {
                             await _vsehicleRepairHistoryFileRepo.UpdateAsync(item);
                         }
-
                     }
                 }
                 return Ok(ApiResponseFactory.Success(null, " Lưu dữ liệu thành công"));

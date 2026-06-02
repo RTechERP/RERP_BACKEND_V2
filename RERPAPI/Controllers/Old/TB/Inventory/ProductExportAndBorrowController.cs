@@ -1,7 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.Param.TB;
 using RERPAPI.Model.Param.TB.Inventory;
 
 namespace RERPAPI.Controllers.Old.TB.Inventory
@@ -18,7 +16,7 @@ namespace RERPAPI.Controllers.Old.TB.Inventory
                 var products = SQLHelper<dynamic>.ProcedureToList("spGetProductByExportAndBorrowDate",
                 new string[] { "@DateStart", "@DateEnd", "@PageNumber", "@PageSize", "@FilterText", "@WarehouseID" },
                 new object[] { request.DateStart, request.DateEnd, request.Page, request.Size, request.Filtertext, request.WarehouseID });
- 
+
                 return Ok(new
                 {
                     status = 1,
@@ -31,7 +29,6 @@ namespace RERPAPI.Controllers.Old.TB.Inventory
             {
                 return Ok(new
                 {
-
                     status = 0,
                     message = ex.Message,
                     error = ex.ToString()
@@ -39,12 +36,11 @@ namespace RERPAPI.Controllers.Old.TB.Inventory
             }
         }
         [HttpGet("get-borrow-report")]
-        public IActionResult GetBorrowReport(int warehouseID,int warehouseType)
+        public IActionResult GetBorrowReport(int warehouseID, int warehouseType)
         {
-            
-            var dt = SQLHelper<dynamic>.ProcedureToList("spGetRecentTimeAndNumberUse", 
-                new string[] { "@WarehouseID", "@WarehouseType" }, 
-                new object[] { warehouseID ,warehouseType});
+            var dt = SQLHelper<dynamic>.ProcedureToList("spGetRecentTimeAndNumberUse",
+                new string[] { "@WarehouseID", "@WarehouseType" },
+                new object[] { warehouseID, warehouseType });
 
             var data = SQLHelper<dynamic>.GetListData(dt, 0);
             return Ok(ApiResponseFactory.Success(data, ""));

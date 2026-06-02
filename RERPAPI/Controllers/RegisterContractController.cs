@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
@@ -7,8 +6,6 @@ using RERPAPI.Model.Param;
 using RERPAPI.Model.Param.SendEmailRegisterContract;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.DocumentManager;
-using System.Text;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers
 {
@@ -55,6 +52,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // hàm lấy dữ liệu cho combobox
         [HttpGet("get-document-type")]
         public async Task<IActionResult> GetDocumentType()
@@ -69,6 +67,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-tax-company")]
         public async Task<IActionResult> GetTaxCompany()
         {
@@ -82,7 +81,8 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        //lấy dữ liệu theo id 
+
+        //lấy dữ liệu theo id
         [HttpGet("get-data-by-id")]
         public async Task<IActionResult> GetDataByID(int id)
         {
@@ -96,6 +96,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] RegisterContract request)
         {

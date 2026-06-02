@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
@@ -24,6 +23,7 @@ namespace RERPAPI.Controllers.Old.POKH
             _context = context;
             _customerRepo = customerRepo;
         }
+
         [HttpGet("get-part")]
         public IActionResult LoadPart(int id)
         {
@@ -44,6 +44,7 @@ namespace RERPAPI.Controllers.Old.POKH
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-customer")]
         public IActionResult LoadCustomer()
         {
@@ -51,13 +52,13 @@ namespace RERPAPI.Controllers.Old.POKH
             {
                 List<Customer> list = _customerRepo.GetAll(x => x.IsDeleted == false).ToList();
                 return Ok(ApiResponseFactory.Success(list, ""));
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveCustomerParts([FromBody] CustomerPartSaveModel model)
         {

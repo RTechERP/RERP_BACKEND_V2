@@ -1,11 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO.Warehouses.AGV;
-using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.Warehouse.AGV
 {
@@ -53,7 +50,6 @@ namespace RERPAPI.Controllers.Warehouse.AGV
             }
         }
 
-
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] AGVBillImportDTO billImport)
         {
@@ -64,7 +60,6 @@ namespace RERPAPI.Controllers.Warehouse.AGV
 
                 if (billImport.ID <= 0)
                 {
-
                     billImport.BillCode = _billImportRepo.GetBillCode(Convert.ToInt32(billImport.BillType));
                     await _billImportRepo.CreateAsync(billImport);
                 }
@@ -79,7 +74,6 @@ namespace RERPAPI.Controllers.Warehouse.AGV
                     }
                     else await _detailRepo.UpdateAsync(item);
                 }
-
 
                 return Ok(ApiResponseFactory.Success(billImport, "Cập nhật thành công!"));
             }

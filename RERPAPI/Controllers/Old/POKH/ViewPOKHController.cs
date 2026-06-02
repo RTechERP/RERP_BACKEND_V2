@@ -1,14 +1,9 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
-using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -26,6 +21,7 @@ namespace RERPAPI.Controllers.Old.POKH
         private readonly EmployeeRepo _employeeRepo;
         private readonly POKHDetailRepo _pokhDetailRepo;
         private readonly RequestInvoiceDetailRepo _requestInvoiceDetailRepo;
+
         public ViewPOKHController(
             GroupSaleRepo groupSaleRepo,
             MainIndexRepo mainIndexRepo,
@@ -44,25 +40,27 @@ namespace RERPAPI.Controllers.Old.POKH
             _pokhDetailRepo = pokhDetailRepo;
             _requestInvoiceDetailRepo = requestInvoiceDetailRepo;
         }
+
         [HttpGet("get-viewpokh")]
-        public IActionResult Get(DateTime dateTimeS, DateTime dateTimeE, int employeeTeamSaleID, int userID, int poType, int status, int customerID,int warehouseId, string keyword = "")
+        public IActionResult Get(DateTime dateTimeS, DateTime dateTimeE, int employeeTeamSaleID, int userID, int poType, int status, int customerID, int warehouseId, string keyword = "")
         {
             try
             {
-                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetViewPOKHDetail", 
-                         new string[] { "@DateStart", "@DateEnd", "@EmployeeTeamSaleID", "@UserID", "@POType", "@Status", "@CustomerID", "@Keyword", "@WarehouseID" }, 
-                         new object[] { dateTimeS , dateTimeE , employeeTeamSaleID, userID, poType, status, customerID, keyword, warehouseId });
+                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetViewPOKHDetail",
+                         new string[] { "@DateStart", "@DateEnd", "@EmployeeTeamSaleID", "@UserID", "@POType", "@Status", "@CustomerID", "@Keyword", "@WarehouseID" },
+                         new object[] { dateTimeS, dateTimeE, employeeTeamSaleID, userID, poType, status, customerID, keyword, warehouseId });
                 var data = SQLHelper<dynamic>.GetListData(list, 0);
                 var dataExport = SQLHelper<dynamic>.GetListData(list, 1);
                 var dataInvoice = SQLHelper<dynamic>.GetListData(list, 2);
 
-                return Ok(ApiResponseFactory.Success(new { data, dataExport, dataInvoice}, ""));
+                return Ok(ApiResponseFactory.Success(new { data, dataExport, dataInvoice }, ""));
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-user")]
         public IActionResult LoadUser()
         {
@@ -78,6 +76,7 @@ namespace RERPAPI.Controllers.Old.POKH
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-employee-by-teamsale")]
         public IActionResult LoadEmployeeByTeamSale(int teamId)
         {
@@ -93,6 +92,7 @@ namespace RERPAPI.Controllers.Old.POKH
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-customer")]
         public IActionResult LoadCustomer()
         {
@@ -106,6 +106,7 @@ namespace RERPAPI.Controllers.Old.POKH
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-groupsale")]
         public IActionResult LoadGroupSale()
         {
@@ -119,12 +120,13 @@ namespace RERPAPI.Controllers.Old.POKH
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-employee-team-sale")]
         public IActionResult LoadEmployeeTeamSale()
         {
             try
             {
-                var list = _employeeTeamSaleRepo.GetAll(x=>x.ParentID == 0).ToList();
+                var list = _employeeTeamSaleRepo.GetAll(x => x.ParentID == 0).ToList();
                 return Ok(ApiResponseFactory.Success(list, ""));
             }
             catch (Exception ex)
@@ -132,6 +134,7 @@ namespace RERPAPI.Controllers.Old.POKH
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-mainindex")]
         public IActionResult LoadMainIndex()
         {
@@ -147,6 +150,7 @@ namespace RERPAPI.Controllers.Old.POKH
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-data")]
         public IActionResult SavePOKHDetail(SaveViewPOKHDTO dto)
         {

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.Param.Asset
+﻿namespace RERPAPI.Model.Param.Asset
 {
     public class AssetmanagementRequestParam
     {
@@ -17,4 +11,3 @@ namespace RERPAPI.Model.Param.Asset
         public string? Department { get; set; }
     }
 }
-

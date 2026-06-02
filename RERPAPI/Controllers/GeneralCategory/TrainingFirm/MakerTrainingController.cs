@@ -9,8 +9,8 @@ using RERPAPI.Model.Param.Duan.MeetingMinutes;
 using RERPAPI.Model.Param.MakerTraining;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.MakerTrainingFirm;
-//using Microsoft.EntityFrameworkCore;
 
+//using Microsoft.EntityFrameworkCore;
 
 namespace RERPAPI.Controllers.TrainingFirm
 {
@@ -19,12 +19,12 @@ namespace RERPAPI.Controllers.TrainingFirm
     [Authorize]
     public class MakerTrainingController : ControllerBase
     {
-        DepartmentRepo _tsDepartment;
-        FirmRepo _firmRepo;
-        MakerTrainingRepo _makerTrainingRepo;
-        MakerTrainingEmployeeLinkRepo _makertrainingEmployeeLinkRepo;
-        MakerTrainingDocumentRepo _makertrainingDocumentRepo;
-        MakerTrainingTypeRepo _makertrainingTypeRepo;
+        private DepartmentRepo _tsDepartment;
+        private FirmRepo _firmRepo;
+        private MakerTrainingRepo _makerTrainingRepo;
+        private MakerTrainingEmployeeLinkRepo _makertrainingEmployeeLinkRepo;
+        private MakerTrainingDocumentRepo _makertrainingDocumentRepo;
+        private MakerTrainingTypeRepo _makertrainingTypeRepo;
 
         public MakerTrainingController(DepartmentRepo tsDepartment, FirmRepo firmRepo, MakerTrainingRepo makerTrainingRepo, MakerTrainingEmployeeLinkRepo makertrainingEmployeeLinkRepo, MakerTrainingDocumentRepo makertrainingDocumentRepo, MakerTrainingTypeRepo makertrainingTypeRepo)
         {
@@ -44,7 +44,7 @@ namespace RERPAPI.Controllers.TrainingFirm
             {
                 var param = new
                 {
-                    request.DepartmentID ,
+                    request.DepartmentID,
                     request.MakerTrainingTypeID,
                     request.FirmID,
                     request.DateStart,
@@ -54,7 +54,8 @@ namespace RERPAPI.Controllers.TrainingFirm
                 var data = await SqlDapper<object>.ProcedureToListAsync("spGetMakerTraining", param);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
@@ -81,7 +82,6 @@ namespace RERPAPI.Controllers.TrainingFirm
         }
 
         [HttpPost("get-employee-maker-training")]
-
         public IActionResult GetEmployee([FromBody] EmployeeRequestParam employeerequest)
         {
             try
@@ -97,7 +97,6 @@ namespace RERPAPI.Controllers.TrainingFirm
                         asset = SQLHelper<dynamic>.GetListData(employee, 0),
                         total = SQLHelper<dynamic>.GetListData(employee, 1)
                     }
-
                 });
             }
             catch (Exception ex)
@@ -112,7 +111,6 @@ namespace RERPAPI.Controllers.TrainingFirm
         }
 
         [HttpGet("get-departments")]
-
         public IActionResult GetDepartment()
         {
             try
@@ -136,7 +134,6 @@ namespace RERPAPI.Controllers.TrainingFirm
         }
 
         [HttpGet("get-firms")]
-
         public IActionResult GetFirm()
         {
             try
@@ -160,7 +157,6 @@ namespace RERPAPI.Controllers.TrainingFirm
         }
 
         [HttpGet("get-maker-training-type")]
-
         public IActionResult GetMakerTrainingType()
         {
             try
@@ -184,7 +180,7 @@ namespace RERPAPI.Controllers.TrainingFirm
         }
 
         [HttpGet("get-maker-training-document/{id}")]
-        public IActionResult GetMakerTrainingDocument (int id)
+        public IActionResult GetMakerTrainingDocument(int id)
         {
             try
             {
@@ -194,8 +190,8 @@ namespace RERPAPI.Controllers.TrainingFirm
                     status = 1,
                     data = document
                 });
-
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 return BadRequest(new
                 {
@@ -204,7 +200,6 @@ namespace RERPAPI.Controllers.TrainingFirm
                     error = ex.ToString(),
                 });
             }
-
         }
 
         [HttpGet("get-maker-training/{id}")]
@@ -251,8 +246,6 @@ namespace RERPAPI.Controllers.TrainingFirm
                         .Max();
                     dto.MakerTraining.STT = maxStt + 1;
 
-
-                    
                     await _makerTrainingRepo.CreateAsync(dto.MakerTraining);
                     makerTrainingID = dto.MakerTraining.ID; // repo sẽ gán ID sau khi insert
                 }
@@ -266,7 +259,7 @@ namespace RERPAPI.Controllers.TrainingFirm
                 if (dto.MakerTrainingEmployeeLink != null && dto.MakerTrainingEmployeeLink.Any())
                 {
                     var maxSttEmployee = _makertrainingEmployeeLinkRepo.GetAll()
-                        .Where(x => x.MakerTrainingID == makerTrainingID) 
+                        .Where(x => x.MakerTrainingID == makerTrainingID)
                         .Select(x => x.STT ?? 0)
                         .DefaultIfEmpty(0)
                         .Max();
@@ -277,24 +270,23 @@ namespace RERPAPI.Controllers.TrainingFirm
 
                         if (employeetraining.ID <= 0)
                         {
-                          sttEmployeeCounter++;
-                          employeetraining.STT = sttEmployeeCounter;
-                        await _makertrainingEmployeeLinkRepo.CreateAsync(employeetraining);
-                        }    
-                         
+                            sttEmployeeCounter++;
+                            employeetraining.STT = sttEmployeeCounter;
+                            await _makertrainingEmployeeLinkRepo.CreateAsync(employeetraining);
+                        }
                         else
-                           await _makertrainingEmployeeLinkRepo.UpdateAsync(employeetraining);
+                            await _makertrainingEmployeeLinkRepo.UpdateAsync(employeetraining);
                     }
                 }
-                    if(dto.DeletedEmployees.Count > 0)
-                    {
-                    foreach( var item in dto.DeletedEmployees)
+                if (dto.DeletedEmployees.Count > 0)
+                {
+                    foreach (var item in dto.DeletedEmployees)
                     {
                         MakerTrainingEmployeeLink employeemodel = _makertrainingEmployeeLinkRepo.GetByID(item);
                         employeemodel.IsDeleted = true;
                         await _makertrainingEmployeeLinkRepo.UpdateAsync(employeemodel);
                     }
-                    }
+                }
 
                 // File training
                 if (dto.MakerTrainingDocument != null && dto.MakerTrainingDocument.Any())
@@ -304,7 +296,7 @@ namespace RERPAPI.Controllers.TrainingFirm
                         .Select(x => x.STT ?? 0)
                         .DefaultIfEmpty(0)
                         .Max();
-                     int sttFileCounter = maxSttFile;
+                    int sttFileCounter = maxSttFile;
                     foreach (var fileTraining in dto.MakerTrainingDocument)
                     {
                         fileTraining.MakerTrainingID = makerTrainingID;
@@ -316,7 +308,6 @@ namespace RERPAPI.Controllers.TrainingFirm
                             fileTraining.CreatedDate = DateTime.Now;
                             await _makertrainingDocumentRepo.CreateAsync(fileTraining);
                         }
-                            
                         else
                             _makertrainingDocumentRepo.Update(fileTraining);
                     }
@@ -397,7 +388,6 @@ namespace RERPAPI.Controllers.TrainingFirm
                     status = 1,
                     message = "" +
                     "Thêm thành công.",
-                  
                 });
             }
             catch (Exception ex)
@@ -423,11 +413,9 @@ namespace RERPAPI.Controllers.TrainingFirm
                     return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng chọn mục training để xóa"));
                 foreach (var item in ids)
                 {
-
                     var project = _makerTrainingRepo.GetByID(item);
                     project.IsDeleted = true;
                     await _makerTrainingRepo.UpdateAsync(project);
-
                 }
                 return Ok(ApiResponseFactory.Success(ids, "Xóa thành công"));
             }
@@ -436,11 +424,5 @@ namespace RERPAPI.Controllers.TrainingFirm
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-
-
-
-
-
     }
 }

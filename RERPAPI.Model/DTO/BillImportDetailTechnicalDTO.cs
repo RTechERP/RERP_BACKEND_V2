@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.DTO
+﻿namespace RERPAPI.Model.DTO
 {
     public class BillImportDetailTechnicalDTO
     {
@@ -41,6 +35,7 @@ namespace RERPAPI.Model.DTO
 
         // Các trường mở rộng từ join
         public string? ProductName { get; set; }
+
         public string? ProductCode { get; set; }
         public string? ProductCodeRTC { get; set; }
         public string? Maker { get; set; }
@@ -49,5 +44,4 @@ namespace RERPAPI.Model.DTO
         public string? ProductQRCode { get; set; }
         public string? EmployeeBorrowName { get; set; }
     }
-
 }

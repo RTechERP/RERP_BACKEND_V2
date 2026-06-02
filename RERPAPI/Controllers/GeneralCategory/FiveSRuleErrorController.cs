@@ -9,7 +9,6 @@ namespace RERPAPI.Controllers.GeneralCategory
 {
     [Route("api/[controller]")]
     [ApiController]
-
     public class FiveSRuleErrorController : ControllerBase
     {
         private readonly FiveSRuleErrorRepo _fiveSRuleErrorRepo;

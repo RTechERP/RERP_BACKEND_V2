@@ -1,19 +1,17 @@
 ﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 namespace RERPAPI.Repo.GenericEntity.HRM
 {
     public class EmployeeNightShiftRepo : GenericRepo<EmployeeNighShift>
     {
         private readonly CurrentUser _currentUser;
+
         public EmployeeNightShiftRepo(CurrentUser currentUser) : base(currentUser)
         {
             _currentUser = currentUser;
         }
+
         public bool Validate(EmployeeNighShift item, out string message)
         {
             message = string.Empty;
@@ -32,14 +30,14 @@ namespace RERPAPI.Repo.GenericEntity.HRM
                 return false;
             }
 
-            // 3. Bắt buộc nhập ngày đăng ký 
+            // 3. Bắt buộc nhập ngày đăng ký
             if (!item.DateRegister.HasValue)
             {
                 message = "Vui lòng chọn Ngày đăng ký.";
                 return false;
             }
 
-            // 4. Bắt buộc nhập lý do 
+            // 4. Bắt buộc nhập lý do
             if (string.IsNullOrWhiteSpace(item.Location))
             {
                 message = "Vui lòng nhập Lý do.";

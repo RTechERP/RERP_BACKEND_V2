@@ -1,17 +1,8 @@
-﻿using DocumentFormat.OpenXml.Drawing.Charts;
-using DocumentFormat.OpenXml.Office2010.Excel;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using NPOI.SS.Formula.Functions;
-using RERPAPI.Middleware;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
-using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.HRM.ProductProtectiveGear;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.HRM;
-using System.IO;
 
 namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
 {
@@ -25,9 +16,10 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
         private readonly ProductRTCRepo _productRTCRepo;
         private readonly ProductLocationRepo _productLocationRepo;
         private readonly ConfigSystemRepo _configSystemRepo;
-        string pathServer = "\\\\192.168.1.190\\Common\\11. HCNS";
-        string pathPattern = $@"DoPhongSach\Anh";
-        string urlAPI = $@"http://192.168.1.2:8083/api/hcns";
+        private string pathServer = "\\\\192.168.1.190\\Common\\11. HCNS";
+        private string pathPattern = $@"DoPhongSach\Anh";
+        private string urlAPI = $@"http://192.168.1.2:8083/api/hcns";
+
         public ProductProtectiveGearController(ProductGroupRTCRepo productGroupRTCRepo, UnitCountRepo unitCountRepo, FirmRepo firmRepo, ProductLocationRepo productLocationRepo, ProductRTCRepo productRTCRepo, ConfigSystemRepo configSystemRepo)
         {
             _productGroupRTCRepo = productGroupRTCRepo;
@@ -39,7 +31,7 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
         }
 
         [HttpGet("get-product-group")]
-        public IActionResult GetProductGroup( int warehouseID)
+        public IActionResult GetProductGroup(int warehouseID)
         {
             try
             {
@@ -51,6 +43,7 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-product-rtc")]
         public IActionResult GetProductRTC([FromQuery] ProductRTCParam param)
         {
@@ -58,7 +51,7 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
             {
                 var data = SQLHelper<object>.ProcedureToList("spGetProductRTC",
                 new string[] { "@ProductGroupID", "@Keyword", "@CheckAll", "@WarehouseID" },
-                new object[] { param.ProductGroupID, param.KeyWord??"", 1, param.WarehouseID }
+                new object[] { param.ProductGroupID, param.KeyWord ?? "", 1, param.WarehouseID }
                 );
                 var data0 = SQLHelper<object>.GetListData(data, 0);
                 return Ok(ApiResponseFactory.Success(data0, ""));
@@ -68,6 +61,7 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-unit-count")]
         public IActionResult GetUnitCount()
         {
@@ -81,12 +75,13 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-firm")]
         public IActionResult GetFirm()
         {
             try
             {
-                var data = _firmRepo.GetAll(c=>c.FirmType ==2).OrderByDescending(c=>c.ID);
+                var data = _firmRepo.GetAll(c => c.FirmType == 2).OrderByDescending(c => c.ID);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
@@ -94,12 +89,13 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-product-location")]
         public IActionResult GetProductLocation(int wareHouseID)
         {
             try
             {
-                var data = _productLocationRepo.GetAll(c=>c.WarehouseID == wareHouseID);
+                var data = _productLocationRepo.GetAll(c => c.WarehouseID == wareHouseID);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
@@ -107,8 +103,9 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-image-url")]
-        public IActionResult GetImageUrl(string LocationImg, string ProductCode )
+        public IActionResult GetImageUrl(string LocationImg, string ProductCode)
         {
             try
             {
@@ -121,14 +118,15 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-data")]
-        public async Task<IActionResult> PostSaveDataAsync([FromBody] ProductRTC productRTC,int warehouseType)
+        public async Task<IActionResult> PostSaveDataAsync([FromBody] ProductRTC productRTC, int warehouseType)
         {
             try
             {
-                if (_productRTCRepo.checkExistProductCodeRTC(productRTC,warehouseType)==true )
+                if (_productRTCRepo.checkExistProductCodeRTC(productRTC, warehouseType) == true)
                 {
-                    string message =$"Mã sản phẩm [{productRTC.ProductCode}] đã tồn tại!";
+                    string message = $"Mã sản phẩm [{productRTC.ProductCode}] đã tồn tại!";
                     return BadRequest(ApiResponseFactory.Fail(null, message));
                 }
                 if (productRTC.ID <= 0)
@@ -146,12 +144,12 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("upload-file")]
         public async Task<IActionResult> PostUploadImages([FromQuery] int productRTCID)
         {
             try
             {
-
                 var productRTC = _productRTCRepo.GetByID(productRTCID);
                 if (productRTC == null)
                     return NotFound("Product not found");
@@ -225,7 +223,6 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
 
                         var uniqueFileName = $"{productRTC.ProductCode}_{originalFileName}{fileExtension}";
 
-
                         //var uniqueFileName = originalFileName;
                         var fullPath = Path.Combine(targetFolder, uniqueFileName);
 
@@ -248,7 +245,6 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                         // cập nhật DB sau khi upload OK
                         productRTC.LocationImg = file.FileName;
                         _productRTCRepo.Update(productRTC);
-
                     }
                 }
                 return Ok(ApiResponseFactory.Success(uploadResults, $"Upload thành công {uploadResults.Count} file!"));
@@ -258,6 +254,5 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-     
     }
 }

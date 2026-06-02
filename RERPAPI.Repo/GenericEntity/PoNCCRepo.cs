@@ -18,7 +18,7 @@ namespace RERPAPI.Repo.GenericEntity
         private PONCCDetailLogRepo _repoDetailLog;
         private SupplierSaleRepo _supplierSaleRepo;
         private ProjectPartlistPurchaseRequestRepo _prjPartListRepo;
-        CurrentUser _currentUser;
+        private CurrentUser _currentUser;
 
         private string[] ones = { "", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen" };
         private string[] tens = { "", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety" };
@@ -46,7 +46,6 @@ namespace RERPAPI.Repo.GenericEntity
             ProjectPartlistPurchaseRequestRepo prjPartListRepo,
             SupplierSaleRepo supplierSaleRepo) : base(currentUser)
         {
-
             _currentUser = currentUser;
             _pONCCDetailRepo = pONCCDetailRepo;
             _repoRulePay = pONCCRulePayRepo;
@@ -71,6 +70,7 @@ namespace RERPAPI.Repo.GenericEntity
             var lstPONCCDetail = pONCCDTO.lstPONCCDetail;
 
             #region validate cho poncc bao gôm rulepayId
+
             if (model.ID > 0)
             {
                 if (!(model.Status == 0 || model.Status == 5) && !(_currentUser.EmployeeID == 178 || _currentUser.IsAdmin))
@@ -178,7 +178,8 @@ namespace RERPAPI.Repo.GenericEntity
                 message = "Vui lòng nhập Ngày giao hàng";
                 return false;
             }
-            #endregion
+
+            #endregion validate cho poncc bao gôm rulepayId
 
             if (pONCCDTO.lstPrjPartlistPurchaseRequest.Count() > 0)
             {
@@ -190,7 +191,7 @@ namespace RERPAPI.Repo.GenericEntity
 
                     if (totalPrice > totalPriceRequest)
                     {
-                        message = $@"Tổng Thành tiền không được lớn hơn tổng Thành tiền duyệt mua ({totalPriceRequest.ToString("n2")}). 
+                        message = $@"Tổng Thành tiền không được lớn hơn tổng Thành tiền duyệt mua ({totalPriceRequest.ToString("n2")}).
                                 Vui lòng kiểm tra lại!";
                         return false;
                     }
@@ -215,7 +216,7 @@ namespace RERPAPI.Repo.GenericEntity
                 }
             }
 
-            //check lại sau 
+            //check lại sau
             if ((bool)model.OrderQualityNotMet && string.IsNullOrWhiteSpace(model.ReasonForFailure))
             {
                 message = $"Vui lòng nhập lý do không đạt chất lượng!";
@@ -257,7 +258,6 @@ namespace RERPAPI.Repo.GenericEntity
                 return false;
             }
 
-
             return true;
         }
 
@@ -297,6 +297,7 @@ namespace RERPAPI.Repo.GenericEntity
 
             return code;
         }
+
         public string GetBillCode(PONCC model)
         {
             string code = model.POType == 0 ? "DMH" : "DEMO";
@@ -320,6 +321,7 @@ namespace RERPAPI.Repo.GenericEntity
 
             return code;
         }
+
         public async Task UpdatePurchaseRequest(int projectPartlistPurchaseRequestID, int supplierSaleID)
         {
             ProjectPartlistPurchaseRequest request = _prjPartListRepo.
@@ -334,6 +336,7 @@ namespace RERPAPI.Repo.GenericEntity
                 await _prjPartListRepo.UpdateAsync(request);
             }
         }
+
         public async Task UpdateTinhHinhDonHang(BillImportApprovedDTO lstModels, bool isapproved)
         {
             int PONCCID = 0;
@@ -373,19 +376,17 @@ namespace RERPAPI.Repo.GenericEntity
                 await UpdateAsync(pONCC);
             }
         }
+
         private bool CheckPONCCDetaila(List<PONCCDetail> dt)
         {
             int dem = 0;
             for (int i = 0; i < dt.Count; i++)
             {
                 dem = dt[i].Soluongcon == 0 ? dem + 1 : dem;
-
             }
             if (dem == dt.Count) return true;
             return false;
         }
-
-
 
         public string ConvertVietnameseToEnglish(string s)
         {
@@ -412,7 +413,6 @@ namespace RERPAPI.Repo.GenericEntity
 
         public string ConvertNumberToTextEnglish(decimal number, string currencyType)
         {
-
             if (number == 0) return "zero";
 
             string words = "";
@@ -496,8 +496,8 @@ namespace RERPAPI.Repo.GenericEntity
             return words;
         }
 
-
         #region Đọc số tiền bằng chữ tiếng việt
+
         public string ConvertNumberToTextVietNamese(decimal num, string currencyType)
         {
             try
@@ -746,7 +746,8 @@ namespace RERPAPI.Repo.GenericEntity
 
             return kq.Trim();
         }
-        #endregion
+
+        #endregion Đọc số tiền bằng chữ tiếng việt
     }
 
     public class UnitCurrency

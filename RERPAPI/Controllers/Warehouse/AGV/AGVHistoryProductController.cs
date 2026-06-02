@@ -1,12 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.Warehouse.AGV
 {
@@ -15,12 +13,12 @@ namespace RERPAPI.Controllers.Warehouse.AGV
     [Authorize]
     public class AGVHistoryProductController : ControllerBase
     {
-        const int WAREHOUSE_ID = 1;
+        private const int WAREHOUSE_ID = 1;
         private readonly IConfiguration _configuration;
         private CurrentUser _currentUser;
         private readonly AGVHistoryProductRepo _historyProductRepo;
 
-        public AGVHistoryProductController(IConfiguration configuration,CurrentUser currentUser, AGVHistoryProductRepo historyProductRepo)
+        public AGVHistoryProductController(IConfiguration configuration, CurrentUser currentUser, AGVHistoryProductRepo historyProductRepo)
         {
             _configuration = configuration;
             _currentUser = currentUser;
@@ -41,7 +39,6 @@ namespace RERPAPI.Controllers.Warehouse.AGV
             }
         }
 
-
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] List<AGVHistoryProduct> historyProducts)
         {
@@ -59,7 +56,6 @@ namespace RERPAPI.Controllers.Warehouse.AGV
                 {
                     if (item.ID <= 0)
                     {
-
                         item.Status = 7;
                         if (_currentUser.IsAdmin || isAdminWarehouse)
                         {

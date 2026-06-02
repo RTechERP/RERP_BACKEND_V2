@@ -6,10 +6,9 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class VisitFactoryRepo : GenericRepo<VisitFactory>
     {
-
-        EmployeeRepo employeeRepo;
-        VisitFactoryDetailRepo visitFactoryDetailRepo;
-        EmployeeSendEmailRepo sendEmailRepo;
+        private EmployeeRepo employeeRepo;
+        private VisitFactoryDetailRepo visitFactoryDetailRepo;
+        private EmployeeSendEmailRepo sendEmailRepo;
         private readonly EmailHelper _emailHelper;
 
         public VisitFactoryRepo(CurrentUser currentUser, EmployeeRepo employeeRepo, VisitFactoryDetailRepo visitFactoryDetailRepo, EmployeeSendEmailRepo employeeSendEmailRepo, EmailHelper emailHelper) : base(currentUser)
@@ -117,5 +116,3 @@ namespace RERPAPI.Repo.GenericEntity
         }
     }
 }
-
-

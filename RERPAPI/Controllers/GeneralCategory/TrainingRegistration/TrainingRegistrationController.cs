@@ -16,8 +16,9 @@ namespace RERPAPI.Controllers.GeneralCategory.TrainingRegistration
         private TrainingRegistrationApprovedFlowRepo _trainingRegistrationApprovedFlowRepo;
         private TrainingRegistrationFileRepo _trainingRegistrationFileRepo;
         private TrainingRegistrationDetailRepo _trainingRegistrationDetailRepo;
-        TrainingRegistrationCategoryRepo _trainingRegistrationCategoryRepo;
+        private TrainingRegistrationCategoryRepo _trainingRegistrationCategoryRepo;
         private EmployeeRepo _employeeRepo;
+
         public TrainingRegistrationController(TrainingRegistrationRepo trainingRegistrationRepo, TrainingRegistrationApprovedRepo trainingRegistrationApprovedRepo, TrainingRegistrationApprovedFlowRepo trainingRegistrationApprovedFlowRepo, TrainingRegistrationFileRepo trainingRegistrationFileRepo, TrainingRegistrationDetailRepo trainingRegistrationDetailRepo, TrainingRegistrationCategoryRepo trainingRegistrationCategoryRepo, EmployeeRepo employeeRepo)
         {
             _trainingRegistrationRepo = trainingRegistrationRepo;
@@ -67,7 +68,6 @@ namespace RERPAPI.Controllers.GeneralCategory.TrainingRegistration
 
                 bool success = false;
 
-
                 // Save Training registration data
                 if (model.ID <= 0)
                 {
@@ -110,13 +110,8 @@ namespace RERPAPI.Controllers.GeneralCategory.TrainingRegistration
                             DateApproved = dateApproved,
                             CreatedBy = _currentUser.LoginName,
                             UpdatedBy = _currentUser.LoginName
-
                         });
                     }
-
-
-
-
 
                     await _trainingRegistrationApprovedRepo.CreateRangeAsync(approvedList);
                     success = true;

@@ -1,29 +1,24 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
-using RERPAPI.Model.DTO.Asset;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Model.Param.HRM;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.GeneralCatetogy;
 using RERPAPI.Repo.GenericEntity.HRM;
-using System;
 
 namespace RERPAPI.Controllers.HRM.Employees
 {
     [ApiController]
-
     [Route("api/[controller]")]
     public class EmployeeBussinessController : ControllerBase
     {
         private EmployeeBussinessRepo _employeeBussinessRepo;
-        EmployeeBussinessFileRepo _employeeBussinessFileRepo;
-        EmployeeBussinessVehicleRepo _employeeBussinessVehicleRepo;
+        private EmployeeBussinessFileRepo _employeeBussinessFileRepo;
+        private EmployeeBussinessVehicleRepo _employeeBussinessVehicleRepo;
 
         public EmployeeBussinessController(EmployeeBussinessRepo employeeBussinessRepo, EmployeeBussinessFileRepo employeeBussinessFileRepo, EmployeeBussinessVehicleRepo employeeBussinessVehicleRepo)
         {
@@ -51,7 +46,6 @@ namespace RERPAPI.Controllers.HRM.Employees
                     status = 1,
                     data = result
                 });
-
             }
             catch (Exception ex)
             {
@@ -63,7 +57,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 });
             }
         }
-    
+
         [HttpPost("get-employee-bussinesss-person")]
         public IActionResult GetEmployeeBussinessPerson(EmployeeBussinessInWebRequestParam param)
         {
@@ -74,8 +68,8 @@ namespace RERPAPI.Controllers.HRM.Employees
                 var firstDay = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
                 var lastDay = firstDay.AddMonths(1).AddDays(-1);
                 var arrParamName = new string[] { "@DateStart", "@DateEnd", "@Keyword", "@EmployeeID", "@IsApproved", "@Type", "@VehicleID", "@NotCheckIn" };
-                var arrParamValue = new object[] { param.DateStart ?? firstDay, param.DateEnd ?? lastDay, param.Keyword ?? "",currentUser.EmployeeID, param.IsApproved ?? 0, param.Type??0, param.VehicleID??0, param.NotCheckIn??-1};
-                    var employeeBussiness = SQLHelper<object>.ProcedureToList("spGetEmployeeBussinessInWeb", arrParamName, arrParamValue);
+                var arrParamValue = new object[] { param.DateStart ?? firstDay, param.DateEnd ?? lastDay, param.Keyword ?? "", currentUser.EmployeeID, param.IsApproved ?? 0, param.Type ?? 0, param.VehicleID ?? 0, param.NotCheckIn ?? -1 };
+                var employeeBussiness = SQLHelper<object>.ProcedureToList("spGetEmployeeBussinessInWeb", arrParamName, arrParamValue);
 
                 var result = SQLHelper<object>.GetListData(employeeBussiness, 0);
 
@@ -84,7 +78,6 @@ namespace RERPAPI.Controllers.HRM.Employees
                     status = 1,
                     data = result
                 });
-
             }
             catch (Exception ex)
             {
@@ -96,6 +89,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 });
             }
         }
+
         [HttpPost("get-employee-bussiness-person")]
         public IActionResult GetEmployeeBussinessPerson(EmployeeBussinessParam param)
         {
@@ -124,8 +118,6 @@ namespace RERPAPI.Controllers.HRM.Employees
         })
         .ToList();
                 return Ok(ApiResponseFactory.Success(new { result, summary }, "Lấy dữ liệu thành công"));
-
-
             }
             catch (Exception ex)
             {
@@ -134,7 +126,6 @@ namespace RERPAPI.Controllers.HRM.Employees
         }
 
         [HttpPost("list-summary-employee-bussiness")]
-
         public IActionResult ListSummaryEmployeeOnleavePerson(EmployeeBussinessSummaryParam request)
         {
             try
@@ -172,6 +163,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2")]
         [HttpGet("detail")]
         public IActionResult GetEmployeeBussinessDetail(int employeeId, DateTime dayBussiness)
@@ -190,7 +182,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-      
+
         [HttpGet("deleted")]
         public async Task<IActionResult> deleteEmployeeBussiness([FromQuery] List<int> listID)
         {
@@ -203,7 +195,6 @@ namespace RERPAPI.Controllers.HRM.Employees
                         var employeeBussiness = _employeeBussinessRepo.GetByID(id);
                         employeeBussiness.IsDeleted = true;
                         if (employeeBussiness != null) await _employeeBussinessRepo.UpdateAsync(employeeBussiness);
-
                     }
                 }
                 return Ok(ApiResponseFactory.Success(null, ""));
@@ -214,9 +205,7 @@ namespace RERPAPI.Controllers.HRM.Employees
             }
         }
 
-
         [RequiresPermission("N1,N2")]
-
         [HttpPost("save-data")]
         public async Task<IActionResult> saveEmployeeBussiness([FromBody] List<EmployeeBussiness> employeeBussiness)
         {
@@ -237,7 +226,6 @@ namespace RERPAPI.Controllers.HRM.Employees
                     }
                 }
 
-
                 return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
             }
             catch (Exception ex)
@@ -245,6 +233,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1")]
         [HttpPost("save-approve-tbp")]
         public async Task<IActionResult> SaveApproveTBP([FromBody] List<EmployeeBussiness> employeeBussiness)
@@ -266,7 +255,6 @@ namespace RERPAPI.Controllers.HRM.Employees
                     }
                 }
 
-
                 return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
             }
             catch (Exception ex)
@@ -274,6 +262,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2")]
         [HttpPost("save-approve-hr")]
         public async Task<IActionResult> SaveApproveHR([FromBody] List<EmployeeBussiness> employeeBussiness)
@@ -295,18 +284,17 @@ namespace RERPAPI.Controllers.HRM.Employees
                     }
                 }
 
-
                 return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
             }
             catch (Exception ex)
-            {   
+            {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         [HttpPost("save-data-employee")]
         public async Task<IActionResult> SaveDataEmployee([FromBody] EmployeeBussinessDTO dto)
-                {
+        {
             try
             {
                 if (dto == null) { return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." }); }
@@ -323,7 +311,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                     {
                         dto.employeeBussinessFiles.EmployeeBussinessID = dto.employeeBussiness.ID;
                         await _employeeBussinessFileRepo.CreateAsync(dto.employeeBussinessFiles);
-                    }    
+                    }
                     else
                         await _employeeBussinessFileRepo.UpdateAsync(dto.employeeBussinessFiles);
                 }
@@ -344,32 +332,31 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-       
-            [HttpPost("save-file")]
-            public async Task<IActionResult> SaveFile([FromBody] EmployeeBussinessFile employeeBussinessFile)
+
+        [HttpPost("save-file")]
+        public async Task<IActionResult> SaveFile([FromBody] EmployeeBussinessFile employeeBussinessFile)
+        {
+            try
             {
-                try
+                if (employeeBussinessFile.ID <= 0)
                 {
-                    if (employeeBussinessFile.ID <= 0)
-                    {
-                 
-                        await _employeeBussinessFileRepo.CreateAsync(employeeBussinessFile);
-                    }
-                    else await _employeeBussinessFileRepo.UpdateAsync(employeeBussinessFile);
-                    return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
+                    await _employeeBussinessFileRepo.CreateAsync(employeeBussinessFile);
                 }
-                catch (Exception ex)
-                {
-                    return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-                }
+                else await _employeeBussinessFileRepo.UpdateAsync(employeeBussinessFile);
+                return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
             }
-       
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpGet("get-file-by-id")]
         public IActionResult GetFileByID(int bussinessID)
         {
             try
             {
-                var file = _employeeBussinessFileRepo.GetAll(x => x.EmployeeBussinessID == bussinessID&&x.IsDeleted!=true);
+                var file = _employeeBussinessFileRepo.GetAll(x => x.EmployeeBussinessID == bussinessID && x.IsDeleted != true);
                 return Ok(ApiResponseFactory.Success(file, ""));
             }
             catch (Exception ex)
@@ -377,8 +364,9 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-employee-buissiness-vehicle")]
-        public IActionResult GetEmployeeBussinessVehicle (int id)
+        public IActionResult GetEmployeeBussinessVehicle(int id)
         {
             try
             {
@@ -394,6 +382,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-by-id")]
         public IActionResult GetByID(int id)
         {
@@ -408,5 +397,4 @@ namespace RERPAPI.Controllers.HRM.Employees
             }
         }
     }
-
 }

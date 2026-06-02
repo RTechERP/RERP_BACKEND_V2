@@ -38,6 +38,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 });
             }
         }
+
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] TSStatusAsset statusasset)
         {

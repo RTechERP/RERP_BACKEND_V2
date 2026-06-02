@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.Param
+﻿namespace RERPAPI.Model.Param
 {
     public class EmployeeOnLeaveParam
     {
@@ -17,6 +11,5 @@ namespace RERPAPI.Model.Param
         public int year { get; set; }
         public int IDApprovedTP { get; set; }
         public int status { get; set; } = -1;
-        
     }
 }

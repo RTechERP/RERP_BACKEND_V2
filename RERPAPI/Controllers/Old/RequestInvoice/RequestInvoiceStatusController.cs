@@ -1,6 +1,4 @@
-﻿using DocumentFormat.OpenXml.Office2010.Excel;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -17,6 +15,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
         private readonly RequestInvoiceStatusRepo _requestInvoiceStatusRepo;
         private readonly RequestInvoiceFileRepo _requestInvoiceFileRepo;
         private readonly RequestInvoiceStatusLinkRepo _requestInvoiceStatusLinkRepo;
+
         public RequestInvoiceStatusController(
             RequestInvoiceStatusRepo requestInvoiceStatusRepo,
             RequestInvoiceStatusLinkRepo requestInvoiceStatusLinkRepo,
@@ -27,6 +26,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
             _requestInvoiceFileRepo = requestInvoiceFileRepo;
             _requestInvoiceStatusLinkRepo = requestInvoiceStatusLinkRepo;
         }
+
         [HttpGet("get-status-invoice")]
         public IActionResult GetMainStatusInvoice(int requestInvoiceId)
         {
@@ -41,6 +41,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-status")]
         public IActionResult GetStatus()
         {
@@ -54,6 +55,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-status-file")]
         public IActionResult GetStatusFile(int requestInvoiceId)
         {
@@ -121,7 +123,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
         {
             try
             {
-                if(model.ID > 0)
+                if (model.ID > 0)
                 {
                     await _requestInvoiceStatusRepo.UpdateAsync(model);
                 }
@@ -136,6 +138,5 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

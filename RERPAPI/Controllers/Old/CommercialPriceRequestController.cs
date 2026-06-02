@@ -1,15 +1,9 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NPOI.HSSF.Record.Chart;
-using NPOI.OpenXmlFormats.Dml;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Repo.GenericEntity;
-using System.Globalization;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.CommercialPriceRequest
 {
@@ -199,7 +193,6 @@ namespace RERPAPI.Controllers.CommercialPriceRequest
                             await _commercialPriceRequestRepo.UpdateAsync(entity);
                         }
                     }
-
                 }
                 return Ok(new
                 {
@@ -213,5 +206,4 @@ namespace RERPAPI.Controllers.CommercialPriceRequest
             }
         }
     }
-
 }

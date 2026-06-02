@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace RERPAPI.Model.DTO
 {
     public class SubmitExamRequestDTO

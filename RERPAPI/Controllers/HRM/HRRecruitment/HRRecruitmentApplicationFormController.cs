@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using RERPAPI.Attributes;
@@ -8,13 +7,11 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
-using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.HRM
 {
@@ -77,8 +74,9 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [Authorize]
-        //API lấy danh sách tờ khai 
+        //API lấy danh sách tờ khai
         [HttpGet("get-all-application-form")]
         public IActionResult GetAllApplicationForm(string? filterText, int departmentID = 0)
         {
@@ -103,7 +101,7 @@ namespace RERPAPI.Controllers.HRM
                 var applicationForm = SQLHelper<dynamic>.ProcedureToList(
                                    "spGetHRCandidateApplicationForm",
                                    new[] { "@FilterText", "@DepartmentID", "@RequestID" },
-                                   new object[] { filterText, departmentID,requestID });
+                                   new object[] { filterText, departmentID, requestID });
                 var dataList = SQLHelper<dynamic>.GetListData(applicationForm, 0);
 
                 return Ok(ApiResponseFactory.Success(dataList, ""));
@@ -113,13 +111,13 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        //API lấy danh sách tờ khai 
+
+        //API lấy danh sách tờ khai
         [HttpGet("get-all-application-form-detail")]
         public IActionResult GetAllApplicationFormDetail(int hRRecruitmentCandidateID)
         {
             try
             {
-
                 var candidate = SQLHelper<dynamic>.ProcedureToList(
                    "spGetHRRecruitmentApplicationForm",
                    new[] { "@HRRecruitmentCandidateID" },
@@ -144,15 +142,15 @@ namespace RERPAPI.Controllers.HRM
                     recruitmentInfo
                 }, "Lấy dữ liệu thành công"));
             }
-
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [Authorize]
         [RequiresPermission("N1,N2,N94")]
-        //Xóa form thông tin ứng viên 
+        //Xóa form thông tin ứng viên
         [HttpGet("delete-application-form")]
         public async Task<IActionResult> DeleteApplicationForm([FromQuery]
         List<int> ids)
@@ -186,6 +184,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //API đăng nhập ứng viên
         [HttpPost("login-candidate")]
         public IActionResult LoginCandidate([FromBody] HRRecruitmentCandidate user)
@@ -243,7 +242,6 @@ namespace RERPAPI.Controllers.HRM
 
                 var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
-
                 return Ok(new
                 {
                     access_token = tokenString,
@@ -255,6 +253,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message + "\n"));
             }
         }
+
         //Get Current candidate
         //[ApiKeyAuthorize]
         [HttpGet("current-candidate")]
@@ -271,6 +270,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-form")]
         public async Task<IActionResult> SaveForm([FromBody] HRRecruitmentApplicationFullDTO data)
         {
@@ -395,6 +395,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-form-auto")]
         public async Task<IActionResult> SaveFormAuto([FromBody] HRRecruitmentApplicationFullDTO data)
         {
@@ -508,6 +509,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //lấy master hợp đồng
         //[HttpGet("get-candidate-infomation")]
         //public IActionResult GetCandidateInfomation(int hRRecruitmentCandidateID)
@@ -534,7 +536,6 @@ namespace RERPAPI.Controllers.HRM
         {
             try
             {
-
                 var candidate = SQLHelper<dynamic>.ProcedureToList(
                    "spGetHRRecruitmentApplicationForm",
                    new[] { "@HRRecruitmentCandidateID" },
@@ -559,14 +560,13 @@ namespace RERPAPI.Controllers.HRM
                     recruitmentInfo
                 }, "Lấy dữ liệu thành công"));
             }
-
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [HttpGet("download-by-key")]
 
+        [HttpGet("download-by-key")]
         public IActionResult DownloadByKey([FromQuery] string key, [FromQuery] string? subPath, [FromQuery] string fileName)
         {
             try

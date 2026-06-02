@@ -1,11 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System.Data;
 
 namespace RERPAPI.Controllers.Project
 {
@@ -43,7 +40,6 @@ namespace RERPAPI.Controllers.Project
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-
             }
         }
 
@@ -58,7 +54,6 @@ namespace RERPAPI.Controllers.Project
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-
             }
         }
 
@@ -81,7 +76,6 @@ namespace RERPAPI.Controllers.Project
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-
             }
         }
 
@@ -103,7 +97,6 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-        #endregion
-
+        #endregion Lấy danh sách tiến độ công việc
     }
 }

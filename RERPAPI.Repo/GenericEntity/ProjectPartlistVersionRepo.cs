@@ -7,12 +7,10 @@ namespace RERPAPI.Repo.GenericEntity
     {
         private ProjectTypeRepo _projectTypeRepo;
 
-
         public ProjectPartlistVersionRepo(CurrentUser currentUser, ProjectTypeRepo projectTypeRepo) : base(currentUser)
         {
             _projectTypeRepo = projectTypeRepo;
         }
-
 
         public ProjectPartlistVersionRepo(CurrentUser currentUser) : base(currentUser)
         {
@@ -119,6 +117,7 @@ namespace RERPAPI.Repo.GenericEntity
             }
             return true;
         }
+
         public bool ValidateApprove(ProjectPartListVersion version, out string message)
         {
             message = "";

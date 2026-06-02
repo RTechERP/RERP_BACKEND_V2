@@ -1,7 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
@@ -14,6 +12,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     {
         private readonly DocumentImportPONCCRepo _documentRepo;
         private readonly BillDocumentImportLogRepo _billDocumentImportLogRepo;
+
         public DocumentImportPONCCController(
             DocumentImportPONCCRepo documentRepo,
             BillDocumentImportLogRepo billDocumentImportLogRepo
@@ -24,7 +23,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpGet("get-by-BdiID/{bdiID}")]
-        public IActionResult getDataByDocumentInportID (int bdiID)
+        public IActionResult getDataByDocumentInportID(int bdiID)
         {
             try
             {
@@ -125,7 +124,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     result.DateAdditional = DateTime.Now;
                     if (result.ID <= 0) // Nếu là bản ghi mới
                     {
-                       await _documentRepo.CreateAsync(result);
+                        await _documentRepo.CreateAsync(result);
                     }
                     else if (result.Status != 1) // Nếu bản ghi tồn tại và trạng thái cho phép cập nhật
                     {

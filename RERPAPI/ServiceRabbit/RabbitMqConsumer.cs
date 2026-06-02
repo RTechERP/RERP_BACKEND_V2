@@ -66,4 +66,3 @@ public abstract class RabbitMqConsumer<T> : BackgroundService
 
     protected abstract Task HandleAsync(T message, CancellationToken token);
 }
-

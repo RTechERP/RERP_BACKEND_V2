@@ -15,6 +15,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
         {
             _firmRepo = firmRepo;
         }
+
         [HttpGet("")]
         public IActionResult getDataFirm(int firmType)
         {
@@ -28,12 +29,14 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-firm-code")]
         public IActionResult GetFirmCode(int firmType = 2)
         {
             string firmcode = _firmRepo.GenerateCode(firmType);
             return Ok(ApiResponseFactory.Success(firmcode, ""));
         }
+
         [HttpGet("check-code")]
         public IActionResult CheckFirmCodeExists([FromQuery] string firmCode, [FromQuery] int? id = null)
         {
@@ -55,6 +58,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("delete-multiple")]
         public async Task<IActionResult> DeleteMultipleFirms([FromBody] List<int> firmIds)
         {
@@ -103,6 +107,7 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("")]
         public async Task<IActionResult> saveDataFirm([FromBody] Firm firmData)
         {
@@ -120,7 +125,6 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
 
                 if (firmData.ID <= 0)
                 {
-
                     firmData.FirmCode = _firmRepo.GenerateCode(firmData.FirmType ?? 0);
                     await _firmRepo.CreateAsync(firmData);
                 }
@@ -154,6 +158,5 @@ namespace RERPAPI.Controllers.SaleWareHouseManagement
         //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
         //    }
         //}
-
     }
 }

@@ -1,7 +1,5 @@
-﻿using DocumentFormat.OpenXml.Wordprocessing;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -16,6 +14,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     {
         private readonly ProductGroupRepo _productgroupRepo;
         private readonly ProductGroupWareHouseRepo _productgroupwarehouseRepo;
+
         public ProductGroupController(ProductGroupRepo productgroupRepo, ProductGroupWareHouseRepo productgroupwarehouseRepo)
         {
             _productgroupRepo = productgroupRepo;
@@ -37,7 +36,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             }
         }
 
-
         [HttpGet("get-productgroup-purchase")]
         public IActionResult getProductGroupPurchase(bool isvisible = true, string warehousecode = "")
         {
@@ -51,6 +49,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-all")]
         public IActionResult GetAll()
         {
@@ -74,6 +73,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 });
             }
         }
+
         [HttpGet("{id}")]
         public IActionResult getProductGroupByID(int id)
         {
@@ -87,6 +87,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //update 14/06 fix khi xoa tu them 1 ban ghi bang productsalewarehouse
 
         [HttpPost("save-data")]
@@ -101,33 +102,32 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 {
                     //return Ok(new { status = 0, message = $"Mã nhóm [{dto.Productgroup.ProductGroupID}] đã tồn tại!" });
                 }
-                //end update 
+                //end update
                 if (dto.Productgroup.ID <= 0)
                 {
                     int stt = _productgroupRepo.GetAll(x => x.STT > 0).Select(x => x.STT).Max() ?? 0 + 100;
                     dto.Productgroup.STT = stt;
-					int newId = await _productgroupRepo.CreateReturnIDAsync(dto.Productgroup);
+                    int newId = await _productgroupRepo.CreateReturnIDAsync(dto.Productgroup);
                     dto.ProductgroupWarehouse.ProductGroupID = newId;
                     await _productgroupwarehouseRepo.CreateAsync(dto.ProductgroupWarehouse);
 
-					//if(dto.ProductgroupWarehouse.WarehouseID > 0)
-					//{
-					//    ProductGroupLink model = new ProductGroupLink
-					//    {
-					//        WarehouseID = dto.ProductgroupWarehouse.WarehouseID,
-					//        ProductGroupID = newId,
-					//        IsDeleted = false,
-					//        Createdby = currentUser.LoginName,
-					//        CreatedDate = DateTime.Now,
-					//        UpdatedBy = currentUser.LoginName,
-					//        UpdatedDate = DateTime.Now
-					//    };
+                    //if(dto.ProductgroupWarehouse.WarehouseID > 0)
+                    //{
+                    //    ProductGroupLink model = new ProductGroupLink
+                    //    {
+                    //        WarehouseID = dto.ProductgroupWarehouse.WarehouseID,
+                    //        ProductGroupID = newId,
+                    //        IsDeleted = false,
+                    //        Createdby = currentUser.LoginName,
+                    //        CreatedDate = DateTime.Now,
+                    //        UpdatedBy = currentUser.LoginName,
+                    //        UpdatedDate = DateTime.Now
+                    //    };
 
-					//    await _productGroupLinkRepo.CreateAsync(model);
-					//}
-
-				}
-				else
+                    //    await _productGroupLinkRepo.CreateAsync(model);
+                    //}
+                }
+                else
                 {
                     _productgroupRepo.Update(dto.Productgroup);
 
@@ -172,12 +172,12 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             if (exists.Count > 0) check = false;
             return check;
         }
+
         //end update
 
-        #endregion
+        #endregion check trùng mã sản phẩm khi thêm, sửa nhóm vật tư
 
-
-        #region Lấy danh sách nhóm sản phẩm mới 
+        #region Lấy danh sách nhóm sản phẩm mới
 
         [HttpGet("product-group-new")]
         public async Task<IActionResult> getProductGroupNew(bool isVisible, bool isDeleted, int warehouseId)
@@ -244,7 +244,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     }
                 }
 
-
                 return Ok(ApiResponseFactory.Success(null, "Xử lý dữ liệu thành công!"));
             }
             catch (Exception ex)
@@ -253,7 +252,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             }
         }
 
-
-        #endregion
+        #endregion Lấy danh sách nhóm sản phẩm mới
     }
 }

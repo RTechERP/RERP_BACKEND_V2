@@ -176,7 +176,7 @@ namespace RERPAPI.Controllers.KPISale
             }
         }
 
-        #endregion
+        #endregion Period
 
         #region Template
 
@@ -288,7 +288,7 @@ namespace RERPAPI.Controllers.KPISale
             }
         }
 
-        #endregion
+        #endregion Template
 
         #region Index
 
@@ -434,7 +434,7 @@ namespace RERPAPI.Controllers.KPISale
             }
         }
 
-        #endregion
+        #endregion Index
 
         #region Allowed table and column
 
@@ -630,7 +630,7 @@ namespace RERPAPI.Controllers.KPISale
             }
         }
 
-        #endregion
+        #endregion Allowed table and column
 
         #region Data source
 
@@ -746,7 +746,7 @@ namespace RERPAPI.Controllers.KPISale
             }
         }
 
-        #endregion
+        #endregion Data source
 
         #region Mapping and filter
 
@@ -1074,7 +1074,7 @@ namespace RERPAPI.Controllers.KPISale
             }
         }
 
-        #endregion
+        #endregion Mapping and filter
 
         #region Formula and scoring
 
@@ -1245,7 +1245,7 @@ namespace RERPAPI.Controllers.KPISale
             }
         }
 
-        #endregion
+        #endregion Formula and scoring
 
         #region Target and result
 
@@ -1449,7 +1449,7 @@ namespace RERPAPI.Controllers.KPISale
             }
         }
 
-        #endregion
+        #endregion Target and result
 
         #region Calculator
 
@@ -1884,7 +1884,7 @@ FROM (
             await _kpiSaleRepo.SaveChangesAsync();
         }
 
-        #endregion
+        #endregion Calculator
 
         #region Validation and helper
 
@@ -2597,6 +2597,6 @@ FROM (
             public object? Value { get; }
         }
 
-        #endregion
+        #endregion Validation and helper
     }
 }

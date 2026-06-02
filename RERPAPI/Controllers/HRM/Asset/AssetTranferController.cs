@@ -1,15 +1,12 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.Asset;
-using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.Asset;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Asset;
-using System;
 
 namespace RERPAPI.Controllers.Old.Asset
 {
@@ -17,13 +14,13 @@ namespace RERPAPI.Controllers.Old.Asset
     [ApiController]
     public class AssetTranferController : ControllerBase
     {
-        TSAssetTransferRepo _tSAssetTransferRepo;
-        TSAllocationEvictionAssetRepo _tSAllocationEvictionRepo;
-        TSAssetManagementRepo _tsAssetManagementRepo;
-        TSAssetTransferDetailRepo _tSAssetTransferDetailRepo;
+        private TSAssetTransferRepo _tSAssetTransferRepo;
+        private TSAllocationEvictionAssetRepo _tSAllocationEvictionRepo;
+        private TSAssetManagementRepo _tsAssetManagementRepo;
+        private TSAssetTransferDetailRepo _tSAssetTransferDetailRepo;
         private IConfiguration _configuration;
-        vUserGroupLinksRepo _vUserGroupLinksRepo;
-         
+        private vUserGroupLinksRepo _vUserGroupLinksRepo;
+
         public AssetTranferController(TSAssetTransferRepo tSAssetTransferRepo, TSAllocationEvictionAssetRepo tSAllocationEvictionAssetRepo, TSAssetManagementRepo TSAssetManagementRepo, TSAssetTransferDetailRepo tSAssetTransferDetailRepo, vUserGroupLinksRepo vUserGroupLinksRepo, IConfiguration configuration)
         {
             _tSAssetTransferRepo = tSAssetTransferRepo;
@@ -63,7 +60,6 @@ namespace RERPAPI.Controllers.Old.Asset
                     status = 1,
 
                     assetTranfer = SQLHelper<dynamic>.GetListData(assetTranfer, 0)
-
                 });
             }
             catch (Exception ex)
@@ -71,6 +67,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-asset-tranfer-detail")]
         public IActionResult GetAssetTranferDetail(string? id)
         {
@@ -94,6 +91,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-asset-tranfer-code")]
         public async Task<IActionResult> GenerateTransferCode([FromQuery] DateTime? transferDate)
         {
@@ -107,6 +105,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 data = newCode
             });
         }
+
         [HttpPost("export-transfer-asset-report")]
         public IActionResult ExportTransferAssetReport([FromBody] TranferExportFullDto dto)
         {
@@ -150,10 +149,10 @@ namespace RERPAPI.Controllers.Old.Asset
                 //    ws.Cells[32, 8].Value = master.DateApprovedPersonalProperty.Value.ToString("dd/MM/yyyy HH:mm");
                 ws.Cells[27, 1].Value = master.DeliverName ?? "";
                 ws.Cells[27, 8].Value = master.ReceiverName ?? "";
-              
+
                 ws.Cells[28, 1].Value = master.DateApprovedHR?.ToString("dd/MM/yyyy HH:mm") ?? "";
                 ws.Cells[28, 8].Value = master.DateApprovedPersonalProperty?.ToString("dd/MM/yyyy HH:mm") ?? "";
-              
+
                 ws.DeleteRow(20, 1);
 
                 // Ghi dữ liệu chi tiết từ dòng 21 trở đi
@@ -173,9 +172,6 @@ namespace RERPAPI.Controllers.Old.Asset
                     ws.Cells[row, 8].Value = item.Note ?? "";
                 }
 
-
-
-
                 var stream = new MemoryStream();
                 package.SaveAs(stream);
                 stream.Position = 0;
@@ -188,7 +184,6 @@ namespace RERPAPI.Controllers.Old.Asset
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         [RequiresPermission("N1,N23")]
         [HttpPost("save-data")]
@@ -246,6 +241,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-data-personal")]
         public async Task<IActionResult> SaveDataPersonal([FromBody] AssetTranferFullDTO assetTransfer)
         {
@@ -301,6 +297,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N67")]
         [HttpPost("save-data-kt")]
         public async Task<IActionResult> SaveDataKT([FromBody] AssetTranferFullDTO assetTransfer)

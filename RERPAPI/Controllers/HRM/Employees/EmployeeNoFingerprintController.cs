@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -9,19 +8,17 @@ using RERPAPI.Model.Param.HRM;
 using RERPAPI.Repo.GenericEntity;
 using System.Data;
 
-
 namespace RERPAPI.Controllers.HRM.Employees
 {
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-
     public class EmployeeNoFingerprintController : ControllerBase
     {
-        EmployeeNoFingerprintRepo _employeeNoFingerprintRepo;
-        DepartmentRepo _departmentRepo;
+        private EmployeeNoFingerprintRepo _employeeNoFingerprintRepo;
+        private DepartmentRepo _departmentRepo;
         private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
-        EmployeeApproveRepo _employeeApproveRepo;
+        private EmployeeApproveRepo _employeeApproveRepo;
 
         public EmployeeNoFingerprintController(EmployeeNoFingerprintRepo employeeNoFingerprintRepo, DepartmentRepo departmentRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeApproveRepo employeeApproveRepo)
         {
@@ -30,7 +27,6 @@ namespace RERPAPI.Controllers.HRM.Employees
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
             _employeeApproveRepo = employeeApproveRepo;
         }
-
 
         //[RequiresPermission("N1,N2")]
         [HttpPost("get-employee-no-fingerprint")]
@@ -71,6 +67,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("get-employee-no-fingerprint-person")]
         public IActionResult GetEmployeeNoFingerprintPerson([FromBody] EmployeeNoFingerPrintRequestParam request)
         {
@@ -109,6 +106,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //[RequiresPermission("N1,N2")]
         [HttpGet("get-employee-approver")]
         public IActionResult GetEmployeesWithApprovers()
@@ -125,7 +123,6 @@ namespace RERPAPI.Controllers.HRM.Employees
                                          x.FullName,
                                          x.DepartmentName,
                                          x.Code
-
                                      }).ToList();
 
                 var approvers = SQLHelper<object>.GetListData(dataSet, 1)
@@ -135,7 +132,6 @@ namespace RERPAPI.Controllers.HRM.Employees
                                                              x.FullName,
                                                              x.DepartmentName,
                                                              x.Code
-
                                                          }).ToList();
 
                 // Trả về kết quả
@@ -158,7 +154,6 @@ namespace RERPAPI.Controllers.HRM.Employees
         }
 
         [HttpPost("list-summary-employee-no-finger")]
-
         public IActionResult ListSummaryEmployeeOnleavePerson(EmployeeNoFingerSummaryParam request)
         {
             try
@@ -182,7 +177,6 @@ namespace RERPAPI.Controllers.HRM.Employees
         {
             try
             {
-
                 if (employeeNoFingerprint.ID <= 0)
                     await _employeeNoFingerprintRepo.CreateAsync(employeeNoFingerprint);
                 else
@@ -191,18 +185,16 @@ namespace RERPAPI.Controllers.HRM.Employees
             }
             catch (Exception ex)
             {
-
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //[RequiresPermission("N1,N2")]
         [HttpGet("get-department")]
         public IActionResult GetDepartment()
         {
             try
             {
-
-
                 var departments = _departmentRepo.GetAll()
                     .Select(x => new
                     {
@@ -222,6 +214,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //[RequiresPermission("N1,N2")]
 
         [HttpGet("check-duplicate-enf/{id}/{employeeId}/{dayWork}/{type}")]
@@ -247,7 +240,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                                 x.DayWork.HasValue &&
                                 x.DayWork.Value.Date == dayWorkDate.Date &&
                                 x.Type == type
-                                && x.IsDeleted !=true
+                                && x.IsDeleted != true
                                 );
 
                 if (existENF.Any())
@@ -271,8 +264,5 @@ namespace RERPAPI.Controllers.HRM.Employees
                 });
             }
         }
-
-
     }
-
 }

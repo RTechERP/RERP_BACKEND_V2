@@ -1,12 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
-using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.Old.Technical
 {
@@ -17,11 +13,13 @@ namespace RERPAPI.Controllers.Old.Technical
     {
         private readonly DepartmentRepo _departmentRepo;
         private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
+
         public KPISyntheticYearsController(DepartmentRepo departmentRepo, vUserGroupLinksRepo vUserGroupLinksRepo)
         {
             _departmentRepo = departmentRepo;
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
         }
+
         [HttpGet("get-department")]
         public IActionResult GetDepartment()
         {

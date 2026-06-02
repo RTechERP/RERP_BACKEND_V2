@@ -1,19 +1,12 @@
-﻿using DocumentFormat.OpenXml.Drawing.Charts;
-using DocumentFormat.OpenXml.Office2010.Excel;
-using DocumentFormat.OpenXml.Wordprocessing;
-using Microsoft.AspNetCore.Mvc;
-using NPOI.SS.Formula.Functions;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using System.Data;
-using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
-using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -21,17 +14,18 @@ namespace RERPAPI.Controllers.Old
     [Route("api/[controller]")]
     public class BillImportQCController : ControllerBase
     {
-        List<int> lsEmployeeID = new List<int>();
-        List<int> lsLeaderID = new List<int>();
-        List<string> lsEmailCC = new List<string>();
+        private List<int> lsEmployeeID = new List<int>();
+        private List<int> lsLeaderID = new List<int>();
+        private List<string> lsEmailCC = new List<string>();
 
-        EmployeeRepo _employeeRepo;
-        BillImportQCRepo _billImportQCRepo;
-        BillImportQCDetailRepo _billImportQCDetailRepo;
-        ProjectRepo _projectRepo;
-        ProductSaleRepo _productSaleRepo;
-        BillImportQCDetailFilesRepo _billImportQCDetailFilesRepo;
-        ConfigSystemRepo _configSystemRepo;
+        private EmployeeRepo _employeeRepo;
+        private BillImportQCRepo _billImportQCRepo;
+        private BillImportQCDetailRepo _billImportQCDetailRepo;
+        private ProjectRepo _projectRepo;
+        private ProductSaleRepo _productSaleRepo;
+        private BillImportQCDetailFilesRepo _billImportQCDetailFilesRepo;
+        private ConfigSystemRepo _configSystemRepo;
+
         public BillImportQCController(
             BillImportQCDetailRepo billImportQCDetailRepo,
             BillImportQCRepo billImportQCRepo,
@@ -361,6 +355,7 @@ namespace RERPAPI.Controllers.Old
                 };
 
                 #region Lấy dữ liệu từ formdata
+
                 var form = await Request.ReadFormAsync();
                 var dto = new BillImportQCDTO();
 
@@ -387,9 +382,11 @@ namespace RERPAPI.Controllers.Old
                 dto.CheckSheetFiles = _billImportQCRepo.ExtractFiles(form, "CheckSheetFiles", 1);
                 dto.ReportFiles = _billImportQCRepo.ExtractFiles(form, "ReportFiles", 2);
                 //return Ok(ApiResponseFactory.Success(null, ""));
-                #endregion
+
+                #endregion Lấy dữ liệu từ formdata
 
                 #region Xử lý dữ liệu Master
+
                 if (dto.billImportQC.ID > 0)
                 {
                     dto.billImportQC.UpdatedDate = DateTime.Now;
@@ -401,9 +398,11 @@ namespace RERPAPI.Controllers.Old
                     isNew = true;
                     await _billImportQCRepo.CreateAsync(dto.billImportQC);
                 }
-                #endregion
+
+                #endregion Xử lý dữ liệu Master
 
                 #region xử lý dữ liệu detail
+
                 if (dto.billImportQCDetails.Count() > 0)
                 {
                     foreach (var detail in dto.billImportQCDetails)
@@ -434,6 +433,7 @@ namespace RERPAPI.Controllers.Old
                         }
 
                         #region Xử lý upload file
+
                         if (dto.billImportQC.EmployeeRequestID != currentUser.EmployeeID && !currentUser.IsAdmin) continue;
 
                         var uploadPath = _configSystemRepo.GetUploadPathByKey("BillImportQCDetailFiles");
@@ -461,12 +461,15 @@ namespace RERPAPI.Controllers.Old
                         {
                             await _billImportQCDetailFilesRepo.UploadFiles(reportFiles, detail.ID, pathUpload);
                         }
-                        #endregion
+
+                        #endregion Xử lý upload file
                     }
                 }
-                #endregion
+
+                #endregion xử lý dữ liệu detail
 
                 #region Xử lý xóa file
+
                 if (dto.DeletedCheckSheetFileIds != null && dto.DeletedCheckSheetFileIds.Count() > 0)
                 {
                     var url = $"http://113.190.234.64:8083/api/Home/removefile?path=";
@@ -501,9 +504,11 @@ namespace RERPAPI.Controllers.Old
                         }
                     }
                 }
-                #endregion
+
+                #endregion Xử lý xóa file
 
                 #region Xử lý xóa detail
+
                 if (dto.DeletedDetailIds != null && dto.DeletedDetailIds.Count() > 0)
                 {
                     foreach (int id in dto.DeletedDetailIds)
@@ -511,9 +516,11 @@ namespace RERPAPI.Controllers.Old
                         if (id > 0) await _billImportQCDetailRepo.DeleteAsync(id);
                     }
                 }
-                #endregion
+
+                #endregion Xử lý xóa detail
 
                 #region Xử lý gửi mail
+
                 if (isNew)
                 {
                     string emailCCs = "";
@@ -534,7 +541,8 @@ namespace RERPAPI.Controllers.Old
                         _billImportQCRepo.SetInforEmail(emailCCs, leader?.EmailCongTy ?? "", leader?.FullName ?? "", dtr, emRequestName, (DateTime)dto.billImportQC.Dealine);
                     }
                 }
-                #endregion
+
+                #endregion Xử lý gửi mail
 
                 return Ok(ApiResponseFactory.Success(dto.billImportQC.ID, ""));
             }

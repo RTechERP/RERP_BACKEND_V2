@@ -1,11 +1,6 @@
 ﻿using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
@@ -18,6 +13,7 @@ namespace RERPAPI.Repo.GenericEntity
         private CurrencyRepo _currencyRepo;
         private CustomerPartsRepo _customerPartsRepo;
         private ProductSaleRepo _productSaleRepo;
+
         //private po _userRepo;
         public POKHLogRepo(
             CurrentUser currentUser,
@@ -39,6 +35,7 @@ namespace RERPAPI.Repo.GenericEntity
         }
 
         #region Log chính
+
         private static readonly Dictionary<string, string> _map = new()
         {
             { "Status", "trạng thái" },
@@ -99,7 +96,6 @@ namespace RERPAPI.Repo.GenericEntity
 
             var ignoreFields = new HashSet<string> { "CreatedDate", "UpdatedDate" };
 
-
             foreach (var prop in props)
             {
                 if (ignoreFields.Contains(prop.Name)) continue;
@@ -126,9 +122,11 @@ namespace RERPAPI.Repo.GenericEntity
 
             return string.Join("\n", changes);
         }
-        #endregion
+
+        #endregion Log chính
 
         #region Log chi tiết
+
         private static readonly Dictionary<string, string> _mapDetail = new()
         {
             { "ProductID", "sản phẩm" },
@@ -163,7 +161,6 @@ namespace RERPAPI.Repo.GenericEntity
             { "Spec", "quy cách" },
             { "IsDelivered", "đã giao hàng" },
             { "AccountType", "loại tài khoản" },
-
         };
 
         public static string GetDisplayNameDetail(string fieldName)
@@ -184,7 +181,6 @@ namespace RERPAPI.Repo.GenericEntity
             var props = typeof(POKHDetail).GetProperties();
 
             var ignoreFields = new HashSet<string> { "CreatedDate", "UpdatedDate", "QuotationDetailID" };
-
 
             foreach (var prop in props)
             {
@@ -207,9 +203,11 @@ namespace RERPAPI.Repo.GenericEntity
 
             return string.Join("\n", changes);
         }
-        #endregion
+
+        #endregion Log chi tiết
 
         #region Log người phụ trách
+
         private static readonly Dictionary<string, string> _mapUser = new()
             {
                 { "UserID", "người nhận" },
@@ -241,7 +239,6 @@ namespace RERPAPI.Repo.GenericEntity
 
             var ignoreFields = new HashSet<string> { "CreatedDate", "UpdatedDate" };
 
-
             foreach (var prop in props)
             {
                 if (ignoreFields.Contains(prop.Name)) continue;
@@ -261,9 +258,11 @@ namespace RERPAPI.Repo.GenericEntity
 
             return string.Join("\n", changes);
         }
-        #endregion
 
-        #region Khác 
+        #endregion Log người phụ trách
+
+        #region Khác
+
         private string FormatValueMaster(string fieldName, object value)
         {
             if (value == null) return "rỗng";
@@ -275,43 +274,53 @@ namespace RERPAPI.Repo.GenericEntity
                     int customerID = Convert.ToInt32(value);
                     msg = _customerRepo.GetByID(customerID).CustomerName;
                     return msg;
+
                 case "KHID":
                     int KHID = Convert.ToInt32(value);
                     msg = _customerRepo.GetByID(KHID).CustomerName;
                     return msg;
+
                 case "UserID":
                     int userID = Convert.ToInt32(value);
                     msg = _userRepo.GetByID(userID).FullName;
                     return msg;
+
                 case "ProjectID":
                     int projectID = Convert.ToInt32(value);
                     msg = _projectRepo.GetByID(projectID).ProjectName;
                     return msg;
+
                 case "DealerID":
                     int dealerID = Convert.ToInt32(value);
                     msg = _userRepo.GetByID(dealerID).FullName;
                     return msg;
+
                 case "EndUserID":
                     int endUserID = Convert.ToInt32(value);
                     msg = _userRepo.GetByID(endUserID).FullName;
                     return msg;
+
                 case "CurrencyID":
                     int currencyID = Convert.ToInt32(value);
                     msg = _currencyRepo.GetByID(currencyID).Code;
                     return msg;
+
                 case "PartID":
                     int partID = Convert.ToInt32(value);
                     msg = _customerPartsRepo.GetByID(partID).PartName;
                     return msg;
+
                 case "ProductID":
                     int ProductID = Convert.ToInt32(value);
                     msg = _productSaleRepo.GetByID(ProductID).ProductName;
                     return msg;
+
                 case "AccountType":
                     int AccountType = Convert.ToInt32(value);
                     if (AccountType == 1) msg = "Big Account";
                     if (AccountType == 2) msg = "Minor Account";
                     return msg;
+
                 case "POType":
                     List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetMainIndex", new string[] { "@Type" }, new object[] { 0 });
                     var data = SQLHelper<dynamic>.GetListData(list, 0);
@@ -321,6 +330,7 @@ namespace RERPAPI.Repo.GenericEntity
                     var item = data.FirstOrDefault(x => x.ID == poType);
                     msg = item.MainIndex?.ToString();
                     return msg;
+
                 default:
                     break;
             }
@@ -358,6 +368,7 @@ namespace RERPAPI.Repo.GenericEntity
 
             await CreateAsync(log);
         }
-        #endregion
+
+        #endregion Khác
     }
 }

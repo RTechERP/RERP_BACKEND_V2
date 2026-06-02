@@ -1,11 +1,6 @@
 ﻿using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity.Warehouses.AGV
 {
@@ -14,7 +9,6 @@ namespace RERPAPI.Repo.GenericEntity.Warehouses.AGV
         public AGVProductGroupLinkRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
-
 
         public APIResponse Validate(List<AGVProductGroupLink> groupLinks)
         {
@@ -42,8 +36,6 @@ namespace RERPAPI.Repo.GenericEntity.Warehouses.AGV
                         return ApiResponseFactory.Fail(null, $"Sản phẩm [{groupLink.AGVProductID}] đã tồn tại trong Loại [{groupLink.AGVProductGroupID}] kho [{groupLink.WarehouseID}]. Vui lòng kiểm tra lại!");
                     }
                 }
-                
-
 
                 return ApiResponseFactory.Success(null, "");
             }

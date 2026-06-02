@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.DTO
+﻿namespace RERPAPI.Model.DTO
 {
     public class BillImportTechnicalDTO
     {
@@ -40,6 +34,7 @@ namespace RERPAPI.Model.DTO
 
         // Thêm các trường mở rộng từ JOIN và CASE
         public DateTime? DateStatus { get; set; }
+
         public string? NCC { get; set; }                   // Tên nhà cung cấp (có thể từ SupplierSale hoặc trực tiếp)
         public string? DepartmentName { get; set; }        // Tên phòng ban người giao
         public string? CustomerName { get; set; }          // Tên khách hàng
@@ -47,5 +42,4 @@ namespace RERPAPI.Model.DTO
         public string? EmployeeApproveName { get; set; }   // Người duyệt
         public string? EmployeeReceiverName { get; set; }  // Người nhận
     }
-
 }

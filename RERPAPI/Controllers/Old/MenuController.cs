@@ -1,28 +1,23 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Attributes;
-using RERPAPI.IRepo;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using RERPAPI.Repo;
 using RERPAPI.Repo.GenericEntity;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.Old
 {
     [Route("api/[controller]")]
     [ApiController]
-
-    //[ApiKeyAuthorize]
     public class MenuController : ControllerBase
     {
         //Response _response = new Response();
-        MenuRepo _menuRepo ;
+        private MenuRepo _menuRepo;
+
         public MenuController(MenuRepo menuRepo)
         {
             this._menuRepo = menuRepo;
         }
+
         //[RequiresPermission("N42")]
         //[ApiKeyAuthorize]
         [HttpGet("menus/{parentid}")]
@@ -41,7 +36,6 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
-
         [HttpGet("menus/parent")]
         public IActionResult GetAllParent()
         {
@@ -54,7 +48,6 @@ namespace RERPAPI.Controllers.Old
                 //    data = menuparents
                 //});
                 return Ok(ApiResponseFactory.Success(menuparents, ""));
-
             }
             catch (Exception ex)
             {
@@ -65,7 +58,6 @@ namespace RERPAPI.Controllers.Old
                 //    error = ex.ToString()
                 //});
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-
             }
         }
 
@@ -74,7 +66,6 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-
                 if (menu.ID <= 0) await _menuRepo.CreateAsync(menu);
                 else await _menuRepo.UpdateAsync(menu);
                 return Ok(ApiResponseFactory.Success(menu, "Cập nhật thành công!"));
@@ -84,6 +75,5 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

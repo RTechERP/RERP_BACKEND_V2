@@ -1,12 +1,7 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
-using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System.Data;
 
 namespace RERPAPI.Controllers.Project
 {
@@ -32,7 +27,9 @@ namespace RERPAPI.Controllers.Project
             this.departmentRepo = departmentRepo;
             this.userTeamRepo = userTeamRepo;
         }
+
         #region Load  timeline hạng mục công việc
+
         [HttpGet("get-data")]
         public async Task<IActionResult> getData(DateTime dateStart, DateTime dateEnd, int departmentId, int userTeamId, int employeeId, int status)
         {
@@ -61,9 +58,11 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion Load  timeline hạng mục công việc
 
         #region lấy danh sách team theo phòng ban
+
         [HttpGet("get-user-team")]
         public async Task<IActionResult> getUserTeam(int depID)
         {
@@ -77,7 +76,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
 
+        #endregion lấy danh sách team theo phòng ban
     }
 }

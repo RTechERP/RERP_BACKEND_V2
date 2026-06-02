@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Metadata;
 using RERPAPI.Model.Common;
@@ -14,20 +13,21 @@ namespace RERPAPI.Controllers.Old.KPISALE
     [Authorize]
     public class EmployeeSaleManagerController : ControllerBase
     {
-
         private readonly EmployeeTeamSaleRepo _employeeTeamSaleRepo;
         private readonly EmployeeTeamSaleLinkRepo _employeeTeamSaleLinkRepo;
+
         public EmployeeSaleManagerController(EmployeeTeamSaleRepo employeeTeamSaleRepo, EmployeeTeamSaleLinkRepo employeeTeamSaleLinkRepo)
         {
             _employeeTeamSaleRepo = employeeTeamSaleRepo;
             _employeeTeamSaleLinkRepo = employeeTeamSaleLinkRepo;
         }
+
         [HttpGet("get-groupsale")]
         public IActionResult loadGroupSale()
         {
             try
             {
-                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetEmployeeTeamSale",null,null);
+                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetEmployeeTeamSale", null, null);
 
                 var data = SQLHelper<dynamic>.GetListData(list, 0);
                 return Ok(ApiResponseFactory.Success(data, ""));
@@ -37,6 +37,7 @@ namespace RERPAPI.Controllers.Old.KPISALE
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-employeesale")]
         public IActionResult loadEmployeeSale(int selectedId)
         {
@@ -69,14 +70,14 @@ namespace RERPAPI.Controllers.Old.KPISALE
         }
 
         [HttpPost("save-employee-team-sale")]
-        public IActionResult saveEmployeeTeamSale( EmployeeTeamSale model )
+        public IActionResult saveEmployeeTeamSale(EmployeeTeamSale model)
         {
             try
             {
                 var existsTeam = _employeeTeamSaleRepo.GetAll(x => x.Code == model.Code && x.ID != model.ID && x.IsDeleted == 0).FirstOrDefault();
-                if(existsTeam != null)
+                if (existsTeam != null)
                 {
-                    return BadRequest(ApiResponseFactory.Fail(null,"Mã Team đã tồn tại!"));
+                    return BadRequest(ApiResponseFactory.Fail(null, "Mã Team đã tồn tại!"));
                 }
 
                 if (model.ID > 0)
@@ -117,19 +118,19 @@ namespace RERPAPI.Controllers.Old.KPISALE
             try
             {
                 List<int> itemToRemove = new List<int>();
-                foreach(int item in request.EmployeeIds)
+                foreach (int item in request.EmployeeIds)
                 {
                     var existingRecords = _employeeTeamSaleLinkRepo.GetAll(x => x.EmployeeID == item && x.EmployeeTeamSaleID == request.EmployeeTeamSaleId);
                     if (existingRecords.Count > 0)
                     {
                         itemToRemove.Add(item);
-                    } 
-                }    
-                foreach(int id in itemToRemove)
+                    }
+                }
+                foreach (int id in itemToRemove)
                 {
                     request.EmployeeIds.Remove(id);
-                }    
-                foreach(int item in request.EmployeeIds)
+                }
+                foreach (int item in request.EmployeeIds)
                 {
                     EmployeeTeamSaleLink newModel = new EmployeeTeamSaleLink()
                     {
@@ -137,7 +138,7 @@ namespace RERPAPI.Controllers.Old.KPISALE
                         EmployeeTeamSaleID = request.EmployeeTeamSaleId
                     };
                     _employeeTeamSaleLinkRepo.Create(newModel);
-                }    
+                }
                 return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
             }
             catch (Exception ex)
@@ -151,7 +152,7 @@ namespace RERPAPI.Controllers.Old.KPISALE
         {
             try
             {
-                if(id <= 0)
+                if (id <= 0)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Hãy chọn 1 nhân viên để xóa"));
                 }
@@ -169,6 +170,5 @@ namespace RERPAPI.Controllers.Old.KPISALE
             public List<int> EmployeeIds { get; set; }
             public int EmployeeTeamSaleId { get; set; }
         }
-
     }
 }

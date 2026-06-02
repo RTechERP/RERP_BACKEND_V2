@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace RERPAPI.Model.Entities;
+﻿namespace RERPAPI.Model.Entities;
 
 /// <summary>
 /// Bảng lưu nhân viên tham gia công việc của dự án
@@ -49,7 +46,7 @@ public partial class ProjectTaskEmployee
     public string? UpdatedBy { get; set; }
 
     /// <summary>
-    /// Trạng thái khóa mềm 
+    /// Trạng thái khóa mềm
     /// </summary>
     public bool? IsDeleted { get; set; }
 

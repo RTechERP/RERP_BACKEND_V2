@@ -1,5 +1,4 @@
-﻿
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
@@ -18,6 +17,7 @@ namespace RERPAPI.Controllers.Old.Asset
         {
             _tsSourceAssetRepo = tsSourceAssetRepo;
         }
+
         [HttpGet("get-source-asset")]
         public IActionResult GetSourceAssets()
         {
@@ -41,8 +41,8 @@ namespace RERPAPI.Controllers.Old.Asset
                     error = ex.ToString()
                 });
             }
-
         }
+
         [RequiresPermission("N23,N1")]
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] TSSourceAsset sourceasset)
@@ -57,7 +57,6 @@ namespace RERPAPI.Controllers.Old.Asset
 
                 if (sourceasset.ID <= 0)
                 {
-
                     await _tsSourceAssetRepo.CreateAsync(sourceasset);
                 }
                 else
@@ -77,4 +76,3 @@ namespace RERPAPI.Controllers.Old.Asset
         }
     }
 }
-

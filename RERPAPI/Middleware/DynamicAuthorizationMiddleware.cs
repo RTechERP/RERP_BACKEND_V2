@@ -1,6 +1,4 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json.Linq;
 using RERPAPI.Attributes;
 using RERPAPI.IRepo;
 using RERPAPI.Model.Common;
@@ -117,7 +115,7 @@ namespace RERPAPI.Middleware
 
                     try
                     {
-                        var hasPermission = await permissionService.HasPermissionAsync(userId, attr.PermissionGroup,attr.PermissionFunction);
+                        var hasPermission = await permissionService.HasPermissionAsync(userId, attr.PermissionGroup, attr.PermissionFunction);
                         if (!hasPermission)
                         {
                             context.Response.StatusCode = StatusCodes.Status403Forbidden;

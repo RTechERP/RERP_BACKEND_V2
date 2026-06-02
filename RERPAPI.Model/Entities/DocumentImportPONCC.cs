@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace RERPAPI.Model.Entities;
+﻿namespace RERPAPI.Model.Entities;
 
 public partial class DocumentImportPONCC
 {
@@ -46,7 +43,7 @@ public partial class DocumentImportPONCC
     public int? StatusHR { get; set; }
 
     /// <summary>
-    /// 1 Đã bàn  giao, 2 Hủy bàn  giao, 3 Không có 
+    /// 1 Đã bàn  giao, 2 Hủy bàn  giao, 3 Không có
     /// </summary>
     public int? StatusPurchase { get; set; }
 }

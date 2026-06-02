@@ -10,6 +10,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     public class BillImportDetailController : ControllerBase
     {
         private readonly BillImportDetailRepo _billImportdetailRepo;
+
         public BillImportDetailController(BillImportDetailRepo billImportDetailRepo)
         {
             _billImportdetailRepo = billImportDetailRepo;
@@ -20,7 +21,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         {
             try
             {
-
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
                        "spGetBillImportDetail", new string[] { "@ID" },
                     new object[] { billImportID }
@@ -43,6 +43,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 });
             }
         }
+
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData(List<BillImportDetail> details)
         {
