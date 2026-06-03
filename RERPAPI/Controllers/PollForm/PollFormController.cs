@@ -116,6 +116,7 @@ namespace RERPAPI.Controllers.PollForm
             try
             {
                 var currentUser = GetCurrentUser();
+
                 var pollForms = _pollFormRepo.GetAll(x => x.IsDeleted != true)
                     .Where(x => x.IsPublic == true || CanManagePoll(x, currentUser))
                     .OrderByDescending(x => x.CreatedDate)
@@ -141,8 +142,8 @@ namespace RERPAPI.Controllers.PollForm
 
                 var now = DateTime.Now;
 
-                // Active polls: not deleted, public, and within date range
-                var activePolls = _pollFormRepo.GetAll(x => x.IsDeleted != true && x.IsPublic == true)
+                // Active polls: not deleted, public, notification enabled, and within date range
+                var activePolls = _pollFormRepo.GetAll(x => x.IsDeleted != true && x.IsPublic == true && x.IsNotifycation == true)
                     .Where(x => (x.StartDate == null || x.StartDate <= now) &&
                                 (x.EndDate == null || x.EndDate >= now))
                     .Select(x => x.ID)
@@ -281,6 +282,7 @@ namespace RERPAPI.Controllers.PollForm
                     StartDate = pollForm.StartDate,
                     EndDate = pollForm.EndDate,
                     IsPublic = pollForm.IsPublic,
+                    IsNotifycation = pollForm.IsNotifycation,
                     IsDeleted = pollForm.IsDeleted,
                     CreatedBy = pollForm.CreatedBy,
                     CreatedDate = pollForm.CreatedDate,
@@ -386,6 +388,7 @@ namespace RERPAPI.Controllers.PollForm
                     StartDate = dto.StartDate,
                     EndDate = dto.EndDate,
                     IsPublic = dto.IsPublic ?? false,
+                    IsNotifycation = dto.IsNotifycation ?? false,
                     IsDeleted = false,
                     CreatedBy = currentUser.LoginName,
                     CreatedDate = DateTime.Now
@@ -431,6 +434,7 @@ namespace RERPAPI.Controllers.PollForm
                 pollForm.StartDate = dto.StartDate ?? pollForm.StartDate;
                 pollForm.EndDate = dto.EndDate ?? pollForm.EndDate;
                 pollForm.IsPublic = dto.IsPublic ?? pollForm.IsPublic;
+                pollForm.IsNotifycation = dto.IsNotifycation ?? pollForm.IsNotifycation;
                 pollForm.UpdatedBy = currentUser.LoginName;
                 pollForm.UpdatedDate = DateTime.Now;
 
@@ -476,6 +480,53 @@ namespace RERPAPI.Controllers.PollForm
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        /// <summary>
+        /// Delete the current employee's response for a poll form (only if the poll is still open)
+        /// </summary>
+        [HttpPost("delete-my-response/{pollFormId}")]
+        public async Task<IActionResult> DeleteMyPollResponse(int pollFormId)
+        {
+            try
+            {
+                var currentUser = GetCurrentUser();
+                var pollForm = _pollFormRepo.GetByID(pollFormId);
+                if (pollForm == null || pollForm.ID <= 0 || pollForm.IsDeleted == true)
+                    return NotFound(ApiResponseFactory.Fail(null, "Poll form not found"));
+
+                // Check if poll is still open
+                var now = DateTime.Now;
+                if (!CanEditPoll(pollForm, now, out var closedReason) || pollForm.IsPublic != true)
+                    return BadRequest(ApiResponseFactory.Fail(null, closedReason ?? "Poll is closed or not public"));
+
+                var employeeId = GetCurrentEmployeeId();
+                if (employeeId <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Current employee could not be determined"));
+
+                var responses = _pollResponseRepo.GetAll(x => x.PollFormID == pollFormId && x.EmployeeID == employeeId).ToList();
+
+                if (responses.Count == 0)
+                    return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy phiếu bình chọn của bạn"));
+
+                var responseIds = responses.Select(x => x.ID).ToList();
+
+                var answers = _pollResponseAnswerRepo.GetAll(x => x.PollResponseID.HasValue && responseIds.Contains(x.PollResponseID.Value)).ToList();
+
+                if (answers.Count > 0)
+                {
+                    await _pollResponseAnswerRepo.DeleteRangeAsync(answers);
+                }
+
+                await _pollResponseRepo.DeleteRangeAsync(responses);
+
+                return Ok(ApiResponseFactory.Success(null, "Xóa phiếu bình chọn thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
 
         /// <summary>
         /// Create a section for a poll form

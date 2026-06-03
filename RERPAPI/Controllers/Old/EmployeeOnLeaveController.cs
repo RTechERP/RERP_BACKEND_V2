@@ -362,12 +362,20 @@ namespace RERPAPI.Controllers.Old
                                     </p>";
                             var footer = _configuration["FooterMail:System:Footer"] ?? "";
 
-                            await _emailHelper.SendAsync(
-                                mailTo,
-                                subject,
-                                body + footer,
-                                cc: ""
-                            );
+                          
+                            _ = Task.Run(async () =>
+                            {
+                                try
+                                {
+                                    await _emailHelper.SendAsync(
+                                        mailTo,
+                                        subject,
+                                        body + footer,
+                                        cc: ""
+                                    );
+                                }
+                                catch { }
+                            });
                             // === Firebase FCM Push Notification ===
                             // Gửi push notification tới người duyệt (ApprovedTP)
                             // Lấy UserID của người duyệt qua EmployeeID
