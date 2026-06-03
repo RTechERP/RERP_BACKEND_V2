@@ -1583,11 +1583,72 @@ namespace RERPAPI.Controllers.KPISale
             if (!runtime.MappingsByIndex.TryGetValue(index.ID, out var mappings) || mappings.Count == 0)
                 return 0;
 
+            var quarterResultType = NormalizeOptionalCode(index.QuarterResultCalculateType, "SUM_MONTH");
+            var periodType = NormalizeOptionalCode(runtime.Period.PeriodType, "MONTH");
+
+            // MANUAL: nhập tay, không tự tính kết quả quý
+            if (quarterResultType == "MANUAL"
+                && (periodType == "QUARTER" || periodType == "YEAR"))
+                return 0;
+
+            // SUM_MONTH: tính riêng từng tháng rồi cộng lại (distinct theo tháng)
+            if (quarterResultType == "SUM_MONTH"
+                && (periodType == "QUARTER" || periodType == "YEAR"))
+            {
+                var childMonthPeriods = await GetChildMonthPeriodsAsync(runtime.Period);
+                if (childMonthPeriods.Count > 0)
+                {
+                    decimal total = 0;
+                    foreach (var monthPeriod in childMonthPeriods)
+                    {
+                        var monthRuntime = runtime.CloneWithPeriod(monthPeriod);
+                        foreach (var mapping in mappings)
+                            total += await CalculateMappingAsync(mapping, monthRuntime);
+                    }
+                    return total;
+                }
+            }
+
+            // FULL_PERIOD hoặc kỳ tháng: tính trực tiếp trên toàn bộ khoảng ngày kỳ hiện tại (distinct toàn quý)
             decimal result = 0;
             foreach (var mapping in mappings)
                 result += await CalculateMappingAsync(mapping, runtime);
 
             return result;
+        }
+
+        /// <summary>
+        /// Lấy danh sách kỳ tháng con của một kỳ quý/năm.
+        /// Nếu là YEAR thì lấy tất cả tháng thuộc các quý con.
+        /// </summary>
+        private async Task<List<KPISalePeriod>> GetChildMonthPeriodsAsync(KPISalePeriod parentPeriod)
+        {
+            var periodType = NormalizeOptionalCode(parentPeriod.PeriodType, "MONTH");
+
+            if (periodType == "QUARTER")
+            {
+                return await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                    .Where(x => x.ParentPeriodID == parentPeriod.ID && x.PeriodType == "MONTH")
+                    .OrderBy(x => x.DateStart)
+                    .ToListAsync();
+            }
+
+            if (periodType == "YEAR")
+            {
+                var quarterIds = await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                    .Where(x => x.ParentPeriodID == parentPeriod.ID && x.PeriodType == "QUARTER")
+                    .Select(x => x.ID)
+                    .ToListAsync();
+
+                return await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                    .Where(x => x.ParentPeriodID.HasValue
+                        && quarterIds.Contains(x.ParentPeriodID.Value)
+                        && x.PeriodType == "MONTH")
+                    .OrderBy(x => x.DateStart)
+                    .ToListAsync();
+            }
+
+            return new List<KPISalePeriod>();
         }
 
         private async Task<decimal> CalculateFormulaIndexAsync(KPISaleIndex index, KPISaleRuntimeContext runtime)
@@ -2583,6 +2644,26 @@ FROM (
             public Dictionary<int, KPISaleScoringRule> ScoringRulesByIndex { get; set; } = new();
             public Dictionary<int, decimal> CalculatedValues { get; } = new();
             public HashSet<int> Visiting { get; } = new();
+
+            /// <summary>
+            /// Tạo bản sao runtime nhưng dùng kỳ khác (dùng khi tính SUM_MONTH: tính từng tháng riêng).
+            /// Giữ nguyên indexes, mappings, targets, scoring rules. Reset CalculatedValues và Visiting.
+            /// </summary>
+            public KPISaleRuntimeContext CloneWithPeriod(KPISalePeriod newPeriod)
+            {
+                return new KPISaleRuntimeContext
+                {
+                    Request = Request,
+                    Period = newPeriod,
+                    Indexes = Indexes,
+                    IndexById = IndexById,
+                    MappingsByIndex = MappingsByIndex,
+                    FormulaItemsByParent = FormulaItemsByParent,
+                    ChildrenByParent = ChildrenByParent,
+                    TargetsByIndex = TargetsByIndex,
+                    ScoringRulesByIndex = ScoringRulesByIndex,
+                };
+            }
         }
 
         private sealed class SqlParameterValue
