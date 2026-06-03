@@ -1,5 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Office2010.Excel;
+using DocumentFormat.OpenXml.Wordprocessing;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.HRM;
 using RERPAPI.Repo.GenericEntity.HRM.HRRecruitmentInterviewAssessment;
@@ -84,6 +91,62 @@ namespace RERPAPI.Controllers.HRM.HRRecruitmentInterviewAssessment
                 //    message = "Lấy dữ liệu thành công!"
                 //});
                 return Ok(ApiResponseFactory.Success(data, $"Lấy dữ liệu thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return Ok(ApiResponseFactory.Fail(null, ex.Message));
+
+            }
+        }
+
+        [HttpGet("get-interview-assessment-result")]
+        public async Task<IActionResult> GetInterviewAssessmentResultAsync(int HRRecruitmentCandidateID)
+        {
+            try
+            {
+                var candidateData = await SqlDapper<object>.ProcedureToListTAsync("spGetHRRecruitmentDataInterview", new { HRRecruitmentCandidateID = HRRecruitmentCandidateID });
+                var assessmentData = _hRRecruitmentInterviewAssessmentFormRepo.GetAll(c => c.HRRecruitmentCandidateID == HRRecruitmentCandidateID).FirstOrDefault() ?? new HRRecruitmentInterviewAssessmentForm();
+                var criteriaData = _performanceCriteriaRepo.GetAll(c => c.IsDeleted != true && c.IsPublish == true);
+
+                var result = new
+                {
+                    CandidateInfo = candidateData,
+                    AssessmentInfo = assessmentData,
+                    Criteria = criteriaData
+                };
+
+                return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return Ok(ApiResponseFactory.Fail(null, ex.Message));
+            }
+        }
+
+        [HttpGet("get-all-interview-assessments")]
+        [Authorize]
+        public async Task<IActionResult> GetAllInterviewAssessmentsAsync(string? filterText, int? departmentID, DateTime? fromDate, DateTime? toDate)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser _currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                bool isHr = _currentUser.Permissions
+                            .Split(',')
+                            .Any(p => p.Trim() == "N1" || p.Trim() == "N2" || p.Trim() == "N94") || _currentUser.IsAdmin;
+
+                int employeeRequestID = isHr ? -1 : _currentUser.EmployeeID;
+
+                var data = await SqlDapper<object>.ProcedureToListTAsync("spGetHRRecruitmentInterviewAssessments", new
+                {
+                    FilterText = filterText,
+                    DepartmentID = departmentID,
+                    FromDate = fromDate,
+                    ToDate = toDate,
+                    EmployeeRequestID = employeeRequestID
+                });
+                return Ok(ApiResponseFactory.Success(data, "Lấy danh sách đánh giá phỏng vấn thành công!"));
             }
             catch (Exception ex)
             {

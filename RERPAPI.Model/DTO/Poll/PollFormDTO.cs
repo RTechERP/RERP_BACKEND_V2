@@ -15,6 +15,7 @@ namespace RERPAPI.Model.DTO.Poll
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public bool? IsPublic { get; set; }
+        public bool? IsNotifycation { get; set; }
         public bool? IsDeleted { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
@@ -34,6 +35,7 @@ namespace RERPAPI.Model.DTO.Poll
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public bool? IsPublic { get; set; } = true;
+        public bool? IsNotifycation { get; set; }
     }
 
     public class PollFormUpdateDTO
@@ -49,6 +51,7 @@ namespace RERPAPI.Model.DTO.Poll
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public bool? IsPublic { get; set; }
+        public bool? IsNotifycation { get; set; }
     }
 
     public class PollFormDetailDTO : PollFormDTO
