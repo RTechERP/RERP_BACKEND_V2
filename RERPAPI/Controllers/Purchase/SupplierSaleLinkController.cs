@@ -107,6 +107,10 @@ namespace RERPAPI.Controllers.Purchase
                             return BadRequest(ApiResponseFactory.Fail(null, "Mặt hàng không được vượt quá 550 ký tự"));
                         if (item.Note?.Length > 550)
                             return BadRequest(ApiResponseFactory.Fail(null, "Ghi chú không được vượt quá 550 ký tự"));
+                        if (item.Website?.Length > 550)
+                            return BadRequest(ApiResponseFactory.Fail(null, "Website không được vượt quá 550 ký tự"));
+                        if (item.AgencyTime?.Length > 550)
+                            return BadRequest(ApiResponseFactory.Fail(null, "Thời điểm đại lý không được vượt quá 550 ký tự"));
                     }
 
                     int employeeID = items[0].EmployeePurchaseID;
@@ -195,7 +199,11 @@ namespace RERPAPI.Controllers.Purchase
                     row.TryGetValue("Mã NV", out object maNvObj);
                     row.TryGetValue("Mã NCC", out object maNccObj);
                     row.TryGetValue("Mặt hàng", out object matHangObj);
+                    row.TryGetValue("Website", out object websiteObj);
                     row.TryGetValue("Ghi chú", out object ghiChuObj);
+                    row.TryGetValue("Thời điểm đại lý", out object agencyTimeObj);
+                    if (agencyTimeObj == null) row.TryGetValue("Thời điểm làm ĐL", out agencyTimeObj);
+                    row.TryGetValue("Chứng nhận ĐL", out object isAgencyCertifiedObj);
 
                     string stt = sttObj?.ToString()?.Trim();
                     string rowLabel = !string.IsNullOrEmpty(stt) ? $"Dòng STT {stt}" : $"Dòng thứ {rowIndex}";
@@ -203,7 +211,21 @@ namespace RERPAPI.Controllers.Purchase
                     string maNv = maNvObj?.ToString()?.Trim();
                     string maNcc = maNccObj?.ToString()?.Trim();
                     string matHang = matHangObj?.ToString()?.Trim();
+                    string website = websiteObj?.ToString()?.Trim();
                     string ghiChu = ghiChuObj?.ToString()?.Trim();
+                    string agencyTime = agencyTimeObj?.ToString()?.Trim();
+                    string isAgencyCertifiedStr = isAgencyCertifiedObj?.ToString()?.Trim();
+
+                    bool? isAgencyCertified = null;
+                    if (!string.IsNullOrEmpty(isAgencyCertifiedStr))
+                    {
+                        isAgencyCertified = isAgencyCertifiedStr.Equals("yes", StringComparison.OrdinalIgnoreCase)
+                                            || isAgencyCertifiedStr.Equals("y", StringComparison.OrdinalIgnoreCase)
+                                            || isAgencyCertifiedStr.Equals("1", StringComparison.OrdinalIgnoreCase)
+                                            || isAgencyCertifiedStr.Equals("có", StringComparison.OrdinalIgnoreCase)
+                                            || isAgencyCertifiedStr.Equals("true", StringComparison.OrdinalIgnoreCase)
+                                            || isAgencyCertifiedStr.Equals("Yes", StringComparison.OrdinalIgnoreCase);
+                    }
 
                     // 1. Kiểm tra thiếu Mã NV
                     if (string.IsNullOrEmpty(maNv))
@@ -229,11 +251,11 @@ namespace RERPAPI.Controllers.Purchase
                         continue;
                     }
 
-                    // 4. Kiểm tra độ dài Mặt hàng hoặc Ghi chú > 550
-                    if (matHang?.Length > 550 || ghiChu?.Length > 550)
+                    // 4. Kiểm tra độ dài Mặt hàng, Ghi chú, Website hoặc Thời điểm đại lý > 550
+                    if (matHang?.Length > 550 || ghiChu?.Length > 550 || website?.Length > 550 || agencyTime?.Length > 550)
                     {
                         skipped++;
-                        errors.Add($"{rowLabel}: Mặt hàng hoặc Ghi chú vượt quá 550 ký tự");
+                        errors.Add($"{rowLabel}: Mặt hàng, Ghi chú, Website hoặc Thời điểm đại lý vượt quá 550 ký tự");
                         continue;
                     }
 
@@ -262,6 +284,12 @@ namespace RERPAPI.Controllers.Purchase
                         // Update
                         existLink.MatHang = matHang;
                         existLink.Note = ghiChu;
+                        existLink.Website = website;
+                        existLink.AgencyTime = agencyTime;
+                        if (isAgencyCertified != null)
+                        {
+                            existLink.IsAgencyCertified = isAgencyCertified.Value;
+                        }
                         existLink.UpdatedDate = DateTime.Now;
                         existLink.UpdatedBy = currentUsername;
 
@@ -277,6 +305,9 @@ namespace RERPAPI.Controllers.Purchase
                             SupplierSaleID = supplier.ID,
                             MatHang = matHang,
                             Note = ghiChu,
+                            Website = website,
+                            AgencyTime = agencyTime,
+                            IsAgencyCertified = isAgencyCertified ?? false,
                             CreatedDate = DateTime.Now,
                             CreatedBy = currentUsername
                         };
