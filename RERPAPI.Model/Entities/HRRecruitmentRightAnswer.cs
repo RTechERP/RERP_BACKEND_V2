@@ -1,4 +1,7 @@
-﻿namespace RERPAPI.Model.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace RERPAPI.Model.Entities;
 
 /// <summary>
 /// Bảng lưu trữ các câu trả lời đúng cho các câu hỏi tuyển dụng.
@@ -36,7 +39,7 @@ public partial class HRRecruitmentRightAnswer
     public string? UpdatedBy { get; set; }
 
     /// <summary>
-    /// Ngày cập nhật bản ghi
+    /// Ngày cập nhật bản ghi 
     /// </summary>
     public DateTime? UpdatedDate { get; set; }
 

@@ -1,4 +1,7 @@
-﻿namespace RERPAPI.Model.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace RERPAPI.Model.Entities;
 
 public partial class TaxEmployee
 {
@@ -141,7 +144,7 @@ public partial class TaxEmployee
     public int? LoaiHDLDID { get; set; }
 
     /// <summary>
-    /// 1:
+    /// 1: 
     /// </summary>
     public string? TinhTrangKyHD { get; set; }
 

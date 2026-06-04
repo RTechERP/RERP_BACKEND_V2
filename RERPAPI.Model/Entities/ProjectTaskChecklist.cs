@@ -1,4 +1,7 @@
-﻿namespace RERPAPI.Model.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace RERPAPI.Model.Entities;
 
 /// <summary>
 /// Bảng lưu chi tiết checklist công việc của dự án
@@ -16,7 +19,7 @@ public partial class ProjectTaskChecklist
     public int? ProjectTaskID { get; set; }
 
     /// <summary>
-    /// Nội dung của checklist
+    /// Nội dung của checklist 
     /// </summary>
     public string? ChecklistTitle { get; set; }
 

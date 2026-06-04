@@ -1,4 +1,7 @@
-﻿namespace RERPAPI.Model.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace RERPAPI.Model.Entities;
 
 public partial class BillExport
 {
@@ -93,7 +96,7 @@ public partial class BillExport
     public int? UnApprove { get; set; }
 
     /// <summary>
-    /// ID kho
+    /// ID kho 
     /// </summary>
     public int? WarehouseID { get; set; }
 

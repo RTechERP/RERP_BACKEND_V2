@@ -927,8 +927,14 @@ app.UseSerilogRequestLogging(options =>
 });
 
 app.UseHttpsRedirection();
-
+//Config static file
 app.UseStaticFiles();
+
+app.Use(async (context, next) =>
+{
+    context.Request.Path = context.Request.Path.Value?.ToLower();
+    await next();
+});
 
 app.UseRouting();
 app.UseCors("MyCors");
@@ -939,13 +945,6 @@ app.UseSession();
 
 app.MapControllers();
 
-//Config static file
-
-app.Use(async (context, next) =>
-{
-    context.Request.Path = context.Request.Path.Value?.ToLower();
-    await next();
-});
 
 app.UseStaticFiles();
 List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();

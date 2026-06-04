@@ -1,4 +1,7 @@
-﻿namespace RERPAPI.Model.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace RERPAPI.Model.Entities;
 
 /// <summary>
 /// Kinh nghiệm làm việc của ứng viên

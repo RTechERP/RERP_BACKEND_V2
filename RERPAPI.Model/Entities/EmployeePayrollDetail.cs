@@ -1,4 +1,7 @@
-﻿namespace RERPAPI.Model.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace RERPAPI.Model.Entities;
 
 public partial class EmployeePayrollDetail
 {
@@ -23,7 +26,7 @@ public partial class EmployeePayrollDetail
     public decimal? TotalMerit { get; set; }
 
     /// <summary>
-    /// Tổng lương theo ngày công
+    /// Tổng lương theo ngày công 
     /// </summary>
     public decimal? TotalSalaryByDay { get; set; }
 
@@ -33,7 +36,7 @@ public partial class EmployeePayrollDetail
     public decimal? SalaryOneHour { get; set; }
 
     /// <summary>
-    ///  Số giờ làm thêm ngày thường
+    ///  Số giờ làm thêm ngày thường  
     /// </summary>
     public decimal? OT_Hour_WD { get; set; }
 
@@ -63,7 +66,7 @@ public partial class EmployeePayrollDetail
     public decimal? OT_Money_HD { get; set; }
 
     /// <summary>
-    /// Phụ cấp chuyên cần
+    /// Phụ cấp chuyên cần 
     /// thực nhận
     /// </summary>
     public decimal? RealIndustry { get; set; }
@@ -74,7 +77,7 @@ public partial class EmployeePayrollDetail
     public decimal? AllowanceMeal { get; set; }
 
     /// <summary>
-    /// Phụ cấp làm thêm trước 7H15
+    /// Phụ cấp làm thêm trước 7H15 
     /// </summary>
     public decimal? Allowance_OT_Early { get; set; }
 
@@ -94,7 +97,7 @@ public partial class EmployeePayrollDetail
     public decimal? CostVehicleBussiness { get; set; }
 
     /// <summary>
-    /// &quot;Thưởng
+    /// &quot;Thưởng 
     /// KPIs/doanh số&quot;
     /// </summary>
     public decimal? Bonus { get; set; }
@@ -105,7 +108,7 @@ public partial class EmployeePayrollDetail
     public decimal? Other { get; set; }
 
     /// <summary>
-    /// &quot;Tổng thu nhập
+    /// &quot;Tổng thu nhập 
     /// thực tế&quot;
     /// </summary>
     public decimal? RealSalary { get; set; }

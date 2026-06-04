@@ -1,4 +1,7 @@
-﻿namespace RERPAPI.Model.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace RERPAPI.Model.Entities;
 
 /// <summary>
 /// Phiếu đánh giá kết quả phỏng vấn
@@ -27,7 +30,7 @@ public partial class HRRecruitmentInterviewAssessmentForm
 
     /// <summary>
     /// Note đánh giá chung
-    ///
+    /// 
     /// </summary>
     public string? OverrallImpressionNote { get; set; }
 
@@ -38,7 +41,7 @@ public partial class HRRecruitmentInterviewAssessmentForm
 
     /// <summary>
     /// Note trình độ
-    ///
+    /// 
     /// </summary>
     public string? QualificationsNote { get; set; }
 

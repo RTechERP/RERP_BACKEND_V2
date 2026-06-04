@@ -1,4 +1,7 @@
-﻿namespace RERPAPI.Model.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace RERPAPI.Model.Entities;
 
 /// <summary>
 /// Bảng lưu chi tiết log khi thay đổi thông tin công việc của dự án
@@ -46,7 +49,7 @@ public partial class ProjectTaskLog
     public string UpdatedBy { get; set; } = null!;
 
     /// <summary>
-    /// Trạng thái khóa mềm
+    /// Trạng thái khóa mềm 
     /// </summary>
     public bool? IsDeleted { get; set; }
 }

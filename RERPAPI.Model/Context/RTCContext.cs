@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Model.Context;
@@ -9797,6 +9799,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.EndDate).HasColumnType("datetime");
+            entity.Property(e => e.IsNotifycation).HasComment("0.Không thông báo, 1.Có thông báo");
             entity.Property(e => e.IsPublic).HasDefaultValue(false);
             entity.Property(e => e.StartDate).HasColumnType("datetime");
             entity.Property(e => e.Title).HasMaxLength(550);
@@ -10514,7 +10517,7 @@ public partial class RTCContext : DbContext
                 .HasComment("lưu tên người yêu cầu lấy từ bảng Employee, nếu  = 0 thì là tên KH");
             entity.Property(e => e.EstimatedTime)
                 .HasComment("Thời gian dự kiến (h)")
-                .HasColumnType("decimal(5, 2)");
+                .HasColumnType("decimal(18, 2)");
             entity.Property(e => e.IsAdditional)
                 .HasDefaultValue(false)
                 .HasComment("Trạng thái đánh giá xem có phát sinh không ");
@@ -11536,9 +11539,7 @@ public partial class RTCContext : DbContext
 
             entity.ToTable("ProjectTaskStatus");
 
-            entity.Property(e => e.ID)
-                .ValueGeneratedNever()
-                .HasComment("ID tự tăng");
+            entity.Property(e => e.ID).HasComment("ID tự tăng");
             entity.Property(e => e.ColorBackground)
                 .HasMaxLength(255)
                 .HasComment("Màu nền của trạng thái");
@@ -14266,6 +14267,7 @@ public partial class RTCContext : DbContext
 
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.Name).HasMaxLength(50);
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
@@ -14754,5 +14756,5 @@ public partial class RTCContext : DbContext
         OnModelCreatingPartial(modelBuilder);
     }
 
-    private partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
+    partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }

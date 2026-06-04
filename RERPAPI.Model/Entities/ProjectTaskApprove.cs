@@ -1,4 +1,7 @@
-﻿namespace RERPAPI.Model.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace RERPAPI.Model.Entities;
 
 /// <summary>
 /// Bảng lưu chi tiết duyệt công việc của dự án
@@ -26,7 +29,7 @@ public partial class ProjectTaskApprove
     public bool? IsApprove { get; set; }
 
     /// <summary>
-    /// Nội dung đánh giá
+    /// Nội dung đánh giá 
     /// </summary>
     public string? Review { get; set; }
 
@@ -51,7 +54,7 @@ public partial class ProjectTaskApprove
     public string? UpdatedBy { get; set; }
 
     /// <summary>
-    /// Trạng thái xóa mềm
+    /// Trạng thái xóa mềm 
     /// </summary>
     public bool? IsDeleted { get; set; }
 

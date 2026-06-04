@@ -1,4 +1,7 @@
-﻿namespace RERPAPI.Model.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace RERPAPI.Model.Entities;
 
 public partial class ProjectTaskWeight
 {
@@ -18,7 +21,7 @@ public partial class ProjectTaskWeight
     public string? Name { get; set; }
 
     /// <summary>
-    /// Yếu tố trọng số
+    /// Yếu tố trọng số 
     /// </summary>
     public decimal? Factor { get; set; }
 
@@ -48,7 +51,7 @@ public partial class ProjectTaskWeight
     public string? UpdatedBy { get; set; }
 
     /// <summary>
-    /// Trạng thái khóa mềm
+    /// Trạng thái khóa mềm 
     /// </summary>
     public bool? IsDeleted { get; set; }
 }

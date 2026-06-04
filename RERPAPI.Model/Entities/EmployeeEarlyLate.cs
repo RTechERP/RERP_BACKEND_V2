@@ -1,4 +1,7 @@
-﻿namespace RERPAPI.Model.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace RERPAPI.Model.Entities;
 
 public partial class EmployeeEarlyLate
 {
@@ -23,7 +26,7 @@ public partial class EmployeeEarlyLate
     public int? Unit { get; set; }
 
     /// <summary>
-    /// 1: Đi muộn việc cá nhân; 2: Về sớm việc cá nhân;  3: Về sớm việc công ty; 4:Đi muộn việc  công ty;
+    /// 1: Đi muộn việc cá nhân; 2: Về sớm việc cá nhân;  3: Về sớm việc công ty; 4:Đi muộn việc  công ty; 
     /// </summary>
     public int? Type { get; set; }
 
