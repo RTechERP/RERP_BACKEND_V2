@@ -109,7 +109,19 @@ namespace RERPAPI.Controllers.HRM
                 var files = _trackingMarksFileRepo.GetAll()
                     .Where(x => x.TrackingMarksID == id).ToList();
 
-                var employee = _employeeRepo.GetByID(tracking.EmployeeID ?? 0);
+                //var employee = _employeeRepo.GetByID(tracking.EmployeeID ?? 0);
+                var employee = _employeeRepo
+                        .GetAll()
+                        .Where(x => x.ID == (tracking.EmployeeID ?? 0))
+                        .Select(x => new
+                        {
+                            x.ID,
+                            x.FullName,
+                            x.UserID,
+                            x.Code,
+                            x.DepartmentID
+                        })
+                        .FirstOrDefault();
                 var department = _departmentRepo.GetByID(employee.DepartmentID ?? 0);
 
                 return Ok(ApiResponseFactory.Success(new
