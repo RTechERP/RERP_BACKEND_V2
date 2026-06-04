@@ -1333,71 +1333,95 @@ namespace RERPAPI.Controllers
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
 
-                bool isBGD = currentUser.DepartmentID == 1 && currentUser.EmployeeID != 54;
+                var permissions = currentUser.Permissions?.Split(',').Select(p => p.Trim()).ToList() ?? new List<string>();
+                object? result = null;
 
-                request.DateStart = request.DateStart.Value.ToLocalTime().Date;
-                request.DateEnd = request.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
-                var paramSenior = new
+                if (permissions.Contains("N1"))
                 {
-                    FilterText = "",
-                    DateStart = request.DateStart,
-                    DateEnd = request.DateEnd,
-                    IDApprovedTP = 0,
-                    Status = 0,
-                    DeleteFlag = 0,
-                    EmployeeID = 0,
-                    TType = 0,
-                    StatusHR = -1,
-                    StatusBGD = -1,
-                    IsBGD = false,
-                    UserTeamID = 0,
-                    SeniorID = currentUser.EmployeeID,
-                    StatusSenior = 0
-                };
-                var paramTP = new
+                    bool isBGD = currentUser.DepartmentID == 1 && currentUser.EmployeeID != 54;
+                    request.DateStart = request.DateStart.Value.ToLocalTime().Date;
+                    request.DateEnd = request.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
+                    var paramBGD = new
+                    {
+                        FilterText = "",
+                        DateStart = request.DateStart,
+                        DateEnd = request.DateEnd,
+                        IDApprovedTP = currentUser.EmployeeID,
+                        Status = 0,
+                        DeleteFlag = 0,
+                        EmployeeID = 0,
+                        TType = 0,
+                        StatusHR = -1,
+                        StatusBGD = 0,
+                        IsBGD = isBGD,
+                        UserTeamID = 0,
+                        SeniorID = 0,
+                        StatusSenior = -1
+                    };
+                    var approveResultBGD = await SqlDapper<object>.ProcedureToListTAsync("spGetApprovedByApprovedTP_New", paramBGD);
+                    int count = approveResultBGD?.Count ?? 0;
+                    if (count > 0)
+                    {
+                        result = new { Type = "BGD", Count = count };
+                    }
+                }
+                else if (permissions.Contains("N85"))
                 {
-                    FilterText = "",
-                    DateStart = request.DateStart,
-                    DateEnd = request.DateEnd,
-                    IDApprovedTP = currentUser.EmployeeID,
-                    Status = 0,
-                    DeleteFlag = 0,
-                    EmployeeID = 0,
-                    TType = 0,
-                    StatusHR = -1,
-                    StatusBGD = 0,
-                    IsBGD = false,
-                    UserTeamID = 0,
-                    SeniorID = 0,
-                    StatusSenior = -1
-                };
-                var paramBGD = new
+                    request.DateStart = request.DateStart.Value.ToLocalTime().Date;
+                    request.DateEnd = request.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
+                    var paramSenior = new
+                    {
+                        FilterText = "",
+                        DateStart = request.DateStart,
+                        DateEnd = request.DateEnd,
+                        IDApprovedTP = 0,
+                        Status = 0,
+                        DeleteFlag = 0,
+                        EmployeeID = 0,
+                        TType = 0,
+                        StatusHR = -1,
+                        StatusBGD = -1,
+                        IsBGD = false,
+                        UserTeamID = 0,
+                        SeniorID = currentUser.EmployeeID,
+                        StatusSenior = 0
+                    };
+                    var approveResultSenior = await SqlDapper<object>.ProcedureToListTAsync("spGetApprovedByApprovedTP_New", paramSenior);
+                    int count = approveResultSenior?.Count ?? 0;
+                    if (count > 0)
+                    {
+                        result = new { Type = "Senior", Count = count };
+                    }
+                }
+                else if (permissions.Contains("N32"))
                 {
-                    FilterText = "",
-                    DateStart = request.DateStart,
-                    DateEnd = request.DateEnd,
-                    IDApprovedTP = currentUser.EmployeeID,
-                    Status = 0,
-                    DeleteFlag = 0,
-                    EmployeeID = 0,
-                    TType = 0,
-                    StatusHR = -1,
-                    StatusBGD = 0,
-                    IsBGD = isBGD,
-                    UserTeamID = 0,
-                    SeniorID = 0,
-                    StatusSenior = -1
-                };
-                var approveResultSenior = await SqlDapper<object>.ProcedureToListTAsync("spGetApprovedByApprovedTP_New", paramSenior);
-                var approveResultTP = await SqlDapper<object>.ProcedureToListTAsync("spGetApprovedByApprovedTP_New", paramTP);
-                var approveResultBGD = await SqlDapper<object>.ProcedureToListTAsync("spGetApprovedByApprovedTP_New", paramBGD);
+                    request.DateStart = request.DateStart.Value.ToLocalTime().Date;
+                    request.DateEnd = request.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
+                    var paramTP = new
+                    {
+                        FilterText = "",
+                        DateStart = request.DateStart,
+                        DateEnd = request.DateEnd,
+                        IDApprovedTP = currentUser.EmployeeID,
+                        Status = 0,
+                        DeleteFlag = 0,
+                        EmployeeID = 0,
+                        TType = 0,
+                        StatusHR = -1,
+                        StatusBGD = 0,
+                        IsBGD = false,
+                        UserTeamID = 0,
+                        SeniorID = 0,
+                        StatusSenior = -1
+                    };
+                    var approveResultTP = await SqlDapper<object>.ProcedureToListTAsync("spGetApprovedByApprovedTP_New", paramTP);
+                    int count = approveResultTP?.Count ?? 0;
+                    if (count > 0)
+                    {
+                        result = new { Type = "TP", Count = count };
+                    }
+                }
 
-                var result = new[]
-                        {
-                            new { Type = "Senior", Count = approveResultSenior?.Count ?? 0 },
-                            new { Type = "TP",     Count = approveResultTP?.Count ?? 0 },
-                            new { Type = "BGD",    Count = approveResultBGD?.Count ?? 0 }
-                        }.FirstOrDefault(x => x.Count > 0);
                 return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
