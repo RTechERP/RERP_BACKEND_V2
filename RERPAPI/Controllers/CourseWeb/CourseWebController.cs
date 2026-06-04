@@ -422,7 +422,7 @@ namespace RERPAPI.Controllers.CourseWeb
         {
             try
             {
-                var courseLessonFile = _courseFilesRepo.GetAll(x => x.LessonID == lessonId && (!x.IsDeleted ?? true));
+                var courseLessonFile = _courseFilesRepo.GetAll(x => x.LessonID == lessonId && (!x.IsDeleted ?? true) && !string.IsNullOrEmpty(x.NameFile));
 
                 return Ok(ApiResponseFactory.Success(courseLessonFile, "Success"));
             }
