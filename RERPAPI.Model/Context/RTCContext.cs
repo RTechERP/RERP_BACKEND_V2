@@ -13222,9 +13222,13 @@ public partial class RTCContext : DbContext
             entity.ToTable("SupplierSaleLink", tb => tb.HasComment("Bảng liên kết SupplierSale và EmployeePurchase"));
 
             entity.Property(e => e.ID).HasComment("ID bản ghi");
+            entity.Property(e => e.AgencyTime)
+                .HasMaxLength(550)
+                .HasComment("TG thành đại lí");
             entity.Property(e => e.CreatedBy).HasMaxLength(50);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.EmployeePurchaseID).HasComment("ID bảng EmployeePurchase");
+            entity.Property(e => e.IsAgencyCertified).HasComment("1: Có, 0: Không");
             entity.Property(e => e.MatHang)
                 .HasMaxLength(550)
                 .HasComment("Mặt hàng");
@@ -13234,6 +13238,9 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.SupplierSaleID).HasComment("ID bảng SupplierSale");
             entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+            entity.Property(e => e.Website)
+                .HasMaxLength(550)
+                .HasComment("Website NCC");
         });
 
         modelBuilder.Entity<TSAllocationAssetPersonal>(entity =>
