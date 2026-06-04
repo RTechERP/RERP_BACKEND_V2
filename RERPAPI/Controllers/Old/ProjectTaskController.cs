@@ -1973,6 +1973,19 @@ namespace RERPAPI.Controllers.Project
                         var result = await SqlDapper<UserTeam>.ExecuteStoredProcedure("spUpdateDateToNull", param);
                     }
 
+
+
+                    // Xóa Deadline
+                    if (projectTask.Deadline == null && existingTask.Deadline?.Date != projectTask.Deadline?.Date)
+                    {
+                        var param = new
+                        {
+                            Id = existingTask.ID,
+                            Col = "Deadline"
+                        };
+                        var result = await SqlDapper<object>.ExecuteStoredProcedure("spUpdateDateToNull", param);
+                    }
+
                     if (!(projectTask.NeedApprove ?? true) && projectTask.Status == 2)
                     {
                         var newProjectTaskApprove = new ProjectTaskApprove
@@ -2862,7 +2875,8 @@ namespace RERPAPI.Controllers.Project
         [HttpPost("efficiency-task-project-total")]
         public async Task<IActionResult> EfficiencyByTaskProjectTotal([FromQuery] DateTime dateStart,
             [FromQuery] DateTime dateEnd,
-            [FromQuery] int projectID = 0
+            [FromQuery] int projectID = 0,
+            [FromQuery] int departmentID = 0
             )
         {
             try
@@ -2875,7 +2889,8 @@ namespace RERPAPI.Controllers.Project
                 {
                     DateStart = dateStart,
                     DateEnd = dateEnd,
-                    ProjectID = projectID
+                    ProjectID = projectID,
+                    DepartmentID = departmentID
                 };
                 var projectTasks = await SqlDapper<object>.ProcedureToListAsync("spProjectTaskEfficiencyByEmployee", param);
                 return Ok(ApiResponseFactory.Success(projectTasks));
