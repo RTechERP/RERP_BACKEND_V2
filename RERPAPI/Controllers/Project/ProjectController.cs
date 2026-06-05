@@ -538,16 +538,17 @@ namespace RERPAPI.Controllers.Project
                 int[] typeCheck = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
                 List<int> projectTypeIDs = projectTypeRepo.GetAll().Select(x => x.ID).ToList();
 
-                if (string.IsNullOrWhiteSpace(projectType)) projectType = string.Join(",", projectTypeIDs);
-                else
+                if (string.IsNullOrWhiteSpace(projectType))
+                    projectType = string.Join(",", projectTypeIDs);
+
+                // ✅ foreach chạy SAU khi đã đảm bảo projectType có giá trị
+                foreach (string item in projectType.Split(','))
                 {
-                    foreach (string item in projectType.Split(','))
+                    if (string.IsNullOrWhiteSpace(item)) continue;
+                    int index = projectTypeIDs.IndexOf(Convert.ToInt32(item));
+                    if (index >= 0 && index < typeCheck.Length)
                     {
-                        int index = projectTypeIDs.IndexOf(Convert.ToInt32(item));
-                        if (index >= 0 && index < typeCheck.Length)
-                        {
-                            typeCheck[index] = 1;
-                        }
+                        typeCheck[index] = 1;
                     }
                 }
 
