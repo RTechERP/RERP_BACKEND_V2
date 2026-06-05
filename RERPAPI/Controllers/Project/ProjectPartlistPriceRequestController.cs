@@ -34,7 +34,27 @@ namespace RERPAPI.Controllers.Project
         private readonly EmailHelper _emailHelper;
         private readonly ILogger<ProjectPartlistPriceRequestController> _logger;
 
-        public ProjectPartlistPriceRequestController(ProjectRepo projectRepo, POKHRepo pOKHRepo, ProjectPartlistPriceRequestRepo requestRepo, ProductSaleRepo productSaleRepo, CurrencyRepo currencyRepo, SupplierSaleRepo supplierSaleRepo, ProjectSolutionRepo projectSolutionRepo, EmployeeSendEmailRepo employeeSendEmailRepo, ProjectPartlistPriceRequestTypeRepo projectPartlistPriceRequestTypeRepo, ProjectPartlistPriceRequestNoteRepo projectPartlistPriceRequestNoteRepo, ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo, UnitCountRepo unitCountRepo, ProductRTCRepo productRTCRepo, EmailHelper emailHelper, ILogger<ProjectPartlistPriceRequestController> logger)
+        private ProjectPartlistPurchaseRequestLogRepo _projectPartlistPurchaseRequestLogRepo;
+        private readonly ProjectPartlistPurchaseRequestLogRepo _PPPRLogRepo;
+
+        public ProjectPartlistPriceRequestController(
+            ProjectRepo projectRepo,
+            POKHRepo pOKHRepo,
+            ProjectPartlistPriceRequestRepo requestRepo,
+            ProductSaleRepo productSaleRepo,
+            CurrencyRepo currencyRepo,
+            SupplierSaleRepo supplierSaleRepo,
+            ProjectSolutionRepo projectSolutionRepo,
+            EmployeeSendEmailRepo employeeSendEmailRepo,
+            ProjectPartlistPriceRequestTypeRepo projectPartlistPriceRequestTypeRepo,
+            ProjectPartlistPriceRequestNoteRepo projectPartlistPriceRequestNoteRepo,
+            ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo,
+            UnitCountRepo unitCountRepo, ProductRTCRepo productRTCRepo,
+            EmailHelper emailHelper,
+            ILogger<ProjectPartlistPriceRequestController> logger,
+            ProjectPartlistPurchaseRequestLogRepo projectPartlistPurchaseRequestLogRepo,
+            ProjectPartlistPurchaseRequestLogRepo PPPRLogRepo
+            )
         {
             this.projectRepo = projectRepo;
             this.pOKHRepo = pOKHRepo;
@@ -51,6 +71,8 @@ namespace RERPAPI.Controllers.Project
             _productRTCRepo = productRTCRepo;
             _emailHelper = emailHelper;
             _logger = logger;
+            _projectPartlistPurchaseRequestLogRepo = projectPartlistPurchaseRequestLogRepo;
+            _PPPRLogRepo = PPPRLogRepo;
         }
 
         #endregion Khai báo repository
@@ -169,6 +191,8 @@ namespace RERPAPI.Controllers.Project
         }
 
         #endregion Lấy tất cả yêu cầu báo giá
+
+        #region API lấy dữ liệu
 
         [HttpGet("get-type")]
         public async Task<IActionResult> GetAllTypebyEmployeeID(int employeeID, int projectTypeID)
@@ -431,6 +455,55 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
+        [HttpGet("get-partlist-summary")]
+        [RequiresPermission("N35,N1,N33")]
+        public async Task<IActionResult> GetProjectPartlistsSummary(
+           DateTime dateStart, DateTime dateEnd, int statusRequest, int projectId, string? keyword, int employeeID, int isDeleted)
+        {
+            try
+            {
+                dateStart = dateStart.Date;
+                dateEnd = dateEnd.Date.AddHours(23).AddMinutes(59).AddSeconds(59);
+
+                var dtPriceRequestResults = SQLHelper<dynamic>.ProcedureToList(
+                    "spGetPurchaseQuoteSummaryDetail",
+                    new string[] {
+                    "@DateStart", "@DateEnd", "@StatusRequest", "@ProjectID", "@Keyword",
+                    "@IsDeleted", "@EmployeeID"
+                    },
+                    new object[] {
+                    dateStart, dateEnd, statusRequest, projectId, keyword ?? "", isDeleted, employeeID
+                    }
+                );
+
+                var dt = SQLHelper<dynamic>.GetListData(dtPriceRequestResults, 0);
+                return Ok(ApiResponseFactory.Success(dt, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("send-mail")]
+        [RequiresPermission("N35,N1")]
+        public async Task<IActionResult> SendMail(List<MailItemPriceRequestDTO> data)
+        {
+            try
+            {
+                await requestRepo.SendMail(data);
+                return Ok(ApiResponseFactory.Success(data));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        #endregion API lấy dữ liệu
+
+        #region Hàm check thêm log
+
         [HttpPost("check-price")]
         [RequiresPermission("N35,N1")]
         public async Task<IActionResult> CheckPrice(List<ProjectPartlistPriceRequest> lst)
@@ -475,21 +548,6 @@ namespace RERPAPI.Controllers.Project
                     await requestRepo.SaveData(item);
                 }
                 return Ok(ApiResponseFactory.Success(lst, "Hủy yêu cầu báo giá thành công!"));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        [HttpPost("send-mail")]
-        [RequiresPermission("N35,N1")]
-        public async Task<IActionResult> SendMail(List<MailItemPriceRequestDTO> data)
-        {
-            try
-            {
-                await requestRepo.SendMail(data);
-                return Ok(ApiResponseFactory.Success(data));
             }
             catch (Exception ex)
             {
@@ -668,6 +726,8 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
                 if (request == null || request.Products == null || !request.Products.Any())
                     return BadRequest(ApiResponseFactory.Fail(null, "Danh sách sản phẩm không được để trống."));
                 // Validate deadline
@@ -782,6 +842,8 @@ namespace RERPAPI.Controllers.Project
                         if (requestModel.ID <= 0 || request.ProjectPartlistPriceRequestTypeID == 7)
                         {
                             var inserted = await _projectPartlistPurchaseRequestRepo.CreateAsync(requestModel);
+                            await _PPPRLogRepo.AddLog(requestModel.ID, $"{currentUser.FullName} đã thêm mới yêu cầu mua hàng!", "Thêm mới");
+
                             bool isRequestBuy = requestModel.ID > 0;
                             var pricerequest = requestRepo.GetByID(item.ID);
                             pricerequest.IsRequestBuy = isRequestBuy;
@@ -823,6 +885,9 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
                 if (request == null || request.Products == null || !request.Products.Any())
                     return BadRequest(ApiResponseFactory.Fail(null, "Danh sách sản phẩm không được để trống."));
 
@@ -857,6 +922,7 @@ namespace RERPAPI.Controllers.Project
                         requestModel.UpdatedDate = DateTime.Now.AddMinutes(2);
 
                         var inserted = await _projectPartlistPurchaseRequestRepo.CreateAsync(requestModel);
+                        await _PPPRLogRepo.AddLog(requestModel.ID, $"{currentUser.FullName} đã thêm mới yêu cầu mua hàng!", "Thêm mới");
 
                         var pricerequest = requestRepo.GetByID(item.ProjectPartlistPriceRequestID);
                         pricerequest.IsRequestBuy = true;
@@ -1115,35 +1181,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-        [HttpGet("get-partlist-summary")]
-        [RequiresPermission("N35,N1,N33")]
-        public async Task<IActionResult> GetProjectPartlistsSummary(
-           DateTime dateStart, DateTime dateEnd, int statusRequest, int projectId, string? keyword, int employeeID, int isDeleted)
-        {
-            try
-            {
-                dateStart = dateStart.Date;
-                dateEnd = dateEnd.Date.AddHours(23).AddMinutes(59).AddSeconds(59);
-
-                var dtPriceRequestResults = SQLHelper<dynamic>.ProcedureToList(
-                    "spGetPurchaseQuoteSummaryDetail",
-                    new string[] {
-                    "@DateStart", "@DateEnd", "@StatusRequest", "@ProjectID", "@Keyword",
-                    "@IsDeleted", "@EmployeeID"
-                    },
-                    new object[] {
-                    dateStart, dateEnd, statusRequest, projectId, keyword ?? "", isDeleted, employeeID
-                    }
-                );
-
-                var dt = SQLHelper<dynamic>.GetListData(dtPriceRequestResults, 0);
-                return Ok(ApiResponseFactory.Success(dt, ""));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
+        #endregion
     }
+
 }

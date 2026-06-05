@@ -37,6 +37,7 @@ namespace RERPAPI.Controllers.Old
         private UnitCountKTRepo _unitCountKTRepo;
         private ProjectPartlistPurchaseRequestNoteRepo _projectPartlistPurchaseRequestNoteRepo;
         private ProjectPartlistPriceRequestRepo _projectPartlistPriceRequestRepo;
+        private ProjectPartlistPurchaseRequestLogRepo _projectPartListPurchaseRequestLogRepo;
 
         public ProjectPartlistPurchaseRequestController(
             ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo,
@@ -56,7 +57,8 @@ namespace RERPAPI.Controllers.Old
             ProductRTCRepo productRTCRepo,
             UnitCountKTRepo unitCountKTRepo,
             ProjectPartlistPurchaseRequestNoteRepo projectPartlistPurchaseRequestNoteRepo,
-            ProjectPartlistPriceRequestRepo projectPartlistPriceRequestRepo
+            ProjectPartlistPriceRequestRepo projectPartlistPriceRequestRepo,
+            ProjectPartlistPurchaseRequestLogRepo projectPartListPurchaseRequestLogRepo
             )
         {
             _repo = projectPartlistPurchaseRequestRepo;
@@ -77,6 +79,7 @@ namespace RERPAPI.Controllers.Old
             _unitCountKTRepo = unitCountKTRepo;
             _projectPartlistPurchaseRequestNoteRepo = projectPartlistPurchaseRequestNoteRepo;
             _projectPartlistPriceRequestRepo = projectPartlistPriceRequestRepo;
+            _projectPartListPurchaseRequestLogRepo = projectPartListPurchaseRequestLogRepo;
         }
 
         #endregion Khai báo repository
@@ -301,6 +304,8 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
+        #region API cần lưu log
+
         [HttpPost("check-order")]
         [RequiresPermission("N35,N1")]
         public async Task<IActionResult> CheckOrder([FromBody] List<int> listIds, bool status)
@@ -342,6 +347,22 @@ namespace RERPAPI.Controllers.Old
                 foreach (var item in projectPartlistPurchaseRequests)
                 {
                     item.EmployeeIDRequestApproved = employeeId;
+                    var oldModel = _repo.GetByID(item.ID);
+                    if (oldModel != null) //logycmh
+                    {
+                        string log = _projectPartListPurchaseRequestLogRepo.GenerateLog(oldModel, item);
+                        if (!String.IsNullOrWhiteSpace(log))
+                        {
+                            log += $"+ Đã {statusText} đặt hàng sản phẩm.\n";
+                            await _projectPartListPurchaseRequestLogRepo.
+                                AddLog(item.ID, $"{currentUser.FullName} đã cập nhật:\n{log}", "Cập nhật");
+                        }
+                        else
+                        {
+                            await _projectPartListPurchaseRequestLogRepo.
+                                AddLog(item.ID, $"{currentUser.FullName} đã {statusText} đặt hàng sản phẩm", "Cập nhật");
+                        }
+                    }
                     await _repo.UpdateAsync(item);
                     await _projectPartListPurchaseRequestApproveLogRepo.CreateLogAsync(item.ID, logStatus, currentUser.EmployeeID, currentUser.LoginName);
                 }
@@ -382,6 +403,23 @@ namespace RERPAPI.Controllers.Old
                     _repo.UpdateData(item);
                     item.IsRequestApproved = status;
                     item.EmployeeIDRequestApproved = currentUser.EmployeeID;
+
+                    if (existingRequest != null) //logycmh
+                    {
+                        string log = _projectPartListPurchaseRequestLogRepo.GenerateLog(existingRequest, item);
+                        if (!String.IsNullOrWhiteSpace(log))
+                        {
+                            log += $"\n+ Đã {textStatus} mua sản phẩm.\n";
+                            await _projectPartListPurchaseRequestLogRepo.
+                                AddLog(item.ID, $"{currentUser.FullName} đã cập nhật:\n{log}", "Cập nhật");
+                        }
+                        else
+                        {
+                            await _projectPartListPurchaseRequestLogRepo.
+                                AddLog(item.ID, $"{currentUser.FullName} đã {textStatus} mua sản phẩm", "Cập nhật");
+                        }
+                    }
+
                     await _repo.UpdateAsync(item);
                     await _projectPartListPurchaseRequestApproveLogRepo.CreateLogAsync(item.ID, logStatus, currentUser.EmployeeID, currentUser.LoginName);
                 }
@@ -421,6 +459,22 @@ namespace RERPAPI.Controllers.Old
                     _repo.UpdateData(item);
                     item.StatusRequest = status;
                     item.EmployeeIDRequestApproved = currentUser.EmployeeID;
+
+                    if (existingRequest != null) //logycmh
+                    {
+                        string log = _projectPartListPurchaseRequestLogRepo.GenerateLog(existingRequest, item);
+                        if (!String.IsNullOrWhiteSpace(log))
+                        {
+                            log += $"\n+ Đã {textStatus} sản phẩm.\n";
+                            await _projectPartListPurchaseRequestLogRepo.
+                                AddLog(item.ID, $"{currentUser.FullName} đã cập nhật:\n{log}", "Cập nhật");
+                        }
+                        else
+                        {
+                            await _projectPartListPurchaseRequestLogRepo.
+                                AddLog(item.ID, $"+ {currentUser.FullName} đã {textStatus} sản phẩm", "Cập nhật");
+                        }
+                    }
 
                     await _repo.UpdateAsync(item);
                     await _projectPartListPurchaseRequestApproveLogRepo.CreateLogAsync(item.ID, logStatus, currentUser.EmployeeID, currentUser.LoginName);
@@ -487,6 +541,22 @@ namespace RERPAPI.Controllers.Old
                     }
                     await _projectPartListPurchaseRequestApproveLogRepo.CreateLogAsync(item.ID, logStatus, currentUser.EmployeeID, currentUser.LoginName);
 
+                    if (existingRequest != null) //logycmh
+                    {
+                        string log = _projectPartListPurchaseRequestLogRepo.GenerateLog(existingRequest, item);
+                        if (!String.IsNullOrWhiteSpace(log))
+                        {
+                            log += $"\n+ Đã {textStatus} mua sản phẩm.\n";
+                            await _projectPartListPurchaseRequestLogRepo.
+                                AddLog(item.ID, $"{currentUser.FullName} đã cập nhật:\n{log}", "Cập nhật");
+                        }
+                        else
+                        {
+                            await _projectPartListPurchaseRequestLogRepo.
+                                AddLog(item.ID, $"+ {currentUser.FullName} đã {textStatus} mua sản phẩm", "Cập nhật");
+                        }
+                    }
+
                     await _repo.UpdateAsync(existingRequest);
                 }
 
@@ -503,6 +573,9 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
                 if (!_repo.Validate(model, out string message))
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, message));
@@ -515,6 +588,15 @@ namespace RERPAPI.Controllers.Old
                         foreach (var item in requestBoughts)
                         {
                             item.IsDeleted = model.IsTechBought;
+
+                            var oldModel = _repo.GetByID(item.ID);
+                            string log = _projectPartListPurchaseRequestLogRepo.GenerateLog(oldModel, item);
+                            if (!String.IsNullOrWhiteSpace(log))
+                            {
+                                await _projectPartListPurchaseRequestLogRepo.
+                                    AddLog(item.ID, $"{currentUser.FullName} đã cập nhật:\n{log}", "Cập nhật");
+                            }
+
                             await _repo.UpdateAsync(item);
                         }
                     }
@@ -863,6 +945,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
+                string log = ""; //logycmh
                 if (data.Count() <= 0) return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu không hợp lệ"));
 
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
@@ -889,9 +972,17 @@ namespace RERPAPI.Controllers.Old
                     if ((item.ProductGroupID <= 0 && item.ProductGroupRTCID <= 0))
                     {
                         _repo.UpdateData(item);
-                        if (item.ID <= 0) await _repo.CreateAsync(item);
+                        if (item.ID <= 0)
+                        {
+                            await _repo.CreateAsync(item);
+                            await _projectPartListPurchaseRequestLogRepo.
+                                AddLog(item.ID, $"{currentUser.FullName} đã thêm mới yêu cầu mua hàng!", "Thêm mới"); //logycmh
+                        }
                         else
                         {
+                            var oldModel = _repo.GetByID(item.ID);
+                            await _projectPartListPurchaseRequestLogRepo.updateLog(oldModel, item);
+
                             item.UpdatedDate = DateTime.Now;
                             await _repo.UpdateAsync(item);
                         }
@@ -954,9 +1045,17 @@ namespace RERPAPI.Controllers.Old
                     }
 
                     _repo.UpdateData(item);
-                    if (item.ID <= 0) await _repo.CreateAsync(item);
+                    if (item.ID <= 0)
+                    {
+                        await _repo.CreateAsync(item);
+                        await _projectPartListPurchaseRequestLogRepo.
+                                AddLog(item.ID, $"{currentUser.FullName} đã thêm mới yêu cầu mua hàng!", "Thêm mới"); //logycmh
+                    }
                     else
                     {
+                        var oldModel = _repo.GetByID(item.ID);
+                        await _projectPartListPurchaseRequestLogRepo.updateLog(oldModel, item);
+
                         item.UpdatedDate = DateTime.Now;
                         await _repo.UpdateAsync(item);
                     }
@@ -1004,6 +1103,10 @@ namespace RERPAPI.Controllers.Old
 
                     if (item.ID <= 0) continue;
                     item.IsDeleted = true;
+
+                    var oldModel = _repo.GetByID(item.ID);
+                    await _projectPartListPurchaseRequestLogRepo.updateLog(oldModel, item);
+
                     await _repo.UpdateAsync(item);
                     successData.Add(item);
 
@@ -1072,6 +1175,10 @@ namespace RERPAPI.Controllers.Old
                         foreach (var item in requestBoughts)
                         {
                             item.IsDeleted = true;
+
+                            var oldModel = _repo.GetByID(item.ID);
+                            await _projectPartListPurchaseRequestLogRepo.updateLog(oldModel, item);
+
                             await _repo.UpdateAsync(item);
                         }
                     }
@@ -1080,10 +1187,15 @@ namespace RERPAPI.Controllers.Old
                 if (requestBought.ID <= 0)
                 {
                     await _repo.CreateAsync(requestBought);
+                    await _projectPartListPurchaseRequestLogRepo.
+                            AddLog(requestBought.ID, $"{currentUser.FullName} đã thêm mới yêu cầu mua hàng!", "Thêm mới"); //logycmh
                     await _repo.SendMail(requestBought);
                 }
                 else
                 {
+                    var oldModel = _repo.GetByID(requestBought.ID);
+                    await _projectPartListPurchaseRequestLogRepo.updateLog(oldModel, requestBought);
+
                     await _repo.UpdateAsync(requestBought);
                 }
 
@@ -1115,6 +1227,10 @@ namespace RERPAPI.Controllers.Old
 
                     if (existingRequest.EmployeeIDRequestApproved != currentUser.EmployeeID
                         && !currentUser.IsAdmin) continue;
+
+                    var oldModel = _repo.GetByID(item.ID);
+                    await _projectPartListPurchaseRequestLogRepo.updateLog(oldModel, item);
+
                     await _repo.UpdateAsync(item);
                 }
                 return Ok(ApiResponseFactory.Success(null, $"Đã {import} "));
@@ -1159,12 +1275,19 @@ namespace RERPAPI.Controllers.Old
                         duplicate.OriginQuantity = existingRequest.Quantity;
                     }
                     await _repo.CreateAsync(duplicate);
+                    await _projectPartListPurchaseRequestLogRepo.
+                            AddLog(duplicate.ID, $"{currentUser.FullName} đã nhân bản yêu cầu mua hàng!", "Nhân bản"); //logycmh
+
                     var newId = duplicate.DuplicateID;
 
                     if (existingRequest.DuplicateID <= 0)
                     {
                         existingRequest.DuplicateID = newId;
                         existingRequest.OriginQuantity = duplicate.OriginQuantity;
+
+                        var oldModel = _repo.GetByID(existingRequest.ID);
+                        await _projectPartListPurchaseRequestLogRepo.updateLog(oldModel, existingRequest);
+
                         await _repo.UpdateAsync(existingRequest);
                     }
                 }
@@ -1225,6 +1348,10 @@ namespace RERPAPI.Controllers.Old
                         await _inventoryProjectRepo.CreateAsync(inventoryProject);
 
                     item.InventoryProjectID = inventoryProject.ID;
+
+                    var oldModel = _repo.GetByID(item.ID);
+                    await _projectPartListPurchaseRequestLogRepo.updateLog(oldModel, item);
+
                     await _repo.UpdateAsync(item);
                 }
 
@@ -1348,6 +1475,22 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        [HttpGet("log-activity")]
+        public IActionResult getProjectPartlistRequestId(int projectPartlistRequestId)
+        {
+            try
+            {
+                var data = _projectPartListPurchaseRequestLogRepo.GetAll().Where(x => x.ProjectPartListPurchaseRequestID == projectPartlistRequestId).OrderByDescending(x => x.CreatedDate).ToList();
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        #endregion API cần lưu log
 
         #region Lấy dữ liệu tổng hợp mua hàng dự án
 

@@ -18,6 +18,7 @@ namespace RERPAPI.Repo.GenericEntity
         private FirmRepo _firmRepo;
         private ProductGroupRTCRepo _productgroupRTCRepo;
         private EmailHelper _emailHelper;
+        private ProjectPartlistPurchaseRequestLogRepo _projectPartlistPurchaseRequestLogRepo;
 
         public ProjectPartlistPurchaseRequestRepo(
             CurrentUser currentUser,
@@ -29,7 +30,8 @@ namespace RERPAPI.Repo.GenericEntity
             UnitCountKTRepo unitCountKTRepo,
             FirmRepo firmRepo,
             ProductGroupRTCRepo productGroupRTCRepo,
-            EmailHelper emailHelper
+            EmailHelper emailHelper,
+            ProjectPartlistPurchaseRequestLogRepo projectPartlistPurchaseRequestLogRepo
         ) : base(currentUser)
         {
             _currentUser = currentUser;
@@ -42,6 +44,7 @@ namespace RERPAPI.Repo.GenericEntity
             _firmRepo = firmRepo;
             _productgroupRTCRepo = productGroupRTCRepo;
             _emailHelper = emailHelper;
+            _projectPartlistPurchaseRequestLogRepo = projectPartlistPurchaseRequestLogRepo;
         }
 
         public bool ValidateKeepProduct(List<ProductHoldDTO> requests, out string message)
@@ -765,6 +768,14 @@ namespace RERPAPI.Repo.GenericEntity
                     await _productRTCRepo.CreateAsync(productRTC);
                 }
                 item.ProductRTCID = productRTC.ID;
+
+                string log = _projectPartlistPurchaseRequestLogRepo.GenerateLog(request, item);
+                if (!String.IsNullOrWhiteSpace(log)) //logycmh
+                {
+                    await _projectPartlistPurchaseRequestLogRepo.
+                        AddLog(item.ID, $"{_currentUser.FullName} đã cập nhật:\n{log}", "Cập nhật");
+                }
+
                 await UpdateAsync(item);
             }
         }
