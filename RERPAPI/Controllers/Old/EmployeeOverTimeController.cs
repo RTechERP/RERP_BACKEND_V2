@@ -62,8 +62,10 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                var ds = request.DateStart.AddHours(00).AddMinutes(00).AddSeconds(00); // 00:00:00
-                var de = request.DateEnd.AddHours(23).AddMinutes(59).AddSeconds(59); // 23:59:59
+                //var ds = request.DateStart.AddHours(00).AddMinutes(00).AddSeconds(00); // 00:00:00
+                //var de = request.DateEnd.AddHours(23).AddMinutes(59).AddSeconds(59); // 23:59:59
+                var ds = request.DateStart.ToLocalTime().Date;
+                var de = request.DateEnd.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
                 var employeeOverTimeSummary = SQLHelper<object>.ProcedureToList("spGetEmployeeOnLeaveInWeb", new string[] { "@Keyword", "@DateStart", "@DateEnd", "@IsApproved", "@Type", "@DepartmentID", "@EmployeeID" },
                new object[] { request.Keyword ?? "", ds, de, request.IsApproved, request.Type, request.DepartmentID ?? 0, request.EmployeeID ?? 0 });
 
@@ -80,8 +82,10 @@ namespace RERPAPI.Controllers.Old
         [HttpPost("get-summary-over-time-person")]
         public IActionResult GetEmployeeOverTimePerson(EmployeeOverTimeSummaryPersonParam request)
         {
-            var ds = request.DateStart.AddHours(00).AddMinutes(00).AddSeconds(00); // 00:00:00
-            var de = request.DateEnd.AddHours(23).AddMinutes(59).AddSeconds(59); // 23:59:59
+            //var ds = request.DateStart.AddHours(00).AddMinutes(00).AddSeconds(00); // 00:00:00
+            //var de = request.DateEnd.AddHours(23).AddMinutes(59).AddSeconds(59); // 23:59:59
+            var ds = request.DateStart.ToLocalTime().Date;
+            var de = request.DateEnd.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
             var employeeOverTimeSummary = SQLHelper<object>.ProcedureToList("spGetEmployeeOvertime",
                new string[] { "@FilterText", "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@DepartmentID", "@IDApprovedTP", "@Status", "@EmployeeID", "@TeamID" },
                new object[] { request.FilterText ?? "", request.Page ?? 1, request.Size ?? 100000, ds, de, request.DepartmentID ?? 0, request.IDApprovedTP ?? 0, request.Status ?? -1, request.EmployeeID ?? 0, request.TeamID ?? 0 });
@@ -97,9 +101,10 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                var ds = request.DateStart.AddHours(0).AddMinutes(0).AddSeconds(0);   // 00:00:00
-                var de = request.DateEnd.AddHours(23).AddMinutes(59).AddSeconds(59);  // 23:59:59
-
+                //var ds = request.DateStart.AddHours(0).AddMinutes(0).AddSeconds(0);   // 00:00:00
+                //var de = request.DateEnd.AddHours(23).AddMinutes(59).AddSeconds(59);  // 23:59:59
+                var ds = request.DateStart.ToLocalTime().Date;
+                var de = request.DateEnd.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
                 var result = SQLHelper<object>.ProcedureToList(
                     "spGetEmployeeOvertimeByDept",
                     new string[] { "@FilterText", "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@DepartmentID", "@IDApprovedTP", "@Status", "@EmployeeID" },
