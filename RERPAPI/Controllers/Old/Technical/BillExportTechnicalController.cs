@@ -11,47 +11,47 @@ using RTCApi.Repo.GenericRepo;
 
 namespace RERPAPI.Controllers.Old.Technical
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class BillExportTechnicalController : ControllerBase
-    {
-        private readonly HistoryDeleteBillRepo _historyDeleteBillRepo;
-        private readonly BillExportTechnicalRepo _billExportTechnicalRepo;
-        private readonly BillExportDetailTechnicalRepo _billExportDetailTechnicalRepo;
-        private readonly BillExportTechDetailSerialRepo _billExportTechDetailSerialRepo;
-        private readonly InventoryDemoRepo _inventoryDemoRepo;
-        private readonly HistoryProductRTCRepo _historyProductRTCRepo;
-        private readonly ProductRTCQRCodeRepo _productRTCQRCodeRepo;
-        private readonly IConfiguration _configuration;
-        private readonly ProjectRepo _projectRepo;
-        private readonly BillExportTechnicalLogRepo _billExportTechnicalLogRepo;
-        private readonly ProductRTCRepo _productRTCRepo;
-        private readonly BillExportDetailSerialNumberModulaLocationRepo _billExportDetailSerialNumberModulaLocationRepo;
-        private readonly BillExportTechnicalAuditLogRepo _billExportTechnicalAuditLogRepo;
-        public BillExportTechnicalController(ProductRTCQRCodeRepo productRTCQRCodeRepo, BillExportTechnicalRepo billExportTechnicalRepo, BillExportDetailTechnicalRepo billExportDetailTechnicalRepo, BillExportTechDetailSerialRepo billExportTechDetailSerialRepo, HistoryDeleteBillRepo historyDeleteBillRepo, HistoryProductRTCRepo historyProductRTCRepo, InventoryDemoRepo inventoryDemoRepo, IConfiguration configuration, ProjectRepo projectRepo, BillExportTechnicalLogRepo billExportTechnicalLogRepo, ProductRTCRepo productRTCRepo, BillExportDetailSerialNumberModulaLocationRepo billExportDetailSerialNumberModulaLocationRepo, BillExportTechnicalAuditLogRepo billExportTechnicalAuditLogRepo)
-        {
-            _productRTCQRCodeRepo = productRTCQRCodeRepo;
-            _billExportTechnicalRepo = billExportTechnicalRepo;
-            _billExportDetailTechnicalRepo = billExportDetailTechnicalRepo;
-            _billExportTechDetailSerialRepo = billExportTechDetailSerialRepo;
-            _historyDeleteBillRepo = historyDeleteBillRepo;
-            _historyProductRTCRepo = historyProductRTCRepo;
-            _inventoryDemoRepo = inventoryDemoRepo;
-            _configuration = configuration;
-            _projectRepo = projectRepo;
-            _billExportTechnicalLogRepo = billExportTechnicalLogRepo;
-            _productRTCRepo = productRTCRepo;
-            _billExportDetailSerialNumberModulaLocationRepo = billExportDetailSerialNumberModulaLocationRepo;
-            _billExportTechnicalAuditLogRepo = billExportTechnicalAuditLogRepo;
-        }
-        [HttpPost("get-bill-export-technical")]
-        //[RequiresPermission("N19,N18,N26,N36,N29,N50,N54,N1")]
-        public ActionResult GetBillExportTechnical([FromBody] BillExportTechnicalRequestParam request)
-        {
-            try
-            {
-                DateTime? dateStart = request.DateStart?.Date;
-                DateTime? dateEnd = request.DateEnd?.Date.AddDays(1).AddSeconds(-1);
+	[Route("api/[controller]")]
+	[ApiController]
+	public class BillExportTechnicalController : ControllerBase
+	{
+		private readonly HistoryDeleteBillRepo _historyDeleteBillRepo;
+		private readonly BillExportTechnicalRepo _billExportTechnicalRepo;
+		private readonly BillExportDetailTechnicalRepo _billExportDetailTechnicalRepo;
+		private readonly BillExportTechDetailSerialRepo _billExportTechDetailSerialRepo;
+		private readonly InventoryDemoRepo _inventoryDemoRepo;
+		private readonly HistoryProductRTCRepo _historyProductRTCRepo;
+		private readonly ProductRTCQRCodeRepo _productRTCQRCodeRepo;
+		private readonly IConfiguration _configuration;
+		private readonly ProjectRepo _projectRepo;
+		private readonly BillExportTechnicalLogRepo _billExportTechnicalLogRepo;
+		private readonly ProductRTCRepo _productRTCRepo;
+		private readonly BillExportDetailSerialNumberModulaLocationRepo _billExportDetailSerialNumberModulaLocationRepo;
+		private readonly BillExportTechnicalAuditLogRepo _billExportTechnicalAuditLogRepo;
+		public BillExportTechnicalController(ProductRTCQRCodeRepo productRTCQRCodeRepo, BillExportTechnicalRepo billExportTechnicalRepo, BillExportDetailTechnicalRepo billExportDetailTechnicalRepo, BillExportTechDetailSerialRepo billExportTechDetailSerialRepo, HistoryDeleteBillRepo historyDeleteBillRepo, HistoryProductRTCRepo historyProductRTCRepo, InventoryDemoRepo inventoryDemoRepo, IConfiguration configuration, ProjectRepo projectRepo, BillExportTechnicalLogRepo billExportTechnicalLogRepo, ProductRTCRepo productRTCRepo, BillExportDetailSerialNumberModulaLocationRepo billExportDetailSerialNumberModulaLocationRepo, BillExportTechnicalAuditLogRepo billExportTechnicalAuditLogRepo)
+		{
+			_productRTCQRCodeRepo = productRTCQRCodeRepo;
+			_billExportTechnicalRepo = billExportTechnicalRepo;
+			_billExportDetailTechnicalRepo = billExportDetailTechnicalRepo;
+			_billExportTechDetailSerialRepo = billExportTechDetailSerialRepo;
+			_historyDeleteBillRepo = historyDeleteBillRepo;
+			_historyProductRTCRepo = historyProductRTCRepo;
+			_inventoryDemoRepo = inventoryDemoRepo;
+			_configuration = configuration;
+			_projectRepo = projectRepo;
+			_billExportTechnicalLogRepo = billExportTechnicalLogRepo;
+			_productRTCRepo = productRTCRepo;
+			_billExportDetailSerialNumberModulaLocationRepo = billExportDetailSerialNumberModulaLocationRepo;
+			_billExportTechnicalAuditLogRepo = billExportTechnicalAuditLogRepo;
+		}
+		[HttpPost("get-bill-export-technical")]
+		//[RequiresPermission("N19,N18,N26,N36,N29,N50,N54,N1")]
+		public ActionResult GetBillExportTechnical([FromBody] BillExportTechnicalRequestParam request)
+		{
+			try
+			{
+				DateTime? dateStart = request.DateStart?.Date;
+				DateTime? dateEnd = request.DateEnd?.Date.AddDays(1).AddSeconds(-1);
 
 				var billExportTechnical = SQLHelper<dynamic>.ProcedureToList(
 					"spGetBillExportTechnical",
@@ -130,42 +130,42 @@ namespace RERPAPI.Controllers.Old.Technical
 				});
 			}
 
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-        [HttpGet("get-all-project")]
-        public IActionResult GetAllProject()
-        {
-            var rs = _projectRepo.GetAll(x => x.IsDeleted == false || x.IsDeleted == null);
-            return Ok(ApiResponseFactory.Success(rs, ""));
-        }
-        [HttpGet("get-technical-logs/{billExportId}")]
-        public IActionResult GetTechnicalLogs(int billExportId)
-        {
-            try
-            {
-                var logs = _billExportTechnicalAuditLogRepo.GetAll(x => x.BillExportTechnicalID == billExportId && x.IsDeleted != true)
-                                                .OrderByDescending(x => x.CreatedDate)
-                                                .ToList();
-                return Ok(ApiResponseFactory.Success(logs));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-        [HttpGet("get-bill-export-technical-detail")]
-        public IActionResult GetbillImportTechnicalDetail(string? ID)
-        {
-            try
-            {
-                var billDetail = SQLHelper<dynamic>.ProcedureToList("spGetBillExportTechDetail_New", new string[] { "@ID" }, new object[] { ID });
-                return Ok(new
-                {
-                    status = 1,
-                    billDetail = SQLHelper<dynamic>.GetListData(billDetail, 0)
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+		[HttpGet("get-all-project")]
+		public IActionResult GetAllProject()
+		{
+			var rs = _projectRepo.GetAll(x => x.IsDeleted == false || x.IsDeleted == null);
+			return Ok(ApiResponseFactory.Success(rs, ""));
+		}
+		[HttpGet("get-technical-logs/{billExportId}")]
+		public IActionResult GetTechnicalLogs(int billExportId)
+		{
+			try
+			{
+				var logs = _billExportTechnicalAuditLogRepo.GetAll(x => x.BillExportTechnicalID == billExportId && x.IsDeleted != true)
+												.OrderByDescending(x => x.CreatedDate)
+												.ToList();
+				return Ok(ApiResponseFactory.Success(logs));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+		[HttpGet("get-bill-export-technical-detail")]
+		public IActionResult GetbillImportTechnicalDetail(string? ID)
+		{
+			try
+			{
+				var billDetail = SQLHelper<dynamic>.ProcedureToList("spGetBillExportTechDetail_New", new string[] { "@ID" }, new object[] { ID });
+				return Ok(new
+				{
+					status = 1,
+					billDetail = SQLHelper<dynamic>.GetListData(billDetail, 0)
 
 				});
 			}
@@ -335,75 +335,105 @@ namespace RERPAPI.Controllers.Old.Technical
 					return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." });
 				}
 
-                // Lưu phiếu xuất0
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                var currentUser = ObjectMapper.GetCurrentUser(claims);
+				// Lưu phiếu xuất0
+				var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+				var currentUser = ObjectMapper.GetCurrentUser(claims);
 
-                if (product.billExportTechnical != null)
-                {
-                    if (product.billExportTechnical.IsDeleted == true)
-                    {
-                        await _billExportTechnicalRepo.UpdateAsync(product.billExportTechnical);
-                        List<BillExportDetailTechnical> lst = _billExportDetailTechnicalRepo.GetAll(x => x.BillExportTechID == product.billExportTechnical.ID);
-                        foreach (var item in lst)
-                        {
-                            item.IsDeleted = true;
-                            await _billExportDetailTechnicalRepo.UpdateAsync(item);
-                        }
+				if (product.billExportTechnical != null)
+				{
+					//if (product.billExportTechnical.IsDeleted == true)
+					//{
+					//    await _billExportTechnicalRepo.UpdateAsync(product.billExportTechnical);
+					//    List<BillExportDetailTechnical> lst = _billExportDetailTechnicalRepo.GetAll(x => x.BillExportTechID == product.billExportTechnical.ID);
+					//    foreach (var item in lst)
+					//    {
+					//        item.IsDeleted = true;
+					//        await _billExportDetailTechnicalRepo.UpdateAsync(item);
+					//    }
 
-                        _billExportTechnicalAuditLogRepo.Create(new BillExportTechnicalAuditLog
-                        {
-                            BillExportTechnicalID = product.billExportTechnical.ID,
-                            TypeLog = "XOÁ PHIẾU",
-                            ContentLog = $"Xoá phiếu xuất kỹ thuật",
-                            CreatedBy = currentUser.LoginName,
-                            CreatedDate = DateTime.Now
-                        });
+					//_billExportTechnicalAuditLogRepo.Create(new BillExportTechnicalAuditLog
+					//{
+					//	BillExportTechnicalID = product.billExportTechnical.ID,
+					//	TypeLog = "XOÁ PHIẾU",
+					//	ContentLog = $"Xoá phiếu xuất kỹ thuật",
+					//	CreatedBy = currentUser.LoginName,
+					//	CreatedDate = DateTime.Now
+					//});
 
-                        return Ok(ApiResponseFactory.Success(product, "Xóa dữ liệu thành công"));
-                    }
+					//    return Ok(ApiResponseFactory.Success(product, "Xóa dữ liệu thành công"));
+					//}
+					if (product.billExportTechnical.IsDeleted == true)
+					{
+						await _billExportTechnicalRepo.UpdateAsync(product.billExportTechnical);
+						var historyproduct = _historyProductRTCRepo.GetAll(x => x.IsDelete == false && x.BillExportTechnicalID == product.billExportTechnical.ID);
+						await _historyProductRTCRepo.PatchAsync(
+							x => x.IsDelete == false && x.BillExportTechnicalID == product.billExportTechnical.ID,
+							x =>
+							{
+								x.IsDelete = true;
+							});
+						await _billExportDetailTechnicalRepo.PatchAsync(x => x.BillExportTechID == product.billExportTechnical.ID, x =>
+						{
+							x.IsDeleted = true;
+						});
+						List<BillExportDetailTechnical> lst = _billExportDetailTechnicalRepo.GetAll(x => x.BillExportTechID == product.billExportTechnical.ID);
+						foreach (var item in lst)
+						{
+							item.IsDeleted = true;
+							await _billExportDetailTechnicalRepo.UpdateAsync(item);
 
+						}
+						_billExportTechnicalAuditLogRepo.Create(new BillExportTechnicalAuditLog
+						{
+							BillExportTechnicalID = product.billExportTechnical.ID,
+							TypeLog = "XOÁ PHIẾU",
+							ContentLog = $"Xoá phiếu xuất kỹ thuật",
+							CreatedBy = currentUser.LoginName,
+							CreatedDate = DateTime.Now
+						});
+						return Ok(ApiResponseFactory.Success(product, "Xóa dữ liệu thành công"));
+					}
 					product.billExportTechnical.CheckAddHistoryProductRTC = product.billExportTechnical.BillType == 1;
 
-                    if (product.billExportTechnical.ID <= 0)
-                    {
-                        await _billExportTechnicalRepo.CreateAsync(product.billExportTechnical);
+					if (product.billExportTechnical.ID <= 0)
+					{
+						await _billExportTechnicalRepo.CreateAsync(product.billExportTechnical);
 
-                        _billExportTechnicalAuditLogRepo.Create(new BillExportTechnicalAuditLog
-                        {
-                            BillExportTechnicalID = product.billExportTechnical.ID,
-                            TypeLog = "TẠO MỚI PHIẾU",
-                            ContentLog = $"Tạo mới phiếu xuất kỹ thuật",
-                            CreatedBy = currentUser.LoginName,
-                            CreatedDate = DateTime.Now
-                        });
-                    }
-                    else
-                    {
-                        var existingMaster = _billExportTechnicalRepo.GetSingleNoTracking(x => x.ID == product.billExportTechnical.ID);
+						_billExportTechnicalAuditLogRepo.Create(new BillExportTechnicalAuditLog
+						{
+							BillExportTechnicalID = product.billExportTechnical.ID,
+							TypeLog = "TẠO MỚI PHIẾU",
+							ContentLog = $"Tạo mới phiếu xuất kỹ thuật",
+							CreatedBy = currentUser.LoginName,
+							CreatedDate = DateTime.Now
+						});
+					}
+					else
+					{
+						var existingMaster = _billExportTechnicalRepo.GetSingleNoTracking(x => x.ID == product.billExportTechnical.ID);
 
-                        var history = _historyProductRTCRepo.GetAll(x => x.BillExportTechnicalID == product.billExportTechnical.ID).FirstOrDefault();
-                        if (history != null)
-                        {
-                            history.IsDelete = true;
-                            _historyProductRTCRepo.Update(history);
-                        }
-                        await _billExportTechnicalRepo.UpdateAsync(product.billExportTechnical);
+						var history = _historyProductRTCRepo.GetAll(x => x.BillExportTechnicalID == product.billExportTechnical.ID).FirstOrDefault();
+						if (history != null)
+						{
+							history.IsDelete = true;
+							_historyProductRTCRepo.Update(history);
+						}
+						await _billExportTechnicalRepo.UpdateAsync(product.billExportTechnical);
 
-                        List<string> changeDetails = _billExportTechnicalAuditLogRepo.GetEntityChanges(existingMaster, product.billExportTechnical);
-                        if (changeDetails.Any())
-                        {
-                            _billExportTechnicalAuditLogRepo.Create(new BillExportTechnicalAuditLog
-                            {
-                                BillExportTechnicalID = product.billExportTechnical.ID,
-                                TypeLog = "CẬP NHẬT PHIẾU",
-                                ContentLog = $"Cập nhật phiếu xuất kỹ thuật: {string.Join(", ", changeDetails)}",
-                                CreatedBy = currentUser.LoginName,
-                                CreatedDate = DateTime.Now
-                            });
-                        }
-                    }
-                }
+						List<string> changeDetails = _billExportTechnicalAuditLogRepo.GetEntityChanges(existingMaster, product.billExportTechnical);
+						if (changeDetails.Any())
+						{
+							_billExportTechnicalAuditLogRepo.Create(new BillExportTechnicalAuditLog
+							{
+								BillExportTechnicalID = product.billExportTechnical.ID,
+								TypeLog = "CẬP NHẬT PHIẾU",
+								ContentLog = $"Cập nhật phiếu xuất kỹ thuật: {string.Join(", ", changeDetails)}",
+								CreatedBy = currentUser.LoginName,
+								CreatedDate = DateTime.Now
+							});
+						}
+					}
+				}
 
 				var existHistory = _historyProductRTCRepo.GetAll(x => x.IsDelete != true && x.BillExportTechnicalID == product.billExportTechnical.ID);
 				foreach (var item in existHistory)
@@ -417,61 +447,61 @@ namespace RERPAPI.Controllers.Old.Technical
 					{
 						item.BillExportTechID = product.billExportTechnical.ID;
 
-                        if (item.ID <= 0)
-                        {
-                            await _billExportDetailTechnicalRepo.CreateAsync(item);
+						if (item.ID <= 0)
+						{
+							await _billExportDetailTechnicalRepo.CreateAsync(item);
 
-                            var addedProductName = _productRTCRepo.GetByID(item.ProductID ?? 0)?.ProductName ?? $"ID:{item.ProductID}";
-                            var addedParts = new List<string>();
-                            if (item.Quantity != null) addedParts.Add($"SL: {item.Quantity}");
-                            if (!string.IsNullOrWhiteSpace(item.UnitName)) addedParts.Add($"ĐVT: {item.UnitName}");
-                            if (!string.IsNullOrWhiteSpace(item.Note)) addedParts.Add($"Ghi chú: {item.Note}");
+							var addedProductName = _productRTCRepo.GetByID(item.ProductID ?? 0)?.ProductName ?? $"ID:{item.ProductID}";
+							var addedParts = new List<string>();
+							if (item.Quantity != null) addedParts.Add($"SL: {item.Quantity}");
+							if (!string.IsNullOrWhiteSpace(item.UnitName)) addedParts.Add($"ĐVT: {item.UnitName}");
+							if (!string.IsNullOrWhiteSpace(item.Note)) addedParts.Add($"Ghi chú: {item.Note}");
 
-                            _billExportTechnicalAuditLogRepo.Create(new BillExportTechnicalAuditLog
-                            {
-                                BillExportTechnicalID = product.billExportTechnical.ID,
-                                TypeLog = "THÊM CHI TIẾT",
-                                ContentLog = $"Thêm chi tiết phiếu xuất: [{addedProductName}] {string.Join(", ", addedParts)}",
-                                CreatedBy = currentUser.LoginName,
-                                CreatedDate = DateTime.Now
-                            });
-                        }
-                        else
-                        {
-                            if (item.IsDeleted == true)
-                            {
-                                var deletedProductName = _productRTCRepo.GetByID(item.ProductID ?? 0)?.ProductName ?? $"ID:{item.ProductID}";
-                                _billExportTechnicalAuditLogRepo.Create(new BillExportTechnicalAuditLog
-                                {
-                                    BillExportTechnicalID = product.billExportTechnical.ID,
-                                    TypeLog = "XOÁ CHI TIẾT",
-                                    ContentLog = $"Xoá chi tiết phiếu xuất: {deletedProductName}",
-                                    CreatedBy = currentUser.LoginName,
-                                    CreatedDate = DateTime.Now
-                                });
-                            }
-                            else
-                            {
-                                var existingDetail = _billExportDetailTechnicalRepo.GetByID(item.ID);
-                                if (existingDetail != null)
-                                {
-                                    List<string> changeDetails = _billExportTechnicalAuditLogRepo.GetEntityChanges(existingDetail, item);
-                                    if (changeDetails.Any())
-                                    {
-                                        _billExportTechnicalAuditLogRepo.Create(new BillExportTechnicalAuditLog
-                                        {
-                                            BillExportTechnicalID = product.billExportTechnical.ID,
-                                            TypeLog = "CẬP NHẬT CHI TIẾT",
-                                            ContentLog = $"Cập nhật chi tiết: {string.Join(", ", changeDetails)}",
-                                            CreatedBy = currentUser.LoginName,
-                                            CreatedDate = DateTime.Now
-                                        });
-                                    }
-                                }
-                            }
+							_billExportTechnicalAuditLogRepo.Create(new BillExportTechnicalAuditLog
+							{
+								BillExportTechnicalID = product.billExportTechnical.ID,
+								TypeLog = "THÊM CHI TIẾT",
+								ContentLog = $"Thêm chi tiết phiếu xuất: [{addedProductName}] {string.Join(", ", addedParts)}",
+								CreatedBy = currentUser.LoginName,
+								CreatedDate = DateTime.Now
+							});
+						}
+						else
+						{
+							if (item.IsDeleted == true)
+							{
+								var deletedProductName = _productRTCRepo.GetByID(item.ProductID ?? 0)?.ProductName ?? $"ID:{item.ProductID}";
+								_billExportTechnicalAuditLogRepo.Create(new BillExportTechnicalAuditLog
+								{
+									BillExportTechnicalID = product.billExportTechnical.ID,
+									TypeLog = "XOÁ CHI TIẾT",
+									ContentLog = $"Xoá chi tiết phiếu xuất: {deletedProductName}",
+									CreatedBy = currentUser.LoginName,
+									CreatedDate = DateTime.Now
+								});
+							}
+							else
+							{
+								var existingDetail = _billExportDetailTechnicalRepo.GetByID(item.ID);
+								if (existingDetail != null)
+								{
+									List<string> changeDetails = _billExportTechnicalAuditLogRepo.GetEntityChanges(existingDetail, item);
+									if (changeDetails.Any())
+									{
+										_billExportTechnicalAuditLogRepo.Create(new BillExportTechnicalAuditLog
+										{
+											BillExportTechnicalID = product.billExportTechnical.ID,
+											TypeLog = "CẬP NHẬT CHI TIẾT",
+											ContentLog = $"Cập nhật chi tiết: {string.Join(", ", changeDetails)}",
+											CreatedBy = currentUser.LoginName,
+											CreatedDate = DateTime.Now
+										});
+									}
+								}
+							}
 
-                            await _billExportDetailTechnicalRepo.UpdateAsync(item);
-                        }
+							await _billExportDetailTechnicalRepo.UpdateAsync(item);
+						}
 
 						// Cập nhật inventory demo
 						var inventorydemo = _inventoryDemoRepo.GetAll(x =>
@@ -732,25 +762,25 @@ namespace RERPAPI.Controllers.Old.Technical
 
 				await _billExportTechnicalLogRepo.CreateAsync(log);
 
-                _billExportTechnicalAuditLogRepo.Create(new BillExportTechnicalAuditLog
-                {
-                    BillExportTechnicalID = bill.ID,
-                    TypeLog = req.IsApproved ? "DUYỆT PHIẾU" : "HUỶ DUYỆT PHIẾU",
-                    ContentLog = req.IsApproved ? "Duyệt phiếu xuất kỹ thuật" : "Huỷ duyệt phiếu xuất kỹ thuật",
-                    CreatedBy = currentUserInfo.LoginName,
-                    CreatedDate = DateTime.Now
-                });
+				_billExportTechnicalAuditLogRepo.Create(new BillExportTechnicalAuditLog
+				{
+					BillExportTechnicalID = bill.ID,
+					TypeLog = req.IsApproved ? "DUYỆT PHIẾU" : "HUỶ DUYỆT PHIẾU",
+					ContentLog = req.IsApproved ? "Duyệt phiếu xuất kỹ thuật" : "Huỷ duyệt phiếu xuất kỹ thuật",
+					CreatedBy = currentUserInfo.LoginName,
+					CreatedDate = DateTime.Now
+				});
 
-                return Ok(new
-                {
-                    status = 1,
-                    message = req.IsApproved ? "Duyệt phiếu thành công." : "Đã hủy duyệt phiếu."
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-    }
+				return Ok(new
+				{
+					status = 1,
+					message = req.IsApproved ? "Duyệt phiếu thành công." : "Đã hủy duyệt phiếu."
+				});
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+	}
 }
