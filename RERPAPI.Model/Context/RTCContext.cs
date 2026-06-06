@@ -928,6 +928,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<ProjectPartListPurchaseRequestApproveLog> ProjectPartListPurchaseRequestApproveLogs { get; set; }
 
+    public virtual DbSet<ProjectPartListPurchaseRequestLog> ProjectPartListPurchaseRequestLogs { get; set; }
+
     public virtual DbSet<ProjectPartListType> ProjectPartListTypes { get; set; }
 
     public virtual DbSet<ProjectPartListVersion> ProjectPartListVersions { get; set; }
@@ -4749,6 +4751,21 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.ParkingMoney)
                 .HasComment("Tiền gửi xe ô tô")
                 .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.PenaltyLateEarlyAmount)
+                .HasComment("Số tiền phạt/trừ thưởng quý do đi muộn về sớm")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.PenaltyLateEarlyQty).HasComment("Số lần đi muộn về sớm bị phạt/trừ thưởng quý");
+            entity.Property(e => e.PenaltyLeaveOver2DaysAmount)
+                .HasComment("Số tiền phạt/trừ thưởng quý do nghỉ vượt quá 2 ngày trong tháng")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.PenaltyLeaveOver2DaysQty).HasComment("Số lần/ngày nghỉ vượt quá 2 ngày trong tháng bị phạt/trừ thưởng quý");
+            entity.Property(e => e.PenaltyMissingAttendanceAmount)
+                .HasComment("Số tiền phạt/trừ thưởng quý do quên chấm công")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.PenaltyMissingAttendanceQty).HasComment("Số lần quên chấm công bị phạt/trừ thưởng quý");
+            entity.Property(e => e.PenaltyTotalAmount)
+                .HasComment("Tổng số tiền phạt/trừ vào thưởng quý")
+                .HasColumnType("decimal(18, 2)");
             entity.Property(e => e.Punish5S)
                 .HasComment("Phạt 5S")
                 .HasColumnType("decimal(18, 2)");
@@ -4758,6 +4775,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.RealSalary)
                 .HasComment("\"Tổng thu nhập \r\nthực tế\"")
                 .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.RegulationViolation).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.SalaryOneHour)
                 .HasComment("Tính tiền công 1h")
                 .HasColumnType("decimal(18, 2)");
@@ -10750,6 +10768,17 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.Status).HasComment("1:Yêu cầu duyệt,2:Hủy yêu cầu duyệt, 3:BGĐ duyệt, 4:BGĐ hủy duyệt,5:TBP duyệt,6:TBP hủy duyệt, 7:hoàn thành, 8:Hủy hoàn thành, 9:Check đặt hàng; 10:Hủy check đặt hàng");
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectPartListPurchaseRequestLog>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ProjectP__3214EC27E8411F99");
+
+            entity.ToTable("ProjectPartListPurchaseRequestLog");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.TypeLog).HasMaxLength(250);
         });
 
         modelBuilder.Entity<ProjectPartListType>(entity =>
