@@ -36,6 +36,8 @@ namespace RERPAPI.Repo.GenericEntity
             new UnitCurrency{Name = "JPY", Description = new { nameenglish = "Japanese yen", unitenglish = "sen", namevietnamese = "yên", unitvietnamese = "sen"} },
         };
 
+        private readonly ProjectPartlistPurchaseRequestLogRepo _PPPRLogRepo;
+
         public PONCCRepo(CurrentUser currentUser,
             PONCCDetailRepo pONCCDetailRepo,
             PONCCRulePayRepo pONCCRulePayRepo,
@@ -44,7 +46,9 @@ namespace RERPAPI.Repo.GenericEntity
             BillImportDetailRepo billImportDetailRepo,
             PONCCDetailLogRepo pONCCDetailLogRepo,
             ProjectPartlistPurchaseRequestRepo prjPartListRepo,
-            SupplierSaleRepo supplierSaleRepo) : base(currentUser)
+            SupplierSaleRepo supplierSaleRepo,
+            ProjectPartlistPurchaseRequestLogRepo pPPRLogRepo
+            ) : base(currentUser)
         {
             _currentUser = currentUser;
             _pONCCDetailRepo = pONCCDetailRepo;
@@ -55,6 +59,7 @@ namespace RERPAPI.Repo.GenericEntity
             _repoDetailLog = pONCCDetailLogRepo;
             _supplierSaleRepo = supplierSaleRepo;
             _prjPartListRepo = prjPartListRepo;
+            _PPPRLogRepo = pPPRLogRepo;
         }
 
         public PONCCRepo(CurrentUser currentUser) : base(currentUser)
@@ -333,6 +338,12 @@ namespace RERPAPI.Repo.GenericEntity
             request.SupplierSaleID = supplierSaleID;
             if (request.ID > 0)
             {
+                var oldModel = _prjPartListRepo.GetByID(projectPartlistPurchaseRequestID);
+                if (oldModel != null)
+                {
+                    await _PPPRLogRepo.updateLog(oldModel, request);
+                }
+
                 await _prjPartListRepo.UpdateAsync(request);
             }
         }
