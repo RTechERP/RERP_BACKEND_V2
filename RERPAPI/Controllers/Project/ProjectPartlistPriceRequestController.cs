@@ -31,6 +31,7 @@ namespace RERPAPI.Controllers.Project
         private ProjectPartlistPurchaseRequestRepo _projectPartlistPurchaseRequestRepo;
         private UnitCountRepo _unitCountRepo;
         private ProductRTCRepo _productRTCRepo;
+        private HistoryProductPriceRequestRepo _historyPriceRepo;
         private readonly EmailHelper _emailHelper;
         private readonly ILogger<ProjectPartlistPriceRequestController> _logger;
 
@@ -53,7 +54,8 @@ namespace RERPAPI.Controllers.Project
             EmailHelper emailHelper,
             ILogger<ProjectPartlistPriceRequestController> logger,
             ProjectPartlistPurchaseRequestLogRepo projectPartlistPurchaseRequestLogRepo,
-            ProjectPartlistPurchaseRequestLogRepo PPPRLogRepo
+            ProjectPartlistPurchaseRequestLogRepo PPPRLogRepo,
+             HistoryProductPriceRequestRepo historyPriceRepo
             )
         {
             this.projectRepo = projectRepo;
@@ -73,6 +75,7 @@ namespace RERPAPI.Controllers.Project
             _logger = logger;
             _projectPartlistPurchaseRequestLogRepo = projectPartlistPurchaseRequestLogRepo;
             _PPPRLogRepo = PPPRLogRepo;
+            _historyPriceRepo = historyPriceRepo;
         }
 
         #endregion Khai báo repository
@@ -260,11 +263,38 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
+                
+
                 List<ProjectPartlistPriceRequest> data = new List<ProjectPartlistPriceRequest>();
                 if (projectPartlistPriceRequest != null && projectPartlistPriceRequest.Any())
                 {
+                    string productCode = string.Join(",", projectPartlistPriceRequest.Select(x => x.ProductCode));
+                    List<HistoryProductPriceRequest> lstHistoryProductPriceRequests = await SqlDapper<HistoryProductPriceRequest>.ProcedureToListTAsync("spGetAllHistoryProductPriceRequestByListProductCode",
+                        new { ListProductCode = productCode });
+
                     foreach (var item in projectPartlistPriceRequest)
                     {
+
+                        HistoryProductPriceRequest history = lstHistoryProductPriceRequests.FirstOrDefault(x => x.ProductCode == item.ProductCode) ?? new HistoryProductPriceRequest();
+                        history.HistoryType = $"ProjectPartlistPriceRequestID - {item.ID}";
+                        history.SupplierSaleID = item.SupplierSaleID;
+                        history.CurrencyID = item.CurrencyID;
+                        history.ProductCode = item.ProductCode;
+                        history.ProductName = item.ProductName;
+                        history.UnitPrice = item.UnitPrice;
+                        history.Quantity = item.Quantity;
+                        history.VAT = item.VAT;
+                        history.TotalPrice = item.TotalPrice;
+                        history.TotaMoneyVAT = item.TotaMoneyVAT;
+                        history.TotalPriceExchange = item.TotalPriceExchange;
+                        history.TotalDayLeadTime = item.TotalDayLeadTime;
+                        history.Note = item.Note;
+                        history.HistoryPrice = item.HistoryPrice;
+                        history.IsDeleted = false;
+
+                        if (item.HistoryPrice > 0)  _historyPriceRepo.Update(history);
+                        else _historyPriceRepo.Create(history);
+
                         if (item.ID > 0)
                         {
                             requestRepo.Update(item);
