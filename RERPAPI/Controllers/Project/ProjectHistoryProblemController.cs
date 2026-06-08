@@ -1078,11 +1078,11 @@ namespace RERPAPI.Controllers.Project
                 };
 
                 // Gom danh sách Email: Lấy người đầu tiên gán cho Email To, phần còn lại gán vào Email CC
-                //string emailTo = emails.First();
-                //string emailCc = emails.Count > 1 ? string.Join(",", emails.Skip(1)) : "";
+                string emailTo = emails.First();
+                string emailCc = emails.Count > 1 ? string.Join(",", emails.Skip(1)) : "";
 
-                string emailTo = "tuananh.ng011004@gmail.com";
-                string emailCc = "nhubinh2104@gmail.com";
+                //string emailTo = "tuananh.ng011004@gmail.com";
+                //string emailCc = "nhubinh2104@gmail.com";
 
                 // Xây dựng Tiêu đề và Nội dung HTML
                 string subject = $"THÔNG BÁO PHÁT SINH DỰ ÁN {projectCode} - {projectName}".ToUpper();
