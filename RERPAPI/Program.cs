@@ -706,6 +706,8 @@ builder.Services.AddScoped<PaymentOrderOrderTypeRepo>();
 builder.Services.AddScoped<ConfigNotificationKeyRepo>();
 builder.Services.AddScoped<ConfigNotificationKeyLinkRepo>();
 builder.Services.AddScoped<ProductGroupRTCLinkRepo>();
+builder.Services.AddScoped<MakerTrainingDepartmentLinkRepo>();
+builder.Services.AddScoped<MakerTrainingVideoLinkRepo>();
 
 #region DI LOG
 

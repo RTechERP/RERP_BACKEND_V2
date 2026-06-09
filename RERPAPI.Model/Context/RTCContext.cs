@@ -712,11 +712,15 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<MakerTraining> MakerTrainings { get; set; }
 
+    public virtual DbSet<MakerTrainingDepartmentLink> MakerTrainingDepartmentLinks { get; set; }
+
     public virtual DbSet<MakerTrainingDocument> MakerTrainingDocuments { get; set; }
 
     public virtual DbSet<MakerTrainingEmployeeLink> MakerTrainingEmployeeLinks { get; set; }
 
     public virtual DbSet<MakerTrainingType> MakerTrainingTypes { get; set; }
+
+    public virtual DbSet<MakerTrainingVideoLink> MakerTrainingVideoLinks { get; set; }
 
     public virtual DbSet<Manufacturer> Manufacturers { get; set; }
 
@@ -8401,6 +8405,19 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
+        modelBuilder.Entity<MakerTrainingDepartmentLink>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__MakerTra__3214EC275A2C197A");
+
+            entity.ToTable("MakerTrainingDepartmentLink");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
         modelBuilder.Entity<MakerTrainingDocument>(entity =>
         {
             entity.HasKey(e => e.ID).HasName("PK__MakerTra__CDEB13D86A46754D");
@@ -8438,6 +8455,19 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.TypeCode).HasMaxLength(255);
             entity.Property(e => e.TypeName).HasMaxLength(255);
             entity.Property(e => e.UpdatedBy).HasMaxLength(255);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<MakerTrainingVideoLink>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__MakerTra__3214EC274C83D866");
+
+            entity.ToTable("MakerTrainingVideoLink");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
