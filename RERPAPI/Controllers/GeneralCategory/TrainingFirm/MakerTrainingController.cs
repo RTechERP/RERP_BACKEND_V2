@@ -1,5 +1,7 @@
+using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -10,8 +12,6 @@ using RERPAPI.Model.Param.MakerTraining;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.MakerTrainingFirm;
 
-//using Microsoft.EntityFrameworkCore;
-
 namespace RERPAPI.Controllers.TrainingFirm
 {
     [Route("api/[controller]")]
@@ -19,14 +19,26 @@ namespace RERPAPI.Controllers.TrainingFirm
     [Authorize]
     public class MakerTrainingController : ControllerBase
     {
-        private DepartmentRepo _tsDepartment;
-        private FirmRepo _firmRepo;
-        private MakerTrainingRepo _makerTrainingRepo;
-        private MakerTrainingEmployeeLinkRepo _makertrainingEmployeeLinkRepo;
-        private MakerTrainingDocumentRepo _makertrainingDocumentRepo;
-        private MakerTrainingTypeRepo _makertrainingTypeRepo;
+        DepartmentRepo _tsDepartment;
+        FirmRepo _firmRepo;
+        MakerTrainingRepo _makerTrainingRepo;
+        MakerTrainingEmployeeLinkRepo _makertrainingEmployeeLinkRepo;
+        MakerTrainingDocumentRepo _makertrainingDocumentRepo;
+        MakerTrainingTypeRepo _makertrainingTypeRepo;
+        MakerTrainingDepartmentLinkRepo _makertrainingDepartmentLinkRepo;
+        MakerTrainingVideoLinkRepo _makertrainingVideoLinkRepo;
+        ConfigSystemRepo _configSystemRepo;
 
-        public MakerTrainingController(DepartmentRepo tsDepartment, FirmRepo firmRepo, MakerTrainingRepo makerTrainingRepo, MakerTrainingEmployeeLinkRepo makertrainingEmployeeLinkRepo, MakerTrainingDocumentRepo makertrainingDocumentRepo, MakerTrainingTypeRepo makertrainingTypeRepo)
+        public MakerTrainingController(
+            DepartmentRepo tsDepartment,
+            FirmRepo firmRepo,
+            MakerTrainingRepo makerTrainingRepo,
+            MakerTrainingEmployeeLinkRepo makertrainingEmployeeLinkRepo,
+            MakerTrainingDocumentRepo makertrainingDocumentRepo,
+            MakerTrainingTypeRepo makertrainingTypeRepo,
+            MakerTrainingDepartmentLinkRepo makertrainingDepartmentLinkRepo,
+            MakerTrainingVideoLinkRepo makertrainingVideoLinkRepo,
+            ConfigSystemRepo configSystemRepo)
         {
             _tsDepartment = tsDepartment;
             _firmRepo = firmRepo;
@@ -34,6 +46,9 @@ namespace RERPAPI.Controllers.TrainingFirm
             _makertrainingEmployeeLinkRepo = makertrainingEmployeeLinkRepo;
             _makertrainingDocumentRepo = makertrainingDocumentRepo;
             _makertrainingTypeRepo = makertrainingTypeRepo;
+            _makertrainingDepartmentLinkRepo = makertrainingDepartmentLinkRepo;
+            _makertrainingVideoLinkRepo = makertrainingVideoLinkRepo;
+            _configSystemRepo = configSystemRepo;
         }
 
         [RequiresPermission("N85,N32")]
@@ -67,12 +82,20 @@ namespace RERPAPI.Controllers.TrainingFirm
             {
                 var param = new { makerTrainingData.MakerTrainingID };
 
-                var (makerTrainingEmployeeLink, makerTrainingDocument) = await SqlDapper<object>.QueryMultipleAsync<dynamic, dynamic>("spGetMakerTrainingData", param);
+                using var connection = new SqlConnection(RERPAPI.Model.Common.Config.ConnectionString);
+                using var multi = await connection.QueryMultipleAsync("spGetMakerTrainingData", param, commandType: System.Data.CommandType.StoredProcedure);
+
+                var makerTrainingEmployeeLink = (await multi.ReadAsync<dynamic>()).ToList();
+                var makerTrainingDocument = (await multi.ReadAsync<dynamic>()).ToList();
+                var makerTrainingDepartmentLink = (await multi.ReadAsync<dynamic>()).ToList();
+                var makerTrainingVideoLink = (await multi.ReadAsync<dynamic>()).ToList();
 
                 return Ok(ApiResponseFactory.Success(new
                 {
                     MakerTrainingEmployeeLink = makerTrainingEmployeeLink,
-                    MakerTrainingDocument = makerTrainingDocument
+                    MakerTrainingDocument = makerTrainingDocument,
+                    MakerTrainingDepartmentLink = makerTrainingDepartmentLink,
+                    MakerTrainingVideoLink = makerTrainingVideoLink
                 }, ""));
             }
             catch (Exception ex)
@@ -81,7 +104,28 @@ namespace RERPAPI.Controllers.TrainingFirm
             }
         }
 
+        // Lấy đường dẫn server để upload video
+        [HttpGet("get-path-server")]
+        public IActionResult GetPathServer(string subPath)
+        {
+            try
+            {
+                var pathUpload = _configSystemRepo.GetUploadPathByKey("MakerTraining");
+                if (string.IsNullOrWhiteSpace(pathUpload))
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy cấu hình đường dẫn cho key: MakerTraining"));
+
+                subPath = $"/{subPath}/";
+                string path = pathUpload + subPath;
+                return Ok(ApiResponseFactory.Success(path, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpPost("get-employee-maker-training")]
+
         public IActionResult GetEmployee([FromBody] EmployeeRequestParam employeerequest)
         {
             try
@@ -97,6 +141,7 @@ namespace RERPAPI.Controllers.TrainingFirm
                         asset = SQLHelper<dynamic>.GetListData(employee, 0),
                         total = SQLHelper<dynamic>.GetListData(employee, 1)
                     }
+
                 });
             }
             catch (Exception ex)
@@ -111,6 +156,7 @@ namespace RERPAPI.Controllers.TrainingFirm
         }
 
         [HttpGet("get-departments")]
+
         public IActionResult GetDepartment()
         {
             try
@@ -134,6 +180,7 @@ namespace RERPAPI.Controllers.TrainingFirm
         }
 
         [HttpGet("get-firms")]
+
         public IActionResult GetFirm()
         {
             try
@@ -157,6 +204,7 @@ namespace RERPAPI.Controllers.TrainingFirm
         }
 
         [HttpGet("get-maker-training-type")]
+
         public IActionResult GetMakerTrainingType()
         {
             try
@@ -180,7 +228,7 @@ namespace RERPAPI.Controllers.TrainingFirm
         }
 
         [HttpGet("get-maker-training-document/{id}")]
-        public IActionResult GetMakerTrainingDocument(int id)
+        public IActionResult GetMakerTrainingDocument (int id)
         {
             try
             {
@@ -190,8 +238,8 @@ namespace RERPAPI.Controllers.TrainingFirm
                     status = 1,
                     data = document
                 });
-            }
-            catch (Exception ex)
+
+            }catch(Exception ex)
             {
                 return BadRequest(new
                 {
@@ -200,6 +248,7 @@ namespace RERPAPI.Controllers.TrainingFirm
                     error = ex.ToString(),
                 });
             }
+
         }
 
         [HttpGet("get-maker-training/{id}")]
@@ -246,6 +295,8 @@ namespace RERPAPI.Controllers.TrainingFirm
                         .Max();
                     dto.MakerTraining.STT = maxStt + 1;
 
+
+
                     await _makerTrainingRepo.CreateAsync(dto.MakerTraining);
                     makerTrainingID = dto.MakerTraining.ID; // repo sẽ gán ID sau khi insert
                 }
@@ -278,13 +329,51 @@ namespace RERPAPI.Controllers.TrainingFirm
                             await _makertrainingEmployeeLinkRepo.UpdateAsync(employeetraining);
                     }
                 }
-                if (dto.DeletedEmployees.Count > 0)
-                {
-                    foreach (var item in dto.DeletedEmployees)
+                    if(dto.DeletedEmployees != null && dto.DeletedEmployees.Count > 0)
+                    {
+                    foreach( var item in dto.DeletedEmployees)
                     {
                         MakerTrainingEmployeeLink employeemodel = _makertrainingEmployeeLinkRepo.GetByID(item);
                         employeemodel.IsDeleted = true;
                         await _makertrainingEmployeeLinkRepo.UpdateAsync(employeemodel);
+                    }
+                }
+
+                // Phòng ban training
+                var oldDeptLinks = _makertrainingDepartmentLinkRepo.GetAll()
+                    .Where(x => x.MakerTrainingID == makerTrainingID && (x.IsDeleted == false || x.IsDeleted == null))
+                    .ToList();
+
+                foreach (var oldLink in oldDeptLinks)
+                {
+                    oldLink.IsDeleted = true;
+                    await _makertrainingDepartmentLinkRepo.UpdateAsync(oldLink);
+                }
+
+                if (dto.MakerTrainingDepartmentLink != null && dto.MakerTrainingDepartmentLink.Any())
+                {
+                    int sttDeptCounter = 0;
+                    foreach (var deptLink in dto.MakerTrainingDepartmentLink)
+                    {
+                        sttDeptCounter++;
+                        deptLink.ID = 0;
+                        deptLink.STT = sttDeptCounter;
+                        deptLink.MakerTrainingID = makerTrainingID;
+                        deptLink.CreatedDate = DateTime.Now;
+                        deptLink.IsDeleted = false;
+                        await _makertrainingDepartmentLinkRepo.CreateAsync(deptLink);
+                    }
+                }
+                if (dto.DeletedDepartments != null && dto.DeletedDepartments.Count > 0)
+                {
+                    foreach (var item in dto.DeletedDepartments)
+                    {
+                        var deptmodel = _makertrainingDepartmentLinkRepo.GetByID(item);
+                        if (deptmodel != null)
+                        {
+                            deptmodel.IsDeleted = true;
+                            await _makertrainingDepartmentLinkRepo.UpdateAsync(deptmodel);
+                        }
                     }
                 }
 
@@ -333,6 +422,46 @@ namespace RERPAPI.Controllers.TrainingFirm
                         }
                     }
                 }
+
+                // Video training
+                if (dto.MakerTrainingVideoLink != null && dto.MakerTrainingVideoLink.Any())
+                {
+                    var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                    var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                    foreach (var videoLink in dto.MakerTrainingVideoLink)
+                    {
+                        videoLink.MakerTrainingID = makerTrainingID;
+
+                        if (videoLink.ID <= 0)
+                        {
+                            videoLink.CreatedBy = currentUser?.LoginName;
+                            videoLink.CreatedDate = DateTime.Now;
+                            videoLink.IsDeleted = false;
+                            await _makertrainingVideoLinkRepo.CreateAsync(videoLink);
+                        }
+                        else
+                        {
+                            videoLink.UpdatedBy = currentUser?.LoginName;
+                            videoLink.UpdatedDate = DateTime.Now;
+                            await _makertrainingVideoLinkRepo.UpdateAsync(videoLink);
+                        }
+                    }
+                }
+
+                if (dto.DeletedVideoIds != null && dto.DeletedVideoIds.Any())
+                {
+                    foreach (var item in dto.DeletedVideoIds.Where(x => x > 0))
+                    {
+                        var videoModel = _makertrainingVideoLinkRepo.GetByID(item);
+                        if (videoModel != null)
+                        {
+                            videoModel.IsDeleted = true;
+                            await _makertrainingVideoLinkRepo.UpdateAsync(videoModel);
+                        }
+                    }
+                }
+
                 return Ok(new
                 {
                     status = 1,
@@ -366,7 +495,7 @@ namespace RERPAPI.Controllers.TrainingFirm
                     return Ok(new
                     {
                         status = 0,
-                        message = "Mã cuộc họp đã tồn tại."
+                        message = "Mã hạng mục đã tồn tại!"
                     });
                 }
 
