@@ -862,6 +862,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<ProductGroupRTC> ProductGroupRTCs { get; set; }
 
+    public virtual DbSet<ProductGroupRTCLink> ProductGroupRTCLinks { get; set; }
+
     public virtual DbSet<ProductGroupWarehouse> ProductGroupWarehouses { get; set; }
 
     public virtual DbSet<ProductKhachHang> ProductKhachHangs { get; set; }
@@ -8052,6 +8054,9 @@ public partial class RTCContext : DbContext
                 .IsUnicode(false);
             entity.Property(e => e.DisplayName).HasMaxLength(255);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.LookupDisplayColumn).HasMaxLength(128);
+            entity.Property(e => e.LookupTable).HasMaxLength(128);
+            entity.Property(e => e.LookupValueColumn).HasMaxLength(128);
         });
 
         modelBuilder.Entity<KPISaleAllowedTable>(entity =>
@@ -9967,6 +9972,18 @@ public partial class RTCContext : DbContext
                 .IsUnicode(false)
                 .HasComment("Mã nhóm thiết bị");
             entity.Property(e => e.WarehouseType).HasComment("1: KHo demo; 2: Kho AGV");
+        });
+
+        modelBuilder.Entity<ProductGroupRTCLink>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ProductG__3214EC2717612679");
+
+            entity.ToTable("ProductGroupRTCLink");
+
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.Createdby).HasMaxLength(255);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(255);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<ProductGroupWarehouse>(entity =>

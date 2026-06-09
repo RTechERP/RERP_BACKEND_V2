@@ -705,6 +705,7 @@ builder.Services.AddScoped<ProjectTaskStatusRepo>();
 builder.Services.AddScoped<PaymentOrderOrderTypeRepo>();
 builder.Services.AddScoped<ConfigNotificationKeyRepo>();
 builder.Services.AddScoped<ConfigNotificationKeyLinkRepo>();
+builder.Services.AddScoped<ProductGroupRTCLinkRepo>();
 
 #region DI LOG
 
