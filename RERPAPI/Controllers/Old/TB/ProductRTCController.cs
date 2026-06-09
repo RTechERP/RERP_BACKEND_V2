@@ -500,7 +500,7 @@ namespace RERPAPI.Controllers.Old.TB
                 {
                     if (product.productGroupRTC.ID <= 0)
                     {
-                        product.productGroupRTC.WarehouseID = 6;
+                        //product.productGroupRTC.WarehouseID = 6;
                         await _productGroupRTCRepo.CreateAsync(product.productGroupRTC);
                     }
                     else await _productGroupRTCRepo.UpdateAsync(product.productGroupRTC);
