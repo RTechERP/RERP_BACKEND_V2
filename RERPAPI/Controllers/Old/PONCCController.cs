@@ -13,1400 +13,1415 @@ using System.Data;
 
 namespace RERPAPI.Controllers.Old
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    [Authorize]
-    public class PONCCController : ControllerBase
-    {
-        private readonly List<PathStaticFile> _pathStaticFiles;
-        private PONCCRepo _pONCCRepo;
-        private ProductGroupRepo _productGroupRepo;
-        private ProjectRepo _projectRepo;
-        private PONCCDetailRepo _pONCCDetailRepo;
-        private PONCCRulePayRepo _pONCCRulePayRepo;
-        private BillImportDetailRepo _billImportDetailRepo;
-        private ProjectPartlistPurchaseRequestRepo _projectPartlistPurchaseRequestRepo;
-        private PONCCDetailRequestBuyRepo _pONCCDetailRequestBuyRepo;
-        private WarehouseRepo _warehouseRepo;
-        private BillImportRepo _billImportRepo;
-        private BillImportTechnicalRepo _billImportTechnicalRepo;
-        private readonly IConfiguration _configuration;
-        private readonly TaxCompanyRepo _taxCompanyRepo;
-        private readonly EmployeePurchaseRepo _employeePurchaseRepo;
-        private readonly PONCCLogRepo _pONCCLogRepo;
-        private readonly RulePayRepo _rulePayRepo;
-        private readonly ProductSaleRepo _productSaleRepo;
-
-        public PONCCController(
-            IOptions<List<PathStaticFile>> pathStaticFiles,
-            PONCCRepo pONCCRepo
-            , ProductGroupRepo productGroupRepo
-            , ProjectRepo projectRepo
-            , PONCCRulePayRepo pONCCRulePayRepo
-            , PONCCDetailRepo pONCCDetailRepo
-            , BillImportDetailRepo billImportDetailRepo
-            , ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo
-            , PONCCDetailRequestBuyRepo pONCCDetailRequestBuyRepo
-            , WarehouseRepo warehouseRepo
-            , BillImportRepo billImportRepo
-            , BillImportTechnicalRepo billImportTechRepo, TaxCompanyRepo taxCompanyRepo, EmployeePurchaseRepo employeePurchaseRepo, IConfiguration configuration
-            , PONCCLogRepo pONCCLogRepo
-            , RulePayRepo rulePayRepo
-            , ProductSaleRepo productSaleRepo
-            )
-        {
-            _pathStaticFiles = pathStaticFiles.Value;
-            _pONCCRepo = pONCCRepo;
-            _productGroupRepo = productGroupRepo;
-            _projectRepo = projectRepo;
-            _pONCCRulePayRepo = pONCCRulePayRepo;
-            _pONCCDetailRepo = pONCCDetailRepo;
-            _billImportDetailRepo = billImportDetailRepo;
-            _projectPartlistPurchaseRequestRepo = projectPartlistPurchaseRequestRepo;
-            _pONCCDetailRequestBuyRepo = pONCCDetailRequestBuyRepo;
-            _warehouseRepo = warehouseRepo;
-            _billImportRepo = billImportRepo;
-            _billImportTechnicalRepo = billImportTechRepo;
-            _taxCompanyRepo = taxCompanyRepo;
-            _employeePurchaseRepo = employeePurchaseRepo;
-            _configuration = configuration;
-            _pONCCLogRepo = pONCCLogRepo;
-            _rulePayRepo = rulePayRepo;
-            _productSaleRepo = productSaleRepo;
-        }
-
-        #region Lấy data master/ detail
-
-        [HttpGet("get-all")]
-        [RequiresPermission("N33,N35,N36,N1,N52,N38,N54")]
-        public IActionResult GetAll(
-                string? keyword = "",
-                int pageNumber = 1,
-                int pageSize = 20,
-                DateTime? dateStart = null,
-                DateTime? dateEnd = null,
-                int? supplierId = null,
-                int? status = null,
-                int? employeeId = null,
-                int? poType = 0
-            )
-        {
-            try
-            {
-                pageSize = 999999;
-                DateTime _dateStart = dateStart?.Date ?? DateTime.MinValue;
-                DateTime _dateEnd = (dateEnd?.Date ?? DateTime.MaxValue)
-                                    .AddHours(23).AddMinutes(59).AddSeconds(59);
-
-                // Gọi stored procedure
-                var dt = SQLHelper<dynamic>.ProcedureToList(
-                    "spGetPONCC_Khanh",
-                    new string[]
-                    {
-                        "@FilterText",
-                        "@PageNumber",
-                        "@PageSize",
-                        "@DateStart",
-                        "@DateEnd",
-                        "@SupplierID",
-                        "@Status",
-                        "@EmployeeID"
-                    },
-                    new object[]
-                    {
-                        keyword ?? "",
-                        pageNumber,
-                        pageSize,
-                        _dateStart,
-                        _dateEnd,
-                        supplierId,
-                        status,
-                        employeeId
-                    }
-                );
-
-                var data = SQLHelper<dynamic>.GetListData(dt, 0);
-                var data1 = SQLHelper<dynamic>.GetListData(dt, 1);
-
-                if (data != null)
-                {
-                    if (poType == 0)
-                    {
-                        data = data.Where(x => Convert.ToInt32(x.POType) == 0).ToList();
-                    }
-                    else if (poType == 1)
-                    {
-                        data = data.Where(x => Convert.ToInt32(x.POType) == 1).ToList();
-                    }
-                }
-                int totalPage = 0;
-                if (data1 != null && data1.Count > 0)
-                {
-                    totalPage = data1[0].TotalPage ?? 0;
-                }
-
-                var response = new
-                {
-                    data = data,
-                    totalPage = totalPage
-                };
-
-                return Ok(ApiResponseFactory.Success(response, null));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        [HttpGet("warehouse-code")]
-        public IActionResult GetWarehouse(int warehouseId)
-        {
-            try
-            {
-                var warehouse = _warehouseRepo.GetByID(warehouseId);
-                string wareHouseCode = warehouse != null ? warehouse.WarehouseCode : "";
-                return Ok(ApiResponseFactory.Success(wareHouseCode, null));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        [HttpGet("bill-import-tech")]
-        public IActionResult GetBillImportTech(int billimportTechId)
-        {
-            try
-            {
-                var billimportTech = _billImportTechnicalRepo.GetByID(billimportTechId);
-                return Ok(ApiResponseFactory.Success(billimportTech, null));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        [HttpGet("data-detail")]
-        [RequiresPermission("N33,N35,N36,N1,N52,N38,N54")]
-        public IActionResult GetDetail(int ponccId)
-        {
-            try
-            {
-                List<string> listAllID = new List<string>();
-                List<bool> checkList = new List<bool>();
-                var dt = SQLHelper<dynamic>
-                    .ProcedureToList("spGetPONCCDetail_Khanh", new string[] { "@PONCCID" }, new object[] { ponccId });
-                var data = SQLHelper<dynamic>.GetListData(dt, 0);
-                var dtRef = SQLHelper<dynamic>.GetListData(dt, 1);
-
-                var result = new
-                {
-                    data = data,
-                    dtRef = dtRef ?? [],
-                };
-
-                return Ok(ApiResponseFactory.Success(result, null));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        [HttpGet("get-rulepay-by-poncc")]
-        public IActionResult GetRulePayByPONCC(int ponccId)
-        {
-            try
-            {
-                int rulePayID = _pONCCRulePayRepo.GetAll(x => x.PONCCID == ponccId).Where(x => x.RulePayID.HasValue).Select(x => x.RulePayID.Value).FirstOrDefault();
-                return Ok(ApiResponseFactory.Success(rulePayID));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        [HttpGet("poncc-detail")]
-        [RequiresPermission("N33,N35,N36,N1,N52,N38,N54")]
-        public IActionResult Getponccdetail(string idText, int warehouseID, string detailId)
-        {
-            try
-            {
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                var currentUser = ObjectMapper.GetCurrentUser(claims);
-                string warehouseCode = _warehouseRepo.GetByID(warehouseID).WarehouseCode;
-                List<PONCCDetail> listAllPONCCDetails = _pONCCDetailRepo.GetAll();
-
-                List<int> listDetailId = detailId
-                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                    .Select(x => int.Parse(x))
-                    .ToList();
-
-                var dt = SQLHelper<dynamic>
-                    .ProcedureToList("spGetPONCCDetailByID", new string[] { "@ID" }, new object[] { idText });
-                var data = SQLHelper<dynamic>.GetListData(dt, 0);
-
-                var toDelete = new List<dynamic>();
-
-                //foreach (var row in data)
-                //{
-                //    if (!listDetailId.Contains(Convert.ToInt32(row.ID)))
-                //    {
-                //        data.Remove(row);
-                //    }
-                //}
-                data = data
-                    .Where(x => listDetailId.Contains(Convert.ToInt32(x.ID)))
-                    .ToList();
-
-                var listSale = data
-                        .Where(row => row.SupplierSaleID != null && row.ProductGroupID != null)
-                        .GroupBy(x => new { x.SupplierSaleID, x.ProductGroupID })
-                        .Select(g => g.First())
-                        .ToList();
-
-                var listDemo = data
-                        .Where(row => row.SupplierSaleID != null && row.ProductGroupRTCID != null)
-                        .GroupBy(x => new { x.SupplierSaleID, x.ProductGroupRTCID })
-                        .Select(g => g.First())
-                        .ToList();
-
-                List<BillImport> billImports = new List<BillImport>();
-                List<BillImportTechnical> billImportTechs = new List<BillImportTechnical>();
-                List<dynamic> listSaleDetail = [];
-                List<dynamic> listDemoDetail = [];
-
-                List<int> listSalePonccId = new List<int>();
-                List<int> listDemoPonccId = new List<int>();
-                if (listSale.Count() > 0)
-                {
-                    foreach (var item in listSale)
-                    {
-                        BillImport bill = new BillImport();
-
-                        int supplierSaleID = Convert.ToInt32(item.SupplierSaleID);
-                        int productGroupID = Convert.ToInt32(item.ProductGroupID);
-
-                        var dtDetails = data.Where(x => x.SupplierSaleID == supplierSaleID && x.ProductGroupID == productGroupID).ToList();
-                        if (dtDetails.Count() <= 0) continue;
-                        else
-                        {
-                            var checkQtyRemain = dtDetails.Where(x => (decimal)x.QuantityRemain > 0).ToList();
-                            if (checkQtyRemain.Count <= 0) continue;
-                        }
-                        var dataRow = dtDetails[0];
-
-                        int poNCCId = Convert.ToInt32(dataRow.PONCCID);
-
-                        bill.BillImportCode = _billImportRepo.GetBillCode(4);
-                        bill.CreatDate = DateTime.Now;
-                        bill.Deliver = Convert.ToString(dataRow.FullName);
-                        bill.Reciver = "Admin kho";
-                        bill.Status = false;
-                        bill.Suplier = Convert.ToString(dataRow.NameNCC);
-                        bill.BillType = false;
-                        bill.KhoType = Convert.ToString(dataRow.ProductGroupName);
-                        bill.GroupID = Convert.ToString(dataRow.ProductGroupID);
-                        bill.SupplierID = Convert.ToInt32(dataRow.SupplierSaleID);
-                        bill.DeliverID = Convert.ToInt32(dataRow.UserID);
-                        bill.KhoTypeID = Convert.ToInt32(dataRow.ProductGroupID);
-                        bill.WarehouseID = warehouseID;
-                        bill.BillTypeNew = 4;
-                        bill.DateRequestImport = DateTime.Now;
-                        bill.CreatedDate = DateTime.Now;
-                        bill.CreatedBy = currentUser.LoginName;
-
-                        bill.RulePayID = Convert.ToInt32(dataRow.RulePayID);
-
-                        var productGroupWarehouses = SQLHelper<object>.ProcedureToList("spGetProductGroupWarehouse",
-                                                   new string[] { "@WarehouseID", "@ProductGroupID" },
-                                                   new object[] { warehouseID, productGroupID });
-
-                        var productGroupWarehouse = SQLHelper<object>.GetListData(productGroupWarehouses, 0);
-
-                        bill.ReciverID = productGroupWarehouse.Count() > 0 ? Convert.ToInt32(productGroupWarehouse[0].UserID) : 0;
-
-                        billImports.Add(bill);
-                        listSaleDetail.Add(dtDetails);
-                        listSalePonccId.Add(poNCCId);
-                    }
-                }
-                if (listDemo.Count() > 0)
-                {
-                    foreach (var item in listDemo)
-                    {
-                        int supplierSaleID = Convert.ToInt32(item.SupplierSaleID);
-                        var dtDetails = data.Where(x =>
-                        x.SupplierSaleID == supplierSaleID &&
-                        x.ProductRTCID != null &&
-                        x.ProductRTCID != 0).ToList();
-
-                        if (dtDetails.Count() <= 0) continue;
-                        else
-                        {
-                            var checkQtyRemain = dtDetails.Where(x => (decimal)x.QuantityRemain > 0).ToList();
-                            if (checkQtyRemain.Count <= 0) continue;
-                        }
-                        var dataRow = dtDetails[0];
-
-                        int poNCCId = Convert.ToInt32(dataRow.PONCCID);
-                        BillImportTechnical bill = new BillImportTechnical();
-                        bill.BillCode = _billImportTechnicalRepo.GetBillCode(4); ;
-                        bill.CreatDate = DateTime.Now;
-                        bill.Deliver = Convert.ToString(dataRow.FullName);
-                        bill.Receiver = "Admin kho";
-                        bill.Status = false;
-                        bill.Suplier = Convert.ToString(dataRow.NameNCC);
-                        bill.BillType = false;
-                        bill.SupplierSaleID = Convert.ToInt32(dataRow.SupplierSaleID);
-                        bill.DeliverID = Convert.ToInt32(dataRow.UserID);
-                        bill.ReceiverID = 0;
-                        bill.WarehouseID = 1;
-                        bill.BillTypeNew = 4;
-                        bill.DateRequestImport = DateTime.Now;
-                        bill.CreatedDate = DateTime.Now;
-                        bill.CreatedBy = currentUser.LoginName;
-                        bill.ApproverID = 54;
-
-                        bill.WarehouseType = "Demo";
-
-                        bill.RulePayID = Convert.ToInt32(dataRow.RulePayID);
-                        billImportTechs.Add(bill);
-                        listDemoDetail.Add(dtDetails);
-                        listDemoPonccId.Add(poNCCId);
-                    }
-                }
-
-                var result = new
-                {
-                    dataSale = billImports ?? [],
-                    dataDemo = billImportTechs ?? [],
-                    listSaleDetail = listSaleDetail ?? [],
-                    listDemoDetail = listDemoDetail ?? [],
-                    listDemoPonccId = listDemoPonccId ?? [],
-                    listSalePonccId = listSalePonccId ?? []
-                };
-
-                return Ok(ApiResponseFactory.Success(result, null));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        [HttpGet("deleted-poncc-detail")]
-        [RequiresPermission("N35,N33,N1")]
-        public async Task<IActionResult> deletedPonccDetail(int poDetailId)
-        {
-            try
-            {
-                if (poDetailId > 0) await _pONCCDetailRepo.DeleteAsync(poDetailId);
-                return Ok(ApiResponseFactory.Success(null, null));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        #endregion Lấy data master/ detail
-
-        #region Lấy dữ liệu các select cho bảng
-
-        [HttpGet("load-bill-code")]
-        [RequiresPermission("N35,N33,N1")]
-        public IActionResult LoadBillCode(int poTypeId)
-        {
-            try
-            {
-                string prefix = poTypeId == 0 ? "DMH" : "DEMO";
-
-                var listPO = _pONCCRepo.GetAll(x => x.BillCode != null && x.BillCode.StartsWith(prefix))
-                    .Select(x => new
-                    {
-                        ID = x.ID,
-                        BillCode = x.BillCode,
-                        STT = Convert.ToInt32(x.BillCode.Substring(prefix.Length))
-                    })
-                    .ToList();
-
-                int stt = listPO.Count <= 0 ? 0 : listPO.Max(x => x.STT);
-                stt++;
-                string sttText = stt.ToString();
-                while (sttText.Length < 5)
-                {
-                    sttText = $"0{sttText}";
-                }
-
-                string newBillCode = prefix + sttText;
-
-                return Ok(ApiResponseFactory.Success(newBillCode, null));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        [HttpGet("product-sale")]
-        public IActionResult getProductSale()
-        {
-            try
-            {
-                var listGroup = _productGroupRepo.GetAll().Select(x => x.ID).ToList();
-                var idGroup = string.Join(",", listGroup);
-                var dt = SQLHelper<object>.ProcedureToList("spGetProductSale", new string[] { "@IDgroup" }, new object[] { idGroup });
-                var data = SQLHelper<object>.GetListData(dt, 0);
-                return Ok(ApiResponseFactory.Success(data, null));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        [HttpGet("product-rtc")]
-        public IActionResult getProductRTC(int? warehouseType)
-        {
-            try
-            {
-                if (warehouseType == null) warehouseType = 1;
-                var dt = SQLHelper<dynamic>.ProcedureToList("spGetProductRTC",
-                new string[] { "@ProductGroupID", "@Keyword", "@CheckAll", "@WarehouseID", "@ProductRTCID", "@ProductGroupNo", "@PageNumber", "@PageSize", "@WarehouseType" },
-                new object[] { 0, "", 0, 0, 0, "", 1, 100000000, warehouseType });
-                var data = SQLHelper<object>.GetListData(dt, 0);
-                return Ok(ApiResponseFactory.Success(data, null));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        [HttpGet("projects")]
-        public IActionResult getProjects()
-        {
-            try
-            {
-                var dt = _projectRepo.GetAll().OrderByDescending(x => x.ID);
-                return Ok(ApiResponseFactory.Success(dt, null));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        [HttpGet("history-price")]
-        [RequiresPermission("N35,N33,N1")]
-        public IActionResult getHistoryPrice(int productId, string productCode)
-        {
-            try
-            {
-                decimal historyPrice = 0;
-                var dt = SQLHelper<object>.ProcedureToList("spGetHistoryPricePartlistForProduct",
-                    new string[] { "@ProductSaleID", "@ProductCode" }, new object[] { productId, productCode });
-                var data = SQLHelper<object>.GetListData(dt, 0);
-                if (data.Count() > 0) historyPrice = (decimal)data[0].UnitPrice;
-
-                return Ok(ApiResponseFactory.Success(historyPrice, null));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        [HttpGet("check-po-code")]
-        public IActionResult checkPoCode(int id, string pOCode, string billCode)
-        {
-            try
-            {
-                var data = _pONCCRepo.GetAll(x =>
-                x.ID != id &&
-                x.POCode.Trim().ToLower() == pOCode.Trim().ToLower() &&
-                x.BillCode.Trim().ToLower() == billCode.Trim().ToLower() &&
-                x.IsDeleted != true
-                ).ToList();
-
-                var count = data?.Count() ?? 0;
-
-                return Ok(ApiResponseFactory.Success(count, null));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        [HttpGet("receivedId")]
-        public IActionResult getReceivedId(int warehouseID, int productGroupID)
-        {
-            try
-            {
-                var dt = SQLHelper<object>.ProcedureToList("spGetProductGroupWarehouse",
-                                                   new string[] { "@WarehouseID", "@ProductGroupID" },
-                                                   new object[] { warehouseID, productGroupID });
-
-                var data = SQLHelper<object>.GetListData(dt, 0);
-                int userId = 0;
-
-                if (data.Count() > 0)
-                {
-                    try
-                    {
-                        userId = Convert.ToInt32(data[0].UserID);
-                    }
-                    catch
-                    {
-                        userId = 0;
-                    }
-                }
-
-                return Ok(ApiResponseFactory.Success(userId, null));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        [HttpGet("po-code")]
-        public IActionResult getPoCode(string productCode)
-        {
-            try
-            {
-                string prefix = $"{DateTime.Now.ToString("MMyyyy")}-{productCode}-";
-
-                var dt = SQLHelper<object>.ProcedureToList("spGetPOCodeInPONCC",
-                        new string[] { "@Value" },
-                        new object[] { prefix }
-                    );
-
-                // Lấy bảng 0
-                var data = SQLHelper<object>.GetListData(dt, 0);
-
-                string currentCode = "";
-
-                if (data.Count > 0)
-                {
-                    currentCode = Convert.ToString(data[0].POCode);
-                }
-
-                int stt = 1;
-
-                if (!string.IsNullOrWhiteSpace(currentCode))
-                {
-                    stt = Convert.ToInt32(currentCode.Substring(prefix.Length)) + 1;
-                }
-
-                // Format STT 3 số
-                string sttText = stt.ToString().PadLeft(3, '0');
-
-                string newPOCode = prefix + sttText;
-
-                return Ok(ApiResponseFactory.Success(newPOCode, null));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        [HttpGet("poncc")]
-        public IActionResult getPoncc(int ponccId)
-        {
-            try
-            {
-                var data = _pONCCRepo.GetByID(ponccId);
-                return Ok(ApiResponseFactory.Success(data, null));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        #endregion Lấy dữ liệu các select cho bảng
-
-        #region Lưu dữ liệu
-
-        [HttpPost("save-data")]
-        [RequiresPermission("N35,N33,N1")]
-        public async Task<IActionResult> SaveData([FromBody] PONCCDTO data)
-        {
-            try
-            {
-                if (!_pONCCRepo.Validate(data, out string message))
-                {
-                    return BadRequest(ApiResponseFactory.Fail(null, message));
-                }
-
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                var currentUser = ObjectMapper.GetCurrentUser(claims);
-                string logContent = "";
-
-                if (data.poncc.ID > 0)
-                {
-                    #region Lưu log master
-
-                    PONCC poncc = _pONCCRepo.GetByID(data.poncc.ID);
-                    logContent = _pONCCLogRepo.GenerateLog(poncc, data.poncc);
-
-                    if (!String.IsNullOrWhiteSpace(logContent))
-                    {
-                        await _pONCCLogRepo.AddLog(data.poncc.ID, $"- {currentUser.FullName} đã cập nhật: \\n{logContent} \\n", "Cập nhật");
-                    }
-
-                    logContent = "";
-
-                    #endregion Lưu log master
-
-                    await _pONCCRepo.UpdateAsync(data.poncc);
-                }
-                else
-                {
-                    var po = data.poncc;
-                    po.SupplierSaleID = po.SupplierSaleID ?? 0;
-                    po.GroupID = po.GroupID ?? "";
-                    po.SupplierID = po.SupplierID ?? 0;
-                    po.UserID = po.UserID ?? 0;
-                    po.DeliveryTime = po.DeliveryTime ?? 0;
-                    po.Status_Old = po.Status_Old ?? 0;
-                    po.Currency = po.Currency ?? 0;
-                    po.BankCharge = po.BankCharge ?? "";
-                    po.IsApproved = po.IsApproved ?? false;
-                    po.BankingFee = po.BankingFee ?? "";
-                    po.UserNCC = po.UserNCC ?? "";
-                    po.UserName = po.UserName ?? "";
-                    po.Phone = po.Phone ?? "";
-                    po.Email = po.Email ?? "";
-                    po.Note = po.Note ?? "";
-                    po.AccountNumber = po.AccountNumber ?? "";
-                    po.RuleIncoterm = po.RuleIncoterm ?? "";
-                    po.RulePay = po.RulePay ?? "";
-                    po.AddressDelivery = po.AddressDelivery ?? "";
-                    po.SupplierVoucher = po.SupplierVoucher ?? "";
-                    po.OrderTargets = po.OrderTargets ?? "";
-                    po.ReasonForFailure = po.ReasonForFailure ?? "";
-                    po.ExpectedDate = po.ExpectedDate ?? null;
-                    await _pONCCRepo.CreateAsync(po);
-
-                    await _pONCCLogRepo.AddLog(po.ID, $"- {currentUser.FullName} đã thêm mới poncc\\n", "Thêm mới");
-                }
-
-                #region Xử lý rulePay
-
-                if (data.RulePayID > 0)
-                {
-                    var rulePay = _pONCCRulePayRepo.GetAll(x => x.PONCCID == data.poncc.ID);
-                    var ruleNew = _rulePayRepo.GetByID((int)data.RulePayID);
-
-                    foreach (var item in rulePay)
-                    {
-                        var ruleOld = _rulePayRepo.GetByID((int)item.RulePayID);
-                        if (item.ID > 0) await _pONCCRulePayRepo.DeleteAsync(item.ID);
-
-                        if (ruleNew.ID != item.RulePayID)
-                        {
-                            logContent += $"thay đổi [{ruleOld.Note}] thành [{ruleNew.Note}]";
-                        }
-                    }
-                    PONCCRulePay rulepay = new PONCCRulePay();
-                    rulepay.PONCCID = data.poncc.ID;
-                    rulepay.RulePayID = data.RulePayID;
-                    await _pONCCRulePayRepo.CreateAsync(rulepay);
-
-                    if (!string.IsNullOrWhiteSpace(logContent))
-                    {
-                        await _pONCCLogRepo.AddLog(data.poncc.ID, $"- {currentUser.FullName} đã {logContent} \\n", "Cập nhật");
-                    }
-                }
-
-                string productNew = "";
-                foreach (var item in data.lstPONCCDetail)
-                {
-                    item.PONCCID = data.poncc.ID;
-                    string totalPriceFormat = String.Format("{0:0.00}",
-                        item.ThanhTien + item.VATMoney + item.FeeShip - item.Discount);
-                    item.TotalPrice = Convert.ToDecimal(totalPriceFormat);
-                    string currencyExchangeFormat = String.Format("{0:0.00}", item.TotalPrice * data.poncc.CurrencyRate);
-                    item.CurrencyExchange = Convert.ToDecimal(currencyExchangeFormat);
-
-                    var productSale = _productSaleRepo.GetByID((int)item.ProductSaleID);
-
-                    if (item.ID > 0)
-                    {
-                        var ponccDetail = _pONCCDetailRepo.GetByID(item.ID);
-                        logContent = _pONCCLogRepo.GenerateLogDetail(ponccDetail, item);
-
-                        await _pONCCDetailRepo.UpdateAsync(item);
-                        if (!string.IsNullOrWhiteSpace(logContent))
-                        {
-                            await _pONCCLogRepo.AddLog(data.poncc.ID, $"- {currentUser.FullName} đã cập nhật SP \\n {productSale?.ProductName}: \\n {logContent}\\n", "Cập nhật");
-                        }
-                        UpdateBillImportDetail(item, data.lstBillImportId);
-                    }
-                    else
-                    {
-                        productNew += productSale != null ? productSale.ProductCode + "; " : "";
-                        await _pONCCDetailRepo.CreateAsync(item);
-                    }
-
-                    if (item.ProjectPartlistPurchaseRequestID == null) continue;
-                    await _pONCCRepo.UpdatePurchaseRequest(item.ProjectPartlistPurchaseRequestID ?? 0, data.poncc.SupplierSaleID ?? 0);
-
-                    string ponccDetailRequestBuyId = item.PONCCDetailRequestBuyID ?? "";
-                    if (string.IsNullOrWhiteSpace(ponccDetailRequestBuyId)) continue;
-                    string[] idRequestBuys = ponccDetailRequestBuyId.Split(';');
-
-                    foreach (string idRequestBuy in idRequestBuys)
-                    {
-                        var id = Convert.ToInt32(idRequestBuy);
-                        PONCCDetailRequestBuy poRequestBuy = _pONCCDetailRequestBuyRepo.GetAll(x =>
-                        x.PONCCDetailID == item.ID && x.ProjectPartlistPurchaseRequestID == id).FirstOrDefault();
-
-                        poRequestBuy = poRequestBuy ?? new PONCCDetailRequestBuy();
-                        poRequestBuy.PONCCDetailID = item.ID;
-                        poRequestBuy.ProjectPartlistPurchaseRequestID = id;
-                        if (poRequestBuy.ID <= 0)
-                        {
-                            await _pONCCDetailRequestBuyRepo.CreateAsync(poRequestBuy);
-                        }
-                        else
-                        {
-                            await _pONCCDetailRequestBuyRepo.UpdateAsync(poRequestBuy);
-                        }
-                    }
-                }
-
-                if (!string.IsNullOrWhiteSpace(productNew))
-                    await _pONCCLogRepo.AddLog(data.poncc.ID, $"- {currentUser.FullName} đã thêm mới SP [{productNew}]\\n", "Thêm mới");
-
-                #endregion Xử lý rulePay
-
-                return Ok(ApiResponseFactory.Success(data.poncc, "Đã cập nhật đặt hàng thành công."));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        [HttpPost("update-poncc")]
-        [RequiresPermission("N35,N33,N1")]
-        public async Task<IActionResult> updatePoncc([FromBody] List<PONCC> data)
-        {
-            try
-            {
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                var currentUser = ObjectMapper.GetCurrentUser(claims);
-
-                if (data.Count() > 0)
-                {
-                    foreach (var item in data)
-                    {
-                        if (item.ID > 0)
-                        {
-                            var model = _pONCCRepo.GetByID(item.ID);
-                            string logContent = _pONCCLogRepo.GenerateLog(model, item);
-
-                            if (!String.IsNullOrWhiteSpace(logContent))
-                            {
-                                await _pONCCLogRepo.AddLog(item.ID, $"- {currentUser.FullName} đã cập nhật: \\n{logContent} \\n", "Cập nhật");
-                            }
-                            await _pONCCRepo.UpdateAsync(item);
-                        }
-                    }
-                }
-                return Ok(ApiResponseFactory.Success(null, ""));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        private async Task UpdateBillImportDetail(PONCCDetail detail, List<int> lstBillImportId)
-        {
-            try
-            {
-                if (lstBillImportId.Count <= 0 || detail.ID == 0) return;
-                foreach (var i in lstBillImportId)
-                {
-                    Expression ep1 = new Expression("BillImportID", lstBillImportId[i]);
-                    Expression ep2 = new Expression("PONCCDetailID", detail.ID);
-                    List<BillImportDetail> lst = _billImportDetailRepo.GetAll(x => x.BillImportID == i && x.PONCCDetailID == detail.ID);
-                    foreach (BillImportDetail item in lst)
-                    {
-                        item.ProductID = detail.ProductSaleID;
-                        item.Price = detail.UnitPrice;
-                        item.QtyRequest = detail.QtyRequest;
-                        item.ProjectCode = detail.ProductCodeOfSupplier;
-                        item.ProjectID = detail.ProjectID;
-                        if (item.ID <= 0)
-                        {
-                            await _billImportDetailRepo.CreateAsync(item);
-                        }
-                        else
-                        {
-                            await _billImportDetailRepo.UpdateAsync(item);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        #endregion Lưu dữ liệu
-
-        #region Lương Update lấy tổng hợp PO NCC
-
-        //Lấy danh tổng hợp PO NCC
-        [HttpPost("get-po-ncc-summary")]
-        public IActionResult GetPONCCSummary([FromBody] PONCCSummaryRequestParam request)
-        {
-            try
-            {
-                var firstDay = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-                var lastDay = firstDay.AddMonths(1).AddDays(-1);
-                string procedureName = "sp_GetAllPONCC";
-                string[] paramNames = new string[] { "@FilterText", "@DateStart", "@DateEnd", "@SupplierID", "@Status", "@EmployeeID" };
-                object[] paramValues = new object[] { request.FilterText, request.DateStart ?? firstDay, request.DateEnd ?? lastDay, request.SupplierID, request.Status, request.EmployeeID };
-                var data = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
-                var propose = SQLHelper<object>.GetListData(data, 0);
-
-                return Ok(ApiResponseFactory.Success(propose, "Lấy dữ liệu thành công"));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        //Lấy danh tổng hợp PO NCC kế toán
-        [HttpPost("get-po-ncc-summary-kt")]
-        public IActionResult GetPONCCSummaryKT([FromBody] PONCCSummaryRequestParam request)
-        {
-            try
-            {
-                var firstDay = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-                var lastDay = firstDay.AddMonths(1).AddDays(-1);
-                string procedureName = "sp_GetAllPONCCKT";
-                string[] paramNames = new string[] { "@FilterText", "@DateStart", "@DateEnd", "@SupplierID", "@Status", "@EmployeeID" };
-                object[] paramValues = new object[] { request.FilterText, request.DateStart ?? firstDay, request.DateEnd ?? lastDay, request.SupplierID, request.Status, request.EmployeeID };
-                var data = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
-                var propose = SQLHelper<object>.GetListData(data, 0);
-
-                return Ok(ApiResponseFactory.Success(propose, "Lấy dữ liệu thành công"));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        #endregion Lương Update lấy tổng hợp PO NCC
-
-        [HttpGet("printpo")]
-        public IActionResult PrintPO(int id, bool isMerge)
-        {
-            string message = "";
-            try
-            {
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                var currentUser = ObjectMapper.GetCurrentUser(claims);
-
-                //get thông tin master
-                var dataPO = SQLHelper<object>.ProcedureToList("spGetPONCCByID", new string[] { "@ID" }, new object[] { id });
-                var po = SQLHelper<object>.GetListData(dataPO, 0)[0];
-                string companyText = po.CompanyText.ToUpper().Trim();
-                var taxCompany = _taxCompanyRepo.GetAll(x => x.Code.ToUpper().Trim() == companyText).FirstOrDefault() ?? new TaxCompany();
-
-                int employeeID = TextUtils.ToInt32(po.EmployeeID);
-
-                var employeePurchase = _employeePurchaseRepo.GetAll(x => x.EmployeeID == employeeID && x.TaxCompayID == taxCompany.ID).FirstOrDefault() ?? new EmployeePurchase();
-                po.Purchaser = $"{_pONCCRepo.ConvertVietnameseToEnglish(po.FullName)} - Phone: {_pONCCRepo.ConvertPhoneNumberVietnamese(employeePurchase.Telephone ?? "")} - Email: {employeePurchase.Email}";
-                po.TotalAmountText = _pONCCRepo.ConvertNumberToTextEnglish(Convert.ToDecimal(po.TotalMoneyPO), po.CurrencyText);
-                po.TotalMoneyText = _pONCCRepo.ConvertNumberToTextVietNamese(Convert.ToDecimal(po.TotalMoneyPO), po.CurrencyText);
-
-                PathStaticFile pathStaticFile = _pathStaticFiles.Where(x => x.PathName == "Purchases").FirstOrDefault() ?? new PathStaticFile();
-                if (!Path.Exists(pathStaticFile.PathFull))
-                {
-                    message = $"Thư mục ảnh chữ ký không tồn tại!\n{pathStaticFile.PathName}: {pathStaticFile.PathFull}";
-                }
-
-                string pathImage = Path.Combine(pathStaticFile.PathFull, @"2. quy trình. quy định chung\1. quy trình mua hàng\phần mềm misa\ảnh import misa\signnonback");
-                string picPrepared = Path.Combine(pathImage, $@"{po.Code.Trim()}.png");
-                //string picPrepared = Path.Combine(pathImage, $@"R0101.png");
-                string picDirector = Path.Combine(pathImage, $"seal{companyText.ToUpper()}.png");
-
-                string logo = Path.Combine(pathImage, $"logo{companyText.ToUpper()}.jpg");
-
-                po.PicPrepared = ImageHelper.ImageToBase64(picPrepared);
-                po.PicDirector = ImageHelper.ImageToBase64(picDirector);
-                po.Logo = ImageHelper.ImageToBase64(logo);
-
-                //get danh sách chi tiết sản phẩm
-                var poDetails = SQLHelper<PONCCDetailDTO>.ProcedureToListModel("spGetPONCCDetail", new string[] { "@PONCCID" }, new object[] { id });
-                poDetails = poDetails.Where(x => x.IsPurchase != true).ToList();
-                if (isMerge)
-                {
-                    bool isHCNS = poDetails.Any(x => x.ProductGroupID == 77);
-                    if (isHCNS)
-                    {
-                        poDetails = poDetails.GroupBy(item => new { item.ProductCodeOfSupplier, item.UnitPrice })
-                                            .Select(cl => new PONCCDetailDTO
-                                            {
-                                                STT = cl.First().Status,
-                                                ProductCodeOfSupplier = cl.First().ProductCodeOfSupplier,
-                                                Unit = cl.First().Unit,
-                                                UnitName = cl.First().UnitName,
-                                                QtyRequest = cl.Sum(q => q.QtyRequest),
-                                                UnitPrice = cl.First().UnitPrice,
-                                                ThanhTien = cl.Sum(q => q.ThanhTien),
-                                                VAT = cl.First().VAT,
-                                                VATMoney = cl.Sum(q => q.VATMoney),
-                                                Discount = cl.Sum(q => q.Discount),
-                                                TotalPrice = cl.Sum(q => q.TotalPrice),
-                                            })
-                                            .Select((item, index) =>
-                                            {
-                                                item.STT = index + 1;
-                                                return item;
-                                            }).ToList();
-                    }
-                    else
-                    {
-                        poDetails = poDetails.GroupBy(item => new { item.ProductCode, item.UnitPrice.Value, item.ProductCodeOfSupplier })
-                                                                            .Select(cl => new PONCCDetailDTO
-                                                                            {
-                                                                                STT = cl.First().Status,
-                                                                                ProductCodeOfSupplier = cl.First().ProductCodeOfSupplier,
-                                                                                Unit = cl.First().Unit,
-                                                                                UnitName = cl.First().UnitName,
-                                                                                QtyRequest = cl.Sum(q => q.QtyRequest),
-                                                                                UnitPrice = cl.First().UnitPrice,
-                                                                                ThanhTien = cl.Sum(q => q.ThanhTien),
-                                                                                VAT = cl.First().VAT,
-                                                                                VATMoney = cl.Sum(q => q.VATMoney),
-                                                                                Discount = cl.Sum(q => q.Discount),
-                                                                                TotalPrice = cl.Sum(q => q.TotalPrice),
-                                                                            })
-                                                                            .Select((item, index) =>
-                                                                            {
-                                                                                item.STT = index + 1;
-                                                                                return item;
-                                                                            }).ToList();
-                    }
-                }
-                var data = new
-                {
-                    po = po,
-                    taxCompany = taxCompany,
-                    employeePurchase = employeePurchase,
-                    poDetails = poDetails
-                };
-
-                _pONCCLogRepo.AddLog(po.ID, $"- {currentUser.FullName} đã in PO \\n", "Cập nhật");
-
-                return Ok(ApiResponseFactory.Success(data, message));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        #region Xuất file excel poncc theo mẫu
-
-        [HttpGet("print-excel")]
-        public IActionResult PrintExcel(int id, bool isMerge, string language, bool isShowSign, bool isShowSeal)
-        {
-            string message = "";
-            try
-            {
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                var currentUser = ObjectMapper.GetCurrentUser(claims);
-                _pONCCLogRepo.AddLog(id, $"- {currentUser.FullName} đã xuất excel PO \\n", "Cập nhật");
-
-                //get thông tin master
-                var dataPO = SQLHelper<object>.ProcedureToList("spGetPONCCByID", new string[] { "@ID" }, new object[] { id });
-                var po = SQLHelper<object>.GetListData(dataPO, 0)[0];
-                string companyText = po.CompanyText.ToUpper().Trim();
-                var taxCompany = _taxCompanyRepo.GetAll(x => x.Code.ToUpper().Trim() == companyText).FirstOrDefault() ?? new TaxCompany();
-
-                int employeeID = TextUtils.ToInt32(po.EmployeeID);
-
-                var employeePurchase = _employeePurchaseRepo.GetAll(x => x.EmployeeID == employeeID && x.TaxCompayID == taxCompany.ID).FirstOrDefault() ?? new EmployeePurchase();
-                po.Purchaser = $"{_pONCCRepo.ConvertVietnameseToEnglish(po.FullName)} - Phone: {_pONCCRepo.ConvertPhoneNumberVietnamese(employeePurchase.Telephone ?? "")} - Email: {employeePurchase.Email}";
-                po.TotalAmountText = _pONCCRepo.ConvertNumberToTextEnglish(Convert.ToDecimal(po.TotalMoneyPO), po.CurrencyText);
-                po.TotalMoneyText = _pONCCRepo.ConvertNumberToTextVietNamese(Convert.ToDecimal(po.TotalMoneyPO), po.CurrencyText);
-
-                PathStaticFile pathStaticFile = _pathStaticFiles.Where(x => x.PathName == "Purchases").FirstOrDefault() ?? new PathStaticFile();
-                if (!Path.Exists(pathStaticFile.PathFull))
-                {
-                    message = $"Thư mục ảnh chữ ký không tồn tại!\n{pathStaticFile.PathName}: {pathStaticFile.PathFull}";
-                }
-
-                string pathImage = Path.Combine(pathStaticFile.PathFull, @"2. quy trình. quy định chung\1. quy trình mua hàng\phần mềm misa\ảnh import misa\signnonback");
-                //string picPrepared = Path.Combine(pathImage, $@"R0101.png");
-                string picPrepared = Path.Combine(pathImage, $@"{po.Code.Trim()}.png");
-                string picDirector = Path.Combine(pathImage, $"seal{companyText.ToUpper()}.png");
-
-                string logo = Path.Combine(pathImage, $"logo{companyText.ToUpper()}.jpg");
-
-                //get danh sách chi tiết sản phẩm
-                var poDetails = SQLHelper<PONCCDetailDTO>.ProcedureToListModel("spGetPONCCDetail", new string[] { "@PONCCID" }, new object[] { id });
-                poDetails = poDetails.Where(x => x.IsPurchase != true).ToList();
-                if (isMerge)
-                {
-                    bool isHCNS = poDetails.Any(x => x.ProductGroupID == 77);
-                    if (isHCNS)
-                    {
-                        poDetails = poDetails.GroupBy(item => new { item.ProductCodeOfSupplier, item.UnitPrice })
-                                            .Select(cl => new PONCCDetailDTO
-                                            {
-                                                STT = cl.First().Status,
-                                                ProductCodeOfSupplier = cl.First().ProductCodeOfSupplier,
-                                                Unit = cl.First().Unit,
-                                                UnitName = cl.First().UnitName,
-                                                QtyRequest = cl.Sum(q => q.QtyRequest),
-                                                UnitPrice = cl.First().UnitPrice,
-                                                ThanhTien = cl.Sum(q => q.ThanhTien),
-                                                VAT = cl.First().VAT,
-                                                VATMoney = cl.Sum(q => q.VATMoney),
-                                                Discount = cl.Sum(q => q.Discount),
-                                                TotalPrice = cl.Sum(q => q.TotalPrice),
-                                            })
-                                            .Select((item, index) =>
-                                            {
-                                                item.STT = index + 1;
-                                                return item;
-                                            }).ToList();
-                    }
-                    else
-                    {
-                        poDetails = poDetails.GroupBy(item => new { item.ProductCode, item.UnitPrice.Value, item.ProductCodeOfSupplier })
-                                                                            .Select(cl => new PONCCDetailDTO
-                                                                            {
-                                                                                STT = cl.First().Status,
-                                                                                ProductCodeOfSupplier = cl.First().ProductCodeOfSupplier,
-                                                                                Unit = cl.First().Unit,
-                                                                                UnitName = cl.First().UnitName,
-                                                                                QtyRequest = cl.Sum(q => q.QtyRequest),
-                                                                                UnitPrice = cl.First().UnitPrice,
-                                                                                ThanhTien = cl.Sum(q => q.ThanhTien),
-                                                                                VAT = cl.First().VAT,
-                                                                                VATMoney = cl.Sum(q => q.VATMoney),
-                                                                                Discount = cl.Sum(q => q.Discount),
-                                                                                TotalPrice = cl.Sum(q => q.TotalPrice),
-                                                                            })
-                                                                            .Select((item, index) =>
-                                                                            {
-                                                                                item.STT = index + 1;
-                                                                                return item;
-                                                                            }).ToList();
-                    }
-                }
-
-                string templatePath = "";
-                var basePath = _configuration.GetValue<string>("PathTemplate");
-
-                templatePath = language == "en"
-                    ? Path.Combine(basePath, "ExportExcel", "PONCCReportEnTemplate.xlsx")
-                    : Path.Combine(basePath, "ExportExcel", "PONCCReportViTemplate.xlsx");
-                if (!System.IO.File.Exists(templatePath))
-                {
-                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy file template: {templatePath}"));
-                }
-                using (var workbook = new XLWorkbook(templatePath))
-                {
-                    var sheet = workbook.Worksheet(1);
-                    decimal totalAmount = 0;
-                    decimal vatMoney = 0;
-                    decimal discount = 0;
-                    decimal totalPrice = 0;
-
-                    int startRow = language == "en" ? 15 : 14;
-                    int currentRow = startRow;
-                    int stt = 1;
-                    int additionalRows = 0; // Số dòng thêm vào để điều chỉnh vị trí các thành phần khác
-
-                    // Tính toán tổng tiền
-                    if (poDetails.Any())
-                    {
-                        foreach (var item in poDetails)
-                        {
-                            totalAmount += Convert.ToDecimal(item.ThanhTien);
-                            vatMoney += Convert.ToDecimal(item.VATMoney);
-                            discount += Convert.ToDecimal(item.Discount);
-                            totalPrice += Convert.ToDecimal(item.TotalPrice);
-                        }
-                    }
-
-                    // Điền thông tin Header theo ngôn ngữ
-                    switch (language)
-                    {
-                        case "en":
-
-                            #region in tiếng anh
-
-                            sheet.Cell(2, 41).Value = po.POCode ?? "";
-                            sheet.Cell(3, 18).Value = po.NameNCC ?? "";
-                            sheet.Cell(3, 52).Value = (po.RequestDate).ToString("dd/MM/yyyy") ?? "";
-                            sheet.Cell(4, 18).Value = po.AddressNCC ?? "";
-                            sheet.Cell(4, 52).Value = po.BillCode ?? "";
-                            sheet.Cell(6, 18).Value = po.SupplierContactPhone ?? "";
-                            sheet.Cell(6, 39).Value = po.Fax ?? "............................";
-                            sheet.Cell(5, 55).Value = po.CurrencyText ?? "";
-                            sheet.Cell(8, 18).Value = po.SupplierContactName ?? "";
-                            sheet.Cell(8, 39).Value = po.SupplierContactEmail ?? "";
-                            sheet.Cell(9, 18).Value = taxCompany.BuyerEnglish ?? "";
-                            sheet.Cell(10, 18).Value = taxCompany.AddressBuyerEnglish ?? "";
-                            sheet.Cell(11, 18).Value = taxCompany.LegalRepresentativeEnglish ?? "";
-                            sheet.Cell(12, 18).Value = po.Purchaser ?? "";
-
-                            if (poDetails.Any())
-                            {
-                                // Tính số dòng cần thêm
-                                additionalRows = poDetails.Count - 1;
-
-                                // Insert rows nếu cần (chỉ insert khi có nhiều hơn 1 item)
-                                if (additionalRows > 0)
-                                {
-                                    sheet.Row(startRow + 1).InsertRowsAbove(additionalRows);
-
-                                    // Copy format từ dòng template sang các dòng mới
-                                    for (int i = 1; i <= additionalRows; i++)
-                                    {
-                                        sheet.Row(startRow).CopyTo(sheet.Row(startRow + i));
-                                    }
-                                }
-
-                                // Fill data vào các dòng
-                                foreach (var item in poDetails)
-                                {
-                                    sheet.Cell(currentRow, 2).Value = stt++;
-                                    sheet.Cell(currentRow, 5).Value = item.ProductCodeOfSupplier?.Trim() ?? "";
-                                    sheet.Cell(currentRow, 28).Value = (item.UnitName?.Trim() ?? item.Unit?.Trim()) ?? "";
-                                    sheet.Cell(currentRow, 31).Value = item.QtyRequest ?? 0;
-                                    sheet.Cell(currentRow, 38).Value = item.UnitPrice ?? 0;
-                                    sheet.Cell(currentRow, 45).Value = item.ThanhTien ?? 0;
-                                    sheet.Cell(currentRow, 50).Value = item.VAT ?? 0;
-                                    sheet.Cell(currentRow, 53).Value = item.VATMoney ?? 0;
-                                    currentRow++;
-                                }
-
-                                // Apply number format cho các cột số
-                                var numberColumns = new[] { 31, 38, 45, 50, 53 };
-                                foreach (var col in numberColumns)
-                                {
-                                    sheet.Range(startRow, col, currentRow - 1, col)
-                                        .Style.NumberFormat.Format = "#,##0.00";
-                                }
-                            }
-
-                            // Điền tổng tiền với vị trí đã điều chỉnh
-                            int summaryRowOffset = 17 + additionalRows;
-                            sheet.Cell(summaryRowOffset, 43).Value = totalAmount;
-                            sheet.Cell(summaryRowOffset + 1, 43).Value = vatMoney;
-                            sheet.Cell(summaryRowOffset + 2, 43).Value = discount;
-                            sheet.Cell(summaryRowOffset + 3, 43).Value = totalPrice;
-                            sheet.Range(summaryRowOffset, 43, summaryRowOffset + 3, 43).Style.NumberFormat.Format = "#,##0.00";
-
-                            sheet.Cell(summaryRowOffset + 4, 20).Value = po.TotalAmountText ?? "";
-                            sheet.Cell(summaryRowOffset + 6, 15).Value = (po.DeliveryDate).ToString("dd/MM/yyyy") ?? "";
-                            sheet.Cell(summaryRowOffset + 7, 15).Value = po.AddressDelivery ?? "";
-                            sheet.Cell(summaryRowOffset + 8, 15).Value = po.RulePayName ?? "";
-                            sheet.Cell(summaryRowOffset + 9, 15).Value = po.BankCharge ?? "";
-                            sheet.Cell(summaryRowOffset + 10, 15).Value = po.FedexAccount ?? "";
-                            sheet.Cell(summaryRowOffset + 11, 15).Value = po.AccountNumberSupplier ?? "";
-
-                            #endregion in tiếng anh
-
-                            break;
-
-                        case "vi":
-
-                            #region in tiếng việt
-
-                            string taxInfor = $"{taxCompany.BuyerVietnamese ?? ""}\n" +
-                                $"{taxCompany.AddressBuyerVienamese ?? ""}\n" +
-                                $"{taxCompany.TaxVietnamese ?? ""}";
-                            sheet.Cell(2, 2).Value = taxInfor;
-                            sheet.Cell(4, 12).Value = po.NameNCC ?? "";
-                            sheet.Cell(4, 41).Value = (po.RequestDate).ToString("dd/MM/yyyy") ?? "";
-                            sheet.Cell(5, 12).Value = po.AddressNCC ?? "";
-                            sheet.Cell(5, 41).Value = po.BillCode ?? "";
-                            sheet.Cell(8, 12).Value = po.MaSoThue ?? "";
-                            sheet.Cell(7, 44).Value = po.CurrencyText ?? "";
-                            sheet.Cell(10, 12).Value = po.SupplierContactPhone ?? "";
-                            sheet.Cell(10, 32).Value = po.Fax ?? "............................";
-                            sheet.Cell(11, 12).Value = po.Note ?? "";
-
-                            if (poDetails.Any())
-                            {
-                                // Tính số dòng cần thêm
-                                additionalRows = poDetails.Count - 1;
-
-                                // Insert rows nếu cần
-                                if (additionalRows > 0)
-                                {
-                                    sheet.Row(startRow + 1).InsertRowsAbove(additionalRows);
-
-                                    // Copy format từ dòng template
-                                    for (int i = 1; i <= additionalRows; i++)
-                                    {
-                                        sheet.Row(startRow).CopyTo(sheet.Row(startRow + i));
-                                    }
-                                }
-
-                                // Fill data
-                                foreach (var item in poDetails)
-                                {
-                                    sheet.Cell(currentRow, 2).Value = stt++;
-                                    sheet.Cell(currentRow, 3).Value = item.ProductCodeOfSupplier?.Trim() ?? "";
-                                    sheet.Cell(currentRow, 20).Value = (item.UnitName?.Trim() ?? item.Unit?.Trim()) ?? "";
-                                    sheet.Cell(currentRow, 24).Value = item.QtyRequest ?? 0;
-                                    sheet.Cell(currentRow, 28).Value = item.UnitPrice ?? 0;
-                                    sheet.Cell(currentRow, 34).Value = item.ThanhTien ?? 0;
-                                    sheet.Cell(currentRow, 39).Value = item.VAT ?? 0;
-                                    sheet.Cell(currentRow, 43).Value = item.VATMoney ?? 0;
-                                    currentRow++;
-                                }
-
-                                // Apply number format
-                                var numberColumns = new[] { 24, 28, 34, 39, 43 };
-                                foreach (var col in numberColumns)
-                                {
-                                    sheet.Range(startRow, col, currentRow - 1, col)
-                                        .Style.NumberFormat.Format = "#,##0.00";
-                                }
-                            }
-                            else
-                            {
-                                // Nếu không có detail thì xóa dòng template
-                                sheet.Row(startRow).Delete();
-                                additionalRows = -1; // Giảm 1 dòng
-                            }
-
-                            // Điền tổng tiền với vị trí đã điều chỉnh
-                            int summaryRowOffsetVi = 15 + additionalRows;
-                            sheet.Cell(summaryRowOffsetVi, 40).Value = totalAmount;
-                            sheet.Cell(summaryRowOffsetVi + 1, 40).Value = vatMoney;
-                            sheet.Cell(summaryRowOffsetVi + 2, 40).Value = discount;
-                            sheet.Cell(summaryRowOffsetVi + 3, 40).Value = totalPrice;
-                            sheet.Range(summaryRowOffsetVi, 40, summaryRowOffsetVi + 3, 40).Style.NumberFormat.Format = "#,##0.00";
-
-                            sheet.Cell(summaryRowOffsetVi + 4, 15).Value = po.TotalMoneyText ?? "";
-                            sheet.Cell(summaryRowOffsetVi + 6, 14).Value = (po.DeliveryDate).ToString("dd/MM/yyyy") ?? "";
-                            sheet.Cell(summaryRowOffsetVi + 7, 14).Value = po.AddressDelivery ?? "";
-                            sheet.Cell(summaryRowOffsetVi + 8, 14).Value = po.RulePayName ?? "";
-                            sheet.Cell(summaryRowOffsetVi + 9, 14).Value = po.AccountNumberSupplier ?? "";
-
-                            sheet.Cell(summaryRowOffsetVi + 13, 24).Value = employeePurchase.Telephone ?? "";
-                            sheet.Cell(summaryRowOffsetVi + 14, 24).Value = employeePurchase.Email ?? "";
-
-                            #endregion in tiếng việt
-
-                            break;
-
-                        default:
-                            break;
-                    }
-
-                    #region Gán ảnh logo và chữ ký, seal (Đã điều chỉnh vị trí theo số dòng thêm vào)
-
-                    // 1. Xử lý Logo (không bị ảnh hưởng vì ở trên phần detail)
-                    // 1. Logo
-                    if (System.IO.File.Exists(logo) && isShowSign && language == "en")
-                    {
-                        using var ms = ConvertImageToMemoryStream(logo);
-                        sheet.AddPicture(ms)
-                             .MoveTo(sheet.Cell(2, 2))
-                             .Scale(0.14); // zoom 50%
-                    }
-
-                    // 2. Chữ ký người lập
-                    if (System.IO.File.Exists(picPrepared) && isShowSign)
-                    {
-                        using var ms = ConvertImageToMemoryStream(picPrepared);
-                        int preparedRow = language == "vi" ? 27 + additionalRows : 31 + additionalRows;
-                        int preparedCol = language == "vi" ? 20 : 25;
-
-                        sheet.AddPicture(ms)
-                             .MoveTo(sheet.Cell(preparedRow, preparedCol))
-                             .Scale(0.68); // zoom 70%
-                    }
-
-                    // 3. Dấu và chữ ký giám đốc
-                    if (System.IO.File.Exists(picDirector) && isShowSeal)
-                    {
-                        using var ms = ConvertImageToMemoryStream(picDirector);
-                        int directorRow = language == "vi" ? 27 + additionalRows : 31 + additionalRows;
-                        int directorCol = language == "vi" ? 35 : 42;
-
-                        sheet.AddPicture(ms)
-                             .MoveTo(sheet.Cell(directorRow, directorCol))
-                             .Scale(0.68); // zoom 60%
-                    }
-
-                    #endregion Gán ảnh logo và chữ ký, seal (Đã điều chỉnh vị trí theo số dòng thêm vào)
-
-                    using (var stream = new MemoryStream())
-                    {
-                        workbook.SaveAs(stream);
-                        stream.Position = 0;
-
-                        string fileName = $"{po.BillCode}.xlsx";
-                        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        private MemoryStream ConvertImageToMemoryStream(string imagePath)
-        {
-            byte[] imgBytes;
-            using (var img = System.Drawing.Image.FromFile(imagePath))
-            using (var msTemp = new MemoryStream())
-            {
-                img.Save(msTemp, System.Drawing.Imaging.ImageFormat.Png);
-                imgBytes = msTemp.ToArray();
-            }
-            return new MemoryStream(imgBytes);
-        }
-
-        #endregion Xuất file excel poncc theo mẫu
-
-        #region Log thao tác poncc
-
-        [HttpGet("log-activity")]
-        public IActionResult getActivityLogPoncc(int ponccId)
-        {
-            try
-            {
-                var data = _pONCCLogRepo.GetAll().Where(x => x.PONCCID == ponccId).OrderByDescending(x => x.CreatedDate).ToList();
-                return Ok(ApiResponseFactory.Success(data, ""));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        #endregion Log thao tác poncc
-    }
+	[Route("api/[controller]")]
+	[ApiController]
+	[Authorize]
+	public class PONCCController : ControllerBase
+	{
+		private readonly List<PathStaticFile> _pathStaticFiles;
+		private PONCCRepo _pONCCRepo;
+		private ProductGroupRepo _productGroupRepo;
+		private ProjectRepo _projectRepo;
+		private PONCCDetailRepo _pONCCDetailRepo;
+		private PONCCRulePayRepo _pONCCRulePayRepo;
+		private BillImportDetailRepo _billImportDetailRepo;
+		private ProjectPartlistPurchaseRequestRepo _projectPartlistPurchaseRequestRepo;
+		private PONCCDetailRequestBuyRepo _pONCCDetailRequestBuyRepo;
+		private WarehouseRepo _warehouseRepo;
+		private BillImportRepo _billImportRepo;
+		private BillImportTechnicalRepo _billImportTechnicalRepo;
+		private readonly IConfiguration _configuration;
+		private readonly TaxCompanyRepo _taxCompanyRepo;
+		private readonly EmployeePurchaseRepo _employeePurchaseRepo;
+		private readonly PONCCLogRepo _pONCCLogRepo;
+		private readonly RulePayRepo _rulePayRepo;
+		private readonly ProductSaleRepo _productSaleRepo;
+
+		public PONCCController(
+			IOptions<List<PathStaticFile>> pathStaticFiles,
+			PONCCRepo pONCCRepo
+			, ProductGroupRepo productGroupRepo
+			, ProjectRepo projectRepo
+			, PONCCRulePayRepo pONCCRulePayRepo
+			, PONCCDetailRepo pONCCDetailRepo
+			, BillImportDetailRepo billImportDetailRepo
+			, ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo
+			, PONCCDetailRequestBuyRepo pONCCDetailRequestBuyRepo
+			, WarehouseRepo warehouseRepo
+			, BillImportRepo billImportRepo
+			, BillImportTechnicalRepo billImportTechRepo, TaxCompanyRepo taxCompanyRepo, EmployeePurchaseRepo employeePurchaseRepo, IConfiguration configuration
+			, PONCCLogRepo pONCCLogRepo
+			, RulePayRepo rulePayRepo
+			, ProductSaleRepo productSaleRepo
+			)
+		{
+			_pathStaticFiles = pathStaticFiles.Value;
+			_pONCCRepo = pONCCRepo;
+			_productGroupRepo = productGroupRepo;
+			_projectRepo = projectRepo;
+			_pONCCRulePayRepo = pONCCRulePayRepo;
+			_pONCCDetailRepo = pONCCDetailRepo;
+			_billImportDetailRepo = billImportDetailRepo;
+			_projectPartlistPurchaseRequestRepo = projectPartlistPurchaseRequestRepo;
+			_pONCCDetailRequestBuyRepo = pONCCDetailRequestBuyRepo;
+			_warehouseRepo = warehouseRepo;
+			_billImportRepo = billImportRepo;
+			_billImportTechnicalRepo = billImportTechRepo;
+			_taxCompanyRepo = taxCompanyRepo;
+			_employeePurchaseRepo = employeePurchaseRepo;
+			_configuration = configuration;
+			_pONCCLogRepo = pONCCLogRepo;
+			_rulePayRepo = rulePayRepo;
+			_productSaleRepo = productSaleRepo;
+		}
+
+		#region Lấy data master/ detail
+
+		[HttpGet("get-all")]
+		[RequiresPermission("N33,N35,N36,N1,N52,N38,N54")]
+		public IActionResult GetAll(
+				string? keyword = "",
+				int pageNumber = 1,
+				int pageSize = 20,
+				DateTime? dateStart = null,
+				DateTime? dateEnd = null,
+				int? supplierId = null,
+				int? status = null,
+				int? employeeId = null,
+				int? poType = 0
+			)
+		{
+			try
+			{
+				pageSize = 999999;
+				DateTime _dateStart = dateStart?.Date ?? DateTime.MinValue;
+				DateTime _dateEnd = (dateEnd?.Date ?? DateTime.MaxValue)
+									.AddHours(23).AddMinutes(59).AddSeconds(59);
+
+				// Gọi stored procedure
+				var dt = SQLHelper<dynamic>.ProcedureToList(
+					"spGetPONCC_Khanh",
+					new string[]
+					{
+						"@FilterText",
+						"@PageNumber",
+						"@PageSize",
+						"@DateStart",
+						"@DateEnd",
+						"@SupplierID",
+						"@Status",
+						"@EmployeeID"
+					},
+					new object[]
+					{
+						keyword ?? "",
+						pageNumber,
+						pageSize,
+						_dateStart,
+						_dateEnd,
+						supplierId,
+						status,
+						employeeId
+					}
+				);
+
+				var data = SQLHelper<dynamic>.GetListData(dt, 0);
+				var data1 = SQLHelper<dynamic>.GetListData(dt, 1);
+
+				if (data != null)
+				{
+					if (poType == 0)
+					{
+						data = data.Where(x => Convert.ToInt32(x.POType) == 0).ToList();
+					}
+					else if (poType == 1)
+					{
+						data = data.Where(x => Convert.ToInt32(x.POType) == 1).ToList();
+					}
+				}
+				int totalPage = 0;
+				if (data1 != null && data1.Count > 0)
+				{
+					totalPage = data1[0].TotalPage ?? 0;
+				}
+
+				var response = new
+				{
+					data = data,
+					totalPage = totalPage
+				};
+
+				return Ok(ApiResponseFactory.Success(response, null));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+
+		[HttpGet("warehouse-code")]
+		public IActionResult GetWarehouse(int warehouseId)
+		{
+			try
+			{
+				var warehouse = _warehouseRepo.GetByID(warehouseId);
+				string wareHouseCode = warehouse != null ? warehouse.WarehouseCode : "";
+				return Ok(ApiResponseFactory.Success(wareHouseCode, null));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+
+		[HttpGet("bill-import-tech")]
+		public IActionResult GetBillImportTech(int billimportTechId)
+		{
+			try
+			{
+				var billimportTech = _billImportTechnicalRepo.GetByID(billimportTechId);
+				return Ok(ApiResponseFactory.Success(billimportTech, null));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+
+		[HttpGet("data-detail")]
+		[RequiresPermission("N33,N35,N36,N1,N52,N38,N54")]
+		public IActionResult GetDetail(int ponccId)
+		{
+			try
+			{
+				List<string> listAllID = new List<string>();
+				List<bool> checkList = new List<bool>();
+				var dt = SQLHelper<dynamic>
+					.ProcedureToList("spGetPONCCDetail_Khanh", new string[] { "@PONCCID" }, new object[] { ponccId });
+				var data = SQLHelper<dynamic>.GetListData(dt, 0);
+				var dtRef = SQLHelper<dynamic>.GetListData(dt, 1);
+
+				var result = new
+				{
+					data = data,
+					dtRef = dtRef ?? [],
+				};
+
+				return Ok(ApiResponseFactory.Success(result, null));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+
+		[HttpGet("get-rulepay-by-poncc")]
+		public IActionResult GetRulePayByPONCC(int ponccId)
+		{
+			try
+			{
+				int rulePayID = _pONCCRulePayRepo.GetAll(x => x.PONCCID == ponccId).Where(x => x.RulePayID.HasValue).Select(x => x.RulePayID.Value).FirstOrDefault();
+				return Ok(ApiResponseFactory.Success(rulePayID));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+
+		[HttpGet("poncc-detail")]
+		[RequiresPermission("N33,N35,N36,N1,N52,N38,N54")]
+		public IActionResult Getponccdetail(string idText, int warehouseID, string detailId)
+		{
+			try
+			{
+				var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+				var currentUser = ObjectMapper.GetCurrentUser(claims);
+				string warehouseCode = _warehouseRepo.GetByID(warehouseID).WarehouseCode;
+				List<PONCCDetail> listAllPONCCDetails = _pONCCDetailRepo.GetAll();
+
+				List<int> listDetailId = detailId
+					.Split(',', StringSplitOptions.RemoveEmptyEntries)
+					.Select(x => int.Parse(x))
+					.ToList();
+
+				var dt = SQLHelper<dynamic>
+					.ProcedureToList("spGetPONCCDetailByID", new string[] { "@ID" }, new object[] { idText });
+				var data = SQLHelper<dynamic>.GetListData(dt, 0);
+
+				var toDelete = new List<dynamic>();
+
+				//foreach (var row in data)
+				//{
+				//    if (!listDetailId.Contains(Convert.ToInt32(row.ID)))
+				//    {
+				//        data.Remove(row);
+				//    }
+				//}
+				data = data
+					.Where(x => listDetailId.Contains(Convert.ToInt32(x.ID)))
+					.ToList();
+
+				var listSale = data
+						.Where(row => row.SupplierSaleID != null && row.ProductGroupID != null)
+						.GroupBy(x => new { x.SupplierSaleID, x.ProductGroupID })
+						.Select(g => g.First())
+						.ToList();
+
+				var listDemo = data
+						.Where(row => row.SupplierSaleID != null && row.ProductGroupRTCID != null)
+						.GroupBy(x => new { x.SupplierSaleID, x.ProductGroupRTCID })
+						.Select(g => g.First())
+						.ToList();
+
+				List<BillImport> billImports = new List<BillImport>();
+				List<BillImportTechnical> billImportTechs = new List<BillImportTechnical>();
+				List<dynamic> listSaleDetail = [];
+				List<dynamic> listDemoDetail = [];
+
+				List<int> listSalePonccId = new List<int>();
+				List<int> listDemoPonccId = new List<int>();
+				if (listSale.Count() > 0)
+				{
+					foreach (var item in listSale)
+					{
+						BillImport bill = new BillImport();
+
+						int supplierSaleID = Convert.ToInt32(item.SupplierSaleID);
+						int productGroupID = Convert.ToInt32(item.ProductGroupID);
+
+						var dtDetails = data.Where(x => x.SupplierSaleID == supplierSaleID && x.ProductGroupID == productGroupID).ToList();
+						if (dtDetails.Count() <= 0) continue;
+						else
+						{
+							var checkQtyRemain = dtDetails.Where(x => (decimal)x.QuantityRemain > 0).ToList();
+							if (checkQtyRemain.Count <= 0) continue;
+						}
+						var dataRow = dtDetails[0];
+
+						int poNCCId = Convert.ToInt32(dataRow.PONCCID);
+
+						bill.BillImportCode = _billImportRepo.GetBillCode(4);
+						bill.CreatDate = DateTime.Now;
+						bill.Deliver = Convert.ToString(dataRow.FullName);
+						bill.Reciver = "Admin kho";
+						bill.Status = false;
+						bill.Suplier = Convert.ToString(dataRow.NameNCC);
+						bill.BillType = false;
+						bill.KhoType = Convert.ToString(dataRow.ProductGroupName);
+						bill.GroupID = Convert.ToString(dataRow.ProductGroupID);
+						bill.SupplierID = Convert.ToInt32(dataRow.SupplierSaleID);
+						bill.DeliverID = Convert.ToInt32(dataRow.UserID);
+						bill.KhoTypeID = Convert.ToInt32(dataRow.ProductGroupID);
+						bill.WarehouseID = warehouseID;
+						bill.BillTypeNew = 4;
+						bill.DateRequestImport = DateTime.Now;
+						bill.CreatedDate = DateTime.Now;
+						bill.CreatedBy = currentUser.LoginName;
+
+						bill.RulePayID = Convert.ToInt32(dataRow.RulePayID);
+
+						var productGroupWarehouses = SQLHelper<object>.ProcedureToList("spGetProductGroupWarehouse",
+												   new string[] { "@WarehouseID", "@ProductGroupID" },
+												   new object[] { warehouseID, productGroupID });
+
+						var productGroupWarehouse = SQLHelper<object>.GetListData(productGroupWarehouses, 0);
+
+						bill.ReciverID = productGroupWarehouse.Count() > 0 ? Convert.ToInt32(productGroupWarehouse[0].UserID) : 0;
+
+						billImports.Add(bill);
+						listSaleDetail.Add(dtDetails);
+						listSalePonccId.Add(poNCCId);
+					}
+				}
+				if (listDemo.Count() > 0)
+				{
+					foreach (var item in listDemo)
+					{
+						int supplierSaleID = Convert.ToInt32(item.SupplierSaleID);
+						var dtDetails = data.Where(x =>
+						x.SupplierSaleID == supplierSaleID &&
+						x.ProductRTCID != null &&
+						x.ProductRTCID != 0).ToList();
+
+						if (dtDetails.Count() <= 0) continue;
+						else
+						{
+							var checkQtyRemain = dtDetails.Where(x => (decimal)x.QuantityRemain > 0).ToList();
+							if (checkQtyRemain.Count <= 0) continue;
+						}
+						var dataRow = dtDetails[0];
+
+						int poNCCId = Convert.ToInt32(dataRow.PONCCID);
+						BillImportTechnical bill = new BillImportTechnical();
+						bill.BillCode = _billImportTechnicalRepo.GetBillCode(4); ;
+						bill.CreatDate = DateTime.Now;
+						bill.Deliver = Convert.ToString(dataRow.FullName);
+						bill.Receiver = "Admin kho";
+						bill.Status = false;
+						bill.Suplier = Convert.ToString(dataRow.NameNCC);
+						bill.BillType = false;
+						bill.SupplierSaleID = Convert.ToInt32(dataRow.SupplierSaleID);
+						bill.DeliverID = Convert.ToInt32(dataRow.UserID);
+						bill.ReceiverID = 0;
+						bill.WarehouseID = 1;
+						bill.BillTypeNew = 4;
+						bill.DateRequestImport = DateTime.Now;
+						bill.CreatedDate = DateTime.Now;
+						bill.CreatedBy = currentUser.LoginName;
+						bill.ApproverID = 54;
+
+						bill.WarehouseType = "Demo";
+
+						bill.RulePayID = Convert.ToInt32(dataRow.RulePayID);
+						billImportTechs.Add(bill);
+						listDemoDetail.Add(dtDetails);
+						listDemoPonccId.Add(poNCCId);
+					}
+				}
+
+				var result = new
+				{
+					dataSale = billImports ?? [],
+					dataDemo = billImportTechs ?? [],
+					listSaleDetail = listSaleDetail ?? [],
+					listDemoDetail = listDemoDetail ?? [],
+					listDemoPonccId = listDemoPonccId ?? [],
+					listSalePonccId = listSalePonccId ?? []
+				};
+
+				return Ok(ApiResponseFactory.Success(result, null));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+
+		[HttpGet("deleted-poncc-detail")]
+		[RequiresPermission("N35,N33,N1")]
+		public async Task<IActionResult> deletedPonccDetail(int poDetailId)
+		{
+			try
+			{
+				if (poDetailId > 0) await _pONCCDetailRepo.DeleteAsync(poDetailId);
+				return Ok(ApiResponseFactory.Success(null, null));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+
+		#endregion Lấy data master/ detail
+
+		#region Lấy dữ liệu các select cho bảng
+
+		[HttpGet("load-bill-code")]
+		[RequiresPermission("N35,N33,N1")]
+		public IActionResult LoadBillCode(int poTypeId)
+		{
+			try
+			{
+				string prefix = poTypeId == 0 ? "DMH" : "DEMO";
+
+				var listPO = _pONCCRepo.GetAll(x => x.BillCode != null && x.BillCode.StartsWith(prefix))
+					.Select(x => new
+					{
+						ID = x.ID,
+						BillCode = x.BillCode,
+						STT = Convert.ToInt32(x.BillCode.Substring(prefix.Length))
+					})
+					.ToList();
+
+				int stt = listPO.Count <= 0 ? 0 : listPO.Max(x => x.STT);
+				stt++;
+				string sttText = stt.ToString();
+				while (sttText.Length < 5)
+				{
+					sttText = $"0{sttText}";
+				}
+
+				string newBillCode = prefix + sttText;
+
+				return Ok(ApiResponseFactory.Success(newBillCode, null));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+
+		[HttpGet("product-sale")]
+		public IActionResult getProductSale()
+		{
+			try
+			{
+				var listGroup = _productGroupRepo.GetAll().Select(x => x.ID).ToList();
+				var idGroup = string.Join(",", listGroup);
+				var dt = SQLHelper<object>.ProcedureToList("spGetProductSale", new string[] { "@IDgroup" }, new object[] { idGroup });
+				var data = SQLHelper<object>.GetListData(dt, 0);
+				return Ok(ApiResponseFactory.Success(data, null));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+
+		[HttpGet("product-rtc")]
+		public IActionResult getProductRTC(int? warehouseType)
+		{
+			try
+			{
+				if (warehouseType == null) warehouseType = 1;
+				var dt = SQLHelper<dynamic>.ProcedureToList("spGetProductRTC",
+				new string[] { "@ProductGroupID", "@Keyword", "@CheckAll", "@WarehouseID", "@ProductRTCID", "@ProductGroupNo", "@PageNumber", "@PageSize", "@WarehouseType" },
+				new object[] { 0, "", 0, 0, 0, "", 1, 100000000, warehouseType });
+				var data = SQLHelper<object>.GetListData(dt, 0);
+				return Ok(ApiResponseFactory.Success(data, null));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+
+		[HttpGet("projects")]
+		public IActionResult getProjects()
+		{
+			try
+			{
+				var dt = _projectRepo.GetAll().OrderByDescending(x => x.ID);
+				return Ok(ApiResponseFactory.Success(dt, null));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+
+		[HttpGet("history-price")]
+		[RequiresPermission("N35,N33,N1")]
+		public IActionResult getHistoryPrice(int productId, string productCode)
+		{
+			try
+			{
+				decimal historyPrice = 0;
+				var dt = SQLHelper<object>.ProcedureToList("spGetHistoryPricePartlistForProduct",
+					new string[] { "@ProductSaleID", "@ProductCode" }, new object[] { productId, productCode });
+				var data = SQLHelper<object>.GetListData(dt, 0);
+				if (data.Count() > 0) historyPrice = (decimal)data[0].UnitPrice;
+
+				return Ok(ApiResponseFactory.Success(historyPrice, null));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+
+		[HttpGet("check-po-code")]
+		public IActionResult checkPoCode(int id, string pOCode, string billCode)
+		{
+			try
+			{
+				var data = _pONCCRepo.GetAll(x =>
+				x.ID != id &&
+				x.POCode.Trim().ToLower() == pOCode.Trim().ToLower() &&
+				x.BillCode.Trim().ToLower() == billCode.Trim().ToLower() &&
+				x.IsDeleted != true
+				).ToList();
+
+				var count = data?.Count() ?? 0;
+
+				return Ok(ApiResponseFactory.Success(count, null));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+
+		[HttpGet("receivedId")]
+		public IActionResult getReceivedId(int warehouseID, int productGroupID)
+		{
+			try
+			{
+				var dt = SQLHelper<object>.ProcedureToList("spGetProductGroupWarehouse",
+												   new string[] { "@WarehouseID", "@ProductGroupID" },
+												   new object[] { warehouseID, productGroupID });
+
+				var data = SQLHelper<object>.GetListData(dt, 0);
+				int userId = 0;
+
+				if (data.Count() > 0)
+				{
+					try
+					{
+						userId = Convert.ToInt32(data[0].UserID);
+					}
+					catch
+					{
+						userId = 0;
+					}
+				}
+
+				return Ok(ApiResponseFactory.Success(userId, null));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+
+		[HttpGet("po-code")]
+		public IActionResult getPoCode(string productCode)
+		{
+			try
+			{
+				string prefix = $"{DateTime.Now.ToString("MMyyyy")}-{productCode}-";
+
+				var dt = SQLHelper<object>.ProcedureToList("spGetPOCodeInPONCC",
+						new string[] { "@Value" },
+						new object[] { prefix }
+					);
+
+				// Lấy bảng 0
+				var data = SQLHelper<object>.GetListData(dt, 0);
+
+				string currentCode = "";
+
+				if (data.Count > 0)
+				{
+					currentCode = Convert.ToString(data[0].POCode);
+				}
+
+				int stt = 1;
+
+				if (!string.IsNullOrWhiteSpace(currentCode))
+				{
+					stt = Convert.ToInt32(currentCode.Substring(prefix.Length)) + 1;
+				}
+
+				// Format STT 3 số
+				string sttText = stt.ToString().PadLeft(3, '0');
+
+				string newPOCode = prefix + sttText;
+
+				return Ok(ApiResponseFactory.Success(newPOCode, null));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+
+		[HttpGet("poncc")]
+		public IActionResult getPoncc(int ponccId)
+		{
+			try
+			{
+				var data = _pONCCRepo.GetByID(ponccId);
+				return Ok(ApiResponseFactory.Success(data, null));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+
+		#endregion Lấy dữ liệu các select cho bảng
+
+		#region Lưu dữ liệu
+
+		[HttpPost("save-data")]
+		[RequiresPermission("N35,N33,N1")]
+		public async Task<IActionResult> SaveData([FromBody] PONCCDTO data)
+		{
+			try
+			{
+				if (!_pONCCRepo.Validate(data, out string message))
+				{
+					return BadRequest(ApiResponseFactory.Fail(null, message));
+				}
+
+				var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+				var currentUser = ObjectMapper.GetCurrentUser(claims);
+				string logContent = "";
+
+				if (data.poncc.ID > 0)
+				{
+					#region Lưu log master
+
+					PONCC poncc = _pONCCRepo.GetByID(data.poncc.ID);
+					logContent = _pONCCLogRepo.GenerateLog(poncc, data.poncc);
+
+					if (!String.IsNullOrWhiteSpace(logContent))
+					{
+						await _pONCCLogRepo.AddLog(data.poncc.ID, $"- {currentUser.FullName} đã cập nhật: \\n{logContent} \\n", "Cập nhật");
+					}
+
+					logContent = "";
+
+					#endregion Lưu log master
+
+					await _pONCCRepo.UpdateAsync(data.poncc);
+				}
+				else
+				{
+					var po = data.poncc;
+					po.SupplierSaleID = po.SupplierSaleID ?? 0;
+					po.GroupID = po.GroupID ?? "";
+					po.SupplierID = po.SupplierID ?? 0;
+					po.UserID = po.UserID ?? 0;
+					po.DeliveryTime = po.DeliveryTime ?? 0;
+					po.Status_Old = po.Status_Old ?? 0;
+					po.Currency = po.Currency ?? 0;
+					po.BankCharge = po.BankCharge ?? "";
+					po.IsApproved = po.IsApproved ?? false;
+					po.BankingFee = po.BankingFee ?? "";
+					po.UserNCC = po.UserNCC ?? "";
+					po.UserName = po.UserName ?? "";
+					po.Phone = po.Phone ?? "";
+					po.Email = po.Email ?? "";
+					po.Note = po.Note ?? "";
+					po.AccountNumber = po.AccountNumber ?? "";
+					po.RuleIncoterm = po.RuleIncoterm ?? "";
+					po.RulePay = po.RulePay ?? "";
+					po.AddressDelivery = po.AddressDelivery ?? "";
+					po.SupplierVoucher = po.SupplierVoucher ?? "";
+					po.OrderTargets = po.OrderTargets ?? "";
+					po.ReasonForFailure = po.ReasonForFailure ?? "";
+					po.ExpectedDate = po.ExpectedDate ?? null;
+					await _pONCCRepo.CreateAsync(po);
+
+					await _pONCCLogRepo.AddLog(po.ID, $"- {currentUser.FullName} đã thêm mới poncc\\n", "Thêm mới");
+				}
+
+				#region Xử lý rulePay
+
+				if (data.RulePayID > 0)
+				{
+					var rulePay = _pONCCRulePayRepo.GetAll(x => x.PONCCID == data.poncc.ID);
+					var ruleNew = _rulePayRepo.GetByID((int)data.RulePayID);
+
+					foreach (var item in rulePay)
+					{
+						var ruleOld = _rulePayRepo.GetByID((int)item.RulePayID);
+						if (item.ID > 0) await _pONCCRulePayRepo.DeleteAsync(item.ID);
+
+						if (ruleNew.ID != item.RulePayID)
+						{
+							logContent += $"thay đổi [{ruleOld.Note}] thành [{ruleNew.Note}]";
+						}
+					}
+					PONCCRulePay rulepay = new PONCCRulePay();
+					rulepay.PONCCID = data.poncc.ID;
+					rulepay.RulePayID = data.RulePayID;
+					await _pONCCRulePayRepo.CreateAsync(rulepay);
+
+					if (!string.IsNullOrWhiteSpace(logContent))
+					{
+						await _pONCCLogRepo.AddLog(data.poncc.ID, $"- {currentUser.FullName} đã {logContent} \\n", "Cập nhật");
+					}
+				}
+
+				string productNew = "";
+				foreach (var item in data.lstPONCCDetail)
+				{
+					item.PONCCID = data.poncc.ID;
+					string totalPriceFormat = String.Format("{0:0.00}",
+						item.ThanhTien + item.VATMoney + item.FeeShip - item.Discount);
+					item.TotalPrice = Convert.ToDecimal(totalPriceFormat);
+					string currencyExchangeFormat = String.Format("{0:0.00}", item.TotalPrice * data.poncc.CurrencyRate);
+					item.CurrencyExchange = Convert.ToDecimal(currencyExchangeFormat);
+
+					var productSale = _productSaleRepo.GetByID((int)item.ProductSaleID);
+
+					if (item.ID > 0)
+					{
+						var ponccDetail = _pONCCDetailRepo.GetByID(item.ID);
+						logContent = _pONCCLogRepo.GenerateLogDetail(ponccDetail, item);
+
+						await _pONCCDetailRepo.UpdateAsync(item);
+						if (!string.IsNullOrWhiteSpace(logContent))
+						{
+							await _pONCCLogRepo.AddLog(data.poncc.ID, $"- {currentUser.FullName} đã cập nhật SP \\n {productSale?.ProductName}: \\n {logContent}\\n", "Cập nhật");
+						}
+						UpdateBillImportDetail(item, data.lstBillImportId);
+					}
+					else
+					{
+						productNew += productSale != null ? productSale.ProductCode + "; " : "";
+						await _pONCCDetailRepo.CreateAsync(item);
+					}
+
+					if (item.ProjectPartlistPurchaseRequestID == null) continue;
+					await _pONCCRepo.UpdatePurchaseRequest(item.ProjectPartlistPurchaseRequestID ?? 0, data.poncc.SupplierSaleID ?? 0);
+
+					string ponccDetailRequestBuyId = item.PONCCDetailRequestBuyID ?? "";
+					if (string.IsNullOrWhiteSpace(ponccDetailRequestBuyId)) continue;
+					string[] idRequestBuys = ponccDetailRequestBuyId.Split(';');
+
+					foreach (string idRequestBuy in idRequestBuys)
+					{
+						var id = Convert.ToInt32(idRequestBuy);
+						PONCCDetailRequestBuy poRequestBuy = _pONCCDetailRequestBuyRepo.GetAll(x =>
+						x.PONCCDetailID == item.ID && x.ProjectPartlistPurchaseRequestID == id).FirstOrDefault();
+
+						poRequestBuy = poRequestBuy ?? new PONCCDetailRequestBuy();
+						poRequestBuy.PONCCDetailID = item.ID;
+						poRequestBuy.ProjectPartlistPurchaseRequestID = id;
+						if (poRequestBuy.ID <= 0)
+						{
+							await _pONCCDetailRequestBuyRepo.CreateAsync(poRequestBuy);
+						}
+						else
+						{
+							await _pONCCDetailRequestBuyRepo.UpdateAsync(poRequestBuy);
+						}
+					}
+				}
+
+				if (!string.IsNullOrWhiteSpace(productNew))
+					await _pONCCLogRepo.AddLog(data.poncc.ID, $"- {currentUser.FullName} đã thêm mới SP [{productNew}]\\n", "Thêm mới");
+
+				#endregion Xử lý rulePay
+
+				return Ok(ApiResponseFactory.Success(data.poncc, "Đã cập nhật đặt hàng thành công."));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+
+		[HttpPost("update-poncc")]
+		[RequiresPermission("N35,N33,N1")]
+		public async Task<IActionResult> updatePoncc([FromBody] List<PONCC> data)
+		{
+			try
+			{
+				var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+				var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+				if (data.Count() > 0)
+				{
+					foreach (var item in data)
+					{
+						if (item.ID > 0)
+						{
+							var model = _pONCCRepo.GetByID(item.ID);
+							string logContent = _pONCCLogRepo.GenerateLog(model, item);
+
+							if (!String.IsNullOrWhiteSpace(logContent))
+							{
+								await _pONCCLogRepo.AddLog(item.ID, $"- {currentUser.FullName} đã cập nhật: \\n{logContent} \\n", "Cập nhật");
+							}
+							await _pONCCRepo.UpdateAsync(item);
+						}
+					}
+				}
+				return Ok(ApiResponseFactory.Success(null, ""));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+
+		private async Task UpdateBillImportDetail(PONCCDetail detail, List<int> lstBillImportId)
+		{
+			try
+			{
+				if (lstBillImportId.Count <= 0 || detail.ID == 0) return;
+				foreach (var i in lstBillImportId)
+				{
+					Expression ep1 = new Expression("BillImportID", lstBillImportId[i]);
+					Expression ep2 = new Expression("PONCCDetailID", detail.ID);
+					List<BillImportDetail> lst = _billImportDetailRepo.GetAll(x => x.BillImportID == i && x.PONCCDetailID == detail.ID);
+					foreach (BillImportDetail item in lst)
+					{
+						item.ProductID = detail.ProductSaleID;
+						item.Price = detail.UnitPrice;
+						item.QtyRequest = detail.QtyRequest;
+						item.ProjectCode = detail.ProductCodeOfSupplier;
+						item.ProjectID = detail.ProjectID;
+						if (item.ID <= 0)
+						{
+							await _billImportDetailRepo.CreateAsync(item);
+						}
+						else
+						{
+							await _billImportDetailRepo.UpdateAsync(item);
+						}
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+
+		#endregion Lưu dữ liệu
+
+		#region Lương Update lấy tổng hợp PO NCC
+
+		//Lấy danh tổng hợp PO NCC
+		[HttpPost("get-po-ncc-summary")]
+		public IActionResult GetPONCCSummary([FromBody] PONCCSummaryRequestParam request)
+		{
+			try
+			{
+				var firstDay = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+				var lastDay = firstDay.AddMonths(1).AddDays(-1);
+				string procedureName = "sp_GetAllPONCC";
+				string[] paramNames = new string[] { "@FilterText", "@DateStart", "@DateEnd", "@SupplierID", "@Status", "@EmployeeID" };
+				object[] paramValues = new object[] { request.FilterText, request.DateStart ?? firstDay, request.DateEnd ?? lastDay, request.SupplierID, request.Status, request.EmployeeID };
+				var data = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
+				var propose = SQLHelper<object>.GetListData(data, 0);
+
+				return Ok(ApiResponseFactory.Success(propose, "Lấy dữ liệu thành công"));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+
+		//Lấy danh tổng hợp PO NCC kế toán
+		[HttpPost("get-po-ncc-summary-kt")]
+		public IActionResult GetPONCCSummaryKT([FromBody] PONCCSummaryRequestParam request)
+		{
+			try
+			{
+				var firstDay = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+				var lastDay = firstDay.AddMonths(1).AddDays(-1);
+				string procedureName = "sp_GetAllPONCCKT";
+				string[] paramNames = new string[] { "@FilterText", "@DateStart", "@DateEnd", "@SupplierID", "@Status", "@EmployeeID" };
+				object[] paramValues = new object[] { request.FilterText, request.DateStart ?? firstDay, request.DateEnd ?? lastDay, request.SupplierID, request.Status, request.EmployeeID };
+				var data = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
+				var propose = SQLHelper<object>.GetListData(data, 0);
+
+				return Ok(ApiResponseFactory.Success(propose, "Lấy dữ liệu thành công"));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+
+		#endregion Lương Update lấy tổng hợp PO NCC
+
+		[HttpGet("printpo")]
+		public IActionResult PrintPO(int id, bool isMerge)
+		{
+			string message = "";
+			try
+			{
+				var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+				var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+				//get thông tin master
+				var dataPO = SQLHelper<object>.ProcedureToList("spGetPONCCByID", new string[] { "@ID" }, new object[] { id });
+				var po = SQLHelper<object>.GetListData(dataPO, 0)[0];
+				string companyText = po.CompanyText.ToUpper().Trim();
+				var taxCompany = _taxCompanyRepo.GetAll(x => x.Code.ToUpper().Trim() == companyText).FirstOrDefault() ?? new TaxCompany();
+
+				int employeeID = TextUtils.ToInt32(po.EmployeeID);
+
+				var employeePurchase = _employeePurchaseRepo.GetAll(x => x.EmployeeID == employeeID && x.TaxCompayID == taxCompany.ID).FirstOrDefault() ?? new EmployeePurchase();
+				po.Purchaser = $"{_pONCCRepo.ConvertVietnameseToEnglish(po.FullName)} - Phone: {_pONCCRepo.ConvertPhoneNumberVietnamese(employeePurchase.Telephone ?? "")} - Email: {employeePurchase.Email}";
+				po.TotalAmountText = _pONCCRepo.ConvertNumberToTextEnglish(Convert.ToDecimal(po.TotalMoneyPO), po.CurrencyText);
+				po.TotalMoneyText = _pONCCRepo.ConvertNumberToTextVietNamese(Convert.ToDecimal(po.TotalMoneyPO), po.CurrencyText);
+
+				PathStaticFile pathStaticFile = _pathStaticFiles.Where(x => x.PathName == "Purchases").FirstOrDefault() ?? new PathStaticFile();
+				if (!Path.Exists(pathStaticFile.PathFull))
+				{
+					message = $"Thư mục ảnh chữ ký không tồn tại!\n{pathStaticFile.PathName}: {pathStaticFile.PathFull}";
+				}
+
+				string pathImage = Path.Combine(pathStaticFile.PathFull, @"2. quy trình. quy định chung\1. quy trình mua hàng\phần mềm misa\ảnh import misa\signnonback");
+				string picPrepared = Path.Combine(pathImage, $@"{po.Code.Trim()}.png");
+				//string picPrepared = Path.Combine(pathImage, $@"R0101.png");
+				string picDirector = Path.Combine(pathImage, $"seal{companyText.ToUpper()}.png");
+
+				string logo = Path.Combine(pathImage, $"logo{companyText.ToUpper()}.jpg");
+
+				po.PicPrepared = ImageHelper.ImageToBase64(picPrepared);
+				po.PicDirector = ImageHelper.ImageToBase64(picDirector);
+				po.Logo = ImageHelper.ImageToBase64(logo);
+
+				//get danh sách chi tiết sản phẩm
+				var poDetails = SQLHelper<PONCCDetailDTO>.ProcedureToListModel("spGetPONCCDetail", new string[] { "@PONCCID" }, new object[] { id });
+				poDetails = poDetails.Where(x => x.IsPurchase != true).Select((x, index) =>
+				{
+					x.STT = index + 1;
+					return x;
+				}).ToList();
+				decimal totalMoney = poDetails.Sum(x => x.TotalPrice ?? 0);
+
+				po.TotalMoneyPO = totalMoney;
+
+				po.TotalAmountText = _pONCCRepo.ConvertNumberToTextEnglish(
+					totalMoney,
+					po.CurrencyText);
+
+				po.TotalMoneyText = _pONCCRepo.ConvertNumberToTextVietNamese(
+					totalMoney,
+					po.CurrencyText);
+				if (isMerge)
+				{
+					bool isHCNS = poDetails.Any(x => x.ProductGroupID == 77);
+					if (isHCNS)
+					{
+						poDetails = poDetails.GroupBy(item => new { item.ProductCodeOfSupplier, item.UnitPrice })
+											.Select(cl => new PONCCDetailDTO
+											{
+												STT = cl.First().Status,
+												ProductCodeOfSupplier = cl.First().ProductCodeOfSupplier,
+												Unit = cl.First().Unit,
+												UnitName = cl.First().UnitName,
+												QtyRequest = cl.Sum(q => q.QtyRequest),
+												UnitPrice = cl.First().UnitPrice,
+												ThanhTien = cl.Sum(q => q.ThanhTien),
+												VAT = cl.First().VAT,
+												VATMoney = cl.Sum(q => q.VATMoney),
+												Discount = cl.Sum(q => q.Discount),
+												TotalPrice = cl.Sum(q => q.TotalPrice),
+											})
+											.Select((item, index) =>
+											{
+												item.STT = index + 1;
+												return item;
+											}).ToList();
+					}
+					else
+					{
+						poDetails = poDetails.GroupBy(item => new { item.ProductCode, item.UnitPrice.Value, item.ProductCodeOfSupplier })
+																			.Select(cl => new PONCCDetailDTO
+																			{
+																				STT = cl.First().Status,
+																				ProductCodeOfSupplier = cl.First().ProductCodeOfSupplier,
+																				Unit = cl.First().Unit,
+																				UnitName = cl.First().UnitName,
+																				QtyRequest = cl.Sum(q => q.QtyRequest),
+																				UnitPrice = cl.First().UnitPrice,
+																				ThanhTien = cl.Sum(q => q.ThanhTien),
+																				VAT = cl.First().VAT,
+																				VATMoney = cl.Sum(q => q.VATMoney),
+																				Discount = cl.Sum(q => q.Discount),
+																				TotalPrice = cl.Sum(q => q.TotalPrice),
+																			})
+																			.Select((item, index) =>
+																			{
+																				item.STT = index + 1;
+																				return item;
+																			}).ToList();
+					}
+				}
+				var data = new
+				{
+					po = po,
+					taxCompany = taxCompany,
+					employeePurchase = employeePurchase,
+					poDetails = poDetails
+				};
+
+				_pONCCLogRepo.AddLog(po.ID, $"- {currentUser.FullName} đã in PO \\n", "Cập nhật");
+
+				return Ok(ApiResponseFactory.Success(data, message));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+
+		#region Xuất file excel poncc theo mẫu
+
+		[HttpGet("print-excel")]
+		public IActionResult PrintExcel(int id, bool isMerge, string language, bool isShowSign, bool isShowSeal)
+		{
+			string message = "";
+			try
+			{
+				var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+				var currentUser = ObjectMapper.GetCurrentUser(claims);
+				_pONCCLogRepo.AddLog(id, $"- {currentUser.FullName} đã xuất excel PO \\n", "Cập nhật");
+
+				//get thông tin master
+				var dataPO = SQLHelper<object>.ProcedureToList("spGetPONCCByID", new string[] { "@ID" }, new object[] { id });
+				var po = SQLHelper<object>.GetListData(dataPO, 0)[0];
+				string companyText = po.CompanyText.ToUpper().Trim();
+				var taxCompany = _taxCompanyRepo.GetAll(x => x.Code.ToUpper().Trim() == companyText).FirstOrDefault() ?? new TaxCompany();
+
+				int employeeID = TextUtils.ToInt32(po.EmployeeID);
+
+				var employeePurchase = _employeePurchaseRepo.GetAll(x => x.EmployeeID == employeeID && x.TaxCompayID == taxCompany.ID).FirstOrDefault() ?? new EmployeePurchase();
+				po.Purchaser = $"{_pONCCRepo.ConvertVietnameseToEnglish(po.FullName)} - Phone: {_pONCCRepo.ConvertPhoneNumberVietnamese(employeePurchase.Telephone ?? "")} - Email: {employeePurchase.Email}";
+				po.TotalAmountText = _pONCCRepo.ConvertNumberToTextEnglish(Convert.ToDecimal(po.TotalMoneyPO), po.CurrencyText);
+				po.TotalMoneyText = _pONCCRepo.ConvertNumberToTextVietNamese(Convert.ToDecimal(po.TotalMoneyPO), po.CurrencyText);
+
+				PathStaticFile pathStaticFile = _pathStaticFiles.Where(x => x.PathName == "Purchases").FirstOrDefault() ?? new PathStaticFile();
+				if (!Path.Exists(pathStaticFile.PathFull))
+				{
+					message = $"Thư mục ảnh chữ ký không tồn tại!\n{pathStaticFile.PathName}: {pathStaticFile.PathFull}";
+				}
+
+				string pathImage = Path.Combine(pathStaticFile.PathFull, @"2. quy trình. quy định chung\1. quy trình mua hàng\phần mềm misa\ảnh import misa\signnonback");
+				//string picPrepared = Path.Combine(pathImage, $@"R0101.png");
+				string picPrepared = Path.Combine(pathImage, $@"{po.Code.Trim()}.png");
+				string picDirector = Path.Combine(pathImage, $"seal{companyText.ToUpper()}.png");
+
+				string logo = Path.Combine(pathImage, $"logo{companyText.ToUpper()}.jpg");
+
+				//get danh sách chi tiết sản phẩm
+				var poDetails = SQLHelper<PONCCDetailDTO>.ProcedureToListModel("spGetPONCCDetail", new string[] { "@PONCCID" }, new object[] { id });
+				poDetails = poDetails.Where(x => x.IsPurchase != true).ToList();
+				if (isMerge)
+				{
+					bool isHCNS = poDetails.Any(x => x.ProductGroupID == 77);
+					if (isHCNS)
+					{
+						poDetails = poDetails.GroupBy(item => new { item.ProductCodeOfSupplier, item.UnitPrice })
+											.Select(cl => new PONCCDetailDTO
+											{
+												STT = cl.First().Status,
+												ProductCodeOfSupplier = cl.First().ProductCodeOfSupplier,
+												Unit = cl.First().Unit,
+												UnitName = cl.First().UnitName,
+												QtyRequest = cl.Sum(q => q.QtyRequest),
+												UnitPrice = cl.First().UnitPrice,
+												ThanhTien = cl.Sum(q => q.ThanhTien),
+												VAT = cl.First().VAT,
+												VATMoney = cl.Sum(q => q.VATMoney),
+												Discount = cl.Sum(q => q.Discount),
+												TotalPrice = cl.Sum(q => q.TotalPrice),
+											})
+											.Select((item, index) =>
+											{
+												item.STT = index + 1;
+												return item;
+											}).ToList();
+					}
+					else
+					{
+						poDetails = poDetails.GroupBy(item => new { item.ProductCode, item.UnitPrice.Value, item.ProductCodeOfSupplier })
+																			.Select(cl => new PONCCDetailDTO
+																			{
+																				STT = cl.First().Status,
+																				ProductCodeOfSupplier = cl.First().ProductCodeOfSupplier,
+																				Unit = cl.First().Unit,
+																				UnitName = cl.First().UnitName,
+																				QtyRequest = cl.Sum(q => q.QtyRequest),
+																				UnitPrice = cl.First().UnitPrice,
+																				ThanhTien = cl.Sum(q => q.ThanhTien),
+																				VAT = cl.First().VAT,
+																				VATMoney = cl.Sum(q => q.VATMoney),
+																				Discount = cl.Sum(q => q.Discount),
+																				TotalPrice = cl.Sum(q => q.TotalPrice),
+																			})
+																			.Select((item, index) =>
+																			{
+																				item.STT = index + 1;
+																				return item;
+																			}).ToList();
+					}
+				}
+
+				string templatePath = "";
+				var basePath = _configuration.GetValue<string>("PathTemplate");
+
+				templatePath = language == "en"
+					? Path.Combine(basePath, "ExportExcel", "PONCCReportEnTemplate.xlsx")
+					: Path.Combine(basePath, "ExportExcel", "PONCCReportViTemplate.xlsx");
+				if (!System.IO.File.Exists(templatePath))
+				{
+					return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy file template: {templatePath}"));
+				}
+				using (var workbook = new XLWorkbook(templatePath))
+				{
+					var sheet = workbook.Worksheet(1);
+					decimal totalAmount = 0;
+					decimal vatMoney = 0;
+					decimal discount = 0;
+					decimal totalPrice = 0;
+
+					int startRow = language == "en" ? 15 : 14;
+					int currentRow = startRow;
+					int stt = 1;
+					int additionalRows = 0; // Số dòng thêm vào để điều chỉnh vị trí các thành phần khác
+
+					// Tính toán tổng tiền
+					if (poDetails.Any())
+					{
+						foreach (var item in poDetails)
+						{
+							totalAmount += Convert.ToDecimal(item.ThanhTien);
+							vatMoney += Convert.ToDecimal(item.VATMoney);
+							discount += Convert.ToDecimal(item.Discount);
+							totalPrice += Convert.ToDecimal(item.TotalPrice);
+						}
+					}
+
+					// Điền thông tin Header theo ngôn ngữ
+					switch (language)
+					{
+						case "en":
+
+							#region in tiếng anh
+
+							sheet.Cell(2, 41).Value = po.POCode ?? "";
+							sheet.Cell(3, 18).Value = po.NameNCC ?? "";
+							sheet.Cell(3, 52).Value = (po.RequestDate).ToString("dd/MM/yyyy") ?? "";
+							sheet.Cell(4, 18).Value = po.AddressNCC ?? "";
+							sheet.Cell(4, 52).Value = po.BillCode ?? "";
+							sheet.Cell(6, 18).Value = po.SupplierContactPhone ?? "";
+							sheet.Cell(6, 39).Value = po.Fax ?? "............................";
+							sheet.Cell(5, 55).Value = po.CurrencyText ?? "";
+							sheet.Cell(8, 18).Value = po.SupplierContactName ?? "";
+							sheet.Cell(8, 39).Value = po.SupplierContactEmail ?? "";
+							sheet.Cell(9, 18).Value = taxCompany.BuyerEnglish ?? "";
+							sheet.Cell(10, 18).Value = taxCompany.AddressBuyerEnglish ?? "";
+							sheet.Cell(11, 18).Value = taxCompany.LegalRepresentativeEnglish ?? "";
+							sheet.Cell(12, 18).Value = po.Purchaser ?? "";
+
+							if (poDetails.Any())
+							{
+								// Tính số dòng cần thêm
+								additionalRows = poDetails.Count - 1;
+
+								// Insert rows nếu cần (chỉ insert khi có nhiều hơn 1 item)
+								if (additionalRows > 0)
+								{
+									sheet.Row(startRow + 1).InsertRowsAbove(additionalRows);
+
+									// Copy format từ dòng template sang các dòng mới
+									for (int i = 1; i <= additionalRows; i++)
+									{
+										sheet.Row(startRow).CopyTo(sheet.Row(startRow + i));
+									}
+								}
+
+								// Fill data vào các dòng
+								foreach (var item in poDetails)
+								{
+									sheet.Cell(currentRow, 2).Value = stt++;
+									sheet.Cell(currentRow, 5).Value = item.ProductCodeOfSupplier?.Trim() ?? "";
+									sheet.Cell(currentRow, 28).Value = (item.UnitName?.Trim() ?? item.Unit?.Trim()) ?? "";
+									sheet.Cell(currentRow, 31).Value = item.QtyRequest ?? 0;
+									sheet.Cell(currentRow, 38).Value = item.UnitPrice ?? 0;
+									sheet.Cell(currentRow, 45).Value = item.ThanhTien ?? 0;
+									sheet.Cell(currentRow, 50).Value = item.VAT ?? 0;
+									sheet.Cell(currentRow, 53).Value = item.VATMoney ?? 0;
+									currentRow++;
+								}
+
+								// Apply number format cho các cột số
+								var numberColumns = new[] { 31, 38, 45, 50, 53 };
+								foreach (var col in numberColumns)
+								{
+									sheet.Range(startRow, col, currentRow - 1, col)
+										.Style.NumberFormat.Format = "#,##0.00";
+								}
+							}
+
+							// Điền tổng tiền với vị trí đã điều chỉnh
+							int summaryRowOffset = 17 + additionalRows;
+							sheet.Cell(summaryRowOffset, 43).Value = totalAmount;
+							sheet.Cell(summaryRowOffset + 1, 43).Value = vatMoney;
+							sheet.Cell(summaryRowOffset + 2, 43).Value = discount;
+							sheet.Cell(summaryRowOffset + 3, 43).Value = totalPrice;
+							sheet.Range(summaryRowOffset, 43, summaryRowOffset + 3, 43).Style.NumberFormat.Format = "#,##0.00";
+
+							sheet.Cell(summaryRowOffset + 4, 20).Value = po.TotalAmountText ?? "";
+							sheet.Cell(summaryRowOffset + 6, 15).Value = (po.DeliveryDate).ToString("dd/MM/yyyy") ?? "";
+							sheet.Cell(summaryRowOffset + 7, 15).Value = po.AddressDelivery ?? "";
+							sheet.Cell(summaryRowOffset + 8, 15).Value = po.RulePayName ?? "";
+							sheet.Cell(summaryRowOffset + 9, 15).Value = po.BankCharge ?? "";
+							sheet.Cell(summaryRowOffset + 10, 15).Value = po.FedexAccount ?? "";
+							sheet.Cell(summaryRowOffset + 11, 15).Value = po.AccountNumberSupplier ?? "";
+
+							#endregion in tiếng anh
+
+							break;
+
+						case "vi":
+
+							#region in tiếng việt
+
+							string taxInfor = $"{taxCompany.BuyerVietnamese ?? ""}\n" +
+								$"{taxCompany.AddressBuyerVienamese ?? ""}\n" +
+								$"{taxCompany.TaxVietnamese ?? ""}";
+							sheet.Cell(2, 2).Value = taxInfor;
+							sheet.Cell(4, 12).Value = po.NameNCC ?? "";
+							sheet.Cell(4, 41).Value = (po.RequestDate).ToString("dd/MM/yyyy") ?? "";
+							sheet.Cell(5, 12).Value = po.AddressNCC ?? "";
+							sheet.Cell(5, 41).Value = po.BillCode ?? "";
+							sheet.Cell(8, 12).Value = po.MaSoThue ?? "";
+							sheet.Cell(7, 44).Value = po.CurrencyText ?? "";
+							sheet.Cell(10, 12).Value = po.SupplierContactPhone ?? "";
+							sheet.Cell(10, 32).Value = po.Fax ?? "............................";
+							sheet.Cell(11, 12).Value = po.Note ?? "";
+
+							if (poDetails.Any())
+							{
+								// Tính số dòng cần thêm
+								additionalRows = poDetails.Count - 1;
+
+								// Insert rows nếu cần
+								if (additionalRows > 0)
+								{
+									sheet.Row(startRow + 1).InsertRowsAbove(additionalRows);
+
+									// Copy format từ dòng template
+									for (int i = 1; i <= additionalRows; i++)
+									{
+										sheet.Row(startRow).CopyTo(sheet.Row(startRow + i));
+									}
+								}
+
+								// Fill data
+								foreach (var item in poDetails)
+								{
+									sheet.Cell(currentRow, 2).Value = stt++;
+									sheet.Cell(currentRow, 3).Value = item.ProductCodeOfSupplier?.Trim() ?? "";
+									sheet.Cell(currentRow, 20).Value = (item.UnitName?.Trim() ?? item.Unit?.Trim()) ?? "";
+									sheet.Cell(currentRow, 24).Value = item.QtyRequest ?? 0;
+									sheet.Cell(currentRow, 28).Value = item.UnitPrice ?? 0;
+									sheet.Cell(currentRow, 34).Value = item.ThanhTien ?? 0;
+									sheet.Cell(currentRow, 39).Value = item.VAT ?? 0;
+									sheet.Cell(currentRow, 43).Value = item.VATMoney ?? 0;
+									currentRow++;
+								}
+
+								// Apply number format
+								var numberColumns = new[] { 24, 28, 34, 39, 43 };
+								foreach (var col in numberColumns)
+								{
+									sheet.Range(startRow, col, currentRow - 1, col)
+										.Style.NumberFormat.Format = "#,##0.00";
+								}
+							}
+							else
+							{
+								// Nếu không có detail thì xóa dòng template
+								sheet.Row(startRow).Delete();
+								additionalRows = -1; // Giảm 1 dòng
+							}
+
+							// Điền tổng tiền với vị trí đã điều chỉnh
+							int summaryRowOffsetVi = 15 + additionalRows;
+							sheet.Cell(summaryRowOffsetVi, 40).Value = totalAmount;
+							sheet.Cell(summaryRowOffsetVi + 1, 40).Value = vatMoney;
+							sheet.Cell(summaryRowOffsetVi + 2, 40).Value = discount;
+							sheet.Cell(summaryRowOffsetVi + 3, 40).Value = totalPrice;
+							sheet.Range(summaryRowOffsetVi, 40, summaryRowOffsetVi + 3, 40).Style.NumberFormat.Format = "#,##0.00";
+
+							sheet.Cell(summaryRowOffsetVi + 4, 15).Value = po.TotalMoneyText ?? "";
+							sheet.Cell(summaryRowOffsetVi + 6, 14).Value = (po.DeliveryDate).ToString("dd/MM/yyyy") ?? "";
+							sheet.Cell(summaryRowOffsetVi + 7, 14).Value = po.AddressDelivery ?? "";
+							sheet.Cell(summaryRowOffsetVi + 8, 14).Value = po.RulePayName ?? "";
+							sheet.Cell(summaryRowOffsetVi + 9, 14).Value = po.AccountNumberSupplier ?? "";
+
+							sheet.Cell(summaryRowOffsetVi + 13, 24).Value = employeePurchase.Telephone ?? "";
+							sheet.Cell(summaryRowOffsetVi + 14, 24).Value = employeePurchase.Email ?? "";
+
+							#endregion in tiếng việt
+
+							break;
+
+						default:
+							break;
+					}
+
+					#region Gán ảnh logo và chữ ký, seal (Đã điều chỉnh vị trí theo số dòng thêm vào)
+
+					// 1. Xử lý Logo (không bị ảnh hưởng vì ở trên phần detail)
+					// 1. Logo
+					if (System.IO.File.Exists(logo) && isShowSign && language == "en")
+					{
+						using var ms = ConvertImageToMemoryStream(logo);
+						sheet.AddPicture(ms)
+							 .MoveTo(sheet.Cell(2, 2))
+							 .Scale(0.14); // zoom 50%
+					}
+
+					// 2. Chữ ký người lập
+					if (System.IO.File.Exists(picPrepared) && isShowSign)
+					{
+						using var ms = ConvertImageToMemoryStream(picPrepared);
+						int preparedRow = language == "vi" ? 27 + additionalRows : 31 + additionalRows;
+						int preparedCol = language == "vi" ? 20 : 25;
+
+						sheet.AddPicture(ms)
+							 .MoveTo(sheet.Cell(preparedRow, preparedCol))
+							 .Scale(0.68); // zoom 70%
+					}
+
+					// 3. Dấu và chữ ký giám đốc
+					if (System.IO.File.Exists(picDirector) && isShowSeal)
+					{
+						using var ms = ConvertImageToMemoryStream(picDirector);
+						int directorRow = language == "vi" ? 27 + additionalRows : 31 + additionalRows;
+						int directorCol = language == "vi" ? 35 : 42;
+
+						sheet.AddPicture(ms)
+							 .MoveTo(sheet.Cell(directorRow, directorCol))
+							 .Scale(0.68); // zoom 60%
+					}
+
+					#endregion Gán ảnh logo và chữ ký, seal (Đã điều chỉnh vị trí theo số dòng thêm vào)
+
+					using (var stream = new MemoryStream())
+					{
+						workbook.SaveAs(stream);
+						stream.Position = 0;
+
+						string fileName = $"{po.BillCode}.xlsx";
+						return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+
+		private MemoryStream ConvertImageToMemoryStream(string imagePath)
+		{
+			byte[] imgBytes;
+			using (var img = System.Drawing.Image.FromFile(imagePath))
+			using (var msTemp = new MemoryStream())
+			{
+				img.Save(msTemp, System.Drawing.Imaging.ImageFormat.Png);
+				imgBytes = msTemp.ToArray();
+			}
+			return new MemoryStream(imgBytes);
+		}
+
+		#endregion Xuất file excel poncc theo mẫu
+
+		#region Log thao tác poncc
+
+		[HttpGet("log-activity")]
+		public IActionResult getActivityLogPoncc(int ponccId)
+		{
+			try
+			{
+				var data = _pONCCLogRepo.GetAll().Where(x => x.PONCCID == ponccId).OrderByDescending(x => x.CreatedDate).ToList();
+				return Ok(ApiResponseFactory.Success(data, ""));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+
+		#endregion Log thao tác poncc
+	}
 }
