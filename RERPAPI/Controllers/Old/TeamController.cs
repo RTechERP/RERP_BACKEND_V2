@@ -79,7 +79,7 @@ namespace RERPAPI.Controllers.Old
             try
             {
                 List<UserTeam> userTeams = _userTeamRepo.GetAll();
-                if (userTeams.Any(x => x.Name == userTeam.Name && x.ID != userTeam.ID))
+                if (userTeams.Any(x => x.Name == userTeam.Name && x.ID != userTeam.ID && x.IsDeleted !=true))
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Tên team đã tồn tại"));
                 }
