@@ -974,7 +974,8 @@ namespace RERPAPI.Controllers.Old
 					po.CurrencyText);
 				if (isMerge)
 				{
-					bool isHCNS = poDetails.Any(x => x.ProductGroupID == 77);
+					List<int> lstIDHCNS = new List<int> { 77, 80 };
+					bool isHCNS = poDetails.Any(x => lstIDHCNS.Contains(x.ProductGroupID));
 					if (isHCNS)
 					{
 						poDetails = poDetails.GroupBy(item => new { item.ProductCodeOfSupplier, item.UnitPrice })
