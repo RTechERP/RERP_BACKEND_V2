@@ -38,7 +38,7 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-        [RequiresPermission("N1,N13,N27")]
+        [RequiresPermission("N1,N13,N27,N97")]
         [HttpPost("save-project-application-type")]
         public async Task<IActionResult> SaveData([FromBody] ProjectApplicationType projectApplicationType)
         {
@@ -74,7 +74,7 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-        [RequiresPermission("N1,N13,N27")]
+        [RequiresPermission("N1,N13,N27,N97")]
         [HttpPost("delete")]
         public async Task<IActionResult> Delete([FromBody] List<int> ids)
         {
