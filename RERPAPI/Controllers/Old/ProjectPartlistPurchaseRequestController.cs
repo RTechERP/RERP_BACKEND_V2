@@ -976,7 +976,7 @@ namespace RERPAPI.Controllers.Old
                         {
                             await _repo.CreateAsync(item);
                             await _projectPartListPurchaseRequestLogRepo.
-                                AddLog(item.ID, $"{currentUser.FullName} đã thêm mới yêu cầu mua hàng!", "Thêm mới"); //logycmh
+                                AddLog(item.ID, $"{currentUser.FullName} đã thêm mới yêu cầu mua hàng!", "Thêm mới");
                         }
                         else
                         {
@@ -1123,6 +1123,9 @@ namespace RERPAPI.Controllers.Old
                             if (priceRequest != null)
                             {
                                 priceRequest.IsDeleted = true;
+
+                                await _projectPartListPurchaseRequestLogRepo.
+                                        AddLog(priceRequest.ID, $"{currentUser.FullName} đã xóa yêu cầu báo giá!", "Xóa");
                                 await _projectPartlistPriceRequestRepo.UpdateAsync(priceRequest);
                             }
                         }
