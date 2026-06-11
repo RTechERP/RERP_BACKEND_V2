@@ -473,16 +473,26 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 		{
 			if (dto.billImport.ID > 0)
 			{
-				var productSale = _productSaleRepo.GetByID(dto.billImportDetail[0].ProductID ?? 0);
-				if (productSale.ID > 0 && productSale.ProductGroupID != dto.billImport.KhoTypeID)
+				if (dto.billImport.IsDeleted == false)
 				{
-					return (false, "Không thể đổi loại kho của phiếu nhập, Vui lòng tạo phiếu nhập kho khác!");
+
+					var lstDetail = _billImportDetailRepo.GetAll(x => x.BillImportID == dto.billImport.ID);
+					var productSale = dto.billImportDetail.Count > 0 ? _productSaleRepo.GetByID(dto.billImportDetail[0].ProductID ?? 0) : _productSaleRepo.GetByID(lstDetail[0].ProductID ?? 0);
+
+					if (productSale.ID > 0 && productSale.ProductGroupID != dto.billImport.KhoTypeID)
+					{
+						return (false, "Không thể đổi loại kho của phiếu nhập, Vui lòng tạo phiếu nhập kho khác!");
+					}
+					else
+					{
+						return (true, string.Empty);
+					}
 				}
 			}
-			if (dto.billImport.IsDeleted == true && dto.billImport.ID > 0)
-			{
-				return (true, string.Empty);
-			}
+			//if (dto.billImport.IsDeleted == true && dto.billImport.ID > 0)
+			//{
+			//	return (true, string.Empty);
+			//}
 			// Validate Supplier
 			if (dto.billImport.SupplierID == null)
 			{
@@ -1792,6 +1802,17 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 			{
 				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
 			}
+		}
+		[HttpPost("delete-bill-import")]
+		public async Task<IActionResult> DeleteBillImport([FromBody] List<int> billImportIDs)
+		{
+			if (billImportIDs.Count < 0) return BadRequest(ApiResponseFactory.Fail(null, "Hãy chọn 1 phiếu nhập để xóa!"));
+			int rs = await _billImportRepo.PatchAsync(x => billImportIDs.Contains(x.ID) && x.IsDeleted == false, x => x.IsDeleted = true);
+			if (rs > 0)
+			{
+				return Ok(ApiResponseFactory.Success(billImportIDs, "Đã xóa thành công danh sách phiếu nhập được chọn!"));
+			}
+			else return Ok(ApiResponseFactory.Fail(null, "Xóa danh sách phiếu nhập không thành công!"));
 		}
 	}
 }
