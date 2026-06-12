@@ -1,4 +1,7 @@
-﻿namespace RERPAPI.Model.Entities.RTCCourse;
+﻿using System;
+using System.Collections.Generic;
+
+namespace RERPAPI.Model.Entities.RTCCourse;
 
 public partial class User
 {
@@ -102,4 +105,8 @@ public partial class User
     /// Nguồn giới thiệu
     /// </summary>
     public string? ReferralSource { get; set; }
+
+    public string? PhoneNumber { get; set; }
+
+    public string? Address { get; set; }
 }

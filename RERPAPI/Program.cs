@@ -962,11 +962,11 @@ foreach (var item in staticFiles)
         RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
     });
 
-    app.UseDirectoryBrowser(new DirectoryBrowserOptions
-    {
-        FileProvider = new PhysicalFileProvider(item.PathFull),
-        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-    });
+    //app.UseDirectoryBrowser(new DirectoryBrowserOptions
+    //{
+    //    FileProvider = new PhysicalFileProvider(item.PathFull),
+    //    RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+    //});
 }
 var tusStore = new TusDiskStore(Directory.GetCurrentDirectory());
 // config Tus dotnet
