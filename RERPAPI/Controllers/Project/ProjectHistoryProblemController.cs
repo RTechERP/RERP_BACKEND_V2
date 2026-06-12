@@ -178,6 +178,9 @@ namespace RERPAPI.Controllers.Project
                                     DateProblem = oldProblemDb.DateProblem,
                                     DateImplementation = oldProblemDb.DateImplementation,
                                     PIC = oldProblemDb.PIC,
+                                    Impact = oldProblemDb.Impact,
+                                    ErrorLocation = oldProblemDb.ErrorLocation,
+                                    Note = oldProblemDb.Note,
 
                                     CreatedBy = oldProblemDb.CreatedBy,
                                     CreatedDate = oldProblemDb.CreatedDate,
@@ -188,6 +191,7 @@ namespace RERPAPI.Controllers.Project
                                     IsDeleted = oldProblemDb.IsDeleted,
                                     IssueLogType = oldProblemDb.IssueLogType,
                                     CreatorID = oldProblemDb.CreatorID,
+                                    ProjectManagerID = oldProblemDb.ProjectManagerID,
                                     PriorityLevel = oldProblemDb.PriorityLevel,
                                     PerformerID = oldProblemDb.PerformerID,
                                     StatusProblem = oldProblemDb.StatusProblem,
@@ -1057,6 +1061,7 @@ namespace RERPAPI.Controllers.Project
                 {
                     1 => "Khách hàng",
                     2 => "Nội bộ",
+                    3 => "Nhà cung cấp",
                     _ => ""
                 };
 
@@ -1091,12 +1096,12 @@ namespace RERPAPI.Controllers.Project
                 <h2 style='color: #d9534f;'>THÔNG BÁO CÓ PHÁT SINH DỰ ÁN MỚI</h2>
                 <p><strong>Dự án:</strong>{projectCode} - {projectName}</p>
                 <p><strong>Ngày phát sinh:</strong> {(problem.DateProblem.HasValue ? problem.DateProblem.Value.ToString("dd/MM/yyyy") : "")}</p>
-                <p><strong>Mức độ ưu tiên:</strong> {priorityText}</p>
+                <p><strong>Mức độ nghiêm trọng:</strong> {priorityText}</p>
                 <p><strong>Loại phát sinh:</strong> {issueLogTypeText}</p>
                 <p><strong>Trạng thái xử lý:</strong> {statusProblemText}</p>
-                <p><strong>Nội dung lỗi:</strong> {problem.ContentError}</p>
+                <p><strong>Nội dung sự cố:</strong> {problem.ContentError}</p>
                 <p><strong>Nguyên nhân:</strong> {problem.Reason}</p>
-                <p><strong>Biện pháp khắc phục:</strong> {problem.Remedies}</p>
+                <p><strong>Phương án xử lý:</strong> {problem.Remedies}</p>
                 <p><strong>PIC:</strong> {problem.PIC}</p>
                 <hr/>
                 <p><small>Đây là email thông báo tự động từ hệ thống R-ERP, vui lòng không phản hồi lại email này.</small></p>
