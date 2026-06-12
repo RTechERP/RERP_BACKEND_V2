@@ -637,8 +637,8 @@ builder.Services.AddScoped<ProjectTaskTypeRepo>();
 builder.Services.AddScoped<KPIEvaluationRuleDetailRepo>();
 builder.Services.AddScoped<KPIExamRepo>();
 builder.Services.AddScoped<KPISumaryEvaluationRepo>();
-
-#endregion KPI
+builder.Services.AddScoped<KPIEvaluationLogRepo>();
+#endregion
 
 #region Yêu cầu tuyển dụng
 
