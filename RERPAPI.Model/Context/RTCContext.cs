@@ -932,6 +932,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<ProjectPartList> ProjectPartLists { get; set; }
 
+    public virtual DbSet<ProjectPartListPriceRequestLog> ProjectPartListPriceRequestLogs { get; set; }
+
     public virtual DbSet<ProjectPartListPurchaseRequestApproveLog> ProjectPartListPurchaseRequestApproveLogs { get; set; }
 
     public virtual DbSet<ProjectPartListPurchaseRequestLog> ProjectPartListPurchaseRequestLogs { get; set; }
@@ -10453,6 +10455,8 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.DateApproved_TP).HasColumnType("datetime");
             entity.Property(e => e.DateImplementation).HasColumnType("datetime");
             entity.Property(e => e.DateProblem).HasColumnType("datetime");
+            entity.Property(e => e.ErrorLocation).HasMaxLength(500);
+            entity.Property(e => e.Impact).HasMaxLength(500);
             entity.Property(e => e.IsApproved_PM).HasDefaultValue(false);
             entity.Property(e => e.IsApproved_PP).HasDefaultValue(false);
             entity.Property(e => e.IsApproved_TP).HasDefaultValue(false);
@@ -10803,6 +10807,17 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
             entity.Property(e => e.VAT).HasColumnType("decimal(18, 2)");
+        });
+
+        modelBuilder.Entity<ProjectPartListPriceRequestLog>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ProjectP__3214EC27BCD38F29");
+
+            entity.ToTable("ProjectPartListPriceRequestLog");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.TypeLog).HasMaxLength(250);
         });
 
         modelBuilder.Entity<ProjectPartListPurchaseRequestApproveLog>(entity =>
