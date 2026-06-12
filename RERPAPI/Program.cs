@@ -617,7 +617,7 @@ builder.Services.AddScoped<NotificationTypeRepo>();
 builder.Services.AddScoped<JobRequirementLogRepo>();
 //builder.Services.AddScoped<AssetLogRepo>();
 
-#region KPI
+#region KPI Tech
 
 builder.Services.AddScoped<KPISaleRepo>();
 builder.Services.AddScoped<KPIEvaluationPointRepo>();
@@ -637,7 +637,7 @@ builder.Services.AddScoped<ProjectTaskTypeRepo>();
 builder.Services.AddScoped<KPIEvaluationRuleDetailRepo>();
 builder.Services.AddScoped<KPIExamRepo>();
 builder.Services.AddScoped<KPISumaryEvaluationRepo>();
-builder.Services.AddScoped<KPIEvaluationLogRepo>();
+builder.Services.AddScoped<KPIEvaluationLogRepo>(); 
 #endregion
 
 #region Yêu cầu tuyển dụng
