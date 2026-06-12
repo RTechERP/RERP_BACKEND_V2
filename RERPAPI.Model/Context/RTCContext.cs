@@ -652,6 +652,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<KPIEvaluationFactor> KPIEvaluationFactors { get; set; }
 
+    public virtual DbSet<KPIEvaluationLog> KPIEvaluationLogs { get; set; }
+
     public virtual DbSet<KPIEvaluationPoint> KPIEvaluationPoints { get; set; }
 
     public virtual DbSet<KPIEvaluationRule> KPIEvaluationRules { get; set; }
@@ -7922,6 +7924,37 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
             entity.Property(e => e.VerificationToolsContent).HasComment("Phương tiện xác minh tiêu chí");
+        });
+
+        modelBuilder.Entity<KPIEvaluationLog>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__KPIEvalu__3214EC274BD71D9D");
+
+            entity.ToTable("KPIEvaluationLog", tb => tb.HasComment("Bảng lưu lịch sử các thao tác đánh giá KPI của nhân viên"));
+
+            entity.Property(e => e.ID).HasComment("Khóa chính tự tăng");
+            entity.Property(e => e.ActionType)
+                .HasMaxLength(100)
+                .HasComment("Loại thao tác thực hiện: Tạo mới, Cập nhật, Duyệt, Từ chối, Xóa...");
+            entity.Property(e => e.ContentLog).HasComment("Nội dung chi tiết của thao tác được ghi nhận");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(200)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasComment("Thời gian tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.EmployeeID).HasComment("Mã nhân viên thực hiện hoặc liên quan đến thao tác đánh giá");
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false)
+                .HasComment("Cờ đánh dấu xóa mềm: 0 - Đang sử dụng, 1 - Đã xóa");
+            entity.Property(e => e.KPIExamID).HasComment("Mã kỳ đánh giá KPI");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(200)
+                .HasComment("Người cập nhật bản ghi gần nhất");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Thời gian cập nhật bản ghi gần nhất")
+                .HasColumnType("datetime");
         });
 
         modelBuilder.Entity<KPIEvaluationPoint>(entity =>

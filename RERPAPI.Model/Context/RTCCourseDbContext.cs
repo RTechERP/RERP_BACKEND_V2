@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 using RERPAPI.Model.Entities.RTCCourse;
 
 namespace RERPAPI.Model.Context;
@@ -43,6 +45,8 @@ public partial class RTCCourseDbContext : DbContext
     public virtual DbSet<CourseType> CourseTypes { get; set; }
 
     public virtual DbSet<Employee> Employees { get; set; }
+
+    public virtual DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
 
@@ -420,6 +424,19 @@ public partial class RTCCourseDbContext : DbContext
             entity.Property(e => e.XangXe).HasColumnType("decimal(18, 2)");
         });
 
+        modelBuilder.Entity<PasswordResetToken>(entity =>
+        {
+            entity.ToTable("PasswordResetToken");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.ExpiredAt).HasColumnType("datetime");
+            entity.Property(e => e.IsUsed).HasDefaultValue(false);
+            entity.Property(e => e.Token).HasMaxLength(255);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasKey(e => e.ID).HasName("PK__Users__3214EC2783EB53AE");
@@ -449,6 +466,7 @@ public partial class RTCCourseDbContext : DbContext
                 .HasComment("Đơn vị công tác");
             entity.Property(e => e.PassExpireDate).HasColumnType("datetime");
             entity.Property(e => e.PasswordHash).HasMaxLength(250);
+            entity.Property(e => e.PhoneNumber).HasMaxLength(100);
             entity.Property(e => e.PinPassword).HasMaxLength(255);
             entity.Property(e => e.Position)
                 .HasMaxLength(550)
@@ -470,5 +488,5 @@ public partial class RTCCourseDbContext : DbContext
         OnModelCreatingPartial(modelBuilder);
     }
 
-    private partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
+    partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }
