@@ -2616,10 +2616,18 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                var versions = _partlistVersionRepo.GetAll(x => x.ProjectTypeID == request.ProjectTypeID && x.StatusVersion == 2 && x.ProjectSolutionID == request.ProjectSolutionID && x.IsDeleted == false);
+                var versions = _partlistVersionRepo.GetAll(
+                    x => x.ProjectTypeID == request.ProjectTypeID && 
+                    x.StatusVersion == 2 && 
+                    x.ProjectSolutionID == request.ProjectSolutionID && 
+                    x.IsDeleted == false &&
+                    x.IsConsumable == request.IsConsumable
+                    );
+
                 if (versions.Count > 0)
                 {
-                    return BadRequest(ApiResponseFactory.Fail(null, $"Danh mục [{request.ProjectTypeName}] đã có phiên bản PO!"));
+                    string statusText = request.IsConsumable == true ? "vật tư tiêu hao" : "PO";
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Danh mục [{request.ProjectTypeName}] đã có phiên bản {statusText}!"));
                 }
                 else
                 {
