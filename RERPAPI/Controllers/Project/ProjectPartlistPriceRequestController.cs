@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using NPOI.SS.Formula.Functions;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -37,6 +38,7 @@ namespace RERPAPI.Controllers.Project
         private ProjectPartlistPurchaseRequestLogRepo _projectPartlistPurchaseRequestLogRepo;
         private readonly ProjectPartlistPurchaseRequestLogRepo _PPPRLogRepo;
         private readonly HistoryProductPriceRequestRepo _historyProductPriceRequestRepo;
+        private readonly ProjectPartListPriceRequestLogRepo _projectPartListPriceRequestLogRepo;
 
         public ProjectPartlistPriceRequestController(
             ProjectRepo projectRepo,
@@ -56,6 +58,7 @@ namespace RERPAPI.Controllers.Project
             ProjectPartlistPurchaseRequestLogRepo projectPartlistPurchaseRequestLogRepo,
             ProjectPartlistPurchaseRequestLogRepo PPPRLogRepo,
             HistoryProductPriceRequestRepo historyProductPriceRequestRepo
+            ProjectPartListPriceRequestLogRepo projectPartListPriceRequestLogRepo
             )
         {
             this.projectRepo = projectRepo;
@@ -76,6 +79,7 @@ namespace RERPAPI.Controllers.Project
             _projectPartlistPurchaseRequestLogRepo = projectPartlistPurchaseRequestLogRepo;
             _PPPRLogRepo = PPPRLogRepo;
             _historyProductPriceRequestRepo = historyProductPriceRequestRepo;
+            _projectPartListPriceRequestLogRepo = projectPartListPriceRequestLogRepo;
         }
 
         #endregion Khai báo repository
@@ -527,11 +531,56 @@ namespace RERPAPI.Controllers.Project
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+            //Logycbg
         }
 
         #endregion API lấy dữ liệu
 
         #region Hàm check thêm log
+        [HttpPost("save-data")]
+        public async Task<IActionResult> SaveData([FromBody] List<ProjectPartlistPriceRequest> projectPartlistPriceRequest)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                List<ProjectPartlistPriceRequest> data = new List<ProjectPartlistPriceRequest>();
+                if (projectPartlistPriceRequest != null && projectPartlistPriceRequest.Any())
+                {
+                    foreach (var item in projectPartlistPriceRequest)
+                    {
+                        if (item.ID <= 0)
+                        {
+                            await requestRepo.CreateAsync(item);
+                            await _projectPartListPriceRequestLogRepo.
+                                AddLog(item.ID, $"{currentUser.FullName} đã thêm mới yêu cầu báo giá!", "Thêm mới");
+                        }
+                        else
+                        {
+                            var oldModel = requestRepo.GetByID(item.ID);
+                            await _projectPartListPriceRequestLogRepo.updateLog(oldModel, item);
+
+                            item.UpdatedDate = DateTime.Now;
+                            await requestRepo.UpdateAsync(item);
+                        }
+
+                        data.Add(item);
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
+        }
 
         [HttpPost("check-price")]
         [RequiresPermission("N35,N1")]
@@ -552,6 +601,7 @@ namespace RERPAPI.Controllers.Project
                     if (currentUser.EmployeeID != item.QuoteEmployeeID && item.QuoteEmployeeID > 0) continue;
                     item.QuoteEmployeeID = item.IsCheckPrice == false ? 0 : item.QuoteEmployeeID;
                     item.UpdatedDate = exist.UpdatedDate;
+
                     await requestRepo.SaveData(item);
                 }
                 return Ok(ApiResponseFactory.Success(lst, "Cập nhật dữ liệu thành công!"));
@@ -592,6 +642,9 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
+
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
                 if (request == null || request.ListModel == null || !request.ListModel.Any())
                 {
                     return BadRequest(new
@@ -707,7 +760,10 @@ namespace RERPAPI.Controllers.Project
                     priceRequest.EmployeeIDUnPrice = item.EmployeeIDUnPrice;
                     priceRequest.ReasonUnPrice = item.ReasonUnPrice;
 
-                    requestRepo.Update(priceRequest);
+                    var oldModel = requestRepo.GetByID(item.ID);
+                    await _projectPartListPriceRequestLogRepo.updateLog(oldModel, item);
+
+                    await requestRepo.UpdateAsync(priceRequest);
                     updateCount++;
                 }
 
@@ -877,6 +933,10 @@ namespace RERPAPI.Controllers.Project
                             var pricerequest = requestRepo.GetByID(item.ID);
                             pricerequest.IsRequestBuy = isRequestBuy;
                             pricerequest.JobRequirementID = request.JobRequirementID;
+
+                            var oldModel = requestRepo.GetByID(item.ID);
+                            await _projectPartListPriceRequestLogRepo.updateLog(oldModel, pricerequest);
+
                             await requestRepo.UpdateAsync(pricerequest);
 
                             if (inserted != null)
@@ -956,6 +1016,9 @@ namespace RERPAPI.Controllers.Project
                         var pricerequest = requestRepo.GetByID(item.ProjectPartlistPriceRequestID);
                         pricerequest.IsRequestBuy = true;
                         pricerequest.JobRequirementID = 0;
+
+                        var oldModel = requestRepo.GetByID(item.ID);
+                        await _projectPartListPriceRequestLogRepo.updateLog(oldModel, pricerequest);
                         await requestRepo.UpdateAsync(pricerequest);
                     }
                     catch (Exception ex)
@@ -1204,6 +1267,26 @@ namespace RERPAPI.Controllers.Project
                     }
                 }
                 return Ok(ApiResponseFactory.Success(notes, "Lưu ghi chú thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        #endregion
+
+        #region Lấy log thao tác chức năng
+        [HttpGet("log-activity")]
+        public IActionResult GetLogActivity(int projectPartlistPriceRequestId)
+        {
+            try
+            {
+                var data = _projectPartListPriceRequestLogRepo.GetAll()
+                    .Where(x => x.ProjectPartlistPriceRequestID == projectPartlistPriceRequestId)
+                    .OrderByDescending(x => x.CreatedDate)
+                    .ToList();
+
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {

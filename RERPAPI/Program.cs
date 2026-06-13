@@ -617,7 +617,7 @@ builder.Services.AddScoped<NotificationTypeRepo>();
 builder.Services.AddScoped<JobRequirementLogRepo>();
 //builder.Services.AddScoped<AssetLogRepo>();
 
-#region KPI
+#region KPI Tech
 
 builder.Services.AddScoped<KPISaleRepo>();
 builder.Services.AddScoped<KPIEvaluationPointRepo>();
@@ -637,8 +637,8 @@ builder.Services.AddScoped<ProjectTaskTypeRepo>();
 builder.Services.AddScoped<KPIEvaluationRuleDetailRepo>();
 builder.Services.AddScoped<KPIExamRepo>();
 builder.Services.AddScoped<KPISumaryEvaluationRepo>();
-
-#endregion KPI
+builder.Services.AddScoped<KPIEvaluationLogRepo>(); 
+#endregion
 
 #region Yêu cầu tuyển dụng
 
@@ -720,6 +720,7 @@ builder.Services.AddScoped<AssetLogRepo>();
 builder.Services.AddScoped<BillExportTechnicalAuditLogRepo>();
 builder.Services.AddScoped<AssetAllocationLogRepo>();
 builder.Services.AddScoped<ProjectPartlistPurchaseRequestLogRepo>();
+builder.Services.AddScoped<ProjectPartListPriceRequestLogRepo>();
 
 #endregion DI LOG
 
@@ -961,11 +962,11 @@ foreach (var item in staticFiles)
         RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
     });
 
-    app.UseDirectoryBrowser(new DirectoryBrowserOptions
-    {
-        FileProvider = new PhysicalFileProvider(item.PathFull),
-        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-    });
+    //app.UseDirectoryBrowser(new DirectoryBrowserOptions
+    //{
+    //    FileProvider = new PhysicalFileProvider(item.PathFull),
+    //    RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+    //});
 }
 var tusStore = new TusDiskStore(Directory.GetCurrentDirectory());
 // config Tus dotnet

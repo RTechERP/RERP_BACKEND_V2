@@ -30,8 +30,23 @@ namespace RERPAPI.Controllers.Project
         private readonly InventoryStockRepo _inventoryStockRepo;
         private ProjectPartlistPriceRequestNoteRepo _projectPartlistPriceRequestNoteRepo;
         private UnitCountKTRepo _unitCountKTRepo;
+        private ProjectPartListPriceRequestLogRepo _projectPartListPriceRequestLogRepo;
 
-        public ProjectPartlistController(ProjectPartListRepo projectPartlistRepo, ProductSaleRepo productSaleRepo, FirmRepo firmRepo, UnitCountRepo unitCountRepo, ProductRTCRepo productRTCRepo, ProjectPartlistPriceRequestRepo priceRequestRepo, ProjectPartlistVersionRepo partlistVersionRepo, ProjectPartlistPurchaseRequestRepo partlistPurchaseRequestRepo, UnitCountKTRepo unitCountKTRepo, WarehouseRepo warehouseRepo, BillExportRepo billExportRepo, ProductGroupRepo productGroupRepo, InventoryStockRepo inventoryStockRepo, ProjectPartlistPriceRequestNoteRepo projectPartlistPriceRequestNoteRepo)
+        public ProjectPartlistController(
+            ProjectPartListRepo projectPartlistRepo,
+            ProductSaleRepo productSaleRepo,
+            FirmRepo firmRepo,
+            UnitCountRepo unitCountRepo,
+            ProductRTCRepo productRTCRepo,
+            ProjectPartlistPriceRequestRepo priceRequestRepo,
+            ProjectPartlistVersionRepo partlistVersionRepo,
+            ProjectPartlistPurchaseRequestRepo partlistPurchaseRequestRepo,
+            UnitCountKTRepo unitCountKTRepo, WarehouseRepo warehouseRepo,
+            BillExportRepo billExportRepo, ProductGroupRepo productGroupRepo,
+            InventoryStockRepo inventoryStockRepo,
+            ProjectPartlistPriceRequestNoteRepo projectPartlistPriceRequestNoteRepo,
+            ProjectPartListPriceRequestLogRepo projectPartListPriceRequestLogRepo
+            )
         {
             _projectPartlistRepo = projectPartlistRepo;
             _productSaleRepo = productSaleRepo;
@@ -47,6 +62,7 @@ namespace RERPAPI.Controllers.Project
             _productGroupRepo = productGroupRepo;
             _inventoryStockRepo = inventoryStockRepo;
             _projectPartlistPriceRequestNoteRepo = projectPartlistPriceRequestNoteRepo;
+            _projectPartListPriceRequestLogRepo = projectPartListPriceRequestLogRepo;
         }
 
         [HttpPost("get-all")]
@@ -218,6 +234,9 @@ namespace RERPAPI.Controllers.Project
                         IsDeleted = false
                     };
                     await _priceRequestRepo.CreateAsync(priceRequest);
+                    await _projectPartListPriceRequestLogRepo.
+                        AddLog(priceRequest.ID, $"{currentUser.FullName} đã thêm mới yêu cầu báo giá!", "Thêm mới");
+
                     var priceRequestNote = new ProjectPartlistPriceRequestNote
                     {
                         ProjectPartlistPriceRequestID = priceRequest.ID,
@@ -302,6 +321,9 @@ namespace RERPAPI.Controllers.Project
                         //Note = item.Note
                     };
                     await _priceRequestRepo.CreateAsync(priceRequest);
+                    await _projectPartListPriceRequestLogRepo.
+                         AddLog(priceRequest.ID, $"{currentUser.FullName} đã thêm mới yêu cầu báo giá!", "Thêm mới");
+
                     var priceRequestNote = new ProjectPartlistPriceRequestNote
                     {
                         ProjectPartlistPriceRequestID = priceRequest.ID,
@@ -348,6 +370,10 @@ namespace RERPAPI.Controllers.Project
                         {
                             rs.IsDeleted = true;
                             rs.StatusRequest = 0;
+
+                            var oldModel = _priceRequestRepo.GetByID(rs.ID);
+                            await _projectPartListPriceRequestLogRepo.updateLog(oldModel, rs);
+
                             await _priceRequestRepo.UpdateAsync(rs);
                         }
                     }
@@ -629,6 +655,10 @@ namespace RERPAPI.Controllers.Project
                         {
                             pr.ProductName = item.GroupMaterial;
                             pr.Maker = item.Manufacturer;
+
+                            var oldModel = _priceRequestRepo.GetByID(pr.ID);
+                            await _projectPartListPriceRequestLogRepo.updateLog(oldModel, pr);
+
                             await _priceRequestRepo.UpdateAsync(pr);
                         }
                     }
@@ -1114,6 +1144,10 @@ namespace RERPAPI.Controllers.Project
             foreach (var quote in listQuotes)
             {
                 quote.IsDeleted = true;
+
+                var oldModel = _priceRequestRepo.GetByID(quote.ID);
+                await _projectPartListPriceRequestLogRepo.updateLog(oldModel, quote);
+
                 await _priceRequestRepo.UpdateAsync(quote);
             }
 
@@ -1162,8 +1196,7 @@ namespace RERPAPI.Controllers.Project
             }
             await _projectPartlistRepo.UpdateAsync(partListNew);
 
-            // Create new price request
-            await _priceRequestRepo.CreateAsync(new ProjectPartlistPriceRequest
+            var pricerequest = new ProjectPartlistPriceRequest
             {
                 ProjectPartListID = partListNew.ID,
                 EmployeeID = currentUser.EmployeeID,
@@ -1173,7 +1206,12 @@ namespace RERPAPI.Controllers.Project
                 DateRequest = now,
                 Deadline = partListNew.DeadlinePriceRequest,
                 Quantity = partListNew.QtyFull,
-            });
+            };
+
+            await _priceRequestRepo.CreateAsync(pricerequest);
+
+            await _projectPartListPriceRequestLogRepo.
+                AddLog(pricerequest.ID, $"{currentUser.FullName} đã thêm mới yêu cầu báo giá!", "Thêm mới");
         }
 
         //end
@@ -2578,10 +2616,18 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                var versions = _partlistVersionRepo.GetAll(x => x.ProjectTypeID == request.ProjectTypeID && x.StatusVersion == 2 && x.ProjectSolutionID == request.ProjectSolutionID && x.IsDeleted == false);
+                var versions = _partlistVersionRepo.GetAll(
+                    x => x.ProjectTypeID == request.ProjectTypeID && 
+                    x.StatusVersion == 2 && 
+                    x.ProjectSolutionID == request.ProjectSolutionID && 
+                    x.IsDeleted == false &&
+                    x.IsConsumable == request.IsConsumable
+                    );
+
                 if (versions.Count > 0)
                 {
-                    return BadRequest(ApiResponseFactory.Fail(null, $"Danh mục [{request.ProjectTypeName}] đã có phiên bản PO!"));
+                    string statusText = request.IsConsumable == true ? "vật tư tiêu hao" : "PO";
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Danh mục [{request.ProjectTypeName}] đã có phiên bản {statusText}!"));
                 }
                 else
                 {
