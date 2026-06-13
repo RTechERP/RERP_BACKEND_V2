@@ -51,6 +51,10 @@ namespace RERPAPI.Controllers.CourseWeb
                     {
                         return Ok(ApiResponseFactory.Fail(null, "Email đã tồn tại!"));
                     }
+                    if (_userRepo.GetAll(c => c.PhoneNumber == model.PhoneNumber).Count() > 0)
+                    {
+                        return Ok(ApiResponseFactory.Fail(null, "Số điện thoại đã tồn tại!"));
+                    }
                     string hashedPassword = RERPAPI.Model.Common.MaHoaMD5.EncryptPassword(model.PasswordHash);
                     var result = _userRepo.Create(new User
                     {
