@@ -572,6 +572,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<HistoryMoneyPO> HistoryMoneyPOs { get; set; }
 
+    public virtual DbSet<HistoryProductPriceRequest> HistoryProductPriceRequests { get; set; }
+
     public virtual DbSet<HistoryProductRTC> HistoryProductRTCs { get; set; }
 
     public virtual DbSet<HistoryProductRTCLog> HistoryProductRTCLogs { get; set; }
@@ -7081,6 +7083,30 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.VAT).HasColumnType("decimal(18, 2)");
         });
 
+        modelBuilder.Entity<HistoryProductPriceRequest>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK_HistoryProductPriceRequest_1");
+
+            entity.ToTable("HistoryProductPriceRequest");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.CurrencyRate).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.HistoryPrice).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.HistoryType)
+                .HasMaxLength(150)
+                .HasComment("1: Yêu cầu báo giá, 2: Yêu cầu mua");
+            entity.Property(e => e.ProductCode).HasMaxLength(550);
+            entity.Property(e => e.Quantity).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TotaMoneyVAT).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TotalPrice).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TotalPriceExchange).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.UnitPrice).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+            entity.Property(e => e.VAT).HasColumnType("decimal(18, 2)");
+        });
+
         modelBuilder.Entity<HistoryProductRTC>(entity =>
         {
             entity.HasKey(e => e.ID).HasName("PK__HistoryP__3214EC2786D54999");
@@ -11054,6 +11080,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.DateReturnExpected)
                 .HasComment("Ngày hàng về mong đợi (Deadline)")
                 .HasColumnType("datetime");
+            entity.Property(e => e.DiscountPercent).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.DuplicateID).HasDefaultValue(0);
             entity.Property(e => e.EmployeeApproveID).HasDefaultValue(0);
             entity.Property(e => e.EmployeeID).HasDefaultValue(0);

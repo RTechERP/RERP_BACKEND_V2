@@ -748,6 +748,7 @@ builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.UserRepo>();
 builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.EmployeeRepo>();
 builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.CourseExamPracticeRepo>();
 builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.CourseCatalogTypeRepo>();
+builder.Services.AddScoped<HistoryProductPriceRequestRepo>();
 
 #endregion DI Khoá học web
 

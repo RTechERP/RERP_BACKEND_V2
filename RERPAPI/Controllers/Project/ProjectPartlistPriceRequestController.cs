@@ -57,7 +57,7 @@ namespace RERPAPI.Controllers.Project
             ILogger<ProjectPartlistPriceRequestController> logger,
             ProjectPartlistPurchaseRequestLogRepo projectPartlistPurchaseRequestLogRepo,
             ProjectPartlistPurchaseRequestLogRepo PPPRLogRepo,
-            HistoryProductPriceRequestRepo historyProductPriceRequestRepo
+            HistoryProductPriceRequestRepo historyProductPriceRequestRepo,
             ProjectPartListPriceRequestLogRepo projectPartListPriceRequestLogRepo
             )
         {
@@ -262,68 +262,7 @@ namespace RERPAPI.Controllers.Project
             return Ok(new { status = 1, data = currencies });
         }
 
-        [HttpPost("save-data")]
-        public async Task<IActionResult> SaveData([FromBody] List<ProjectPartlistPriceRequest> projectPartlistPriceRequest)
-        {
-            try
-            {
-                string productCode = string.Join(",", projectPartlistPriceRequest.Select(x => x.ProductCode));
-                List<HistoryProductPriceRequest> lstHistoryProductPriceRequests = await SqlDapper<HistoryProductPriceRequest>.ProcedureToListTAsync("spGetAllHistoryProductPriceRequestByListProductCode",
-                    new { ListProductCode = productCode });
-
-
-                List<ProjectPartlistPriceRequest> data = new List<ProjectPartlistPriceRequest>();
-                if (projectPartlistPriceRequest != null && projectPartlistPriceRequest.Any())
-                {
-                    foreach (var item in projectPartlistPriceRequest)
-                    {
-                        if (item.ID > 0)
-                        {
-                            await requestRepo.UpdateAsync(item);
-                        }
-                        else
-                        {
-                            await requestRepo.CreateAsync(item);
-                        }
-
-                        #region Update lịch sử giá 
-                        HistoryProductPriceRequest history = lstHistoryProductPriceRequests.FirstOrDefault(x => x.ProductCode == item.ProductCode) ?? new HistoryProductPriceRequest();
-                        history.HistoryType = $"ProjectPartlistPriceRequestID - {item.ID}";
-                        history.SupplierSaleID = item.SupplierSaleID;
-                        history.CurrencyID = item.CurrencyID;
-                        history.ProductCode = item.ProductCode;
-                        history.ProductName = item.ProductName;
-                        history.UnitPrice = item.UnitPrice;
-                        history.Quantity = item.Quantity;
-                        history.VAT = item.VAT;
-                        history.TotalPrice = item.TotalPrice;
-                        history.TotaMoneyVAT = item.TotaMoneyVAT;
-                        history.TotalPriceExchange = item.TotalPriceExchange;
-                        history.TotalDayLeadTime = item.TotalDayLeadTime;
-                        history.Note = item.Note;
-                        history.HistoryPrice = item.HistoryPrice;
-                        history.IsDeleted = false;
-
-                        if (history.ID > 0) _historyProductPriceRequestRepo.Update(history);
-                        else _historyProductPriceRequestRepo.Create(history);
-                        #endregion
-                        data.Add(item);
-                    }
-                }
-
-                return Ok(ApiResponseFactory.Success(data, ""));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
-        }
-
+        
         [HttpGet("get-price-request-type")]
         public IActionResult GetPriceRequestType()
         {
@@ -544,7 +483,9 @@ namespace RERPAPI.Controllers.Project
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
-
+                string productCode = string.Join(",", projectPartlistPriceRequest.Select(x => x.ProductCode));
+                List<HistoryProductPriceRequest> lstHistoryProductPriceRequests = await SqlDapper<HistoryProductPriceRequest>.ProcedureToListTAsync("spGetAllHistoryProductPriceRequestByListProductCode",
+                    new { ListProductCode = productCode });
                 List<ProjectPartlistPriceRequest> data = new List<ProjectPartlistPriceRequest>();
                 if (projectPartlistPriceRequest != null && projectPartlistPriceRequest.Any())
                 {
@@ -564,7 +505,27 @@ namespace RERPAPI.Controllers.Project
                             item.UpdatedDate = DateTime.Now;
                             await requestRepo.UpdateAsync(item);
                         }
+                        #region Update lịch sử giá 
+                        HistoryProductPriceRequest history = lstHistoryProductPriceRequests.FirstOrDefault(x => x.ProductCode == item.ProductCode) ?? new HistoryProductPriceRequest();
+                        history.HistoryType = $"ProjectPartlistPriceRequestID - {item.ID}";
+                        history.SupplierSaleID = item.SupplierSaleID;
+                        history.CurrencyID = item.CurrencyID;
+                        history.ProductCode = item.ProductCode;
+                        history.ProductName = item.ProductName;
+                        history.UnitPrice = item.UnitPrice;
+                        history.Quantity = item.Quantity;
+                        history.VAT = item.VAT;
+                        history.TotalPrice = item.TotalPrice;
+                        history.TotaMoneyVAT = item.TotaMoneyVAT;
+                        history.TotalPriceExchange = item.TotalPriceExchange;
+                        history.TotalDayLeadTime = item.TotalDayLeadTime;
+                        history.Note = item.Note;
+                        history.HistoryPrice = item.HistoryPrice;
+                        history.IsDeleted = false;
 
+                        if (history.ID > 0) _historyProductPriceRequestRepo.Update(history);
+                        else _historyProductPriceRequestRepo.Create(history);
+                        #endregion
                         data.Add(item);
                     }
                 }

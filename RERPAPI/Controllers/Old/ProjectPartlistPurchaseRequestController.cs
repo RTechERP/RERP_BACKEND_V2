@@ -1006,6 +1006,7 @@ namespace RERPAPI.Controllers.Old
                         if (item.ID <= 0)
                         {
                             await _repo.CreateAsync(item);
+
                             await _projectPartListPurchaseRequestLogRepo.
                                 AddLog(item.ID, $"{currentUser.FullName} đã thêm mới yêu cầu mua hàng!", "Thêm mới");
                         }
@@ -1074,7 +1075,28 @@ namespace RERPAPI.Controllers.Old
                             }
                         }
                     }
+                    #region Update lịch sử giá 
+                    HistoryProductPriceRequest historypur = lstHistoryProductPriceRequests.FirstOrDefault(x => x.ProductCode == item.ProductCode) ?? new HistoryProductPriceRequest();
+                    historypur.HistoryType = $"ProjectPartlistPurchaseRequestID - {item.ID}";
+                    historypur.SupplierSaleID = item.SupplierSaleID;
+                    historypur.CurrencyID = item.CurrencyID;
+                    historypur.ProductCode = item.ProductCode;
+                    historypur.ProductName = item.ProductName;
+                    historypur.UnitPrice = item.UnitPrice;
+                    historypur.Quantity = item.Quantity;
+                    historypur.VAT = item.VAT;
+                    historypur.TotalPrice = item.TotalPrice;
+                    historypur.TotaMoneyVAT = item.TotaMoneyVAT;
+                    historypur.TotalPriceExchange = item.TotalPriceExchange;
+                    historypur.TotalDayLeadTime = item.TotalDayLeadTime;
+                    historypur.Note = item.Note;
+                    historypur.HistoryPrice = item.HistoryPrice;
+                    historypur.IsDeleted = false;
 
+
+                    if (historypur.ID > 0) _historyProductPriceRequestRepo.Update(historypur);
+                    else _historyProductPriceRequestRepo.Create(historypur);
+                    #endregion
                     _repo.UpdateData(item);
                     if (item.ID <= 0)
                     {
