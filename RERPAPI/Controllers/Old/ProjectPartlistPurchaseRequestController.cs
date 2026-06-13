@@ -38,6 +38,7 @@ namespace RERPAPI.Controllers.Old
         private ProjectPartlistPurchaseRequestNoteRepo _projectPartlistPurchaseRequestNoteRepo;
         private ProjectPartlistPriceRequestRepo _projectPartlistPriceRequestRepo;
         private ProjectPartlistPurchaseRequestLogRepo _projectPartListPurchaseRequestLogRepo;
+        private HistoryProductPriceRequestRepo _historyProductPriceRequestRepo;
 
         public ProjectPartlistPurchaseRequestController(
             ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo,
@@ -58,7 +59,8 @@ namespace RERPAPI.Controllers.Old
             UnitCountKTRepo unitCountKTRepo,
             ProjectPartlistPurchaseRequestNoteRepo projectPartlistPurchaseRequestNoteRepo,
             ProjectPartlistPriceRequestRepo projectPartlistPriceRequestRepo,
-            ProjectPartlistPurchaseRequestLogRepo projectPartListPurchaseRequestLogRepo
+            ProjectPartlistPurchaseRequestLogRepo projectPartListPurchaseRequestLogRepo,
+            HistoryProductPriceRequestRepo historyProductPriceRequestRepo
             )
         {
             _repo = projectPartlistPurchaseRequestRepo;
@@ -80,6 +82,7 @@ namespace RERPAPI.Controllers.Old
             _projectPartlistPurchaseRequestNoteRepo = projectPartlistPurchaseRequestNoteRepo;
             _projectPartlistPriceRequestRepo = projectPartlistPriceRequestRepo;
             _projectPartListPurchaseRequestLogRepo = projectPartListPurchaseRequestLogRepo;
+            _historyProductPriceRequestRepo = historyProductPriceRequestRepo;
         }
 
         #endregion Khai báo repository
@@ -959,6 +962,11 @@ namespace RERPAPI.Controllers.Old
                     return BadRequest(ApiResponseFactory.Fail(null, mes));
 
                 var firms = _firmRepo.GetAll(x => x.FirmType == 1 && x.IsDelete != true);
+
+
+                string productCode = string.Join(",", data.Select(x => x.ProductCode));
+                List<HistoryProductPriceRequest> lstHistoryProductPriceRequests = await SqlDapper<HistoryProductPriceRequest>.ProcedureToListTAsync("spGetAllHistoryProductPriceRequestByListProductCode",
+                    new { ListProductCode = productCode });
                 foreach (var item in data)
                 {
                     ProjectPartlistPurchaseRequest prjPartList = _repo.GetByID(item.ID);
@@ -971,6 +979,29 @@ namespace RERPAPI.Controllers.Old
 
                     if ((item.ProductGroupID <= 0 && item.ProductGroupRTCID <= 0))
                     {
+                        #region Update lịch sử giá 
+                        HistoryProductPriceRequest history = lstHistoryProductPriceRequests.FirstOrDefault(x => x.ProductCode == item.ProductCode) ?? new HistoryProductPriceRequest();
+                        history.HistoryType = $"ProjectPartlistPurchaseRequestID - {item.ID}";
+                        history.SupplierSaleID = item.SupplierSaleID;
+                        history.CurrencyID = item.CurrencyID;
+                        history.ProductCode = item.ProductCode;
+                        history.ProductName = item.ProductName;
+                        history.UnitPrice = item.UnitPrice;
+                        history.Quantity = item.Quantity;
+                        history.VAT = item.VAT;
+                        history.TotalPrice = item.TotalPrice;
+                        history.TotaMoneyVAT = item.TotaMoneyVAT;
+                        history.TotalPriceExchange = item.TotalPriceExchange;
+                        history.TotalDayLeadTime = item.TotalDayLeadTime;
+                        history.Note = item.Note;
+                        history.HistoryPrice = item.HistoryPrice;
+                        history.IsDeleted = false;
+
+
+                        if (history.ID > 0) _historyProductPriceRequestRepo.Update(history);
+                        else _historyProductPriceRequestRepo.Create(history);
+                        #endregion
+
                         _repo.UpdateData(item);
                         if (item.ID <= 0)
                         {
