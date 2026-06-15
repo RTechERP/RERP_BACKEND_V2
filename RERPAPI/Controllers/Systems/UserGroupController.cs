@@ -1,12 +1,10 @@
-using DocumentFormat.OpenXml.VariantTypes;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.Systems;
-using RERPAPI.Model.DTO;
-using RERPAPI.Attributes;
-using Microsoft.AspNetCore.Authorization;
 
 namespace RERPAPI.Controllers.Systems
 {
@@ -15,10 +13,9 @@ namespace RERPAPI.Controllers.Systems
     [Authorize]
     public class UserGroupController : ControllerBase
     {
-
-        UserGroupRepo _userGroupRepo;
-        UserGroupLinkRepo _userGroupLinkRepo;
-        UserGroupRightDistributionRepo _userGroupRightDistributionRepo;
+        private UserGroupRepo _userGroupRepo;
+        private UserGroupLinkRepo _userGroupLinkRepo;
+        private UserGroupRightDistributionRepo _userGroupRightDistributionRepo;
 
         public UserGroupController(
             UserGroupRepo userGroupRepo,
@@ -45,6 +42,7 @@ namespace RERPAPI.Controllers.Systems
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // Lấy danh sách liên kết người dùng trong nhóm
         [RequiresPermission(permissionFunction: "userPermissionForm_View")]
         [HttpGet("get-group-links")]
@@ -60,6 +58,7 @@ namespace RERPAPI.Controllers.Systems
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // Lấy danh sách phân quyền của nhóm
         [RequiresPermission(permissionFunction: "userPermissionForm_View")]
         [HttpGet("get-rights-distribution")]
@@ -75,6 +74,7 @@ namespace RERPAPI.Controllers.Systems
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // Lấy cây phân quyền của nhóm
         [RequiresPermission(permissionFunction: "userPermissionForm_View")]
         [HttpGet("get-group-permission-tree")]
@@ -90,6 +90,7 @@ namespace RERPAPI.Controllers.Systems
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // Lấy danh sách quyền của người dùng theo tất cả nhóm
         [RequiresPermission(permissionFunction: "userPermissionForm_View")]
         [HttpGet("get-user-permissions")]
@@ -105,6 +106,7 @@ namespace RERPAPI.Controllers.Systems
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // Lưu danh sách nhóm quyền cho người dùng
         [RequiresPermission(permissionFunction: "userPermissionForm_Add")]
         [HttpPost("save-user-group-links")]
@@ -122,6 +124,7 @@ namespace RERPAPI.Controllers.Systems
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // Lưu thông tin phân quyền cho nhóm
         [RequiresPermission(permissionFunction: "userPermissionForm_Add")]
         [HttpPost("save-group-permissions")]
@@ -163,6 +166,7 @@ namespace RERPAPI.Controllers.Systems
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // Thêm danh sách người dùng vào nhóm
         [RequiresPermission(permissionFunction: "userPermissionForm_Add")]
         [HttpPost("add-users-to-group")]
@@ -178,6 +182,7 @@ namespace RERPAPI.Controllers.Systems
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // Lưu thông tin nhóm người dùng (Thêm mới hoặc Cập nhật)
         [RequiresPermission(permissionFunction: "userPermissionForm_Add")]
         [HttpPost("save")]
@@ -207,6 +212,7 @@ namespace RERPAPI.Controllers.Systems
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // Xóa nhóm người dùng
         [RequiresPermission(permissionFunction: "userPermissionForm_Delete")]
         [HttpPost("delete")]
@@ -214,7 +220,6 @@ namespace RERPAPI.Controllers.Systems
         {
             try
             {
-            
                 bool hasLinks = await _userGroupLinkRepo.ExistsAsync(x => x.UserGroupID == id);
                 bool hasRights = await _userGroupRightDistributionRepo.ExistsAsync(x => x.UserGroupID == id);
 
@@ -231,6 +236,7 @@ namespace RERPAPI.Controllers.Systems
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // Xóa liên kết người dùng trong nhóm
         [RequiresPermission(permissionFunction: "userPermissionForm_Delete")]
         [HttpPost("delete-link")]
@@ -246,6 +252,7 @@ namespace RERPAPI.Controllers.Systems
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // Lấy danh sách nhóm người dùng theo mã chức năng
         [RequiresPermission(permissionFunction: "userPermissionForm_View")]
         [HttpGet("get-user-group")]
@@ -267,6 +274,7 @@ namespace RERPAPI.Controllers.Systems
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // Lấy danh sách nhóm theo người dùng
         [RequiresPermission(permissionFunction: "userPermissionForm_View")]
         [HttpGet("get-groups-by-user")]
@@ -288,6 +296,7 @@ namespace RERPAPI.Controllers.Systems
             public int ToUserID { get; set; }
             public List<int> RoleIDs { get; set; }
         }
+
         // Sao chép danh sách nhóm quyền cho người dùng
         [RequiresPermission(permissionFunction: "userPermissionForm_Add")]
         [HttpPost("copy-user-groups")]
@@ -337,7 +346,7 @@ namespace RERPAPI.Controllers.Systems
         }
 
         // Lấy danh sách nhân viên trong nhóm quyền
-        [RequiresPermission(permissionFunction : "userPermissionForm_View")]
+        [RequiresPermission(permissionFunction: "userPermissionForm_View")]
         [HttpGet("get-employees-by-group")]
         public IActionResult GetEmployeesByGroup(int userGroupId)
         {

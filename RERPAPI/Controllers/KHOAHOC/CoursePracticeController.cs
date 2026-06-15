@@ -1,13 +1,9 @@
-﻿using DocumentFormat.OpenXml.Office.SpreadSheetML.Y2023.MsForms;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
-using System.Collections.Immutable;
-using System.Net.NetworkInformation;
 
 namespace RERPAPI.Controllers.KHOAHOC
 {
@@ -27,6 +23,7 @@ namespace RERPAPI.Controllers.KHOAHOC
         private readonly DepartmentRepo _departmentRepo;
         private readonly CourseLessonRepo _courseLessonRepo;
         private readonly ConfigSystemRepo _configSystemRepo;
+
         public CoursePracticeController(CourseExamRepo courseExamRepo,
             CourseLessonHistoryRepo courseLessonHistoryRepo,
             CourseExamResultRepo courseExamResultRepo,
@@ -62,7 +59,6 @@ namespace RERPAPI.Controllers.KHOAHOC
             {
                 var data = _courseExamRepo.GetAll();
                 return Ok(ApiResponseFactory.Success(data, ""));
-
             }
             catch (Exception ex)
             {
@@ -70,7 +66,7 @@ namespace RERPAPI.Controllers.KHOAHOC
             }
         }
 
-        // API để lấy danh sách bài học cho 
+        // API để lấy danh sách bài học cho
 
         [HttpGet("get-course-leson-by-course-id")]
         public IActionResult GetCourseLessonByCourseID(int CourseID)
@@ -103,7 +99,6 @@ namespace RERPAPI.Controllers.KHOAHOC
                 {
                     var lesson = _courseLessonRepo.GetByID(lessonId);
 
-
                     var lessonHistory = new CourseLessonHistory()
                     {
                         Status = 0,
@@ -126,6 +121,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-lesson-by-lesson-id")]
         public async Task<IActionResult> GetLessonByLessonIdAsync(int lessonId)
         {
@@ -147,9 +143,6 @@ namespace RERPAPI.Controllers.KHOAHOC
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-
-
 
         [HttpPost("save-lesson-history-progress")]
         public async Task<IActionResult> SaveLessonHistoryProgress([FromBody] LessonHistoryProgressParam param)
@@ -192,7 +185,6 @@ namespace RERPAPI.Controllers.KHOAHOC
                 await _courseLessonHistoryRepo.UpdateAsync(exitLessonHistory);
 
                 return Ok(ApiResponseFactory.Success(exitLessonHistory, "Đã cập nhật thành công"));
-
             }
             catch (Exception ex)
             {
@@ -221,7 +213,6 @@ namespace RERPAPI.Controllers.KHOAHOC
                         exitLessonHistory.Status = 0;
                     }
                     await _courseLessonHistoryRepo.UpdateAsync(exitLessonHistory);
-
                 }
                 else
                 {
@@ -235,7 +226,6 @@ namespace RERPAPI.Controllers.KHOAHOC
                     await _courseLessonHistoryRepo.CreateAsync(lessonHistory);
                 }
                 return Ok(ApiResponseFactory.Success(exitLessonHistory, "Đã cập nhật trạng thái bài học thành công"));
-
             }
             catch (Exception ex)
             {
@@ -243,7 +233,7 @@ namespace RERPAPI.Controllers.KHOAHOC
             }
         }
 
-        // API lấy lịch sử các bài thi trắc nghiệm 
+        // API lấy lịch sử các bài thi trắc nghiệm
 
         [HttpPost("get-exam-result")]
         public async Task<IActionResult> GetExamResult(int courseID = 0, int lessonID = 0)
@@ -254,7 +244,6 @@ namespace RERPAPI.Controllers.KHOAHOC
                 if (lessonID > 0)
                 {
                     courseExam = _courseExamRepo.GetAll(x => x.LessonID == lessonID && x.ExamType == 1).FirstOrDefault();
-
                 }
                 else
                 {
@@ -277,6 +266,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // API cho phần thi Trắc nghiệm
         [HttpPost("create-exam-result")]
         public async Task<IActionResult> CreateExamResult(int courseExamID)
@@ -299,7 +289,6 @@ namespace RERPAPI.Controllers.KHOAHOC
                     return Ok(ApiResponseFactory.Success(courseExamResult, "Tạo kết quả khóa học thành công!"));
                 }
                 return BadRequest(ApiResponseFactory.Fail(null, "Tạo mới kết quả khóa học thất bại"));
-
             }
             catch (Exception ex)
             {
@@ -314,8 +303,6 @@ namespace RERPAPI.Controllers.KHOAHOC
             {
                 if (lessonID > 0)
                 {
-
-
                     var dataLessonExam = SQLHelper<object>.ProcedureToList("spCourseLessonQuestion",
                                                             new string[] { "@LessonID", "@CourseExamResultID", "@ExamType" },
                                                             new object[] { lessonID, courseExamResultID, examType });
@@ -388,6 +375,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("delete-exam")]
         public async Task<IActionResult> DeleteExam(int courseExamResultID)
         {
@@ -396,19 +384,16 @@ namespace RERPAPI.Controllers.KHOAHOC
                 var examResult = _courseExamResultRepo.GetByID(courseExamResultID);
                 if (examResult == null)
                 {
-
                     return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy bài kiểm tra!"));
                 }
                 var result = _courseExamResultRepo.Delete(examResult.ID);
-                return Ok(ApiResponseFactory.Success("","Xoá thành công!"));
+                return Ok(ApiResponseFactory.Success("", "Xoá thành công!"));
             }
             catch (Exception)
             {
-
                 throw;
             }
         }
-
 
         [HttpPost("submit-exam")]
         public async Task<IActionResult> SubmitExam(int courseExamResultID)
@@ -467,7 +452,6 @@ namespace RERPAPI.Controllers.KHOAHOC
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
 
         [HttpGet("get-question-answer-right")]
@@ -491,15 +475,13 @@ namespace RERPAPI.Controllers.KHOAHOC
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
 
-        // ---------------------------------------- API Cho phần Thực hành ---------------------------------------- 
+        // ---------------------------------------- API Cho phần Thực hành ----------------------------------------
 
         [HttpGet("get-history-result-practice")]
         public IActionResult GetHistoryResultPractice(int courseExamId)
         {
-
             try
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
@@ -558,7 +540,6 @@ namespace RERPAPI.Controllers.KHOAHOC
             }
         }
 
-
         [HttpPost("confirm-practice")]
         public IActionResult ConfirmPractice([FromBody] CourseExamResult data)
         {
@@ -582,7 +563,6 @@ namespace RERPAPI.Controllers.KHOAHOC
             {
                 var data = _courseQuestionRepo.GetAll(x => x.CourseExamId == courseExamId).OrderBy(x => x.STT).ToList();
                 return Ok(ApiResponseFactory.Success(data, "Lấy câu hỏi thực hành thành công"));
-
             }
             catch (Exception ex)
             {
@@ -591,7 +571,6 @@ namespace RERPAPI.Controllers.KHOAHOC
         }
 
         [HttpGet("question-details")]
-
         public IActionResult QuestionDetails(int questionId = 0, int courseId = 0)
         {
             try
@@ -616,7 +595,6 @@ namespace RERPAPI.Controllers.KHOAHOC
             }
         }
 
-
         [HttpGet("load-course-category")]
         public async Task<IActionResult> GetDanhMuc()
         {
@@ -640,6 +618,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // API mới: Lấy tất cả khóa học theo phòng ban
         [HttpGet("load-all-courses")]
         public async Task<IActionResult> LoadAllCourses()
@@ -661,10 +640,8 @@ namespace RERPAPI.Controllers.KHOAHOC
 
                 //var listCourseChile = new List<CourseDTO>();
 
-
                 //for (int i = 0; i < listCourseParent.Count; i++)
                 //{
-
                 //    if (i == 0) continue;
 
                 //    CourseDTO course = listCourseParent[i - 1];
@@ -685,7 +662,6 @@ namespace RERPAPI.Controllers.KHOAHOC
                 //        listCourseParent[i - 1].Status = 1;
                 //    }
                 //}
-
 
                 //if (!listCourseChile.Any(x => x.Evaluate <= 0))
                 //{
@@ -715,7 +691,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                     .OrderBy(c => c.DepartmentID)
                     .ThenBy(c => c.CatalogType)
                     .OrderByDescending(c => c.CatalogID)
-                    ////.ThenBy(c => c.ID)          
+                    ////.ThenBy(c => c.ID)
                     .ToList();
                 // Theo dõi các danh mục đã hoàn thành toàn bộ bài
                 var completedCatalogs = new HashSet<int>();
@@ -726,7 +702,6 @@ namespace RERPAPI.Controllers.KHOAHOC
                 {
                     var course = orderedCourses[i];
                     var CatalogID = course.CatalogID; // hoặc course.CatalogID
-
 
                     bool isRequiredCourse = course.IsRequired;
 
@@ -800,10 +775,8 @@ namespace RERPAPI.Controllers.KHOAHOC
 
                 var listCourseChile = new List<CourseDTO>();
 
-
                 for (int i = 0; i < listCourseParent.Count; i++)
                 {
-
                     if (i == 0) continue;
 
                     CourseDTO course = listCourseParent[i - 1];
@@ -820,7 +793,6 @@ namespace RERPAPI.Controllers.KHOAHOC
                         }
                     }
                 }
-
 
                 if (!listCourseChile.Any(x => x.Evaluate <= 0))
                 {
@@ -840,7 +812,6 @@ namespace RERPAPI.Controllers.KHOAHOC
                         parent.Status = 0; // Còn lại → không thể làm
                     }
                 }
-
 
                 //for (int i = 1; i < listCourseParent.Count; i++)
                 //{
@@ -872,6 +843,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-path-server")]
         public IActionResult GetPathServer(string keyName)
         {
@@ -884,7 +856,6 @@ namespace RERPAPI.Controllers.KHOAHOC
                 var pathUpload = _configSystemRepo.GetUploadPathByKey(keyName);
                 string path = pathUpload;
                 return Ok(ApiResponseFactory.Success(path, ""));
-
             }
             catch (Exception ex)
             {

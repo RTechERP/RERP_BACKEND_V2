@@ -1,14 +1,11 @@
 ﻿using ClosedXML.Excel;
-using System.IO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
-using RERPAPI.Model.Param.Handover;
 using RERPAPI.Model.Param.HRM.DepartmentRequired;
-using RERPAPI.Repo.GenericEntity.BBNV;
 using RERPAPI.Repo.GenericEntity.GeneralCatetogy.JobRequirements;
 using RERPAPI.Repo.GenericEntity.HRM.DepartmentRequire;
 
@@ -16,16 +13,16 @@ namespace RERPAPI.Controllers.HRM
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] 
+    [Authorize]
     public class RecommendSupplierController : ControllerBase
     {
-        JobRequirementRepo _jobRepo;
+        private JobRequirementRepo _jobRepo;
 
-        DepartmentRequiredRepo _departmentrequired;
+        private DepartmentRequiredRepo _departmentrequired;
 
         //DepartmentRequiredApprovalsRepo _departmentrequiredapprovals;
 
-        HCNSProposalsRepo _hcnsproposals;
+        private HCNSProposalsRepo _hcnsproposals;
 
         private IConfiguration _configuration;
 
@@ -71,6 +68,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-data-department-required")]
         public async Task<IActionResult> SaveData([FromBody] RecommendSupplierDTO dto)
         {
@@ -87,7 +85,6 @@ namespace RERPAPI.Controllers.HRM
                 int JobRequirementID = dto.JobRequirementID;
                 int DepartmentRequiredID = 0;
 
-
                 // Phòng ban yêu cầu
                 if (dto.DepartmentRequired != null)
                 {
@@ -100,7 +97,6 @@ namespace RERPAPI.Controllers.HRM
 
                     foreach (var employeeRequired in dto.DepartmentRequired)
                     {
-
                         employeeRequired.JobRequirementID = JobRequirementID;
 
                         var existing = _departmentrequired.GetAll()
@@ -112,14 +108,10 @@ namespace RERPAPI.Controllers.HRM
                             employeeRequired.STT = sttEmployeeCounter;
                             await _departmentrequired.CreateAsync(employeeRequired);
                             DepartmentRequiredID = employeeRequired.ID;
-
                         }
-
                         else
                             _departmentrequired.Update(employeeRequired);
                         DepartmentRequiredID = employeeRequired.ID;
-
-
                     }
                 }
 
@@ -134,7 +126,6 @@ namespace RERPAPI.Controllers.HRM
                     int sttHCNSProposal = maxSttProposal;
                     foreach (var itemProposal in dto.HCNSProposal)
                     {
-
                         itemProposal.JobRequirementID = JobRequirementID;
 
                         var existing = _hcnsproposals.GetAll()
@@ -148,11 +139,9 @@ namespace RERPAPI.Controllers.HRM
                             itemProposal.DepartmentRequiredID = DepartmentRequiredID;
                             await _hcnsproposals.CreateAsync(itemProposal);
                         }
-
                         else
                             itemProposal.DepartmentRequiredID = existing.DepartmentRequiredID;
                         _hcnsproposals.Update(itemProposal);
-
                     }
                 }
                 if (dto.DeletedCommend.Count > 0)
@@ -435,7 +424,7 @@ namespace RERPAPI.Controllers.HRM
             return date.ToString();
         }
 
-    //Lấy danh sách lịch sử ncc, đơn giá
+        //Lấy danh sách lịch sử ncc, đơn giá
         [HttpPost("get-historical-suppliers")]
         public IActionResult GetHistoricalSuppliers()
         {
@@ -461,6 +450,5 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

@@ -19,6 +19,7 @@ namespace RERPAPI.Controllers.Old
         private readonly TeamRepo teamRepo;
         private readonly UserTeamRepo _userTeamRepo;
         private readonly UserTeamLinkRepo _userTeamLinkRepo;
+
         public TeamController(UserTeamRepo userTeamRepo, UserTeamLinkRepo userTeamLinkRepo, TeamRepo teamRepo)
         {
             _userTeamRepo = userTeamRepo;
@@ -69,7 +70,6 @@ namespace RERPAPI.Controllers.Old
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
 
         [HttpPost]
@@ -79,7 +79,7 @@ namespace RERPAPI.Controllers.Old
             try
             {
                 List<UserTeam> userTeams = _userTeamRepo.GetAll();
-                if (userTeams.Any(x => x.Name == userTeam.Name && x.ID != userTeam.ID))
+                if (userTeams.Any(x => x.Name == userTeam.Name && x.ID != userTeam.ID && x.IsDeleted !=true))
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Tên team đã tồn tại"));
                 }
@@ -116,7 +116,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                if(teamID <= 0)
+                if (teamID <= 0)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Không được xóa team cha cao nhất!"));
                 }
@@ -139,9 +139,7 @@ namespace RERPAPI.Controllers.Old
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
-
 
         [HttpPost("add-employee")]
         [RequiresPermission("N26,N40,N1")]
@@ -205,10 +203,10 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-team-by-department-id")]
         public IActionResult getTeamByDepartment(int departmentID)
         {
-
             try
             {
                 var data = _userTeamRepo.GetAll(x => x.DepartmentID == departmentID);
@@ -216,10 +214,8 @@ namespace RERPAPI.Controllers.Old
             }
             catch (Exception ex)
             {
-
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
 
         /// <summary>
@@ -230,7 +226,7 @@ namespace RERPAPI.Controllers.Old
             // Lấy toàn bộ danh sách nhóm chưa bị xóa để duyệt cây
             var allTeams = _userTeamRepo.GetAll(x => x.IsDeleted == false || x.IsDeleted == null);
             var descendants = new List<UserTeam>();
-            
+
             // Tìm tất cả các nhóm con, cháu... trực thuộc nhóm cha này
             GetDescendants(parentID, allTeams, descendants);
 
@@ -261,7 +257,6 @@ namespace RERPAPI.Controllers.Old
                 GetDescendants(child.ID, allTeams, result);
             }
         }
-
 
         [HttpGet("employee-by-department-string")]
         public async Task<IActionResult> GetTeamByDepartmentString(string departmentString = "")

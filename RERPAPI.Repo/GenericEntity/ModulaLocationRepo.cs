@@ -6,8 +6,7 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class ModulaLocationRepo : GenericRepo<ModulaLocation>
     {
-
-        BillImportTechDetailSerialRepo importDetailSerialNumberRepo;
+        private BillImportTechDetailSerialRepo importDetailSerialNumberRepo;
 
         public ModulaLocationRepo(CurrentUser currentUser, BillImportTechDetailSerialRepo billImportTechDetailSerialRepo) : base(currentUser)
         {
@@ -20,7 +19,6 @@ namespace RERPAPI.Repo.GenericEntity
 
         public APIResponse CheckValidate(List<ModulaLocationDTO.SerialNumberModulaLocation> serialNumberModulaLocations)
         {
-
             APIResponse response = new APIResponse() { status = 1 };
 
             for (int i = 0; i < serialNumberModulaLocations.Count; i++)
@@ -51,7 +49,6 @@ namespace RERPAPI.Repo.GenericEntity
                     }
                 }
             }
-
 
             return response;
         }

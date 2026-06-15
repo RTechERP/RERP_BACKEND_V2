@@ -1,11 +1,6 @@
 ﻿using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity.HRM
 {
@@ -14,11 +9,11 @@ namespace RERPAPI.Repo.GenericEntity.HRM
         public EconomicContractTypeRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
+
         public APIResponse Validate(EconomicContractType item)
         {
             try
             {
-
                 if (!string.IsNullOrEmpty(item.TypeCode) == false)
                 {
                     return ApiResponseFactory.Fail(null, "Vui lòng nhập mã loại hợp đồng");

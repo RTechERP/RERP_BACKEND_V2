@@ -1,23 +1,22 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using static NPOI.HSSF.Util.HSSFColor;
 
 namespace RERPAPI.Controllers.Old
 {
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize]
     public class KPIEmployeeTeamController : ControllerBase
     {
         #region Khai báo repository
-        KPIEmployeeTeamRepo teamRepo;
-        DepartmentRepo departmentRepo;
-        EmployeeRepo employeeRepo;
-        KPIEmployeeTeamRepo _kpiEmployeeTeamRepo;
-        KPIEmployeeTeamLinkRepo _kpiEmployeeTeamLinkRepo;
+
+        private KPIEmployeeTeamRepo teamRepo;
+        private DepartmentRepo departmentRepo;
+        private EmployeeRepo employeeRepo;
+        private KPIEmployeeTeamRepo _kpiEmployeeTeamRepo;
+        private KPIEmployeeTeamLinkRepo _kpiEmployeeTeamLinkRepo;
+
         public KPIEmployeeTeamController(KPIEmployeeTeamRepo teamRepo, EmployeeRepo employeeRepo, DepartmentRepo departmentRepo, KPIEmployeeTeamRepo kPIEmployeeTeamRepo, KPIEmployeeTeamLinkRepo kPIEmployeeTeamLinkRepo)
         {
             this.teamRepo = teamRepo;
@@ -27,8 +26,10 @@ namespace RERPAPI.Controllers.Old
             _kpiEmployeeTeamLinkRepo = kPIEmployeeTeamLinkRepo;
         }
 
-        #endregion
+        #endregion Khai báo repository
+
         #region lấy ra tất cả team
+
         /// <summary>
         /// lấy team theo từng quý, nawmg, phòng ban
         /// </summary>
@@ -39,14 +40,11 @@ namespace RERPAPI.Controllers.Old
         [HttpGet("getall")]
         public IActionResult GetAll(int yearValue, int quarterValue, int departmentID)
         {
-
             try
             {
-
                 var teams = SQLHelper<object>.ProcedureToList("spGetALLKPIEmployeeTeam",
                                                                 new string[] { "@YearValue", "@QuarterValue", "@DepartmentID" },
                                                                 new object[] { yearValue, quarterValue, departmentID });
-
 
                 return Ok(new
                 {
@@ -63,7 +61,6 @@ namespace RERPAPI.Controllers.Old
                     error = ex.ToString()
                 });
             }
-
         }
 
         [HttpGet("get-employee-in-team")]
@@ -85,8 +82,11 @@ namespace RERPAPI.Controllers.Old
                 });
             }
         }
-        #endregion
+
+        #endregion lấy ra tất cả team
+
         #region lấy theo ID
+
         [HttpGet("getbyid")]
         public IActionResult FindByID(int id)
         {
@@ -117,14 +117,16 @@ namespace RERPAPI.Controllers.Old
                 });
             }
         }
-        #endregion
+
+        #endregion lấy theo ID
+
         #region Lưu dữ liệu
+
         [HttpPost("savedata")]
         public async Task<IActionResult> SaveData([FromBody] KPIEmployeeTeam team)
         {
             try
             {
-
                 if (team.ID <= 0) await teamRepo.CreateAsync(team);
                 else await teamRepo.UpdateAsync(team);
 
@@ -145,14 +147,14 @@ namespace RERPAPI.Controllers.Old
                 });
             }
         }
-        #endregion
+
+        #endregion Lưu dữ liệu
 
         [HttpPost("copy")]
         public IActionResult Copy([FromBody] CopyKPITeamRequest request)
         {
             try
             {
-
                 CopyKPITeam(request);
 
                 return Ok(ApiResponseFactory.Success(null, "Copy thành công"));
@@ -162,6 +164,7 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         private void CopyKPITeam(CopyKPITeamRequest request)
         {
             int oldQuarter = request.OldQuarter;
@@ -179,10 +182,10 @@ namespace RERPAPI.Controllers.Old
 
             List<KPIEmployeeTeam> listTeam;
             List<KPIEmployeeTeam> listExistTeam;
-            if(departmentID > 0)
+            if (departmentID > 0)
             {
-                 listTeam = _kpiEmployeeTeamRepo.GetAll(x => x.QuarterValue == oldQuarter && x.YearValue == oldYear && x.IsDeleted == false && x.DepartmentID == departmentID);
-                 listExistTeam = _kpiEmployeeTeamRepo.GetAll(x => x.QuarterValue == newQuarter && x.YearValue == newYear && x.IsDeleted == false && x.DepartmentID == departmentID);
+                listTeam = _kpiEmployeeTeamRepo.GetAll(x => x.QuarterValue == oldQuarter && x.YearValue == oldYear && x.IsDeleted == false && x.DepartmentID == departmentID);
+                listExistTeam = _kpiEmployeeTeamRepo.GetAll(x => x.QuarterValue == newQuarter && x.YearValue == newYear && x.IsDeleted == false && x.DepartmentID == departmentID);
             }
             else
             {
@@ -295,10 +298,8 @@ namespace RERPAPI.Controllers.Old
             return result;
         }
 
-
         private void CopyTeamDetails(int oldTeamID, int newTeamID)
         {
-
             var listDetail = _kpiEmployeeTeamLinkRepo.GetAll(x => x.KPIEmployeeTeamID == oldTeamID && x.IsDeleted == false);
 
             if (!listDetail.Any()) return;
@@ -338,6 +339,5 @@ namespace RERPAPI.Controllers.Old
             public int NewYear { get; set; }
             public int? DepartmentID { get; set; }
         }
-
     }
 }

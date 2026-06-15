@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.Param
+﻿namespace RERPAPI.Model.Param
 {
     public class HistoryImportExportParam
     {
@@ -16,6 +10,6 @@ namespace RERPAPI.Model.Param
         public int Status { get; set; }
         public string WareHouseCode { get; set; }
 
-        public bool checkedAll { get; set; } 
+        public bool checkedAll { get; set; }
     }
 }

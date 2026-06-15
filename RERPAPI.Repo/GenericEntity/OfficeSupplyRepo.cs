@@ -1,12 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using RERPAPI.Model.DTO;
+﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
@@ -18,7 +11,7 @@ namespace RERPAPI.Repo.GenericEntity
 
         public string GetNextCodeRTC()
         {
-         var allCodes = table.Where(x=>x.CodeRTC.StartsWith("VPP")).Select(x=>x.CodeRTC).ToList();
+            var allCodes = table.Where(x => x.CodeRTC.StartsWith("VPP")).Select(x => x.CodeRTC).ToList();
             int maxNumber = 0;
             foreach (var code in allCodes)
             {
@@ -32,8 +25,8 @@ namespace RERPAPI.Repo.GenericEntity
             int nextNumber = maxNumber + 1;
             var nextCodeRTC = "VPP" + nextNumber;
             return nextCodeRTC;
-
         }
+
         public bool Validate(OfficeSupply item, out string message)
         {
             message = "";

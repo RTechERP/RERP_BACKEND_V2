@@ -1,5 +1,3 @@
-using DocumentFormat.OpenXml.Bibliography;
-using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -13,31 +11,28 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
-using RERPAPI.Model.Param.HRM.VehicleManagement;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
-using RERPAPI.Services;
 using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Mime;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
-
 
 namespace RERPAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-
     public class HomeController : ControllerBase
     {
         private readonly JwtSettings _jwtSettings;
         private readonly RTCContext _context;
         private readonly IConfiguration _configuration;
-        EmployeeOverTimeRepo _employeeOverTimeRepo;
+        private EmployeeOverTimeRepo _employeeOverTimeRepo;
+
         //UserRepo _userRepo = new UserRepo();
-        vUserGroupLinksRepo _vUserGroupLinksRepo;
+        private vUserGroupLinksRepo _vUserGroupLinksRepo;
+
         private readonly RoleConfig _roleConfig;
         private readonly EmployeePayrollDetailRepo _employeePayrollDetailRepo;
 
@@ -67,6 +62,7 @@ namespace RERPAPI.Controllers
             _userRepo = userRepo;
             _employeeRepo = employeeRepo;
         }
+
         [HttpPost("login")]
         public IActionResult Login([FromBody] User user)
         {
@@ -107,7 +103,6 @@ namespace RERPAPI.Controllers
                     claims.Add(claim);
                 }
 
-
                 //3. Tạo token
                 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
                 var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -122,7 +117,6 @@ namespace RERPAPI.Controllers
 
                 var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
-
                 return Ok(new
                 {
                     access_token = tokenString,
@@ -134,7 +128,6 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message + "\n"));
             }
         }
-
 
         [ApiKeyAuthorize]
         [HttpPost("loginiden")]
@@ -177,7 +170,6 @@ namespace RERPAPI.Controllers
                     claims.Add(claim);
                 }
 
-
                 //3. Tạo token
                 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
                 var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -206,7 +198,6 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         [Authorize]
         //[ApiKeyAuthorize]
@@ -271,17 +262,16 @@ namespace RERPAPI.Controllers
                 // 3. Cập nhật mật khẩu mới
                 user.PasswordHash = MaHoaMD5.EncryptPassword(param.NewPassword);
 
-
                 await _userRepo.UpdateAsync(user);
 
                 return Ok(ApiResponseFactory.Success(null, "Đổi mật khẩu thành công!"));
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, "Lỗi khi đổi mật khẩu: " + ex.Message));
             }
         }
+
         //API lấy thông tin cá nhân nhân viên
         [Authorize]
         [HttpGet("personal-information")]
@@ -303,7 +293,6 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         /// <summary>
         /// Upload file chung cho hệ thống
@@ -373,6 +362,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi upload file: {ex.Message}"));
             }
         }
+
         [HttpGet("download-by-key")]
         [Authorize]
         public IActionResult DownloadByKey(
@@ -455,6 +445,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi download file: {ex.Message}"));
             }
         }
+
         /// <summary>
         /// Upload nhiều file cùng lúc
         /// </summary>
@@ -532,11 +523,8 @@ namespace RERPAPI.Controllers
                         var originalFileName = Path.GetFileNameWithoutExtension(file.FileName);
                         // var uniqueFileName = $"{originalFileName}{fileExtension}";
 
-
-
                         // Tạo tên file unique để tránh trùng lặp
                         var uniqueFileName = $"{originalFileName}_{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid().ToString("N")[..8]}{fileExtension}";
-
 
                         //var uniqueFileName = originalFileName;
                         var fullPath = Path.Combine(targetFolder, uniqueFileName);
@@ -556,8 +544,6 @@ namespace RERPAPI.Controllers
                             file.ContentType,
                             UploadTime = DateTime.Now
                         });
-
-
                     }
                 }
 
@@ -644,7 +630,6 @@ namespace RERPAPI.Controllers
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
 
         //[HttpPost("send")]
@@ -654,13 +639,9 @@ namespace RERPAPI.Controllers
         //    return Ok();
         //}
 
-
-
         //[HttpGet("download")]
         //public IActionResult DownloadFile([FromQuery] string controllerName, [FromQuery] string subPath) {
-
         //        return BadRequest(new { status = 0, message = ex.Message, error = ex.ToString()
-
 
         //}
 
@@ -762,7 +743,6 @@ namespace RERPAPI.Controllers
             };
         }
 
-
         //[HttpGet("open-folder")]
         //[Authorize]
         //public IActionResult OpenFolder(string path)
@@ -803,7 +783,6 @@ namespace RERPAPI.Controllers
                 if (isBGD == true)
                 {
                     request.IDApprovedTP = 0;
-
                 }
                 request.DateStart = request.DateStart.Value.ToLocalTime().Date;
                 request.DateEnd = request.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
@@ -840,6 +819,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //private string? ValidateTBP(ApproveItemParam item, bool isApproved)
         //{
         //    // Id là int? => ép về int
@@ -856,8 +836,6 @@ namespace RERPAPI.Controllers
         //    // IsCancelRegister là int? => ép về int
         //    if ((item.IsCancelRegister ) > 0)
         //        return $"Nhân viên [{item.FullName}] đã đăng ký hủy, không thể duyệt / hủy duyệt.";
-
-
 
         //    //if (!isApproved && !(item.IsApprovedTP ?? false))
         //    //    return $"Nhân viên [{item.FullName}] chưa được TBP duyệt, không thể hủy duyệt.";
@@ -876,9 +854,6 @@ namespace RERPAPI.Controllers
         //    if (!(item.IsApprovedHR ?? false))
         //        return $"Nhân viên [{item.FullName}] chưa được HR duyệt, BGD không thể duyệt / hủy duyệt.";
 
-
-
-
         //    return null;
         //}
 
@@ -893,8 +868,6 @@ namespace RERPAPI.Controllers
 
         //    if (item.IsApprovedBGD == true)
         //        return $"Nhân viên [{item.FullName}] đã được BGĐ duyệt, Senior không thể thay đổi.";
-
-
 
         //    //// Hủy duyệt mà chưa từng Senior duyệt
         //    //if (isApproved==false && (item.IsSeniorApproved != true))
@@ -917,7 +890,6 @@ namespace RERPAPI.Controllers
         //        var dt = SQLHelper<dynamic>.ProcedureToList("spGetUserTeamLinkByLeaderID", new string[] { "@LeaderID" }, new object[] { currentUser.EmployeeID });
         //        var data = SQLHelper<object>.GetListData(dt, 0);
         //        var result = data.Cast<IDictionary<string, object>>().FirstOrDefault(x => x.ContainsKey("EmployeeID") && x["EmployeeID"] != null && Convert.ToInt32(x["EmployeeID"]) == item.EmployeeID);
-
 
         //        return Ok(ApiResponseFactory.Success(null, $"{isApprovedText} thành công"));
         //    }
@@ -1077,13 +1049,13 @@ namespace RERPAPI.Controllers
         //        var notProcessed = new List<NotProcessedApprovalItem>();
         //        var dt = SQLHelper<dynamic>.ProcedureToList("spGetUserTeamLinkByLeaderID", new string[] { "@LeaderID" }, new object[] { currentUser.EmployeeID });
         //        var data = SQLHelper<object>.GetListData(dt, 0);
-        //        var teamEmployeeIds = data.Cast<IDictionary<string, object>>().Where(x => x.ContainsKey("EmployeeID") && x["EmployeeID"] != null).Select(x => Convert.ToInt32(x["EmployeeID"])).ToHashSet(); // 
+        //        var teamEmployeeIds = data.Cast<IDictionary<string, object>>().Where(x => x.ContainsKey("EmployeeID") && x["EmployeeID"] != null).Select(x => Convert.ToInt32(x["EmployeeID"])).ToHashSet(); //
         //                                                                                                                                                                                                     //   var result = data.Cast<IDictionary<string, object>>().FirstOrDefault(x => x.ContainsKey("EmployeeID") && x["EmployeeID"] != null && Convert.ToInt32(x["EmployeeID"]) == request.Items.EmployeeID);
         //        foreach (var item in request.Items)
         //        {
         //            if ( !teamEmployeeIds.Contains(item.EmployeeID ?? 0))
         //            {
-        //                notProcessed.Add(new NotProcessedApprovalItem   
+        //                notProcessed.Add(new NotProcessedApprovalItem
         //                {
         //                    Item = item,
         //                    Reason = "Nhân viên không thuộc team của bạn"
@@ -1143,7 +1115,6 @@ namespace RERPAPI.Controllers
 
                 var fingers = new
                 {
-
                     data = summaryFinger,
                     details = listFingerDetails
                 };
@@ -1158,7 +1129,6 @@ namespace RERPAPI.Controllers
                 IDictionary<string, object> dictChamCong = null;
                 if (rowChamCongChiTiet != null)
                 {
-
                     if (rowChamCongChiTiet is IDictionary<string, object>)
                         dictChamCong = (IDictionary<string, object>)rowChamCongChiTiet;
                     else
@@ -1177,7 +1147,6 @@ namespace RERPAPI.Controllers
                     if (dictTotal != null && dictTotal.ContainsKey("TotalWorkDay"))
                         totalWorkDay = TextUtils.ToInt32(dictTotal["TotalWorkDay"]);
                 }
-
 
                 var listHeaderChamCong = new List<object>();
                 var listDates = Enumerable.Range(1, DateTime.DaysInMonth(year, month))
@@ -1252,10 +1221,10 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-user-team")]
         [Authorize]
         public IActionResult GetUserTeam()
@@ -1274,8 +1243,8 @@ namespace RERPAPI.Controllers
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
+
         [HttpGet("get-user-team-link-by-leader-id")]
         [Authorize]
         public IActionResult GetUserTeamLinkByLeaderID()
@@ -1295,11 +1264,10 @@ namespace RERPAPI.Controllers
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
+
         [HttpGet("get-all-contact")]
         [Authorize]
-        //[RequiresPermission("N1")]
         public IActionResult GetAllContact(int departmentID, string? keyword)
         {
             try
@@ -1325,7 +1293,6 @@ namespace RERPAPI.Controllers
                                                     x.Code
                                                 });
 
-
                 return Ok(ApiResponseFactory.Success(new { list, isPermissDownload }, ""));
             }
             catch (Exception ex)
@@ -1333,6 +1300,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-all-team-new")]
         [Authorize]
         public IActionResult GetAllTeamNew(int deID)
@@ -1348,7 +1316,6 @@ namespace RERPAPI.Controllers
                 var dt = SQLHelper<object>.GetListData(orgCharts, 0);
                 var dtDetail = SQLHelper<object>.GetListData(orgdChart, 0);
 
-
                 return Ok(ApiResponseFactory.Success(new { dt, dtDetail }, ""));
             }
             catch (Exception ex)
@@ -1356,6 +1323,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("get-quantity-approve")]
         [Authorize]
         public async Task<IActionResult> GetQuantityApprove([FromBody] ApproveByApproveTPRequestParam request)
@@ -1365,71 +1333,95 @@ namespace RERPAPI.Controllers
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
 
-                bool isBGD = currentUser.DepartmentID == 1 && currentUser.EmployeeID != 54;
+                var permissions = currentUser.Permissions?.Split(',').Select(p => p.Trim()).ToList() ?? new List<string>();
+                object? result = null;
 
-                request.DateStart = request.DateStart.Value.ToLocalTime().Date;
-                request.DateEnd = request.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
-                var paramSenior = new
+                if (permissions.Contains("N1"))
                 {
-                    FilterText = "",
-                    DateStart = request.DateStart,
-                    DateEnd = request.DateEnd,
-                    IDApprovedTP = 0,
-                    Status = 0,
-                    DeleteFlag = 0,
-                    EmployeeID = 0,
-                    TType = 0,
-                    StatusHR = -1,
-                    StatusBGD = -1,
-                    IsBGD = false,
-                    UserTeamID = 0,
-                    SeniorID = currentUser.EmployeeID,
-                    StatusSenior = 0
-                };
-                var paramTP = new
+                    bool isBGD = currentUser.DepartmentID == 1 && currentUser.EmployeeID != 54;
+                    request.DateStart = request.DateStart.Value.ToLocalTime().Date;
+                    request.DateEnd = request.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
+                    var paramBGD = new
+                    {
+                        FilterText = "",
+                        DateStart = request.DateStart,
+                        DateEnd = request.DateEnd,
+                        IDApprovedTP = currentUser.EmployeeID,
+                        Status = 0,
+                        DeleteFlag = 0,
+                        EmployeeID = 0,
+                        TType = 0,
+                        StatusHR = -1,
+                        StatusBGD = 0,
+                        IsBGD = isBGD,
+                        UserTeamID = 0,
+                        SeniorID = 0,
+                        StatusSenior = -1
+                    };
+                    var approveResultBGD = await SqlDapper<object>.ProcedureToListTAsync("spGetApprovedByApprovedTP_New", paramBGD);
+                    int count = approveResultBGD?.Count ?? 0;
+                    if (count > 0)
+                    {
+                        result = new { Type = "BGD", Count = count };
+                    }
+                }
+                else if (permissions.Contains("N85"))
                 {
-                    FilterText = "",
-                    DateStart = request.DateStart,
-                    DateEnd = request.DateEnd,
-                    IDApprovedTP = currentUser.EmployeeID,
-                    Status = 0,
-                    DeleteFlag = 0,
-                    EmployeeID = 0,
-                    TType = 0,
-                    StatusHR = -1,
-                    StatusBGD = 0,
-                    IsBGD = false,
-                    UserTeamID = 0,
-                    SeniorID = 0,
-                    StatusSenior = -1
-                };
-                var paramBGD = new
+                    request.DateStart = request.DateStart.Value.ToLocalTime().Date;
+                    request.DateEnd = request.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
+                    var paramSenior = new
+                    {
+                        FilterText = "",
+                        DateStart = request.DateStart,
+                        DateEnd = request.DateEnd,
+                        IDApprovedTP = 0,
+                        Status = 0,
+                        DeleteFlag = 0,
+                        EmployeeID = 0,
+                        TType = 0,
+                        StatusHR = -1,
+                        StatusBGD = -1,
+                        IsBGD = false,
+                        UserTeamID = 0,
+                        SeniorID = currentUser.EmployeeID,
+                        StatusSenior = 0
+                    };
+                    var approveResultSenior = await SqlDapper<object>.ProcedureToListTAsync("spGetApprovedByApprovedTP_New", paramSenior);
+                    int count = approveResultSenior?.Count ?? 0;
+                    if (count > 0)
+                    {
+                        result = new { Type = "Senior", Count = count };
+                    }
+                }
+                else if (permissions.Contains("N32"))
                 {
-                    FilterText = "",
-                    DateStart = request.DateStart,
-                    DateEnd = request.DateEnd,
-                    IDApprovedTP = currentUser.EmployeeID,
-                    Status = 0,
-                    DeleteFlag = 0,
-                    EmployeeID = 0,
-                    TType = 0,
-                    StatusHR = -1,
-                    StatusBGD = 0,
-                    IsBGD = isBGD,
-                    UserTeamID = 0,
-                    SeniorID = 0,
-                    StatusSenior = -1
-                };
-                var approveResultSenior = await SqlDapper<object>.ProcedureToListTAsync("spGetApprovedByApprovedTP_New", paramSenior);
-                var approveResultTP = await SqlDapper<object>.ProcedureToListTAsync("spGetApprovedByApprovedTP_New", paramTP);
-                var approveResultBGD = await SqlDapper<object>.ProcedureToListTAsync("spGetApprovedByApprovedTP_New", paramBGD);
+                    request.DateStart = request.DateStart.Value.ToLocalTime().Date;
+                    request.DateEnd = request.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
+                    var paramTP = new
+                    {
+                        FilterText = "",
+                        DateStart = request.DateStart,
+                        DateEnd = request.DateEnd,
+                        IDApprovedTP = currentUser.EmployeeID,
+                        Status = 0,
+                        DeleteFlag = 0,
+                        EmployeeID = 0,
+                        TType = 0,
+                        StatusHR = -1,
+                        StatusBGD = 0,
+                        IsBGD = false,
+                        UserTeamID = 0,
+                        SeniorID = 0,
+                        StatusSenior = -1
+                    };
+                    var approveResultTP = await SqlDapper<object>.ProcedureToListTAsync("spGetApprovedByApprovedTP_New", paramTP);
+                    int count = approveResultTP?.Count ?? 0;
+                    if (count > 0)
+                    {
+                        result = new { Type = "TP", Count = count };
+                    }
+                }
 
-                var result = new[]
-                        {
-                            new { Type = "Senior", Count = approveResultSenior?.Count ?? 0 },
-                            new { Type = "TP",     Count = approveResultTP?.Count ?? 0 },
-                            new { Type = "BGD",    Count = approveResultBGD?.Count ?? 0 }
-                        }.FirstOrDefault(x => x.Count > 0);
                 return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
@@ -1437,6 +1429,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //[HttpPost("save-approve")]
         //public IActionResult GetQuantityApprove([FromBody] ApproveByApproveTPRequestParam request)
         //{
@@ -1529,7 +1522,6 @@ namespace RERPAPI.Controllers
                 //string[] paramNameBuissiness = new string[] { "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@IsApproved", "@Keyword", "@Type", "@NotCheckIn" };
                 //    object[] paramValueBuissiness = new object[] { request.DateStart, request.DateEnd, request.DepartmentID ?? 0, request.EmployeeID ?? 0, request.IsApproved, request.Keyword ?? "", 0, -1};
 
-
                 var dataOnLeavedata = SQLHelper<object>.ProcedureToList(procedureOnLeave, paramNames, paramValues);
                 var dataEarlyLate = SQLHelper<object>.ProcedureToList(procedureEarlyLate, paramNamesEarlyLate, paramValuesEarlyLate);
                 var dataOverTime = SQLHelper<object>.ProcedureToList(procedureOverTime, paramNamesEarlyLate, paramValuesEarlyLate);
@@ -1562,8 +1554,6 @@ namespace RERPAPI.Controllers
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
-
         }
 
         [HttpPost("save-config-system-hr")]
@@ -1586,7 +1576,6 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         #region API của DA Trường
 
@@ -1630,7 +1619,6 @@ namespace RERPAPI.Controllers
                 return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         [HttpGet("get-user-teamlink-truongda")]
         public async Task<IActionResult> GetUserTeamLink(string? listUserID)
@@ -1700,8 +1688,8 @@ namespace RERPAPI.Controllers
                 return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
 
+        #endregion API của DA Trường
 
         [HttpPost("send-email")]
         [Authorize]
@@ -1764,7 +1752,7 @@ namespace RERPAPI.Controllers
 
                         <p><strong>Điều 2.</strong> Thời gian áp dụng kể từ ngày 01/01/2026.</p>
 
-                        <p><strong>Điều 3.</strong> Phòng Hành chính Nhân sự, Tài chính Kế toán, Phòng ban liên quan và ông/bà 
+                        <p><strong>Điều 3.</strong> Phòng Hành chính Nhân sự, Tài chính Kế toán, Phòng ban liên quan và ông/bà
                             <strong>Lê Thị Lệ</strong> căn cứ Quyết định thi hành./.</p>
                     </div>";
 
@@ -1778,7 +1766,6 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         [HttpGet("get-config-autoupdate")]
         public IActionResult GetConfigAutoUpdate()
@@ -1837,7 +1824,6 @@ namespace RERPAPI.Controllers
                     status = 1,
                     newVersion = newVersion,
                     data = listFile
-
                 });
             }
             catch (Exception ex)
@@ -1845,6 +1831,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //API cập nhật thông tin cá nhân nhân viên
         [Authorize]
         [HttpPost("update-personal-information")]
@@ -1886,7 +1873,6 @@ namespace RERPAPI.Controllers
             }
         }
 
-
         [Authorize]
         [HttpGet("get-permission")]
         public async Task<IActionResult> GetPermission()
@@ -1896,7 +1882,7 @@ namespace RERPAPI.Controllers
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
                 var permissions = await SqlDapper<PermissionDTO>.ProcedureToListTAsync("spGetUserPermissions", new { UserID = currentUser.ID });
-                var listPermission = permissions.Where(x=>!string.IsNullOrEmpty( x.FunctionCode)).Select(x => x.FunctionCode).Distinct().ToList();
+                var listPermission = permissions.Where(x => !string.IsNullOrEmpty(x.FunctionCode)).Select(x => x.FunctionCode).Distinct().ToList();
                 return Ok(ApiResponseFactory.Success(listPermission, "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
@@ -1904,6 +1890,5 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

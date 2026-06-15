@@ -18,7 +18,6 @@ namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
         /// <param id phòng ban="departmenID"></param>
         /// <returns></returns>
         [HttpPost("get-daily-report-technical")]
-
         public IActionResult getDailyReportTechnical([FromBody] DailyReportTechnicalRequestParam filter)
         {
             try
@@ -44,6 +43,7 @@ namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
                 });
             }
         }
+
         /// <summary>
         /// Hàm lấy dữ liệu báo cáo cắt phim-lái xe
         /// </summary>
@@ -85,7 +85,6 @@ namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
             }
         }
 
-
         [HttpGet("get-data-employee")]
         public IActionResult getDataEmployee(int departmentID = 0, int projectID = 0)
         {
@@ -114,6 +113,5 @@ namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
                 });
             }
         }
-
     }
 }

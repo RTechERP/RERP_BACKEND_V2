@@ -1,12 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO.HRM;
-using System;
-using System.Collections.Generic;
 
 namespace RERPAPI.Controllers.HRM.HRRecruitment
 {
@@ -52,7 +49,8 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 var candidates = SQLHelper<object>.GetListData(dt, 1);
                 var chartData = SQLHelper<object>.GetListData(dt, 2);
 
-                return Ok(ApiResponseFactory.Success(new {
+                return Ok(ApiResponseFactory.Success(new
+                {
                     HiringRequests = hiringRequests ?? new List<object>(),
                     Candidates = candidates ?? new List<object>(),
                     ChartData = chartData ?? new List<object>()
@@ -63,6 +61,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2")]
         [HttpPost("get-source-summary")]
         public IActionResult GetSourceSummary([FromBody] HRRecruitmentSummaryFilterDTO request)
@@ -108,6 +107,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2")]
         [HttpPost("get-education-summary")]
         public IActionResult GetEducationSummary([FromBody] HRRecruitmentSummaryFilterDTO request)
@@ -153,6 +153,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2")]
         [HttpPost("ExportExcel")]
         public IActionResult ExportExcel([FromBody] HRRecruitmentSummaryFilterDTO request)
@@ -188,7 +189,6 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                     return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu để xuất ng!"));
                 }
 
-               
                 using (var package = new OfficeOpenXml.ExcelPackage())
                 {
                     var sheet = package.Workbook.Worksheets.Add("DS Ứng Viên");
@@ -294,12 +294,12 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                             sheet.Cells[row, 11].Value = dataRow.ContainsKey("Truong") ? dataRow["Truong"] : "";
                             sheet.Cells[row, 12].Value = dataRow.ContainsKey("Email") ? dataRow["Email"] : "";
                             sheet.Cells[row, 13].Value = dataRow.ContainsKey("NguonUngVien") ? dataRow["NguonUngVien"] : "";
-                            sheet.Cells[row, 14].Value = ""; 
-                            sheet.Cells[row, 15].Value = dataRow.ContainsKey("SoVongPV") ? dataRow["SoVongPV"] : ""; 
+                            sheet.Cells[row, 14].Value = "";
+                            sheet.Cells[row, 15].Value = dataRow.ContainsKey("SoVongPV") ? dataRow["SoVongPV"] : "";
 
                             // PV Vòng 1 (P-Z)
                             sheet.Cells[row, 16].Value = dataRow.ContainsKey("Round1_BanCM") ? dataRow["Round1_BanCM"] : "";
-                            sheet.Cells[row, 17].Value = ""; 
+                            sheet.Cells[row, 17].Value = "";
                             sheet.Cells[row, 18].Value = dataRow.ContainsKey("Round1_Overall") ? dataRow["Round1_Overall"] : "";
                             sheet.Cells[row, 19].Value = dataRow.ContainsKey("Round1_Qualif") ? dataRow["Round1_Qualif"] : "";
                             sheet.Cells[row, 20].Value = dataRow.ContainsKey("Round1_Exp") ? dataRow["Round1_Exp"] : "";
@@ -307,12 +307,12 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                             sheet.Cells[row, 22].Value = dataRow.ContainsKey("Round1_Motiv") ? dataRow["Round1_Motiv"] : "";
                             sheet.Cells[row, 23].Value = dataRow.ContainsKey("Round1_Other") ? dataRow["Round1_Other"] : "";
                             sheet.Cells[row, 24].Value = dataRow.ContainsKey("Round1_Status") ? dataRow["Round1_Status"] : "";
-                            sheet.Cells[row, 25].Value = ""; 
-                            sheet.Cells[row, 26].Value = ""; 
+                            sheet.Cells[row, 25].Value = "";
+                            sheet.Cells[row, 26].Value = "";
 
                             // PV Vòng 2 (AA-AH)
                             sheet.Cells[row, 27].Value = dataRow.ContainsKey("Round2_BanCM") ? dataRow["Round2_BanCM"] : "";
-                            sheet.Cells[row, 28].Value = ""; 
+                            sheet.Cells[row, 28].Value = "";
                             sheet.Cells[row, 29].Value = dataRow.ContainsKey("Round2_Overall") ? dataRow["Round2_Overall"] : "";
                             sheet.Cells[row, 30].Value = dataRow.ContainsKey("Round2_Qualif") ? dataRow["Round2_Qualif"] : "";
                             sheet.Cells[row, 31].Value = dataRow.ContainsKey("Round2_Exp") ? dataRow["Round2_Exp"] : "";
@@ -358,10 +358,10 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
 
                     for (int col = 16; col <= 35; col++)
                     {
-                        if(col != 23)
+                        if (col != 23)
                         {
                             sheet.Column(col).Width = 18; //col đánh giá pv
-                        }    
+                        }
                     }
 
                     var stream = new System.IO.MemoryStream(package.GetAsByteArray());

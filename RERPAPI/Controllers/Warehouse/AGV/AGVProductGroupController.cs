@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
@@ -21,7 +20,6 @@ namespace RERPAPI.Controllers.Warehouse.AGV
             _groupRepo = groupRepo;
         }
 
-
         [HttpGet()]
         public IActionResult GetAll()
         {
@@ -36,7 +34,6 @@ namespace RERPAPI.Controllers.Warehouse.AGV
             }
         }
 
-
         [HttpGet("{id}")]
         public IActionResult GetByID(int id)
         {
@@ -50,7 +47,6 @@ namespace RERPAPI.Controllers.Warehouse.AGV
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] AGVProductGroup group)

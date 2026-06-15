@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.Param
+﻿namespace RERPAPI.Model.Param
 {
     public class InventoryBorrowNCCParam
     {
@@ -15,6 +9,5 @@ namespace RERPAPI.Model.Param
         public int PageSize { get; set; }
         public int WareHouseID { get; set; }
         public int SupplierSaleID { get; set; }
-
     }
 }

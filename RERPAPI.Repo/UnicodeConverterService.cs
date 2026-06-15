@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Repo
+﻿namespace RERPAPI.Repo
 {
     public static class UnicodeConverterService
     {
@@ -29,7 +23,7 @@ namespace RERPAPI.Repo
         /// </summary>
         /// <param name="text">chuỗi cần chuyển đổi</param>
         /// <param name="type">
-        /// type = 0: dựng sẵn sang tổ hợp  
+        /// type = 0: dựng sẵn sang tổ hợp
         /// type = 1: tổ hợp sang dựng sẵn
         /// </param>
         /// <returns></returns>

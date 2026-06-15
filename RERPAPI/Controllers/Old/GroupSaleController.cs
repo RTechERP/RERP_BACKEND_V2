@@ -14,6 +14,7 @@ namespace RERPAPI.Controllers.Old
         {
             _groupSaleRepo = groupSaleRepo;
         }
+
         [HttpGet]
         public IActionResult GetAll()
         {

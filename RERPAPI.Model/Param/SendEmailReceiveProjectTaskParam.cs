@@ -1,9 +1,4 @@
 ﻿using RERPAPI.Model.Common;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Model.Param
 {
@@ -28,15 +23,16 @@ namespace RERPAPI.Model.Param
     public class SendEmailReceiveProjectTaskClass
     {
         public readonly EmailHelper _emailHelper;
+
         public SendEmailReceiveProjectTaskClass(EmailHelper emailHelper)
         {
             _emailHelper = emailHelper;
         }
+
         public async Task SendEmailReceiveProjectTask(SendEmailReceiveProjectTaskParam sendEmail)
         {
             try
             {
-
                 string htmlBody = @"<!DOCTYPE html>
 <html lang=""vi"">
 <head>
@@ -141,9 +137,9 @@ namespace RERPAPI.Model.Param
             <div class=""greeting"">
                 Xin chào bạn!,
             </div>
-            
+
             <p>Chúng tôi xin thông báo rằng bạn đã được thêm vào công việc:</p>
-            
+
             <!-- Project Details -->
             <div class=""project-details"">
                 <div class=""project-name"">" + sendEmail.projectTaskName + @"</div>
@@ -153,7 +149,7 @@ namespace RERPAPI.Model.Param
                 <div class=""project-info""><strong>Hạn hoàn thành:</strong>" + sendEmail.endDate + @"</div>
                 <div class=""project-info""><strong>Mô tả công việc:</strong>
                 <p>" + sendEmail.discription + @"</p></div>
-            </div> 
+            </div>
 
             <!-- Action Button -->
             <div style=""text-align: center;"">
@@ -162,7 +158,7 @@ namespace RERPAPI.Model.Param
 
             <!-- Additional Info -->
             <p style=""font-style: italic; color: #666666;"">
-                💡 Vui lòng đăng nhập vào hệ thống để xem thông tin chi tiết và cập nhật tiến độ công việc. 
+                💡 Vui lòng đăng nhập vào hệ thống để xem thông tin chi tiết và cập nhật tiến độ công việc.
                 Nếu có bất kỳ thắc mắc nào, hãy liên hệ với quản lý dự án hoặc bộ phận hỗ trợ.
             </p>
 
@@ -177,15 +173,11 @@ namespace RERPAPI.Model.Param
 </body>
 </html>";
 
-
                 // await _emailHelper.SendRangeAsync(sendEmail.emailRecive, "THÔNG BÁO THAM GIA CÔNG VIỆC", htmlBody, cc: sendEmail.emailCC);
-               await _emailHelper.SendRangeAsync(sendEmail.emailRecive, "CV - THÔNG BÁO THAM GIA CÔNG VIỆC", htmlBody, cc: sendEmail.emailCC);
-
-
+                await _emailHelper.SendRangeAsync(sendEmail.emailRecive, "CV - THÔNG BÁO THAM GIA CÔNG VIỆC", htmlBody, cc: sendEmail.emailCC);
             }
             catch (Exception ex)
             {
-
             }
         }
 
@@ -193,7 +185,6 @@ namespace RERPAPI.Model.Param
         {
             try
             {
-
                 string htmlBody = @"<!DOCTYPE html>
 <html lang=""vi"">
 <head>
@@ -382,15 +373,11 @@ namespace RERPAPI.Model.Param
 </body>
 </html>";
 
-
                 // await _emailHelper.SendRangeAsync(sendEmail.emailRecive, "THÔNG BÁO THAM GIA CÔNG VIỆC", htmlBody, cc: sendEmail.emailCC);
                 await _emailHelper.SendRangeAsync(sendEmail.emailRecive, "CV - THÔNG BÁO CÔNG VIỆC HOÀN THÀNH", htmlBody, cc: sendEmail.emailCC);
-
-
             }
             catch (Exception ex)
             {
-
             }
         }
 
@@ -398,7 +385,6 @@ namespace RERPAPI.Model.Param
         {
             try
             {
-
                 string htmlBody = @"<!DOCTYPE html>
 <html lang=""vi"">
 <head>
@@ -474,22 +460,18 @@ namespace RERPAPI.Model.Param
 </body>
 </html>";
 
-
                 // await _emailHelper.SendRangeAsync(sendEmail.emailRecive, "THÔNG BÁO THAM GIA CÔNG VIỆC", htmlBody, cc: sendEmail.emailCC);
                 await _emailHelper.SendRangeAsync(sendEmail.emailRecive, "CV - THÔNG BÁO CÔNG VIỆC ĐÃ ĐƯỢC DUYỆT ", htmlBody, cc: sendEmail.emailCC);
-
-
             }
             catch (Exception ex)
             {
-
             }
         }
+
         public async Task SendEmailRejectReviewProjectTask(SendEmailReceiveProjectTaskParam sendEmail)
         {
             try
             {
-
                 string htmlBody = @"<!DOCTYPE html>
                     <html lang=""vi"">
                     <head>
@@ -705,15 +687,11 @@ namespace RERPAPI.Model.Param
                     </body>
                     </html>";
 
-
                 // await _emailHelper.SendRangeAsync(sendEmail.emailRecive, "THÔNG BÁO THAM GIA CÔNG VIỆC", htmlBody, cc: sendEmail.emailCC);
                 await _emailHelper.SendRangeAsync(sendEmail.emailRecive, "CV - THÔNG BÁO CÔNG VIỆC ĐÃ HỦY DUYỆT ", htmlBody, cc: sendEmail.emailCC);
-
-
             }
             catch (Exception ex)
             {
-
             }
         }
     }

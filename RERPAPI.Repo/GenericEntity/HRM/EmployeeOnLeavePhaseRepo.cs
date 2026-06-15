@@ -2,11 +2,6 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity.HRM
 {
@@ -15,6 +10,7 @@ namespace RERPAPI.Repo.GenericEntity.HRM
         public EmployeeOnLeaveRepo _employeeOnLeaveRepo;
         private CurrentUser _currentUser;
         private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
+
         public EmployeeOnLeavePhaseRepo(CurrentUser currentUser, EmployeeOnLeaveRepo employeeOnLeaveRepo, vUserGroupLinksRepo vUserGroupLinksRepo) : base(currentUser)
         {
             _employeeOnLeaveRepo = employeeOnLeaveRepo;
@@ -255,9 +251,5 @@ namespace RERPAPI.Repo.GenericEntity.HRM
                 return ApiResponseFactory.Fail(ex, ex.Message);
             }
         }
-
-
-
-
     }
 }

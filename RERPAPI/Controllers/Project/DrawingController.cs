@@ -1,14 +1,10 @@
 ﻿using iTextSharp.text;
 using iTextSharp.text.pdf;
-using iTextSharp.text.pdf;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NPOI.SS.Formula.Functions;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System.IO;
-using static NPOI.POIFS.Crypt.Dsig.SignatureInfo;
 
 namespace RERPAPI.Controllers.Project
 {
@@ -38,6 +34,7 @@ namespace RERPAPI.Controllers.Project
         }
 
         #region Get data
+
         [HttpGet("get-project-type")]
         public IActionResult GetProjectType()
         {
@@ -195,7 +192,7 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-        #endregion
+        #endregion Get data
 
         #region Save / Delete
 
@@ -351,7 +348,7 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-        #endregion
+        #endregion Save / Delete
 
         #region Upload PDF
 
@@ -465,9 +462,11 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi upload file: {ex.Message}"));
             }
         }
-        #endregion
+
+        #endregion Upload PDF
 
         #region Sign workflow
+
         [HttpPost("check")]
         public async Task<IActionResult> Check(int id, int employeeID)
         {
@@ -578,9 +577,10 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-        #endregion
+        #endregion Sign workflow
 
         #region Get Signatures
+
         [HttpGet("get-signatures")]
         public IActionResult GetSignatures(int drawingID)
         {
@@ -684,9 +684,11 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion Get Signatures
 
         #region Save PDF
+
         [HttpGet("view-signed-pdf")]
         public IActionResult ViewSignedPdf(int drawingID)
         {
@@ -748,7 +750,8 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, "Lỗi khi tạo PDF: " + ex.Message));
             }
         }
-        #endregion
+
+        #endregion Save PDF
 
         #region Get Log
 
@@ -778,6 +781,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion Get Log
     }
 }

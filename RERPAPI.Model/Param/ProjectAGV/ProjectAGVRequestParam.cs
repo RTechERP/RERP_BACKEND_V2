@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.Param.ProjectAGV
+﻿namespace RERPAPI.Model.Param.ProjectAGV
 {
     public class ProjectAGVRequestParam
     {

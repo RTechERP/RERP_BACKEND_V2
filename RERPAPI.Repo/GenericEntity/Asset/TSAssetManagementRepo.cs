@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 
@@ -14,6 +8,7 @@ namespace RERPAPI.Repo.GenericEntity.Asset
         public TSAssetManagementRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
+
         public string GenerateAssetCode(DateTime? assetdate)
         {
             var date = assetdate.Value.Date;
@@ -41,10 +36,12 @@ namespace RERPAPI.Repo.GenericEntity.Asset
 
             return newCode;
         }
+
         public int GetMaxSTT()
         {
             return table.OrderByDescending(x => x.STT).Select(x => x.STT).FirstOrDefault() ?? 0;
         }
+
         public bool Validate(TSAssetManagement item, out string message)
         {
             message = "";

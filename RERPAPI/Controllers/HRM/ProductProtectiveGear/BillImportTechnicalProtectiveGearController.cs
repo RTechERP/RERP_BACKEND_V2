@@ -1,20 +1,12 @@
-﻿using DocumentFormat.OpenXml.Office2010.Excel;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json.Linq;
-using NPOI.SS.UserModel;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
-using RERPAPI.Model.Param.HRM.ProductProtectiveGear;
 using RERPAPI.Model.Param.Technical;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM.ProductProtectiveGear;
 using RERPAPI.Repo.GenericEntity.Technical;
 using RTCApi.Repo.GenericRepo;
-using System.Drawing.Drawing2D;
-using System.Net;
 
 namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
 {
@@ -30,7 +22,6 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
         private readonly WarehouseRepo _warehouseRepo;
         private readonly HistoryDeleteBillRepo _historyDeleteBillRepo;
 
-
         public BillImportTechnicalProtectiveGearController
             (BillImportTechnicalRepo billImportTechnicalRepo,
             SupplierSaleRepo supplierSaleRepo,
@@ -39,7 +30,6 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
             WarehouseRepo warehouseRepo,
             BillImportDetailTechnicalRepo billImportDetailTechnicalRepo,
             HistoryDeleteBillRepo historyDeleteBillRepo
-
 
             )
         {
@@ -51,6 +41,7 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
             _warehouseRepo = warehouseRepo;
             _historyDeleteBillRepo = historyDeleteBillRepo;
         }
+
         [HttpGet("get-all")]
         public IActionResult GetInventoryDemo([FromQuery] BillImportTechnicalRequestParam param)
         {
@@ -74,6 +65,7 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("billimport/{id}")]
         public IActionResult GetBillImportByID(int id)
         {
@@ -98,12 +90,12 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 });
             }
         }
+
         [HttpGet("BillImportDetail/BillImportID/{billImportID}")]
         public IActionResult GetBillExportDetailByBillID(int billImportID)
         {
             try
             {
-
                 var data = SQLHelper<dynamic>.ProcedureToList("spGetBillImportDetailTechnical", new string[] { "@ID" }, new object[] { billImportID });
                 var data0 = SQLHelper<object>.GetListData(data, 0);
                 return Ok(new
@@ -122,12 +114,12 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 });
             }
         }
+
         [HttpGet("get-supplier")]
         public IActionResult GetSupplier()
         {
             try
             {
-
                 var data = _supplierSaleRepo.GetAll().OrderByDescending(c => c.NgayUpdate);
                 return Ok(new
                 {
@@ -145,12 +137,12 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 });
             }
         }
+
         [HttpGet("get-customer")]
         public IActionResult GetCustomer()
         {
             try
             {
-
                 var data = _customerRepo.GetAll().OrderByDescending(c => c.ID);
                 return Ok(new
                 {
@@ -168,12 +160,12 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 });
             }
         }
+
         [HttpGet("get-receiver-and-deliver")]
         public IActionResult GetReceiverAndDeliver()
         {
             try
             {
-
                 var data = SQLHelper<object>.ProcedureToList("spGetUsersHistoryProductRTC", new string[] { "@UsersID" }, new object[] { 0 });
                 var data0 = SQLHelper<object>.GetListData(data, 0);
                 return Ok(new
@@ -192,12 +184,12 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 });
             }
         }
+
         [HttpGet("get-rule-pay")]
         public IActionResult GetRulePay()
         {
             try
             {
-
                 var data = _rulePayRepo.GetAll();
                 return Ok(new
                 {
@@ -215,12 +207,12 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 });
             }
         }
+
         [HttpGet("get-warehouse")]
         public IActionResult GetWarehouse()
         {
             try
             {
-
                 var data = _warehouseRepo.GetAll();
                 return Ok(new
                 {
@@ -238,6 +230,7 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 });
             }
         }
+
         [HttpGet("get-product")]
         public IActionResult GetProduct(int warehouseID)
         {
@@ -267,6 +260,7 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 });
             }
         }
+
         //[HttpPost("save-data-bill-import")]
         //public async Task<IActionResult> PostSaveDataBillImportAsync([FromBody] BillImportTechnical billImportTechnical)
         //{
@@ -289,10 +283,10 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
         [HttpGet("get-bill-code")]
         public async Task<IActionResult> GenerateBillCode(int billCode)
         {
-            var listBillImports = _billImportTechnicalRepo.GetBillCode( billCode)??"";
+            var listBillImports = _billImportTechnicalRepo.GetBillCode(billCode) ?? "";
 
             //var listBillImports = SQLHelper<BillImportTechnical>.FindByExpression(exp1.And(exp2));
-            
+
             return Ok(new
             {
                 status = 1,
@@ -310,7 +304,6 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 data = billCode
             });
         }
-
 
         [HttpPost("save-data")]
         public async Task<IActionResult> PostSaveDataBillImportDetailAsync([FromBody] List<BillImportTechnicalProtectiveGearDTO> dtos)
@@ -357,7 +350,6 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                     {
                         foreach (var detailId in deletedDetailIds)
                         {
-
                             var billDetailByID = _billImportDetailTechnicalRepo.GetByID(detailId);
                             deletedBillDetail.Add(billDetailByID);
 
@@ -407,12 +399,12 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("delete-data")]
         public async Task<IActionResult> PostDeleteDataAsync([FromBody] int id)
         {
             try
             {
-
                 var data = _billImportTechnicalRepo.GetByID(id);
                 if (data.ID <= 0)
                 {
@@ -461,6 +453,5 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

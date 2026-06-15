@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace RERPAPI.Attributes
 {
-    public class ApiKeyAuthorizeAttribute:Attribute
+    public class ApiKeyAuthorizeAttribute : Attribute
     {
         public void OnAuthorization(AuthorizationFilterContext context)
         {

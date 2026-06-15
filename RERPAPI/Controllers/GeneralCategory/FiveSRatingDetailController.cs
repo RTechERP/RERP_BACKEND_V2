@@ -1,14 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NPOI.HSSF.Record.Chart;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Linq;
 
 namespace RERPAPI.Controllers.GeneralCategory
 {
@@ -24,8 +19,8 @@ namespace RERPAPI.Controllers.GeneralCategory
         private readonly FiveSErrorRepo _errorRepo;
 
         public FiveSRatingDetailController(
-            FiveSRatingDetailRepo fiveSRatingDetailRepo, 
-            CurrentUser currentUser, 
+            FiveSRatingDetailRepo fiveSRatingDetailRepo,
+            CurrentUser currentUser,
             FiveSBonusMinusRepo fiveSBonusMinusRepo,
             FiveSDepartmentRepo departmentRepo,
             FiveSRatingTicketRepo ticketRepo,
@@ -161,6 +156,7 @@ namespace RERPAPI.Controllers.GeneralCategory
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-minus-points")]
         [Authorize]
         public IActionResult GetMinusPoints(int ticketId = 0, int departmentId = 0)
@@ -188,6 +184,7 @@ namespace RERPAPI.Controllers.GeneralCategory
             public int FiveSRatingTicketID { get; set; }
             public int FiveSErrorID { get; set; }
         }
+
         [Authorize]
         [HttpPost("save-minus-point")]
         public async Task<IActionResult> SaveMinusPoint([FromBody] SaveMinusPointRequest items)

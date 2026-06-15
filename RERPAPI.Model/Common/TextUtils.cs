@@ -1,17 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
+﻿using System.Globalization;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Model.Common
 {
     public static class TextUtils
     {
-
-        public static DateTime MinDate { get
+        public static DateTime MinDate
+        {
+            get
             {
                 return new DateTime(1900, 1, 1, 0, 0, 0);
             }
@@ -62,6 +58,7 @@ namespace RERPAPI.Model.Common
                 return 0;
             }
         }
+
         public static float ToFloat(object x)
         {
             try
@@ -73,6 +70,7 @@ namespace RERPAPI.Model.Common
                 return 0;
             }
         }
+
         /// <summary>
         /// Chuyển giá trị sang kiểu long
         /// </summary>
@@ -210,6 +208,4 @@ namespace RERPAPI.Model.Common
             return date.Date;
         }
     }
-
 }
-

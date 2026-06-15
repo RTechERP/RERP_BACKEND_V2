@@ -13,17 +13,19 @@ namespace RERPAPI.Controllers.Old
     public class EmployeeContractTypeController : ControllerBase
     {
         private EmployeeContractTypeRepo _employeeContractTypeRepo;
+
         public EmployeeContractTypeController(EmployeeContractTypeRepo employeeContractTypeRepo)
         {
             _employeeContractTypeRepo = employeeContractTypeRepo;
         }
+
         [HttpGet]
         [RequiresPermission("N1,N2,N60")]
         public IActionResult GetAll()
         {
             try
             {
-                var employeeContractTypes = _employeeContractTypeRepo.GetAll(x=> x.IsDeleted != true);
+                var employeeContractTypes = _employeeContractTypeRepo.GetAll(x => x.IsDeleted != true);
                 return Ok(new
                 {
                     status = 1,
@@ -71,16 +73,15 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                
                 List<EmployeeLoaiHDLD> employeeContractTypes = _employeeContractTypeRepo.GetAll();
                 if (employeeContractTypes.Any(x => (x.Name == employeeContractType.Name || x.Code == employeeContractType.Code) && x.ID != employeeContractType.ID))
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Tên hoặc mã loại hợp đồng đã tồn tại"));
                 }
 
-                if(String.IsNullOrWhiteSpace(employeeContractType.Name) || String.IsNullOrWhiteSpace(employeeContractType.Code))
+                if (String.IsNullOrWhiteSpace(employeeContractType.Name) || String.IsNullOrWhiteSpace(employeeContractType.Code))
                 {
-                    return BadRequest(ApiResponseFactory.Fail(null,"Không được để trống mã hoặc tên hợp đồng !"));
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không được để trống mã hoặc tên hợp đồng !"));
                 }
 
                 employeeContractType.Code = employeeContractType.Code.Trim();
@@ -103,6 +104,5 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

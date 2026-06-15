@@ -1,11 +1,7 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
@@ -26,7 +22,7 @@ namespace RERPAPI.Repo.GenericEntity
                     new SqlParameter("@MonthValue", (object)monthValue ?? DBNull.Value),
                     new SqlParameter("@Keyword", (object)keyword ?? DBNull.Value)
                 };
-                
+
                 return await table.FromSqlRaw(sql, parameters).ToListAsync();
             }
             catch (Exception ex)

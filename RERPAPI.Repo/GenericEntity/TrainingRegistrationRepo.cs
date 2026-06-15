@@ -35,6 +35,5 @@ namespace RERPAPI.Repo.GenericEntity
             //string newCode = $"{fullPrefix}.{newNumber:D3}";
             return "newCode";
         }
-
     }
 }

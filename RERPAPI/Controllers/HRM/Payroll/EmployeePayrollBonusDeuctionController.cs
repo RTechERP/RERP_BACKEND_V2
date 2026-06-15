@@ -10,16 +10,17 @@ namespace RERPAPI.Controllers.Old
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    
     public class EmployeePayrollBonusDeuctionController : Controller
     {
-        EmployeePayrollBonusDeuctionRepo _employeePayrollBonusDeuctionRepo;
-        EmployeeRepo _employeeRepo;
+        private EmployeePayrollBonusDeuctionRepo _employeePayrollBonusDeuctionRepo;
+        private EmployeeRepo _employeeRepo;
+
         public EmployeePayrollBonusDeuctionController(EmployeePayrollBonusDeuctionRepo employeePayrollBonusDeuctionRepo, EmployeeRepo employeeRepo)
         {
             _employeePayrollBonusDeuctionRepo = employeePayrollBonusDeuctionRepo;
             _employeeRepo = employeeRepo;
         }
+
         [HttpGet("employee-payroll-bonus-deduction")]
         [RequiresPermission("N2,N1")]
         public async Task<IActionResult> getemployeepayrollbonusdeduction(int? year, int? month, int page, int size, int departmentID, int employeeID, string? keyword)
@@ -30,7 +31,6 @@ namespace RERPAPI.Controllers.Old
                     new string[] { "@Year", "@Month", "@PageNumber", "@PageSize", "@DepartmentID", "@EmployeeID", "@Keyword" },
                     new object[] { year, month, page, size, departmentID, employeeID, keyword ?? "" });
                 var arrTotalPage = SQLHelper<object>.GetListData(data, 1);
-
 
                 var result = new
                 {
@@ -178,11 +178,8 @@ namespace RERPAPI.Controllers.Old
             }
             catch (Exception ex)
             {
-
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
-
     }
 }

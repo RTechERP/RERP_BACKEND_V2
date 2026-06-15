@@ -1,18 +1,10 @@
 ﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
     public class EmployeeRepo : GenericRepo<Employee>
     {
-
         public EmployeeRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
@@ -22,7 +14,7 @@ namespace RERPAPI.Repo.GenericEntity
             message = "";
             bool exits = GetAll()
                 .Any(x => x.Code.Trim().ToLower() == item.Code.Trim().ToLower()
-                    && x.ID != item.ID&&x.Status!=1);
+                    && x.ID != item.ID && x.Status != 1);
             if (exits)
             {
                 message = "Mã nhân viên này đã được sử dụng!";
@@ -76,7 +68,6 @@ namespace RERPAPI.Repo.GenericEntity
                 message = "Vui lòng chọn Đơn vị bảo hiểm xã hội!";
                 return false;
             }
-
 
             // ===== 8. Validate Ngày sinh =====
             if (!item.BirthOfDate.HasValue)
@@ -136,6 +127,5 @@ namespace RERPAPI.Repo.GenericEntity
 
             return true;
         }
-
     }
 }

@@ -1,25 +1,21 @@
-﻿using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
+﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.JobRequirements
 {
     public class JobRequirementApprovedRepo : GenericRepo<JobRequirementApproved>
     {
-        DepartmentRepo _departmentRepo;
-        CurrentUser _currentUser;
-        EmployeeApproveRepo _employeeApproveRepo;
+        private DepartmentRepo _departmentRepo;
+        private CurrentUser _currentUser;
+        private EmployeeApproveRepo _employeeApproveRepo;
+
         public JobRequirementApprovedRepo(CurrentUser currentUser, DepartmentRepo departmentRepo, EmployeeApproveRepo employeeApproveRepo) : base(currentUser)
         {
             _departmentRepo = departmentRepo;
             _currentUser = currentUser;
             _employeeApproveRepo = employeeApproveRepo;
         }
+
         public async Task CreateJobRequirementApproved(int approvedTBPID, JobRequirement model)
         {
             string _typeHanhChinh = "2,3,4,5,6,7";
@@ -65,7 +61,5 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.JobRequirements
             }
             //return null;
         }
-      
-
     }
 }

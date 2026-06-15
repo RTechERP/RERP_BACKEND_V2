@@ -17,7 +17,6 @@ namespace RERPAPI.Repo
         //    table = db.Set<T>();
         //}
 
-
         public GenericCourseRepo(CurrentUser currentUser)
         {
             db = new RTCCourseDbContext();
@@ -97,11 +96,8 @@ namespace RERPAPI.Repo
             }
         }
 
-
-
         public int Update(T item)
         {
-
             try
             {
                 var fieldValues = new Dictionary<string, object>();
@@ -165,7 +161,6 @@ namespace RERPAPI.Repo
             }
         }
 
-
         public int Delete(int id)
         {
             try
@@ -195,7 +190,6 @@ namespace RERPAPI.Repo
 
         //public async Task<int> UpdateAsync(T item)
         //{
-
         //    try
         //    {
         //        //var claims = _userPermissionService.GetClaims();
@@ -491,6 +485,7 @@ namespace RERPAPI.Repo
                 throw new Exception(ex.ToString());
             }
         }
+
         public async Task<int> DeleteByAttributeAsync(string propertyName, object value)
         {
             try
@@ -536,6 +531,7 @@ namespace RERPAPI.Repo
                 throw new Exception($"Error deleting by attribute: {ex.Message}", ex);
             }
         }
+
         public async Task<int> UpdateRangeAsync<TValue>(Expression<Func<T, bool>> predicate, Dictionary<Expression<Func<T, object>>, TValue> updatedFields)
         {
             try
@@ -571,7 +567,6 @@ namespace RERPAPI.Repo
                 throw new Exception($"Error updating entities by attribute: {ex.Message}", ex);
             }
         }
-
 
         public int UpdateFieldByAttribute<TValue>(Expression<Func<T, bool>> predicate, Dictionary<Expression<Func<T, object>>, TValue> updatedFields)
         {
@@ -628,6 +623,7 @@ namespace RERPAPI.Repo
                 throw new Exception($"Error updating fields: {ex.Message}", ex);
             }
         }
+
         public async Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate)
         {
             return await table.AnyAsync(predicate);

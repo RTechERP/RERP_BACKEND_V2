@@ -1,7 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
-using RERPAPI.Model.Common;
+﻿using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
-using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Middleware
 {
@@ -42,54 +40,55 @@ namespace RERPAPI.Middleware
                 throw new Exception(ex.Message);
             }
         }
-		public static async Task<APIResponse> UploadFileHoldName(IFormFile file, string path, string newFileName = "")
-		{
-			try
-			{
-				// Tạo thư mục nếu chưa tồn tại
-				if (!Directory.Exists(path))
-				{
-					Directory.CreateDirectory(path);
-				}
 
-				if (file.Length > 0)
-				{
-					string fileExtension = Path.GetExtension(file.FileName);
-					string originalFileName = Path.GetFileNameWithoutExtension(file.FileName);
+        public static async Task<APIResponse> UploadFileHoldName(IFormFile file, string path, string newFileName = "")
+        {
+            try
+            {
+                // Tạo thư mục nếu chưa tồn tại
+                if (!Directory.Exists(path))
+                {
+                    Directory.CreateDirectory(path);
+                }
 
-					// Nếu có newFileName thì dùng, không thì dùng tên gốc
-					string baseFileName = !string.IsNullOrWhiteSpace(newFileName)
-						? Path.GetFileNameWithoutExtension(newFileName)
-						: originalFileName;
+                if (file.Length > 0)
+                {
+                    string fileExtension = Path.GetExtension(file.FileName);
+                    string originalFileName = Path.GetFileNameWithoutExtension(file.FileName);
 
-					string finalFileName = baseFileName + fileExtension;
-					string fullPath = Path.Combine(path, finalFileName);
+                    // Nếu có newFileName thì dùng, không thì dùng tên gốc
+                    string baseFileName = !string.IsNullOrWhiteSpace(newFileName)
+                        ? Path.GetFileNameWithoutExtension(newFileName)
+                        : originalFileName;
 
-					int count = 1;
+                    string finalFileName = baseFileName + fileExtension;
+                    string fullPath = Path.Combine(path, finalFileName);
 
-					// Nếu file đã tồn tại thì thêm (1), (2), ...
-					while (File.Exists(fullPath))
-					{
-						finalFileName = $"{baseFileName} ({count}){fileExtension}";
-						fullPath = Path.Combine(path, finalFileName);
-						count++;
-					}
+                    int count = 1;
 
-					// Lưu file
-					using (var stream = new FileStream(fullPath, FileMode.Create))
-					{
-						await file.CopyToAsync(stream);
-					}
+                    // Nếu file đã tồn tại thì thêm (1), (2), ...
+                    while (File.Exists(fullPath))
+                    {
+                        finalFileName = $"{baseFileName} ({count}){fileExtension}";
+                        fullPath = Path.Combine(path, finalFileName);
+                        count++;
+                    }
 
-					return ApiResponseFactory.Success(finalFileName, "Upload thành công!");
-				}
+                    // Lưu file
+                    using (var stream = new FileStream(fullPath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
 
-				return ApiResponseFactory.Fail(null, "");
-			}
-			catch (Exception ex)
-			{
-				throw new Exception(ex.Message);
-			}
-		}
-	}
+                    return ApiResponseFactory.Success(finalFileName, "Upload thành công!");
+                }
+
+                return ApiResponseFactory.Fail(null, "");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+    }
 }

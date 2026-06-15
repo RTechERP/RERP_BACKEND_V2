@@ -1,26 +1,20 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json.Linq;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System.Threading.Tasks;
-using ZXing;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.Old
 {
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    
     public class ProjectTypeAssignController : ControllerBase
     {
-        ProjectTypeAssignRepo _projectTypeAssignRepo;
-        EmployeeRepo _employeeRepo;
+        private ProjectTypeAssignRepo _projectTypeAssignRepo;
+        private EmployeeRepo _employeeRepo;
 
         public ProjectTypeAssignController(
             ProjectTypeAssignRepo projectTypeAssignRepo,
@@ -29,7 +23,6 @@ namespace RERPAPI.Controllers.Old
         {
             _projectTypeAssignRepo = projectTypeAssignRepo;
             _employeeRepo = employeeRepo;
-
         }
 
         [HttpGet("project-type")]
@@ -81,7 +74,6 @@ namespace RERPAPI.Controllers.Old
                                                 new string[] { "@Status", "@DepartmentID", "@Keyword" },
                                                 new object[] { status, departmentId, keyword ?? "" });
 
-
                 return Ok(ApiResponseFactory.Success(employees, ""));
             }
             catch (Exception ex)
@@ -89,7 +81,6 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         [HttpPost("add-employee")]
         [RequiresPermission("N33,N1")]
@@ -149,7 +140,5 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-
     }
 }

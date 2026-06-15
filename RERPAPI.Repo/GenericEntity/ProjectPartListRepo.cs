@@ -15,8 +15,19 @@ namespace RERPAPI.Repo.GenericEntity
         private readonly ProjectPartlistVersionRepo _versionRepo;
         private readonly UnitCountRepo _unitCountRepo;
         private readonly ProjectTypeRepo _projectTypeRepo;
+        private readonly ProjectPartlistPurchaseRequestLogRepo _PPPRLogRepo;
+        private readonly CurrentUser _currentUser;
 
-        public ProjectPartListRepo(CurrentUser currentUser, ProjectPartlistPriceRequestRepo projectPartlistPriceRequestRepo, ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo, ProductSaleRepo productSaleRepo, ProjectPartlistVersionRepo projectPartlistVersionRepo, UnitCountRepo unitCountRepo, ProjectTypeRepo projectTypeRepo) : base(currentUser)
+        public ProjectPartListRepo(
+            CurrentUser currentUser,
+            ProjectPartlistPriceRequestRepo projectPartlistPriceRequestRepo,
+            ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo,
+            ProductSaleRepo productSaleRepo,
+            ProjectPartlistVersionRepo projectPartlistVersionRepo,
+            UnitCountRepo unitCountRepo,
+            ProjectTypeRepo projectTypeRepo,
+            ProjectPartlistPurchaseRequestLogRepo pPPRLogRepo
+            ) : base(currentUser)
         {
             _priceRepo = projectPartlistPriceRequestRepo;
             _purchaseRepo = projectPartlistPurchaseRequestRepo;
@@ -24,6 +35,8 @@ namespace RERPAPI.Repo.GenericEntity
             _versionRepo = projectPartlistVersionRepo;
             _unitCountRepo = unitCountRepo;
             _projectTypeRepo = projectTypeRepo;
+            _PPPRLogRepo = pPPRLogRepo;
+            _currentUser = currentUser;
         }
 
         public int getSTT(int projectVersionID)
@@ -32,6 +45,7 @@ namespace RERPAPI.Repo.GenericEntity
             int stt = listPartList.Count <= 0 ? 1 : listPartList.Max(a => a.STT ?? 0) + 1;
             return stt;
         }
+
         public int GetParentIdImport(string tt, int versionID, bool isProblem, int projectTypeID)
         {
             int parentId = 0;
@@ -50,6 +64,7 @@ namespace RERPAPI.Repo.GenericEntity
             }
             return parentId;
         }
+
         public int GetParentID(string tt, int projectTypeId, int versionId)
         {
             if (string.IsNullOrWhiteSpace(tt))
@@ -84,6 +99,7 @@ namespace RERPAPI.Repo.GenericEntity
 
             return 0;
         }
+
         public bool Validate(ProjectPartList item, out string message)
         {
             message = string.Empty;
@@ -178,7 +194,6 @@ namespace RERPAPI.Repo.GenericEntity
             //    }
             //}
 
-
             string pattern = @"^[^àáảãạâầấẩẫậăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵÀÁẢÃẠÂẦẤẨẪẬĂẰẮẲẴẶÈÉẺẼẸÊỀẾỂỄỆÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴ]+$";
             Regex regex = new Regex(pattern);
             if (item.ProjectID <= 0)
@@ -211,7 +226,6 @@ namespace RERPAPI.Repo.GenericEntity
                     message = $"TT [{item.TT}] là mục phát sinh đã tồn tại .\nVui lòng kiểm tra lại!";
                     return false;
                 }
-
             }
             if (!string.IsNullOrWhiteSpace(item.SpecialCode))
             {
@@ -254,7 +268,6 @@ namespace RERPAPI.Repo.GenericEntity
 
             //if (productSale.ID > 0 && productSale.IsFix==true)
             //{
-
             //}
             //đã tách riêng logic này
             /*   var productSale = _productSaleRepo.GetAll(x => x.IsDeleted != true && x.ProductCode == item.ProductCode).FirstOrDefault();
@@ -282,6 +295,159 @@ namespace RERPAPI.Repo.GenericEntity
                }*/
             return true;
         }
+
+        public bool Validates(List<ProjectPartList> projectPartLists, out string message)
+        {
+            var errors = new List<string>();
+
+            string pattern = @"^[^àáảãạâầấẩẫậăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵÀÁẢÃẠÂẦẤẨẪẬĂẰẮẲẴẶÈÉẺẼẸÊỀẾỂỄỆÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴ]+$";
+            Regex regex = new Regex(pattern);
+
+            var duplicateTTs = new HashSet<string>();
+            var duplicateProblemTTs = new HashSet<string>();
+            var duplicateSpecialCodes = new HashSet<string>();
+
+            foreach (var item in projectPartLists)
+            {
+                #region Validate cơ bản
+
+                if (item.ProjectID <= 0)
+                    errors.Add("Vui lòng nhập Dự án!");
+
+                if (item.ProjectPartListVersionID <= 0)
+                    errors.Add("Vui lòng nhập Phiên bản!");
+
+                #endregion Validate cơ bản
+
+                #region Validate TT
+
+                var tt = (item.TT ?? "").Trim();
+
+                if (string.IsNullOrWhiteSpace(tt))
+                {
+                    errors.Add("Vui lòng nhập TT!");
+                }
+                else
+                {
+                    // Check TT thường
+                    var existsTT = GetAll(x =>
+                        x.ProjectPartListVersionID == item.ProjectPartListVersionID
+                        && (x.TT ?? "").Trim() == tt
+                        && x.ID != item.ID
+                        && x.IsDeleted != true
+                        && x.IsProblem != true);
+
+                    if (existsTT.Count > 0 && item.IsProblem == false)
+                    {
+                        duplicateTTs.Add(tt);
+                    }
+
+                    // Check TT phát sinh
+                    var existsProblemTT = GetAll(x =>
+                        x.ProjectPartListVersionID == item.ProjectPartListVersionID
+                        && (x.TT ?? "").Trim() == tt
+                        && x.ID != item.ID
+                        && x.IsDeleted != true
+                        && x.IsProblem == true);
+
+                    if (existsProblemTT.Count > 0 && item.IsProblem == false)
+                    {
+                        duplicateProblemTTs.Add(tt);
+                    }
+                }
+
+                #endregion Validate TT
+
+                #region Validate SpecialCode
+
+                if (!string.IsNullOrWhiteSpace(item.SpecialCode))
+                {
+                    var specialCode = GetAll(x =>
+                        x.SpecialCode == item.SpecialCode
+                        && x.ID != item.ID
+                        && x.IsDeleted != true);
+
+                    if (specialCode.Count > 0)
+                    {
+                        duplicateSpecialCodes.Add(item.SpecialCode);
+                    }
+                }
+
+                #endregion Validate SpecialCode
+
+                #region Validate thông tin thiết bị
+
+                var listChilds = GetAll(x =>
+                    x.IsDeleted != true
+                    && x.ParentID == item.ParentID);
+
+                // FIX: Count < 0 => sai
+                if (listChilds.Count == 0)
+                {
+                    if (string.IsNullOrWhiteSpace((item.ProductCode ?? "").Trim()))
+                    {
+                        errors.Add($"TT [{tt}] chưa nhập Mã thiết bị!");
+                    }
+                    else
+                    {
+                        bool isCheck = regex.IsMatch((item.ProductCode ?? "").Trim());
+
+                        if (!isCheck)
+                        {
+                            errors.Add($"TT [{tt}] - Mã thiết bị chứa ký tự tiếng Việt!");
+                        }
+                    }
+
+                    if (string.IsNullOrWhiteSpace((item.GroupMaterial ?? "").Trim()))
+                    {
+                        errors.Add($"TT [{tt}] chưa nhập Tên thiết bị!");
+                    }
+
+                    if (item.IsProblem == true &&
+                        string.IsNullOrWhiteSpace((item.ReasonProblem ?? "").Trim()))
+                    {
+                        errors.Add($"TT [{tt}] chưa nhập Lý do phát sinh!");
+                    }
+                }
+
+                #endregion Validate thông tin thiết bị
+            }
+
+            #region Gom lỗi duplicate
+
+            if (duplicateTTs.Any())
+            {
+                errors.Add(
+                    $"Các TT đã tồn tại: {string.Join(", ", duplicateTTs.Select(x => $"[{x}]"))}");
+            }
+
+            if (duplicateProblemTTs.Any())
+            {
+                errors.Add(
+                    $"Các TT phát sinh đã tồn tại: {string.Join(", ", duplicateProblemTTs.Select(x => $"[{x}]"))}");
+            }
+
+            if (duplicateSpecialCodes.Any())
+            {
+                errors.Add(
+                    $"Các mã đặc biệt đã tồn tại: {string.Join(", ", duplicateSpecialCodes.Select(x => $"[{x}]"))}");
+            }
+
+            #endregion Gom lỗi duplicate
+
+            // Distinct để tránh trùng message
+            errors = errors.Distinct().ToList();
+
+            if (errors.Any())
+            {
+                message = string.Join(Environment.NewLine, errors);
+                return false;
+            }
+
+            message = string.Empty;
+            return true;
+        }
+
         public bool ValidateUpdate(ProjectPartList item, out string message)
         {
             message = string.Empty;
@@ -376,7 +542,6 @@ namespace RERPAPI.Repo.GenericEntity
             //    }
             //}
 
-
             string pattern = @"^[^àáảãạâầấẩẫậăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵÀÁẢÃẠÂẦẤẨẪẬĂẰẮẲẴẶÈÉẺẼẸÊỀẾỂỄỆÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴ]+$";
             Regex regex = new Regex(pattern);
             if (item.ProjectID <= 0)
@@ -409,7 +574,6 @@ namespace RERPAPI.Repo.GenericEntity
                     message = $"TT [{item.TT}] là mục phát sinh đã tồn tại .\nVui lòng kiểm tra lại!";
                     return false;
                 }
-
             }
             if (!string.IsNullOrWhiteSpace(item.SpecialCode))
             {
@@ -450,6 +614,7 @@ namespace RERPAPI.Repo.GenericEntity
             }
             return true;
         }
+
         public bool ValidateApproveTBP(ProjectPartList partlist, bool isApproved, out string message)
         {
             message = string.Empty;
@@ -520,6 +685,7 @@ namespace RERPAPI.Repo.GenericEntity
              }*/
             return true;
         }
+
         public bool ValidateProduct(ProjectPartList partlist, out string message, bool isFix)
         {
             message = string.Empty;
@@ -589,8 +755,6 @@ namespace RERPAPI.Repo.GenericEntity
                 }
             }
 
-
-
             return true;
         }
 
@@ -609,6 +773,7 @@ namespace RERPAPI.Repo.GenericEntity
             // 2. Chuyển về chữ thường và cắt bỏ khoảng trắng thừa.
             return normalized.ToLower().Trim();
         }
+
         //private string Normalize(string value)
         //{
         //    value = (value ?? "").Trim().ToLower();
@@ -654,6 +819,7 @@ namespace RERPAPI.Repo.GenericEntity
             }
             return true;
         }
+
         //validate khi yêu cầu báo giá hoặc yêu cầu mua hàng
         public bool CheckValidate(ProjectPartList item, out string message)
         {
@@ -685,7 +851,8 @@ namespace RERPAPI.Repo.GenericEntity
             }
             return true;
         }
-        //y/c mua 
+
+        //y/c mua
         public async void UpdatePurchaseRequest(List<ProjectPartList> listPartlists, int employeeIDCurrent)
         {
             foreach (var item in listPartlists)
@@ -719,169 +886,26 @@ namespace RERPAPI.Repo.GenericEntity
                 if (request.ID <= 0)
                 {
                     await _purchaseRepo.CreateAsync(request);
+                    await _PPPRLogRepo.AddLog(item.ID, $"{_currentUser.FullName} đã thêm mới yêu cầu mua hàng.", "Thêm mới");
                 }
                 else
                 {
                     if (request.StatusRequest > 2) continue;
                     if (requests.Count > 0) { }
+
+                    var oldRequest = _purchaseRepo.GetByID(request.ID);
+                    if (oldRequest != null)
+                    {
+                        await _PPPRLogRepo.updateLog(oldRequest, request);
+                    }
+
                     await _purchaseRepo.UpdateAsync(request);
                 }
             }
         }
 
-        public bool Validates(List<ProjectPartList> projectPartLists, out string message)
-        {
-            var errors = new List<string>();
-
-            string pattern = @"^[^àáảãạâầấẩẫậăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵÀÁẢÃẠÂẦẤẨẪẬĂẰẮẲẴẶÈÉẺẼẸÊỀẾỂỄỆÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴ]+$";
-            Regex regex = new Regex(pattern);
-
-            var duplicateTTs = new HashSet<string>();
-            var duplicateProblemTTs = new HashSet<string>();
-            var duplicateSpecialCodes = new HashSet<string>();
-
-            foreach (var item in projectPartLists)
-            {
-                #region Validate cơ bản
-
-                if (item.ProjectID <= 0)
-                    errors.Add("Vui lòng nhập Dự án!");
-
-                if (item.ProjectPartListVersionID <= 0)
-                    errors.Add("Vui lòng nhập Phiên bản!");
-
-                #endregion
-
-                #region Validate TT
-
-                var tt = (item.TT ?? "").Trim();
-
-                if (string.IsNullOrWhiteSpace(tt))
-                {
-                    errors.Add("Vui lòng nhập TT!");
-                }
-                else
-                {
-                    // Check TT thường
-                    var existsTT = GetAll(x =>
-                        x.ProjectPartListVersionID == item.ProjectPartListVersionID
-                        && (x.TT ?? "").Trim() == tt
-                        && x.ID != item.ID
-                        && x.IsDeleted != true
-                        && x.IsProblem != true);
-
-                    if (existsTT.Count > 0 && item.IsProblem == false)
-                    {
-                        duplicateTTs.Add(tt);
-                    }
-
-                    // Check TT phát sinh
-                    var existsProblemTT = GetAll(x =>
-                        x.ProjectPartListVersionID == item.ProjectPartListVersionID
-                        && (x.TT ?? "").Trim() == tt
-                        && x.ID != item.ID
-                        && x.IsDeleted != true
-                        && x.IsProblem == true);
-
-                    if (existsProblemTT.Count > 0 && item.IsProblem == false)
-                    {
-                        duplicateProblemTTs.Add(tt);
-                    }
-                }
-
-                #endregion
-
-                #region Validate SpecialCode
-
-                if (!string.IsNullOrWhiteSpace(item.SpecialCode))
-                {
-                    var specialCode = GetAll(x =>
-                        x.SpecialCode == item.SpecialCode
-                        && x.ID != item.ID
-                        && x.IsDeleted != true);
-
-                    if (specialCode.Count > 0)
-                    {
-                        duplicateSpecialCodes.Add(item.SpecialCode);
-                    }
-                }
-
-                #endregion
-
-                #region Validate thông tin thiết bị
-
-                var listChilds = GetAll(x =>
-                    x.IsDeleted != true
-                    && x.ParentID == item.ParentID);
-
-                // FIX: Count < 0 => sai
-                if (listChilds.Count == 0)
-                {
-                    if (string.IsNullOrWhiteSpace((item.ProductCode ?? "").Trim()))
-                    {
-                        errors.Add($"TT [{tt}] chưa nhập Mã thiết bị!");
-                    }
-                    else
-                    {
-                        bool isCheck = regex.IsMatch((item.ProductCode ?? "").Trim());
-
-                        if (!isCheck)
-                        {
-                            errors.Add($"TT [{tt}] - Mã thiết bị chứa ký tự tiếng Việt!");
-                        }
-                    }
-
-                    if (string.IsNullOrWhiteSpace((item.GroupMaterial ?? "").Trim()))
-                    {
-                        errors.Add($"TT [{tt}] chưa nhập Tên thiết bị!");
-                    }
-
-                    if (item.IsProblem == true &&
-                        string.IsNullOrWhiteSpace((item.ReasonProblem ?? "").Trim()))
-                    {
-                        errors.Add($"TT [{tt}] chưa nhập Lý do phát sinh!");
-                    }
-                }
-
-                #endregion
-            }
-
-            #region Gom lỗi duplicate
-
-            if (duplicateTTs.Any())
-            {
-                errors.Add(
-                    $"Các TT đã tồn tại: {string.Join(", ", duplicateTTs.Select(x => $"[{x}]"))}");
-            }
-
-            if (duplicateProblemTTs.Any())
-            {
-                errors.Add(
-                    $"Các TT phát sinh đã tồn tại: {string.Join(", ", duplicateProblemTTs.Select(x => $"[{x}]"))}");
-            }
-
-            if (duplicateSpecialCodes.Any())
-            {
-                errors.Add(
-                    $"Các mã đặc biệt đã tồn tại: {string.Join(", ", duplicateSpecialCodes.Select(x => $"[{x}]"))}");
-            }
-
-            #endregion
-
-            // Distinct để tránh trùng message
-            errors = errors.Distinct().ToList();
-
-            if (errors.Any())
-            {
-                message = string.Join(Environment.NewLine, errors);
-                return false;
-            }
-
-            message = string.Empty;
-            return true;
-        }
-
         #region validate import excel
+
         public bool ValidateImportExcel(PartlistImportRequestDTO request, out string message)
         {
             message = string.Empty;
@@ -1084,7 +1108,9 @@ namespace RERPAPI.Repo.GenericEntity
 
             return true;
         }
-        #endregion
+
+        #endregion validate import excel
+
         public class PartlistValidateResult
         {
             public bool IsValid { get; set; }
@@ -1092,9 +1118,9 @@ namespace RERPAPI.Repo.GenericEntity
 
             // Chuyển dtError → List<PartlistDiffDto>
             public List<PartlistDiffDTO> Diffs { get; set; } = new();
-
         }
-        Regex regex = new Regex(@"^-?[\d\.]+$");
+
+        private Regex regex = new Regex(@"^-?[\d\.]+$");
 
         /// <summary>
         /// Chuyển tiếng Việt sang không dấu (tương đương TextUtils.ConvertUnicode(..., 1))
@@ -1123,6 +1149,7 @@ namespace RERPAPI.Repo.GenericEntity
 
             return result;
         }
+
         public PartlistValidateResult Validate2(PartlistImportRequestDTO request)
         {
             var result = new PartlistValidateResult
@@ -1225,8 +1252,6 @@ namespace RERPAPI.Repo.GenericEntity
                         }
                     }
 
-
-
                     // 5. Check với Stock (IsFix = true)
                     var fixedProduct = _productSaleRepo
                         .GetAll(x => x.ProductCode == productCode && x.IsFix == true && x.IsDeleted == false)
@@ -1283,6 +1308,7 @@ namespace RERPAPI.Repo.GenericEntity
             res.Message = msg;
             return res;
         }
+
         public bool Validate1(PartlistImportRequestDTO request, out string message)
         {
             message = string.Empty;
@@ -1314,6 +1340,7 @@ namespace RERPAPI.Repo.GenericEntity
             }
             return true;
         }
+
         public bool ValidateFixProduct(ProjectPartList item, out string message)
         {
             message = string.Empty;
@@ -1362,6 +1389,7 @@ namespace RERPAPI.Repo.GenericEntity
 
             return true;
         }
+
         public bool ValidateIsFix(ProjectPartlistDTO request, out string message)
         {
             message = string.Empty;
@@ -1369,7 +1397,8 @@ namespace RERPAPI.Repo.GenericEntity
             return true;
         }
 
-        string[] unitNames = new string[] { "m", "mét" };
+        private string[] unitNames = new string[] { "m", "mét" };
+
         public bool ValidateKeep(ProjectPartListExportDTO partList, int wareHouseID, out string productNewCode)
         {
             productNewCode = string.Empty;
@@ -1382,7 +1411,7 @@ namespace RERPAPI.Repo.GenericEntity
             int projectID = partList.ProjectID;
             //int pokhDetailID = 0;
             decimal remainQuantity = partList.RemainQuantity; // số lượng còn lại
-            decimal quantityReturn = partList.QuantityReturn; // số lượng đã về 
+            decimal quantityReturn = partList.QuantityReturn; // số lượng đã về
             decimal qtyFull = partList.QtyFull; // số lượng yêu cầu - sl tổng
 
             if (remainQuantity <= 0) // nếu còn lại = 0 thì không thể xuất
@@ -1396,14 +1425,12 @@ namespace RERPAPI.Repo.GenericEntity
                 return false;
             }
 
-
             decimal totalQty = (quantityReturn >= qtyFull) ? remainQuantity : Math.Min(remainQuantity, quantityReturn);
             int pokhDetailID = 0;
 
             string tt = partList.TT ?? "";
             string productnewCode = partList.ProductNewCode ?? "";
             string projectCode = partList.ProjectCode ?? " ";
-
 
             // Lấy tồn kho theo sp, project, POKH
             var ds = SQLHelper<dynamic>.ProcedureToList("spGetInventoryProjectImportExport",
@@ -1431,6 +1458,7 @@ namespace RERPAPI.Repo.GenericEntity
 
             return true;
         }
+
         public int GetParentIDAdditionalPO(string tt, int versionId, bool isProblem)
         {
             int parentId = 0;
@@ -1450,7 +1478,5 @@ namespace RERPAPI.Repo.GenericEntity
             }
             return parentId;
         }
-
-
     }
 }

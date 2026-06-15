@@ -68,6 +68,7 @@ namespace RERPAPI.Model.Common
 
             return currentUser;
         }
+
         public static HRRecruitmentCandidate GetCurrentCandidate(Dictionary<string, string> claims)
         {
             HRRecruitmentCandidate currentCandidate = new HRRecruitmentCandidate();
@@ -110,7 +111,6 @@ namespace RERPAPI.Model.Common
                         continue;
                     }
 
-                 
                     if (claims.TryGetValue("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name", out var name))
                     {
                         prop.SetValue(currentCandidate, name);

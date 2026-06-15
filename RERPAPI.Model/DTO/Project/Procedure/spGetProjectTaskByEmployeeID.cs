@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.DTO.Project.Procedure
+﻿namespace RERPAPI.Model.DTO.Project.Procedure
 {
     public class spGetProjectTaskByEmployeeID
     {
@@ -16,7 +10,7 @@ namespace RERPAPI.Model.DTO.Project.Procedure
         public string? STT { get; set; }
 
         /// <summary>
-        /// Người phụ trách 
+        /// Người phụ trách
         /// </summary>
         public int? UserID { get; set; }
 
@@ -125,14 +119,11 @@ namespace RERPAPI.Model.DTO.Project.Procedure
         /// </summary>
         public decimal? PercentOverTime { get; set; }
 
-
         public string? ProjectCode { get; set; }
         public string? ProjectName { get; set; }
 
-
         // tên người giao việc
         public string? FullName { get; set; }
-
 
         public string? ParentCode { get; set; }
         public string? ParentTitle { get; set; }
@@ -141,6 +132,7 @@ namespace RERPAPI.Model.DTO.Project.Procedure
 
         // tên người nhận việc hoặc người liên quan
         public string? SecondEmployeeFullName { get; set; }
+
         public int? SecondEmployeeType { get; set; }
         public string? ReviewDiscription { get; set; }
         public string? ProjectTaskTypeName { get; set; }
@@ -150,26 +142,32 @@ namespace RERPAPI.Model.DTO.Project.Procedure
         public string? DepartmentAssigneeName { get; set; }
         public int? AsigneeEmployeeID { get; set; }
         public string? AsigneeEmployeeFullName { get; set; }
+
         /// <summary>
         /// Mã màu
         /// </summary>
         public string? ProjectTaskColor { get; set; }
+
         public decimal? TotalActualHours { get; set; }
 
         /// <summary>
         /// đánh giá mức độ hoàn thành công việc từ 1 -&gt; 5
         /// </summary>
         public int? ReviewCompletionRating { get; set; }
+
         /// <summary>
         /// Điểm danh công việc
         /// </summary>
         public bool? IsCheck { get; set; }
+
         /// <summary>
         /// Thời gian công việc phải hoàn thành
         /// </summary>
         public DateTime? Deadline { get; set; }
+
         public int? ProjectTaskTypeID { get; set; }
         public bool? ApprovalStatus { get; set; }
+
         /// <summary>
         /// Độ ưu tiên dự án 1: Thấp, 2. Trung bình, 3. Cao, 4. Khẩn cấp
         /// </summary>
@@ -179,6 +177,5 @@ namespace RERPAPI.Model.DTO.Project.Procedure
         /// Thời gian dự kiến (h)
         /// </summary>
         public decimal? EstimatedTime { get; set; }
-
     }
 }

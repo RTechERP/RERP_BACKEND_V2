@@ -1,10 +1,4 @@
-﻿using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
 
 namespace RERPAPI.Model.DTO.Project
 {
@@ -14,7 +8,7 @@ namespace RERPAPI.Model.DTO.Project
         public int ID { get; set; }
 
         [JsonPropertyName("project_id")]
-        public int ProjectID { get; set; }  
+        public int ProjectID { get; set; }
 
         [JsonPropertyName("title")]
         public string? Title { get; set; }
@@ -48,7 +42,5 @@ namespace RERPAPI.Model.DTO.Project
 
         [JsonPropertyName("update_at")]
         public DateTime? UpdatedDate { get; set; }
-
     }
-
 }

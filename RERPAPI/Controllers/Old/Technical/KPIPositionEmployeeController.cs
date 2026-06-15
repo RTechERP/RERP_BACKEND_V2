@@ -1,6 +1,4 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -22,6 +20,7 @@ namespace RERPAPI.Controllers.Old.Technical
         private readonly KPIPositionEmployeeRepo _kpiPositionEmployeeRepo;
         private readonly ProjectTypeRepo _projectTypeRepo;
         private readonly KPIPositionTypeRepo _kpiPositionTypeRepo;
+
         public KPIPositionEmployeeController(DepartmentRepo departmentRepo, KPISessionRepo kpiSession, KPIPositionRepo kpiPositionRepo, CurrentUser currentUser, KPIPositionEmployeeRepo kpiPositionEmployeeRepo, ProjectTypeRepo projectTypeRepo, KPIPositionTypeRepo kpiPositionTypeRepo)
         {
             _departmentRepo = departmentRepo;
@@ -56,7 +55,7 @@ namespace RERPAPI.Controllers.Old.Technical
             try
             {
                 var result = SQLHelper<dynamic>.ProcedureToList("spGetEmployeeByKPIPositionID",
-                                new string[] { "@KPIPositionID"},
+                                new string[] { "@KPIPositionID" },
                                 new object[] { positionId });
                 var data = SQLHelper<dynamic>.GetListData(result, 0);
                 return Ok(ApiResponseFactory.Success(data, ""));
@@ -118,7 +117,7 @@ namespace RERPAPI.Controllers.Old.Technical
             try
             {
                 var data = _kpiPositionRepo.GetByID(positionID);
-                data.IsDeleted= true;
+                data.IsDeleted = true;
                 _kpiPositionRepo.Update(data);
                 return Ok(ApiResponseFactory.Success(null, "Xóa vị trí thành công"));
             }
@@ -139,12 +138,12 @@ namespace RERPAPI.Controllers.Old.Technical
                     if (item.DepartmentID != _currentUser.DepartmentID && isAdmin)
                     {
                         return BadRequest(ApiResponseFactory.Fail(null, "Bạn không thể xóa nhân viên của phòng ban khác"));
-                    }     
+                    }
                 }
 
                 foreach (var item in dto)
                 {
-                    if(item.KPIPositionEmployeeID == null || item.KPIPositionEmployeeID <= 0)
+                    if (item.KPIPositionEmployeeID == null || item.KPIPositionEmployeeID <= 0)
                     {
                         return BadRequest(ApiResponseFactory.Fail(null, "KPIPositionEmployeeID không hợp lệ"));
                     }
@@ -162,8 +161,8 @@ namespace RERPAPI.Controllers.Old.Technical
         public async Task<IActionResult> SaveDataPosition([FromBody] KPIPosition model)
         {
             try
-            { 
-                if(string.IsNullOrWhiteSpace(model.PositionCode))
+            {
+                if (string.IsNullOrWhiteSpace(model.PositionCode))
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng nhập mã chức vụ"));
                 }
@@ -171,7 +170,7 @@ namespace RERPAPI.Controllers.Old.Technical
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng nhập tên chức vụ"));
                 }
-                if (model.KPISessionID == null || model.KPISessionID <= 0 )
+                if (model.KPISessionID == null || model.KPISessionID <= 0)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng chọn kỳ đánh giá"));
                 }
@@ -184,7 +183,7 @@ namespace RERPAPI.Controllers.Old.Technical
                 if (listDuplicate.Count > 0)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, $"Mã chức vụ [{model.PositionCode}] đã được sử dụng!"));
-                }    
+                }
 
                 if (model.ID > 0)
                 {
@@ -224,11 +223,11 @@ namespace RERPAPI.Controllers.Old.Technical
         {
             try
             {
-                foreach(int id in model.listDel)
+                foreach (int id in model.listDel)
                 {
                     await _kpiPositionEmployeeRepo.DeleteAsync(id);
-                }    
-                foreach(int id in model.listInsert)
+                }
+                foreach (int id in model.listInsert)
                 {
                     KPIPositionEmployee newModel = new KPIPositionEmployee()
                     {
@@ -236,7 +235,7 @@ namespace RERPAPI.Controllers.Old.Technical
                         EmployeeID = id
                     };
                     await _kpiPositionEmployeeRepo.CreateAsync(newModel);
-                }    
+                }
                 return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
             }
             catch (Exception ex)
@@ -244,7 +243,6 @@ namespace RERPAPI.Controllers.Old.Technical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         //KPIPositionTypeDetail
         [HttpGet("get-project-types")]
@@ -266,7 +264,7 @@ namespace RERPAPI.Controllers.Old.Technical
         {
             try
             {
-                if(model.ID > 0)
+                if (model.ID > 0)
                 {
                     _kpiPositionTypeRepo.Update(model);
                 }
@@ -299,17 +297,17 @@ namespace RERPAPI.Controllers.Old.Technical
                 //Xóa dữ liệu cũ
                 List<KPIPosition> listPositionOld = _kpiPositionRepo.GetAll(x => x.KPISessionID == kpiSessionTo && x.IsDeleted == false);
 
-                foreach(var item in listPositionOld)
+                foreach (var item in listPositionOld)
                 {
                     item.IsDeleted = true;
                     _kpiPositionRepo.Update(item);
 
                     List<KPIPositionEmployee> listPositionEmployeeOld = _kpiPositionEmployeeRepo.GetAll(x => x.KPIPosiotionID == item.ID && x.IsDeleted == false);
-                    foreach(var item2 in listPositionEmployeeOld)
+                    foreach (var item2 in listPositionEmployeeOld)
                     {
                         item2.IsDeleted = true;
                         _kpiPositionEmployeeRepo.Update(item2);
-                    }    
+                    }
                 }
 
                 List<KPIPosition> listData = _kpiPositionRepo.GetAll(x => x.KPISessionID == kpiSessionFrom && x.IsDeleted == false);
@@ -327,9 +325,9 @@ namespace RERPAPI.Controllers.Old.Technical
                 //        {
                 //            itemEm.KPIPosiotionID = newID;
                 //            _kpiPositionEmployeeRepo.Create(itemEm);
-                //        }    
-                //    }    
-                //}    
+                //        }
+                //    }
+                //}
 
                 foreach (var src in listData)
                 {

@@ -4,7 +4,6 @@ using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using static RERPAPI.Controllers.HRM.EmployeeController;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -15,6 +14,7 @@ namespace RERPAPI.Controllers.Old
     {
         private readonly EmployeeOnLeaveMasterRepo _employeeOnLeaveMasterRepo;
         private readonly EmployeeRepo _employeeRepo;
+
         public EmployeeOnLeaveMasterController(EmployeeOnLeaveMasterRepo employeeOnLeaveMasterRepo, EmployeeRepo employeeRepo)
         {
             _employeeOnLeaveMasterRepo = employeeOnLeaveMasterRepo;
@@ -22,7 +22,6 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet]
-        //[RequiresPermission("N2,N1")]
         public IActionResult GetAllEmployeeOnLeaveMaster()
         {
             try
@@ -44,7 +43,6 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-
                 if (employeeOnLeaveMaster.ID <= 0)
                 {
                     var employee = SQLHelper<object>.ProcedureToList("spGetCheckDeclareDayOff", new string[] { "@EmployeeID", "ID", "@Year" },
@@ -56,7 +54,6 @@ namespace RERPAPI.Controllers.Old
                         return Ok(ApiResponseFactory.Success(null, ""));
                     }
                     await _employeeOnLeaveMasterRepo.CreateAsync(employeeOnLeaveMaster);
-
                 }
                 else await _employeeOnLeaveMasterRepo.UpdateAsync(employeeOnLeaveMaster);
 
@@ -68,14 +65,11 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
-
         public class EmployeeOnLeaveMasterCheck
         {
             public int? EmployeeID { get; set; }
             public decimal? YearOnleave { get; set; }
         }
-
-
 
         [HttpPost("check-exist")]
         [RequiresPermission("N2,N1")]
@@ -85,7 +79,6 @@ namespace RERPAPI.Controllers.Old
             {
                 var employeeIDList = check.Select(x => x.EmployeeID).ToList();
                 var yearOnLeaveList = check.Select(x => x.YearOnleave).ToList();
-
 
                 // Kiểm tra trong database
                 var existingDayOff = _employeeOnLeaveMasterRepo.GetAll()
@@ -105,6 +98,5 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

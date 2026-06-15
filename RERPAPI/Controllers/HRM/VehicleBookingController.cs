@@ -1,15 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO.HRM;
-using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.HRM
 {
@@ -22,7 +16,7 @@ namespace RERPAPI.Controllers.HRM
         private readonly EmployeeRepo _employeeRepo;
         private readonly ConfigSystemRepo _configSystemRepo;
         private readonly ProjectRepo _projectRepo;
-        private readonly EmployeeApproveRepo  _employeeApproveRepo;
+        private readonly EmployeeApproveRepo _employeeApproveRepo;
         private readonly VehicleBookingFileRepo _vehicleBookingFileRepo;
         private readonly ProvinceRepo _provinceRepo;
 
@@ -96,8 +90,5 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-        
-
     }
 }

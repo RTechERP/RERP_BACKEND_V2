@@ -7,9 +7,9 @@ namespace RERPAPI.Repo.GenericEntity
     {
         private readonly EmployeeRepo _employeeRepo;
 
-        public EmployeeAttendanceRepo(CurrentUser currentUser,EmployeeRepo employeeRepo) : base(currentUser)
+        public EmployeeAttendanceRepo(CurrentUser currentUser, EmployeeRepo employeeRepo) : base(currentUser)
         {
-            _employeeRepo = employeeRepo;   
+            _employeeRepo = employeeRepo;
         }
 
         /// <summary>
@@ -38,12 +38,14 @@ namespace RERPAPI.Repo.GenericEntity
 
             return count;
         }
+
         public async Task<int> BulkCreateAttendanceAsync(List<EmployeeAttendance> items)
         {
             if (items == null || !items.Any()) return 0;
             await table.AddRangeAsync(items);
             return await db.SaveChangesAsync();
         }
+
         public async Task<int> BulkUpdateAttendanceAsync(List<EmployeeAttendance> items)
         {
             if (items == null || !items.Any()) return 0;

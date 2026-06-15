@@ -1,10 +1,8 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers
 {
@@ -17,11 +15,10 @@ namespace RERPAPI.Controllers
 
         /// <summary>
 
-
         public EmployeePurchaseController(EmployeePurchaseRepo employeePurchaseRepo, TaxCompanyRepo taxCompanyRepo)
         {
             _employeePurchaseRepo = employeePurchaseRepo;
-            _taxCompanyRepo = taxCompanyRepo;   
+            _taxCompanyRepo = taxCompanyRepo;
         }
 
         /// <summary>
@@ -38,7 +35,6 @@ namespace RERPAPI.Controllers
                 var data = SQLHelper<object>.GetListData(employeePurchases, 0);
 
                 return Ok(ApiResponseFactory.Success(data, ""));
-
             }
             catch (Exception ex)
             {
@@ -47,7 +43,6 @@ namespace RERPAPI.Controllers
         }
 
         [HttpGet("employeepurchase/{id}")]
-
         public IActionResult GetByID(int id)
         {
             try
@@ -66,25 +61,21 @@ namespace RERPAPI.Controllers
         {
             try
             {
-            
                 var employees = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
-                                                new string[] { "@Status"},
-                                                new object[] {0 });
+                                                new string[] { "@Status" },
+                                                new object[] { 0 });
 
                 return Ok(new
                 {
                     status = 1,
                     data = employees
                 });
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-
 
         [HttpGet("taxcompanies")]
         public IActionResult GetAll()
@@ -98,9 +89,7 @@ namespace RERPAPI.Controllers
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
-
 
         [HttpPost("savedata")]
         public async Task<IActionResult> SaveData([FromBody] EmployeePurchase employeepurchase)

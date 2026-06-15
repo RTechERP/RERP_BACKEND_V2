@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.Common
+﻿namespace RERPAPI.Model.Common
 {
     public class RoleConfig
     {
@@ -15,5 +9,4 @@ namespace RERPAPI.Model.Common
         public List<int> DepartmentIDs { get; set; } = new();
         public List<int> EmployeeIDSaleApproveDNTTDBs { get; set; } = new();
     }
-
 }

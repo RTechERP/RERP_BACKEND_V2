@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
@@ -14,6 +13,7 @@ namespace RERPAPI.Controllers.Old.Technical
     {
         private readonly KPIErrorFineAmountRepo _kpiErrorFineAmountRepo;
         private readonly KPIErrorRepo _kpiErrorRepo;
+
         public KPIErrorFineAmountController(KPIErrorFineAmountRepo kpiErrorFineAmountRepo, KPIErrorRepo kpiErrorRepo)
         {
             _kpiErrorFineAmountRepo = kpiErrorFineAmountRepo;
@@ -27,11 +27,10 @@ namespace RERPAPI.Controllers.Old.Technical
             {
                 var dataKpiError = SQLHelper<object>.ProcedureToList("spGetKPIError",
                                                 new string[] { "@Keyword", "@TypeID", "@DepartmentID" },
-                                                new object[] { "",0,0 });
+                                                new object[] { "", 0, 0 });
                 var data = SQLHelper<object>.GetListData(dataKpiError, 0);
 
                 return Ok(ApiResponseFactory.Success(data, ""));
-
             }
             catch (Exception ex)
             {
@@ -109,7 +108,5 @@ namespace RERPAPI.Controllers.Old.Technical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-
     }
 }

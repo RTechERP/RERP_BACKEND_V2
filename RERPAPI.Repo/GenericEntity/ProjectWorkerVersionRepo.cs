@@ -5,7 +5,7 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class ProjectWorkerVersionRepo : GenericRepo<ProjectWorkerVersion>
     {
-        ProjectTypeRepo _projectTypeRepo;
+        private ProjectTypeRepo _projectTypeRepo;
 
         public ProjectWorkerVersionRepo(CurrentUser currentUser, ProjectTypeRepo projectTypeRepo) : base(currentUser)
         {
@@ -26,6 +26,7 @@ namespace RERPAPI.Repo.GenericEntity
                 return "V" + nextCode.ToString();
             }
         }
+
         public bool Validate(ProjectWorkerVersion item, out string message)
         {
             message = "";
@@ -97,6 +98,7 @@ namespace RERPAPI.Repo.GenericEntity
             }
             return true;
         }
+
         public bool ValidateApprove(ProjectPartListVersion version, bool isApproved, out string message)
         {
             message = "";

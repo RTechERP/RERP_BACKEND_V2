@@ -1,14 +1,8 @@
-﻿using DocumentFormat.OpenXml.Spreadsheet;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Controllers.CRM;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
-using RERPAPI.Model.DTO.HRM;
-using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.Old.RequestInvoice
 {
@@ -22,6 +16,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
         private readonly RequestInvoiceFileRepo _requestInvoiceFileRepo;
         private readonly POKHFilesRepo _pokhFilesRepo;
         private readonly ConfigSystemRepo _configSystemRepo;
+
         public RequestInvoiceSummaryController(CustomerRepo customerRepo, RequestInvoiceRepo requestInvoiceRepo, RequestInvoiceFileRepo requestInvoiceFileRepo, POKHFilesRepo pokhFilesRepo, ConfigSystemRepo configSystemRepo)
         {
             _customerRepo = customerRepo;
@@ -30,6 +25,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
             _pokhFilesRepo = pokhFilesRepo;
             _configSystemRepo = configSystemRepo;
         }
+
         [HttpGet("get-request-invoice-summary")]
         public IActionResult GetEmployee(DateTime dateStart, DateTime dateEnd, int customerId, int userId, int status, string keyWords = "")
         {
@@ -46,6 +42,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-customer")]
         public IActionResult GetCustomer()
         {
@@ -59,7 +56,6 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         [HttpPost("download-batch-files")]
         public IActionResult DownloadBatchFiles([FromBody] List<RequestInvoiceSummaryFilesDownloadDTO> payload)
@@ -87,7 +83,6 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                 {
                     string companyName = string.IsNullOrEmpty(item.CompanyText) ? "Unknown_Company" : item.CompanyText;
                     string invoiceNum = string.IsNullOrEmpty(item.InvoiceNumber) ? "Unknown_Invoice" : item.InvoiceNumber;
-
 
                     // Format ngày hóa đơn
                     string invoiceDateStr = "";
@@ -163,6 +158,5 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                 return BadRequest(ApiResponseFactory.Fail(null, $"Lỗi tải file hàng loạt: {ex.Message}"));
             }
         }
-
     }
 }

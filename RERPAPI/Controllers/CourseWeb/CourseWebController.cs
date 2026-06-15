@@ -1,20 +1,14 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using NPOI.OpenXmlFormats;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities.RTCCourse;
 using RERPAPI.Model.Param.CourseWeb;
 using RERPAPI.Model.Param.HRM.Course;
 using RERPAPI.Repo.GenericCourseEntity;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.CourseWeb
 {
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize]
     public class CourseWebController : ControllerBase
     {
         private readonly CourseCatalogRepo _courseCatalogRepo;
@@ -34,12 +28,11 @@ namespace RERPAPI.Controllers.CourseWeb
         private readonly RERPAPI.Repo.GenericEntity.ConfigSystemRepo _configSystemOldWebRepo;
         private readonly RERPAPI.Repo.GenericEntity.CourseFilesRepo _courseFileOldWebRepo;
         private readonly RERPAPI.Repo.GenericEntity.CourseExamRepo _courseExamOldWebRepo;
-       
+
         private readonly RERPAPI.Repo.GenericEntity.CourseExamRepo _courseExamOldWdfebRepo;
         private readonly RERPAPI.Repo.GenericEntity.CourseQuestionRepo _courseQuestionOldWebRepo;
         private readonly RERPAPI.Repo.GenericEntity.CourseAnswerRepo _courseAnswersOldWebRepo;
         private readonly RERPAPI.Repo.GenericEntity.CourseRightAnswerRepo _courseRightAnswersOldWebRepo;
-
 
         public CourseWebController(
           CourseCatalogRepo courseCatalogRepo,
@@ -49,7 +42,7 @@ namespace RERPAPI.Controllers.CourseWeb
           CourseFileRepo courseFilesRepo,
             EmployeeRepo employeeRepo,
             CourseCatalogTypeRepo courseCatalogTypeRepo,
-            
+
         CourseAnswersRepo courseAnswersRepo,
         CourseRightAnswersRepo courseRightAnswersRepo,
             CourseQuestionRepo courseQuestionRepo,
@@ -86,12 +79,12 @@ namespace RERPAPI.Controllers.CourseWeb
             _courseRightAnswersOldWebRepo = courseRightAnswersOldWebRepo;
             _courseAnswersRepo = courseAnswersRepo;
         }
+
         [HttpGet("get-course-summary")]
         public IActionResult GetCourseSummary(int? employeeID)
         {
             try
             {
-
                 employeeID = employeeID ?? 0;
 
                 var data = SQLCourseHelper<object>.ProcedureToList("spGetCourseNew",
@@ -126,6 +119,7 @@ namespace RERPAPI.Controllers.CourseWeb
                 return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-stt-course-catalog")]
         public async Task<IActionResult> GetSTTCourseCatalog()
         {
@@ -140,6 +134,7 @@ namespace RERPAPI.Controllers.CourseWeb
                 return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // get stt course
         [HttpGet("get-stt-course")]
         public async Task<IActionResult> GetSTTCourse(int CourseTypeID, int CourseCatalogID)
@@ -155,6 +150,7 @@ namespace RERPAPI.Controllers.CourseWeb
                 return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-stt-lesson")]
         public async Task<IActionResult> GetSTTLesson(int CourseID)
         {
@@ -169,6 +165,7 @@ namespace RERPAPI.Controllers.CourseWeb
                 return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //lấy danh sách khóa học
         [HttpGet("load-data-course")]
         public async Task<IActionResult> LoadDataCourse(int courseCatalogID)
@@ -188,6 +185,7 @@ namespace RERPAPI.Controllers.CourseWeb
                 return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //lấy danh sách bài học
         [HttpGet("load-dataLesson")]
         public async Task<IActionResult> LoadDataLesson(int courseID)
@@ -219,8 +217,6 @@ namespace RERPAPI.Controllers.CourseWeb
                 {
                     return Ok(ApiResponseFactory.Fail(null, "Mã danh mục đã tồn tại! Vui lòng kiểm tra lại."));
                 }
-
-
 
                 if (model.ID <= 0)
                 {
@@ -257,7 +253,8 @@ namespace RERPAPI.Controllers.CourseWeb
                 return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        // lấy danh sách nhân viên cho bảng trong tổng hợp khóa học 
+
+        // lấy danh sách nhân viên cho bảng trong tổng hợp khóa học
         [HttpGet("get-employees")]
         public IActionResult GetEmployee()
         {
@@ -274,6 +271,7 @@ namespace RERPAPI.Controllers.CourseWeb
                 return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-course-catalog-type")]
         public IActionResult GetCatalogType()
         {
@@ -287,6 +285,7 @@ namespace RERPAPI.Controllers.CourseWeb
                 return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-employees-web")]
         public IActionResult GetEmployeeWeb(int? employeeID)
         {
@@ -300,13 +299,9 @@ namespace RERPAPI.Controllers.CourseWeb
                 //var data = _employeeRepo.GetAll(c => c.Status == 0);
                 //if (employeeID !=null && employeeID !=0)
                 //{
-
                 //     data = data.Where(c=>c.ID == employeeID).ToList();
                 //}
                 return Ok(ApiResponseFactory.Success(data0, ""));
-
-
-
             }
             catch (Exception ex)
             {
@@ -370,7 +365,6 @@ namespace RERPAPI.Controllers.CourseWeb
                 }
                 else
                 {
-
                     var courseUpdate = _courseRepo.GetByID(model.ID);
                     courseUpdate.STT = model.STT;
                     courseUpdate.Code = model.Code;
@@ -392,6 +386,7 @@ namespace RERPAPI.Controllers.CourseWeb
                 return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("load-lessons-by-catalog")]
         public IActionResult getLessonsByCatalog(int courseID)
         {
@@ -407,6 +402,7 @@ namespace RERPAPI.Controllers.CourseWeb
                 return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-lesson-by-id")]
         public async Task<IActionResult> getLessonByid(int id)
         {
@@ -420,12 +416,13 @@ namespace RERPAPI.Controllers.CourseWeb
                 return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("get-course-lesson-file-by-lessonid")]
         public IActionResult GetCourseLessonFileByLessonId(int lessonId)
         {
             try
             {
-                var courseLessonFile = _courseFilesRepo.GetAll(x => x.LessonID == lessonId && (!x.IsDeleted ?? true));
+                var courseLessonFile = _courseFilesRepo.GetAll(x => x.LessonID == lessonId && (!x.IsDeleted ?? true) && !string.IsNullOrEmpty(x.NameFile));
 
                 return Ok(ApiResponseFactory.Success(courseLessonFile, "Success"));
             }
@@ -434,6 +431,7 @@ namespace RERPAPI.Controllers.CourseWeb
                 return Ok(ApiResponseFactory.Fail(ex, $"Lỗi GET lesson file by lesonId: {ex.Message}"));
             }
         }
+
         [HttpGet("get-path-server")]
         public async Task<IActionResult> getPathServer(string subPath)
         {
@@ -449,6 +447,7 @@ namespace RERPAPI.Controllers.CourseWeb
                 return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // Thêm sửa xóa bài học
         [HttpPost("save-data-lesson")]
         public async Task<IActionResult> SaveDataLesson([FromBody] SaveCourseLessonParamWeb model)
@@ -492,7 +491,6 @@ namespace RERPAPI.Controllers.CourseWeb
 
                     await _courseLessonRepo.CreateAsync(model.CourseLesson);
 
-
                     if (model.CourseFiles != null && model.CourseFiles.Any())
                     {
                         foreach (var file in model.CourseFiles)
@@ -503,16 +501,13 @@ namespace RERPAPI.Controllers.CourseWeb
                         }
                     }
                 }
-
                 else
                 {
-
                     if (model.CoursePdf != null && model.CoursePdf.NameFile != null)
                     {
                         model.CourseLesson.UrlPDF = pathUpload + subPath + model.CoursePdf.NameFile;
                     }
                     await _courseLessonRepo.UpdateAsync(model.CourseLesson);
-
 
                     if (model.CourseFiles != null && model.CourseFiles.Any())
                     {
@@ -552,6 +547,7 @@ namespace RERPAPI.Controllers.CourseWeb
                 return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-catalog-type")]
         public async Task<IActionResult> getCatalogType()
         {
@@ -565,6 +561,7 @@ namespace RERPAPI.Controllers.CourseWeb
                 return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //[HttpPost("copy-course-catalog")]
         //public async Task<IActionResult> CopyCatalogCourse(CopyCatalogCourseParam model)
         //{
@@ -575,7 +572,6 @@ namespace RERPAPI.Controllers.CourseWeb
         //        List<Course> lstCouseToInsert = new List<Course>();
         //        List<CourseLesson> lstCouseLessonToInsert = new List<CourseLesson>();
         //        List<CourseExam> lstCourseExam = new List<CourseExam>();
-
 
         //        // check exist mã danh mục
         //        var isExistCatalogCode = _courseCatalogRepo.GetAll(c => c.Code.ToLower() == model.Code.Trim().ToLower());
@@ -603,8 +599,7 @@ namespace RERPAPI.Controllers.CourseWeb
         //        }
         //        CourseCatalogInsert = couseCatalogNew;
 
-
-        //        // check is copy khoá học 
+        //        // check is copy khoá học
         //        if (model.CopyCourses)
         //        {
         //            // check danh mục khoá học tồn tại ở web cũ
@@ -680,7 +675,7 @@ namespace RERPAPI.Controllers.CourseWeb
         //                                        LessonID = couseLessonNew.ID,
         //                                        OriginPath = courseFileItem.OriginPath,
         //                                        IsDeleted = courseFileItem.IsDeleted,
-        //                                        ServerPath = FileCourseHelper.CopyFile(courseFileItem.ServerPath, Path.Combine(_configSystemRepo.GetUploadPathByKey("CourseLesson"), "files")) // copy file  
+        //                                        ServerPath = FileCourseHelper.CopyFile(courseFileItem.ServerPath, Path.Combine(_configSystemRepo.GetUploadPathByKey("CourseLesson"), "files")) // copy file
         //                                    });
         //                                }
         //                                await _courseFilesRepo.CreateRangeAsync(lstCourseFile);
@@ -708,7 +703,6 @@ namespace RERPAPI.Controllers.CourseWeb
         //                        }
         //                    }
         //                }
-
 
         //            }
         //        }
@@ -768,7 +762,7 @@ namespace RERPAPI.Controllers.CourseWeb
                     return Ok(ApiResponseFactory.Fail(null, "Mã danh mục đã tồn tại!"));
                 }
 
-                #endregion
+                #endregion Validate input
 
                 #region Check source catalog old web
 
@@ -779,7 +773,7 @@ namespace RERPAPI.Controllers.CourseWeb
                     return Ok(ApiResponseFactory.Fail(null, "Danh mục khóa học nguồn không tồn tại!"));
                 }
 
-                #endregion
+                #endregion Check source catalog old web
 
                 #region Prepare folder
 
@@ -793,7 +787,7 @@ namespace RERPAPI.Controllers.CourseWeb
                 var pdfFolder = Path.Combine(courseLessonRoot, "pdfs");
                 var fileFolder = Path.Combine(courseLessonRoot, "files");
 
-                #endregion
+                #endregion Prepare folder
 
                 #region Create new catalog
 
@@ -821,7 +815,7 @@ namespace RERPAPI.Controllers.CourseWeb
                     return Ok(ApiResponseFactory.Fail(null, "Có lỗi xảy ra khi tạo danh mục khóa học!"));
                 }
 
-                #endregion
+                #endregion Create new catalog
 
                 #region Copy courses
 
@@ -896,7 +890,6 @@ namespace RERPAPI.Controllers.CourseWeb
 
                         foreach (var oldExam in oldCourseExams)
                         {
-
                             var copyExamResult = await CopyExamFullAsync(
                                 oldExam: oldExam,
                                 newCourseId: newCourse.ID,
@@ -913,7 +906,7 @@ namespace RERPAPI.Controllers.CourseWeb
                         }
                     }
 
-                    #endregion
+                    #endregion Copy course-level exams
 
                     #region Copy lessons
 
@@ -923,7 +916,7 @@ namespace RERPAPI.Controllers.CourseWeb
                     }
 
                     var oldLessons = _courseLessonOldWebRepo
-                        .GetAll(l => l.CourseID == oldCourse.ID && l.IsDeleted !=true)
+                        .GetAll(l => l.CourseID == oldCourse.ID && l.IsDeleted != true)
                         .OrderBy(l => l.STT)
                         .ToList();
 
@@ -1009,14 +1002,14 @@ namespace RERPAPI.Controllers.CourseWeb
                             }
                         }
 
-                        #endregion
+                        #endregion Copy lesson files
 
                         #region Copy lesson exams
 
                         if (model.CopyExams)
                         {
                             var oldLessonExams = _courseExamOldWebRepo
-                                .GetAll(e => e.LessonID == oldLesson.ID )
+                                .GetAll(e => e.LessonID == oldLesson.ID)
                                 .ToList();
 
                             foreach (var oldExam in oldLessonExams)
@@ -1037,13 +1030,13 @@ namespace RERPAPI.Controllers.CourseWeb
                             }
                         }
 
-                        #endregion
+                        #endregion Copy lesson exams
                     }
 
-                    #endregion
+                    #endregion Copy lessons
                 }
 
-                #endregion
+                #endregion Copy courses
 
                 return Ok(ApiResponseFactory.Success(new
                 {
@@ -1060,6 +1053,7 @@ namespace RERPAPI.Controllers.CourseWeb
                 return Ok(ApiResponseFactory.Fail(ex, $"Có lỗi xảy ra khi copy danh mục khóa học: {ex.Message}"));
             }
         }
+
         private async Task<(bool Success, string Message)> CopyExamFullAsync(
     RERPAPI.Model.Entities.CourseExam oldExam,
     int newCourseId,
@@ -1096,7 +1090,7 @@ namespace RERPAPI.Controllers.CourseWeb
 
             var oldQuestionIds = oldQuestions.Select(q => q.ID).ToList();
             var oldQuestionImageFolder = _configSystemOldWebRepo.GetUploadPathByKey("CourseExamExerciseImages");
-            var newQuestionImageFolder =  _configSystemRepo.GetUploadPathByKey("CourseExamExerciseImages");
+            var newQuestionImageFolder = _configSystemRepo.GetUploadPathByKey("CourseExamExerciseImages");
             foreach (var oldQuestion in oldQuestions)
             {
                 var newQuestion = new CourseQuestion
@@ -1107,12 +1101,11 @@ namespace RERPAPI.Controllers.CourseWeb
                     STT = oldQuestion.STT,
                     CheckInput = oldQuestion.CheckInput,
                     Marks = oldQuestion.Marks,
-                    Image =  FileCourseHelper.CopyFileFromFolder(
+                    Image = FileCourseHelper.CopyFileFromFolder(
         oldQuestion.Image,
         oldQuestionImageFolder,
         newQuestionImageFolder
     )
-
                 };
 
                 var resultCreateQuestion = await _courseQuestionRepo.CreateAsync(newQuestion);
@@ -1137,8 +1130,6 @@ namespace RERPAPI.Controllers.CourseWeb
 
                         AnswerText = oldAnswer.AnswerText,
                         AnswerNumber = oldAnswer.AnswerNumber,
-
-
                     };
 
                     var resultCreateAnswer = await _courseAnswersRepo.CreateAsync(newAnswer);
@@ -1196,8 +1187,8 @@ namespace RERPAPI.Controllers.CourseWeb
 
             return (true, "OK");
         }
-
     }
+
     public class CopyCatalogCourseParam
     {
         public int SourceCatalogID { get; set; }

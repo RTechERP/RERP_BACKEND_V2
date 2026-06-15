@@ -1,40 +1,20 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using DocumentFormat.OpenXml.Drawing.Charts;
-using DocumentFormat.OpenXml.Office2010.Excel;
-using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
-using DocumentFormat.OpenXml.Wordprocessing;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
-using Newtonsoft.Json.Linq;
-using NPOI.SS.Formula.Functions;
-using OfficeOpenXml.Style.XmlAccess;
 using RERPAPI.Attributes;
-using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
-using RERPAPI.Model.Entities;
-using RERPAPI.Model.Param;
-using RERPAPI.Model.Param.HRM.VehicleManagement;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.DocumentManager;
-using RTCApi.Repo.GenericRepo;
-using System.Data;
-using System.Net;
-using System.Threading.Tasks;
-using ZXing;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.Old
 {
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-
     public class PONCCHistoryController : ControllerBase
     {
-        PONCCHistoryRepo _pONCCHistoryRepo;
-        SupplierSaleRepo _supplierSaleRepo;
+        private PONCCHistoryRepo _pONCCHistoryRepo;
+        private SupplierSaleRepo _supplierSaleRepo;
+
         public PONCCHistoryController(
             PONCCHistoryRepo pONCCHistoryRepo,
             SupplierSaleRepo supplierSaleRepo
@@ -50,11 +30,10 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-
                 if (model.SupplierSaleID != null && model.SupplierSaleID > 0)
                 {
                     var supplierSale = _supplierSaleRepo.GetByID((int)model.SupplierSaleID);
-                    if(supplierSale != null)
+                    if (supplierSale != null)
                     {
                         model.CodeNCC = supplierSale.CodeNCC;
                     }
@@ -77,7 +56,6 @@ namespace RERPAPI.Controllers.Old
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
 
         [HttpPost("deleted")]
@@ -99,8 +77,6 @@ namespace RERPAPI.Controllers.Old
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
-
     }
 }

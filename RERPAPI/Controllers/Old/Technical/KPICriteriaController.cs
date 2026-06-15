@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
@@ -16,6 +15,7 @@ namespace RERPAPI.Controllers.Old.Technical
         private readonly KPISessionRepo _kpiSessionRepo;
         private readonly KPICriteriaDetailRepo _kpiCriteriaDetailRepo;
         private readonly KPICriterionRepo _kpiCriterionRepo;
+
         public KPICriteriaController(KPICriteriaDetailRepo kpiCriteriaDetailRepo, KPICriterionRepo kpiCriterionRepo, KPISessionRepo kpiSessionRepo)
         {
             _kpiCriteriaDetailRepo = kpiCriteriaDetailRepo;
@@ -98,7 +98,7 @@ namespace RERPAPI.Controllers.Old.Technical
         {
             try
             {
-                if(dto.KPICriterions.CriteriaCode == null || dto.KPICriterions.CriteriaCode.Trim() == "")
+                if (dto.KPICriterions.CriteriaCode == null || dto.KPICriterions.CriteriaCode.Trim() == "")
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng nhập Mã Tiêu Chí!"));
                 }
@@ -142,9 +142,9 @@ namespace RERPAPI.Controllers.Old.Technical
                 }
                 if (dto.KPICriteriaDetails != null && dto.KPICriteriaDetails.Count > 0)
                 {
-                    foreach(var item in dto.KPICriteriaDetails)
+                    foreach (var item in dto.KPICriteriaDetails)
                     {
-                        if(item.ID > 0)
+                        if (item.ID > 0)
                         {
                             await _kpiCriteriaDetailRepo.UpdateAsync(item);
                         }
@@ -153,8 +153,8 @@ namespace RERPAPI.Controllers.Old.Technical
                             item.KPICriteriaID = dto.KPICriterions.ID;
                             await _kpiCriteriaDetailRepo.CreateAsync(item);
                         }
-                    }    
-                }    
+                    }
+                }
                 return Ok(ApiResponseFactory.Success("", ""));
             }
             catch (Exception ex)
@@ -169,11 +169,11 @@ namespace RERPAPI.Controllers.Old.Technical
             try
             {
                 var session = _kpiSessionRepo.GetAll(x => x.YearEvaluation == year && x.QuarterEvaluation == quarter && x.IsDeleted == false && x.DepartmentID == 2).FirstOrDefault();
-                if(session == null) return BadRequest(ApiResponseFactory.Fail(null, ""));
+                if (session == null) return BadRequest(ApiResponseFactory.Fail(null, ""));
                 var listCriteriaOld = _kpiCriterionRepo.GetAll(x => x.KPICriteriaYear == yearCopyTo && x.KPICriteriaQuater == quarterCopyTo && x.IsDeleted == false).ToList();
 
                 //xóa dl cũ
-                foreach(var item in listCriteriaOld)
+                foreach (var item in listCriteriaOld)
                 {
                     List<KPICriteriaDetail> listDetail = _kpiCriteriaDetailRepo.GetAll(x => x.KPICriteriaID == item.ID);
                     _kpiCriteriaDetailRepo.DeleteRange(listDetail);

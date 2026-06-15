@@ -17,7 +17,7 @@ namespace RERPAPI.Controllers.HRM.Employees
         {
             _employeeVehicleBussinessRepo = employeeVehicleBussinessRepo;
         }
-        
+
         [HttpGet]
         public IActionResult GetEmployeeVehicleBussiness()
         {
@@ -39,10 +39,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                     error = ex.ToString()
                 });
             }
-
         }
-
-
 
         [RequiresPermission("N1,N2")]
         [HttpPost]

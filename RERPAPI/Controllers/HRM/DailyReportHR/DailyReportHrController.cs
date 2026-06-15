@@ -1,12 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.Param;
-using RERPAPI.Model.Param.HRM.VehicleManagement;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.Film;
 
 namespace RERPAPI.Controllers.HRM.DailyReportHR
@@ -17,7 +13,8 @@ namespace RERPAPI.Controllers.HRM.DailyReportHR
     {
         public DailyReportLXCP _dailyReportHRRepo;
         public FilmManagementDetailRepo _filmDetail;
-        public DailyReportHrController(DailyReportLXCP dailyReportHRRepo,FilmManagementDetailRepo filmDetail)
+
+        public DailyReportHrController(DailyReportLXCP dailyReportHRRepo, FilmManagementDetailRepo filmDetail)
         {
             _dailyReportHRRepo = dailyReportHRRepo;
             _filmDetail = filmDetail;
@@ -52,7 +49,6 @@ namespace RERPAPI.Controllers.HRM.DailyReportHR
                     new object[] { ds, de, request.userID, keyword, 6 }
                 );
 
-
                 var technical = SQLHelper<object>.GetListData(dataTech, 0);
                 var dataHr = SQLHelper<object>.ProcedureToList(
                     "spGetDailyReportHR",
@@ -60,7 +56,7 @@ namespace RERPAPI.Controllers.HRM.DailyReportHR
                     new object[] { ds, de, keyword, request.employeeID }
                 );
 
-                    var hrAll = SQLHelper<object>.GetListData(dataHr, 0);
+                var hrAll = SQLHelper<object>.GetListData(dataHr, 0);
 
                 var dataFilm = hrAll
                     .Where(x =>
@@ -97,7 +93,6 @@ namespace RERPAPI.Controllers.HRM.DailyReportHR
             }
         }
 
-
         [RequiresPermission("N1,N44")]
         [HttpGet("get-film-detail")]
         public IActionResult GetFilmDetail()
@@ -115,6 +110,7 @@ namespace RERPAPI.Controllers.HRM.DailyReportHR
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-data-by-id")]
         public IActionResult GetByID(int id)
         {
@@ -128,6 +124,7 @@ namespace RERPAPI.Controllers.HRM.DailyReportHR
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-report-hr")]
         public async Task<IActionResult> SaveReportHR([FromBody] List<Model.Entities.DailyReportHR> request)
         {
@@ -149,7 +146,6 @@ namespace RERPAPI.Controllers.HRM.DailyReportHR
                         await _dailyReportHRRepo.UpdateAsync(dataDelete);
                         return Ok(ApiResponseFactory.Success(null, "Xóa báo cáo thành công"));
                     }
-                   
                 }
                 // 1. Kiểm tra request null hoặc empty
                 if (request == null || request.Count == 0)
@@ -162,7 +158,6 @@ namespace RERPAPI.Controllers.HRM.DailyReportHR
                     return BadRequest(ApiResponseFactory.Fail(null, validationMessage));
                 }
 
-
                 foreach (var item in request)
                 {
                     // --- LOGIC TÍNH TOÁN (Từ RTC Web) ---
@@ -171,7 +166,7 @@ namespace RERPAPI.Controllers.HRM.DailyReportHR
                     if (item.FilmManagementDetailID.HasValue && item.FilmManagementDetailID > 0)
                     {
                         // Lấy thông tin chi tiết phim để lấy Năng suất trung bình (PerformanceAvg)
-                        var filmDetail = _filmDetail.GetAll(x=>x.FilmManagementID == item.FilmManagementDetailID).FirstOrDefault();
+                        var filmDetail = _filmDetail.GetAll(x => x.FilmManagementID == item.FilmManagementDetailID).FirstOrDefault();
                         decimal performanceAVG = filmDetail != null ? (decimal)filmDetail.PerformanceAVG : 0;
 
                         // Tính Năng suất thực tế = Thời gian / Số lượng
@@ -190,7 +185,7 @@ namespace RERPAPI.Controllers.HRM.DailyReportHR
                     item.EmployeeID = currentUser.EmployeeID; // Gán ID nhân viên đang đăng nhập
                     ///item.Quantity = Convert.ToInt32(item.Quantity);
                     if (item.ID > 0)
-                    {                    
+                    {
                         await _dailyReportHRRepo.UpdateAsync(item);
                     }
                     else

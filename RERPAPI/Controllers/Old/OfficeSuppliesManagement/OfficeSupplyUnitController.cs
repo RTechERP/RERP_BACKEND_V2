@@ -56,13 +56,13 @@ namespace RERPAPI.Controllers.Old.OfficeSuppliesManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //danh sách tính
         [HttpPost("save-data")]
         public async Task<IActionResult> saveDataOfficeSupplyUnit([FromBody] OfficeSupplyUnit dst)
         {
             try
             {
-
                 if (dst != null && dst.IsDeleted != true)
                 {
                     if (!_officesupplyunitRepo.Validate(dst, out string message))

@@ -1,10 +1,5 @@
 ﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
@@ -13,6 +8,7 @@ namespace RERPAPI.Repo.GenericEntity
         public DailyReportLXCP(CurrentUser currentUser) : base(currentUser)
         {
         }
+
         /// <summary>
         /// Validate danh sách báo cáo trước khi lưu
         /// </summary>
@@ -53,10 +49,10 @@ namespace RERPAPI.Repo.GenericEntity
                     // Nếu cần check Quantity theo cấu hình phim, cần query FilmDetail để lấy cờ RequestResult
                     // Tạm thời check cơ bản:
                     /*
-                    if (item.Quantity <= 0) 
+                    if (item.Quantity <= 0)
                     {
                          message = "Số lượng kết quả phải lớn hơn 0!";
-                         return false; 
+                         return false;
                     }
                     */
                 }

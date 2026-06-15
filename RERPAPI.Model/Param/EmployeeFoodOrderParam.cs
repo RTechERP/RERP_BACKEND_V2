@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.Param
+﻿namespace RERPAPI.Model.Param
 {
     public class EmployeeFoodOrderParam
     {
@@ -14,6 +8,5 @@ namespace RERPAPI.Model.Param
         public int employeeId { get; set; } = 0;
         public int pageNumber { get; set; } = 1;
         public int pageSize { get; set; } = 1000000;
-
     }
 }

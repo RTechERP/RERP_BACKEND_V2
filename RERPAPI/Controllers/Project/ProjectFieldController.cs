@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
@@ -7,18 +6,19 @@ using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.Project
 {
-
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
     public class ProjectFieldController : ControllerBase
     {
         private readonly ProjectFieldRepo _projectFieldRepo;
+
         public ProjectFieldController(
           ProjectFieldRepo projectFieldRepo)
         {
             _projectFieldRepo = projectFieldRepo;
         }
+
         [HttpGet("get-all")]
         public async Task<IActionResult> GetAllProjectFields()
         {
@@ -38,7 +38,6 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-
                 if (dto == null || dto.Count == 0)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu gửi lên không hợp lệ"));
@@ -55,7 +54,6 @@ namespace RERPAPI.Controllers.Project
                                 status = 2,
                                 message = "Mã lĩnh vực đã tồn tại!"
                             });
-
                         }
                     }
 

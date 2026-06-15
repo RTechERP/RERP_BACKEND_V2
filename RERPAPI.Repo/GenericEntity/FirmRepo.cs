@@ -8,13 +8,12 @@ namespace RERPAPI.Repo.GenericEntity
         public FirmRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
+
         public bool CheckFirmCodeExists(string firmCode, int? id = null)
         {
             try
             {
-
                 var query = GetAll(f => (f.FirmCode ?? "").ToUpper() == firmCode.ToUpper() && f.IsDelete != true);
-
 
                 if (id.HasValue)
                 {
@@ -28,6 +27,7 @@ namespace RERPAPI.Repo.GenericEntity
                 throw new Exception($"Lỗi khi kiểm tra mã hãng: {ex.Message}", ex);
             }
         }
+
         public string GenerateCode(int firmType)
         {
             // 1. Xác định prefix theo FirmType

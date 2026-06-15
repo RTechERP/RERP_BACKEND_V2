@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Model;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.HRM.PinAuth;
@@ -22,8 +20,8 @@ namespace RERPAPI.Controllers.HRM
         private readonly PinResetTokenRepo _pinResetTokenRepo;
 
         public PinAuthController(
-            CurrentUser currentUser, 
-            EmailHelper emailHelper, 
+            CurrentUser currentUser,
+            EmailHelper emailHelper,
             EmployeeRepo employeeRepo,
             UserRepo userRepo,
             PinResetTokenRepo pinResetTokenRepo)
@@ -59,7 +57,7 @@ namespace RERPAPI.Controllers.HRM
         }
 
         /// <summary>
-        /// Tạo Mã PIN lần đầu tiền 
+        /// Tạo Mã PIN lần đầu tiền
         /// </summary>
         [Authorize]
         [HttpPost("set-pin")]
@@ -150,9 +148,8 @@ namespace RERPAPI.Controllers.HRM
                         item.UpdatedDate = DateTime.Now;
                         await _pinResetTokenRepo.UpdateAsync(item);
                     }
-                    
-                }    
-                    
+                }
+
                 // Create new OTP (6 digits)
                 string rawToken = new Random().Next(100000, 1000000).ToString();
                 var token = new PinResetToken
@@ -174,7 +171,7 @@ namespace RERPAPI.Controllers.HRM
                 string targetEmail = employee?.EmailCongTy;
                 if (string.IsNullOrEmpty(targetEmail))
                     targetEmail = employee?.EmailCaNhan;
-                
+
                 // Fallback to User email if employee email is missing
                 if (string.IsNullOrEmpty(targetEmail))
                     targetEmail = user.Email;
@@ -193,7 +190,7 @@ namespace RERPAPI.Controllers.HRM
         <div style='padding: 40px 30px; color: #333333;'>
             <p style='margin-top: 0; font-size: 16px;'>Chào <b>{user.FullName}</b>,</p>
             <p style='font-size: 15px; line-height: 1.6; color: #555555;'>Bạn vừa yêu cầu đặt lại mã PIN. Vui lòng sử dụng mã xác thực dưới đây để tiếp tục:</p>
-            
+
             <div style='background: #f8f9fa; border: 2px dashed #e9ecef; border-radius: 12px; margin: 30px 0; padding: 30px; text-align: center;'>
                 <span style='font-size: 36px; font-weight: 800; color: #764ba2; letter-spacing: 8px; display: block;'>{rawToken}</span>
                 <p style='margin-top: 10px; color: #888888; font-size: 13px;'>Mã OTP có hiệu lực trong 10 phút</p>

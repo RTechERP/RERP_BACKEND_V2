@@ -12,11 +12,13 @@ namespace RERPAPI.Controllers.Old
     {
         private readonly PositionContractRepo positionContractRepo;
         private readonly PositionInternalRepo positionInternalRepo;
+
         public PositionController(PositionContractRepo positionContractRepo, PositionInternalRepo positionInternalRepo)
         {
             this.positionContractRepo = positionContractRepo;
             this.positionInternalRepo = positionInternalRepo;
         }
+
         [HttpGet("position-contract")]
         [RequiresPermission("N2,N1")]
         public IActionResult GetPositionContract()
@@ -24,6 +26,7 @@ namespace RERPAPI.Controllers.Old
             var result = positionContractRepo.GetAll(x => x.IsDeleted != true).OrderBy(x => x.PriorityOrder);
             return Ok(result);
         }
+
         [HttpGet("position-internal")]
         [RequiresPermission("N2,N1")]
         public IActionResult GetPositionInternal()
@@ -40,12 +43,12 @@ namespace RERPAPI.Controllers.Old
             {
                 List<EmployeeChucVuHD> employeeChucVuHDs = positionContractRepo.GetAll();
 
-                if(employeeChucVuHD.IsDeleted == false)
+                if (employeeChucVuHD.IsDeleted == false)
                 {
                     if (employeeChucVuHDs.Any(x => (
                     x.Name.ToLower().Trim() == employeeChucVuHD.Name.ToLower().Trim()
-                    || x.Code.ToLower().Trim() == employeeChucVuHD.Code.ToLower().Trim()) 
-                    && x.ID != employeeChucVuHD.ID 
+                    || x.Code.ToLower().Trim() == employeeChucVuHD.Code.ToLower().Trim())
+                    && x.ID != employeeChucVuHD.ID
                     && x.IsDeleted != true))
                     {
                         return BadRequest(new
@@ -85,7 +88,6 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
-
         [HttpPost("position-internal")]
         [RequiresPermission("N2,N1")]
         public async Task<IActionResult> SavePositionInternal([FromBody] EmployeeChucVu employeeChucVu)
@@ -93,11 +95,11 @@ namespace RERPAPI.Controllers.Old
             try
             {
                 List<EmployeeChucVu> employeeChucVus = positionInternalRepo.GetAll();
-                if(employeeChucVu.IsDeleted == false)
+                if (employeeChucVu.IsDeleted == false)
                 {
                     if (employeeChucVus.Any(x => (
                     x.Name.ToLower().Trim() == employeeChucVu.Name.ToLower().Trim()
-                     || x.Code.ToLower().Trim() == employeeChucVu.Code.ToLower().Trim()) 
+                     || x.Code.ToLower().Trim() == employeeChucVu.Code.ToLower().Trim())
                      && x.ID != employeeChucVu.ID
                      && x.IsDeleted != true
                      ))
@@ -109,7 +111,7 @@ namespace RERPAPI.Controllers.Old
                         });
                     }
                 }
-                
+
                 if (employeeChucVu.ID <= 0)
                 {
                     employeeChucVu.CreatedDate = DateTime.Now;
@@ -137,7 +139,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                if(employeeChucVuHDs.Count() <= 0) return BadRequest(ApiResponseFactory.Fail(null, "Không có chức vụ được chọn!"));
+                if (employeeChucVuHDs.Count() <= 0) return BadRequest(ApiResponseFactory.Fail(null, "Không có chức vụ được chọn!"));
                 foreach (EmployeeChucVuHD item in employeeChucVuHDs)
                 {
                     await positionContractRepo.UpdateAsync(item);
@@ -230,7 +232,7 @@ namespace RERPAPI.Controllers.Old
         //            message = "Lỗi khi xóa chức vụ nội bộ",
         //            error = ex.Message
         //        });
-        //    }   
+        //    }
         //}
     }
 }

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.DTO.Asset
+﻿namespace RERPAPI.Model.DTO.Asset
 {
     public class TransferAssetMasterDto
     {
@@ -21,5 +15,4 @@ namespace RERPAPI.Model.DTO.Asset
         public DateTime? CreatedDate { get; set; }
         public DateTime? DateApprovedPersonalProperty { get; set; }
     }
-
 }

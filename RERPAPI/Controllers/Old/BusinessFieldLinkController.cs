@@ -9,10 +9,12 @@ namespace RERPAPI.Controllers.Old
     public class BusinessFieldLinkController : ControllerBase
     {
         private BusinessFieldLinkRepo _businessFieldLinkRepo;
+
         public BusinessFieldLinkController(BusinessFieldLinkRepo businessFieldLinkRepo)
         {
             _businessFieldLinkRepo = businessFieldLinkRepo;
         }
+
         [HttpGet]
         public IActionResult GetAll()
         {

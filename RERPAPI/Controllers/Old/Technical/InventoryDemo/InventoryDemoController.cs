@@ -15,11 +15,13 @@ namespace RERPAPI.Controllers.Old.Technical.InventoryDemo
     {
         private readonly ProductRTCQRCodeRepo _productRTCQRCodeRepo;
         private readonly ProductGroupRTCRepo _productGroupRTCRepo;
+
         public InventoryDemoController(ProductRTCQRCodeRepo productRTCQRCodeRepo, ProductGroupRTCRepo productGroupRTCRepo)
         {
             _productRTCQRCodeRepo = productRTCQRCodeRepo;
             _productGroupRTCRepo = productGroupRTCRepo;
         }
+
         [HttpPost("get-inventoryDemo")]
         public IActionResult GetInventoryDemo([FromBody] InventoryDemoRequestParam request)
         {
@@ -46,6 +48,7 @@ namespace RERPAPI.Controllers.Old.Technical.InventoryDemo
                 });
             }
         }
+
         [HttpPost("get-inventory-borrow-ncc-Demo")]
         public IActionResult GetInventoryBorrowNCCDemo([FromBody] GetInventoryBorrowSupplierDemoRequestParam request)
         {
@@ -66,13 +69,13 @@ namespace RERPAPI.Controllers.Old.Technical.InventoryDemo
             {
                 return Ok(new
                 {
-
                     status = 0,
                     message = ex.Message,
                     error = ex.ToString()
                 });
             }
         }
+
         [HttpPost("save-data-qrcode")]
         public async Task<IActionResult> SaveDataQRCode([FromBody] ProductRTCQRCode productRTCQRCode)
         {
@@ -99,6 +102,7 @@ namespace RERPAPI.Controllers.Old.Technical.InventoryDemo
                 });
             }
         }
+
         [HttpGet("get-borrow-import-export-product-rtc")]
         public IActionResult GetBorrowImportExportProductRTC([FromQuery] int? ProductID, [FromQuery] int? WarehouseID)
         {
@@ -142,6 +146,5 @@ namespace RERPAPI.Controllers.Old.Technical.InventoryDemo
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

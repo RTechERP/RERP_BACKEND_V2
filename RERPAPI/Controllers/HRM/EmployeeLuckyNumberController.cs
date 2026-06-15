@@ -1,8 +1,5 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NPOI.HPSF;
 using RERPAPI.Attributes;
 using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
@@ -10,16 +7,11 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
-using SixLabors.ImageSharp;
-using System.Threading.Tasks;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.HRM
 {
     [Route("api/[controller]")]
     [ApiController]
-    
-
     public class EmployeeLuckyNumberController : ControllerBase
     {
         private readonly IConfiguration _configuration;
@@ -36,7 +28,6 @@ namespace RERPAPI.Controllers.HRM
             _employeeLucky = employeeLucky;
             _configSystemRepo = configSystemRepo;
         }
-
 
         [HttpGet("{id}")]
         [Authorize]
@@ -130,21 +121,19 @@ namespace RERPAPI.Controllers.HRM
                         //employee.LuckyNumber = employeeLucky.LuckyNumber;
                         employee.IsChampion = employeeLucky.IsChampion;
                         employee.ImageName = employeeLucky.ImageName;
-                        
+
                         records += await _employeeLucky.UpdateAsync(employee);
                     }
                 }
 
                 if (records > 0) return Ok(ApiResponseFactory.Success(employeeLuckys, "Câp nhật thành công!"));
                 else return BadRequest(ApiResponseFactory.Fail(null, "Câp nhật thất bại!", employeeLuckys));
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         [HttpPost("get-random-number")]
         [Authorize]
@@ -226,14 +215,12 @@ namespace RERPAPI.Controllers.HRM
                         maxValue
                     }, message));
                 }
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         [HttpPost("upload-avatar")]
         [Authorize]
@@ -283,13 +270,11 @@ namespace RERPAPI.Controllers.HRM
 
                 if (records > 0) return Ok(ApiResponseFactory.Success(null, "Cập nhật thành công!"));
                 else return BadRequest(ApiResponseFactory.Fail(null, "Cập nhật thất bại. Vui lòng thử lại!"));
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

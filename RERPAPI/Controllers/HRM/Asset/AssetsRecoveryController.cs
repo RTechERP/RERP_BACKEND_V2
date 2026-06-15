@@ -1,15 +1,12 @@
-﻿    using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.Asset;
-using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.Asset;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Asset;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers.Old.Asset
 {
@@ -17,13 +14,14 @@ namespace RERPAPI.Controllers.Old.Asset
     [ApiController]
     public class AssetsRecoveryController : ControllerBase
     {
-        TSAssetRecoveryRepo _tSAssetRecoveryRepo;
-        TSAssetRecoveryDetailRepo _tSAssetRecoveryDetailRepo;
-        TSAssetManagementRepo _tsAssetManagementRepo;
-        TSAllocationEvictionAssetRepo _tSAllocationEvictionAssetRepo;
-        vUserGroupLinksRepo _vUserGroupLinksRepo;
+        private TSAssetRecoveryRepo _tSAssetRecoveryRepo;
+        private TSAssetRecoveryDetailRepo _tSAssetRecoveryDetailRepo;
+        private TSAssetManagementRepo _tsAssetManagementRepo;
+        private TSAllocationEvictionAssetRepo _tSAllocationEvictionAssetRepo;
+        private vUserGroupLinksRepo _vUserGroupLinksRepo;
         private readonly RoleConfig _roleConfig;
         private IConfiguration _configuration;
+
         public AssetsRecoveryController(TSAssetRecoveryRepo tSAssetRecoveryRepo, TSAssetRecoveryDetailRepo tSAssetRecoveryDetailRepo, TSAssetManagementRepo tSAssetManagementRepo, TSAllocationEvictionAssetRepo tSAllocationEvictionAssetRepo, vUserGroupLinksRepo vUserGroupLinksRepo, IConfiguration configuration)
         {
             _tSAssetRecoveryRepo = tSAssetRecoveryRepo;
@@ -32,7 +30,6 @@ namespace RERPAPI.Controllers.Old.Asset
             _tSAssetRecoveryDetailRepo = tSAssetRecoveryDetailRepo;
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
             _configuration = configuration;
-
         }
 
         [HttpPost("get-asset-recovery")]
@@ -64,7 +61,6 @@ namespace RERPAPI.Controllers.Old.Asset
                     status = 1,
 
                     assetsrecovery = SQLHelper<dynamic>.GetListData(assetRecovery, 0)
-
                 });
             }
             catch (Exception ex)
@@ -72,6 +68,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-asset-recovery-detail")]
         public IActionResult GetAssetsRecoveryDetail(int? id)
         {
@@ -96,6 +93,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-recovery-code")]
         public async Task<IActionResult> GenerateRecoveryCode([FromQuery] DateTime? recoveryDate)
         {
@@ -110,6 +108,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 data = newCode
             });
         }
+
         [HttpGet("get-recovery-by-employee")]
         public IActionResult GetRecoveryByEmployee(int? recoveID, int? employeeID)
         {
@@ -132,7 +131,6 @@ namespace RERPAPI.Controllers.Old.Asset
                     status = 1,
 
                     assetsRecoveryByEmployee = SQLHelper<dynamic>.GetListData(assetsRecoveryByEmployee, 0)
-
                 });
             }
             catch (Exception ex)
@@ -140,18 +138,18 @@ namespace RERPAPI.Controllers.Old.Asset
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("export-recovery-asset-report")]
         public IActionResult ExportRecoveryAssetReport([FromBody] AssetRecoveryExportFullDto dto)
         {
             var master = dto.Master;
-                var details = dto.Details;
+            var details = dto.Details;
 
             if (master == null || details == null || !details.Any())
                 return BadRequest("Dữ liệu thu hồi không hợp lệ.");
             try
             {
                 ExcelPackage.License.SetNonCommercialOrganization("RTC Technology Viet Nam");
-
 
                 var templateFolder = _configuration.GetValue<string>("PathTemplate");
 
@@ -185,13 +183,10 @@ namespace RERPAPI.Controllers.Old.Asset
 
                     ws.Cells[17, 3].Value = master.Note;
 
-
-                   
-                    ws.Cells[27, 1].Value = master.EmployeeReturnName??"";
+                    ws.Cells[27, 1].Value = master.EmployeeReturnName ?? "";
                     ws.Cells[27, 8].Value = master.EmployeeRecoveryName ?? "";
-                    ws.Cells[28, 1].Value = master.DateApprovedHR?.ToString("dd/MM/yyyy HH:mm") ??"";
+                    ws.Cells[28, 1].Value = master.DateApprovedHR?.ToString("dd/MM/yyyy HH:mm") ?? "";
                     ws.Cells[28, 8].Value = master.DateApprovedPersonalProperty?.ToString("dd/MM/yyyy HH:mm") ?? "";
-
 
                     // Xoá dòng template sẵn (dòng 20 + 21)
                     ws.DeleteRow(20, 1);
@@ -212,10 +207,10 @@ namespace RERPAPI.Controllers.Old.Asset
                         ws.Cells[row, 7].Value = item.Status ?? "";
                         ws.Cells[row, 8].Value = item.Note ?? "";
                     }
-                        //ws.Cells[27, 1].Value = master.EmployeeReturnName ?? "";
-                        //ws.Cells[27, 8].Value = master.EmployeeRecoveryName?? "";
-                        //ws.Cells[28, 1].Value = master.DateApprovedPersonalProperty?.ToString("dd/MM/yyyy HH:mm") ?? "";
-                        //ws.Cells[28, 8].Value = master.DateApprovedHR?.ToString("dd/MM/yyyy HH:mm") ?? "";
+                    //ws.Cells[27, 1].Value = master.EmployeeReturnName ?? "";
+                    //ws.Cells[27, 8].Value = master.EmployeeRecoveryName?? "";
+                    //ws.Cells[28, 1].Value = master.DateApprovedPersonalProperty?.ToString("dd/MM/yyyy HH:mm") ?? "";
+                    //ws.Cells[28, 8].Value = master.DateApprovedHR?.ToString("dd/MM/yyyy HH:mm") ?? "";
                     // Lưu file tạm rồi trả về
                     var outStream = new MemoryStream();
                     package.SaveAs(outStream);
@@ -230,8 +225,8 @@ namespace RERPAPI.Controllers.Old.Asset
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N23")]
-            
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData2([FromBody] AssetRecoveryDTO asset)
         {
@@ -267,7 +262,6 @@ namespace RERPAPI.Controllers.Old.Asset
                 {
                     foreach (var item in asset.tSAssetManagements)
                     {
-
                         if (item.ID <= 0)
                             await _tsAssetManagementRepo.CreateAsync(item);
                         else
@@ -278,7 +272,6 @@ namespace RERPAPI.Controllers.Old.Asset
                 {
                     foreach (var item in asset.tSAllocationEvictionAssets)
                     {
-
                         if (item.ID <= 0)
                             await _tSAllocationEvictionAssetRepo.CreateAsync(item);
                         else
@@ -300,6 +293,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 });
             }
         }
+
         [HttpPost("save-data-personal")]
         public async Task<IActionResult> SaveDataPersonal([FromBody] AssetRecoveryDTO asset)
         {
@@ -335,7 +329,6 @@ namespace RERPAPI.Controllers.Old.Asset
                 {
                     foreach (var item in asset.tSAssetManagements)
                     {
-
                         if (item.ID <= 0)
                             await _tsAssetManagementRepo.CreateAsync(item);
                         else
@@ -346,7 +339,6 @@ namespace RERPAPI.Controllers.Old.Asset
                 {
                     foreach (var item in asset.tSAllocationEvictionAssets)
                     {
-
                         if (item.ID <= 0)
                             await _tSAllocationEvictionAssetRepo.CreateAsync(item);
                         else
@@ -368,6 +360,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 });
             }
         }
+
         [RequiresPermission("N1,N67")]
         [HttpPost("save-data-kt")]
         public async Task<IActionResult> SaveDataKT([FromBody] AssetRecoveryDTO asset)
@@ -404,7 +397,6 @@ namespace RERPAPI.Controllers.Old.Asset
                 {
                     foreach (var item in asset.tSAssetManagements)
                     {
-
                         if (item.ID <= 0)
                             await _tsAssetManagementRepo.CreateAsync(item);
                         else
@@ -415,7 +407,6 @@ namespace RERPAPI.Controllers.Old.Asset
                 {
                     foreach (var item in asset.tSAllocationEvictionAssets)
                     {
-
                         if (item.ID <= 0)
                             await _tSAllocationEvictionAssetRepo.CreateAsync(item);
                         else

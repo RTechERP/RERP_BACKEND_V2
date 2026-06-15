@@ -1,11 +1,5 @@
-﻿using RERPAPI.Model.Context;
-using RERPAPI.Model.DTO;
+﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
@@ -22,7 +16,7 @@ namespace RERPAPI.Repo.GenericEntity
         //            _context.POKHDetailMoneys.Remove(deleteItem);
         //            return _context.SaveChanges();
         //        }
-        //        return 0; 
+        //        return 0;
         //    }
         //    catch (Exception ex)
         //    {

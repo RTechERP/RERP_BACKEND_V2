@@ -1,7 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using NPOI.HSSF.Record.Chart;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.HRM;
@@ -13,9 +10,9 @@ namespace RERPAPI.Controllers.HRM.HrRecruitmentApprove
     [ApiController]
     public class HrRecruitmentApproveController : ControllerBase
     {
-        HRRecruitmentApproveRepo _hRRecruitmentApproveRepo;
-        HRRecruitmentCandidateRepo _hRRecruitmentCandidateRepo;
-        HRRecruitmentApplicationFormRepo _hRRecruitmentApplicationFormRepo;
+        private HRRecruitmentApproveRepo _hRRecruitmentApproveRepo;
+        private HRRecruitmentCandidateRepo _hRRecruitmentCandidateRepo;
+        private HRRecruitmentApplicationFormRepo _hRRecruitmentApplicationFormRepo;
 
         public HrRecruitmentApproveController(HRRecruitmentApproveRepo hRRecruitmentApproveRepo, HRRecruitmentCandidateRepo hRRecruitmentCandidateRepo, HRRecruitmentApplicationFormRepo hRRecruitmentApplicationFormRepo)
         {
@@ -23,6 +20,7 @@ namespace RERPAPI.Controllers.HRM.HrRecruitmentApprove
             _hRRecruitmentCandidateRepo = hRRecruitmentCandidateRepo;
             _hRRecruitmentApplicationFormRepo = hRRecruitmentApplicationFormRepo;
         }
+
         [HttpGet("get-data-to-hr-recruit-approve")]
         public async Task<IActionResult> GetDataToHRRecruitmentApproveAsync(int HRRecruitmentCandidateID)
         {
@@ -40,7 +38,6 @@ namespace RERPAPI.Controllers.HRM.HrRecruitmentApprove
             catch (Exception ex)
             {
                 return Ok(ApiResponseFactory.Fail(null, ex.Message));
-
             }
         }
 
@@ -68,6 +65,7 @@ namespace RERPAPI.Controllers.HRM.HrRecruitmentApprove
                 return Ok(ApiResponseFactory.Fail(null, ex.Message));
             }
         }
+
         [HttpGet("get-list-hr-recruitment-approve")]
         public async Task<IActionResult> GetListHRRecruitmetApprove(string? Keyword, int? DepartmentID, int EmployeeID, DateTime? StartDate, DateTime? EndDate)
         {
@@ -85,7 +83,6 @@ namespace RERPAPI.Controllers.HRM.HrRecruitmentApprove
                 //    message = "Lấy dữ liệu thành công!"
                 //});
                 return Ok(ApiResponseFactory.Success(data, $"Lấy dữ liệu thành công!"));
-
             }
             catch (Exception ex)
             {
@@ -112,7 +109,8 @@ namespace RERPAPI.Controllers.HRM.HrRecruitmentApprove
                 return Ok(ApiResponseFactory.Fail(null, ex.Message));
             }
         }
-        bool IsApproved(int? approverId, string approverName)
+
+        private bool IsApproved(int? approverId, string approverName)
         {
             //return (approverId.HasValue && approverId > 0)
             //    || !string.IsNullOrWhiteSpace(approverName);
@@ -172,7 +170,6 @@ namespace RERPAPI.Controllers.HRM.HrRecruitmentApprove
                             if (!IsApproved(item.HCNSApprove, item.HCNSApproveName)) continue;
                             if (IsApproved(item.BGDApprover, item.BGDApproverName)) continue;
 
-
                             item.BGDApprover = currentUser.EmployeeID;
                             item.BGDApproverName = currentUser.FullName;
                             // nhảy sang bước tiếp theo: Thư mời nhận việc
@@ -215,14 +212,13 @@ namespace RERPAPI.Controllers.HRM.HrRecruitmentApprove
                 }
 
                 return Ok(ApiResponseFactory.Success(null, $"Duyệt thành công!"));
-
             }
             catch (Exception ex)
             {
                 return Ok(ApiResponseFactory.Fail(null, ex.Message));
-
             }
         }
+
         [HttpPost("unapprove-hr-recruitment")]
         public async Task<IActionResult> UnApproveHRRecruitment([FromBody] List<int> lstID, [FromQuery] string type, [FromQuery] string reason)
         {
@@ -250,10 +246,9 @@ namespace RERPAPI.Controllers.HRM.HrRecruitmentApprove
                 {
                     if (type == "TBP")
                     {
-
                         //item.TBPApprover = -1;
                         item.TBPApproverName = $"Không duyệt";
-                        item.RejectionReason = $"{type} - {currentUser.FullName} không duyệt: {reason}"; 
+                        item.RejectionReason = $"{type} - {currentUser.FullName} không duyệt: {reason}";
                     }
                     if (type == "HCNS")
                     {
@@ -269,17 +264,14 @@ namespace RERPAPI.Controllers.HRM.HrRecruitmentApprove
                     }
                 }
                 var countSuccss = await _hRRecruitmentApproveRepo.UpdateRangeAsync(data);
-                if (countSuccss<=0)
+                if (countSuccss <= 0)
                 {
                     return Ok(ApiResponseFactory.Fail(null, "Không duyệt thất bại!"));
-
                 }
                 return Ok(ApiResponseFactory.Success(null, $"Không duyệt thành công {countSuccss} tờ trình!"));
-
             }
             catch (Exception ex)
             {
-
                 return Ok(ApiResponseFactory.Fail(null, ex.Message));
             }
         }
@@ -295,7 +287,6 @@ namespace RERPAPI.Controllers.HRM.HrRecruitmentApprove
                 }
                 if (HRRecruitmentApprove.ID <= 0)
                 {
-
                     var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                     var currentUser = ObjectMapper.GetCurrentUser(claims);
                     HRRecruitmentApprove.EmployeeApprover = currentUser.EmployeeID;
@@ -329,14 +320,13 @@ namespace RERPAPI.Controllers.HRM.HrRecruitmentApprove
                         return Ok(ApiResponseFactory.Fail(null, "Cập nhật tờ trình thất bại!"));
                     }
                 }
-                // cập nhật trạng thái 
+                // cập nhật trạng thái
                 var HRRecruitmentApplicationForm = await _hRRecruitmentApplicationFormRepo.GetByIDAsync(HRRecruitmentApprove.HRRecruitmentApplicationFormID ?? 0);
                 var hRRecruitmentCandidate = await _hRRecruitmentCandidateRepo.GetByIDAsync(HRRecruitmentApplicationForm.HRRecruitmentCandidateID ?? 0);
                 hRRecruitmentCandidate.Status = 6;
 
                 if ((await _hRRecruitmentCandidateRepo.UpdateAsync(hRRecruitmentCandidate)) != 1)
                 {
-
                     return Ok(ApiResponseFactory.Fail(null, "Cập nhật trạng thái đơn tuyển dụng thất bại!"));
                 }
 
@@ -347,6 +337,5 @@ namespace RERPAPI.Controllers.HRM.HrRecruitmentApprove
                 return Ok(ApiResponseFactory.Fail(null, ex.Message));
             }
         }
-
     }
 }

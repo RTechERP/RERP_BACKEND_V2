@@ -7,12 +7,10 @@ namespace RERPAPI.Repo.GenericEntity
     {
         private ProjectTypeRepo _projectTypeRepo;
 
-
         public ProjectPartlistVersionRepo(CurrentUser currentUser, ProjectTypeRepo projectTypeRepo) : base(currentUser)
         {
             _projectTypeRepo = projectTypeRepo;
         }
-
 
         public ProjectPartlistVersionRepo(CurrentUser currentUser) : base(currentUser)
         {
@@ -26,6 +24,7 @@ namespace RERPAPI.Repo.GenericEntity
             {
                 return true;
             }
+
             if (item.IsDeleted == true && item.ID > 0)
             {
                 if (string.IsNullOrEmpty(item.ReasonDeleted))
@@ -86,6 +85,7 @@ namespace RERPAPI.Repo.GenericEntity
                          && x.IsActive == true
                          && x.StatusVersion == item.StatusVersion
                          && x.IsDeleted == false
+                         && x.IsConsumable == item.IsConsumable
                 );
 
                 if (projectPartListVersions.Count > 0)
@@ -119,6 +119,7 @@ namespace RERPAPI.Repo.GenericEntity
             }
             return true;
         }
+
         public bool ValidateApprove(ProjectPartListVersion version, out string message)
         {
             message = "";

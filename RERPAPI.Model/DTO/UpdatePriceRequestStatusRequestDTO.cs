@@ -7,6 +7,7 @@ namespace RERPAPI.Model.DTO
         public List<ProjectPartlistPriceRequest> ListModel { get; set; }
         public List<ProductMailInfo>? ListDataMail { get; set; }
     }
+
     public class ProductMailInfo
     {
         public int EmployeeID { get; set; }

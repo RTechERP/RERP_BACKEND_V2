@@ -1,16 +1,9 @@
-﻿using RERPAPI.Model.Context;
-using RERPAPI.Model.DTO;
+﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class RequestInvoiceRepo:GenericRepo<RequestInvoice>
+    public class RequestInvoiceRepo : GenericRepo<RequestInvoice>
     {
         public RequestInvoiceRepo(CurrentUser currentUser) : base(currentUser)
         {
@@ -25,6 +18,5 @@ namespace RERPAPI.Repo.GenericEntity
                 .FirstOrDefault();
             return item?.Code ?? "";
         }
-
     }
 }

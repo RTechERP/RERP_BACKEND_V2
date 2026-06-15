@@ -1,12 +1,7 @@
-using Microsoft.Extensions.Options;
 using MailKit.Security;
+using Microsoft.Extensions.Options;
 using MimeKit;
 using SmtpClient = MailKit.Net.Smtp.SmtpClient;
-using Microsoft.Data.SqlClient;
-using Microsoft.Identity.Client;
-using Org.BouncyCastle.Cms;
-using System.Net.Mail;
-using System.Net.Http.Headers;
 
 namespace RERPAPI.Model.Common
 {
@@ -22,6 +17,7 @@ namespace RERPAPI.Model.Common
             _smtpHr = smtpHr.Value;
             _smtpHrm = smtpHrm.Value;
         }
+
         //public static async Task SendAsync(string[] toEmails, string subject, string htmlBody)
         //{
         //	try
@@ -66,7 +62,6 @@ namespace RERPAPI.Model.Common
         //	}
         //}
 
-
         public async Task SendAsync(string toEmail, string subject, string body, bool isHtml = true, string cc = "")
         {
             try
@@ -99,7 +94,6 @@ namespace RERPAPI.Model.Common
                                     </body>
                                     </html>";
 
-
                 email.Body = builder.ToMessageBody();
                 //email.Body = new TextPart(isHtml ? "html" : "plain")
                 //{
@@ -116,7 +110,6 @@ namespace RERPAPI.Model.Common
             }
             catch (Exception ex)
             {
-
                 throw new Exception(ex.Message);
             }
         }
@@ -130,9 +123,9 @@ namespace RERPAPI.Model.Common
 
                 if (!string.IsNullOrEmpty(toEmailRange))
                 {
-                    foreach( var toEmail in toEmailRange.Split(new[] {';',','}, StringSplitOptions.RemoveEmptyEntries))
+                    foreach (var toEmail in toEmailRange.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries))
                     {
-                        if(MailboxAddress.TryParse(toEmail.Trim(), out var addr))
+                        if (MailboxAddress.TryParse(toEmail.Trim(), out var addr))
                         {
                             email.To.Add(addr);
                         }
@@ -162,8 +155,6 @@ namespace RERPAPI.Model.Common
                                     </body>
                                     </html>";
 
-
-
                 email.Body = builder.ToMessageBody();
                 //email.Body = new TextPart(isHtml ? "html" : "plain")
                 //{
@@ -180,7 +171,6 @@ namespace RERPAPI.Model.Common
             }
             catch (Exception ex)
             {
-
                 throw new Exception(ex.Message);
             }
         }
@@ -311,7 +301,6 @@ namespace RERPAPI.Model.Common
                                     </body>
                                     </html>";
 
-
                 email.Body = builder.ToMessageBody();
                 //email.Body = new TextPart(isHtml ? "html" : "plain")
                 //{
@@ -328,10 +317,10 @@ namespace RERPAPI.Model.Common
             }
             catch (Exception ex)
             {
-
                 throw new Exception(ex.Message);
             }
         }
+
         public async Task SendAsyncHrm(string toEmail, string subject, string body, bool isHtml = true, string cc = "")
         {
             try
@@ -364,7 +353,6 @@ namespace RERPAPI.Model.Common
                                     </body>
                                     </html>";
 
-
                 email.Body = builder.ToMessageBody();
                 //email.Body = new TextPart(isHtml ? "html" : "plain")
                 //{
@@ -381,11 +369,8 @@ namespace RERPAPI.Model.Common
             }
             catch (Exception ex)
             {
-
                 throw new Exception(ex.Message);
             }
         }
     }
 }
-
-

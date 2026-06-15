@@ -7,7 +7,7 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Project;
-using System.Threading.Tasks;
+
 namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
@@ -21,6 +21,7 @@ namespace RERPAPI.Controllers.Project
         private readonly ProjectRequestRepo _projectRequestRepo;
         private readonly ProjectSolutionFileRepo _projectSolutionFilRepo;
         private readonly ProjectRequestFileRepo _projectRequestFileRepo;
+
         public ProjectSolutionController(
             ProjectSolutionRepo projectSolutionRepo,
             IConfiguration configuration,
@@ -36,6 +37,7 @@ namespace RERPAPI.Controllers.Project
             _projectSolutionFilRepo = projectSolutionFilRepo;
             _projectRequestFileRepo = projectRequestFileRepo;
         }
+
         [HttpGet("get-all-project")]
         public async Task<IActionResult> GetAllProject()
         {
@@ -49,6 +51,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-all-project-request")]
         public async Task<IActionResult> GetAllProjectRequest(int projectID)
         {
@@ -184,7 +187,6 @@ namespace RERPAPI.Controllers.Project
                     {
                         if (item.ID > 0)
                         {
-
                             await _projectSolutionFilRepo.UpdateAsync(item);
                         }
                         else
@@ -211,6 +213,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, "Lỗi khi xử lý dữ liệu"));
             }
         }
+
         [HttpGet("get-solution-code")]
         public async Task<IActionResult> GetSolutionCode(int projectRequestId)
         {
@@ -228,7 +231,6 @@ namespace RERPAPI.Controllers.Project
         //[HttpPost("approve")]
         //public async Task<IActionResult> ApproveSolution(int id, bool isApproved, int status)
         //{
-
         //    if (!_projectSolutionRepo.ValidateApprove(id, isApproved, status, out string message))
         //    {
         //        return BadRequest(ApiResponseFactory.Fail(null, message));
@@ -258,6 +260,7 @@ namespace RERPAPI.Controllers.Project
         //}
 
         #region dành cho yêu cầu - gaiir pháp
+
         [HttpGet("get-project-request2")]
         public async Task<IActionResult> GetProjectRequest2(int projectID, string? keyword)
         {
@@ -274,6 +277,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-project-solution")]
         public async Task<IActionResult> GetSolution(int projectID, int projectRequestID)
         {
@@ -290,6 +294,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-solution-file")]
         public async Task<IActionResult> GetSolutionFile(int projectSolutionID)
         {
@@ -303,6 +308,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-request-file")]
         public async Task<IActionResult> GetRequestFile(int projectRequestID)
         {
@@ -316,6 +322,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-request")]
         [RequiresPermission("N13,N1,N63")]
         public async Task<IActionResult> SaveDataRequest([FromBody] ProjectRequestDTO request)
@@ -348,7 +355,6 @@ namespace RERPAPI.Controllers.Project
                     {
                         if (item.ID > 0)
                         {
-
                             await _projectRequestFileRepo.UpdateAsync(item);
                         }
                         else
@@ -375,6 +381,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, "Lỗi khi xử lý dữ liệu"));
             }
         }
-        #endregion
+
+        #endregion dành cho yêu cầu - gaiir pháp
     }
 }

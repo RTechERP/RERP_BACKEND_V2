@@ -12,7 +12,7 @@ namespace RERPAPI.Controllers.Project
     [Authorize]
     public class ProjectTechnologiesController : Controller
     {
-        ProjectTechnologiesRepo _projectTechnologyRepo;
+        private ProjectTechnologiesRepo _projectTechnologyRepo;
 
         public ProjectTechnologiesController(ProjectTechnologiesRepo projectTechnologyRepo)
         {
@@ -38,7 +38,7 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-        [RequiresPermission("N1,N13,N27")]
+        [RequiresPermission("N1,N13,N27,N97")]
         [HttpPost("save-project-technology")]
         public async Task<IActionResult> SaveData([FromBody] ProjectTechnology projectTechnologies)
         {
@@ -73,7 +73,8 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [RequiresPermission("N1,N13,N27")]
+
+        [RequiresPermission("N1,N13,N27,N97")]
         [HttpPost("delete")]
         public async Task<IActionResult> Delete([FromBody] List<int> ids)
         {
@@ -85,11 +86,9 @@ namespace RERPAPI.Controllers.Project
                     return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng chọn dự án để xóa"));
                 foreach (var item in ids)
                 {
-
                     var project = _projectTechnologyRepo.GetByID(item);
                     project.IsDeleted = true;
                     await _projectTechnologyRepo.UpdateAsync(project);
-
                 }
                 return Ok(ApiResponseFactory.Success(ids, "Xóa thành công"));
             }

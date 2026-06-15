@@ -1,11 +1,5 @@
-﻿using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
+﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
@@ -16,6 +10,7 @@ namespace RERPAPI.Repo.GenericEntity
         private TaxCompanyRepo _taxCompanyRepo;
         private EmployeeRepo _employeeRepo;
         private ProductSaleRepo _productSaleRepo;
+
         public RequestInvoiceLogRepo(
             CurrentUser currentUser,
             CustomerRepo customerRepo,
@@ -32,6 +27,7 @@ namespace RERPAPI.Repo.GenericEntity
         }
 
         #region Log chính
+
         private static readonly Dictionary<string, string> _map = new()
         {
             { "Code", "mã" },
@@ -71,7 +67,6 @@ namespace RERPAPI.Repo.GenericEntity
 
             var ignoreFields = new HashSet<string> { "CreatedDate", "UpdatedDate", "IsDeleted", "UpdatedBy", "CreatedBy", "ProductByProject" };
 
-
             foreach (var prop in props)
             {
                 if (ignoreFields.Contains(prop.Name)) continue;
@@ -98,9 +93,11 @@ namespace RERPAPI.Repo.GenericEntity
 
             return string.Join("\n", changes);
         }
-        #endregion
+
+        #endregion Log chính
 
         #region Log chi tiết
+
         private static readonly Dictionary<string, string> _mapRequestInvoiceDetail = new()
         {
             { "ID", "ID" },
@@ -176,15 +173,12 @@ namespace RERPAPI.Repo.GenericEntity
             return string.Join("\n", changes);
         }
 
-
-        #endregion
-
-        #region Log file
+        #endregion Log chi tiết
 
 
-        #endregion
 
-        #region Khác 
+        #region Khác
+
         private string FormatValueMaster(string fieldName, object value)
         {
             if (value == null) return "rỗng";
@@ -196,28 +190,34 @@ namespace RERPAPI.Repo.GenericEntity
                     int customerID = Convert.ToInt32(value);
                     msg = _customerRepo.GetByID(customerID).CustomerName;
                     return msg;
+
                 case "TaxCompanyID":
                     int KHID = Convert.ToInt32(value);
                     msg = _taxCompanyRepo.GetByID(KHID).Name;
                     return msg;
+
                 case "EmployeeRequestID":
                     int userID = Convert.ToInt32(value);
                     msg = _employeeRepo.GetByID(userID).FullName;
                     return msg;
+
                 case "ReceriverID":
                     int receriverID = Convert.ToInt32(value);
                     msg = _employeeRepo.GetByID(receriverID).FullName;
                     return msg;
+
                 case "ProductSaleID":
                     int productSaleID = Convert.ToInt32(value);
                     msg = _productSaleRepo.GetByID(productSaleID).ProductName;
                     return msg;
+
                 case "Status":
                     int Status = Convert.ToInt32(value);
                     if (Status == 1) msg = "Yêu cầu xuất hóa đơn";
                     if (Status == 2) msg = "Đã xuất nháp";
                     if (Status == 3) msg = "Đã phát hành hóa đơn";
                     return msg;
+
                 default:
                     break;
             }
@@ -255,6 +255,7 @@ namespace RERPAPI.Repo.GenericEntity
 
             await CreateAsync(log);
         }
-        #endregion
+
+        #endregion Khác
     }
 }

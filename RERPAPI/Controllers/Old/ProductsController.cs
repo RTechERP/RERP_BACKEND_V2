@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -7,6 +6,5 @@ namespace RERPAPI.Controllers.Old
     [ApiController]
     public class ProductsController : ControllerBase
     {
-        
     }
 }

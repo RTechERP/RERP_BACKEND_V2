@@ -1,11 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System.Security.Principal;
 
 namespace RERPAPI.Controllers.Old.Technical
 {
@@ -24,6 +22,7 @@ namespace RERPAPI.Controllers.Old.Technical
         private readonly EmployeeRepo _employeeRepo;
         private readonly EmployeeOverTimeRepo _employeeOvertimeRepo;
         private readonly DailyReportTechnicalRepo _dailyReportTechnicalRepo;
+
         public KPIErrorEmployeeController(DepartmentRepo departmentRepo, KPIErrorTypeRepo kpiErrorTypeRepo, KPIErrorEmployeeRepo kpiErrorEmployeeRepo, KPIErrorEmployeeFileRepo kpiErrorEmployeeFileRepo, UserTeamRepo userTeamRepo, ConfigSystemRepo configSystemRepo, KPIErrorRepo kpiErrorRepo, EmployeeRepo employeeRepo, EmployeeOverTimeRepo employeeOvertimeRepo, DailyReportTechnicalRepo dailyReportTechnicalRepo)
         {
             _departmentRepo = departmentRepo;
@@ -58,7 +57,7 @@ namespace RERPAPI.Controllers.Old.Technical
             try
             {
                 var list = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
-                                 new string[] {"@Status" },
+                                 new string[] { "@Status" },
                                  new object[] { 0 });
                 return Ok(ApiResponseFactory.Success(list, ""));
             }
@@ -67,6 +66,7 @@ namespace RERPAPI.Controllers.Old.Technical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-kpierror")]
         public IActionResult GetKPIError(int typeID)
         {
@@ -78,7 +78,6 @@ namespace RERPAPI.Controllers.Old.Technical
                 var data = SQLHelper<object>.GetListData(dataKpiError, 0);
 
                 return Ok(ApiResponseFactory.Success(data, ""));
-
             }
             catch (Exception ex)
             {
@@ -97,7 +96,6 @@ namespace RERPAPI.Controllers.Old.Technical
                 var data = SQLHelper<object>.GetListData(dataKpiError, 0);
 
                 return Ok(ApiResponseFactory.Success(data, ""));
-
             }
             catch (Exception ex)
             {
@@ -120,7 +118,7 @@ namespace RERPAPI.Controllers.Old.Technical
             }
         }
 
-        [HttpGet("load-data")]  
+        [HttpGet("load-data")]
         public IActionResult GetKPIErrorEmployeeData(DateTime startDate, DateTime endDate, int kpiErrorID, int employeeID, int typeID, string departmentIDs = "", string keywords = "")
         {
             try
@@ -133,7 +131,6 @@ namespace RERPAPI.Controllers.Old.Technical
                 var data = SQLHelper<object>.GetListData(dataKpiError, 0);
 
                 return Ok(ApiResponseFactory.Success(data, ""));
-
             }
             catch (Exception ex)
             {
@@ -149,7 +146,6 @@ namespace RERPAPI.Controllers.Old.Technical
                 var dataFile = _kpiErrorEmployeeFileRepo.GetAll(x => x.KPIErrorEmployeeID == kpiErrorEmployeeID);
 
                 return Ok(ApiResponseFactory.Success(dataFile, ""));
-
             }
             catch (Exception ex)
             {
@@ -171,7 +167,7 @@ namespace RERPAPI.Controllers.Old.Technical
                     return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng chọn mã lỗi vi phạm"));
                 }
 
-                if(model.ID > 0)
+                if (model.ID > 0)
                 {
                     _kpiErrorEmployeeRepo.Update(model);
                 }
@@ -181,7 +177,6 @@ namespace RERPAPI.Controllers.Old.Technical
                 }
 
                 return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
-
             }
             catch (Exception ex)
             {
@@ -197,14 +192,12 @@ namespace RERPAPI.Controllers.Old.Technical
                 var data = _kpiErrorEmployeeRepo.GetByID(id);
 
                 return Ok(ApiResponseFactory.Success(data, ""));
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         [HttpPost("auto-add")]
         public IActionResult AutoAddKPIError([FromBody] AutoAddKPIErrorRequest request)
@@ -441,8 +434,6 @@ namespace RERPAPI.Controllers.Old.Technical
 
         [HttpPost("upload")]
         [DisableRequestSizeLimit]
-        //[RequiresPermission("N27,N36,N1,N31")]
-
         public async Task<IActionResult> Upload(int kpiErrorEmployeeId, int fileType)
         {
             try
@@ -537,8 +528,6 @@ namespace RERPAPI.Controllers.Old.Technical
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi upload file: {ex.Message}"));
             }
         }
-
-
 
         [HttpPost("delete-file")]
         public IActionResult DeleteFile([FromBody] List<int> fileIds)
@@ -657,9 +646,6 @@ namespace RERPAPI.Controllers.Old.Technical
             }
         }
 
-
-
-
         //[HttpGet("get-image")]
         //[AllowAnonymous]
         //public IActionResult GetImage(string fileName)
@@ -748,6 +734,5 @@ namespace RERPAPI.Controllers.Old.Technical
                 return date;
             return null;
         }
-
     }
 }

@@ -16,6 +16,7 @@ namespace RERPAPI.Controllers.Old
     public class ProjectTaskTypeController : ControllerBase
     {
         private readonly ProjectTaskTypeRepo _projectTaskTypeRepo;
+
         public ProjectTaskTypeController(ProjectTaskTypeRepo projectTaskTypeRepo)
         {
             _projectTaskTypeRepo = projectTaskTypeRepo;
@@ -35,25 +36,25 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, "Failed to get project task type."));
             }
         }
-        
+
         [HttpPost]
         [RequiresPermission("N90")]
         public async Task<IActionResult> CreateProjectTaskType([FromBody] ProjectTaskType projectTaskType)
         {
             try
             {
-                if(string.IsNullOrEmpty(projectTaskType.Code) )
+                if (string.IsNullOrEmpty(projectTaskType.Code))
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "MÃ CODE KHÔNG ĐƯỢC ĐỂ TRỐNG, VUI LÒNG NHẬP MÃ CODE !"));
                 }
-                if( int.TryParse(projectTaskType.Code, out int code))
+                if (int.TryParse(projectTaskType.Code, out int code))
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "MÃ CODE PHẢI LÀ CHỮ HOẶC CHỮ VÀ SỐ VUI LÒNG NHẬP MÃ CODE !"));
                 }
                 var exitCode = _projectTaskTypeRepo.GetAll(x => (!x.IsDeleted ?? true) && (x.Code.ToUpper().Equals(projectTaskType.Code.ToUpper()))).FirstOrDefault();
                 if (projectTaskType.ID > 0)
                 {
-                    if(exitCode != null && exitCode.ID > 0 && exitCode.ID != projectTaskType.ID)
+                    if (exitCode != null && exitCode.ID > 0 && exitCode.ID != projectTaskType.ID)
                     {
                         return BadRequest(ApiResponseFactory.Fail(null, "MÃ CODE ĐÃ TỒN TẠI, VUI LÒNG NHẬP MÃ CODE MỚI !"));
                     }
@@ -71,11 +72,11 @@ namespace RERPAPI.Controllers.Old
                 }
                 else
                 {
-                    if(exitCode != null && exitCode.ID > 0)
+                    if (exitCode != null && exitCode.ID > 0)
                     {
                         return BadRequest(ApiResponseFactory.Fail(null, "MÃ CODE ĐÃ TỒN TẠI, VUI LÒNG NHẬP MÃ CODE MỚI !"));
                     }
-                    projectTaskType.Code = projectTaskType.Code.Replace(" ","").ToUpper();
+                    projectTaskType.Code = projectTaskType.Code.Replace(" ", "").ToUpper();
                     if (await _projectTaskTypeRepo.CreateAsync(projectTaskType) > 0)
                     {
                         return Ok(ApiResponseFactory.Success(projectTaskType, "Project task type created successfully."));

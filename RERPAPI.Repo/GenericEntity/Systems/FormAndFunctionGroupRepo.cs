@@ -1,8 +1,6 @@
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Linq;
 
 namespace RERPAPI.Repo.GenericEntity.Systems
 {

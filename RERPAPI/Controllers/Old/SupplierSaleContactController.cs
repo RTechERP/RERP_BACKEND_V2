@@ -1,12 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json.Linq;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.DocumentManager;
-using ZXing;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -15,7 +12,7 @@ namespace RERPAPI.Controllers.Old
     [Authorize]
     public class SupplierSaleContactController : ControllerBase
     {
-        SupplierSaleContactRepo _supplierSaleContactRepo;
+        private SupplierSaleContactRepo _supplierSaleContactRepo;
 
         public SupplierSaleContactController(
             SupplierSaleContactRepo supplierSaleContactRepo
@@ -25,7 +22,6 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpGet("supplier-sale-contact")]
-        //[RequiresPermission("N27,N33,N52,N53,N35,N1")]
         public async Task<IActionResult> getSupplierSaleContact(int supplierID)
         {
             try
@@ -63,7 +59,6 @@ namespace RERPAPI.Controllers.Old
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
     }
 }

@@ -8,10 +8,6 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.HRM.FlightBookingManagement;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM.FlightBooking;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.HRM.FlightBooking
 {
@@ -40,6 +36,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
             _projectRepo = projectRepo;
             _currentUser = currentUser;
         }
+
         [RequiresPermission("N1,N2,N34")]
         [HttpGet("get-employees")]
         public IActionResult GetEmployees()
@@ -55,6 +52,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2,N34")]
         [HttpGet("get-projects")]
         public IActionResult GetProjects()
@@ -70,6 +68,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2,N34")]
         [HttpPost("get-list")]
         public IActionResult GetList([FromBody] FlightBookingRequestParam request)
@@ -79,10 +78,10 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                 string procedureName = "spGetFlightBookingManagement";
                 string[] paramNames = new string[] { "@StartDate", "@EndDate", "@Keyword", "@EmployeeID", "@ProjectID" };
                 object[] paramValues = new object[] { request.StartDate, request.EndDate, request.Keyword ?? "", request.EmployeeID ?? 0, request.ProjectID ?? 0 };
-                
+
                 var data = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
                 var result = SQLHelper<object>.GetListData(data, 0);
-                
+
                 return Ok(ApiResponseFactory.Success(result, ""));
             }
             catch (Exception ex)
@@ -90,6 +89,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2,N34")]
         [HttpGet("get-by-id")]
         public IActionResult GetByID(int id)
@@ -99,11 +99,11 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                 string procedureName = "spGetFlightBookingManagementByID";
                 string[] paramNames = new string[] { "@ID" };
                 object[] paramValues = new object[] { id };
-                
+
                 var data = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
                 var master = SQLHelper<object>.GetListData(data, 0).FirstOrDefault();
                 var proposals = SQLHelper<object>.GetListData(data, 1);
-                
+
                 return Ok(ApiResponseFactory.Success(new { master, proposals }, ""));
             }
             catch (Exception ex)
@@ -111,6 +111,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2,N34")]
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] FlightBookingSaveDTO dto)
@@ -147,7 +148,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                     {
                         p.IsDeleted = true;
                         p.UpdatedDate = DateTime.Now;
-                       
+
                         await _flightBookingProposalRepo.UpdateAsync(p);
                     }
 
@@ -223,7 +224,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                 var master = _flightBookingManagementRepo.GetByID(id);
                 if (master != null)
                 {
-                    master.IsDeleted = true;               
+                    master.IsDeleted = true;
                     await _flightBookingManagementRepo.UpdateAsync(master);
                 }
                 return Ok(ApiResponseFactory.Success(null, "Xóa thông tin thành công"));
@@ -254,6 +255,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("ExportExcel")]
         public IActionResult ExportExcel([FromBody] FlightBookingRequestParam request)
         {
@@ -261,17 +263,17 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
             {
                 OfficeOpenXml.ExcelPackage.License.SetNonCommercialOrganization("RTC");
 
-                string selectedIDsStr = request.SelectedIDs != null && request.SelectedIDs.Any() 
-                    ? string.Join(",", request.SelectedIDs) 
+                string selectedIDsStr = request.SelectedIDs != null && request.SelectedIDs.Any()
+                    ? string.Join(",", request.SelectedIDs)
                     : "";
 
                 var dt = SQLHelper<dynamic>.ProcedureToList(
                     "spGetFlightBookingExportExcel",
                     new string[] { "@StartDate", "@EndDate", "@Keyword", "@ProjectID", "@SelectedIDs" },
-                    new object[] { 
-                        request.StartDate ?? (object)DBNull.Value, 
-                        request.EndDate ?? (object)DBNull.Value, 
-                        request.Keyword ?? "", 
+                    new object[] {
+                        request.StartDate ?? (object)DBNull.Value,
+                        request.EndDate ?? (object)DBNull.Value,
+                        request.Keyword ?? "",
                         request.ProjectID ?? 0,
                         selectedIDsStr
                     }
@@ -293,9 +295,10 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                 int maxPA = groups.Max(g => g.Count());
                 if (maxPA < 2) maxPA = 2;
 
-                int hcnsReasonCol = 12 + maxPA; // 11 cột đầu + (maxPA cột/PA)
-                int diffCol = hcnsReasonCol + 1;
-                int totalCol = diffCol + 1;
+                int hcnsProposalCol = 12 + maxPA; // 11 cột đầu + (maxPA cột/PA)
+                int diffCol = hcnsProposalCol + 1;
+                int hcnsReasonCol = diffCol + 1;
+                int totalCol = hcnsReasonCol + 1;
                 int approverCol = totalCol + 1;
                 int bookerCol = approverCol + 1;
                 int bookedDateCol = bookerCol + 1;
@@ -340,11 +343,15 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                         colIndex++;
                     }
 
-                    sheet.Cells[2, colIndex].Value = "Lý do HCNS đề xuất";
+                    sheet.Cells[2, colIndex].Value = "Phương án HCNS đề xuất";
                     sheet.Cells[2, colIndex, 3, colIndex].Merge = true;
                     colIndex++;
 
                     sheet.Cells[2, colIndex].Value = "Chênh lệch\nchi phí";
+                    sheet.Cells[2, colIndex, 3, colIndex].Merge = true;
+                    colIndex++;
+
+                    sheet.Cells[2, colIndex].Value = "Lý do HCNS đề xuất";
                     sheet.Cells[2, colIndex, 3, colIndex].Merge = true;
                     colIndex++;
 
@@ -398,8 +405,11 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                         decimal pa1Price = 0;
                         decimal pa2Price = 0;
                         decimal totalApproved = 0;
+                        bool hasApproved = false;
+                        decimal minPrice = decimal.MaxValue;
                         string approverName = "";
-                        
+
+                        var hcnsProposalsList = new List<string>();
                         string hcnsReason = "";
 
                         for (int i = 0; i < groupCount; i++)
@@ -419,9 +429,27 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                                 sheet.Cells[startRow, 9].Value = first["ArrivesAddress"];
                             }
 
-                            sheet.Cells[row, 10].Value = item["DepartureTime"] != null && item["DepartureTime"] != DBNull.Value ? ((DateTime)item["DepartureTime"]).ToString("HH:mm") : "";
+                            string dayOfWeekStr = "";
+                            if (item["DepartureDate"] != null && item["DepartureDate"] != DBNull.Value)
+                            {
+                                var dateVal = (DateTime)item["DepartureDate"];
+                                dayOfWeekStr = dateVal.DayOfWeek switch
+                                {
+                                    DayOfWeek.Sunday => "Chủ Nhật",
+                                    DayOfWeek.Monday => "Thứ Hai",
+                                    DayOfWeek.Tuesday => "Thứ Ba",
+                                    DayOfWeek.Wednesday => "Thứ Tư",
+                                    DayOfWeek.Thursday => "Thứ Năm",
+                                    DayOfWeek.Friday => "Thứ Sáu",
+                                    DayOfWeek.Saturday => "Thứ Bảy",
+                                    _ => ""
+                                };
+                            }
+
+                            string depTimeStr = item["DepartureTime"] != null && item["DepartureTime"] != DBNull.Value ? ((DateTime)item["DepartureTime"]).ToString("HH:mm") : "";
+                            sheet.Cells[row, 10].Value = string.IsNullOrEmpty(dayOfWeekStr) ? depTimeStr : $"{dayOfWeekStr} {depTimeStr}";
                             sheet.Cells[row, 11].Value = item["DepartureDate"] != null && item["DepartureDate"] != DBNull.Value ? ((DateTime)item["DepartureDate"]).ToString("dd/MM/yyyy") : "";
-                            
+
                             int paCol = 12 + i;
                             string airline = item["Airline"] != null ? item["Airline"].ToString() : "";
                             decimal priceVal = item["Price"] != null && item["Price"] != DBNull.Value ? Convert.ToDecimal(item["Price"]) : 0;
@@ -435,22 +463,29 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
 
                             sheet.Cells[row, paCol].Value = string.Join("\n", lines);
                             sheet.Cells[row, paCol].Style.WrapText = true;
+                            sheet.Cells[row, paCol].Style.Font.Color.SetColor(System.Drawing.Color.Black);
 
                             bool isHCNS = item["HCNSProposal"] != null && item["HCNSProposal"] != DBNull.Value && Convert.ToBoolean(item["HCNSProposal"]);
                             if (isHCNS)
                             {
-                                string reasonStr = item["ReasonHCNSProposal"] != null ? item["ReasonHCNSProposal"].ToString() : "";
-                                hcnsReason = "Phương án " + (i + 1) + (string.IsNullOrEmpty(reasonStr) ? "" : ": " + reasonStr);
+                                hcnsReason = item["ReasonHCNSProposal"] != null ? item["ReasonHCNSProposal"].ToString() : "";
+                                hcnsProposalsList.Add("Phương án " + (i + 1));
                             }
 
                             decimal price = priceVal;
                             if (i == 0) pa1Price = price;
                             if (i == 1) pa2Price = price;
-                            
+
+                            if (price > 0 && price < minPrice)
+                            {
+                                minPrice = price;
+                            }
+
                             int isApprove = item["IsApprove"] != null && item["IsApprove"] != DBNull.Value ? Convert.ToInt32(item["IsApprove"]) : 0;
-                            if (isApprove == 1) 
+                            if (isApprove == 1)
                             {
                                 totalApproved += price;
+                                hasApproved = true;
                                 if (item["ApproverName"] != null && item["ApproverName"] != DBNull.Value)
                                 {
                                     approverName = item["ApproverName"].ToString();
@@ -466,12 +501,16 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
 
                         int endRow = row - 1;
 
+                        sheet.Cells[startRow, hcnsProposalCol].Value = string.Join("\n\n", hcnsProposalsList);
+                        sheet.Cells[startRow, hcnsProposalCol].Style.WrapText = true;
+
                         sheet.Cells[startRow, hcnsReasonCol].Value = hcnsReason;
 
                         sheet.Cells[startRow, diffCol].Value = Math.Abs(pa1Price - pa2Price);
                         sheet.Cells[startRow, diffCol].Style.Numberformat.Format = "#,##0";
 
-                        sheet.Cells[startRow, totalCol].Value = totalApproved;
+                        decimal totalVal = hasApproved ? totalApproved : (minPrice == decimal.MaxValue ? 0 : minPrice);
+                        sheet.Cells[startRow, totalCol].Value = totalVal;
                         sheet.Cells[startRow, totalCol].Style.Numberformat.Format = "#,##0";
 
                         sheet.Cells[startRow, approverCol].Value = approverName;
@@ -481,7 +520,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
 
                         if (endRow > startRow)
                         {
-                            int[] colsToMerge = { 1, 2, 3, 4, 5, 6, 7, 8, 9, hcnsReasonCol, diffCol, totalCol, approverCol, bookerCol, bookedDateCol, noteCol };
+                            int[] colsToMerge = { 1, 2, 3, 4, 5, 6, 7, 8, 9, hcnsProposalCol, diffCol, hcnsReasonCol, totalCol, approverCol, bookerCol, bookedDateCol, noteCol };
                             foreach (int col in colsToMerge)
                             {
                                 sheet.Cells[startRow, col, endRow, col].Merge = true;
@@ -494,7 +533,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                     allRange.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
                     allRange.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
                     allRange.Style.WrapText = true;
-                    
+
                     // Kẻ khung cho tất cả các ô dữ liệu
                     using (var range = sheet.Cells[4, 1, row - 1, totalCols])
                     {
@@ -517,10 +556,11 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                     sheet.Column(10).Width = 10; // Time
                     sheet.Column(11).Width = 12; // Date
 
-                    for (int i = 12; i < hcnsReasonCol; i++)
+                    for (int i = 12; i < hcnsProposalCol; i++)
                     {
                         sheet.Column(i).Width = 20;
                     }
+                    sheet.Column(hcnsProposalCol).Width = 25;
                     sheet.Column(hcnsReasonCol).Width = 35;
                     sheet.Column(diffCol).Width = 20;
                     sheet.Column(totalCol).Width = 15;

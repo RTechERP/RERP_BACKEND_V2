@@ -1,7 +1,5 @@
-using RERPAPI.Model.Entities;
-using RERPAPI.Model.Common;
-using System;
 using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Repo.GenericEntity.HRRecruitmentExamRepo
 {

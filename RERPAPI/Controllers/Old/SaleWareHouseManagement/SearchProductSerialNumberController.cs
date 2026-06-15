@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 
 namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
@@ -9,14 +8,14 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
     public class SearchProductSerialNumberController : ControllerBase
     {
         [HttpGet("")]
-        public IActionResult getAll(string? keyword )
+        public IActionResult getAll(string? keyword)
         {
             try
             {
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
                     "spGetSearchProductSerialNumber",
-                    new string[] {"@FilterText" },
-                    new object[] {keyword ?? ""}
+                    new string[] { "@FilterText" },
+                    new object[] { keyword ?? "" }
                     );
                 return Ok(new
                 {
@@ -29,8 +28,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             {
                 return BadRequest(new
                 {
-                    status=0,
-                    message=ex.Message
+                    status = 0,
+                    message = ex.Message
                 });
             }
         }

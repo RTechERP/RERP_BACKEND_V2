@@ -6,7 +6,7 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class ProductsSaleRepo : GenericRepo<ProductSale>
     {
-        RTCContext _context = new RTCContext();
+        private RTCContext _context = new RTCContext();
 
         public ProductsSaleRepo(CurrentUser currentUser) : base(currentUser)
         {
@@ -18,12 +18,13 @@ namespace RERPAPI.Repo.GenericEntity
             await _context.SaveChangesAsync();
             return item.ID;
         }
+
         public bool CheckCode(ProductSaleImportExcelDTO item)
         {
             var existing = GetAll(
-                x => x.ProductName.Trim().ToLower() == item.ProductName.Trim().ToLower() 
-                && x.ProductCode.Trim().ToLower() == item.ProductCode.Trim().ToLower() 
-                && x.IsDeleted == false 
+                x => x.ProductName.Trim().ToLower() == item.ProductName.Trim().ToLower()
+                && x.ProductCode.Trim().ToLower() == item.ProductCode.Trim().ToLower()
+                && x.IsDeleted == false
                 && x.ProductGroupID == item.ProductGroupID);
 
             return existing.Any();

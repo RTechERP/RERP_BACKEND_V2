@@ -1,5 +1,4 @@
 ﻿using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
@@ -9,8 +8,6 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using System.Data;
 using System.Globalization;
-using System.Linq;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.KhoBaseManager
 {
@@ -29,6 +26,7 @@ namespace RERPAPI.Controllers.KhoBaseManager
         private readonly FollowProjectRepo _followProjectRepo;
         private readonly ProjectStatusRepo _projectStatusRepo;
         private readonly GroupSalesUserRepo _groupSalesUserRepo;
+
         public FollowProjectBaseController(
             ProjectRepo projectRepo,
             UserRepo userRepo,
@@ -89,7 +87,8 @@ namespace RERPAPI.Controllers.KhoBaseManager
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        // Danh sách group sale suser 
+
+        // Danh sách group sale suser
         [HttpGet("getfollowprojectbasedetail")]
         public async Task<IActionResult> getfollowprojectbasedetail(int followProjectBaseID, int projectID)
         {
@@ -118,6 +117,7 @@ namespace RERPAPI.Controllers.KhoBaseManager
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // check exist firmbase
         [HttpGet("getcheckexistfirmbase")]
         public async Task<IActionResult> getcheckexistfirmbase(string firmBaseCode)
@@ -137,6 +137,7 @@ namespace RERPAPI.Controllers.KhoBaseManager
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // check exist project type base
         [HttpGet("getcheckexistprojecttypebase")]
         public async Task<IActionResult> getcheckexistprojecttypebase(string projectTypeBaseCode)
@@ -156,7 +157,8 @@ namespace RERPAPI.Controllers.KhoBaseManager
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        // Danh sách group sale suser 
+
+        // Danh sách group sale suser
         [HttpGet("getgroupsalesuser")]
         public IActionResult getgroupsalesuser(int groupID, int teamID)
         {
@@ -204,10 +206,9 @@ namespace RERPAPI.Controllers.KhoBaseManager
 
         [HttpGet("get-user-sale")]
         public async Task<IActionResult> GetUserSale(int userId, bool isAdmin, int isAdminSale)
-      {
+        {
             try
             {
-
                 var list = SQLHelper<dynamic>.ProcedureToList(
                     "spGetEmployeeManager",
                     new[] { "@UserID" },
@@ -240,8 +241,7 @@ namespace RERPAPI.Controllers.KhoBaseManager
             }
         }
 
-
-        // Danh sách PM 
+        // Danh sách PM
         [HttpGet("getpm")]
         public async Task<IActionResult> getpm()
         {
@@ -261,7 +261,8 @@ namespace RERPAPI.Controllers.KhoBaseManager
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        // Danh sách projects 
+
+        // Danh sách projects
         [HttpGet("getprojects")]
         public async Task<IActionResult> getprojects()
         {
@@ -283,7 +284,8 @@ namespace RERPAPI.Controllers.KhoBaseManager
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        // Danh sách user 
+
+        // Danh sách user
         [HttpGet("getusers")]
         public async Task<IActionResult> getusers()
         {
@@ -298,7 +300,8 @@ namespace RERPAPI.Controllers.KhoBaseManager
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        // Danh sách customer 
+
+        // Danh sách customer
         [HttpGet("getcustomers")]
         public async Task<IActionResult> getcustomers()
         {
@@ -317,7 +320,8 @@ namespace RERPAPI.Controllers.KhoBaseManager
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        // Danh sách getprojectstatus 
+
+        // Danh sách getprojectstatus
         [HttpGet("getprojectstatus")]
         public async Task<IActionResult> getprojectstatus()
         {
@@ -336,7 +340,8 @@ namespace RERPAPI.Controllers.KhoBaseManager
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        // Danh sách getprojectstatus 
+
+        // Danh sách getprojectstatus
         [HttpGet("getprojectbyid")]
         public async Task<IActionResult> getprojectbyid(int id)
         {
@@ -354,7 +359,8 @@ namespace RERPAPI.Controllers.KhoBaseManager
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        // Danh sách FirmBase 
+
+        // Danh sách FirmBase
         [HttpGet("getfirmbase")]
         public async Task<IActionResult> getfirmbase()
         {
@@ -373,7 +379,8 @@ namespace RERPAPI.Controllers.KhoBaseManager
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        // Danh sách ProjectTypeBase 
+
+        // Danh sách ProjectTypeBase
         [HttpGet("getprojecttypebase")]
         public async Task<IActionResult> getprojecttypebase()
         {
@@ -392,7 +399,8 @@ namespace RERPAPI.Controllers.KhoBaseManager
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        // Danh sách ProjectTypeBase 
+
+        // Danh sách ProjectTypeBase
         [HttpGet("getupdateproject")]
         public async Task<IActionResult> getupdateproject(int ProjectStatusBaseID, int ProjectID, string LoginName)
         {
@@ -421,7 +429,7 @@ namespace RERPAPI.Controllers.KhoBaseManager
             }
         }
 
-        // Danh sách khách hàng 
+        // Danh sách khách hàng
         [HttpGet("getcustomerbase")]
         public async Task<IActionResult> getcustomerbase()
         {
@@ -440,16 +448,16 @@ namespace RERPAPI.Controllers.KhoBaseManager
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        // Danh sách employee 
+
+        // Danh sách employee
         [HttpGet("getemployee")]
         public async Task<IActionResult> getemployee(int status)
         {
             try
             {
-           
                 var employees = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
                                                 new string[] { "@Status" },
-                                                new object[] { status});
+                                                new object[] { status });
                 return Ok(new
                 {
                     status = 1,
@@ -461,6 +469,7 @@ namespace RERPAPI.Controllers.KhoBaseManager
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("savefollowprojectbase")]
         public async Task<IActionResult> savefollowprojectbase([FromBody] FollowProjectBase obj)
         {
@@ -486,8 +495,8 @@ namespace RERPAPI.Controllers.KhoBaseManager
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
+
         [HttpPost("saveprojectstatuslog")]
         public async Task<IActionResult> saveprojectstatuslog([FromBody] ProjectStatusLog obj)
         {
@@ -513,8 +522,8 @@ namespace RERPAPI.Controllers.KhoBaseManager
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
+
         // lưu firm base
         [HttpPost("savefirmbase")]
         public async Task<IActionResult> savefirmbase([FromBody] FirmBase obj)
@@ -541,8 +550,8 @@ namespace RERPAPI.Controllers.KhoBaseManager
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
+
         // lưu loại dự án base
         [HttpPost("saveprojecttypebase")]
         public async Task<IActionResult> saveprojecttypebase([FromBody] ProjectTypeBase obj)
@@ -569,7 +578,6 @@ namespace RERPAPI.Controllers.KhoBaseManager
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
 
         [HttpGet("exportfollowprojectbase")]
@@ -593,12 +601,11 @@ namespace RERPAPI.Controllers.KhoBaseManager
                 var data = SQLHelper<dynamic>.GetListData(list, 0);
 
                 if (data == null || data.Count == 0)
-                    return BadRequest(ApiResponseFactory.Fail(null,"Không có dữ liệu để xuất"));
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu để xuất"));
 
                 // 2. Lấy template
                 //string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "TemplateFollowProjectBase.xlsx");
                 string templatePath = @"\\192.168.1.190\Software\Template\ExportExcel\TemplateFollowProjectBase.xlsx";
-
 
                 if (!System.IO.File.Exists(templatePath))
                     return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy file template"));
@@ -728,7 +735,7 @@ namespace RERPAPI.Controllers.KhoBaseManager
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(null, "Lỗi xuất file: " + ex.Message ));
+                return BadRequest(ApiResponseFactory.Fail(null, "Lỗi xuất file: " + ex.Message));
             }
         }
 
@@ -842,13 +849,11 @@ namespace RERPAPI.Controllers.KhoBaseManager
             }
         }
 
-
         [HttpPost("importexcel")]
         public IActionResult ImportExcel([FromBody] List<Dictionary<string, object>> projects)
         {
             if (projects == null || projects.Count == 0)
                 return BadRequest(new { status = 0, message = "Payload rỗng." });
-
 
             int created = 0, updated = 0;
             var errors = new List<object>();
@@ -935,7 +940,6 @@ namespace RERPAPI.Controllers.KhoBaseManager
                         }
                     }
 
-
                     //toSave.Add(entity);
                 }
                 catch (Exception ex)
@@ -964,8 +968,8 @@ namespace RERPAPI.Controllers.KhoBaseManager
             //    return result;
 
             //}
-
         }
+
         [HttpGet("download-template-followprojectbase")]
         public IActionResult DownloadTemplateFollowProjectBase()
         {
@@ -992,11 +996,9 @@ namespace RERPAPI.Controllers.KhoBaseManager
                 return BadRequest(ApiResponseFactory.Fail(null, "Lỗi tải template: " + ex.Message));
             }
         }
-
     }
 
-
-    static class ImportExtensions
+    internal static class ImportExtensions
     {
         public static string GetString(this Dictionary<string, object> row, string key)
         {

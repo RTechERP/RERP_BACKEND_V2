@@ -19,6 +19,7 @@ namespace RERPAPI.Controllers.Old.VisionBase
         private readonly DepartmentRepo _departmentRepo;
         private readonly EmployeeTeamSaleLinkRepo _employeeTeamSaleLinkRepo;
         private readonly EmployeeTeamSaleRepo _employeeTeamSaleRepo;
+
         public PlanWeekController(WeekPlanRepo weekPlanRepo,
             DepartmentRepo departmentRepo,
             CustomerRepo customerRepo,
@@ -31,7 +32,6 @@ namespace RERPAPI.Controllers.Old.VisionBase
             _employeeTeamSaleLinkRepo = employeeTeamSaleLinkRepo;
             _employeeTeamSaleRepo = employeeTeamSaleRepo;
         }
-
 
         [HttpGet("get-data")]
         public IActionResult Get(DateTime dateStart, DateTime dateEnd, int departmentId, int userId, int groupSaleId)
@@ -82,6 +82,7 @@ namespace RERPAPI.Controllers.Old.VisionBase
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-team")]
         public IActionResult GetTeam()
         {
@@ -96,6 +97,7 @@ namespace RERPAPI.Controllers.Old.VisionBase
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-customers")]
         public IActionResult GetCustomers()
         {
@@ -192,7 +194,6 @@ namespace RERPAPI.Controllers.Old.VisionBase
             {
                 foreach (var item in model)
                 {
-
                     var validate = item;
 
                     List<string> errors = new List<string>();
@@ -226,11 +227,11 @@ namespace RERPAPI.Controllers.Old.VisionBase
                         string.IsNullOrWhiteSpace(weekPlan.Result) &&
                         string.IsNullOrWhiteSpace(weekPlan.Problem))
                     {
-                        if (weekPlan.ID > 0) 
+                        if (weekPlan.ID > 0)
                         {
                             await _weekPlanRepo.DeleteAsync(weekPlan.ID);
                         }
-                        continue; 
+                        continue;
                     }
                     else
                     {
@@ -241,10 +242,8 @@ namespace RERPAPI.Controllers.Old.VisionBase
                         else
                         {
                             await _weekPlanRepo.CreateAsync(weekPlan);
-
                         }
                     }
-
                 }
                 return Ok(ApiResponseFactory.Success(null, "Lưu thành công!"));
             }
@@ -253,6 +252,7 @@ namespace RERPAPI.Controllers.Old.VisionBase
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("delete")]
         public async Task<IActionResult> Delete(PlanWeekDTO dto)
         {
@@ -264,7 +264,6 @@ namespace RERPAPI.Controllers.Old.VisionBase
                     return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy kế hoạch để xoá!"));
                 await _weekPlanRepo.DeleteRangeAsync(weekPlans);
 
-
                 return Ok(ApiResponseFactory.Success(null, "Xoá thành công!"));
             }
             catch (Exception ex)
@@ -272,6 +271,5 @@ namespace RERPAPI.Controllers.Old.VisionBase
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

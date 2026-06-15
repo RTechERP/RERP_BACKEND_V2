@@ -1,14 +1,8 @@
 ﻿using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using RERPAPI.Model.Entities;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Model.DTO
 {
-    public class DailyReportHRDTO:DailyReportHR
+    public class DailyReportHRDTO : DailyReportHR
     {
         public decimal PerformanceAVG { get; set; }
         public string WorkContent { get; set; }

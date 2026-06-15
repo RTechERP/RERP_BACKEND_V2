@@ -2,11 +2,6 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity.HRM
 {
@@ -55,15 +50,14 @@ namespace RERPAPI.Repo.GenericEntity.HRM
                 }
                 foreach (var contact in data.EmergencyContacts)
                 {
-                    if(contact.IsDeleted!=true)
+                    if (contact.IsDeleted != true)
                     {
                         if (string.IsNullOrWhiteSpace(contact.FullName) || string.IsNullOrWhiteSpace(contact.Relation) ||
                        string.IsNullOrWhiteSpace(contact.Tel) || string.IsNullOrWhiteSpace(contact.Address))
                         {
                             return ApiResponseFactory.Fail(null, "Vui lòng nhập đầy đủ thông tin cho Người liên hệ khẩn cấp!");
                         }
-                    }    
-                   
+                    }
                 }
                 // Check Educations (at least 1)
                 if (data.Educations == null || data.Educations.Count < 1)
@@ -72,7 +66,7 @@ namespace RERPAPI.Repo.GenericEntity.HRM
                 }
                 foreach (var edu in data.Educations)
                 {
-                    if(edu.IsDeleted!=true)
+                    if (edu.IsDeleted != true)
                     {
                         if (string.IsNullOrWhiteSpace(edu.NameOfSchool) || string.IsNullOrWhiteSpace(edu.Major) ||
                      string.IsNullOrWhiteSpace(edu.GraduatedTime) || edu.QualificationLevel <= 0)

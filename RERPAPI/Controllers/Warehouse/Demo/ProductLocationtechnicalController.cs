@@ -34,12 +34,14 @@ namespace RERPAPI.Controllers.Warehouse.Demo
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-stt")]
         public IActionResult GetSTT(int warehouseID)
         {
             int stt = _productLocationRepo.GetSTT(warehouseID);
             return Ok(ApiResponseFactory.Success(stt, ""));
         }
+
         [HttpPost("save-data")]
         [RequiresPermission("N26,N1,N34,N80")]
         public async Task<IActionResult> SaveData(ProductLocation p)
@@ -58,7 +60,6 @@ namespace RERPAPI.Controllers.Warehouse.Demo
                     await _productLocationRepo.CreateAsync(p);
                 }
                 return Ok(ApiResponseFactory.Success(p, "cập nhật dữ liệu thành công!"));
-
             }
             catch (Exception ex)
             {

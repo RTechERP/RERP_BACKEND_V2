@@ -1,12 +1,6 @@
 ﻿using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
-using RERPAPI.Model.DTO.Warehouses.AGV;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity.HRM
 {
@@ -15,11 +9,11 @@ namespace RERPAPI.Repo.GenericEntity.HRM
         public EconomicContractTermRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
+
         public APIResponse Validate(EconomicContractTerm item)
         {
             try
             {
-
                 if (!string.IsNullOrEmpty(item.TermCode) == false)
                 {
                     return ApiResponseFactory.Fail(null, "Vui lòng nhập mã điều khoản");

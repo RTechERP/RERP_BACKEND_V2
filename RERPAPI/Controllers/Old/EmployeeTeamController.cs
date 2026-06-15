@@ -26,7 +26,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                var dtEmployeeTeams = SQLHelper<object>.ProcedureToList("spGetEmployeeTeam",new string[] { }, new object[] { });
+                var dtEmployeeTeams = SQLHelper<object>.ProcedureToList("spGetEmployeeTeam", new string[] { }, new object[] { });
                 return Ok(new
                 {
                     status = 1,
@@ -44,14 +44,13 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
-
         [HttpPost]
         [RequiresPermission("N1,N2,N60")]
         public async Task<IActionResult> SaveEmployeeTeam([FromBody] EmployeeTeam employeeTeam)
         {
             try
             {
-                if(employeeTeam.ID <= 0)
+                if (employeeTeam.ID <= 0)
                 {
                     await _employeeTeamRepo.CreateAsync(employeeTeam);
                 }
@@ -76,6 +75,7 @@ namespace RERPAPI.Controllers.Old
                 });
             }
         }
+
         [HttpGet("update-employee-team")]
         [RequiresPermission("N1,N2,N60")]
         public async Task<IActionResult> UpdateEmployeeTeam(int employeeID, int teamID)
@@ -107,6 +107,5 @@ namespace RERPAPI.Controllers.Old
                 });
             }
         }
-
     }
 }

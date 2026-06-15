@@ -1,5 +1,3 @@
-using System;
-
 namespace RERPAPI.Model.Param.HRM.FlightBookingManagement;
 
 /// <summary>

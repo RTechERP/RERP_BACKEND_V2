@@ -221,4 +221,41 @@ public partial class EmployeePayrollDetail
     /// Khấu trừ thuế TNCN
     /// </summary>
     public decimal? TaxDeduction { get; set; }
+
+    /// <summary>
+    /// Số lần đi muộn về sớm bị phạt/trừ thưởng quý
+    /// </summary>
+    public int PenaltyLateEarlyQty { get; set; }
+
+    /// <summary>
+    /// Số tiền phạt/trừ thưởng quý do đi muộn về sớm
+    /// </summary>
+    public decimal PenaltyLateEarlyAmount { get; set; }
+
+    /// <summary>
+    /// Số lần quên chấm công bị phạt/trừ thưởng quý
+    /// </summary>
+    public int PenaltyMissingAttendanceQty { get; set; }
+
+    /// <summary>
+    /// Số tiền phạt/trừ thưởng quý do quên chấm công
+    /// </summary>
+    public decimal PenaltyMissingAttendanceAmount { get; set; }
+
+    /// <summary>
+    /// Số lần/ngày nghỉ vượt quá 2 ngày trong tháng bị phạt/trừ thưởng quý
+    /// </summary>
+    public int PenaltyLeaveOver2DaysQty { get; set; }
+
+    /// <summary>
+    /// Số tiền phạt/trừ thưởng quý do nghỉ vượt quá 2 ngày trong tháng
+    /// </summary>
+    public decimal PenaltyLeaveOver2DaysAmount { get; set; }
+
+    /// <summary>
+    /// Tổng số tiền phạt/trừ vào thưởng quý
+    /// </summary>
+    public decimal PenaltyTotalAmount { get; set; }
+
+    public decimal RegulationViolation { get; set; }
 }

@@ -1,16 +1,9 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using NPOI.HSSF.Record.Chart;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.KPITech;
 using RERPAPI.Model.Entities;
-using RERPAPI.Repo.GenericEntity.AddNewBillExport;
+using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Technical.KPI;
-using System.IO;
-using System.Threading.Tasks;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.KPITechnical
 {
@@ -18,14 +11,28 @@ namespace RERPAPI.Controllers.KPITechnical
     [ApiController]
     public class KPIEvaluationEmployeeController : ControllerBase
     {
-        KPIEvaluationPointRepo _kpiEvaluationPointRepo;
-        KPISessionRepo _kpiSessionRepo;
-        KPIEmployeePointRepo _kpiEmployeePointRepo;
-        KPIPositionRepo _kpiPositionRepo;
-        KPIPositionEmployeeRepo _kpiPositionEmployeeRepo;
-        KPIEvaluationRuleRepo _kpiEvaluationRuleRepo;
-        KPIEmployeePointDetailRepo _kpiEmployeePointDetailRepo;
-        public KPIEvaluationEmployeeController(KPIEvaluationPointRepo kpiEvaluationPointRepo, KPISessionRepo kpiSessionRepo, KPIEmployeePointRepo kpiEmployeePointRepo, KPIPositionRepo kpiPositionRepo, KPIPositionEmployeeRepo kpiPositionEmployeeRepo, KPIEvaluationRuleRepo kpiEvaluationRuleRepo, KPIEmployeePointDetailRepo kpiEmployeePointDetailRepo)
+        private KPIEvaluationPointRepo _kpiEvaluationPointRepo;
+        private KPISessionRepo _kpiSessionRepo;
+        private KPIEmployeePointRepo _kpiEmployeePointRepo;
+        private KPIPositionRepo _kpiPositionRepo;
+        private KPIPositionEmployeeRepo _kpiPositionEmployeeRepo;
+        private KPIEvaluationRuleRepo _kpiEvaluationRuleRepo;
+        private KPIEmployeePointDetailRepo _kpiEmployeePointDetailRepo;
+        private KPIEvaluationLogRepo _kpiEvaluationLogRepo;
+        private KPIExamRepo _kpiExamRepo;
+        private KPIExamPositionRepo _kpiExamPositionRepo;
+
+        public KPIEvaluationEmployeeController(
+            KPIEvaluationPointRepo kpiEvaluationPointRepo, 
+            KPISessionRepo kpiSessionRepo, 
+            KPIEmployeePointRepo kpiEmployeePointRepo, 
+            KPIPositionRepo kpiPositionRepo, 
+            KPIPositionEmployeeRepo kpiPositionEmployeeRepo, 
+            KPIEvaluationRuleRepo kpiEvaluationRuleRepo, 
+            KPIEmployeePointDetailRepo kpiEmployeePointDetailRepo, 
+            KPIEvaluationLogRepo kpiEvaluationLogRepo,
+            KPIExamRepo kpiExamRepo,
+            KPIExamPositionRepo kpiExamPositionRepo)
         {
             _kpiEvaluationPointRepo = kpiEvaluationPointRepo;
             _kpiSessionRepo = kpiSessionRepo;
@@ -34,8 +41,13 @@ namespace RERPAPI.Controllers.KPITechnical
             _kpiPositionEmployeeRepo = kpiPositionEmployeeRepo;
             _kpiEvaluationRuleRepo = kpiEvaluationRuleRepo;
             _kpiEmployeePointDetailRepo = kpiEmployeePointDetailRepo;
+            _kpiEvaluationLogRepo = kpiEvaluationLogRepo;
+            _kpiExamRepo = kpiExamRepo;
+            _kpiExamPositionRepo = kpiExamPositionRepo;
         }
-        #region load dữ liệu combobox team 
+
+        #region load dữ liệu combobox team
+
         [HttpGet("get-combobox-team")]
         public async Task<IActionResult> getComboboxTeam(int kpiSession)
         {
@@ -54,8 +66,11 @@ namespace RERPAPI.Controllers.KPITechnical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion load dữ liệu combobox team
+
         #region load dữ liệu kpi session
+
         [HttpGet("get-data-kpi-session")]
         public async Task<IActionResult> getDataKPISession(int year, int departmentID, string? keyword)
         {
@@ -79,8 +94,11 @@ namespace RERPAPI.Controllers.KPITechnical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion load dữ liệu kpi session
+
         #region load dữ liệu kpi exam
+
         [HttpGet("get-data-kpi-exam")]
         public async Task<IActionResult> getDataKPIEvaluationEmployee(int employeeID, int kpiSessionID)
         {
@@ -96,8 +114,11 @@ namespace RERPAPI.Controllers.KPITechnical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
-        #region Xác nhận hoàn thành 
+
+        #endregion load dữ liệu kpi exam
+
+        #region Xác nhận hoàn thành
+
         [HttpGet("check-complete")]
         public async Task<IActionResult> CheckCompelete(int kpiExamID)
         {
@@ -131,6 +152,7 @@ namespace RERPAPI.Controllers.KPITechnical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("confirm-success-kpi")]
         public async Task<IActionResult> ConfrimSuccessKPI(int kpiExamID)
         {
@@ -154,6 +176,21 @@ namespace RERPAPI.Controllers.KPITechnical
                     item.DateEmployeeConfirm = DateTime.Now;
                     await _kpiEvaluationPointRepo.UpdateAsync(item);
                 }
+                try
+                {
+                    var log = new KPIEvaluationLog
+                    {
+                        KPIExamID = kpiExamID,
+                        EmployeeID = currentUser.EmployeeID,
+                        ActionType = "NV xác nhận hoàn thành",
+                        ContentLog = $"{currentUser.FullName} đã xác nhận hoàn thành đánh giá",
+                        CreatedBy = currentUser.LoginName,
+                        CreatedDate = DateTime.Now,
+                        IsDeleted = false
+                    };
+                    await _kpiEvaluationLogRepo.CreateAsync(log);
+                }
+                catch (Exception) { }
                 return Ok(ApiResponseFactory.Success(null, "Xác nhận thành công"));
             }
             catch (Exception ex)
@@ -161,9 +198,11 @@ namespace RERPAPI.Controllers.KPITechnical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
 
-        #region load dữ liệu combobox kỳ đánh giá 
+        #endregion Xác nhận hoàn thành
+
+        #region load dữ liệu combobox kỳ đánh giá
+
         [HttpGet("get-combobox-kpi-session")]
         public async Task<IActionResult> getComboboxKPISession(int year, int departmentID)
         {
@@ -177,8 +216,11 @@ namespace RERPAPI.Controllers.KPITechnical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
-        #region load dữ liệu vị trí theo kỳ 
+
+        #endregion load dữ liệu combobox kỳ đánh giá
+
+        #region load dữ liệu vị trí theo kỳ
+
         [HttpGet("get-position-employee")]
         public async Task<IActionResult> GetPostionEmployee(int kpiSessionID)
         {
@@ -201,10 +243,13 @@ namespace RERPAPI.Controllers.KPITechnical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
-        #region  chọn vị trí trong kỳ đánh giá
+
+        #endregion load dữ liệu vị trí theo kỳ
+
+        #region chọn vị trí trong kỳ đánh giá
+
         [HttpPost("choice-position")]
-        public async Task<IActionResult> ChoicePosition( int positionID)
+        public async Task<IActionResult> ChoicePosition(int positionID)
         {
             try
             {
@@ -220,6 +265,38 @@ namespace RERPAPI.Controllers.KPITechnical
                     EmployeeID = currentUser.EmployeeID,
                 };
                 await _kpiPositionEmployeeRepo.CreateAsync(newModel);
+                try
+                {
+                    var position = _kpiPositionRepo.GetByID(positionID);
+                    int? resolvedExamID = null;
+                    if (position != null && position.KPISessionID.HasValue)
+                    {
+                        var employeeExam = (from exam in _kpiExamRepo.GetAll(x => x.KPISessionID == position.KPISessionID.Value && x.IsDeleted == false)
+                                            join ep in _kpiExamPositionRepo.GetAll(x => x.IsDeleted == false) on exam.ID equals ep.KPIExamID
+                                            where ep.KPIPositionID == positionID
+                                            select exam).FirstOrDefault();
+                        resolvedExamID = employeeExam?.ID;
+                        if (resolvedExamID == null)
+                        {
+                            var fallbackExam = _kpiExamRepo.GetAll(x => x.KPISessionID == position.KPISessionID.Value && x.IsDeleted != true).FirstOrDefault();
+                            resolvedExamID = fallbackExam?.ID;
+                        }
+                    }
+
+                    var positionName = position?.PositionName ?? "";
+                    var log = new KPIEvaluationLog
+                    {
+                        KPIExamID = resolvedExamID,
+                        EmployeeID = currentUser.EmployeeID,
+                        ActionType = "NV xác nhận vị trí",
+                        ContentLog = $"{currentUser.FullName} đã xác nhận vị trí: {positionName}",
+                        CreatedBy = currentUser.LoginName,
+                        CreatedDate = DateTime.Now,
+                        IsDeleted = false
+                    };
+                    await _kpiEvaluationLogRepo.CreateAsync(log);
+                }
+                catch (Exception) { }
                 return Ok(ApiResponseFactory.Success(newModel, "Chọn vị trí thành công"));
             }
             catch (Exception ex)
@@ -227,10 +304,11 @@ namespace RERPAPI.Controllers.KPITechnical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
 
+        #endregion chọn vị trí trong kỳ đánh giá
 
         #region load dữ liệu cobobox team (kpi)
+
         [HttpGet("get-combobox-team-kpi")]
         public async Task<IActionResult> getComboboxTeamKPI(int kpiSessionId, int departmentID)
         {
@@ -255,9 +333,11 @@ namespace RERPAPI.Controllers.KPITechnical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion load dữ liệu cobobox team (kpi)
 
         #region load dữ liệu bài đánh giá theo KPISESSIONID
+
         [HttpGet("get-kpi-exam-by-kpisessionid")]
         public async Task<IActionResult> getKpiExamByKsID(int kpiSessionId, int departmentID)
         {
@@ -280,8 +360,11 @@ namespace RERPAPI.Controllers.KPITechnical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion load dữ liệu bài đánh giá theo KPISESSIONID
+
         #region load danh sách nhân viên đánh giá KPI
+
         [HttpGet("get-list-employee-kpi-evaluation")]
         public async Task<IActionResult> getListEmployeeKPIEvaluation(int kpiExamID, int status, int departmentID, int userTeamID, string? keyword)
         {
@@ -307,12 +390,13 @@ namespace RERPAPI.Controllers.KPITechnical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
 
+        #endregion load danh sách nhân viên đánh giá KPI
 
         #region load dữ liệu KPI kỹ năng , chuyên môn , chung , rule
+
         [HttpGet("load-kpi-kynang")]
-        public async Task<IActionResult> LoadKPIKyNang(int kpiExamID, bool isPublic, int employeeID)
+        public async Task<IActionResult> LoadKPIKyNang(int kpiExamID, bool isPublicTBP, bool isPublicBGD, int employeeID)
         {
             try
             {
@@ -321,12 +405,10 @@ namespace RERPAPI.Controllers.KPITechnical
                     EmployeeID = employeeID,
                     EvaluationType = 1,
                     KPIExamID = kpiExamID,
-                    IsPulbic = isPublic,
+                    IsPublicTBP = isPublicTBP,
+                    IsPublicBGD = isPublicBGD,
                 };
-                var data = await SqlDapper<object>.ProcedureToListAsync("spGetAllKPIEvaluationPoint", param);
-                //var data = SQLHelper<object>.ProcedureToList("spGetAllKPIEvaluationPoint"
-                // , new string[] { "@EmployeeID", "@EvaluationType", "@KPIExamID", "@IsPulbic" }
-                // , new object[] { employeeID, 1, kpiExamID, isPublic });
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetAllKPIEvaluationPoint_TNB", param);
                 return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
@@ -334,6 +416,7 @@ namespace RERPAPI.Controllers.KPITechnical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-ispublish")]
         public async Task<IActionResult> GetISPublish(int kpiExamID, bool isPublic, int employeeID, int sessionID)
         {
@@ -364,7 +447,7 @@ namespace RERPAPI.Controllers.KPITechnical
         }
 
         [HttpGet("load-kpi-chung")]
-        public async Task<IActionResult> LoadKPIChung(int kpiExamID, bool isPublic, int employeeID)
+        public async Task<IActionResult> LoadKPIChung(int kpiExamID, bool isPublicTBP, bool isPublicBGD, int employeeID)
         {
             try
             {
@@ -373,12 +456,10 @@ namespace RERPAPI.Controllers.KPITechnical
                     EmployeeID = employeeID,
                     EvaluationType = 3,
                     KPIExamID = kpiExamID,
-                    IsPulbic = isPublic,
+                    IsPublicTBP = isPublicTBP,
+                    IsPublicBGD = isPublicBGD,
                 };
-                var data = await SqlDapper<object>.ProcedureToListAsync("spGetAllKPIEvaluationPoint", param);
-                //var data = SQLHelper<object>.ProcedureToList("spGetAllKPIEvaluationPoint"
-                // , new string[] { "@EmployeeID", "@EvaluationType", "@KPIExamID", "@IsPulbic" }
-                // , new object[] { employeeID, 3, kpiExamID, isPublic });
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetAllKPIEvaluationPoint_TNB", param);
                 return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
@@ -386,8 +467,9 @@ namespace RERPAPI.Controllers.KPITechnical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("load-kpi-chuyenmon")]
-        public async Task<IActionResult> LoadKPIChuyenMon(int kpiExamID, bool isPublic, int employeeID)
+        public async Task<IActionResult> LoadKPIChuyenMon(int kpiExamID, bool isPublicTBP, bool isPublicBGD, int employeeID)
         {
             try
             {
@@ -396,12 +478,10 @@ namespace RERPAPI.Controllers.KPITechnical
                     EmployeeID = employeeID,
                     EvaluationType = 2,
                     KPIExamID = kpiExamID,
-                    IsPulbic = isPublic,
+                    IsPublicTBP = isPublicTBP,
+                    IsPublicBGD = isPublicBGD,
                 };
-                var data = await SqlDapper<object>.ProcedureToListAsync("spGetAllKPIEvaluationPoint", param);
-                //var data = SQLHelper<object>.ProcedureToList("spGetAllKPIEvaluationPoint"
-                // , new string[] { "@EmployeeID", "@EvaluationType", "@KPIExamID", "@IsPulbic" }
-                // , new object[] { employeeID, 2, kpiExamID, isPublic });
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetAllKPIEvaluationPoint_TNB", param);
                 return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
@@ -409,6 +489,7 @@ namespace RERPAPI.Controllers.KPITechnical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("load-kpi-rule-and-team")]
         public async Task<IActionResult> LoadKPIRule(int kpiExamID, bool isPublic, int employeeID, int sessionID)
         {
@@ -453,7 +534,7 @@ namespace RERPAPI.Controllers.KPITechnical
                 //  var data2 = SQLHelper<object>.ProcedureToList("spGetEmployeeRulePointByKPIEmpPointIDNew"
                 //, new string[] { "@KPIEmployeePointID", "@IsPublic" }
                 //, new object[] { kpiEmpPoint.ID, isPublic });
-                List<KPIEmployeePointDetail> lst = _kpiEmployeePointDetailRepo.GetAll(x=>x.KPIEmployeePointID == empPoint.ID);
+                List<KPIEmployeePointDetail> lst = _kpiEmployeePointDetailRepo.GetAll(x => x.KPIEmployeePointID == empPoint.ID);
 
                 var dtTeam = data1;
                 var dtKpiRule = data2;
@@ -465,8 +546,11 @@ namespace RERPAPI.Controllers.KPITechnical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion load dữ liệu KPI kỹ năng , chuyên môn , chung , rule
+
         #region lấy dữ liệu KPIEmployeePointID
+
         [NonAction]
         public async Task<int> GetKPIEmployeePointID(int ruleID, int employeeID)
         {
@@ -481,7 +565,7 @@ namespace RERPAPI.Controllers.KPITechnical
                 {
                     return -1;
                 }
-                KPIEmployeePoint model = _kpiEmployeePointRepo.GetAll().FirstOrDefault(x => x.EmployeeID == empID && x.KPIEvaluationRuleID == ruleID && x.IsDelete == false) ?? new KPIEmployeePoint();
+                KPIEmployeePoint model = _kpiEmployeePointRepo.GetAll(x => x.EmployeeID == empID && x.KPIEvaluationRuleID == ruleID && x.IsDelete == false).FirstOrDefault() ?? new KPIEmployeePoint();
                 model.EmployeeID = empID;
                 model.KPIEvaluationRuleID = ruleID;
                 model.Status = 1;
@@ -500,28 +584,31 @@ namespace RERPAPI.Controllers.KPITechnical
                 throw new Exception("Lỗi: " + ex.Message);
             }
         }
-        #endregion
-        #region lấy điểm cuối cùng 
+
+        #endregion lấy dữ liệu KPIEmployeePointID
+
+        #region lấy điểm cuối cùng
+
         [HttpGet("get-final-point")]
         public async Task<IActionResult> GetFinalPoint(int employeeID, int sessionID)
         {
             try
             {
-                        //Get possition của nhân viên
-                        List<KPIPosition> kpiPositions = _kpiPositionRepo.GetAll(x => x.KPISessionID == sessionID && x.IsDeleted == false);
-                        List<KPIPositionEmployee> kpiPositionEmployees = _kpiPositionEmployeeRepo.GetAll(x => x.EmployeeID == employeeID && x.IsDeleted == false);
+                //Get possition của nhân viên
+                List<KPIPosition> kpiPositions = _kpiPositionRepo.GetAll(x => x.KPISessionID == sessionID && x.IsDeleted == false);
+                List<KPIPositionEmployee> kpiPositionEmployees = _kpiPositionEmployeeRepo.GetAll(x => x.EmployeeID == employeeID && x.IsDeleted == false);
 
-                        var empPosition = (from p in kpiPositions
-                                           join pe in kpiPositionEmployees on p.ID equals pe.KPIPosiotionID
-                                           select pe)
+                var empPosition = (from p in kpiPositions
+                                   join pe in kpiPositionEmployees on p.ID equals pe.KPIPosiotionID
+                                   select pe)
 
-                             .FirstOrDefault() ?? new KPIPositionEmployee();
+                     .FirstOrDefault() ?? new KPIPositionEmployee();
 
-                        KPIEvaluationRule rule = _kpiEvaluationRuleRepo.GetAll(x => x.KPISessionID == sessionID && x.KPIPositionID == (empPosition.KPIPosiotionID > 0 ? empPosition.KPIPosiotionID : 1) && x.IsDeleted == false)
-                            .FirstOrDefault() ?? new KPIEvaluationRule(); // 1 là kỹ thuật
+                KPIEvaluationRule rule = _kpiEvaluationRuleRepo.GetAll(x => x.KPISessionID == sessionID && x.KPIPositionID == (empPosition.KPIPosiotionID > 0 ? empPosition.KPIPosiotionID : 1) && x.IsDeleted == false)
+                    .FirstOrDefault() ?? new KPIEvaluationRule(); // 1 là kỹ thuật
 
-                        int empPointId = await GetKPIEmployeePointID(rule.ID, employeeID);
-                        KPIEmployeePoint empPoint = _kpiEmployeePointRepo.GetByID(empPointId);
+                int empPointId = await GetKPIEmployeePointID(rule.ID, employeeID);
+                KPIEmployeePoint empPoint = _kpiEmployeePointRepo.GetByID(empPointId);
                 //var data = SQLHelper<object>.ProcedureToList("spGetFinalKPIEmployeePoint"
                 // , new string[] { "@KPIExamID", "@EmployeeID" }
                 // , new object[] { kpiExamID, employeeID });
@@ -532,9 +619,11 @@ namespace RERPAPI.Controllers.KPITechnical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion lấy điểm cuối cùng
 
         #region LoadPointRuleNew
+
         [HttpGet("load-point-rule-new2")]
         public async Task<IActionResult> LoadPointRuleNew(int kpiExamID, bool isPublic, int employeeID, int sessionID)
         {
@@ -559,7 +648,7 @@ namespace RERPAPI.Controllers.KPITechnical
                 {
                     KPIEmployeePointID = empPoint.ID,
                 };
-                var data = await SqlDapper<object>.ProcedureToListAsync("spGetSumarizebyKPIEmpPointIDNew", param);
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetSumarizebyKPIEmpPointIDNew_TNB", param);
                 //var data = SQLHelper<object>.ProcedureToList("spGetEmployeeRulePointByKPIEmpPointIDNew"
                 //  , new string[] { "@KPIEmployeePointID", "@IsPublic" }
                 //  , new object[] { kpiEmployeePointID, isPublic });
@@ -570,8 +659,11 @@ namespace RERPAPI.Controllers.KPITechnical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion LoadPointRuleNew
+
         #region load point rule last month
+
         [HttpGet("load-point-rule-last-month")]
         public async Task<IActionResult> LoadPointRuleLastMonthNew(int kpiExamID, bool isPublic, int employeeID, int sessionID)
         {
@@ -597,7 +689,7 @@ namespace RERPAPI.Controllers.KPITechnical
                     KPIEmployeePointID = empPoint.ID,
                     IsPublic = isPublic
                 };
-                var data = await SqlDapper<object>.ProcedureToListAsync("spGetSumarizebyKPIEmpPointIDNew", param);
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetSumarizebyKPIEmpPointIDNew_TNB", param);
                 //var data = SQLHelper<object>.ProcedureToList("spGetEmployeeRulePointByKPIEmpPointIDNew"
                 //  , new string[] { "@KPIEmployeePointID", "@IsPublic" }
                 //  , new object[] { kpiEmployeePointID, isPublic });
@@ -608,6 +700,7 @@ namespace RERPAPI.Controllers.KPITechnical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion load point rule last month
     }
 }

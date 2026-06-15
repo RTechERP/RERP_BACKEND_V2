@@ -16,6 +16,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         {
             _documentImportRepo = documentImportRepo;
         }
+
         [HttpGet("")]
         [RequiresPermission("N52,N36,N1,N34")]
         public IActionResult getDocumentImportByPO(int poNCCId, int billImportID)
@@ -42,6 +43,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     });
             }
         }
+
         [HttpGet("dropdownmenu")]
         public IActionResult getDataContextMenu()
         {
@@ -64,6 +66,5 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     });
             }
         }
-
     }
 }

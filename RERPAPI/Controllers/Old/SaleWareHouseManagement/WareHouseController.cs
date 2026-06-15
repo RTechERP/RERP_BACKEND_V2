@@ -1,12 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.AddNewBillExport;
-using RERPAPI.Repo.GenericEntity.Asset;
 
 namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 {
@@ -25,7 +21,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         {
             try
             {
-                List<RERPAPI.Model.Entities.Warehouse> warehouse = _warehouseRepo.GetAll(x=>x.IsDeleted!=true);
+                List<RERPAPI.Model.Entities.Warehouse> warehouse = _warehouseRepo.GetAll(x => x.IsDeleted != true);
                 return Ok(new
                 {
                     status = 1,
@@ -53,7 +49,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     var validate = _warehouseRepo.Validate(warehouse);
                     if (validate.status == 0) return BadRequest(validate);
                 }
-               
+
                 if (warehouse.ID > 0)
                 {
                     await _warehouseRepo.UpdateAsync(warehouse);
@@ -69,6 +65,5 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

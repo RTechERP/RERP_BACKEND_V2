@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
@@ -22,6 +21,7 @@ namespace RERPAPI.Controllers.HRM.Employees
             _employeeCurricularRepo = employeeCurricularRepo;
             _employeeRepo = employeeRepo;
         }
+
         [RequiresPermission("N1,N2")]
         [HttpGet("get-employee-curricular")]
         public IActionResult GetEmployeeCurricular(int month = 0, int year = 0, int departmentId = 0, int employeeId = 0)
@@ -43,6 +43,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2")]
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveEmployeeCurricular([FromBody] EmployeeCurricular model)
@@ -51,13 +52,11 @@ namespace RERPAPI.Controllers.HRM.Employees
             {
                 if (model.ID > 0)
                 {
-                   
-                        await _employeeCurricularRepo.UpdateAsync(model);   
+                    await _employeeCurricularRepo.UpdateAsync(model);
                 }
                 else
-                {  
-                        await _employeeCurricularRepo.CreateAsync(model);
-                    
+                {
+                    await _employeeCurricularRepo.CreateAsync(model);
                 }
                 return Ok(ApiResponseFactory.Success(null, "Lưu dữ liệu thành công!"));
             }
@@ -66,6 +65,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2")]
         [HttpGet("check")]
         public IActionResult CheckEmployeeCurricular(int employeeId, int curricularDay, int curricularMonth, int curricularYear)
@@ -92,11 +92,11 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2")]
         [HttpPost("import-excel")]
         public async Task<IActionResult> ImportFromExcel(IFormFile file, string sheetName = "")
         {
-
             try
             {
                 ExcelPackage.License.SetNonCommercialOrganization("RTC Technology Viet Nam");
@@ -222,6 +222,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2")]
         [HttpGet("get-excel-sheets")]
         public async Task<IActionResult> GetExcelSheets(IFormFile file)
@@ -254,7 +255,5 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-       
     }
 }

@@ -47,7 +47,23 @@ namespace RERPAPI.Model.DTO.KPISale
         public int? ParentGroupID { get; set; }
         public string LogicOperator { get; set; } = "";
         public int SortOrder { get; set; }
-        public List<object> Conditions { get; set; } = new();
+        public List<KPISaleFilterConditionDto> Conditions { get; set; } = new();
         public List<KPISaleFilterGroupNode> Children { get; set; } = new();
+    }
+
+    public class KPISaleFilterConditionDto
+    {
+        public int ID { get; set; }
+        public int FilterGroupID { get; set; }
+        public string ColumnName { get; set; } = null!;
+        public string Operator { get; set; } = null!;
+        public string ValueType { get; set; } = null!;
+        public string? Value1 { get; set; }
+        public string? Value2 { get; set; }
+        public string DataType { get; set; } = null!;
+        public bool IsActive { get; set; }
+        public int SortOrder { get; set; }
+        public string? Value1Display { get; set; }
+        public string? Value2Display { get; set; }
     }
 }

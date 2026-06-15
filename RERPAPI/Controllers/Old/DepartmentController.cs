@@ -12,14 +12,14 @@ namespace RERPAPI.Controllers.Old
     {
         private DepartmentRepo _departmentRepo;
         private EmployeeRepo _employeeRepo;
+
         public DepartmentController(DepartmentRepo departmentRepo, EmployeeRepo employeeRepo)
         {
             _departmentRepo = departmentRepo;
             _employeeRepo = employeeRepo;
-        }   
+        }
 
         [HttpGet("get-all")]
-        //[RequiresPermission("N2,N1")]
         public IActionResult GetAll()
         {
             try
@@ -31,7 +31,6 @@ namespace RERPAPI.Controllers.Old
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
 
         [HttpGet("deleted")]
@@ -41,7 +40,7 @@ namespace RERPAPI.Controllers.Old
             try
             {
                 Department? department = _departmentRepo.GetByID(id);
-                if (department == null )
+                if (department == null)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Phòng ban không tồn tại"));
                 }
@@ -52,8 +51,6 @@ namespace RERPAPI.Controllers.Old
                 }
                 _departmentRepo.Update(department);
                 return Ok(ApiResponseFactory.Success(null, "Xóa phòng ban thành công"));
-
-
             }
             catch (Exception ex)
             {
@@ -67,7 +64,7 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                if(!_departmentRepo.Validate(obj, out String error))
+                if (!_departmentRepo.Validate(obj, out String error))
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, error));
                 }
@@ -82,8 +79,6 @@ namespace RERPAPI.Controllers.Old
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
-
     }
 }

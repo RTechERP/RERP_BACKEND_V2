@@ -1,16 +1,11 @@
 using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity.Asset
 {
-    public class AssetLogRepo: GenericRepo<AssetLog>
+    public class AssetLogRepo : GenericRepo<AssetLog>
     {
         public AssetLogRepo(CurrentUser currentUser) : base(currentUser)
         {
@@ -24,11 +19,11 @@ namespace RERPAPI.Repo.GenericEntity.Asset
             "ID", "CreatedDate", "UpdatedDate",
             "CreatedBy", "UpdatedBy", "IsDeleted", "STT", "StatusID"
             // Internal tracking fields
-
         };
-        #endregion
 
-        #region  Tên hiển thị tiếng Việt cho các property (thay vì tên cột DB)
+        #endregion Các trường hệ thống/nội bộ không cần ghi log thay đổi
+
+        #region Tên hiển thị tiếng Việt cho các property (thay vì tên cột DB)
 
         private static readonly Dictionary<string, string> _propertyLabels = new()
         {
@@ -50,7 +45,8 @@ namespace RERPAPI.Repo.GenericEntity.Asset
             ["WindowActiveStatus"] = "Active Windows",
             ["OfficeActiveStatus"] = "Active Office",
         };
-        #endregion
+
+        #endregion Tên hiển thị tiếng Việt cho các property (thay vì tên cột DB)
 
         #region So sánh 2 entity cùng loại, trả về danh sách mô tả thay đổi (tiếng Việt, resolve FK)
 
@@ -200,7 +196,8 @@ namespace RERPAPI.Repo.GenericEntity.Asset
 
             return changes;
         }
-        #endregion
+
+        #endregion So sánh 2 entity cùng loại, trả về danh sách mô tả thay đổi (tiếng Việt, resolve FK)
 
         #region Phân loại ID vào đúng HashSet theo tên property (để batch query)
 
@@ -218,7 +215,8 @@ namespace RERPAPI.Repo.GenericEntity.Asset
                 case "TSAssetID": assetIds.Add(id); break;
             }
         }
-        #endregion
+
+        #endregion Phân loại ID vào đúng HashSet theo tên property (để batch query)
 
         #region Resolve FK ID thành tên hiển thị từ dictionary đã batch-load
 
@@ -240,7 +238,8 @@ namespace RERPAPI.Repo.GenericEntity.Asset
                 _ => text
             };
         }
-        #endregion
+
+        #endregion Resolve FK ID thành tên hiển thị từ dictionary đã batch-load
 
         #region Map Status (int) → tên trạng thái tài sản tiếng Việt
 
@@ -255,6 +254,7 @@ namespace RERPAPI.Repo.GenericEntity.Asset
                 _ => v.ToString()
             };
         }
-        #endregion
+
+        #endregion Map Status (int) → tên trạng thái tài sản tiếng Việt
     }
 }

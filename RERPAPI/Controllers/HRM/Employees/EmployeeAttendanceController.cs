@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
@@ -18,12 +17,14 @@ namespace RERPAPI.Controllers
         private readonly EmployeeRepo _employeeRepo;
         private readonly EmployeeAttendanceRepo _employeeAttendanceRepo;
         private readonly DepartmentRepo _departmentRepo;
+
         public EmployeeAttendanceController(EmployeeRepo employeeRepo, EmployeeAttendanceRepo employeeAttendanceRepo, DepartmentRepo departmentRepo)
         {
             _employeeRepo = employeeRepo;
             _employeeAttendanceRepo = employeeAttendanceRepo;
             _departmentRepo = departmentRepo;
         }
+
         //[RequiresPermission("N1,N2")]
         [HttpGet("get-department")]
         public IActionResult getDepartment()
@@ -38,7 +39,6 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         [RequiresPermission("N1,N2")]
         [HttpGet("get-employee-attendance")]
@@ -62,6 +62,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2")]
         [HttpPost("import-excel")]
         public async Task<IActionResult> ImportExcel([FromBody] ImportAttendancePayload payload)
@@ -81,7 +82,6 @@ namespace RERPAPI.Controllers
 
                 int created = 0, updated = 0;
                 var errors = new List<ImportError>();
-
 
                 var employees = _employeeRepo
       .GetAll()
@@ -127,7 +127,7 @@ namespace RERPAPI.Controllers
                     ).ToList();
 
                     existingDict = existingRecords
-     .Where(x => x.AttendanceDate.HasValue) 
+     .Where(x => x.AttendanceDate.HasValue)
      .GroupBy(x => (x.IDChamCongMoi, x.AttendanceDate.Value.Date))
      .ToDictionary(g => g.Key, g => g.First());
                 }
@@ -274,12 +274,9 @@ namespace RERPAPI.Controllers
             }
         }
 
-
-
         [HttpGet("check-existing")]
         public IActionResult CheckExisting(DateTime dateStart, DateTime dateEnd, int departmentId)
         {
-
             try
             {
                 int count = _employeeAttendanceRepo.CheckExisting(dateStart, dateEnd, departmentId);
@@ -290,20 +287,19 @@ namespace RERPAPI.Controllers
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
 
         // ===== Helper methods remain the same =====
-        static string GetString(Dictionary<string, object> r, params string[] keys)
+        private static string GetString(Dictionary<string, object> r, params string[] keys)
         {
             foreach (var k in keys)
                 if (r.TryGetValue(k, out var v) && v != null) return v.ToString()!.Trim();
             return string.Empty;
         }
 
-        static int ToInt(string s) => int.TryParse(s, out var n) ? n : 0;
+        private static int ToInt(string s) => int.TryParse(s, out var n) ? n : 0;
 
-        static DateTime? GetDate(Dictionary<string, object> r, params string[] keys)
+        private static DateTime? GetDate(Dictionary<string, object> r, params string[] keys)
         {
             var formats = new[] { "dd/MM/yyyy", "d/M/yyyy", "yyyy-MM-dd" };
 
@@ -330,7 +326,7 @@ namespace RERPAPI.Controllers
             return null;
         }
 
-        static DateTime? ParseTimeOnDate(DateTime d, string hm)
+        private static DateTime? ParseTimeOnDate(DateTime d, string hm)
         {
             if (string.IsNullOrWhiteSpace(hm)) return null;
             hm = hm.Trim();
@@ -353,7 +349,8 @@ namespace RERPAPI.Controllers
 
             return null;
         }
-        static (bool IsLate, int TimeLate, bool IsEarly, int TimeEarly, decimal TotalHour, decimal TotalDay, bool IsLunch)
+
+        private static (bool IsLate, int TimeLate, bool IsEarly, int TimeEarly, decimal TotalHour, decimal TotalDay, bool IsLunch)
             ComputeAttendance(int departmentId, DateTime date, DateTime? inDt, DateTime? outDt)
         {
             bool isLate = false, isEarly = false, isLunch = false;
@@ -429,6 +426,7 @@ namespace RERPAPI.Controllers
             }
             return (isLate, timeLate, isEarly, timeEarly, totalHour, totalDay, isLunch);
         }
+
         [RequiresPermission("N1,N2")]
         [HttpPost("save-attendance")]
         public async Task<IActionResult> UpsertSingleAttendance([FromBody] UpsertSingleAttendanceRequest request)
@@ -449,19 +447,17 @@ namespace RERPAPI.Controllers
                 if (string.IsNullOrWhiteSpace(emp.IDChamCongMoi))
                     return BadRequest(ApiResponseFactory.Fail(null, $"Nhân viên mã '{request.Code}' không có IDChamCongMoi."));
 
-              
                 DateTime date = request.AttendanceDate.Date;
                 DateTime? inDt = ParseTimeOnDate(date, request.CheckIn);
                 DateTime? outDt = ParseTimeOnDate(date, request.CheckOut);
 
-               
                 var comp = ComputeAttendance(emp.DepartmentID ?? 0, date, inDt, outDt);
 
                 string message;
 
                 if (request.ID > 0)
                 {
-                    //  UPDATE existing 
+                    //  UPDATE existing
                     var existing = _employeeAttendanceRepo.GetAll(x => x.ID == request.ID).FirstOrDefault();
                     if (existing == null)
                         return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy bản ghi chấm công ID={request.ID}."));
@@ -488,7 +484,6 @@ namespace RERPAPI.Controllers
                 }
                 else
                 {
-                
                     var existingByKey = _employeeAttendanceRepo.GetAll(ea =>
                         ea.IDChamCongMoi == emp.IDChamCongMoi &&
                         ea.AttendanceDate.HasValue &&
@@ -497,7 +492,6 @@ namespace RERPAPI.Controllers
 
                     if (existingByKey != null)
                     {
-                        
                         existingByKey.EmployeeID = emp.ID;
                         existingByKey.DayWeek = request.DayWeek ?? "";
                         existingByKey.CheckIn = inDt?.ToString("HH:mm");
@@ -518,7 +512,6 @@ namespace RERPAPI.Controllers
                     }
                     else
                     {
-                        
                         var newRecord = new EmployeeAttendance
                         {
                             EmployeeID = emp.ID,
@@ -569,11 +562,9 @@ namespace RERPAPI.Controllers
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Không có vân tay hợp lệ để xóa"));
                 }
-
             }
             catch (Exception ex)
             {
-
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }

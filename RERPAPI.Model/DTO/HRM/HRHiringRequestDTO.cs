@@ -1,9 +1,4 @@
 ﻿using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Model.DTO.HRM
 {
@@ -14,6 +9,7 @@ namespace RERPAPI.Model.DTO.HRM
 
         // Link data - tất cả dùng số
         public List<int>? EducationLevels { get; set; }
+
         public List<int>? Experiences { get; set; }
         public List<int>? Appearances { get; set; }
         public List<int>? Genders { get; set; }
@@ -39,7 +35,6 @@ namespace RERPAPI.Model.DTO.HRM
     {
         public int ComputerType { get; set; } // 1-6
         public string? ComputerName { get; set; }
-
     }
 
     // Communication DTO - giữ nguyên
@@ -54,7 +49,6 @@ namespace RERPAPI.Model.DTO.HRM
         public int HealthType { get; set; }
         public string? HealthDescription { get; set; }
     }
-
 
     // Approval DTO - giữ nguyên
     public class ApprovalDTO

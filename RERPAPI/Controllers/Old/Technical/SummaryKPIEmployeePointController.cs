@@ -1,13 +1,10 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Technical.KPI;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.Old.Technical
 {
@@ -24,8 +21,6 @@ namespace RERPAPI.Controllers.Old.Technical
         private readonly KPIEvaluationRuleRepo _kpiEvaluationRuleRepo;
         private readonly KPIPositionEmployeeRepo _kpiPositionEmployeeRepo;
         private readonly KPIExamRepo _kpiExamRepo;
-
-
 
         public SummaryKPIEmployeePointController(
             DepartmentRepo departmentRepo,
@@ -118,7 +113,6 @@ namespace RERPAPI.Controllers.Old.Technical
                 };
                 var dataStore = await SqlDapper<object>.ProcedureToListAsync("spGetEmployeeRulePointByKPIEmpPointIDNew", param);
 
-
                 return Ok(ApiResponseFactory.Success(dataStore, ""));
             }
             catch (Exception ex)
@@ -186,7 +180,6 @@ namespace RERPAPI.Controllers.Old.Technical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         //[HttpPost("publish")]
         //public IActionResult Publish([FromBody] List<int> ids)
@@ -359,7 +352,6 @@ namespace RERPAPI.Controllers.Old.Technical
             }
         }
 
-
         [HttpGet("get-kpi-ranking")]
         public async Task<IActionResult> GetKPIRanking(int year, int quarter, int departmentID)
         {
@@ -408,7 +400,7 @@ namespace RERPAPI.Controllers.Old.Technical
             try
             {
                 var session = _kpiSessionRepo
-                    .GetAll(x => x.YearEvaluation == year 
+                    .GetAll(x => x.YearEvaluation == year
                               && x.QuarterEvaluation == quarter
                               && x.IsDeleted != true)
                     .FirstOrDefault();
@@ -565,7 +557,6 @@ namespace RERPAPI.Controllers.Old.Technical
                 }
                 catch { }
 
-
                 if (!lstDetails.Any())
                 {
                     // Load lần đầu
@@ -624,7 +615,6 @@ namespace RERPAPI.Controllers.Old.Technical
                         await _kpiEmployeePointDetailRepo.DeleteAsync(old.ID);
                     }
                 }
-
 
                 // Lưu chi tiết mới
                 foreach (var item in request.Details)
@@ -822,7 +812,7 @@ namespace RERPAPI.Controllers.Old.Technical
                     var timeWorks = dtTeam.Select(x => x.TimeWork).ToList();
                     var fiveSs = dtTeam.Select(x => x.FiveS).ToList();
                     var reportWorks = dtTeam.Select(x => x.ReportWork).ToList();
-                    var customerComplaints = dtTeam.Select(x => x.ComplaneAndMissing).ToList(); 
+                    var customerComplaints = dtTeam.Select(x => x.ComplaneAndMissing).ToList();
                     var deadlineDelays = dtTeam.Select(x => x.DeadlineDelay).ToList();
                     var teamKPIKyNangs = dtTeam.Select(x => x.KPIKyNang).ToList();
                     var teanKPIChungs = dtTeam.Select(x => x.KPIChung).ToList();
@@ -1065,7 +1055,5 @@ namespace RERPAPI.Controllers.Old.Technical
             public decimal TotalPercent { get; set; }
             public List<KPIRuleDetailDTO> Details { get; set; } = new();
         }
-
-
     }
 }

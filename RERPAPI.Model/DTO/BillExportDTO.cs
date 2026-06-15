@@ -1,5 +1,4 @@
-﻿
-using RERPAPI.Model.Entities;
+﻿using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Model.DTO
 {

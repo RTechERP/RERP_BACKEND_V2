@@ -1,41 +1,31 @@
 ﻿using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Bibliography;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.Document;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.Asset;
-using RERPAPI.Repo.GenericEntity.BBNV;
 using RERPAPI.Repo.GenericEntity.DocumentManager;
 using System.Data;
 using System.Globalization;
-
-
-
 
 namespace RERPAPI.Controllers.DocumentManager
 {
     [Route("api/[controller]")]
     [ApiController]
-
     public class DocumentController : ControllerBase
     {
-        DocumentTypeRepo _documenttype;
+        private DocumentTypeRepo _documenttype;
 
-        DocumentRepo _document;
+        private DocumentRepo _document;
 
-        DocumentFileRepo _documentfile;
+        private DocumentFileRepo _documentfile;
 
-        DepartmentRepo _tsDepartment;
+        private DepartmentRepo _tsDepartment;
         private IConfiguration _configuration;
 
-        public DocumentController(DocumentTypeRepo documenttype, DocumentRepo document, DocumentFileRepo documentfile, DepartmentRepo tsDepartment, IConfiguration configuration) 
+        public DocumentController(DocumentTypeRepo documenttype, DocumentRepo document, DocumentFileRepo documentfile, DepartmentRepo tsDepartment, IConfiguration configuration)
         {
             _configuration = configuration;
             _documenttype = documenttype;
@@ -49,24 +39,22 @@ namespace RERPAPI.Controllers.DocumentManager
         {
             try
             {
-                var documenttype = _documenttype.GetAll(x=>x.IsDeleted!=true);
+                var documenttype = _documenttype.GetAll(x => x.IsDeleted != true);
                 return Ok(new
                 {
                     status = 1,
                     data = documenttype
-
                 });
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-
             }
         }
 
         [HttpPost("get-document")]
         public IActionResult GetListDocument([FromBody] DocumentRequestParam request)
-        {   
+        {
             try
             {
                 var document = SQLHelper<dynamic>.ProcedureToList("spGetDocument",
@@ -80,7 +68,6 @@ namespace RERPAPI.Controllers.DocumentManager
                         asset = SQLHelper<dynamic>.GetListData(document, 0),
                     }
                 });
-
             }
             catch (Exception ex)
             {
@@ -93,13 +80,12 @@ namespace RERPAPI.Controllers.DocumentManager
         {
             try
             {
-                List<DocumentFile> result = _documentfile.GetAll(x => x.DocumentID == id && x.IsDeleted !=true).ToList();
+                List<DocumentFile> result = _documentfile.GetAll(x => x.DocumentID == id && x.IsDeleted != true).ToList();
                 return Ok(new
                 {
                     status = 1,
                     data = result,
                 });
-
             }
             catch (Exception ex)
             {
@@ -108,7 +94,6 @@ namespace RERPAPI.Controllers.DocumentManager
         }
 
         [HttpGet("get-departments")]
-
         public IActionResult GetDepartment()
         {
             try
@@ -165,6 +150,7 @@ namespace RERPAPI.Controllers.DocumentManager
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2,N34,N89")]
         [HttpPost("save-document")]
         public async Task<IActionResult> SaveData([FromBody] Document document)
@@ -187,14 +173,14 @@ namespace RERPAPI.Controllers.DocumentManager
 
                 if (document.ID <= 0)
                 {
-                 //   var maxStt = _document.GetAll()
-                 //.Where(x => x.DocumentTypeID == document.DocumentTypeID
-                 //         && x.DepartmentID == document.DepartmentID)
-                 //.Select(x => x.STT ?? 0)
-                 //.DefaultIfEmpty(0)
-                 //.Max();
+                    //   var maxStt = _document.GetAll()
+                    //.Where(x => x.DocumentTypeID == document.DocumentTypeID
+                    //         && x.DepartmentID == document.DepartmentID)
+                    //.Select(x => x.STT ?? 0)
+                    //.DefaultIfEmpty(0)
+                    //.Max();
 
-                 //   document.STT = maxStt + 1;
+                    //   document.STT = maxStt + 1;
                     await _document.CreateAsync(document);
                 }
                 else
@@ -245,11 +231,6 @@ namespace RERPAPI.Controllers.DocumentManager
             }
         }
 
-
-
-
-
-
         [HttpPost("save-document-file")]
         public async Task<IActionResult> SaveData([FromBody] DocumentFile documentfile)
         {
@@ -282,7 +263,7 @@ namespace RERPAPI.Controllers.DocumentManager
 
                 List<List<dynamic>> documentList = SQLHelper<dynamic>.ProcedureToList(
                     "spGetDocument",
-                    new string[] { "@IDDocumentType", "@DepartmentID", "@GroupType" }, 
+                    new string[] { "@IDDocumentType", "@DepartmentID", "@GroupType" },
                     new object[] { filterId, -1, 1 }
                 );
 
@@ -484,6 +465,7 @@ namespace RERPAPI.Controllers.DocumentManager
 
             return table;
         }
+
         [HttpGet("get-document-common")]
         public IActionResult GetDocumrntCommon(string? keyword, int departID, int groupType)
         {
@@ -491,16 +473,16 @@ namespace RERPAPI.Controllers.DocumentManager
             {
                 var document = SQLHelper<dynamic>.ProcedureToList("spGetDocument",
                        new string[] { "@FilterText", "@DepartmentID", "@GroupType" },
-                    new object[] { keyword??"", departID, groupType });
-              var  documentList = SQLHelper<object>.GetListData(document, 0);
+                    new object[] { keyword ?? "", departID, groupType });
+                var documentList = SQLHelper<object>.GetListData(document, 0);
                 return Ok(ApiResponseFactory.Success(documentList, ""));
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-document-admin-sale")]
         public IActionResult GetDocumrntCommon(int departID)
         {
@@ -510,7 +492,6 @@ namespace RERPAPI.Controllers.DocumentManager
                      new string[] { "@GroupType", "@DepartmentID" }, new object[] { 2, departID });
                 var documentList = SQLHelper<object>.GetListData(document, 0);
                 return Ok(ApiResponseFactory.Success(documentList, ""));
-
             }
             catch (Exception ex)
             {

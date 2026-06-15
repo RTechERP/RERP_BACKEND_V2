@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.Param
+﻿namespace RERPAPI.Model.Param
 {
     public class spGetProjectTaskTreeParam
     {
@@ -15,7 +9,7 @@ namespace RERPAPI.Model.Param
         public string? STT { get; set; }
 
         /// <summary>
-        /// Người phụ trách 
+        /// Người phụ trách
         /// </summary>
         public int? UserID { get; set; }
 
@@ -124,7 +118,6 @@ namespace RERPAPI.Model.Param
         /// </summary>
         public decimal? PercentOverTime { get; set; }
 
-
         public string? ProjectCode { get; set; }
         public string? ProjectName { get; set; }
 
@@ -134,6 +127,5 @@ namespace RERPAPI.Model.Param
         public string? ParentName { get; set; }
         public string? EmployeeCode { get; set; }
         public int? DepartmentID { get; set; }
-
     }
 }

@@ -1,15 +1,10 @@
-using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
-using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
-using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System.Threading.Tasks;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.HRM
 {
@@ -20,7 +15,7 @@ namespace RERPAPI.Controllers.HRM
     {
         private readonly IConfiguration _configuration;
         private readonly EmployeeRepo _employeeRepo;
-        vUserGroupLinksRepo _vUserGroupLinksRepo;
+        private vUserGroupLinksRepo _vUserGroupLinksRepo;
         private CurrentUser _currentUser;
         private readonly EmployeeApprovedRepo _approvedRepo;
         private readonly TaxCompanyRepo _taxCompanyRepo;
@@ -40,8 +35,7 @@ namespace RERPAPI.Controllers.HRM
         {
             try
             {
-
-                departmentid = departmentid ?? 0; 
+                departmentid = departmentid ?? 0;
                 keyword = string.IsNullOrWhiteSpace(keyword) ? "" : keyword;
                 status = status ?? 0;
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
@@ -149,8 +143,8 @@ namespace RERPAPI.Controllers.HRM
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
+
         [HttpGet("get-approve")]
         public IActionResult GetApprove()
         {
@@ -164,12 +158,11 @@ namespace RERPAPI.Controllers.HRM
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
+
         [HttpGet("get-tax-company")]
         public IActionResult GetTaxCompany()
         {
-
             try
             {
                 var data = _taxCompanyRepo.GetAll(x => x.IsDeleted != true);
@@ -177,15 +170,13 @@ namespace RERPAPI.Controllers.HRM
             }
             catch (Exception ex)
             {
-                    
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
+
         [HttpGet("update-count-salary")]
         public async Task<IActionResult> UpdateCountSalary([FromQuery] int employeeID, [FromQuery] bool isExcludedFromSalary)
         {
-
             try
             {
                 int result = 0;
@@ -205,11 +196,10 @@ namespace RERPAPI.Controllers.HRM
             }
             catch (Exception ex)
             {
-
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
+
         //API thêm nhân viên vào phòng ban
         [HttpGet("update-employee-department")]
         public async Task<IActionResult> UpdateEmployeeDepartment([FromQuery] int employeeID, [FromQuery] int departmentID)
@@ -236,7 +226,6 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         //API thêm nhân viên vào phòng ban
         [HttpGet("get-employee-by-department-string")]

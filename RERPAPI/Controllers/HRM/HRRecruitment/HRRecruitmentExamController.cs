@@ -1,9 +1,5 @@
-using DocumentFormat.OpenXml.Office.SpreadSheetML.Y2023.MsForms;
-using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using NPOI.SS.Formula.Functions;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -12,27 +8,26 @@ using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
 using RERPAPI.Repo.GenericEntity.HRRecruitmentExamRepo;
-using RERPAPI.Repo.GenericEntity.Technical.KPI;
 
 namespace RERPAPI.Controllers.HRM.HRRecruitment
 {
     [Route("api/[controller]")]
     [ApiController]
-
     public class HRRecruitmentExamController : ControllerBase
     {
-        HRRecruitmentExamRepo _hrRecruitmentExamRepo;
-        HRRecruitmentQuestionRepo _hrRecruitmentQuestionRepo;
-        HRRecruitmentAnswersRepo _hrRecruitmentAnswersRepo;
-        HRRecruitmentRightAnswearsRepo _hrRecruitmentRightAnswearsRepo;
-        HRRecruitmentExamResultRepo _hrRecruitmentExamResultRepo;
-        HRRecruitmentExamResultDetailRepo _hrRecruitmentExamResultDetailRepo;
-        HRRecruitmentExamResultImageRepo _hrRecruitmentExamResultImageRepo;
-        ConfigSystemRepo _configSystemRepo;
-        HiringRequestExamRepo _hiringRequestExamRepo;
-        HRHiringRequestRepo _hiringRequestRepo;
-        HRRecruitmentCandidateRepo _hrRecruitmentCandidateRepo;
-        HRRecruitmentExamEvaluationFileRepo _hrRecruitmentExamEvaluationFileRepo;
+        private HRRecruitmentExamRepo _hrRecruitmentExamRepo;
+        private HRRecruitmentQuestionRepo _hrRecruitmentQuestionRepo;
+        private HRRecruitmentAnswersRepo _hrRecruitmentAnswersRepo;
+        private HRRecruitmentRightAnswearsRepo _hrRecruitmentRightAnswearsRepo;
+        private HRRecruitmentExamResultRepo _hrRecruitmentExamResultRepo;
+        private HRRecruitmentExamResultDetailRepo _hrRecruitmentExamResultDetailRepo;
+        private HRRecruitmentExamResultImageRepo _hrRecruitmentExamResultImageRepo;
+        private ConfigSystemRepo _configSystemRepo;
+        private HiringRequestExamRepo _hiringRequestExamRepo;
+        private HRHiringRequestRepo _hiringRequestRepo;
+        private HRRecruitmentCandidateRepo _hrRecruitmentCandidateRepo;
+        private HRRecruitmentExamEvaluationFileRepo _hrRecruitmentExamEvaluationFileRepo;
+
         public HRRecruitmentExamController(HRRecruitmentQuestionRepo hrRecruitmentQuestionRepo, HRRecruitmentAnswersRepo hrRecruitmentAnswersRepo, HRRecruitmentRightAnswearsRepo hrRecruitmentRightAnswearsRepo, HRRecruitmentExamRepo hRRecruitmentExamRepo, HRRecruitmentExamResultRepo hrRecruitmentExamResultRepo, HRRecruitmentExamResultDetailRepo hrRecruitmentExamResultDetailRepo, HRRecruitmentExamResultImageRepo hrRecruitmentExamResultImageRepo, ConfigSystemRepo configSystemRepo, HiringRequestExamRepo hiringRequestExamRepo, HRHiringRequestRepo hiringRequestRepo, HRRecruitmentCandidateRepo hRRecruitmentCandidateRepo, HRRecruitmentExamEvaluationFileRepo hrRecruitmentExamEvaluationFileRepo)
         {
             _hrRecruitmentQuestionRepo = hrRecruitmentQuestionRepo;
@@ -48,7 +43,9 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             _hrRecruitmentCandidateRepo = hRRecruitmentCandidateRepo;
             _hrRecruitmentExamEvaluationFileRepo = hrRecruitmentExamEvaluationFileRepo;
         }
+
         #region load dữ liệu exam
+
         [Authorize]
         [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpGet("get-data-exam")]
@@ -69,8 +66,11 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion load dữ liệu exam
+
         #region load dữ liêu chi tiết exam
+
         [Authorize]
         [HttpGet("get-data-exam-by-id")]
         public async Task<IActionResult> getDataExamByID(int examID)
@@ -85,9 +85,11 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion load dữ liêu chi tiết exam
 
         #region lấy ID max
+
         [HttpGet("get-max-id")]
         public async Task<IActionResult> GetMaxID()
         {
@@ -102,10 +104,12 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             }
         }
 
-        #endregion
+        #endregion lấy ID max
+
         #region save exam
+
         [Authorize]
-        //load data cbb đợt tuyển dụng cho trường hợp thêm mới ( chỉ lấy những vị trí chưa có đề thi) 
+        //load data cbb đợt tuyển dụng cho trường hợp thêm mới ( chỉ lấy những vị trí chưa có đề thi)
         [HttpGet("get-data-cbb-hiring-request-insert")]
         public async Task<IActionResult> GetDataCbbHiringRequestInsert(int departmentID)
         {
@@ -123,6 +127,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [Authorize]
         [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpPost("save-data-exam")]
@@ -150,8 +155,11 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion save exam
+
         #region đóng/mở hoạt động cho bài thi
+
         //[HttpPost("active-exam")]
         //public async Task<IActionResult> ActiveExam(int examID, bool isActive)
         //{
@@ -185,9 +193,11 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
         //    }
         //}
-        #endregion
+
+        #endregion đóng/mở hoạt động cho bài thi
 
         #region delete exam
+
         [Authorize]
         [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpPost("delete-data-exam")]
@@ -213,9 +223,11 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
 
-        #region các api liên quan đến chức năng copy 
+        #endregion delete exam
+
+        #region các api liên quan đến chức năng copy
+
         //load data cbb đợt tuyển dụng
         [Authorize]
         [HttpGet("get-data-cbb-hiring-request")]
@@ -258,7 +270,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             }
         }
 
-        // copy câu hỏi 
+        // copy câu hỏi
         [Authorize]
         [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpPost("copy-question-answers")]
@@ -353,9 +365,11 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
 
-        #region liên quan đến làm bài thi tuyển dụng 
+        #endregion các api liên quan đến chức năng copy
+
+        #region liên quan đến làm bài thi tuyển dụng
+
         //lưu file
         [HttpGet("download-by-key-not-auth")]
         public IActionResult DownloadByKey(
@@ -446,6 +460,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi download file: {ex.Message}"));
             }
         }
+
         // API upload file cho phần thi tự luận — không yêu cầu đăng nhập
         [HttpPost("upload-not-auth")]
         [DisableRequestSizeLimit]
@@ -557,7 +572,6 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                     return Ok(ApiResponseFactory.Success(hRRecruitmentExamResult, "Tạo kết quả thi ứng tuyển thành công!"));
                 }
                 return BadRequest(ApiResponseFactory.Fail(null, "Tạo mới kết quả thi ứng tuyển thất bại"));
-
             }
             catch (Exception ex)
             {
@@ -565,7 +579,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             }
         }
 
-        //api lấy thông tin bài thi theo ứng viên 
+        //api lấy thông tin bài thi theo ứng viên
         [HttpGet("get-data-exam-by-employee")]
         public async Task<IActionResult> GetDataExamByEmployee(int hRRecruitmentCandidateID)
         {
@@ -606,7 +620,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             }
         }
 
-        // lấy thông tin câu hỏi - đáp án cho thi 
+        // lấy thông tin câu hỏi - đáp án cho thi
         [HttpPost("get-data-question-answers-by-exam")]
         public async Task<IActionResult> GetDataQuestionAnswersByExam(int examID)
         {
@@ -625,7 +639,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             }
         }
 
-        // tạo mới kết quả 
+        // tạo mới kết quả
         [HttpPost("create-exam-hr-recruitment-result")]
         public async Task<IActionResult> CreateExamRecruitmentResult([FromBody] HRRecruitmentExamResult request, int hRRecruitmentCandidateID, int hrHiringRequestID)
         {
@@ -822,6 +836,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 }
             }
         }
+
         // nộp bài và chấm điểm
         [HttpPost("submit-exam-result")]
         public async Task<IActionResult> SubmitExamResult([FromBody] SubmitExamRequestDTO request)
@@ -961,8 +976,11 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion liên quan đến làm bài thi tuyển dụng
+
         #region Chấm điểm ứng viên
+
         [Authorize]
         [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")] // Permissions consistent with other HR recruitment tasks
         [HttpGet("get-candidate-scores")]
@@ -1134,10 +1152,11 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             }
         }
 
-        #endregion
-        #region Matrix View - Tổng quan điểm đa bài thi
-        [Authorize]
+        #endregion Chấm điểm ứng viên
 
+        #region Matrix View - Tổng quan điểm đa bài thi
+
+        [Authorize]
         [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpGet("get-exams-by-hiring-request")]
         public async Task<IActionResult> GetExamsByHiringRequest(int hiringRequestID)
@@ -1170,7 +1189,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         {
             try
             {
-                // check thêm người phỏng vấn và người yêu câu tuyển dụng 
+                // check thêm người phỏng vấn và người yêu câu tuyển dụng
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
 
@@ -1183,8 +1202,6 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
     .Contains("N2")) ? 0 : currentUser.EmployeeID
                 };
 
-
-
                 var data = await SqlDapper<object>.ProcedureToListAsync("spGetCandidateScoreMatrixByHiringRequest", param);
                 return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu ma trận điểm thành công"));
             }
@@ -1193,9 +1210,11 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
 
-        #region lấy danh sách yêu cầu tuyển dụng chưa hoàn thành của phiên đăng nhập 
+        #endregion Matrix View - Tổng quan điểm đa bài thi
+
+        #region lấy danh sách yêu cầu tuyển dụng chưa hoàn thành của phiên đăng nhập
+
         [Authorize]
         [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpGet("get-data-hiring-request-iscompleted")]
@@ -1231,8 +1250,11 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 }
             }
         }
-        #endregion
+
+        #endregion lấy danh sách yêu cầu tuyển dụng chưa hoàn thành của phiên đăng nhập
+
         #region api đánh giá đạt/ hủy đạt kết quả thi của ứng viên (dành cho TBP)
+
         [Authorize]
         [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpPost("evaluate-candidate-result")]
@@ -1266,12 +1288,16 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                     {
                         case 7:
                             return BadRequest(ApiResponseFactory.Fail(null, "Ứng viên đang ở trạng thái 'Gửi thư mời nhận việc', không thể đánh giá kết quả thi!"));
+
                         case 8:
                             return BadRequest(ApiResponseFactory.Fail(null, "Ứng viên đang ở trạng thái 'Xác nhận thư mời', không thể đánh giá kết quả thi!"));
+
                         case 9:
                             return BadRequest(ApiResponseFactory.Fail(null, "Ứng viên đã trúng tuyển, không thể đánh giá kết quả thi!"));
+
                         case 6:
                             return BadRequest(ApiResponseFactory.Fail(null, "Ứng viên đang ở trạng thái 'Trình phê duyệt', không thể đánh giá kết quả thi!"));
+
                         default:
                             break;
                     }
@@ -1289,6 +1315,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion api đánh giá đạt/ hủy đạt kết quả thi của ứng viên (dành cho TBP)
     }
 }

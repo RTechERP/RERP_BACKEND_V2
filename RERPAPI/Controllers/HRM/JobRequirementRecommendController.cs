@@ -5,10 +5,8 @@ using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
-using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.HRM;
 using RERPAPI.Repo.GenericEntity.HRM;
-using System.Data;
 
 namespace RERPAPI.Controllers.HRM
 {
@@ -20,6 +18,7 @@ namespace RERPAPI.Controllers.HRM
         private readonly JobRequirementRecommendRepo _masterRepo;
         private readonly JobRequirementRecommendDetailRepo _detailRepo;
         private IConfiguration _configuration;
+
         public JobRequirementRecommendController(
             JobRequirementRecommendRepo masterRepo,
             JobRequirementRecommendDetailRepo detailRepo,
@@ -29,6 +28,7 @@ namespace RERPAPI.Controllers.HRM
             _detailRepo = detailRepo;
             _configuration = configuration;
         }
+
         [RequiresPermission("N1,N2,N34")]
         [HttpPost("get-all")]
         public IActionResult GetAll([FromBody] JobRequirementRecommendParam param)
@@ -50,6 +50,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2,N34")]
         [HttpGet("get-by-id/{id}")]
         public IActionResult GetByID(int id)
@@ -67,6 +68,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2,N34")]
         [HttpGet("init-recommend/{jobRequirementID}")]
         public IActionResult InitRecommend(int jobRequirementID)
@@ -85,6 +87,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2,N34")]
         [HttpGet("get-historical-suppliers")]
         public IActionResult GetHistoricalSuppliers()
@@ -101,6 +104,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2,N34")]
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] JobRequirementRecommendDTO dto)
@@ -112,12 +116,10 @@ namespace RERPAPI.Controllers.HRM
 
                 if (dto.Master.ID > 0)
                 {
-              
                     await _masterRepo.UpdateAsync(dto.Master);
                 }
                 else
                 {
-                  
                     await _masterRepo.CreateAsync(dto.Master);
                 }
 
@@ -141,12 +143,10 @@ namespace RERPAPI.Controllers.HRM
                     detail.JobRequirementRecommendID = dto.Master.ID;
                     if (detail.ID > 0)
                     {
-        
                         await _detailRepo.UpdateAsync(detail);
                     }
                     else
                     {
-                     
                         await _detailRepo.CreateAsync(detail);
                     }
                 }
@@ -158,6 +158,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2,N34")]
         [HttpPost("export-excel")]
         public IActionResult ExportExcel([FromBody] JobRequirementRecommendParam param)
@@ -407,6 +408,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2,N34")]
         [HttpPost("delete")]
         public async Task<IActionResult> Delete(int id)
@@ -416,7 +418,7 @@ namespace RERPAPI.Controllers.HRM
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
 
-                var master =  _masterRepo.GetByID(id);
+                var master = _masterRepo.GetByID(id);
                 if (master == null) return BadRequest(ApiResponseFactory.Fail(null, "Bản ghi không tồn tại"));
 
                 master.IsDeleted = true;
@@ -427,7 +429,7 @@ namespace RERPAPI.Controllers.HRM
                 foreach (var detail in details)
                 {
                     detail.IsDeleted = true;
-        
+
                     await _detailRepo.UpdateAsync(detail);
                 }
 

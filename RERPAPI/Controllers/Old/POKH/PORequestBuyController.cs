@@ -1,11 +1,8 @@
-﻿using Azure.Core;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -18,18 +15,24 @@ namespace RERPAPI.Controllers.Old.POKH
     {
         private readonly ProjectPartlistPurchaseRequestRepo _PPPRRepo;
         private readonly UnitCountRepo _unitCountRepo;
+        private readonly ProjectPartlistPurchaseRequestLogRepo _PPPRLogRepo;
 
-        public PORequestBuyController(ProjectPartlistPurchaseRequestRepo pPPRRepo, UnitCountRepo unitCountRepo)
+        public PORequestBuyController(ProjectPartlistPurchaseRequestRepo pPPRRepo, UnitCountRepo unitCountRepo, ProjectPartlistPurchaseRequestLogRepo pPPRLogRepo)
         {
             _PPPRRepo = pPPRRepo;
             _unitCountRepo = unitCountRepo;
+            _PPPRLogRepo = pPPRLogRepo;
         }
+
         [HttpPost("save-data")]
         public async Task<IActionResult> Save([FromBody] List<ProjectPartlistPurchaseRequest> request)
         {
             try
             {
                 var results = new List<object>();
+
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
 
                 foreach (var item in request)
                 {
@@ -86,6 +89,7 @@ namespace RERPAPI.Controllers.Old.POKH
 
                     // Lưu vào database
                     var insertResult = await _PPPRRepo.CreateAsync(model);
+                    await _PPPRLogRepo.AddLog(model.ID, $"{currentUser.FullName} đã thêm mới yêu cầu mua hàng!", "Thêm mới"); // Update ycmh
                     results.Add(new { item.ProductCode, Success = insertResult > 0 });
                 }
 
@@ -96,6 +100,7 @@ namespace RERPAPI.Controllers.Old.POKH
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         private UnitCount GetUnitCountByName(string unitName)
         {
             try

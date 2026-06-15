@@ -1,7 +1,5 @@
-﻿using Azure.Core;
-using RERPAPI.Model.Common;
+﻿using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
-using RERPAPI.Model.DTO.ProjectAGV;
 using RERPAPI.Model.Entities;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
 
@@ -9,7 +7,7 @@ namespace RERPAPI.Repo.GenericEntity.Project
 {
     public class ProjectItemRepo : GenericRepo<ProjectItem>
     {
-        ProjectRepo _projectRepo;
+        private ProjectRepo _projectRepo;
 
         public ProjectItemRepo(CurrentUser currentUser, ProjectRepo projectRepo) : base(currentUser)
         {
@@ -67,7 +65,7 @@ namespace RERPAPI.Repo.GenericEntity.Project
             try
             {
                 var projectTask = GetByID(projectTaskID);
-                string prefix = projectTask.Code + ".";    
+                string prefix = projectTask.Code + ".";
 
                 int count = GetAll()
                     .Where(x =>
@@ -85,6 +83,7 @@ namespace RERPAPI.Repo.GenericEntity.Project
                 throw new Exception($"Lỗi: {ex.Message}\r\n{ex.ToString()}");
             }
         }
+
         public string GetMaxSTT(int? projectID)
         {
             if (projectID == null || projectID <= 0) return "1";
@@ -104,7 +103,6 @@ namespace RERPAPI.Repo.GenericEntity.Project
                 .Max();
             return (max + 1).ToString();
         }
-
 
         public bool Validate(ProjectItem item, out string message)
         {
@@ -162,6 +160,7 @@ namespace RERPAPI.Repo.GenericEntity.Project
             }
             return true;
         }
+
         public bool ValidateAGV(ProjectItem item, out string message)
         {
             message = "";
@@ -206,7 +205,6 @@ namespace RERPAPI.Repo.GenericEntity.Project
             }
             if (item.Status == 2)
             {
-
                 if (!item.ActualEndDate.HasValue)
                 {
                     message = $"Hạng mục [{item.Code}]: Vui lòng nhập ngày kết thúc thực tế";
@@ -220,12 +218,14 @@ namespace RERPAPI.Repo.GenericEntity.Project
             }
             return true;
         }
+
         public void CalculateDays(ProjectItem item)
         {
             item.TotalDayActual = item.ActualStartDate.HasValue && item.ActualEndDate.HasValue
                 ? (decimal)(item.ActualEndDate.Value - item.ActualStartDate.Value).TotalDays
                 : 0;
         }
+
         public bool CanDelete(ProjectItem item, CurrentUser user)
         {
             if (user.IsAdmin) return true;
@@ -236,6 +236,7 @@ namespace RERPAPI.Repo.GenericEntity.Project
 
             return isTBP || isPBP;
         }
+
         public bool CanEdit(ProjectItem item, CurrentUser user)
         {
             var check = SQLHelper<dynamic>.ProcedureToList("spGetProjectEmployeePermisstion",
@@ -247,6 +248,7 @@ namespace RERPAPI.Repo.GenericEntity.Project
                 || user.IsAdmin == true
                 || item.EmployeeIDRequest == user.EmployeeID;
         }
+
         public async Task UpdatePercent(int projectId)
         {
             var items = GetAll(x => x.ProjectID == projectId && x.IsDeleted != true).ToList();
@@ -258,9 +260,10 @@ namespace RERPAPI.Repo.GenericEntity.Project
             }
             await UpdateRangeAsync_Binh(items);
         }
+
         public async Task UpdateLate(int projectId)
         {
-            var items = GetAll(x => x.ProjectID == projectId  && x.IsDeleted != true).ToList();
+            var items = GetAll(x => x.ProjectID == projectId && x.IsDeleted != true).ToList();
             var now = DateTime.Now.Date;
 
             foreach (var item in items)
@@ -293,6 +296,7 @@ namespace RERPAPI.Repo.GenericEntity.Project
             }
             await UpdateRangeAsync_Binh(items);
         }
+
         /* public async Task<string> GetMaxCodeAsync(int projectId, string projectCode)
          {
              var count = await _context.ProjectItems
@@ -306,8 +310,6 @@ namespace RERPAPI.Repo.GenericEntity.Project
         //    {
         //        var projectItem = GetAll(x => x.ProjectID == projectId);
 
-
-
         //        int maxSTT  = projectItem.Max(x=>x.STT);
         //        return maxSTT;
         //    }
@@ -316,7 +318,5 @@ namespace RERPAPI.Repo.GenericEntity.Project
         //        throw new Exception("Lỗi:" + ex.Message);
         //    }
         //}
-
     }
-
 }

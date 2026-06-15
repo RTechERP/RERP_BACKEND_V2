@@ -15,6 +15,7 @@ namespace RERPAPI.Repo.GenericEntity
             int stt = solutions.Count > 0 ? solutions.Max(x => (x.STT ?? 0)) + 1 : 1;
             return $"GP{stt}";
         }
+
         public bool Validate(ProjectSolution item, out string message)
         {
             message = "";
@@ -29,10 +30,10 @@ namespace RERPAPI.Repo.GenericEntity
             }
             if (item.ID >= 0)
             {
-                var existingSolutions = GetAll().Any(x => 
-                    x.CodeSolution == item.CodeSolution && 
-                    x.ProjectRequestID == item.ProjectRequestID && 
-                    x.ID != item.ID && 
+                var existingSolutions = GetAll().Any(x =>
+                    x.CodeSolution == item.CodeSolution &&
+                    x.ProjectRequestID == item.ProjectRequestID &&
+                    x.ID != item.ID &&
                     x.IsDeleted == false);
                 if (existingSolutions)
                 {
@@ -45,7 +46,7 @@ namespace RERPAPI.Repo.GenericEntity
             {
                 message = "Vui lòng chọn Yêu cầu Dự án";
                 return false;
-            }   
+            }
             if (string.IsNullOrEmpty(item.CodeSolution))
             {
                 message = "Vui lòng nhập Mã giải pháp";
@@ -58,6 +59,7 @@ namespace RERPAPI.Repo.GenericEntity
             }
             return true;
         }
+
         /// <summary>
         /// Validate điều kiện duyệt (status: 1 = báo giá, 2 = PO)
         /// </summary>

@@ -1,22 +1,17 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
-using RERPAPI.Middleware;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.Context;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.HRM;
 
 namespace RERPAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    
     public class NotifyController : ControllerBase
     {
         private readonly NotifyRepo _notifyRepo;
+
         public NotifyController(NotifyRepo notifyRepo)
         {
             _notifyRepo = notifyRepo;
@@ -36,13 +31,11 @@ namespace RERPAPI.Controllers
                 await _notifyRepo.CreateAsync(notify);
 
                 return Ok(ApiResponseFactory.Success(null, "Lấy dữu liệu thành công"));
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 
@@ -11,7 +10,7 @@ namespace RERPAPI.Controllers.Old.KETOAN
     public class HistoryExportAccountantController : ControllerBase
     {
         [HttpGet("load-data")]
-        public IActionResult GetData(int page, int size, DateTime dateStart, DateTime dateEnd, int status, string filterText = "" )
+        public IActionResult GetData(int page, int size, DateTime dateStart, DateTime dateEnd, int status, string filterText = "")
         {
             try
             {

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.DTO
+﻿namespace RERPAPI.Model.DTO
 {
     public class CourseDTO
     {
@@ -37,6 +31,5 @@ namespace RERPAPI.Model.DTO
         public bool IsRequired { get; set; }
         public string CourseTypeName { get; set; }
         public bool IsLearnInTurn { get; set; }
-
     }
 }

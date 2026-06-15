@@ -7,7 +7,6 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.HRM;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.HRM.Employees
 {
@@ -43,7 +42,7 @@ namespace RERPAPI.Controllers.HRM.Employees
 
                 // Check N1/N2 role
                 var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x =>
-                    (x.Code == "N1" || x.Code == "N2"||currentUser.IsAdmin==true) && x.UserID == currentUser.ID);
+                    (x.Code == "N1" || x.Code == "N2" || currentUser.IsAdmin == true) && x.UserID == currentUser.ID);
 
                 int employeeID;
                 int departmentID;
@@ -77,7 +76,7 @@ namespace RERPAPI.Controllers.HRM.Employees
         /// <summary>
         /// Calculate deductions automatically (N1/N2 only) - calls spInsertIntoEmployeePayrollDeduction
         /// </summary>
-        /// 
+        ///
         [RequiresPermission("N1,N2")]
         [HttpPost("calculate-deductions")]
         public IActionResult CalculateDeductions([FromBody] EmployeeDeductionParam param)
@@ -89,7 +88,7 @@ namespace RERPAPI.Controllers.HRM.Employees
 
                 // Only N1/N2 can calculate
                 var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x =>
-                    (x.Code == "N1" || x.Code == "N2"||currentUser.IsAdmin==true) && x.UserID == currentUser.ID);
+                    (x.Code == "N1" || x.Code == "N2" || currentUser.IsAdmin == true) && x.UserID == currentUser.ID);
 
                 if (vUserHR == null)
                 {
@@ -111,7 +110,7 @@ namespace RERPAPI.Controllers.HRM.Employees
         /// <summary>
         /// Save a manual deduction entry (N1/N2 only)
         /// </summary>
-        /// 
+        ///
         [RequiresPermission("N1,N2")]
         [HttpPost("save-manual")]
         public async Task<IActionResult> SaveManualDeduction([FromBody] EmployeePayrollDeduction model)
@@ -123,7 +122,7 @@ namespace RERPAPI.Controllers.HRM.Employees
 
                 // Only N1/N2 can add manual deductions
                 var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x =>
-                    (x.Code == "N1" || x.Code == "N2"||currentUser.IsAdmin==true) && x.UserID == currentUser.ID);
+                    (x.Code == "N1" || x.Code == "N2" || currentUser.IsAdmin == true) && x.UserID == currentUser.ID);
 
                 if (vUserHR == null)
                 {
@@ -135,7 +134,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                     model.CreatedDate = DateTime.Now;
                     model.CreatedBy = currentUser.LoginName;
                     model.IsDeleted = false;
-                 await   _deductionRepo.CreateAsync(model);
+                    await _deductionRepo.CreateAsync(model);
                 }
                 else
                 {
@@ -199,7 +198,7 @@ namespace RERPAPI.Controllers.HRM.Employees
         /// <summary>
         /// Soft delete a deduction entry (N1/N2 only)
         /// </summary>
-        /// 
+        ///
         [RequiresPermission("N1,N2")]
         [HttpPost("delete")]
         public async Task<IActionResult> DeleteDeduction([FromBody] EmployeePayrollDeduction param)
@@ -221,13 +220,13 @@ namespace RERPAPI.Controllers.HRM.Employees
                 var model = _deductionRepo.GetByID(param.ID);
                 if (model == null)
                 {
-                    return Ok(ApiResponseFactory.Fail(null,"Dữ liệu không tồn tại."));
+                    return Ok(ApiResponseFactory.Fail(null, "Dữ liệu không tồn tại."));
                 }
 
                 model.IsDeleted = true;
                 model.UpdatedBy = currentUser.LoginName;
                 model.UpdatedDate = DateTime.Now;
-               await _deductionRepo.UpdateAsync(model);
+                await _deductionRepo.UpdateAsync(model);
 
                 return Ok(ApiResponseFactory.Success(null, "Xóa thành công."));
             }

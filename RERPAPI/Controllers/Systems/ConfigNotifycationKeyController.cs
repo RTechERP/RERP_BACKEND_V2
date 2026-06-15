@@ -1,13 +1,9 @@
-using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
-using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Systems;
-using ZXing;
 
 namespace RERPAPI.Controllers.Systems
 {
@@ -24,7 +20,7 @@ namespace RERPAPI.Controllers.Systems
             _configNotificationKeyRepo = configNotificationKeyRepo;
             _configNotificationKeyLinkRepo = configNotificationKeyLinkRepo;
         }
-        //Lấy danh sách key 
+        //Lấy danh sách key
         [HttpGet]
         public IActionResult GetAll()
         {
@@ -59,7 +55,6 @@ namespace RERPAPI.Controllers.Systems
                         if (item.ID > 0)
                         {
                             result = await _configNotificationKeyRepo.UpdateAsync(item);
-
                         }
                         else
                         {
@@ -127,7 +122,6 @@ namespace RERPAPI.Controllers.Systems
                             IsActive = true
                         };
                         await _configNotificationKeyLinkRepo.CreateAsync(link);
-                       
                     }
 
                     resultList.Add(new

@@ -1,19 +1,13 @@
-﻿using DocumentFormat.OpenXml.Spreadsheet;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using NPOI.HSSF.Record.Chart;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.Project;
 
 namespace RERPAPI.Controllers.AppMobile
 {
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize]
     public class NotificationTypeController : ControllerBase
     {
         private readonly NotificationTypeRepo _notificationTypeRepo;
@@ -34,7 +28,6 @@ namespace RERPAPI.Controllers.AppMobile
         {
             try
             {
-
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
                 var param = new
@@ -49,13 +42,14 @@ namespace RERPAPI.Controllers.AppMobile
                 return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] List<NotificationTypeLink> notificationTypeLink)
         {
             try
             {
-                foreach( var item in notificationTypeLink)
-                { 
+                foreach (var item in notificationTypeLink)
+                {
                     if (item.ID <= 0)
                     {
                         await _notificationTypeLinkRepo.CreateAsync(item);
@@ -73,7 +67,6 @@ namespace RERPAPI.Controllers.AppMobile
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-        }   
-
+        }
     }
 }

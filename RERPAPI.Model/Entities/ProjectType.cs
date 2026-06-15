@@ -22,4 +22,8 @@ public partial class ProjectType
     public bool? IsHide { get; set; }
 
     public bool? IsHidePartlist { get; set; }
+
+    public bool IsPurchase { get; set; }
+
+    public bool IsProject { get; set; }
 }

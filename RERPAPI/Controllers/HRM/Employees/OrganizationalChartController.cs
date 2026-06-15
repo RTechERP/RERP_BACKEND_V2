@@ -1,13 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using NPOI.HSSF.Record.Chart;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO.Asset;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.Asset;
 
 namespace RERPAPI.Controllers.HRM.Employees
 {
@@ -27,7 +23,6 @@ namespace RERPAPI.Controllers.HRM.Employees
         }
 
         [HttpGet("get-organization-chart")]
-        //[RequiresPermission("N2,N23,N34,N1,N52,N80")]
         public IActionResult GetOrganizationalChart()
         {
             try
@@ -42,8 +37,8 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-organization-chart-detail")]
-        //[RequiresPermission("N2,N23,N34,N1,N52,N80")]
         public IActionResult GetOrganizationalChartDetail(int id)
         {
             try
@@ -58,6 +53,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] OrganizationalChartDTO dto)
         {
@@ -74,7 +70,6 @@ namespace RERPAPI.Controllers.HRM.Employees
                             await _organizationalChartRepo.UpdateAsync(item);
                     }
                 }
-
 
                 if (dto.organizationalChartDetails != null && dto.organizationalChartDetails.Any())
                 {
@@ -104,6 +99,5 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

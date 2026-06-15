@@ -1,10 +1,5 @@
 ﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes
 {
@@ -13,9 +8,10 @@ namespace RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes
         public MeetingTypeRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
+
         public bool Validate(MeetingType entity, out string message)
         {
-            if(entity.IsDelete == true)
+            if (entity.IsDelete == true)
             {
                 message = "Trường hợp xóa!";
                 return true;
@@ -39,6 +35,7 @@ namespace RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes
 
             return true;
         }
+
         public bool CheckTypeCodeExists(string typeCode, int? id = null)
         {
             try

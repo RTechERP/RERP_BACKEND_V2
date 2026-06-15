@@ -1,11 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
-using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System.Data;
 
 namespace RERPAPI.Controllers.Project
 {
@@ -31,7 +27,9 @@ namespace RERPAPI.Controllers.Project
             this.departmentRepo = departmentRepo;
             this.userTeamRepo = userTeamRepo;
         }
+
         #region Load  timeline hạng mục công việc
+
         [HttpGet("get-data")]
         public async Task<IActionResult> GetData(DateTime dateStart, DateTime dateEnd, int departmentId, int userTeamId, int userId, int projectTypeId, string? keyword)
         {
@@ -52,7 +50,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
 
+        #endregion Load  timeline hạng mục công việc
     }
 }

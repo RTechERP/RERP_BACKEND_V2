@@ -32,6 +32,7 @@ namespace RERPAPI.Controllers.Old.POKH
             _quotationKHRepo = quotationKHRepo;
             _quotationDetailKHRepo = quotationDetailKHRepo;
         }
+
         [HttpGet("get-users")]
         public IActionResult GetUser()
         {
@@ -51,6 +52,7 @@ namespace RERPAPI.Controllers.Old.POKH
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-contacts")]
         public IActionResult GetCustomerContact(int id)
         {
@@ -70,6 +72,7 @@ namespace RERPAPI.Controllers.Old.POKH
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("generate-code")]
         public IActionResult GenerateQuotationKHCode(int customerId, string createDate)
         {
@@ -115,6 +118,7 @@ namespace RERPAPI.Controllers.Old.POKH
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveDataAsync([FromBody] QuotationDTO dto)
         {
@@ -163,6 +167,5 @@ namespace RERPAPI.Controllers.Old.POKH
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

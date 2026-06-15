@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.Old
@@ -10,10 +9,12 @@ namespace RERPAPI.Controllers.Old
     public class EmployeeEducationLevelController : ControllerBase
     {
         private readonly EmployeeEducationLevelRepo _employeeEducationLevelRepo;
+
         public EmployeeEducationLevelController(EmployeeEducationLevelRepo employeeEducationLevelRepo)
         {
             _employeeEducationLevelRepo = employeeEducationLevelRepo;
         }
+
         [HttpGet("{id}")]
         public IActionResult GetEmployeeEducationLevelByEmployeeID(int id)
         {

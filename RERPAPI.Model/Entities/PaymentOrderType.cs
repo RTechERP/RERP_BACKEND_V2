@@ -30,4 +30,6 @@ public partial class PaymentOrderType
     public bool? IsBill { get; set; }
 
     public string? AccountingAccount { get; set; }
+
+    public bool? IsValidProject { get; set; }
 }

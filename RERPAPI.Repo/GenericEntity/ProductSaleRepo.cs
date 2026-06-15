@@ -6,13 +6,15 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class ProductSaleRepo : GenericRepo<ProductSale>
     {
-        LocationRepo _locationRepo;
-        CurrentUser _currentUser;
+        private LocationRepo _locationRepo;
+        private CurrentUser _currentUser;
+
         public ProductSaleRepo(CurrentUser currentUser, LocationRepo locationRepo) : base(currentUser)
         {
             _locationRepo = locationRepo;
             _currentUser = currentUser;
         }
+
         public async Task<bool> SetLocationList(SetLocationRequestDTO req)
         {
             int count = 0;
@@ -42,6 +44,7 @@ namespace RERPAPI.Repo.GenericEntity
             }
             return count > 0;
         }
+
         public bool SetLocation(int locationID, int productsaleID)
         {
             var productSale = GetByID(productsaleID);

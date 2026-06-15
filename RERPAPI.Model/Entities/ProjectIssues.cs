@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RERPAPI.Model.Entities
 {
@@ -11,7 +6,7 @@ namespace RERPAPI.Model.Entities
     public class ProjectIssues
     {
         public int ID { get; set; }
-        public int? STT { get; set; }    
+        public int? STT { get; set; }
         public int ProjectID { get; set; }
         public string? Title { get; set; }
         public string? Description { get; set; }

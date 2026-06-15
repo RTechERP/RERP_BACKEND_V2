@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO.HRM;
@@ -14,6 +13,7 @@ namespace RERPAPI.Controllers.Old.Technical
     {
         private readonly DepartmentRepo _departmentRepo;
         private readonly KPIErrorTypeRepo _kpiErrorTypeRepo;
+
         public KPIErrorEmployeeSummaryMaxController(DepartmentRepo departmentRepo, KPIErrorTypeRepo kpiErrorTypeRepo)
         {
             _departmentRepo = departmentRepo;
@@ -33,7 +33,6 @@ namespace RERPAPI.Controllers.Old.Technical
                 var data = SQLHelper<object>.GetListData(list, 0);
 
                 return Ok(ApiResponseFactory.Success(data, ""));
-
             }
             catch (Exception ex)
             {

@@ -13,13 +13,15 @@ namespace RERPAPI.Controllers.Old
     [Route("api/[controller]")]
     public class LoginManagerController : ControllerBase
     {
-        LoginManagerRepo loginManagerRepo;
-        EmployeeRepo employeeRepo;
+        private LoginManagerRepo loginManagerRepo;
+        private EmployeeRepo employeeRepo;
+
         public LoginManagerController(LoginManagerRepo loginManagerRepo, EmployeeRepo employeeRepo)
         {
             this.loginManagerRepo = loginManagerRepo;
             this.employeeRepo = employeeRepo;
         }
+
         [HttpGet("{id}")]
         [RequiresPermission("N1,N2,N60")]
         public IActionResult GetLoginInfo(int id)
@@ -78,9 +80,8 @@ namespace RERPAPI.Controllers.Old
                         message = "Chưa có thông tin nhân viên"
                     });
                 }
-                User user = loginManagerRepo.GetAll(x => x.LoginName.ToLower() == loginInfo.LoginName.ToLower() && x.Status != 1).FirstOrDefault()??new Model.Entities.User();
-                Employee employee = employeeRepo.GetAll(x=> x.Code.ToLower() == loginInfo.Code && x.FullName.ToLower() == loginInfo.FullName.ToLower()).FirstOrDefault();
-
+                User user = loginManagerRepo.GetAll(x => x.LoginName.ToLower() == loginInfo.LoginName.ToLower() && x.Status != 1).FirstOrDefault() ?? new Model.Entities.User();
+                Employee employee = employeeRepo.GetAll(x => x.Code.ToLower() == loginInfo.Code && x.FullName.ToLower() == loginInfo.FullName.ToLower()).FirstOrDefault();
 
                 if (loginInfo.Status)
                 {
@@ -110,7 +111,7 @@ namespace RERPAPI.Controllers.Old
 
                 // Set TeamID
                 user.TeamID = loginInfo.TeamID;
-                if (loginManagerRepo.GetAll(x =>x.LoginName == loginInfo.LoginName &&x.ID != loginInfo.UserID&&x.Status!=1).Any())
+                if (loginManagerRepo.GetAll(x => x.LoginName == loginInfo.LoginName && x.ID != loginInfo.UserID && x.Status != 1).Any())
                 {
                     return BadRequest(ApiResponseFactory.Fail(
                         null,
@@ -125,7 +126,6 @@ namespace RERPAPI.Controllers.Old
                 }
                 else
                 {
-                  
                     await loginManagerRepo.CreateAsync(user);
                     employee.UserID = user.ID;
                     await employeeRepo.UpdateAsync(employee);
@@ -136,7 +136,6 @@ namespace RERPAPI.Controllers.Old
                     status = 1,
                     message = "Cập nhật thông tin đăng nhập thành công"
                 });
-
             }
             catch (Exception ex)
             {
@@ -148,7 +147,5 @@ namespace RERPAPI.Controllers.Old
                 });
             }
         }
-
-
     }
 }

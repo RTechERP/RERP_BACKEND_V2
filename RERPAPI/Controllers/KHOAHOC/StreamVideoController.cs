@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.KHOAHOC
@@ -9,6 +8,7 @@ namespace RERPAPI.Controllers.KHOAHOC
     public class StreamVideoController : ControllerBase
     {
         private readonly CourseLessonRepo _courseLessonRepo;
+
         public StreamVideoController(CourseLessonRepo courseLessonRepo)
         {
             _courseLessonRepo = courseLessonRepo;

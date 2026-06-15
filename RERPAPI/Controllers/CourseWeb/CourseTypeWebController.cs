@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities.RTCCourse;
@@ -12,13 +11,14 @@ namespace RERPAPI.Controllers.KHOAHOC
     [Authorize]
     public class CourseTypeWebController : ControllerBase
     {
-        CourseTypeRepo _courseTypeRepo;
+        private CourseTypeRepo _courseTypeRepo;
+
         public CourseTypeWebController(CourseTypeRepo courseTypeRepo)
         {
             _courseTypeRepo = courseTypeRepo;
         }
 
-        //get data 
+        //get data
         [HttpGet("get-all")]
         public async Task<IActionResult> getAllData()
         {
@@ -41,7 +41,7 @@ namespace RERPAPI.Controllers.KHOAHOC
         [HttpPost("save-data")]
         public async Task<IActionResult> saveData([FromBody] List<CourseType> request)
         {
-            try 
+            try
             {
                 foreach (var item in request)
                 {
@@ -55,7 +55,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                     {
                         if (!_courseTypeRepo.ValidateCourseType(item, out string message))
                         {
-                            return BadRequest(ApiResponseFactory.Fail(null,message));
+                            return BadRequest(ApiResponseFactory.Fail(null, message));
                         }
                         if (item.ID <= 0)
                         {
@@ -71,12 +71,10 @@ namespace RERPAPI.Controllers.KHOAHOC
                     "Lưu dữ liệu thành công!"
                 ));
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex,ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-            
-
         }
     }
 }

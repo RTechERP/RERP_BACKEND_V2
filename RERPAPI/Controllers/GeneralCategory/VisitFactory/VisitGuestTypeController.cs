@@ -9,6 +9,7 @@ namespace RERPAPI.Controllers
     public class VisitGuestTypeController : ControllerBase
     {
         private readonly VisitGuestTypeRepo _repo;
+
         public VisitGuestTypeController(VisitGuestTypeRepo repo)
         {
             _repo = repo;
@@ -76,5 +77,3 @@ namespace RERPAPI.Controllers
         }
     }
 }
-
-

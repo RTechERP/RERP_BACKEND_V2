@@ -14,7 +14,7 @@ namespace RERPAPI.Controllers.Old
         public EmployeeScheduleWorkController(EmployeeScheduleWorkRepo employeeScheduleWorkRepo)
         {
             _employeeScheduleWorkRepo = employeeScheduleWorkRepo;
-        }       
+        }
 
         [HttpGet("schedule-work")]
         public IActionResult GetEmployeeScheduleWork(int month, int year)
@@ -48,7 +48,7 @@ namespace RERPAPI.Controllers.Old
             {
                 var dtRegisterWork = SQLHelper<object>.ProcedureToList("spGetEmployeeRegisterWork",
                                                                                new string[] { "@Year", "@Month", "@DepartmentID", "@FilterText" },
-                                                                                                                                          new object[] { year, month, departmentId, filterText ?? ""});
+                                                                                                                                          new object[] { year, month, departmentId, filterText ?? "" });
                 return Ok(new
                 {
                     status = 1,
@@ -81,10 +81,11 @@ namespace RERPAPI.Controllers.Old
                 //    });
                 //}
 
-                if(employeeScheduleWork.ID <= 0)
+                if (employeeScheduleWork.ID <= 0)
                 {
                     await _employeeScheduleWorkRepo.CreateAsync(employeeScheduleWork);
-                } else
+                }
+                else
                 {
                     await _employeeScheduleWorkRepo.UpdateAsync(employeeScheduleWork);
                 }

@@ -5,14 +5,16 @@ namespace RERPAPI.Repo.GenericEntity.Technical
 {
     public class HistoryProductRTCRepo : GenericRepo<HistoryProductRTC>
     {
-        const int WAREHOUSE_ID = 1;
+        private const int WAREHOUSE_ID = 1;
         private readonly ProductRTCQRCodeRepo _productRTCQRCodeRepo;
-        CurrentUser _currentUser;
+        private CurrentUser _currentUser;
+
         public HistoryProductRTCRepo(CurrentUser currentUser, ProductRTCQRCodeRepo productRTCQRCodeRepo) : base(currentUser)
         {
             _productRTCQRCodeRepo = productRTCQRCodeRepo;
             _currentUser = currentUser;
         }
+
         public async Task SaveDataAsync(ModulaLocationDTO.SerialNumberModulaLocation item)
         {
             string productQRCode = item.SerialNumber ?? "";
@@ -57,11 +59,7 @@ namespace RERPAPI.Repo.GenericEntity.Technical
 
                     await UpdateAsync(historyProductRTC);
                 }
-
-
             }
-
         }
-
     }
 }

@@ -7,6 +7,7 @@ using RERPAPI.Model.DTO.KPISale;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.KPISale;
 using System.Globalization;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace RERPAPI.Controllers.KPISale
@@ -66,6 +67,13 @@ namespace RERPAPI.Controllers.KPISale
             "DateEnd",
             "DepartmentID",
             "PeriodID"
+        };
+
+        private static readonly string[] SoftDeleteColumnCandidates =
+        {
+            "IsDeleted",
+            "IsDelete",
+            "DeleteFlag"
         };
 
         public KPISaleController(KPISaleRepo kpiSaleRepo)
@@ -176,7 +184,7 @@ namespace RERPAPI.Controllers.KPISale
             }
         }
 
-        #endregion
+        #endregion Period
 
         #region Template
 
@@ -288,7 +296,7 @@ namespace RERPAPI.Controllers.KPISale
             }
         }
 
-        #endregion
+        #endregion Template
 
         #region Index
 
@@ -434,7 +442,7 @@ namespace RERPAPI.Controllers.KPISale
             }
         }
 
-        #endregion
+        #endregion Index
 
         #region Allowed table and column
 
@@ -566,6 +574,7 @@ namespace RERPAPI.Controllers.KPISale
                 request.ColumnName = request.ColumnName.Trim();
                 request.DisplayName = request.DisplayName.Trim();
                 request.DataType = request.DataType.Trim().ToUpperInvariant();
+                request.ManualValueMapJson = NormalizeManualValueMapJson(request.ManualValueMapJson);
                 request.IsActive = true;
 
                 await _kpiSaleRepo.KPISaleAllowedColumns.AddAsync(request);
@@ -600,7 +609,10 @@ namespace RERPAPI.Controllers.KPISale
                 model.IsEmployeeColumn = request.IsEmployeeColumn;
                 model.IsDateColumn = request.IsDateColumn;
                 model.IsValueColumn = request.IsValueColumn;
-                model.IsActive = request.IsActive;
+                model.LookupValueColumn = request.LookupValueColumn;
+                model.LookupDisplayColumn = request.LookupDisplayColumn;
+                model.LookupTable = request.LookupTable;
+                model.ManualValueMapJson = NormalizeManualValueMapJson(request.ManualValueMapJson);
 
                 await _kpiSaleRepo.SaveChangesAsync();
                 return Ok(ApiResponseFactory.Success(model, "Lưu thành công"));
@@ -630,7 +642,7 @@ namespace RERPAPI.Controllers.KPISale
             }
         }
 
-        #endregion
+        #endregion Allowed table and column
 
         #region Data source
 
@@ -746,7 +758,7 @@ namespace RERPAPI.Controllers.KPISale
             }
         }
 
-        #endregion
+        #endregion Data source
 
         #region Mapping and filter
 
@@ -874,6 +886,73 @@ namespace RERPAPI.Controllers.KPISale
             }
         }
 
+        [HttpGet("mappings/{mappingId:int}/columns/{columnName}/unique-values")]
+        public async Task<IActionResult> GetColumnUniqueValues(int mappingId, string columnName)
+        {
+            try
+            {
+                var mapping = await _kpiSaleRepo.KPISaleIndexDataMappings.AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.ID == mappingId);
+                if (mapping == null)
+                    return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy KPI mapping"));
+
+                var source = await _kpiSaleRepo.KPISaleDataSources.AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.ID == mapping.DataSourceID);
+                if (source == null)
+                    return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy data source"));
+
+                var table = await _kpiSaleRepo.KPISaleAllowedTables.AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.ID == source.AllowedTableID);
+                if (table == null)
+                    return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy bảng được phép"));
+
+                var column = await _kpiSaleRepo.KPISaleAllowedColumns.AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.TableID == table.ID && x.ColumnName == columnName && x.IsActive);
+                if (column == null)
+                    return NotFound(ApiResponseFactory.Fail(null, $"Cột không được phép hoặc không hợp lệ: {columnName}"));
+
+                ValidateIdentifier(table.TableName, nameof(table.TableName));
+                ValidateIdentifier(table.SchemaName ?? "dbo", nameof(table.SchemaName));
+                ValidateIdentifier(column.ColumnName, nameof(column.ColumnName));
+
+                if (!string.IsNullOrWhiteSpace(column.LookupTable))
+                {
+                    string lookupSchema = "dbo";
+                    string lookupTable = column.LookupTable.Trim();
+                    if (lookupTable.Contains('.'))
+                    {
+                        var parts = lookupTable.Split('.');
+                        lookupSchema = parts[0].Trim();
+                        lookupTable = parts[1].Trim();
+                    }
+                    var valueColumn = string.IsNullOrWhiteSpace(column.LookupValueColumn) ? "ID" : column.LookupValueColumn.Trim();
+                    var displayColumn = string.IsNullOrWhiteSpace(column.LookupDisplayColumn) ? valueColumn : column.LookupDisplayColumn.Trim();
+
+                    ValidateIdentifier(lookupSchema, nameof(lookupSchema));
+                    ValidateIdentifier(lookupTable, nameof(lookupTable));
+                    ValidateIdentifier(valueColumn, nameof(valueColumn));
+                    ValidateIdentifier(displayColumn, nameof(displayColumn));
+
+                    var lookupData = await _kpiSaleRepo.GetUniqueValuesAsync(lookupSchema, lookupTable, valueColumn, displayColumn);
+                    return Ok(ApiResponseFactory.Success(lookupData, ""));
+                }
+                else if (!string.IsNullOrWhiteSpace(column.ManualValueMapJson))
+                {
+                    var data = ParseManualLookupValues(column.ManualValueMapJson);
+                    return Ok(ApiResponseFactory.Success(data, ""));
+                }
+                else
+                {
+                    var data = await _kpiSaleRepo.GetUniqueValuesAsync(table.SchemaName ?? "dbo", table.TableName, column.ColumnName, column.ColumnName);
+                    return Ok(ApiResponseFactory.Success(data, ""));
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpGet("mappings/{mappingId:int}/filters")]
         public async Task<IActionResult> GetFilterTree(int mappingId)
         {
@@ -891,6 +970,7 @@ namespace RERPAPI.Controllers.KPISale
                                m.DataSourceID,
                                source.SourceCode,
                                source.SourceName,
+                               source.AllowedTableID,
                                m.AggregateType,
                                m.ValueColumn,
                                m.DistinctColumn,
@@ -912,7 +992,72 @@ namespace RERPAPI.Controllers.KPISale
                     .ThenBy(x => x.ID)
                     .ToListAsync();
 
-                var nodes = BuildFilterTree(groups, conditions);
+                var columns = await _kpiSaleRepo.KPISaleAllowedColumns.AsNoTracking()
+                    .Where(x => x.TableID == mapping.AllowedTableID && x.IsActive)
+                    .ToListAsync();
+                var colMap = columns.ToDictionary(c => c.ColumnName, c => c);
+
+                var enrichedConditions = new List<KPISaleFilterConditionDto>();
+                foreach (var cond in conditions)
+                {
+                    string? value1Display = null;
+                    string? value2Display = null;
+
+                    if (cond.ValueType == "STATIC" && colMap.TryGetValue(cond.ColumnName, out var col))
+                    {
+                        if (!string.IsNullOrWhiteSpace(col.LookupTable))
+                        {
+                            string lookupSchema = "dbo";
+                            string lookupTable = col.LookupTable.Trim();
+                            if (lookupTable.Contains('.'))
+                            {
+                                var parts = lookupTable.Split('.');
+                                lookupSchema = parts[0].Trim();
+                                lookupTable = parts[1].Trim();
+                            }
+                            var valueColumn = string.IsNullOrWhiteSpace(col.LookupValueColumn) ? "ID" : col.LookupValueColumn.Trim();
+                            var displayCol = string.IsNullOrWhiteSpace(col.LookupDisplayColumn) ? valueColumn : col.LookupDisplayColumn.Trim();
+
+                            try
+                            {
+                                ValidateIdentifier(lookupSchema, nameof(lookupSchema));
+                                ValidateIdentifier(lookupTable, nameof(lookupTable));
+                                ValidateIdentifier(valueColumn, nameof(valueColumn));
+                                ValidateIdentifier(displayCol, nameof(displayCol));
+
+                                value1Display = await BuildLookupDisplayTextAsync(lookupSchema, lookupTable, valueColumn, displayCol, cond.Value1);
+                                value2Display = await BuildLookupDisplayTextAsync(lookupSchema, lookupTable, valueColumn, displayCol, cond.Value2);
+                            }
+                            catch (Exception)
+                            {
+                                // Fail-safe
+                            }
+                        }
+                        else if (!string.IsNullOrWhiteSpace(col.ManualValueMapJson))
+                        {
+                            value1Display = BuildManualDisplayText(col.ManualValueMapJson, cond.Value1);
+                            value2Display = BuildManualDisplayText(col.ManualValueMapJson, cond.Value2);
+                        }
+                    }
+
+                    enrichedConditions.Add(new KPISaleFilterConditionDto
+                    {
+                        ID = cond.ID,
+                        FilterGroupID = cond.FilterGroupID,
+                        ColumnName = cond.ColumnName,
+                        Operator = cond.Operator,
+                        ValueType = cond.ValueType,
+                        Value1 = cond.Value1,
+                        Value2 = cond.Value2,
+                        DataType = cond.DataType,
+                        IsActive = cond.IsActive,
+                        SortOrder = cond.SortOrder,
+                        Value1Display = value1Display,
+                        Value2Display = value2Display
+                    });
+                }
+
+                var nodes = BuildFilterTree(groups, enrichedConditions);
 
                 return Ok(ApiResponseFactory.Success(new KPISaleFilterTreeResult
                 {
@@ -1074,7 +1219,7 @@ namespace RERPAPI.Controllers.KPISale
             }
         }
 
-        #endregion
+        #endregion Mapping and filter
 
         #region Formula and scoring
 
@@ -1245,7 +1390,7 @@ namespace RERPAPI.Controllers.KPISale
             }
         }
 
-        #endregion
+        #endregion Formula and scoring
 
         #region Target and result
 
@@ -1449,7 +1594,7 @@ namespace RERPAPI.Controllers.KPISale
             }
         }
 
-        #endregion
+        #endregion Target and result
 
         #region Calculator
 
@@ -1583,11 +1728,72 @@ namespace RERPAPI.Controllers.KPISale
             if (!runtime.MappingsByIndex.TryGetValue(index.ID, out var mappings) || mappings.Count == 0)
                 return 0;
 
+            var quarterResultType = NormalizeOptionalCode(index.QuarterResultCalculateType, "SUM_MONTH");
+            var periodType = NormalizeOptionalCode(runtime.Period.PeriodType, "MONTH");
+
+            // MANUAL: nhập tay, không tự tính kết quả quý
+            if (quarterResultType == "MANUAL"
+                && (periodType == "QUARTER" || periodType == "YEAR"))
+                return 0;
+
+            // SUM_MONTH: tính riêng từng tháng rồi cộng lại (distinct theo tháng)
+            if (quarterResultType == "SUM_MONTH"
+                && (periodType == "QUARTER" || periodType == "YEAR"))
+            {
+                var childMonthPeriods = await GetChildMonthPeriodsAsync(runtime.Period);
+                if (childMonthPeriods.Count > 0)
+                {
+                    decimal total = 0;
+                    foreach (var monthPeriod in childMonthPeriods)
+                    {
+                        var monthRuntime = runtime.CloneWithPeriod(monthPeriod);
+                        foreach (var mapping in mappings)
+                            total += await CalculateMappingAsync(mapping, monthRuntime);
+                    }
+                    return total;
+                }
+            }
+
+            // FULL_PERIOD hoặc kỳ tháng: tính trực tiếp trên toàn bộ khoảng ngày kỳ hiện tại (distinct toàn quý)
             decimal result = 0;
             foreach (var mapping in mappings)
                 result += await CalculateMappingAsync(mapping, runtime);
 
             return result;
+        }
+
+        /// <summary>
+        /// Lấy danh sách kỳ tháng con của một kỳ quý/năm.
+        /// Nếu là YEAR thì lấy tất cả tháng thuộc các quý con.
+        /// </summary>
+        private async Task<List<KPISalePeriod>> GetChildMonthPeriodsAsync(KPISalePeriod parentPeriod)
+        {
+            var periodType = NormalizeOptionalCode(parentPeriod.PeriodType, "MONTH");
+
+            if (periodType == "QUARTER")
+            {
+                return await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                    .Where(x => x.ParentPeriodID == parentPeriod.ID && x.PeriodType == "MONTH")
+                    .OrderBy(x => x.DateStart)
+                    .ToListAsync();
+            }
+
+            if (periodType == "YEAR")
+            {
+                var quarterIds = await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                    .Where(x => x.ParentPeriodID == parentPeriod.ID && x.PeriodType == "QUARTER")
+                    .Select(x => x.ID)
+                    .ToListAsync();
+
+                return await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                    .Where(x => x.ParentPeriodID.HasValue
+                        && quarterIds.Contains(x.ParentPeriodID.Value)
+                        && x.PeriodType == "MONTH")
+                    .OrderBy(x => x.DateStart)
+                    .ToListAsync();
+            }
+
+            return new List<KPISalePeriod>();
         }
 
         private async Task<decimal> CalculateFormulaIndexAsync(KPISaleIndex index, KPISaleRuntimeContext runtime)
@@ -1685,6 +1891,10 @@ namespace RERPAPI.Controllers.KPISale
 
             if (!string.IsNullOrWhiteSpace(source.EmployeeColumn))
                 whereParts.Add($"{QuoteIdentifier(source.EmployeeColumn)} = {AddParameter(runtime.Request.EmployeeID)}");
+
+            var softDeleteSql = BuildSoftDeleteFilterSql(columnMap);
+            if (!string.IsNullOrWhiteSpace(softDeleteSql))
+                whereParts.Add(softDeleteSql);
 
             var filterSql = await BuildMappingFilterSqlAsync(mapping.ID, columnMap, AddParameter, runtime);
             if (!string.IsNullOrWhiteSpace(filterSql))
@@ -1821,6 +2031,34 @@ namespace RERPAPI.Controllers.KPISale
             return $"{columnName} {op} {addParameter(value)}";
         }
 
+        private string BuildSoftDeleteFilterSql(Dictionary<string, KPISaleAllowedColumn> columnMap)
+        {
+            var softDeleteConditions = new List<string>();
+
+            foreach (var candidate in SoftDeleteColumnCandidates)
+            {
+                if (!columnMap.TryGetValue(candidate, out var column))
+                    continue;
+
+                var dataType = NormalizeOptionalCode(column.DataType, "STRING");
+                var quotedColumn = QuoteIdentifier(column.ColumnName);
+
+                if (dataType is "BOOL" or "BIT" or "BOOLEAN")
+                {
+                    softDeleteConditions.Add($"({quotedColumn} IS NULL OR {quotedColumn} <> 1)");
+                }
+                else
+                {
+                    softDeleteConditions.Add($"({quotedColumn} IS NULL OR {quotedColumn} <> 'true')");
+                }
+            }
+
+            if (softDeleteConditions.Count == 0)
+                return string.Empty;
+
+            return string.Join(" AND ", softDeleteConditions);
+        }
+
         private static string BuildAggregateSql(
             string aggregateType,
             string qualifiedTableName,
@@ -1884,7 +2122,7 @@ FROM (
             await _kpiSaleRepo.SaveChangesAsync();
         }
 
-        #endregion
+        #endregion Calculator
 
         #region Validation and helper
 
@@ -2285,6 +2523,118 @@ FROM (
             return normalized;
         }
 
+        private static string[] SplitMultiValue(string? rawValue)
+        {
+            return string.IsNullOrWhiteSpace(rawValue)
+                ? Array.Empty<string>()
+                : rawValue
+                    .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .ToArray();
+        }
+
+        private async Task<string?> BuildLookupDisplayTextAsync(string lookupSchema, string lookupTable, string valueColumn, string displayCol, string? rawValue)
+        {
+            var values = SplitMultiValue(rawValue);
+            if (values.Length == 0)
+                return null;
+
+            var displays = new List<string>();
+            foreach (var value in values)
+            {
+                var display = await _kpiSaleRepo.GetLookupDisplayValueAsync(lookupSchema, lookupTable, valueColumn, displayCol, value);
+                displays.Add(string.IsNullOrWhiteSpace(display) ? value : display);
+            }
+
+            return displays.Count == 0 ? null : string.Join(", ", displays);
+        }
+
+        private static string? NormalizeManualValueMapJson(string? rawJson)
+        {
+            if (string.IsNullOrWhiteSpace(rawJson))
+                return null;
+
+            _ = ParseManualLookupValues(rawJson);
+            return rawJson.Trim();
+        }
+
+        private static List<KPISaleLookupValue> ParseManualLookupValues(string rawJson)
+        {
+            try
+            {
+                var json = rawJson.Trim();
+                using var document = JsonDocument.Parse(json);
+                var result = new List<KPISaleLookupValue>();
+
+                if (document.RootElement.ValueKind == JsonValueKind.Object)
+                {
+                    foreach (var property in document.RootElement.EnumerateObject())
+                    {
+                        result.Add(new KPISaleLookupValue
+                        {
+                            Value = property.Name,
+                            Display = property.Value.ValueKind == JsonValueKind.Null ? property.Name : (property.Value.ToString() ?? property.Name)
+                        });
+                    }
+
+                    return result;
+                }
+
+                if (document.RootElement.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var item in document.RootElement.EnumerateArray())
+                    {
+                        if (item.ValueKind != JsonValueKind.Object)
+                            continue;
+
+                        string? value = null;
+                        string? display = null;
+                        foreach (var property in item.EnumerateObject())
+                        {
+                            if (property.NameEquals("value") || property.NameEquals("Value"))
+                                value = property.Value.ToString();
+                            else if (property.NameEquals("label") || property.NameEquals("Label") || property.NameEquals("display") || property.NameEquals("Display"))
+                                display = property.Value.ToString();
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(value))
+                        {
+                            result.Add(new KPISaleLookupValue
+                            {
+                                Value = value,
+                                Display = string.IsNullOrWhiteSpace(display) ? value : display
+                            });
+                        }
+                    }
+
+                    return result;
+                }
+            }
+            catch (JsonException ex)
+            {
+                throw new Exception($"ManualValueMapJson không đúng định dạng JSON: {ex.Message}");
+            }
+
+            throw new Exception("ManualValueMapJson chỉ hỗ trợ dạng object hoặc array");
+        }
+
+        private static string? BuildManualDisplayText(string? rawJson, string? rawValue)
+        {
+            if (string.IsNullOrWhiteSpace(rawJson))
+                return null;
+
+            var values = SplitMultiValue(rawValue);
+            if (values.Length == 0)
+                return null;
+
+            var map = ParseManualLookupValues(rawJson)
+                .GroupBy(x => x.Value, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.First().Display, StringComparer.OrdinalIgnoreCase);
+
+            var displays = values.Select(value => map.TryGetValue(value, out var display) ? display : value);
+            return string.Join(", ", displays);
+        }
+
         private static string NormalizeOptionalCode(string? value, string defaultValue)
         {
             return string.IsNullOrWhiteSpace(value)
@@ -2514,7 +2864,7 @@ FROM (
 
         private static List<KPISaleFilterGroupNode> BuildFilterTree(
             List<KPISaleMappingFilterGroup> groups,
-            List<KPISaleMappingFilterCondition> conditions)
+            List<KPISaleFilterConditionDto> conditions)
         {
             var nodeMap = groups.ToDictionary(x => x.ID, x => new KPISaleFilterGroupNode
             {
@@ -2527,7 +2877,6 @@ FROM (
                     .Where(c => c.FilterGroupID == x.ID)
                     .OrderBy(c => c.SortOrder)
                     .ThenBy(c => c.ID)
-                    .Cast<object>()
                     .ToList()
             });
 
@@ -2583,6 +2932,26 @@ FROM (
             public Dictionary<int, KPISaleScoringRule> ScoringRulesByIndex { get; set; } = new();
             public Dictionary<int, decimal> CalculatedValues { get; } = new();
             public HashSet<int> Visiting { get; } = new();
+
+            /// <summary>
+            /// Tạo bản sao runtime nhưng dùng kỳ khác (dùng khi tính SUM_MONTH: tính từng tháng riêng).
+            /// Giữ nguyên indexes, mappings, targets, scoring rules. Reset CalculatedValues và Visiting.
+            /// </summary>
+            public KPISaleRuntimeContext CloneWithPeriod(KPISalePeriod newPeriod)
+            {
+                return new KPISaleRuntimeContext
+                {
+                    Request = Request,
+                    Period = newPeriod,
+                    Indexes = Indexes,
+                    IndexById = IndexById,
+                    MappingsByIndex = MappingsByIndex,
+                    FormulaItemsByParent = FormulaItemsByParent,
+                    ChildrenByParent = ChildrenByParent,
+                    TargetsByIndex = TargetsByIndex,
+                    ScoringRulesByIndex = ScoringRulesByIndex,
+                };
+            }
         }
 
         private sealed class SqlParameterValue
@@ -2597,6 +2966,6 @@ FROM (
             public object? Value { get; }
         }
 
-        #endregion
+        #endregion Validation and helper
     }
 }

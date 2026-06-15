@@ -21,9 +21,6 @@ namespace RERPAPI.Controllers.CRM
         //BusinessFieldLinkRepo businessFieldLinkRepo = new BusinessFieldLinkRepo();
         //EmployeeRepo employeeRepo = new EmployeeRepo();
 
-
-
-
         //[HttpGet("{id}")]
         //public IActionResult GetCustomerByID(int id)
         //{
@@ -50,7 +47,6 @@ namespace RERPAPI.Controllers.CRM
         //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
         //    }
         //}
-
 
         //[HttpGet()]
         //public IActionResult GetCustomer(int groupId, int employeeId, string? filterText, int pageNumber, int pageSize)
@@ -82,7 +78,6 @@ namespace RERPAPI.Controllers.CRM
         //    }
         //}
 
-
         //[HttpGet("export-excel")]
         //public IActionResult GetCustomerToExcel(int groupId, int employeeId, string? filterText, int pageNumber, int pageSize)
         //{
@@ -111,13 +106,11 @@ namespace RERPAPI.Controllers.CRM
         //    }
         //}
 
-
         //[HttpGet("{id}/customer-contact")]
         //public IActionResult GetCustomerContact(int id)
         //{
         //    try
         //    {
-
         //        var customerContacts = SQLHelper<object>.ProcedureToList("spGetCustomerContactByCustomerID", new string[] { "@CustomerID" }, new object[] { id });
 
         //        //return Ok(new
@@ -144,7 +137,6 @@ namespace RERPAPI.Controllers.CRM
         //[HttpGet("{id}/customer-employee")]
         //public IActionResult GetCustomerEmployeeByCustomerID(int id)
         //{
-
         //    try
         //    {
         //        string employeeName = "";
@@ -165,7 +157,6 @@ namespace RERPAPI.Controllers.CRM
         //        //        EmployeeName = employeeRepo.GetByID((int)e.EmployeeID)?.FullName
         //        //    }).ToList()
         //        //});
-
 
         //        var data = employeeSales.Select(e => new
         //        {
@@ -189,7 +180,6 @@ namespace RERPAPI.Controllers.CRM
         //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
         //    }
         //}
-
 
         //[HttpPost]
         //public async Task<IActionResult> SaveCustomer([FromBody] CustomerDTO request)
@@ -249,7 +239,6 @@ namespace RERPAPI.Controllers.CRM
         //            }
         //        }
 
-
         //        foreach (var contact in request.Contacts ?? new List<CustomerContactDTO>())
         //        {
         //            var customerContact = new CustomerContact
@@ -272,8 +261,6 @@ namespace RERPAPI.Controllers.CRM
         //                await customerContactRepo.UpdateAsync(customerContact);
         //            }
         //        }
-
-
 
         //        foreach (var address in request.Addresses ?? new List<CustomerAddressDTO>())
         //        {
@@ -326,7 +313,6 @@ namespace RERPAPI.Controllers.CRM
         //            await businessFieldLinkRepo.UpdateAsync(business);
         //        }
 
-
         //        //return Ok(new
         //        //{
         //        //    status = 1,
@@ -348,7 +334,6 @@ namespace RERPAPI.Controllers.CRM
         //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
         //    }
         //}
-
 
         //[HttpGet("{customerID}")]
         //public async Task<IActionResult> DeleteCustomer(int customerID)
@@ -406,6 +391,7 @@ namespace RERPAPI.Controllers.CRM
         //    }
         //}
         private readonly AddressStockRepo _addressStockRepo;
+
         private readonly CustomerContactRepo _customerContactRepo;
         private readonly CustomerEmployeeRepo _customerEmployeeRepo;
         private readonly EmployeeRepo _employeeRepo;
@@ -416,6 +402,7 @@ namespace RERPAPI.Controllers.CRM
         private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
         private readonly ProvinceRepo _provinceRepo;
         private readonly CustomerIndustriesRepo _customerIndustriesRepo;
+
         public CustomerController(AddressStockRepo addressStockRepo, CustomerContactRepo customerContactRepo, CustomerEmployeeRepo customerEmployeeRepo, EmployeeRepo employeeRepo, CustomerSpecializationRepo customerSpecializationRepo, BusinessFieldRepo businessFieldRepo, CustomerRepo customerRepo, BusinessFieldLinkRepo businessFieldLinkRepo, vUserGroupLinksRepo vUserGroupLinksRepo, ProvinceRepo provinceRepo, CustomerIndustriesRepo customerIndustriesRepo)
         {
             _addressStockRepo = addressStockRepo;
@@ -430,15 +417,18 @@ namespace RERPAPI.Controllers.CRM
             _provinceRepo = provinceRepo;
             _customerIndustriesRepo = customerIndustriesRepo;
         }
+
         private static string json = System.IO.File.ReadAllText(@"jsonProvinces.txt");
         private static List<Provinces> provinces = JsonConvert.DeserializeObject<List<Provinces>>(json);
         private static List<dynamic> dataExport = new();
+
         public class Provinces
         {
             public int STT { get; set; }
             public string Name { get; set; }
             public string Code { get; set; }
         }
+
         //[HttpGet("get-customers")]
         //public IActionResult GetAll()
         //{
@@ -462,13 +452,11 @@ namespace RERPAPI.Controllers.CRM
             }
             catch (Exception ex)
             {
-
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         [HttpGet("get-data-by-procedure")]
-        //[RequiresPermission("N1,N27,N53,N31,N69")]
         public IActionResult GetCustomer(int page, int size, int employeeId, int groupId, string? filterText = "")
         {
             try
@@ -514,9 +502,9 @@ namespace RERPAPI.Controllers.CRM
         {
             try
             {
-				var contact = _customerContactRepo.GetAll(x => x.CustomerID == customerId).ToList();
-				var address = _addressStockRepo.GetAll(x => x.CustomerID == customerId).ToList();
-				var customerEmployee = _customerEmployeeRepo.GetAll(x => x.CustomerID == customerId).ToList();
+                var contact = _customerContactRepo.GetAll(x => x.CustomerID == customerId).ToList();
+                var address = _addressStockRepo.GetAll(x => x.CustomerID == customerId).ToList();
+                var customerEmployee = _customerEmployeeRepo.GetAll(x => x.CustomerID == customerId).ToList();
                 var employees = _employeeRepo.GetAll().ToList();
                 var employee = (from ce in customerEmployee
                                 join e in employees on ce.EmployeeID equals e.ID
@@ -533,6 +521,7 @@ namespace RERPAPI.Controllers.CRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-customer-specialization")]
         [Authorize]
         public IActionResult GetCustomerSpecialization()
@@ -547,6 +536,7 @@ namespace RERPAPI.Controllers.CRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-business-field")]
         [Authorize]
         public IActionResult GetBusinessField()
@@ -561,6 +551,7 @@ namespace RERPAPI.Controllers.CRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-provinces")]
         [Authorize]
         public IActionResult GetProvinces()
@@ -575,6 +566,7 @@ namespace RERPAPI.Controllers.CRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-detail")]
         [Authorize]
         public IActionResult GetDetail(int id)
@@ -591,11 +583,11 @@ namespace RERPAPI.Controllers.CRM
 
                     if (model.CustomerCode.Trim().Length >= 3) provinceCode = model.CustomerCode.Substring(0, 3);
                 }
-				var business = _businessFieldLinkRepo.GetSingleNoTracking(x => x.CustomerID == id);
-				var addressStock = _addressStockRepo.GetAll(x => x.CustomerID == id);
-				var customerContact = _customerContactRepo.GetAll(x => x.CustomerID == id);
-				var customerEmployee = _customerEmployeeRepo.GetAll(x => x.CustomerID == id);
-				var employees = _employeeRepo.GetAll();
+                var business = _businessFieldLinkRepo.GetSingleNoTracking(x => x.CustomerID == id);
+                var addressStock = _addressStockRepo.GetAll(x => x.CustomerID == id);
+                var customerContact = _customerContactRepo.GetAll(x => x.CustomerID == id);
+                var customerEmployee = _customerEmployeeRepo.GetAll(x => x.CustomerID == id);
+                var employees = _employeeRepo.GetAll();
                 var customerEmployeeWithName = (from ce in customerEmployee
                                                 join e in employees on ce.EmployeeID equals e.ID
                                                 select new
@@ -618,6 +610,7 @@ namespace RERPAPI.Controllers.CRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-data")]
         [Authorize]
         public async Task<IActionResult> Save(InsertCustomerDTO dto)
@@ -729,8 +722,6 @@ namespace RERPAPI.Controllers.CRM
                     return Ok(ApiResponseFactory.Fail(null, errorMessage, new { Errors = errors }));
                 }
 
-
-
                 Customer customer = dto.Customer.ID > 0 ? _customerRepo.GetByID(dto.Customer.ID) : new Customer();
                 customer.Province = dto.Customer.Province;
                 customer.CustomerCode = dto.Customer.CustomerCode;
@@ -758,7 +749,7 @@ namespace RERPAPI.Controllers.CRM
                 }
                 else
                 {
-                    //customer.CreatedBy = 
+                    //customer.CreatedBy =
                     customer.CreatedDate = DateTime.Now;
                     await _customerRepo.CreateAsync(customer);
                 }
@@ -852,7 +843,6 @@ namespace RERPAPI.Controllers.CRM
                     customer.UpdatedDate = DateTime.Now;
                     customer.IsDeleted = true;
                     await _customerRepo.UpdateAsync(customer);
-
                 }
                 return Ok(ApiResponseFactory.Success("", "Xóa thành công"));
             }
@@ -947,13 +937,14 @@ namespace RERPAPI.Controllers.CRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        //lấy ra dữ liệu khách hàng 
+
+        //lấy ra dữ liệu khách hàng
         [HttpGet("get-customer-industry")]
         public async Task<IActionResult> getCustomerIndustries()
         {
             try
             {
-				var result = _customerIndustriesRepo.GetAll(x => x.IsDeleted != true).OrderBy(p => p.NumberOrder).ToList();
+                var result = _customerIndustriesRepo.GetAll(x => x.IsDeleted != true).OrderBy(p => p.NumberOrder).ToList();
                 return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)

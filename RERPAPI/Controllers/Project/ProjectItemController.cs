@@ -1,22 +1,12 @@
-﻿
-using Azure.Core;
-using DocumentFormat.OpenXml.Drawing;
-using DocumentFormat.OpenXml.VariantTypes;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
-using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
-using RERPAPI.Model.DTO.Project;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.Project;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Project;
-using System.Collections.Immutable;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace RERPAPI.Controllers.Project
 {
@@ -45,7 +35,8 @@ namespace RERPAPI.Controllers.Project
             _projectRepo = projectRepo;
             _configuration = configuration;
         }
-        //API lấy list hạng mục công việc 
+
+        //API lấy list hạng mục công việc
         [ApiKeyAuthorize]
         [HttpPost("get-project-item")]
         public IActionResult GetProjectItem(ProjectItemRequestParam request)
@@ -63,6 +54,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("get-project-item-over-time")]
         public IActionResult GetProjectItemOverTime(ProjectItemRequestParam request)
         {
@@ -70,7 +62,7 @@ namespace RERPAPI.Controllers.Project
             {
                 var projectItem = SQLHelper<dynamic>.ProcedureToList("spGetProjectItem",
                     new[] { "@ProjectID", "@UserID", "@Keyword", "@Status" },
-                    new object[] {  request.ProjectID       , request.UserID, request.Keyword, request.Status });
+                    new object[] { request.ProjectID, request.UserID, request.Keyword, request.Status });
                 var rows = SQLHelper<dynamic>.GetListData(projectItem, 0);
                 return Ok(ApiResponseFactory.Success(rows, ""));
             }
@@ -79,6 +71,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //Hàm lấy mã hạng mục công việc
         [ApiKeyAuthorize]
         [HttpGet("get-project-item-code")]
@@ -112,7 +105,6 @@ namespace RERPAPI.Controllers.Project
                     status = 2,
                     message = "Không tìm thấy mã dự án!"
                 });
-
 
                 /* // Phân loại
                  var creates = req.ProjectItems.Where(x => x.ID <= 0 && !x.IsDeleted).ToList();
@@ -185,7 +177,6 @@ namespace RERPAPI.Controllers.Project
                         if (item.ActualEndDate.HasValue) item.IsApproved = 2;
                         await _projectItemRepo.CreateAsync(item);
                         idMap[data.ID] = item.ID;
-
                     }
                     else
                     {
@@ -271,6 +262,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //[HttpPost("save-data")]
         //public async Task<IActionResult> SaveData([FromBody] ProjectItemFullDTO dto)
         //{
@@ -299,6 +291,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-file")]
         public async Task<IActionResult> SaveProjectFile(List<ProjectItemFile> dto)
         {
@@ -322,6 +315,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //end
         //projectItemProblem
         //lay du lieu
@@ -341,7 +335,8 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        //save 
+
+        //save
         [HttpPost("save-problem")]
         public async Task<IActionResult> GetProjectItemProblem(ProjectItemProblem dto)
         {

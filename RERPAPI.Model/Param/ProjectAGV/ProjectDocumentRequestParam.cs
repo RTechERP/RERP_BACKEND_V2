@@ -1,12 +1,4 @@
-﻿using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-
-namespace RERPAPI.Model.Param
+﻿namespace RERPAPI.Model.Param
 {
     public class ProjectDocumentRequestParam
     {
@@ -16,14 +8,11 @@ namespace RERPAPI.Model.Param
         public byte Type { get; set; } = 0;
         public string? Keyword { get; set; } = "";
 
-
         public (string[] Names, object?[] Values) ToSqlParams()
         {
-       
             DateTime? ds = DateStart?.Date;
             DateTime? de = DateEnd?.Date.AddDays(1).AddTicks(-1);
 
-       
             if (ds.HasValue && de.HasValue && ds > de)
             {
                 var t = ds; ds = de; de = t;

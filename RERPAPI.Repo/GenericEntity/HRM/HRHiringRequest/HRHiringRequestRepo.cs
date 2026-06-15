@@ -1,13 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Azure.Core;
-using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using static System.Runtime.CompilerServices.RuntimeHelpers;
 
 namespace RERPAPI.Repo.GenericEntity
 {
@@ -30,6 +22,7 @@ namespace RERPAPI.Repo.GenericEntity
                 throw new Exception(ex.Message);
             }
         }
+
         public HRHiringRequest GetRequestCode()
         {
             try
@@ -42,9 +35,9 @@ namespace RERPAPI.Repo.GenericEntity
                 var hrHirings = GetAll(x => x.IsDeleted == false);
                 int stt = hrHirings.Count() <= 0 ? 1 : Convert.ToInt32(hrHirings.Max(x => x.STT)) + 1;
 
-                var hrHiringCodes = hrHirings.Where(x => x.DateRequest.HasValue && 
+                var hrHiringCodes = hrHirings.Where(x => x.DateRequest.HasValue &&
                                                         x.DateRequest.Value.Year == DateTime.Now.Year &&
-                                                        x.DateRequest.Value.Month == DateTime.Now.Month && 
+                                                        x.DateRequest.Value.Month == DateTime.Now.Month &&
                                                         x.DateRequest.Value.Date == DateTime.Now.Date)
                                             .Select(x => new
                                             {

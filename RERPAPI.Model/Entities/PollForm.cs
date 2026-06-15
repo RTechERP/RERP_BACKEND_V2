@@ -31,5 +31,8 @@ public partial class PollForm
 
     public string? TitleColor { get; set; }
 
+    /// <summary>
+    /// 0.Không thông báo, 1.Có thông báo
+    /// </summary>
     public bool? IsNotifycation { get; set; }
 }

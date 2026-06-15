@@ -9,6 +9,7 @@ namespace RERPAPI.Controllers.GeneralCategory.TrainingRegistration
     public class TrainingRegistrationCategoryController : ControllerBase
     {
         private TrainingRegistrationCategoryRepo _trainingRegistrationCategoryRepo;
+
         public TrainingRegistrationCategoryController(TrainingRegistrationCategoryRepo trainingRegistrationCategoryRepo)
         {
             _trainingRegistrationCategoryRepo = trainingRegistrationCategoryRepo;

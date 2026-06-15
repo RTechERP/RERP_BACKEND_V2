@@ -1,13 +1,9 @@
-﻿using Azure.Messaging;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
-using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.Asset;
 
 namespace RERPAPI.Controllers.HRM.OfficeSupply
 {
@@ -19,7 +15,7 @@ namespace RERPAPI.Controllers.HRM.OfficeSupply
         private readonly OfficeSupplyRepo _officesupplyRepo;
         private readonly ProductSaleRepo _productSaleRepo;
 
-        public OfficeSupplyController(OfficeSupplyRepo officesupplyRepo, ProductSaleRepo productSaleRepo )
+        public OfficeSupplyController(OfficeSupplyRepo officesupplyRepo, ProductSaleRepo productSaleRepo)
         {
             _officesupplyRepo = officesupplyRepo;
             _productSaleRepo = productSaleRepo;
@@ -46,7 +42,6 @@ namespace RERPAPI.Controllers.HRM.OfficeSupply
                         officeSupply = rs,
                         nextCode,
                     }
-
                 });
             }
             catch (Exception ex)
@@ -59,12 +54,13 @@ namespace RERPAPI.Controllers.HRM.OfficeSupply
                 });
             }
         }
+
         /// <summary>
         /// Hàm tìm kiếm data OfficeSupply theo id
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-      
+
         [HttpGet("get-office-supply-by-id")]
         public IActionResult getOfficeSupplyByID(int id)
         {
@@ -103,7 +99,7 @@ namespace RERPAPI.Controllers.HRM.OfficeSupply
                     {
                         item.IsDeleted = true;
                         /* await _officesupplyRepo.UpdateAsync(item);*/
-                     await   _officesupplyRepo.UpdateAsync(item);/* // Cập nhật lại mục*/
+                        await _officesupplyRepo.UpdateAsync(item);/* // Cập nhật lại mục*/
                     }
                 }
                 return Ok(new
@@ -122,7 +118,7 @@ namespace RERPAPI.Controllers.HRM.OfficeSupply
                 });
             }
         }
-    
+
         [HttpPost("check-codes")]
         public async Task<IActionResult> checkCodes([FromBody] List<ProductCodeCheck> codes)
         {
@@ -182,12 +178,11 @@ namespace RERPAPI.Controllers.HRM.OfficeSupply
                     //var productSale = _productSaleRepo.GetAll(x => x.ProductCode == officesupply.CodeRTC && x.IsDeleted !=true).FirstOrDefault();
                     var productSale = _productSaleRepo.GetSingleNoTracking(x => x.ProductCode == officesupply.CodeRTC && x.IsDeleted != true);
 
-                    if (productSale.ID>0)
+                    if (productSale.ID > 0)
                     {
                         productSale.ProductName = officesupply.NameNCC;
                         await _productSaleRepo.UpdateAsync(productSale);
-                    }    
-             
+                    }
                 }
                 return Ok(new
                 {
@@ -205,8 +200,6 @@ namespace RERPAPI.Controllers.HRM.OfficeSupply
                     error = ex.ToString()
                 });
             }
-
         }
-
     }
 }

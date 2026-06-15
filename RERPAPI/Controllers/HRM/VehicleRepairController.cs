@@ -1,8 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO.HRM;
-using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.HRM.VehicleManagement;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
@@ -32,13 +30,13 @@ namespace RERPAPI.Controllers.HRM
             _vehicleRepairRepo = vehicleRepairRepo;
             _vehicleRepairTypeRepo = vehicleRepairTypeRepo;
         }
+
         //Lấy danh sách sửa chữa, bảo dưỡng
         [HttpPost("get-vehicles-repair")]
         public IActionResult GetVehicleRepair([FromBody] VehicleRepairRequestParam request)
         {
             try
             {
-                
                 var firstDay = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
                 var lastDay = firstDay.AddMonths(1).AddDays(-1);
                 string procedureName = "spGetVehicleRepair";
@@ -47,13 +45,14 @@ namespace RERPAPI.Controllers.HRM
                 var data = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
                 var vehicleRepair = SQLHelper<object>.GetListData(data, 0);
                 var TotalPage = SQLHelper<object>.GetListData(data, 1);
-                return Ok(ApiResponseFactory.Success(new { vehicleRepair, TotalPage  }, "Lấy dữ liệu thành công"));
+                return Ok(ApiResponseFactory.Success(new { vehicleRepair, TotalPage }, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //Lấy danh sách loại xe sửa chữa, bảo dưỡng
         [HttpGet("get-vehicle-repair-type")]
         public IActionResult GetVehicleRepairType()
@@ -68,6 +67,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] VehicleRepairDTO dto)
         {
@@ -79,7 +79,6 @@ namespace RERPAPI.Controllers.HRM
                 }
                 else
                 {
-                 
                     if (dto.vehicleRepair != null && dto.vehicleRepair.IsDeleted != true)
                     {
                         if (!_vehicleRepairRepo.Validate(dto.vehicleRepair, out string message))
@@ -90,7 +89,7 @@ namespace RERPAPI.Controllers.HRM
                         if (!_vehicleRepairTypeRepo.Validate(dto.vehicleRepairType, out string message))
                             return BadRequest(ApiResponseFactory.Fail(null, message));
                     }
-                    if (dto.vehicleRepair != null )
+                    if (dto.vehicleRepair != null)
                     {
                         if (dto.vehicleRepair.ID > 0)
                         {
@@ -104,7 +103,7 @@ namespace RERPAPI.Controllers.HRM
                         }
                         return Ok(ApiResponseFactory.Success(null, "Thêm thành công"));
                     }
-                    if (dto.vehicleRepairType != null )
+                    if (dto.vehicleRepairType != null)
                     {
                         if (dto.vehicleRepairType.ID > 0)
                         {
@@ -118,9 +117,8 @@ namespace RERPAPI.Controllers.HRM
                         }
                         return Ok(ApiResponseFactory.Success(null, "Thêm thành công"));
                     }
-                  
-                  
-                    return BadRequest(ApiResponseFactory.Fail(null,"Lưu dữ liệu không thành công"));
+
+                    return BadRequest(ApiResponseFactory.Fail(null, "Lưu dữ liệu không thành công"));
                 }
             }
             catch (Exception ex)
@@ -128,6 +126,5 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

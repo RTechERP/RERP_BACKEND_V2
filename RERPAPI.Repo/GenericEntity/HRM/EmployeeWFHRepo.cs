@@ -1,20 +1,17 @@
 ﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity.HRM
 {
     public class EmployeeWFHRepo : GenericRepo<EmployeeWFH>
     {
-        CurrentUser _currentUser;
-        public EmployeeWFHRepo(CurrentUser currentUser ) : base(currentUser)
+        private CurrentUser _currentUser;
+
+        public EmployeeWFHRepo(CurrentUser currentUser) : base(currentUser)
         {
             _currentUser = currentUser;
         }
+
         public bool Validate(EmployeeWFH item, out string message)
         {
             message = string.Empty;
@@ -60,7 +57,6 @@ namespace RERPAPI.Repo.GenericEntity.HRM
                 return false;
             }
 
-
             var date = item.DateWFH.Value.Date;
             //  Check trùng: cùng EmployeeID + DateWFH + TimeWFH, khác ID hiện tại
             var query = GetAll(x =>
@@ -100,7 +96,7 @@ namespace RERPAPI.Repo.GenericEntity.HRM
             }
 
             // 7. Nếu sửa (ID > 0) thì bắt buộc nhập lý do sửa cho HR
-            if (item.ID > 0 && string.IsNullOrWhiteSpace(item.ReasonHREdit)&& _currentUser.EmployeeID!=item.EmployeeID)
+            if (item.ID > 0 && string.IsNullOrWhiteSpace(item.ReasonHREdit) && _currentUser.EmployeeID != item.EmployeeID)
             {
                 message = "Vui lòng nhập Lý do sửa!";
                 return false;

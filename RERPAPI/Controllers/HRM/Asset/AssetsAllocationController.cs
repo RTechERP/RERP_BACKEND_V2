@@ -8,7 +8,6 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Asset;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers.Old.Asset
 {
@@ -16,27 +15,27 @@ namespace RERPAPI.Controllers.Old.Asset
     [ApiController]
     public class AssetsAllocationController : ControllerBase
     {
-        vUserGroupLinksRepo _vUserGroupLinksRepo;
+        private vUserGroupLinksRepo _vUserGroupLinksRepo;
 
-        TSAssetManagementRepo _tsAssetManagementRepo;
-        TSAssetAllocationRepo _tSAssetAllocationRepo;
-        TSAssetAllocationDetailRepo _tSAssetAllocationDetailRepo;
-        TSAllocationEvictionAssetRepo _tSAllocationEvictionAssetRepo;
-        AssetAllocationLogRepo _assetAllocationLogRepo;
+        private TSAssetManagementRepo _tsAssetManagementRepo;
+        private TSAssetAllocationRepo _tSAssetAllocationRepo;
+        private TSAssetAllocationDetailRepo _tSAssetAllocationDetailRepo;
+        private TSAllocationEvictionAssetRepo _tSAllocationEvictionAssetRepo;
+        private AssetAllocationLogRepo _assetAllocationLogRepo;
         private IConfiguration _configuration;
-        public AssetsAllocationController(TSAssetManagementRepo tSAssetManagementRepo, TSAssetAllocationRepo tSAssetAllocationRepo, TSAssetAllocationDetailRepo tSAssetAllocationDetailRepo, TSAllocationEvictionAssetRepo tSAllocationEvictionAssetRepo, vUserGroupLinksRepo vUserGroupLinksRepo, AssetAllocationLogRepo assetAllocationLogRepo,IConfiguration configuration )
+
+        public AssetsAllocationController(TSAssetManagementRepo tSAssetManagementRepo, TSAssetAllocationRepo tSAssetAllocationRepo, TSAssetAllocationDetailRepo tSAssetAllocationDetailRepo, TSAllocationEvictionAssetRepo tSAllocationEvictionAssetRepo, vUserGroupLinksRepo vUserGroupLinksRepo, AssetAllocationLogRepo assetAllocationLogRepo, IConfiguration configuration)
         {
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
             _tsAssetManagementRepo = tSAssetManagementRepo;
             _tSAssetAllocationRepo = tSAssetAllocationRepo;
             _tSAssetAllocationDetailRepo = tSAssetAllocationDetailRepo;
-          _tSAllocationEvictionAssetRepo = tSAllocationEvictionAssetRepo;
+            _tSAllocationEvictionAssetRepo = tSAllocationEvictionAssetRepo;
             _assetAllocationLogRepo = assetAllocationLogRepo;
             _configuration = configuration;
         }
 
         [HttpPost("get-allocation")]
-
         public async Task<ActionResult> GetAssetAllocationnn([FromBody] AssetAllocationRequestParam request)
 
         {
@@ -69,7 +68,6 @@ namespace RERPAPI.Controllers.Old.Asset
                 {
                     status = 1,
                     assetAllocation = SQLHelper<dynamic>.GetListData(assetAllocation, 0)
-
                 });
             }
             catch (Exception ex)
@@ -82,6 +80,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 });
             }
         }
+
         [HttpGet("get-asset-allocation-detail")]
         public IActionResult GetAssetAllocationDetail(string? id)
         {
@@ -107,6 +106,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 });
             }
         }
+
         [HttpGet("get-allocation-code")]
         public async Task<IActionResult> GenerateAllocationCode([FromQuery] DateTime? allocationDate)
         {
@@ -135,7 +135,6 @@ namespace RERPAPI.Controllers.Old.Asset
             }
         }
 
-
         [HttpPost("export-allocation-asset-report")]
         public IActionResult ExportAllocationAssetReport([FromBody] AssetAllocationExportFullDto dto)
         {
@@ -148,16 +147,16 @@ namespace RERPAPI.Controllers.Old.Asset
             try
             {
                 ExcelPackage.License.SetNonCommercialOrganization("RTC");
-                    
+
                 //string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "BienBanBanGiao.xlsx");
 
                 var templateFolder = _configuration.GetValue<string>("PathTemplate");
 
-                if (string.IsNullOrWhiteSpace(templateFolder))    
-                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy đường dẫn thư mục {templateFolder} trên sever!!"));              
+                if (string.IsNullOrWhiteSpace(templateFolder))
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy đường dẫn thư mục {templateFolder} trên sever!!"));
                 string templatePath = Path.Combine(templateFolder, "ExportExcel", "BienBanBanGiao.xlsx");
                 if (!System.IO.File.Exists(templatePath))
-                    return BadRequest(ApiResponseFactory.Fail(null,"Không tìm thấy File mẫu!"));
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy File mẫu!"));
 
                 string fileName = $"PhieuCapPhat_{master.Code}.xlsx";
 
@@ -184,17 +183,16 @@ namespace RERPAPI.Controllers.Old.Asset
                 }
 
                 ws.Cells[8, 3].Value = master.EmployeeAllocationName;
-                ws.Cells[9, 3].Value =  master.PosittionAllocation;
+                ws.Cells[9, 3].Value = master.PosittionAllocation;
                 ws.Cells[10, 3].Value = master.DepartmentAllocation;
 
-                ws.Cells[13, 3].Value =  string.Join(", ", names);
-                ws.Cells[14, 3].Value =  string.Join(", ", positions);
+                ws.Cells[13, 3].Value = string.Join(", ", names);
+                ws.Cells[14, 3].Value = string.Join(", ", positions);
                 ws.Cells[15, 3].Value = string.Join(", ", departments);
                 ws.Cells[17, 3].Value = master.Note;
 
-
                 ws.Cells[27, 1].Value = master.EmployeeName ?? "";
-                ws.Cells[27, 8].Value = master.EmployeeName?? "";
+                ws.Cells[27, 8].Value = master.EmployeeName ?? "";
                 ws.Cells[28, 1].Value = master.DateApprovedHR?.ToString("dd/MM/yyyy HH:mm") ?? "";
                 ws.Cells[28, 8].Value = master.DateApprovedPersonalProperty?.ToString("dd/MM/yyyy HH:mm") ?? "";
 
@@ -208,11 +206,11 @@ namespace RERPAPI.Controllers.Old.Asset
                     ws.InsertRow(row, 1);
 
                     ws.Cells[row, 1].Value = i + 1;
-                    ws.Cells[row, 2].Value = item.TSCodeNCC??"";
+                    ws.Cells[row, 2].Value = item.TSCodeNCC ?? "";
                     ws.Cells[row, 3].Value = item.TSAssetName ?? "";
                     ws.Cells[row, 5].Value = item.UnitName ?? "";
-                    ws.Cells[row, 6].Value = item.Quantity ;
-                    ws.Cells[row, 7].Value = item.Status??""; // Tình trạng không có trong DTO
+                    ws.Cells[row, 6].Value = item.Quantity;
+                    ws.Cells[row, 7].Value = item.Status ?? ""; // Tình trạng không có trong DTO
                     ws.Cells[row, 8].Value = item.Note;
                 }
 
@@ -227,6 +225,7 @@ namespace RERPAPI.Controllers.Old.Asset
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N23,N1,N67")]
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] TSAssetAllocationFullDTO allocations)
@@ -249,7 +248,7 @@ namespace RERPAPI.Controllers.Old.Asset
                     {
                         var existingMaster = _tSAssetAllocationRepo.GetSingleNoTracking(x => x.ID == allocations.tSAssetAllocation.ID);
                         allocations.tSAssetAllocation.AllocationID = existingMaster?.AllocationID;
-                        
+
                         await _tSAssetAllocationRepo.UpdateAsync(allocations.tSAssetAllocation);
                         assetId = allocations.tSAssetAllocation.ID;
 
@@ -267,7 +266,6 @@ namespace RERPAPI.Controllers.Old.Asset
                             });
                         }
                     }
-                       
                 }
 
                 if (allocations.tSAssetAllocationDetails != null && allocations.tSAssetAllocationDetails.Any())
@@ -275,7 +273,7 @@ namespace RERPAPI.Controllers.Old.Asset
                     foreach (var item in allocations.tSAssetAllocationDetails)
                     {
                         item.TSAssetAllocationID = allocations.tSAssetAllocation.ID;
-                        
+
                         var existingDetail = item.ID > 0 ? _tSAssetAllocationDetailRepo.GetSingleNoTracking(x => x.ID == item.ID) : null;
                         int? assetIdLookup = item.AssetManagementID > 0 ? item.AssetManagementID : existingDetail?.AssetManagementID;
                         var master = assetIdLookup > 0 ? _tsAssetManagementRepo.GetSingleNoTracking(x => x.ID == assetIdLookup) : null;
@@ -396,7 +394,6 @@ namespace RERPAPI.Controllers.Old.Asset
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
 
         [HttpPost("save-appropve-personal")]
@@ -434,7 +431,6 @@ namespace RERPAPI.Controllers.Old.Asset
                 {
                     foreach (var item in allocations.tSAssetManagements)
                     {
-
                         if (item.ID <= 0)
                             await _tsAssetManagementRepo.CreateAsync(item);
                         else
@@ -445,7 +441,6 @@ namespace RERPAPI.Controllers.Old.Asset
                 {
                     foreach (var item in allocations.tSAllocationEvictionAssets)
                     {
-
                         if (item.ID <= 0)
                             await _tSAllocationEvictionAssetRepo.CreateAsync(item);
                         else
@@ -458,8 +453,8 @@ namespace RERPAPI.Controllers.Old.Asset
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
+
         [RequiresPermission("N67,N1")]
         [HttpPost("save-appropve-kt")]
         public async Task<IActionResult> SaveAppropveKT([FromBody] TSAssetAllocationFullDTO allocations)
@@ -496,7 +491,6 @@ namespace RERPAPI.Controllers.Old.Asset
                 {
                     foreach (var item in allocations.tSAssetManagements)
                     {
-
                         if (item.ID <= 0)
                             await _tsAssetManagementRepo.CreateAsync(item);
                         else
@@ -507,7 +501,6 @@ namespace RERPAPI.Controllers.Old.Asset
                 {
                     foreach (var item in allocations.tSAllocationEvictionAssets)
                     {
-
                         if (item.ID <= 0)
                             await _tSAllocationEvictionAssetRepo.CreateAsync(item);
                         else
@@ -520,11 +513,6 @@ namespace RERPAPI.Controllers.Old.Asset
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
-
-
-
-
     }
 }

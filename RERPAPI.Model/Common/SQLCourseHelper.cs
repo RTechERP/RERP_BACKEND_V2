@@ -1,18 +1,13 @@
 ﻿using Microsoft.Data.SqlClient;
-using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Dynamic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Model.Common
 {
     public class SQLCourseHelper<T> where T : class, new()
     {
-        static string connectionString = Config.ConnectionStringCourse;
-        static int commandTimeout = 2000;
+        private static string connectionString = Config.ConnectionStringCourse;
+        private static int commandTimeout = 2000;
 
         public static T ProcedureToModel(string procedureName, string[] paramName, object[] paramValue)
         {
@@ -83,7 +78,6 @@ namespace RERPAPI.Model.Common
             return lst;
         }
 
-
         //TN.Bình update 01/08/25
         public static void ExcuteProcedure(string storeProcedureName, string[] paramName, object[] paramValue)
         {
@@ -114,10 +108,7 @@ namespace RERPAPI.Model.Common
             {
                 cn.Close();
             }
-
         }
-
-
 
         public static List<List<dynamic>> ProcedureToList(string procedureName, string[] paramName, object[] paramValue)
         {
@@ -174,13 +165,8 @@ namespace RERPAPI.Model.Common
             }
             finally
             {
-
             }
         }
-
-
-
-
 
         public static List<dynamic> GetListData(List<List<dynamic>> dynamics, int tableIndex)
         {
@@ -196,8 +182,5 @@ namespace RERPAPI.Model.Common
                 throw new Exception(ex.Message);
             }
         }
-
-
-
     }
 }

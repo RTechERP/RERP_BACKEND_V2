@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.DTO
+﻿namespace RERPAPI.Model.DTO
 {
     public class AdditionPartlistPoDTO
     {
@@ -15,7 +9,5 @@ namespace RERPAPI.Model.DTO
         public int ProjectSolutionID { get; set; }
         public int projectID { get; set; }
         public string ReasonProblem { get; set; }
-
-
     }
 }

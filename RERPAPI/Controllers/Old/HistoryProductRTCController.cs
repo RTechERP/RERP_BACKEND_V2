@@ -3,9 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Technical;
-using ZXing.QrCode.Internal;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -59,7 +57,6 @@ namespace RERPAPI.Controllers.Old
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
                 //_historyRepo.SetClaim(claims);
 
-
                 foreach (var item in historyProducts)
                 {
                     if (item.ID <= 0)
@@ -105,6 +102,7 @@ namespace RERPAPI.Controllers.Old
         }
 
         #region Mượn trả phiếu bằng qrcode
+
         [HttpGet("user-product-qr")]
         public IActionResult getUserProductQR(int userId)
         {
@@ -241,7 +239,7 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
 
+        #endregion Mượn trả phiếu bằng qrcode
     }
 }

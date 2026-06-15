@@ -1,12 +1,4 @@
-﻿using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.DTO
+﻿namespace RERPAPI.Model.DTO
 {
     public class DailyReportSaleDTO
     {
@@ -50,9 +42,9 @@ namespace RERPAPI.Model.DTO
 
         public string productOfCustomer { get; set; }
 
-
-        //dành cho updateProject 
+        //dành cho updateProject
         public int? projectStatusOld { get; set; } = 0;
+
         public int? employeeId { get; set; } = 0;
         public DateTime dateStatusLog { get; set; }
     }

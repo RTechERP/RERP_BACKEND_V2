@@ -1,8 +1,5 @@
 ﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace RERPAPI.Repo.GenericEntity
 {
@@ -118,7 +115,7 @@ namespace RERPAPI.Repo.GenericEntity
                     x.UserReport == userId.Value &&
                     x.DateReport.HasValue &&
                     data.DateReport.HasValue &&
-                    x.DateReport== data.DateReport &&
+                    x.DateReport == data.DateReport &&
                     (x.DeleteFlag == null || x.DeleteFlag != 1) &&
                     // HR reports có ProjectID = 0 hoặc null
                     (x.ProjectID == null || x.ProjectID == 0)).ToList();

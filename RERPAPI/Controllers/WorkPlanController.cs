@@ -1,21 +1,14 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Middleware;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
-using RERPAPI.Model.DTO.Asset;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
-using System.Numerics;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-
     public class WorkPlanController : ControllerBase
     {
         private readonly IConfiguration _configuration;
@@ -32,6 +25,7 @@ namespace RERPAPI.Controllers
             _planDetailRepo = planDetailRepo;
             _userTeamRepo = userTeamRepo;
         }
+
         [HttpPost("")]
         public IActionResult GetAll([FromBody] WorkPlanParam param)
         {
@@ -54,7 +48,6 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-      
 
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] WorkPlan plan)
@@ -117,7 +110,7 @@ namespace RERPAPI.Controllers
         //public async Task<IActionResult> Delete(int id)
         //{
         //    try
-        //    { 
+        //    {
         //        var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
         //        CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
 
@@ -139,7 +132,7 @@ namespace RERPAPI.Controllers
         //            workPlanDetails.IsDeleted=true;
         //            // Xóa chi tiết kế hoạch trước
         //            await _planDetailRepo.UpdateAsync(workPlanDetails);
-        //        }    
+        //        }
         //        // Xóa kế hoạch
         //        await _workPlanRepo.UpdateAsync(workPlan);
 
@@ -167,7 +160,7 @@ namespace RERPAPI.Controllers
                     "spGetWorkPlanDetail1",
                     new string[] { "@DateStart", "@DateEnd", "@FilterText", "@DepartmentID", "@TeamID", "@Type", "@UserID" },
                     new object[] {
-                param.DateStart,    
+                param.DateStart,
                 param.DateEnd,
                 param.Keyword ?? "",
                 departmentId,
@@ -244,8 +237,6 @@ namespace RERPAPI.Controllers
             }
         }
 
-
-     
         [HttpGet("summarize-work")]
         public IActionResult GetSummarizeWork(
             [FromQuery] DateTime dateStart,
@@ -257,7 +248,6 @@ namespace RERPAPI.Controllers
         {
             try
             {
-
                 dateStart = dateStart.ToLocalTime().Date;
                 dateEnd = dateEnd.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
 

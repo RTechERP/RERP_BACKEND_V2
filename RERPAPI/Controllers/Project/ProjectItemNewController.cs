@@ -1,21 +1,11 @@
-﻿using DocumentFormat.OpenXml.Spreadsheet;
-using MathNet.Numerics.Distributions;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NPOI.SS.Formula.Functions;
-using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
-using RERPAPI.Model.DTO.Asset;
 using RERPAPI.Model.DTO.Project;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.Project;
-using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.Project;
-using System.Net.WebSockets;
-
 
 namespace RERPAPI.Controllers.Project
 {
@@ -39,7 +29,7 @@ namespace RERPAPI.Controllers.Project
             _projectItemFileRepo = projectItemFileRepo;
         }
         [Authorize]
-        //Hàm check truy cập cho hạng mục công việc 
+        //Hàm check truy cập cho hạng mục công việc
         [HttpGet("get-project-employee-permission")]
         public IActionResult GetProjectEmployeePermission([FromQuery] int? projectID, int? employeeID)
         {
@@ -89,7 +79,6 @@ namespace RERPAPI.Controllers.Project
             {
                 return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
         // Hàm upload file
         [HttpPost("upload")]
@@ -190,19 +179,15 @@ namespace RERPAPI.Controllers.Project
                         _projectItemFileRepo.Update(projectItem.ProjectItemFile);
                 }
 
-
                 return Ok(ApiResponseFactory.Success(1, "Lưu thành công"));
             }
             catch (Exception ex)
             {
                 return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
-                           
 
-
-        #region hạng mục công việc cá nhân 
+        #region hạng mục công việc cá nhân
         //API lấy list hạng mục công việc cá nhân
         [HttpPost("get-project-item-person")]
         public async Task<IActionResult> GetProjectItem(ProjectItemRequestParam request)
@@ -262,7 +247,7 @@ namespace RERPAPI.Controllers.Project
                 ProjectItem data = _projectItemRepo.GetByID(projectItemID);
                 return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
@@ -272,7 +257,7 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                var data = _projectItemRepo.GetAll(x=>x.ParentID ==0 && x.IsDeleted == false && x.ProjectID ==projectID);
+                var data = _projectItemRepo.GetAll(x => x.ParentID == 0 && x.IsDeleted == false && x.ProjectID == projectID);
                 return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
@@ -285,9 +270,9 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
-             
+
                 //Lưu hạng mục công việc nếu có
                 int projectID = 0;
                 if (projectItem.projectItems != null)
@@ -350,6 +335,6 @@ namespace RERPAPI.Controllers.Project
                 return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+        #endregion hạng mục công việc cá nhân
     }
 }

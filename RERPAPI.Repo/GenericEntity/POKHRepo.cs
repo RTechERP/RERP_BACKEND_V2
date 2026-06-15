@@ -1,23 +1,18 @@
 ﻿using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
     public class POKHRepo : GenericRepo<POKH>
     {
-        RTCContext _context = new RTCContext();
+        private RTCContext _context = new RTCContext();
 
         public POKHRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
-
 
         public string GenerateUniqueFileName(string originalFileName)
         {
@@ -32,6 +27,7 @@ namespace RERPAPI.Repo.GenericEntity
                 return BitConverter.ToString(hashBytes).Replace("-", "").ToLower() + extension;
             }
         }
+
         public string FindLastestCode(string customer)
         {
             return _context.POKHs

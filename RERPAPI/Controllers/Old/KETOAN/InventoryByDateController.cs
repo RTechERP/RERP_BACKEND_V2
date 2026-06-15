@@ -1,6 +1,4 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
@@ -13,8 +11,8 @@ namespace RERPAPI.Controllers.Old.KETOAN
     [Authorize]
     public class InventoryByDateController : ControllerBase
     {
-
         private readonly InventoryRepo _inventoryRepo;
+
         public InventoryByDateController(InventoryRepo inventoryRepo)
         {
             _inventoryRepo = inventoryRepo;
@@ -50,13 +48,14 @@ namespace RERPAPI.Controllers.Old.KETOAN
                 var dataImport = SQLHelper<dynamic>.GetListData(list, 0);
                 var dataExport = SQLHelper<dynamic>.GetListData(list, 1);
                 var dataHistory = SQLHelper<dynamic>.GetListData(list, 2);
-                return Ok(ApiResponseFactory.Success(new { dataImport, dataExport, dataHistory}, ""));
+                return Ok(ApiResponseFactory.Success(new { dataImport, dataExport, dataHistory }, ""));
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-inventory-by-productid")]
         public IActionResult GetInventoryByProductID(int productSaleId)
         {

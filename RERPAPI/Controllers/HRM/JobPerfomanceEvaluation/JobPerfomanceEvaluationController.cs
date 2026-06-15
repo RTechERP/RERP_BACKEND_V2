@@ -1,23 +1,14 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using NPOI.HSSF.Record.Chart;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
-using RERPAPI.Controllers.HRM.JobPerfomanceEvaluation;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
-using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param.HRM.JobPerfomanceEvaluation;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
 using RERPAPI.Repo.GenericEntity.HRM.HRRecruitmentInterviewAssessment;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
 {
@@ -25,11 +16,10 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
     [ApiController]
     public class JobPerfomanceEvaluationController : ControllerBase
     {
-
         private EmployeeApproveRepo _employeeApproveRepo;
         private JobPerfomanceEvaluationApproveRepo _jobPerfomanceEvaluationApproveRepo;
         private readonly IConfiguration _configuration;
-        EmailHelper _emailHelper;
+        private EmailHelper _emailHelper;
         private JobPerfomanceEvaluationNewRepo _jobPerfomanceEvaluationNewRepo;
         private vUserGroupLinksRepo _vUserGroupLinksRepo;
 
@@ -122,7 +112,6 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
             }
         }
 
-
         [HttpGet("get-detail")]
         public async Task<IActionResult> GetDetail(int JobPerfomanceEvaluationID)
         {
@@ -135,6 +124,7 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                 return Ok(ApiResponseFactory.Fail(null, ex.Message));
             }
         }
+
         [HttpGet("get-detail-new")]
         public async Task<IActionResult> GetDetailNew(int id)
         {
@@ -210,7 +200,6 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                 approveRecord.StatusApprove
             }));
         }
-
 
         [HttpPost("save-new")]
         public async Task<IActionResult> SaveDataNew([FromBody] JobPerfomanceEvaluationDTO model)
@@ -324,7 +313,6 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                     entity.TBPAreasForImprovement = model.TBPAreasForImprovement;
                     entity.TBPConclusionEmployeeLoaiHDID = model.TBPConclusionEmployeeLoaiHDID;
                     entity.TBPRecommendationsOrOther = model.TBPRecommendationsOrOther;
-
 
                     // Audit
                     entity.UpdatedBy = model.UpdatedBy;
@@ -493,7 +481,6 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                         TBPTotalScore = model.TBPTotalScore,
                         TBPEvaluationGrade = model.TBPEvaluationGrade,
                         //--------------------------------------------------------------------------------------------------
-
 
                         // Nhận xét / Kết luận
                         Strengths = model.Strengths,
@@ -844,7 +831,6 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
         //            }
         //            var currentUser = ObjectMapper.GetCurrentUser(User.Claims.ToDictionary(x => x.Type, x => x.Value));
 
-
         //            int currentUserId = currentUser.EmployeeID;
         //            string currentFullName = currentUser.FullName;
         //            if (req.IsApprove == 1)
@@ -1035,7 +1021,6 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                             }
                         }
                         successCount++;
-
                     }
 
                     // ── Cập nhật approve names vào master entity ─────────────────────
@@ -1122,7 +1107,6 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
             }
         }
 
-
         [HttpPost("cancel-confirm")]
         public async Task<IActionResult> CancelConfirm([FromBody] CancelConfirmRequest req)
         {
@@ -1150,7 +1134,6 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                 //await _jobPerfomanceEvaluationRepo.UpdateAsync(entity);
                 //return Ok(ApiResponseFactory.Success(id, "Xóa phiếu thành công!"));
 
-
                 var newEntity = await _jobPerfomanceEvaluationNewRepo.GetByIDAsync(id);
                 if (newEntity != null && !newEntity.IsDeleted.GetValueOrDefault())
                 {
@@ -1165,6 +1148,7 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                 return Ok(ApiResponseFactory.Fail(null, ex.Message));
             }
         }
+
         //[HttpPost("send-mail")]
         //[RequiresPermission("N1,N2")]
         //public async Task<IActionResult> SendEmailOferLetter([FromBody] List<RERPAPI.Model.Entities.EmployeeSendEmail> sendEmails)
@@ -1225,7 +1209,6 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                                   && c.IsDeleted != true)
                         .FirstOrDefault();
 
-
                     await _emailHelper.SendAsyncHrm(
                         email.EmailTo, email.Subject,
                         email.Body + footer, cc: email.EmailCC);
@@ -1256,6 +1239,7 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-pending-count")]
         public IActionResult GetPendingCount()
         {
@@ -1270,7 +1254,7 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
             //          a => a.JobPerfomanceEvaluationID, j => j.ID, (a, j) => a)
             //    .Count();
 
-            //// Người đánh giá: EmployeeEvaluationID=mình, Step=2, SA=0 
+            //// Người đánh giá: EmployeeEvaluationID=mình, Step=2, SA=0
             //int asEvaluator = _jobPerfomanceEvaluationApproveRepo
             //    .GetAll(x => x.Step == 2 && x.StatusApprove == 0 && x.IsDeleted != true && x.StepName == "TBP: Chờ đánh giá")
             //    .Join(_jobPerfomanceEvaluationNewRepo.GetAll(j => j.EmployeeEvaluationID == empId && j.IsDeleted != true),
@@ -1291,7 +1275,6 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
             var vUserGroupBGD = vUserGroup.FirstOrDefault(x => (
                                                      x.Code == "N1") &&
                                                      x.UserID == currentUser.ID);
-
 
             var approveQuery = _jobPerfomanceEvaluationApproveRepo
             .GetAll(x => x.IsDeleted != true);
@@ -1348,7 +1331,5 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                 AsBGD = asBGD
             }, "OK"));
         }
-
-
     }
 }

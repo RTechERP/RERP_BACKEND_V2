@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System.Xml.XPath;
 
 namespace RERPAPI.Controllers.Old.Technical
 {
@@ -14,6 +12,7 @@ namespace RERPAPI.Controllers.Old.Technical
     public class KPIErrorTypeController : ControllerBase
     {
         private readonly KPIErrorTypeRepo _kpiErrorTypeRepo;
+
         public KPIErrorTypeController(KPIErrorTypeRepo kpiErrorTypeRepo)
         {
             _kpiErrorTypeRepo = kpiErrorTypeRepo;

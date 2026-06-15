@@ -1,12 +1,5 @@
 ﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.ProjectAGV;
-using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
@@ -57,6 +50,7 @@ namespace RERPAPI.Repo.GenericEntity
 
             return true;
         }
+
         public bool ValidateDTOAGV(ProjectAGVResponseDTO e, out string message)
         {
             message = "";
@@ -98,11 +92,10 @@ namespace RERPAPI.Repo.GenericEntity
 
             return true;
         }
+
         private static bool IsReasonableDate(DateTime d)
         {
             return d >= new DateTime(2000, 1, 1) && d <= new DateTime(2100, 12, 31);
         }
-
-
     }
 }

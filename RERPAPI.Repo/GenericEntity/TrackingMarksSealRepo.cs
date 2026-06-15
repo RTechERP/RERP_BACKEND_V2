@@ -1,22 +1,14 @@
-﻿using RERPAPI.Model.Common;
-using RERPAPI.Model.Context;
-using RERPAPI.Model.DTO;
+﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
     public class TrackingMarksSealRepo : GenericRepo<TrackingMarksSeal>
     {
-       
         public TrackingMarksSealRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
+
         public void DeleteByTrackingMarkId(int trackingMarkId)
         {
             var ids = GetAll()
@@ -29,7 +21,6 @@ namespace RERPAPI.Repo.GenericEntity
                 Delete(id);
             }
         }
-
 
         public void CreateListByTrackingMarkId(List<TrackingMarksSeal> lst, int TrackingMarkId)
         {

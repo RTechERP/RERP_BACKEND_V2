@@ -1,19 +1,15 @@
-﻿using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using RERPAPI.Model.DTO;
+﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class ProjectWorkerRepo: GenericRepo <ProjectWorker>
+    public class ProjectWorkerRepo : GenericRepo<ProjectWorker>
     {
         public ProjectWorkerRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
-        public bool checkTTExists(string tt, int? parentID = 0, int? id = null, int versionID=0)
+
+        public bool checkTTExists(string tt, int? parentID = 0, int? id = null, int versionID = 0)
         {
             try
             {
@@ -29,6 +25,7 @@ namespace RERPAPI.Repo.GenericEntity
                 throw new Exception($"Lỗi khi kiểm tra TT: {ex.Message}", ex);
             }
         }
+
         /// <summary>
         /// Tìm ParentID từ TT của con
         /// Nếu không tìm thấy cha → coi node này là gốc (ParentID = 0)
@@ -59,6 +56,5 @@ namespace RERPAPI.Repo.GenericEntity
             // 4. Nếu KHÔNG TÌM THẤY → coi node này là GỐC
             return parent?.ID ?? 0;
         }
-
     }
 }

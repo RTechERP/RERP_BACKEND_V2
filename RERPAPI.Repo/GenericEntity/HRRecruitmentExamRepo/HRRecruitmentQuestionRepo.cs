@@ -1,10 +1,5 @@
 ﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity.HRRecruitmentExamRepo
 {
@@ -13,6 +8,7 @@ namespace RERPAPI.Repo.GenericEntity.HRRecruitmentExamRepo
         public HRRecruitmentQuestionRepo(CurrentUser currentUser) : base(currentUser)
         {
         }
+
         public bool CheckValidate(HRRecruitmentQuestionAnswersDTO item, out string message)
         {
             message = string.Empty;
@@ -92,7 +88,6 @@ namespace RERPAPI.Repo.GenericEntity.HRRecruitmentExamRepo
                 message = "Loại câu hỏi không hợp lệ!";
                 return false;
             }
-
 
             return true;
         }

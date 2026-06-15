@@ -16,67 +16,67 @@ namespace RERPAPI.Controllers.Old
 	[Route("api/[controller]")]
 	[ApiController]
 	[Authorize]
+	public class PONCCController : ControllerBase
+	{
+		private readonly List<PathStaticFile> _pathStaticFiles;
+		private PONCCRepo _pONCCRepo;
+		private ProductGroupRepo _productGroupRepo;
+		private ProjectRepo _projectRepo;
+		private PONCCDetailRepo _pONCCDetailRepo;
+		private PONCCRulePayRepo _pONCCRulePayRepo;
+		private BillImportDetailRepo _billImportDetailRepo;
+		private ProjectPartlistPurchaseRequestRepo _projectPartlistPurchaseRequestRepo;
+		private PONCCDetailRequestBuyRepo _pONCCDetailRequestBuyRepo;
+		private WarehouseRepo _warehouseRepo;
+		private BillImportRepo _billImportRepo;
+		private BillImportTechnicalRepo _billImportTechnicalRepo;
+		private readonly IConfiguration _configuration;
+		private readonly TaxCompanyRepo _taxCompanyRepo;
+		private readonly EmployeePurchaseRepo _employeePurchaseRepo;
+		private readonly PONCCLogRepo _pONCCLogRepo;
+		private readonly RulePayRepo _rulePayRepo;
+		private readonly ProductSaleRepo _productSaleRepo;
 
-    public class PONCCController : ControllerBase
-    {
-        private readonly List<PathStaticFile> _pathStaticFiles;
-        PONCCRepo _pONCCRepo;
-        ProductGroupRepo _productGroupRepo;
-        ProjectRepo _projectRepo;
-        PONCCDetailRepo _pONCCDetailRepo;
-        PONCCRulePayRepo _pONCCRulePayRepo;
-        BillImportDetailRepo _billImportDetailRepo;
-        ProjectPartlistPurchaseRequestRepo _projectPartlistPurchaseRequestRepo;
-        PONCCDetailRequestBuyRepo _pONCCDetailRequestBuyRepo;
-        WarehouseRepo _warehouseRepo;
-        BillImportRepo _billImportRepo;
-        BillImportTechnicalRepo _billImportTechnicalRepo;
-        private readonly IConfiguration _configuration;
-        private readonly TaxCompanyRepo _taxCompanyRepo;
-        private readonly EmployeePurchaseRepo _employeePurchaseRepo;
-        private readonly PONCCLogRepo _pONCCLogRepo;
-        private readonly RulePayRepo _rulePayRepo;
-        private readonly ProductSaleRepo _productSaleRepo;
-
-        public PONCCController(
-            IOptions<List<PathStaticFile>> pathStaticFiles,
-            PONCCRepo pONCCRepo
-            , ProductGroupRepo productGroupRepo
-            , ProjectRepo projectRepo
-            , PONCCRulePayRepo pONCCRulePayRepo
-            , PONCCDetailRepo pONCCDetailRepo
-            , BillImportDetailRepo billImportDetailRepo
-            , ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo
-            , PONCCDetailRequestBuyRepo pONCCDetailRequestBuyRepo
-            , WarehouseRepo warehouseRepo
-            , BillImportRepo billImportRepo
-            , BillImportTechnicalRepo billImportTechRepo, TaxCompanyRepo taxCompanyRepo, EmployeePurchaseRepo employeePurchaseRepo, IConfiguration configuration
-            , PONCCLogRepo pONCCLogRepo
-            , RulePayRepo rulePayRepo
-            , ProductSaleRepo productSaleRepo
-            )
-        {
-            _pathStaticFiles = pathStaticFiles.Value;
-            _pONCCRepo = pONCCRepo;
-            _productGroupRepo = productGroupRepo;
-            _projectRepo = projectRepo;
-            _pONCCRulePayRepo = pONCCRulePayRepo;
-            _pONCCDetailRepo = pONCCDetailRepo;
-            _billImportDetailRepo = billImportDetailRepo;
-            _projectPartlistPurchaseRequestRepo = projectPartlistPurchaseRequestRepo;
-            _pONCCDetailRequestBuyRepo = pONCCDetailRequestBuyRepo;
-            _warehouseRepo = warehouseRepo;
-            _billImportRepo = billImportRepo;
-            _billImportTechnicalRepo = billImportTechRepo;
-            _taxCompanyRepo = taxCompanyRepo;
-            _employeePurchaseRepo = employeePurchaseRepo;
-            _configuration = configuration;
-            _pONCCLogRepo = pONCCLogRepo;
-            _rulePayRepo = rulePayRepo;
-            _productSaleRepo = productSaleRepo;
-        }
+		public PONCCController(
+			IOptions<List<PathStaticFile>> pathStaticFiles,
+			PONCCRepo pONCCRepo
+			, ProductGroupRepo productGroupRepo
+			, ProjectRepo projectRepo
+			, PONCCRulePayRepo pONCCRulePayRepo
+			, PONCCDetailRepo pONCCDetailRepo
+			, BillImportDetailRepo billImportDetailRepo
+			, ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo
+			, PONCCDetailRequestBuyRepo pONCCDetailRequestBuyRepo
+			, WarehouseRepo warehouseRepo
+			, BillImportRepo billImportRepo
+			, BillImportTechnicalRepo billImportTechRepo, TaxCompanyRepo taxCompanyRepo, EmployeePurchaseRepo employeePurchaseRepo, IConfiguration configuration
+			, PONCCLogRepo pONCCLogRepo
+			, RulePayRepo rulePayRepo
+			, ProductSaleRepo productSaleRepo
+			)
+		{
+			_pathStaticFiles = pathStaticFiles.Value;
+			_pONCCRepo = pONCCRepo;
+			_productGroupRepo = productGroupRepo;
+			_projectRepo = projectRepo;
+			_pONCCRulePayRepo = pONCCRulePayRepo;
+			_pONCCDetailRepo = pONCCDetailRepo;
+			_billImportDetailRepo = billImportDetailRepo;
+			_projectPartlistPurchaseRequestRepo = projectPartlistPurchaseRequestRepo;
+			_pONCCDetailRequestBuyRepo = pONCCDetailRequestBuyRepo;
+			_warehouseRepo = warehouseRepo;
+			_billImportRepo = billImportRepo;
+			_billImportTechnicalRepo = billImportTechRepo;
+			_taxCompanyRepo = taxCompanyRepo;
+			_employeePurchaseRepo = employeePurchaseRepo;
+			_configuration = configuration;
+			_pONCCLogRepo = pONCCLogRepo;
+			_rulePayRepo = rulePayRepo;
+			_productSaleRepo = productSaleRepo;
+		}
 
 		#region Lấy data master/ detail
+
 		[HttpGet("get-all")]
 		[RequiresPermission("N33,N35,N36,N1,N52,N38,N54")]
 		public IActionResult GetAll(
@@ -172,7 +172,6 @@ namespace RERPAPI.Controllers.Old
 			{
 				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
 			}
-
 		}
 
 		[HttpGet("bill-import-tech")]
@@ -187,9 +186,7 @@ namespace RERPAPI.Controllers.Old
 			{
 				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
 			}
-
 		}
-
 
 		[HttpGet("data-detail")]
 		[RequiresPermission("N33,N35,N36,N1,N52,N38,N54")]
@@ -216,8 +213,8 @@ namespace RERPAPI.Controllers.Old
 			{
 				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
 			}
-
 		}
+
 		[HttpGet("get-rulepay-by-poncc")]
 		public IActionResult GetRulePayByPONCC(int ponccId)
 		{
@@ -231,6 +228,7 @@ namespace RERPAPI.Controllers.Old
 				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
 			}
 		}
+
 		[HttpGet("poncc-detail")]
 		[RequiresPermission("N33,N35,N36,N1,N52,N38,N54")]
 		public IActionResult Getponccdetail(string idText, int warehouseID, string detailId)
@@ -285,7 +283,6 @@ namespace RERPAPI.Controllers.Old
 				List<int> listDemoPonccId = new List<int>();
 				if (listSale.Count() > 0)
 				{
-
 					foreach (var item in listSale)
 					{
 						BillImport bill = new BillImport();
@@ -324,7 +321,6 @@ namespace RERPAPI.Controllers.Old
 
 						bill.RulePayID = Convert.ToInt32(dataRow.RulePayID);
 
-
 						var productGroupWarehouses = SQLHelper<object>.ProcedureToList("spGetProductGroupWarehouse",
 												   new string[] { "@WarehouseID", "@ProductGroupID" },
 												   new object[] { warehouseID, productGroupID });
@@ -340,7 +336,6 @@ namespace RERPAPI.Controllers.Old
 				}
 				if (listDemo.Count() > 0)
 				{
-
 					foreach (var item in listDemo)
 					{
 						int supplierSaleID = Convert.ToInt32(item.SupplierSaleID);
@@ -401,11 +396,7 @@ namespace RERPAPI.Controllers.Old
 			{
 				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
 			}
-
 		}
-
-
-
 
 		[HttpGet("deleted-poncc-detail")]
 		[RequiresPermission("N35,N33,N1")]
@@ -420,11 +411,12 @@ namespace RERPAPI.Controllers.Old
 			{
 				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
 			}
-
 		}
-		#endregion
+
+		#endregion Lấy data master/ detail
 
 		#region Lấy dữ liệu các select cho bảng
+
 		[HttpGet("load-bill-code")]
 		[RequiresPermission("N35,N33,N1")]
 		public IActionResult LoadBillCode(int poTypeId)
@@ -573,7 +565,6 @@ namespace RERPAPI.Controllers.Old
 					{
 						userId = 0;
 					}
-
 				}
 
 				return Ok(ApiResponseFactory.Success(userId, null));
@@ -639,127 +630,132 @@ namespace RERPAPI.Controllers.Old
 				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
 			}
 		}
-		#endregion
 
-        #region Lưu dữ liệu
-        [HttpPost("save-data")]
-        [RequiresPermission("N35,N33,N1")]
-        public async Task<IActionResult> SaveData([FromBody] PONCCDTO data)
-        {
-            try
-            {
-                if (!_pONCCRepo.Validate(data, out string message))
-                {
-                    return BadRequest(ApiResponseFactory.Fail(null, message));
-                }
+		#endregion Lấy dữ liệu các select cho bảng
 
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                var currentUser = ObjectMapper.GetCurrentUser(claims);
-                string logContent = "";
+		#region Lưu dữ liệu
 
-                if (data.poncc.ID > 0)
-                {
-                    #region Lưu log master
-                    PONCC poncc = _pONCCRepo.GetByID(data.poncc.ID);
-                    logContent = _pONCCLogRepo.GenerateLog(poncc, data.poncc);
+		[HttpPost("save-data")]
+		[RequiresPermission("N35,N33,N1")]
+		public async Task<IActionResult> SaveData([FromBody] PONCCDTO data)
+		{
+			try
+			{
+				if (!_pONCCRepo.Validate(data, out string message))
+				{
+					return BadRequest(ApiResponseFactory.Fail(null, message));
+				}
 
-                    if (!String.IsNullOrWhiteSpace(logContent))
-                    {
-                        await _pONCCLogRepo.AddLog(data.poncc.ID, $"- {currentUser.FullName} đã cập nhật: \\n{logContent} \\n", "Cập nhật");
-                    }
+				var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+				var currentUser = ObjectMapper.GetCurrentUser(claims);
+				string logContent = "";
 
-                    logContent = "";
-                    #endregion
+				if (data.poncc.ID > 0)
+				{
+					#region Lưu log master
 
-                    await _pONCCRepo.UpdateAsync(data.poncc);
-                }
-                else
-                {
-                    var po = data.poncc;
-                    po.SupplierSaleID = po.SupplierSaleID ?? 0;
-                    po.GroupID = po.GroupID ?? "";
-                    po.SupplierID = po.SupplierID ?? 0;
-                    po.UserID = po.UserID ?? 0;
-                    po.DeliveryTime = po.DeliveryTime ?? 0;
-                    po.Status_Old = po.Status_Old ?? 0;
-                    po.Currency = po.Currency ?? 0;
-                    po.BankCharge = po.BankCharge ?? "";
-                    po.IsApproved = po.IsApproved ?? false;
-                    po.BankingFee = po.BankingFee ?? "";
-                    po.UserNCC = po.UserNCC ?? "";
-                    po.UserName = po.UserName ?? "";
-                    po.Phone = po.Phone ?? "";
-                    po.Email = po.Email ?? "";
-                    po.Note = po.Note ?? "";
-                    po.AccountNumber = po.AccountNumber ?? "";
-                    po.RuleIncoterm = po.RuleIncoterm ?? "";
-                    po.RulePay = po.RulePay ?? "";
-                    po.AddressDelivery = po.AddressDelivery ?? "";
-                    po.SupplierVoucher = po.SupplierVoucher ?? "";
-                    po.OrderTargets = po.OrderTargets ?? "";
-                    po.ReasonForFailure = po.ReasonForFailure ?? "";
-                    po.ExpectedDate = po.ExpectedDate ?? null;
-                    await _pONCCRepo.CreateAsync(po);
+					PONCC poncc = _pONCCRepo.GetByID(data.poncc.ID);
+					logContent = _pONCCLogRepo.GenerateLog(poncc, data.poncc);
 
-                    await _pONCCLogRepo.AddLog(po.ID, $"- {currentUser.FullName} đã thêm mới poncc\\n", "Thêm mới");
-                }
+					if (!String.IsNullOrWhiteSpace(logContent))
+					{
+						await _pONCCLogRepo.AddLog(data.poncc.ID, $"- {currentUser.FullName} đã cập nhật: \\n{logContent} \\n", "Cập nhật");
+					}
 
-                #region Xử lý rulePay
-                if (data.RulePayID > 0)
-                {
-                    var rulePay = _pONCCRulePayRepo.GetAll(x => x.PONCCID == data.poncc.ID);
-                    var ruleNew = _rulePayRepo.GetByID((int)data.RulePayID);
+					logContent = "";
 
-                    foreach (var item in rulePay)
-                    {
-                        var ruleOld = _rulePayRepo.GetByID((int)item.RulePayID);
-                        if (item.ID > 0) await _pONCCRulePayRepo.DeleteAsync(item.ID);
+					#endregion Lưu log master
 
-                        if (ruleNew.ID != item.RulePayID)
-                        {
-                            logContent += $"thay đổi [{ruleOld.Note}] thành [{ruleNew.Note}]";
-                        }
-                    }
-                    PONCCRulePay rulepay = new PONCCRulePay();
-                    rulepay.PONCCID = data.poncc.ID;
-                    rulepay.RulePayID = data.RulePayID;
-                    await _pONCCRulePayRepo.CreateAsync(rulepay);
+					await _pONCCRepo.UpdateAsync(data.poncc);
+				}
+				else
+				{
+					var po = data.poncc;
+					po.SupplierSaleID = po.SupplierSaleID ?? 0;
+					po.GroupID = po.GroupID ?? "";
+					po.SupplierID = po.SupplierID ?? 0;
+					po.UserID = po.UserID ?? 0;
+					po.DeliveryTime = po.DeliveryTime ?? 0;
+					po.Status_Old = po.Status_Old ?? 0;
+					po.Currency = po.Currency ?? 0;
+					po.BankCharge = po.BankCharge ?? "";
+					po.IsApproved = po.IsApproved ?? false;
+					po.BankingFee = po.BankingFee ?? "";
+					po.UserNCC = po.UserNCC ?? "";
+					po.UserName = po.UserName ?? "";
+					po.Phone = po.Phone ?? "";
+					po.Email = po.Email ?? "";
+					po.Note = po.Note ?? "";
+					po.AccountNumber = po.AccountNumber ?? "";
+					po.RuleIncoterm = po.RuleIncoterm ?? "";
+					po.RulePay = po.RulePay ?? "";
+					po.AddressDelivery = po.AddressDelivery ?? "";
+					po.SupplierVoucher = po.SupplierVoucher ?? "";
+					po.OrderTargets = po.OrderTargets ?? "";
+					po.ReasonForFailure = po.ReasonForFailure ?? "";
+					po.ExpectedDate = po.ExpectedDate ?? null;
+					await _pONCCRepo.CreateAsync(po);
 
-                    if (!string.IsNullOrWhiteSpace(logContent))
-                    {
-                        await _pONCCLogRepo.AddLog(data.poncc.ID, $"- {currentUser.FullName} đã {logContent} \\n", "Cập nhật");
-                    }
-                }
+					await _pONCCLogRepo.AddLog(po.ID, $"- {currentUser.FullName} đã thêm mới poncc\\n", "Thêm mới");
+				}
 
-                string productNew = "";
-                foreach (var item in data.lstPONCCDetail)
-                {
-                    item.PONCCID = data.poncc.ID;
-                    string totalPriceFormat = String.Format("{0:0.00}",
-                        item.ThanhTien + item.VATMoney + item.FeeShip - item.Discount);
-                    item.TotalPrice = Convert.ToDecimal(totalPriceFormat);
-                    string currencyExchangeFormat = String.Format("{0:0.00}", item.TotalPrice * data.poncc.CurrencyRate);
-                    item.CurrencyExchange = Convert.ToDecimal(currencyExchangeFormat);
+				#region Xử lý rulePay
 
-                    var productSale = _productSaleRepo.GetByID((int)item.ProductSaleID);
+				if (data.RulePayID > 0)
+				{
+					var rulePay = _pONCCRulePayRepo.GetAll(x => x.PONCCID == data.poncc.ID);
+					var ruleNew = _rulePayRepo.GetByID((int)data.RulePayID);
 
-                    if (item.ID > 0)
-                    {
-                        var ponccDetail = _pONCCDetailRepo.GetByID(item.ID);
-                        logContent = _pONCCLogRepo.GenerateLogDetail(ponccDetail, item);
+					foreach (var item in rulePay)
+					{
+						var ruleOld = _rulePayRepo.GetByID((int)item.RulePayID);
+						if (item.ID > 0) await _pONCCRulePayRepo.DeleteAsync(item.ID);
 
-                        await _pONCCDetailRepo.UpdateAsync(item);
-                        if (!string.IsNullOrWhiteSpace(logContent))
-                        {
-                            await _pONCCLogRepo.AddLog(data.poncc.ID, $"- {currentUser.FullName} đã cập nhật SP \\n {productSale?.ProductName}: \\n {logContent}\\n", "Cập nhật");
-                        }
-                        UpdateBillImportDetail(item, data.lstBillImportId);
-                    }
-                    else
-                    {
-                        productNew += productSale != null ? productSale.ProductCode + "; " : "";
-                        await _pONCCDetailRepo.CreateAsync(item);
-                    }
+						if (ruleNew.ID != item.RulePayID)
+						{
+							logContent += $"thay đổi [{ruleOld.Note}] thành [{ruleNew.Note}]";
+						}
+					}
+					PONCCRulePay rulepay = new PONCCRulePay();
+					rulepay.PONCCID = data.poncc.ID;
+					rulepay.RulePayID = data.RulePayID;
+					await _pONCCRulePayRepo.CreateAsync(rulepay);
+
+					if (!string.IsNullOrWhiteSpace(logContent))
+					{
+						await _pONCCLogRepo.AddLog(data.poncc.ID, $"- {currentUser.FullName} đã {logContent} \\n", "Cập nhật");
+					}
+				}
+
+				string productNew = "";
+				foreach (var item in data.lstPONCCDetail)
+				{
+					item.PONCCID = data.poncc.ID;
+					string totalPriceFormat = String.Format("{0:0.00}",
+						item.ThanhTien + item.VATMoney + item.FeeShip - item.Discount);
+					item.TotalPrice = Convert.ToDecimal(totalPriceFormat);
+					string currencyExchangeFormat = String.Format("{0:0.00}", item.TotalPrice * data.poncc.CurrencyRate);
+					item.CurrencyExchange = Convert.ToDecimal(currencyExchangeFormat);
+
+					var productSale = _productSaleRepo.GetByID((int)item.ProductSaleID);
+
+					if (item.ID > 0)
+					{
+						var ponccDetail = _pONCCDetailRepo.GetByID(item.ID);
+						logContent = _pONCCLogRepo.GenerateLogDetail(ponccDetail, item);
+
+						await _pONCCDetailRepo.UpdateAsync(item);
+						if (!string.IsNullOrWhiteSpace(logContent))
+						{
+							await _pONCCLogRepo.AddLog(data.poncc.ID, $"- {currentUser.FullName} đã cập nhật SP \\n {productSale?.ProductName}: \\n {logContent}\\n", "Cập nhật");
+						}
+						UpdateBillImportDetail(item, data.lstBillImportId);
+					}
+					else
+					{
+						productNew += productSale != null ? productSale.ProductCode + "; " : "";
+						await _pONCCDetailRepo.CreateAsync(item);
+					}
 
 					if (item.ProjectPartlistPurchaseRequestID == null) continue;
 					await _pONCCRepo.UpdatePurchaseRequest(item.ProjectPartlistPurchaseRequestID ?? 0, data.poncc.SupplierSaleID ?? 0);
@@ -774,66 +770,65 @@ namespace RERPAPI.Controllers.Old
 						PONCCDetailRequestBuy poRequestBuy = _pONCCDetailRequestBuyRepo.GetAll(x =>
 						x.PONCCDetailID == item.ID && x.ProjectPartlistPurchaseRequestID == id).FirstOrDefault();
 
-                        poRequestBuy = poRequestBuy ?? new PONCCDetailRequestBuy();
-                        poRequestBuy.PONCCDetailID = item.ID;
-                        poRequestBuy.ProjectPartlistPurchaseRequestID = id;
-                        if (poRequestBuy.ID <= 0)
-                        {
-                            await _pONCCDetailRequestBuyRepo.CreateAsync(poRequestBuy);
-                        }
-                        else
-                        {
-                            await _pONCCDetailRequestBuyRepo.UpdateAsync(poRequestBuy);
-                        }
-                    }
-                }
+						poRequestBuy = poRequestBuy ?? new PONCCDetailRequestBuy();
+						poRequestBuy.PONCCDetailID = item.ID;
+						poRequestBuy.ProjectPartlistPurchaseRequestID = id;
+						if (poRequestBuy.ID <= 0)
+						{
+							await _pONCCDetailRequestBuyRepo.CreateAsync(poRequestBuy);
+						}
+						else
+						{
+							await _pONCCDetailRequestBuyRepo.UpdateAsync(poRequestBuy);
+						}
+					}
+				}
 
-                if (!string.IsNullOrWhiteSpace(productNew))
-                    await _pONCCLogRepo.AddLog(data.poncc.ID, $"- {currentUser.FullName} đã thêm mới SP [{productNew}]\\n", "Thêm mới");
+				if (!string.IsNullOrWhiteSpace(productNew))
+					await _pONCCLogRepo.AddLog(data.poncc.ID, $"- {currentUser.FullName} đã thêm mới SP [{productNew}]\\n", "Thêm mới");
 
-                #endregion
+				#endregion Xử lý rulePay
 
-                return Ok(ApiResponseFactory.Success(data.poncc, "Đã cập nhật đặt hàng thành công."));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
+				return Ok(ApiResponseFactory.Success(data.poncc, "Đã cập nhật đặt hàng thành công."));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
 
-        [HttpPost("update-poncc")]
-        [RequiresPermission("N35,N33,N1")]
-        public async Task<IActionResult> updatePoncc([FromBody] List<PONCC> data)
-        {
-            try
-            {
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                var currentUser = ObjectMapper.GetCurrentUser(claims);
+		[HttpPost("update-poncc")]
+		[RequiresPermission("N35,N33,N1")]
+		public async Task<IActionResult> updatePoncc([FromBody] List<PONCC> data)
+		{
+			try
+			{
+				var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+				var currentUser = ObjectMapper.GetCurrentUser(claims);
 
-                if (data.Count() > 0)
-                {
-                    foreach (var item in data)
-                    {
-                        if (item.ID > 0)
-                        {
-                            var model = _pONCCRepo.GetByID(item.ID);
-                            string logContent = _pONCCLogRepo.GenerateLog(model, item);
+				if (data.Count() > 0)
+				{
+					foreach (var item in data)
+					{
+						if (item.ID > 0)
+						{
+							var model = _pONCCRepo.GetByID(item.ID);
+							string logContent = _pONCCLogRepo.GenerateLog(model, item);
 
-                            if (!String.IsNullOrWhiteSpace(logContent))
-                            {
-                                await _pONCCLogRepo.AddLog(item.ID, $"- {currentUser.FullName} đã cập nhật: \\n{logContent} \\n", "Cập nhật");
-                            }
-                            await _pONCCRepo.UpdateAsync(item);
-                        }
-                    }
-                }
-                return Ok(ApiResponseFactory.Success(null, ""));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-
+							if (!String.IsNullOrWhiteSpace(logContent))
+							{
+								await _pONCCLogRepo.AddLog(item.ID, $"- {currentUser.FullName} đã cập nhật: \\n{logContent} \\n", "Cập nhật");
+							}
+							await _pONCCRepo.UpdateAsync(item);
+						}
+					}
+				}
+				return Ok(ApiResponseFactory.Success(null, ""));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
 		}
 
 		private async Task UpdateBillImportDetail(PONCCDetail detail, List<int> lstBillImportId)
@@ -870,9 +865,10 @@ namespace RERPAPI.Controllers.Old
 			}
 		}
 
+		#endregion Lưu dữ liệu
 
-		#endregion
 		#region Lương Update lấy tổng hợp PO NCC
+
 		//Lấy danh tổng hợp PO NCC
 		[HttpPost("get-po-ncc-summary")]
 		public IActionResult GetPONCCSummary([FromBody] PONCCSummaryRequestParam request)
@@ -887,50 +883,52 @@ namespace RERPAPI.Controllers.Old
 				var data = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
 				var propose = SQLHelper<object>.GetListData(data, 0);
 
-                return Ok(ApiResponseFactory.Success(propose, "Lấy dữ liệu thành công"));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-        //Lấy danh tổng hợp PO NCC kế toán
-        [HttpPost("get-po-ncc-summary-kt")]
-        public IActionResult GetPONCCSummaryKT([FromBody] PONCCSummaryRequestParam request)
-        {
-            try
-            {
-                var firstDay = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-                var lastDay = firstDay.AddMonths(1).AddDays(-1);
-                string procedureName = "sp_GetAllPONCCKT";
-                string[] paramNames = new string[] { "@FilterText", "@DateStart", "@DateEnd", "@SupplierID", "@Status", "@EmployeeID" };
-                object[] paramValues = new object[] { request.FilterText, request.DateStart ?? firstDay, request.DateEnd ?? lastDay, request.SupplierID, request.Status, request.EmployeeID };
-                var data = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
-                var propose = SQLHelper<object>.GetListData(data, 0);
+				return Ok(ApiResponseFactory.Success(propose, "Lấy dữ liệu thành công"));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
 
-                return Ok(ApiResponseFactory.Success(propose, "Lấy dữ liệu thành công"));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-        #endregion
+		//Lấy danh tổng hợp PO NCC kế toán
+		[HttpPost("get-po-ncc-summary-kt")]
+		public IActionResult GetPONCCSummaryKT([FromBody] PONCCSummaryRequestParam request)
+		{
+			try
+			{
+				var firstDay = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+				var lastDay = firstDay.AddMonths(1).AddDays(-1);
+				string procedureName = "sp_GetAllPONCCKT";
+				string[] paramNames = new string[] { "@FilterText", "@DateStart", "@DateEnd", "@SupplierID", "@Status", "@EmployeeID" };
+				object[] paramValues = new object[] { request.FilterText, request.DateStart ?? firstDay, request.DateEnd ?? lastDay, request.SupplierID, request.Status, request.EmployeeID };
+				var data = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
+				var propose = SQLHelper<object>.GetListData(data, 0);
 
-        [HttpGet("printpo")]
-        public IActionResult PrintPO(int id, bool isMerge)
-        {
-            string message = "";
-            try
-            {
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                var currentUser = ObjectMapper.GetCurrentUser(claims);
+				return Ok(ApiResponseFactory.Success(propose, "Lấy dữ liệu thành công"));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
 
-                //get thông tin master
-                var dataPO = SQLHelper<object>.ProcedureToList("spGetPONCCByID", new string[] { "@ID" }, new object[] { id });
-                var po = SQLHelper<object>.GetListData(dataPO, 0)[0];
-                string companyText = po.CompanyText.ToUpper().Trim();
-                var taxCompany = _taxCompanyRepo.GetAll(x => x.Code.ToUpper().Trim() == companyText).FirstOrDefault() ?? new TaxCompany();
+		#endregion Lương Update lấy tổng hợp PO NCC
+
+		[HttpGet("printpo")]
+		public IActionResult PrintPO(int id, bool isMerge)
+		{
+			string message = "";
+			try
+			{
+				var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+				var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+				//get thông tin master
+				var dataPO = SQLHelper<object>.ProcedureToList("spGetPONCCByID", new string[] { "@ID" }, new object[] { id });
+				var po = SQLHelper<object>.GetListData(dataPO, 0)[0];
+				string companyText = po.CompanyText.ToUpper().Trim();
+				var taxCompany = _taxCompanyRepo.GetAll(x => x.Code.ToUpper().Trim() == companyText).FirstOrDefault() ?? new TaxCompany();
 
 				int employeeID = TextUtils.ToInt32(po.EmployeeID);
 
@@ -938,7 +936,6 @@ namespace RERPAPI.Controllers.Old
 				po.Purchaser = $"{_pONCCRepo.ConvertVietnameseToEnglish(po.FullName)} - Phone: {_pONCCRepo.ConvertPhoneNumberVietnamese(employeePurchase.Telephone ?? "")} - Email: {employeePurchase.Email}";
 				po.TotalAmountText = _pONCCRepo.ConvertNumberToTextEnglish(Convert.ToDecimal(po.TotalMoneyPO), po.CurrencyText);
 				po.TotalMoneyText = _pONCCRepo.ConvertNumberToTextVietNamese(Convert.ToDecimal(po.TotalMoneyPO), po.CurrencyText);
-
 
 				PathStaticFile pathStaticFile = _pathStaticFiles.Where(x => x.PathName == "Purchases").FirstOrDefault() ?? new PathStaticFile();
 				if (!Path.Exists(pathStaticFile.PathFull))
@@ -959,10 +956,26 @@ namespace RERPAPI.Controllers.Old
 
 				//get danh sách chi tiết sản phẩm
 				var poDetails = SQLHelper<PONCCDetailDTO>.ProcedureToListModel("spGetPONCCDetail", new string[] { "@PONCCID" }, new object[] { id });
-				poDetails = poDetails.Where(x => x.IsPurchase != true).ToList();
+				poDetails = poDetails.Where(x => x.IsPurchase != true).Select((x, index) =>
+				{
+					x.STT = index + 1;
+					return x;
+				}).ToList();
+				decimal totalMoney = poDetails.Sum(x => x.TotalPrice ?? 0);
+
+				po.TotalMoneyPO = totalMoney;
+
+				po.TotalAmountText = _pONCCRepo.ConvertNumberToTextEnglish(
+					totalMoney,
+					po.CurrencyText);
+
+				po.TotalMoneyText = _pONCCRepo.ConvertNumberToTextVietNamese(
+					totalMoney,
+					po.CurrencyText);
 				if (isMerge)
 				{
-					bool isHCNS = poDetails.Any(x => x.ProductGroupID == 77);
+					List<int> lstIDHCNS = new List<int> { 77, 80 };
+					bool isHCNS = poDetails.Any(x => lstIDHCNS.Contains(x.ProductGroupID));
 					if (isHCNS)
 					{
 						poDetails = poDetails.GroupBy(item => new { item.ProductCodeOfSupplier, item.UnitPrice })
@@ -1008,7 +1021,6 @@ namespace RERPAPI.Controllers.Old
 																				item.STT = index + 1;
 																				return item;
 																			}).ToList();
-
 					}
 				}
 				var data = new
@@ -1019,32 +1031,33 @@ namespace RERPAPI.Controllers.Old
 					poDetails = poDetails
 				};
 
-                _pONCCLogRepo.AddLog(po.ID, $"- {currentUser.FullName} đã in PO \\n", "Cập nhật");
+				_pONCCLogRepo.AddLog(po.ID, $"- {currentUser.FullName} đã in PO \\n", "Cập nhật");
 
-                return Ok(ApiResponseFactory.Success(data, message));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
+				return Ok(ApiResponseFactory.Success(data, message));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
 
-        #region Xuất file excel poncc theo mẫu 
-        [HttpGet("print-excel")]
-        public IActionResult PrintExcel(int id, bool isMerge, string language, bool isShowSign, bool isShowSeal)
-        {
-            string message = "";
-            try
-            {
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                var currentUser = ObjectMapper.GetCurrentUser(claims);
-                _pONCCLogRepo.AddLog(id, $"- {currentUser.FullName} đã xuất excel PO \\n", "Cập nhật");
+		#region Xuất file excel poncc theo mẫu
 
-                //get thông tin master
-                var dataPO = SQLHelper<object>.ProcedureToList("spGetPONCCByID", new string[] { "@ID" }, new object[] { id });
-                var po = SQLHelper<object>.GetListData(dataPO, 0)[0];
-                string companyText = po.CompanyText.ToUpper().Trim();
-                var taxCompany = _taxCompanyRepo.GetAll(x => x.Code.ToUpper().Trim() == companyText).FirstOrDefault() ?? new TaxCompany();
+		[HttpGet("print-excel")]
+		public IActionResult PrintExcel(int id, bool isMerge, string language, bool isShowSign, bool isShowSeal)
+		{
+			string message = "";
+			try
+			{
+				var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+				var currentUser = ObjectMapper.GetCurrentUser(claims);
+				_pONCCLogRepo.AddLog(id, $"- {currentUser.FullName} đã xuất excel PO \\n", "Cập nhật");
+
+				//get thông tin master
+				var dataPO = SQLHelper<object>.ProcedureToList("spGetPONCCByID", new string[] { "@ID" }, new object[] { id });
+				var po = SQLHelper<object>.GetListData(dataPO, 0)[0];
+				string companyText = po.CompanyText.ToUpper().Trim();
+				var taxCompany = _taxCompanyRepo.GetAll(x => x.Code.ToUpper().Trim() == companyText).FirstOrDefault() ?? new TaxCompany();
 
 				int employeeID = TextUtils.ToInt32(po.EmployeeID);
 
@@ -1052,7 +1065,6 @@ namespace RERPAPI.Controllers.Old
 				po.Purchaser = $"{_pONCCRepo.ConvertVietnameseToEnglish(po.FullName)} - Phone: {_pONCCRepo.ConvertPhoneNumberVietnamese(employeePurchase.Telephone ?? "")} - Email: {employeePurchase.Email}";
 				po.TotalAmountText = _pONCCRepo.ConvertNumberToTextEnglish(Convert.ToDecimal(po.TotalMoneyPO), po.CurrencyText);
 				po.TotalMoneyText = _pONCCRepo.ConvertNumberToTextVietNamese(Convert.ToDecimal(po.TotalMoneyPO), po.CurrencyText);
-
 
 				PathStaticFile pathStaticFile = _pathStaticFiles.Where(x => x.PathName == "Purchases").FirstOrDefault() ?? new PathStaticFile();
 				if (!Path.Exists(pathStaticFile.PathFull))
@@ -1118,7 +1130,6 @@ namespace RERPAPI.Controllers.Old
 																				item.STT = index + 1;
 																				return item;
 																			}).ToList();
-
 					}
 				}
 
@@ -1161,7 +1172,9 @@ namespace RERPAPI.Controllers.Old
 					switch (language)
 					{
 						case "en":
+
 							#region in tiếng anh
+
 							sheet.Cell(2, 41).Value = po.POCode ?? "";
 							sheet.Cell(3, 18).Value = po.NameNCC ?? "";
 							sheet.Cell(3, 52).Value = (po.RequestDate).ToString("dd/MM/yyyy") ?? "";
@@ -1233,12 +1246,14 @@ namespace RERPAPI.Controllers.Old
 							sheet.Cell(summaryRowOffset + 10, 15).Value = po.FedexAccount ?? "";
 							sheet.Cell(summaryRowOffset + 11, 15).Value = po.AccountNumberSupplier ?? "";
 
+							#endregion in tiếng anh
 
-							#endregion
 							break;
 
 						case "vi":
+
 							#region in tiếng việt
+
 							string taxInfor = $"{taxCompany.BuyerVietnamese ?? ""}\n" +
 								$"{taxCompany.AddressBuyerVienamese ?? ""}\n" +
 								$"{taxCompany.TaxVietnamese ?? ""}";
@@ -1316,8 +1331,10 @@ namespace RERPAPI.Controllers.Old
 							sheet.Cell(summaryRowOffsetVi + 13, 24).Value = employeePurchase.Telephone ?? "";
 							sheet.Cell(summaryRowOffsetVi + 14, 24).Value = employeePurchase.Email ?? "";
 
-							#endregion
+							#endregion in tiếng việt
+
 							break;
+
 						default:
 							break;
 					}
@@ -1358,7 +1375,7 @@ namespace RERPAPI.Controllers.Old
 							 .Scale(0.68); // zoom 60%
 					}
 
-					#endregion
+					#endregion Gán ảnh logo và chữ ký, seal (Đã điều chỉnh vị trí theo số dòng thêm vào)
 
 					using (var stream = new MemoryStream())
 					{
@@ -1376,33 +1393,36 @@ namespace RERPAPI.Controllers.Old
 			}
 		}
 
-        private MemoryStream ConvertImageToMemoryStream(string imagePath)
-        {
-            byte[] imgBytes;
-            using (var img = System.Drawing.Image.FromFile(imagePath))
-            using (var msTemp = new MemoryStream())
-            {
-                img.Save(msTemp, System.Drawing.Imaging.ImageFormat.Png);
-                imgBytes = msTemp.ToArray();
-            }
-            return new MemoryStream(imgBytes);
-        }
-        #endregion
+		private MemoryStream ConvertImageToMemoryStream(string imagePath)
+		{
+			byte[] imgBytes;
+			using (var img = System.Drawing.Image.FromFile(imagePath))
+			using (var msTemp = new MemoryStream())
+			{
+				img.Save(msTemp, System.Drawing.Imaging.ImageFormat.Png);
+				imgBytes = msTemp.ToArray();
+			}
+			return new MemoryStream(imgBytes);
+		}
 
-        #region Log thao tác poncc
-        [HttpGet("log-activity")]
-        public IActionResult getActivityLogPoncc(int ponccId)
-        {
-            try
-            {
-                var data = _pONCCLogRepo.GetAll().Where(x => x.PONCCID == ponccId).OrderByDescending(x => x.CreatedDate).ToList();
-                return Ok(ApiResponseFactory.Success(data, ""));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-        #endregion
-    }
+		#endregion Xuất file excel poncc theo mẫu
+
+		#region Log thao tác poncc
+
+		[HttpGet("log-activity")]
+		public IActionResult getActivityLogPoncc(int ponccId)
+		{
+			try
+			{
+				var data = _pONCCLogRepo.GetAll().Where(x => x.PONCCID == ponccId).OrderByDescending(x => x.CreatedDate).ToList();
+				return Ok(ApiResponseFactory.Success(data, ""));
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+			}
+		}
+
+		#endregion Log thao tác poncc
+	}
 }

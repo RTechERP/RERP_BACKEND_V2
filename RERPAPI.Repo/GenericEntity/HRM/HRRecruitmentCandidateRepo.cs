@@ -1,20 +1,8 @@
-﻿using MailKit.Net.Smtp;
-using MailKit.Security;
-using Microsoft.Extensions.Options;
-using MimeKit;
+﻿using Microsoft.Extensions.Options;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
-using RERPAPI.Model.Entities;
-using RERPAPI.Repo.GenericEntity;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity.HRM
 {
@@ -22,7 +10,7 @@ namespace RERPAPI.Repo.GenericEntity.HRM
     {
         private readonly SmtpSettings _smtp;
 
-        HRRecruitmentCandidateLogRepo _hrRecruitmentCandidateLogRepo;
+        private HRRecruitmentCandidateLogRepo _hrRecruitmentCandidateLogRepo;
 
         public HRRecruitmentCandidateRepo(
             CurrentUser currentUser,
@@ -31,9 +19,10 @@ namespace RERPAPI.Repo.GenericEntity.HRM
             _hrRecruitmentCandidateLogRepo = hRRecruitmentCandidateLogRepo;
             _smtp = smtp.Value;
         }
+
         public string GenerateUserName()
         {
-            int stt = GetAll().Count+1;
+            int stt = GetAll().Count + 1;
             return $"UV000{stt}";
         }
 
@@ -81,7 +70,6 @@ namespace RERPAPI.Repo.GenericEntity.HRM
 
         public string GetFooterMail(int status)
         {
-
             if (status == 0)
                 return string.Empty;
 

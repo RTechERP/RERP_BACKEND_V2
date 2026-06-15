@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.DTO.HRM
+﻿namespace RERPAPI.Model.DTO.HRM
 {
     public class EmployeeCommonDTO
     {
@@ -29,6 +23,7 @@ namespace RERPAPI.Model.DTO.HRM
         /// Chức vụ nội bộ
         /// </summary>
         public string ChucVu { get; set; } = string.Empty;
+
         public int DepartmentSTT { get; set; }
         public string DepartmentName { get; set; } = string.Empty;
         public string DvBHXH { get; set; } = string.Empty;

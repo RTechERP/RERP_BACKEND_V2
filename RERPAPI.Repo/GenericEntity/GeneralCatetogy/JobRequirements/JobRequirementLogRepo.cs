@@ -1,9 +1,6 @@
 using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 
 namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.JobRequirements
@@ -15,13 +12,16 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.JobRequirements
         }
 
         #region Các trường hệ thống/nội bộ không cần ghi log thay đổi
+
         private static readonly HashSet<string> _ignoredProperties = new(StringComparer.OrdinalIgnoreCase)
         {
             "ID", "CreatedDate", "UpdatedDate", "CreatedBy", "UpdatedBy", "IsDeleted"
         };
-        #endregion
+
+        #endregion Các trường hệ thống/nội bộ không cần ghi log thay đổi
 
         #region Tên hiển thị tiếng Việt cho các property
+
         private static readonly Dictionary<string, string> _propertyLabels = new()
         {
             ["NumberRequest"] = "Mã yêu cầu",
@@ -46,9 +46,11 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.JobRequirements
             ["IsRequestBGDApproved"] = "YC BGĐ duyệt",
             ["IsRequestPriceQuote"] = "YC báo giá"
         };
-        #endregion
+
+        #endregion Tên hiển thị tiếng Việt cho các property
 
         #region So sánh 2 entity cùng loại, trả về danh sách mô tả thay đổi
+
         public List<string> GetEntityChanges<T>(T oldObj, T newObj)
         {
             var changes = new List<string>();
@@ -151,7 +153,8 @@ namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.JobRequirements
 
             return changes;
         }
-        #endregion
+
+        #endregion So sánh 2 entity cùng loại, trả về danh sách mô tả thay đổi
 
         private static void CollectFkId(string propertyName, object? value, HashSet<int> employeeIds, HashSet<int> departmentIds)
         {

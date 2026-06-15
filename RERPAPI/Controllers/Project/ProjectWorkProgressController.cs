@@ -1,9 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
-using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.Project
@@ -24,7 +21,9 @@ namespace RERPAPI.Controllers.Project
             this.projectRepo = projectRepo;
             this.customerRepo = customerRepo;
         }
+
         #region Lấy danh sách tiến độ công việc
+
         [HttpGet("get-work-propress/{projectId}")]
         public async Task<IActionResult> getWorkPropress(int projectId)
         {
@@ -59,7 +58,7 @@ namespace RERPAPI.Controllers.Project
                 });
             }
         }
-        #endregion
 
+        #endregion Lấy danh sách tiến độ công việc
     }
 }

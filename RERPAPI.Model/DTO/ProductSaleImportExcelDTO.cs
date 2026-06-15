@@ -11,6 +11,5 @@ namespace RERPAPI.Model.DTO
         public string? ProductGroupNo { get; set; }
         public string? ProductGroupTypeNo { get; set; }
         public string? ProductGroupTypeName { get; set; }
-
     }
 }

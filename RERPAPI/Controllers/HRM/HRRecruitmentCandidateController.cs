@@ -1,25 +1,12 @@
-using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Drawing.Charts;
-using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using MimeKit;
-using NPOI.SS.UserModel;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
-using RERPAPI.Model.DTO.Warehouses.AGV;
 using RERPAPI.Model.Entities;
-using RERPAPI.Model.Param.HRM.VehicleManagement;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.AddNewBillExport;
 using RERPAPI.Repo.GenericEntity.HRM;
-using System.ComponentModel.DataAnnotations;
-using System.Drawing.Imaging;
-using ZXing;
-using ZXing.Common;
 
 namespace RERPAPI.Controllers.HRM
 {
@@ -29,13 +16,14 @@ namespace RERPAPI.Controllers.HRM
     public class HRRecruitmentCandidateController : ControllerBase
     {
         private readonly IConfiguration _configuration;
-        EmployeeChucVuHDRepo _employeeChucVuHDRepo;
-        ConfigSystemRepo _configSystemRepo;
-        HRRecruitmentCandidateRepo _hrRecruitmentCandidateRepo;
-        HRRecruitmentCandidateLogRepo _hrRecruitmentCandidateLogRepo;
-        EmailHelper _emailHelper;
-        HRHiringRequestRepo _hrHiringRequestRepo;
+        private EmployeeChucVuHDRepo _employeeChucVuHDRepo;
+        private ConfigSystemRepo _configSystemRepo;
+        private HRRecruitmentCandidateRepo _hrRecruitmentCandidateRepo;
+        private HRRecruitmentCandidateLogRepo _hrRecruitmentCandidateLogRepo;
+        private EmailHelper _emailHelper;
+        private HRHiringRequestRepo _hrHiringRequestRepo;
         private readonly IWebHostEnvironment _environment;
+
         public HRRecruitmentCandidateController(
             EmployeeChucVuHDRepo employeeChucVuHDRepo,
             ConfigSystemRepo configSystemRepo,
@@ -68,9 +56,9 @@ namespace RERPAPI.Controllers.HRM
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
-        [RequiresPermission("N1,N2,N94",permissionFunction: "frmCandidate_View")]
+
+        [RequiresPermission("N1,N2,N94", permissionFunction: "frmCandidate_View")]
         //Lấy UserName
         [HttpGet("get-username-candidate")]
         public IActionResult GetUserName()
@@ -84,9 +72,7 @@ namespace RERPAPI.Controllers.HRM
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
-
 
         [HttpGet("hiring-request")]
         public async Task<IActionResult> GetHiringRequest()
@@ -120,7 +106,7 @@ namespace RERPAPI.Controllers.HRM
 
                 bool isHr = _currentUser.Permissions
                             .Split(',')
-                            .Any(p => p.Trim() == "N1" || p.Trim() == "N2"||p.Trim()=="N94") || _currentUser.IsAdmin;
+                            .Any(p => p.Trim() == "N1" || p.Trim() == "N2" || p.Trim() == "N94") || _currentUser.IsAdmin;
 
                 var param = new
                 {
@@ -131,19 +117,16 @@ namespace RERPAPI.Controllers.HRM
                     DateStart = dateStart,
                     DateEnd = dateEnd,
                     FilterText = keyword?.Trim(),
-                    
-
                 };
                 var result = await SqlDapper<dynamic>.ProcedureToListAsync("spGetHrRecruitmentCandidate", param);
 
                 var dtMaster = ((IEnumerable<dynamic>)result).ToList();
 
-                if (!isHr)  
+                if (!isHr)
                 {
                     dtMaster = dtMaster
-                        .Where(x => x.EmployeeRequestID == _currentUser.EmployeeID|| x.InterviewerID == _currentUser.EmployeeID)
+                        .Where(x => x.EmployeeRequestID == _currentUser.EmployeeID || x.InterviewerID == _currentUser.EmployeeID)
                         .ToList();
-                   
                 }
 
                 return Ok(ApiResponseFactory.Success(dtMaster, null));
@@ -153,8 +136,6 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-
 
         [HttpPost("delete")]
         [RequiresPermission("N1,N2,N94")]
@@ -172,10 +153,8 @@ namespace RERPAPI.Controllers.HRM
 
                 if (listIds.Count() > 0)
                 {
-
                     foreach (var id in listIds)
                     {
-
                         var hrRecruitmentCandidates = _hrRecruitmentCandidateRepo.GetByID(id);
                         if (hrRecruitmentCandidates.ID > 0)
                         {
@@ -186,7 +165,6 @@ namespace RERPAPI.Controllers.HRM
                         }
                     }
                 }
-
 
                 return Ok(ApiResponseFactory.Success(null, "Đã xóa ứng viên thành công."));
             }
@@ -212,10 +190,8 @@ namespace RERPAPI.Controllers.HRM
 
                 if (data.listIds.Count() > 0)
                 {
-
                     foreach (var id in data.listIds)
                     {
-
                         var hrRecruitmentCandidates = _hrRecruitmentCandidateRepo.GetByID(id);
 
                         if (data.Status == 1 && data.isApproved == false)
@@ -257,11 +233,9 @@ namespace RERPAPI.Controllers.HRM
                             hrRecruitmentCandidates.Status = data.Status;
                         }
 
-
                         await _hrRecruitmentCandidateRepo.UpdateAsync(hrRecruitmentCandidates);
                     }
                 }
-
 
                 return Ok(ApiResponseFactory.Success(null, "Đã lưu ứng viên thành công."));
             }
@@ -306,6 +280,7 @@ namespace RERPAPI.Controllers.HRM
                 });
             }
         }
+
         private string GetContentType(string fileName)
         {
             var extension = Path.GetExtension(fileName)?.ToLowerInvariant();
@@ -361,7 +336,7 @@ namespace RERPAPI.Controllers.HRM
                     // Dynamic subpath: CvUngVien/Year/PositionName
                     string year = (data.DateApply ?? DateTime.Now).ToString("yyyy");
                     string position = string.IsNullOrWhiteSpace(data.PositionName) ? "NoPosition" : data.PositionName;
-                    string pathPattern = Path.Combine( year, position);
+                    string pathPattern = Path.Combine(year, position);
 
                     string pathUpload = data.ServerPath = Path.Combine(uploadPath, pathPattern);
 
@@ -396,7 +371,6 @@ namespace RERPAPI.Controllers.HRM
                 data.UserName = data.UserName?.Trim() ?? "";
                 data.Password = data.Password?.Trim() ?? "";
                 data.Email = data.Email?.Trim() ?? "";
-
 
                 if (data.ID > 0)
                 {
@@ -459,7 +433,7 @@ namespace RERPAPI.Controllers.HRM
                         {
                             var hrRecruitmentCandidate = _hrRecruitmentCandidateRepo.GetByID(email.ID);
                             if (hrRecruitmentCandidate != null)
-                            {   
+                            {
                                 hrRecruitmentCandidate.StatusMail = email.StatusSend;
                                 hrRecruitmentCandidate.DateInterview = email.DateSend;
                                 hrRecruitmentCandidate.DeadlineFeedbackMail = email.DeadlineFeedbackMail;
@@ -481,6 +455,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("send-offer-letter-mail")]
         [RequiresPermission("N1,N2,N94")]
         public async Task<IActionResult> SendEmailOferLetter([FromBody] List<EmployeeSendEmail> sendEmails)

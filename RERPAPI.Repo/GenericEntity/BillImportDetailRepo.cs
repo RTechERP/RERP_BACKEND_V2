@@ -1,5 +1,4 @@
-﻿
-using RERPAPI.Model.Common;
+﻿using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
@@ -9,9 +8,10 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class BillImportDetailRepo : GenericRepo<BillImportDetail>
     {
-        InvoiceLinkRepo _invoicelinkrepo;
-        BillImportDetailSerialNumberRepo _billImportDetailSerialNumberRepo ;
-        InventoryProjectRepo _inventoryProjectRepo;
+        private InvoiceLinkRepo _invoicelinkrepo;
+        private BillImportDetailSerialNumberRepo _billImportDetailSerialNumberRepo;
+        private InventoryProjectRepo _inventoryProjectRepo;
+
         public BillImportDetailRepo(CurrentUser currentUser, InvoiceLinkRepo invoicelinkrepo, BillImportDetailSerialNumberRepo billImportDetailSerialNumberRepo, InventoryProjectRepo inventoryProjectRepo) : base(currentUser)
         {
             _invoicelinkrepo = invoicelinkrepo;
@@ -19,10 +19,8 @@ namespace RERPAPI.Repo.GenericEntity
             _inventoryProjectRepo = inventoryProjectRepo;
         }
 
-
-
-
         #region lưu dữ liệu chi tiết phiếu nhập
+
         public async Task SaveBillImportDetail(List<BillImportDetail> details, int billImportId)
         {
             if (details == null || details.Count == 0) return;
@@ -60,7 +58,6 @@ namespace RERPAPI.Repo.GenericEntity
                     await UpdateAsync(detail);
                 }
 
-
                 // xử lý liên kết hóa đơn
                 await _invoicelinkrepo.InvoiceLinkForBillImport(detail);
                 // Cập nhật trạng thái
@@ -75,9 +72,11 @@ namespace RERPAPI.Repo.GenericEntity
                     new object[] { poNCCDetailID });
             }
         }
-        #endregion
+
+        #endregion lưu dữ liệu chi tiết phiếu nhập
 
         #region xóa chi tiết phiếu nhập
+
         public async Task DeleteBillImportDetail(List<int> DeletedDetailIDs)
         {
             if (DeletedDetailIDs == null || DeletedDetailIDs.Count == 0) return;
@@ -98,9 +97,11 @@ namespace RERPAPI.Repo.GenericEntity
                 }
             }
         }
-        #endregion
+
+        #endregion xóa chi tiết phiếu nhập
 
         #region hàm lưu serial number
+
         public async Task SaveSerialNumberForDetail(BillImportDetail detail)
         {
             if (string.IsNullOrEmpty(detail.SerialNumber)) return;
@@ -137,6 +138,6 @@ namespace RERPAPI.Repo.GenericEntity
             }
         }
 
-        #endregion
+        #endregion hàm lưu serial number
     }
 }

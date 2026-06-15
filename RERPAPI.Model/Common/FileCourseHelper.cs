@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-
-namespace RERPAPI.Model.Common
+﻿namespace RERPAPI.Model.Common
 {
     public static class FileCourseHelper
     {
@@ -22,11 +19,11 @@ namespace RERPAPI.Model.Common
 
             return Path.GetFileName(path);
         }
+
         public static string? CopyFile(string? sourcePath, string destinationFolder)
         {
             if (string.IsNullOrWhiteSpace(sourcePath))
             {
-
                 return null;
             }
 
@@ -83,6 +80,7 @@ namespace RERPAPI.Model.Common
 
             return destinationPath;
         }
+
         public static string? CopyFileFromFolder(
     string? fileName,
     string oldFolder,
@@ -120,8 +118,5 @@ namespace RERPAPI.Model.Common
             // Vì DB CourseQuestion.Image chỉ lưu tên ảnh nên return tên file mới
             return newFileName;
         }
-
-
-
     }
 }

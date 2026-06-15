@@ -2,11 +2,6 @@
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.Warehouses.AGV;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity.Warehouses.AGV
 {
@@ -45,12 +40,10 @@ namespace RERPAPI.Repo.GenericEntity.Warehouses.AGV
             return billCode;
         }
 
-
         public APIResponse Validate(AGVBillExportDTO billExport)
         {
             try
             {
-
                 if (billExport.BillType <= 0)
                 {
                     return ApiResponseFactory.Fail(null, "Vui lòng nhập Loại phiếu!");
@@ -96,7 +89,6 @@ namespace RERPAPI.Repo.GenericEntity.Warehouses.AGV
                 {
                     return ApiResponseFactory.Fail(null, "Vui lòng chọn Người duyệt!");
                 }
-
 
                 //Check chi tiết phiếu xuất
                 foreach (var detail in billExport.AGVBillExportDetails)

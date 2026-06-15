@@ -5,7 +5,6 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class ProductGroupRepo : GenericRepo<ProductGroup>
     {
-
         public ProductGroupRepo(CurrentUser currentUser) : base(currentUser)
         {
         }

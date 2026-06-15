@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.Param.Technical
+﻿namespace RERPAPI.Model.Param.Technical
 {
     public class GetImportExportTechnicalRequestParam
     {
@@ -14,7 +8,7 @@ namespace RERPAPI.Model.Param.Technical
         public DateTime? DateStart { get; set; }
         public DateTime? DateEnd { get; set; }
         public int? Status { get; set; }
-      
+
         public int? WarehouseID { get; set; }
         public int? BillType { get; set; }
         public int? ReceiverID { get; set; }

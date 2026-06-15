@@ -1,10 +1,6 @@
-using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Identity.Client;
 using Newtonsoft.Json;
-using NPOI.SS.Formula.Functions;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
@@ -29,6 +25,7 @@ namespace RERPAPI.Controllers.Old.KETOAN
         private readonly AccountingContractFileRepo _accountingContractFileRepo;
         private readonly ConfigSystemRepo _configSystemRepo;
         private readonly UserRepo _userRepo;
+
         public AccountingContractController(AccountingContractRepo accountingContractRepo, AccountingContractLogRepo accountingContractLogRepo, CurrentUser currentUser, CustomerRepo customerRepo, SupplierSaleRepo supplierSaleRepo, AccountingContractTypeRepo accountingContractTypeRepo, AccountingContractFileRepo accountingContractFileRepo, ConfigSystemRepo configSystemRepo, UserRepo userRepo)
         {
             _accountingContractRepo = accountingContractRepo;
@@ -124,7 +121,7 @@ namespace RERPAPI.Controllers.Old.KETOAN
             try
             {
                 var list = _accountingContractRepo.GetAll(x => x.IsDelete == false).OrderByDescending(x => x.DateInput).ToList();
-                list.Insert(0, new AccountingContract() { ID = -1, ContractNumber = "HĐ cha"});
+                list.Insert(0, new AccountingContract() { ID = -1, ContractNumber = "HĐ cha" });
                 return Ok(ApiResponseFactory.Success(list, ""));
             }
             catch (Exception ex)
@@ -161,7 +158,7 @@ namespace RERPAPI.Controllers.Old.KETOAN
             }
         }
 
-        [HttpGet("get-accounting-contracts")] 
+        [HttpGet("get-accounting-contracts")]
         public IActionResult GetAccountingContracts(int page, int size, DateTime dateStart, DateTime dateEnd, int customerId, int supplierId, int isReceivedContract, int isComingExpired, string keyword = "")
         {
             try
@@ -172,7 +169,7 @@ namespace RERPAPI.Controllers.Old.KETOAN
                 int employeeId = 0;
                 int isReceivedContractIndex = isReceivedContract - 1;
                 int isComingExpiredIndex = isComingExpired - 1;
-                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetAccountingContract", 
+                List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetAccountingContract",
                     new string[] { "@DateStart", "@DateEnd", "@Company", "@ContractGroup", "@AccountingContractTypeID", "@CustomerID", "@SupplierSaleID",
                                    "@EmployeeID", "@IsReceivedContract","@IsComingExpired", "@Keyword", "@PageNumber", "@PageSize"},
                     new object[] { dateStart, dateEnd, company, group, type, customerId, supplierId, employeeId, isReceivedContractIndex, isComingExpiredIndex, keyword, page, size });
@@ -184,6 +181,7 @@ namespace RERPAPI.Controllers.Old.KETOAN
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-accounting-contracts-file")]
         public IActionResult GetAccountingContractFile(int accountingContractId)
         {
@@ -200,19 +198,20 @@ namespace RERPAPI.Controllers.Old.KETOAN
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("approval")]
         public IActionResult Approval(AccountingContractApprovalDTO dto)
         {
             try
             {
                 string isApprovedText = dto.IsApproved ? "duyệt" : "hủy duyệt";
-                if(dto.approvalContractIds == null || dto.approvalContractIds.Count <= 0)
+                if (dto.approvalContractIds == null || dto.approvalContractIds.Count <= 0)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, $"Chưa có hợp đồng nào để {isApprovedText}"));
                 }
                 foreach (int id in dto.approvalContractIds)
                 {
-                    if(id <= 0)
+                    if (id <= 0)
                     {
                         continue;
                     }
@@ -248,11 +247,11 @@ namespace RERPAPI.Controllers.Old.KETOAN
             try
             {
                 var model = _accountingContractRepo.GetByID(accountingContractId);
-                if (_currentUser.IsAdmin == false && _currentUser.LoginName.Trim() != model.CreatedBy.Trim() )
+                if (_currentUser.IsAdmin == false && _currentUser.LoginName.Trim() != model.CreatedBy.Trim())
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền xóa"));
-                }    
-                if(model.IsApproved == true)
+                }
+                if (model.IsApproved == true)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, $"Hợp đồng {model.ContractNumber} đã được duyệt. Vui lòng hủy duyệt trước"));
                 }
@@ -277,10 +276,10 @@ namespace RERPAPI.Controllers.Old.KETOAN
                     return BadRequest(ApiResponseFactory.Fail(null, $"Hợp đồng {model.ContractNumber} đã được duyệt. Vui lòng hủy duyệt trước"));
                 }
 
-                if(model.IsReceivedContract == false)
+                if (model.IsReceivedContract == false)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, $"Hợp đồng {model.ContractNumber} chưa nhận chứng từ. Không thể hủy nhận"));
-                }    
+                }
 
                 AccountingContractLog log = new AccountingContractLog()
                 {
@@ -394,7 +393,6 @@ namespace RERPAPI.Controllers.Old.KETOAN
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveAsync(AccountingContractSaveDTO req)
         {
-
             try
             {
                 AccountingContract? oldSnapshot = null;
@@ -468,13 +466,10 @@ namespace RERPAPI.Controllers.Old.KETOAN
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
 
         [HttpPost("upload-file")]
         [DisableRequestSizeLimit]
-        //[RequiresPermission("N27,N36,N1,N31")]
-
         public async Task<IActionResult> Upload(int contractID, int fileType)
         {
             try
@@ -806,7 +801,6 @@ namespace RERPAPI.Controllers.Old.KETOAN
             }
         }
 
-
         private void SaveLog(AccountingContract oldC, AccountingContract newC)
         {
             var compare = _accountingContractRepo.DeepEquals(oldC, newC);
@@ -835,7 +829,6 @@ namespace RERPAPI.Controllers.Old.KETOAN
                 ContentLog = content.ToString()
             });
         }
-
 
         private string? Validate(AccountingContractSaveDTO req)
         {
@@ -900,7 +893,6 @@ namespace RERPAPI.Controllers.Old.KETOAN
 
                     if (!compare.Equal && string.IsNullOrWhiteSpace(c.Note))
                         return "Bạn đã thay đổi thông tin. Vui lòng nhập Nội dung thay đổi";
-
                 }
             }
 
@@ -952,10 +944,9 @@ namespace RERPAPI.Controllers.Old.KETOAN
             public DateTime? DateReceived { get; set; }
             public int QuantityDocument { get; set; }
         }
-
-
     }
-    static class ImportExtensions
+
+    internal static class ImportExtensions
     {
         public static string GetString(this Dictionary<string, object> row, string key)
         {

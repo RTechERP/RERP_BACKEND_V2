@@ -1,9 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
 
@@ -15,8 +13,8 @@ namespace RERPAPI.Controllers.Old
     {
         private readonly NewsletterTypeRepo _newsletterTypeRepo;
         private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
-        PhasedAllocationPersonRepo _phaseRepo;
-        PhasedAllocationPersonDetailRepo _phaseDetailRepo;
+        private PhasedAllocationPersonRepo _phaseRepo;
+        private PhasedAllocationPersonDetailRepo _phaseDetailRepo;
 
         public NewsletterTypeController(NewsletterTypeRepo newsletterTypeRepo, vUserGroupLinksRepo vUserGroupLinksRepo, PhasedAllocationPersonRepo phaseRepo, PhasedAllocationPersonDetailRepo phasedAllocationPersonDetailRepo
 )
@@ -27,9 +25,7 @@ namespace RERPAPI.Controllers.Old
             _phaseDetailRepo = phasedAllocationPersonDetailRepo;
         }
 
-
         [HttpGet]
-        //[RequiresPermission("N2,N23,N34,N1,N80")]
         public IActionResult GetNewsletterType()
         {
             try
@@ -45,7 +41,6 @@ namespace RERPAPI.Controllers.Old
         }
 
         [HttpPost("save-data")]
-        //[RequiresPermission("N2,N23,N34,N1,N80")]
         public async Task<IActionResult> SaveData([FromBody] NewsletterType newsletterType)
         {
             try
@@ -64,20 +59,19 @@ namespace RERPAPI.Controllers.Old
                     .FirstOrDefault(x => (x.Code == "N23" || x.Code == "N1" || x.Code == "N2" || x.Code == "N34") && x.UserID == currentUser.ID);
 
                 var exitNewsletterType = _newsletterTypeRepo.GetAll(x => x.NewsletterTypeCode.Trim().ToLower() == newsletterType.NewsletterTypeCode.Trim().ToLower());
-                if(exitNewsletterType.Count > 0)
+                if (exitNewsletterType.Count > 0)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Mã loại tin tức đã tồn tại!"));
                 }
-                
+
                 if (newsletterType.ID <= 0)
-                {   
+                {
                     newsletterType.CreatedBy = currentUser.LoginName;
                     newsletterType.CreatedDate = now;
                     await _newsletterTypeRepo.CreateAsync(newsletterType);
                 }
                 else
                 {
-
                     newsletterType.UpdatedBy = currentUser.LoginName;
                     newsletterType.UpdatedDate = now;
                     await _newsletterTypeRepo.UpdateAsync(newsletterType);
@@ -89,6 +83,5 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

@@ -1,14 +1,6 @@
-﻿    using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Identity.Client;
-using NPOI.HSSF.Record.Chart;
-using NPOI.OpenXmlFormats.Dml;
-using NPOI.SS.Formula.Functions;
-using NPOI.SS.Util;
 using OfficeOpenXml;
-using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -17,7 +9,6 @@ using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
 using RERPAPI.Repo.GenericEntity.Project;
 using RERPAPI.SendService;
-using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 
 namespace RERPAPI.Controllers.Old.Technical
@@ -27,19 +18,19 @@ namespace RERPAPI.Controllers.Old.Technical
     [Authorize]
     public class DailyReportTechController : ControllerBase
     {
-        DailyReportTechnicalRepo _dailyReportTechnicalRepo;
-        DailyReportHRRepo _dailyReportHRRepo;
-        ProjectItemRepo _projectItemRepo;
-        EmployeeSendEmailRepo _employeeSendEmailRepo;
-        DailyReportMarketingFileRepo _dailyFileMar;
-        EmployeeRepo _employeeRepo;
+        private DailyReportTechnicalRepo _dailyReportTechnicalRepo;
+        private DailyReportHRRepo _dailyReportHRRepo;
+        private ProjectItemRepo _projectItemRepo;
+        private EmployeeSendEmailRepo _employeeSendEmailRepo;
+        private DailyReportMarketingFileRepo _dailyFileMar;
+        private EmployeeRepo _employeeRepo;
         private readonly ProjectHistoryProblemRepo _projectHistoryProblemRepo;
         private readonly ProjectHistoryProblemProjectItemLinkRepo _projectHistoryProblemProjectItemLinkRepo;
-        UserTeamRepo _userTeamRepo;
+        private UserTeamRepo _userTeamRepo;
         private IConfiguration _configuration;
         private readonly EmailHelper _emailHelper;
         private readonly IFirebaseNotificationService _firebaseNotificationService;
-        
+
         public DailyReportTechController(DailyReportTechnicalRepo dailyReportTechnicalRepo, ProjectItemRepo projectItemRepo, EmployeeSendEmailRepo employeeSendEmailRepo, DailyReportHRRepo dailyReportHRRepo, IConfiguration configuration, DailyReportMarketingFileRepo dailyFileMar, EmployeeRepo employeeRepo, EmailHelper emailHelper, IFirebaseNotificationService firebaseNotificationService, ProjectHistoryProblemRepo projectHistoryProblemRepo, ProjectHistoryProblemProjectItemLinkRepo projectHistoryProblemProjectItemLinkRepo, UserTeamRepo userTeamRepo)
         {
             _dailyReportTechnicalRepo = dailyReportTechnicalRepo;
@@ -51,10 +42,11 @@ namespace RERPAPI.Controllers.Old.Technical
             _dailyFileMar = dailyFileMar;
             _employeeRepo = employeeRepo;
             _emailHelper = emailHelper;
-            _userTeamRepo = userTeamRepo;   
+            _userTeamRepo = userTeamRepo;
             _projectHistoryProblemRepo = projectHistoryProblemRepo;
             _projectHistoryProblemProjectItemLinkRepo = projectHistoryProblemProjectItemLinkRepo;
         }
+
         [HttpPost("get-daily-report-tech")]
         public IActionResult GetDailyReportHr([FromBody] DailyReportTechParam request)
         {
@@ -90,7 +82,7 @@ namespace RERPAPI.Controllers.Old.Technical
             }
         }
 
-        //lay du lieu bao cao theo id 
+        //lay du lieu bao cao theo id
         [HttpGet("get-by-id")]
         public async Task<IActionResult> GetDataByID(int dailyID)
         {
@@ -107,7 +99,7 @@ namespace RERPAPI.Controllers.Old.Technical
 
         // ham lay hang muc cong viec theo projectId và userID
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="projectId"></param>
         /// <param name="status" -1: lấy tất cả hạng mục ( cho trường hợp sửa) ; 2: lấy các hạng mục chưa hoàn thành (TH thêm mới)></param>
@@ -146,7 +138,7 @@ namespace RERPAPI.Controllers.Old.Technical
                 {
                     if (request.PercentComplete == 100)
                     {
-                        projectItem.Status = 2; // cập nhật trạng thái hoàn thành 
+                        projectItem.Status = 2; // cập nhật trạng thái hoàn thành
                         if (!projectItem.ActualStartDate.HasValue)
                         {
                             projectItem.ActualStartDate = dateReport;
@@ -180,6 +172,7 @@ namespace RERPAPI.Controllers.Old.Technical
                 throw new Exception("Lỗi khi cập nhật hạng mục: " + ex.Message);
             }
         }
+
         [HttpPost("save-report-tech")]
         public async Task<IActionResult> SaveReportTechnical([FromBody] List<DailyReportTechnical> request)
         {
@@ -188,7 +181,7 @@ namespace RERPAPI.Controllers.Old.Technical
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 int userId = currentUser.ID;
-                var technicalDepartments = new HashSet<int> { 2,24,25,26,27,9,10 };
+                var technicalDepartments = new HashSet<int> { 2, 24, 25, 26, 27, 9, 10 };
                 bool isTechnical = technicalDepartments.Contains(currentUser.DepartmentID);
 
                 // 1. Kiểm tra request null hoặc empty
@@ -196,22 +189,25 @@ namespace RERPAPI.Controllers.Old.Technical
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Danh sách báo cáo không được rỗng!"));
                 }
-                if (!_dailyReportTechnicalRepo.ValidateDailyReportTechnicalList(request, out string validationMessage, existingReports: null, userId, isTechnical
-               ))
+                if (!_dailyReportTechnicalRepo.ValidateDailyReportTechnicalList(request, out string validationMessage, existingReports: null, userId, isTechnical))
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, validationMessage));
                 }
+
+                var savedIds = new List<int>();
+
                 foreach (var item in request)
                 {
                     if (item.ID > 0)
                     {
                         var data = _dailyReportTechnicalRepo.GetByID(item.ID);
-                        if (data.UserReport != currentUser.ID)
+                        if (data == null || data.UserReport != currentUser.ID)
                         {
                             return BadRequest(ApiResponseFactory.Fail(null, "Bạn không thể sửa báo cáo công việc của người khác!"));
                         }
                         await _dailyReportTechnicalRepo.UpdateAsync(item);
-                        if(isTechnical) await UpdateProjectItem(item);
+                        if (isTechnical) await UpdateProjectItem(item);
+                        savedIds.Add(item.ID); // ID đã tồn tại từ trước
                     }
                     else
                     {
@@ -226,12 +222,14 @@ namespace RERPAPI.Controllers.Old.Technical
                         item.Confirm = false;
                         item.CreatedDate = DateTime.Today.AddHours(23).AddMinutes(30);
                         await _dailyReportTechnicalRepo.CreateAsync(item);
+                        // Sau CreateAsync, EF Core tự gán item.ID = identity value từ DB
                         if (isTechnical) await UpdateProjectItem(item);
+                        savedIds.Add(item.ID); // ID được EF Core populate sau khi insert thành công
                     }
                 }
-                return Ok(ApiResponseFactory.Success(null,
-                          "Lưu dữ liệu thành công"
-                      ));
+
+                // Trả về danh sách ID đã lưu — FE kiểm tra tất cả ID > 0 để xác nhận lưu thành công
+                return Ok(ApiResponseFactory.Success(savedIds, "Lưu dữ liệu thành công"));
             }
             catch (Exception ex)
             {
@@ -284,12 +282,10 @@ namespace RERPAPI.Controllers.Old.Technical
                     request.Confirm = false;
                     request.CreatedDate = DateTime.Today.AddHours(23).AddMinutes(30);
                     await _dailyReportTechnicalRepo.CreateAsync(request);
-
                 }
                 return Ok(ApiResponseFactory.Success(null,
                           "Lưu dữ liệu thành công"
                       ));
-
             }
             catch (Exception ex)
             {
@@ -298,6 +294,7 @@ namespace RERPAPI.Controllers.Old.Technical
         }
 
         #region dành cho mar
+
         [HttpPost("save-report-mar")]
         public async Task<IActionResult> SaveReportMar([FromBody] DailyReportMarketingDTO request)
         {
@@ -375,14 +372,14 @@ namespace RERPAPI.Controllers.Old.Technical
                 return Ok(ApiResponseFactory.Success(null,
                           "Lưu dữ liệu thành công"
                       ));
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        //lay du lieu bao cao theo id 
+
+        //lay du lieu bao cao theo id
         [HttpGet("get-by-id-hr")]
         public async Task<IActionResult> GetDataByIDHR(int dailyID)
         {
@@ -397,7 +394,9 @@ namespace RERPAPI.Controllers.Old.Technical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion dành cho mar
+
         [HttpPost("delete-daily-report")]
         public async Task<IActionResult> DeletedDailyreport(int dailyReportID)
         {
@@ -458,7 +457,6 @@ namespace RERPAPI.Controllers.Old.Technical
             }
         }
 
-
         [HttpPost("send-email-report")]
         public async Task<IActionResult> SendEmailReport([FromBody] SendEmailReportRequestParam request)
         {
@@ -494,7 +492,7 @@ namespace RERPAPI.Controllers.Old.Technical
                     Subject = subject,
                     Body = emailBody,
                     EmailTo = "nguyenvan.thao@rtc.edu.vn", // Email người nhận
-                    //EmailTo = "nhubinh2104@gmail.com", // Email người nhận        
+                    //EmailTo = "nhubinh2104@gmail.com", // Email người nhận
                     StatusSend = 1, // 1: Đã gửi
                     DateSend = DateTime.Now,
                     EmployeeID = currentUser.EmployeeID,
@@ -512,7 +510,7 @@ namespace RERPAPI.Controllers.Old.Technical
                     Receiver = email.Receiver
                 };
                 //await _employeeSendEmailRepo.CreateAsync(emailEntity);
-                await _emailHelper.SendAsync (email.EmailTo, email.Subject, email.Body);
+                await _emailHelper.SendAsync(email.EmailTo, email.Subject, email.Body);
 
                 return Ok(ApiResponseFactory.Success(null, "Gửi email thành công!"));
             }
@@ -521,6 +519,7 @@ namespace RERPAPI.Controllers.Old.Technical
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi khi gửi email: {ex.Message}"));
             }
         }
+
         [HttpPost("export-to-excel")]
         public IActionResult ExportToExcel([FromBody] ExportExcelDailyReportTechRequest request)
         {
@@ -858,7 +857,7 @@ namespace RERPAPI.Controllers.Old.Technical
                 {
                     try
                     {
-                await _emailHelper.SendAsync(emailTo ?? "", subject, request.Body, true, emailCc ?? "");
+                        await _emailHelper.SendAsync(emailTo ?? "", subject, request.Body, true, emailCc ?? "");
                     }
                     catch (Exception ex)
                     {
@@ -945,11 +944,13 @@ namespace RERPAPI.Controllers.Old.Technical
             /// Ngày báo cáo (optional, mặc định là ngày hiện tại)
             /// </summary>
             public DateTime? DateReport { get; set; }
+
             /// <summary>
             /// Danh sách file đính kèm (Optional)
             /// </summary>
             public List<FileLink>? FileLinks { get; set; }
         }
+
         /// <summary>
         /// Thông tin file đính kèm
         /// </summary>
@@ -959,17 +960,19 @@ namespace RERPAPI.Controllers.Old.Technical
             /// Tên file
             /// </summary>
             public string? FileName { get; set; }
+
             /// <summary>
             /// URL để download file
             /// </summary>
             public string? Url { get; set; }
         }
+
         // ========================================
         // CÁCH SỬ DỤNG
         // ========================================
         /*
          * POST /api/daily-report-marketing/send-email-marketing-report
-         * 
+         *
          * Request Body:
          * {
          *   "dateReport": "2025-12-25",
@@ -988,7 +991,7 @@ namespace RERPAPI.Controllers.Old.Technical
          *     }
          *   ]
          * }
-         * 
+         *
          * Response (Success):
          * {
          *   "isSuccess": true,
@@ -1002,7 +1005,9 @@ namespace RERPAPI.Controllers.Old.Technical
          *   "errors": null
          * }
          */
+
         #region send email mkt
+
         [HttpPost("send-email-marketing-report")]
         [Authorize]
         public async Task<IActionResult> SendEmail([FromBody] SendEmailMarketingReportRequest request)
@@ -1042,7 +1047,7 @@ namespace RERPAPI.Controllers.Old.Technical
                 {
                     // Trường hợp 2: Nhân viên Marketing khác
                     // Gửi cho Nguyễn Văn Thắng
-                    ///-- Nhân viên Đinh Hoàng Anh UserID = 1722 gửi mail cho Hoàng Thị Thu Hà ( marketing01@rtc.edu.vn ) 
+                    ///-- Nhân viên Đinh Hoàng Anh UserID = 1722 gửi mail cho Hoàng Thị Thu Hà ( marketing01@rtc.edu.vn )
                     if (currentUser.ID == 1722)
                     {
                         //emailTo = "nhubinh2104@gmail.com";
@@ -1050,7 +1055,7 @@ namespace RERPAPI.Controllers.Old.Technical
                         //emailCc = marketingManager.EmailCongTy; // CC cho chính Marketing Manager
                         await _emailHelper.SendAsync(emailTo, subject, request.Body, cc: emailCc);
                     }
-                    else if (currentUser.ID == 1618) ///-- Nhân viên Bùi Lệ Thủy UserID = 1618 gửi mail cho Phạm văn Trung( marketing02@rtc.edu.vn ) 
+                    else if (currentUser.ID == 1618) ///-- Nhân viên Bùi Lệ Thủy UserID = 1618 gửi mail cho Phạm văn Trung( marketing02@rtc.edu.vn )
                     {
                         emailTo = "marketing02@rtc.edu.vn";
                         //emailTo = "quanghung21hb@gmail.com";
@@ -1079,6 +1084,7 @@ namespace RERPAPI.Controllers.Old.Technical
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion send email mkt
     }
 }

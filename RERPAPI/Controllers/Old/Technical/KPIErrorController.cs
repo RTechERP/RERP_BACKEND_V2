@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
@@ -15,12 +14,14 @@ namespace RERPAPI.Controllers.Old.Technical
         private readonly KPIErrorRepo _kpiErrorRepo;
         private readonly KPIErrorTypeRepo _kpiErrorTypeRepo;
         private readonly DepartmentRepo _departmentRepo;
+
         public KPIErrorController(KPIErrorRepo kpiErrorRepo, DepartmentRepo departmentRepo, KPIErrorTypeRepo kpiErrorTypeRepo)
         {
             _kpiErrorRepo = kpiErrorRepo;
             _departmentRepo = departmentRepo;
             _kpiErrorTypeRepo = kpiErrorTypeRepo;
         }
+
         [HttpGet("get-kpierror")]
         public IActionResult GetKPIError(int departmentId, string keyword = "")
         {
@@ -32,7 +33,6 @@ namespace RERPAPI.Controllers.Old.Technical
                 var data = SQLHelper<object>.GetListData(dataKpiError, 0);
 
                 return Ok(ApiResponseFactory.Success(data, ""));
-
             }
             catch (Exception ex)
             {
@@ -59,7 +59,7 @@ namespace RERPAPI.Controllers.Old.Technical
         {
             try
             {
-                if(id <= 0)
+                if (id <= 0)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "ID không hợp lệ"));
                 }

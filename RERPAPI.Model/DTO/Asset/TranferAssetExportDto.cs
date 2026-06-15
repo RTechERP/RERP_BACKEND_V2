@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.DTO.Asset
+﻿namespace RERPAPI.Model.DTO.Asset
 {
     public class TranferAssetExportDto
     {
@@ -22,5 +16,4 @@ namespace RERPAPI.Model.DTO.Asset
         public DateTime? DateApprovedPersonalProperty { get; set; }
         public DateTime? DateApprovedHR { get; set; }
     }
-
 }

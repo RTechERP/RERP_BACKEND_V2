@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace RERPAPI.Model.DTO.HRM
+﻿namespace RERPAPI.Model.DTO.HRM
 {
     // Generated from procedure: spGetEmployee
     public class EmployeeDTON60

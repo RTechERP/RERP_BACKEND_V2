@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.DTO
+﻿namespace RERPAPI.Model.DTO
 {
     public class ContractDTO
     {
         // ===== Thông tin hợp đồng =====
         public int ID { get; set; }
+
         public int? EmployeeID { get; set; }
         public int? EmployeeLoaiHDLDID { get; set; }
 
@@ -33,6 +28,7 @@ namespace RERPAPI.Model.DTO
 
         // ===== Thôn?g tin công ty (BỔ SUNG) =====
         public string? CompanyNameHeader { get; set; }
+
         public string? COMPANYCODE { get; set; }
         public string? CompanyName { get; set; }
         public string? TaxCodeCom { get; set; }
@@ -41,5 +37,4 @@ namespace RERPAPI.Model.DTO
         public string? DirectorCom { get; set; }
         public string? PositionCom { get; set; }
     }
-
 }

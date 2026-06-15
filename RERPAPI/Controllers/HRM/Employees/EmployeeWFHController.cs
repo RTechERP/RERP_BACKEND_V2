@@ -1,5 +1,4 @@
-﻿using DocumentFormat.OpenXml.Drawing;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
@@ -10,6 +9,7 @@ using RERPAPI.Model.Param.HRM;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
 using System.Data;
+
 namespace RERPAPI.Controllers
 {
     [Route("api/[controller]")]
@@ -20,8 +20,8 @@ namespace RERPAPI.Controllers
         private readonly EmployeeWFHRepo _employeeWFHRepo;
         private readonly DepartmentRepo _departmentRepo;
         private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
-        EmployeeRepo _employeeRepo;
-        EmployeeSendEmailRepo _employeeSendEmailRepo;
+        private EmployeeRepo _employeeRepo;
+        private EmployeeSendEmailRepo _employeeSendEmailRepo;
         private readonly EmailHelper _emailHelper;
 
         public EmployeeWFHController(EmployeeWFHRepo employeeWFHRepo, DepartmentRepo departmentRepo, vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeRepo employeeRepo, EmployeeSendEmailRepo employeeSendEmailRepo, EmailHelper emailHelper)
@@ -36,7 +36,7 @@ namespace RERPAPI.Controllers
 
         //[RequiresPermission("N1,N2")]
         [HttpPost("get-wfh")]
-        public IActionResult GetWFH([FromBody] EmployeeWFHRequestParam  request)
+        public IActionResult GetWFH([FromBody] EmployeeWFHRequestParam request)
         {
             try
             {
@@ -73,6 +73,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("get-wfh-person")]
         public IActionResult GetWFHPerson([FromBody] EmployeeOnLeavePersonParam request)
         {
@@ -92,7 +93,6 @@ namespace RERPAPI.Controllers
         }
 
         [HttpPost("list-summary-employee-work-form-home")]
-
         public IActionResult ListSummaryEmployeeOnleavePerson(EmployeeWorkFormHomeSummaryParam request)
         {
             try
@@ -129,6 +129,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //[RequiresPermission("N1,N2")]
         [HttpGet("get-department")]
         public IActionResult GetDepartment()
@@ -146,27 +147,27 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //[RequiresPermission("N1,N2")]
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] EmployeeWFH employeeWFH)
-            {
+        {
             try
             {
-
-                if (!_employeeWFHRepo.Validate(employeeWFH, out string message)&&employeeWFH.IsDeleted!=true)
+                if (!_employeeWFHRepo.Validate(employeeWFH, out string message) && employeeWFH.IsDeleted != true)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, message));
                 }
                 if (employeeWFH.ID <= 0)
                 {
-                  var result=  await _employeeWFHRepo.CreateAsync(employeeWFH);
-                    if(result>0)
+                    var result = await _employeeWFHRepo.CreateAsync(employeeWFH);
+                    if (result > 0)
                     {
                         var employee = _employeeRepo.GetByID(employeeWFH.EmployeeID ?? 0);
                         var employeeTP = _employeeRepo.GetByID(employeeWFH.ApprovedID ?? 0);
                         string type = employeeWFH.TimeWFH == 1 ? " buổi sáng" : (employeeWFH.TimeWFH == 2 ? " buổi chiều" : "");
 
-                        string subject = $"WFH{type.ToUpper()} - {employee.FullName??"".ToUpper()} - {employeeWFH.DateWFH.Value.ToString("dd/MM/yyyy")}";
+                        string subject = $"WFH{type.ToUpper()} - {employee.FullName ?? "".ToUpper()} - {employeeWFH.DateWFH.Value.ToString("dd/MM/yyyy")}";
                         string body = "<div> <p style=\"font - weight: bold; color: red;\">[NO REPLY]</p> <p>Dear anh/chị " + employeeTP.FullName + "</p> </div> <div style=\"margin-top: 30px;\"> " +
                                       $"<p>Em xin phép anh/chị cho em làm việc tại nhà{type} ngày {employeeWFH.DateWFH.Value.ToString("dd/MM/yyyy")}.</p> " +
                                       "<p>Lý do: " + employeeWFH.Reason + "</p> " +
@@ -177,7 +178,7 @@ namespace RERPAPI.Controllers
 
                         string cc = string.IsNullOrEmpty(employee.EmailCongTy) ? (employee.EmailCaNhan ?? "") : employee.EmailCongTy;
                         _emailHelper.SendAsync(employeeTP?.EmailCongTy ?? "", subject, body, true, cc);
-                    }    
+                    }
                 }
                 else
                 {
@@ -187,43 +188,37 @@ namespace RERPAPI.Controllers
             }
             catch (Exception ex)
             {
-
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [RequiresPermission("N1,N2")]
         [HttpPost("save-approve-hr")]
         public async Task<IActionResult> SaveApproveHR([FromBody] EmployeeWFH employeeWFH)
         {
             try
             {
-
-             
                 if (employeeWFH.ID <= 0) await _employeeWFHRepo.CreateAsync(employeeWFH);
                 else await _employeeWFHRepo.UpdateAsync(employeeWFH);
                 return Ok(ApiResponseFactory.Success(employeeWFH, "Cập nhật thành công!"));
             }
             catch (Exception ex)
             {
-
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
         [HttpPost("save-approve-tbp")]
         public async Task<IActionResult> SaveApproveTBP([FromBody] EmployeeWFH employeeWFH)
-            {
+        {
             try
             {
-
-
                 if (employeeWFH.ID <= 0) await _employeeWFHRepo.CreateAsync(employeeWFH);
                 else await _employeeWFHRepo.UpdateAsync(employeeWFH);
                 return Ok(ApiResponseFactory.Success(employeeWFH, "Cập nhật thành công!"));
             }
             catch (Exception ex)
             {
-
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
@@ -243,7 +238,6 @@ namespace RERPAPI.Controllers
                                          x.FullName,
                                          x.DepartmentName,
                                          x.Code
-
                                      }).ToList();
 
                 var approvers = SQLHelper<object>.GetListData(dataSet, 1)
@@ -253,7 +247,6 @@ namespace RERPAPI.Controllers
                                                              x.FullName,
                                                              x.DepartmentName,
                                                              x.Code
-
                                                          }).ToList();
 
                 // Trả về kết quả
@@ -274,6 +267,7 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("check-duplicate-wfh/{id}/{employeeId}/{date}/{timeWFH}")]
         public IActionResult CheckDuplicateWFH(int id, int employeeId, string date, int timeWFH)
         {
@@ -322,7 +316,5 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-
     }
 }

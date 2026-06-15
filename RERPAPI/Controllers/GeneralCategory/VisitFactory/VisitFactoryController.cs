@@ -13,12 +13,12 @@ namespace RERPAPI.Controllers
     {
         private readonly VisitFactoryRepo _visitFactoryRepo;
         private readonly VisitFactoryDetailRepo _visitFactoryDetailRepo;
+
         public VisitFactoryController(VisitFactoryRepo visitFactoryRepo, VisitFactoryDetailRepo visitFactoryDetailRepo)
         {
             _visitFactoryRepo = visitFactoryRepo;
             _visitFactoryDetailRepo = visitFactoryDetailRepo;
         }
-
 
         [HttpGet("getall")]
         public IActionResult GetAll()
@@ -45,8 +45,6 @@ namespace RERPAPI.Controllers
             {
                 var item = _visitFactoryRepo.GetByID(id);
                 if (item == null || item.ID <= 0) return Ok(new { status = 1, data = (VisitFactory?)null });
-
-
 
                 // Attach details (lọc bằng LINQ với kiểu tường minh)
                 item.VisitFactoryDetails = _visitFactoryDetailRepo
@@ -259,11 +257,9 @@ namespace RERPAPI.Controllers
         {
             try
             {
-        
                 var employeeList = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
                                                 new string[] { "@Status", "@DepartmentID", "@Keyword" },
                                                 new object[] { status, departmentId, keyword ?? "" });
-             
 
                 return Ok(ApiResponseFactory.Success(employeeList, "Lấy danh sách Employee thành công."));
             }

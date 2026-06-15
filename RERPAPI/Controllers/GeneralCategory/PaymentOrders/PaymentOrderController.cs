@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Newtonsoft.Json;
-using NPOI.POIFS.Properties;
 using RERPAPI.Attributes;
 using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
@@ -125,7 +124,6 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             _paymentOrderOrderTypeRepo = paymentOrderOrderTypeRepo;
         }
 
-
         [HttpPost("")]
         public async Task<IActionResult> GetAll([FromBody] PaymentOrderParam p)
         {
@@ -140,7 +138,6 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 //var data = SQLHelper<object>.ProcedureToList("spGetPaymentOrder_New",
                 //            new string[] { "@PageNumber", "@PageSize", "@TypeOrder", "@PaymentOrderTypeID", "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@Keyword", "@IsIgnoreHR", "@IsApproved", "@IsSpecialOrder", "@ApprovedTBPID", "@Step", "@IsShowTable", "@Statuslog", "@IsDelete" },
                 //            new object[] { p.PageNumber, p.PageSize, p.TypeOrder, p.PaymentOrderTypeID, p.DateStart, p.DateEnd, p.DepartmentID, p.EmployeeID, p.Keyword, p.IsIgnoreHR, p.IsApproved, p.IsSpecialOrder, p.ApprovedTBPID, p.Step, p.IsShowTable, p.Statuslog, p.IsDelete });
-
 
                 var param = new
                 {
@@ -188,7 +185,6 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 //var data = SQLHelper<object>.ProcedureToList("spGetPaymentOrder_New",
                 //            new string[] { "@PageNumber", "@PageSize", "@TypeOrder", "@PaymentOrderTypeID", "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@Keyword", "@IsIgnoreHR", "@IsApproved", "@IsSpecialOrder", "@ApprovedTBPID", "@Step", "@IsShowTable", "@Statuslog", "@IsDelete" },
                 //            new object[] { p.PageNumber, p.PageSize, p.TypeOrder, p.PaymentOrderTypeID, p.DateStart, p.DateEnd, p.DepartmentID, p.EmployeeID, p.Keyword, p.IsIgnoreHR, p.IsApproved, p.IsSpecialOrder, p.ApprovedTBPID, p.Step, p.IsShowTable, p.Statuslog, p.IsDelete });
-
 
                 var param = new
                 {
@@ -259,7 +255,6 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         //[HttpPost("save-data")]
         //public async Task<IActionResult> SaveData([FromBody] PaymentOrderDTO payment)
         //{
-
         //    try
         //    {
         //        //_currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
@@ -344,8 +339,6 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
         //            }
         //            await _paymentRepo.UpdateAsync(payment);
         //        }
-
-
 
         //        //Update link pokh
         //        await _paymentOrderPORepo.Create(payment);
@@ -483,7 +476,6 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                     if (file.ID > 0) await _fileRepo.UpdateAsync(file);
                 }
 
-
                 var paymentOrderID = TextUtils.ToInt32(form["PaymentOrderID"]);
                 var files = Request.Form.Files;
 
@@ -531,6 +523,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("upload-file-bankslip")]
         public async Task<IActionResult> UploadFileBankSlip()
         {
@@ -581,6 +574,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("approvers")]
         public async Task<IActionResult> GetApprovers()
         {
@@ -613,6 +607,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("procurement")]
         public IActionResult GetProcurementData()
         {
@@ -635,6 +630,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("partners-projects")]
         public IActionResult GetPartnersAndProjects()
         {
@@ -652,6 +648,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("metadata")]
         public IActionResult GetMetadata()
         {
@@ -667,6 +664,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-data-combo")]
         public async Task<IActionResult> GetDataCombo()
         {
@@ -722,7 +720,6 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 var approverBGDs = employees.Where(x => x.DepartmentID == 1).ToList();
 
                 var steps = _approveFollowRepo.GetAll(x => x.IsDeleted != true);
-
 
                 var data = new
                 {
@@ -807,7 +804,6 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
 
         [HttpPost("appoved-kttt")]
@@ -830,7 +826,6 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
 
         [HttpPost("appoved-ktt")]
@@ -853,7 +848,6 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
 
         [HttpPost("appoved-bgd")]
@@ -876,13 +870,9 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
 
-
-
         [HttpPost("appoved-khreceive")]
-        //[RequiresPermission("N55")]
         public async Task<IActionResult> ApprovedKHReceive([FromBody] List<PaymentOrderDTO> payments)
         {
             try
@@ -952,7 +942,6 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 }
                 if (records > 0) return Ok(ApiResponseFactory.Success(payments, "Cập nhật thành công!"));
                 else return BadRequest(ApiResponseFactory.Fail(null, message, payments));
-
             }
             catch (Exception ex)
             {
@@ -1051,7 +1040,6 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             }
         }
 
-
         [HttpPost("update-totalmoney")]
         public async Task<IActionResult> UpdateTotalMoney([FromBody] List<PaymentOrder> payments)
         {
@@ -1113,15 +1101,14 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
+
         [HttpGet("get-team-sale/{employeeId}")]
         [RequiresPermission("N88")]
         public async Task<IActionResult> GetTeamSale(int employeeId)
         {
             try
             {
-
                 EmployeeTeamSaleLink empTeamLink = _employeeTeamSaleLinkRepo.GetAll(x => x.EmployeeID == employeeId)?.FirstOrDefault() ?? new();
 
                 if (empTeamLink.ID > 0)
@@ -1154,6 +1141,7 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-currency-config")]
         public async Task<IActionResult> GetCurrencyConfig()
         {
@@ -1181,7 +1169,6 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         [HttpPost("download-zip")]
         public async Task<IActionResult> DownloadZip([FromBody] DownloadPaymentOrderDTO file)
@@ -1214,13 +1201,13 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 $"{file.PaymentOrderCode}_{DateTime.Now:yyyyMMddHHmmss}.zip"
             );
         }
+
         [HttpPost("update-transfer-type")]
         [RequiresPermission("N55,N61")]
         public async Task<IActionResult> UpdateTranferType([FromBody] List<PaymentOrderDTO> payments)
         {
             try
             {
-
                 foreach (var payment in payments)
                 {
                     PaymentOrder paymentOrder = _paymentRepo.GetByID(payment.ID);
@@ -1236,7 +1223,6 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             }
         }
 
-
         [HttpGet("update-supplier-code-and-invoice-number")]
         public async Task<IActionResult> UpdateSupplierCodeAndInvoiceNumber(int paymentID, int typeUpdate, string contentUpdate = "")
         {
@@ -1246,9 +1232,8 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
 
                 if (paymentOrder.ID <= 0) BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy Đề nghị thanh toán"));
 
-
                 if (typeUpdate == 1) paymentOrder.SupplierAccCode = contentUpdate; // Mã nhà cung cấp
-                else if (typeUpdate == 2) paymentOrder.InvoiceAccNumber = contentUpdate; // số hóa đơn 
+                else if (typeUpdate == 2) paymentOrder.InvoiceAccNumber = contentUpdate; // số hóa đơn
                 else return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy Đề nghị thanh toán"));
 
                 await _paymentRepo.UpdateAsync(paymentOrder);
@@ -1259,6 +1244,5 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

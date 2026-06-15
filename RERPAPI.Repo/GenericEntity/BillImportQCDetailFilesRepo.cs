@@ -1,16 +1,12 @@
 ﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
     public class BillImportQCDetailFilesRepo : GenericRepo<BillImportQCDetailFile>
     {
-        BillImportQCDetailFilesRepo _billImportQCDetailFilesRepo;
+        private BillImportQCDetailFilesRepo _billImportQCDetailFilesRepo;
+
         public BillImportQCDetailFilesRepo(CurrentUser currentUser) : base(currentUser)
         {
             _billImportQCDetailFilesRepo = this;
@@ -49,13 +45,12 @@ namespace RERPAPI.Repo.GenericEntity
 
                 if (System.IO.File.Exists(fullPath))
                 {
-                    if(fileOrder.ID > 0)
+                    if (fileOrder.ID > 0)
                     {
                         await _billImportQCDetailFilesRepo.UpdateAsync(fileOrder);
                     }
                     else await _billImportQCDetailFilesRepo.CreateAsync(fileOrder);
                 }
-
             }
         }
     }

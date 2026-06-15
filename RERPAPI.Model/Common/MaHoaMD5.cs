@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.Common
+﻿namespace RERPAPI.Model.Common
 {
     public class MaHoaMD5
     {
@@ -171,7 +165,7 @@ namespace RERPAPI.Model.Common
                 System.Security.Cryptography.TripleDESCryptoServiceProvider tdes = new System.Security.Cryptography.TripleDESCryptoServiceProvider();
                 // Set the secret key for the tripleDES algorithm
                 tdes.Key = keyArray;
-                // Mode of operation. there are other 4 modes. 
+                // Mode of operation. there are other 4 modes.
                 // We choose ECB(Electronic code Book)
                 tdes.Mode = System.Security.Cryptography.CipherMode.ECB;
                 // Padding mode(if any extra byte added)

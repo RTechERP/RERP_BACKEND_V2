@@ -1,7 +1,5 @@
-﻿using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -20,6 +18,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
         private readonly POKHFilesRepo _pokhFileRepo;
         private readonly ConfigSystemRepo _configSystemRepo;
         private readonly RequestInvoiceLogRepo _requestInvoiceLogRepo;
+
         public RequestInvoiceController(RequestInvoiceRepo requestInvoiceRepo, POKHFilesRepo pokhFileRepo, ConfigSystemRepo configSystemRepo, RequestInvoiceLogRepo requestInvoiceLogRepo)
         {
             _requestInvoiceRepo = requestInvoiceRepo;
@@ -27,6 +26,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
             _configSystemRepo = configSystemRepo;
             _requestInvoiceLogRepo = requestInvoiceLogRepo;
         }
+
         [HttpGet]
         public IActionResult Get(DateTime dateStart, DateTime dateEnd, int warehouseId, string keyWords = "")
         {
@@ -41,6 +41,7 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-details")]
         public IActionResult GetDetail(int id)
         {
@@ -52,7 +53,8 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                 return Ok(new
                 {
                     status = 1,
-                    data = details, files
+                    data = details,
+                    files
                 });
             }
             catch (Exception ex)
@@ -75,13 +77,12 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
             }
         }
 
-
         [HttpGet("get-pokh-file")]
         public IActionResult GetPOKHFile(int pokhId)
         {
             try
             {
-                var data = _pokhFileRepo.GetAll(x=>x.POKHID == pokhId);
+                var data = _pokhFileRepo.GetAll(x => x.POKHID == pokhId);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
@@ -95,7 +96,6 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
         {
             try
             {
-
                 ConfigSystem config = _configSystemRepo.GetAll(x => x.KeyName == "RequestInvoiceFile").FirstOrDefault();
                 if (config == null || string.IsNullOrEmpty(config.KeyValue))
                 {
@@ -116,7 +116,6 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
             }
         }
 
-
         [HttpGet("log-activity-request-invoice")]
         public IActionResult GetLogActivityRequestInvoice(int requestInvoiceId)
         {
@@ -130,6 +129,5 @@ namespace RERPAPI.Controllers.Old.RequestInvoice
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

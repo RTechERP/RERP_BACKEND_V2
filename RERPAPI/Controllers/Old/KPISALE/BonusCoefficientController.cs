@@ -1,11 +1,8 @@
-﻿using DocumentFormat.OpenXml.Spreadsheet;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.Old.KPISALE
 {
@@ -19,6 +16,7 @@ namespace RERPAPI.Controllers.Old.KPISALE
         private readonly BonusRuleIndexRepo _bonusRuleIndexRepo;
         private readonly SaleUserTypeRepo _saleUserTypeRepo;
         private readonly SalesPerformanceRankingRepo _salesPerformanceRankingRepo;
+
         public BonusCoefficientController(GroupSalesUserRepo groupSalesUserRepo, UserRepo userRepo, BonusRuleIndexRepo bonusRuleIndexRepo, SaleUserTypeRepo saleUserTypeRepo, SalesPerformanceRankingRepo salesPerformanceRankingRepo)
         {
             _groupSalesUserRepo = groupSalesUserRepo;
@@ -29,7 +27,6 @@ namespace RERPAPI.Controllers.Old.KPISALE
         }
 
         [HttpGet("get-users-group-sales")]
-
         public IActionResult loadUsers()
         {
             try
@@ -45,7 +42,7 @@ namespace RERPAPI.Controllers.Old.KPISALE
                                  u.ID,
                                  g.SaleUserTypeID
                              };
-                return Ok(ApiResponseFactory.Success(result,""));
+                return Ok(ApiResponseFactory.Success(result, ""));
             }
             catch (Exception ex)
             {
@@ -83,8 +80,8 @@ namespace RERPAPI.Controllers.Old.KPISALE
                            where b.GroupSalesID == groupId
                            select new
                            {
-                                b.PercentBonus,
-                                s.SaleUserTypeCode,
+                               b.PercentBonus,
+                               s.SaleUserTypeCode,
                            };
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
@@ -109,7 +106,7 @@ namespace RERPAPI.Controllers.Old.KPISALE
                     model.TotalBonus = s.TotalBonus;
                     model.UserID = s.UserID;
                     model.Quy = s.Quy;
-                    model.Year  = DateTime.Now.Year;
+                    model.Year = DateTime.Now.Year;
                     if (model.ID > 0)
                     {
                         await _salesPerformanceRankingRepo.UpdateAsync(model);
@@ -118,7 +115,7 @@ namespace RERPAPI.Controllers.Old.KPISALE
                     {
                         await _salesPerformanceRankingRepo.CreateAsync(model);
                     }
-                }    
+                }
                 return Ok(ApiResponseFactory.Success(null, "Save successful"));
             }
             catch (Exception ex)

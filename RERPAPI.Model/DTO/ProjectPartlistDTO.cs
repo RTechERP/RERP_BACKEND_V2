@@ -1,9 +1,4 @@
 ﻿using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Model.DTO
 {
@@ -17,12 +12,11 @@ namespace RERPAPI.Model.DTO
 
         // yc mua
         public DateTime? DeadlinePur { get; set; }
+
         public int? SupplierSaleQuoteID { get; set; }
         public decimal? UnitPriceQuote { get; set; }
         public decimal? UnitPriceHistory { get; set; }
         public string? Note { get; set; }
-
-
 
         public int? LeadTimeTechnical { get; set; }
         public decimal? TargetPrice { get; set; }

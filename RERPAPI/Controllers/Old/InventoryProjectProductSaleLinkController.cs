@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -13,11 +12,12 @@ namespace RERPAPI.Controllers.Old
     [Authorize]
     public class InventoryProjectProductSaleLinkController : ControllerBase
     {
-        UserTeamRepo _userTeamRepo;
-        ProductGroupRepo _productGroupRepo;
-        ProductSaleRepo _productSaleRepo;
+        private UserTeamRepo _userTeamRepo;
+        private ProductGroupRepo _productGroupRepo;
+        private ProductSaleRepo _productSaleRepo;
 
-        InventoryProjectProductSaleLinkRepo _inventoryProjectProductSaleLinkRepo;
+        private InventoryProjectProductSaleLinkRepo _inventoryProjectProductSaleLinkRepo;
+
         public InventoryProjectProductSaleLinkController(
             UserTeamRepo userTeamRepo,
             ProductGroupRepo productGroupRepo,
@@ -126,7 +126,5 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-
     }
 }

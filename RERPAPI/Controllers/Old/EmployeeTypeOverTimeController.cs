@@ -18,13 +18,13 @@ namespace RERPAPI.Controllers.Old
         {
             _employeeTypeOverTimeRepo = employeeTypeOverTimeRepo;
         }
+
         [HttpGet]
-        
         public IActionResult GetAllEmployeeTypeOverTime()
         {
             try
             {
-                var employeeTypeOverTimes = _employeeTypeOverTimeRepo.GetAll(x=> x.IsDeleted != true);
+                var employeeTypeOverTimes = _employeeTypeOverTimeRepo.GetAll(x => x.IsDeleted != true);
                 return Ok(new
                 {
                     status = 1,
@@ -41,7 +41,6 @@ namespace RERPAPI.Controllers.Old
                 });
             }
         }
-
 
         [HttpPost]
         [RequiresPermission("N2,N1")]

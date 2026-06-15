@@ -1,10 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.AddNewBillExport;
-using System.Text.RegularExpressions;
 
 namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 {
@@ -20,13 +17,14 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpGet("cbb-user")]
-        public IActionResult getDataCbbUser() {
+        public IActionResult getDataCbbUser()
+        {
             try
-            {           
-               var result = SQLHelper<object>.ProcedureToList(
-                                    "spGetUsersHistoryProductRTC", new string[] { "@UsersID" },
-                                 new object[] { 0}
-                                );
+            {
+                var result = SQLHelper<object>.ProcedureToList(
+                                     "spGetUsersHistoryProductRTC", new string[] { "@UsersID" },
+                                  new object[] { 0 }
+                                 );
                 List<dynamic> rs = result[0];
                 return Ok(new
                 {
@@ -45,7 +43,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpGet("cbb-sender")]
-        public IActionResult getDataCbbSender() {
+        public IActionResult getDataCbbSender()
+        {
             try
             {
                 List<User> result = _userRepo.GetAll();
@@ -63,9 +62,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     ex.Message
                 });
             }
-
-
         }
-
     }
 }

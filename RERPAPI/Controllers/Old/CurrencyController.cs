@@ -10,10 +10,12 @@ namespace RERPAPI.Controllers.Old
     public class CurrencyController : ControllerBase
     {
         private CurrencyRepo _currencyRepo;
+
         public CurrencyController(CurrencyRepo currencyRepo)
         {
             _currencyRepo = currencyRepo;
-        }   
+        }
+
         [HttpGet("get-all")]
         public IActionResult GetAll()
         {
@@ -37,6 +39,7 @@ namespace RERPAPI.Controllers.Old
                 });
             }
         }
+
         [HttpGet("currencies")]
         public IActionResult GetAll([FromQuery] string? code)
         {
@@ -104,6 +107,5 @@ namespace RERPAPI.Controllers.Old
                 return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

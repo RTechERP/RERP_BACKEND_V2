@@ -1,12 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json.Linq;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.DocumentManager;
-using ZXing;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -15,9 +12,10 @@ namespace RERPAPI.Controllers.Old
     [Authorize]
     public class SupplierSaleController : ControllerBase
     {
-        SupplierSaleRepo _supplierSaleRepo;
-        EmployeeRepo _employeeRepo;
+        private SupplierSaleRepo _supplierSaleRepo;
+        private EmployeeRepo _employeeRepo;
         private readonly BankListRepo _bankListRepo;
+
         public SupplierSaleController(
             SupplierSaleRepo supplierSaleRepo,
             EmployeeRepo employeeRepo,
@@ -28,7 +26,9 @@ namespace RERPAPI.Controllers.Old
             _employeeRepo = employeeRepo;
             _bankListRepo = bankListRepo;
         }
+
         #region Get
+
         // Danh sách supplier
         [HttpGet("list-supplier-sale")]
         public async Task<IActionResult> getAll()
@@ -37,7 +37,6 @@ namespace RERPAPI.Controllers.Old
             {
                 var supplierSale = _supplierSaleRepo.GetAll().OrderByDescending(x => x.UpdatedDate);
                 return Ok(ApiResponseFactory.Success(supplierSale, null));
-
             }
             catch (Exception ex)
             {
@@ -62,31 +61,27 @@ namespace RERPAPI.Controllers.Old
                 };
 
                 return Ok(ApiResponseFactory.Success(result, null));
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-supplier-sale")]
-        //[RequiresPermission("N27,N33,N35,N1,N36")]
         public async Task<IActionResult> GetSupplierSale()
         {
             try
             {
                 var saleSupplier = _supplierSaleRepo.GetAll(x => x.IsDeleted == false || x.IsDeleted == null);
 
-                
                 return Ok(ApiResponseFactory.Success(saleSupplier, null));
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         [HttpGet("supplier-sale-by-id")]
         public async Task<IActionResult> getsalesupplierbyid(int supplierID)
@@ -102,11 +97,10 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
-        
-        #endregion
-
+        #endregion Get
 
         #region Method Post
+
         [HttpPost("supplier-sale")]
         [RequiresPermission("N27,N33,N35,N1")]
         public async Task<IActionResult> savesuppliersale([FromBody] SupplierSale supplierSale)
@@ -164,9 +158,10 @@ namespace RERPAPI.Controllers.Old
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
-        #endregion
+
+        #endregion Method Post
+
         [HttpGet("get-bank-list")]
         public async Task<IActionResult> GetBankList()
         {

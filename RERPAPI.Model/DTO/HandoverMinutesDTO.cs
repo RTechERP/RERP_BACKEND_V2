@@ -1,11 +1,4 @@
-﻿using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.DTO
+﻿namespace RERPAPI.Model.DTO
 {
     public class HandoverMinutesDTO
     {
@@ -34,5 +27,4 @@ namespace RERPAPI.Model.DTO
         public string? Guarantee { get; set; } // Bảo hành
         public int? DeliveryStatus { get; set; } // Trạng thái giao hàng
     }
-
 }

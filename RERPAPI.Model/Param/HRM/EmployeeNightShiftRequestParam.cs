@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RERPAPI.Model.Param.HRM
+﻿namespace RERPAPI.Model.Param.HRM
 {
     public class EmployeeNightShiftRequestParam
     {
@@ -14,8 +8,7 @@ namespace RERPAPI.Model.Param.HRM
         public int IsApproved { get; set; }
         public string? KeyWord { get; set; }
         public int? DepartmentID { get; set; }
-        public int? Page{ get; set; }
+        public int? Page { get; set; }
         public int? Size { get; set; }
-
     }
 }

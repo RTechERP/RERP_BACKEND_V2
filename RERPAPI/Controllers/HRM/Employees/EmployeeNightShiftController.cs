@@ -15,14 +15,15 @@ namespace RERPAPI.Controllers.HRM.Employees
     [Authorize]
     public class EmployeeNightShiftController : ControllerBase
     {
-        vUserGroupLinksRepo _vUserGroupLinksRepo;
-        EmployeeNightShiftRepo _employeeNightShiftRepo;
+        private vUserGroupLinksRepo _vUserGroupLinksRepo;
+        private EmployeeNightShiftRepo _employeeNightShiftRepo;
+
         public EmployeeNightShiftController(vUserGroupLinksRepo vUserGroupLinksRepo, EmployeeNightShiftRepo employeeNightShiftRepo)
         {
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
             _employeeNightShiftRepo = employeeNightShiftRepo;
-
         }
+
         //[RequiresPermission("N1,N2")]
         [HttpPost("get-employee-night-shift")]
         public ActionResult GetEmployeeNightShift([FromBody] EmployeeNightShiftRequestParam request)
@@ -62,6 +63,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("get-employee-night-shift-person")]
         public ActionResult GetEmployeeNightShiftPerson([FromBody] EmployeeNightShiftRequestParam request)
 
@@ -82,6 +84,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //[RequiresPermission("N1,N2")]
         [HttpPost("get-employee-night-shift-summary")]
         public ActionResult GetEmployeeNightShiftSummary([FromBody] EmployeeNightShiftSummaryRequestParam request)
@@ -121,6 +124,7 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //[RequiresPermission("N1,N2")]
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] List<EmployeeNighShift> nightShifts)
@@ -132,14 +136,13 @@ namespace RERPAPI.Controllers.HRM.Employees
                 {
                     foreach (var item in nightShifts)
                     {
-                        if(item.IsDeleted!=true)
+                        if (item.IsDeleted != true)
                         {
                             if (!_employeeNightShiftRepo.Validate(item, out string message))
                             {
                                 return BadRequest(ApiResponseFactory.Fail(null, message));
                             }
                         }
-                     
 
                         if (item.ID <= 0)
                             await _employeeNightShiftRepo.CreateAsync(item);
@@ -153,8 +156,8 @@ namespace RERPAPI.Controllers.HRM.Employees
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
+
         [RequiresPermission("N1,N2")]
         [HttpPost("save-approve-hr")]
         public async Task<IActionResult> SaveApproveHr([FromBody] List<EmployeeNighShift> nightShifts)
@@ -166,7 +169,6 @@ namespace RERPAPI.Controllers.HRM.Employees
                 {
                     foreach (var item in nightShifts)
                     {
-
                         if (item.ID <= 0)
                             await _employeeNightShiftRepo.CreateAsync(item);
                         else
@@ -179,8 +181,8 @@ namespace RERPAPI.Controllers.HRM.Employees
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
+
         [RequiresPermission("N1,N2")]
         [HttpPost("save-approve-tbp")]
         public async Task<IActionResult> SaveApproveTBP([FromBody] List<EmployeeNighShift> nightShifts)
@@ -192,7 +194,6 @@ namespace RERPAPI.Controllers.HRM.Employees
                 {
                     foreach (var item in nightShifts)
                     {
-
                         if (item.ID <= 0)
                             await _employeeNightShiftRepo.CreateAsync(item);
                         else
@@ -205,7 +206,6 @@ namespace RERPAPI.Controllers.HRM.Employees
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
-
         }
     }
 }

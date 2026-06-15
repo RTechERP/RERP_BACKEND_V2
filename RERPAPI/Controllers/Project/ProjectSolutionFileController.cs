@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -14,10 +12,12 @@ namespace RERPAPI.Controllers.Project
     public class ProjectSolutionFileController : ControllerBase
     {
         private ProjectSolutionFileRepo _repo;
+
         public ProjectSolutionFileController(ProjectSolutionFileRepo repo)
         {
             _repo = repo;
         }
+
         [HttpGet("get-all")]
         public IActionResult GetAll(int projectSolutionID)
         {
@@ -25,7 +25,6 @@ namespace RERPAPI.Controllers.Project
             {
                 List<ProjectSolutionFile> dtAll = _repo.GetAll(x => x.ProjectSolutionID == projectSolutionID);
                 return Ok(ApiResponseFactory.Success(dtAll, ""));
-
             }
             catch (Exception ex)
             {

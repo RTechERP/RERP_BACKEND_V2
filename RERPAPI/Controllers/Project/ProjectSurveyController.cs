@@ -4,7 +4,6 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.Project;
 using System.Diagnostics;
 
 namespace RERPAPI.Controllers.Project
@@ -15,6 +14,7 @@ namespace RERPAPI.Controllers.Project
     public class ProjectSurveyController : ControllerBase
     {
         #region Khai báo biến
+
         private readonly ProjectRepo projectRepo;
         private readonly CustomerRepo customerRepo;
         private readonly ProjectSurveyDetailRepo projectSurveyDetailRepo;
@@ -35,9 +35,11 @@ namespace RERPAPI.Controllers.Project
             this.projectSurveyRepo = projectSurveyRepo;
             this.projectSurveyFileRepo = projectSurveyFileRepo;
         }
-        #endregion
+
+        #endregion Khai báo biến
 
         #region Lấy danh sách tiến độ công việc
+
         [HttpGet("get-project-survey")]
         public async Task<IActionResult> getProjectSurvey(DateTime dateStart, DateTime dateEnd, int projectId, int technicalId, int saleId, string? keyword)
         {
@@ -58,7 +60,7 @@ namespace RERPAPI.Controllers.Project
                     currentUserID = currentUser.ID;
                 }
 
-                    DateTime ds = new DateTime(dateStart.Year, dateStart.Month, dateStart.Day, 0, 0, 0);
+                DateTime ds = new DateTime(dateStart.Year, dateStart.Month, dateStart.Day, 0, 0, 0);
                 DateTime de = new DateTime(dateEnd.Year, dateEnd.Month, dateEnd.Day, 23, 59, 59);
                 var dt = SQLHelper<object>.ProcedureToList("spGetProjectSurvey",
                                                     new string[] { "@DateStart", "@DateEnd", "@ProjectID", "@EmployeeRequestID", "@EmployeeTechID", "@Keyword", "@CurrentEmployeeID" },
@@ -71,14 +73,16 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion Lấy danh sách tiến độ công việc
+
         #region Duyệt/ hủy duyệt gấp
+
         [HttpGet("approved-urgent")]
         public async Task<IActionResult> ApprovedUrgent(bool approvedStatus, string loginName, int globalEmployeeId, [FromQuery] int[] ids)
         {
             try
             {
-
                 if (ids.Count() > 0)
                 {
                     foreach (int id in ids)
@@ -99,12 +103,14 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion Duyệt/ hủy duyệt gấp
+
         #region Duyệt/ hủy duyệt yêu cầu
+
         [HttpGet("approved-request")]
         public async Task<IActionResult> approvedRequest(int id, bool status, int employeeID, DateTime dateSurvey, string? reasonCancel, string updatedBy, int surveySession)
         {
-
             string statusname = status ? "duyệt" : "hủy";
             var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
             var currentUser = ObjectMapper.GetCurrentUser(claims);
@@ -134,8 +140,11 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion Duyệt/ hủy duyệt yêu cầu
+
         #region Load dữ liệu chi tiết leader duyệt khảo sát
+
         [HttpGet("get-tb-detail")]
         public async Task<IActionResult> gettbdetail(int projectSurveyId, int projectId)
         {
@@ -153,14 +162,17 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
-        #region Lấy danh sách file đính kém 
+
+        #endregion Load dữ liệu chi tiết leader duyệt khảo sát
+
+        #region Lấy danh sách file đính kém
+
         [HttpGet("get-files")]
         public async Task<IActionResult> getfiles(int projectSurveyId)
         {
             try
             {
-				var data = projectSurveyFileRepo.GetAll(x => x.ProjectSurveyID == projectSurveyId && x.IsDeleted == false);
+                var data = projectSurveyFileRepo.GetAll(x => x.ProjectSurveyID == projectSurveyId && x.IsDeleted == false);
 
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
@@ -169,8 +181,11 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion Lấy danh sách file đính kém
+
         #region Lấy thông tin chi tiết khảo sát
+
         [HttpGet("get-detail")]
         public async Task<IActionResult> getdetail(int projectSurveyId)
         {
@@ -184,8 +199,11 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
-        #region Lưu thông tin khảo sát dự án 
+
+        #endregion Lấy thông tin chi tiết khảo sát
+
+        #region Lưu thông tin khảo sát dự án
+
         [HttpPost("save-project-survey")]
         public async Task<IActionResult> saveprojectsurvey(ProjectSurveyDTO projectSurveyDTO)
         {
@@ -208,7 +226,6 @@ namespace RERPAPI.Controllers.Project
                 {
                     foreach (var item in projectSurveyDTO.projectSurveyDetails)
                     {
-
                         ProjectSurveyDetail modelDetail = item;
                         modelDetail.ProjectSurveyID = model.ID;
                         if (item.ID > 0)
@@ -221,7 +238,7 @@ namespace RERPAPI.Controllers.Project
                         }
                     }
                 }
-                //logic them file 
+                //logic them file
                 if (projectSurveyDTO.projectSurveyFiles.Count() > 0)
                 {
                     foreach (var item in projectSurveyDTO.projectSurveyFiles)
@@ -236,7 +253,6 @@ namespace RERPAPI.Controllers.Project
                             await projectSurveyFileRepo.CreateAsync(item);
                         }
                     }
-
                 }
 
                 if (projectSurveyDTO.deletedFiles.Count() > 0)
@@ -256,9 +272,11 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
 
-        #region Lưu thông tin file đính kèm dự án 
+        #endregion Lưu thông tin khảo sát dự án
+
+        #region Lưu thông tin file đính kèm dự án
+
         [HttpPost("save-project-survey-files")]
         public async Task<IActionResult> saveprojectsurveyfiles([FromForm] int projectSurveyID, [FromForm] int year, [FromForm] string projectCode, [FromForm] List<IFormFile> files)
         {
@@ -302,9 +320,11 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion Lưu thông tin file đính kèm dự án
 
         #region Xem thông tin file đính kèm
+
         [HttpGet("see-file")]
         public async Task<IActionResult> seefile(int year, int projectTypeID, string projectCode)
         {
@@ -339,8 +359,11 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion Xem thông tin file đính kèm
+
         #region Lấy chi tiết khảo sát theo Id master
+
         [HttpGet("check-status-detail")]
         public async Task<IActionResult> checkstatusdetail(int projectSurveyId)
         {
@@ -357,8 +380,10 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-        #endregion
+        #endregion Lấy chi tiết khảo sát theo Id master
+
         #region Xóa khảo sát dự án
+
         [HttpGet("deleted-project-survey")]
         public async Task<IActionResult> deletedprojectsurvey(int ids)
         {
@@ -384,9 +409,11 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion Xóa khảo sát dự án
 
         #region cây thư mục
+
         [HttpGet("open-folder")]
         public async Task<IActionResult> openfolder(int year, string projectCode)
         {
@@ -400,7 +427,7 @@ namespace RERPAPI.Controllers.Project
                 //}
 
                 string pathLocation = @"\\192.168.1.190\duan\Projects"; //Thư mục trên server
-                //if (Global.IsOnline) // chưa có 
+                //if (Global.IsOnline) // chưa có
                 //{
                 //    //pathLocation = @"\\rtctechnologydata.ddns.net\DUAN\Projects\";
                 //    pathLocation = @"\\14.232.152.154\DUAN\Projects\";
@@ -410,7 +437,6 @@ namespace RERPAPI.Controllers.Project
                 {
                     Directory.CreateDirectory(pathLocation);
                 }
-
                 catch (Exception)
                 {
                     pathLocation = @"\\rtctechnologydata.ddns.net\DUAN\Projects\";
@@ -432,8 +458,6 @@ namespace RERPAPI.Controllers.Project
                     Process.Start(path);
                 }
 
-
-
                 return Ok(ApiResponseFactory.Success(1, ""));
             }
             catch (Exception ex)
@@ -441,9 +465,11 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion cây thư mục
 
         #region Lấy chi tiết khảo sát theo Id detail
+
         [HttpGet("get-detail-byid")]
         public async Task<IActionResult> getdetailbyid(int projectSurveyDetailId)
         {
@@ -454,7 +480,7 @@ namespace RERPAPI.Controllers.Project
                 {
                     return BadRequest();
                 }
-				List<ProjectSurveyFile> files = projectSurveyFileRepo.GetAll(x => x.ProjectSurveyDetailID == projectSurveyDetailId).ToList();
+                List<ProjectSurveyFile> files = projectSurveyFileRepo.GetAll(x => x.ProjectSurveyDetailID == projectSurveyDetailId).ToList();
 
                 var data = new
                 {
@@ -470,8 +496,10 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-        #endregion
+        #endregion Lấy chi tiết khảo sát theo Id detail
+
         #region Lưu nội dung kết quả khảo sát dự án
+
         [HttpPost("save-project-survey-results")]
         public async Task<IActionResult> saveprojectsurveyresult([FromForm] int projectSurveyId, [FromForm] int projectId, [FromForm] int projectSurveyDetailId, [FromForm] string result,
             [FromForm] int projectTypeId, [FromForm] List<IFormFile> files)
@@ -530,7 +558,6 @@ namespace RERPAPI.Controllers.Project
 
                     string pathPattern = $@"\\192.168.1.190\duan\Projects\{prj.CreatedDate.Value.Year}\{prj.ProjectCode}\{lstPath.FolderName}\KetQuaKhaoSat";
 
-
                     var client = new HttpClient();
 
                     /* List<ProjectSurveyFile> listFiles = new List<ProjectSurveyFile>();
@@ -563,20 +590,21 @@ namespace RERPAPI.Controllers.Project
                 }
 
                 return Ok(ApiResponseFactory.Success(1, "Cập nhật kết quả khảo sát thành công"));
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        class ProjectTypeFilePath
+
+        private class ProjectTypeFilePath
         {
             public int ID { get; set; }
             public int ParentID { get; set; }
             public string FolderName { get; set; }
         }
-        #endregion
+
+        #endregion Lưu nội dung kết quả khảo sát dự án
 
         [HttpPost("save-project-survey-result")]
         public async Task<IActionResult> saveprojectsurveyresult2([FromBody] ProjectSurveyResultDTO request)
@@ -592,7 +620,6 @@ namespace RERPAPI.Controllers.Project
                     {
                         if (item.ID > 0)
                         {
-
                             await projectSurveyFileRepo.UpdateAsync(item);
                         }
                         else
@@ -620,6 +647,7 @@ namespace RERPAPI.Controllers.Project
         }
 
         #region cây thư mục khảo sát
+
         [HttpPost("create-survey-folder/{projectId}")]
         public IActionResult CreateSurveyFolder(int projectId)
         {
@@ -664,6 +692,7 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        #endregion
+
+        #endregion cây thư mục khảo sát
     }
 }

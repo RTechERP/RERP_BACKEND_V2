@@ -1,18 +1,8 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using DocumentFormat.OpenXml.Office2010.Excel;
-using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
-using DocumentFormat.OpenXml.Spreadsheet;
-using DocumentFormat.OpenXml.Wordprocessing;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using NPOI.SS.Formula.Functions;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Technical;
-using System.Threading.Tasks;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 using static RERPAPI.Controllers.BorrowController;
 
 namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
@@ -26,6 +16,7 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
         private readonly HistoryProductRTCLogRepo _historyProductRTCLogRepo;
         private readonly ProductRTCRepo _productRTCRepo;
         private readonly ProductLocationRepo _productLocationRepo;
+
         public HistoryProductRtcProtectiveGearController(HistoryProductRTCRepo historyProductRTCRepo, vUserGroupLinksRepo vUserGroupLinksRepo, HistoryProductRTCLogRepo historyProductRTCLogRepo, ProductRTCRepo productRTCRepo, ProductLocationRepo productLocationRepo)
         {
             _historyProductRTCRepo = historyProductRTCRepo;
@@ -34,6 +25,7 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
             _productRTCRepo = productRTCRepo;
             _productLocationRepo = productLocationRepo;
         }
+
         [HttpGet("get-product-history")]
         public async Task<IActionResult> GetProductHistory(DateTime dateStart, DateTime dateEnd, string? keyWords, int warehouseID, int userID, string status, int page, int size, int isDeleted)
         {
@@ -68,12 +60,12 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-extend-product")]
         public async Task<IActionResult> SaveExtend(HistoryProductRTC item)
         {
             try
             {
-
                 // if (item.ID <= 0)
                 //return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy lịch sử mượn trong database!"));
                 var hcnsLst = _vUserGroupLinksRepo.GetAll(c => c.Code == "N34");
@@ -86,7 +78,7 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                     item.Status = 1;
 
                     item.AdminConfirm = true;
-                    // lưu log 
+                    // lưu log
                     HistoryProductRTCLog logModel = new HistoryProductRTCLog();
                     logModel.HistoryProductRTCID = item.ID;
                     logModel.DateReturnExpected = item.DateReturnExpected;
@@ -102,7 +94,7 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                     item.Status = 8;
                 }
                 _historyProductRTCRepo.Update(item);
-               
+
                 return Ok(ApiResponseFactory.Success(item, ""));
             }
             catch (Exception ex)
@@ -110,6 +102,7 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("approve-borrowing")]
         public IActionResult ApproveBorrowing([FromBody] ReturnProductRtcRequest req)
         {
@@ -144,6 +137,7 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("return-productrtc")]
         public IActionResult ReturnProductRtc([FromBody] ReturnProductRtcRequest req)
         {
@@ -207,15 +201,14 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-history-product")]
         public async Task<IActionResult> SaveHistoryProduct(HistoryProductRTC item)
         {
             try
             {
-
                 if (item.ID <= 0)
                 {
-
                     if (await _historyProductRTCRepo.CreateAsync(item) > 0)
                     {
                         return Ok(ApiResponseFactory.Success(item, "Thêm mới thành công"));
@@ -223,12 +216,10 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 }
                 else
                 {
-
                     if (await _historyProductRTCRepo.UpdateAsync(item) > 0)
                     {
                         return Ok(ApiResponseFactory.Success(item, "Cập nhật thành công"));
                     }
-
                 }
                 return Ok(ApiResponseFactory.Fail(null, "Cập nhật thất bại"));
             }
@@ -237,6 +228,7 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("save-update-status-product-rtc")]
         public async Task<IActionResult> SaveUpdatsStatusProductRTC(int id, int status)
         {
@@ -260,14 +252,11 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
             }
         }
 
-
-
         [HttpGet("get-history-product-rtc-by-id")]
         public async Task<IActionResult> GetHistoryProductrtcById(int productHistoryID)
         {
             try
             {
-
                 var data = _historyProductRTCRepo.GetByID(productHistoryID);
                 return Ok(new
                 {
@@ -280,6 +269,7 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-history-productrtc-log")]
         public IActionResult GetHistoryProductrtcLog(int historyID)
         {
@@ -297,6 +287,7 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-user-history-product")]
         public async Task<IActionResult> GetUserHistoryProduct(int userId, int? status)
         {
@@ -315,11 +306,10 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 {
                     userId = currentUser.ID;
                 }
-                    var data = SQLHelper<object>.ProcedureToList("spGetUsersHistoryProductRTC", new string[] { "@UsersID", "@Status" }, new object[] { userId, status });
+                var data = SQLHelper<object>.ProcedureToList("spGetUsersHistoryProductRTC", new string[] { "@UsersID", "@Status" }, new object[] { userId, status });
                 var dt = SQLHelper<object>.GetListData(data, 0);
                 return Ok(ApiResponseFactory.Success(dt, ""))
                 ;
-
             }
             catch (Exception ex)
             {
@@ -350,13 +340,13 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 var data0 = dt.FindAll(c => c.ProductGroupRTCID != 140);
                 return Ok(ApiResponseFactory.Success(data0, ""))
                 ;
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-history-productrtc")]
         public async Task<IActionResult> SaveHistoryProductrtc(HistoryProductRTC item)
         {
@@ -370,7 +360,6 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
 
                 if (item.ID <= 0)
                 {
-
                     if (isAdmin)
                     {
                         item.Status = 1;
@@ -393,16 +382,15 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                     {
                         return Ok(ApiResponseFactory.Fail(null, "Có lỗi xảy ra khi cập nhật HistoryProductRTC"));
                     }
-
                 }
                 return Ok(ApiResponseFactory.Success(item, ""));
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("delete")]
         public async Task<IActionResult> DeleteHistoryProduct(List<int> items)
         {
@@ -417,12 +405,12 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 }
                 return Ok(ApiResponseFactory.Success(items, ""));
             }
-
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-coordinates")]
         public async Task<IActionResult> SaveCoordinates([FromBody] List<ProductLocationUpdateDTO> items)
         {
@@ -438,12 +426,10 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 }
                 foreach (var item in items)
                 {
-                   
                     int ProductLocationID = item.ProductLocationID;
                     int LocationType = item.LocationType;
                     int CoordinatesX = item.CoordinatesX;
                     int CoordinatesY = item.CoordinatesY;
-
 
                     // Tìm ProductLocation theo ProductRTCID và LocationType
                     var entity = _productLocationRepo.GetByID(ProductLocationID);
@@ -452,8 +438,7 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                         // Update coordinates
                         entity.CoordinatesX = CoordinatesX;
                         entity.CoordinatesY = CoordinatesY;
-                      await _productLocationRepo.UpdateAsync(entity);
-
+                        await _productLocationRepo.UpdateAsync(entity);
                     }
                 }
                 return Ok(ApiResponseFactory.Success(null, "Cập nhật vị trí thành công!"));
@@ -467,8 +452,8 @@ namespace RERPAPI.Controllers.HRM.ProductProtectiveGear
                 });
             }
         }
-
     }
+
     // DTO
     public class ProductLocationUpdateDTO
     {

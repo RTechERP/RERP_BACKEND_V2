@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
@@ -15,11 +14,13 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         {
             _addressStockRepo = addressStockRepo;
         }
+
         [HttpGet("get-by-customerID")]
-        public IActionResult getDataCbbAddressStock(int customerID) {
+        public IActionResult getDataCbbAddressStock(int customerID)
+        {
             try
             {
-                List<AddressStock> result = _addressStockRepo.GetAll(x=>x.CustomerID==customerID);
+                List<AddressStock> result = _addressStockRepo.GetAll(x => x.CustomerID == customerID);
                 return Ok(new
                 {
                     status = 1,

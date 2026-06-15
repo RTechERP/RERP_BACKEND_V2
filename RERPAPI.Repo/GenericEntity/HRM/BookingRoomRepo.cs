@@ -1,20 +1,15 @@
 ﻿using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity.HRM
 {
-    public class BookingRoomRepo:GenericRepo<BookingRoom>
+    public class BookingRoomRepo : GenericRepo<BookingRoom>
     {
         public BookingRoomRepo(CurrentUser currentUser) : base(currentUser)
         {
-
         }
+
         public APIResponse IsHaveRegisterTime(BookingRoom model)
         {
             try
@@ -22,7 +17,7 @@ namespace RERPAPI.Repo.GenericEntity.HRM
                 List<BookingRoom> list = GetAll().Where(p => p.ID != model.ID
                                                       && p.DateRegister.Value.Date == model.DateRegister.Value.Date
                                                       && p.EmployeeID > 0
-                                                      &&p.IsDeleted!=true
+                                                      && p.IsDeleted != true
                                                       && p.MeetingRoomID == model.MeetingRoomID
                                                       && ((
                                                              p.StartTime.Value.TimeOfDay <= model.StartTime.Value.TimeOfDay
@@ -32,7 +27,7 @@ namespace RERPAPI.Repo.GenericEntity.HRM
                                                                  && p.EndTime.Value.TimeOfDay >= model.EndTime.Value.TimeOfDay)
                                                          ))
                                               .ToList();
-                if(list.Count>0)
+                if (list.Count > 0)
                 {
                     return ApiResponseFactory.Fail(null, $"Phòng từ {model.StartTime} - {model.EndTime} đã có người đăng ký!");
                 }
@@ -43,6 +38,7 @@ namespace RERPAPI.Repo.GenericEntity.HRM
                 return ApiResponseFactory.Fail(ex, ex.Message);
             }
         }
+
         public APIResponse Validate(BookingRoom model)
         {
             try
@@ -84,6 +80,5 @@ namespace RERPAPI.Repo.GenericEntity.HRM
                 return ApiResponseFactory.Fail(ex, ex.Message);
             }
         }
-
     }
 }

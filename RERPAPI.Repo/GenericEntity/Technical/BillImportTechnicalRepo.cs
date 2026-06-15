@@ -8,9 +8,10 @@ namespace RTCApi.Repo.GenericRepo
 {
     public class BillImportTechnicalRepo : GenericRepo<BillImportTechnical>
     {
-        BillImportTechnicalLogRepo _BillImportTechnicalLog;
-        ProductRTCRepo _productRTCRepo;
-        CurrentUser _currentUser;
+        private BillImportTechnicalLogRepo _BillImportTechnicalLog;
+        private ProductRTCRepo _productRTCRepo;
+        private CurrentUser _currentUser;
+
         public BillImportTechnicalRepo(CurrentUser currentUser, BillImportTechnicalLogRepo billImportTechnicalLogRepo, ProductRTCRepo productRTCRepo) : base(currentUser)
         {
             _BillImportTechnicalLog = billImportTechnicalLogRepo;
@@ -56,6 +57,7 @@ namespace RTCApi.Repo.GenericRepo
 
             return billCode;
         }
+
         public async Task UpdateStatusAsync(BillImportTechnical bill, bool status)
         {
             // 1. Cập nhật thông tin phiếu
@@ -75,6 +77,7 @@ namespace RTCApi.Repo.GenericRepo
 
             await _BillImportTechnicalLog.CreateAsync(log);
         }
+
         public async Task UpdateHistoryProductRTC(BillimporttechnicalFullDTO dTO)
         {
             bool values = true;
@@ -100,7 +103,6 @@ namespace RTCApi.Repo.GenericRepo
                         SQLHelper<object>.ExcuteProcedure("spUpdateStatusProductRTCQRCode", new string[] { "@ProductRTCQRCodeID", "@Status" }, new object[] { ProductRTCQRCodeID, 3 });
                     }
                 }
-
             }
             foreach (var item in dTO.billImportDetailTechnicals)
             {
@@ -114,6 +116,5 @@ namespace RTCApi.Repo.GenericRepo
                 }
             }
         }
-
     }
 }

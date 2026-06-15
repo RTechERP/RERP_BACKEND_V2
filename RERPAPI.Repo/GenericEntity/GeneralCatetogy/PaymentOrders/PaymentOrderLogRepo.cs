@@ -4,387 +4,380 @@ using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders
 {
-	public class PaymentOrderLogRepo : GenericRepo<PaymentOrderLog>
-	{
-		CurrentUser _currentUser;
-		PaymentOrderApproveFollowRepo _followRepo;
-		PaymentOrderTypeRepo _typeRepo;
-		PaymentOrderRepo _paymentOrderRepo;
-		PaymentOrderLogApprovedRepo _paymentOrderLogApprovedRepo;
-		public PaymentOrderLogRepo(CurrentUser currentUser, PaymentOrderApproveFollowRepo followRepo, PaymentOrderTypeRepo typeRepo, PaymentOrderRepo paymentOrderRepo, PaymentOrderLogApprovedRepo paymentOrderLogApprovedRepo) : base(currentUser)
-		{
-			_currentUser = currentUser;
-			_followRepo = followRepo;
-			_typeRepo = typeRepo;
-			_paymentOrderRepo = paymentOrderRepo;
-			_paymentOrderLogApprovedRepo = paymentOrderLogApprovedRepo;
-		}
+    public class PaymentOrderLogRepo : GenericRepo<PaymentOrderLog>
+    {
+        private CurrentUser _currentUser;
+        private PaymentOrderApproveFollowRepo _followRepo;
+        private PaymentOrderTypeRepo _typeRepo;
+        private PaymentOrderRepo _paymentOrderRepo;
+        private PaymentOrderLogApprovedRepo _paymentOrderLogApprovedRepo;
 
+        public PaymentOrderLogRepo(CurrentUser currentUser, PaymentOrderApproveFollowRepo followRepo, PaymentOrderTypeRepo typeRepo, PaymentOrderRepo paymentOrderRepo, PaymentOrderLogApprovedRepo paymentOrderLogApprovedRepo) : base(currentUser)
+        {
+            _currentUser = currentUser;
+            _followRepo = followRepo;
+            _typeRepo = typeRepo;
+            _paymentOrderRepo = paymentOrderRepo;
+            _paymentOrderLogApprovedRepo = paymentOrderLogApprovedRepo;
+        }
 
-		public async Task<int> Create(PaymentOrderDTO payment)
-		{
-			try
-			{
-				var logs = GetAll(x => x.PaymentOrderID == payment.ID && x.IsDeleted != true);
+        public async Task<int> Create(PaymentOrderDTO payment)
+        {
+            try
+            {
+                var logs = GetAll(x => x.PaymentOrderID == payment.ID && x.IsDeleted != true);
 
-				//Xóa hết ds chi tiết
-				foreach (var item in logs)
-				{
-					item.IsDeleted = true;
-					await UpdateAsync(item);
-				}
-				logs.Clear();
-				//Insert lại 1 list mới
-				if (payment.IsDelete == false)
-				{
-					//Get danh sách các bước duyệt
-					var paymentOrderType = _typeRepo.GetByID(TextUtils.ToInt32(payment.PaymentOrderTypeID));
-					int followType = 1;
-					if (paymentOrderType.IsIgnoreHR == true) followType = 2;
-					if (payment.IsSpecialOrder == true) followType = 3;
-					var follows = _followRepo.GetAll(x => x.FollowType == followType && x.IsDeleted != true)
-											 .OrderBy(x => x.Step)
-											 .ToList();
+                //Xóa hết ds chi tiết
+                foreach (var item in logs)
+                {
+                    item.IsDeleted = true;
+                    await UpdateAsync(item);
+                }
+                logs.Clear();
+                //Insert lại 1 list mới
+                if (payment.IsDelete == false)
+                {
+                    //Get danh sách các bước duyệt
+                    var paymentOrderType = _typeRepo.GetByID(TextUtils.ToInt32(payment.PaymentOrderTypeID));
+                    int followType = 1;
+                    if (paymentOrderType.IsIgnoreHR == true) followType = 2;
+                    if (payment.IsSpecialOrder == true) followType = 3;
+                    var follows = _followRepo.GetAll(x => x.FollowType == followType && x.IsDeleted != true)
+                                             .OrderBy(x => x.Step)
+                                             .ToList();
 
-					var stepTBP = follows.FirstOrDefault(x => x.Code == "TBP") ?? new PaymentOrderApproveFollow();
-					var stepBGĐ = follows.FirstOrDefault(x => x.Code == "BGD") ?? new PaymentOrderApproveFollow();
+                    var stepTBP = follows.FirstOrDefault(x => x.Code == "TBP") ?? new PaymentOrderApproveFollow();
+                    var stepBGĐ = follows.FirstOrDefault(x => x.Code == "BGD") ?? new PaymentOrderApproveFollow();
 
-					foreach (var f in follows)
-					{
-						var log = new PaymentOrderLog();
-						log.PaymentOrderID = payment.ID;
-						log.Step = f.Step;
-						log.StepName = f.StepName;
-						log.IsApproved = 0;
-						log.EmployeeID = f.ApproverID;
-						if (log.Step == 1)
-						{
-							log.EmployeeID = _currentUser.EmployeeID;
-							log.DateApproved = DateTime.Now;
-							log.IsApproved = 1;
-						}
-						else if (log.Step == stepTBP.Step) log.EmployeeID = payment.ApprovedTBPID;
-						else if (log.Step == stepBGĐ.Step) log.EmployeeID = payment.ApprovedBGDID;
+                    foreach (var f in follows)
+                    {
+                        var log = new PaymentOrderLog();
+                        log.PaymentOrderID = payment.ID;
+                        log.Step = f.Step;
+                        log.StepName = f.StepName;
+                        log.IsApproved = 0;
+                        log.EmployeeID = f.ApproverID;
+                        if (log.Step == 1)
+                        {
+                            log.EmployeeID = _currentUser.EmployeeID;
+                            log.DateApproved = DateTime.Now;
+                            log.IsApproved = 1;
+                        }
+                        else if (log.Step == stepTBP.Step) log.EmployeeID = payment.ApprovedTBPID;
+                        else if (log.Step == stepBGĐ.Step) log.EmployeeID = payment.ApprovedBGDID;
 
-						log.EmployeeApproveActualID = 0;
-						log.ReasonCancel = "";
-						log.ContentLog = "";
-						log.IsRequestAppendFileAC = false;
-						log.ReasonRequestAppendFileAC = "";
+                        log.EmployeeApproveActualID = 0;
+                        log.ReasonCancel = "";
+                        log.ContentLog = "";
+                        log.IsRequestAppendFileAC = false;
+                        log.ReasonRequestAppendFileAC = "";
 
-						log.IsRequestAppendFileHR = false;
-						log.ReasonRequestAppendFileHR = "";
-						logs.Add(log);
-					}
+                        log.IsRequestAppendFileHR = false;
+                        log.ReasonRequestAppendFileHR = "";
+                        logs.Add(log);
+                    }
+                }
 
-				}
+                return await CreateRangeAsync(logs);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
 
-				return await CreateRangeAsync(logs);
-			}
-			catch (Exception ex)
-			{
+        public async Task<(int, string)> Appoved(List<PaymentOrderDTO> payments)
+        {
+            try
+            {
+                string reasonRequestAppendFileHR = string.Empty;
+                string reasonCancel = string.Empty;
+                string reasonCancel_1 = string.Empty;
+                bool isRequestAppendFileHR = false;
 
-				throw new Exception(ex.Message);
-			}
-		}
+                List<string> messageFails = new List<string>();
 
+                foreach (var item in payments)
+                {
+                    int actionStep = 0;
+                    string statusText = "";
 
-		public async Task<(int, string)> Appoved(List<PaymentOrderDTO> payments)
-		{
-			try
-			{
-				string reasonRequestAppendFileHR = string.Empty;
-				string reasonCancel = string.Empty;
-				string reasonCancel_1 = string.Empty;
-				bool isRequestAppendFileHR = false;
+                    if (item.ID <= 0) continue;
 
+                    //int currentStep = item.Step;
+                    //int paymentOrderTypeID = item.PaymentOrderTypeID ?? 0;
+                    var paymentOrderType = _typeRepo.GetByID(item.PaymentOrderTypeID ?? 0);
+                    statusText = item.PaymentOrderLog.IsApproved == 1 ? "duyệt" : (item.PaymentOrderLog.IsApproved == 2 ? "hủy duyệt" : "bổ xung chứng từ");
+                    if (item.IsSpecialOrder == true)
+                    {
+                        if (item.Action.ButtonActionGroup == "btnTBP") actionStep = 2;
+                        else if (item.Action.ButtonActionGroup == "btnHR")
+                        {
+                        }
+                        else if (item.Action.ButtonActionGroup == "btnKTT") actionStep = 3;
+                        else if (item.Action.ButtonActionGroup == "btnBGĐ") actionStep = 4;
+                        else if (item.Action.ButtonActionGroup == "btnKTTT")
+                        {
+                            //if (item.Action.ButtonActionName == "btnReceiveDocument" || item.Action.ButtonActionName == "btnUnApproveDocument") return ApiResponseFactory.Fail(null,"");
+                            if (item.Action.ButtonActionName == "btnReceiveDocument" || item.Action.ButtonActionName == "btnUnApproveDocument") continue;
+                            else if (item.Action.ButtonActionName == "btnIsPayment" || item.Action.ButtonActionName == "btnUnPayment") actionStep = 5;
+                        }
+                    }
+                    else if (paymentOrderType.IsIgnoreHR == true)
+                    {
+                        if (item.Action.ButtonActionGroup == "btnTBP") actionStep = 2;
+                        else if (item.Action.ButtonActionGroup == "btnHR")
+                        {
+                        }
+                        else if (item.Action.ButtonActionGroup == "btnKTTT")
+                        {
+                            if (item.Action.ButtonActionName == "btnApproveDocument" || item.Action.ButtonActionName == "btnUnApproveDocument" || item.Action.ButtonActionName == "btnUpdateDocument") actionStep = 3;
+                            else if (item.Action.ButtonActionName == "btnReceiveDocument" || item.Action.ButtonActionName == "btnUnReceiveDocument") actionStep = 6;
+                            else if (item.Action.ButtonActionName == "btnIsPayment" || item.Action.ButtonActionName == "btnUnPayment") actionStep = 7;
+                        }
+                        else if (item.Action.ButtonActionGroup == "btnKTT") actionStep = 4;
+                        else if (item.Action.ButtonActionGroup == "btnBGĐ") actionStep = 5;
+                    }
+                    else
+                    {
+                        if (item.Action.ButtonActionGroup == "btnTBP") actionStep = 2;
+                        else if (item.Action.ButtonActionGroup == "btnHR")
+                        {
+                            //actionStep = 3;
+                            //if (buttonName == "btnApproveDocumentHR" || buttonName == "btnUnApproveDocumentHR") actionStep = 3;
+                            // lee min khooi update 03/10/2024
+                            if (item.Action.ButtonActionName == "btnApproveDocumentHR" || item.Action.ButtonActionName == "btnUnApproveDocumentHR" || item.Action.ButtonActionName == "btnHRUpdateDocument") actionStep = 3;
+                            else if (item.Action.ButtonActionName == "btnApproveHR" || item.Action.ButtonActionName == "btnUnApproveHR") actionStep = 4;
+                        }
+                        else if (item.Action.ButtonActionGroup == "btnKTTT")
+                        {
+                            if (item.Action.ButtonActionName == "btnApproveDocument" || item.Action.ButtonActionName == "btnUnApproveDocument" || item.Action.ButtonActionName == "btnUpdateDocument") actionStep = 5;
+                            else if (item.Action.ButtonActionName == "btnReceiveDocument" || item.Action.ButtonActionName == "btnUnReceiveDocument") actionStep = 8;
+                            else if (item.Action.ButtonActionName == "btnIsPayment" || item.Action.ButtonActionName == "btnUnPayment") actionStep = 9;
+                        }
+                        else if (item.Action.ButtonActionGroup == "btnKTT") actionStep = 6;
+                        else if (item.Action.ButtonActionGroup == "btnBGĐ") actionStep = 7;
+                    }
 
-				List<string> messageFails = new List<string>();
+                    if (actionStep == 0)
+                    {
+                        //messageFails.Add( $"Đề nghị [{item.Code}] không cần {dropdownButtonText.Trim().ToLower()} buttonText.Trim().ToLower()!");
+                        return (0, "");
+                    }
 
-				foreach (var item in payments)
-				{
-					int actionStep = 0;
-					string statusText = "";
+                    if (actionStep == 2 && !_currentUser.IsAdmin) //Kiểm tra đề nghị có phải của tbp đó hay ko
+                    {
+                        var logDb = GetAll(x => x.IsDeleted != true
+                                            && x.PaymentOrderID == item.ID
+                                            && x.Step == actionStep).FirstOrDefault() ?? new PaymentOrderLog();
 
-					if (item.ID <= 0) continue;
+                        if (logDb.EmployeeID != _currentUser.EmployeeID)
+                        {
+                            messageFails.Add($"Bạn không thể {statusText} đề nghị [{item.Code}]!");
+                            continue;
+                        }
+                    }
 
-					//int currentStep = item.Step;
-					//int paymentOrderTypeID = item.PaymentOrderTypeID ?? 0;
-					var paymentOrderType = _typeRepo.GetByID(item.PaymentOrderTypeID ?? 0);
-					statusText = item.PaymentOrderLog.IsApproved == 1 ? "duyệt" : (item.PaymentOrderLog.IsApproved == 2 ? "hủy duyệt" : "bổ xung chứng từ");
-					if (item.IsSpecialOrder == true)
-					{
-						if (item.Action.ButtonActionGroup == "btnTBP") actionStep = 2;
-						else if (item.Action.ButtonActionGroup == "btnHR")
-						{
+                    //int currentApproved = item.PaymentOrderLog.IsApproved ?? 0;
+                    if (actionStep == item.Step)
+                    {
+                        if (item.PaymentOrderLog.IsApproved == 1 && item.CurrentApproved == 2 && item.Action.ButtonActionGroup != "btnBGĐ")
+                        {
+                            ApiResponseFactory.Fail(null, $"Bạn không thể {statusText} đề nghị [{item.Code}]!");
+                            continue;
+                        }
+                        else if (item.PaymentOrderLog.IsApproved == 1 && item.CurrentApproved == 1)
+                        {
+                            ApiResponseFactory.Fail(null, $"Đề nghị [{item.Code}] đã được duyệt!");
+                            continue;
+                        }
+                    }
+                    else if (actionStep < item.Step)
+                    {
+                        if (item.PaymentOrderLog.IsApproved != 1)
+                        {
+                            ApiResponseFactory.Fail(null, "Vui lòng huỷ duyệt ở bước sau trước!", "Thông báo");
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        if (item.CurrentApproved != 1)
+                        {
+                            //MessageBox.Show($"Bạn không thể {statusText}!", "Thông báo");
+                            continue;
+                        }
+                        else if ((actionStep - item.Step) == 1) //Ở ngay bước sau
+                        {
+                            if (item.PaymentOrderLog.IsApproved == 1 && item.CurrentApproved == 2 && item.Action.ButtonActionGroup != "btnBGĐ")
+                            {
+                                //MessageBox.Show("Bạn không thể huỷ duyệt!", "Thông báo");
+                                continue;
+                            }
+                        }
+                        else
+                        {
+                            //MessageBox.Show("Vui lòng duyệt ở bước trước!", "Thông báo");
+                            continue;
+                        }
+                    }
+                    PaymentOrderLogApproved? logUnApproved = _paymentOrderLogApprovedRepo.GetAll(p => p.PaymentOrderID == item.ID && p.IsDeleted != true && p.IsApproved == 2)?.FirstOrDefault();
+                    if (logUnApproved != null && logUnApproved.ID > 0)
+                    {
+                        PaymentOrderLog l = GetByID(logUnApproved.PaymentOrderLogID ?? 0);
+                        if (l.IsDeleted.HasValue && !l.IsDeleted.Value)
+                        {
+                            messageFails.Add($"Đề nghị [{item.Code}] đã bị hủy duyệt ở bước [{l.StepName}] !");
+                            continue;
+                        }
+                    }
+                    //Get quy trình duyệt
+                    var log = GetAll(x => x.PaymentOrderID == item.ID && x.Step == actionStep && x.IsDeleted != true).FirstOrDefault();
 
-						}
-						else if (item.Action.ButtonActionGroup == "btnKTT") actionStep = 3;
-						else if (item.Action.ButtonActionGroup == "btnBGĐ") actionStep = 4;
-						else if (item.Action.ButtonActionGroup == "btnKTTT")
-						{
-							//if (item.Action.ButtonActionName == "btnReceiveDocument" || item.Action.ButtonActionName == "btnUnApproveDocument") return ApiResponseFactory.Fail(null,"");
-							if (item.Action.ButtonActionName == "btnReceiveDocument" || item.Action.ButtonActionName == "btnUnApproveDocument") continue;
-							else if (item.Action.ButtonActionName == "btnIsPayment" || item.Action.ButtonActionName == "btnUnPayment") actionStep = 5;
-						}
-					}
-					else if (paymentOrderType.IsIgnoreHR == true)
-					{
-						if (item.Action.ButtonActionGroup == "btnTBP") actionStep = 2;
-						else if (item.Action.ButtonActionGroup == "btnHR")
-						{
+                    if (log == null)
+                    {
+                        throw new Exception($"Không tìm thấy log cho đề nghị [{item.Code}] - step {actionStep}");
+                    }
+                    PaymentOrderLogApproved orderLogApproved = new();
+                    orderLogApproved.PaymentOrderID = item.ID;
+                    orderLogApproved.DateApproved = DateTime.Now;
+                    orderLogApproved.PaymentOrderLogID = log.ID;
+                    if (item.PaymentOrderLog.IsApproved == 2)
+                    {
+                        if (string.IsNullOrWhiteSpace(item.ReasonCancel))
+                        {
+                            ApiResponseFactory.Fail(null, "Vui lòng nhập Lý do hủy!", "Thông báo");
+                            continue;
+                        }
+                        orderLogApproved.EmployeeID = log.EmployeeID;
+                        orderLogApproved.IsApproved = item.PaymentOrderLog.IsApproved;
+                        orderLogApproved.EmployeeApproveActualID = _currentUser.EmployeeID;
+                        orderLogApproved.ReasonCancel = item.ReasonCancel;
+                        orderLogApproved.ContentLog = $"{DateTime.Now.ToString("dd/MM/yyyy")}: {_currentUser.FullName} {item.Action.ButtonActionText}\n";
 
-						}
-						else if (item.Action.ButtonActionGroup == "btnKTTT")
-						{
-							if (item.Action.ButtonActionName == "btnApproveDocument" || item.Action.ButtonActionName == "btnUnApproveDocument" || item.Action.ButtonActionName == "btnUpdateDocument") actionStep = 3;
-							else if (item.Action.ButtonActionName == "btnReceiveDocument" || item.Action.ButtonActionName == "btnUnReceiveDocument") actionStep = 6;
-							else if (item.Action.ButtonActionName == "btnIsPayment" || item.Action.ButtonActionName == "btnUnPayment") actionStep = 7;
-						}
-						else if (item.Action.ButtonActionGroup == "btnKTT") actionStep = 4;
-						else if (item.Action.ButtonActionGroup == "btnBGĐ") actionStep = 5;
-					}
-					else
-					{
-						if (item.Action.ButtonActionGroup == "btnTBP") actionStep = 2;
-						else if (item.Action.ButtonActionGroup == "btnHR")
-						{
-							//actionStep = 3;
-							//if (buttonName == "btnApproveDocumentHR" || buttonName == "btnUnApproveDocumentHR") actionStep = 3;
-							// lee min khooi update 03/10/2024
-							if (item.Action.ButtonActionName == "btnApproveDocumentHR" || item.Action.ButtonActionName == "btnUnApproveDocumentHR" || item.Action.ButtonActionName == "btnHRUpdateDocument") actionStep = 3;
-							else if (item.Action.ButtonActionName == "btnApproveHR" || item.Action.ButtonActionName == "btnUnApproveHR") actionStep = 4;
-						}
-						else if (item.Action.ButtonActionGroup == "btnKTTT")
-						{
-							if (item.Action.ButtonActionName == "btnApproveDocument" || item.Action.ButtonActionName == "btnUnApproveDocument" || item.Action.ButtonActionName == "btnUpdateDocument") actionStep = 5;
-							else if (item.Action.ButtonActionName == "btnReceiveDocument" || item.Action.ButtonActionName == "btnUnReceiveDocument") actionStep = 8;
-							else if (item.Action.ButtonActionName == "btnIsPayment" || item.Action.ButtonActionName == "btnUnPayment") actionStep = 9;
-						}
-						else if (item.Action.ButtonActionGroup == "btnKTT") actionStep = 6;
-						else if (item.Action.ButtonActionGroup == "btnBGĐ") actionStep = 7;
-					}
+                        //log.DateApproved = DateTime.Now;
+                        //log.IsApproved = item.PaymentOrderLog.IsApproved;
+                        //log.EmployeeApproveActualID = _currentUser.EmployeeID;
+                        //log.ReasonCancel += $"{DateTime.Now.ToString("dd/MM/yyyy")}: " + item.ReasonCancel + "\n";
+                        //log.ContentLog += $"{DateTime.Now.ToString("dd/MM/yyyy")}: {_currentUser.FullName} {item.Action.ButtonActionText}\n";
 
-					if (actionStep == 0)
-					{
-						//messageFails.Add( $"Đề nghị [{item.Code}] không cần {dropdownButtonText.Trim().ToLower()} buttonText.Trim().ToLower()!");
-						return (0, "");
-					}
+                        //await UpdateAsync(log);
+                        var result = await _paymentOrderLogApprovedRepo.CreateAsync(orderLogApproved);
+                        if (result == 0)
+                        {
+                            throw new Exception($"Cập nhập chưa thành công đề nghị [{item.Code}]!");
+                        }
+                    }
+                    else
+                    {
+                        orderLogApproved.EmployeeID = log.EmployeeID;
+                        orderLogApproved.IsApproved = item.PaymentOrderLog.IsApproved;
+                        orderLogApproved.ReasonCancel = "";
+                        orderLogApproved.ContentLog += $"{DateTime.Now.ToString("dd/MM/yyyy")}: {_currentUser.FullName} {item.Action.ButtonActionText}\n";
+                        orderLogApproved.EmployeeApproveActualID = _currentUser.EmployeeID;
 
-					if (actionStep == 2 && !_currentUser.IsAdmin) //Kiểm tra đề nghị có phải của tbp đó hay ko
-					{
-						var logDb = GetAll(x => x.IsDeleted != true
-											&& x.PaymentOrderID == item.ID
-											&& x.Step == actionStep).FirstOrDefault() ?? new PaymentOrderLog();
+                        //log.DateApproved = DateTime.Now;
+                        //log.IsApproved = item.PaymentOrderLog.IsApproved;
+                        //log.EmployeeApproveActualID = _currentUser.EmployeeID;
+                        //log.ReasonCancel = "";
+                        //log.ContentLog += $"{DateTime.Now.ToString("dd/MM/yyyy")}: {_currentUser.FullName} {item.Action.ButtonActionText}\n";
 
-						if (logDb.EmployeeID != _currentUser.EmployeeID)
-						{
-							messageFails.Add($"Bạn không thể {statusText} đề nghị [{item.Code}]!");
-							continue;
-						}
-					}
+                        if (item.Action.ButtonActionName == "btnApproveDocument" || item.Action.ButtonActionName == "btnApproveKT" || item.Action.ButtonActionName == "btnUpdateDocument")
+                        {
+                            //item.AccountingNote += item.
 
-					//int currentApproved = item.PaymentOrderLog.IsApproved ?? 0;
-					if (actionStep == item.Step)
-					{
-						if (item.PaymentOrderLog.IsApproved == 1 && item.CurrentApproved == 2 && item.Action.ButtonActionGroup != "btnBGĐ")
-						{
-							ApiResponseFactory.Fail(null, $"Bạn không thể {statusText} đề nghị [{item.Code}]!");
-							continue;
-						}
-						else if (item.PaymentOrderLog.IsApproved == 1 && item.CurrentApproved == 1)
-						{
-							ApiResponseFactory.Fail(null, $"Đề nghị [{item.Code}] đã được duyệt!");
-							continue;
-						}
-					}
-					else if (actionStep < item.Step)
-					{
-						if (item.PaymentOrderLog.IsApproved != 1)
-						{
-							ApiResponseFactory.Fail(null, "Vui lòng huỷ duyệt ở bước sau trước!", "Thông báo");
-							continue;
-						}
-					}
-					else
-					{
+                            if (item.Action.ButtonActionName == "btnUpdateDocument")
+                            {
+                                //var paymentOrder = _paymentOrderRepo.GetByID(item.ID);
+                                //paymentOrder.AccountingNote += item.AccountingNote + "\n";
+                                //await _paymentOrderRepo.UpdateAsync(paymentOrder);
+                            }
 
-						if (item.CurrentApproved != 1)
-						{
-							//MessageBox.Show($"Bạn không thể {statusText}!", "Thông báo");
-							continue;
-						}
-						else if ((actionStep - item.Step) == 1) //Ở ngay bước sau
-						{
-							if (item.PaymentOrderLog.IsApproved == 1 && item.CurrentApproved == 2 && item.Action.ButtonActionGroup != "btnBGĐ")
-							{
-								//MessageBox.Show("Bạn không thể huỷ duyệt!", "Thông báo");
-								continue;
-							}
-						}
-						else
-						{
-							//MessageBox.Show("Vui lòng duyệt ở bước trước!", "Thông báo");
-							continue;
-						}
-					}
-					PaymentOrderLogApproved? logUnApproved = _paymentOrderLogApprovedRepo.GetAll(p => p.PaymentOrderID == item.ID && p.IsDeleted != true && p.IsApproved == 2)?.FirstOrDefault();
-					if (logUnApproved != null && logUnApproved.ID > 0)
-					{
-						PaymentOrderLog l = GetByID(logUnApproved.PaymentOrderLogID ?? 0);
-						if (l.IsDeleted.HasValue && !l.IsDeleted.Value)
-						{
-							messageFails.Add($"Đề nghị [{item.Code}] đã bị hủy duyệt ở bước [{l.StepName}] !");
-							continue;
-						}
-					}
-					//Get quy trình duyệt
-					var log = GetAll(x => x.PaymentOrderID == item.ID && x.Step == actionStep && x.IsDeleted != true).FirstOrDefault();
+                            //log.DateApproved = DateTime.Now;
+                            //log.IsApproved = item.PaymentOrderLog.IsApproved;
+                            //log.EmployeeApproveActualID = _currentUser.EmployeeID;
+                            //log.ReasonCancel = "";
+                            //log.ContentLog += $"{DateTime.Now.ToString("dd/MM/yyyy")}: {_currentUser.FullName} {item.Action.ButtonActionText}\n";
+                            orderLogApproved.IsRequestAppendFileAC = item.PaymentOrderLog.IsApproved == 3;
+                            orderLogApproved.ReasonRequestAppendFileAC = item.PaymentOrderLog.ReasonRequestAppendFileAC;
+                            //log.IsRequestAppendFileAC = item.PaymentOrderLog.IsApproved == 3;
+                            //log.ReasonRequestAppendFileAC = item.AccountingNote;
 
-					if (log == null)
-					{
-						throw new Exception($"Không tìm thấy log cho đề nghị [{item.Code}] - step {actionStep}");
-					}
-					PaymentOrderLogApproved orderLogApproved = new();
-					orderLogApproved.PaymentOrderID = item.ID;
-					orderLogApproved.DateApproved = DateTime.Now;
-					orderLogApproved.PaymentOrderLogID = log.ID;
-					if (item.PaymentOrderLog.IsApproved == 2)
-					{
-						if (string.IsNullOrWhiteSpace(item.ReasonCancel))
-						{
-							ApiResponseFactory.Fail(null, "Vui lòng nhập Lý do hủy!", "Thông báo");
-							continue;
-						}
-						orderLogApproved.EmployeeID = log.EmployeeID;
-						orderLogApproved.IsApproved = item.PaymentOrderLog.IsApproved;
-						orderLogApproved.EmployeeApproveActualID = _currentUser.EmployeeID;
-						orderLogApproved.ReasonCancel = item.ReasonCancel;
-						orderLogApproved.ContentLog = $"{DateTime.Now.ToString("dd/MM/yyyy")}: {_currentUser.FullName} {item.Action.ButtonActionText}\n";
+                            if (!string.IsNullOrEmpty(item.AccountingNote))
+                            {
+                                PaymentOrder paymentOrder = _paymentOrderRepo.GetByID(item.ID);
 
-						//log.DateApproved = DateTime.Now;
-						//log.IsApproved = item.PaymentOrderLog.IsApproved;
-						//log.EmployeeApproveActualID = _currentUser.EmployeeID;
-						//log.ReasonCancel += $"{DateTime.Now.ToString("dd/MM/yyyy")}: " + item.ReasonCancel + "\n";
-						//log.ContentLog += $"{DateTime.Now.ToString("dd/MM/yyyy")}: {_currentUser.FullName} {item.Action.ButtonActionText}\n";
+                                if (paymentOrder != null)
+                                {
+                                    if (item.Action.ButtonActionGroup == "btnKTT")
+                                        paymentOrder.AccountingLeaderNote = item.AccountingNote.Trim();
+                                    else paymentOrder.AccountingNote = item.AccountingNote.Trim();
+                                    await _paymentOrderRepo.UpdateAsync(paymentOrder);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (item.Action.ButtonActionName == "btnHRUpdateDocument" && !isRequestAppendFileHR)
+                            {
+                                reasonRequestAppendFileHR = item.PaymentOrderLog.ReasonRequestAppendFileHR ?? "";
+                                orderLogApproved.ReasonRequestAppendFileHR = reasonRequestAppendFileHR;
+                                orderLogApproved.IsRequestAppendFileHR = isRequestAppendFileHR;
+                                //log.ReasonRequestAppendFileHR = reasonRequestAppendFileHR;
+                                //log.IsRequestAppendFileHR = isRequestAppendFileHR;
+                                //log.DateApproved = DateTime.Now;
+                                //log.IsApproved = item.PaymentOrderLog.IsApproved;
+                                //log.EmployeeApproveActualID = _currentUser.EmployeeID;
+                                //log.ReasonCancel = "";
+                                //log.ContentLog += $"{DateTime.Now.ToString("dd/MM/yyyy HH:mm")}: {_currentUser.FullName} {item.Action.ButtonActionText}\n";
 
-						//await UpdateAsync(log);
-						var result = await _paymentOrderLogApprovedRepo.CreateAsync(orderLogApproved);
-						if (result == 0)
-						{
-							throw new Exception($"Cập nhập chưa thành công đề nghị [{item.Code}]!");
-						}
-					}
-					else
-					{
-						orderLogApproved.EmployeeID = log.EmployeeID;
-						orderLogApproved.IsApproved = item.PaymentOrderLog.IsApproved;
-						orderLogApproved.ReasonCancel = "";
-						orderLogApproved.ContentLog += $"{DateTime.Now.ToString("dd/MM/yyyy")}: {_currentUser.FullName} {item.Action.ButtonActionText}\n";
-						orderLogApproved.EmployeeApproveActualID = _currentUser.EmployeeID;
-
-						//log.DateApproved = DateTime.Now;
-						//log.IsApproved = item.PaymentOrderLog.IsApproved;
-						//log.EmployeeApproveActualID = _currentUser.EmployeeID;
-						//log.ReasonCancel = "";
-						//log.ContentLog += $"{DateTime.Now.ToString("dd/MM/yyyy")}: {_currentUser.FullName} {item.Action.ButtonActionText}\n";
-
-						if (item.Action.ButtonActionName == "btnApproveDocument" || item.Action.ButtonActionName == "btnApproveKT" || item.Action.ButtonActionName == "btnUpdateDocument")
-						{
-							//item.AccountingNote += item.
-
-							if (item.Action.ButtonActionName == "btnUpdateDocument")
-							{
-								//var paymentOrder = _paymentOrderRepo.GetByID(item.ID);
-								//paymentOrder.AccountingNote += item.AccountingNote + "\n";
-								//await _paymentOrderRepo.UpdateAsync(paymentOrder);
-							}
-
-							//log.DateApproved = DateTime.Now;
-							//log.IsApproved = item.PaymentOrderLog.IsApproved;
-							//log.EmployeeApproveActualID = _currentUser.EmployeeID;
-							//log.ReasonCancel = "";
-							//log.ContentLog += $"{DateTime.Now.ToString("dd/MM/yyyy")}: {_currentUser.FullName} {item.Action.ButtonActionText}\n";
-							orderLogApproved.IsRequestAppendFileAC = item.PaymentOrderLog.IsApproved == 3;
-							orderLogApproved.ReasonRequestAppendFileAC = item.PaymentOrderLog.ReasonRequestAppendFileAC;
-							//log.IsRequestAppendFileAC = item.PaymentOrderLog.IsApproved == 3;
-							//log.ReasonRequestAppendFileAC = item.AccountingNote;
-
-							if (!string.IsNullOrEmpty(item.AccountingNote))
-							{
-								PaymentOrder paymentOrder = _paymentOrderRepo.GetByID(item.ID);
-
-								if (paymentOrder != null)
-								{
-									if (item.Action.ButtonActionGroup == "btnKTT")
-										paymentOrder.AccountingLeaderNote = item.AccountingNote.Trim();
-									else paymentOrder.AccountingNote = item.AccountingNote.Trim();
-									await _paymentOrderRepo.UpdateAsync(paymentOrder);
-								}
-							}
-						}
-						else
-						{
-							if (item.Action.ButtonActionName == "btnHRUpdateDocument" && !isRequestAppendFileHR)
-							{
-								reasonRequestAppendFileHR = item.PaymentOrderLog.ReasonRequestAppendFileHR ?? "";
-								orderLogApproved.ReasonRequestAppendFileHR = reasonRequestAppendFileHR;
-								orderLogApproved.IsRequestAppendFileHR = isRequestAppendFileHR;
-								//log.ReasonRequestAppendFileHR = reasonRequestAppendFileHR;
-								//log.IsRequestAppendFileHR = isRequestAppendFileHR;
-								//log.DateApproved = DateTime.Now;
-								//log.IsApproved = item.PaymentOrderLog.IsApproved;
-								//log.EmployeeApproveActualID = _currentUser.EmployeeID;
-								//log.ReasonCancel = "";
-								//log.ContentLog += $"{DateTime.Now.ToString("dd/MM/yyyy HH:mm")}: {_currentUser.FullName} {item.Action.ButtonActionText}\n";
-
-								if (item.Action.ButtonActionName == "btnUpdateDocument") //log.IsRequestAppendFileAC = true;
-									orderLogApproved.IsRequestAppendFileAC = true;
-							}
-							// Lưu HRNote vào PaymentOrder khi HR duyệt
-							if (item.Action.ButtonActionGroup == "btnHR" && item.PaymentOrderLog.IsApproved == 1 && !string.IsNullOrEmpty(item.HRNote))
-							{
-								PaymentOrder paymentOrder = _paymentOrderRepo.GetByID(item.ID);
-								if (paymentOrder != null)
-								{
-									paymentOrder.HRNote = item.HRNote.Trim();
-									await _paymentOrderRepo.UpdateAsync(paymentOrder);
-								}
-							}
-						}
-						//int resultUpdate = await UpdateAsync(log);
-						//int resultUpdate = await SqlDapper<PaymentOrderLog>.ExecuteScalarStoredProcedure<int>("spUpdatePaymentOrderLog", new
-						//{
-						//    ID = log.ID,
-						//    DateApproved = log.DateApproved,
-						//    IsApproved = log.IsApproved,
-						//    EmployeeApproveActualID = log.EmployeeApproveActualID,
-						//    ReasonCancel = log.ReasonCancel,
-						//    ContentLog = log.ContentLog,
-						//    IsRequestAppendFileAC = log.IsRequestAppendFileAC,
-						//    ReasonRequestAppendFileAC = log.ReasonRequestAppendFileAC,
-						//    ReasonRequestAppendFileHR = log.ReasonRequestAppendFileHR,
-						//    IsRequestAppendFileHR = log.IsRequestAppendFileHR
-						//});
-						int resultUpdate = await _paymentOrderLogApprovedRepo.CreateAsync(orderLogApproved);
-						if (resultUpdate <= 0)
-						{
-							messageFails.Add($"Cập nhập chưa thành công đề nghị [{item.Code}]!");
-							continue;
-						}
-					}
-				}
-				if (messageFails.Count > 0)
-				{
-					//throw new Exception(string.Join("\r\n", messageFails));
-					return (0, string.Join("\r\n", messageFails));
-				}
-				return (1, "");
-			}
-			catch (Exception ex)
-			{
-				throw new Exception(ex.Message);
-			}
-		}
-	}
+                                if (item.Action.ButtonActionName == "btnUpdateDocument") //log.IsRequestAppendFileAC = true;
+                                    orderLogApproved.IsRequestAppendFileAC = true;
+                            }
+                            // Lưu HRNote vào PaymentOrder khi HR duyệt
+                            if (item.Action.ButtonActionGroup == "btnHR" && item.PaymentOrderLog.IsApproved == 1 && !string.IsNullOrEmpty(item.HRNote))
+                            {
+                                PaymentOrder paymentOrder = _paymentOrderRepo.GetByID(item.ID);
+                                if (paymentOrder != null)
+                                {
+                                    paymentOrder.HRNote = item.HRNote.Trim();
+                                    await _paymentOrderRepo.UpdateAsync(paymentOrder);
+                                }
+                            }
+                        }
+                        //int resultUpdate = await UpdateAsync(log);
+                        //int resultUpdate = await SqlDapper<PaymentOrderLog>.ExecuteScalarStoredProcedure<int>("spUpdatePaymentOrderLog", new
+                        //{
+                        //    ID = log.ID,
+                        //    DateApproved = log.DateApproved,
+                        //    IsApproved = log.IsApproved,
+                        //    EmployeeApproveActualID = log.EmployeeApproveActualID,
+                        //    ReasonCancel = log.ReasonCancel,
+                        //    ContentLog = log.ContentLog,
+                        //    IsRequestAppendFileAC = log.IsRequestAppendFileAC,
+                        //    ReasonRequestAppendFileAC = log.ReasonRequestAppendFileAC,
+                        //    ReasonRequestAppendFileHR = log.ReasonRequestAppendFileHR,
+                        //    IsRequestAppendFileHR = log.IsRequestAppendFileHR
+                        //});
+                        int resultUpdate = await _paymentOrderLogApprovedRepo.CreateAsync(orderLogApproved);
+                        if (resultUpdate <= 0)
+                        {
+                            messageFails.Add($"Cập nhập chưa thành công đề nghị [{item.Code}]!");
+                            continue;
+                        }
+                    }
+                }
+                if (messageFails.Count > 0)
+                {
+                    //throw new Exception(string.Join("\r\n", messageFails));
+                    return (0, string.Join("\r\n", messageFails));
+                }
+                return (1, "");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+    }
 }

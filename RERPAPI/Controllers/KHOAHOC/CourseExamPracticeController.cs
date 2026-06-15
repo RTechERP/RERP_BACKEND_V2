@@ -1,17 +1,8 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using DocumentFormat.OpenXml.Wordprocessing;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using NPOI.SS.Formula.Functions;
+﻿using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
-using SkiaSharp;
-using System.Net;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers.KHOAHOC
 {
@@ -47,7 +38,6 @@ namespace RERPAPI.Controllers.KHOAHOC
             _courseExamResultRepo = courseExamResultRepo;
             _courseExamEvaluateRepo = courseExamEvaluateRepo;
         }
-
 
         // load khóa học
         [HttpGet("get-course-data")]
@@ -200,7 +190,6 @@ namespace RERPAPI.Controllers.KHOAHOC
         [HttpPost("course-exam-results-evaluate")]
         public IActionResult CourseRxamResultsEvaluate(string lstId, bool evaluate)
         {
-
             SQLHelper<object>.ExcuteProcedure(
                 "spUpdateEvaluate",
                 new[] { "@LstID", "@Evaluate" },
@@ -276,7 +265,7 @@ namespace RERPAPI.Controllers.KHOAHOC
             }
         }
 
-        // 
+        //
         [HttpGet("get-check-lesson-exam")]
         public IActionResult GetCheckLessonExam(int? lessonID)
         {
@@ -297,7 +286,6 @@ namespace RERPAPI.Controllers.KHOAHOC
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         // curd kết quả thị khóa học: TH, BT
 
@@ -322,7 +310,6 @@ namespace RERPAPI.Controllers.KHOAHOC
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         // Thêm sửa kết quả thi: TH, BT
         [HttpPost("save-course-exam-practice")]
@@ -520,7 +507,5 @@ namespace RERPAPI.Controllers.KHOAHOC
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-
     }
 }

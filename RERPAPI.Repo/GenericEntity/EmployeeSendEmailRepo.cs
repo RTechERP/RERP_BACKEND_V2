@@ -1,23 +1,19 @@
 ﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
     public class EmployeeSendEmailRepo : GenericRepo<EmployeeSendEmail>
     {
-        EmployeeRepo employeeRepo;
+        private EmployeeRepo employeeRepo;
+
         public EmployeeSendEmailRepo(CurrentUser currentUser, EmployeeRepo employeeRepo) : base(currentUser)
         {
             this.employeeRepo = employeeRepo;
         }
+
         //public int SendMail(int employeeid, int receiver, string subject, string body, string cc)
         //{
-
         //    try
         //    {
         //        EmployeeSendEmail sendEmail = new EmployeeSendEmail();
@@ -48,10 +44,8 @@ namespace RERPAPI.Repo.GenericEntity
         //            }
         //        }
 
-
         //        if (employee != null)
         //        {
-
         //            string emailCC = string.Join(";", listEmailCC);
 
         //            sendEmail.EmailTo = employee.EmailCongTy;

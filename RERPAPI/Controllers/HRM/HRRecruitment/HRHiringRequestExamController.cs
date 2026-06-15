@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NPOI.SS.Formula.Functions;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO.HRM;
@@ -8,9 +7,6 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
 using RERPAPI.Repo.GenericEntity.HRRecruitmentExamRepo;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.HRM.HRRecruitment
 {
@@ -19,9 +15,10 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
     [Authorize]
     public class HRHiringRequestExamController : ControllerBase
     {
-        HiringRequestExamRepo _hiringRequestExamRepo;
-        HRHiringRequestRepo _hiringRequestRepo;
-        HRRecruitmentCandidateRepo _hrRecruitmentCandidateRepo;
+        private HiringRequestExamRepo _hiringRequestExamRepo;
+        private HRHiringRequestRepo _hiringRequestRepo;
+        private HRRecruitmentCandidateRepo _hrRecruitmentCandidateRepo;
+
         public HRHiringRequestExamController(HiringRequestExamRepo hiringRequestExamRepo, HRHiringRequestRepo hRHiringRequestRepo, HRRecruitmentCandidateRepo hrRecruitmentCandidateRepo)
         {
             _hiringRequestExamRepo = hiringRequestExamRepo;
@@ -44,7 +41,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
         //}
         [HttpGet("get-data-hiring-request")]
         [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
-        public async Task<IActionResult> GetDataHiringRequest(DateTime dateStart, DateTime dateEnd, string? keyword) // thêm keyword, tìm kiếm theo ngày tạo 
+        public async Task<IActionResult> GetDataHiringRequest(DateTime dateStart, DateTime dateEnd, string? keyword) // thêm keyword, tìm kiếm theo ngày tạo
         {
             try
             {
@@ -54,7 +51,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 dateStart = dateStart.Date;
                 dateEnd = dateEnd.Date.AddDays(1);
 
-                var data = _hiringRequestRepo.GetAll(x =>!x.IsDeleted
+                var data = _hiringRequestRepo.GetAll(x => !x.IsDeleted
                                                        && (string.IsNullOrEmpty(keywordLower)
                                                        || x.HiringRequestCode.ToLower().Contains(keywordLower)
                                                        || x.PositionName.ToLower().Contains(keywordLower))
@@ -71,6 +68,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-exam-by-requestID")]
         [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         public async Task<IActionResult> GetExamByRequestID(int hiringRequestID)
@@ -179,7 +177,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             }
         }
 
-        // lấy danh sách ưng viên tham gia kỳ tuyển dụng 
+        // lấy danh sách ưng viên tham gia kỳ tuyển dụng
         [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpPost("get-candidates")]
         public async Task<IActionResult> GetCandidates(long hiringRequestId)
@@ -195,6 +193,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //cập nhật khóa bài thi ứng viên có đang hoạt động hay không
         [RequiresPermission("N1,N2,N32,N33,N38,N51,N52,N56,N61,N79,N81,N86,N94")]
         [HttpPost("update-active-exam-candidate")]

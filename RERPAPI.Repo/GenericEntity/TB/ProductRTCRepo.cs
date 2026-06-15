@@ -6,32 +6,36 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class ProductRTCRepo : GenericRepo<ProductRTC>
     {
-        ProductGroupRTCRepo _groupRTCRepo;
+        private ProductGroupRTCRepo _groupRTCRepo;
+
         public ProductRTCRepo(CurrentUser currentUser, ProductGroupRTCRepo groupRTCRepo) : base(currentUser)
         {
             _groupRTCRepo = groupRTCRepo;
         }
+
         public bool checkExistProductCodeRTC(ProductRTC model, int warehouseType)
         {
             var dt = SQLHelper<object>.ProcedureToList("spCheckCodeExistRTC", ["@ProductCode", "@ID", "@WarehouseType"], [model.ProductCode ?? "", model.ID, warehouseType]);
             var exist = SQLHelper<dynamic>.GetListData(dt, 0);
             return exist[0].IsExist;
         }
+
         public bool checkExistSerialRTC(ProductRTC model)
         {
             var exist = GetAll(x => x.SerialNumber == model.SerialNumber && x.ID != model.ID && x.IsDelete != true).Any();
             return exist;
         }
+
         public bool checkExistPartnumberRTC(ProductRTC model)
         {
             var exist = GetAll(x => x.PartNumber == model.SerialNumber && x.ID != model.ID && x.IsDelete != true).Any();
             return exist;
         }
+
         public string generateProductCode(int productGroupID)
         {
             string numberCodeDefault = "00000001";
             string productCodeRTC = "Z";
-
 
             var group = _groupRTCRepo.GetByID(productGroupID);
             if (group.WarehouseType == 2) productCodeRTC = "A";
@@ -62,6 +66,5 @@ namespace RERPAPI.Repo.GenericEntity
             productCodeRTC += numberCodeText;
             return productCodeRTC;
         }
-
     }
 }

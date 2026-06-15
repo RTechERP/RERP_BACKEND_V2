@@ -4,8 +4,6 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.GeneralCategory
 {
@@ -29,12 +27,12 @@ namespace RERPAPI.Controllers.GeneralCategory
             try
             {
                 var arrParamName = new string[] { "@YearValue", "@MonthValue", "@Keyword" };
-                var arrParamValue = new object[] { 
-                    yearValue ?? (object)DBNull.Value, 
-                    monthValue ?? (object)DBNull.Value, 
-                    keyword ?? (object)DBNull.Value 
+                var arrParamValue = new object[] {
+                    yearValue ?? (object)DBNull.Value,
+                    monthValue ?? (object)DBNull.Value,
+                    keyword ?? (object)DBNull.Value
                 };
-                
+
                 var dataSet = SQLHelper<object>.ProcedureToList("spGetFiveSRatingList", arrParamName, arrParamValue);
                 var result = SQLHelper<object>.GetListData(dataSet, 0);
 

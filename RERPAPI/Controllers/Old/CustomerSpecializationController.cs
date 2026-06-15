@@ -10,22 +10,23 @@ namespace RERPAPI.Controllers.Old
     public class CustomerSpecializationController : ControllerBase
     {
         private CustomerSpecializationRepo _customerSpecializationRepo;
+
         public CustomerSpecializationController(CustomerSpecializationRepo customerSpecializationRepo)
         {
             _customerSpecializationRepo = customerSpecializationRepo;
         }
+
         [HttpPost("save-data")]
         public async Task<IActionResult> Post(CustomerSpecialization model)
         {
             try
             {
-
                 //TN.Binh update 19/10/25
                 if (!CheckCustomerSpecializationCode(model))
                 {
                     return Ok(new { status = 0, message = $"Mã ngành nghề [{model.Code}] đã tồn tại!" });
                 }
-                //end update 
+                //end update
                 if (model.ID > 0)
                 {
                     await _customerSpecializationRepo.UpdateAsync(model);
@@ -42,26 +43,30 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        // TN.Binh update 27/10/25 
+
+        // TN.Binh update 27/10/25
 
         #region check trùng mã code
+
         private bool CheckCustomerSpecializationCode(CustomerSpecialization dto)
         {
             bool check = true;
             var exists = _customerSpecializationRepo.GetAll(x => x.Code == dto.Code
-                            && x.ID != dto.ID && dto.IsDeleted !=true).ToList();
+                            && x.ID != dto.ID && dto.IsDeleted != true).ToList();
             if (exists.Count > 0) check = false;
             return check;
         }
+
         //end update
-        #endregion
+
+        #endregion check trùng mã code
 
         [HttpGet]
         public IActionResult Get()
         {
             try
             {
-                var data = _customerSpecializationRepo.GetAll(x=>x.IsDeleted != true);
+                var data = _customerSpecializationRepo.GetAll(x => x.IsDeleted != true);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
@@ -69,6 +74,7 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("search")]
         public IActionResult Search(string? keyword)
         {
@@ -95,7 +101,6 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
-
         [HttpGet("get-detail")]
         public IActionResult GetDetail(int id)
         {
@@ -103,15 +108,12 @@ namespace RERPAPI.Controllers.Old
             {
                 var data = _customerSpecializationRepo.GetByID(id);
                 return Ok(ApiResponseFactory.Success(data, ""));
-
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         //[HttpDelete("{id}")]
         //public IActionResult DeleteCustomerSpecialization(int id)

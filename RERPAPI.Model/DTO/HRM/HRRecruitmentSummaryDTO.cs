@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace RERPAPI.Model.DTO.HRM
 {
     public class HRRecruitmentSummaryFilterDTO

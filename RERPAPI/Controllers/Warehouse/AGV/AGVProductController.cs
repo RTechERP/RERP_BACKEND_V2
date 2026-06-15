@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.Warehouses.AGV;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.Warehouse.AGV
 {
@@ -16,12 +14,11 @@ namespace RERPAPI.Controllers.Warehouse.AGV
         private readonly IConfiguration _configuration;
         private readonly AGVProductRepo _agvProductRepo;
 
-        public AGVProductController(AGVProductRepo agvProductRepo,IConfiguration configuration)
+        public AGVProductController(AGVProductRepo agvProductRepo, IConfiguration configuration)
         {
             _configuration = configuration;
             _agvProductRepo = agvProductRepo;
         }
-
 
         [HttpGet()]
         public IActionResult GetAll()
@@ -51,13 +48,11 @@ namespace RERPAPI.Controllers.Warehouse.AGV
             }
         }
 
-
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] AGVProduct product)
         {
             try
             {
-
                 var validate = _agvProductRepo.Validate(product);
                 if (validate.status == 0)
                 {
@@ -71,7 +66,7 @@ namespace RERPAPI.Controllers.Warehouse.AGV
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex,ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }

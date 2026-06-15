@@ -1,10 +1,5 @@
 ﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Repo.GenericEntity
 {
@@ -90,7 +85,7 @@ namespace RERPAPI.Repo.GenericEntity
             return string.Join("\n", changes);
         }
 
-        #endregion
+        #endregion Log chính ProjectHistoryProblem
 
         #region Log chi tiết ProjectHistoryProblemDetail
 
@@ -149,7 +144,7 @@ namespace RERPAPI.Repo.GenericEntity
             return string.Join("\n", changes);
         }
 
-        #endregion
+        #endregion Log chi tiết ProjectHistoryProblemDetail
 
         #region Log danh sách link
 
@@ -167,7 +162,7 @@ namespace RERPAPI.Repo.GenericEntity
             return $"- thay đổi {fieldDisplayName} từ {oldText} thành {newText}.";
         }
 
-        #endregion
+        #endregion Log danh sách link
 
         #region Khác
 
@@ -280,6 +275,6 @@ namespace RERPAPI.Repo.GenericEntity
             await CreateAsync(log);
         }
 
-        #endregion
+        #endregion Khác
     }
 }

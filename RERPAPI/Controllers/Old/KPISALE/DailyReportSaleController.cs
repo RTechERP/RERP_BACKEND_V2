@@ -1,7 +1,4 @@
-﻿using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Spreadsheet;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -33,7 +30,7 @@ namespace RERPAPI.Controllers.Old.KPISALE
         private readonly EmployeeRepo _employeeRepo;
         private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
 
-        public DailyReportSaleController(DailyReportSaleRepo dailyReportSaleRepo,CustomerPartsRepo customerPartsRepo , ProjectRepo projectRepo, CustomerRepo customerRepo, GroupSaleRepo groupSaleRepo, EmployeeTeamSaleRepo employeeTeamSaleRepo, FirmBaseRepo firmBaseRepo, ProjectTypeBaseRepo projectTypeBaseRepo, ProjectStatusRepo projectStatusRepo, CustomerContactRepo customerContactRepo, FollowProjectBaseRepo followProjectBaseRepo, ProjectStatusLogRepo projectStatusLogRepo, EmployeeTeamSaleLinkRepo employeeTeamSaleLinkRepo, FollowProjectBaseDetailRepo followProjectBaseDetailRepo, EmployeeRepo employeeRepo, vUserGroupLinksRepo vUserGroupLinksRepo)
+        public DailyReportSaleController(DailyReportSaleRepo dailyReportSaleRepo, CustomerPartsRepo customerPartsRepo, ProjectRepo projectRepo, CustomerRepo customerRepo, GroupSaleRepo groupSaleRepo, EmployeeTeamSaleRepo employeeTeamSaleRepo, FirmBaseRepo firmBaseRepo, ProjectTypeBaseRepo projectTypeBaseRepo, ProjectStatusRepo projectStatusRepo, CustomerContactRepo customerContactRepo, FollowProjectBaseRepo followProjectBaseRepo, ProjectStatusLogRepo projectStatusLogRepo, EmployeeTeamSaleLinkRepo employeeTeamSaleLinkRepo, FollowProjectBaseDetailRepo followProjectBaseDetailRepo, EmployeeRepo employeeRepo, vUserGroupLinksRepo vUserGroupLinksRepo)
         {
             _dailyReportSaleRepo = dailyReportSaleRepo;
             _projectRepo = projectRepo;
@@ -62,8 +59,8 @@ namespace RERPAPI.Controllers.Old.KPISALE
                                 new string[] { "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@FilterText", "@CustomerID", "@UserID", "@GroupType", "@Team", "@ProjectID", "@EmployeeTeamSaleID" },
                                 new object[] { page, size, dateStart, dateEnd, filterText, customerId, userId, groupType, teamId, projectId, employeeTeamSaleId });
                 var data = SQLHelper<dynamic>.GetListData(result, 0);
-                var totalPage = SQLHelper<dynamic>.GetListData(result, 1); 
-                return Ok(ApiResponseFactory.Success(new {data, totalPage}, ""));
+                var totalPage = SQLHelper<dynamic>.GetListData(result, 1);
+                return Ok(ApiResponseFactory.Success(new { data, totalPage }, ""));
             }
             catch (Exception ex)
             {
@@ -86,7 +83,8 @@ namespace RERPAPI.Controllers.Old.KPISALE
         }
 
         [HttpGet("get-projects")]
-        public IActionResult GetProjects() {
+        public IActionResult GetProjects()
+        {
             try
             {
                 var result = _projectRepo.GetAll(x => x.IsDeleted != true);
@@ -104,7 +102,6 @@ namespace RERPAPI.Controllers.Old.KPISALE
             try
             {
                 var result = _employeeTeamSaleRepo.GetAll(x => x.IsDeleted != 1 && x.ParentID == 0);
-
 
                 return Ok(ApiResponseFactory.Success(result, ""));
             }
@@ -326,7 +323,6 @@ namespace RERPAPI.Controllers.Old.KPISALE
         //        //    }
         //        //}
 
-
         //        DailyReportSale model = dto.ID > 0 ? _dailyReportSaleRepo.GetByID(dto.ID) : new DailyReportSale();
         //            model.UserID = dto.userId;
         //            model.DateEnd = dto.dateEnd;
@@ -394,7 +390,7 @@ namespace RERPAPI.Controllers.Old.KPISALE
         //            };
         //            await _followProjectBaseDetailRepo.CreateAsync(detail);
 
-        //        //Updateproject 
+        //        //Updateproject
         //        if (project.ID > 0)
         //            {
         //                project.ProjectStatus = dto.projectStatusBaseId;
@@ -630,6 +626,7 @@ namespace RERPAPI.Controllers.Old.KPISALE
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("delete")]
         public IActionResult Delete(int id)
         {
@@ -639,7 +636,6 @@ namespace RERPAPI.Controllers.Old.KPISALE
                 model.DeleteFlag = 1;
                 _dailyReportSaleRepo.Update(model);
                 return Ok(ApiResponseFactory.Success("", ""));
-
             }
             catch (Exception ex)
             {
@@ -687,7 +683,7 @@ namespace RERPAPI.Controllers.Old.KPISALE
                         // F1: Ngày thực hiện gần nhất
                         model.DateStart = ParseDate(GetString(row, "Ngày thực hiện"));
 
-                        // F2: Ngày dự kiến thực hiện  
+                        // F2: Ngày dự kiến thực hiện
                         model.DateEnd = ParseDate(GetString(row, "Ngày dự kiến"));
 
                         // F3: Người phụ trách (lookup từ FullName)
@@ -753,7 +749,7 @@ namespace RERPAPI.Controllers.Old.KPISALE
                         var bigAccount = GetString(row, "Big Account").Trim().ToLower();
                         model.BigAccount = bigAccount == "x" || bigAccount == "có";
 
-                        // F19: Cơ hội bán hàng 
+                        // F19: Cơ hội bán hàng
                         var saleOpportunity = GetString(row, "Cơ hội bán hàng").Trim().ToLower();
                         model.SaleOpportunity = saleOpportunity == "x" || saleOpportunity == "có";
 
@@ -786,16 +782,15 @@ namespace RERPAPI.Controllers.Old.KPISALE
             try
             {
                 var exist = _projectStatusRepo.GetAll(x => x.StatusName.ToLower().Trim() == model.StatusName.ToLower().Trim());
-                if(exist != null && exist.Count > 0)
+                if (exist != null && exist.Count > 0)
                 {
-                    return BadRequest(ApiResponseFactory.Fail(null,""));
+                    return BadRequest(ApiResponseFactory.Fail(null, ""));
                 }
                 ProjectStatus data = new ProjectStatus();
                 data.STT = model.STT;
                 data.StatusName = model.StatusName;
                 _projectStatusRepo.Create(data);
                 return Ok(ApiResponseFactory.Success("", "Lưu thành công"));
-
             }
             catch (Exception ex)
             {
@@ -899,7 +894,6 @@ namespace RERPAPI.Controllers.Old.KPISALE
             }
         }
 
-
         private string GetString(Dictionary<string, object> row, string key)
         {
             return row.TryGetValue(key, out var value) ? value?.ToString()?.Trim() ?? "" : "";
@@ -920,6 +914,5 @@ namespace RERPAPI.Controllers.Old.KPISALE
 
             return null;
         }
-
     }
 }

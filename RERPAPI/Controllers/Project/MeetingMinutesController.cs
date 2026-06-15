@@ -1,5 +1,4 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -9,14 +8,12 @@ using RERPAPI.Model.Param.Duan.MeetingMinutes;
 
 using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
 using RERPAPI.Repo.GenericEntity.MeetingMinutesRepo;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.Project
 {
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-
     public class MeetingMinutesController : ControllerBase
     {
         private readonly MeetingTypeRepo _meetingtype;
@@ -66,7 +63,6 @@ namespace RERPAPI.Controllers.Project
                     message = ex.Message,
                     error = ex.ToString()
                 });
-
             }
         }
 
@@ -96,7 +92,6 @@ namespace RERPAPI.Controllers.Project
                     //    total = SQLHelper<object>.GetListData(meetingminutes, 1)
                     //}
                     data = meetingminutes
-
                 });
             }
             catch (Exception ex)
@@ -146,24 +141,20 @@ namespace RERPAPI.Controllers.Project
         }
 
         [HttpPost("get-employee")]
-
         public IActionResult GetEmployee([FromBody] EmployeeRequestParam employeerequest)
         {
             try
             {
-             
                 var employees = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
                                                 new string[] { "@Status" },
-                                                new object[] { 0});
+                                                new object[] { 0 });
                 return Ok(new
                 {
                     status = 1,
                     data = new
                     {
                         asset = employees,
-                     
                     }
-
                 });
             }
             catch (Exception ex)
@@ -178,14 +169,13 @@ namespace RERPAPI.Controllers.Project
         }
 
         [HttpPost("get-user-team")]
-
         public IActionResult GetUserTeam([FromBody] UserTeamRequestParam userteamquest)
         {
             try
             {
                 var userteam = SQLHelper<dynamic>.ProcedureToList("spGetUserTeamLink_New",
-                    new string[] {"@UserTeamID", "@DepartmentID" },
-                    new object[] {0, userteamquest.DepartmentID });
+                    new string[] { "@UserTeamID", "@DepartmentID" },
+                    new object[] { 0, userteamquest.DepartmentID });
                 return Ok(new
                 {
                     status = 1,
@@ -194,7 +184,6 @@ namespace RERPAPI.Controllers.Project
                         asset = SQLHelper<dynamic>.GetListData(userteam, 0),
                         total = SQLHelper<dynamic>.GetListData(userteam, 1)
                     }
-
                 });
             }
             catch (Exception ex)
@@ -209,7 +198,6 @@ namespace RERPAPI.Controllers.Project
         }
 
         [HttpGet("get-project-history-problem/{id}")]
-
         public IActionResult GetProjectProblem(int id)
         {
             try
@@ -270,16 +258,16 @@ namespace RERPAPI.Controllers.Project
                 // Lấy từng result set
                 var customerDetails = SQLHelper<dynamic>.GetListData(allResults, 0);       // Chi tiết khách hàng
                 var employeeDetails = SQLHelper<dynamic>.GetListData(allResults, 2);       // nhân viên tham dự
-                var employeeAttendance = SQLHelper<dynamic>.GetListData(allResults, 1);    // nội dung 
+                var employeeAttendance = SQLHelper<dynamic>.GetListData(allResults, 1);    // nội dung
                 var customerAttendance = SQLHelper<dynamic>.GetListData(allResults, 3);    // Khách hàng tham dự
 
-                //nội dung nhân viên 
+                //nội dung nhân viên
                 var empContent = SQLHelper<dynamic>.GetListData(allResults, 1);
                 //nội dung khách hàng
                 var cusContent = SQLHelper<dynamic>.GetListData(allResults, 0);
                 //nhân viên tham gia
                 var empDetail = SQLHelper<dynamic>.GetListData(allResults, 2);
-                //khách hàng tham gia 
+                //khách hàng tham gia
                 var cusDetail = SQLHelper<dynamic>.GetListData(allResults, 3);
                 var file = SQLHelper<dynamic>.GetListData(allResults, 4);    // file
 
@@ -315,7 +303,6 @@ namespace RERPAPI.Controllers.Project
         }
 
         [HttpGet("get-projects")]
-
         public IActionResult GetDepartment()
         {
             try
@@ -337,6 +324,7 @@ namespace RERPAPI.Controllers.Project
                 });
             }
         }
+
         [HttpPost("save-data-meeting-minutes")]
         public async Task<IActionResult> SaveData([FromBody] MeetingMinutesDTO dto)
         {
@@ -383,7 +371,6 @@ namespace RERPAPI.Controllers.Project
                         MeetingMinutesDetail meetingDetails = _meetingMinutesDetailRepo.GetByID(item);
                         meetingDetails.IsDeleted = true;
                         await _meetingMinutesDetailRepo.UpdateAsync(meetingDetails);
-
                     }
                 }
 
@@ -408,7 +395,6 @@ namespace RERPAPI.Controllers.Project
                         MeetingMinutesAttendance meetingAttendance = _meetingMinutesAttendanceRepo.GetByID(item);
                         meetingAttendance.IsDeleted = true;
                         await _meetingMinutesAttendanceRepo.UpdateAsync(meetingAttendance);
-
                     }
                 }
 
@@ -425,7 +411,7 @@ namespace RERPAPI.Controllers.Project
                             _projectHistoryProblemRepo.Update(problem);
                     }
                 }
-                //lưu file 
+                //lưu file
                 if (dto.MeetingMinutesFile != null && dto.MeetingMinutesFile.Any())
                 {
                     foreach (var item in dto.MeetingMinutesFile)
@@ -464,6 +450,7 @@ namespace RERPAPI.Controllers.Project
                 });
             }
         }
+
         //private async Task SaveFiles(MeetingMinutesDTO dto, IFormFile[] files, int meetingMinutesID)
         //{
         //    var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "meeting-minutes");
@@ -565,11 +552,5 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-
-
-
-
-
     }
 }

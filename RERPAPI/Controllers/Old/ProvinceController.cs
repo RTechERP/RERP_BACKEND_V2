@@ -9,14 +9,16 @@ namespace RERPAPI.Controllers.Old
     public class ProvinceController : ControllerBase
     {
         private ProvinceRepo _provinceRepo;
+
         public ProvinceController(ProvinceRepo provinceRepo)
         {
             _provinceRepo = provinceRepo;
         }
+
         [HttpGet]
-       public async Task<IActionResult> GetProvinces()
+        public async Task<IActionResult> GetProvinces()
         {
-           try
+            try
             {
                 List<Province> provinces = _provinceRepo.GetAll();
                 return Ok(new
@@ -24,7 +26,8 @@ namespace RERPAPI.Controllers.Old
                     data = provinces,
                     status = 1
                 });
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 return BadRequest(new
                 {
@@ -33,7 +36,6 @@ namespace RERPAPI.Controllers.Old
                     error = ex.ToString()
                 });
             }
-
         }
     }
 }

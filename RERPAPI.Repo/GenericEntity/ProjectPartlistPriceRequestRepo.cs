@@ -6,37 +6,51 @@ namespace RERPAPI.Repo.GenericEntity
 {
     public class ProjectPartlistPriceRequestRepo : GenericRepo<ProjectPartlistPriceRequest>
     {
-        EmployeeSendEmailRepo _employeeSendEmailRepo;
-        EmployeeRepo _employeeRepo;
-        CurrencyRepo _currencyRepo;
-        CurrentUser _currentUser;
+        private EmployeeSendEmailRepo _employeeSendEmailRepo;
+        private EmployeeRepo _employeeRepo;
+        private CurrencyRepo _currencyRepo;
+        private CurrentUser _currentUser;
         private readonly EmailHelper _emailHelper;
+        private readonly ProjectPartListPriceRequestLogRepo _projectPartListPriceRequestLogRepo;
 
-        public ProjectPartlistPriceRequestRepo(CurrentUser currentUser, EmployeeSendEmailRepo employeeSendEmailRepo, EmployeeRepo employeeRepo, CurrencyRepo currencyRepo, EmailHelper emailHelper) : base(currentUser)
+        public ProjectPartlistPriceRequestRepo(
+            CurrentUser currentUser, 
+            EmployeeSendEmailRepo employeeSendEmailRepo, 
+            EmployeeRepo employeeRepo, 
+            CurrencyRepo currencyRepo, 
+            EmailHelper emailHelper,
+            ProjectPartListPriceRequestLogRepo projectPartListPriceRequestLogRepo
+        ) : base(currentUser)
         {
             _employeeSendEmailRepo = employeeSendEmailRepo;
             _employeeRepo = employeeRepo;
             _currencyRepo = currencyRepo;
             _currentUser = currentUser;
             _emailHelper = emailHelper;
+            _projectPartListPriceRequestLogRepo = projectPartListPriceRequestLogRepo;
         }
+
         public async Task SaveData(ProjectPartlistPriceRequest item)
         {
-
             if (item.ID > 0)
             {
+                var oldModel = GetByID(item.ID);
+                await _projectPartListPriceRequestLogRepo.updateLog(oldModel, item);
+
                 await UpdateAsync(item);
             }
             else
             {
                 await CreateAsync(item);
+                await _projectPartListPriceRequestLogRepo.
+                   AddLog(item.ID, $"{_currentUser.FullName} đã thêm mới yêu cầu báo giá!", "Thêm mới");
             }
-
         }
+
         public async Task SendMail(List<MailItemPriceRequestDTO> dataMail)
         {
-            List<Employee> employees = _employeeRepo.GetAll(x=>x.Status==0);
-            List<Currency> currencies = _currencyRepo.GetAll(x=>x.IsDeleted==false);
+            List<Employee> employees = _employeeRepo.GetAll(x => x.Status == 0);
+            List<Currency> currencies = _currencyRepo.GetAll(x => x.IsDeleted == false);
 
             var grouped = dataMail
                 .GroupBy(r => r.EmployeeID)
@@ -72,7 +86,7 @@ namespace RERPAPI.Repo.GenericEntity
                 string body = $@"
                     <div style='font-family: Arial; font-size: 14px;'>
                         Dear <b>{emp?.FullName ?? "Không rõ"}</b>,<br/><br/>
-                        Nhân viên <b>{string.Join(", ", row.QuoteEmployee)}</b> 
+                        Nhân viên <b>{string.Join(", ", row.QuoteEmployee)}</b>
                         đã báo giá danh sách sản phẩm sau:<br/><br/>
                         <table border='1' cellspacing='0' cellpadding='5' style='border-collapse:collapse; width:100%;'>
                             <thead style='background-color:#f2f2f2;'>
@@ -113,7 +127,6 @@ namespace RERPAPI.Repo.GenericEntity
 
                 await _emailHelper.SendAsync(toEmail, subject, body, true, "");
             }
-
         }
     }
 }

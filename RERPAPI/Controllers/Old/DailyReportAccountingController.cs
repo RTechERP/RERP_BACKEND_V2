@@ -1,16 +1,11 @@
-﻿using DocumentFormat.OpenXml.Spreadsheet;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
-using RERPAPI.Repo.GenericEntity; 
-using System;
+using RERPAPI.Repo.GenericEntity;
 using System.Globalization;
-using System.Linq;
-using System.Threading.Tasks;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.Accounting
 {
@@ -44,7 +39,7 @@ namespace RERPAPI.Controllers.Accounting
         {
             try
             {
-                // Tùy theo logic hiện tại, bạn có thể gọi spGetEmployee qua SQLHelper giống bên Sale 
+                // Tùy theo logic hiện tại, bạn có thể gọi spGetEmployee qua SQLHelper giống bên Sale
                 // hoặc gọi trực tiếp qua _employeeRepo. Ở đây mình làm cách đơn giản qua Repo.
                 var result = _employeeRepo.GetAll(x => x.Status == 0) // Giả sử Status = 0 là đang hoạt động
                     .Select(x => new
@@ -71,24 +66,24 @@ namespace RERPAPI.Controllers.Accounting
                 // Nếu không truyền teamId hoặc teamId = 0 thì lấy full nhân viên bằng spGetEmployee
                 //if (teamId == null || teamId == 0)
                 //{
-                    var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                    CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
-                    var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x => (x.Code == "N1" || x.Code == "N2" || x.Code == "N60") && x.UserID == currentUser.ID);
-                    object data;
-                    if (vUserHR == null)
-                    {
-                        data = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
-                            new string[] { "@Status", "@DepartmentID", "@Keyword" },
-                            new object[] { 0, 0, "" });
-                    }
-                    else
-                    {
-                        var employee = SQLHelper<object>.ProcedureToList("spGetEmployee",
-                            new string[] { "@Status", "@DepartmentID", "@Keyword" },
-                            new object[] { 0, 0, "" });
-                        data = SQLHelper<object>.GetListData(employee, 0);
-                    }
-                    return Ok(ApiResponseFactory.Success(data, ""));
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x => (x.Code == "N1" || x.Code == "N2" || x.Code == "N60") && x.UserID == currentUser.ID);
+                object data;
+                if (vUserHR == null)
+                {
+                    data = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
+                        new string[] { "@Status", "@DepartmentID", "@Keyword" },
+                        new object[] { 0, 0, "" });
+                }
+                else
+                {
+                    var employee = SQLHelper<object>.ProcedureToList("spGetEmployee",
+                        new string[] { "@Status", "@DepartmentID", "@Keyword" },
+                        new object[] { 0, 0, "" });
+                    data = SQLHelper<object>.GetListData(employee, 0);
+                }
+                return Ok(ApiResponseFactory.Success(data, ""));
                 //}
 
                 //// Nếu có teamId thì lấy nhân viên theo team
@@ -188,7 +183,7 @@ namespace RERPAPI.Controllers.Accounting
                             new object[] { filterText, page, size, dateStart, dateEnd, employeeId });
                 var data = SQLHelper<dynamic>.GetListData(list, 0);
                 var totalPages = SQLHelper<dynamic>.GetListData(list, 1);
-                return Ok(ApiResponseFactory.Success(new { data, totalPages}, ""));
+                return Ok(ApiResponseFactory.Success(new { data, totalPages }, ""));
             }
             catch (Exception ex)
             {
@@ -230,7 +225,6 @@ namespace RERPAPI.Controllers.Accounting
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Danh sách báo cáo trống"));
                 }
-
 
                 foreach (var dto in dtos)
                 {
@@ -277,7 +271,7 @@ namespace RERPAPI.Controllers.Accounting
                     {
                         model = _dailyReportAccountingRepo.GetByID(dto.ID);
 
-                        if  (model.IsDeleted == true)
+                        if (model.IsDeleted == true)
                         {
                             return NotFound(ApiResponseFactory.Fail(null, $"Không tìm thấy báo cáo ID = {dto.ID}"));
                         }

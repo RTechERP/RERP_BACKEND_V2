@@ -1,12 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.Project
 {
@@ -17,8 +15,10 @@ namespace RERPAPI.Controllers.Project
     {
         //nhân công dự án
         private readonly ProjectWorkerVersionRepo _projectWorkerVersionRepo;
+
         private readonly ProjectHistoryProblemWorkerLinkRepo _projectHistoryProblemWorkerLinkRepo;
         private readonly ProjectHistoryProblemRepo _projectHistoryProblemRepo;
+
         public ProjectWokerVesionController(
           ProjectWorkerVersionRepo projectWorkerVersionRepo,
           ProjectHistoryProblemWorkerLinkRepo projectHistoryProblemWorkerLinkRepo,
@@ -47,7 +47,7 @@ namespace RERPAPI.Controllers.Project
                 }
                 else
                 {
-                    if(item.StatusVersion == 2)
+                    if (item.StatusVersion == 2)
                     {
                         var check = _projectWorkerVersionRepo.GetAll(x => x.ProjectSolutionID == item.ProjectSolutionID && x.StatusVersion == 2 && x.IsDeleted == false && x.ProjectTypeID == item.ProjectTypeID);
                         if (check.Count > 0)
@@ -102,13 +102,13 @@ namespace RERPAPI.Controllers.Project
                 }
 
                 return Ok(ApiResponseFactory.Success(item, "Lưu thành công"));
-
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-project-solution-cbb/{projectID}")]
         public async Task<IActionResult> GetProjectSolution(int projectID)
         {
@@ -190,6 +190,5 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

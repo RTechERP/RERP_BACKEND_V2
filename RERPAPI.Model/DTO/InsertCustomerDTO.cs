@@ -1,9 +1,4 @@
 ﻿using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Model.DTO
 {
@@ -18,8 +13,8 @@ namespace RERPAPI.Model.DTO
 
         ///TNB.update 27/10/25
         public List<int>? deletedIdsEmp { get; set; }
+
         public List<int>? deletedIdsAdrress { get; set; }
         public List<int>? deletedIdsContact { get; set; }
-
     }
 }

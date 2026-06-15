@@ -1,9 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
-using System.Linq.Expressions;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -16,7 +14,8 @@ namespace RERPAPI.Controllers.Old
         public EmployeeWorkingProcessController(EmployeeWorkingProcessRepo employeeWorkingProcessRepo)
         {
             _employeeWorkingProcessRepo = employeeWorkingProcessRepo;
-        }   
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetAll(string? filterText, DateTime dateStart, DateTime dateEnd, int pageNumber, int pageSize)
         {
@@ -25,13 +24,14 @@ namespace RERPAPI.Controllers.Old
                 filterText = string.IsNullOrEmpty(filterText) ? "" : filterText;
                 var workingProcesses = SQLHelper<object>.ProcedureToList("spLoadEmployeeWorkingProcess",
                                        new string[] { "@FilterText", "@DateStart", "@DateEnd", "@PageNumber", "@PageSize" },
-                                                          new object[] { filterText, dateStart, dateEnd, pageNumber, pageSize});
+                                                          new object[] { filterText, dateStart, dateEnd, pageNumber, pageSize });
                 return Ok(new
                 {
                     status = 1,
                     data = SQLHelper<object>.GetListData(workingProcesses, 0)
                 });
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 return BadRequest(new
                 {
@@ -78,12 +78,13 @@ namespace RERPAPI.Controllers.Old
         {
             try
             {
-                if(employeeWorkingProcess.ID <= 0)
+                if (employeeWorkingProcess.ID <= 0)
                 {
                     await _employeeWorkingProcessRepo.CreateAsync(employeeWorkingProcess);
-                } else
+                }
+                else
                 {
-                    if(employeeWorkingProcess.IsApproved == true)
+                    if (employeeWorkingProcess.IsApproved == true)
                     {
                         return BadRequest(new
                         {
@@ -108,7 +109,7 @@ namespace RERPAPI.Controllers.Old
                     message = ex.Message,
                     error = ex.ToString()
                 });
-            }   
+            }
         }
     }
 }

@@ -1,8 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using NPOI.HSSF.Record.Chart;
-using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -10,13 +6,11 @@ using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.GeneralCatetogy.JobRequirements;
 using RERPAPI.Repo.GenericEntity.HRM;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.GeneralCategory
 {
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize]
     public class JobRequirementController : ControllerBase
     {
         private readonly IConfiguration _configuration;
@@ -47,7 +41,6 @@ namespace RERPAPI.Controllers.GeneralCategory
             _emailHelper = emailHelper;
             _jobRequirementLogRepo = jobRequirementLogRepo;
         }
-
 
         [HttpPost("")]
         public IActionResult GetAll([FromBody] JobRequirementParam param)
@@ -113,6 +106,7 @@ namespace RERPAPI.Controllers.GeneralCategory
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("details/{jobRequirementID}")]
         public IActionResult GetDetails(int jobRequirementID)
         {
@@ -154,7 +148,6 @@ namespace RERPAPI.Controllers.GeneralCategory
             }
         }
 
-
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] JobRequirementDTO job)
         {
@@ -174,7 +167,8 @@ namespace RERPAPI.Controllers.GeneralCategory
                     job.NumberRequest = $"{list.Count + 1}.{currentYear}.PYC-RTC";
                     var result = await _jobRepo.CreateAsync(job);
 
-                    _jobRequirementLogRepo.Create(new JobRequirementLog {
+                    _jobRequirementLogRepo.Create(new JobRequirementLog
+                    {
                         JobRequirementID = job.ID,
                         EmployeeID = currentUser.EmployeeID,
                         TypeLog = "TẠO MỚI PHIẾU",
@@ -195,7 +189,8 @@ namespace RERPAPI.Controllers.GeneralCategory
                     var changeDetails = _jobRequirementLogRepo.GetEntityChanges(existingMaster, job);
                     if (changeDetails.Any())
                     {
-                        _jobRequirementLogRepo.Create(new JobRequirementLog {
+                        _jobRequirementLogRepo.Create(new JobRequirementLog
+                        {
                             JobRequirementID = job.ID,
                             TypeLog = "CẬP NHẬT PHIẾU",
                             EmployeeID = currentUser.EmployeeID,
@@ -261,6 +256,7 @@ namespace RERPAPI.Controllers.GeneralCategory
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("delete")]
         public async Task<IActionResult> Delete([FromBody] List<int> ids)
         {
@@ -272,7 +268,6 @@ namespace RERPAPI.Controllers.GeneralCategory
                     return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng chọn yccv để xóa"));
                 foreach (var item in ids)
                 {
-
                     var jobRe = _jobRepo.GetByID(item);
                     var jobReApprove = _approvedRepo.GetAll(x => x.JobRequirementID == jobRe.ID && x.IsApproved == 1 && x.Step != 1);
                     if (jobReApprove.Any())
@@ -286,7 +281,8 @@ namespace RERPAPI.Controllers.GeneralCategory
                     jobRe.IsDeleted = true;
                     await _jobRepo.UpdateAsync(jobRe);
 
-                    _jobRequirementLogRepo.Create(new JobRequirementLog {
+                    _jobRequirementLogRepo.Create(new JobRequirementLog
+                    {
                         JobRequirementID = jobRe.ID,
                         TypeLog = "XÓA PHIẾU",
                         EmployeeID = currentUser.EmployeeID,
@@ -397,7 +393,8 @@ namespace RERPAPI.Controllers.GeneralCategory
 
                     await _approvedRepo.UpdateAsync(currentApprove);
 
-                    _jobRequirementLogRepo.Create(new JobRequirementLog {
+                    _jobRequirementLogRepo.Create(new JobRequirementLog
+                    {
                         JobRequirementID = job.ID,
                         EmployeeID = currentUser.EmployeeID,
                         TypeLog = param.Status == 2 ? "TỪ CHỐI" : "DUYỆT",
@@ -416,6 +413,7 @@ namespace RERPAPI.Controllers.GeneralCategory
 
             return Ok(ApiResponseFactory.Success(result, "Xử lý duyệt hoàn tất"));
         }
+
         [HttpPost("save-request-bgd-approve")]
         public async Task<IActionResult> SaveRequestBGDApprove([FromBody] JobRequirement model)
         {
@@ -437,6 +435,7 @@ namespace RERPAPI.Controllers.GeneralCategory
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("save-comment")]
         public async Task<IActionResult> SaveComment([FromBody] JobRequirement model)
         {
@@ -457,6 +456,7 @@ namespace RERPAPI.Controllers.GeneralCategory
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("get-project-partlist-purchase-request")]
         public IActionResult GetProjectPartlistPurchaseRequest([FromBody] JobProjectPartlistPurchaseRequestParam request)
         {
@@ -475,6 +475,7 @@ namespace RERPAPI.Controllers.GeneralCategory
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("get-summary-jobrequirement")]
         public IActionResult GetSummaryJobRequireMent([FromBody] SummaryJobrequirementRequestParam request)
         {
@@ -493,6 +494,7 @@ namespace RERPAPI.Controllers.GeneralCategory
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpGet("get-all")]
         public IActionResult GetAllJobRequirement()
         {

@@ -1,22 +1,16 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
-using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
-using RERPAPI.Repo.GenericEntity.AddNewBillExport;
 using RERPAPI.Repo.GenericEntity.HRM;
-using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
 
 namespace RERPAPI.Controllers.HRM
 {
     [Route("api/[controller]")]
     [ApiController]
-   [Authorize]
-    
+    [Authorize]
     public class EconomicContractController : ControllerBase
     {
         private readonly EconomicContractTermRepo _economicContractTermRepo;
@@ -31,6 +25,7 @@ namespace RERPAPI.Controllers.HRM
             _economicContractFileRepo = economicContractFileRepo;
             _economicContractRepo = economicContractRepo;
         }
+
         [RequiresPermission("N1,N34")]
         //lấy master hợp đồng
         [HttpPost("get-economic-contract")]
@@ -41,17 +36,16 @@ namespace RERPAPI.Controllers.HRM
                 var economicContract = SQLHelper<dynamic>.ProcedureToList(
                    "spGetEconomicContract",
                    new[] { "@DateStart", "@DateEnd", "@Keyword", "@TypeNCC", "@Type" },
-                   new object[] {request.DateStart??DateTime.MinValue, request.DateEnd??DateTime.MaxValue,request.Keyword??"", request.TypeNCC??0,request.Type??0});
+                   new object[] { request.DateStart ?? DateTime.MinValue, request.DateEnd ?? DateTime.MaxValue, request.Keyword ?? "", request.TypeNCC ?? 0, request.Type ?? 0 });
                 var dataList = SQLHelper<dynamic>.GetListData(economicContract, 0);
                 return Ok(ApiResponseFactory.Success(economicContract, "Lấy dữ liệu thành công"));
-                
             }
-
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //lưu hợp đồng
         [RequiresPermission("N1,N34")]
         [HttpPost("save-contract")]
@@ -90,6 +84,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //xóa hợp đồng
         [RequiresPermission("N1,N34")]
         [HttpPost("delete-contract")]
@@ -121,6 +116,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //lấy điều khoản hợp đồng
         [RequiresPermission("N1,N34")]
         [HttpGet("get-economic-contract-term")]
@@ -128,7 +124,7 @@ namespace RERPAPI.Controllers.HRM
         {
             try
             {
-                int maxSTT = _economicContractTermRepo.GetAll(x => x.IsDeleted != true).Max(x => x.STT) +1?? 1;
+                int maxSTT = _economicContractTermRepo.GetAll(x => x.IsDeleted != true).Max(x => x.STT) + 1 ?? 1;
                 var data = _economicContractTermRepo.GetAll(x => x.IsDeleted != true);
                 return Ok(ApiResponseFactory.Success(new { data, maxSTT }, "Lấy dữ liệu thành công"));
             }
@@ -137,6 +133,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //lưu điều khoản hợp đồng
         [RequiresPermission("N1,N34")]
         [HttpPost("save-contract-term")]
@@ -162,7 +159,7 @@ namespace RERPAPI.Controllers.HRM
                             await _economicContractTermRepo.UpdateAsync(term);
                         }
                         else
-                        {                          
+                        {
                             await _economicContractTermRepo.CreateAsync(term);
                         }
                         return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
@@ -175,6 +172,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //Xóa điều khoản hợp đồng
         [RequiresPermission("N1,N34")]
         [HttpPost("delete-term")]
@@ -206,6 +204,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //lấy loại hợp đồng
         [RequiresPermission("N1,N34")]
         [HttpGet("get-economic-contract-type")]
@@ -213,15 +212,16 @@ namespace RERPAPI.Controllers.HRM
         {
             try
             {
-                int maxSTT = _economicContractTypeRepo.GetAll(x=>x.IsDeleted!=true).Max(x => x.STT)+1 ?? 1;
+                int maxSTT = _economicContractTypeRepo.GetAll(x => x.IsDeleted != true).Max(x => x.STT) + 1 ?? 1;
                 var data = _economicContractTypeRepo.GetAll(x => x.IsDeleted != true);
-                return Ok(ApiResponseFactory.Success(new {data, maxSTT}, "Lấy dữ liệu thành công"));
+                return Ok(ApiResponseFactory.Success(new { data, maxSTT }, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //Lưu loại hợp đồng
         [RequiresPermission("N1,N34")]
         [HttpPost("save-contract-type")]
@@ -260,6 +260,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //Xóa loại hợp đồng
         [RequiresPermission("N1,N34")]
         [HttpPost("delete-type")]
@@ -291,6 +292,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //Lấy file đính kèm theo id hợp đồng
         [RequiresPermission("N1,N34")]
         [HttpGet("get-file-by-contract-id")]
@@ -306,6 +308,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         //Lưu file hợp đồng
         [RequiresPermission("N1,N34")]
         [HttpPost("save-contract-file")]
@@ -339,6 +342,5 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
     }
 }

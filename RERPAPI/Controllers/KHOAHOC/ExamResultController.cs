@@ -1,20 +1,16 @@
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO.HRM;
-using RERPAPI.Model.Entities;
-using RERPAPI.Model.Param.HRM.Course;
-using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.KHOAHOC
 {
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize]
     public class ExamResultController : ControllerBase
     {
         private readonly ExamResultRepo _examResultRepo;
         private readonly ExamResultDetailRepo _examResultDetailRepo;
+
         public ExamResultController(
             ExamResultRepo examResultRepo,
             ExamResultDetailRepo examResultDetailRepo)
@@ -68,7 +64,6 @@ namespace RERPAPI.Controllers.KHOAHOC
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
 
         // Lấy chi tiết kết quả bài thi
         [HttpGet("get-exam-result-detail")]

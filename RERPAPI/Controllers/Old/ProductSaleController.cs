@@ -10,6 +10,7 @@ namespace RERPAPI.Controllers.Old
     {
         private readonly ProductSaleRepo _productSaleRepo;
         private readonly ProductGroupRepo _productGroupRepo;
+
         public ProductSaleController(ProductSaleRepo productSaleRepo, ProductGroupRepo productGroupRepo)
         {
             _productSaleRepo = productSaleRepo;

@@ -9,7 +9,6 @@ namespace RERPAPI.Controllers.GeneralCategory
 {
     [Route("api/[controller]")]
     [ApiController]
-
     public class FiveSErrorController : ControllerBase
     {
         private readonly FiveSErrorRepo _fiveSErrorRepo;
@@ -101,7 +100,7 @@ namespace RERPAPI.Controllers.GeneralCategory
                                 TypePoint = rule.TypePoint,
                                 BonusPoint = rule.BonusPoint,
                                 MinusPoint = rule.MinusPoint,
-                                Name = rule.RatingLevels                            
+                                Name = rule.RatingLevels
                             };
 
                             await _fiveSRuleErrorRepo.CreateAsync(newRule);

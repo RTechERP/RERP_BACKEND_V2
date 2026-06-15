@@ -1,17 +1,12 @@
-﻿using RERPAPI.Model.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
-using RERPAPI.Model.DTO;
 
 namespace RERPAPI.Repo.GenericEntity
 {
     public class PONCCLogRepo : GenericRepo<PONCCLog>
     {
         #region Khai báo repo
+
         private CurrentUser _currentUser;
         private SupplierSaleRepo _supplierSaleRepo;
         private UserRepo _userRepo;
@@ -47,9 +42,11 @@ namespace RERPAPI.Repo.GenericEntity
             _projectRepo = projectRepo;
             _taxCompanyRepo = taxCompanyRepo;
         }
-        #endregion
+
+        #endregion Khai báo repo
 
         #region Log chính
+
         private static readonly Dictionary<string, string> _map = new()
         {
             { "ID", "id" },
@@ -123,7 +120,6 @@ namespace RERPAPI.Repo.GenericEntity
 
             var ignoreFields = new HashSet<string> { "CreatedDate", "UpdatedDate", "UpdatedBy", "CreatedBy", "ID" };
 
-
             foreach (var prop in props)
             {
                 if (ignoreFields.Contains(prop.Name)) continue;
@@ -153,9 +149,10 @@ namespace RERPAPI.Repo.GenericEntity
             return string.Join("\n", changes);
         }
 
-        #endregion
+        #endregion Log chính
 
         #region Log chi tiết
+
         private static readonly Dictionary<string, string> _mapDetail = new()
         {
             { "ID", "id" },
@@ -230,7 +227,6 @@ namespace RERPAPI.Repo.GenericEntity
 
             var ignoreFields = new HashSet<string> { "CreatedDate", "UpdatedDate", "UpdatedBy", "CreatedBy", "ID", "ProjectName" };
 
-
             foreach (var prop in props)
             {
                 if (ignoreFields.Contains(prop.Name)) continue;
@@ -258,9 +254,10 @@ namespace RERPAPI.Repo.GenericEntity
             return string.Join("\n", changes);
         }
 
-        #endregion
+        #endregion Log chi tiết
 
         #region Khác
+
         private string FormatValue(string fieldName, object value)
         {
             if (value == null) return "rỗng";
@@ -272,43 +269,53 @@ namespace RERPAPI.Repo.GenericEntity
                     int supplierSaleID = Convert.ToInt32(value);
                     msg = _supplierSaleRepo.GetByID(supplierSaleID).CodeNCC;
                     return msg;
+
                 case "EmployeeID":
                     int employeeID = Convert.ToInt32(value);
                     msg = _employeeRepo.GetByID(employeeID).FullName;
                     return msg;
+
                 case "ProductSaleID":
                     int productSaleID = Convert.ToInt32(value);
                     msg = _productSaleRepo.GetByID(productSaleID).ProductCode;
                     return msg;
+
                 case "ProductRTCID":
                     int productRTCID = Convert.ToInt32(value);
                     msg = _productRtcRepo.GetByID(productRTCID).ProductCode;
                     return msg;
+
                 case "ProjectID":
                     int projectID = Convert.ToInt32(value);
                     msg = _projectRepo.GetByID(projectID).ProjectCode;
                     return msg;
+
                 case "SupplierID":
                     int SupplierID = Convert.ToInt32(value);
                     msg = _supplierRepo.GetByID(SupplierID).SupplierCode;
                     return msg;
+
                 case "UserID":
                     int UserID = Convert.ToInt32(value);
                     msg = _userRepo.GetByID(UserID).FullName;
                     return msg;
+
                 case "CurrencyID":
                     int CurrencyID = Convert.ToInt32(value);
                     msg = _currencyRepo.GetByID(CurrencyID).Code;
                     return msg;
+
                 case "POType":
                     int POType = Convert.ToInt32(value);
                     if (POType == 1) msg = "PO thương mại";
                     if (POType == 2) msg = "PO mượn";
                     return msg;
+
                 case "Company":
                     int Company = Convert.ToInt32(value);
                     msg = _taxCompanyRepo.GetByID(Company).Code;
                     return msg;
+
                 default:
                     break;
             }
@@ -318,7 +325,7 @@ namespace RERPAPI.Repo.GenericEntity
             {
                 return b ? "True" : "False";
             }
-            
+
             // ===== DATE =====
             if (value is DateTime dt)
             {
@@ -347,7 +354,6 @@ namespace RERPAPI.Repo.GenericEntity
             await CreateAsync(log);
         }
 
-        #endregion
-
+        #endregion Khác
     }
 }
