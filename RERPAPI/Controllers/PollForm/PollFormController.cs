@@ -764,187 +764,187 @@ namespace RERPAPI.Controllers.PollForm
         /// <summary>
         /// Submit answers for one section and return the next section
         /// </summary>
-        [HttpPost("{pollFormId}/submit-section")]
-        public IActionResult SubmitPollSection(int pollFormId, [FromBody] SubmitPollSectionDTO dto)
-        {
-            try
-            {
-                var currentUser = GetCurrentUser();
+        //[HttpPost("{pollFormId}/submit-section")]
+        //public IActionResult SubmitPollSection(int pollFormId, [FromBody] SubmitPollSectionDTO dto)
+        //{
+        //    try
+        //    {
+        //        var currentUser = GetCurrentUser();
 
-                if (dto.SectionID == null)
-                    return BadRequest(ApiResponseFactory.Fail(null, "SectionID is required"));
+        //        if (dto.SectionID == null)
+        //            return BadRequest(ApiResponseFactory.Fail(null, "SectionID is required"));
 
-                var pollForm = _pollFormRepo.GetByID(pollFormId);
-                if (pollForm == null || pollForm.ID <= 0 || pollForm.IsDeleted == true)
-                    return NotFound(ApiResponseFactory.Fail(null, "Poll form not found"));
+        //        var pollForm = _pollFormRepo.GetByID(pollFormId);
+        //        if (pollForm == null || pollForm.ID <= 0 || pollForm.IsDeleted == true)
+        //            return NotFound(ApiResponseFactory.Fail(null, "Poll form not found"));
 
-                var voteFailure = EnsureCanVotePollForm(pollForm);
-                if (voteFailure != null)
-                    return voteFailure;
+        //        var voteFailure = EnsureCanVotePollForm(pollForm);
+        //        if (voteFailure != null)
+        //            return voteFailure;
 
-                if (!CanEditPoll(pollForm, DateTime.Now, out var closedReason))
-                    return BadRequest(ApiResponseFactory.Fail(null, closedReason ?? "Poll is closed"));
+        //        if (!CanEditPoll(pollForm, DateTime.Now, out var closedReason))
+        //            return BadRequest(ApiResponseFactory.Fail(null, closedReason ?? "Poll is closed"));
 
-                var section = _pollSectionRepo.GetByID(dto.SectionID.Value);
-                if (section == null || section.ID <= 0 || section.PollFormID != pollFormId || section.IsDeleted == true)
-                    return NotFound(ApiResponseFactory.Fail(null, "Section not found"));
+        //        var section = _pollSectionRepo.GetByID(dto.SectionID.Value);
+        //        if (section == null || section.ID <= 0 || section.PollFormID != pollFormId || section.IsDeleted == true)
+        //            return NotFound(ApiResponseFactory.Fail(null, "Section not found"));
 
-                var employeeId = GetCurrentEmployeeId(dto.EmployeeID);
-                var sectionQuestions = _pollQuestionRepo.GetAll(x => x.PollFormID == pollFormId && x.PollSectionID == section.ID)
-                    .OrderBy(x => x.SortOrder)
-                    .ThenBy(x => x.ID)
-                    .ToList();
+        //        var employeeId = GetCurrentEmployeeId(dto.EmployeeID);
+        //        var sectionQuestions = _pollQuestionRepo.GetAll(x => x.PollFormID == pollFormId && x.PollSectionID == section.ID)
+        //            .OrderBy(x => x.SortOrder)
+        //            .ThenBy(x => x.ID)
+        //            .ToList();
 
-                var currentEmployee = GetCurrentEmployee(employeeId);
+        //        var currentEmployee = GetCurrentEmployee(employeeId);
 
-                using var dbContext = CreateDbContext(currentUser);
-                using var transaction = dbContext.Database.BeginTransaction();
+        //        using var dbContext = CreateDbContext(currentUser);
+        //        using var transaction = dbContext.Database.BeginTransaction();
 
-                PollResponse response;
-                if (dto.PollResponseID.HasValue)
-                {
-                    response = dbContext.PollResponses
-                        .FirstOrDefault(x => x.ID == dto.PollResponseID.Value && x.PollFormID == pollFormId) ?? new PollResponse();
-                    if (response.ID <= 0)
-                        return BadRequest(ApiResponseFactory.Fail(null, "Poll response is invalid for this poll form"));
+        //        PollResponse response;
+        //        if (dto.PollResponseID.HasValue)
+        //        {
+        //            response = dbContext.PollResponses
+        //                .FirstOrDefault(x => x.ID == dto.PollResponseID.Value && x.PollFormID == pollFormId) ?? new PollResponse();
+        //            if (response.ID <= 0)
+        //                return BadRequest(ApiResponseFactory.Fail(null, "Poll response is invalid for this poll form"));
 
-                    if (!CanManagePoll(pollForm, currentUser) &&
-                        (employeeId <= 0 || response.EmployeeID != employeeId))
-                    {
-                        return BadRequest(ApiResponseFactory.Fail(null, "Cannot update another employee's poll response"));
-                    }
-                }
-                else
-                {
-                    response = employeeId > 0
-                        ? GetLatestEmployeeResponse(dbContext, pollFormId, employeeId) ?? new PollResponse()
-                        : new PollResponse();
+        //            if (!CanManagePoll(pollForm, currentUser) &&
+        //                (employeeId <= 0 || response.EmployeeID != employeeId))
+        //            {
+        //                return BadRequest(ApiResponseFactory.Fail(null, "Cannot update another employee's poll response"));
+        //            }
+        //        }
+        //        else
+        //        {
+        //            response = employeeId > 0
+        //                ? GetLatestEmployeeResponse(dbContext, pollFormId, employeeId) ?? new PollResponse()
+        //                : new PollResponse();
 
-                    if (response.ID <= 0)
-                    {
-                        response.PollFormID = pollFormId;
-                        response.EmployeeID = employeeId > 0 ? employeeId : dto.EmployeeID;
-                        response.IsCompleted = false;
-                        response.CreatedBy = currentUser.LoginName;
-                        response.CreatedDate = DateTime.Now;
-                        dbContext.PollResponses.Add(response);
-                        dbContext.SaveChanges();
-                    }
-                }
+        //            if (response.ID <= 0)
+        //            {
+        //                response.PollFormID = pollFormId;
+        //                response.EmployeeID = employeeId > 0 ? employeeId : dto.EmployeeID;
+        //                response.IsCompleted = false;
+        //                response.CreatedBy = currentUser.LoginName;
+        //                response.CreatedDate = DateTime.Now;
+        //                dbContext.PollResponses.Add(response);
+        //                dbContext.SaveChanges();
+        //            }
+        //        }
 
-                var answers = AddEmployeeMappedAnswers(dto.Answers, sectionQuestions, currentEmployee, dbContext);
-                if (!TryValidateAnswers(answers, sectionQuestions, dbContext, out var validationMessage, out var validationData))
-                    return BadRequest(ApiResponseFactory.Fail(null, validationMessage, validationData));
+        //        var answers = AddEmployeeMappedAnswers(dto.Answers, sectionQuestions, currentEmployee, dbContext);
+        //        if (!TryValidateAnswers(answers, sectionQuestions, dbContext, out var validationMessage, out var validationData))
+        //            return BadRequest(ApiResponseFactory.Fail(null, validationMessage, validationData));
 
-                var savedAnswerCount = SaveResponseAnswers(dbContext, response.ID, answers, currentUser);
-                dbContext.SaveChanges();
+        //        var savedAnswerCount = SaveResponseAnswers(dbContext, response.ID, answers, currentUser);
+        //        dbContext.SaveChanges();
 
-                var allSections = dbContext.PollSections
-                    .Where(x => x.PollFormID == pollFormId && x.IsDeleted != true)
-                    .OrderBy(x => x.SortOrder)
-                    .ThenBy(x => x.ID)
-                    .ToList();
-                var allQuestions = dbContext.PollQuestions.Where(x => x.PollFormID == pollFormId).ToList();
-                var allResponseAnswers = dbContext.PollResponseAnswers.Where(x => x.PollResponseID == response.ID).ToList();
-                var answerMap = BuildAnswerMap(allQuestions, allResponseAnswers);
-                var nextSectionId = _pollBranchingRuleEvaluator.ResolveNextSectionId(section, allSections, answerMap);
-                var isCompleted = nextSectionId == null;
+        //        var allSections = dbContext.PollSections
+        //            .Where(x => x.PollFormID == pollFormId && x.IsDeleted != true)
+        //            .OrderBy(x => x.SortOrder)
+        //            .ThenBy(x => x.ID)
+        //            .ToList();
+        //        var allQuestions = dbContext.PollQuestions.Where(x => x.PollFormID == pollFormId).ToList();
+        //        var allResponseAnswers = dbContext.PollResponseAnswers.Where(x => x.PollResponseID == response.ID).ToList();
+        //        var answerMap = BuildAnswerMap(allQuestions, allResponseAnswers);
+        //        var nextSectionId = _pollBranchingRuleEvaluator.ResolveNextSectionId(section, allSections, answerMap);
+        //        var isCompleted = nextSectionId == null;
 
-                response.IsCompleted = response.IsCompleted == true || isCompleted;
-                response.CompletedDate = response.IsCompleted == true
-                    ? response.CompletedDate ?? DateTime.Now
-                    : response.CompletedDate;
-                response.UpdatedBy = currentUser.LoginName;
-                response.UpdatedDate = DateTime.Now;
-                dbContext.SaveChanges();
-                transaction.Commit();
+        //        response.IsCompleted = response.IsCompleted == true || isCompleted;
+        //        response.CompletedDate = response.IsCompleted == true
+        //            ? response.CompletedDate ?? DateTime.Now
+        //            : response.CompletedDate;
+        //        response.UpdatedBy = currentUser.LoginName;
+        //        response.UpdatedDate = DateTime.Now;
+        //        dbContext.SaveChanges();
+        //        transaction.Commit();
 
-                var result = new SubmitPollSectionResultDTO
-                {
-                    PollResponseID = response.ID,
-                    PollFormID = pollFormId,
-                    SectionID = section.ID,
-                    NextSectionID = nextSectionId,
-                    IsCompleted = isCompleted,
-                    SavedAnswerCount = savedAnswerCount
-                };
+        //        var result = new SubmitPollSectionResultDTO
+        //        {
+        //            PollResponseID = response.ID,
+        //            PollFormID = pollFormId,
+        //            SectionID = section.ID,
+        //            NextSectionID = nextSectionId,
+        //            IsCompleted = isCompleted,
+        //            SavedAnswerCount = savedAnswerCount
+        //        };
 
-                return Ok(ApiResponseFactory.Success(result, "Section submitted successfully"));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
+        //        return Ok(ApiResponseFactory.Success(result, "Section submitted successfully"));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
 
         /// <summary>
         /// Submit poll response (voting)
         /// </summary>
-        [HttpPost("submit")]
-        public IActionResult SubmitPollResponse([FromBody] SubmitPollResponseDTO dto)
-        {
-            try
-            {
-                var currentUser = GetCurrentUser();
+        //[HttpPost("submit")]
+        //public IActionResult SubmitPollResponse([FromBody] SubmitPollResponseDTO dto)
+        //{
+        //    try
+        //    {
+        //        var currentUser = GetCurrentUser();
 
-                var pollForm = _pollFormRepo.GetByID(dto.PollFormID ?? 0);
-                if (pollForm == null || pollForm.ID <= 0 || pollForm.IsDeleted == true)
-                    return NotFound(ApiResponseFactory.Fail(null, "Poll form not found"));
+        //        var pollForm = _pollFormRepo.GetByID(dto.PollFormID ?? 0);
+        //        if (pollForm == null || pollForm.ID <= 0 || pollForm.IsDeleted == true)
+        //            return NotFound(ApiResponseFactory.Fail(null, "Poll form not found"));
 
-                var voteFailure = EnsureCanVotePollForm(pollForm);
-                if (voteFailure != null)
-                    return voteFailure;
+        //        var voteFailure = EnsureCanVotePollForm(pollForm);
+        //        if (voteFailure != null)
+        //            return voteFailure;
 
-                if (!CanEditPoll(pollForm, DateTime.Now, out var closedReason))
-                    return BadRequest(ApiResponseFactory.Fail(null, closedReason ?? "Poll is closed"));
+        //        if (!CanEditPoll(pollForm, DateTime.Now, out var closedReason))
+        //            return BadRequest(ApiResponseFactory.Fail(null, closedReason ?? "Poll is closed"));
 
-                var employeeId = GetCurrentEmployeeId(dto.EmployeeID);
-                var currentEmployee = GetCurrentEmployee(employeeId);
+        //        var employeeId = GetCurrentEmployeeId(dto.EmployeeID);
+        //        var currentEmployee = GetCurrentEmployee(employeeId);
 
-                using var dbContext = CreateDbContext(currentUser);
-                using var transaction = dbContext.Database.BeginTransaction();
+        //        using var dbContext = CreateDbContext(currentUser);
+        //        using var transaction = dbContext.Database.BeginTransaction();
 
-                var response = employeeId > 0
-                    ? GetLatestEmployeeResponse(dbContext, pollForm.ID, employeeId) ?? new PollResponse()
-                    : new PollResponse();
-                var pollQuestions = dbContext.PollQuestions
-                    .Where(x => x.PollFormID == pollForm.ID)
-                    .OrderBy(x => x.SortOrder)
-                    .ThenBy(x => x.ID)
-                    .ToList();
-                var answers = AddEmployeeMappedAnswers(dto.Answers, pollQuestions, currentEmployee, dbContext);
+        //        var response = employeeId > 0
+        //            ? GetLatestEmployeeResponse(dbContext, pollForm.ID, employeeId) ?? new PollResponse()
+        //            : new PollResponse();
+        //        var pollQuestions = dbContext.PollQuestions
+        //            .Where(x => x.PollFormID == pollForm.ID)
+        //            .OrderBy(x => x.SortOrder)
+        //            .ThenBy(x => x.ID)
+        //            .ToList();
+        //        var answers = AddEmployeeMappedAnswers(dto.Answers, pollQuestions, currentEmployee, dbContext);
 
-                if (!TryValidateAnswers(answers, pollQuestions, dbContext, out var validationMessage, out var validationData))
-                    return BadRequest(ApiResponseFactory.Fail(null, validationMessage, validationData));
+        //        if (!TryValidateAnswers(answers, pollQuestions, dbContext, out var validationMessage, out var validationData))
+        //            return BadRequest(ApiResponseFactory.Fail(null, validationMessage, validationData));
 
-                if (response.ID <= 0)
-                {
-                    response.PollFormID = pollForm.ID;
-                    response.EmployeeID = employeeId > 0 ? employeeId : dto.EmployeeID;
-                    response.IsCompleted = true;
-                    response.CompletedDate = DateTime.Now;
-                    response.CreatedBy = currentUser.LoginName;
-                    response.CreatedDate = DateTime.Now;
-                    dbContext.PollResponses.Add(response);
-                    dbContext.SaveChanges();
-                }
+        //        if (response.ID <= 0)
+        //        {
+        //            response.PollFormID = pollForm.ID;
+        //            response.EmployeeID = employeeId > 0 ? employeeId : dto.EmployeeID;
+        //            response.IsCompleted = true;
+        //            response.CompletedDate = DateTime.Now;
+        //            response.CreatedBy = currentUser.LoginName;
+        //            response.CreatedDate = DateTime.Now;
+        //            dbContext.PollResponses.Add(response);
+        //            dbContext.SaveChanges();
+        //        }
 
-                response.IsCompleted = true;
-                response.CompletedDate = response.CompletedDate ?? DateTime.Now;
-                response.UpdatedBy = currentUser.LoginName;
-                response.UpdatedDate = DateTime.Now;
+        //        response.IsCompleted = true;
+        //        response.CompletedDate = response.CompletedDate ?? DateTime.Now;
+        //        response.UpdatedBy = currentUser.LoginName;
+        //        response.UpdatedDate = DateTime.Now;
 
-                SaveResponseAnswers(dbContext, response.ID, answers, currentUser);
-                dbContext.SaveChanges();
-                transaction.Commit();
+        //        SaveResponseAnswers(dbContext, response.ID, answers, currentUser);
+        //        dbContext.SaveChanges();
+        //        transaction.Commit();
 
-                return Ok(ApiResponseFactory.Success(MapResponseDetail(response), "Poll response submitted successfully"));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
+        //        return Ok(ApiResponseFactory.Success(MapResponseDetail(response), "Poll response submitted successfully"));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
 
         /// <summary>
         /// Get all responses for a poll form
@@ -1386,15 +1386,15 @@ namespace RERPAPI.Controllers.PollForm
                 .FirstOrDefault(x => x.ID > 0);
         }
 
-        private static PollResponse? GetLatestEmployeeResponse(RTCContext dbContext, int pollFormId, int employeeId)
-        {
-            return dbContext.PollResponses
-                .Where(x => x.PollFormID == pollFormId && x.EmployeeID == employeeId)
-                .OrderByDescending(x => x.IsCompleted == true)
-                .ThenByDescending(x => x.CompletedDate ?? x.UpdatedDate ?? x.CreatedDate)
-                .ThenByDescending(x => x.ID)
-                .FirstOrDefault(x => x.ID > 0);
-        }
+        //private static PollResponse? GetLatestEmployeeResponse(RTCContext dbContext, int pollFormId, int employeeId)
+        //{
+        //    return dbContext.PollResponses
+        //        .Where(x => x.PollFormID == pollFormId && x.EmployeeID == employeeId)
+        //        .OrderByDescending(x => x.IsCompleted == true)
+        //        .ThenByDescending(x => x.CompletedDate ?? x.UpdatedDate ?? x.CreatedDate)
+        //        .ThenByDescending(x => x.ID)
+        //        .FirstOrDefault(x => x.ID > 0);
+        //}
 
         private PollResponseDetailDTO MapResponseDetail(PollResponse response)
         {
@@ -1423,154 +1423,154 @@ namespace RERPAPI.Controllers.PollForm
             };
         }
 
-        private int SaveResponseAnswers(RTCContext dbContext, int responseId, List<AnswerItemDTO> answers, CurrentUser currentUser)
-        {
-            var savedAnswerCount = 0;
-            var submittedAnswers = answers
-                .Where(x => x.QuestionID.HasValue)
-                .GroupBy(x => x.QuestionID!.Value)
-                .Select(x => x.Last())
-                .ToList();
-            var questionIds = submittedAnswers.Select(x => x.QuestionID!.Value).ToHashSet();
-            var existingAnswers = dbContext.PollResponseAnswers
-                .Where(x => x.PollResponseID == responseId && x.PollQuestionID.HasValue && questionIds.Contains(x.PollQuestionID.Value))
-                .ToDictionary(x => x.PollQuestionID!.Value);
+        //private int SaveResponseAnswers(RTCContext dbContext, int responseId, List<AnswerItemDTO> answers, CurrentUser currentUser)
+        //{
+        //    var savedAnswerCount = 0;
+        //    var submittedAnswers = answers
+        //        .Where(x => x.QuestionID.HasValue)
+        //        .GroupBy(x => x.QuestionID!.Value)
+        //        .Select(x => x.Last())
+        //        .ToList();
+        //    var questionIds = submittedAnswers.Select(x => x.QuestionID!.Value).ToHashSet();
+        //    var existingAnswers = dbContext.PollResponseAnswers
+        //        .Where(x => x.PollResponseID == responseId && x.PollQuestionID.HasValue && questionIds.Contains(x.PollQuestionID.Value))
+        //        .ToDictionary(x => x.PollQuestionID!.Value);
 
-            foreach (var answer in submittedAnswers)
-            {
-                if (existingAnswers.TryGetValue(answer.QuestionID!.Value, out var existingAnswer) && existingAnswer.ID > 0)
-                {
-                    existingAnswer.AnswerText = answer.AnswerText;
-                    existingAnswer.AnswerJson = answer.AnswerJson;
-                    existingAnswer.DisplayText = answer.DisplayText;
-                    existingAnswer.UpdatedBy = currentUser.LoginName;
-                    existingAnswer.UpdatedDate = DateTime.Now;
-                    savedAnswerCount++;
-                }
-                else
-                {
-                    var pollAnswer = new PollResponseAnswer
-                    {
-                        PollResponseID = responseId,
-                        PollQuestionID = answer.QuestionID,
-                        AnswerText = answer.AnswerText,
-                        AnswerJson = answer.AnswerJson,
-                        DisplayText = answer.DisplayText,
-                        CreatedBy = currentUser.LoginName,
-                        CreatedDate = DateTime.Now
-                    };
+        //    foreach (var answer in submittedAnswers)
+        //    {
+        //        if (existingAnswers.TryGetValue(answer.QuestionID!.Value, out var existingAnswer) && existingAnswer.ID > 0)
+        //        {
+        //            existingAnswer.AnswerText = answer.AnswerText;
+        //            existingAnswer.AnswerJson = answer.AnswerJson;
+        //            existingAnswer.DisplayText = answer.DisplayText;
+        //            existingAnswer.UpdatedBy = currentUser.LoginName;
+        //            existingAnswer.UpdatedDate = DateTime.Now;
+        //            savedAnswerCount++;
+        //        }
+        //        else
+        //        {
+        //            var pollAnswer = new PollResponseAnswer
+        //            {
+        //                PollResponseID = responseId,
+        //                PollQuestionID = answer.QuestionID,
+        //                AnswerText = answer.AnswerText,
+        //                AnswerJson = answer.AnswerJson,
+        //                DisplayText = answer.DisplayText,
+        //                CreatedBy = currentUser.LoginName,
+        //                CreatedDate = DateTime.Now
+        //            };
 
-                    dbContext.PollResponseAnswers.Add(pollAnswer);
-                    savedAnswerCount++;
-                }
-            }
+        //            dbContext.PollResponseAnswers.Add(pollAnswer);
+        //            savedAnswerCount++;
+        //        }
+        //    }
 
-            return savedAnswerCount;
-        }
+        //    return savedAnswerCount;
+        //}
 
-        private static bool TryValidateAnswers(
-            List<AnswerItemDTO> answers,
-            List<PollQuestion> allowedQuestions,
-            RTCContext dbContext,
-            out string validationMessage,
-            out object? validationData)
-        {
-            validationMessage = "";
-            validationData = null;
+        //private static bool TryValidateAnswers(
+        //    List<AnswerItemDTO> answers,
+        //    List<PollQuestion> allowedQuestions,
+        //    RTCContext dbContext,
+        //    out string validationMessage,
+        //    out object? validationData)
+        //{
+        //    validationMessage = "";
+        //    validationData = null;
 
-            if (answers.Any(x => !x.QuestionID.HasValue))
-            {
-                validationMessage = "QuestionID is required for all answers";
-                return false;
-            }
+        //    if (answers.Any(x => !x.QuestionID.HasValue))
+        //    {
+        //        validationMessage = "QuestionID is required for all answers";
+        //        return false;
+        //    }
 
-            var allowedQuestionIds = allowedQuestions.Select(x => x.ID).ToHashSet();
-            var invalidQuestionIds = answers
-                .Where(x => x.QuestionID.HasValue && !allowedQuestionIds.Contains(x.QuestionID.Value))
-                .Select(x => x.QuestionID)
-                .Distinct()
-                .ToList();
+        //    var allowedQuestionIds = allowedQuestions.Select(x => x.ID).ToHashSet();
+        //    var invalidQuestionIds = answers
+        //        .Where(x => x.QuestionID.HasValue && !allowedQuestionIds.Contains(x.QuestionID.Value))
+        //        .Select(x => x.QuestionID)
+        //        .Distinct()
+        //        .ToList();
 
-            if (invalidQuestionIds.Count > 0)
-            {
-                validationMessage = "Answers contain questions outside this poll/section";
-                validationData = invalidQuestionIds;
-                return false;
-            }
+        //    if (invalidQuestionIds.Count > 0)
+        //    {
+        //        validationMessage = "Answers contain questions outside this poll/section";
+        //        validationData = invalidQuestionIds;
+        //        return false;
+        //    }
 
-            var duplicatedQuestionIds = answers
-                .Where(x => x.QuestionID.HasValue)
-                .GroupBy(x => x.QuestionID!.Value)
-                .Where(x => x.Count() > 1)
-                .Select(x => x.Key)
-                .ToList();
+        //    var duplicatedQuestionIds = answers
+        //        .Where(x => x.QuestionID.HasValue)
+        //        .GroupBy(x => x.QuestionID!.Value)
+        //        .Where(x => x.Count() > 1)
+        //        .Select(x => x.Key)
+        //        .ToList();
 
-            if (duplicatedQuestionIds.Count > 0)
-            {
-                validationMessage = "Answers contain duplicated questions";
-                validationData = duplicatedQuestionIds;
-                return false;
-            }
+        //    if (duplicatedQuestionIds.Count > 0)
+        //    {
+        //        validationMessage = "Answers contain duplicated questions";
+        //        validationData = duplicatedQuestionIds;
+        //        return false;
+        //    }
 
-            var answerByQuestion = answers
-                .Where(x => x.QuestionID.HasValue)
-                .ToDictionary(x => x.QuestionID!.Value);
-            var missingRequiredQuestionIds = allowedQuestions
-                .Where(x => x.IsRequired)
-                .Where(x => !answerByQuestion.TryGetValue(x.ID, out var answer) || IsEmptyAnswer(answer))
-                .Select(x => x.ID)
-                .ToList();
+        //    var answerByQuestion = answers
+        //        .Where(x => x.QuestionID.HasValue)
+        //        .ToDictionary(x => x.QuestionID!.Value);
+        //    var missingRequiredQuestionIds = allowedQuestions
+        //        .Where(x => x.IsRequired)
+        //        .Where(x => !answerByQuestion.TryGetValue(x.ID, out var answer) || IsEmptyAnswer(answer))
+        //        .Select(x => x.ID)
+        //        .ToList();
 
-            if (missingRequiredQuestionIds.Count > 0)
-            {
-                validationMessage = "Required questions are missing answers";
-                validationData = missingRequiredQuestionIds;
-                return false;
-            }
+        //    if (missingRequiredQuestionIds.Count > 0)
+        //    {
+        //        validationMessage = "Required questions are missing answers";
+        //        validationData = missingRequiredQuestionIds;
+        //        return false;
+        //    }
 
-            var choiceQuestions = allowedQuestions
-                .Where(IsChoiceQuestion)
-                .ToList();
-            if (choiceQuestions.Count == 0)
-                return true;
+        //    var choiceQuestions = allowedQuestions
+        //        .Where(IsChoiceQuestion)
+        //        .ToList();
+        //    if (choiceQuestions.Count == 0)
+        //        return true;
 
-            var choiceQuestionIds = choiceQuestions.Select(x => x.ID).ToHashSet();
-            var optionsByQuestion = dbContext.PollQuestionOptions
-                .Where(x => x.PollQuestionID.HasValue && choiceQuestionIds.Contains(x.PollQuestionID.Value))
-                .GroupBy(x => x.PollQuestionID!.Value)
-                .ToDictionary(x => x.Key, x => x.ToList());
+        //    var choiceQuestionIds = choiceQuestions.Select(x => x.ID).ToHashSet();
+        //    var optionsByQuestion = dbContext.PollQuestionOptions
+        //        .Where(x => x.PollQuestionID.HasValue && choiceQuestionIds.Contains(x.PollQuestionID.Value))
+        //        .GroupBy(x => x.PollQuestionID!.Value)
+        //        .ToDictionary(x => x.Key, x => x.ToList());
 
-            foreach (var question in choiceQuestions)
-            {
-                if (!answerByQuestion.TryGetValue(question.ID, out var answer) || IsEmptyAnswer(answer))
-                    continue;
+        //    foreach (var question in choiceQuestions)
+        //    {
+        //        if (!answerByQuestion.TryGetValue(question.ID, out var answer) || IsEmptyAnswer(answer))
+        //            continue;
 
-                optionsByQuestion.TryGetValue(question.ID, out var options);
-                options ??= new List<PollQuestionOption>();
-                var values = ExtractAnswerValues(answer);
+        //        optionsByQuestion.TryGetValue(question.ID, out var options);
+        //        options ??= new List<PollQuestionOption>();
+        //        var values = ExtractAnswerValues(answer);
 
-                if (string.Equals(question.QuestionType, "SingleChoice", StringComparison.OrdinalIgnoreCase) && values.Count > 1)
-                {
-                    validationMessage = "SingleChoice question accepts only one answer";
-                    validationData = question.ID;
-                    return false;
-                }
+        //        if (string.Equals(question.QuestionType, "SingleChoice", StringComparison.OrdinalIgnoreCase) && values.Count > 1)
+        //        {
+        //            validationMessage = "SingleChoice question accepts only one answer";
+        //            validationData = question.ID;
+        //            return false;
+        //        }
 
-                var invalidValues = values
-                    .Where(x => !IsValidChoiceValue(x, options))
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .ToList();
+        //        var invalidValues = values
+        //            .Where(x => !IsValidChoiceValue(x, options))
+        //            .Distinct(StringComparer.OrdinalIgnoreCase)
+        //            .ToList();
 
-                if (invalidValues.Count > 0)
-                {
-                    validationMessage = "Answer contains invalid option values";
-                    validationData = new { questionId = question.ID, invalidValues };
-                    return false;
-                }
-            }
+        //        if (invalidValues.Count > 0)
+        //        {
+        //            validationMessage = "Answer contains invalid option values";
+        //            validationData = new { questionId = question.ID, invalidValues };
+        //            return false;
+        //        }
+        //    }
 
-            return true;
-        }
+        //    return true;
+        //}
 
         private static bool IsEmptyAnswer(AnswerItemDTO answer)
         {

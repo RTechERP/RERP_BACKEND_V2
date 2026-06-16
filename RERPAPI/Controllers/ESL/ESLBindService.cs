@@ -11,6 +11,7 @@ namespace RERPAPI.Controllers.ESL
     public interface IESLBindService
     {
         Task<ESLBindResponse> UpdateProductAsync(object requestPayload);
+        Task<List<EslDevice>> GetEslDevicesAsync();
     }
 
     public class ESLBindService : IESLBindService
@@ -22,6 +23,25 @@ namespace RERPAPI.Controllers.ESL
         {
             _configRepo = configRepo;
             _httpClient = httpClient;
+        }
+
+        public async Task<List<EslDevice>> GetEslDevicesAsync()
+        {
+            try
+            {
+                var configs = _configRepo.GetAll();
+                string baseUrl = configs.Find(x => x.ConfigKey == "ESL_API_BASE_URL")?.ConfigValue ?? "https://la-woesl.cloud/";
+                string store_code = configs.Find(x => x.ConfigKey == "ESL_STORE_CODE")?.ConfigValue ?? "rtc01";
+                string esl_sign = configs.Find(x => x.ConfigKey == "ESL_SIGN")?.ConfigValue ?? "80805d794841f1b4";
+                string url = $"{baseUrl.TrimEnd('/')}/api/default/esl/query?f1=1&f2=200&store_code={store_code}&is_base64=0&sign={esl_sign}";
+                var json = await _httpClient.GetStringAsync(url);
+                return JsonSerializer.Deserialize<List<EslDevice>>(json) ?? new List<EslDevice>();
+            }
+            catch (Exception e)
+            {
+
+                throw;
+            }
         }
 
         public async Task<ESLBindResponse> UpdateProductAsync(object requestPayload)
@@ -61,5 +81,11 @@ namespace RERPAPI.Controllers.ESL
                 return new ESLBindResponse { code = 500, message = ex.Message };
             }
         }
+
+
+
+
+
+
     }
 }

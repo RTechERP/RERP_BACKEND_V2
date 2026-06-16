@@ -87,39 +87,39 @@ namespace RERPAPI.Controllers
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        [HttpDelete("{id}")]
-        [RequiresPermission("N33,N35,N36,N55,N27")]
-        public async Task<IActionResult> DeleteBankList(int id)
-        {
-            try
-            {
-                bool hasPaymentOrders = _paymentOrderRepo.GetAll(p => p.BankListID == id && (!p.IsDelete.HasValue || !p.IsDelete.Value)).Any();
-                if (hasPaymentOrders)
-                {
-                    return BadRequest(ApiResponseFactory.Fail(null, "Không thể xóa bank list vì đã được sử dụng tại đề nghị thanh toán!"));
-                }
-                BankList bankList = _bankListRepo.GetByID(id);
-                if (bankList == null)
-                {
-                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy bank"));
-                }
-                bankList.IsDeleted = true;
-                int result = await _bankListRepo.UpdateAsync(bankList);
-                if (result > 0)
-                {
-                    return Ok(ApiResponseFactory.Success(null, "Bank list deleted successfully"));
-                }
-                else
-                {
-                    return BadRequest(ApiResponseFactory.Fail(null, "Failed to delete bank list"));
-                }
-            }
-            catch (Exception ex)
-            {
-                // Log the exception (not implemented here)
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
+        //[HttpDelete("{id}")]
+        //[RequiresPermission("N33,N35,N36,N55,N27")]
+        //public async Task<IActionResult> DeleteBankList(int id)
+        //{
+        //    try
+        //    {
+        //        bool hasPaymentOrders = _paymentOrderRepo.GetAll(p => p.BankListID == id && (!p.IsDelete.HasValue || !p.IsDelete.Value)).Any();
+        //        if (hasPaymentOrders)
+        //        {
+        //            return BadRequest(ApiResponseFactory.Fail(null, "Không thể xóa bank list vì đã được sử dụng tại đề nghị thanh toán!"));
+        //        }
+        //        BankList bankList = _bankListRepo.GetByID(id);
+        //        if (bankList == null)
+        //        {
+        //            return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy bank"));
+        //        }
+        //        bankList.IsDeleted = true;
+        //        int result = await _bankListRepo.UpdateAsync(bankList);
+        //        if (result > 0)
+        //        {
+        //            return Ok(ApiResponseFactory.Success(null, "Bank list deleted successfully"));
+        //        }
+        //        else
+        //        {
+        //            return BadRequest(ApiResponseFactory.Fail(null, "Failed to delete bank list"));
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        // Log the exception (not implemented here)
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
 
     }
 }

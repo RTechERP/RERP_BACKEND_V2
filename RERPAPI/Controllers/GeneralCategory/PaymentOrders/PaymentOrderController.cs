@@ -261,113 +261,113 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             }
         }
 
-        [HttpPost("save-data")]
-        public async Task<IActionResult> SaveData([FromBody] PaymentOrderDTO payment)
-        {
+        //[HttpPost("save-data")]
+        //public async Task<IActionResult> SaveData([FromBody] PaymentOrderDTO payment)
+        //{
 
-            try
-            {
-                //_currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
-                string saveText = payment.ID > 0 ? "Cập nhật" : "Tạo mới";
-                string message = $"{saveText} thành công!";
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                _currentUser = ObjectMapper.GetCurrentUser(claims);
+        //    try
+        //    {
+        //        //_currentUser = HttpContext.Session.GetObject<CurrentUser>(_configuration.GetValue<string>("SessionKey") ?? "");
+        //        string saveText = payment.ID > 0 ? "Cập nhật" : "Tạo mới";
+        //        string message = $"{saveText} thành công!";
+        //        var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+        //        _currentUser = ObjectMapper.GetCurrentUser(claims);
 
-                if (payment.ID > 0)
-                {
-                    var paymentDb = _paymentRepo.GetByID(payment.ID);
-                    if (paymentDb.EmployeeID != _currentUser.EmployeeID)
-                    {
-                        return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền cập nhập đề nghị của nhân viên khác!"));
-                    }
+        //        if (payment.ID > 0)
+        //        {
+        //            var paymentDb = _paymentRepo.GetByID(payment.ID);
+        //            if (paymentDb.EmployeeID != _currentUser.EmployeeID)
+        //            {
+        //                return BadRequest(ApiResponseFactory.Fail(null, "Bạn không có quyền cập nhập đề nghị của nhân viên khác!"));
+        //            }
 
-                    //Get log
+        //            //Get log
 
-                    var logApproved = _paymentOrderLogApprovedRepo.GetAll(x => x.PaymentOrderID == payment.ID
-                                                      //&& x.PaymentOrderLogID == logDb.ID
-                                                      && x.IsApproved != 0)?.OrderByDescending(x => x.ID)?.FirstOrDefault();
-                    if (logApproved?.ID > 0)
-                    {
-                        var logDb = _logRepo.GetByID(logApproved?.PaymentOrderLogID ?? 0) ?? new PaymentOrderLog();
-                        string isApprovedText = logApproved.IsApproved == 1 ? "duyệt" : (logApproved.IsApproved == 2 ? "hủy duyệt" : "yêu cầu bổ sung");
-                        return BadRequest(ApiResponseFactory.Fail(null, $"Đề nghị [{payment.Code}] đã được {logDb.StepName} {isApprovedText}. Bạn không thể cập nhật!"));
-                    }
-                }
+        //            var logApproved = _paymentOrderLogApprovedRepo.GetAll(x => x.PaymentOrderID == payment.ID
+        //                                              //&& x.PaymentOrderLogID == logDb.ID
+        //                                              && x.IsApproved != 0)?.OrderByDescending(x => x.ID)?.FirstOrDefault();
+        //            if (logApproved?.ID > 0)
+        //            {
+        //                var logDb = _logRepo.GetByID(logApproved?.PaymentOrderLogID ?? 0) ?? new PaymentOrderLog();
+        //                string isApprovedText = logApproved.IsApproved == 1 ? "duyệt" : (logApproved.IsApproved == 2 ? "hủy duyệt" : "yêu cầu bổ sung");
+        //                return BadRequest(ApiResponseFactory.Fail(null, $"Đề nghị [{payment.Code}] đã được {logDb.StepName} {isApprovedText}. Bạn không thể cập nhật!"));
+        //            }
+        //        }
 
-                if (payment.IsDelete != true)
-                {
-                    var validate = _paymentRepo.Validate(payment);
-                    if (validate.status == 0)
-                    {
-                        return BadRequest(validate);
-                    }
-                }
-                if (payment.BankListID > 0 && payment.BankListID != 187) // Nếu không phải loại khác thì lấy tên ngân hàng, nếu là loại khác thì đã có bank điền
-                {
-                    BankList bankList = _bankListRepo.GetByID(payment.BankListID ?? 0);
-                    if (bankList != null && bankList.ID > 0)
-                    {
-                        payment.Bank = bankList.BankName;
-                    }
-                }
-                payment.EmployeeID = _currentUser.EmployeeID;
-                payment.IsUrgent = payment.DeadlinePayment.HasValue;
-                if (payment.DeadlinePayment.HasValue) payment.DeadlinePayment = payment.DeadlinePayment.Value.ToLocalTime();
-                else payment.DeadlinePayment = null;
-                if (payment.DateOrder.HasValue) payment.DateOrder = payment.DateOrder.Value.ToLocalTime();
-                if (payment.DatePayment.HasValue) payment.DatePayment = payment.DatePayment.Value.ToLocalTime();
-                if (payment.IsSpecialOrder == true) payment.TypeOrder = 0;
-                if (payment.ID <= 0)
-                {
-                    payment.Code = _paymentRepo.GetCode(payment);
+        //        if (payment.IsDelete != true)
+        //        {
+        //            var validate = _paymentRepo.Validate(payment);
+        //            if (validate.status == 0)
+        //            {
+        //                return BadRequest(validate);
+        //            }
+        //        }
+        //        if (payment.BankListID > 0 && payment.BankListID != 187) // Nếu không phải loại khác thì lấy tên ngân hàng, nếu là loại khác thì đã có bank điền
+        //        {
+        //            BankList bankList = _bankListRepo.GetByID(payment.BankListID ?? 0);
+        //            if (bankList != null && bankList.ID > 0)
+        //            {
+        //                payment.Bank = bankList.BankName;
+        //            }
+        //        }
+        //        payment.EmployeeID = _currentUser.EmployeeID;
+        //        payment.IsUrgent = payment.DeadlinePayment.HasValue;
+        //        if (payment.DeadlinePayment.HasValue) payment.DeadlinePayment = payment.DeadlinePayment.Value.ToLocalTime();
+        //        else payment.DeadlinePayment = null;
+        //        if (payment.DateOrder.HasValue) payment.DateOrder = payment.DateOrder.Value.ToLocalTime();
+        //        if (payment.DatePayment.HasValue) payment.DatePayment = payment.DatePayment.Value.ToLocalTime();
+        //        if (payment.IsSpecialOrder == true) payment.TypeOrder = 0;
+        //        if (payment.ID <= 0)
+        //        {
+        //            payment.Code = _paymentRepo.GetCode(payment);
 
-                    var existCodes = _paymentRepo.GetAll(x => x.Code == payment.Code && x.IsDelete != true);
-                    if (existCodes.Count() > 0)
-                    {
-                        string newCode = _paymentRepo.GetCode(payment);
-                        message += $"\nSố ĐNTT [{payment.Code}] đã tồn tại. PM tự động đổi thành [{newCode}]";
-                        payment.Code = newCode;
-                        //return BadRequest(ApiResponseFactory.Fail(null, $"Số đề nghị [{payment.Code}] đã tồn tại!"));
-                    }
+        //            var existCodes = _paymentRepo.GetAll(x => x.Code == payment.Code && x.IsDelete != true);
+        //            if (existCodes.Count() > 0)
+        //            {
+        //                string newCode = _paymentRepo.GetCode(payment);
+        //                message += $"\nSố ĐNTT [{payment.Code}] đã tồn tại. PM tự động đổi thành [{newCode}]";
+        //                payment.Code = newCode;
+        //                //return BadRequest(ApiResponseFactory.Fail(null, $"Số đề nghị [{payment.Code}] đã tồn tại!"));
+        //            }
 
-                    await _paymentRepo.CreateAsync(payment);
-                }
-                else
-                {
-                    if (string.IsNullOrEmpty(payment.Code?.Trim()))
-                    {
-                        payment.Code = _paymentRepo.GetCode(payment);
+        //            await _paymentRepo.CreateAsync(payment);
+        //        }
+        //        else
+        //        {
+        //            if (string.IsNullOrEmpty(payment.Code?.Trim()))
+        //            {
+        //                payment.Code = _paymentRepo.GetCode(payment);
 
-                        var existCodes = _paymentRepo.GetAll(x => x.Code == payment.Code && x.IsDelete != true);
-                        if (existCodes.Count() > 0)
-                        {
-                            string newCode = _paymentRepo.GetCode(payment);
-                            message += $"\nSố ĐNTT [{payment.Code}] đã tồn tại. PM tự động đổi thành [{newCode}]";
-                            payment.Code = newCode;
-                            //return BadRequest(ApiResponseFactory.Fail(null, $"Số đề nghị [{payment.Code}] đã tồn tại!"));
-                        }
-                    }
-                    await _paymentRepo.UpdateAsync(payment);
-                }
+        //                var existCodes = _paymentRepo.GetAll(x => x.Code == payment.Code && x.IsDelete != true);
+        //                if (existCodes.Count() > 0)
+        //                {
+        //                    string newCode = _paymentRepo.GetCode(payment);
+        //                    message += $"\nSố ĐNTT [{payment.Code}] đã tồn tại. PM tự động đổi thành [{newCode}]";
+        //                    payment.Code = newCode;
+        //                    //return BadRequest(ApiResponseFactory.Fail(null, $"Số đề nghị [{payment.Code}] đã tồn tại!"));
+        //                }
+        //            }
+        //            await _paymentRepo.UpdateAsync(payment);
+        //        }
 
 
 
-                //Update link pokh
-                await _paymentOrderPORepo.Create(payment);
+        //        //Update link pokh
+        //        await _paymentOrderPORepo.Create(payment);
 
-                //Update chi tiết thanh toán
-                await _detailRepo.Create(payment);
+        //        //Update chi tiết thanh toán
+        //        await _detailRepo.Create(payment);
 
-                //Update quy trình duyệt
-                await _logRepo.Create(payment);
+        //        //Update quy trình duyệt
+        //        await _logRepo.Create(payment);
 
-                return Ok(ApiResponseFactory.Success(payment, message));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
+        //        return Ok(ApiResponseFactory.Success(payment, message));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
 
         [HttpPost("upload-file")]
         public async Task<IActionResult> UploadFile()
@@ -1117,26 +1117,26 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
                 $"{file.PaymentOrderCode}_{DateTime.Now:yyyyMMddHHmmss}.zip"
             );
         }
-        [HttpPost("update-transfer-type")]
-        [RequiresPermission("N55,N61")]
-        public async Task<IActionResult> UpdateTranferType([FromBody] List<PaymentOrderDTO> payments)
-        {
-            try
-            {
+        //[HttpPost("update-transfer-type")]
+        //[RequiresPermission("N55,N61")]
+        //public async Task<IActionResult> UpdateTranferType([FromBody] List<PaymentOrderDTO> payments)
+        //{
+        //    try
+        //    {
                
-                foreach (var payment in payments)
-                {
-                   PaymentOrder paymentOrder = _paymentRepo.GetByID(payment.ID);
-                    if (paymentOrder.ID <= 0) continue;
-                    paymentOrder.TransferType = payment.TransferType;
-                    await _paymentRepo.UpdateAsync(paymentOrder);
-                }
-                return Ok(ApiResponseFactory.Success(payments));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
+        //        foreach (var payment in payments)
+        //        {
+        //           PaymentOrder paymentOrder = _paymentRepo.GetByID(payment.ID);
+        //            if (paymentOrder.ID <= 0) continue;
+        //            paymentOrder.TransferType = payment.TransferType;
+        //            await _paymentRepo.UpdateAsync(paymentOrder);
+        //        }
+        //        return Ok(ApiResponseFactory.Success(payments));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
     }
 }

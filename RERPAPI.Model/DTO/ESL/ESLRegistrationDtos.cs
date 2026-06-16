@@ -21,13 +21,35 @@ namespace RERPAPI.Model.DTO.ESL
     public class ESLRegistrationRequest
     {
         // For No=1
+        public int ID { get; set; }
         public int TestTableID { get; set; }
         public int OwnerID { get; set; }
         public int ApproverID { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public string ProjectCode { get; set; }
+        public int ProjectID { get; set; }
         public string RegistrationContent { get; set; }
+        public bool IsDelete { get; set; }
+    }
+
+
+    public class ESLRegistrationResponse
+    {
+        // For No=1
+        public int ID { get; set; }
+        public int TestTableID { get; set; }
+        public int OwnerID { get; set; }
+        public int ApproverID { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public string ProjectCode { get; set; }
+        public int ProjectID { get; set; }
+        public string RegistrationContent { get; set; }
+        public bool IsDelete { get; set; }
+        public int Status { get; set; } // 0=Chờ duyệt, 1=Đã duyệt, 2=Từ chối
+        public int Type { get; set; } // 1=Đăng ký mới, 2=Gia hạn, 3=Bàn giao
+        public int No { get; set; } // Số thứ tự
     }
 
     public class ESLExtendHandoverRequest
@@ -36,6 +58,8 @@ namespace RERPAPI.Model.DTO.ESL
         public int Type { get; set; } // 2: Gia hạn, 3: Bàn giao
         public int OwnerID { get; set; } // OwnerID mới hoặc cũ
         public int ApproverID { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
     }
 
     public class ESLReturnRequest

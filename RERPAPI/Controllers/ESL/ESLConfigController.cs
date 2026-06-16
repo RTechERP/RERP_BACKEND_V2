@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Model.Entities.ESL;
+using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.ESL;
 using System;
 using System.Linq;
@@ -22,7 +22,7 @@ namespace RERPAPI.Controllers.ESL
         {
             try
             {
-                var configs = _configRepo.GetAll().ToList();
+                var configs = _configRepo.GetAll(x => x.IsDeleted != true).ToList();
                 return Ok(new
                 {
                     status = 1,
@@ -68,6 +68,31 @@ namespace RERPAPI.Controllers.ESL
                     status = 1,
                     message = "Lưu thành công"
                 });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
+        }
+
+        [HttpPost("delete")]
+        public IActionResult Delete([FromBody] int id)
+        {
+            try
+            {
+                var exist = _configRepo.GetByID(id);
+                if (exist != null && exist.ID > 0)
+                {
+                    exist.IsDeleted = true;
+                    _configRepo.Update(exist);
+                    return Ok(new { status = 1, message = "Xóa thành công" });
+                }
+                return Ok(new { status = 0, message = "Bản ghi không tồn tại" });
             }
             catch (Exception ex)
             {

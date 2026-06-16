@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using RERPAPI.Model.Entities.ESL;
+using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.ESL;
 using System;
 using System.Linq;
@@ -22,7 +22,7 @@ namespace RERPAPI.Controllers.ESL
         {
             try
             {
-                var tables = _testTableRepo.GetAll().ToList();
+                var tables = _testTableRepo.GetAll(x => x.IsDeleted != true).ToList();
                 return Ok(new
                 {
                     status = 1,
@@ -89,7 +89,8 @@ namespace RERPAPI.Controllers.ESL
                 var exist = _testTableRepo.GetByID(id);
                 if (exist != null && exist.ID > 0)
                 {
-                    _testTableRepo.Delete(id);
+                    exist.IsDeleted = true;
+                    _testTableRepo.Update(exist);
                     return Ok(new { status = 1, message = "Xóa thành công" });
                 }
                 return Ok(new { status = 0, message = "Bản ghi không tồn tại" });

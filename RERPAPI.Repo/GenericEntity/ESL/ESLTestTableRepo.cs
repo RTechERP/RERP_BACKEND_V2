@@ -1,6 +1,6 @@
 using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
-using RERPAPI.Model.Entities.ESL;
+using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Repo.GenericEntity.ESL
 {
