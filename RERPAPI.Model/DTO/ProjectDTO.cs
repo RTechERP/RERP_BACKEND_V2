@@ -20,4 +20,10 @@ namespace RERPAPI.Model.DTO
         public List<int>? ApplicationTypeIDs { get; set; }
         public List<int>? TechnologyIDs { get; set; }
     }
+
+    public class ProjectAppTechSaveDTO
+    {
+        public int ProjectID { get; set; }
+        public List<prjTypeLinkDTO> ProjectTypeLinks { get; set; }
+    }
 }
