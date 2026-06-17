@@ -1986,10 +1986,12 @@ namespace RERPAPI.Controllers.Project
                         await projectTypeTechnologyLinkRepo.CreateAsync(techLink);
                     }
 
-                    if (item.Selected == true)
-                    {
-                        selectedProjectTypeLink.Add(item.ProjectTypeID ?? item.ID);
-                    }
+                }
+
+                var lst = projectTypeLinkRepo.GetAll(x => x.ProjectID == prjAppTech.ProjectID && x.Selected == true);
+                foreach (var l in lst)
+                {
+                    selectedProjectTypeLink.Add(l.ProjectTypeID ?? 0);
                 }
 
                 return Ok(ApiResponseFactory.Success(new { project = new { ID = prjAppTech.ProjectID }, selectedProjectTypeLink }, "Lưu thông tin lĩnh vực và công nghệ thành công"));
