@@ -1783,7 +1783,7 @@ namespace RERPAPI.Controllers.Project
         }
 
         [Authorize]
-        [RequiresPermission("N1,N1,N13,N27,N97")]
+        [RequiresPermission("N1,N13,N27,N97")]
         [HttpPost("save-project-application-technology")]
         public async Task<IActionResult> SaveProjectApplicationTechnology([FromBody] ProjectAppTechSaveDTO prjAppTech)
         {
