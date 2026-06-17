@@ -394,6 +394,8 @@ namespace RERPAPI.Controllers.Old
                 PurchaseRequestApproveStatus logStatus = status
                                                            ? PurchaseRequestApproveStatus.RequestApprove
                                                            : PurchaseRequestApproveStatus.CancelRequestApprove;
+                int updatedCount = 0;
+                var failedItems = new List<string>();
                 foreach (ProjectPartlistPurchaseRequestDTO item in data)
                 {
                     if (item.ID <= 0) continue;
@@ -403,6 +405,8 @@ namespace RERPAPI.Controllers.Old
                     if (existingRequest.EmployeeIDRequestApproved != currentUser.EmployeeID
                         && !currentUser.IsAdmin) continue;
 
+                    try
+                    {
                     _repo.UpdateData(item);
                     item.IsRequestApproved = status;
                     item.EmployeeIDRequestApproved = currentUser.EmployeeID;
@@ -424,9 +428,30 @@ namespace RERPAPI.Controllers.Old
                     }
 
                     await _repo.UpdateAsync(item);
+
+                        // Verify DB thực sự đã lưu — tránh trường hợp UpdateAsync !hasChanges return 1 mà không save
+                        var saved = _repo.GetSingleNoTracking(x => x.ID == item.ID);
+                        if (saved.IsRequestApproved != status)
+                        {
+                            failedItems.Add($"[{item.ProductCode}] lưu không thành công");
+                            continue;
+                        }
+
                     await _projectPartListPurchaseRequestApproveLogRepo.CreateLogAsync(item.ID, logStatus, currentUser.EmployeeID, currentUser.LoginName);
+                        updatedCount++;
                 }
-                return Ok(ApiResponseFactory.Success(data, $"Đã cập nhật trạng thái {textStatus} thành công."));
+                    catch (Exception itemEx)
+                    {
+                        failedItems.Add($"[{item.ProductCode}] {itemEx.Message}");
+                    }
+                }
+                if (updatedCount == 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không có sản phẩm nào được {textStatus}. Vui lòng kiểm tra lại!"));
+
+                string resultMessage = $"Đã {textStatus} thành công {updatedCount} sản phẩm.";
+                if (failedItems.Count > 0)
+                    resultMessage += $"\nLỗi {failedItems.Count} sản phẩm:\n" + string.Join("\n", failedItems);
+                return Ok(ApiResponseFactory.Success(data, resultMessage));
             }
             catch (Exception ex)
             {
