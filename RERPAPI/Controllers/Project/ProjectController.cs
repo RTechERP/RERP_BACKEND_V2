@@ -1799,7 +1799,96 @@ namespace RERPAPI.Controllers.Project
                 foreach (var item in prjAppTech.ProjectTypeLinks)
                 {
                     int projectTypeLinkID = item.ProjectTypeLinkID;
+                    ProjectTypeLink prjTypeLink = null;
+                    if (projectTypeLinkID > 0)
+                    {
+                        prjTypeLink = projectTypeLinkRepo.GetByID(projectTypeLinkID);
+                    }
+
+                    if (prjTypeLink == null)
+                    {
+                        int projectTypeID = item.ProjectTypeID ?? item.ID;
+                        prjTypeLink = projectTypeLinkRepo.GetAll()
+                            .FirstOrDefault(x => x.ProjectID == prjAppTech.ProjectID && x.ProjectTypeID == projectTypeID);
+                    }
+
+                    if (prjTypeLink == null)
+                    {
+                        prjTypeLink = new ProjectTypeLink()
+                        {
+                            ProjectID = prjAppTech.ProjectID,
+                            ProjectTypeID = item.ProjectTypeID ?? item.ID,
+                            CreatedDate = DateTime.Now
+                        };
+                    }
+
+                    prjTypeLink.LeaderID = item.LeaderID > 0 ? item.LeaderID : (item.EmployeeID > 0 ? item.EmployeeID : (int?)null);
+                    prjTypeLink.Selected = item.Selected;
+                    prjTypeLink.UpdatedDate = DateTime.Now;
+
+                    if (prjTypeLink.ID > 0)
+                    {
+                        await projectTypeLinkRepo.UpdateAsync(prjTypeLink);
+                    }
+                    else
+                    {
+                        await projectTypeLinkRepo.CreateAsync(prjTypeLink);
+                    }
+
+                    projectTypeLinkID = prjTypeLink.ID;
                     if (projectTypeLinkID <= 0) continue;
+
+                    // Đồng bộ bảng ProjectEmployee (người tham gia - Leader)
+                    int pTypeID = item.ProjectTypeID ?? item.ID;
+                    int? newLeaderID = item.LeaderID > 0 ? item.LeaderID : (item.EmployeeID > 0 ? item.EmployeeID : (int?)null);
+
+                    var oldLeaders = projectEmployeeRepo.GetAll(
+                        x => x.ProjectID == prjAppTech.ProjectID
+                        && x.ProjectTypeID == pTypeID
+                        && x.IsLeader == true
+                        && x.IsDeleted != true
+                    ).ToList();
+
+                    if (newLeaderID.HasValue && newLeaderID.Value > 0)
+                    {
+                        bool isNewLeaderExist = false;
+                        foreach (var oldLd in oldLeaders)
+                        {
+                            if (oldLd.EmployeeID == newLeaderID.Value)
+                            {
+                                isNewLeaderExist = true;
+                            }
+                            else
+                            {
+                                oldLd.IsDeleted = true;
+                                oldLd.UpdatedDate = DateTime.Now;
+                                await projectEmployeeRepo.UpdateAsync(oldLd);
+                            }
+                        }
+
+                        if (!isNewLeaderExist)
+                        {
+                            ProjectEmployee model = new ProjectEmployee()
+                            {
+                                ProjectID = prjAppTech.ProjectID,
+                                EmployeeID = newLeaderID.Value,
+                                ProjectTypeID = pTypeID,
+                                IsLeader = true,
+                                IsDeleted = false,
+                                CreatedDate = DateTime.Now
+                            };
+                            await projectEmployeeRepo.CreateAsync(model);
+                        }
+                    }
+                    else
+                    {
+                        foreach (var oldLd in oldLeaders)
+                        {
+                            oldLd.IsDeleted = true;
+                            oldLd.UpdatedDate = DateTime.Now;
+                            await projectEmployeeRepo.UpdateAsync(oldLd);
+                        }
+                    }
 
                     // 1. Đồng bộ bảng ProjectTypeApplicationLink (lĩnh vực ứng dụng)
                     var existingApps = projectTypeApplicationLinkRepo.GetAll()
