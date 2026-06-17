@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using RERPAPI.Model.Common;
@@ -189,22 +189,25 @@ namespace RERPAPI.Controllers.Old.Technical
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Danh sách báo cáo không được rỗng!"));
                 }
-                if (!_dailyReportTechnicalRepo.ValidateDailyReportTechnicalList(request, out string validationMessage, existingReports: null, userId, isTechnical
-               ))
+                if (!_dailyReportTechnicalRepo.ValidateDailyReportTechnicalList(request, out string validationMessage, existingReports: null, userId, isTechnical))
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, validationMessage));
                 }
+
+                var savedIds = new List<int>();
+
                 foreach (var item in request)
                 {
                     if (item.ID > 0)
                     {
                         var data = _dailyReportTechnicalRepo.GetByID(item.ID);
-                        if (data.UserReport != currentUser.ID)
+                        if (data == null || data.UserReport != currentUser.ID)
                         {
                             return BadRequest(ApiResponseFactory.Fail(null, "Bạn không thể sửa báo cáo công việc của người khác!"));
                         }
                         await _dailyReportTechnicalRepo.UpdateAsync(item);
                         if (isTechnical) await UpdateProjectItem(item);
+                        savedIds.Add(item.ID); // ID đã tồn tại từ trước
                     }
                     else
                     {
@@ -219,12 +222,14 @@ namespace RERPAPI.Controllers.Old.Technical
                         item.Confirm = false;
                         item.CreatedDate = DateTime.Today.AddHours(23).AddMinutes(30);
                         await _dailyReportTechnicalRepo.CreateAsync(item);
+                        // Sau CreateAsync, EF Core tự gán item.ID = identity value từ DB
                         if (isTechnical) await UpdateProjectItem(item);
+                        savedIds.Add(item.ID); // ID được EF Core populate sau khi insert thành công
                     }
                 }
-                return Ok(ApiResponseFactory.Success(null,
-                          "Lưu dữ liệu thành công"
-                      ));
+
+                // Trả về danh sách ID đã lưu — FE kiểm tra tất cả ID > 0 để xác nhận lưu thành công
+                return Ok(ApiResponseFactory.Success(savedIds, "Lưu dữ liệu thành công"));
             }
             catch (Exception ex)
             {

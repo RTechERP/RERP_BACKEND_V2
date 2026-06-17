@@ -1,4 +1,7 @@
-﻿namespace RERPAPI.Model.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace RERPAPI.Model.Entities;
 
 /// <summary>
 /// Bảng lưu trữ thông tin về hình ảnh liên quan đến kết quả chi tiết bài kiểm tra tuyển dụng (ví dụ: ảnh bài làm tự luận).

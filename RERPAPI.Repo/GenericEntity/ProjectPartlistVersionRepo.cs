@@ -24,6 +24,7 @@ namespace RERPAPI.Repo.GenericEntity
             {
                 return true;
             }
+
             if (item.IsDeleted == true && item.ID > 0)
             {
                 if (string.IsNullOrEmpty(item.ReasonDeleted))
@@ -84,6 +85,7 @@ namespace RERPAPI.Repo.GenericEntity
                          && x.IsActive == true
                          && x.StatusVersion == item.StatusVersion
                          && x.IsDeleted == false
+                         && x.IsConsumable == item.IsConsumable
                 );
 
                 if (projectPartListVersions.Count > 0)

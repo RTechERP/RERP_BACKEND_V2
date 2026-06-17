@@ -1,4 +1,7 @@
-﻿namespace RERPAPI.Model.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace RERPAPI.Model.Entities;
 
 /// <summary>
 /// Bảng liên kết SupplierSale và EmployeePurchase
@@ -37,4 +40,19 @@ public partial class SupplierSaleLink
     /// Mặt hàng
     /// </summary>
     public string? MatHang { get; set; }
+
+    /// <summary>
+    /// Website NCC
+    /// </summary>
+    public string? Website { get; set; }
+
+    /// <summary>
+    /// TG thành đại lí
+    /// </summary>
+    public string? AgencyTime { get; set; }
+
+    /// <summary>
+    /// 1: Có, 0: Không
+    /// </summary>
+    public bool? IsAgencyCertified { get; set; }
 }

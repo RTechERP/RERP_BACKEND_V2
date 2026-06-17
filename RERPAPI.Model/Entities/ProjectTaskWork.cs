@@ -1,4 +1,7 @@
-﻿namespace RERPAPI.Model.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace RERPAPI.Model.Entities;
 
 public partial class ProjectTaskWork
 {
@@ -48,7 +51,7 @@ public partial class ProjectTaskWork
     public string? UpdatedBy { get; set; }
 
     /// <summary>
-    /// Trạng thái khóa mềm
+    /// Trạng thái khóa mềm 
     /// </summary>
     public bool? IsDeleted { get; set; }
 

@@ -617,7 +617,7 @@ builder.Services.AddScoped<NotificationTypeRepo>();
 builder.Services.AddScoped<JobRequirementLogRepo>();
 //builder.Services.AddScoped<AssetLogRepo>();
 
-#region KPI
+#region KPI Tech
 
 builder.Services.AddScoped<KPISaleRepo>();
 builder.Services.AddScoped<KPIEvaluationPointRepo>();
@@ -637,8 +637,8 @@ builder.Services.AddScoped<ProjectTaskTypeRepo>();
 builder.Services.AddScoped<KPIEvaluationRuleDetailRepo>();
 builder.Services.AddScoped<KPIExamRepo>();
 builder.Services.AddScoped<KPISumaryEvaluationRepo>();
-
-#endregion KPI
+builder.Services.AddScoped<KPIEvaluationLogRepo>(); 
+#endregion
 
 #region Yêu cầu tuyển dụng
 
@@ -705,6 +705,9 @@ builder.Services.AddScoped<ProjectTaskStatusRepo>();
 builder.Services.AddScoped<PaymentOrderOrderTypeRepo>();
 builder.Services.AddScoped<ConfigNotificationKeyRepo>();
 builder.Services.AddScoped<ConfigNotificationKeyLinkRepo>();
+builder.Services.AddScoped<ProductGroupRTCLinkRepo>();
+builder.Services.AddScoped<MakerTrainingDepartmentLinkRepo>();
+builder.Services.AddScoped<MakerTrainingVideoLinkRepo>();
 
 #region DI LOG
 
@@ -716,6 +719,8 @@ builder.Services.AddScoped<BillImportTechnicalAuditLogRepo>();
 builder.Services.AddScoped<AssetLogRepo>();
 builder.Services.AddScoped<BillExportTechnicalAuditLogRepo>();
 builder.Services.AddScoped<AssetAllocationLogRepo>();
+builder.Services.AddScoped<ProjectPartlistPurchaseRequestLogRepo>();
+builder.Services.AddScoped<ProjectPartListPriceRequestLogRepo>();
 
 #endregion DI LOG
 
@@ -743,6 +748,7 @@ builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.UserRepo>();
 builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.EmployeeRepo>();
 builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.CourseExamPracticeRepo>();
 builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.CourseCatalogTypeRepo>();
+builder.Services.AddScoped<HistoryProductPriceRequestRepo>();
 
 #endregion DI Khoá học web
 
@@ -927,8 +933,14 @@ app.UseSerilogRequestLogging(options =>
 });
 
 app.UseHttpsRedirection();
-
+//Config static file
 app.UseStaticFiles();
+
+app.Use(async (context, next) =>
+{
+    context.Request.Path = context.Request.Path.Value?.ToLower();
+    await next();
+});
 
 app.UseRouting();
 app.UseCors("MyCors");
@@ -939,13 +951,6 @@ app.UseSession();
 
 app.MapControllers();
 
-//Config static file
-
-app.Use(async (context, next) =>
-{
-    context.Request.Path = context.Request.Path.Value?.ToLower();
-    await next();
-});
 
 app.UseStaticFiles();
 List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticFiles").Get<List<PathStaticFile>>() ?? new List<PathStaticFile>();
@@ -958,11 +963,11 @@ foreach (var item in staticFiles)
         RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
     });
 
-    app.UseDirectoryBrowser(new DirectoryBrowserOptions
-    {
-        FileProvider = new PhysicalFileProvider(item.PathFull),
-        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-    });
+    //app.UseDirectoryBrowser(new DirectoryBrowserOptions
+    //{
+    //    FileProvider = new PhysicalFileProvider(item.PathFull),
+    //    RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+    //});
 }
 var tusStore = new TusDiskStore(Directory.GetCurrentDirectory());
 // config Tus dotnet

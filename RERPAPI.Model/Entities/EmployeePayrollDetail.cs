@@ -1,4 +1,7 @@
-﻿namespace RERPAPI.Model.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace RERPAPI.Model.Entities;
 
 public partial class EmployeePayrollDetail
 {
@@ -23,7 +26,7 @@ public partial class EmployeePayrollDetail
     public decimal? TotalMerit { get; set; }
 
     /// <summary>
-    /// Tổng lương theo ngày công
+    /// Tổng lương theo ngày công 
     /// </summary>
     public decimal? TotalSalaryByDay { get; set; }
 
@@ -33,7 +36,7 @@ public partial class EmployeePayrollDetail
     public decimal? SalaryOneHour { get; set; }
 
     /// <summary>
-    ///  Số giờ làm thêm ngày thường
+    ///  Số giờ làm thêm ngày thường  
     /// </summary>
     public decimal? OT_Hour_WD { get; set; }
 
@@ -63,7 +66,7 @@ public partial class EmployeePayrollDetail
     public decimal? OT_Money_HD { get; set; }
 
     /// <summary>
-    /// Phụ cấp chuyên cần
+    /// Phụ cấp chuyên cần 
     /// thực nhận
     /// </summary>
     public decimal? RealIndustry { get; set; }
@@ -74,7 +77,7 @@ public partial class EmployeePayrollDetail
     public decimal? AllowanceMeal { get; set; }
 
     /// <summary>
-    /// Phụ cấp làm thêm trước 7H15
+    /// Phụ cấp làm thêm trước 7H15 
     /// </summary>
     public decimal? Allowance_OT_Early { get; set; }
 
@@ -94,7 +97,7 @@ public partial class EmployeePayrollDetail
     public decimal? CostVehicleBussiness { get; set; }
 
     /// <summary>
-    /// &quot;Thưởng
+    /// &quot;Thưởng 
     /// KPIs/doanh số&quot;
     /// </summary>
     public decimal? Bonus { get; set; }
@@ -105,7 +108,7 @@ public partial class EmployeePayrollDetail
     public decimal? Other { get; set; }
 
     /// <summary>
-    /// &quot;Tổng thu nhập
+    /// &quot;Tổng thu nhập 
     /// thực tế&quot;
     /// </summary>
     public decimal? RealSalary { get; set; }
@@ -218,4 +221,41 @@ public partial class EmployeePayrollDetail
     /// Khấu trừ thuế TNCN
     /// </summary>
     public decimal? TaxDeduction { get; set; }
+
+    /// <summary>
+    /// Số lần đi muộn về sớm bị phạt/trừ thưởng quý
+    /// </summary>
+    public int PenaltyLateEarlyQty { get; set; }
+
+    /// <summary>
+    /// Số tiền phạt/trừ thưởng quý do đi muộn về sớm
+    /// </summary>
+    public decimal PenaltyLateEarlyAmount { get; set; }
+
+    /// <summary>
+    /// Số lần quên chấm công bị phạt/trừ thưởng quý
+    /// </summary>
+    public int PenaltyMissingAttendanceQty { get; set; }
+
+    /// <summary>
+    /// Số tiền phạt/trừ thưởng quý do quên chấm công
+    /// </summary>
+    public decimal PenaltyMissingAttendanceAmount { get; set; }
+
+    /// <summary>
+    /// Số lần/ngày nghỉ vượt quá 2 ngày trong tháng bị phạt/trừ thưởng quý
+    /// </summary>
+    public int PenaltyLeaveOver2DaysQty { get; set; }
+
+    /// <summary>
+    /// Số tiền phạt/trừ thưởng quý do nghỉ vượt quá 2 ngày trong tháng
+    /// </summary>
+    public decimal PenaltyLeaveOver2DaysAmount { get; set; }
+
+    /// <summary>
+    /// Tổng số tiền phạt/trừ vào thưởng quý
+    /// </summary>
+    public decimal PenaltyTotalAmount { get; set; }
+
+    public decimal RegulationViolation { get; set; }
 }

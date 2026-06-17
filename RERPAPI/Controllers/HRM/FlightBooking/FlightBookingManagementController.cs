@@ -295,9 +295,10 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                 int maxPA = groups.Max(g => g.Count());
                 if (maxPA < 2) maxPA = 2;
 
-                int hcnsReasonCol = 12 + maxPA; // 11 cột đầu + (maxPA cột/PA)
-                int diffCol = hcnsReasonCol + 1;
-                int totalCol = diffCol + 1;
+                int hcnsProposalCol = 12 + maxPA; // 11 cột đầu + (maxPA cột/PA)
+                int diffCol = hcnsProposalCol + 1;
+                int hcnsReasonCol = diffCol + 1;
+                int totalCol = hcnsReasonCol + 1;
                 int approverCol = totalCol + 1;
                 int bookerCol = approverCol + 1;
                 int bookedDateCol = bookerCol + 1;
@@ -342,11 +343,15 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                         colIndex++;
                     }
 
-                    sheet.Cells[2, colIndex].Value = "Lý do HCNS đề xuất";
+                    sheet.Cells[2, colIndex].Value = "Phương án HCNS đề xuất";
                     sheet.Cells[2, colIndex, 3, colIndex].Merge = true;
                     colIndex++;
 
                     sheet.Cells[2, colIndex].Value = "Chênh lệch\nchi phí";
+                    sheet.Cells[2, colIndex, 3, colIndex].Merge = true;
+                    colIndex++;
+
+                    sheet.Cells[2, colIndex].Value = "Lý do HCNS đề xuất";
                     sheet.Cells[2, colIndex, 3, colIndex].Merge = true;
                     colIndex++;
 
@@ -400,8 +405,11 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                         decimal pa1Price = 0;
                         decimal pa2Price = 0;
                         decimal totalApproved = 0;
+                        bool hasApproved = false;
+                        decimal minPrice = decimal.MaxValue;
                         string approverName = "";
 
+                        var hcnsProposalsList = new List<string>();
                         string hcnsReason = "";
 
                         for (int i = 0; i < groupCount; i++)
@@ -421,7 +429,25 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                                 sheet.Cells[startRow, 9].Value = first["ArrivesAddress"];
                             }
 
-                            sheet.Cells[row, 10].Value = item["DepartureTime"] != null && item["DepartureTime"] != DBNull.Value ? ((DateTime)item["DepartureTime"]).ToString("HH:mm") : "";
+                            string dayOfWeekStr = "";
+                            if (item["DepartureDate"] != null && item["DepartureDate"] != DBNull.Value)
+                            {
+                                var dateVal = (DateTime)item["DepartureDate"];
+                                dayOfWeekStr = dateVal.DayOfWeek switch
+                                {
+                                    DayOfWeek.Sunday => "Chủ Nhật",
+                                    DayOfWeek.Monday => "Thứ Hai",
+                                    DayOfWeek.Tuesday => "Thứ Ba",
+                                    DayOfWeek.Wednesday => "Thứ Tư",
+                                    DayOfWeek.Thursday => "Thứ Năm",
+                                    DayOfWeek.Friday => "Thứ Sáu",
+                                    DayOfWeek.Saturday => "Thứ Bảy",
+                                    _ => ""
+                                };
+                            }
+
+                            string depTimeStr = item["DepartureTime"] != null && item["DepartureTime"] != DBNull.Value ? ((DateTime)item["DepartureTime"]).ToString("HH:mm") : "";
+                            sheet.Cells[row, 10].Value = string.IsNullOrEmpty(dayOfWeekStr) ? depTimeStr : $"{dayOfWeekStr} {depTimeStr}";
                             sheet.Cells[row, 11].Value = item["DepartureDate"] != null && item["DepartureDate"] != DBNull.Value ? ((DateTime)item["DepartureDate"]).ToString("dd/MM/yyyy") : "";
 
                             int paCol = 12 + i;
@@ -437,22 +463,29 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
 
                             sheet.Cells[row, paCol].Value = string.Join("\n", lines);
                             sheet.Cells[row, paCol].Style.WrapText = true;
+                            sheet.Cells[row, paCol].Style.Font.Color.SetColor(System.Drawing.Color.Black);
 
                             bool isHCNS = item["HCNSProposal"] != null && item["HCNSProposal"] != DBNull.Value && Convert.ToBoolean(item["HCNSProposal"]);
                             if (isHCNS)
                             {
-                                string reasonStr = item["ReasonHCNSProposal"] != null ? item["ReasonHCNSProposal"].ToString() : "";
-                                hcnsReason = "Phương án " + (i + 1) + (string.IsNullOrEmpty(reasonStr) ? "" : ": " + reasonStr);
+                                hcnsReason = item["ReasonHCNSProposal"] != null ? item["ReasonHCNSProposal"].ToString() : "";
+                                hcnsProposalsList.Add("Phương án " + (i + 1));
                             }
 
                             decimal price = priceVal;
                             if (i == 0) pa1Price = price;
                             if (i == 1) pa2Price = price;
 
+                            if (price > 0 && price < minPrice)
+                            {
+                                minPrice = price;
+                            }
+
                             int isApprove = item["IsApprove"] != null && item["IsApprove"] != DBNull.Value ? Convert.ToInt32(item["IsApprove"]) : 0;
                             if (isApprove == 1)
                             {
                                 totalApproved += price;
+                                hasApproved = true;
                                 if (item["ApproverName"] != null && item["ApproverName"] != DBNull.Value)
                                 {
                                     approverName = item["ApproverName"].ToString();
@@ -468,12 +501,16 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
 
                         int endRow = row - 1;
 
+                        sheet.Cells[startRow, hcnsProposalCol].Value = string.Join("\n\n", hcnsProposalsList);
+                        sheet.Cells[startRow, hcnsProposalCol].Style.WrapText = true;
+
                         sheet.Cells[startRow, hcnsReasonCol].Value = hcnsReason;
 
                         sheet.Cells[startRow, diffCol].Value = Math.Abs(pa1Price - pa2Price);
                         sheet.Cells[startRow, diffCol].Style.Numberformat.Format = "#,##0";
 
-                        sheet.Cells[startRow, totalCol].Value = totalApproved;
+                        decimal totalVal = hasApproved ? totalApproved : (minPrice == decimal.MaxValue ? 0 : minPrice);
+                        sheet.Cells[startRow, totalCol].Value = totalVal;
                         sheet.Cells[startRow, totalCol].Style.Numberformat.Format = "#,##0";
 
                         sheet.Cells[startRow, approverCol].Value = approverName;
@@ -483,7 +520,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
 
                         if (endRow > startRow)
                         {
-                            int[] colsToMerge = { 1, 2, 3, 4, 5, 6, 7, 8, 9, hcnsReasonCol, diffCol, totalCol, approverCol, bookerCol, bookedDateCol, noteCol };
+                            int[] colsToMerge = { 1, 2, 3, 4, 5, 6, 7, 8, 9, hcnsProposalCol, diffCol, hcnsReasonCol, totalCol, approverCol, bookerCol, bookedDateCol, noteCol };
                             foreach (int col in colsToMerge)
                             {
                                 sheet.Cells[startRow, col, endRow, col].Merge = true;
@@ -519,10 +556,11 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                     sheet.Column(10).Width = 10; // Time
                     sheet.Column(11).Width = 12; // Date
 
-                    for (int i = 12; i < hcnsReasonCol; i++)
+                    for (int i = 12; i < hcnsProposalCol; i++)
                     {
                         sheet.Column(i).Width = 20;
                     }
+                    sheet.Column(hcnsProposalCol).Width = 25;
                     sheet.Column(hcnsReasonCol).Width = 35;
                     sheet.Column(diffCol).Width = 20;
                     sheet.Column(totalCol).Width = 15;

@@ -240,6 +240,15 @@ namespace RERPAPI.Controllers.Old
                             employeePayrollDetail.TaxDependentsDeduction = TextUtils.ToDecimal(row["TaxDependentsDeduction"]);
                             employeePayrollDetail.TaxAbleIncome = TextUtils.ToDecimal(row["TaxAbleIncome"]);
                             employeePayrollDetail.TaxDeduction = TextUtils.ToDecimal(row["TaxDeduction"]);
+                            employeePayrollDetail.PenaltyLateEarlyQty = TextUtils.ToInt32(row["PenaltyLateEarlyQty"]);
+                            employeePayrollDetail.PenaltyLateEarlyAmount = TextUtils.ToDecimal(row["PenaltyLateEarlyAmount"]);
+                            employeePayrollDetail.PenaltyMissingAttendanceQty = TextUtils.ToInt32(row["PenaltyMissingAttendanceQty"]);
+                            employeePayrollDetail.PenaltyMissingAttendanceAmount = TextUtils.ToDecimal(row["PenaltyMissingAttendanceAmount"]);
+                            employeePayrollDetail.PenaltyLeaveOver2DaysQty = TextUtils.ToInt32(row["PenaltyLeaveOver2DaysQty"]);
+                            employeePayrollDetail.PenaltyLeaveOver2DaysAmount = TextUtils.ToDecimal(row["PenaltyLeaveOver2DaysAmount"]);
+                            employeePayrollDetail.PenaltyTotalAmount = TextUtils.ToDecimal(row["PenaltyTotalAmount"]);
+                            employeePayrollDetail.RegulationViolation = TextUtils.ToDecimal(row["RegulationViolation"]);
+
 
                             // Lưu
                             if (lstExistFromDB.Any())

@@ -1,4 +1,7 @@
-﻿namespace RERPAPI.Model.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace RERPAPI.Model.Entities;
 
 public partial class ProjectType
 {
@@ -19,4 +22,8 @@ public partial class ProjectType
     public bool? IsHide { get; set; }
 
     public bool? IsHidePartlist { get; set; }
+
+    public bool IsPurchase { get; set; }
+
+    public bool IsProject { get; set; }
 }

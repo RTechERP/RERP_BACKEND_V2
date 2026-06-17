@@ -346,16 +346,48 @@ namespace RERPAPI.Controllers.Old.Technical
 
                 if (product.billExportTechnical != null)
                 {
+                    //if (product.billExportTechnical.IsDeleted == true)
+                    //{
+                    //    await _billExportTechnicalRepo.UpdateAsync(product.billExportTechnical);
+                    //    List<BillExportDetailTechnical> lst = _billExportDetailTechnicalRepo.GetAll(x => x.BillExportTechID == product.billExportTechnical.ID);
+                    //    foreach (var item in lst)
+                    //    {
+                    //        item.IsDeleted = true;
+                    //        await _billExportDetailTechnicalRepo.UpdateAsync(item);
+                    //    }
+
+                    //    _billExportTechnicalAuditLogRepo.Create(new BillExportTechnicalAuditLog
+                    //    {
+                    //        BillExportTechnicalID = product.billExportTechnical.ID,
+                    //        TypeLog = "XOÁ PHIẾU",
+                    //        ContentLog = $"Xoá phiếu xuất kỹ thuật",
+                    //        CreatedBy = currentUser.LoginName,
+                    //        CreatedDate = DateTime.Now
+                    //    });
+
+                    //    return Ok(ApiResponseFactory.Success(product, "Xóa dữ liệu thành công"));
+                    //}
                     if (product.billExportTechnical.IsDeleted == true)
                     {
                         await _billExportTechnicalRepo.UpdateAsync(product.billExportTechnical);
+                        var historyproduct = _historyProductRTCRepo.GetAll(x => x.IsDelete == false && x.BillExportTechnicalID == product.billExportTechnical.ID);
+                        await _historyProductRTCRepo.PatchAsync(
+                            x => x.IsDelete == false && x.BillExportTechnicalID == product.billExportTechnical.ID,
+                            x =>
+                            {
+                                x.IsDelete = true;
+                            });
+                        await _billExportDetailTechnicalRepo.PatchAsync(x => x.BillExportTechID == product.billExportTechnical.ID, x =>
+                        {
+                            x.IsDeleted = true;
+                        });
                         List<BillExportDetailTechnical> lst = _billExportDetailTechnicalRepo.GetAll(x => x.BillExportTechID == product.billExportTechnical.ID);
                         foreach (var item in lst)
                         {
                             item.IsDeleted = true;
                             await _billExportDetailTechnicalRepo.UpdateAsync(item);
-                        }
 
+                        }
                         _billExportTechnicalAuditLogRepo.Create(new BillExportTechnicalAuditLog
                         {
                             BillExportTechnicalID = product.billExportTechnical.ID,
@@ -364,10 +396,8 @@ namespace RERPAPI.Controllers.Old.Technical
                             CreatedBy = currentUser.LoginName,
                             CreatedDate = DateTime.Now
                         });
-
                         return Ok(ApiResponseFactory.Success(product, "Xóa dữ liệu thành công"));
                     }
-
                     product.billExportTechnical.CheckAddHistoryProductRTC = product.billExportTechnical.BillType == 1;
 
                     if (product.billExportTechnical.ID <= 0)

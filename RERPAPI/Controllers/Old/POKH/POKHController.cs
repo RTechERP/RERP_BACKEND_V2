@@ -328,7 +328,7 @@ namespace RERPAPI.Controllers.Old.POKH
                 }
                 var errors = ValidatePOKH(dto);
 
-                if (existingPO != null && dto.POKH != null && dto.POKH.ID > 0)
+                if (existingPO.ID > 0 && dto.POKH != null && dto.POKH.ID > 0)
                 {
                     string logUpdate = _pokhLogRepo.GenerateLog(existingPO, dto.POKH);
                     if (!string.IsNullOrWhiteSpace(logUpdate))
@@ -371,17 +371,17 @@ namespace RERPAPI.Controllers.Old.POKH
                             continue;
                         int parentId = 0;
                         var existing = _pokhDetailRepo.GetByID(idOld);
-                        var product = _productSaleRepo.GetByID(item.ProductID ?? (int)existing.ProductID);
+                        var product = _productSaleRepo.GetByID(item.ProductID ?? existing.ProductID??0);
 
                         if (item.IsDeleted == true && idOld > 0)
                         {
-                            if (existing != null)
+                            if (existing.ID>0)
                             {
                                 existing.IsDeleted = true;
                                 await _pokhDetailRepo.UpdateAsync(existing);
                             }
 
-                            productNameDeleted += product != null ? product.ProductName + ", " : "";
+                            productNameDeleted += product.ID>0 ? product.ProductName + ", " : "";
                             continue;
                         }
 
@@ -439,7 +439,7 @@ namespace RERPAPI.Controllers.Old.POKH
                         }
                         else
                         {
-                            if (model.ProductID > 0 && product != null)
+                            if (model.ProductID > 0 && product.ID>0)
                             {
                                 productNameCreated += product.ProductCode + ", ";
                             }
@@ -493,9 +493,9 @@ namespace RERPAPI.Controllers.Old.POKH
 
                         if (item.IsDeleted == true && idOld > 0)
                         {
-                            if (user != null)
+                            if (user.ID > 0)
                             {
-                                userNameDeleted += user != null ? user.FullName + ", " : "";
+                                userNameDeleted += user.ID > 0 ? user.FullName + ", " : "";
                             }
                         }
 

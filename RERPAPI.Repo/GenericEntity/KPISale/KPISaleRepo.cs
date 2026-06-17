@@ -63,6 +63,73 @@ namespace RERPAPI.Repo.GenericEntity.KPISale
 
             return Convert.ToDecimal(result, CultureInfo.InvariantCulture);
         }
+
+        public async Task<List<KPISaleLookupValue>> GetUniqueValuesAsync(
+            string schemaName,
+            string tableName,
+            string valueColumn,
+            string? displayColumn = null)
+        {
+            var result = new List<KPISaleLookupValue>();
+            var connection = _context.Database.GetDbConnection();
+            await using var command = connection.CreateCommand();
+            var qualifiedTable = $"[{schemaName.Trim()}].[{tableName.Trim()}]";
+            var displayColName = string.IsNullOrWhiteSpace(displayColumn) ? valueColumn : displayColumn;
+            command.CommandText = $"SELECT DISTINCT TOP 500 [{valueColumn.Trim()}] AS [Value], [{displayColName.Trim()}] AS [Display] FROM {qualifiedTable} WHERE [{valueColumn.Trim()}] IS NOT NULL ORDER BY [{displayColName.Trim()}]";
+            command.CommandType = CommandType.Text;
+
+            if (connection.State != ConnectionState.Open)
+                await connection.OpenAsync();
+
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                var val = reader.GetValue(0);
+                var disp = reader.GetValue(1);
+                if (val != null && val != DBNull.Value)
+                {
+                    result.Add(new KPISaleLookupValue
+                    {
+                        Value = val.ToString() ?? "",
+                        Display = (disp != null && disp != DBNull.Value) ? disp.ToString() ?? "" : val.ToString() ?? ""
+                    });
+                }
+            }
+            return result;
+        }
+
+        public async Task<string?> GetLookupDisplayValueAsync(
+            string schemaName,
+            string tableName,
+            string valueColumn,
+            string displayColumn,
+            string value)
+        {
+            var connection = _context.Database.GetDbConnection();
+            await using var command = connection.CreateCommand();
+            var qualifiedTable = $"[{schemaName.Trim()}].[{tableName.Trim()}]";
+            command.CommandText = $"SELECT TOP 1 [{displayColumn.Trim()}] FROM {qualifiedTable} WHERE [{valueColumn.Trim()}] = @Value";
+            command.CommandType = CommandType.Text;
+
+            var param = command.CreateParameter();
+            param.ParameterName = "@Value";
+            param.Value = value;
+            command.Parameters.Add(param);
+
+            if (connection.State != ConnectionState.Open)
+                await connection.OpenAsync();
+
+            var result = await command.ExecuteScalarAsync();
+            if (result == null || result == DBNull.Value)
+                return null;
+            return result.ToString();
+        }
+    }
+
+    public class KPISaleLookupValue
+    {
+        public string Value { get; set; } = null!;
+        public string Display { get; set; } = null!;
     }
 
     public sealed class KPISaleSqlParameter

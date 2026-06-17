@@ -392,7 +392,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
             if (status != 2 && status != 6)
                 return (true, string.Empty);
 
-            var skipUnitNames = new[] { "m", "mét", "met" };
+			//var skipUnitNames = new[] { "m", "mét", "met" };
             var allDetails = (dto.billExportDetail ?? new List<BillExportDetailExtendedDTO>()).ToList();
 
             var groupedQuantities = allDetails
@@ -404,16 +404,16 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                 })
                 .ToDictionary(g => g.Key, g => g.Sum(d => d.Qty ?? 0));
 
-            var toValidate = allDetails.Where(d =>
-                (string.IsNullOrWhiteSpace(d.Unit) || !skipUnitNames.Contains(d.Unit.Trim().ToLower())) &&
-                (string.IsNullOrWhiteSpace(d.UnitName) || !skipUnitNames.Contains(d.UnitName.Trim().ToLower()))
-            ).ToList();
+			//var toValidate = allDetails.Where(d =>
+			//	(string.IsNullOrWhiteSpace(d.Unit) || !skipUnitNames.Contains(d.Unit.Trim().ToLower())) &&
+			//	(string.IsNullOrWhiteSpace(d.UnitName) || !skipUnitNames.Contains(d.UnitName.Trim().ToLower()))
+			//).ToList();
 
-            if (!toValidate.Any())
-                return (true, string.Empty);
+			//if (!toValidate.Any())
+			//	return (true, string.Empty);
 
             // Các key riêng biệt để gọi batch SP 1 lần
-            var distinctKeys = toValidate
+			var distinctKeys = allDetails
                 .Select(d => (
                     ProductID: d.ProductID ?? 0,
                     ProjectID: (d.POKHDetailID ?? 0) > 0 ? 0 : d.ProjectID ?? 0,
@@ -455,7 +455,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                     stockLookup[k] = row; // Giữ row đầu tiên nếu SP trả về duplicate
             }
 
-            foreach (var detail in toValidate)
+			foreach (var detail in allDetails)
             {
                 var groupKey = new
                 {

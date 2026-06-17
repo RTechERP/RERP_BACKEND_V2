@@ -1,4 +1,7 @@
-﻿namespace RERPAPI.Model.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace RERPAPI.Model.Entities;
 
 public partial class HistoryBorrowSaleLog
 {
@@ -38,7 +41,7 @@ public partial class HistoryBorrowSaleLog
     public string? CreatedBy { get; set; }
 
     /// <summary>
-    /// Ngày cập nhật
+    /// Ngày cập nhật 
     /// </summary>
     public DateTime? UpdatedDate { get; set; }
 

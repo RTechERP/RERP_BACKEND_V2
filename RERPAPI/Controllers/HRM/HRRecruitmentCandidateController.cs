@@ -8,6 +8,11 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.HRM;
 
+using RERPAPI.Repo.GenericEntity.HRM.HRRecruitmentInterviewAssessment;
+using System.Linq;
+using Dapper;
+using Microsoft.Data.SqlClient;
+
 namespace RERPAPI.Controllers.HRM
 {
     [Route("api/[controller]")]
@@ -23,6 +28,9 @@ namespace RERPAPI.Controllers.HRM
         private EmailHelper _emailHelper;
         private HRHiringRequestRepo _hrHiringRequestRepo;
         private readonly IWebHostEnvironment _environment;
+        private readonly HRRecruitmentInterviewAssessmentFormRepo _hrRecruitmentInterviewAssessmentFormRepo;
+        private readonly HRRecruitmentApproveRepo _hrRecruitmentApproveRepo;
+        private readonly HRRecruitmentApplicationFormRepo _hrRecruitmentApplicationFormRepo;
 
         public HRRecruitmentCandidateController(
             EmployeeChucVuHDRepo employeeChucVuHDRepo,
@@ -32,7 +40,10 @@ namespace RERPAPI.Controllers.HRM
             EmailHelper emailHelper,
             IWebHostEnvironment environment,
             IConfiguration configuration,
-            HRHiringRequestRepo hrHiringRequestRepo)
+            HRHiringRequestRepo hrHiringRequestRepo,
+            HRRecruitmentInterviewAssessmentFormRepo hrRecruitmentInterviewAssessmentFormRepo,
+            HRRecruitmentApproveRepo hrRecruitmentApproveRepo,
+            HRRecruitmentApplicationFormRepo hrRecruitmentApplicationFormRepo)
         {
             _employeeChucVuHDRepo = employeeChucVuHDRepo;
             _configSystemRepo = configSystemRepo;
@@ -42,6 +53,9 @@ namespace RERPAPI.Controllers.HRM
             _environment = environment;
             _configuration = configuration;
             _hrHiringRequestRepo = hrHiringRequestRepo;
+            _hrRecruitmentInterviewAssessmentFormRepo = hrRecruitmentInterviewAssessmentFormRepo;
+            _hrRecruitmentApproveRepo = hrRecruitmentApproveRepo;
+            _hrRecruitmentApplicationFormRepo = hrRecruitmentApplicationFormRepo;
         }
 
         [HttpGet("position-contract")]
@@ -484,6 +498,104 @@ namespace RERPAPI.Controllers.HRM
                     }
                 }
                 return Ok(ApiResponseFactory.Success(null, "Gửi thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("summary-detail")]
+        public async Task<IActionResult> GetSummaryDetail(int candidateId)
+        {
+            try
+            {
+                var details = SQLHelper<dynamic>.ProcedureToList(
+                    "spGetHrRecruitmentCandidateSummaryDetail",
+                    new[] { "@HRRecruitmentCandidateID" },
+                    new object[] { candidateId });
+
+                var applicationForm = SQLHelper<dynamic>.GetListData(details, 0);
+                var workingExperiences = SQLHelper<dynamic>.GetListData(details, 1);
+                var otherCertificates = SQLHelper<dynamic>.GetListData(details, 2);
+                var educations = SQLHelper<dynamic>.GetListData(details, 3);
+                var emergencyContacts = SQLHelper<dynamic>.GetListData(details, 4);
+                var foreignLanguageSkills = SQLHelper<dynamic>.GetListData(details, 5);
+                var recruitmentInfo = SQLHelper<dynamic>.GetListData(details, 6);
+
+                var applicationFormMaster = ((System.Collections.IEnumerable)applicationForm).Cast<dynamic>().FirstOrDefault();
+                
+                var assessmentData = SQLHelper<dynamic>.GetListData(details, 7);
+                var assessmentMaster = ((System.Collections.IEnumerable)assessmentData).Cast<dynamic>().FirstOrDefault();
+
+                var candidateData = SQLHelper<dynamic>.GetListData(details, 8);
+
+                var approveDataList = SQLHelper<dynamic>.GetListData(details, 9);
+                var approveData = ((System.Collections.IEnumerable)approveDataList).Cast<dynamic>().FirstOrDefault();
+
+                var examResults = SQLHelper<dynamic>.GetListData(details, 10);
+
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    ApplicationForm = new
+                    {
+                        Master = applicationFormMaster,
+                        WorkingExperiences = workingExperiences,
+                        OtherCertificates = otherCertificates,
+                        Educations = educations,
+                        EmergencyContacts = emergencyContacts,
+                        ForeignLanguageSkills = foreignLanguageSkills,
+                        RecruitmentInfo = recruitmentInfo
+                    },
+                    InterviewAssessment = new
+                    {
+                        CandidateInfo = candidateData,
+                        AssessmentInfo = assessmentMaster
+                    },
+                    RecruitmentApprove = approveData,
+                    ExamResults = examResults
+                }, "Lấy dữ liệu tổng hợp tuyển dụng thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("summary-master")]
+        public async Task<IActionResult> GetSummaryMaster(
+            int? id = 0,
+            int? status = -1,
+            int? employeeRequestId = -1,
+            int? departmentId = -1,
+            DateTime? dateStart = null,
+            DateTime? dateEnd = null,
+            string? keyword = "")
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser _currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                bool isHr = _currentUser.Permissions
+                            .Split(',')
+                            .Any(p => p.Trim() == "N1" || p.Trim() == "N2" || p.Trim() == "N94") || _currentUser.IsAdmin;
+
+                int empReqId = isHr ? -1 : _currentUser.EmployeeID;
+
+                var param = new
+                {
+                    ID = id ?? 0,
+                    Status = status ?? -1,
+                    EmployeeRequestID = empReqId,
+                    DepartmentID = departmentId ?? 0,
+                    DateStart = dateStart,
+                    DateEnd = dateEnd,
+                    FilterText = keyword?.Trim() ?? ""
+                };
+
+                var data = await SqlDapper<dynamic>.ProcedureToListAsync("spGetHrRecruitmentCandidateSummaryMaster", param);
+                return Ok(ApiResponseFactory.Success(data, null));
             }
             catch (Exception ex)
             {

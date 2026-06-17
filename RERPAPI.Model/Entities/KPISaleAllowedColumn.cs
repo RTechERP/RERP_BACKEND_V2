@@ -1,4 +1,7 @@
-﻿namespace RERPAPI.Model.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace RERPAPI.Model.Entities;
 
 public partial class KPISaleAllowedColumn
 {
@@ -25,4 +28,12 @@ public partial class KPISaleAllowedColumn
     public bool IsValueColumn { get; set; }
 
     public bool IsActive { get; set; }
+
+    public string? ManualValueMapJson { get; set; }
+
+    public string? LookupTable { get; set; }
+
+    public string? LookupValueColumn { get; set; }
+
+    public string? LookupDisplayColumn { get; set; }
 }

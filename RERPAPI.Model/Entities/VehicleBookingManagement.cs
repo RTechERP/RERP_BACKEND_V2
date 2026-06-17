@@ -1,4 +1,7 @@
-﻿namespace RERPAPI.Model.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace RERPAPI.Model.Entities;
 
 public partial class VehicleBookingManagement
 {
@@ -23,7 +26,7 @@ public partial class VehicleBookingManagement
     /// 4:&apos;Chủ động phương tiện&apos;
     /// 5:&apos;Đăng ký về&apos;
     /// 6:&apos;Đăng ký lấy hàng&apos;
-    ///
+    /// 
     /// </summary>
     public int? Category { get; set; }
 
