@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
@@ -541,7 +542,6 @@ namespace RERPAPI.Controllers.Project
                 if (string.IsNullOrWhiteSpace(projectType))
                     projectType = string.Join(",", projectTypeIDs);
 
-                // ✅ foreach chạy SAU khi đã đảm bảo projectType có giá trị
                 foreach (string item in projectType.Split(','))
                 {
                     if (string.IsNullOrWhiteSpace(item)) continue;
@@ -572,11 +572,67 @@ namespace RERPAPI.Controllers.Project
                         ,typeCheck[6] ,typeCheck[7] ,typeCheck[8], currentUser.ID, bussinessFieldID, projectStatus
                     });
 
-                //var projects = SQLHelper<object>.ProcedureToList("spGetProject",
-                //    new string[] {
-                //        "@PageSize", "@PageNumber", "@DateStart", "@DateEnd", "@FilterText", "@CustomerID", "@UserID",
-                //        "@ListProjectType", "@LeaderID", "@UserIDTech", "@EmployeeIDPM", "@1", "@2", "@3", "@4", "@5",
-                //        "@6", "@7", "@8", "@9", "@UserIDPriotity", "@BusinessFieldID"
+                var project = SQLHelper<object>.GetListData(projects, 0);
+                var totalPage = SQLHelper<object>.GetListData(projects, 1).FirstOrDefault().TotalPage;
+                return Ok(ApiResponseFactory.Success(new { project, totalPage }, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        // Danh sách dự án phục vụ cho Lĩnh vực & Công nghệ
+        [HttpGet("get-projects-apptech")]
+        public async Task<IActionResult> GetProjectsAppTech(int size, int page,
+            DateTime dateTimeS, DateTime dateTimeE, string? projectType,
+            int pmID, int leaderID, int bussinessFieldID, string? projectStatus,
+            int customerID, int saleID, int userTechID, int globalUserID, string? keyword, bool isAGV,
+            string? applicationType, string? technology
+            )
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                int[] typeCheck = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+                List<int> projectTypeIDs = projectTypeRepo.GetAll().Select(x => x.ID).ToList();
+
+                if (string.IsNullOrWhiteSpace(projectType))
+                    projectType = string.Join(",", projectTypeIDs);
+
+                foreach (string item in projectType.Split(','))
+                {
+                    if (string.IsNullOrWhiteSpace(item)) continue;
+                    int index = projectTypeIDs.IndexOf(Convert.ToInt32(item));
+                    if (index >= 0 && index < typeCheck.Length)
+                    {
+                        typeCheck[index] = 1;
+                    }
+                }
+
+                if (string.IsNullOrWhiteSpace(projectStatus))
+                {
+                    List<int> listStatus = projectStatusRepo.GetAll().Select(x => x.ID).ToList();
+                    projectStatus = string.Join(",", listStatus);
+                }
+
+                if (isAGV == false) projectStatus = "";
+
+                var projects = SQLHelper<object>.ProcedureToList("spGetProject_AppTech",
+                    new string[] {
+                        "@PageSize", "@PageNumber", "@DateStart", "@DateEnd", "@FilterText", "@CustomerID", "@UserID",
+                        "@ListProjectType", "@LeaderID", "@UserIDTech", "@EmployeeIDPM", "@1", "@2", "@3", "@4", "@5",
+                        "@6", "@7", "@8", "@9", "@UserIDPriotity", "@BusinessFieldID", "@ProjectStatus",
+                        "@ApplicationTypeIDs", "@TechnologyIDs"
+                    },
+                    new object[] {
+                        size, page, dateTimeS, dateTimeE, keyword ?? "", customerID, saleID, projectType, leaderID,
+                        userTechID, pmID, typeCheck[0] ,typeCheck[1] ,typeCheck[2] ,typeCheck[3] ,typeCheck[4] ,typeCheck[5]
+                        ,typeCheck[6] ,typeCheck[7] ,typeCheck[8], currentUser.ID, bussinessFieldID, projectStatus,
+                        applicationType ?? "", technology ?? ""
+                    });
+
                 //    },
                 //    new object[] {
                 //        size, page, dateTimeS, dateTimeE, keywword ?? "", customerID, saleID, projectType, leaderID,
@@ -1719,6 +1775,135 @@ namespace RERPAPI.Controllers.Project
                 }
 
                 return Ok(ApiResponseFactory.Success(new { project, selectedProjectTypeLink }, "Lưu dự án thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [Authorize]
+        [RequiresPermission("N1,N1,N13,N27,N97")]
+        [HttpPost("save-project-application-technology")]
+        public async Task<IActionResult> SaveProjectApplicationTechnology([FromBody] ProjectAppTechSaveDTO prjAppTech)
+        {
+            try
+            {
+                if (prjAppTech == null || prjAppTech.ProjectTypeLinks == null)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu không hợp lệ"));
+                }
+
+                List<int> selectedProjectTypeLink = new List<int>();
+
+                foreach (var item in prjAppTech.ProjectTypeLinks)
+                {
+                    int projectTypeLinkID = item.ProjectTypeLinkID;
+                    if (projectTypeLinkID <= 0) continue;
+
+                    // 1. Đồng bộ bảng ProjectTypeApplicationLink (lĩnh vực ứng dụng)
+                    var existingApps = projectTypeApplicationLinkRepo.GetAll()
+                        .Where(x => x.ProjectTypeLinkID == projectTypeLinkID)
+                        .ToList();
+
+                    var newAppIds = (item.Selected == true && item.ApplicationTypeIDs != null) 
+                        ? item.ApplicationTypeIDs 
+                        : new List<int>();
+
+                    // Soft-delete những cái đang active nhưng không có trong list mới
+                    var appsToSoftDelete = existingApps.Where(x => x.IsDeleted != true && 
+                                                                  x.ApplicationTypeID.HasValue && 
+                                                                  !newAppIds.Contains(x.ApplicationTypeID.Value));
+                    foreach (var app in appsToSoftDelete)
+                    {
+                        app.IsDeleted = true;
+                        app.UpdatedDate = DateTime.Now;
+                        await projectTypeApplicationLinkRepo.UpdateAsync(app);
+                    }
+
+                    // Kích hoạt lại (Reactivate) những cái đang soft-deleted nhưng lại có trong list mới
+                    var appsToReactivate = existingApps.Where(x => x.IsDeleted == true && 
+                                                                   x.ApplicationTypeID.HasValue && 
+                                                                   newAppIds.Contains(x.ApplicationTypeID.Value));
+                    foreach (var app in appsToReactivate)
+                    {
+                        app.IsDeleted = false;
+                        app.UpdatedDate = DateTime.Now;
+                        await projectTypeApplicationLinkRepo.UpdateAsync(app);
+                    }
+
+                    // Thêm mới những cái chưa từng tồn tại
+                    var allExistingAppIds = existingApps.Where(x => x.ApplicationTypeID.HasValue)
+                                                         .Select(x => x.ApplicationTypeID.Value)
+                                                         .ToList();
+                    var appsToInsert = newAppIds.Where(id => !allExistingAppIds.Contains(id));
+                    foreach (int appId in appsToInsert)
+                    {
+                        var appLink = new ProjectTypeApplicationLink()
+                        {
+                            ProjectTypeLinkID = projectTypeLinkID,
+                            ApplicationTypeID = appId,
+                            CreatedDate = DateTime.Now,
+                            IsDeleted = false
+                        };
+                        await projectTypeApplicationLinkRepo.CreateAsync(appLink);
+                    }
+
+                    // 2. Đồng bộ bảng ProjectTypeTechnologyLink (công nghệ ứng dụng)
+                    var existingTechs = projectTypeTechnologyLinkRepo.GetAll()
+                        .Where(x => x.ProjectTypeLinkID == projectTypeLinkID)
+                        .ToList();
+
+                    var newTechIds = (item.Selected == true && item.TechnologyIDs != null)
+                        ? item.TechnologyIDs
+                        : new List<int>();
+
+                    // Soft-delete những cái đang active nhưng không có trong list mới
+                    var techsToSoftDelete = existingTechs.Where(x => x.IsDeleted != true && 
+                                                                    x.TechnologyID.HasValue && 
+                                                                    !newTechIds.Contains(x.TechnologyID.Value));
+                    foreach (var tech in techsToSoftDelete)
+                    {
+                        tech.IsDeleted = true;
+                        tech.UpdatedDate = DateTime.Now;
+                        await projectTypeTechnologyLinkRepo.UpdateAsync(tech);
+                    }
+
+                    // Kích hoạt lại (Reactivate) những cái đang soft-deleted nhưng lại có trong list mới
+                    var techsToReactivate = existingTechs.Where(x => x.IsDeleted == true && 
+                                                                     x.TechnologyID.HasValue && 
+                                                                     newTechIds.Contains(x.TechnologyID.Value));
+                    foreach (var tech in techsToReactivate)
+                    {
+                        tech.IsDeleted = false;
+                        tech.UpdatedDate = DateTime.Now;
+                        await projectTypeTechnologyLinkRepo.UpdateAsync(tech);
+                    }
+
+                    // Thêm mới những cái chưa từng tồn tại
+                    var allExistingTechIds = existingTechs.Where(x => x.TechnologyID.HasValue)
+                                                           .Select(x => x.TechnologyID.Value)
+                                                           .ToList();
+                    var techsToInsert = newTechIds.Where(id => !allExistingTechIds.Contains(id));
+                    foreach (int techId in techsToInsert)
+                    {
+                        var techLink = new ProjectTypeTechnologyLink()
+                        {
+                            ProjectTypeLinkID = projectTypeLinkID,
+                            TechnologyID = techId,
+                            CreatedDate = DateTime.Now,
+                            IsDeleted = false
+                        };
+                        await projectTypeTechnologyLinkRepo.CreateAsync(techLink);
+                    }
+
+                    if (item.Selected == true)
+                    {
+                        selectedProjectTypeLink.Add(item.ProjectTypeID ?? item.ID);
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(new { project = new { ID = prjAppTech.ProjectID }, selectedProjectTypeLink }, "Lưu thông tin lĩnh vực và công nghệ thành công"));
             }
             catch (Exception ex)
             {
