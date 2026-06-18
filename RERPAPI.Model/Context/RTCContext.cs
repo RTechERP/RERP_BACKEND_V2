@@ -280,6 +280,16 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<DrawingLog> DrawingLogs { get; set; }
 
+    public virtual DbSet<ESLConfig> ESLConfigs { get; set; }
+
+    public virtual DbSet<ESLTestTable> ESLTestTables { get; set; }
+
+    public virtual DbSet<ESLTestTableRegistration> ESLTestTableRegistrations { get; set; }
+
+    public virtual DbSet<ESLTestTableRegistrationDetail> ESLTestTableRegistrationDetails { get; set; }
+
+    public virtual DbSet<ESLTestTableRegistrationLog> ESLTestTableRegistrationLogs { get; set; }
+
     public virtual DbSet<EconomicContract> EconomicContracts { get; set; }
 
     public virtual DbSet<EconomicContractFile> EconomicContractFiles { get; set; }
@@ -3715,6 +3725,202 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.TypeLog).HasMaxLength(250);
             entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ESLConfig>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ESLConfi__3214EC27EF3EB091");
+
+            entity.ToTable("ESLConfig");
+
+            entity.HasIndex(e => e.ConfigKey, "UQ__ESLConfi__4A3067841626E0D4").IsUnique();
+
+            entity.Property(e => e.ID).HasComment("ID tự tăng");
+            entity.Property(e => e.ConfigKey)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasComment("Dùng để gọi Config lấy giá trị (tên config)");
+            entity.Property(e => e.ConfigValue)
+                .HasMaxLength(500)
+                .HasComment("Giá trị của config");
+            entity.Property(e => e.Description)
+                .HasMaxLength(500)
+                .HasComment("Mô tả config");
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false)
+                .HasComment("Trạng thái xóa");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người cập nhật");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ESLTestTable>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ESLTestT__3214EC27CDA37097");
+
+            entity.ToTable("ESLTestTable");
+
+            entity.Property(e => e.ID).HasComment("ID tự tăng");
+            entity.Property(e => e.Barcode)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasComment("Bar code của E-INK");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người tạo");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasComment("Ngày tạo")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Description)
+                .HasMaxLength(500)
+                .HasComment("Mô tả");
+            entity.Property(e => e.IsActive)
+                .HasDefaultValue(true)
+                .HasComment("Trạng thái hoạt động của bàn");
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false)
+                .HasComment("Trạng thái xóa");
+            entity.Property(e => e.NumberOfSides)
+                .HasDefaultValue(2)
+                .HasComment("Số lượng mặt bàn");
+            entity.Property(e => e.TableSide).HasComment("Mặt bàn");
+            entity.Property(e => e.TestTableName)
+                .HasMaxLength(100)
+                .HasComment("Tên bàn test");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người cập nhật");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật")
+                .HasColumnType("datetime");
+            entity.Property(e => e.esl_battery).HasComment("Dung lượng Pin");
+            entity.Property(e => e.online)
+                .HasDefaultValue(false)
+                .HasComment("Trạng thái online");
+        });
+
+        modelBuilder.Entity<ESLTestTableRegistration>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ESLTestT__3214EC271455BD11");
+
+            entity.ToTable("ESLTestTableRegistration");
+
+            entity.Property(e => e.ID).HasComment("ID tự tăng");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người tạo");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasComment("Thời gian tạo")
+                .HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false)
+                .HasComment("Trạng thái xóa");
+            entity.Property(e => e.IsReturned)
+                .HasDefaultValue(false)
+                .HasComment("Trạng thái trả bàn");
+            entity.Property(e => e.ProjectCode)
+                .HasMaxLength(200)
+                .HasComment("Mã dự án");
+            entity.Property(e => e.ProjectID).HasComment("ID dự án");
+            entity.Property(e => e.RegistrationCode)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasComment("Mã của đơn đăng ký");
+            entity.Property(e => e.RegistrationContent)
+                .HasMaxLength(1000)
+                .HasComment("Tên dự án");
+            entity.Property(e => e.StartDate)
+                .HasComment("Thời gian bắt đầu")
+                .HasColumnType("datetime");
+            entity.Property(e => e.TestTableID).HasComment("ID của bàn test");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người cập nhật");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật")
+                .HasColumnType("datetime");
+
+            entity.HasOne(d => d.TestTable).WithMany(p => p.ESLTestTableRegistrations)
+                .HasForeignKey(d => d.TestTableID)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_ESLRegistration_TestTable");
+        });
+
+        modelBuilder.Entity<ESLTestTableRegistrationDetail>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ESLTestT__3214EC2793257901");
+
+            entity.ToTable("ESLTestTableRegistrationDetail");
+
+            entity.Property(e => e.ID).HasComment("ID tự tăng ");
+            entity.Property(e => e.ActualReturnDate)
+                .HasComment("Thời gian trả")
+                .HasColumnType("datetime");
+            entity.Property(e => e.ApproveDate)
+                .HasComment("Ngày duyệt")
+                .HasColumnType("datetime");
+            entity.Property(e => e.ApproveNote)
+                .HasMaxLength(500)
+                .HasComment("Ghi chú duyệt");
+            entity.Property(e => e.ApproverID).HasComment("Người duyệt");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasComment("Ngày tạo")
+                .HasColumnType("datetime");
+            entity.Property(e => e.EndDate)
+                .HasComment("Ngày kết thúc")
+                .HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false)
+                .HasComment("Trạng thái xóa");
+            entity.Property(e => e.No).HasComment("Số thứ tự của đơn đăng ký detail");
+            entity.Property(e => e.OwnerID).HasComment("Người sử dụng bàn test");
+            entity.Property(e => e.RegistrationID).HasComment("ID của đơn đăng ký master");
+            entity.Property(e => e.StartDate)
+                .HasComment("Ngày bắt đầu ")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Status)
+                .HasDefaultValue(0)
+                .HasComment("0=Chờ duyệt, 1=Đã duyệt, 2=Từ chối");
+            entity.Property(e => e.Type).HasComment(" 1=Đăng ký mới, 2=Gia hạn, 3=Bàn giao");
+
+            entity.HasOne(d => d.Registration).WithMany(p => p.ESLTestTableRegistrationDetails)
+                .HasForeignKey(d => d.RegistrationID)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Detail_Registration");
+        });
+
+        modelBuilder.Entity<ESLTestTableRegistrationLog>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ESLTestT__3214EC2764F6EF1E");
+
+            entity.ToTable("ESLTestTableRegistrationLog");
+
+            entity.Property(e => e.ID).HasComment("ID Tự tăng");
+            entity.Property(e => e.APIResponse).HasComment("API sử lý");
+            entity.Property(e => e.Action)
+                .HasMaxLength(50)
+                .HasComment("Hành động");
+            entity.Property(e => e.ActionBy).HasComment("Người thực hiện hành động");
+            entity.Property(e => e.ActionDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasComment("Ngày thực hiện")
+                .HasColumnType("datetime");
+            entity.Property(e => e.NewStatus).HasComment("Trạng thái mới");
+            entity.Property(e => e.Note)
+                .HasMaxLength(500)
+                .HasComment("Ghi chú");
+            entity.Property(e => e.OldStatus).HasComment("Trạng thái cũ");
+            entity.Property(e => e.RegistrationID).HasComment("ID của đơn đăng ký master");
+
+            entity.HasOne(d => d.Registration).WithMany(p => p.ESLTestTableRegistrationLogs)
+                .HasForeignKey(d => d.RegistrationID)
+                .HasConstraintName("FK_ESLTestTableRegistrationLog_Registration");
         });
 
         modelBuilder.Entity<EconomicContract>(entity =>
@@ -11080,7 +11286,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.DateReturnExpected)
                 .HasComment("Ngày hàng về mong đợi (Deadline)")
                 .HasColumnType("datetime");
-            entity.Property(e => e.DiscountPercent).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.DiscountPercent).HasColumnType("decimal(18, 3)");
             entity.Property(e => e.DuplicateID).HasDefaultValue(0);
             entity.Property(e => e.EmployeeApproveID).HasDefaultValue(0);
             entity.Property(e => e.EmployeeID).HasDefaultValue(0);
