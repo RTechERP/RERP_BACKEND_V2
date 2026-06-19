@@ -729,6 +729,7 @@ builder.Services.AddScoped<BillExportTechnicalAuditLogRepo>();
 builder.Services.AddScoped<AssetAllocationLogRepo>();
 builder.Services.AddScoped<ProjectPartlistPurchaseRequestLogRepo>();
 builder.Services.AddScoped<ProjectPartListPriceRequestLogRepo>();
+builder.Services.AddScoped<ProjectPartListLogRepo>();
 
 #endregion DI LOG
 

@@ -1,4 +1,4 @@
-﻿namespace RERPAPI.Model.DTO
+namespace RERPAPI.Model.DTO
 {
     public class PartlistImportRequestDTO
     {
@@ -24,5 +24,11 @@
         public List<PartlistDiffDTO>? Diffs { get; set; } = new();
 
         public bool? IsConsumable { get; set; }
+
+        /// <summary>
+        /// Danh sách ID vật tư cần bảo vệ (đã đặt hàng + cha của chúng).
+        /// Khi overwrite, backend sẽ KHÔNG xóa những record này.
+        /// </summary>
+        public List<int>? ExcludeIds { get; set; } = new();
     }
 }
