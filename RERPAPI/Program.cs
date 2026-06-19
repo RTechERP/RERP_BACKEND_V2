@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using RERPAPI.Controllers.ESL;
 using RERPAPI.IRepo;
 using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
@@ -18,6 +19,7 @@ using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.BBNV;
 using RERPAPI.Repo.GenericEntity.DocumentManager;
 using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
+using RERPAPI.Repo.GenericEntity.ESL;
 using RERPAPI.Repo.GenericEntity.Film;
 using RERPAPI.Repo.GenericEntity.GeneralCatetogy;
 using RERPAPI.Repo.GenericEntity.GeneralCatetogy.JobRequirements;
@@ -709,6 +711,12 @@ builder.Services.AddScoped<ProductGroupRTCLinkRepo>();
 builder.Services.AddScoped<MakerTrainingDepartmentLinkRepo>();
 builder.Services.AddScoped<MakerTrainingVideoLinkRepo>();
 
+builder.Services.AddScoped<ESLTestTableRepo>();
+builder.Services.AddScoped<ESLTestTableRegistrationRepo>();
+builder.Services.AddScoped<ESLTestTableRegistrationLogRepo>();
+builder.Services.AddScoped<ESLTestTableRegistrationDetailRepo>();
+builder.Services.AddScoped<ESLConfigRepo>();
+builder.Services.AddHttpClient<IESLBindService, ESLBindService>();
 #region DI LOG
 
 builder.Services.AddScoped<POKHLogRepo>();
