@@ -946,6 +946,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<ProjectPartList> ProjectPartLists { get; set; }
 
+    public virtual DbSet<ProjectPartListLog> ProjectPartListLogs { get; set; }
+
     public virtual DbSet<ProjectPartListPriceRequestLog> ProjectPartListPriceRequestLogs { get; set; }
 
     public virtual DbSet<ProjectPartListPurchaseRequestApproveLog> ProjectPartListPurchaseRequestApproveLogs { get; set; }
@@ -11072,6 +11074,29 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
             entity.Property(e => e.VAT).HasColumnType("decimal(18, 2)");
+        });
+
+        modelBuilder.Entity<ProjectPartListLog>(entity =>
+        {
+            entity.ToTable("ProjectPartListLog", tb => tb.HasComment("Bảng lưu lịch sử các thao tác đối với từng vật tư (ProjectPartList)"));
+
+            entity.Property(e => e.ID).HasComment("Khóa chính tự tăng");
+            entity.Property(e => e.ActionType)
+                .HasMaxLength(100)
+                .HasComment("Loại thao tác (Thêm mới, Cập nhật, Xóa mềm, Duyệt TBP, YC báo giá, YC mua hàng,...)");
+            entity.Property(e => e.ContentLog).HasComment("Nội dung chi tiết log (chứa diff giá trị cũ -> giá trị mới)");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(100)
+                .HasComment("Tên tài khoản đăng nhập của người thực hiện");
+            entity.Property(e => e.CreatedByEmployeeID).HasComment("Mã nhân viên (EmployeeID) thực hiện thao tác");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasComment("Thời gian tạo bản ghi log")
+                .HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false)
+                .HasComment("Trạng thái xóa mềm (0: Đang hoạt động, 1: Đã xóa)");
+            entity.Property(e => e.ProjectPartListID).HasComment("Mã định danh vật tư (ProjectPartList.ID)");
         });
 
         modelBuilder.Entity<ProjectPartListPriceRequestLog>(entity =>
