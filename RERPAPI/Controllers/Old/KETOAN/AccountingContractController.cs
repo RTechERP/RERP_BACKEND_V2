@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.StaticFiles;
 using Newtonsoft.Json;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -470,7 +471,7 @@ namespace RERPAPI.Controllers.Old.KETOAN
 
         [HttpPost("upload-file")]
         [DisableRequestSizeLimit]
-        public async Task<IActionResult> Upload(int contractID, int fileType)
+        public async Task<IActionResult> Upload(int contractID)
         {
             try
             {
@@ -478,7 +479,6 @@ namespace RERPAPI.Controllers.Old.KETOAN
                 var key = form["key"].ToString();
                 var files = form.Files;
 
-                // Kiểm tra input
                 if (string.IsNullOrWhiteSpace(key))
                     return BadRequest(ApiResponseFactory.Fail(null, "Key không được để trống!"));
 
@@ -489,36 +489,17 @@ namespace RERPAPI.Controllers.Old.KETOAN
                 if (ac == null)
                     throw new Exception("AccountingContract not found");
 
+                if (ac.IsApproved == true)
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Hợp đồng [{ac.ContractNumber}] đã được duyệt. Bạn không thể upload file!"));
+
                 var uploadPath = _configSystemRepo.GetUploadPathByKey(key);
                 if (string.IsNullOrWhiteSpace(uploadPath))
                     return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: {key}"));
 
-                var subPathRaw = form["subPath"].ToString()?.Trim() ?? "";
-                string targetFolder = uploadPath;
-                if (!string.IsNullOrWhiteSpace(subPathRaw))
-                {
-                    var separator = Path.DirectorySeparatorChar;
-                    var segments = subPathRaw
-                        .Replace('/', separator)
-                        .Replace('\\', separator)
-                        .Split(separator, StringSplitOptions.RemoveEmptyEntries)
-                        .Select(seg =>
-                        {
-                            var invalidChars = Path.GetInvalidFileNameChars();
-                            var cleaned = new string(seg.Where(c => !invalidChars.Contains(c)).ToArray());
-                            cleaned = cleaned.Replace("..", "").Trim();
-                            return cleaned;
-                        })
-                        .Where(s => !string.IsNullOrWhiteSpace(s))
-                        .ToArray();
+                // Build subPath theo logic giống WinForms
+                string subPath = BuildWinFormsSubPath(ac);
 
-                    if (segments.Length > 0)
-                        targetFolder = Path.Combine(uploadPath, Path.Combine(segments));
-                }
-                else
-                {
-                    targetFolder = Path.Combine(uploadPath, $"NB{ac.ID}");
-                }
+                string targetFolder = Path.Combine(uploadPath, subPath);
 
                 if (!Directory.Exists(targetFolder))
                     Directory.CreateDirectory(targetFolder);
@@ -529,13 +510,11 @@ namespace RERPAPI.Controllers.Old.KETOAN
                 {
                     if (file.Length <= 0) continue;
 
-                    // Tạo tên file unique để tránh trùng lặp
                     var fileExtension = Path.GetExtension(file.FileName);
                     var originalFileName = Path.GetFileNameWithoutExtension(file.FileName);
                     var uniqueFileName = $"{originalFileName}{fileExtension}";
                     var fullPath = Path.Combine(targetFolder, uniqueFileName);
 
-                    // Lưu file trực tiếp vào targetFolder (không tạo file tạm khác)
                     using (var stream = new FileStream(fullPath, FileMode.Create))
                     {
                         await file.CopyToAsync(stream);
@@ -547,7 +526,6 @@ namespace RERPAPI.Controllers.Old.KETOAN
                         FileName = uniqueFileName,
                         OriginPath = targetFolder,
                         ServerPath = targetFolder,
-                        //IsDeleted = false,
                         CreatedBy = User.Identity?.Name ?? "System",
                         CreatedDate = DateTime.Now,
                         UpdatedBy = User.Identity?.Name ?? "System",
@@ -564,6 +542,77 @@ namespace RERPAPI.Controllers.Old.KETOAN
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi upload file: {ex.Message}"));
             }
+        }
+
+        /// <summary>
+        /// Build subPath: {COMPANY}\{GROUP}\{CUSTOMER_OR_SUPPLIER}\{PARENT_CONTRACT_NUMBER}
+        /// </summary>
+        private string BuildWinFormsSubPath(AccountingContract ac)
+        {
+            // 1. COMPANY text (1:RTC, 2:MVI, 3:APR, 4:YONKO, 5:R-TECH)
+            string companyText = ac.Company switch
+            {
+                1 => "RTC",
+                2 => "MVI",
+                3 => "APR",
+                4 => "YONKO",
+                5 => "R-TECH",
+                _ => "UNKNOWN"
+            };
+
+            // 2. GROUP text (1: mua vào, 2: bán ra)
+            string groupText = ac.ContractGroup switch
+            {
+                1 => "HỢP ĐỒNG MUA VÀO",
+                2 => "HỢP ĐỒNG BÁN RA",
+                _ => "KHAC"
+            };
+
+            // 3. Customer or Supplier name
+            string customerOrSupplier = "";
+            if (ac.ContractGroup == 2 && ac.CustomerID > 0)
+            {
+                var customer = _customerRepo.GetByID(ac.CustomerID ?? 0);
+                customerOrSupplier = customer?.CustomerName?.Trim() ?? "";
+            }
+            else if (ac.ContractGroup == 1 && ac.SupplierSaleID > 0)
+            {
+                var supplier = _supplierSaleRepo.GetByID(ac.SupplierSaleID ?? 0);
+                customerOrSupplier = supplier?.NameNCC?.Trim() ?? "";
+            }
+
+            // 4. Parent contract number (nếu có)
+            string parentContractNumber = "";
+            if (ac.ParentID > 0)
+            {
+                var parent = _accountingContractRepo.GetByID(ac.ParentID ?? 0);
+                parentContractNumber = parent?.ContractNumber?.Trim() ?? "";
+            }
+
+            // Sanitize từng segment
+            string Sanitize(string s)
+            {
+                var invalidChars = Path.GetInvalidFileNameChars();
+                var cleaned = new string(s.Where(c => !invalidChars.Contains(c)).ToArray());
+                return cleaned.Replace("..", "").Trim().ToUpper();
+            }
+
+            // Build: COMPANY\GROUP\CUSTOMERORSUPPLIER\PARENTCONTRACTNUMBER
+            var segments = new[]
+            {
+                Sanitize(companyText),
+                Sanitize(groupText),
+                Sanitize(customerOrSupplier)
+            }
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .ToList();
+
+            if (!string.IsNullOrWhiteSpace(parentContractNumber))
+            {
+                segments.Add(Sanitize(parentContractNumber));
+            }
+
+            return Path.Combine(segments.ToArray());
         }
 
         [HttpPost("delete-file")]
@@ -601,6 +650,229 @@ namespace RERPAPI.Controllers.Old.KETOAN
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        [HttpGet("download-file")]
+        public IActionResult DownloadFile(int fileId)
+        {
+            try
+            {
+                var file = _accountingContractFileRepo.GetByID(fileId);
+
+                if (file == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "File không tồn tại"));
+
+                // Ghép thành đường dẫn đầy đủ từ ServerPath
+                var fullPath = Path.Combine(file.ServerPath ?? "", file.FileName ?? "");
+
+                if (!System.IO.File.Exists(fullPath))
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy file trên server"));
+
+                // Detect content-type
+                var provider = new FileExtensionContentTypeProvider();
+                if (!provider.TryGetContentType(fullPath, out string contentType))
+                {
+                    contentType = "application/octet-stream";
+                }
+
+                return PhysicalFile(fullPath, contentType, file.FileName);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi tải file: {ex.Message}"));
+            }
+        }
+
+        #region Migration: copy file từ subpath cũ (NB{id}) sang subpath mới (COMPANY\GROUP\CUSTOMER_OR_SUPPLIER\PARENT_CONTRACT) + tạo record mới
+
+        [HttpPost("migrate-files-to-new-subpath")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> MigrateFilesToNewSubpath(
+            bool dryRun = true,
+            int? accountingContractId = null,
+            DateTime? fromDate = null,
+            DateTime? toDate = null)
+        {
+            try
+            {
+                var uploadPath = _configSystemRepo.GetUploadPathByKey("PathAccounting");
+                if (string.IsNullOrWhiteSpace(uploadPath))
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy cấu hình đường dẫn cho key: PathAccounting"));
+
+                var separator = Path.DirectorySeparatorChar;
+
+                // Lấy danh sách AccountingContract - lọc theo CreatedDate
+                var contractsQuery = _accountingContractRepo
+                    .GetAll(c => c.CreatedDate != null);
+
+                if (accountingContractId.HasValue)
+                {
+                    contractsQuery = contractsQuery.Where(c => c.ID == accountingContractId.Value).ToList();
+                }
+                else
+                {
+                    if (fromDate.HasValue)
+                        contractsQuery = contractsQuery.Where(c => c.CreatedDate >= fromDate.Value.Date).ToList();
+
+                    if (toDate.HasValue)
+                    {
+                        // inclusive: lấy đến cuối ngày toDate
+                        var toEndOfDay = toDate.Value.Date.AddDays(1).AddTicks(-1);
+                        contractsQuery = contractsQuery.Where(c => c.CreatedDate <= toEndOfDay).ToList();
+                    }
+                }
+
+                var contracts = contractsQuery.ToList();
+                var contractIds = contracts.Select(c => c.ID).ToHashSet();
+
+                // Lấy file thuộc các hợp đồng trong khoảng
+                var allFiles = _accountingContractFileRepo
+                    .GetAll(f => f.AccountingContractID != null && contractIds.Contains(f.AccountingContractID.Value))
+                    .ToList();
+
+                var contractDict = contracts.ToDictionary(c => c.ID, c => c);
+                var report = new List<object>();
+                int copied = 0, skipped = 0, failed = 0;
+
+                foreach (var f in allFiles)
+                {
+                    try
+                    {
+                        if (string.IsNullOrWhiteSpace(f.ServerPath) || string.IsNullOrWhiteSpace(f.FileName))
+                        {
+                            skipped++;
+                            report.Add(new { f.ID, status = "skipped", reason = "ServerPath/FileName rỗng" });
+                            continue;
+                        }
+
+                        if (!contractDict.TryGetValue(f.AccountingContractID.Value, out var ac) || ac == null)
+                        {
+                            skipped++;
+                            report.Add(new { f.ID, status = "skipped", reason = "Không tìm thấy AccountingContract" });
+                            continue;
+                        }
+
+                        var oldPath = f.ServerPath.Replace('/', separator).Replace('\\', separator).TrimEnd(separator);
+                        var expectedOldLeaf = $"NB{ac.ID}";
+
+                        // Tính subpath mới giống hệt BuildWinFormsSubPath
+                        var newSubPath = BuildWinFormsSubPath(ac);
+                        var newFolder = Path.Combine(uploadPath, newSubPath);
+                        var newFullPath = Path.Combine(newFolder, f.FileName);
+
+                        // Tìm file nguồn (ưu tiên ServerPath hiện tại, fallback về NB{id})
+                        var oldFullPath = Path.Combine(oldPath, f.FileName);
+                        if (!System.IO.File.Exists(oldFullPath))
+                        {
+                            var fallback = Path.Combine(uploadPath, expectedOldLeaf, f.FileName);
+                            if (System.IO.File.Exists(fallback))
+                            {
+                                oldFullPath = fallback;
+                                oldPath = Path.Combine(uploadPath, expectedOldLeaf);
+                            }
+                            else
+                            {
+                                skipped++;
+                                report.Add(new
+                                {
+                                    f.ID,
+                                    f.FileName,
+                                    status = "skipped",
+                                    reason = "File nguồn không tồn tại trên server",
+                                    tried = oldFullPath
+                                });
+                                continue;
+                            }
+                        }
+
+                        if (dryRun)
+                        {
+                            report.Add(new
+                            {
+                                f.ID,
+                                f.FileName,
+                                contractNumber = ac.ContractNumber,
+                                createdDate = ac.CreatedDate,
+                                status = "dry-run",
+                                oldPath,
+                                newPath = newFolder
+                            });
+                            continue;
+                        }
+
+                        // Tạo thư mục đích
+                        if (!Directory.Exists(newFolder))
+                            Directory.CreateDirectory(newFolder);
+
+                        // Nếu file đích đã tồn tại thì thêm hậu tố _old{id} để tránh ghi đè
+                        var finalNewPath = newFullPath;
+                        if (System.IO.File.Exists(finalNewPath))
+                        {
+                            var ext = Path.GetExtension(f.FileName);
+                            var nameOnly = Path.GetFileNameWithoutExtension(f.FileName);
+                            finalNewPath = Path.Combine(newFolder, $"{nameOnly}_old{f.ID}{ext}");
+                        }
+
+                        // COPY (không move, không xóa thư mục cũ)
+                        System.IO.File.Copy(oldFullPath, finalNewPath, overwrite: false);
+
+                        // Tạo bản ghi mới cho cùng AccountingContractID
+                        var newFile = new AccountingContractFile
+                        {
+                            AccountingContractID = ac.ID,
+                            FileName = Path.GetFileName(finalNewPath),
+                            OriginPath = newFolder,
+                            ServerPath = newFolder,
+                            CreatedBy = User.Identity?.Name ?? "System",
+                            CreatedDate = DateTime.Now,
+                            UpdatedBy = User.Identity?.Name ?? "System",
+                            UpdatedDate = DateTime.Now
+                        };
+
+                        await _accountingContractFileRepo.CreateAsync(newFile);
+
+                        copied++;
+                        report.Add(new
+                        {
+                            oldId = f.ID,
+                            newId = newFile.ID,
+                            f.FileName,
+                            contractNumber = ac.ContractNumber,
+                            createdDate = ac.CreatedDate,
+                            status = "copied",
+                            oldPath,
+                            newPath = newFolder
+                        });
+                    }
+                    catch (Exception exFile)
+                    {
+                        failed++;
+                        report.Add(new { f.ID, status = "failed", error = exFile.Message });
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    dryRun,
+                    fromDate,
+                    toDate,
+                    accountingContractId,
+                    totalContracts = contracts.Count,
+                    totalFiles = allFiles.Count,
+                    copied,
+                    skipped,
+                    failed,
+                    uploadPath,
+                    details = report
+                }, $"Hoàn tất. Copied: {copied}, Skipped: {skipped}, Failed: {failed}"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        #endregion
+
 
         [HttpPost("importexcel")]
         public async Task<IActionResult> ImportExcel([FromBody] List<Dictionary<string, object>> rows)
