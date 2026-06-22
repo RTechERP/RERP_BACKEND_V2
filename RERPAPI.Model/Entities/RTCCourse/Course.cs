@@ -42,4 +42,6 @@ public partial class Course
     public int? CourseTypeID { get; set; }
 
     public int? EmployeeID { get; set; }
+
+    public string? Thumbnail { get; set; }
 }

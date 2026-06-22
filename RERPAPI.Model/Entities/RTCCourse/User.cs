@@ -109,4 +109,8 @@ public partial class User
     public string? PhoneNumber { get; set; }
 
     public string? Address { get; set; }
+
+    public string? InterestedCatalogTypeIds { get; set; }
+
+    public bool CanLearnAhead { get; set; }
 }
