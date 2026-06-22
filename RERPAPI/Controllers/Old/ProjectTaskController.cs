@@ -296,6 +296,7 @@ namespace RERPAPI.Controllers.Project
             [FromQuery] int userID = 0,
             [FromQuery] int projectID = 0,
             [FromQuery] string status = "0,1",
+            [FromQuery] int approve = -1,
             [FromQuery] int typeSearch = 1
             )
         {
@@ -314,6 +315,7 @@ namespace RERPAPI.Controllers.Project
                     UserID = userID,
                     ProjectID = projectID,
                     Status = status,
+                    Approve = approve,
                     TypeSearch = typeSearch
                 };
                 var projectTasks = await SqlDapper<object>.ProcedureToListAsync("spGetProjectTaskTimeLineByTeam", param);
@@ -2063,7 +2065,7 @@ namespace RERPAPI.Controllers.Project
                         }
                     }
 
-                    if (projectTask.ParentID != null && projectTask.ParentID >= 0)
+                    if (projectTask.ParentID != null && projectTask.ParentID > 0)
                     {
                         newProjectTask.Code = _projectItemRepo.GenerateChildProjectItemCode(projectTask.ParentID ?? 0).Trim();
                     }
