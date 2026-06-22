@@ -8671,16 +8671,13 @@ public partial class RTCContext : DbContext
 
         modelBuilder.Entity<KPISaleTeam>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("KPISaleTeam");
+            entity.ToTable("KPISaleTeam");
 
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
             entity.Property(e => e.CreatedDate)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
             entity.Property(e => e.Description).HasMaxLength(500);
-            entity.Property(e => e.ID).ValueGeneratedOnAdd();
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.TeamCode).HasMaxLength(50);
             entity.Property(e => e.TeamName).HasMaxLength(255);
@@ -8690,14 +8687,11 @@ public partial class RTCContext : DbContext
 
         modelBuilder.Entity<KPISaleTeamMember>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("KPISaleTeamMember");
+            entity.ToTable("KPISaleTeamMember");
 
             entity.Property(e => e.CreatedDate)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
-            entity.Property(e => e.ID).ValueGeneratedOnAdd();
         });
 
         modelBuilder.Entity<KPISaleTeamTemplate>(entity =>
