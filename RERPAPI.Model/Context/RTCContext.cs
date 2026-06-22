@@ -1338,6 +1338,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<vUserGroupLink> vUserGroupLinks { get; set; }
 
+    public virtual DbSet<v_HistoryMoney_POKH> v_HistoryMoney_POKHs { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AGVBillDocumentExport>(entity =>
@@ -8437,6 +8439,10 @@ public partial class RTCContext : DbContext
                 .HasMaxLength(30)
                 .IsUnicode(false)
                 .HasDefaultValue("SUM_MONTH");
+            entity.Property(e => e.ReportScoreAdjustmentType).HasDefaultValue(0);
+            entity.Property(e => e.ReportScoreValue)
+                .HasDefaultValue(0m)
+                .HasColumnType("decimal(18, 4)");
             entity.Property(e => e.UnitType)
                 .HasMaxLength(30)
                 .IsUnicode(false);
@@ -15326,6 +15332,19 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.FullName).HasMaxLength(250);
             entity.Property(e => e.Name).HasMaxLength(50);
             entity.Property(e => e.UserCode).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<v_HistoryMoney_POKH>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("v_HistoryMoney_POKH");
+
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.Money).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.MoneyDate).HasColumnType("datetime");
+            entity.Property(e => e.MoneyVAT).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.VAT).HasColumnType("decimal(18, 2)");
         });
 
         OnModelCreatingPartial(modelBuilder);
