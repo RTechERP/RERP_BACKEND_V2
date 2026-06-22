@@ -22,4 +22,22 @@ public partial class KPISaleTarget
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
+
+    public int? TeamID { get; set; }
+
+    public decimal? WeightPercent { get; set; }
+
+    public decimal? ProposedGoalValue { get; set; }
+
+    public decimal? ProposedWeightPercent { get; set; }
+
+    public string? ApprovalStatus { get; set; }
+
+    public string? ApprovedBy { get; set; }
+
+    public DateTime? ApprovedDate { get; set; }
+
+    public string? RejectedBy { get; set; }
+
+    public DateTime? RejectedDate { get; set; }
 }

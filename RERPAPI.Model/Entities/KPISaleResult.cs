@@ -24,4 +24,10 @@ public partial class KPISaleResult
     public decimal FinalScore { get; set; }
 
     public DateTime CalculatedDate { get; set; }
+
+    public int? ReportScoreAdjustmentType { get; set; }
+
+    public decimal? ReportScoreValue { get; set; }
+
+    public int? TeamID { get; set; }
 }

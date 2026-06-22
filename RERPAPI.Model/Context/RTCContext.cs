@@ -688,6 +688,10 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<KPISaleDataSource> KPISaleDataSources { get; set; }
 
+    public virtual DbSet<KPISaleEmployeeRewardMapping> KPISaleEmployeeRewardMappings { get; set; }
+
+    public virtual DbSet<KPISaleEmployeeTemplate> KPISaleEmployeeTemplates { get; set; }
+
     public virtual DbSet<KPISaleIndex> KPISaleIndices { get; set; }
 
     public virtual DbSet<KPISaleIndexDataMapping> KPISaleIndexDataMappings { get; set; }
@@ -700,7 +704,13 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<KPISalePeriod> KPISalePeriods { get; set; }
 
+    public virtual DbSet<KPISaleRankingResult> KPISaleRankingResults { get; set; }
+
     public virtual DbSet<KPISaleResult> KPISaleResults { get; set; }
+
+    public virtual DbSet<KPISaleRewardCoefficient> KPISaleRewardCoefficients { get; set; }
+
+    public virtual DbSet<KPISaleRewardConfig> KPISaleRewardConfigs { get; set; }
 
     public virtual DbSet<KPISaleScoringRule> KPISaleScoringRules { get; set; }
 
@@ -708,7 +718,15 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<KPISaleTarget> KPISaleTargets { get; set; }
 
+    public virtual DbSet<KPISaleTeam> KPISaleTeams { get; set; }
+
+    public virtual DbSet<KPISaleTeamMember> KPISaleTeamMembers { get; set; }
+
+    public virtual DbSet<KPISaleTeamTemplate> KPISaleTeamTemplates { get; set; }
+
     public virtual DbSet<KPISaleTemplate> KPISaleTemplates { get; set; }
+
+    public virtual DbSet<KPISaleTotalPerformance> KPISaleTotalPerformances { get; set; }
 
     public virtual DbSet<KPISession> KPISessions { get; set; }
 
@@ -8362,6 +8380,37 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.ValueColumn).HasMaxLength(128);
         });
 
+        modelBuilder.Entity<KPISaleEmployeeRewardMapping>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__KPISaleE__3214EC0784EF3AF0");
+
+            entity.ToTable("KPISaleEmployeeRewardMapping");
+
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.PositionType).HasMaxLength(50);
+            entity.Property(e => e.ProjectIds).HasMaxLength(500);
+            entity.Property(e => e.TeamCode).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<KPISaleEmployeeTemplate>(entity =>
+        {
+            entity.ToTable("KPISaleEmployeeTemplate");
+
+            entity.HasIndex(e => new { e.EmployeeID, e.TemplateID, e.IsActive }, "IX_KPISaleEmployeeTemplate_Employee_Template");
+
+            entity.Property(e => e.AssignedBy).HasMaxLength(100);
+            entity.Property(e => e.AssignedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.EndDate).HasColumnType("datetime");
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.Note).HasMaxLength(500);
+            entity.Property(e => e.PeriodType).HasMaxLength(20);
+            entity.Property(e => e.PeriodValue).HasMaxLength(20);
+            entity.Property(e => e.StartDate).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
         modelBuilder.Entity<KPISaleIndex>(entity =>
         {
             entity.HasKey(e => e.ID).HasName("PK__KPISaleI__3214EC27E6ECC4FF");
@@ -8481,6 +8530,35 @@ public partial class RTCContext : DbContext
                 .IsUnicode(false);
         });
 
+        modelBuilder.Entity<KPISaleRankingResult>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__KPISaleR__3214EC0758599E15");
+
+            entity.ToTable("KPISaleRankingResult");
+
+            entity.Property(e => e.AchievementPercent).HasColumnType("decimal(18, 4)");
+            entity.Property(e => e.CalculatedDate).HasColumnType("datetime");
+            entity.Property(e => e.Coefficient).HasColumnType("decimal(10, 4)");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.EmployeeCode).HasMaxLength(50);
+            entity.Property(e => e.EmployeeName).HasMaxLength(200);
+            entity.Property(e => e.IsCalculated).HasDefaultValue(false);
+            entity.Property(e => e.ModifiedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.NewAccountBonus).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.OtherBonus).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.PositionType).HasMaxLength(50);
+            entity.Property(e => e.RankingBonusAmount).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.SalesBonusAmount).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TeamCode).HasMaxLength(50);
+            entity.Property(e => e.TotalBonus).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TotalRevenue).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TotalSalesAmount).HasColumnType("decimal(18, 2)");
+        });
+
         modelBuilder.Entity<KPISaleResult>(entity =>
         {
             entity.HasKey(e => e.ID).HasName("PK__KPISaleR__3214EC27D9A4F47C");
@@ -8493,8 +8571,46 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CalculatedDate).HasDefaultValueSql("(sysdatetime())");
             entity.Property(e => e.FinalScore).HasColumnType("decimal(18, 4)");
             entity.Property(e => e.GoalValue).HasColumnType("decimal(18, 4)");
+            entity.Property(e => e.ReportScoreAdjustmentType).HasDefaultValue(0);
+            entity.Property(e => e.ReportScoreValue)
+                .HasDefaultValue(0m)
+                .HasColumnType("decimal(18, 4)");
             entity.Property(e => e.ResultValue).HasColumnType("decimal(18, 4)");
             entity.Property(e => e.WeightPercent).HasColumnType("decimal(10, 2)");
+        });
+
+        modelBuilder.Entity<KPISaleRewardCoefficient>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__KPISaleR__3214EC0782E1F863");
+
+            entity.ToTable("KPISaleRewardCoefficient");
+
+            entity.Property(e => e.Coefficient).HasColumnType("decimal(10, 2)");
+            entity.Property(e => e.EmployeeType).HasMaxLength(50);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.MaxPerformance).HasColumnType("decimal(10, 2)");
+            entity.Property(e => e.MinPerformance).HasColumnType("decimal(10, 2)");
+        });
+
+        modelBuilder.Entity<KPISaleRewardConfig>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__KPISaleR__3214EC07B1E3BCD8");
+
+            entity.ToTable("KPISaleRewardConfig");
+
+            entity.Property(e => e.ConfigCode).HasMaxLength(50);
+            entity.Property(e => e.ConfigName).HasMaxLength(200);
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.EmployeeType).HasMaxLength(50);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.ModifiedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.NewAccountBonusAmount).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.Rank1BonusAmount).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.RewardRate).HasColumnType("decimal(10, 4)");
         });
 
         modelBuilder.Entity<KPISaleScoringRule>(entity =>
@@ -8533,10 +8649,70 @@ public partial class RTCContext : DbContext
 
             entity.HasIndex(e => new { e.EmployeeID, e.PeriodID, e.KpiIndexID }, "IX_KpiTarget_Employee_Period_Index");
 
+            entity.Property(e => e.ApprovalStatus).HasMaxLength(20);
+            entity.Property(e => e.ApprovedBy).HasMaxLength(100);
+            entity.Property(e => e.ApprovedDate).HasColumnType("datetime");
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
             entity.Property(e => e.CreatedDate).HasDefaultValueSql("(sysdatetime())");
             entity.Property(e => e.GoalValue).HasColumnType("decimal(18, 4)");
+            entity.Property(e => e.ProposedGoalValue).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.ProposedWeightPercent).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.RejectedBy).HasMaxLength(100);
+            entity.Property(e => e.RejectedDate).HasColumnType("datetime");
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            entity.Property(e => e.WeightPercent).HasColumnType("decimal(5, 2)");
+        });
+
+        modelBuilder.Entity<KPISaleTeam>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToTable("KPISaleTeam");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.ID).ValueGeneratedOnAdd();
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.TeamCode).HasMaxLength(50);
+            entity.Property(e => e.TeamName).HasMaxLength(255);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<KPISaleTeamMember>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToTable("KPISaleTeamMember");
+
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.ID).ValueGeneratedOnAdd();
+        });
+
+        modelBuilder.Entity<KPISaleTeamTemplate>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__KPISaleT__3214EC2791E13279");
+
+            entity.ToTable("KPISaleTeamTemplate");
+
+            entity.Property(e => e.AssignedBy).HasMaxLength(100);
+            entity.Property(e => e.AssignedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.EndDate).HasColumnType("datetime");
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.Note).HasMaxLength(500);
+            entity.Property(e => e.PeriodType)
+                .HasMaxLength(20)
+                .HasDefaultValue("Quarter");
+            entity.Property(e => e.PeriodValue).HasMaxLength(20);
+            entity.Property(e => e.StartDate).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<KPISaleTemplate>(entity =>
@@ -8554,6 +8730,15 @@ public partial class RTCContext : DbContext
                 .IsUnicode(false);
             entity.Property(e => e.TemplateName).HasMaxLength(255);
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<KPISaleTotalPerformance>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__KPISaleT__3214EC27D74733EB");
+
+            entity.ToTable("KPISaleTotalPerformance");
+
+            entity.Property(e => e.FinalScore).HasColumnType("decimal(18, 4)");
         });
 
         modelBuilder.Entity<KPISession>(entity =>
