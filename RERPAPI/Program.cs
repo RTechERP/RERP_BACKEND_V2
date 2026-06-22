@@ -110,6 +110,7 @@ builder.Services.AddScoped<CustomerRepo>();
 builder.Services.AddScoped<CourseCatalogRepo>();
 builder.Services.AddScoped<CustomerSpecializationRepo>();
 builder.Services.AddScoped<DailyReportTechnicalRepo>();
+builder.Services.AddScoped<TeamEmployeeProjectRepo>();
 builder.Services.AddScoped<DailyReportSaleRepo>();
 builder.Services.AddScoped<DailyReportSaleAdminRepo>();
 builder.Services.AddScoped<DocumentTypeRepo>();
