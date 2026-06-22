@@ -1802,7 +1802,7 @@ namespace RERPAPI.Controllers.Project
                     entity.Model = item.Model;
                     entity.QtyMin = item.QtyMin;
                     entity.QtyFull = item.QtyFull;
-                    entity.Unit = item.Unit;
+                    entity.Unit = item.Unit?.ToUpper()?.Trim();
                     entity.Price = item.Price;
                     entity.Amount = item.Amount;
                     entity.LeadTime = item.LeadTime;
