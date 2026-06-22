@@ -27,10 +27,22 @@ namespace RERPAPI.Repo.GenericEntity.KPISale
         public DbSet<KPISaleMappingFilterGroup> KPISaleMappingFilterGroups => _context.KPISaleMappingFilterGroups;
         public DbSet<KPISalePeriod> KPISalePeriods => _context.KPISalePeriods;
         public DbSet<KPISaleResult> KPISaleResults => _context.KPISaleResults;
+        public DbSet<KPISaleTotalPerformance> KPISaleTotalPerformances => _context.KPISaleTotalPerformances;
         public DbSet<KPISaleScoringRule> KPISaleScoringRules => _context.KPISaleScoringRules;
+        //public DbSet<KPISaleReportMetricConfig> KPISaleReportMetricConfigs => _context.KPISaleReportMetricConfigs;
+        //public DbSet<KPISaleReportMetricAssignment> KPISaleReportMetricAssignments => _context.KPISaleReportMetricAssignments;
+        //public DbSet<KPISaleReportMonthlyInput> KPISaleReportMonthlyInputs => _context.KPISaleReportMonthlyInputs;
         public DbSet<KPISaleSystemParameter> KPISaleSystemParameters => _context.KPISaleSystemParameters;
         public DbSet<KPISaleTarget> KPISaleTargets => _context.KPISaleTargets;
         public DbSet<KPISaleTemplate> KPISaleTemplates => _context.KPISaleTemplates;
+        public DbSet<KPISaleTeam> KPISaleTeams => _context.KPISaleTeams;
+        public DbSet<KPISaleTeamMember> KPISaleTeamMembers => _context.KPISaleTeamMembers;
+        public DbSet<KPISaleRewardConfig> KPISaleRewardConfig => _context.KPISaleRewardConfigs;
+        public DbSet<KPISaleRewardCoefficient> KPISaleRewardCoefficient => _context.KPISaleRewardCoefficients;
+        public DbSet<KPISaleEmployeeRewardMapping> KPISaleEmployeeRewardMapping => _context.KPISaleEmployeeRewardMappings;
+        public DbSet<KPISaleRankingResult> KPISaleRankingResult => _context.KPISaleRankingResults;
+        public DbSet<KPISaleEmployeeTemplate> KPISaleEmployeeTemplates => _context.KPISaleEmployeeTemplates;
+        public DbSet<KPISaleTeamTemplate> KPISaleTeamTemplates => _context.KPISaleTeamTemplates;
 
         public Task<int> SaveChangesAsync()
         {
