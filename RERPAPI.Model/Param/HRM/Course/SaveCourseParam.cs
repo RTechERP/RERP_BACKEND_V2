@@ -28,6 +28,7 @@
         public int? CourseCopyID { get; set; }
 
         public int? CourseTypeID { get; set; }
+        public string? Thumbnail { get; set; }
 
         public List<int>? IdeaIDs { get; set; }
         public List<int>? KPIIDs { get; set; }

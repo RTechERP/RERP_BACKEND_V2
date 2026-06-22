@@ -57,7 +57,7 @@ namespace RERPAPI.Controllers.CourseWeb
                     }
                     string hashedPassword = RERPAPI.Model.Common.MaHoaMD5.EncryptPassword(model.PasswordHash);
                     var result = _userRepo.Create(new User
-                    {
+                    {   
                         LoginName = model.Email,
                         FullName = model.FullName,
                         BirthOfDate = model.BirthOfDate,
@@ -67,7 +67,9 @@ namespace RERPAPI.Controllers.CourseWeb
                         PhoneNumber = model.PhoneNumber,
                         Position = model.Position,
                         Organization = model.Organization,
-                        Status = model.Status
+                        Status = model.Status,
+                        CanLearnAhead = model.CanLearnAhead
+
                     });
                     if (result > 0)
                     {
@@ -107,6 +109,7 @@ namespace RERPAPI.Controllers.CourseWeb
                     user.Position = model.Position;
                     user.Organization = model.Organization;
                     user.Status = model.Status;
+                    user.CanLearnAhead = model.CanLearnAhead;
                     if (_userRepo.Update(user) <= 0)
                     {
                         return Ok(ApiResponseFactory.Fail(null, "Có lỗi xảy ra khi cập nhật người dùng"));
