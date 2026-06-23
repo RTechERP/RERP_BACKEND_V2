@@ -870,7 +870,7 @@ namespace RERPAPI.Controllers.Project
                         }
                         else
                         {
-                            var productRTC = _productRTCRepo.GetAll(x => x.ProductCode == item.ProductCode).FirstOrDefault();
+                            var productRTC = _productRTCRepo.GetAll(x => x.ProductCode.Trim().ToUpper() == item.ProductCode.Trim().ToUpper()).FirstOrDefault();
                             if (productRTC == null)
                             {
                                 return BadRequest(ApiResponseFactory.Fail(null, "Sản phẩm không có trong kho demo!"));
