@@ -458,10 +458,10 @@ namespace RERPAPI.Controllers.Old.KETOAN
                 }
                 else
                 {
-                    contract.ID = await _accountingContractRepo.CreateAsync(contract);
+                    await _accountingContractRepo.CreateAsync(contract);
                 }
 
-                return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
+                return Ok(ApiResponseFactory.Success(contract, "Lưu thành công"));
             }
             catch (Exception ex)
             {

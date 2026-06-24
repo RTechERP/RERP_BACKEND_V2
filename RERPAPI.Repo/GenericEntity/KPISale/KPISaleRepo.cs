@@ -80,14 +80,74 @@ namespace RERPAPI.Repo.GenericEntity.KPISale
             string schemaName,
             string tableName,
             string valueColumn,
-            string? displayColumn = null)
+            string? displayColumn = null,
+            string? preFilterColumn = null,
+            string? preFilterOperator = null,
+            string? preFilterValue = null,
+            string? preFilterValue2 = null,
+            Dictionary<string, object>? systemParams = null)
         {
             var result = new List<KPISaleLookupValue>();
             var connection = _context.Database.GetDbConnection();
             await using var command = connection.CreateCommand();
             var qualifiedTable = $"[{schemaName.Trim()}].[{tableName.Trim()}]";
             var displayColName = string.IsNullOrWhiteSpace(displayColumn) ? valueColumn : displayColumn;
-            command.CommandText = $"SELECT DISTINCT TOP 500 [{valueColumn.Trim()}] AS [Value], [{displayColName.Trim()}] AS [Display] FROM {qualifiedTable} WHERE [{valueColumn.Trim()}] IS NOT NULL ORDER BY [{displayColName.Trim()}]";
+
+            var whereClauses = new List<string> { $"[{valueColumn.Trim()}] IS NOT NULL" };
+
+            if (!string.IsNullOrWhiteSpace(preFilterColumn) && !string.IsNullOrWhiteSpace(preFilterOperator))
+            {
+                var col = $"[{preFilterColumn.Trim()}]";
+                switch (preFilterOperator.Trim().ToUpperInvariant())
+                {
+                    case "=":
+                    case ">":
+                    case ">=":
+                    case "<":
+                    case "<=":
+                    case "<>":
+                        if (!string.IsNullOrWhiteSpace(preFilterValue))
+                        {
+                            if (preFilterValue.StartsWith("{{") && preFilterValue.EndsWith("}}"))
+                            {
+                                var paramKey = preFilterValue.Substring(2, preFilterValue.Length - 4).Trim();
+                                whereClauses.Add($"{col} {preFilterOperator} {{{paramKey}}}");
+                            }
+                            else
+                            {
+                                whereClauses.Add($"{col} {preFilterOperator} '{preFilterValue.Replace("'", "''")}'");
+                            }
+                        }
+                        break;
+                    case "LIKE":
+                        if (!string.IsNullOrWhiteSpace(preFilterValue))
+                        {
+                            whereClauses.Add($"{col} LIKE '%{preFilterValue.Replace("'", "''")}%'");
+                        }
+                        break;
+                    case "IN":
+                        if (!string.IsNullOrWhiteSpace(preFilterValue))
+                        {
+                            var inValues = preFilterValue.Split(',').Select(v => $"'{v.Trim().Replace("'", "''")}'");
+                            whereClauses.Add($"{col} IN ({string.Join(", ", inValues)})");
+                        }
+                        break;
+                    case "BETWEEN":
+                        if (!string.IsNullOrWhiteSpace(preFilterValue) && !string.IsNullOrWhiteSpace(preFilterValue2))
+                        {
+                            whereClauses.Add($"{col} BETWEEN '{preFilterValue.Replace("'", "''")}' AND '{preFilterValue2.Replace("'", "''")}'");
+                        }
+                        break;
+                    case "IS NULL":
+                        whereClauses.Add($"{col} IS NULL");
+                        break;
+                    case "IS NOT NULL":
+                        whereClauses.Add($"{col} IS NOT NULL");
+                        break;
+                }
+            }
+
+            command.CommandText = $"SELECT DISTINCT TOP 500 [{valueColumn.Trim()}] AS [Value], [{displayColName.Trim()}] AS [Display] FROM {qualifiedTable} WHERE {string.Join(" AND ", whereClauses)} ORDER BY [{displayColName.Trim()}]";
             command.CommandType = CommandType.Text;
 
             if (connection.State != ConnectionState.Open)

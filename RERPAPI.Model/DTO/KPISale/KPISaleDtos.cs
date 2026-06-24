@@ -99,10 +99,8 @@ namespace RERPAPI.Model.DTO.KPISale
         public int KpiIndexID { get; set; }
         public decimal GoalValue { get; set; }
         public decimal? WeightPercent { get; set; }
-        public bool IsProposed { get; set; }
         public decimal? ProposedGoalValue { get; set; }
         public string? ApprovalStatus { get; set; }
-        public string? ApproveNote { get; set; }
     }
 
     public class KPISaleTargetProposeRequest
@@ -115,6 +113,18 @@ namespace RERPAPI.Model.DTO.KPISale
     public class KPISaleTargetRejectRequest
     {
         public string? Reason { get; set; }
+    }
+
+    public class AutoCreateTargetRequest
+    {
+        public int EmployeeID { get; set; }
+        public int TemplateID { get; set; }
+        public int PeriodID { get; set; }
+    }
+
+    public class KPISaleTargetUpdateWeightRequest
+    {
+        public decimal? WeightPercent { get; set; }
     }
 
     public class KPISaleEmployeeTemplateUpsertRequest
