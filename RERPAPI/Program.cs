@@ -508,6 +508,7 @@ builder.Services.AddScoped<CourseAnswerRepo>();
 builder.Services.AddScoped<CourseExamPracticeRepo>();
 builder.Services.AddScoped<ExamResultRepo>();
 builder.Services.AddScoped<ExamResultDetailRepo>();
+builder.Services.AddScoped<ExamResultAnswerDetailRepo>();
 
 builder.Services.AddScoped<InventoryProjectProductSaleLinkRepo>();
 builder.Services.AddScoped<HandoverPersonalAssetRepo>();
