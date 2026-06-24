@@ -968,16 +968,21 @@ List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticF
 
 foreach (var item in staticFiles)
 {
+    var pathName = item.PathName.Trim().ToLower();
+    var requestPath = pathName == "upload" 
+        ? "/api/upload" 
+        : $"/api/share/{pathName}";
+
     app.UseStaticFiles(new StaticFileOptions()
     {
         FileProvider = new PhysicalFileProvider(item.PathFull),
-        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+        RequestPath = new PathString(requestPath)
     });
 
     //app.UseDirectoryBrowser(new DirectoryBrowserOptions
     //{
     //    FileProvider = new PhysicalFileProvider(item.PathFull),
-    //    RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+    //    RequestPath = new PathString(requestPath)
     //});
 }
 var tusStore = new TusDiskStore(Directory.GetCurrentDirectory());
