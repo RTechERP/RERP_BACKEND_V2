@@ -579,6 +579,66 @@ namespace RERPAPI.Controllers.KPISale
             }
         }
 
+        [HttpGet("allowed-tables/{tableId:int}/columns/{columnName}/unique-values")]
+        public async Task<IActionResult> GetAllowedColumnUniqueValues(int tableId, string columnName)
+        {
+            try
+            {
+                var table = await _kpiSaleRepo.KPISaleAllowedTables.AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.ID == tableId && x.IsActive);
+                if (table == null || table.ID <= 0)
+                    return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy bảng được phép"));
+
+                ValidateIdentifier(table.SchemaName, nameof(table.SchemaName));
+                ValidateIdentifier(table.TableName, nameof(table.TableName));
+                ValidateIdentifier(columnName, nameof(columnName));
+
+                var column = await _kpiSaleRepo.KPISaleAllowedColumns.AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.TableID == tableId && x.ColumnName == columnName && x.IsActive);
+                if (column == null)
+                    return NotFound(ApiResponseFactory.Fail(null, $"Cột '{columnName}' không được phép"));
+
+                if (!string.IsNullOrWhiteSpace(column.LookupTable))
+                {
+                    string lookupSchema = "dbo";
+                    string lookupTable = column.LookupTable.Trim();
+                    if (lookupTable.Contains('.'))
+                    {
+                        var parts = lookupTable.Split('.');
+                        lookupSchema = parts[0].Trim();
+                        lookupTable = parts[1].Trim();
+                    }
+                    var valueCol = string.IsNullOrWhiteSpace(column.LookupValueColumn) ? "ID" : column.LookupValueColumn.Trim();
+                    var displayCol = string.IsNullOrWhiteSpace(column.LookupDisplayColumn) ? valueCol : column.LookupDisplayColumn.Trim();
+
+                    ValidateIdentifier(lookupSchema, nameof(lookupSchema));
+                    ValidateIdentifier(lookupTable, nameof(lookupTable));
+                    ValidateIdentifier(valueCol, nameof(valueCol));
+                    ValidateIdentifier(displayCol, nameof(displayCol));
+
+                    // LookupPreFilter áp vào bảng lookup
+                    var lookupData = await _kpiSaleRepo.GetUniqueValuesAsync(lookupSchema, lookupTable, valueCol, displayCol,
+                        column.LookupPreFilterColumn, column.LookupPreFilterOperator, column.LookupPreFilterValue, column.LookupPreFilterValue2);
+                    return Ok(ApiResponseFactory.Success(lookupData, ""));
+                }
+                else if (!string.IsNullOrWhiteSpace(column.ManualValueMapJson))
+                {
+                    var data = ParseManualLookupValues(column.ManualValueMapJson);
+                    return Ok(ApiResponseFactory.Success(data, ""));
+                }
+                else
+                {
+                    // Không có lookup -> pre-filter áp vào bảng chính
+                    var data = await _kpiSaleRepo.GetUniqueValuesAsync(table.SchemaName ?? "dbo", table.TableName, columnName, columnName);
+                    return Ok(ApiResponseFactory.Success(data, ""));
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpPost("allowed-columns")]
         public async Task<IActionResult> CreateAllowedColumn([FromBody] KPISaleAllowedColumn request)
         {
@@ -629,6 +689,16 @@ namespace RERPAPI.Controllers.KPISale
                 model.LookupDisplayColumn = request.LookupDisplayColumn;
                 model.LookupTable = request.LookupTable;
                 model.ManualValueMapJson = NormalizeManualValueMapJson(request.ManualValueMapJson);
+                model.PreFilterColumn = request.PreFilterColumn;
+                model.PreFilterOperator = request.PreFilterOperator;
+                model.PreFilterValueType = request.PreFilterValueType;
+                model.PreFilterValue = request.PreFilterValue;
+                model.PreFilterValue2 = request.PreFilterValue2;
+                model.LookupPreFilterColumn = request.LookupPreFilterColumn;
+                model.LookupPreFilterOperator = request.LookupPreFilterOperator;
+                model.LookupPreFilterValueType = request.LookupPreFilterValueType;
+                model.LookupPreFilterValue = request.LookupPreFilterValue;
+                model.LookupPreFilterValue2 = request.LookupPreFilterValue2;
 
                 await _kpiSaleRepo.SaveChangesAsync();
                 return Ok(ApiResponseFactory.Success(model, "Lưu thành công"));
@@ -949,7 +1019,9 @@ namespace RERPAPI.Controllers.KPISale
                     ValidateIdentifier(valueColumn, nameof(valueColumn));
                     ValidateIdentifier(displayColumn, nameof(displayColumn));
 
-                    var lookupData = await _kpiSaleRepo.GetUniqueValuesAsync(lookupSchema, lookupTable, valueColumn, displayColumn);
+                    // LookupPreFilter áp vào bảng lookup (vì cột này là FK)
+                    var lookupData = await _kpiSaleRepo.GetUniqueValuesAsync(lookupSchema, lookupTable, valueColumn, displayColumn,
+                        column.LookupPreFilterColumn, column.LookupPreFilterOperator, column.LookupPreFilterValue, column.LookupPreFilterValue2);
                     return Ok(ApiResponseFactory.Success(lookupData, ""));
                 }
                 else if (!string.IsNullOrWhiteSpace(column.ManualValueMapJson))
@@ -959,6 +1031,7 @@ namespace RERPAPI.Controllers.KPISale
                 }
                 else
                 {
+                    // Không có lookup -> pre-filter áp vào bảng chính (ít dùng)
                     var data = await _kpiSaleRepo.GetUniqueValuesAsync(table.SchemaName ?? "dbo", table.TableName, column.ColumnName, column.ColumnName);
                     return Ok(ApiResponseFactory.Success(data, ""));
                 }
@@ -1626,6 +1699,42 @@ namespace RERPAPI.Controllers.KPISale
             }
         }
 
+        [HttpPut("targets/{id:int}/weight")]
+        public async Task<IActionResult> UpdateTargetWeight(int id, [FromBody] KPISaleTargetUpdateWeightRequest request)
+        {
+            try
+            {
+                var currentUser = GetCurrentUser();
+
+                // Permission: only N1 admin or Leader
+                //var isN1 = HasPermission("N1");
+                var permissions = currentUser.Permissions?.Split(',').Select(p => p.Trim()).ToList() ?? new List<string>();
+
+                var isLeader = currentUser?.EmployeeID != null &&
+                    await _kpiSaleRepo.KPISaleTeams.AnyAsync(t => t.IsActive && t.LeaderEmployeeID == currentUser.EmployeeID);
+                if (!permissions.Contains("N1") && !isLeader)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Chỉ admin (N1) hoặc Leader mới được chỉnh sửa trọng số"));
+
+                if (request.WeightPercent.HasValue && (request.WeightPercent.Value < 0 || request.WeightPercent.Value > 100))
+                    return BadRequest(ApiResponseFactory.Fail(null, "Trọng số phải nằm trong khoảng 0 - 100%"));
+
+                var target = await _kpiSaleRepo.KPISaleTargets.FirstOrDefaultAsync(x => x.ID == id);
+                if (target == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy mục tiêu"));
+
+                target.WeightPercent = request.WeightPercent;
+                target.UpdatedBy = currentUser.LoginName;
+                target.UpdatedDate = DateTime.Now;
+
+                await _kpiSaleRepo.SaveChangesAsync();
+                return Ok(ApiResponseFactory.Success(target, "Cập nhật trọng số thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpPost("targets/{id:int}/reject")]
         public async Task<IActionResult> RejectTarget(int id, [FromBody] KPISaleTargetRejectRequest? body = null)
         {
@@ -1671,6 +1780,102 @@ namespace RERPAPI.Controllers.KPISale
 
                 await _kpiSaleRepo.SaveChangesAsync();
                 return Ok(ApiResponseFactory.Success(data, "Lưu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("targets/auto-create")]
+        public async Task<IActionResult> AutoCreateMissingTargets([FromBody] AutoCreateTargetRequest request)
+        {
+            try
+            {
+                if (request.EmployeeID <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "EmployeeID không hợp lệ"));
+                if (request.TemplateID <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "TemplateID không hợp lệ"));
+                if (request.PeriodID <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "PeriodID không hợp lệ"));
+
+                var currentUser = GetCurrentUser();
+
+                // Lấy template + indexes
+                var template = await _kpiSaleRepo.KPISaleTemplates
+                    .FirstOrDefaultAsync(t => t.ID == request.TemplateID);
+                if (template == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy template"));
+
+                var indexes = await _kpiSaleRepo.KPISaleIndices.AsNoTracking()
+                    .Where(x => x.TemplateID == request.TemplateID && x.IsActive)
+                    .OrderBy(x => x.SortOrder)
+                    .ToListAsync();
+
+                // Lấy tất cả period cần tạo (tháng con nếu là QUARTER/YEAR)
+                var period = await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.ID == request.PeriodID);
+                if (period == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy kỳ KPI"));
+
+                var periodIds = new List<int> { request.PeriodID };
+                if (period.PeriodType == "QUARTER" || period.PeriodType == "YEAR")
+                {
+                    var childMonths = await GetChildMonthPeriodsAsync(period);
+                    periodIds.AddRange(childMonths.Select(x => x.ID));
+                }
+
+                // Lấy target đã tồn tại
+                var existingTargets = await _kpiSaleRepo.KPISaleTargets.AsNoTracking()
+                    .Where(x => x.EmployeeID == request.EmployeeID
+                        && periodIds.Contains(x.PeriodID)
+                        && indexes.Select(i => i.ID).Contains(x.KpiIndexID))
+                    .Select(x => new { x.PeriodID, x.KpiIndexID })
+                    .ToListAsync();
+
+                var existingSet = existingTargets
+                    .Select(x => (x.PeriodID, x.KpiIndexID))
+                    .ToHashSet();
+
+                // Tạo target mới cho index chưa có target
+                var toCreate = new List<KPISaleTarget>();
+                foreach (var periodId in periodIds)
+                {
+                    foreach (var index in indexes)
+                    {
+                        if (existingSet.Contains((periodId, index.ID)))
+                            continue;
+
+                        var model = new KPISaleTarget
+                        {
+                            EmployeeID = request.EmployeeID,
+                            PeriodID = periodId,
+                            KpiIndexID = index.ID,
+                            GoalValue = 0,
+                            WeightPercent = 0,
+                            ProposedGoalValue = 0,
+                            ApprovalStatus = "Pending",
+                            CreatedBy = currentUser.LoginName,
+                            UpdatedBy = currentUser.LoginName,
+                            CreatedDate = DateTime.Now,
+                            UpdatedDate = DateTime.Now
+                        };
+                        toCreate.Add(model);
+                    }
+                }
+
+                if (toCreate.Count > 0)
+                {
+                    await _kpiSaleRepo.KPISaleTargets.AddRangeAsync(toCreate);
+                    await _kpiSaleRepo.SaveChangesAsync();
+                }
+
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    CreatedCount = toCreate.Count,
+                    TotalIndexes = indexes.Count,
+                    PeriodCount = periodIds.Count
+                }, $"Đã thêm {toCreate.Count} chỉ tiêu mới (weight=0, goal=0)"));
             }
             catch (Exception ex)
             {
@@ -2920,7 +3125,7 @@ namespace RERPAPI.Controllers.KPISale
                         GoalValue = 0,
                         ResultValue = 0,
                         AchievedPercent = 0,
-                        WeightPercent = index.WeightPercent,
+                        WeightPercent = itemsForIndex.FirstOrDefault(i => i.WeightPercent > 0)?.WeightPercent ?? 0,
                         FinalScore = reportFinalScore,
                         UnitType = index.UnitType,
                         ReportScoreAdjustmentType = adjType,
@@ -2932,14 +3137,24 @@ namespace RERPAPI.Controllers.KPISale
                 }
                 else
                 {
-                    // DETAIL/GROUP/FORMULA: sum goal + sum result, re-compute score theo cùng scoring rule
-                    decimal sumGoal = itemsForIndex.Sum(i => i.GoalValue);
-                    decimal sumResult = itemsForIndex.Sum(i => i.ResultValue);
+                    // DETAIL/GROUP/FORMULA: chỉ aggregate từ employee có weightPercent hợp lệ (> 0)
+                    var validItems = itemsForIndex
+                        .Where(i => i.WeightPercent > 0)
+                        .ToList();
+
+                    // Nếu không có employee nào có weight hợp lệ cho index này → bỏ qua
+                    if (validItems.Count == 0)
+                        continue;
+
+                    decimal sumGoal = validItems.Sum(i => i.GoalValue);
+                    decimal sumResult = validItems.Sum(i => i.ResultValue);
 
                     scoringRules.TryGetValue(index.ID, out var scoringRule);
                     var scoreType = NormalizeOptionalCode(scoringRule?.ScoreType, "NORMAL_PERCENT");
                     var achievedPercent = CalculateAchievedPercent(sumGoal, sumResult, scoreType);
-                    var finalScore = CalculateFinalScore(achievedPercent, index.WeightPercent, scoringRule, scoreType);
+                    // Lấy WeightPercent từ employee đầu tiên có weight hợp lệ
+                    var weightPercent = validItems[0].WeightPercent;
+                    var finalScore = CalculateFinalScore(achievedPercent, weightPercent, scoringRule, scoreType);
 
                     aggregatedItems.Add(new KPISaleCalculateResult
                     {
@@ -2956,7 +3171,7 @@ namespace RERPAPI.Controllers.KPISale
                         GoalValue = sumGoal,
                         ResultValue = sumResult,
                         AchievedPercent = achievedPercent,
-                        WeightPercent = index.WeightPercent,
+                        WeightPercent = weightPercent,
                         FinalScore = finalScore,
                         UnitType = index.UnitType,
                         ReportScoreAdjustmentType = 0,
@@ -4455,6 +4670,9 @@ namespace RERPAPI.Controllers.KPISale
                     .GroupBy(x => x.ParentID!.Value)
                     .ToDictionary(x => x.Key, x => x.ToList()),
                 TargetsByIndex = targets.ToDictionary(x => (x.PeriodID, x.KpiIndexID), x => x.GoalValue),
+                WeightsByIndex = targets
+                    .Where(x => x.WeightPercent.HasValue)
+                    .ToDictionary(x => (x.PeriodID, x.KpiIndexID), x => x.WeightPercent!.Value),
                 ScoringRulesByIndex = scoringRules
                     .GroupBy(x => x.KpiIndexID)
                     .ToDictionary(x => x.Key, x => x.OrderByDescending(r => r.ID).First()),
@@ -4464,9 +4682,25 @@ namespace RERPAPI.Controllers.KPISale
             foreach (var index in indexes)
                 await ResolveIndexResultAsync(index, runtime);
 
+            // Lọc bỏ DETAIL/GROUP/FORMULA có weightPercent = 0 hoặc chưa khai báo
+            var noWeightIndexIds = indexes
+                .Where(x => NormalizeOptionalCode(x.IndexType, "DETAIL") != "REPORT")
+                .Select(x => x.ID)
+                .ToHashSet();
+
+            var noWeightTargets = targets
+                .Where(t => noWeightIndexIds.Contains(t.KpiIndexID)
+                    && (!t.WeightPercent.HasValue || t.WeightPercent.Value == 0))
+                .Select(t => t.KpiIndexID)
+                .ToHashSet();
+
             var results = new List<KPISaleCalculateResult>();
             foreach (var index in indexes)
             {
+                // Bỏ qua DETAIL/GROUP/FORMULA không có weight hợp lệ
+                if (noWeightIndexIds.Contains(index.ID) && noWeightTargets.Contains(index.ID))
+                    continue;
+
                 var resultValue = runtime.CalculatedValues.GetValueOrDefault(index.ID);
                 var goalValue = runtime.TargetsByIndex.GetValueOrDefault((period.ID, index.ID));
                 var indexType = NormalizeOptionalCode(index.IndexType, "DETAIL");
@@ -4487,7 +4721,8 @@ namespace RERPAPI.Controllers.KPISale
                 runtime.ScoringRulesByIndex.TryGetValue(index.ID, out var scoringRule);
                 var scoreType = NormalizeOptionalCode(scoringRule?.ScoreType, "NORMAL_PERCENT");
                 var achievedPercent = CalculateAchievedPercent(goalValue, resultValue, scoreType);
-                var finalScore = CalculateFinalScore(achievedPercent, index.WeightPercent, scoringRule, scoreType);
+                var weightPercent = runtime.WeightsByIndex.GetValueOrDefault((period.ID, index.ID), 0m);
+                var finalScore = CalculateFinalScore(achievedPercent, weightPercent, scoringRule, scoreType);
                 reportAdjustmentsByIndex.TryGetValue(index.ID, out var reportAdjustment);
                 var reportScoreValue = reportAdjustment?.ReportScoreValue ?? 0;
                 var reportScoreAdjustmentType = reportAdjustment?.ReportScoreAdjustmentType ?? 0;
@@ -4519,7 +4754,7 @@ namespace RERPAPI.Controllers.KPISale
                     GoalValue = goalValue,
                     ResultValue = resultValue,
                     AchievedPercent = achievedPercent,
-                    WeightPercent = index.WeightPercent,
+                    WeightPercent = weightPercent,
                     FinalScore = finalScore,
                     UnitType = index.UnitType,
                     ReportScoreAdjustmentType = reportScoreAdjustmentType,
@@ -5979,6 +6214,7 @@ FROM (
             public Dictionary<int, List<KPISaleIndexFormulaItem>> FormulaItemsByParent { get; set; } = new();
             public Dictionary<int, List<KPISaleIndex>> ChildrenByParent { get; set; } = new();
             public Dictionary<(int PeriodID, int IndexID), decimal> TargetsByIndex { get; set; } = new();
+            public Dictionary<(int PeriodID, int IndexID), decimal> WeightsByIndex { get; set; } = new();
             public Dictionary<int, KPISaleScoringRule> ScoringRulesByIndex { get; set; } = new();
             public Dictionary<int, KPISaleReportAdjustmentInputDto> ReportAdjustmentsByIndex { get; set; } = new();
             public Dictionary<int, decimal> CalculatedValues { get; } = new();
@@ -6000,6 +6236,7 @@ FROM (
                     FormulaItemsByParent = FormulaItemsByParent,
                     ChildrenByParent = ChildrenByParent,
                     TargetsByIndex = TargetsByIndex,
+                    WeightsByIndex = WeightsByIndex,
                     ScoringRulesByIndex = ScoringRulesByIndex,
                     ReportAdjustmentsByIndex = ReportAdjustmentsByIndex,
                 };
