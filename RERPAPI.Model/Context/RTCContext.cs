@@ -8348,8 +8348,16 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.DisplayName).HasMaxLength(255);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.LookupDisplayColumn).HasMaxLength(128);
+            entity.Property(e => e.LookupPreFilterColumn).HasMaxLength(128);
+            entity.Property(e => e.LookupPreFilterOperator).HasMaxLength(16);
+            entity.Property(e => e.LookupPreFilterValueType).HasMaxLength(32);
             entity.Property(e => e.LookupTable).HasMaxLength(128);
             entity.Property(e => e.LookupValueColumn).HasMaxLength(128);
+            entity.Property(e => e.PreFilterColumn).HasMaxLength(128);
+            entity.Property(e => e.PreFilterOperator).HasMaxLength(20);
+            entity.Property(e => e.PreFilterValue).HasMaxLength(500);
+            entity.Property(e => e.PreFilterValue2).HasMaxLength(500);
+            entity.Property(e => e.PreFilterValueType).HasMaxLength(20);
         });
 
         modelBuilder.Entity<KPISaleAllowedTable>(entity =>
