@@ -810,7 +810,7 @@ namespace RERPAPI.Controllers.Old.Technical
                         continue;
 
                     var billDetail = _billImportTechnicalDetailRepo.GetByID(item.IDDetail);
-                    if (item.DeliverID != currentUser.EmployeeID && !isAdmin)
+					if (item.DeliverID != currentUser.ID && !isAdmin)
                     {
                         skippedIds.Add(item.IDDetail);
                         continue;
