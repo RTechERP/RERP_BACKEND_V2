@@ -1505,6 +1505,8 @@ namespace RERPAPI.Controllers.KPISale
                         }
                         else if (selectedPeriod.PeriodType == "QUARTER")
                         {
+                            // Lấy cả bản ghi QUARTER (để frontend cascade sum lên QUARTER target)
+                            periodIdsToQuery.Add(periodId.Value);
                             // Lấy tất cả tháng con
                             var childMonths = allPeriods.Where(p => p.PeriodType == "MONTH" && p.ParentPeriodID == periodId.Value);
                             foreach (var m in childMonths)
@@ -3137,13 +3139,19 @@ namespace RERPAPI.Controllers.KPISale
                 }
                 else
                 {
-                    // DETAIL/GROUP/FORMULA: chỉ aggregate từ employee có weightPercent hợp lệ (> 0)
+                    // REPORT: đã xử lý ở trên
+                    // DETAIL: chỉ aggregate từ employee có weightPercent hợp lệ
+                    // GROUP/FORMULA: vẫn xử lý ngay cả khi không có validItems
+                    //   (goal sẽ được sum từ các con ở CalculateInternalAsync, đã chạy rồi)
                     var validItems = itemsForIndex
                         .Where(i => i.WeightPercent > 0)
                         .ToList();
 
-                    // Nếu không có employee nào có weight hợp lệ cho index này → bỏ qua
-                    if (validItems.Count == 0)
+                    // Với GROUP/FORMULA, luôn tạo aggregated item nếu có dữ liệu từ team.
+                    // validItems.Count == 0 chỉ có nghĩa là không employee nào trong team
+                    // có weight trực tiếp cho index này. Điều đó không có nghĩa là
+                    // GROUP/FORMULA không có goal — goal đến từ con.
+                    if (validItems.Count == 0 && indexType != "GROUP" && indexType != "FORMULA")
                         continue;
 
                     decimal sumGoal = validItems.Sum(i => i.GoalValue);
@@ -3152,8 +3160,9 @@ namespace RERPAPI.Controllers.KPISale
                     scoringRules.TryGetValue(index.ID, out var scoringRule);
                     var scoreType = NormalizeOptionalCode(scoringRule?.ScoreType, "NORMAL_PERCENT");
                     var achievedPercent = CalculateAchievedPercent(sumGoal, sumResult, scoreType);
-                    // Lấy WeightPercent từ employee đầu tiên có weight hợp lệ
-                    var weightPercent = validItems[0].WeightPercent;
+                    // Với GROUP/FORMULA, weight lấy từ index đầu tiên có weight hợp lệ trong team;
+                    // nếu không có, weightPercent = 0 (GROUP không cần weight để sum goal)
+                    decimal weightPercent = validItems.Count > 0 ? validItems[0].WeightPercent : 0;
                     var finalScore = CalculateFinalScore(achievedPercent, weightPercent, scoringRule, scoreType);
 
                     aggregatedItems.Add(new KPISaleCalculateResult
@@ -4697,17 +4706,32 @@ namespace RERPAPI.Controllers.KPISale
             var results = new List<KPISaleCalculateResult>();
             foreach (var index in indexes)
             {
-                // Bỏ qua DETAIL/GROUP/FORMULA không có weight hợp lệ
-                if (noWeightIndexIds.Contains(index.ID) && noWeightTargets.Contains(index.ID))
+                var indexType = NormalizeOptionalCode(index.IndexType, "DETAIL");
+
+                // Bỏ qua DETAIL không có weight hợp lệ
+                if (indexType == "DETAIL" && noWeightIndexIds.Contains(index.ID) && noWeightTargets.Contains(index.ID))
                     continue;
+
+                // GROUP/FORMULA: không bỏ qua chỉ vì không có target trực tiếp.
+                // Nếu không có direct target, SumGoalFromChildren/SumGoalFromChildMonths đã được gọi
+                // ở trên (dòng 4708-4718) để compute goal từ các con.
+                // Chỉ bỏ qua nếu goalValue vẫn = 0 sau khi đã thử sum từ con.
 
                 var resultValue = runtime.CalculatedValues.GetValueOrDefault(index.ID);
                 var goalValue = runtime.TargetsByIndex.GetValueOrDefault((period.ID, index.ID));
-                var indexType = NormalizeOptionalCode(index.IndexType, "DETAIL");
 
-                if (goalValue == 0)
+                // GROUP/FORMULA ở QUÝ/NĂM: LUÔN compute goal từ tháng con,
+                // bất kể direct target có tồn tại hay không (tránh bị fix cứng GoalValue=0).
+                // DIRECTION: QUÝ/NĂM → tháng con
+                var periodTypeNorm = NormalizeOptionalCode(runtime.Period.PeriodType, "MONTH");
+                if ((indexType == "GROUP" || indexType == "FORMULA")
+                    && (periodTypeNorm == "QUARTER" || periodTypeNorm == "YEAR"))
                 {
-                    // Nếu là GROUP hoặc FORMULA, sum goal từ các con cùng kỳ
+                    goalValue = await SumGoalFromChildrenAsync(index, runtime);
+                }
+                else if (goalValue == 0)
+                {
+                    // THÁNG hoặc DETAIL: chỉ fallback khi direct goal = 0
                     if (indexType == "GROUP" || indexType == "FORMULA")
                     {
                         goalValue = await SumGoalFromChildrenAsync(index, runtime);
@@ -4894,10 +4918,14 @@ namespace RERPAPI.Controllers.KPISale
         /// </summary>
         private async Task<decimal> SumGoalFromChildMonthsAsync(KPISaleIndex index, KPISaleRuntimeContext runtime)
         {
-            var quarterResultType = NormalizeOptionalCode(index.QuarterResultCalculateType, "SUM_MONTH");
+            var quarterGoalType = NormalizeOptionalCode(index.QuarterGoalCalculateType, "SUM_MONTH");
             var periodType = NormalizeOptionalCode(runtime.Period.PeriodType, "MONTH");
 
-            if ((periodType == "QUARTER" || periodType == "YEAR") && quarterResultType == "SUM_MONTH")
+            // MANUAL: goal được nhập trực tiếp cho QUÝ, không sum từ tháng
+            if (quarterGoalType == "MANUAL")
+                return 0;
+
+            if ((periodType == "QUARTER" || periodType == "YEAR") && quarterGoalType == "SUM_MONTH")
             {
                 var childMonthPeriods = await GetChildMonthPeriodsAsync(runtime.Period);
                 decimal total = 0;
@@ -4919,7 +4947,8 @@ namespace RERPAPI.Controllers.KPISale
         /// </summary>
         private async Task<decimal> SumGoalFromChildrenAsync(KPISaleIndex index, KPISaleRuntimeContext runtime)
         {
-            if (!runtime.ChildrenByParent.TryGetValue(index.ID, out var children) || children.Count == 0)
+            var children = ResolveChildren(index, runtime);
+            if (children.Count == 0)
                 return 0;
 
             var periodType = NormalizeOptionalCode(runtime.Period.PeriodType, "MONTH");
@@ -4957,6 +4986,37 @@ namespace RERPAPI.Controllers.KPISale
             return sum;
         }
 
+        /// <summary>
+        /// Lấy danh sách child index của 1 GROUP.
+        /// Ưu tiên ChildrenByParent (group theo KPISaleIndex.ParentID).
+        /// Fallback: nếu rỗng, dùng FormulaItemsByParent (group theo KPISaleIndexFormulaItems.ParentKpiIndexID)
+        /// — trường hợp ParentID trong bảng Index không được set đúng nhưng formula items có.
+        /// </summary>
+        private List<KPISaleIndex> ResolveChildren(KPISaleIndex index, KPISaleRuntimeContext runtime)
+        {
+            if (runtime.ChildrenByParent.TryGetValue(index.ID, out var children) && children.Count > 0)
+                return children;
+
+            // Fallback: dùng formula items
+            if (runtime.FormulaItemsByParent.TryGetValue(index.ID, out var formulaItems) && formulaItems.Count > 0)
+            {
+                var resolved = new List<KPISaleIndex>();
+                var seenIds = new HashSet<int>();
+                foreach (var item in formulaItems.OrderBy(x => x.SortOrder).ThenBy(x => x.ID))
+                {
+                    if (seenIds.Contains(item.ChildKpiIndexID)) continue;
+                    if (runtime.IndexById.TryGetValue(item.ChildKpiIndexID, out var child))
+                    {
+                        resolved.Add(child);
+                        seenIds.Add(child.ID);
+                    }
+                }
+                if (resolved.Count > 0)
+                    return resolved;
+            }
+            return new List<KPISaleIndex>();
+        }
+
         private async Task<decimal> CalculateFormulaIndexAsync(KPISaleIndex index, KPISaleRuntimeContext runtime)
         {
             if (runtime.FormulaItemsByParent.TryGetValue(index.ID, out var items) && items.Count > 0)
@@ -4983,11 +5043,12 @@ namespace RERPAPI.Controllers.KPISale
                 return result ?? 0;
             }
 
-            if (!runtime.ChildrenByParent.TryGetValue(index.ID, out var children) || children.Count == 0)
+            var resolvedChildren = ResolveChildren(index, runtime);
+            if (resolvedChildren.Count == 0)
                 return 0;
 
             decimal sum = 0;
-            foreach (var child in children.OrderBy(x => x.SortOrder).ThenBy(x => x.ID))
+            foreach (var child in resolvedChildren.OrderBy(x => x.SortOrder).ThenBy(x => x.ID))
                 sum += await ResolveIndexResultAsync(child, runtime);
 
             return sum;
@@ -5346,8 +5407,44 @@ FROM (
             if (period == null || period.ID <= 0)
                 throw new Exception("Không tìm thấy kỳ KPI");
 
+            // Kỳ QUÝ/NĂM được phép upsert GoalValue khi frontend cascade sum từ MONTH,
+            // hoặc chỉ upsert WeightPercent. Không throw lỗi nữa.
             if (period.PeriodType != "MONTH")
-                throw new Exception("Chỉ được thiết lập mục tiêu cho kỳ THÁNG. Kỳ QUÝ và NĂM sẽ được tự động tổng hợp từ các tháng.");
+            {
+                if (period.PeriodType != "QUARTER" && period.PeriodType != "YEAR")
+                    throw new Exception("Kỳ KPI không hợp lệ.");
+
+                // Validate weight
+                if (request.WeightPercent.HasValue && (request.WeightPercent.Value < 0 || request.WeightPercent.Value > 100))
+                    throw new Exception("Trọng số phải nằm trong khoảng 0 - 100");
+
+                var existingQuarter = await FindTargetAsync(request);
+                if (existingQuarter == null || existingQuarter.ID <= 0)
+                {
+                    var model = new KPISaleTarget
+                    {
+                        EmployeeID = request.EmployeeID,
+                        PeriodID = request.PeriodID,
+                        KpiIndexID = request.KpiIndexID,
+                        GoalValue = request.GoalValue,
+                        WeightPercent = request.WeightPercent,
+                        ProposedGoalValue = request.ProposedGoalValue,
+                        ApprovalStatus = request.ProposedGoalValue.HasValue ? "Pending" : "Default",
+                        CreatedBy = currentUserName,
+                        CreatedDate = DateTime.Now
+                    };
+                    await _kpiSaleRepo.KPISaleTargets.AddAsync(model);
+                    return model;
+                }
+
+                existingQuarter.GoalValue = request.GoalValue;
+                existingQuarter.WeightPercent = request.WeightPercent;
+                if (request.ProposedGoalValue.HasValue)
+                    existingQuarter.ProposedGoalValue = request.ProposedGoalValue;
+                existingQuarter.UpdatedBy = currentUserName;
+                existingQuarter.UpdatedDate = DateTime.Now;
+                return existingQuarter;
+            }
 
             var kpiIndex = await _kpiSaleRepo.KPISaleIndices.AsNoTracking()
                 .FirstOrDefaultAsync(x => x.ID == request.KpiIndexID);
