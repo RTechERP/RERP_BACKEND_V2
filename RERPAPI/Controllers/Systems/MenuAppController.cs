@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Repo.GenericEntity.Systems;
@@ -67,6 +68,7 @@ namespace RERPAPI.Controllers.Systems
         }
 
         [HttpPost("save-data")]
+        [RequiresPermission(permissionFunction: "save-menu")]
         public async Task<IActionResult> SaveData([FromBody] MenuAppDTO menu)
         {
             try
