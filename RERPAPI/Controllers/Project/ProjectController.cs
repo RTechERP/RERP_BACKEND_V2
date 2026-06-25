@@ -1415,11 +1415,15 @@ namespace RERPAPI.Controllers.Project
         #endregion API GET
 
         [HttpGet("get-application-types")]
-        public async Task<IActionResult> GetApplicationTypes()
+        public async Task<IActionResult> GetApplicationTypes(string? projectTypeIds)
         {
             try
             {
-                var data = projectApplicationTypesRepo.GetAll(x => x.IsDeleted != true).ToList();
+                var param = new
+                {
+                    ProjectTypeIds = projectTypeIds ?? ""
+                };
+                var data = await SqlDapper<ProjectApplicationType>.ProcedureToListTAsync("spGetProjectApplicationTypesByList", param);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
@@ -1429,11 +1433,15 @@ namespace RERPAPI.Controllers.Project
         }
 
         [HttpGet("get-technologies")]
-        public async Task<IActionResult> GetTechnologies()
+        public async Task<IActionResult> GetTechnologies(string? projectTypeIds)
         {
             try
             {
-                var data = projectTechnologiesRepo.GetAll(x => x.IsDeleted != true).ToList();
+                var param = new
+                {
+                    ProjectTypeIds = projectTypeIds ?? ""
+                };
+                var data = await SqlDapper<ProjectTechnology>.ProcedureToListTAsync("spGetProjectTechnologiesByList", param);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
