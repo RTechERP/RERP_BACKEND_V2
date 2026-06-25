@@ -799,7 +799,7 @@ namespace RERPAPI.Controllers.ESL
             payload["pn"] = table1?.TestTableName?.Replace(" - Mặt 1", "") ?? table2?.TestTableName?.Replace(" - Mặt 2", "") ?? "Bàn Test";
             payload["extend"] = new object();
             payload[$"f1"] =  table1?.TestTableName ?? "Bàn 1";
-            payload[$"f2"] = table2?.TestTableName ?? "Bàn 2";
+            payload[$"f15"] = table2?.TestTableName ?? "Bàn 2";
 
 
             void FillSide(int side, ESLTestTableRegistration reg, ESLTestTableRegistrationDetail det)
@@ -814,9 +814,11 @@ namespace RERPAPI.Controllers.ESL
                 }
 
                 int offset = side == 1 ? 0 : 14;
-
+                var content = reg?.RegistrationContent ?? "";
+                if (content.Length > 54)
+                    content = content.Substring(0, 54) + "...";
                 payload[$"f{2 + offset}"] = reg?.ProjectCode ?? "";
-                payload[$"f{3 + offset}"] = reg?.RegistrationContent ?? "";
+                payload[$"f{3 + offset}"] = content;
                 payload[$"f{4 + offset}"] = det != null ? det.StartDate.ToString("dd/MM/yyyy") : "";
                 payload[$"f{5 + offset}"] = det != null ? det.EndDate.ToString("dd/MM/yyyy") : "";
                 payload[$"f{6 + offset}"] = empReg;
