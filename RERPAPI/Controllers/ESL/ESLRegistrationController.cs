@@ -671,82 +671,82 @@ namespace RERPAPI.Controllers.ESL
             }
         }
 
-        private async Task<ESLBindResponse> SyncESLProductAsync2(string barcode)
-        {
-            var tables = _testTableRepo.GetAll(x => x.Barcode == barcode).ToList();
-            if (!tables.Any()) return new ESLBindResponse { code = 404, message = "Không tìm thấy bàn test theo Barcode" };
+        //private async Task<ESLBindResponse> SyncESLProductAsync2(string barcode)
+        //{
+        //    var tables = _testTableRepo.GetAll(x => x.Barcode == barcode).ToList();
+        //    if (!tables.Any()) return new ESLBindResponse { code = 404, message = "Không tìm thấy bàn test theo Barcode" };
 
-            var tableIds = tables.Select(t => t.ID).ToList();
+        //    var tableIds = tables.Select(t => t.ID).ToList();
 
-            // Find all active masters for these tables. An active master has a latest detail with Status = 1 and ActualReturnDate = null and EndDate >= Today
-            var activeMasters = new List<ESLTestTableRegistration>();
-            var activeDetails = new Dictionary<int, ESLTestTableRegistrationDetail>();
+        //    // Find all active masters for these tables. An active master has a latest detail with Status = 1 and ActualReturnDate = null and EndDate >= Today
+        //    var activeMasters = new List<ESLTestTableRegistration>();
+        //    var activeDetails = new Dictionary<int, ESLTestTableRegistrationDetail>();
 
-            var allMasters = _registrationRepo.GetAll(x => tableIds.Contains(x.TestTableID)).ToList();
-            var allDetails = _detailRepo.GetAll().ToList();
+        //    var allMasters = _registrationRepo.GetAll(x => tableIds.Contains(x.TestTableID)).ToList();
+        //    var allDetails = _detailRepo.GetAll().ToList();
 
-            foreach (var m in allMasters)
-            {
-                var latest = allDetails.Where(d => d.RegistrationID == m.ID).OrderByDescending(d => d.No).FirstOrDefault();
-                if (latest != null && latest.Status == 1 && latest.ActualReturnDate == null && latest.EndDate >= DateTime.Today)
-                {
-                    activeMasters.Add(m);
-                    activeDetails[m.ID] = latest;
-                }
-            }
+        //    foreach (var m in allMasters)
+        //    {
+        //        var latest = allDetails.Where(d => d.RegistrationID == m.ID).OrderByDescending(d => d.No).FirstOrDefault();
+        //        if (latest != null && latest.Status == 1 && latest.ActualReturnDate == null && latest.EndDate >= DateTime.Today)
+        //        {
+        //            activeMasters.Add(m);
+        //            activeDetails[m.ID] = latest;
+        //        }
+        //    }
 
-            var payload = new Dictionary<string, object>();
+        //    var payload = new Dictionary<string, object>();
 
-            var configs = _configRepo.GetAll();
-            payload["store_code"] = configs.Find(x => x.ConfigKey == "ESL_STORE_CODE")?.ConfigValue ?? "rtc01";
-            payload["is_base64"] = configs.Find(x => x.ConfigKey == "ESL_IS_BASE64")?.ConfigValue ?? "0";
-            payload["sign"] = configs.Find(x => x.ConfigKey == "ESL_SIGN")?.ConfigValue ?? "80805d794841f1b4";
-            payload["pc"] = barcode;
+        //    var configs = _configRepo.GetAll();
+        //    payload["store_code"] = configs.Find(x => x.ConfigKey == "ESL_STORE_CODE")?.ConfigValue ?? "rtc01";
+        //    payload["is_base64"] = configs.Find(x => x.ConfigKey == "ESL_IS_BASE64")?.ConfigValue ?? "0";
+        //    payload["sign"] = configs.Find(x => x.ConfigKey == "ESL_SIGN")?.ConfigValue ?? "80805d794841f1b4";
+        //    payload["pc"] = barcode;
 
-            var table1 = tables.FirstOrDefault(x => x.TableSide == 1);
-            var table2 = tables.FirstOrDefault(x => x.TableSide == 2);
+        //    var table1 = tables.FirstOrDefault(x => x.TableSide == 1);
+        //    var table2 = tables.FirstOrDefault(x => x.TableSide == 2);
 
-            payload["pn"] = table1?.TestTableName?.Replace(" - Mặt 1", "") ?? table2?.TestTableName?.Replace(" - Mặt 2", "") ?? "Bàn Test";
-            payload["extend"] = new object();
+        //    payload["pn"] = table1?.TestTableName?.Replace(" - Mặt 1", "") ?? table2?.TestTableName?.Replace(" - Mặt 2", "") ?? "Bàn Test";
+        //    payload["extend"] = new object();
 
-            void FillSide(int side, ESLTestTableRegistration reg, ESLTestTableRegistrationDetail det)
-            {
-                string empReg = "", empApp = "";
-                if (det != null)
-                {
-                    var rE = _employeeRepo.GetByID(det.OwnerID);
-                    var aE = _employeeRepo.GetByID(det.ApproverID);
-                    empReg = rE?.FullName ?? "";
-                    empApp = aE?.FullName ?? "";
-                }
+        //    void FillSide(int side, ESLTestTableRegistration reg, ESLTestTableRegistrationDetail det)
+        //    {
+        //        string empReg = "", empApp = "";
+        //        if (det != null)
+        //        {
+        //            var rE = _employeeRepo.GetByID(det.OwnerID);
+        //            var aE = _employeeRepo.GetByID(det.ApproverID);
+        //            empReg = rE?.FullName ?? "";
+        //            empApp = aE?.FullName ?? "";
+        //        }
 
-                int offset = side == 1 ? 0 : 14;
+        //        int offset = side == 1 ? 0 : 14;
 
-                payload[$"f{1 + offset}"] = reg != null ? (side == 1 ? (table1?.TestTableName ?? "Bàn 1") : (table2?.TestTableName ?? "Bàn 2")) : "";
-                payload[$"f{2 + offset}"] = reg?.ProjectCode ?? "";
-                payload[$"f{3 + offset}"] = reg?.RegistrationContent ?? "";
-                payload[$"f{4 + offset}"] = det != null ? det.StartDate.ToString("dd/MM/yyyy") : "";
-                payload[$"f{5 + offset}"] = det != null ? det.EndDate.ToString("dd/MM/yyyy") : "";
-                payload[$"f{6 + offset}"] = empReg;
-                payload[$"f{7 + offset}"] = empApp;
+        //        payload[$"f{1 + offset}"] = reg != null ? (side == 1 ? (table1?.TestTableName ?? "Bàn 1") : (table2?.TestTableName ?? "Bàn 2")) : "";
+        //        payload[$"f{2 + offset}"] = reg?.ProjectCode ?? "";
+        //        payload[$"f{3 + offset}"] = reg?.RegistrationContent ?? "";
+        //        payload[$"f{4 + offset}"] = det != null ? det.StartDate.ToString("dd/MM/yyyy") : "";
+        //        payload[$"f{5 + offset}"] = det != null ? det.EndDate.ToString("dd/MM/yyyy") : "";
+        //        payload[$"f{6 + offset}"] = empReg;
+        //        payload[$"f{7 + offset}"] = empApp;
 
-                for (int i = 8; i <= (side == 1 ? 14 : 13); i++)
-                {
-                    payload[$"f{i + offset}"] = "";
-                }
-            }
+        //        for (int i = 8; i <= (side == 1 ? 14 : 13); i++)
+        //        {
+        //            payload[$"f{i + offset}"] = "";
+        //        }
+        //    }
 
-            var reg1 = activeMasters.FirstOrDefault(x => table1 != null && x.TestTableID == table1.ID);
-            var det1 = reg1 != null ? activeDetails[reg1.ID] : null;
+        //    var reg1 = activeMasters.FirstOrDefault(x => table1 != null && x.TestTableID == table1.ID);
+        //    var det1 = reg1 != null ? activeDetails[reg1.ID] : null;
 
-            var reg2 = activeMasters.FirstOrDefault(x => table2 != null && x.TestTableID == table2.ID);
-            var det2 = reg2 != null ? activeDetails[reg2.ID] : null;
+        //    var reg2 = activeMasters.FirstOrDefault(x => table2 != null && x.TestTableID == table2.ID);
+        //    var det2 = reg2 != null ? activeDetails[reg2.ID] : null;
 
-            FillSide(1, reg1, det1);
-            FillSide(2, reg2, det2);
+        //    FillSide(1, reg1, det1);
+        //    FillSide(2, reg2, det2);
 
-            return await _eslBindService.UpdateProductAsync(payload);
-        }
+        //    return await _eslBindService.UpdateProductAsync(payload);
+        //}
 
 
         private async Task<ESLBindResponse> SyncESLProductAsync(string barcode)
@@ -932,7 +932,7 @@ namespace RERPAPI.Controllers.ESL
             foreach ( var table in tables)
             {
                 var exitEslInfor = listESLInformation.Where(x => x.EslCode.ToLower().Trim().Equals(table.Barcode.ToLower().Trim())).FirstOrDefault();
-                if (exitEslInfor != null && table.online != exitEslInfor.IsOnline)
+                if (exitEslInfor != null && (table.online != exitEslInfor.IsOnline || table.esl_battery != exitEslInfor.EslBattery))
                 {
                     table.online = exitEslInfor.IsOnline;
                     table.esl_battery = exitEslInfor.EslBattery;

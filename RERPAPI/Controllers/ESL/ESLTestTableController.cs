@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity.ESL;
 using System;
@@ -18,11 +19,14 @@ namespace RERPAPI.Controllers.ESL
         }
 
         [HttpGet("getall")]
-        public IActionResult GetAll()
+        public async Task<IActionResult> GetAll()
         {
             try
             {
-                var tables = _testTableRepo.GetAll(x => x.IsDeleted != true).ToList();
+                var param = new
+                {
+                };
+                var tables = await SqlDapper<object>.ProcedureToListTAsync("spGetESLTestTable", param);
                 return Ok(new
                 {
                     status = 1,
