@@ -169,5 +169,31 @@ namespace RERPAPI.Controllers.Systems
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        //Kiểm tra xem nhân viên có bật thông báo cho 1 mã cấu hình không
+        [HttpGet("check-notification")]
+        public IActionResult CheckNotification([FromQuery] string code, [FromQuery] int employeeId)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                var key = _configNotificationKeyRepo.GetAll(x => x.KeyCode == code && x.IsDeleted != true).FirstOrDefault();
+                if (key == null) return Ok(ApiResponseFactory.Success(true, "Không tìm thấy mã cấu hình, mặc định bật"));
+
+                var link = _configNotificationKeyLinkRepo.GetAll(x => x.ConfigNotificationKeyID == key.ID && x.EmployeeID == currentUser.EmployeeID&& x.IsActive!=true).FirstOrDefault();
+                if (link == null)
+                {
+                    // Nếu chưa có cài đặt thì mặc định là true như hàm GetByEmployee
+                    return Ok(ApiResponseFactory.Success(true, "Thành công"));
+                }
+
+                return Ok(ApiResponseFactory.Success(link.IsActive, "Thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 }
