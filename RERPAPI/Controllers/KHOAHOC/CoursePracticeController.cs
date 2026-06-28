@@ -627,6 +627,7 @@ namespace RERPAPI.Controllers.KHOAHOC
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
+                var canViewAll = currentUser.Permissions.Contains("N102");
                 var param = new
                 {
                     CourseCatalogID = 0,
@@ -731,7 +732,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                     // 1. Là bài đầu danh mục HOẶC bài trước đã hoàn thành
                     // 2. VÀ thỏa điều kiện hiện tại (Evaluate == 1, IsLeader, IsAdmin...)
                     if ((isFirstInCatalog || prevCompleted)
-                        || (currentUser.IsLeader > 0 || currentUser.IsAdmin))
+                        || (currentUser.IsLeader > 0 || currentUser.IsAdmin) || canViewAll)
                     {
                         course.Status = 1;
                     }
