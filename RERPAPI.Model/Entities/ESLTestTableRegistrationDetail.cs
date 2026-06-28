@@ -74,6 +74,4 @@ public partial class ESLTestTableRegistrationDetail
     /// Trạng thái xóa
     /// </summary>
     public bool? IsDeleted { get; set; }
-
-    public virtual ESLTestTableRegistration Registration { get; set; } = null!;
 }

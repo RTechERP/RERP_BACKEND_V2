@@ -1310,6 +1310,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<VehicleManagement> VehicleManagements { get; set; }
 
+    public virtual DbSet<VehicleRentalRequest> VehicleRentalRequests { get; set; }
+
     public virtual DbSet<VehicleRepair> VehicleRepairs { get; set; }
 
     public virtual DbSet<VehicleRepairHistory> VehicleRepairHistories { get; set; }
@@ -3866,11 +3868,6 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedDate)
                 .HasComment("Ngày cập nhật")
                 .HasColumnType("datetime");
-
-            entity.HasOne(d => d.TestTable).WithMany(p => p.ESLTestTableRegistrations)
-                .HasForeignKey(d => d.TestTableID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_ESLRegistration_TestTable");
         });
 
         modelBuilder.Entity<ESLTestTableRegistrationDetail>(entity =>
@@ -3910,11 +3907,6 @@ public partial class RTCContext : DbContext
                 .HasDefaultValue(0)
                 .HasComment("0=Chờ duyệt, 1=Đã duyệt, 2=Từ chối");
             entity.Property(e => e.Type).HasComment(" 1=Đăng ký mới, 2=Gia hạn, 3=Bàn giao");
-
-            entity.HasOne(d => d.Registration).WithMany(p => p.ESLTestTableRegistrationDetails)
-                .HasForeignKey(d => d.RegistrationID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Detail_Registration");
         });
 
         modelBuilder.Entity<ESLTestTableRegistrationLog>(entity =>
@@ -3939,10 +3931,6 @@ public partial class RTCContext : DbContext
                 .HasComment("Ghi chú");
             entity.Property(e => e.OldStatus).HasComment("Trạng thái cũ");
             entity.Property(e => e.RegistrationID).HasComment("ID của đơn đăng ký master");
-
-            entity.HasOne(d => d.Registration).WithMany(p => p.ESLTestTableRegistrationLogs)
-                .HasForeignKey(d => d.RegistrationID)
-                .HasConstraintName("FK_ESLTestTableRegistrationLog_Registration");
         });
 
         modelBuilder.Entity<EconomicContract>(entity =>
@@ -14979,6 +14967,66 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.VehicleName).HasMaxLength(500);
         });
 
+        modelBuilder.Entity<VehicleRentalRequest>(entity =>
+        {
+            entity.ToTable("VehicleRentalRequest", tb => tb.HasComment("Bảng lưu thông tin yêu cầu thuê xe vận chuyển"));
+
+            entity.Property(e => e.ID).HasComment("ID tự tăng");
+            entity.Property(e => e.AddressLocation)
+                .HasMaxLength(550)
+                .HasComment("Địa điểm cần đến");
+            entity.Property(e => e.Cost)
+                .HasComment("Chi phí")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người tạo");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo")
+                .HasColumnType("datetime");
+            entity.Property(e => e.DateRequest)
+                .HasComment("Ngày yêu cầu")
+                .HasColumnType("datetime");
+            entity.Property(e => e.DepartmentID).HasComment("ID phòng ban");
+            entity.Property(e => e.DepartureLocation)
+                .HasMaxLength(550)
+                .HasComment("Địa điểm xuất phát");
+            entity.Property(e => e.DistanceKm)
+                .HasComment("Khoảng cách (km)")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.EmployeeID).HasComment("ID người đặt");
+            entity.Property(e => e.EmployeeRequestID).HasComment("ID nhân viên yêu cầu");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái xóa mềm (0: Chưa xóa, 1: Đã xóa)");
+            entity.Property(e => e.NameNCC)
+                .HasMaxLength(550)
+                .HasComment("Tên đơn vị vận chuyển");
+            entity.Property(e => e.Note).HasComment("Ghi chú");
+            entity.Property(e => e.PackageHeightCm)
+                .HasComment("Chiều cao gói hàng (cm)")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.PackageLengthCm)
+                .HasComment("Chiều dài gói hàng (cm)")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.PackageName)
+                .HasMaxLength(550)
+                .HasComment("Tên gói hàng");
+            entity.Property(e => e.PackageQuantity).HasComment("Số lượng kiện hàng");
+            entity.Property(e => e.PackageWeightKg)
+                .HasComment("Cân nặng gói hàng (kg)")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.PackageWidthCm)
+                .HasComment("Chiều rộng gói hàng (cm)")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.ProjectID).HasComment("ID dự án");
+            entity.Property(e => e.STT).HasComment("Số thứ tự");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người cập nhật");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật")
+                .HasColumnType("datetime");
+        });
+
         modelBuilder.Entity<VehicleRepair>(entity =>
         {
             entity.HasKey(e => e.ID).HasName("PK__VehicleR__3214EC279FA9CAF0");
@@ -15346,6 +15394,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.Money).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.MoneyDate).HasColumnType("datetime");
             entity.Property(e => e.MoneyVAT).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.ReceivedDatePO).HasColumnType("datetime");
             entity.Property(e => e.VAT).HasColumnType("decimal(18, 2)");
         });
 
