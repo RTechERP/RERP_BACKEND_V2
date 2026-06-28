@@ -76,8 +76,8 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
             try
             {
                 string procedureName = "spGetFlightBookingManagement";
-                string[] paramNames = new string[] { "@StartDate", "@EndDate", "@Keyword", "@EmployeeID", "@ProjectID" };
-                object[] paramValues = new object[] { request.StartDate, request.EndDate, request.Keyword ?? "", request.EmployeeID ?? 0, request.ProjectID ?? 0 };
+                string[] paramNames = new string[] { "@StartDate", "@EndDate", "@Keyword", "@EmployeeID", "@ProjectID", "@EmployeeBookerID" };
+                object[] paramValues = new object[] { request.StartDate, request.EndDate, request.Keyword ?? "", request.EmployeeID ?? 0, request.ProjectID ?? 0, request.EmployeeBookerID ??0};
 
                 var data = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
                 var result = SQLHelper<object>.GetListData(data, 0);
@@ -256,6 +256,32 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
             }
         }
 
+        [HttpPost("get-historical-suggestions")]
+        public IActionResult GetHistoricalSuggestions()
+        {
+            try
+            {
+                var query = from m in _flightBookingManagementRepo.GetAll(x => x.IsDeleted == false || x.IsDeleted == null)
+                            join p in _flightBookingProposalRepo.GetAll(x => x.IsDeleted == false || x.IsDeleted == null)
+                            on m.ID equals p.FlightBookingManagementID into mp
+                            from p in mp.DefaultIfEmpty()
+                            select new
+                            {
+                                DepartureAddress = m.DepartureAddress,
+                                ArrivesAddress = m.ArrivesAddress,
+                                Airline = p != null ? p.Airline : null,
+                                Baggage = p != null ? p.Baggage : null
+                            };
+
+                var data = query.Distinct().ToList();
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpPost("ExportExcel")]
         public IActionResult ExportExcel([FromBody] FlightBookingRequestParam request)
         {
@@ -269,13 +295,14 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
 
                 var dt = SQLHelper<dynamic>.ProcedureToList(
                     "spGetFlightBookingExportExcel",
-                    new string[] { "@StartDate", "@EndDate", "@Keyword", "@ProjectID", "@SelectedIDs" },
+                    new string[] { "@StartDate", "@EndDate", "@Keyword", "@ProjectID", "@SelectedIDs", "@EmployeeBookerID" },
                     new object[] {
                         request.StartDate ?? (object)DBNull.Value,
                         request.EndDate ?? (object)DBNull.Value,
                         request.Keyword ?? "",
                         request.ProjectID ?? 0,
-                        selectedIDsStr
+                        selectedIDsStr,
+                        request.EmployeeBookerID ?? (object)DBNull.Value
                     }
                 );
 

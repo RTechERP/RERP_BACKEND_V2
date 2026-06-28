@@ -115,12 +115,18 @@ namespace RERPAPI.Controllers.HRM
         {
             try
             {
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                    var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser _currentUser = ObjectMapper.GetCurrentUser(claims);
 
                 bool isHr = _currentUser.Permissions
                             .Split(',')
                             .Any(p => p.Trim() == "N1" || p.Trim() == "N2" || p.Trim() == "N94") || _currentUser.IsAdmin;
+                int loginDepartmentID = -1;
+
+                if (!isHr)
+                {
+                    loginDepartmentID = _currentUser.DepartmentID;
+                }
 
                 var param = new
                 {
@@ -131,18 +137,13 @@ namespace RERPAPI.Controllers.HRM
                     DateStart = dateStart,
                     DateEnd = dateEnd,
                     FilterText = keyword?.Trim(),
+                    LoginDepartmentID= loginDepartmentID
                 };
                 var result = await SqlDapper<dynamic>.ProcedureToListAsync("spGetHrRecruitmentCandidate", param);
 
                 var dtMaster = ((IEnumerable<dynamic>)result).ToList();
 
-                if (!isHr)
-                {
-                    dtMaster = dtMaster
-                        .Where(x => x.EmployeeRequestID == _currentUser.EmployeeID || x.InterviewerID == _currentUser.EmployeeID)
-                        .ToList();
-                }
-
+             
                 return Ok(ApiResponseFactory.Success(dtMaster, null));
             }
             catch (Exception ex)
@@ -580,9 +581,12 @@ namespace RERPAPI.Controllers.HRM
                 bool isHr = _currentUser.Permissions
                             .Split(',')
                             .Any(p => p.Trim() == "N1" || p.Trim() == "N2" || p.Trim() == "N94") || _currentUser.IsAdmin;
-
+                int loginDepartmentID = -1;
                 int empReqId = isHr ? -1 : _currentUser.EmployeeID;
-
+                if(!isHr)
+                {
+                    loginDepartmentID = _currentUser.DepartmentID;
+                }    
                 var param = new
                 {
                     ID = id ?? 0,
@@ -591,7 +595,8 @@ namespace RERPAPI.Controllers.HRM
                     DepartmentID = departmentId ?? 0,
                     DateStart = dateStart,
                     DateEnd = dateEnd,
-                    FilterText = keyword?.Trim() ?? ""
+                    FilterText = keyword?.Trim() ?? "",
+                    LoginDepartmentID = loginDepartmentID
                 };
 
                 var data = await SqlDapper<dynamic>.ProcedureToListAsync("spGetHrRecruitmentCandidateSummaryMaster", param);
