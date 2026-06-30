@@ -994,6 +994,7 @@ namespace RERPAPI.Controllers.KPISale
                         source.DateColumn,
                         source.EmployeeColumn,
                         source.ValueColumn,
+                        source.UseEmployeeID,
                         source.IsActive
                     };
 
@@ -1025,6 +1026,7 @@ namespace RERPAPI.Controllers.KPISale
                 request.DateColumn = request.DateColumn.Trim();
                 request.EmployeeColumn = NormalizeNullableIdentifier(request.EmployeeColumn);
                 request.ValueColumn = NormalizeNullableIdentifier(request.ValueColumn);
+                request.UseEmployeeID = request.UseEmployeeID;
                 request.IsActive = true;
 
                 await _kpiSaleRepo.KPISaleDataSources.AddAsync(request);
@@ -1055,6 +1057,7 @@ namespace RERPAPI.Controllers.KPISale
                 model.DateColumn = request.DateColumn.Trim();
                 model.EmployeeColumn = NormalizeNullableIdentifier(request.EmployeeColumn);
                 model.ValueColumn = NormalizeNullableIdentifier(request.ValueColumn);
+                model.UseEmployeeID = request.UseEmployeeID;
                 model.IsActive = request.IsActive;
 
                 await _kpiSaleRepo.SaveChangesAsync();
@@ -5355,7 +5358,17 @@ namespace RERPAPI.Controllers.KPISale
             whereParts.Add($"{QuoteIdentifier(source.DateColumn)} < {AddParameter(runtime.Period.DateEnd.AddDays(1).ToDateTime(TimeOnly.MinValue))}");
 
             if (!string.IsNullOrWhiteSpace(source.EmployeeColumn))
-                whereParts.Add($"{QuoteIdentifier(source.EmployeeColumn)} = {AddParameter(runtime.Request.EmployeeID)}");
+            {
+                // Nếu UseEmployeeID = true, cần resolve EmployeeID từ UserID
+                var employeeIdValue = runtime.Request.EmployeeID;
+                if (source.UseEmployeeID)
+                {
+                    var employee = _employeeRepo.GetAll(e => e.UserID == runtime.Request.EmployeeID).FirstOrDefault();
+                    if (employee != null && employee.ID > 0)
+                        employeeIdValue = employee.ID;
+                }
+                whereParts.Add($"{QuoteIdentifier(source.EmployeeColumn)} = {AddParameter(employeeIdValue)}");
+            }
 
             var softDeleteSql = BuildSoftDeleteFilterSql(columnMap);
             if (!string.IsNullOrWhiteSpace(softDeleteSql))
