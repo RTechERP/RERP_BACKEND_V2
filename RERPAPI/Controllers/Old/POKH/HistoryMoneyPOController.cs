@@ -175,10 +175,11 @@ namespace RERPAPI.Controllers.Old.POKH
                     worksheet.Cell(1, 4).Value = "Ghi chú";
                     worksheet.Cell(1, 5).Value = "Ngân hàng";
                     worksheet.Cell(1, 6).Value = "Số hóa đơn";
-                    worksheet.Cell(1, 7).Value = "Người phụ trách";
-                    worksheet.Cell(1, 8).Value = "Team";
-                    worksheet.Cell(1, 9).Value = "VAT (%)";
-                    worksheet.Cell(1, 10).Value = "Tiền trước VAT";
+                    worksheet.Cell(1, 7).Value = "Người phụ trách (Admin)";
+                    worksheet.Cell(1, 8).Value = "Người phụ trách (PM)";
+                    worksheet.Cell(1, 9).Value = "Team";
+                    worksheet.Cell(1, 10).Value = "VAT (%)";
+                    worksheet.Cell(1, 11).Value = "Tiền trước VAT";
 
                     int row = 2;
                     foreach (var item in data)
@@ -197,14 +198,15 @@ namespace RERPAPI.Controllers.Old.POKH
                         worksheet.Cell(row, 5).Value = dict.ContainsKey("BankName") && dict["BankName"] != null ? dict["BankName"].ToString() : "";
                         worksheet.Cell(row, 6).Value = dict.ContainsKey("InvoiceNo") && dict["InvoiceNo"] != null ? dict["InvoiceNo"].ToString() : "";
                         worksheet.Cell(row, 7).Value = dict.ContainsKey("EmployeeName") && dict["EmployeeName"] != null ? dict["EmployeeName"].ToString() : "";
-                        worksheet.Cell(row, 8).Value = dict.ContainsKey("TeamSaleName") && dict["TeamSaleName"] != null ? dict["TeamSaleName"].ToString() : "";
-                        worksheet.Cell(row, 9).Value = dict.ContainsKey("VAT") && dict["VAT"] != null ? Convert.ToDecimal(dict["VAT"]) : 0;
-                        worksheet.Cell(row, 10).Value = dict.ContainsKey("MoneyVAT") && dict["MoneyVAT"] != null ? Convert.ToDecimal(dict["MoneyVAT"]) : 0;
+                        worksheet.Cell(row, 8).Value = dict.ContainsKey("PMEmployeeName") && dict["PMEmployeeName"] != null ? dict["PMEmployeeName"].ToString() : "";
+                        worksheet.Cell(row, 9).Value = dict.ContainsKey("TeamSaleName") && dict["TeamSaleName"] != null ? dict["TeamSaleName"].ToString() : "";
+                        worksheet.Cell(row, 10).Value = dict.ContainsKey("VAT") && dict["VAT"] != null ? Convert.ToDecimal(dict["VAT"]) : 0;
+                        worksheet.Cell(row, 11).Value = dict.ContainsKey("MoneyVAT") && dict["MoneyVAT"] != null ? Convert.ToDecimal(dict["MoneyVAT"]) : 0;
 
                         row++;
                     }
 
-                    var rngHeaders = worksheet.Range("A1:J1");
+                    var rngHeaders = worksheet.Range("A1:K1");
                     rngHeaders.Style.Font.Bold = true;
                     rngHeaders.Style.Fill.BackgroundColor = XLColor.LightGray;
 
@@ -218,7 +220,7 @@ namespace RERPAPI.Controllers.Old.POKH
                     if (row > 2)
                     {
                         worksheet.Range($"C2:C{row - 1}").Style.NumberFormat.Format = "#,##0";
-                        worksheet.Range($"J2:J{row - 1}").Style.NumberFormat.Format = "#,##0";
+                        worksheet.Range($"K2:K{row - 1}").Style.NumberFormat.Format = "#,##0";
                     }
 
                     worksheet.Columns().AdjustToContents();
@@ -266,10 +268,11 @@ namespace RERPAPI.Controllers.Old.POKH
                     worksheet.Cell(1, 6).Value = "Ghi chú";
                     worksheet.Cell(1, 7).Value = "Ngân hàng";
                     worksheet.Cell(1, 8).Value = "Số hóa đơn";
-                    worksheet.Cell(1, 9).Value = "Người phụ trách";
-                    worksheet.Cell(1, 10).Value = "Team";
-                    worksheet.Cell(1, 11).Value = "VAT (%)";
-                    worksheet.Cell(1, 12).Value = "Tiền trước VAT";
+                    worksheet.Cell(1, 9).Value = "Người phụ trách (Admin)";
+                    worksheet.Cell(1, 10).Value = "Người phụ trách (PM)";
+                    worksheet.Cell(1, 11).Value = "Team";
+                    worksheet.Cell(1, 12).Value = "VAT (%)";
+                    worksheet.Cell(1, 13).Value = "Tiền trước VAT";
 
                     int row = 2;
                     foreach (var item in data)
@@ -290,18 +293,19 @@ namespace RERPAPI.Controllers.Old.POKH
                         worksheet.Cell(row, 7).Value = dict.ContainsKey("BankName") && dict["BankName"] != null ? dict["BankName"].ToString() : "";
                         worksheet.Cell(row, 8).Value = dict.ContainsKey("InvoiceNo") && dict["InvoiceNo"] != null ? dict["InvoiceNo"].ToString() : "";
                         worksheet.Cell(row, 9).Value = dict.ContainsKey("EmployeeName") && dict["EmployeeName"] != null ? dict["EmployeeName"].ToString() : "";
-                        worksheet.Cell(row, 10).Value = dict.ContainsKey("TeamSaleName") && dict["TeamSaleName"] != null ? dict["TeamSaleName"].ToString() : "";
-                        worksheet.Cell(row, 11).Value = dict.ContainsKey("VAT") && dict["VAT"] != null ? Convert.ToDecimal(dict["VAT"]) : 0;
-                        worksheet.Cell(row, 12).Value = dict.ContainsKey("MoneyVAT") && dict["MoneyVAT"] != null ? Convert.ToDecimal(dict["MoneyVAT"]) : 0;
+                        worksheet.Cell(row, 10).Value = dict.ContainsKey("PMEmployeeName") && dict["PMEmployeeName"] != null ? dict["PMEmployeeName"].ToString() : "";
+                        worksheet.Cell(row, 11).Value = dict.ContainsKey("TeamSaleName") && dict["TeamSaleName"] != null ? dict["TeamSaleName"].ToString() : "";
+                        worksheet.Cell(row, 12).Value = dict.ContainsKey("VAT") && dict["VAT"] != null ? Convert.ToDecimal(dict["VAT"]) : 0;
+                        worksheet.Cell(row, 13).Value = dict.ContainsKey("MoneyVAT") && dict["MoneyVAT"] != null ? Convert.ToDecimal(dict["MoneyVAT"]) : 0;
 
                         row++;
                     }
 
-                    var rngHeaders = worksheet.Range("A1:L1");
+                    var rngHeaders = worksheet.Range("A1:M1");
                     rngHeaders.Style.Font.Bold = true;
                     rngHeaders.Style.Fill.BackgroundColor = XLColor.LightGray;
 
-                    var rngTable = worksheet.Range($"A1:L{Math.Max(row - 1, 1)}");
+                    var rngTable = worksheet.Range($"A1:M{Math.Max(row - 1, 1)}");
                     rngTable.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
                     rngTable.Style.Border.TopBorder = XLBorderStyleValues.Thin;
                     rngTable.Style.Border.LeftBorder = XLBorderStyleValues.Thin;
@@ -311,7 +315,7 @@ namespace RERPAPI.Controllers.Old.POKH
                     if (row > 2)
                     {
                         worksheet.Range($"E2:E{row - 1}").Style.NumberFormat.Format = "#,##0";
-                        worksheet.Range($"L2:L{row - 1}").Style.NumberFormat.Format = "#,##0";
+                        worksheet.Range($"M2:M{row - 1}").Style.NumberFormat.Format = "#,##0";
                     }
 
                     worksheet.Columns().AdjustToContents();
@@ -412,14 +416,17 @@ namespace RERPAPI.Controllers.Old.POKH
 
             try
             {
-                if (dto.listIdsDel.Count > 0)
+                if (dto.listIdsDel != null && dto.listIdsDel.Count > 0)
                 {
                     foreach (int id in dto.listIdsDel)
                     {
                         HistoryMoneyPO modelDel = await _historyMoneyPORepo.GetByIDAsync(id);
-                        modelDel.IsDeleted = true;
-                        modelDel.UpdatedDate = DateTime.Now;
-                        await _historyMoneyPORepo.UpdateAsync(modelDel);
+                        if (modelDel != null)
+                        {
+                            modelDel.IsDeleted = true;
+                            modelDel.UpdatedDate = DateTime.Now;
+                            await _historyMoneyPORepo.UpdateAsync(modelDel);
+                        }
                     }
                 }
 
@@ -437,16 +444,19 @@ namespace RERPAPI.Controllers.Old.POKH
                     model.ProductID = item.ProductID;
                     model.IsFilm = item.IsFilm;
                     model.UserID = item.UserID;
+                    model.PMUserID = item.PMUserID;
 
-                    // Update RecivedMoneyDate
+                    // Update RecivedMoneyDate for the specific POKHDetail
                     if (model.MoneyDate.HasValue)
                     {
-                        POKHDetail pokhDetailModel = await _pokhDetailRepo.GetByIDAsync(dto.pokhDetailId);
+                        // Use item.POKHDetailID if available, otherwise fallback to dto.pokhDetailId
+                        int targetPOKHDetailId = item.POKHDetailID > 0 ? item.POKHDetailID ?? 0 : dto.pokhDetailId;
+                        POKHDetail pokhDetailModel = await _pokhDetailRepo.GetByIDAsync(targetPOKHDetailId);
                         if (pokhDetailModel != null)
                         {
                             pokhDetailModel.RecivedMoneyDate = model.MoneyDate;
+                            await _pokhDetailRepo.UpdateAsync(pokhDetailModel);
                         }
-                        await _pokhDetailRepo.UpdateAsync(pokhDetailModel);
                     }
 
                     if (item.ID > 0)
@@ -455,62 +465,70 @@ namespace RERPAPI.Controllers.Old.POKH
                     }
                     else
                     {
-                        model.POKHID = dto.pokhId;
-                        model.POKHDetailID = dto.pokhDetailId;
+                        // Use item.POKHDetailID and item.POKHID if available, otherwise fallback to dto
+                        model.POKHID = item.POKHID > 0 ? item.POKHID : dto.pokhId;
+                        model.POKHDetailID = item.POKHDetailID > 0 ? item.POKHDetailID : dto.pokhDetailId;
                         await _historyMoneyPORepo.CreateAsync(model);
                     }
                 }
 
-                // ===== Update PO =====
-                RERPAPI.Model.Entities.POKH po = await _pokhRepo.GetByIDAsync(dto.pokhId);
-                if (po == null)
-                    return BadRequest("Không tìm thấy POKH.");
-
-                decimal totalReceive = _historyMoneyPORepo.GetAll(x => x.POKHID == dto.pokhId).Sum(x => x.Money ?? 0);
-
-                po.ReceiveMoney = totalReceive;
-
-                // Logic trạng thái giống Winform
-                if (totalReceive > 0)
+                // ===== Update PO (for single PO save) =====
+                // Only update PO when saving for a single POKHDetail
+                if (dto.pokhId > 0 && dto.pokhDetailId > 0)
                 {
-                    po.IsPay = true;
+                    RERPAPI.Model.Entities.POKH po = await _pokhRepo.GetByIDAsync(dto.pokhId);
+                    if (po != null)
+                    {
+                        decimal totalReceive = _historyMoneyPORepo.GetAll(x => x.POKHID == dto.pokhId).Sum(x => x.Money ?? 0);
 
-                    if (po.IsPay == true && po.IsExport == true && po.IsBill == true)
-                        po.Status = 1;
-                    else if (po.IsPay != true && po.IsExport == true)
-                        po.Status = 3;
-                    else if (po.IsPay != true && po.IsExport != true)
-                        po.Status = 0;
-                    else if (po.IsPay == true && po.IsExport != true)
-                        po.Status = 2;
-                    else if (po.IsPay == true && po.IsExport == true && po.IsBill != true)
-                        po.Status = 4;
-                    else if (po.IsShip == true && po.IsExport != true)
-                        po.Status = 5;
+                        po.ReceiveMoney = totalReceive;
+
+                        // Logic trạng thái giống Winform
+                        if (totalReceive > 0)
+                        {
+                            po.IsPay = true;
+
+                            if (po.IsPay == true && po.IsExport == true && po.IsBill == true)
+                                po.Status = 1;
+                            else if (po.IsPay != true && po.IsExport == true)
+                                po.Status = 3;
+                            else if (po.IsPay != true && po.IsExport != true)
+                                po.Status = 0;
+                            else if (po.IsPay == true && po.IsExport != true)
+                                po.Status = 2;
+                            else if (po.IsPay == true && po.IsExport == true && po.IsBill != true)
+                                po.Status = 4;
+                            else if (po.IsShip == true && po.IsExport != true)
+                                po.Status = 5;
+                        }
+
+                        // PaymentStatus
+                        if (po.IsPay == true)
+                        {
+                            if (po.ReceiveMoney > 0 && po.ReceiveMoney < po.TotalMoneyPO)
+                                po.PaymentStatus = 2;
+                            else if (po.TotalMoneyPO - po.ReceiveMoney <= 0)
+                                po.PaymentStatus = 3;
+                        }
+                        else
+                        {
+                            po.PaymentStatus = 1;
+                        }
+
+                        po.DeliveryStatus = 1;
+
+                        await _pokhRepo.UpdateAsync(po);
+
+                        decimal totalMoney = dto.totalMoneyIncludeVAT;
+
+                        decimal totalMoneyRemaining = totalMoney - totalReceive;
+
+                        return Ok(ApiResponseFactory.Success(new { TotalMoneyRemaining = totalMoneyRemaining }, "Lưu thành công"));
+                    }
                 }
 
-                // PaymentStatus
-                if (po.IsPay == true)
-                {
-                    if (po.ReceiveMoney > 0 && po.ReceiveMoney < po.TotalMoneyPO)
-                        po.PaymentStatus = 2;
-                    else if (po.TotalMoneyPO - po.ReceiveMoney <= 0)
-                        po.PaymentStatus = 3;
-                }
-                else
-                {
-                    po.PaymentStatus = 1;
-                }
-
-                po.DeliveryStatus = 1;
-
-                await _pokhRepo.UpdateAsync(po);
-
-                decimal totalMoney = dto.totalMoneyIncludeVAT;
-
-                decimal totalMoneyRemaining = totalMoney - totalReceive;
-
-                return Ok(ApiResponseFactory.Success(new { TotalMoneyRemaining = totalMoneyRemaining }, "Lưu thành công"));
+                // For multi-POKHDetail save, return success without updating PO
+                return Ok(ApiResponseFactory.Success(new { TotalMoneyRemaining = 0 }, "Lưu thành công"));
             }
             catch (Exception ex)
             {
