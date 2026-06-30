@@ -718,6 +718,9 @@ builder.Services.AddScoped<ESLTestTableRegistrationRepo>();
 builder.Services.AddScoped<ESLTestTableRegistrationLogRepo>();
 builder.Services.AddScoped<ESLTestTableRegistrationDetailRepo>();
 builder.Services.AddScoped<ESLConfigRepo>();
+
+builder.Services.AddScoped<VehicleRentalRequestRepo>();
+
 builder.Services.AddHttpClient<IESLBindService, ESLBindService>();
 #region DI LOG
 
