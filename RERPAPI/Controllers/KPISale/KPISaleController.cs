@@ -309,6 +309,117 @@ namespace RERPAPI.Controllers.KPISale
             }
         }
 
+        [HttpPost("templates/copy")]
+        public async Task<IActionResult> CopyTemplate([FromBody] KPISaleCopyTemplateRequest request)
+        {
+            try
+            {
+                if (request == null)
+                    throw new Exception("Dữ liệu copy không được để trống");
+
+                if (request.SourceTemplateID <= 0)
+                    throw new Exception("Vui lòng chọn mẫu nguồn");
+
+                if (request.TargetTemplateID <= 0)
+                    throw new Exception("Vui lòng chọn mẫu đích");
+
+                if (request.TargetTemplateID == request.SourceTemplateID)
+                    throw new Exception("Mẫu nguồn và mẫu đích không được trùng nhau");
+
+                var result = await CopyTemplateInternalAsync(request);
+                return Ok(ApiResponseFactory.Success(result,
+                    $"Đã sao chép {result.CopiedIndexCount} chỉ tiêu sang mẫu \"{result.TargetTemplateName}\""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        private async Task<KPISaleCopyTemplateResponse> CopyTemplateInternalAsync(KPISaleCopyTemplateRequest request)
+        {
+            var sourceTemplate = await _kpiSaleRepo.KPISaleTemplates.AsNoTracking()
+                .FirstOrDefaultAsync(t => t.ID == request.SourceTemplateID)
+                    ?? throw new Exception("Không tìm thấy mẫu nguồn");
+
+            var targetTemplate = await _kpiSaleRepo.KPISaleTemplates.AsNoTracking()
+                .FirstOrDefaultAsync(t => t.ID == request.TargetTemplateID)
+                    ?? throw new Exception("Không tìm thấy mẫu đích");
+
+            var currentUser = GetCurrentUser();
+            int copiedCount = 0;
+            var newIndexIds = new List<int>();
+
+            if (request.CopyIndexes)
+            {
+                var sourceIndexesQuery = _kpiSaleRepo.KPISaleIndices.AsNoTracking()
+                    .Where(x => x.TemplateID == request.SourceTemplateID);
+
+                if (!request.IncludeInactiveIndexes)
+                    sourceIndexesQuery = sourceIndexesQuery.Where(x => x.IsActive);
+
+                var sourceIndexes = await sourceIndexesQuery
+                    .OrderBy(x => x.SortOrder)
+                    .ThenBy(x => x.ID)
+                    .ToListAsync();
+
+                if (sourceIndexes.Count > 0)
+                {
+                    // Remap ParentID: sắp xếp parent trước rồi insert để idMap luôn có sẵn
+                    var idMap = new Dictionary<int, int>();
+                    var sortedIndexes = sourceIndexes
+                        .OrderBy(x => x.ParentID.HasValue ? 1 : 0)
+                        .ThenBy(x => x.SortOrder)
+                        .ThenBy(x => x.ID)
+                        .ToList();
+
+                    foreach (var src in sortedIndexes)
+                    {
+                        int? newParentId = null;
+                        if (src.ParentID.HasValue && idMap.TryGetValue(src.ParentID.Value, out var mapped))
+                            newParentId = mapped;
+
+                        var clone = new KPISaleIndex
+                        {
+                            ID = 0,
+                            TemplateID = request.TargetTemplateID,
+                            ParentID = newParentId,
+                            IndexCode = src.IndexCode,
+                            IndexName = src.IndexName,
+                            IndexType = src.IndexType,
+                            UnitType = src.UnitType,
+                            WeightPercent = src.WeightPercent,
+                            QuarterGoalCalculateType = src.QuarterGoalCalculateType,
+                            QuarterResultCalculateType = src.QuarterResultCalculateType,
+                            ReportScoreAdjustmentType = src.ReportScoreAdjustmentType,
+                            ReportScoreValue = src.ReportScoreValue,
+                            SortOrder = src.SortOrder,
+                            IsBold = src.IsBold,
+                            IsMainIndex = src.IsMainIndex,
+                            IsActive = src.IsActive,
+                            CreatedBy = currentUser.LoginName,
+                            CreatedDate = DateTime.Now,
+                            UpdatedBy = null,
+                            UpdatedDate = null,
+                        };
+                        await _kpiSaleRepo.KPISaleIndices.AddAsync(clone);
+                        await _kpiSaleRepo.SaveChangesAsync();
+                        idMap[src.ID] = clone.ID;
+                        newIndexIds.Add(clone.ID);
+                        copiedCount++;
+                    }
+                }
+            }
+
+            return new KPISaleCopyTemplateResponse
+            {
+                TargetTemplateID = request.TargetTemplateID,
+                TargetTemplateName = targetTemplate.TemplateName,
+                CopiedIndexCount = copiedCount,
+                NewIndexIDs = newIndexIds,
+            };
+        }
+
         #endregion Template
 
         #region Index
@@ -2956,7 +3067,9 @@ namespace RERPAPI.Controllers.KPISale
 
             var teamId = team.ID;
 
-            // 2. Tính KPI cho từng employee (không lưu DB cá nhân, chỉ lấy items)
+            // 2. Tính KPI cho từng employee
+            //    - Nếu RecalcPerEmployee=true: gọi CalculateInternalAsync với SaveSnapshot=true để lưu lại data cá nhân
+            //    - Nếu RecalcPerEmployee=false: chỉ lấy kết quả tạm (không lưu), dùng cho việc tổng hợp team
             var perEmployeeResults = new List<KPISaleCalculateResponse>();
             foreach (var empId in request.EmployeeIDs)
             {
@@ -2966,7 +3079,7 @@ namespace RERPAPI.Controllers.KPISale
                     PeriodID = request.PeriodID,
                     TemplateID = request.TemplateID,
                     DepartmentID = request.DepartmentID,
-                    SaveSnapshot = false,
+                    SaveSnapshot = request.RecalcPerEmployee,
                     ReportAdjustments = new List<KPISaleReportAdjustmentInputDto>()
                 };
                 perEmployeeResults.Add(await CalculateInternalAsync(singleRequest));
@@ -3583,12 +3696,12 @@ namespace RERPAPI.Controllers.KPISale
                             personalTotalSales, personalTotalRevenue,
                             personalNewAccountCount, personalNewAccountCount * newAccountBonusAmount));
 
-                        // Dòng 2: LEADER — data cả team
+                        // Dòng 2: LEADER — data cả team (không tính thưởng new account)
                         empMetrics.Add((empId, employeeCode, employeeName,
                             teamCodeByEmp.GetValueOrDefault(empId) ?? mapping?.TeamCode ?? "",
                             "LEADER", achievementPercent, coefficient,
                             totalSales, totalRevenue,
-                            newAccountCount, newAccountBonus));
+                            newAccountCount, 0));
                     }
                     else
                     {
