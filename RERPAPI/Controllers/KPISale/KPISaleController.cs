@@ -327,8 +327,11 @@ namespace RERPAPI.Controllers.KPISale
                     throw new Exception("Mẫu nguồn và mẫu đích không được trùng nhau");
 
                 var result = await CopyTemplateInternalAsync(request);
-                return Ok(ApiResponseFactory.Success(result,
-                    $"Đã sao chép {result.CopiedIndexCount} chỉ tiêu sang mẫu \"{result.TargetTemplateName}\""));
+                var message = $"Đã sao chép {result.CopiedIndexCount} chỉ tiêu";
+                if (result.CopiedMappingCount > 0)
+                    message += $" và {result.CopiedMappingCount} ánh xạ";
+                message += $" sang mẫu \"{result.TargetTemplateName}\"";
+                return Ok(ApiResponseFactory.Success(result, message));
             }
             catch (Exception ex)
             {
@@ -348,7 +351,11 @@ namespace RERPAPI.Controllers.KPISale
 
             var currentUser = GetCurrentUser();
             int copiedCount = 0;
+            int copiedMappingCount = 0;
             var newIndexIds = new List<int>();
+
+            // idMap: source IndexID -> new IndexID
+            var idMap = new Dictionary<int, int>();
 
             if (request.CopyIndexes)
             {
@@ -366,7 +373,6 @@ namespace RERPAPI.Controllers.KPISale
                 if (sourceIndexes.Count > 0)
                 {
                     // Remap ParentID: sắp xếp parent trước rồi insert để idMap luôn có sẵn
-                    var idMap = new Dictionary<int, int>();
                     var sortedIndexes = sourceIndexes
                         .OrderBy(x => x.ParentID.HasValue ? 1 : 0)
                         .ThenBy(x => x.SortOrder)
@@ -411,13 +417,137 @@ namespace RERPAPI.Controllers.KPISale
                 }
             }
 
+            // Copy mappings và filters nếu được yêu cầu
+            if (request.CopyMappings && idMap.Count > 0)
+            {
+                copiedMappingCount = await CopyMappingsForIndexesAsync(idMap.Keys.ToList(), idMap, currentUser);
+            }
+
             return new KPISaleCopyTemplateResponse
             {
                 TargetTemplateID = request.TargetTemplateID,
                 TargetTemplateName = targetTemplate.TemplateName,
                 CopiedIndexCount = copiedCount,
+                CopiedMappingCount = copiedMappingCount,
                 NewIndexIDs = newIndexIds,
             };
+        }
+
+        /// <summary>
+        /// Sao chép tất cả ánh xạ (KPISaleIndexDataMapping) và bộ lọc (FilterGroup, FilterCondition)
+        /// từ các chỉ tiêu nguồn sang các chỉ tiêu đích.
+        /// </summary>
+        private async Task<int> CopyMappingsForIndexesAsync(List<int> sourceIndexIds, Dictionary<int, int> idMap, object currentUser)
+        {
+            int totalMappingsCopied = 0;
+
+            // Lấy tất cả mappings từ các chỉ tiêu nguồn
+            var sourceMappings = await _kpiSaleRepo.KPISaleIndexDataMappings.AsNoTracking()
+                .Where(m => sourceIndexIds.Contains(m.KpiIndexID))
+                .ToListAsync();
+
+            if (sourceMappings.Count == 0)
+                return 0;
+
+            // mappingIdMap: source MappingID -> new MappingID
+            var mappingIdMap = new Dictionary<int, int>();
+
+            foreach (var srcMapping in sourceMappings)
+            {
+                // Tạo mapping mới với KPIIndexID mới
+                var newMapping = new KPISaleIndexDataMapping
+                {
+                    KpiIndexID = idMap[srcMapping.KpiIndexID],
+                    DataSourceID = srcMapping.DataSourceID,
+                    AggregateType = srcMapping.AggregateType,
+                    ValueColumn = srcMapping.ValueColumn,
+                    DistinctColumn = srcMapping.DistinctColumn,
+                    IsActive = srcMapping.IsActive,
+                    //CreatedBy = currentUser?.LoginName ?? "System",
+                    //CreatedDate = DateTime.Now,
+                    //UpdatedBy = null,
+                    //UpdatedDate = null,
+                };
+
+                await _kpiSaleRepo.KPISaleIndexDataMappings.AddAsync(newMapping);
+                await _kpiSaleRepo.SaveChangesAsync();
+
+                var newMappingId = newMapping.ID;
+                mappingIdMap[srcMapping.ID] = newMappingId;
+                totalMappingsCopied++;
+            }
+
+            // Lấy tất cả filter groups từ các mappings nguồn
+            if (mappingIdMap.Count > 0)
+            {
+                var sourceGroups = await _kpiSaleRepo.KPISaleMappingFilterGroups.AsNoTracking()
+                    .Where(g => mappingIdMap.Keys.Contains(g.MappingID))
+                    .ToListAsync();
+
+                if (sourceGroups.Count > 0)
+                {
+                    // groupIdMap: source GroupID -> new GroupID
+                    var groupIdMap = new Dictionary<int, int>();
+
+                    // Sắp xếp: root groups trước, rồi children theo thứ tự SortOrder
+                    var sortedGroups = sourceGroups
+                        .OrderBy(g => g.ParentGroupID.HasValue ? 1 : 0)
+                        .ThenBy(g => g.SortOrder)
+                        .ThenBy(g => g.ID)
+                        .ToList();
+
+                    foreach (var srcGroup in sortedGroups)
+                    {
+                        int? newParentGroupId = null;
+                        if (srcGroup.ParentGroupID.HasValue && groupIdMap.TryGetValue(srcGroup.ParentGroupID.Value, out var mappedGroupId))
+                        {
+                            newParentGroupId = mappedGroupId;
+                        }
+
+                        var newGroup = new KPISaleMappingFilterGroup
+                        {
+                            MappingID = mappingIdMap[srcGroup.MappingID],
+                            ParentGroupID = newParentGroupId,
+                            LogicOperator = srcGroup.LogicOperator,
+                            SortOrder = srcGroup.SortOrder,
+                        };
+
+                        await _kpiSaleRepo.KPISaleMappingFilterGroups.AddAsync(newGroup);
+                        await _kpiSaleRepo.SaveChangesAsync();
+
+                        groupIdMap[srcGroup.ID] = newGroup.ID;
+                    }
+
+                    // Lấy tất cả filter conditions từ các groups nguồn
+                    if (groupIdMap.Count > 0)
+                    {
+                        var sourceConditions = await _kpiSaleRepo.KPISaleMappingFilterConditions.AsNoTracking()
+                            .Where(c => groupIdMap.Keys.Contains(c.FilterGroupID))
+                            .ToListAsync();
+
+                        foreach (var srcCond in sourceConditions)
+                        {
+                            var newCondition = new KPISaleMappingFilterCondition
+                            {
+                                FilterGroupID = groupIdMap[srcCond.FilterGroupID],
+                                ColumnName = srcCond.ColumnName,
+                                Operator = srcCond.Operator,
+                                ValueType = srcCond.ValueType,
+                                Value1 = srcCond.Value1,
+                                Value2 = srcCond.Value2,
+                                DataType = srcCond.DataType,
+                                IsActive = srcCond.IsActive,
+                            };
+
+                            await _kpiSaleRepo.KPISaleMappingFilterConditions.AddAsync(newCondition);
+                        }
+
+                        await _kpiSaleRepo.SaveChangesAsync();
+                    }
+                }
+            }
+
+            return totalMappingsCopied;
         }
 
         #endregion Template
