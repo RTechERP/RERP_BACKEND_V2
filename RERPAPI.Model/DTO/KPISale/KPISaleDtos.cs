@@ -38,6 +38,9 @@ namespace RERPAPI.Model.DTO.KPISale
         /// <summary>Bao gồm các chỉ tiêu đang IsActive = false.</summary>
         public bool IncludeInactiveIndexes { get; set; } = true;
 
+        /// <summary>Có copy các ánh xạ (mapping) và bộ lọc (filter) của chỉ tiêu hay không.</summary>
+        public bool CopyMappings { get; set; } = true;
+
         /// <summary>ID user hiện tại (phục vụ audit). Có thể bỏ trống.</summary>
         public int? CurrentUserID { get; set; }
     }
@@ -53,6 +56,9 @@ namespace RERPAPI.Model.DTO.KPISale
 
         /// <summary>Số chỉ tiêu đã copy.</summary>
         public int CopiedIndexCount { get; set; }
+
+        /// <summary>Số ánh xạ đã copy.</summary>
+        public int CopiedMappingCount { get; set; }
 
         /// <summary>Danh sách ID chỉ tiêu mới tạo.</summary>
         public List<int> NewIndexIDs { get; set; } = new();
