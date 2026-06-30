@@ -190,8 +190,8 @@ namespace RERPAPI.Controllers.Systems
         {
             try
             {
-                var validate = _userGroupRepo.Validate(item);
-                if (validate.Status == 0)
+                var validate = await _userGroupRepo.Validate(item);
+                if (validate.status == 0)
                 {
                     return BadRequest(validate);
                 }
