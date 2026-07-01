@@ -690,8 +690,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 			{
 				List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
 					"spGetListProductImportExportByProjectID_New",
-					new string[] { "@projectId", "@projectCode", "@WarehouseCode" },
-					new object[] { filter.projectID, filter.projectCode, filter.WarehouseCode }
+					new string[] { "@projectId", "@projectCode", "@WarehouseCode", "@ProductGroupID" },
+					new object[] { filter.projectID, filter.projectCode, filter.WarehouseCode, filter.ProductGroupID }
 					);
 				var dt = SQLHelper<object>.GetListData(result, 0);
 				return Ok(new

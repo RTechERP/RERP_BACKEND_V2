@@ -6,5 +6,6 @@
         public string projectCode { get; set; } = "";
         public string WarehouseCode { get; set; } = "";
         public int CustomerID { get; set; } = 0;
+        public string ProductGroupID { get; set; } = "";
     }
 }
