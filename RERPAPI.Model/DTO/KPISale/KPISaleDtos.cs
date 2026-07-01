@@ -83,7 +83,14 @@ namespace RERPAPI.Model.DTO.KPISale
         public string TeamName { get; set; } = "";
         public string? Description { get; set; }
         public int? LeaderEmployeeID { get; set; }
-        public List<int> EmployeeIDs { get; set; } = new();
+        public List<KPISaleTeamMemberItem> EmployeeIDs { get; set; } = new();
+    }
+
+    public class KPISaleTeamMemberItem
+    {
+        public int EmployeeId { get; set; }
+        public bool IsAdmin { get; set; } = false;
+        public bool IsPM { get; set; } = false;
     }
 
     public class KPISaleTotalPerformanceDto

@@ -2955,7 +2955,7 @@ namespace RERPAPI.Controllers.KPISale
                 var teamIds = teams.Select(t => t.ID).ToList();
                 var members = await _kpiSaleRepo.KPISaleTeamMembers.AsNoTracking()
                     .Where(m => teamIds.Contains(m.TeamID))
-                    .Select(m => new { m.TeamID, m.EmployeeID })
+                    .Select(m => new { m.TeamID, m.EmployeeID, m.IsAdmin, m.IsPM })
                     .ToListAsync();
 
                 var result = teams.Select(t => new
@@ -2968,7 +2968,7 @@ namespace RERPAPI.Controllers.KPISale
                     LeaderEmployeeName = t.LeaderEmployeeID.HasValue ? leaderEmployees.GetValueOrDefault(t.LeaderEmployeeID.Value) : null,
                     t.IsActive,
                     t.CreatedDate,
-                    EmployeeIDs = members.Where(m => m.TeamID == t.ID).Select(m => m.EmployeeID).ToList()
+                    EmployeeIDs = members.Where(m => m.TeamID == t.ID).Select(m => new { EmployeeId = m.EmployeeID, m.IsAdmin, m.IsPM }).ToList()
                 });
 
                 return Ok(ApiResponseFactory.Success(result, ""));
@@ -2999,14 +2999,18 @@ namespace RERPAPI.Controllers.KPISale
                 if (request.EmployeeIDs.Count > 50)
                     return BadRequest(ApiResponseFactory.Fail(null, "Team tối đa 50 thành viên"));
 
-                if (request.LeaderEmployeeID.HasValue && !request.EmployeeIDs.Contains(request.LeaderEmployeeID.Value))
+                var memberItems = request.EmployeeIDs
+                    .GroupBy(m => m.EmployeeId)
+                    .Select(g => g.First())
+                    .ToList();
+                var distinctIds = memberItems.Select(m => m.EmployeeId).ToList();
+
+                if (request.LeaderEmployeeID.HasValue && !distinctIds.Contains(request.LeaderEmployeeID.Value))
                     return BadRequest(ApiResponseFactory.Fail(null, "Trưởng nhóm phải là thành viên trong team"));
 
                 // Cấm dùng mã trùng pattern team auto-created cũ (T_<hex>)
                 if (IsAutoCreatedTeamCode(request.TeamCode))
                     return BadRequest(ApiResponseFactory.Fail(null, $"Mã team '{request.TeamCode}' không hợp lệ (trùng pattern team tự động)"));
-
-                var distinctIds = request.EmployeeIDs.Distinct().ToList();
 
                 if (request.ID.HasValue && request.ID.Value > 0)
                 {
@@ -3041,12 +3045,14 @@ namespace RERPAPI.Controllers.KPISale
                     if (oldMembers.Count > 0)
                         _kpiSaleRepo.KPISaleTeamMembers.RemoveRange(oldMembers);
 
-                    foreach (var empId in distinctIds)
+                    foreach (var item in memberItems)
                     {
                         await _kpiSaleRepo.KPISaleTeamMembers.AddAsync(new KPISaleTeamMember
                         {
                             TeamID = existing.ID,
-                            EmployeeID = empId,
+                            EmployeeID = item.EmployeeId,
+                            IsAdmin = item.IsAdmin,
+                            IsPM = item.IsPM,
                             CreatedDate = DateTime.Now
                         });
                     }
@@ -3074,12 +3080,14 @@ namespace RERPAPI.Controllers.KPISale
                     await _kpiSaleRepo.KPISaleTeams.AddAsync(team);
                     await _kpiSaleRepo.SaveChangesAsync();
 
-                    foreach (var empId in distinctIds)
+                    foreach (var item in memberItems)
                     {
                         await _kpiSaleRepo.KPISaleTeamMembers.AddAsync(new KPISaleTeamMember
                         {
                             TeamID = team.ID,
-                            EmployeeID = empId,
+                            EmployeeID = item.EmployeeId,
+                            IsAdmin = item.IsAdmin,
+                            IsPM = item.IsPM,
                             CreatedDate = DateTime.Now
                         });
                     }
@@ -3169,7 +3177,7 @@ namespace RERPAPI.Controllers.KPISale
 
                 var members = await _kpiSaleRepo.KPISaleTeamMembers.AsNoTracking()
                     .Where(m => m.TeamID == id)
-                    .Select(m => new { m.EmployeeID })
+                    .Select(m => new { m.EmployeeID, m.IsAdmin, m.IsPM })
                     .ToListAsync();
 
                 return Ok(ApiResponseFactory.Success(members, ""));
@@ -3722,12 +3730,21 @@ namespace RERPAPI.Controllers.KPISale
 
                     var mapping = mappingByEmp.GetValueOrDefault(empId);
 
-                    // Ưu tiên PositionType: Leader team > Mapping > SALES_STAFF
+                    // Ưu tiên PositionType: Leader team > IsAdmin/IsPM > Mapping > SALES_STAFF
                     string positionType;
-                    var leaderTeamId = teamMembers.FirstOrDefault(m => m.EmployeeID == empId)?.TeamID;
+                    var memberInfo = teamMembers.FirstOrDefault(m => m.EmployeeID == empId);
+                    var leaderTeamId = memberInfo?.TeamID;
                     if (leaderTeamId.HasValue && leaderIdsByTeam.GetValueOrDefault(leaderTeamId.Value) == empId)
                     {
                         positionType = "LEADER";
+                    }
+                    else if (memberInfo?.IsAdmin == true)
+                    {
+                        positionType = "ADMIN";
+                    }
+                    else if (memberInfo?.IsPM == true)
+                    {
+                        positionType = "PM";
                     }
                     else
                     {
@@ -3875,6 +3892,14 @@ namespace RERPAPI.Controllers.KPISale
                         rewardRate = leaderConfig?.RewardRate ?? salesConfig?.RewardRate ?? defaultRewardRate;
                         rewardConfigId = leaderConfig?.Id ?? salesConfig?.Id;
                         salesBonus = rewardRate * m.Coefficient * m.TotalRevenue;
+                    }
+                    else if (m.PositionType == "ADMIN" || m.PositionType == "PM")
+                    {
+                        rewardRate = m.PositionType == "ADMIN"
+                            ? (adminConfig?.RewardRate ?? 0.001m)
+                            : (pmConfig?.RewardRate ?? 0.003m);
+                        rewardConfigId = m.PositionType == "ADMIN" ? adminConfig?.Id : pmConfig?.Id;
+                        salesBonus = rewardRate * m.Coefficient * m.TotalSales;
                     }
                     else
                     {
@@ -4448,36 +4473,14 @@ namespace RERPAPI.Controllers.KPISale
 
         private decimal GetNewAccountCount(int employeeId, int periodId, int templateId, int? newAccountKpiIndexId)
         {
-            // Lấy chỉ số NewAccount từ KPISaleResult
-            var query = _kpiSaleRepo.KPISaleResults.AsNoTracking()
-                .Where(r => r.EmployeeID == employeeId && r.PeriodID == periodId && r.TeamID == null);
+            // Chỉ tính new account khi có chọn NewAccountKpiIndexId trong config
+            if (!newAccountKpiIndexId.HasValue) return 0m;
 
-            if (newAccountKpiIndexId.HasValue)
-            {
-                // Dùng chính xác KPI Index được config
-                return query.Where(r => r.KpiIndexID == newAccountKpiIndexId.Value)
-                    .Select(r => r.ResultValue)
-                    .FirstOrDefault();
-            }
-            else
-            {
-                // Fallback: tìm theo tên/code chứa NEW, ACCOUNT, KHÁCH...
-                var newAccResults = query
-                    .Join(_kpiSaleRepo.KPISaleIndices.AsNoTracking(),
-                        r => r.KpiIndexID,
-                        i => i.ID,
-                        (r, i) => new { r.ResultValue, i.IndexCode, i.IndexName, i.UnitType })
-                    .ToList();
-
-                var newAcc = newAccResults.FirstOrDefault(x =>
-                    (x.IndexCode ?? "").ToUpper().Contains("NEW") ||
-                    (x.IndexCode ?? "").ToUpper().Contains("ACCOUNT") ||
-                    (x.IndexCode ?? "").ToUpper().Contains("KHACH") ||
-                    (x.IndexName ?? "").ToUpper().Contains("TAI KHOAN") ||
-                    (x.IndexName ?? "").ToUpper().Contains("KHACH HANG") ||
-                    (x.IndexName ?? "").ToUpper().Contains("NEW ACCOUNT"));
-                return newAcc?.ResultValue ?? 0m;
-            }
+            return _kpiSaleRepo.KPISaleResults.AsNoTracking()
+                .Where(r => r.EmployeeID == employeeId && r.PeriodID == periodId && r.TeamID == null
+                    && r.KpiIndexID == newAccountKpiIndexId.Value)
+                .Select(r => r.ResultValue)
+                .FirstOrDefault();
         }
 
         private static decimal CalculateCoefficient(decimal achievementPercent, string positionType, List<KPISaleRewardCoefficient> coefficients)
