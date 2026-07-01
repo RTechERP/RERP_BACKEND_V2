@@ -10,7 +10,7 @@ namespace RERPAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class AppMobileVersionController : ControllerBase
     {
         private readonly AppMobileVersionRepo _appMobileVersionRepo;
