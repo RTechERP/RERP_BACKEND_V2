@@ -553,228 +553,228 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 				var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
 				var currentUser = ObjectMapper.GetCurrentUser(claims);
 
-					var (isValid, errorMessage) = await ValidateBillImport(dto);
-					if (!isValid)
+				var (isValid, errorMessage) = await ValidateBillImport(dto);
+				if (!isValid)
+				{
+					return BadRequest(ApiResponseFactory.Fail(null, errorMessage));
+				}
+				if (dto.billImportDetail == null && dto.DeletedDetailIDs == null)
+				{
+					_billImportRepo.Update(dto.billImport);
+					return Ok(ApiResponseFactory.Success(null, "Đã xóa thành công phiếu " + dto.billImport.BillImportCode));
+				}
+				var inventoryList = _inventoryRepo.GetAll();
+
+				var createdProductIds = new HashSet<(int? WarehouseID, int? ProductID)>();
+
+				var groupedQuantities = dto.billImportDetail.GroupBy(d => d.ProductID)
+					.ToDictionary(g => g.Key, g => g.Sum(d => d.Qty));
+
+				foreach (var detail in dto.billImportDetail)
+				{
+					if (groupedQuantities.ContainsKey(detail.ProductID))
 					{
-						return BadRequest(ApiResponseFactory.Fail(null, errorMessage));
+						detail.TotalQty = groupedQuantities[detail.ProductID];
 					}
-					if (dto.billImportDetail == null && dto.DeletedDetailIDs == null)
+				}
+
+				int billImportId;
+				if (dto.billImport.ID <= 0)
+				{
+					dto.billImport.BillDocumentImportType = 2;
+					dto.billImport.IsDeleted = false;
+					dto.billImport.Status = false;
+					await _billImportRepo.CreateAsync(dto.billImport);
+					billImportId = dto.billImport.ID;
+
+					// Thêm chứng từ
+					var listID = _documentImportRepo.GetAll(x => x.IsDeleted == false).ToList();
+					foreach (var item in listID)
 					{
-						_billImportRepo.Update(dto.billImport);
-						return Ok(ApiResponseFactory.Success(null, "Đã xóa thành công phiếu " + dto.billImport.BillImportCode));
-					}
-					var inventoryList = _inventoryRepo.GetAll();
-
-					var createdProductIds = new HashSet<(int? WarehouseID, int? ProductID)>();
-
-					var groupedQuantities = dto.billImportDetail.GroupBy(d => d.ProductID)
-						.ToDictionary(g => g.Key, g => g.Sum(d => d.Qty));
-
-					foreach (var detail in dto.billImportDetail)
-					{
-						if (groupedQuantities.ContainsKey(detail.ProductID))
+						BillDocumentImport billDocumentImport = new BillDocumentImport
 						{
-							detail.TotalQty = groupedQuantities[detail.ProductID];
-						}
+							BillImportID = billImportId,
+							DocumentImportID = item.ID,
+							DocumentStatus = 0,
+							Note = ""
+						};
+						await _billDocumentImportRepo.CreateAsync(billDocumentImport);
 					}
 
-					int billImportId;
-					if (dto.billImport.ID <= 0)
+					_billImportSaleLogRepo.Create(new BillImportSaleLog
 					{
-						dto.billImport.BillDocumentImportType = 2;
-						dto.billImport.IsDeleted = false;
-						dto.billImport.Status = false;
-						await _billImportRepo.CreateAsync(dto.billImport);
-						billImportId = dto.billImport.ID;
+						BillImportID = billImportId,
+						TypeLog = "TẠO MỚI PHIẾU",
+						ContentLog = $"Tạo mới phiếu nhập",
+						CreatedBy = currentUser.LoginName,
+						CreatedDate = DateTime.Now
+					});
+				}
+				else
+				{
+					var existingMaster = _billImportRepo.GetSingleNoTracking(x => x.ID == dto.billImport.ID);
+					await _billImportRepo.UpdateAsync(dto.billImport);
+					billImportId = dto.billImport.ID;
 
-						// Thêm chứng từ
-						var listID = _documentImportRepo.GetAll(x => x.IsDeleted == false).ToList();
-						foreach (var item in listID)
+					List<string> changeDetails = _billImportSaleLogRepo.GetEntityChanges(existingMaster, dto.billImport);
+					if (changeDetails.Any())
+					{
+						_billImportSaleLogRepo.Create(new BillImportSaleLog
 						{
-							BillDocumentImport billDocumentImport = new BillDocumentImport
+							BillImportID = billImportId,
+							TypeLog = "CẬP NHẬT PHIẾU",
+							ContentLog = $"Cập nhật phiếu nhập: {string.Join(", ", changeDetails)}",
+							CreatedBy = currentUser.LoginName,
+							CreatedDate = DateTime.Now
+						});
+					}
+				}
+
+				// Xóa chi tiết cũ
+				if (dto.DeletedDetailIDs != null && dto.DeletedDetailIDs.Any())
+				{
+					foreach (var id in dto.DeletedDetailIDs)
+					{
+						var item = _billImportDetailRepo.GetByID(id);
+						if (item != null)
+						{
+							item.IsDeleted = true;
+							_billImportDetailRepo.Update(item);
+							var invoiceLink = _invoiceLinkRepo.GetAll(p => p.BillImportDetailID == id);
+							if (invoiceLink.Any())
+							{
+								await _invoiceLinkRepo.DeleteByAttributeAsync("BillImportDetailID", id);
+							}
+
+							var deletedProductName = _productSaleRepo.GetByID(item.ProductID ?? 0)?.ProductName ?? $"ID:{item.ProductID}";
+							_billImportSaleLogRepo.Create(new BillImportSaleLog
 							{
 								BillImportID = billImportId,
-								DocumentImportID = item.ID,
-								DocumentStatus = 0,
-								Note = ""
-							};
-							await _billDocumentImportRepo.CreateAsync(billDocumentImport);
+								TypeLog = "XOÁ CHI TIẾT",
+								ContentLog = $"Xoá chi tiết phiếu nhập: {deletedProductName}",
+								CreatedBy = currentUser.LoginName,
+								CreatedDate = DateTime.Now
+							});
 						}
+					}
+				}
+				var data = await SqlDapper<ProductGroupWarehouse>.ProcedureToListTAsync("spGetProductGroupWarehouse", new
+				{
+					WarehouseID = dto.billImport.WarehouseID,
+					ProductGroupID = dto.billImport.KhoTypeID
+				});
+				bool isNotKeep = data.FirstOrDefault()?.IsNotKeep ?? false;
+				foreach (var detail in dto.billImportDetail)
+				{
+					detail.BillImportID = billImportId;
+
+					if (detail.ID <= 0)
+					{
+						detail.IsDeleted = false;
+						await _billImportDetailRepo.CreateAsync(detail);
+
+						var addedProductName = _productSaleRepo.GetByID(detail.ProductID ?? 0)?.ProductName ?? $"ID:{detail.ProductID}";
+						var addedParts = new List<string>();
+						if (detail.QtyRequest != null) addedParts.Add($"SL YC thực tế: {detail.QtyRequest}");
+						if (detail.Qty != null) addedParts.Add($"SL thực tế: {detail.Qty}");
+						if (!string.IsNullOrWhiteSpace(detail.UnitName)) addedParts.Add($"ĐVT: {detail.UnitName}");
+						if (!string.IsNullOrWhiteSpace(detail.ProjectName)) addedParts.Add($"Dự án: {detail.ProjectName}");
+						if (!string.IsNullOrWhiteSpace(detail.ProjectCode)) addedParts.Add($"Mã DA: {detail.ProjectCode}");
+						if (!string.IsNullOrWhiteSpace(detail.SomeBill)) addedParts.Add($"Số HĐ: {detail.SomeBill}");
+						if (detail.DateSomeBill != null) addedParts.Add($"Ngày HĐ: {detail.DateSomeBill:dd/MM/yyyy}");
+						if (!string.IsNullOrWhiteSpace(detail.BillCodePO)) addedParts.Add($"Mã ĐMH: {detail.BillCodePO}");
+						if (!string.IsNullOrWhiteSpace(detail.SerialNumber)) addedParts.Add($"Serial: {detail.SerialNumber}");
+						if (detail.DPO != null) addedParts.Add($"Số ngày CN: {detail.DPO}");
+						if (detail.DueDate != null) addedParts.Add($"Ngày tới hạn: {detail.DueDate:dd/MM/yyyy}");
+						if (detail.TaxReduction != null && detail.TaxReduction != 0) addedParts.Add($"Thuế giảm: {detail.TaxReduction:N2}");
+						if (detail.COFormE != null && detail.COFormE != 0) addedParts.Add($"Chi phí FE: {detail.COFormE:N2}");
+						if (!string.IsNullOrWhiteSpace(detail.Note)) addedParts.Add($"Ghi chú: {detail.Note}");
 
 						_billImportSaleLogRepo.Create(new BillImportSaleLog
 						{
 							BillImportID = billImportId,
-							TypeLog = "TẠO MỚI PHIẾU",
-							ContentLog = $"Tạo mới phiếu nhập",
+							TypeLog = "THÊM CHI TIẾT",
+							ContentLog = $"Thêm chi tiết phiếu nhập: [{addedProductName}] {string.Join(", ", addedParts)}",
 							CreatedBy = currentUser.LoginName,
 							CreatedDate = DateTime.Now
 						});
 					}
 					else
 					{
-						var existingMaster = _billImportRepo.GetSingleNoTracking(x => x.ID == dto.billImport.ID);
-						await _billImportRepo.UpdateAsync(dto.billImport);
-						billImportId = dto.billImport.ID;
-
-						List<string> changeDetails = _billImportSaleLogRepo.GetEntityChanges(existingMaster, dto.billImport);
-						if (changeDetails.Any())
+						// Cập nhật
+						var existingDetail = _billImportDetailRepo.GetByID(detail.ID);
+						if (existingDetail != null)
 						{
-							_billImportSaleLogRepo.Create(new BillImportSaleLog
-							{
-								BillImportID = billImportId,
-								TypeLog = "CẬP NHẬT PHIẾU",
-								ContentLog = $"Cập nhật phiếu nhập: {string.Join(", ", changeDetails)}",
-								CreatedBy = currentUser.LoginName,
-								CreatedDate = DateTime.Now
-							});
-						}
-					}
+							List<string> changeDetails = _billImportSaleLogRepo.GetEntityChanges(existingDetail, detail);
 
-					// Xóa chi tiết cũ
-					if (dto.DeletedDetailIDs != null && dto.DeletedDetailIDs.Any())
-					{
-						foreach (var id in dto.DeletedDetailIDs)
-						{
-							var item = _billImportDetailRepo.GetByID(id);
-							if (item != null)
+							if (changeDetails.Any())
 							{
-								item.IsDeleted = true;
-								_billImportDetailRepo.Update(item);
-								var invoiceLink = _invoiceLinkRepo.GetAll(p => p.BillImportDetailID == id);
-								if (invoiceLink.Any())
-								{
-									await _invoiceLinkRepo.DeleteByAttributeAsync("BillImportDetailID", id);
-								}
+								bool isProductChanged = existingDetail.ProductID != detail.ProductID;
+								var updatedProductName = _productSaleRepo.GetByID(detail.ProductID ?? 0)?.ProductName ?? $"ID:{detail.ProductID}";
+								string contentLogPrefix = isProductChanged
+									? "Cập nhật chi tiết"
+									: $"Cập nhật chi tiết [{updatedProductName}]";
 
-								var deletedProductName = _productSaleRepo.GetByID(item.ProductID ?? 0)?.ProductName ?? $"ID:{item.ProductID}";
 								_billImportSaleLogRepo.Create(new BillImportSaleLog
 								{
 									BillImportID = billImportId,
-									TypeLog = "XOÁ CHI TIẾT",
-									ContentLog = $"Xoá chi tiết phiếu nhập: {deletedProductName}",
+									TypeLog = "CẬP NHẬT CHI TIẾT",
+									ContentLog = $"{contentLogPrefix}: {string.Join(", ", changeDetails)}",
 									CreatedBy = currentUser.LoginName,
 									CreatedDate = DateTime.Now
 								});
 							}
+
+							_billImportDetailRepo.Update(detail);
 						}
 					}
-					var data = await SqlDapper<ProductGroupWarehouse>.ProcedureToListTAsync("spGetProductGroupWarehouse", new
+
+					if (!isNotKeep)
 					{
-						WarehouseID = dto.billImport.WarehouseID,
-						ProductGroupID = dto.billImport.KhoTypeID
-					});
-					bool isNotKeep = data.FirstOrDefault()?.IsNotKeep ?? false;
-					foreach (var detail in dto.billImportDetail)
-					{
-						detail.BillImportID = billImportId;
-
-						if (detail.ID <= 0)
-						{
-							detail.IsDeleted = false;
-							await _billImportDetailRepo.CreateAsync(detail);
-
-							var addedProductName = _productSaleRepo.GetByID(detail.ProductID ?? 0)?.ProductName ?? $"ID:{detail.ProductID}";
-							var addedParts = new List<string>();
-							if (detail.QtyRequest != null) addedParts.Add($"SL YC thực tế: {detail.QtyRequest}");
-							if (detail.Qty != null) addedParts.Add($"SL thực tế: {detail.Qty}");
-							if (!string.IsNullOrWhiteSpace(detail.UnitName)) addedParts.Add($"ĐVT: {detail.UnitName}");
-							if (!string.IsNullOrWhiteSpace(detail.ProjectName)) addedParts.Add($"Dự án: {detail.ProjectName}");
-							if (!string.IsNullOrWhiteSpace(detail.ProjectCode)) addedParts.Add($"Mã DA: {detail.ProjectCode}");
-							if (!string.IsNullOrWhiteSpace(detail.SomeBill)) addedParts.Add($"Số HĐ: {detail.SomeBill}");
-							if (detail.DateSomeBill != null) addedParts.Add($"Ngày HĐ: {detail.DateSomeBill:dd/MM/yyyy}");
-							if (!string.IsNullOrWhiteSpace(detail.BillCodePO)) addedParts.Add($"Mã ĐMH: {detail.BillCodePO}");
-							if (!string.IsNullOrWhiteSpace(detail.SerialNumber)) addedParts.Add($"Serial: {detail.SerialNumber}");
-							if (detail.DPO != null) addedParts.Add($"Số ngày CN: {detail.DPO}");
-							if (detail.DueDate != null) addedParts.Add($"Ngày tới hạn: {detail.DueDate:dd/MM/yyyy}");
-							if (detail.TaxReduction != null && detail.TaxReduction != 0) addedParts.Add($"Thuế giảm: {detail.TaxReduction:N2}");
-							if (detail.COFormE != null && detail.COFormE != 0) addedParts.Add($"Chi phí FE: {detail.COFormE:N2}");
-							if (!string.IsNullOrWhiteSpace(detail.Note)) addedParts.Add($"Ghi chú: {detail.Note}");
-
-							_billImportSaleLogRepo.Create(new BillImportSaleLog
-							{
-								BillImportID = billImportId,
-								TypeLog = "THÊM CHI TIẾT",
-								ContentLog = $"Thêm chi tiết phiếu nhập: [{addedProductName}] {string.Join(", ", addedParts)}",
-								CreatedBy = currentUser.LoginName,
-								CreatedDate = DateTime.Now
-							});
-						}
-						else
-						{
-							// Cập nhật
-							var existingDetail = _billImportDetailRepo.GetByID(detail.ID);
-							if (existingDetail != null)
-							{
-								List<string> changeDetails = _billImportSaleLogRepo.GetEntityChanges(existingDetail, detail);
-
-								if (changeDetails.Any())
-								{
-									bool isProductChanged = existingDetail.ProductID != detail.ProductID;
-									var updatedProductName = _productSaleRepo.GetByID(detail.ProductID ?? 0)?.ProductName ?? $"ID:{detail.ProductID}";
-									string contentLogPrefix = isProductChanged
-										? "Cập nhật chi tiết"
-										: $"Cập nhật chi tiết [{updatedProductName}]";
-
-									_billImportSaleLogRepo.Create(new BillImportSaleLog
-									{
-										BillImportID = billImportId,
-										TypeLog = "CẬP NHẬT CHI TIẾT",
-										ContentLog = $"{contentLogPrefix}: {string.Join(", ", changeDetails)}",
-										CreatedBy = currentUser.LoginName,
-										CreatedDate = DateTime.Now
-									});
-								}
-
-								_billImportDetailRepo.Update(detail);
-							}
-						}
-
-						if (!isNotKeep)
-						{
-							await UpdateInventoryProject(detail, dto.billImport);
-						}
-						//await SyncProductSaleGroupWarehouseLink(dto.billImport, detail);
-						// Kiểm tra tồn kho
-						var inventoryKey = (dto.billImport.WarehouseID, detail.ProductID);
-						bool existsInDb = inventoryList.Any(x =>
-							x.WarehouseID == dto.billImport.WarehouseID &&
-							x.ProductSaleID == detail.ProductID);
-						bool existsInCurrentBatch = createdProductIds.Contains(inventoryKey);
-
-						if (!existsInDb && !existsInCurrentBatch)
-						{
-							Inventory inventory = new Inventory
-							{
-								WarehouseID = dto.billImport.WarehouseID,
-								ProductSaleID = detail.ProductID,
-								//ProductGroupID = dto.billImport.KhoTypeID,
-								TotalQuantityFirst = 0,
-								TotalQuantityLast = 0,
-								Import = 0,
-								Export = 0
-							};
-							await _inventoryRepo.CreateAsync(inventory);
-
-							createdProductIds.Add(inventoryKey);
-						}
+						await UpdateInventoryProject(detail, dto.billImport);
 					}
-					// Cập nhật trạng thái
-					SQLHelper<dynamic>.ExcuteProcedure("spUpdateReturnedStatusForBillExportDetail",
-						new string[] { "@BillImportID", "@Approved" },
-						new object[] { dto.billImport.ID, 0 });
-					var listDetails = _billImportDetailRepo.GetAll(x => x.BillImportID == dto.billImport.ID);
-					string poNCCDetailID = string.Join(",", listDetails.Select(x => x.PONCCDetailID));
-					SQLHelper<dynamic>.ExcuteProcedure("spUpdateStatusPONCC",
-						new string[] { "@PONCCDetailID", "@UpdatedBy" },
-						new object[] { poNCCDetailID, currentUser.LoginName });
-					if (dto.pONCCID != null && dto.pONCCID > 0)
-					{
-						PONCC po = _pONCCRepo.GetByID(dto.pONCCID ?? 0);
+					//await SyncProductSaleGroupWarehouseLink(dto.billImport, detail);
+					// Kiểm tra tồn kho
+					var inventoryKey = (dto.billImport.WarehouseID, detail.ProductID);
+					bool existsInDb = inventoryList.Any(x =>
+						x.WarehouseID == dto.billImport.WarehouseID &&
+						x.ProductSaleID == detail.ProductID);
+					bool existsInCurrentBatch = createdProductIds.Contains(inventoryKey);
 
-						po.Status = 5;
-						await _pONCCRepo.UpdateAsync(po);
+					if (!existsInDb && !existsInCurrentBatch)
+					{
+						Inventory inventory = new Inventory
+						{
+							WarehouseID = dto.billImport.WarehouseID,
+							ProductSaleID = detail.ProductID,
+							//ProductGroupID = dto.billImport.KhoTypeID,
+							TotalQuantityFirst = 0,
+							TotalQuantityLast = 0,
+							Import = 0,
+							Export = 0
+						};
+						await _inventoryRepo.CreateAsync(inventory);
+
+						createdProductIds.Add(inventoryKey);
 					}
-					await UpdateDocumentImport(billImportId, dto.billDocumentImports);
+				}
+				// Cập nhật trạng thái
+				SQLHelper<dynamic>.ExcuteProcedure("spUpdateReturnedStatusForBillExportDetail",
+					new string[] { "@BillImportID", "@Approved" },
+					new object[] { dto.billImport.ID, 0 });
+				var listDetails = _billImportDetailRepo.GetAll(x => x.BillImportID == dto.billImport.ID);
+				string poNCCDetailID = string.Join(",", listDetails.Select(x => x.PONCCDetailID));
+				SQLHelper<dynamic>.ExcuteProcedure("spUpdateStatusPONCC",
+					new string[] { "@PONCCDetailID", "@UpdatedBy" },
+					new object[] { poNCCDetailID, currentUser.LoginName });
+				if (dto.pONCCID != null && dto.pONCCID > 0)
+				{
+					PONCC po = _pONCCRepo.GetByID(dto.pONCCID ?? 0);
+
+					po.Status = 5;
+					await _pONCCRepo.UpdateAsync(po);
+				}
+				await UpdateDocumentImport(billImportId, dto.billDocumentImports);
 
 
 				return Ok(ApiResponseFactory.Success(dto, "Cập nhật dữ liệu thành công!"));
@@ -1339,6 +1339,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
 				var existingRoot = _inventoryProjectRepo.GetAll(x =>
 					x.ProjectID == detail.ProjectID &&
+					x.ProductSaleID == detail.ProductID &&
 					(x.POKHDetailID == null || x.POKHDetailID == 0) &&
 					x.ParentID == 0 &&
 					x.IsDeleted == false
