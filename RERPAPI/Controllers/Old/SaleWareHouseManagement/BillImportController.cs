@@ -528,7 +528,11 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 			{
 				return (false, "Vui lòng nhập Điều khoản TT!");
 			}
-
+			var newCode = _billImportRepo.GetBillCode(dto.billImport.BillTypeNew ?? 0);
+			if (newCode != dto.billImport.BillImportCode)
+			{
+				dto.billImport.BillImportCode = newCode;
+			}
 			return (true, string.Empty);
 		}
 
@@ -542,14 +546,13 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
 		[HttpPost("save-data")]
 		[RequiresPermission("N27,N1,N33,N34,N69,N35")]
-		public async Task<IActionResult> saveDataBillImport([FromBody] List<BillImportDTO> dtos)
+		public async Task<IActionResult> saveDataBillImport([FromBody] BillImportDTO dto)
 		{
 			try
 			{
 				var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
 				var currentUser = ObjectMapper.GetCurrentUser(claims);
-				foreach (var dto in dtos)
-				{
+
 					var (isValid, errorMessage) = await ValidateBillImport(dto);
 					if (!isValid)
 					{
@@ -754,38 +757,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
 							createdProductIds.Add(inventoryKey);
 						}
-
-						//bool exists = inventoryList.Any(x => x.WarehouseID == dto.billImport.WarehouseID && x.ProductSaleID == detail.ProductID);
-						//if (!exists)
-						//{
-						//    Inventory inventory = new Inventory
-						//    {
-						//        WarehouseID = dto.billImport.WarehouseID,
-						//        ProductSaleID = detail.ProductID,
-						//        TotalQuantityFirst = 0,
-						//        TotalQuantityLast = 0,
-						//        Import = 0,
-						//        Export = 0
-						//    };
-						//    await _inventoryRepo.CreateAsync(inventory);
-						//}
-						//List<InvoiceDTO> lst = listInvoice.Where(p => p.IdMapping == detail.STT).ToList();
-						//// await _invoiceLinkRepo.DeleteByAttributeAsync("BillImportDetailID", (int?)detail.ID);
-						//var invoicelink = _invoiceLinkRepo.GetAll(p => p.BillImportDetailID == detail.ID).FirstOrDefault();
-						//if (invoicelink != null)
-						//{
-						//    invoicelink.IsDeleted = true;
-						//    _invoiceLinkRepo.Update(invoicelink);
-						//}
-						//foreach (InvoiceDTO item in lst)
-						//{
-						//    foreach (InvoiceLink model in item.Details)
-						//    {
-						//        model.BillImportDetailID = detail.ID;
-						//        //InvoiceBO.Instance.Insert(model);
-						//        _invoiceLinkRepo.Create(model);
-						//    }
-						//}
 					}
 					// Cập nhật trạng thái
 					SQLHelper<dynamic>.ExcuteProcedure("spUpdateReturnedStatusForBillExportDetail",
@@ -804,9 +775,9 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 						await _pONCCRepo.UpdateAsync(po);
 					}
 					await UpdateDocumentImport(billImportId, dto.billDocumentImports);
-				}
 
-				return Ok(ApiResponseFactory.Success(dtos, "Cập nhật dữ liệu thành công!"));
+
+				return Ok(ApiResponseFactory.Success(dto, "Cập nhật dữ liệu thành công!"));
 			}
 			catch (Exception ex)
 			{

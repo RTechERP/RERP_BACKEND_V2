@@ -1399,7 +1399,13 @@ namespace RERPAPI.Controllers.Old
                         continue;
 
                     //var dt = SQLHelper<dynamic>.ProcedureToList("spGetInventory", new[] { "@ProductSaleID" }, new object[] { item.ProductSaleID });
-                    var dt = SQLHelper<dynamic>.ProcedureToList("spGetInventory_Test", new[] { "@ProductSaleID" }, new object[] { item.ProductSaleID });
+					var warehouse = _warehouseRepo.GetByID(item.WarehouseID ?? 0);
+					if (warehouse.ID <= 0)
+					{
+						return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy kho được chọn trên cơ sơ dữ liệu!"));
+					}
+					var dt = SQLHelper<dynamic>.ProcedureToList("spGetInventory_Test", new[] { "@ProductSaleID", "@WarehouseCode" }, new object[] { item.ProductSaleID, warehouse.WarehouseCode });
+
                     var inventoryData = SQLHelper<dynamic>.GetListData(dt, 0);
                     if (inventoryData.Count < 0) return BadRequest(ApiResponseFactory.Fail(null, $"Sản phẩm [{item.ProductName}] không có trong tồn kho!"));
                     var quantity = inventoryData[0]?.TotalQuantityLast;
@@ -1418,7 +1424,7 @@ namespace RERPAPI.Controllers.Old
                     inventoryProject.ProjectID = item.ProjectID;
                     inventoryProject.ProductSaleID = item.ProductSaleID;
                     inventoryProject.EmployeeID = item.EmployeeIDRequestApproved;
-                    inventoryProject.WarehouseID = 1;
+					inventoryProject.WarehouseID = item.WarehouseID ?? 1;
                     inventoryProject.Quantity = item.Quantity;
                     inventoryProject.CustomerID = item.CustomerID;
                     inventoryProject.POKHDetailID = item.POKHDetailID;
