@@ -553,6 +553,7 @@ builder.Services.AddScoped<DrawingRepo>();
 builder.Services.AddScoped<DrawingLogRepo>();
 builder.Services.AddScoped<JobRequirementRecommendRepo>();
 builder.Services.AddScoped<JobRequirementRecommendDetailRepo>();
+builder.Services.AddScoped<AppMobileVersionRepo>();
 
 #region khóa học
 
@@ -792,7 +793,7 @@ builder.Services.AddCors(options =>
         ;
     });
 });
-// Chỉ khởi tạo 1 lần duy nhất khi chạy server
+ //Chỉ khởi tạo 1 lần duy nhất khi chạy server
 FirebaseApp.Create(new AppOptions()
 {
     Credential = GoogleCredential.FromFile("firebase-adminsdk.json") // Thay bằng đường dẫn thực tế
