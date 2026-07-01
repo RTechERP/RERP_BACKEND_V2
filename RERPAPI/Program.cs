@@ -793,11 +793,11 @@ builder.Services.AddCors(options =>
         ;
     });
 });
-// Chỉ khởi tạo 1 lần duy nhất khi chạy server
-//FirebaseApp.Create(new AppOptions()
-//{
-//    Credential = GoogleCredential.FromFile("firebase-adminsdk.json") // Thay bằng đường dẫn thực tế
-//});
+ //Chỉ khởi tạo 1 lần duy nhất khi chạy server
+FirebaseApp.Create(new AppOptions()
+{
+    Credential = GoogleCredential.FromFile("firebase-adminsdk.json") // Thay bằng đường dẫn thực tế
+});
 
 builder.Services.AddSingleton<SseService>();
 
