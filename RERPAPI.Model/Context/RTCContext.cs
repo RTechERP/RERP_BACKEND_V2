@@ -76,6 +76,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<AdminMarketingDetail> AdminMarketingDetails { get; set; }
 
+    public virtual DbSet<AppMobileVersion> AppMobileVersions { get; set; }
+
     public virtual DbSet<AssetAllocationLog> AssetAllocationLogs { get; set; }
 
     public virtual DbSet<AssetLog> AssetLogs { get; set; }
@@ -1844,6 +1846,19 @@ public partial class RTCContext : DbContext
 
             entity.Property(e => e.CompletionRate).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.PercentActual).HasColumnType("decimal(18, 2)");
+        });
+
+        modelBuilder.Entity<AppMobileVersion>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__AppMobil__3214EC2793AB4188");
+
+            entity.ToTable("AppMobileVersion");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.MinSupportedVersion).HasMaxLength(100);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<AssetAllocationLog>(entity =>
