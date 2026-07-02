@@ -174,6 +174,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<BusinessFieldLink> BusinessFieldLinks { get; set; }
 
+    public virtual DbSet<BusinessVisaRequest> BusinessVisaRequests { get; set; }
+
     public virtual DbSet<ChangeLogStore> ChangeLogStores { get; set; }
 
     public virtual DbSet<CommercialPriceRequest> CommercialPriceRequests { get; set; }
@@ -2819,6 +2821,73 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<BusinessVisaRequest>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__Business__3214EC270B6E3C8B");
+
+            entity.ToTable("BusinessVisaRequest", tb => tb.HasComment("Bảng lưu thông tin yêu cầu làm visa công tác"));
+
+            entity.Property(e => e.ID).HasComment("ID bản ghi");
+            entity.Property(e => e.BusinessTripFromDate)
+                .HasComment("Thời gian công tác từ")
+                .HasColumnType("datetime");
+            entity.Property(e => e.BusinessTripToDate)
+                .HasComment("Thời gian công tác đến")
+                .HasColumnType("datetime");
+            entity.Property(e => e.CompanyName)
+                .HasMaxLength(200)
+                .HasComment("Tên công ty");
+            entity.Property(e => e.Cost)
+                .HasComment("Chi phí làm visa")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người tạo");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo")
+                .HasColumnType("datetime");
+            entity.Property(e => e.DateOfBirth)
+                .HasComment("Ngày sinh")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Destination)
+                .HasMaxLength(500)
+                .HasComment("Điểm đến");
+            entity.Property(e => e.EmployeeID).HasComment("ID nhân viên nếu Type = 1");
+            entity.Property(e => e.FullName)
+                .HasMaxLength(200)
+                .HasComment("Họ và tên");
+            entity.Property(e => e.Gender).HasComment("Giới tính (1: Nam, 2: Nữ)");
+            entity.Property(e => e.HoChieu)
+                .HasMaxLength(200)
+                .HasComment("Số hộ chiếu");
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false)
+                .HasComment("Trạng thái xóa mềm (0: Chưa xóa, 1: Đã xóa)");
+            entity.Property(e => e.Nation)
+                .HasMaxLength(200)
+                .HasComment("Quốc tịch");
+            entity.Property(e => e.NgheNghiep)
+                .HasMaxLength(200)
+                .HasComment("Nghề nghiệp");
+            entity.Property(e => e.Note)
+                .HasMaxLength(550)
+                .HasComment("Ghi chú");
+            entity.Property(e => e.STT).HasComment("Số thứ tự");
+            entity.Property(e => e.Status)
+                .HasMaxLength(500)
+                .HasComment("Trạng thái");
+            entity.Property(e => e.Type).HasComment("Loại đối tượng (1: CBNV, 2: Đối tác)");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người cập nhật");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật")
+                .HasColumnType("datetime");
+            entity.Property(e => e.VisaIssueDate)
+                .HasMaxLength(500)
+                .HasComment("Thời gian có visa");
         });
 
         modelBuilder.Entity<ChangeLogStore>(entity =>
