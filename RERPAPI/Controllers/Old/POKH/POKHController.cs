@@ -972,6 +972,8 @@ namespace RERPAPI.Controllers.Old.POKH
                         KHID = item.KHID,
                         GuestCode = item.GuestCode,
                         Qty = item.Qty,
+                        DiscountAmount = item.DiscountAmount,
+                        IntoMoneyAfterDiscount = item.IntoMoneyAfterDiscount,
                         FilmSize = item.FilmSize,
                         UnitPrice = item.UnitPrice,
                         IntoMoney = item.IntoMoney,
