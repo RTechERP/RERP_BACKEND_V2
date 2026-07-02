@@ -850,6 +850,42 @@ namespace RERPAPI.Controllers.KPITechnical
             }
         }
 
+        [HttpGet("get-all-team-by-empID-new")]
+        public async Task<IActionResult> GetAllTeamByEmployeeIDNew(int employeeID, int kpiSessionID)
+        {
+            try
+            {
+                if (kpiSessionID <= 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng chọn Kỳ đánh giá!"));
+                }
+
+                var session = _kpiSessionRepo.GetByID(kpiSessionID);
+                if (session == null)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy Kỳ đánh giá!"));
+                }
+
+                int year = session.YearEvaluation ?? DateTime.Now.Year;
+                int quarter = session.QuarterEvaluation ?? 1;
+
+                var param = new
+                {
+                    EmployeeID = employeeID,
+                    Year = year,
+                    Quarter = quarter
+                };
+
+                var lstTeam = await SqlDapper<dynamic>.ProcedureToListAsync("spGetTeamMembersByEmployeeID", param);
+
+                return Ok(ApiResponseFactory.Success(lstTeam, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpPost("load-data-team")]
         public async Task<IActionResult> LoadDataTeam([FromBody] LoadDataTeamRequest request)
         {
@@ -902,7 +938,7 @@ namespace RERPAPI.Controllers.KPITechnical
                     {
                         KPIEmployeePointID = empPoint.ID
                     };
-                    List<KPIRuleDetailDTO> dtKpiRule = await SqlDapper<KPIRuleDetailDTO>.ProcedureToListTAsync("spGetEmployeeRulePointByKPIEmpPointIDNew_TNB", param);
+                    List<KPIRuleDetailDTO> dtKpiRule = await SqlDapper<KPIRuleDetailDTO>.ProcedureToListTAsync("spGetEmployeeRulePointByKPIEmpPointIDNew_TNB", param2);
                     //List<KPIRuleDetailDTO> dtKpiRule = SQLHelper<KPIRuleDetailDTO>.ProcedureToListModel("spGetEmployeeRulePointByKPIEmpPointIDNew_TNB", new string[] { "@KPIEmployeePointID" }, new object[] { empPoint.ID });
                     if (dtKpiRule.Count <= 0) continue;
 
