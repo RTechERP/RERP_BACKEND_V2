@@ -414,7 +414,13 @@ namespace RERPAPI.Controllers.Old.POKH
         [HttpPost("save")]
         public async Task<IActionResult> SaveHistoryMoney(HistoryMoneyPODTO dto)
         {
-            if (dto.historyMoneyPOs == null || !dto.historyMoneyPOs.Any())
+            if (dto.historyMoneyPOs == null)
+                return BadRequest("Danh sách dữ liệu trống.");
+
+            // Cho phép historyMoneyPOs rỗng khi chỉ có thao tác xóa (xóa hết rows, không thêm/sửa gì)
+            bool hasDataToSave = dto.historyMoneyPOs.Any();
+            bool hasDataToDelete = dto.listIdsDel != null && dto.listIdsDel.Count > 0;
+            if (!hasDataToSave && !hasDataToDelete)
                 return BadRequest("Danh sách dữ liệu trống.");
 
             try
