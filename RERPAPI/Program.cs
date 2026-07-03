@@ -51,6 +51,7 @@ using tusdotnet.Models;
 using tusdotnet.Models.Configuration;
 using tusdotnet.Models.Expiration;
 using tusdotnet.Stores;
+using RERPAPI.Repo.GenericEntity.HRM.Visa;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -721,6 +722,8 @@ builder.Services.AddScoped<ESLTestTableRegistrationDetailRepo>();
 builder.Services.AddScoped<ESLConfigRepo>();
 
 builder.Services.AddScoped<VehicleRentalRequestRepo>();
+builder.Services.AddScoped<BusinessVisaRequestRepo>();
+
 
 builder.Services.AddHttpClient<IESLBindService, ESLBindService>();
 #region DI LOG

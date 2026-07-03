@@ -12,6 +12,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders;
+using System.IO.Compression;
 
 namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
 {
@@ -1202,6 +1203,35 @@ namespace RERPAPI.Controllers.GeneralCategory.PaymentOrders
             );
         }
 
+        [HttpPost("download")]
+        public async Task<IActionResult> Download([FromBody] DownloadPaymentOrderFileDTO model)
+        {
+            try
+            {
+                if (model == null || string.IsNullOrWhiteSpace(model.FilePath))
+                    return BadRequest("Đường dẫn file không hợp lệ.");
+
+                if (!System.IO.File.Exists(model.FilePath))
+                    return NotFound("Không tìm thấy file.");
+
+                var fileName = Path.GetFileName(model.FilePath);
+
+                var stream = new FileStream(
+                    model.FilePath,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.Read);
+
+                return File(
+                    stream,
+                    "application/octet-stream",
+                    fileName);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
         [HttpPost("update-transfer-type")]
         [RequiresPermission("N55,N61")]
         public async Task<IActionResult> UpdateTranferType([FromBody] List<PaymentOrderDTO> payments)
