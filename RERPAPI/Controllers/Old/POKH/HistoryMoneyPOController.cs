@@ -59,20 +59,21 @@ namespace RERPAPI.Controllers.Old.POKH
             }
         }
 
-        [HttpGet("load-products-by-pokh-ids")]
+        [HttpPost("load-products-by-pokh-ids")]
         [Authorize]
-        public IActionResult LoadProductsByPOKHIds(string pokhIds = "")
+        public IActionResult LoadProductsByPOKHIds([FromBody] List<int> pokhIds)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(pokhIds))
+                if (pokhIds == null || pokhIds.Count == 0)
                 {
                     return Ok(ApiResponseFactory.Success(new List<object>(), ""));
                 }
 
+                string pokhIdsStr = string.Join(",", pokhIds);
                 List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetProductByPOKHIds",
                          new string[] { "@POKHIds" },
-                         new object[] { pokhIds });
+                         new object[] { pokhIdsStr });
                 var data = SQLHelper<dynamic>.GetListData(list, 0);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
@@ -130,20 +131,21 @@ namespace RERPAPI.Controllers.Old.POKH
             }
         }
 
-        [HttpGet("load-history-money-po-multiple")]
+        [HttpPost("load-history-money-po-multiple")]
         [Authorize]
-        public IActionResult LoadHistoryMoneyPOMultiple(string pokhDetailIds = "")
+        public IActionResult LoadHistoryMoneyPOMultiple([FromBody] List<int> pokhDetailIds)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(pokhDetailIds))
+                if (pokhDetailIds == null || pokhDetailIds.Count == 0)
                 {
                     return Ok(ApiResponseFactory.Success(new List<object>(), ""));
                 }
 
+                string pokhDetailIdsStr = string.Join(",", pokhDetailIds);
                 List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetHistoryMoneyPOMultiple",
                          new string[] { "@POKHDetailIds" },
-                         new object[] { pokhDetailIds });
+                         new object[] { pokhDetailIdsStr });
                 var data = SQLHelper<dynamic>.GetListData(list, 0);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
@@ -239,20 +241,21 @@ namespace RERPAPI.Controllers.Old.POKH
             }
         }
 
-        [HttpGet("export-excel-multiple")]
+        [HttpPost("export-excel-multiple")]
         [AllowAnonymous]
-        public IActionResult ExportExcelMultiple(string pokhDetailIds = "")
+        public IActionResult ExportExcelMultiple([FromBody] List<int> pokhDetailIds)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(pokhDetailIds))
+                if (pokhDetailIds == null || pokhDetailIds.Count == 0)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Danh sách POKHDetail IDs trống"));
                 }
 
+                string pokhDetailIdsStr = string.Join(",", pokhDetailIds);
                 List<List<dynamic>> list = SQLHelper<dynamic>.ProcedureToList("spGetHistoryMoneyPOMultiple",
                          new string[] { "@POKHDetailIds" },
-                         new object[] { pokhDetailIds });
+                         new object[] { pokhDetailIdsStr });
                 var data = SQLHelper<dynamic>.GetListData(list, 0);
 
                 using (var workbook = new XLWorkbook())
