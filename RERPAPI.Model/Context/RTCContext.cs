@@ -614,6 +614,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<JobPerfomanceEvaluationNew> JobPerfomanceEvaluationNews { get; set; }
 
+    public virtual DbSet<JobPerfomanceEvaluationNewLog> JobPerfomanceEvaluationNewLogs { get; set; }
+
     public virtual DbSet<JobRequirement> JobRequirements { get; set; }
 
     public virtual DbSet<JobRequirementApproved> JobRequirementApproveds { get; set; }
@@ -7853,6 +7855,29 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.WorkStyle)
                 .HasComment("C Tác phong làm việc (Chỉn chu, chuyên nghiệp)")
                 .HasColumnType("decimal(18, 2)");
+        });
+
+        modelBuilder.Entity<JobPerfomanceEvaluationNewLog>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__JobPerfo__3214EC277DBAAB36");
+
+            entity.ToTable("JobPerfomanceEvaluationNewLog", tb => tb.HasComment("Bảng lưu lịch sử các thao tác của phiếu đánh giá chuyển hợp đồng"));
+
+            entity.Property(e => e.ActionType)
+                .HasMaxLength(100)
+                .HasComment("Loại thao tác: HR tạo phiếu, NLĐ/TBP/HR/BGĐ xác nhận, ...");
+            entity.Property(e => e.ContentLog).HasComment("Nội dung chi tiết của thao tác được ghi nhận");
+            entity.Property(e => e.CreatedBy).HasMaxLength(200);
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.EmployeeID).HasComment("ID nhân viên được đánh giá");
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false)
+                .HasComment("Cờ đánh dấu xóa mềm: 0 - Đang sử dụng, 1 - Đã xóa");
+            entity.Property(e => e.JobPerfomanceEvaluationNewID).HasComment("ID phiếu đánh giá chuyển hợp đồng (JobPerfomanceEvaluationNew.ID)");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(200);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<JobRequirement>(entity =>
