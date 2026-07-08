@@ -692,6 +692,10 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<KPISaleAllowedTable> KPISaleAllowedTables { get; set; }
 
+    public virtual DbSet<KPISaleApproval> KPISaleApprovals { get; set; }
+
+    public virtual DbSet<KPISaleApprovalLog> KPISaleApprovalLogs { get; set; }
+
     public virtual DbSet<KPISaleDataSource> KPISaleDataSources { get; set; }
 
     public virtual DbSet<KPISaleEmployeeRewardMapping> KPISaleEmployeeRewardMappings { get; set; }
@@ -8469,6 +8473,59 @@ public partial class RTCContext : DbContext
                 .HasMaxLength(128)
                 .HasDefaultValue("dbo");
             entity.Property(e => e.TableName).HasMaxLength(128);
+        });
+
+        modelBuilder.Entity<KPISaleApproval>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__KPISaleA__3214EC27111AD5D9");
+
+            entity.ToTable("KPISaleApproval");
+
+            entity.Property(e => e.AccountantApprovedBy).HasMaxLength(100);
+            entity.Property(e => e.AccountantApprovedDate).HasColumnType("datetime");
+            entity.Property(e => e.AdminApprovedBy).HasMaxLength(100);
+            entity.Property(e => e.AdminApprovedDate).HasColumnType("datetime");
+            entity.Property(e => e.ApprovalScope)
+                .HasMaxLength(20)
+                .HasDefaultValue("EMPLOYEE");
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.CurrentStep)
+                .HasMaxLength(20)
+                .HasDefaultValue("PENDING");
+            entity.Property(e => e.DirectorApprovedBy).HasMaxLength(100);
+            entity.Property(e => e.DirectorApprovedDate).HasColumnType("datetime");
+            entity.Property(e => e.HRDisbursedBy).HasMaxLength(100);
+            entity.Property(e => e.HRDisbursedDate).HasColumnType("datetime");
+            entity.Property(e => e.SalesManagerApprovedBy).HasMaxLength(100);
+            entity.Property(e => e.SalesManagerApprovedDate).HasColumnType("datetime");
+            entity.Property(e => e.SeniorAccountantApprovedBy).HasMaxLength(100);
+            entity.Property(e => e.SeniorAccountantApprovedDate).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<KPISaleApprovalLog>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__KPISaleA__3214EC27903DCF8F");
+
+            entity.ToTable("KPISaleApprovalLog");
+
+            entity.Property(e => e.ActionType)
+                .HasMaxLength(30)
+                .HasDefaultValue("APPROVE");
+            entity.Property(e => e.Note).HasMaxLength(500);
+            entity.Property(e => e.PerformedBy).HasMaxLength(100);
+            entity.Property(e => e.PerformedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.StatusAfter).HasMaxLength(20);
+            entity.Property(e => e.StatusBefore).HasMaxLength(20);
+            entity.Property(e => e.StepCode)
+                .HasMaxLength(20)
+                .HasDefaultValue("PENDING");
         });
 
         modelBuilder.Entity<KPISaleDataSource>(entity =>
