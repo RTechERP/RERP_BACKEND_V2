@@ -402,7 +402,7 @@ namespace RERPAPI.Controllers.KHOAHOC
             {
                 var examResult = _courseExamResultRepo.GetByID(courseExamResultID);
                 var courseExam = _courseExamRepo.GetByID(examResult.CourseExamId ?? 0);
-
+              
                 var courseQuestions = _courseQuestionRepo.GetAll(p => p.CourseExamId == courseExam.ID);
 
                 int numCorrectAnswers = 0;
@@ -439,8 +439,8 @@ namespace RERPAPI.Controllers.KHOAHOC
                 examResult.TotalCorrect = numCorrectAnswers;
                 examResult.TotalIncorrect = numIncorrectAnswers;
                 examResult.PercentageCorrect = numCorrectAnswers != 0 ? ((decimal)numCorrectAnswers / (numCorrectAnswers + numIncorrectAnswers)) * 100 : 0;
-
-                _courseExamResultRepo.Update(examResult);
+                examResult.UpdatedDate = DateTime.Now; // update thời gian kết thúc bài thi
+              var a =await _courseExamResultRepo.UpdateAsync(examResult);
 
                 return Ok(ApiResponseFactory.Success(new
                 {
