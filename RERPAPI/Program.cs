@@ -726,6 +726,10 @@ builder.Services.AddScoped<BusinessVisaRequestRepo>();
 
 
 builder.Services.AddHttpClient<IESLBindService, ESLBindService>();
+builder.Services.AddScoped<KPISaleApprovalRepo>();
+builder.Services.AddScoped<KPISaleApprovalLogRepo>();
+builder.Services.AddScoped<KPISaleTeamMemberRepo>();
+builder.Services.AddScoped<KPISalePeroidRepo>();
 #region DI LOG
 
 builder.Services.AddScoped<POKHLogRepo>();
@@ -739,6 +743,7 @@ builder.Services.AddScoped<AssetAllocationLogRepo>();
 builder.Services.AddScoped<ProjectPartlistPurchaseRequestLogRepo>();
 builder.Services.AddScoped<ProjectPartListPriceRequestLogRepo>();
 builder.Services.AddScoped<ProjectPartListLogRepo>();
+builder.Services.AddScoped<JobPerfomanceEvaluationNewLogRepo>();
 
 #endregion DI LOG
 
