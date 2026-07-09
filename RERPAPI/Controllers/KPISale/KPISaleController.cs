@@ -20,6 +20,11 @@ namespace RERPAPI.Controllers.KPISale
     {
         private readonly KPISaleRepo _kpiSaleRepo;
         private readonly EmployeeRepo _employeeRepo;
+        private readonly KPISaleApprovalRepo _approvalRepo;
+        private readonly KPISaleApprovalLogRepo _approvalLogRepo;
+        private readonly KPISaleTeamMemberRepo _teamMemberRepo;
+        private readonly KPISalePeroidRepo _kpiSalePeriodRepo;
+        private readonly UserRepo _userRepo;
 
         private static readonly Regex SqlIdentifierRegex = new("^[A-Za-z_][A-Za-z0-9_]*$", RegexOptions.Compiled);
 
@@ -88,10 +93,22 @@ namespace RERPAPI.Controllers.KPISale
             "DeleteFlag"
         };
 
-        public KPISaleController(KPISaleRepo kpiSaleRepo, EmployeeRepo employeeRepo)
+        public KPISaleController(
+            KPISaleRepo kpiSaleRepo,
+            EmployeeRepo employeeRepo,
+            KPISaleApprovalRepo approvalRepo,
+            KPISaleApprovalLogRepo approvalLogRepo,
+            KPISaleTeamMemberRepo teamMemberRepo,
+            KPISalePeroidRepo kpiSalePeroidRepo,
+            UserRepo userRepo)
         {
             _kpiSaleRepo = kpiSaleRepo;
             _employeeRepo = employeeRepo;
+            _approvalRepo = approvalRepo;
+            _approvalLogRepo = approvalLogRepo;
+            _teamMemberRepo = teamMemberRepo;
+            _kpiSalePeriodRepo = kpiSalePeroidRepo;
+            _userRepo = userRepo;
         }
 
         #region Period
@@ -2744,6 +2761,10 @@ namespace RERPAPI.Controllers.KPISale
             {
                 ValidateTeamCalculateRequest(request);
 
+                // Nếu team đã được Admin duyệt ở kỳ này thì KHÔNG cho tính lại KPI.
+                // Muốn tính lại phải hủy duyệt trước.
+                await EnsureTeamNotAdminApprovedAsync(request.TeamID ?? 0, request.PeriodID);
+
                 var result = await CalculateTeamInternalAsync(request);
                 return Ok(ApiResponseFactory.Success(result, "Tính KPI tổng hợp nhóm thành công"));
             }
@@ -2751,6 +2772,118 @@ namespace RERPAPI.Controllers.KPISale
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+        }
+
+        /// <summary>
+        /// Nếu nhân viên đã được Admin duyệt (P0) ở kỳ này thì không cho phép tính lại KPI nữa.
+        /// Muốn tính lại phải hủy duyệt trước.
+        /// Approval chỉ được track ở cấp QUARTER (kỳ cha), không track riêng cho MONTH.
+        /// Nếu chưa có record approval -> cho phép (workflow chưa active cho kỳ này).
+        /// </summary>
+        private async Task EnsureNotAdminApprovedAsync(int employeeId, int periodId)
+        {
+            if (employeeId <= 0 || periodId <= 0) return;
+
+            int quarterPeriodId = await ResolveQuarterPeriodIdAsync(periodId);
+            if (quarterPeriodId <= 0) return;
+
+            var approval = await _approvalRepo.GetCurrentAsync(
+                "EMPLOYEE", employeeId, null, quarterPeriodId);
+            var users = _userRepo.GetByID(employeeId);
+            var period = _kpiSalePeriodRepo.GetByID(quarterPeriodId);
+
+            // Chưa có approval record => workflow chưa active, cho phép tính.
+            if (approval == null) return;
+
+            // Đã được Admin duyệt rồi -> KHÔNG cho phép tính lại.
+            if (approval.IsAdminApproved)
+            {
+                throw new Exception(
+                    $"KPI của nhân viên {users.FullName} đã được duyệt cho kỳ {period.PeriodName}. " +
+                    //$"Trạng thái: {approval.CurrentStep ?? "PENDING"}. " +
+                    $"Vui lòng hủy duyệt trước khi tính lại KPI.");
+            }
+        }
+
+        /// <summary>
+        /// Nếu team đã được Admin duyệt (P0) ở kỳ này thì không cho phép tính lại KPI nhóm.
+        /// Muốn tính lại phải hủy duyệt trước.
+        /// </summary>
+        private async Task EnsureTeamNotAdminApprovedAsync(int teamId, int periodId)
+        {
+            if (teamId <= 0 || periodId <= 0) return;
+
+            int quarterPeriodId = await ResolveQuarterPeriodIdAsync(periodId);
+            if (quarterPeriodId <= 0) return;
+
+            var approval = await _approvalRepo.GetCurrentAsync(
+                "TEAM", employeeId: null, teamId: teamId, periodId: quarterPeriodId);
+            if (approval == null) return;
+
+            if (approval.IsAdminApproved)
+            {
+                throw new Exception(
+                    $"KPI của team đã được duyệt cho kỳ. " +
+                    $"Vui lòng hủy duyệt team trước khi tính lại KPI.");
+            }
+        }
+
+        /// <summary>
+        /// Kiểm tra user hiện tại có quyền thao tác trên bước duyệt tương ứng hay không.
+        /// Throw exception nếu không đủ quyền (để controller trả về BadRequest với message rõ ràng).
+        /// </summary>
+        /// <param name="stepIdx">index của step trong ApprovalStepOrder (1..6)</param>
+        /// <param name="isApprove">true = duyệt, false = hủy duyệt</param>
+        /// <param name="scope">EMPLOYEE hoặc TEAM (chỉ dùng cho thông báo lỗi)</param>
+        private void EnsureHasStepPermission(int stepIdx, bool isApprove, string scope)
+        {
+            if (stepIdx <= 0) return; // PENDING: chưa có bước nào, cho phép
+
+            var currentUser = GetCurrentUser();
+            // Admin tổng (IsAdmin flag hoặc N1) luôn được phép.
+            if (currentUser.IsAdmin) return;
+            var permissions = (currentUser.Permissions ?? "")
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .ToHashSet();
+            if (permissions.Contains("N1")) return;
+
+            if (!StepPermissionMap.TryGetValue(stepIdx, out var requiredCodes))
+            {
+                // Không có mapping → mặc định cho phép (tránh khóa hệ thống).
+                return;
+            }
+
+            bool hasAny = requiredCodes.Any(code => permissions.Contains(code));
+            if (!hasAny)
+            {
+                string action = isApprove ? "duyệt" : "hủy duyệt";
+                string roleName = ApprovalStepOrder[stepIdx];
+                throw new Exception(
+                    $"Bạn không có quyền {action} bước '{roleName}'. " +
+                    $"Yêu cầu một trong các quyền: {string.Join(", ", requiredCodes)} (N1: admin tổng).");
+            }
+        }
+
+        /// <summary>
+        /// Resolve periodId về kỳ QUARTER cha:
+        /// - Nếu periodId là QUARTER/YEAR thì trả về chính nó.
+        /// - Nếu periodId là MONTH thì trả về ParentPeriodID.
+        /// - Không tìm thấy hoặc không có cha thì trả về periodId gốc.
+        /// </summary>
+        private async Task<int> ResolveQuarterPeriodIdAsync(int periodId)
+        {
+            var period = await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                .FirstOrDefaultAsync(p => p.ID == periodId);
+            if (period == null) return periodId;
+
+            var type = (period.PeriodType ?? "").Trim().ToUpperInvariant();
+            if (type == "QUARTER" || type == "YEAR")
+                return period.ID;
+
+            if (type == "MONTH" && period.ParentPeriodID.HasValue && period.ParentPeriodID.Value > 0)
+                return period.ParentPeriodID.Value;
+
+            return period.ID;
         }
 
         private static void ValidateTeamCalculateRequest(KPISaleTeamCalculateRequest request)
@@ -3208,9 +3341,33 @@ namespace RERPAPI.Controllers.KPISale
 
             var teamId = team.ID;
 
-            // 2. Tính KPI cho từng employee
+            // 2. Pre-check: nếu bất kỳ thành viên nào đã được Admin duyệt ở kỳ này
+            //    thì chặn ngay từ đầu (fail-fast), tránh tính dở rồi mới nửa chừng bị throw.
+            int quarterPeriodId = await ResolveQuarterPeriodIdAsync(request.PeriodID);
+            if (quarterPeriodId > 0)
+            {
+                foreach (var empId in request.EmployeeIDs)
+                {
+                    var memberApproval = await _approvalRepo.GetCurrentAsync(
+                        "EMPLOYEE", empId, null, quarterPeriodId);
+                    if (memberApproval != null && memberApproval.IsAdminApproved)
+                    {
+                        var users = _userRepo.GetByID(empId);
+                        var periodName = (await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                            .FirstOrDefaultAsync(p => p.ID == quarterPeriodId))?.PeriodName ?? "";
+                        throw new Exception(
+                            $"Nhân viên {users.FullName} đã được Admin duyệt cho kỳ {periodName}. " +
+                            $"Vui lòng hủy duyệt trước khi tính lại KPI nhóm.");
+                    }
+                }
+            }
+
+            // 3. Tính KPI cho từng employee
             //    - Nếu RecalcPerEmployee=true: gọi CalculateInternalAsync với SaveSnapshot=true để lưu lại data cá nhân
             //    - Nếu RecalcPerEmployee=false: chỉ lấy kết quả tạm (không lưu), dùng cho việc tổng hợp team
+            //    Lưu ý: CalculateInternalAsync cũng đã tự gọi EnsureNotAdminApprovedAsync
+            //    cho từng nhân viên (defense-in-depth), nên pre-check ở trên chỉ để
+            //    fail-fast với message rõ ràng.
             var perEmployeeResults = new List<KPISaleCalculateResponse>();
             foreach (var empId in request.EmployeeIDs)
             {
@@ -4789,6 +4946,10 @@ namespace RERPAPI.Controllers.KPISale
 
         private async Task<KPISaleCalculateResponse> CalculateInternalAsync(KPISaleCalculateRequest request)
         {
+            // Chặn tính lại khi nhân viên đã được Admin duyệt (khoá cứng P0).
+            // Áp dụng cho cả endpoint Calculate lẫn CalculateTeam (gọi nội bộ).
+            await EnsureNotAdminApprovedAsync(request.EmployeeID, request.PeriodID);
+
             var period = await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
                 .FirstOrDefaultAsync(x => x.ID == request.PeriodID);
             if (period == null || period.ID <= 0)
@@ -6612,5 +6773,776 @@ FROM (
         }
 
         #endregion Validation and helper
+
+        #region Approval
+
+        public class ApprovalActionRequest
+        {
+            /// <summary>APPROVE | REJECT</summary>
+            public string Action { get; set; } = "APPROVE";
+
+            /// <summary>
+            /// Mã bước: P0_ADMIN, P1_SALES_MANAGER, P2_ACCOUNTANT,
+            /// P3_SENIOR_ACCOUNTANT, P4_DIRECTOR, P5_HR_DISBURSE.
+            /// Bỏ trống thì lấy CurrentStep trên bản ghi.
+            /// </summary>
+            public string? StepCode { get; set; }
+
+            public string? Note { get; set; }
+
+            public string? PerformedBy { get; set; }
+        }
+
+        /// <summary>
+        /// Lấy danh sách bản ghi phê duyệt.
+        /// Dùng cho màn hình approval list.
+        /// </summary>
+        [HttpGet("approvals")]
+        public async Task<IActionResult> GetApprovals(
+            [FromQuery] int? periodId = null,
+            [FromQuery] string? scope = null,
+            [FromQuery] string? status = null)
+        {
+            try
+            {
+                var data = _approvalRepo.GetAll();
+
+                if (periodId.HasValue)
+                    data = data.Where(x => x.PeriodID == periodId.Value).ToList();
+
+                if (!string.IsNullOrWhiteSpace(scope))
+                    data = data.Where(x => x.ApprovalScope == scope).ToList();
+
+                if (!string.IsNullOrWhiteSpace(status))
+                    data = data.Where(x => x.CurrentStep == status).ToList();
+
+                data = data
+                    .OrderByDescending(x => x.UpdatedDate ?? x.CreatedDate)
+                    .ToList();
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Lấy log lịch sử duyệt theo employee + period.
+        /// </summary>
+        [HttpGet("approvals/logs")]
+        public async Task<IActionResult> GetApprovalLogs(
+            [FromQuery] int employeeId,
+            [FromQuery] int periodId)
+        {
+            try
+            {
+                var logs = _approvalLogRepo.GetAll()
+                    .Where(x => x.EmployeeID == employeeId && x.PeriodID == periodId)
+                    .OrderBy(x => x.PerformedDate)
+                    .ToList();
+
+                return Ok(ApiResponseFactory.Success(logs, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Phê duyệt / hủy phê duyệt một bản ghi.
+        /// StepCode có thể bỏ trống: dùng CurrentStep trên bản ghi.
+        /// </summary>
+        [HttpPost("approvals/{id}/action")]
+        public async Task<IActionResult> ApprovalAction(int id, [FromBody] ApprovalActionRequest request)
+        {
+            try
+            {
+                if (request == null || string.IsNullOrWhiteSpace(request.Action))
+                    return BadRequest(ApiResponseFactory.Fail(null, "Action là bắt buộc (APPROVE hoặc REJECT)."));
+
+                var entity = _approvalRepo.GetByID(id);
+                if (entity == null)
+                    return NotFound(ApiResponseFactory.Fail(null, $"Không tìm thấy bản ghi approval #{id}."));
+
+                var action = request.Action.Trim().ToUpperInvariant();
+                if (action != "APPROVE" && action != "REJECT")
+                    return BadRequest(ApiResponseFactory.Fail(null, "Action chỉ chấp nhận APPROVE hoặc REJECT."));
+
+                var step = (request.StepCode ?? entity.CurrentStep ?? "").Trim().ToUpperInvariant();
+                if (string.IsNullOrEmpty(step))
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không xác định được StepCode."));
+
+                var user = string.IsNullOrWhiteSpace(request.PerformedBy) ? "system" : request.PerformedBy!;
+                var statusBefore = entity.CurrentStep;
+                var note = request.Note ?? "";
+                DateTime now = DateTime.Now;
+
+                ApplyStep(entity, step, action, user, now);
+
+                entity.UpdatedBy = user;
+                entity.UpdatedDate = now;
+
+                _approvalRepo.Update(entity);
+
+                var log = new KPISaleApprovalLog
+                {
+                    EmployeeID = entity.EmployeeID ?? 0,
+                    PeriodID = entity.PeriodID,
+                    ActionType = action,
+                    StepCode = step,
+                    PerformedBy = user,
+                    PerformedDate = now,
+                    Note = note,
+                    StatusBefore = statusBefore,
+                    StatusAfter = entity.CurrentStep
+                };
+                _approvalLogRepo.Create(log);
+
+                return Ok(ApiResponseFactory.Success(entity, action == "APPROVE" ? "Duyệt thành công" : "Hủy duyệt thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Apply trạng thái duyệt lên entity theo step + action.
+        /// Convention step code: PENDING -> P0_APPROVED -> P1_APPROVED -> P2_APPROVED
+        /// -> P3_APPROVED -> P4_APPROVED -> DONE (khớp với ApprovalCurrentStep của frontend).
+        /// </summary>
+        private static void ApplyStep(KPISaleApproval entity, string step, string action, string user, DateTime now)
+        {
+            if (action == "REJECT")
+            {
+                entity.CurrentStep = "REJECTED";
+                return;
+            }
+
+            switch (step)
+            {
+                case "P0_APPROVED":
+                case "P0_ADMIN":
+                    entity.IsAdminApproved = true;
+                    entity.AdminApprovedBy = entity.AdminApprovedBy ?? user;
+                    entity.AdminApprovedDate = entity.AdminApprovedDate ?? now;
+                    entity.CurrentStep = "P1_APPROVED";
+                    break;
+
+                case "P1_APPROVED":
+                case "P1_SALES_MANAGER":
+                    entity.IsSalesManagerApproved = true;
+                    entity.SalesManagerApprovedBy = entity.SalesManagerApprovedBy ?? user;
+                    entity.SalesManagerApprovedDate = entity.SalesManagerApprovedDate ?? now;
+                    entity.CurrentStep = "P2_APPROVED";
+                    break;
+
+                case "P2_APPROVED":
+                case "P2_ACCOUNTANT":
+                    entity.IsAccountantApproved = true;
+                    entity.AccountantApprovedBy = entity.AccountantApprovedBy ?? user;
+                    entity.AccountantApprovedDate = entity.AccountantApprovedDate ?? now;
+                    entity.CurrentStep = "P3_APPROVED";
+                    break;
+
+                case "P3_APPROVED":
+                case "P3_SENIOR_ACCOUNTANT":
+                    entity.IsSeniorAccountantApproved = true;
+                    entity.SeniorAccountantApprovedBy = entity.SeniorAccountantApprovedBy ?? user;
+                    entity.SeniorAccountantApprovedDate = entity.SeniorAccountantApprovedDate ?? now;
+                    entity.CurrentStep = "P4_APPROVED";
+                    break;
+
+                case "P4_APPROVED":
+                case "P4_DIRECTOR":
+                    entity.IsDirectorApproved = true;
+                    entity.DirectorApprovedBy = entity.DirectorApprovedBy ?? user;
+                    entity.DirectorApprovedDate = entity.DirectorApprovedDate ?? now;
+                    entity.CurrentStep = "DONE";
+                    break;
+
+                case "P5_HR_DISBURSE":
+                case "DONE":
+                    entity.IsHRDisbursed = true;
+                    entity.HRDisbursedBy = entity.HRDisbursedBy ?? user;
+                    entity.HRDisbursedDate = entity.HRDisbursedDate ?? now;
+                    entity.CurrentStep = "DONE";
+                    break;
+
+                case "PENDING":
+                    // Bước 0: tạo record ở trạng thái pending, chuyển sang P0 sau khi admin duyệt
+                    entity.CurrentStep = "P0_APPROVED";
+                    entity.IsAdminApproved = true;
+                    entity.AdminApprovedBy = user;
+                    entity.AdminApprovedDate = now;
+                    break;
+
+                default:
+                    entity.CurrentStep = step;
+                    break;
+            }
+        }
+
+        #endregion Approval
+
+        #region Approval (Workflow khớp frontend kpi-summary)
+
+        // ============================================================
+        // Convention step code (khớp ApprovalCurrentStep của frontend kpi-summary.model.ts):
+        //   PENDING -> P0_APPROVED -> P1_APPROVED -> P2_APPROVED
+        //   -> P3_APPROVED -> P4_APPROVED -> DONE
+        // ============================================================
+
+        private static readonly string[] ApprovalStepOrder = new[]
+        {
+            "PENDING",
+            "P0_APPROVED",
+            "P1_APPROVED",
+            "P2_APPROVED",
+            "P3_APPROVED",
+            "P4_APPROVED",
+            "DONE",
+        };
+
+        /// <summary>
+        /// Bảng ánh xạ step index (0..6 trong ApprovalStepOrder) → mã quyền yêu cầu.
+        /// index 1 (P0 - Admin):        N27
+        /// index 2 (P1 - Sales Mgr):    N51
+        /// index 3 (P2 - Kế toán):      N36
+        /// index 4 (P3 - Trưởng KT):    N52
+        /// index 5 (P4 - Giám đốc):     N58
+        /// index 6 (DONE - HR chi):     N34
+        /// N1 luôn được phép (admin tổng). IsAdmin=true cũng được phép.
+        /// </summary>
+        private static readonly Dictionary<int, string[]> StepPermissionMap = new Dictionary<int, string[]>
+        {
+            [1] = new[] { "N27" },
+            [2] = new[] { "N51" },
+            [3] = new[] { "N36" },
+            [4] = new[] { "N52" },
+            [5] = new[] { "N58" },
+            [6] = new[] { "N34" },
+        };
+
+        private static int StepIndex(string? step)
+        {
+            if (string.IsNullOrEmpty(step)) return -1;
+            return Array.IndexOf(ApprovalStepOrder, step);
+        }
+
+        /// <summary>
+        /// Resolve tất cả period cần tạo/update approval record.
+        /// QUARTER → [QUARTER, 3x MONTH]
+        /// YEAR    → [YEAR, 4x QUARTER, 12x MONTH]
+        /// MONTH   → [MONTH] (không cascade ngược lên parent)
+        /// </summary>
+        private async Task<List<int>> ResolveApprovalPeriodIdsAsync(int periodId)
+        {
+            var result = new List<int> { periodId };
+
+            var period = await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                .FirstOrDefaultAsync(p => p.ID == periodId);
+            if (period == null) return result;
+
+            var type = NormalizeOptionalCode(period.PeriodType, "MONTH");
+            if (type == "QUARTER")
+            {
+                var children = await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                    .Where(x => x.ParentPeriodID == periodId && x.PeriodType == "MONTH")
+                    .OrderBy(x => x.DateStart)
+                    .ToListAsync();
+                result.AddRange(children.Select(x => x.ID));
+            }
+            else if (type == "YEAR")
+            {
+                var quarters = await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                    .Where(x => x.ParentPeriodID == periodId && x.PeriodType == "QUARTER")
+                    .OrderBy(x => x.DateStart)
+                    .ToListAsync();
+
+                foreach (var q in quarters)
+                {
+                    result.Add(q.ID);
+                    var months = await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                        .Where(x => x.ParentPeriodID == q.ID && x.PeriodType == "MONTH")
+                        .OrderBy(x => x.DateStart)
+                        .ToListAsync();
+                    result.AddRange(months.Select(x => x.ID));
+                }
+            }
+            // MONTH → chỉ self, không cascade
+
+            return result;
+        }
+
+        private static void ResetAllFlags(KPISaleApproval e)
+        {
+            e.IsAdminApproved = false;
+            e.AdminApprovedBy = null;
+            e.AdminApprovedDate = null;
+            e.IsSalesManagerApproved = false;
+            e.SalesManagerApprovedBy = null;
+            e.SalesManagerApprovedDate = null;
+            e.IsAccountantApproved = false;
+            e.AccountantApprovedBy = null;
+            e.AccountantApprovedDate = null;
+            e.IsSeniorAccountantApproved = false;
+            e.SeniorAccountantApprovedBy = null;
+            e.SeniorAccountantApprovedDate = null;
+            e.IsDirectorApproved = false;
+            e.DirectorApprovedBy = null;
+            e.DirectorApprovedDate = null;
+            e.IsHRDisbursed = false;
+            e.HRDisbursedBy = null;
+            e.HRDisbursedDate = null;
+        }
+
+        private static void ApplyFlagsUpTo(KPISaleApproval e, int idx, string user, DateTime now)
+        {
+            // idx: 0=PENDING, 1=P0_APPROVED, 2=P1_APPROVED, ..., 6=DONE
+            // Mỗi step đánh dấu thêm 1 cờ: P0=Admin, P1=SalesManager,
+            // P2=Accountant, P3=SeniorAccountant, P4=Director, DONE=HR.
+            if (idx >= 1)
+            {
+                e.IsAdminApproved = true;
+                e.AdminApprovedBy ??= user;
+                e.AdminApprovedDate ??= now;
+            }
+            if (idx >= 2)
+            {
+                e.IsSalesManagerApproved = true;
+                e.SalesManagerApprovedBy ??= user;
+                e.SalesManagerApprovedDate ??= now;
+            }
+            if (idx >= 3)
+            {
+                e.IsAccountantApproved = true;
+                e.AccountantApprovedBy ??= user;
+                e.AccountantApprovedDate ??= now;
+            }
+            if (idx >= 4)
+            {
+                e.IsSeniorAccountantApproved = true;
+                e.SeniorAccountantApprovedBy ??= user;
+                e.SeniorAccountantApprovedDate ??= now;
+            }
+            if (idx >= 5)
+            {
+                e.IsDirectorApproved = true;
+                e.DirectorApprovedBy ??= user;
+                e.DirectorApprovedDate ??= now;
+            }
+            if (idx >= 6)
+            {
+                e.IsHRDisbursed = true;
+                e.HRDisbursedBy ??= user;
+                e.HRDisbursedDate ??= now;
+            }
+        }
+
+        public class ApprovalStepRequestDto
+        {
+            /// <summary>EMPLOYEE | TEAM</summary>
+            public string ApprovalScope { get; set; } = "EMPLOYEE";
+            public int? EmployeeID { get; set; }
+            public int? TeamID { get; set; }
+            public int PeriodID { get; set; }
+            public string? Note { get; set; }
+            public string? PerformedBy { get; set; }
+        }
+
+        /// <summary>
+        /// Lấy trạng thái duyệt theo (scope, refId, periodId).
+        /// Trả về null nếu chưa có bản ghi.
+        /// </summary>
+        [HttpGet("approval")]
+        public async Task<IActionResult> GetApprovalByRef(
+            [FromQuery] string scope,
+            [FromQuery] int periodID,
+            [FromQuery] int? employeeID = null,
+            [FromQuery] int? teamID = null)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(scope))
+                    return BadRequest(ApiResponseFactory.Fail(null, "scope là bắt buộc (EMPLOYEE hoặc TEAM)."));
+
+                var s = scope.Trim().ToUpperInvariant();
+                if (s != "EMPLOYEE" && s != "TEAM")
+                    return BadRequest(ApiResponseFactory.Fail(null, "scope chỉ chấp nhận EMPLOYEE hoặc TEAM."));
+
+                if (s == "EMPLOYEE" && (employeeID == null || employeeID == 0))
+                    return BadRequest(ApiResponseFactory.Fail(null, "employeeID là bắt buộc với scope=EMPLOYEE."));
+                if (s == "TEAM" && (teamID == null || teamID == 0))
+                    return BadRequest(ApiResponseFactory.Fail(null, "teamID là bắt buộc với scope=TEAM."));
+
+                var data = await _approvalRepo.GetCurrentAsync(s, employeeID, teamID, periodID);
+                if (data == null)
+                    return Ok(ApiResponseFactory.Success((KPISaleApproval?)null, ""));
+
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Duyệt 1 bước. Tự tạo record nếu chưa có. Nâng currentStep lên 1 nấc.
+        /// Khi duyệt ở QUARTER/YEAR → cascade xuống tất cả kỳ con (MONTH hoặc QUARTER).
+        /// </summary>
+        [HttpPost("approval/approve")]
+        public async Task<IActionResult> ApproveStep([FromBody] ApprovalStepRequestDto request)
+        {
+            try
+            {
+                if (request == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Body rỗng."));
+
+                var s = (request.ApprovalScope ?? "").Trim().ToUpperInvariant();
+                if (s != "EMPLOYEE" && s != "TEAM")
+                    return BadRequest(ApiResponseFactory.Fail(null, "approvalScope chỉ chấp nhận EMPLOYEE hoặc TEAM."));
+
+                int? refId = s == "EMPLOYEE" ? request.EmployeeID : request.TeamID;
+                if (refId == null || refId == 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, $"{(s == "EMPLOYEE" ? "employeeID" : "teamID")} là bắt buộc."));
+
+                var user = string.IsNullOrWhiteSpace(request.PerformedBy) ? "system" : request.PerformedBy!;
+                DateTime now = DateTime.Now;
+
+                // Resolve tất cả period cần duyệt (self + children).
+                var periodIds = await ResolveApprovalPeriodIdsAsync(request.PeriodID);
+
+                // Permission check: bước sắp duyệt tương ứng với nextIdx trên bản ghi kỳ gốc.
+                var currentMainEntity = await _approvalRepo.GetCurrentAsync(s,
+                    employeeId: s == "EMPLOYEE" ? refId : null,
+                    teamId: s == "TEAM" ? refId : null,
+                    periodId: request.PeriodID);
+                int currentMainIdx = currentMainEntity == null ? -1 : StepIndex(currentMainEntity.CurrentStep);
+                int nextMainIdx = Math.Min(currentMainIdx + 1, ApprovalStepOrder.Length - 1);
+                if (currentMainIdx < 0) nextMainIdx = 1;
+                EnsureHasStepPermission(nextMainIdx, isApprove: true, s);
+
+                // Danh sách EmployeeID cần tạo/upsert bản ghi EMPLOYEE.
+                // EMPLOYEE: 1 phần tử { refId }
+                // TEAM:     tất cả thành viên team
+                List<int> employeeIds = new List<int>();
+                if (s == "TEAM")
+                {
+                    var memberIds = await _kpiSaleRepo.KPISaleTeamMembers
+                        .Where(m => m.TeamID == refId)
+                        .Select(m => m.EmployeeID)
+                        .ToListAsync();
+                    if (memberIds.Count == 0)
+                        return BadRequest(ApiResponseFactory.Fail(null, $"Team #{refId} hiện không có thành viên nào."));
+                    employeeIds = memberIds;
+                }
+                else
+                {
+                    employeeIds = new List<int> { refId!.Value };
+                }
+
+                KPISaleApproval? mainEntity = null;
+                int totalApproved = 0;
+
+                foreach (var periodId in periodIds)
+                {
+                    int? teamTargetIdx = null;
+
+                    // --- Bản ghi TEAM (chỉ khi scope = TEAM) ---
+                    if (s == "TEAM")
+                    {
+                        var teamEntity = await _approvalRepo.GetCurrentAsync(
+                            "TEAM", employeeId: null, teamId: refId.Value, periodId: periodId);
+                        var teamStatusBefore = teamEntity?.CurrentStep ?? "PENDING";
+                        int teamCurIdx = teamEntity == null ? -1 : StepIndex(teamEntity.CurrentStep);
+                        int teamNextIdx = Math.Min(teamCurIdx + 1, ApprovalStepOrder.Length - 1);
+                        if (teamCurIdx < 0) teamNextIdx = 1;
+                        teamTargetIdx = teamNextIdx;
+
+                        if (teamEntity == null)
+                        {
+                            teamEntity = new KPISaleApproval
+                            {
+                                ApprovalScope = "TEAM",
+                                EmployeeID = null,
+                                TeamID = refId.Value,
+                                PeriodID = periodId,
+                                CurrentStep = ApprovalStepOrder[teamNextIdx],
+                                CreatedBy = user,
+                                CreatedDate = now,
+                            };
+                        }
+                        else
+                        {
+                            if (teamCurIdx >= 0 && teamCurIdx < teamNextIdx)
+                                ResetAllFlags(teamEntity);
+                            teamEntity.CurrentStep = ApprovalStepOrder[teamNextIdx];
+                        }
+                        ApplyFlagsUpTo(teamEntity, teamNextIdx, user, now);
+                        teamEntity.UpdatedBy = user;
+                        teamEntity.UpdatedDate = now;
+
+                        if (teamEntity.ID == 0)
+                            _approvalRepo.Create(teamEntity);
+                        else
+                            _approvalRepo.Update(teamEntity);
+
+                        _approvalLogRepo.Create(new KPISaleApprovalLog
+                        {
+                            EmployeeID = 0,
+                            PeriodID = periodId,
+                            ActionType = "APPROVE",
+                            StepCode = ApprovalStepOrder[teamNextIdx],
+                            PerformedBy = user,
+                            PerformedDate = now,
+                            Note = request.Note ?? "",
+                            StatusBefore = teamStatusBefore,
+                            StatusAfter = teamEntity.CurrentStep,
+                        });
+
+                        totalApproved++;
+
+                        // Main entity trả về = bản ghi TEAM của kỳ gốc.
+                        if (mainEntity == null)
+                            mainEntity = teamEntity;
+                    }
+
+                    // --- Bản ghi EMPLOYEE ---
+                    // TEAM  : duyệt từng thành viên (INHERIT_FROM_TEAM)
+                    // EMPLOYEE: duyệt 1 người (APPROVE)
+                    foreach (var empId in employeeIds)
+                    {
+                        var entity = await _approvalRepo.GetCurrentAsync(
+                            "EMPLOYEE", employeeId: empId, teamId: null, periodId: periodId);
+
+                        var statusBefore = entity?.CurrentStep ?? "PENDING";
+                        int curIdx = entity == null ? -1 : StepIndex(entity.CurrentStep);
+                        int targetIdx = s == "TEAM" && teamTargetIdx.HasValue
+                            ? teamTargetIdx.Value
+                            : Math.Min(curIdx + 1, ApprovalStepOrder.Length - 1);
+                        if (curIdx < 0 && s != "TEAM") targetIdx = 1;
+
+                        if (entity == null)
+                        {
+                            entity = new KPISaleApproval
+                            {
+                                ApprovalScope = "EMPLOYEE",
+                                EmployeeID = empId,
+                                TeamID = null,
+                                PeriodID = periodId,
+                                CurrentStep = ApprovalStepOrder[targetIdx],
+                                CreatedBy = user,
+                                CreatedDate = now,
+                            };
+                        }
+                        else
+                        {
+                            if (s == "TEAM" || curIdx > targetIdx)
+                                ResetAllFlags(entity);
+                            entity.CurrentStep = ApprovalStepOrder[targetIdx];
+                        }
+                        ApplyFlagsUpTo(entity, targetIdx, user, now);
+                        entity.UpdatedBy = user;
+                        entity.UpdatedDate = now;
+
+                        if (entity.ID == 0)
+                            _approvalRepo.Create(entity);
+                        else
+                            _approvalRepo.Update(entity);
+
+                        _approvalLogRepo.Create(new KPISaleApprovalLog
+                        {
+                            EmployeeID = empId,
+                            PeriodID = periodId,
+                            ActionType = s == "TEAM" ? "INHERIT_FROM_TEAM" : "APPROVE",
+                            StepCode = ApprovalStepOrder[targetIdx],
+                            PerformedBy = user,
+                            PerformedDate = now,
+                            Note = s == "TEAM"
+                                ? $"Kế thừa từ duyệt team #{refId} - {request.Note ?? ""}"
+                                : (request.Note ?? ""),
+                            StatusBefore = statusBefore,
+                            StatusAfter = entity.CurrentStep,
+                        });
+
+                        totalApproved++;
+
+                        // EMPLOYEE scope: main entity trả về = bản ghi EMPLOYEE kỳ gốc.
+                        if (s == "EMPLOYEE" && mainEntity == null)
+                            mainEntity = entity;
+                    }
+                }
+
+                var employee = _userRepo.GetByID(refId ?? 0);
+
+                string scopeLabel = s == "TEAM" ? $"team #{refId}" : $"cá nhân #{employee.FullName}";
+                return Ok(ApiResponseFactory.Success(mainEntity, $"Duyệt thành công: {scopeLabel} x {periodIds.Count} kỳ ({totalApproved} bản ghi)."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Hủy duyệt 1 bước. Lùi currentStep về 1 nấc (về PENDING thì reset toàn bộ flag).
+        /// Khi hủy ở QUARTER/YEAR → cascade tất cả kỳ con.
+        /// Khi scope=TEAM → cascade hủy duyệt bản ghi TEAM + tất cả EMPLOYEE-level records của thành viên.
+        /// </summary>
+        [HttpPost("approval/unapprove")]
+        public async Task<IActionResult> UnapproveStep([FromBody] ApprovalStepRequestDto request)
+        {
+            try
+            {
+                if (request == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Body rỗng."));
+
+                var s = (request.ApprovalScope ?? "").Trim().ToUpperInvariant();
+                if (s != "EMPLOYEE" && s != "TEAM")
+                    return BadRequest(ApiResponseFactory.Fail(null, "approvalScope chỉ chấp nhận EMPLOYEE hoặc TEAM."));
+
+                int? refId = s == "EMPLOYEE" ? request.EmployeeID : request.TeamID;
+                if (refId == null || refId == 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, $"{(s == "EMPLOYEE" ? "employeeID" : "teamID")} là bắt buộc."));
+
+                var user = string.IsNullOrWhiteSpace(request.PerformedBy) ? "system" : request.PerformedBy!;
+                DateTime now = DateTime.Now;
+
+                var periodIds = await ResolveApprovalPeriodIdsAsync(request.PeriodID);
+
+                // Permission check: hủy duyệt cần quyền của bước đích sau rollback; riêng P0 về PENDING vẫn cần quyền P0.
+                var currentMainEntity = await _approvalRepo.GetCurrentAsync(s,
+                    employeeId: s == "EMPLOYEE" ? refId : null,
+                    teamId: s == "TEAM" ? refId : null,
+                    periodId: request.PeriodID);
+                int currentMainIdx = currentMainEntity == null ? -1 : StepIndex(currentMainEntity.CurrentStep);
+                if (currentMainIdx <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Chưa có bước duyệt nào để hủy."));
+                int unapprovePermissionIdx = Math.Max(currentMainIdx - 1, 1);
+                EnsureHasStepPermission(unapprovePermissionIdx, isApprove: false, s);
+
+                // Danh sách EmployeeID cần cập nhật bản ghi EMPLOYEE.
+                // EMPLOYEE: 1 phần tử { refId }
+                // TEAM:     tất cả thành viên team
+                List<int> memberIds = new List<int>();
+                List<int> employeeIds = new List<int>();
+                if (s == "TEAM")
+                {
+                    memberIds = await _kpiSaleRepo.KPISaleTeamMembers
+                        .Where(m => m.TeamID == refId)
+                        .Select(m => m.EmployeeID)
+                        .ToListAsync();
+                    employeeIds = memberIds;
+                }
+                else
+                {
+                    employeeIds = new List<int> { refId!.Value };
+                }
+
+                KPISaleApproval? mainEntity = null;
+                int totalUnapproved = 0;
+
+                foreach (var periodId in periodIds)
+                {
+                    int? teamTargetIdx = null;
+
+                    // --- Bản ghi TEAM ---
+                    if (s == "TEAM")
+                    {
+                        var teamEntity = await _approvalRepo.GetCurrentAsync(
+                            "TEAM", employeeId: null, teamId: refId.Value, periodId: periodId);
+                        if (teamEntity != null)
+                        {
+                            int curIdx = StepIndex(teamEntity.CurrentStep);
+                            if (curIdx > 0)
+                            {
+                                var statusBefore = teamEntity.CurrentStep;
+                                int prevIdx = curIdx - 1;
+                                teamTargetIdx = prevIdx;
+                                ResetAllFlags(teamEntity);
+                                ApplyFlagsUpTo(teamEntity, prevIdx, user, now);
+                                teamEntity.CurrentStep = ApprovalStepOrder[prevIdx];
+                                teamEntity.UpdatedBy = user;
+                                teamEntity.UpdatedDate = now;
+                                _approvalRepo.Update(teamEntity);
+
+                                _approvalLogRepo.Create(new KPISaleApprovalLog
+                                {
+                                    EmployeeID = 0,
+                                    PeriodID = periodId,
+                                    ActionType = "UNAPPROVE",
+                                    StepCode = ApprovalStepOrder[prevIdx],
+                                    PerformedBy = user,
+                                    PerformedDate = now,
+                                    Note = request.Note ?? "",
+                                    StatusBefore = statusBefore,
+                                    StatusAfter = teamEntity.CurrentStep,
+                                });
+
+                                totalUnapproved++;
+                                if (mainEntity == null) mainEntity = teamEntity;
+                            }
+                        }
+                    }
+
+                    // --- Bản ghi EMPLOYEE ---
+                    // TEAM:     hủy cho từng thành viên (INHERIT_FROM_TEAM)
+                    // EMPLOYEE: hủy 1 người (UNAPPROVE)
+                    foreach (var empId in employeeIds)
+                    {
+                        var entity = await _approvalRepo.GetCurrentAsync(
+                            "EMPLOYEE", employeeId: empId, teamId: null, periodId: periodId);
+                        if (entity == null) continue;
+
+                        int curIdx = StepIndex(entity.CurrentStep);
+                        if (curIdx <= 0 && s != "TEAM") continue;
+                        if (s == "TEAM" && !teamTargetIdx.HasValue) continue;
+
+                        var statusBefore = entity.CurrentStep;
+                        int targetIdx = s == "TEAM" && teamTargetIdx.HasValue
+                            ? teamTargetIdx.Value
+                            : curIdx - 1;
+                        ResetAllFlags(entity);
+                        ApplyFlagsUpTo(entity, targetIdx, user, now);
+                        entity.CurrentStep = ApprovalStepOrder[targetIdx];
+                        entity.UpdatedBy = user;
+                        entity.UpdatedDate = now;
+                        _approvalRepo.Update(entity);
+
+                        _approvalLogRepo.Create(new KPISaleApprovalLog
+                        {
+                            EmployeeID = empId,
+                            PeriodID = periodId,
+                            ActionType = s == "TEAM" ? "INHERIT_FROM_TEAM" : "UNAPPROVE",
+                            StepCode = ApprovalStepOrder[targetIdx],
+                            PerformedBy = user,
+                            PerformedDate = now,
+                            Note = s == "TEAM"
+                                ? $"Kế thừa từ hủy duyệt team #{refId} - {request.Note ?? ""}"
+                                : (request.Note ?? "Hủy duyệt"),
+                            StatusBefore = statusBefore,
+                            StatusAfter = entity.CurrentStep,
+                        });
+
+                        totalUnapproved++;
+                        if (s == "EMPLOYEE" && mainEntity == null) mainEntity = entity;
+                    }
+                }
+
+                string scopeLabel = s == "TEAM" ? $"team #{refId} ({memberIds.Count} TV)" : $"cá nhân #{refId}";
+                return Ok(ApiResponseFactory.Success(mainEntity, $"Hủy duyệt thành công: {scopeLabel} x {periodIds.Count} kỳ ({totalUnapproved} bản ghi)."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        #endregion Approval (Workflow khớp frontend kpi-summary)
     }
 }
