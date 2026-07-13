@@ -282,5 +282,43 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 });
             }
         }
+        [HttpPost("inventory-not-export")]
+        public IActionResult getInventoryNotExport(InventoryPram filter)
+        {
+            try
+            {
+                if (filter.checkAll == true) filter.productGroupID = 0;
+                List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
+                    "spGetInventoryNew_nhat",
+                    new string[] { "@ID", "@Find", "@WarehouseCode", "@IsStock", "@IsDeleted", "@ProductSaleID", "@PageSize", "@PageNumber", "@FromDate", "@ToDate" },
+                    new object[] {
+                        filter.productGroupID,
+                        filter.Find ?? "",
+                        filter.WarehouseCode ?? "",
+                        filter.IsStock ? 1 : 0,
+                        0,
+                        0,
+                        999999,
+                        1,
+                        filter.FromDate.HasValue ? (object)filter.FromDate.Value : DBNull.Value,
+                        filter.ToDate.HasValue ? (object)filter.ToDate.Value : DBNull.Value
+                    }
+                );
+                return Ok(new
+                {
+                    status = 1,
+                    data = SQLHelper<object>.GetListData(result, 0)
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
+        }
     }
 }

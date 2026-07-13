@@ -28,4 +28,8 @@ public partial class v_HistoryMoney_POKH
     public int? HistoryMoneyUserID { get; set; }
 
     public bool? IsDeleted { get; set; }
+
+    public DateTime? ReceivedDatePO { get; set; }
+
+    public int? PMUserID { get; set; }
 }

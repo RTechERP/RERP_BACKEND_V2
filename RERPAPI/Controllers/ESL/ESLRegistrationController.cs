@@ -3,6 +3,7 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using iTextSharp.text.pdf;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -799,21 +800,24 @@ namespace RERPAPI.Controllers.ESL
             payload["pn"] = table1?.TestTableName?.Replace(" - Mặt 1", "") ?? table2?.TestTableName?.Replace(" - Mặt 2", "") ?? "Bàn Test";
             payload["extend"] = new object();
             payload[$"f1"] =  table1?.TestTableName ?? "Bàn 1";
-            payload[$"f15"] = table2?.TestTableName ?? "Bàn 2";
+            payload[$"f16"] = table2?.TestTableName ?? "Bàn 2";
 
 
             void FillSide(int side, ESLTestTableRegistration reg, ESLTestTableRegistrationDetail det)
             {
-                string empReg = "", empApp = "";
+                string empReg = "", empApp = "", empRegCodeAndSDT = "";
                 if (det != null)
                 {
                     var rE = _employeeRepo.GetByID(det.OwnerID);
                     var aE = _employeeRepo.GetByID(det.ApproverID);
                     empReg = rE?.FullName ?? "";
+                    empReg = rE?.FullName ?? "";
+                    empRegCodeAndSDT = (bool)(rE?.Code.IsNullOrEmpty()) ? (bool)(rE?.SDTCaNhan.IsNullOrEmpty()) ? "" : rE?.SDTCaNhan : rE?.Code + " - " + rE?.SDTCaNhan;
                     empApp = aE?.FullName ?? "";
+
                 }
 
-                int offset = side == 1 ? 0 : 14;
+                int offset = side == 1 ? 0 : 15;
                 var content = reg?.RegistrationContent ?? "";
                 if (content.Length > 54)
                     content = content.Substring(0, 54) + "...";
@@ -823,8 +827,9 @@ namespace RERPAPI.Controllers.ESL
                 payload[$"f{5 + offset}"] = det != null ? det.EndDate.ToString("dd/MM/yyyy") : "";
                 payload[$"f{6 + offset}"] = empReg;
                 payload[$"f{7 + offset}"] = empApp;
+                payload[$"f{8 + offset}"] = empRegCodeAndSDT;
 
-                for (int i = 8; i <= (side == 1 ? 14 : 13); i++)
+                for (int i = 9; i <= (side == 1 ? 15 : 14); i++)
                 {
                     payload[$"f{i + offset}"] = "";
                 }
@@ -841,13 +846,13 @@ namespace RERPAPI.Controllers.ESL
                     empApp = aE?.FullName ?? "";
                 }
 
-                int offset = side == 1 ? 0 : 14;
+                int offset = side == 1 ? 0 : 15;
 
-                payload[$"f{8 + offset}"] = det != null ? det.EndDate.ToString("dd/MM/yyyy") : "";
-                payload[$"f{9 + offset}"] = empReg;
-                payload[$"f{10 + offset}"] = "✔";
+                payload[$"f{9 + offset}"] = det != null ? det.EndDate.ToString("dd/MM/yyyy") : "";
+                payload[$"f{10 + offset}"] = empReg;
+                payload[$"f{11 + offset}"] = "✔";
 
-                for (int i = 11; i <= (side == 1 ? 14 : 13); i++)
+                for (int i = 12; i <= (side == 1 ? 15 : 14); i++)
                 {
                     payload[$"f{i + offset}"] = "";
                 }
@@ -864,11 +869,11 @@ namespace RERPAPI.Controllers.ESL
                     empApp = aE?.FullName ?? "";
                 }
 
-                int offset = side == 1 ? 0 : 14;
+                int offset = side == 1 ? 0 : 15;
 
-                payload[$"f{11 + offset}"] = det != null ? det.EndDate.ToString("dd/MM/yyyy") : "";
-                payload[$"f{12 + offset}"] = empReg;
-                payload[$"f{13 + offset}"] = "✔";
+                payload[$"f{12 + offset}"] = det != null ? det.EndDate.ToString("dd/MM/yyyy") : "";
+                payload[$"f{13 + offset}"] = empReg;
+                payload[$"f{14 + offset}"] = "✔";
 
             }
 

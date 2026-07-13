@@ -51,6 +51,7 @@ using tusdotnet.Models;
 using tusdotnet.Models.Configuration;
 using tusdotnet.Models.Expiration;
 using tusdotnet.Stores;
+using RERPAPI.Repo.GenericEntity.HRM.Visa;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -553,6 +554,7 @@ builder.Services.AddScoped<DrawingRepo>();
 builder.Services.AddScoped<DrawingLogRepo>();
 builder.Services.AddScoped<JobRequirementRecommendRepo>();
 builder.Services.AddScoped<JobRequirementRecommendDetailRepo>();
+builder.Services.AddScoped<AppMobileVersionRepo>();
 
 #region khóa học
 
@@ -718,7 +720,16 @@ builder.Services.AddScoped<ESLTestTableRegistrationRepo>();
 builder.Services.AddScoped<ESLTestTableRegistrationLogRepo>();
 builder.Services.AddScoped<ESLTestTableRegistrationDetailRepo>();
 builder.Services.AddScoped<ESLConfigRepo>();
+
+builder.Services.AddScoped<VehicleRentalRequestRepo>();
+builder.Services.AddScoped<BusinessVisaRequestRepo>();
+
+
 builder.Services.AddHttpClient<IESLBindService, ESLBindService>();
+builder.Services.AddScoped<KPISaleApprovalRepo>();
+builder.Services.AddScoped<KPISaleApprovalLogRepo>();
+builder.Services.AddScoped<KPISaleTeamMemberRepo>();
+builder.Services.AddScoped<KPISalePeroidRepo>();
 #region DI LOG
 
 builder.Services.AddScoped<POKHLogRepo>();
@@ -732,6 +743,7 @@ builder.Services.AddScoped<AssetAllocationLogRepo>();
 builder.Services.AddScoped<ProjectPartlistPurchaseRequestLogRepo>();
 builder.Services.AddScoped<ProjectPartListPriceRequestLogRepo>();
 builder.Services.AddScoped<ProjectPartListLogRepo>();
+builder.Services.AddScoped<JobPerfomanceEvaluationNewLogRepo>();
 
 #endregion DI LOG
 
@@ -789,7 +801,7 @@ builder.Services.AddCors(options =>
         ;
     });
 });
-// Chỉ khởi tạo 1 lần duy nhất khi chạy server
+ //Chỉ khởi tạo 1 lần duy nhất khi chạy server
 FirebaseApp.Create(new AppOptions()
 {
     Credential = GoogleCredential.FromFile("firebase-adminsdk.json") // Thay bằng đường dẫn thực tế

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -21,16 +21,20 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
         private readonly IConfiguration _configuration;
         private EmailHelper _emailHelper;
         private JobPerfomanceEvaluationNewRepo _jobPerfomanceEvaluationNewRepo;
+        private JobPerfomanceEvaluationNewLogRepo _jobPerfomanceEvaluationNewLogRepo;
         private vUserGroupLinksRepo _vUserGroupLinksRepo;
 
         public JobPerfomanceEvaluationController(EmployeeApproveRepo employeeApproveRepo, EmailHelper emailHelper,
             IConfiguration configuration,
             JobPerfomanceEvaluationApproveRepo jobPerfomanceEvaluationApproveRepo,
-            JobPerfomanceEvaluationNewRepo jobPerfomanceEvaluationNewRepo, vUserGroupLinksRepo vUserGroupLinksRepo)
+            JobPerfomanceEvaluationNewRepo jobPerfomanceEvaluationNewRepo,
+            JobPerfomanceEvaluationNewLogRepo jobPerfomanceEvaluationNewLogRepo,
+            vUserGroupLinksRepo vUserGroupLinksRepo)
         {
             _employeeApproveRepo = employeeApproveRepo;
             _jobPerfomanceEvaluationApproveRepo = jobPerfomanceEvaluationApproveRepo;
             _jobPerfomanceEvaluationNewRepo = jobPerfomanceEvaluationNewRepo;
+            _jobPerfomanceEvaluationNewLogRepo = jobPerfomanceEvaluationNewLogRepo;
             _emailHelper = emailHelper;
             _configuration = configuration;
             _vUserGroupLinksRepo = vUserGroupLinksRepo;
@@ -211,12 +215,95 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
 
                 RERPAPI.Model.Entities.JobPerfomanceEvaluationNew entity;
                 string stepName = "";
+                string employeeName = $"ID={model.EmployeeID}";
+                try
+                {
+                    var empInfo = await SqlDapper<dynamic>.ProcedureToListTAsync("spGetInfomationEmployee", new { EmployeeID = model.EmployeeID });
+                    if (empInfo != null && empInfo.Count > 0)
+                    {
+                        var dict = empInfo[0] as IDictionary<string, object>;
+                        if (dict != null && dict.ContainsKey("FullName") && dict["FullName"] != null)
+                        {
+                            employeeName = dict["FullName"].ToString();
+                        }
+                    }
+                }
+                catch { }
                 if (model.ID > 0)
                 {
                     // ── CẬP NHẬT ──────────────────────────────────────────────────
                     entity = await _jobPerfomanceEvaluationNewRepo.GetByIDAsync(model.ID);
                     if (entity == null)
                         return Ok(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu"));
+
+                    var changes = new List<string>();
+                    Action<string, object, object> CheckChange = (fieldName, oldVal, newVal) =>
+                    {
+                        string sOld = oldVal?.ToString() ?? "0";
+                        string sNew = newVal?.ToString() ?? "0";
+                        if (sOld != sNew)
+                        {
+                            changes.Add($"{fieldName}: {sOld} -> {sNew}");
+                        }
+                    };
+                    Action<string, string, string> CheckChangeText = (fieldName, oldVal, newVal) =>
+                    {
+                        if ((oldVal ?? "") != (newVal ?? ""))
+                        {
+                            changes.Add($"{fieldName} có thay đổi");
+                        }
+                    };
+
+                    // NLĐ
+                    CheckChange("Năng lực chuyên môn (NLĐ)", entity.ProfessionalCompetency, model.ProfessionalCompetency);
+                    CheckChange("Kiến thức chuyên môn (NLĐ)", entity.ProfessionalKnowledge, model.ProfessionalKnowledge);
+                    CheckChange("Kỹ năng công cụ (NLĐ)", entity.ToolAndSystemSkills, model.ToolAndSystemSkills);
+                    CheckChange("Chất lượng CV (NLĐ)", entity.WorkQuality, model.WorkQuality);
+                    CheckChange("Tiến độ CV (NLĐ)", entity.WorkProgress, model.WorkProgress);
+                    CheckChange("Giải quyết vấn đề (NLĐ)", entity.ProblemSolvingAbility, model.ProblemSolvingAbility);
+                    CheckChange("Sự chủ động (NLĐ)", entity.Proactiveness, model.Proactiveness);
+                    CheckChange("Phối hợp, hỗ trợ (NLĐ)", entity.CollaborationAndSupport, model.CollaborationAndSupport);
+                    CheckChange("Làm việc nhóm (NLĐ)", entity.CommunicationAndTeamwork, model.CommunicationAndTeamwork);
+                    CheckChange("Khối lượng CV (NLĐ)", entity.WorkOutputKPI, model.WorkOutputKPI);
+                    CheckChange("Ý thức kỷ luật (NLĐ)", entity.DisciplineAndAttitude, model.DisciplineAndAttitude);
+                    CheckChange("Tuân thủ nội quy (NLĐ)", entity.ComplianceWithRegulations, model.ComplianceWithRegulations);
+                    CheckChange("Chuyên cần (NLĐ)", entity.Attendance, model.Attendance);
+                    CheckChange("Tác phong làm việc (NLĐ)", entity.WorkStyle, model.WorkStyle);
+                    CheckChange("Thái độ trách nhiệm (NLĐ)", entity.AttitudeAndResponsibility, model.AttitudeAndResponsibility);
+                    CheckChange("Phù hợp văn hóa (NLĐ)", entity.CulturalFitRTC, model.CulturalFitRTC);
+                    CheckChange("Tinh thần học hỏi (NLĐ)", entity.LearningAndGrowthMindset, model.LearningAndGrowthMindset);
+                    CheckChange("Sự gắn bó (NLĐ)", entity.CompanyCommitment, model.CompanyCommitment);
+                    CheckChange("Tổng điểm (NLĐ)", entity.TotalScore, model.TotalScore);
+
+                    // TBP
+                    CheckChange("Năng lực chuyên môn (TBP)", entity.TBPProfessionalCompetency, model.TBPProfessionalCompetency);
+                    CheckChange("Kiến thức chuyên môn (TBP)", entity.TBPProfessionalKnowledge, model.TBPProfessionalKnowledge);
+                    CheckChange("Kỹ năng công cụ (TBP)", entity.TBPToolAndSystemSkills, model.TBPToolAndSystemSkills);
+                    CheckChange("Chất lượng CV (TBP)", entity.TBPWorkQuality, model.TBPWorkQuality);
+                    CheckChange("Tiến độ CV (TBP)", entity.TBPWorkProgress, model.TBPWorkProgress);
+                    CheckChange("Giải quyết vấn đề (TBP)", entity.TBPProblemSolvingAbility, model.TBPProblemSolvingAbility);
+                    CheckChange("Sự chủ động (TBP)", entity.TBPProactiveness, model.TBPProactiveness);
+                    CheckChange("Phối hợp, hỗ trợ (TBP)", entity.TBPCollaborationAndSupport, model.TBPCollaborationAndSupport);
+                    CheckChange("Làm việc nhóm (TBP)", entity.TBPCommunicationAndTeamwork, model.TBPCommunicationAndTeamwork);
+                    CheckChange("Khối lượng CV (TBP)", entity.TBPWorkOutputKPI, model.TBPWorkOutputKPI);
+                    CheckChange("Ý thức kỷ luật (TBP)", entity.TBPDisciplineAndAttitude, model.TBPDisciplineAndAttitude);
+                    CheckChange("Tuân thủ nội quy (TBP)", entity.TBPComplianceWithRegulations, model.TBPComplianceWithRegulations);
+                    CheckChange("Chuyên cần (TBP)", entity.TBPAttendance, model.TBPAttendance);
+                    CheckChange("Tác phong làm việc (TBP)", entity.TBPWorkStyle, model.TBPWorkStyle);
+                    CheckChange("Thái độ trách nhiệm (TBP)", entity.TBPAttitudeAndResponsibility, model.TBPAttitudeAndResponsibility);
+                    CheckChange("Phù hợp văn hóa (TBP)", entity.TBPCulturalFitRTC, model.TBPCulturalFitRTC);
+                    CheckChange("Tinh thần học hỏi (TBP)", entity.TBPLearningAndGrowthMindset, model.TBPLearningAndGrowthMindset);
+                    CheckChange("Sự gắn bó (TBP)", entity.TBPCompanyCommitment, model.TBPCompanyCommitment);
+                    CheckChange("Tổng điểm (TBP)", entity.TBPTotalScore, model.TBPTotalScore);
+
+                    // Text fields
+                    CheckChangeText("Điểm mạnh (NLĐ)", entity.Strengths, model.Strengths);
+                    CheckChangeText("Điểm cần cải thiện (NLĐ)", entity.AreasForImprovement, model.AreasForImprovement);
+                    CheckChangeText("Đề xuất khác (NLĐ)", entity.RecommendationsOrOther, model.RecommendationsOrOther);
+                    CheckChangeText("Kết luận khác", entity.OtherConclusion, model.OtherConclusion);
+                    CheckChangeText("Điểm mạnh (TBP)", entity.TBPStrengths, model.TBPStrengths);
+                    CheckChangeText("Điểm cần cải thiện (TBP)", entity.TBPAreasForImprovement, model.TBPAreasForImprovement);
+                    CheckChangeText("Đề xuất khác (TBP)", entity.TBPRecommendationsOrOther, model.TBPRecommendationsOrOther);
 
                     // FK người liên quan
                     entity.EmployeeID = model.EmployeeID;
@@ -322,83 +409,114 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                     if (await _jobPerfomanceEvaluationNewRepo.UpdateAsync(entity) <= 0)
                         return Ok(ApiResponseFactory.Fail(null, "Cập nhật thất bại!"));
 
+                    // Ghi log cập nhật phiếu đánh giá
+                    try
+                    {
+                        var updateUser = ObjectMapper.GetCurrentUser(User.Claims.ToDictionary(x => x.Type, x => x.Value));
+                        string roleLabel = ResolveRoleLabel(model.Role);
+                        string actionType = $"{roleLabel} lưu phiếu đánh giá";
+                        string contentLog = $"{updateUser.FullName} đã cập nhật phiếu đánh giá của nhân viên {employeeName}";
+
+                        if (changes.Count > 0)
+                        {
+                            contentLog += "\nChi tiết thay đổi:\n" + string.Join("\n", changes);
+                        }
+                        else
+                        {
+                            contentLog += "\nKhông có thay đổi về nội dung.";
+                        }
+
+                        await _jobPerfomanceEvaluationNewLogRepo.CreateAsync(new JobPerfomanceEvaluationNewLog
+                        {
+                            JobPerfomanceEvaluationNewID = entity.ID,
+                            EmployeeID = entity.EmployeeID,
+                            ActionType = actionType,
+                            ContentLog = contentLog,
+                            CreatedBy = updateUser.LoginName,
+                            CreatedDate = DateTime.Now,
+                            IsDeleted = false
+                        });
+                    }
+                    catch (Exception) { /* không làm fail cả save vì lỗi log */ }
+
                     // cập nhật trạng thái tờ phiếu
                     var currentUser = ObjectMapper.GetCurrentUser(User.Claims.ToDictionary(x => x.Type, x => x.Value));
                     if (!string.IsNullOrWhiteSpace(model.Role) && model.ID > 0)
-                    {
-                        if (model.Role.Equals("employee", StringComparison.OrdinalIgnoreCase))
+                        if (!string.IsNullOrWhiteSpace(model.Role) && model.ID > 0)
                         {
-                            // NLĐ lưu → "Người lao động: Chờ xác nhận"
-                            var nldStep = _jobPerfomanceEvaluationApproveRepo
-                                .GetAll(x => x.JobPerfomanceEvaluationID == entity.ID
-                                          && x.Step == 1
-                                          && x.StatusApprove == 0
-                                          && x.IsDeleted != true)
-                                .OrderByDescending(x => x.ID).FirstOrDefault();
-                            if (nldStep != null)
+                            if (model.Role.Equals("employee", StringComparison.OrdinalIgnoreCase))
                             {
-                                nldStep.StepName = "Người lao động: Chờ xác nhận";
-                                stepName = nldStep.StepName;
-                                await _jobPerfomanceEvaluationApproveRepo.UpdateAsync(nldStep);
+                                // NLĐ lưu → "Người lao động: Chờ xác nhận"
+                                var nldStep = _jobPerfomanceEvaluationApproveRepo
+                                    .GetAll(x => x.JobPerfomanceEvaluationID == entity.ID
+                                              && x.Step == 1
+                                              && x.StatusApprove == 0
+                                              && x.IsDeleted != true)
+                                    .OrderByDescending(x => x.ID).FirstOrDefault();
+                                if (nldStep != null)
+                                {
+                                    nldStep.StepName = "Người lao động: Chờ xác nhận";
+                                    stepName = nldStep.StepName;
+                                    await _jobPerfomanceEvaluationApproveRepo.UpdateAsync(nldStep);
+                                }
                             }
-                        }
-                        else if (model.Role.Equals("tbp", StringComparison.OrdinalIgnoreCase)
-                              || model.Role.Equals("manager", StringComparison.OrdinalIgnoreCase)
-                              || (model.Role.Equals("hr", StringComparison.OrdinalIgnoreCase) && model.TBPApproveID == currentUser.EmployeeID))
-                        {
-                            // Option B: chỉ chuyển "TBP: Chờ xác nhận" khi TBP đã nhập đủ dữ liệu bắt buộc
-                            bool hasEnoughTbpData =
-                                model.ConclusionEmployeeLoaiHDID != null &&
-                                model.TBPTotalScore != null &&
-                                model.TBPProfessionalKnowledge != null &&
-                                model.TBPToolAndSystemSkills != null &&
-                                model.TBPWorkQuality != null &&
-                                model.TBPWorkProgress != null &&
-                                model.TBPProblemSolvingAbility != null &&
-                                model.TBPProactiveness != null &&
-                                model.TBPCollaborationAndSupport != null &&
-                                model.TBPCommunicationAndTeamwork != null &&
-                                model.TBPWorkOutputKPI != null &&
-                                model.TBPComplianceWithRegulations != null &&
-                                model.TBPAttendance != null &&
-                                model.TBPWorkStyle != null &&
-                                model.TBPAttitudeAndResponsibility != null &&
-                                model.TBPCulturalFitRTC != null &&
-                                model.TBPLearningAndGrowthMindset != null &&
-                                model.TBPCompanyCommitment != null &&
-                                !string.IsNullOrWhiteSpace(model.Strengths) &&
-                                !string.IsNullOrWhiteSpace(model.AreasForImprovement);
+                            else if (model.Role.Equals("tbp", StringComparison.OrdinalIgnoreCase)
+                                  || model.Role.Equals("manager", StringComparison.OrdinalIgnoreCase)
+                                  || (model.Role.Equals("hr", StringComparison.OrdinalIgnoreCase) && model.TBPApproveID == currentUser.EmployeeID))
+                            {
+                                // Option B: chỉ chuyển "TBP: Chờ xác nhận" khi TBP đã nhập đủ dữ liệu bắt buộc
+                                bool hasEnoughTbpData =
+                                    model.ConclusionEmployeeLoaiHDID != null &&
+                                    model.TBPTotalScore != null &&
+                                    model.TBPProfessionalKnowledge != null &&
+                                    model.TBPToolAndSystemSkills != null &&
+                                    model.TBPWorkQuality != null &&
+                                    model.TBPWorkProgress != null &&
+                                    model.TBPProblemSolvingAbility != null &&
+                                    model.TBPProactiveness != null &&
+                                    model.TBPCollaborationAndSupport != null &&
+                                    model.TBPCommunicationAndTeamwork != null &&
+                                    model.TBPWorkOutputKPI != null &&
+                                    model.TBPComplianceWithRegulations != null &&
+                                    model.TBPAttendance != null &&
+                                    model.TBPWorkStyle != null &&
+                                    model.TBPAttitudeAndResponsibility != null &&
+                                    model.TBPCulturalFitRTC != null &&
+                                    model.TBPLearningAndGrowthMindset != null &&
+                                    model.TBPCompanyCommitment != null &&
+                                    !string.IsNullOrWhiteSpace(model.Strengths) &&
+                                    !string.IsNullOrWhiteSpace(model.AreasForImprovement);
 
-                            var tbpStep = _jobPerfomanceEvaluationApproveRepo
-                                .GetAll(x => x.JobPerfomanceEvaluationID == entity.ID
-                                          && x.Step == 2
-                                          && x.StatusApprove == 0
-                                          && x.IsDeleted != true)
-                                .OrderByDescending(x => x.ID).FirstOrDefault();
-                            if (tbpStep != null)
+                                var tbpStep = _jobPerfomanceEvaluationApproveRepo
+                                    .GetAll(x => x.JobPerfomanceEvaluationID == entity.ID
+                                              && x.Step == 2
+                                              && x.StatusApprove == 0
+                                              && x.IsDeleted != true)
+                                    .OrderByDescending(x => x.ID).FirstOrDefault();
+                                if (tbpStep != null)
+                                {
+                                    tbpStep.StepName = hasEnoughTbpData
+                                        ? "TBP: Chờ xác nhận"
+                                        : "TBP: Chờ đánh giá";
+                                    stepName = tbpStep.StepName;
+                                    await _jobPerfomanceEvaluationApproveRepo.UpdateAsync(tbpStep);
+                                }
+                            }
+                            else if (model.Role.Equals("hr", StringComparison.OrdinalIgnoreCase))
                             {
-                                tbpStep.StepName = hasEnoughTbpData
-                                    ? "TBP: Chờ xác nhận"
-                                    : "TBP: Chờ đánh giá";
-                                stepName = tbpStep.StepName;
-                                await _jobPerfomanceEvaluationApproveRepo.UpdateAsync(tbpStep);
+                                // HR lưu khi phiếu còn ở bước "chờ gửi mail" -> trả StepName cho frontend quyết định mở lại modal gửi mail
+                                var hrWaitingStep = _jobPerfomanceEvaluationApproveRepo
+                                    .GetAll(x => x.JobPerfomanceEvaluationID == entity.ID
+                                              && x.Step == 1
+                                              && x.StatusApprove == 0
+                                              && x.IsDeleted != true)
+                                    .OrderByDescending(x => x.ID).FirstOrDefault();
+                                if (hrWaitingStep != null)
+                                {
+                                    stepName = hrWaitingStep.StepName ?? "";
+                                }
                             }
                         }
-                        else if (model.Role.Equals("hr", StringComparison.OrdinalIgnoreCase))
-                        {
-                            // HR lưu khi phiếu còn ở bước "chờ gửi mail" -> trả StepName cho frontend quyết định mở lại modal gửi mail
-                            var hrWaitingStep = _jobPerfomanceEvaluationApproveRepo
-                                .GetAll(x => x.JobPerfomanceEvaluationID == entity.ID
-                                          && x.Step == 1
-                                          && x.StatusApprove == 0
-                                          && x.IsDeleted != true)
-                                .OrderByDescending(x => x.ID).FirstOrDefault();
-                            if (hrWaitingStep != null)
-                            {
-                                stepName = hrWaitingStep.StepName ?? "";
-                            }
-                        }
-                    }
                 }
                 else
                 {
@@ -519,6 +637,24 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                         IsDeleted = false
                     });
                     stepName = "HR: Chờ gửi mail";
+
+                    // Ghi log tạo mới phiếu đánh giá
+                    try
+                    {
+                        var createUser = ObjectMapper.GetCurrentUser(User.Claims.ToDictionary(x => x.Type, x => x.Value));
+                        string roleLabel = ResolveRoleLabel(model.Role);
+                        await _jobPerfomanceEvaluationNewLogRepo.CreateAsync(new JobPerfomanceEvaluationNewLog
+                        {
+                            JobPerfomanceEvaluationNewID = entity.ID,
+                            EmployeeID = entity.EmployeeID,
+                            ActionType = $"{roleLabel} tạo mới phiếu đánh giá",
+                            ContentLog = $"{createUser.FullName} đã tạo mới phiếu đánh giá cho nhân viên {employeeName}",
+                            CreatedBy = createUser.LoginName,
+                            CreatedDate = DateTime.Now,
+                            IsDeleted = false
+                        });
+                    }
+                    catch (Exception) { /* không làm fail cả save vì lỗi log */ }
                 }
                 var data = new { ID = entity.ID, StepName = stepName };
 
@@ -1026,10 +1162,12 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                     // ── Cập nhật approve names vào master entity ─────────────────────
                     // Thử bảng cũ trước
                     var masterOld = await _jobPerfomanceEvaluationNewRepo.GetByIDAsync(id);
+                    RERPAPI.Model.Entities.JobPerfomanceEvaluationNew masterForLog = null;
                     if (masterOld != null)
                     {
                         ApplyApproveNames(masterOld, record.Step ?? 0, req.IsApprove, currentUserId, currentFullName);
                         await _jobPerfomanceEvaluationNewRepo.UpdateAsync(masterOld);
+                        masterForLog = masterOld;
                     }
                     else
                     {
@@ -1039,8 +1177,18 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                         {
                             ApplyApproveNamesNew(masterNew, record.Step ?? 0, req.IsApprove, currentUserId, currentFullName);
                             await _jobPerfomanceEvaluationNewRepo.UpdateAsync(masterNew);
+                            masterForLog = masterNew;
                         }
                     }
+
+                    // ── Ghi log thao tác duyệt ─────────────────────────────────
+                    await WriteApproveLogAsync(
+                        id,
+                        masterForLog?.EmployeeID,
+                        req.Role,
+                        req.IsApprove,
+                        req.Reason,
+                        currentUser);
                 }
 
                 string label = req.IsApprove == 1 ? "Xác nhận"
@@ -1107,6 +1255,69 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
             }
         }
 
+        // ── Helper: map role string sang label tiếng Việt dùng cho log ───────────
+        private static string ResolveRoleLabel(string? role)
+        {
+            if (string.IsNullOrWhiteSpace(role)) return "Người dùng";
+            return role.Trim().ToLowerInvariant() switch
+            {
+                "employee" or "nld" or "nguoilaodong" => "NLĐ",
+                "manager" or "tbp" or "leader" => "TBP",
+                "hr" or "hcns" => "HR",
+                "bgd" => "BGĐ",
+                _ => role
+            };
+        }
+
+        // ── Helper: ghi log thao tác duyệt ───────────────────────────────────────
+        private async Task WriteApproveLogAsync(
+            int jobPerfomanceEvaluationId,
+            int? employeeId,
+            string role,
+            int isApprove,
+            string? reason,
+            CurrentUser currentUser)
+        {
+            try
+            {
+                string roleLabel = ResolveRoleLabel(role);
+                string actionType;
+                string contentLog;
+
+                if (isApprove == 1)
+                {
+                    actionType = $"{roleLabel} xác nhận";
+                    contentLog = $"{currentUser.FullName} ({roleLabel}) đã xác nhận phiếu đánh giá";
+                }
+                else if (isApprove == 2)
+                {
+                    actionType = $"{roleLabel} không xác nhận";
+                    contentLog = $"{currentUser.FullName} ({roleLabel}) không xác nhận phiếu đánh giá"
+                                + (string.IsNullOrWhiteSpace(reason) ? "" : $"\nLý do: {reason}");
+                }
+                else
+                {
+                    actionType = $"{roleLabel} hủy xác nhận";
+                    contentLog = $"{currentUser.FullName} ({roleLabel}) đã hủy xác nhận phiếu đánh giá";
+                }
+
+                await _jobPerfomanceEvaluationNewLogRepo.CreateAsync(new JobPerfomanceEvaluationNewLog
+                {
+                    JobPerfomanceEvaluationNewID = jobPerfomanceEvaluationId,
+                    EmployeeID = employeeId,
+                    ActionType = actionType,
+                    ContentLog = contentLog,
+                    CreatedBy = currentUser.LoginName,
+                    CreatedDate = DateTime.Now,
+                    IsDeleted = false
+                });
+            }
+            catch (Exception)
+            {
+                // Không làm fail luồng duyệt vì lỗi log
+            }
+        }
+
         [HttpPost("cancel-confirm")]
         public async Task<IActionResult> CancelConfirm([FromBody] CancelConfirmRequest req)
         {
@@ -1137,8 +1348,27 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                 var newEntity = await _jobPerfomanceEvaluationNewRepo.GetByIDAsync(id);
                 if (newEntity != null && !newEntity.IsDeleted.GetValueOrDefault())
                 {
+                    int? deletedEmployeeId = newEntity.EmployeeID;
                     newEntity.IsDeleted = true;
                     await _jobPerfomanceEvaluationNewRepo.UpdateAsync(newEntity);
+
+                    // Ghi log xóa phiếu
+                    try
+                    {
+                        var deleteUser = ObjectMapper.GetCurrentUser(User.Claims.ToDictionary(x => x.Type, x => x.Value));
+                        await _jobPerfomanceEvaluationNewLogRepo.CreateAsync(new JobPerfomanceEvaluationNewLog
+                        {
+                            JobPerfomanceEvaluationNewID = id,
+                            EmployeeID = deletedEmployeeId,
+                            ActionType = "Xóa phiếu đánh giá",
+                            ContentLog = $"{deleteUser.FullName} đã xóa phiếu đánh giá của nhân viên (ID={deletedEmployeeId})",
+                            CreatedBy = deleteUser.LoginName,
+                            CreatedDate = DateTime.Now,
+                            IsDeleted = false
+                        });
+                    }
+                    catch (Exception) { /* không fail cả delete vì lỗi log */ }
+
                     return Ok(ApiResponseFactory.Success(id, "Xóa phiếu thành công!"));
                 }
                 return Ok(ApiResponseFactory.Fail(null, "Không tìm thấy phiếu!"));
@@ -1146,6 +1376,39 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
             catch (Exception ex)
             {
                 return Ok(ApiResponseFactory.Fail(null, ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Lấy lịch sử thao tác của phiếu đánh giá chuyển hợp đồng theo ID phiếu.
+        /// </summary>
+        /// <param name="id">ID phiếu đánh giá (JobPerfomanceEvaluationNew.ID)</param>
+        [HttpGet("get-log-activity")]
+        public async Task<IActionResult> GetLogActivity(int id)
+        {
+            try
+            {
+                if (id <= 0)
+                    return Ok(new { Data = new List<object>() });
+
+                var logs = _jobPerfomanceEvaluationNewLogRepo
+                    .GetAll(x => x.JobPerfomanceEvaluationNewID == id && x.IsDeleted != true)
+                    .OrderByDescending(x => x.CreatedDate)
+                    .Select(x => new
+                    {
+                        x.ID,
+                        TypeLog = x.ActionType,
+                        x.ContentLog,
+                        x.CreatedBy,
+                        x.CreatedDate
+                    })
+                    .ToList();
+
+                return Ok(new { Data = logs });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
             }
         }
 

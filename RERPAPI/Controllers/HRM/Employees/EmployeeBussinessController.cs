@@ -65,10 +65,10 @@ namespace RERPAPI.Controllers.HRM.Employees
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
-                var firstDay = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-                var lastDay = firstDay.AddMonths(1).AddDays(-1);
+                param.DateStart = param.DateStart.Value.ToLocalTime().Date;
+                param.DateEnd = param.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
                 var arrParamName = new string[] { "@DateStart", "@DateEnd", "@Keyword", "@EmployeeID", "@IsApproved", "@Type", "@VehicleID", "@NotCheckIn" };
-                var arrParamValue = new object[] { param.DateStart ?? firstDay, param.DateEnd ?? lastDay, param.Keyword ?? "", currentUser.EmployeeID, param.IsApproved ?? 0, param.Type ?? 0, param.VehicleID ?? 0, param.NotCheckIn ?? -1 };
+                var arrParamValue = new object[] { param.DateStart , param.DateEnd , param.Keyword ?? "", currentUser.EmployeeID, param.IsApproved ?? 0, param.Type ?? 0, param.VehicleID ?? 0, param.NotCheckIn ?? -1 };
                 var employeeBussiness = SQLHelper<object>.ProcedureToList("spGetEmployeeBussinessInWeb", arrParamName, arrParamValue);
 
                 var result = SQLHelper<object>.GetListData(employeeBussiness, 0);
@@ -130,6 +130,8 @@ namespace RERPAPI.Controllers.HRM.Employees
         {
             try
             {
+                request.DateStart = request.DateStart.ToLocalTime().Date;
+                request.DateEnd = request.DateEnd.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
                 var employeeOnLeaveSummary = SQLHelper<object>.ProcedureToList("spGetEmployeeOnLeaveInWeb", new string[] { "@Keyword", "@DateStart", "@DateEnd", "@IsApproved", "@Type", "@DepartmentID", "@EmployeeID", "VehicleID", "NotCheckIn" },
                new object[] { request.Keyword ?? "", request.DateStart, request.DateEnd, request.IsApproved, request.Type, request.DepartmentID ?? 0, request.EmployeeID ?? 0, request.VehicleID, request.NotCheckIn });
 

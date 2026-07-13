@@ -74,6 +74,4 @@ public partial class ESLTestTable
     /// Dung lượng Pin
     /// </summary>
     public int? esl_battery { get; set; }
-
-    public virtual ICollection<ESLTestTableRegistration> ESLTestTableRegistrations { get; set; } = new List<ESLTestTableRegistration>();
 }

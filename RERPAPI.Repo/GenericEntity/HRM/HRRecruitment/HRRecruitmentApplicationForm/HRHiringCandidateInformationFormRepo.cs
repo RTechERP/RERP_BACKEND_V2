@@ -1,3 +1,4 @@
+using Microsoft.IdentityModel.Tokens;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
@@ -18,7 +19,7 @@ namespace RERPAPI.Repo.GenericEntity.HRM
                 var mainForm = data.HRRecruitmentApplicationForm;
                 if (mainForm == null) return ApiResponseFactory.Fail(null, "Không có dữ liệu tờ khai!");
                 // Check required fields in main form (skipping CCCD, IssuedOn, IssuedBy, Hobbies, Height, Weight, OtherActivities)
-                if (mainForm.ChucVuHDID <= 0) return ApiResponseFactory.Fail(null, "Vui lòng chọn Vị trí dự tuyển!");
+                if (mainForm.PositionName.IsNullOrEmpty()) return ApiResponseFactory.Fail(null, "Vui lòng chọn Vị trí dự tuyển!");
                 if (string.IsNullOrWhiteSpace(mainForm.FullName)) return ApiResponseFactory.Fail(null, "Vui lòng nhập Họ và tên!");
                 if (mainForm.Gender <= 0) return ApiResponseFactory.Fail(null, "Vui lòng chọn Giới tính!");
                 if (!mainForm.DateOfBirth.HasValue) return ApiResponseFactory.Fail(null, "Vui lòng chọn Ngày sinh!");
@@ -75,9 +76,6 @@ namespace RERPAPI.Repo.GenericEntity.HRM
                         }
                     }
                 }
-                // Experience Level Validation
-                if (mainForm.WorkExperienceLevel <= 0 || mainForm.WorkExperienceLevel == null)
-                    return ApiResponseFactory.Fail(null, "Vui lòng chọn Mức kinh nghiệm làm việc!");
 
                 // If experience level is NOT "No experience" (Value 1)
                 if (mainForm.WorkExperienceLevel > 1)

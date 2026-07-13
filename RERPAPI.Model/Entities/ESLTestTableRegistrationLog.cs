@@ -49,6 +49,4 @@ public partial class ESLTestTableRegistrationLog
     /// API sử lý
     /// </summary>
     public string? APIResponse { get; set; }
-
-    public virtual ESLTestTableRegistration Registration { get; set; } = null!;
 }

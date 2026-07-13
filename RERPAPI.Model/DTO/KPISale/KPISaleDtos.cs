@@ -18,7 +18,50 @@ namespace RERPAPI.Model.DTO.KPISale
         public int TemplateID { get; set; }
         public int? DepartmentID { get; set; }
         public bool SaveSnapshot { get; set; } = true;
+        /// <summary>Khi true: tính lại data cá nhân cho từng employee và lưu snapshot.</summary>
+        public bool RecalcPerEmployee { get; set; } = false;
         public List<KPISaleReportAdjustmentInputDto> ReportAdjustments { get; set; } = new();
+    }
+
+    /// <summary>Request sao chép toàn bộ chỉ tiêu từ một mẫu nguồn sang mẫu đích (đều là mẫu có sẵn).</summary>
+    public class KPISaleCopyTemplateRequest
+    {
+        /// <summary>ID mẫu nguồn cần sao chép các chỉ tiêu.</summary>
+        public int SourceTemplateID { get; set; }
+
+        /// <summary>ID mẫu đích (bắt buộc phải &gt; 0).</summary>
+        public int TargetTemplateID { get; set; }
+
+        /// <summary>Có copy các chỉ tiêu hay không.</summary>
+        public bool CopyIndexes { get; set; } = true;
+
+        /// <summary>Bao gồm các chỉ tiêu đang IsActive = false.</summary>
+        public bool IncludeInactiveIndexes { get; set; } = true;
+
+        /// <summary>Có copy các ánh xạ (mapping) và bộ lọc (filter) của chỉ tiêu hay không.</summary>
+        public bool CopyMappings { get; set; } = true;
+
+        /// <summary>ID user hiện tại (phục vụ audit). Có thể bỏ trống.</summary>
+        public int? CurrentUserID { get; set; }
+    }
+
+    /// <summary>Kết quả trả về cho API copy template.</summary>
+    public class KPISaleCopyTemplateResponse
+    {
+        /// <summary>ID mẫu đích sau khi copy.</summary>
+        public int TargetTemplateID { get; set; }
+
+        /// <summary>Tên mẫu đích.</summary>
+        public string TargetTemplateName { get; set; } = "";
+
+        /// <summary>Số chỉ tiêu đã copy.</summary>
+        public int CopiedIndexCount { get; set; }
+
+        /// <summary>Số ánh xạ đã copy.</summary>
+        public int CopiedMappingCount { get; set; }
+
+        /// <summary>Danh sách ID chỉ tiêu mới tạo.</summary>
+        public List<int> NewIndexIDs { get; set; } = new();
     }
 
     public class KPISaleTeamDto
@@ -40,7 +83,14 @@ namespace RERPAPI.Model.DTO.KPISale
         public string TeamName { get; set; } = "";
         public string? Description { get; set; }
         public int? LeaderEmployeeID { get; set; }
-        public List<int> EmployeeIDs { get; set; } = new();
+        public List<KPISaleTeamMemberItem> EmployeeIDs { get; set; } = new();
+    }
+
+    public class KPISaleTeamMemberItem
+    {
+        public int EmployeeId { get; set; }
+        public bool IsAdmin { get; set; } = false;
+        public bool IsPM { get; set; } = false;
     }
 
     public class KPISaleTotalPerformanceDto

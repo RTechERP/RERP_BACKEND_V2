@@ -235,6 +235,7 @@ namespace RERPAPI.Controllers.Old.Technical
                 bool hasAgvTeams = userTeams.Any(x => x.DepartmentID == 9);
 
                 var data = new List<object>();
+                var agvEmployeeIds = new HashSet<int>();
 
                 // Gọi SP thường cho tất cả team
                 var normalStore = SQLHelper<object>.ProcedureToList(
@@ -256,7 +257,6 @@ namespace RERPAPI.Controllers.Old.Technical
                     var agvData = SQLHelper<object>.GetListData(agvStore, 1);
 
                     // Lấy danh sách EmployeeID từ kết quả AGV để loại trừ khỏi SP thường (tránh trùng)
-                    var agvEmployeeIds = new HashSet<int>();
                     foreach (var agvItem in agvData)
                     {
                         var agvRow = agvItem as IDictionary<string, object>;
@@ -292,7 +292,10 @@ namespace RERPAPI.Controllers.Old.Technical
                     string dayValue = row["DayValue"]?.ToString()?.ToLower() ?? "";
                     DateTime errorDate = Convert.ToDateTime(row["AllDates"]);
 
-                    int kpiErrorId = dayValue == "xm" ? 3 : 1;
+                    bool isAgvEmployee = agvEmployeeIds.Contains(employeeId);
+                    int kpiErrorId = dayValue == "xm"
+                        ? (isAgvEmployee ? 45 : 3)
+                        : (isAgvEmployee ? 44 : 1);
 
                     bool existed = _kpiErrorEmployeeRepo.GetAll(x =>
                         x.KPIErrorID == kpiErrorId &&
@@ -332,7 +335,7 @@ namespace RERPAPI.Controllers.Old.Technical
                     x.ErrorDate.HasValue &&
                     x.ErrorDate.Value.Date >= dateStart.Date &&
                     x.ErrorDate.Value.Date <= dateEnd.Date &&
-                    (x.KPIErrorID == 1 || x.KPIErrorID == 3)
+                    (x.KPIErrorID == 1 || x.KPIErrorID == 3 || x.KPIErrorID == 44 || x.KPIErrorID == 45)
                 ).ToList();
 
                 var deleteList = new List<KPIErrorEmployee>();

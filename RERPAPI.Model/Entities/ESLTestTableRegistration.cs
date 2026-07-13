@@ -69,10 +69,4 @@ public partial class ESLTestTableRegistration
     /// Trạng thái trả bàn
     /// </summary>
     public bool? IsReturned { get; set; }
-
-    public virtual ICollection<ESLTestTableRegistrationDetail> ESLTestTableRegistrationDetails { get; set; } = new List<ESLTestTableRegistrationDetail>();
-
-    public virtual ICollection<ESLTestTableRegistrationLog> ESLTestTableRegistrationLogs { get; set; } = new List<ESLTestTableRegistrationLog>();
-
-    public virtual ESLTestTable TestTable { get; set; } = null!;
 }

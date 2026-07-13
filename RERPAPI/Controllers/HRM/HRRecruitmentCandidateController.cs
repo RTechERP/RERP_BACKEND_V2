@@ -102,55 +102,58 @@ namespace RERPAPI.Controllers.HRM
             }
         }
 
-        [HttpGet("data")]
-        public async Task<IActionResult> GetDataHrRecruitmentCandidates(
-            int? id = 0,
-            int? status = -1,
-            int? employeeRequestId = -1,
-            int? departmentId = -1,
-            DateTime? dateStart = null,
-            DateTime? dateEnd = null,
-            string? keyword = ""
-         )
-        {
-            try
+            [HttpGet("data")]
+            public async Task<IActionResult> GetDataHrRecruitmentCandidates(
+                int? id = 0,
+                int? status = -1,
+                int? employeeRequestId = -1,
+                int? departmentId = -1,
+                DateTime? dateStart = null,
+                DateTime? dateEnd = null,
+                string? keyword = ""
+             )
             {
-                    var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                CurrentUser _currentUser = ObjectMapper.GetCurrentUser(claims);
-
-                bool isHr = _currentUser.Permissions
-                            .Split(',')
-                            .Any(p => p.Trim() == "N1" || p.Trim() == "N2" || p.Trim() == "N94") || _currentUser.IsAdmin;
-                int loginDepartmentID = -1;
-
-                if (!isHr)
+                try
                 {
-                    loginDepartmentID = _currentUser.DepartmentID;
-                }
+                        var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                    CurrentUser _currentUser = ObjectMapper.GetCurrentUser(claims);
 
-                var param = new
-                {
-                    ID = id,
-                    Status = status,
-                    EmployeeRequestID = employeeRequestId,
-                    DepartmentID = departmentId,
-                    DateStart = dateStart,
-                    DateEnd = dateEnd,
-                    FilterText = keyword?.Trim(),
-                    LoginDepartmentID= loginDepartmentID
-                };
-                var result = await SqlDapper<dynamic>.ProcedureToListAsync("spGetHrRecruitmentCandidate", param);
+                    bool isHr = _currentUser.Permissions
+                                .Split(',')
+                                .Any(p => p.Trim() == "N1" || p.Trim() == "N2" || p.Trim() == "N94") || _currentUser.IsAdmin;
+                    int loginDepartmentID = -1;
+                    int interviewID = -1;
 
-                var dtMaster = ((IEnumerable<dynamic>)result).ToList();
+                    if (!isHr)
+                    {
+                        loginDepartmentID = _currentUser.DepartmentID;
+                        interviewID = _currentUser.EmployeeID;
+                    }
+
+                    var param = new
+                    {
+                        ID = id,
+                        Status = status,
+                        EmployeeRequestID = employeeRequestId,
+                        DepartmentID = departmentId,
+                        DateStart = dateStart,
+                        DateEnd = dateEnd,
+                        FilterText = keyword?.Trim(),
+                        LoginDepartmentID= loginDepartmentID,
+                        InterviewID=interviewID
+                    };
+                    var result = await SqlDapper<dynamic>.ProcedureToListAsync("spGetHrRecruitmentCandidate", param);
+
+                    var dtMaster = ((IEnumerable<dynamic>)result).ToList();
 
              
-                return Ok(ApiResponseFactory.Success(dtMaster, null));
+                    return Ok(ApiResponseFactory.Success(dtMaster, null));
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+                }
             }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
 
         [HttpPost("delete")]
         [RequiresPermission("N1,N2,N94")]
