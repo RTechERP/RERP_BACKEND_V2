@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NPOI.SS.Formula.Functions;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -262,7 +261,7 @@ namespace RERPAPI.Controllers.Project
             return Ok(new { status = 1, data = currencies });
         }
 
-        
+
         [HttpGet("get-price-request-type")]
         public IActionResult GetPriceRequestType()
         {
@@ -817,9 +816,29 @@ namespace RERPAPI.Controllers.Project
                         //}
 
                         var existingPricerequest = requestRepo.GetSingleNoTracking(x => x.ID == item.ID);
-                        if (existingPricerequest.IsRequestBuy == true)
+                        //nếu vẫn trong hạn báo giá hoặc (không có hạn báo giá và chưa quá 3 tháng kể từ ngày báo giá thì vẫn cho phép yêu cầu mua)   
+                        bool isQuoteValid = false;
+
+                        // Có EffectiveDate -> dùng EffectiveDate
+                        if (existingPricerequest.EffectiveDate.HasValue)
                         {
-                            resultFail.Add(item.ProductCode);
+                            isQuoteValid = existingPricerequest.EffectiveDate.Value.Date >= DateTime.Today;
+                        }
+                        // Không có EffectiveDate -> dùng DatePriceQuote + 3 tháng
+                        //else if (existingPricerequest.DatePriceQuote.HasValue)
+                        //{
+                        //    isQuoteValid = existingPricerequest.DatePriceQuote.Value.AddMonths(3).Date >= DateTime.Today;
+                        //}
+
+                        if (!isQuoteValid)
+                        {
+                            resultFail.Add($"{item.ProductCode}: Báo giá đã hết hạn.");
+                            continue;
+                        }
+                        //nếu đã hết hạn báo giá và đã yêu cầu mua thì không cho phép yêu cầu mua nữa
+                        else if (existingPricerequest.IsRequestBuy == true && !isQuoteValid)
+                        {
+                            resultFail.Add($"{item.ProductCode}: Sản phẩm đã được yêu cầu mua.");
                             continue;
                         }
                         //ProjectPartlistPurchaseRequest requestModel = existingRequests.FirstOrDefault() ?? new ProjectPartlistPurchaseRequest();
