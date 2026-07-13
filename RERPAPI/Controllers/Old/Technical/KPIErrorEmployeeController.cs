@@ -176,7 +176,7 @@ namespace RERPAPI.Controllers.Old.Technical
                     _kpiErrorEmployeeRepo.Create(model);
                 }
 
-                return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
+                return Ok(ApiResponseFactory.Success(model, "Lưu thành công"));
             }
             catch (Exception ex)
             {

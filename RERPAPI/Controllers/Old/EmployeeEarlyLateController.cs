@@ -5,6 +5,7 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
+using ZXing;
 
 namespace RERPAPI.Controllers.Old
 {
@@ -61,15 +62,27 @@ namespace RERPAPI.Controllers.Old
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        //API lấy danh sách đăng ký đi muộn về sớm cá nhân
+        [HttpPost("person")]
+        public IActionResult GetEmployeeEarlyLatePerson(EmployeeEarlyLateParam param)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                var arrParamName = new string[] { "@FilterText", "@PageNumber", "@PageSize", "@Month", "@Year", "@DepartmentID", "@EmployeeID", "@IDApprovedTP", "@Status" };
+                var arrParamValue = new object[] { param.keyWord ?? "", param.pageNumber, param.pageSize, param.month, param.year, param.departmentId, currentUser.EmployeeID, param.idApprovedTp, param.status };
+                var employeeEarlyLate = SQLHelper<object>.ProcedureToList("spGetEmployeeEarlyLate", arrParamName, arrParamValue);
+                return Ok(ApiResponseFactory.Success(employeeEarlyLate, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [HttpPost("get-employee-early-late-person")]
         public IActionResult GetEmployeeEarlyLatePerson(EmployeeOnLeavePersonParam request)
         {
