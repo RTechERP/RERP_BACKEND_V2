@@ -4179,13 +4179,16 @@ namespace RERPAPI.Controllers.KPISale
         }
 
         [HttpGet("ranking/config")]
-        public async Task<IActionResult> GetRewardConfig()
+        public async Task<IActionResult> GetRewardConfig(int? templateId = null)
         {
             try
             {
-                // Tách 2 query rồi ghép ở memory để tránh EF không dịch được
-                // khi entity có cột chưa được map column (vd RevenueKpiIndexId)
-                var configsRaw = await _kpiSaleRepo.KPISaleRewardConfig.AsNoTracking()
+                var query = _kpiSaleRepo.KPISaleRewardConfig.AsNoTracking().AsQueryable();
+
+                if (templateId.HasValue && templateId.Value > 0)
+                    query = query.Where(c => c.TemplateId == templateId.Value);
+
+                var configsRaw = await query
                     .Where(c => c.IsActive == true)
                     .ToListAsync();
 
