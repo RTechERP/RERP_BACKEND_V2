@@ -88,6 +88,27 @@ namespace RERPAPI.Controllers.Old
             }
         }
 
+        [HttpPost("get-foodorder-personal")]
+        public IActionResult GetEmployeeFoodOrderPersonal(EmployeeFoodOrderParam param)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                param.dateStart = param.dateStart.ToLocalTime().Date;
+                param.dateEnd = param.dateEnd.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
+                var foodOrders = SQLHelper<object>.ProcedureToList("spGetFoodOrder", new string[] { "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@Keyword", "@EmployeeID" },
+                    new object[] { param.pageNumber, param.pageSize, param.dateStart, param.dateEnd, param.keyWord, currentUser.EmployeeID });
+
+                var result = SQLHelper<object>.GetListData(foodOrders, 0);
+
+                return Ok(ApiResponseFactory.Success(result, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [HttpPost("food-order")]
         public IActionResult GetEmployeeFoodOrderByMonth(EmployeeFoodOrderByMonthParam param)
         {
