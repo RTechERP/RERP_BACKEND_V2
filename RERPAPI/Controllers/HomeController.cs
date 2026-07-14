@@ -1925,7 +1925,7 @@ namespace RERPAPI.Controllers
                 var uploadPath = _configSystemRepo.GetUploadPathByKey("Avatar");
                 if (string.IsNullOrWhiteSpace(uploadPath))
                 {
-                    uploadPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Uploads", "Avatars");
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy cấu hình đường dẫn tải ảnh đại diện (Avatar) trong hệ thống!"));
                 }
 
                 // Tạo thư mục nếu chưa tồn tại
@@ -1999,7 +1999,7 @@ namespace RERPAPI.Controllers
                 var uploadPath = _configSystemRepo.GetUploadPathByKey("Avatar");
                 if (string.IsNullOrWhiteSpace(uploadPath))
                 {
-                    uploadPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Uploads", "Avatars");
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy cấu hình đường dẫn tải ảnh đại diện (Avatar) trong hệ thống!"));
                 }
 
                 var fullPath = Path.Combine(uploadPath, employee.ImagePath);
