@@ -75,7 +75,8 @@ namespace RERPAPI.Controllers.Old
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
                 var arrParamName = new string[] { "@FilterText", "@PageNumber", "@PageSize", "@Month", "@Year", "@DepartmentID", "@EmployeeID", "@IDApprovedTP", "@Status" };
                 var arrParamValue = new object[] { param.keyWord ?? "", param.pageNumber, param.pageSize, param.month, param.year, param.departmentId, currentUser.EmployeeID, param.idApprovedTp, param.status };
-                var employeeEarlyLate = SQLHelper<object>.ProcedureToList("spGetEmployeeEarlyLate", arrParamName, arrParamValue);
+                var employeeEarlyLatedata = SQLHelper<object>.ProcedureToList("spGetEmployeeEarlyLate", arrParamName, arrParamValue);
+                var employeeEarlyLate = SQLHelper<object>.GetListData(employeeEarlyLatedata, 0);
                 return Ok(ApiResponseFactory.Success(employeeEarlyLate, ""));
             }
             catch (Exception ex)
