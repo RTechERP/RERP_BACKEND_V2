@@ -5,87 +5,60 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
-using RERPAPI.Model.Param.HRM.FlightBookingManagement;
+using RERPAPI.Model.Param.HRM.HotelBookingManagement;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.HRM.FlightBooking;
+using RERPAPI.Repo.GenericEntity.HRM.HotelBooking;
 
-namespace RERPAPI.Controllers.HRM.FlightBooking
+namespace RERPAPI.Controllers.HRM.HotelBooking
 {
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class FlightBookingManagementController : ControllerBase
+    public class HotelBookingManagementController : ControllerBase
     {
-        private readonly FlightBookingManagementRepo _flightBookingManagementRepo;
-        private readonly FlightBookingProposalRepo _flightBookingProposalRepo;
-        private readonly FlightBookingPassengerRepo _flightBookingPassengerRepo;
+        private readonly HotelBookingManagementRepo _hotelBookingManagementRepo;
+        private readonly HotelBookingProposalRepo _hotelBookingProposalRepo;
+        private readonly HotelBookingEmployeeRepo _hotelBookingEmployeeRepo;
         private readonly EmployeeRepo _employeeRepo;
-
         private readonly ProjectRepo _projectRepo;
         private readonly CurrentUser _currentUser;
 
-        public FlightBookingManagementController(
-            FlightBookingManagementRepo flightBookingManagementRepo,
-            FlightBookingProposalRepo flightBookingProposalRepo,
-            FlightBookingPassengerRepo flightBookingPassengerRepo,
+        public HotelBookingManagementController(
+            HotelBookingManagementRepo hotelBookingManagementRepo,
+            HotelBookingProposalRepo hotelBookingProposalRepo,
+            HotelBookingEmployeeRepo hotelBookingEmployeeRepo,
             EmployeeRepo employeeRepo,
             ProjectRepo projectRepo,
             CurrentUser currentUser)
         {
-            _flightBookingManagementRepo = flightBookingManagementRepo;
-            _flightBookingProposalRepo = flightBookingProposalRepo;
-            _flightBookingPassengerRepo = flightBookingPassengerRepo;
+            _hotelBookingManagementRepo = hotelBookingManagementRepo;
+            _hotelBookingProposalRepo = hotelBookingProposalRepo;
+            _hotelBookingEmployeeRepo = hotelBookingEmployeeRepo;
             _employeeRepo = employeeRepo;
             _projectRepo = projectRepo;
             _currentUser = currentUser;
         }
 
         [RequiresPermission("N1,N2,N34")]
-        [HttpGet("get-employees")]
-        public IActionResult GetEmployees()
-        {
-            try
-            {
-                var data = _employeeRepo.GetAll(x => x.Status != 1).OrderBy(x => x.FullName)
-                    .Select(x => new { x.ID, x.FullName, x.Code }).ToList();
-                return Ok(ApiResponseFactory.Success(data, ""));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        [RequiresPermission("N1,N2,N34")]
-        [HttpGet("get-projects")]
-        public IActionResult GetProjects()
-        {
-            try
-            {
-                var data = _projectRepo.GetAll(x => x.IsDeleted == false).OrderByDescending(x => x.ID)
-                    .Select(x => new { x.ID, Name = x.ProjectName }).ToList();
-                return Ok(ApiResponseFactory.Success(data, ""));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
-        [RequiresPermission("N1,N2,N34")]
         [HttpPost("get-list")]
-        public IActionResult GetList([FromBody] FlightBookingRequestParam request)
+        public IActionResult GetList([FromBody] HotelBookingRequestParam request)
         {
             try
             {
-                string procedureName = "spGetFlightBookingManagement";
+                string procedureName = "spGetHotelBookingManagement";
                 string[] paramNames = new string[] { "@StartDate", "@EndDate", "@Keyword", "@EmployeeID", "@ProjectID", "@EmployeeBookerID" };
-                object[] paramValues = new object[] { request.StartDate, request.EndDate, request.Keyword ?? "", request.EmployeeID ?? 0, request.ProjectID ?? 0, request.EmployeeBookerID ??0};
+                object[] paramValues = new object[] {
+                    request.StartDate ?? (object)DBNull.Value,
+                    request.EndDate ?? (object)DBNull.Value,
+                    request.Keyword ?? "",
+                    request.EmployeeID ?? 0,
+                    request.ProjectID ?? 0,
+                    request.EmployeeBookerID ?? 0
+                };
 
                 var data = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
-                var result = SQLHelper<object>.GetListData(data, 0);
-
-                return Ok(ApiResponseFactory.Success(result, ""));
+                var list = SQLHelper<object>.GetListData(data, 0);
+                return Ok(ApiResponseFactory.Success(list, ""));
             }
             catch (Exception ex)
             {
@@ -99,16 +72,16 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
         {
             try
             {
-                string procedureName = "spGetFlightBookingManagementByID";
+                string procedureName = "spGetHotelBookingManagementByID";
                 string[] paramNames = new string[] { "@ID" };
                 object[] paramValues = new object[] { id };
 
                 var data = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
                 var master = SQLHelper<object>.GetListData(data, 0).FirstOrDefault();
                 var proposals = SQLHelper<object>.GetListData(data, 1);
-                var passengers = _flightBookingPassengerRepo.GetAll(x => x.FlightBookingManagementID == id);
+                var employees = _hotelBookingEmployeeRepo.GetAll(x => x.HotelBookingManagementID == id && x.IsDeleted == false);
 
-                return Ok(ApiResponseFactory.Success(new { master, proposals, passengers }, ""));
+                return Ok(ApiResponseFactory.Success(new { master, proposals, employees }, ""));
             }
             catch (Exception ex)
             {
@@ -118,44 +91,44 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
 
         [RequiresPermission("N1,N2,N34")]
         [HttpPost("save-data")]
-        public async Task<IActionResult> SaveData([FromBody] FlightBookingSaveDTO dto)
+        public async Task<IActionResult> SaveData([FromBody] HotelBookingSaveDTO dto)
         {
             try
             {
-                if (dto.Passengers == null || !dto.Passengers.Any())
+                if (dto.Employees == null || !dto.Employees.Any())
                 {
-                    return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng nhập ít nhất một người đi!"));
+                    return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng nhập ít nhất một người sử dụng phòng!"));
                 }
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser _currentUser = ObjectMapper.GetCurrentUser(claims);
+
                 if (dto.ID > 0)
                 {
-                    //Cập nhật bản ghi hiện có (chỉ cập nhật bản ghi master )
-                    var master = _flightBookingManagementRepo.GetByID(dto.ID);
+                    // Cập nhật bản ghi hiện có
+                    var master = _hotelBookingManagementRepo.GetByID(dto.ID);
                     if (master == null) return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu cần cập nhật!"));
 
-                    // Cập nhật các trường
-                    master.EmployeeID = dto.Passengers.FirstOrDefault(x => x.Type == 1)?.EmployeeID;
+                    master.EmployeeRequestID = dto.EmployeeRequestID;
                     master.Reason = dto.Reason;
                     master.ProjectID = dto.ProjectID;
-                    master.DepartureAddress = dto.DepartureAddress;
-                    master.ArrivesAddress = dto.ArrivesAddress;
-                    master.DepartureDate = dto.DepartureDate;
-                    master.DepartureTime = dto.DepartureTime;
+                    master.Location = dto.Location;
+                    master.CheckinDate = dto.CheckinDate;
+                    master.CheckOutDate = dto.CheckOutDate;
+                    master.EmployeeApproverID = dto.EmployeeApproverID;
                     master.Note = dto.Note;
-                    master.EmployeeBookerID = _currentUser.EmployeeID;
-                    master.EmployeeRequestID = dto.EmployeeRequestID;
-                    master.IsRoundTrip = dto.IsRoundTrip;
-                    await _flightBookingManagementRepo.UpdateAsync(master);
+                    master.UpdatedDate = DateTime.Now;
+                    master.UpdatedBy = _currentUser.LoginName;
 
-                    // Cập nhật các phương án(Detail)
-                    var oldProposals = _flightBookingProposalRepo.GetAll(x => x.FlightBookingManagementID == master.ID);
+                    await _hotelBookingManagementRepo.UpdateAsync(master);
+
+                    // Cập nhật các phương án đề xuất (Detail)
+                    var oldProposals = _hotelBookingProposalRepo.GetAll(x => x.HotelBookingManagementID == master.ID);
                     foreach (var p in oldProposals)
                     {
                         p.IsDeleted = true;
                         p.UpdatedDate = DateTime.Now;
-
-                        await _flightBookingProposalRepo.UpdateAsync(p);
+                        p.UpdatedBy = _currentUser.LoginName;
+                        await _hotelBookingProposalRepo.UpdateAsync(p);
                     }
 
                     if (dto.Proposals != null)
@@ -163,102 +136,104 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                         foreach (var prop in dto.Proposals)
                         {
                             prop.ID = 0; // Chèn mới
-                            prop.FlightBookingManagementID = master.ID;
-                            await _flightBookingProposalRepo.CreateAsync(prop);
+                            prop.HotelBookingManagementID = master.ID;
+                            prop.IsDeleted = false;
+                            await _hotelBookingProposalRepo.CreateAsync(prop);
                         }
                     }
 
-                    // Cập nhật danh sách hành khách
-                    var oldPassengers = _flightBookingPassengerRepo.GetAll(x => x.FlightBookingManagementID == master.ID);
-                    foreach (var p in oldPassengers)
+                    // Cập nhật danh sách nhân viên sử dụng phòng
+                    var oldEmployees = _hotelBookingEmployeeRepo.GetAll(x => x.HotelBookingManagementID == master.ID);
+                    foreach (var e in oldEmployees)
                     {
-                        await _flightBookingPassengerRepo.DeleteAsync(p.ID);
+                        await _hotelBookingEmployeeRepo.DeleteAsync(e.ID);
                     }
 
-                    if (dto.Passengers != null)
+                    if (dto.Employees != null)
                     {
-                        foreach (var passenger in dto.Passengers)
+                        foreach (var emp in dto.Employees)
                         {
-                            if (passenger.Type == 1 && passenger.EmployeeID.HasValue && string.IsNullOrEmpty(passenger.FullName))
+                            if (emp.Type == 1 && emp.EmployeeID.HasValue && string.IsNullOrEmpty(emp.FullName))
                             {
-                                var emp = _employeeRepo.GetByID(passenger.EmployeeID.Value);
-                                passenger.FullName = emp?.FullName;
+                                var e = _employeeRepo.GetByID(emp.EmployeeID.Value);
+                                emp.FullName = e?.FullName;
                             }
-                            passenger.ID = 0;
-                            passenger.FlightBookingManagementID = master.ID;
-                            await _flightBookingPassengerRepo.CreateAsync(passenger);
+                            emp.ID = 0;
+                            emp.HotelBookingManagementID = master.ID;
+                            emp.IsDeleted = false;
+                            await _hotelBookingEmployeeRepo.CreateAsync(emp);
                         }
                     }
                 }
                 else
                 {
-                    // Trường hợp: Tạo bản ghi mới
-                    var master = new FlightBookingManagement
+                    // Trường hợp tạo mới
+                    var master = new HotelBookingManagement
                     {
-                        EmployeeID = dto.Passengers.FirstOrDefault(x => x.Type == 1)?.EmployeeID,
+                        EmployeeRequestID = dto.EmployeeRequestID,
                         Reason = dto.Reason,
                         ProjectID = dto.ProjectID,
-                        DepartureAddress = dto.DepartureAddress,
-                        ArrivesAddress = dto.ArrivesAddress,
-                        DepartureDate = dto.DepartureDate,
-                        DepartureTime = dto.DepartureTime,
-                        Note = dto.Note,
+                        Location = dto.Location,
+                        CheckinDate = dto.CheckinDate,
+                        CheckOutDate = dto.CheckOutDate,
+                        EmployeeApproverID = dto.EmployeeApproverID,
                         EmployeeBookerID = _currentUser.EmployeeID,
-                        EmployeeRequestID = dto.EmployeeRequestID,
-                        BookedDate = DateTime.Now,
-                        IsRoundTrip = dto.IsRoundTrip
+                        DateRequest = DateTime.Now,
+                        Note = dto.Note,
+                        IsDeleted = false
                     };
 
-                    await _flightBookingManagementRepo.CreateAsync(master);
+                    await _hotelBookingManagementRepo.CreateAsync(master);
 
-                    // Thêm các phương án cho bản ghi cụ thể này
+                    // Thêm đề xuất cho bản ghi mới này
                     if (dto.Proposals != null)
                     {
                         foreach (var prop in dto.Proposals)
                         {
-                            var newProp = new FlightBookingProposal
+                            var newProp = new HotelBookingProposal
                             {
-                                FlightBookingManagementID = master.ID,
-                                Airline = prop.Airline,
-                                Price = prop.Price,
-                                Baggage = prop.Baggage,
-                                IsApprove = prop.IsApprove,
-                                ApproveID = prop.ApproveID,
-                                HCNSProposal = prop.HCNSProposal,
+                                HotelBookingManagementID = master.ID,
+                                TypeRoom = prop.TypeRoom,
+                                Quantity = prop.Quantity,
+                                UnitPrice = prop.UnitPrice,
+                                TotalAmount = prop.TotalAmount,
+                                Note = prop.Note,
+                                IsHCNSProposal = prop.IsHCNSProposal,
                                 ReasonHCNSProposal = prop.ReasonHCNSProposal,
-                                DepartureDate = prop.DepartureDate,
-                                DepartureTime = prop.DepartureTime,
-                                ReturnDate = prop.ReturnDate,
-                                ReturnTime = prop.ReturnTime
+                                IsDeleted = false,
+                                IsApprove = prop.IsApprove ?? 0,
+                                ApproveID = prop.ApproveID,
+                                ReasonDecline = prop.ReasonDecline
                             };
-                            await _flightBookingProposalRepo.CreateAsync(newProp);
+                            await _hotelBookingProposalRepo.CreateAsync(newProp);
                         }
                     }
 
-                    // Thêm hành khách cho bản ghi cụ thể này
-                    if (dto.Passengers != null)
+                    // Thêm nhân viên sử dụng phòng cho bản ghi mới này
+                    if (dto.Employees != null)
                     {
-                        foreach (var passenger in dto.Passengers)
+                        foreach (var emp in dto.Employees)
                         {
-                            string fullName = passenger.FullName;
-                            if (passenger.Type == 1 && passenger.EmployeeID.HasValue && string.IsNullOrEmpty(fullName))
+                            string fullName = emp.FullName;
+                            if (emp.Type == 1 && emp.EmployeeID.HasValue && string.IsNullOrEmpty(fullName))
                             {
-                                var emp = _employeeRepo.GetByID(passenger.EmployeeID.Value);
-                                fullName = emp?.FullName;
+                                var e = _employeeRepo.GetByID(emp.EmployeeID.Value);
+                                fullName = e?.FullName;
                             }
-                            var newPassenger = new FlightBookingPassenger
+                            var newEmp = new HotelBookingEmployee
                             {
-                                FlightBookingManagementID = master.ID,
-                                Type = passenger.Type,
-                                EmployeeID = passenger.EmployeeID,
-                                FullName = fullName
+                                HotelBookingManagementID = master.ID,
+                                Type = emp.Type,
+                                EmployeeID = emp.EmployeeID,
+                                FullName = fullName,
+                                IsDeleted = false
                             };
-                            await _flightBookingPassengerRepo.CreateAsync(newPassenger);
+                            await _hotelBookingEmployeeRepo.CreateAsync(newEmp);
                         }
                     }
                 }
 
-                return Ok(ApiResponseFactory.Success(null, "Lưu đăng ký thành công"));
+                return Ok(ApiResponseFactory.Success(null, "Lưu đăng ký đặt phòng thành công"));
             }
             catch (Exception ex)
             {
@@ -266,16 +241,21 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
             }
         }
 
+        public class DeleteRequest
+        {
+            public int ID { get; set; }
+        }
+        [RequiresPermission("N1,N2,N34")]
         [HttpPost("delete")]
-        public async Task<IActionResult> Delete([FromBody] int id)
+        public async Task<IActionResult> Delete([FromBody] DeleteRequest req)
         {
             try
             {
-                var master = _flightBookingManagementRepo.GetByID(id);
+                var master = _hotelBookingManagementRepo.GetByID(req.ID);
                 if (master != null)
                 {
                     master.IsDeleted = true;
-                    await _flightBookingManagementRepo.UpdateAsync(master);
+                    await _hotelBookingManagementRepo.UpdateAsync(master);
                 }
                 return Ok(ApiResponseFactory.Success(null, "Xóa thông tin thành công"));
             }
@@ -284,19 +264,22 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2,N34")]
         [HttpPost("approve-proposal")]
-        public async Task<IActionResult> ApproveProposal([FromBody] FlightBookingApproveDTO dto)
+        public async Task<IActionResult> ApproveProposal([FromBody] HotelBookingApproveDTO dto)
         {
             try
             {
-                var proposal = _flightBookingProposalRepo.GetByID(dto.ProposalID);
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser _currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var proposal = _hotelBookingProposalRepo.GetByID(dto.ProposalID);
                 if (proposal == null) return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy phương án!"));
 
                 proposal.IsApprove = dto.Status;
                 proposal.ReasonDecline = dto.ReasonDecline;
                 proposal.ApproveID = dto.Status == 0 ? null : _currentUser.EmployeeID;
-                await _flightBookingProposalRepo.UpdateAsync(proposal);
+                await _hotelBookingProposalRepo.UpdateAsync(proposal);
 
                 return Ok(ApiResponseFactory.Success(null, "Cập nhật trạng thái thành công"));
             }
@@ -305,22 +288,20 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2,N34")]
         [HttpPost("get-historical-suggestions")]
         public IActionResult GetHistoricalSuggestions()
         {
             try
             {
-                var query = from m in _flightBookingManagementRepo.GetAll(x => x.IsDeleted == false || x.IsDeleted == null)
-                            join p in _flightBookingProposalRepo.GetAll(x => x.IsDeleted == false || x.IsDeleted == null)
-                            on m.ID equals p.FlightBookingManagementID into mp
+                var query = from m in _hotelBookingManagementRepo.GetAll(x => x.IsDeleted == false)
+                            join p in _hotelBookingProposalRepo.GetAll(x => x.IsDeleted == false)
+                            on m.ID equals p.HotelBookingManagementID into mp
                             from p in mp.DefaultIfEmpty()
                             select new
                             {
-                                DepartureAddress = m.DepartureAddress,
-                                ArrivesAddress = m.ArrivesAddress,
-                                Airline = p != null ? p.Airline : null,
-                                Baggage = p != null ? p.Baggage : null
+                                Location = m.Location,
+                                TypeRoom = p != null ? p.TypeRoom : null
                             };
 
                 var data = query.Distinct().ToList();
@@ -331,9 +312,9 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N1,N2,N34")]
         [HttpPost("ExportExcel")]
-        public IActionResult ExportExcel([FromBody] FlightBookingRequestParam request)
+        public IActionResult ExportExcel([FromBody] HotelBookingRequestParam request)
         {
             try
             {
@@ -344,7 +325,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                     : "";
 
                 var dt = SQLHelper<dynamic>.ProcedureToList(
-                    "spGetFlightBookingExportExcel",
+                    "spGetHotelBookingExportExcel",
                     new string[] { "@StartDate", "@EndDate", "@Keyword", "@ProjectID", "@SelectedIDs", "@EmployeeBookerID" },
                     new object[] {
                         request.StartDate ?? (object)DBNull.Value,
@@ -364,14 +345,10 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                     return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu để xuất Excel!"));
                 }
 
-                // Nhóm hành khách theo FlightBookingManagementID
+                // Nhóm hành khách theo HotelBookingManagementID
                 var passengersGrouped = passengersList.Cast<IDictionary<string, object>>()
-                                                      .GroupBy(x => Convert.ToInt32(x["FlightBookingManagementID"]))
+                                                      .GroupBy(x => Convert.ToInt32(x["HotelBookingManagementID"]))
                                                       .ToDictionary(g => g.Key, g => g.ToList());
-
-                // Kiểm tra xem có yêu cầu đặt vé nào là khứ hồi hay không
-                bool hasRoundTrip = listData.Cast<IDictionary<string, object>>()
-                                            .Any(x => x["IsRoundTrip"] != null && Convert.ToBoolean(x["IsRoundTrip"]));
 
                 // Nhóm theo MasterID
                 var groups = listData.Cast<IDictionary<string, object>>()
@@ -382,8 +359,8 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                 int maxPA = groups.Max(g => g.Count());
                 if (maxPA < 2) maxPA = 2;
 
-                int startPACol = hasRoundTrip ? 15 : 13;
-                int hcnsProposalCol = startPACol + maxPA; // (startPACol-1) cột đầu + (maxPA cột/PA)
+                int startPACol = 11;
+                int hcnsProposalCol = startPACol + maxPA;
                 int diffCol = hcnsProposalCol + 1;
                 int hcnsReasonCol = diffCol + 1;
                 int totalCol = hcnsReasonCol + 1;
@@ -396,12 +373,12 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
 
                 using (var package = new OfficeOpenXml.ExcelPackage())
                 {
-                    var sheet = package.Workbook.Worksheets.Add("Flight Booking");
+                    var sheet = package.Workbook.Worksheets.Add("Hotel Booking");
                     sheet.Cells.Style.Font.Name = "Times New Roman";
                     sheet.Cells.Style.Font.Size = 11;
 
                     // 1. Tiêu đề
-                    sheet.Cells[1, 1].Value = "DANH SÁCH THEO DÕI ĐẶT VÉ MÁY BAY";
+                    sheet.Cells[1, 1].Value = "DANH SÁCH THEO DÕI ĐẶT PHÒNG KHÁCH SẠN";
                     sheet.Cells[1, 1, 1, totalCols].Merge = true;
                     using (var range = sheet.Cells[1, 1])
                     {
@@ -416,45 +393,14 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                     sheet.Row(1).Height = 35;
 
                     // 2. Tiêu đề cột Dòng 2 & 3
-                    string[] masterHeaders = { "STT", "Người yêu cầu", "Mục đích", "Dự án", "Người đi", "Vị trí", "Phòng ban" };
+                    string[] masterHeaders = { "STT", "Người yêu cầu", "Mục đích", "Dự án", "Người đi", "Vị trí", "Phòng ban", "Địa điểm / Khách sạn", "Check-in", "Check-out" };
                     for (int i = 0; i < masterHeaders.Length; i++)
                     {
                         sheet.Cells[2, i + 1].Value = masterHeaders[i];
                         sheet.Cells[2, i + 1, 3, i + 1].Merge = true;
                     }
 
-                    int colIndex = 8;
-                    sheet.Cells[2, colIndex].Value = "Khứ hồi";
-                    sheet.Cells[2, colIndex, 3, colIndex].Merge = true;
-                    colIndex++;
-
-                    sheet.Cells[2, colIndex].Value = "Điểm đi";
-                    sheet.Cells[2, colIndex, 3, colIndex].Merge = true;
-                    colIndex++;
-
-                    sheet.Cells[2, colIndex].Value = "Điểm đến";
-                    sheet.Cells[2, colIndex, 3, colIndex].Merge = true;
-                    colIndex++;
-
-                    sheet.Cells[2, colIndex].Value = "Giờ bay";
-                    sheet.Cells[2, colIndex, 3, colIndex].Merge = true;
-                    colIndex++;
-
-                    sheet.Cells[2, colIndex].Value = "Ngày bay";
-                    sheet.Cells[2, colIndex, 3, colIndex].Merge = true;
-                    colIndex++;
-
-                    if (hasRoundTrip)
-                    {
-                        sheet.Cells[2, colIndex].Value = "Giờ về";
-                        sheet.Cells[2, colIndex, 3, colIndex].Merge = true;
-                        colIndex++;
-
-                        sheet.Cells[2, colIndex].Value = "Ngày về";
-                        sheet.Cells[2, colIndex, 3, colIndex].Merge = true;
-                        colIndex++;
-                    }
-
+                    int colIndex = startPACol;
                     for (int i = 1; i <= maxPA; i++)
                     {
                         sheet.Cells[2, colIndex].Value = "Phương án " + i;
@@ -550,9 +496,9 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                                 sheet.Cells[startRow, 2].Value = first["RequesterName"];
                                 sheet.Cells[startRow, 3].Value = first["Reason"];
                                 sheet.Cells[startRow, 4].Value = first["ProjectName"];
-                                sheet.Cells[startRow, 8].Value = (first["IsRoundTrip"] != null && Convert.ToBoolean(first["IsRoundTrip"])) ? "x" : "";
-                                sheet.Cells[startRow, 9].Value = first["DepartureAddress"];
-                                sheet.Cells[startRow, 10].Value = first["ArrivesAddress"];
+                                sheet.Cells[startRow, 8].Value = first["Location"];
+                                sheet.Cells[startRow, 9].Value = first["CheckinDate"] != null && first["CheckinDate"] != DBNull.Value ? ((DateTime)first["CheckinDate"]).ToString("dd/MM/yyyy") : "";
+                                sheet.Cells[startRow, 10].Value = first["CheckOutDate"] != null && first["CheckOutDate"] != DBNull.Value ? ((DateTime)first["CheckOutDate"]).ToString("dd/MM/yyyy") : "";
                             }
 
                             if (groupPassengers != null && i < passengerCount)
@@ -567,65 +513,23 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                             {
                                 var item = items[i];
 
-                                string dayOfWeekStr = "";
-                                if (item["DepartureDate"] != null && item["DepartureDate"] != DBNull.Value)
-                                {
-                                    var dateVal = (DateTime)item["DepartureDate"];
-                                    dayOfWeekStr = dateVal.DayOfWeek switch
-                                    {
-                                        DayOfWeek.Sunday => "Chủ Nhật",
-                                        DayOfWeek.Monday => "Thứ Hai",
-                                        DayOfWeek.Tuesday => "Thứ Ba",
-                                        DayOfWeek.Wednesday => "Thứ Tư",
-                                        DayOfWeek.Thursday => "Thứ Năm",
-                                        DayOfWeek.Friday => "Thứ Sáu",
-                                        DayOfWeek.Saturday => "Thứ Bảy",
-                                        _ => ""
-                                    };
-                                }
-
-                                string depTimeStr = item["DepartureTime"] != null && item["DepartureTime"] != DBNull.Value ? ((DateTime)item["DepartureTime"]).ToString("HH:mm") : "";
-                                sheet.Cells[row, 11].Value = string.IsNullOrEmpty(dayOfWeekStr) ? depTimeStr : $"{dayOfWeekStr} {depTimeStr}";
-                                sheet.Cells[row, 12].Value = item["DepartureDate"] != null && item["DepartureDate"] != DBNull.Value ? ((DateTime)item["DepartureDate"]).ToString("dd/MM/yyyy") : "";
-
-                                if (hasRoundTrip)
-                                {
-                                    string dayOfWeekReturnStr = "";
-                                    if (item["ReturnDate"] != null && item["ReturnDate"] != DBNull.Value)
-                                    {
-                                        var dateVal = (DateTime)item["ReturnDate"];
-                                        dayOfWeekReturnStr = dateVal.DayOfWeek switch
-                                        {
-                                            DayOfWeek.Sunday => "Chủ Nhật",
-                                            DayOfWeek.Monday => "Thứ Hai",
-                                            DayOfWeek.Tuesday => "Thứ Ba",
-                                            DayOfWeek.Wednesday => "Thứ Tư",
-                                            DayOfWeek.Thursday => "Thứ Năm",
-                                            DayOfWeek.Friday => "Thứ Sáu",
-                                            DayOfWeek.Saturday => "Thứ Bảy",
-                                            _ => ""
-                                        };
-                                    }
-
-                                    string retTimeStr = item["ReturnTime"] != null && item["ReturnTime"] != DBNull.Value ? ((DateTime)item["ReturnTime"]).ToString("HH:mm") : "";
-                                    sheet.Cells[row, 13].Value = string.IsNullOrEmpty(dayOfWeekReturnStr) ? retTimeStr : $"{dayOfWeekReturnStr} {retTimeStr}";
-                                    sheet.Cells[row, 14].Value = item["ReturnDate"] != null && item["ReturnDate"] != DBNull.Value ? ((DateTime)item["ReturnDate"]).ToString("dd/MM/yyyy") : "";
-                                }
-
                                 int paCol = startPACol + i;
-                                string airline = item["Airline"] != null ? item["Airline"].ToString() : "";
-                                decimal priceVal = item["Price"] != null && item["Price"] != DBNull.Value ? Convert.ToDecimal(item["Price"]) : 0;
-                                string priceStr = priceVal > 0 ? priceVal.ToString("#,##0") : "";
-                                string baggage = item["Baggage"] != null ? item["Baggage"].ToString() : "";
+                                string typeRoom = item["TypeRoom"] != null ? item["TypeRoom"].ToString() : "";
+                                decimal unitPrice = item["UnitPrice"] != null && item["UnitPrice"] != DBNull.Value ? Convert.ToDecimal(item["UnitPrice"]) : 0;
+                                int quantity = item["Quantity"] != null && item["Quantity"] != DBNull.Value ? Convert.ToInt32(item["Quantity"]) : 0;
+                                decimal totalAmount = item["TotalAmount"] != null && item["TotalAmount"] != DBNull.Value ? Convert.ToDecimal(item["TotalAmount"]) : (unitPrice * quantity);
+
+                                string priceStr = unitPrice > 0 ? unitPrice.ToString("#,##0") : "";
+                                string totalStr = totalAmount > 0 ? totalAmount.ToString("#,##0") : "";
 
                                 var lines = new List<string>();
-                                if (!string.IsNullOrEmpty(airline)) lines.Add(airline);
-                                if (!string.IsNullOrEmpty(priceStr)) lines.Add(priceStr);
-                                if (!string.IsNullOrEmpty(baggage)) lines.Add(baggage);
+                                if (!string.IsNullOrEmpty(typeRoom)) lines.Add($"Loại phòng:{typeRoom}");
+                                if (quantity > 0) lines.Add($"SL: {quantity}");
+                                if (!string.IsNullOrEmpty(priceStr)) lines.Add($"Đơn giá: {priceStr}");
+                                if (!string.IsNullOrEmpty(totalStr)) lines.Add($"Thành tiền: {totalStr}");
 
                                 sheet.Cells[row, paCol].Value = string.Join("\n", lines);
                                 sheet.Cells[row, paCol].Style.WrapText = true;
-                                sheet.Cells[row, paCol].Style.Font.Color.SetColor(System.Drawing.Color.Black);
 
                                 bool isHCNS = item["HCNSProposal"] != null && item["HCNSProposal"] != DBNull.Value && Convert.ToBoolean(item["HCNSProposal"]);
                                 if (isHCNS)
@@ -634,26 +538,22 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                                     hcnsProposalsList.Add("Phương án " + (i + 1));
                                 }
 
-                                decimal price = priceVal;
-                                if (i == 0) pa1Price = price;
-                                if (i == 1) pa2Price = price;
+                                if (i == 0) pa1Price = totalAmount;
+                                if (i == 1) pa2Price = totalAmount;
 
-                                if (price > 0 && price < minPrice)
+                                if (totalAmount > 0 && totalAmount < minPrice)
                                 {
-                                    minPrice = price;
+                                    minPrice = totalAmount;
                                 }
 
                                 int isApprove = item["IsApprove"] != null && item["IsApprove"] != DBNull.Value ? Convert.ToInt32(item["IsApprove"]) : 0;
                                 if (isApprove == 1)
                                 {
-                                    totalApproved += price;
+                                    totalApproved += totalAmount;
                                     hasApproved = true;
-                                    if (item["ApproverName"] != null && item["ApproverName"] != DBNull.Value)
-                                    {
-                                        approverName = item["ApproverName"].ToString();
-                                    }
+                                    approverName = item["ApproverName"] != null ? item["ApproverName"].ToString() : "";
                                 }
-                                else if (string.IsNullOrEmpty(approverName) && item["ApproverName"] != null && item["ApproverName"] != DBNull.Value)
+                                else if (string.IsNullOrEmpty(approverName) && item["ApproverName"] != null)
                                 {
                                     approverName = item["ApproverName"].ToString();
                                 }
@@ -712,23 +612,15 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                     sheet.Column(3).Width = 30;  // Lý do
                     sheet.Column(4).Width = 20;  // Dự án
                     sheet.Column(5).Width = 20;  // Người đi/Hành khách
-                    sheet.Column(6).Width = 15;  // Vị trí/Chức vụ
+                    sheet.Column(6).Width = 15;  // Vị trí
                     sheet.Column(7).Width = 20;  // Phòng ban
-                    sheet.Column(8).Width = 12;  // Khứ hồi
-                    sheet.Column(9).Width = 20;  // Điểm đi
-                    sheet.Column(10).Width = 20; // Điểm đến
-                    sheet.Column(11).Width = 10; // Giờ đi (Giờ bay)
-                    sheet.Column(12).Width = 12; // Ngày đi (Ngày bay)
-
-                    if (hasRoundTrip)
-                    {
-                        sheet.Column(13).Width = 10; // Giờ về
-                        sheet.Column(14).Width = 12; // Ngày về
-                    }
+                    sheet.Column(8).Width = 30;  // Địa điểm / Khách sạn
+                    sheet.Column(9).Width = 15;  // Checkin
+                    sheet.Column(10).Width = 15; // Checkout
 
                     for (int i = startPACol; i < hcnsProposalCol; i++)
                     {
-                        sheet.Column(i).Width = 20;
+                        sheet.Column(i).Width = 25;
                     }
                     sheet.Column(hcnsProposalCol).Width = 25;
                     sheet.Column(hcnsReasonCol).Width = 35;
@@ -740,7 +632,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                     sheet.Column(noteCol).Width = 30;
 
                     var stream = new System.IO.MemoryStream(package.GetAsByteArray());
-                    string fileName = $"FlightBooking_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+                    string fileName = $"HotelBooking_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
                     return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
                 }
             }
@@ -751,7 +643,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
         }
     }
 
-    public class FlightBookingApproveDTO
+    public class HotelBookingApproveDTO
     {
         public int ProposalID { get; set; }
         public int Status { get; set; } // 0: Chờ duyệt, 1: Duyệt, 2: Không duyệt

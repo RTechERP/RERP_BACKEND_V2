@@ -63,7 +63,17 @@ public class FlightBookingSaveDTO
     public List<int> TravelerIDs { get; set; } = new List<int>();
 
     /// <summary>
+    /// Danh sách hành khách đi cùng
+    /// </summary>
+    public List<FlightBookingPassenger> Passengers { get; set; } = new List<FlightBookingPassenger>();
+
+    /// <summary>
     /// Danh sách các phương án đề xuất
     /// </summary>
     public List<FlightBookingProposal> Proposals { get; set; } = new List<FlightBookingProposal>();
+
+    /// <summary>
+    /// Vé khứ hồi
+    /// </summary>
+    public bool? IsRoundTrip { get; set; }
 }
