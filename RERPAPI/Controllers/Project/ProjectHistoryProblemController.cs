@@ -183,6 +183,10 @@ namespace RERPAPI.Controllers.Project
                                     DateImplementation = oldProblemDb.DateImplementation,
                                     PIC = oldProblemDb.PIC,
 
+                                    Impact = oldProblemDb.Impact,
+                                    ErrorLocation = oldProblemDb.ErrorLocation,
+                                    Note = oldProblemDb.Note,
+
                                     CreatedBy = oldProblemDb.CreatedBy,
                                     CreatedDate = oldProblemDb.CreatedDate,
                                     UpdatedBy = oldProblemDb.UpdatedBy,
@@ -192,6 +196,7 @@ namespace RERPAPI.Controllers.Project
                                     IsDeleted = oldProblemDb.IsDeleted,
                                     IssueLogType = oldProblemDb.IssueLogType,
                                     CreatorID = oldProblemDb.CreatorID,
+                                    ProjectManagerID = oldProblemDb.ProjectManagerID,
                                     PriorityLevel = oldProblemDb.PriorityLevel,
                                     PerformerID = oldProblemDb.PerformerID,
                                     StatusProblem = oldProblemDb.StatusProblem,
@@ -1076,6 +1081,7 @@ namespace RERPAPI.Controllers.Project
                 {
                     1 => "Khách hàng",
                     2 => "Nội bộ",
+                    3 => "Nhà cung cấp",
                     _ => ""
                 };
 
