@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace RERPAPI.Model.Entities;
@@ -26,4 +26,6 @@ public partial class ProjectType
     public bool IsPurchase { get; set; }
 
     public bool IsProject { get; set; }
+
+    public int? DepartmentID { get; set; }
 }

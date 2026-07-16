@@ -1,23 +1,23 @@
-﻿using RERPAPI.Model.Entities;
+using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Model.DTO.HRM
 {
     public class HandoverDTO
     {
-        public Handover Handover { get; set; }
-        public List<HandoverReceiver>? HandoverReceiver { get; set; }
-        public List<HandoverWork>? HandoverWork { get; set; }
-        public List<HandoverWarehouseAsset>? HandoverWarehouseAsset { get; set; }
-        public List<HandoverAssetManagement>? HandoverAssetManagement { get; set; }
-        public List<HandoverFinance>? HandoverFinance { get; set; }
-        public List<HandoverSubordinate>? HandoverSubordinate { get; set; }
-        public List<HandoverApprove> HandoverApprove { get; set; }
-        public List<HandoverPersonalAsset>? handoverPersonalAsset { get; set; }
-        public List<int>? DeletedHandoverReceiver { get; set; }
-        public List<int>? DeletedWork { get; set; }
-        public List<int>? DeletedAsset { get; set; }
-        public List<int>? DeletedWarehouseAsset { get; set; }
-        public List<int>? DeletedFinance { get; set; }
-        public List<int>? DeletedPersonalAsset { get; set; }
+        public Handover? Handover { get; set; }
+        public List<HandoverReceiver>? Receivers { get; set; }
+        public List<HandoverWork>? Works { get; set; }
+        public List<HandoverWarehouseAsset>? WarehouseAssets { get; set; }
+        public List<HandoverAssetManagement>? AssetManagements { get; set; }
+        public List<HandoverFinance>? Finances { get; set; }
+        public List<HandoverSubordinate>? Subordinates { get; set; }
+        public List<HandoverApprove>? Approves { get; set; }
+        public List<HandoverPersonalAsset>? PersonalAssets { get; set; }
+        public List<int>? DeletedReceivers { get; set; }
+        public List<int>? DeletedWorks { get; set; }
+        public List<int>? DeletedAssets { get; set; }
+        public List<int>? DeletedWarehouseAssets { get; set; }
+        public List<int>? DeletedFinances { get; set; }
+        public List<int>? DeletedPersonalAssets { get; set; }
     }
 }

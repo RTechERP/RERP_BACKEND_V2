@@ -1,0 +1,166 @@
+﻿Text
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- =============================================
+
+-- Author:		<Author:NXL>
+
+-- Create date: <23/04/2026>
+
+-- Description:	<L?y danh sách d?t vé d? xu?t excel>
+
+-- =============================================
+
+CREATE PROCEDURE spGetFlightBookingExportExcel
+
+    @StartDate DATETIME = NULL,
+
+    @EndDate DATETIME = NULL,
+
+    @Keyword NVARCHAR(500) = NULL,
+
+    @ProjectID INT = NULL,
+
+    @SelectedIDs VARCHAR(MAX) = NULL --L?y nh?ng dòng dc ch?n
+
+AS
+
+BEGIN
+
+    SET NOCOUNT ON;
+
+
+
+    SELECT m.ID AS MasterID,
+
+           m.EmployeeID,
+
+           eb.FullName AS RequesterName,
+
+           m.Reason,
+
+           ProjectName=p.ProjectCode+'-'+p.ProjectName,
+
+           e.FullName AS PassengerName,
+
+           cv.Name AS PositionName,
+
+           d.Name AS DepartmentName,
+
+           m.DepartureAddress,
+
+           m.ArrivesAddress,
+
+           pr.DepartureTime,
+
+           pr.DepartureDate,
+
+           pr.Airline,
+
+           pr.Price,
+
+           pr.Baggage,
+
+           pr.IsApprove,
+
+           pr.HCNSProposal,
+
+           eb.FullName AS BookerName,
+
+           m.CreatedDate AS BookedDate,
+
+           m.Note,
+
+           ApproverName = ep.FullName,
+
+		   ReasonHCNSProposal = pr.ReasonHCNSProposal
+
+    FROM FlightBookingManagement m
+
+        LEFT JOIN Employee e
+
+            ON m.EmployeeID = e.ID
+
+        LEFT JOIN Project p
+
+            ON m.ProjectID = p.ID
+
+        LEFT JOIN Department d
+
+            ON e.DepartmentID = d.ID
+
+        LEFT JOIN dbo.EmployeeChucVu cv
+
+            ON e.ChuVuID = cv.ID
+
+        LEFT JOIN FlightBookingProposal pr
+
+            ON m.ID = pr.FlightBookingManagementID
+
+               AND ISNULL(pr.IsDeleted, 0) = 0
+
+        LEFT JOIN Employee eb
+
+            ON m.EmployeeBookerID = eb.ID
+
+        LEFT JOIN Employee ep
+
+            ON ep.ID = pr.ApproveID
+
+    WHERE ISNULL(m.IsDeleted, 0) = 0
+
+          AND
+
+          (
+
+              @SelectedIDs IS NULL
+
+              OR @SelectedIDs = ''
+
+              OR m.ID IN
+
+                 (
+
+                     SELECT CAST(value AS INT)FROM STRING_SPLIT(@SelectedIDs, ',')
+
+                 )
+
+          )
+
+
+
+          AND
+
+          (
+
+              @ProjectID IS NULL
+
+              OR @ProjectID = 0
+
+              OR m.ProjectID = @ProjectID
+
+          )
+
+          AND
+
+          (
+
+              @Keyword IS NULL
+
+              OR @Keyword = ''
+
+              OR e.FullName LIKE '%' + @Keyword + '%'
+
+              OR m.Reason LIKE '%' + @Keyword + '%'
+
+              OR p.ProjectName LIKE '%' + @Keyword + '%'
+
+          )
+
+    ORDER BY m.EmployeeID,
+
+             m.ID,
+
+             pr.ID;
+
+END;
+
