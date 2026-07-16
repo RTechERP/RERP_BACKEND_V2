@@ -7,6 +7,7 @@ using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
 using RERPAPI.Repo.GenericEntity.Project;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RERPAPI.Controllers.Project
 {
@@ -32,9 +33,10 @@ namespace RERPAPI.Controllers.Project
         private readonly ProjectPartlistVersionRepo _projectPartListVersionRepo;
         private readonly EmailHelper _emailHelper;
         private readonly ProjectHistoryProblemLogRepo _projectHistoryProblemLogRepo;
+        private readonly ProjectTypeLinkRepo _projectTypeLinkRepo;
 
         public ProjectHistoryProblemController(
-               //ProjectHistoryProblemDetailRepo historyproblemDetailRepo,
+               ProjectHistoryProblemDetailRepo historyproblemDetailRepo,
                ProjectHistoryProblemRepo historyproblemRepo,
                ProjectHistoryProblemWorkerLinkRepo projectHistoryProblemWorkerLinkRepo,
                ProjectHistoryProblemPartListLinkRepo projectHistoryProblemPartListLinkRepo,
@@ -49,7 +51,8 @@ namespace RERPAPI.Controllers.Project
                ProjectWorkerVersionRepo projectWorkerVersionRepo,
                ProjectPartlistVersionRepo projectPartlistVersionRepo,
                EmailHelper emailHelper,
-               ProjectHistoryProblemLogRepo projectHistoryProblemLogRepo)
+               ProjectHistoryProblemLogRepo projectHistoryProblemLogRepo,
+               ProjectTypeLinkRepo projectTypeLinkRepo)
         {
             //_historyproblemDetailRepo = historyproblemDetailRepo;
             _historyproblemRepo = historyproblemRepo;
@@ -68,6 +71,7 @@ namespace RERPAPI.Controllers.Project
             _projectPartListVersionRepo = projectPartlistVersionRepo;
             _emailHelper = emailHelper;
             _projectHistoryProblemLogRepo = projectHistoryProblemLogRepo;
+            _projectTypeLinkRepo = projectTypeLinkRepo;
         }
 
         [HttpPost("get-data")]
@@ -84,13 +88,13 @@ namespace RERPAPI.Controllers.Project
                 var dtMaster = SQLHelper<object>.GetListData(data, 2);
                 return Ok(ApiResponseFactory.Success(new { dtDetail, dtMaster },
                     "Lấy dữ liệu thành công"));
+
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
         //[HttpPost("get-data-detail")]
         //public async Task<IActionResult> getDataHistoryProblemDetail(int id)
         //{
@@ -178,6 +182,7 @@ namespace RERPAPI.Controllers.Project
                                     DateProblem = oldProblemDb.DateProblem,
                                     DateImplementation = oldProblemDb.DateImplementation,
                                     PIC = oldProblemDb.PIC,
+
                                     Impact = oldProblemDb.Impact,
                                     ErrorLocation = oldProblemDb.ErrorLocation,
                                     Note = oldProblemDb.Note,
@@ -215,6 +220,7 @@ namespace RERPAPI.Controllers.Project
                                     );
                                 }
                             }
+
                         }
                         else
                         {
@@ -227,6 +233,7 @@ namespace RERPAPI.Controllers.Project
                                 "Tạo mới phát sinh.",
                                 "Thêm mới phát sinh"
                             );
+
                         }
 
                         lastSavedProblemId = problemId;
@@ -598,6 +605,7 @@ namespace RERPAPI.Controllers.Project
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+
         }
 
         [HttpGet("get-project")]
@@ -664,6 +672,7 @@ namespace RERPAPI.Controllers.Project
                 var dtPartlistVersionLink = SQLHelper<object>.GetListData(data, 2);
                 return Ok(ApiResponseFactory.Success(new { dtProjectItemLink, dtWorkerVersionLink, dtPartlistVersionLink },
                     "Lấy dữ liệu thành công"));
+
             }
             catch (Exception ex)
             {
@@ -689,9 +698,10 @@ namespace RERPAPI.Controllers.Project
         }
 
         #region Upload và GetFiles
-
         [HttpPost("upload")]
         [DisableRequestSizeLimit]
+        //[RequiresPermission("N27,N36,N1,N31")]
+
         public async Task<IActionResult> Upload(int requestInvoiceId, int fileType)
         {
             try
@@ -712,6 +722,7 @@ namespace RERPAPI.Controllers.Project
                     throw new Exception("HistoryProblem not found");
 
                 var uploadPath = _configSystemRepo.GetUploadPathByKey(key);
+                //var uploadPath = _configSystemRepo.GetUploadPathByKey("VehicleRepairHistory");
                 if (string.IsNullOrWhiteSpace(uploadPath))
                     return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: {key}"));
 
@@ -766,7 +777,7 @@ namespace RERPAPI.Controllers.Project
                     var fileUpload = new ProjectHistoryProblemFile
                     {
                         ProjectHistoryProblemID = hp.ID,
-                        //FileType = fileType, // Loại file của yêu cầu xuất hóa đơn : 1, loại file tờ khai xuất khẩu: 2
+                        FileType = fileType, // Loại file của Trước khi xử lý : 1, sau khi xử lý: 2
                         FileName = uniqueFileName,
                         OriginPath = targetFolder,
                         ServerPath = targetFolder,
@@ -808,7 +819,8 @@ namespace RERPAPI.Controllers.Project
                         x.FileName,
                         x.ServerPath,
                         x.OriginPath,
-                        x.ProjectHistoryProblemID
+                        x.ProjectHistoryProblemID,
+                        x.FileType
                     })
                     .ToList();
 
@@ -819,11 +831,9 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-        #endregion Upload và GetFiles
+        #endregion
 
         #region Dashboard API
-
         [HttpGet("get-dashboard-department")]
         public IActionResult GetDashboardDepartment(int? projectId = null, DateTime? fromDate = null, DateTime? toDate = null)
         {
@@ -998,11 +1008,9 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-        #endregion Dashboard API
+        #endregion
 
         #region SendMail
-
         [HttpPost("send-email-problem")]
         public async Task<IActionResult> SendEmailProblem([FromBody] SendEmailProblemRequest request)
         {
@@ -1014,8 +1022,8 @@ namespace RERPAPI.Controllers.Project
 
                 // Lấy thông tin dự án để hiển thị ở tiêu đề
                 var project = _projectRepo.GetByID(problem.ProjectID ?? 0);
-                string projectName = project != null ? project.ProjectName : "Không xác định";
-                string projectCode = project != null ? project.ProjectCode : "Không xác định";
+                string projectName = project?.ProjectName ?? "Không xác định";
+                string projectCode = project?.ProjectCode ?? "Không xác định";
 
                 // Sử dụng HashSet để lưu danh sách ID nhân viên (loại bỏ tự động các ID trùng lặp)
                 var employeeIdsToEmail = new HashSet<int>();
@@ -1025,6 +1033,18 @@ namespace RERPAPI.Controllers.Project
 
                 // 2. Thêm Người Thực Hiện
                 if (problem.PerformerID.HasValue) employeeIdsToEmail.Add(problem.PerformerID.Value);
+
+                // 3. Thêm leader liên quan vào email cc
+                if (project != null)
+                {
+                    var leaderIds = _projectTypeLinkRepo
+                        .GetAll(x => x.ProjectID == project.ID &&
+                                     x.Selected == true &&
+                                     x.LeaderID.HasValue)
+                        .Select(x => x.LeaderID.Value);
+
+                    employeeIdsToEmail.UnionWith(leaderIds);
+                }
 
                 // 3. Thêm danh sách Người Tiếp Nhận từ bảng Link
                 var receiverLinks = _projectHistoryProblemReceiverLinkRepo
@@ -1087,21 +1107,22 @@ namespace RERPAPI.Controllers.Project
                 string emailCc = emails.Count > 1 ? string.Join(",", emails.Skip(1)) : "";
 
                 //string emailTo = "tuananh.ng011004@gmail.com";
-                //string emailCc = "nhubinh2104@gmail.com";
+                //string emailCc = "vutunam.cv@gmail.com";
 
                 // Xây dựng Tiêu đề và Nội dung HTML
-                string subject = $"THÔNG BÁO PHÁT SINH DỰ ÁN {projectCode} - {projectName}".ToUpper();
+                //string subject = $"THÔNG BÁO PHÁT SINH DỰ ÁN {projectCode} - {projectName}".ToUpper();
+                string subject = $"ISSUE LOG {projectCode}".ToUpper();
                 string body = $@"
             <div style='font-family: Arial, sans-serif; line-height: 1.6;'>
-                <h2 style='color: #d9534f;'>THÔNG BÁO CÓ PHÁT SINH DỰ ÁN MỚI</h2>
+                <h2 style='color: #d9534f;'>ISSUE LOG {projectCode}</h2>
                 <p><strong>Dự án:</strong>{projectCode} - {projectName}</p>
                 <p><strong>Ngày phát sinh:</strong> {(problem.DateProblem.HasValue ? problem.DateProblem.Value.ToString("dd/MM/yyyy") : "")}</p>
-                <p><strong>Mức độ nghiêm trọng:</strong> {priorityText}</p>
+                <p><strong>Mức độ ưu tiên:</strong> {priorityText}</p>
                 <p><strong>Loại phát sinh:</strong> {issueLogTypeText}</p>
                 <p><strong>Trạng thái xử lý:</strong> {statusProblemText}</p>
-                <p><strong>Nội dung sự cố:</strong> {problem.ContentError}</p>
+                <p><strong>Nội dung lỗi:</strong> {problem.ContentError}</p>
                 <p><strong>Nguyên nhân:</strong> {problem.Reason}</p>
-                <p><strong>Phương án xử lý:</strong> {problem.Remedies}</p>
+                <p><strong>Biện pháp khắc phục:</strong> {problem.Remedies}</p>
                 <p><strong>PIC:</strong> {problem.PIC}</p>
                 <hr/>
                 <p><small>Đây là email thông báo tự động từ hệ thống R-ERP, vui lòng không phản hồi lại email này.</small></p>
@@ -1116,17 +1137,16 @@ namespace RERPAPI.Controllers.Project
                     SentCc = emailCc,
                     Subject = subject
                 }, "Gửi email thông báo phát sinh thành công!"));
+
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi hệ thống khi gửi email: {ex.Message}"));
             }
         }
-
-        #endregion SendMail
+        #endregion
 
         #region GetLog
-
         [HttpGet("get-log")]
         public IActionResult GetLog(int projectHistoryProblemID)
         {
@@ -1153,8 +1173,36 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        #endregion
 
-        #endregion GetLog
+        #region Tổng hợp issue log
+        [HttpPost("data-synthetic")]
+        public async Task<IActionResult> GetDataHistoryProblemSynthetic(DateTime dateStart, DateTime dateEnd,
+            int projectID, int employeeID, string? keyword)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                var param = new
+                {
+                    @DateStart = dateStart,
+                    @DateEnd = dateEnd,
+                    @ProjectID = projectID,
+                    @EmployeeID = employeeID,
+                    @Keyword = keyword
+                };
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetProjectHistoryProblemSynthetic", param);
+
+
+                return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        #endregion
 
         public class ApproveRequest
         {

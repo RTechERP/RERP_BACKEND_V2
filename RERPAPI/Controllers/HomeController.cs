@@ -208,12 +208,17 @@ namespace RERPAPI.Controllers
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                if (currentUser != null && currentUser.EmployeeID > 0)
+                {
+                    var employee = _employeeRepo.GetByID(currentUser.EmployeeID);
+                    if (employee != null)
+                    {
+                        currentUser.ImagePath = employee.ImagePath ?? "";
+                    }
+                }
+
                 return Ok(ApiResponseFactory.Success(currentUser, ""));
-
-                //string key = _configuration.GetValue<string>("SessionKey") ?? "";
-                //CurrentUser currentUser = HttpContext.Session.GetObject<CurrentUser>(key);
-
-                //return Ok(ApiResponseFactory.Success(currentUser, ""));
             }
             catch (Exception ex)
             {
@@ -1889,6 +1894,143 @@ namespace RERPAPI.Controllers
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+        }
+
+        [HttpPost("upload-avatar")]
+        [Authorize]
+        [DisableRequestSizeLimit]
+        public async Task<IActionResult> UploadAvatar()
+        {
+            try
+            {
+                var form = await Request.ReadFormAsync();
+                var file = form.Files.FirstOrDefault();
+
+                if (file == null || file.Length == 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "File không được để trống!"));
+                }
+
+                // Lấy thông tin User hiện tại
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                int employeeID = currentUser.EmployeeID;
+
+                if (employeeID <= 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy thông tin nhân viên!"));
+                }
+
+                // Lấy đường dẫn từ ConfigSystem
+                var uploadPath = _configSystemRepo.GetUploadPathByKey("Avatar");
+                if (string.IsNullOrWhiteSpace(uploadPath))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy cấu hình đường dẫn tải ảnh đại diện (Avatar) trong hệ thống!"));
+                }
+
+                // Tạo thư mục nếu chưa tồn tại
+                if (!Directory.Exists(uploadPath))
+                {
+                    Directory.CreateDirectory(uploadPath);
+                }
+
+                // Tạo tên file unique theo mã nhân viên
+                var fileExtension = Path.GetExtension(file.FileName);
+                var uniqueFileName = $"avatar_emp_{employeeID}_{DateTime.Now:yyyyMMddHHmmss}{fileExtension}";
+                var fullPath = Path.Combine(uploadPath, uniqueFileName);
+
+                // Lưu file
+                using (var stream = new FileStream(fullPath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                // Cập nhật trường ImagePath trong bảng Employee
+                var employee = _employeeRepo.GetByID(employeeID);
+                if (employee != null)
+                {
+                    employee.ImagePath = uniqueFileName;
+                    employee.UpdatedDate = DateTime.Now;
+                    employee.UpdatedBy = currentUser.LoginName;
+                    await _employeeRepo.UpdateAsync(employee);
+                }
+                else
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu nhân viên để cập nhật!"));
+                }
+
+                return Ok(ApiResponseFactory.Success(new { SavedFileName = uniqueFileName }, "Upload ảnh đại diện thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi upload ảnh đại diện: {ex.Message}"));
+            }
+        }
+
+        [AllowAnonymous]
+        [HttpGet("avatar")]
+        public IActionResult GetAvatar([FromQuery] int? employeeId)
+        {
+            try
+            {
+                int targetEmployeeID = 0;
+                if (employeeId.HasValue && employeeId.Value > 0)
+                {
+                    targetEmployeeID = employeeId.Value;
+                }
+                else
+                {
+                    var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                    var currentUser = ObjectMapper.GetCurrentUser(claims);
+                    targetEmployeeID = currentUser?.EmployeeID ?? 0;
+                }
+
+                if (targetEmployeeID <= 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Mã nhân viên không hợp lệ!"));
+                }
+
+                var employee = _employeeRepo.GetByID(targetEmployeeID);
+                if (employee == null || string.IsNullOrWhiteSpace(employee.ImagePath))
+                {
+                    return File(GetDefaultAvatarBytes(), "image/svg+xml");
+                }
+
+                var uploadPath = _configSystemRepo.GetUploadPathByKey("Avatar");
+                if (string.IsNullOrWhiteSpace(uploadPath))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy cấu hình đường dẫn tải ảnh đại diện (Avatar) trong hệ thống!"));
+                }
+
+                var fullPath = Path.Combine(uploadPath, employee.ImagePath);
+                if (!System.IO.File.Exists(fullPath))
+                {
+                    return File(GetDefaultAvatarBytes(), "image/svg+xml");
+                }
+
+                var provider = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
+                if (!provider.TryGetContentType(fullPath, out var contentType))
+                {
+                    contentType = "image/jpeg";
+                }
+
+                var fileBytes = System.IO.File.ReadAllBytes(fullPath);
+                return File(fileBytes, contentType, Path.GetFileName(fullPath));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi lấy ảnh đại diện: {ex.Message}"));
+            }
+        }
+
+        private byte[] GetDefaultAvatarBytes()
+        {
+            string defaultSvg = @"<svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 24 24"" width=""100"" height=""100"">
+  <circle cx=""12"" cy=""12"" r=""11"" fill=""#e2e8f0"" stroke=""#cbd5e1"" stroke-width=""1""/>
+  <circle cx=""12"" cy=""8"" r=""4"" fill=""#94a3b8""/>
+  <path d=""M12,13 C7.5,13 4.8,16.5 4.1,20 C5.8,22 8.8,23 12,23 C15.2,23 18.2,22 19.9,20 C19.2,16.5 16.5,13 12,13 Z"" fill=""#94a3b8""/>
+</svg>";
+            return Encoding.UTF8.GetBytes(defaultSvg);
         }
     }
 }

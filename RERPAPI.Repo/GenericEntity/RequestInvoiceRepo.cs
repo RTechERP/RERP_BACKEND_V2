@@ -13,6 +13,7 @@ namespace RERPAPI.Repo.GenericEntity
         {
             var item = GetAll()
                 .Where(x => x.CreatedDate.HasValue
+                    && x.IsDeleted != true
                     && x.CreatedDate.Value.Date == date.Date)
                 .OrderByDescending(x => x.ID)
                 .FirstOrDefault();
