@@ -38,6 +38,16 @@ namespace RERPAPI.Controllers.KPISale
             return AutoTeamCodeRegex.IsMatch(teamCode);
         }
 
+        /// <summary>
+        /// Sentinel EmployeeID dùng để lưu các bản ghi "trọng số của Team" trong bảng KPISaleTarget.
+        /// Khi <c>EmployeeID == TEAM_EMPLOYEE_ID</c> và <c>TeamID &gt; 0</c>, bản ghi đó không phải của nhân viên
+        /// mà là override trọng số của Team cho (PeriodID, KpiIndexID).
+        /// </summary>
+        public const int TEAM_EMPLOYEE_ID = 0;
+
+        /// <summary>Kiểm tra nhanh target có phải là "trọng số Team" hay không.</summary>
+        public static bool IsTeamTarget(KPISaleTarget t) => t.EmployeeID == TEAM_EMPLOYEE_ID && t.TeamID.HasValue && t.TeamID.Value > 0;
+
         private static readonly HashSet<string> AllowedAggregateTypes = new(StringComparer.OrdinalIgnoreCase)
         {
             "SUM",
@@ -2888,6 +2898,290 @@ namespace RERPAPI.Controllers.KPISale
             return period.ID;
         }
 
+        /// <summary>
+        /// Lấy mẫu KPI mà team đang được gán cho kỳ hiện tại.
+        /// Với kỳ MONTH, sẽ tự động nhảy lên QUARTER cha rồi mới tìm KPISaleTeamTemplate
+        /// (vì KPISaleTeamTemplate luôn được gán theo quý — PeriodType = "Quarter").
+        /// Trả về null nếu team chưa được gán template cho kỳ tương ứng.
+        /// </summary>
+        private async Task<KPISaleTemplate?> ResolveActiveTeamTemplateAsync(int teamId, int periodId)
+        {
+            var period = await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                .FirstOrDefaultAsync(p => p.ID == periodId);
+            if (period == null) return null;
+
+            // Nếu là MONTH → tìm QUARTER cha để lấy PeriodCode của quý (VD: "2026-Q1").
+            string periodValue = period.PeriodCode;
+            if (string.Equals(period.PeriodType, "MONTH", StringComparison.OrdinalIgnoreCase)
+                && period.ParentPeriodID.HasValue)
+            {
+                var parent = await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.ID == period.ParentPeriodID.Value);
+                if (parent != null) periodValue = parent.PeriodCode;
+            }
+
+            var teamTemplate = await _kpiSaleRepo.KPISaleTeamTemplates.AsNoTracking()
+                .Where(x => x.TeamID == teamId
+                    && x.IsActive == true
+                    && x.PeriodValue == periodValue)
+                .OrderByDescending(x => x.AssignedDate)
+                .FirstOrDefaultAsync();
+
+            if (teamTemplate == null) return null;
+
+            return await _kpiSaleRepo.KPISaleTemplates.AsNoTracking()
+                .FirstOrDefaultAsync(t => t.ID == teamTemplate.TemplateID);
+        }
+
+        #region Team Weight Override (KPISaleTarget với EmployeeID = 0)
+
+        /// <summary>
+        /// Lấy trọng số override của team cho kỳ KPI.
+        /// Trả về thông tin mẫu + danh sách chỉ tiêu kèm DefaultWeight (từ KPISaleIndex) và TeamWeight (override từ KPISaleTarget).
+        /// </summary>
+        [HttpGet("teams/{teamId:int}/weights")]
+        public async Task<IActionResult> GetTeamWeights(int teamId, [FromQuery] int periodId)
+        {
+            try
+            {
+                if (teamId <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "teamId không hợp lệ"));
+                if (periodId <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "periodId không hợp lệ"));
+
+                var template = await ResolveActiveTeamTemplateAsync(teamId, periodId);
+                var period = await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.ID == periodId);
+
+                if (template == null)
+                {
+                    return Ok(ApiResponseFactory.Success(new
+                    {
+                        templateId = (int?)null,
+                        templateName = (string?)null,
+                        periodCode = period?.PeriodCode,
+                        items = Array.Empty<object>()
+                    }, "Team chưa được gán template cho kỳ này"));
+                }
+
+                var indexes = await _kpiSaleRepo.KPISaleIndices.AsNoTracking()
+                    .Where(x => x.TemplateID == template.ID && x.IsActive)
+                    .OrderBy(x => x.SortOrder).ThenBy(x => x.ID)
+                    .ToListAsync();
+
+                var indexIds = indexes.Select(i => i.ID).ToList();
+                var teamWeights = await _kpiSaleRepo.KPISaleTargets.AsNoTracking()
+                    .Where(t => t.TeamID == teamId
+                        && t.EmployeeID == TEAM_EMPLOYEE_ID
+                        && t.PeriodID == periodId
+                        && indexIds.Contains(t.KpiIndexID))
+                    .ToDictionaryAsync(t => t.KpiIndexID, t => t.WeightPercent ?? 0m);
+
+                var items = indexes.Select(idx => new KPISaleTeamWeightItemDto
+                {
+                    KpiIndexID = idx.ID,
+                    IndexCode = idx.IndexCode,
+                    IndexName = idx.IndexName,
+                    IndexType = idx.IndexType,
+                    UnitType = idx.UnitType,
+                    DefaultWeightPercent = idx.WeightPercent,
+                    TeamWeightPercent = teamWeights.TryGetValue(idx.ID, out var w) ? w : (decimal?)null,
+                    ApprovalStatus = teamWeights.ContainsKey(idx.ID) ? "Approved" : null
+                });
+
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    templateId = template.ID,
+                    templateName = template.TemplateName,
+                    periodCode = period?.PeriodCode,
+                    items
+                }));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Cập nhật trọng số override cho team ở kỳ KPI. Mỗi phần tử weights là 1 cặp (KpiIndexID, WeightPercent).
+        /// Hệ thống sẽ tìm bản ghi KPISaleTarget đã tồn tại (EmployeeID=0, TeamID=teamId, PeriodID=periodId, KpiIndexID)
+        /// và update WeightPercent, hoặc tạo mới nếu chưa có. GoalValue luôn = 0 (Team không cần goal riêng).
+        ///
+        /// Cascade:
+        /// - Nếu kỳ đang lưu là QUARTER → tự động áp dụng trọng số cho cả các tháng con của QUARTER (upsert theo).
+        /// - Nếu kỳ đang lưu là MONTH → chỉ lưu cho tháng đó (KHÔNG ghi đè các tháng khác, kể cả tháng cha QUARTER).
+        /// </summary>
+        [HttpPut("teams/{teamId:int}/weights")]
+        public async Task<IActionResult> UpdateTeamWeights(
+            int teamId,
+            [FromQuery] int periodId,
+            [FromBody] List<KPISaleTeamWeightUpdateDto> weights)
+        {
+            try
+            {
+                if (teamId <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "teamId không hợp lệ"));
+                if (periodId <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "periodId không hợp lệ"));
+                if (weights == null || weights.Count == 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu trọng số"));
+
+                var team = await _kpiSaleRepo.KPISaleTeams.AsNoTracking()
+                    .FirstOrDefaultAsync(t => t.ID == teamId);
+                if (team == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Team không tồn tại"));
+
+                foreach (var w in weights)
+                {
+                    if (w.WeightPercent < 0 || w.WeightPercent > 100)
+                        return BadRequest(ApiResponseFactory.Fail(null,
+                            $"Trọng số không hợp lệ cho KpiIndexID={w.KpiIndexID}: phải nằm trong [0, 100]"));
+                }
+
+                var currentUser = GetCurrentUser();
+                var userName = currentUser?.LoginName ?? "System";
+
+                // 1) Upsert trọng số cho periodId hiện tại.
+                await UpsertTeamWeightRowsAsync(teamId, periodId, weights, userName);
+
+                // 2) Nếu periodId là QUARTER/YEAR → cascade xuống tất cả MONTH con.
+                //    (Lưu QUARTER đồng nghĩa cập nhật weight cho cả Q đó và mọi tháng trong Q)
+                var savedPeriod = await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.ID == periodId);
+                int cascadedMonths = 0;
+                if (savedPeriod != null &&
+                    !string.Equals(savedPeriod.PeriodType, "MONTH", StringComparison.OrdinalIgnoreCase))
+                {
+                    var childMonths = await GetChildMonthPeriodsAsync(savedPeriod);
+                    foreach (var childMonth in childMonths)
+                    {
+                        await UpsertTeamWeightRowsAsync(teamId, childMonth.ID, weights, userName);
+                        cascadedMonths++;
+                    }
+                }
+
+                string successMsg = cascadedMonths > 0
+                    ? $"Cập nhật trọng số Team thành công (đã đồng bộ cho cả {cascadedMonths} tháng con)"
+                    : "Cập nhật trọng số Team thành công";
+
+                return Ok(ApiResponseFactory.Success(new { cascadedMonths }, successMsg));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Helper: upsert 1 danh sách (KpiIndexID, WeightPercent) cho 1 (TeamID, PeriodID) cụ thể.
+        /// Dùng chung cho cả lưu tại period hiện tại lẫn cascade xuống tháng con.
+        /// </summary>
+        private async Task UpsertTeamWeightRowsAsync(
+            int teamId,
+            int periodId,
+            List<KPISaleTeamWeightUpdateDto> weights,
+            string userName)
+        {
+            foreach (var w in weights)
+            {
+                var existing = await _kpiSaleRepo.KPISaleTargets
+                    .FirstOrDefaultAsync(t =>
+                        t.TeamID == teamId
+                        && t.EmployeeID == TEAM_EMPLOYEE_ID
+                        && t.PeriodID == periodId
+                        && t.KpiIndexID == w.KpiIndexID);
+
+                if (existing != null)
+                {
+                    existing.WeightPercent = w.WeightPercent;
+                    existing.UpdatedBy = userName;
+                    existing.UpdatedDate = DateTime.Now;
+                }
+                else
+                {
+                    await _kpiSaleRepo.KPISaleTargets.AddAsync(new KPISaleTarget
+                    {
+                        EmployeeID = TEAM_EMPLOYEE_ID,
+                        TeamID = teamId,
+                        PeriodID = periodId,
+                        KpiIndexID = w.KpiIndexID,
+                        GoalValue = 0,
+                        WeightPercent = w.WeightPercent,
+                        ApprovalStatus = "Approved",
+                        CreatedBy = userName,
+                        CreatedDate = DateTime.Now
+                    });
+                }
+            }
+
+            await _kpiSaleRepo.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Xóa 1 bản ghi trọng số team — để hệ thống quay lại dùng trọng số mặc định của KPISaleIndex.
+        /// </summary>
+        [HttpDelete("teams/{teamId:int}/weights")]
+        public async Task<IActionResult> DeleteTeamWeights(
+            int teamId,
+            [FromQuery] int periodId,
+            [FromQuery] int kpiIndexId)
+        {
+            try
+            {
+                if (teamId <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "teamId không hợp lệ"));
+                if (periodId <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "periodId không hợp lệ"));
+                if (kpiIndexId <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "kpiIndexId không hợp lệ"));
+
+                var period = await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.ID == periodId);
+
+                // Xác định tập periodId cần reset: nếu là QUARTER/YEAR thì bao gồm cả các tháng con.
+                var periodIdsToReset = new List<int> { periodId };
+                if (period != null &&
+                    !string.Equals(period.PeriodType, "MONTH", StringComparison.OrdinalIgnoreCase))
+                {
+                    var childMonths = await GetChildMonthPeriodsAsync(period);
+                    foreach (var m in childMonths)
+                        periodIdsToReset.Add(m.ID);
+                }
+
+                int removedCount = 0;
+                foreach (var pid in periodIdsToReset)
+                {
+                    var existing = await _kpiSaleRepo.KPISaleTargets
+                        .FirstOrDefaultAsync(t =>
+                            t.TeamID == teamId
+                            && t.EmployeeID == TEAM_EMPLOYEE_ID
+                            && t.PeriodID == pid
+                            && t.KpiIndexID == kpiIndexId);
+                    if (existing != null)
+                    {
+                        _kpiSaleRepo.KPISaleTargets.Remove(existing);
+                        removedCount++;
+                    }
+                }
+
+                if (removedCount > 0)
+                    await _kpiSaleRepo.SaveChangesAsync();
+
+                string msg = removedCount > 1
+                    ? $"Reset trọng số Team về mặc định (đã đồng bộ cho {removedCount} kỳ)"
+                    : "Reset trọng số Team về mặc định";
+
+                return Ok(ApiResponseFactory.Success(new { removedCount }, msg));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        #endregion
+
         private static void ValidateTeamCalculateRequest(KPISaleTeamCalculateRequest request)
         {
             if (request == null)
@@ -3405,6 +3699,16 @@ namespace RERPAPI.Controllers.KPISale
                 .GroupBy(x => x.KpiIndexID)
                 .ToDictionary(g => g.Key, g => g.OrderByDescending(r => r.ID).First());
 
+            // Ưu tiên trọng số Team: nếu có bản ghi KPISaleTarget với EmployeeID=0 + TeamID=teamId
+            // thì hệ thống dùng WeightPercent đó thay vì lấy từ employee đầu tiên.
+            var teamWeightOverrides = await _kpiSaleRepo.KPISaleTargets.AsNoTracking()
+                .Where(t => t.TeamID == teamId
+                    && t.EmployeeID == TEAM_EMPLOYEE_ID
+                    && t.PeriodID == request.PeriodID
+                    && t.WeightPercent.HasValue
+                    && indexIds.Contains(t.KpiIndexID))
+                .ToDictionaryAsync(t => t.KpiIndexID, t => t.WeightPercent!.Value);
+
             var allItems = perEmployeeResults
                 .SelectMany(r => r.Items ?? new List<KPISaleCalculateResult>())
                 .ToList();
@@ -3540,7 +3844,9 @@ namespace RERPAPI.Controllers.KPISale
                         GoalValue = 0,
                         ResultValue = 0,
                         AchievedPercent = 0,
-                        WeightPercent = itemsForIndex.FirstOrDefault(i => i.WeightPercent > 0)?.WeightPercent ?? 0,
+                        WeightPercent = teamWeightOverrides.TryGetValue(index.ID, out var teamWReport) && teamWReport > 0
+                            ? teamWReport
+                            : (itemsForIndex.FirstOrDefault(i => i.WeightPercent > 0)?.WeightPercent ?? 0),
                         FinalScore = reportFinalScore,
                         UnitType = index.UnitType,
                         ReportScoreAdjustmentType = adjType,
@@ -3573,9 +3879,20 @@ namespace RERPAPI.Controllers.KPISale
                     scoringRules.TryGetValue(index.ID, out var scoringRule);
                     var scoreType = NormalizeOptionalCode(scoringRule?.ScoreType, "NORMAL_PERCENT");
                     var achievedPercent = CalculateAchievedPercent(sumGoal, sumResult, scoreType);
-                    // Với GROUP/FORMULA, weight lấy từ index đầu tiên có weight hợp lệ trong team;
-                    // nếu không có, weightPercent = 0 (GROUP không cần weight để sum goal)
-                    decimal weightPercent = validItems.Count > 0 ? validItems[0].WeightPercent : 0;
+                    // Priority: 1) Team override (EmployeeID=0), 2) First member's weight, 3) Default index weight.
+                    decimal weightPercent = 0;
+                    if (teamWeightOverrides.TryGetValue(index.ID, out var teamW) && teamW > 0)
+                    {
+                        weightPercent = teamW;
+                    }
+                    else if (validItems.Count > 0)
+                    {
+                        weightPercent = validItems[0].WeightPercent;
+                    }
+                    else
+                    {
+                        weightPercent = index.WeightPercent;
+                    }
                     var finalScore = CalculateFinalScore(achievedPercent, weightPercent, scoringRule, scoreType);
 
                     aggregatedItems.Add(new KPISaleCalculateResult
