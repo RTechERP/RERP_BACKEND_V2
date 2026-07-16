@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace RERPAPI.Model.Entities;
@@ -86,4 +86,14 @@ public partial class FlightBookingProposal
     /// thời gian cần đến
     /// </summary>
     public DateTime? DepartureTime { get; set; }
+
+    /// <summary>
+    /// Ngày về của chuyến bay khứ hồi
+    /// </summary>
+    public DateTime? ReturnDate { get; set; }
+
+    /// <summary>
+    /// Giờ về của chuyến bay khứ hồi
+    /// </summary>
+    public DateTime? ReturnTime { get; set; }
 }

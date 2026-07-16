@@ -27,9 +27,11 @@ using RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders;
 using RERPAPI.Repo.GenericEntity.HRM;
 using RERPAPI.Repo.GenericEntity.HRM.DepartmentRequire;
 using RERPAPI.Repo.GenericEntity.HRM.FlightBooking;
+using RERPAPI.Repo.GenericEntity.HRM.HotelBooking;
 using RERPAPI.Repo.GenericEntity.HRM.HRRecruitmentInterviewAssessment;
 using RERPAPI.Repo.GenericEntity.HRM.ProductProtectiveGear;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
+
 using RERPAPI.Repo.GenericEntity.HRRecruitmentExamRepo;
 using RERPAPI.Repo.GenericEntity.KPISale;
 using RERPAPI.Repo.GenericEntity.MakerTrainingFirm;
@@ -89,8 +91,10 @@ builder.Services.AddScoped<BillExportDetailSerialNumberModulaLocationRepo>();
 builder.Services.AddScoped<BillExportDetailSerialNumberRepo>();
 builder.Services.AddScoped<BillExportDetailTechnicalRepo>();
 builder.Services.AddScoped<BonusRuleIndexRepo>();
-builder.Services.AddScoped<VehicleBookingManagementRepo>();
-builder.Services.AddScoped<VehicleBookingFileRepo>();
+    builder.Services.AddScoped<VehicleBookingManagementRepo>();
+    builder.Services.AddScoped<VehicleRentalRequestRepo>();
+
+    builder.Services.AddScoped<VehicleBookingFileRepo>();
 builder.Services.AddScoped<BillExportTechDetailSerialRepo>();
 builder.Services.AddScoped<BillImportDetailRepo>();
 builder.Services.AddScoped<BillImportDetailSerialNumberModulaLocationRepo>();
@@ -244,7 +248,19 @@ builder.Services.AddScoped<ProjectTreeFolderRepo>();
 builder.Services.AddScoped<ProjectTypeBaseRepo>();
 builder.Services.AddScoped<ProjectTypeLinkRepo>();
 builder.Services.AddScoped<ProjectTypeRepo>();
+builder.Services.AddScoped<ProjectTypeDepartmentRepo>();
 builder.Services.AddScoped<ProjectUserRepo>();
+builder.Services.AddScoped<ProjectGateRepo>();
+builder.Services.AddScoped<ProjectGateStepRepo>();
+builder.Services.AddScoped<ProjectGateStepTemplateRepo>();
+builder.Services.AddScoped<ProjectGateStepLinkRepo>();
+builder.Services.AddScoped<ProjectGateStepWorkerRepo>();
+builder.Services.AddScoped<ProjectGateDepartmentRepo>();
+builder.Services.AddScoped<ProjectGateStepPositionRepo>();
+builder.Services.AddScoped<ProjectGateStepCheckListRepo>();
+builder.Services.AddScoped<ProjectGateStepCheckListLinkRepo>();
+builder.Services.AddScoped<ProjectGateStepCheckListDetailRepo>();
+builder.Services.AddScoped<ProjectGateStepFileRepo>();
 builder.Services.AddScoped<ProjectWorkerTypeRepo>();
 builder.Services.AddScoped<ProjectWorkerVersionRepo>();
 builder.Services.AddScoped<ProvinceRepo>();
@@ -358,6 +374,10 @@ builder.Services.AddScoped<VehicleRepairRepo>();
 builder.Services.AddScoped<VehicleRepairTypeRepo>();
 builder.Services.AddScoped<FlightBookingManagementRepo>();
 builder.Services.AddScoped<FlightBookingProposalRepo>();
+builder.Services.AddScoped<FlightBookingPassengerRepo>();
+builder.Services.AddScoped<HotelBookingManagementRepo>();
+builder.Services.AddScoped<HotelBookingProposalRepo>();
+builder.Services.AddScoped<HotelBookingEmployeeRepo>();
 
 builder.Services.AddScoped<HandoverApproveRepo>();
 builder.Services.AddScoped<HandoverAssetManagementRepo>();
@@ -543,6 +563,7 @@ builder.Services.AddScoped<HRRecruitmentApplicationFormRepo>();
 builder.Services.AddScoped<HRRecruitmentApproveRepo>();
 builder.Services.AddScoped<JobPerfomanceEvaluationApproveRepo>();
 builder.Services.AddScoped<JobPerfomanceEvaluationNewRepo>();
+builder.Services.AddScoped<JobPerfomanceEvaluationNewLogRepo>();
 
 builder.Services.AddScoped<ProjectHistoryProblemProjectItemLinkRepo>();
 builder.Services.AddScoped<ProjectHistoryProblemPartListLinkRepo>();
@@ -711,6 +732,7 @@ builder.Services.AddScoped<ProjectTaskStatusRepo>();
 builder.Services.AddScoped<PaymentOrderOrderTypeRepo>();
 builder.Services.AddScoped<ConfigNotificationKeyRepo>();
 builder.Services.AddScoped<ConfigNotificationKeyLinkRepo>();
+builder.Services.AddScoped<ProjectGateRepo>();
 builder.Services.AddScoped<ProductGroupRTCLinkRepo>();
 builder.Services.AddScoped<MakerTrainingDepartmentLinkRepo>();
 builder.Services.AddScoped<MakerTrainingVideoLinkRepo>();
@@ -730,6 +752,18 @@ builder.Services.AddScoped<KPISaleApprovalRepo>();
 builder.Services.AddScoped<KPISaleApprovalLogRepo>();
 builder.Services.AddScoped<KPISaleTeamMemberRepo>();
 builder.Services.AddScoped<KPISalePeroidRepo>();
+
+builder.Services.AddScoped<ProjectGateRepo>();
+builder.Services.AddScoped<ProjectGateStepRepo>();
+builder.Services.AddScoped<ProjectGateStepTemplateRepo>();
+builder.Services.AddScoped<ProjectGateStepLinkRepo>();
+builder.Services.AddScoped<ProjectGateStepWorkerRepo>();
+builder.Services.AddScoped<ProjectGateDepartmentRepo>();
+builder.Services.AddScoped<ProjectGateStepPositionRepo>();
+builder.Services.AddScoped<ProjectGateStepCheckListRepo>();
+builder.Services.AddScoped<ProjectGateStepCheckListLinkRepo>();
+builder.Services.AddScoped<ProjectGateStepCheckListDetailRepo>();
+builder.Services.AddScoped<ProjectGateStepFileRepo>();
 #region DI LOG
 
 builder.Services.AddScoped<POKHLogRepo>();
@@ -801,11 +835,11 @@ builder.Services.AddCors(options =>
         ;
     });
 });
- //Chỉ khởi tạo 1 lần duy nhất khi chạy server
-FirebaseApp.Create(new AppOptions()
-{
-    Credential = GoogleCredential.FromFile("firebase-adminsdk.json") // Thay bằng đường dẫn thực tế
-});
+// Chỉ khởi tạo 1 lần duy nhất khi chạy server
+//FirebaseApp.Create(new AppOptions()
+//{
+//    Credential = GoogleCredential.FromFile("firebase-adminsdk.json") // Thay bằng đường dẫn thực tế
+//});
 
 builder.Services.AddSingleton<SseService>();
 

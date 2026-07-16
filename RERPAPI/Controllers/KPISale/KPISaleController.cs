@@ -1969,14 +1969,16 @@ namespace RERPAPI.Controllers.KPISale
             {
                 var currentUser = GetCurrentUser();
 
-                // Permission: only N1 admin or Leader
-                //var isN1 = HasPermission("N1");
+                // Permission: chỉ admin tổng (User.IsAdmin) / N1 / N27 (admin phòng sale) hoặc Leader mới được chỉnh sửa trọng số
                 var permissions = currentUser.Permissions?.Split(',').Select(p => p.Trim()).ToList() ?? new List<string>();
 
                 var isLeader = currentUser?.EmployeeID != null &&
                     await _kpiSaleRepo.KPISaleTeams.AnyAsync(t => t.IsActive && t.LeaderEmployeeID == currentUser.EmployeeID);
-                if (!permissions.Contains("N1") && !isLeader)
-                    return BadRequest(ApiResponseFactory.Fail(null, "Chỉ admin (N1) hoặc Leader mới được chỉnh sửa trọng số"));
+                var isN1 = permissions.Contains("N1");
+                var isN27 = permissions.Contains("N27");
+                var isGlobalAdmin = currentUser?.IsAdmin == true;
+                if (!isN1 && !isN27 && !isLeader && !isGlobalAdmin)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Chỉ admin (N1/N27) hoặc Leader mới được chỉnh sửa trọng số"));
 
                 if (request.WeightPercent.HasValue && (request.WeightPercent.Value < 0 || request.WeightPercent.Value > 100))
                     return BadRequest(ApiResponseFactory.Fail(null, "Trọng số phải nằm trong khoảng 0 - 100%"));
@@ -2840,12 +2842,12 @@ namespace RERPAPI.Controllers.KPISale
             if (stepIdx <= 0) return; // PENDING: chưa có bước nào, cho phép
 
             var currentUser = GetCurrentUser();
-            // Admin tổng (IsAdmin flag hoặc N1) luôn được phép.
+            // Admin tổng (IsAdmin flag hoặc N1/N27) luôn được phép.
             if (currentUser.IsAdmin) return;
             var permissions = (currentUser.Permissions ?? "")
                 .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                 .ToHashSet();
-            if (permissions.Contains("N1")) return;
+            if (permissions.Contains("N1") || permissions.Contains("N27")) return;
 
             if (!StepPermissionMap.TryGetValue(stepIdx, out var requiredCodes))
             {
@@ -4177,13 +4179,16 @@ namespace RERPAPI.Controllers.KPISale
         }
 
         [HttpGet("ranking/config")]
-        public async Task<IActionResult> GetRewardConfig()
+        public async Task<IActionResult> GetRewardConfig(int? templateId = null)
         {
             try
             {
-                // Tách 2 query rồi ghép ở memory để tránh EF không dịch được
-                // khi entity có cột chưa được map column (vd RevenueKpiIndexId)
-                var configsRaw = await _kpiSaleRepo.KPISaleRewardConfig.AsNoTracking()
+                var query = _kpiSaleRepo.KPISaleRewardConfig.AsNoTracking().AsQueryable();
+
+                if (templateId.HasValue && templateId.Value > 0)
+                    query = query.Where(c => c.TemplateId == templateId.Value);
+
+                var configsRaw = await query
                     .Where(c => c.IsActive == true)
                     .ToListAsync();
 
@@ -5871,13 +5876,16 @@ FROM (
             if (kpiIndex == null)
                 throw new Exception("Không tìm thấy KPI index");
 
-            // Validate: Employee phải được gán template chứa kpiIndex này
+            // Validate: Employee phải được gán template chứa kpiIndex này, CHO ĐÚNG KỲ đang upsert.
+            // Mỗi nhân viên có thể được gán template KHÁC NHAU ở từng QUÝ (và các tháng trong quý đó mặc định theo quý).
+            // Do đó cần filter theo cả EmployeeID + PeriodID để lấy đúng assignment của kỳ hiện tại.
             var assignedTemplate = await _kpiSaleRepo.KPISaleEmployeeTemplates.AsNoTracking()
                 .FirstOrDefaultAsync(x => x.EmployeeID == request.EmployeeID
+                    && x.PeriodID == request.PeriodID
                     && x.IsActive == true);
             if (assignedTemplate != null && assignedTemplate.TemplateID != kpiIndex.TemplateID)
             {
-                throw new Exception("Chỉ tiêu KPI không thuộc mẫu KPI đã được gán cho nhân viên này. Vui lòng kiểm tra lại.");
+                throw new Exception("Chỉ tiêu KPI không thuộc mẫu KPI đã được gán cho nhân viên này ở kỳ này. Vui lòng kiểm tra lại.");
             }
 
             // Validate WeightPercent (0-100)

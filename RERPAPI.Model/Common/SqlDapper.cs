@@ -122,6 +122,26 @@ namespace RERPAPI.Model.Common
             );
         }
 
+        public static async Task<(List<T1>, List<T2>, List<T3>, List<T4>)> QueryMultipleAsync<T1, T2, T3, T4>(
+         string procedureName,
+         object? parameters = null,
+         IDbTransaction? transaction = null)
+        {
+            var connection = new SqlConnection(connectionString);
+            using var multi = await connection.QueryMultipleAsync(
+                procedureName,
+                parameters,
+                transaction,
+                commandType: CommandType.StoredProcedure);
+
+            return (
+                multi.Read<T1>().AsList(),
+                multi.Read<T2>().AsList(),
+                multi.Read<T3>().AsList(),
+                multi.Read<T4>().AsList()
+            );
+        }
+
         public static async Task<int> ExecuteStoredProcedure(
         string procedureName,
         object parameters = null,

@@ -71,5 +71,10 @@ namespace RERPAPI.Model.Entities
         /// ID bảng ProjectGateStepTemplate
         /// </summary>
         public int? ProjectGateStepTemplateID { get; set; }
+
+        /// <summary>
+        /// ID phòng ban thực hiện công đoạn
+        /// </summary>
+        public int? DepartmentID { get; set; }
     }
 }

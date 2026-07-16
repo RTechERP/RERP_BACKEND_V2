@@ -393,6 +393,19 @@ namespace RERPAPI.Controllers.KHOAHOC
                     return Ok(ApiResponseFactory.Fail(null, "Mã danh mục đã tồn tại! Vui lòng kiểm tra lại."));
                 }
 
+                // Check trùng STT cho cùng DepartmentID + CatalogType
+                var exitSTT = _courseCatalogRepo.GetAll(x =>
+                    x.STT == model.STT &&
+                    x.DepartmentID == model.DepartmentID &&
+                    x.ID != model.ID &&
+                    (!x.IsDeleted ?? true)
+                ).FirstOrDefault();
+
+                if (exitSTT != null && exitSTT.ID > 0)
+                {
+                    return Ok(ApiResponseFactory.Fail(null, $"STT {model.STT} đã tồn tại cho phòng ban này! Vui lòng nhập STT khác."));
+                }
+
                 if (model.ID <= 0)
                 {
                     var courseCatalog = new CourseCatalog

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.Context;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -27,7 +28,7 @@ namespace RERPAPI.Controllers.Project
         private readonly DepartmentRepo _departmentRepo;
         private readonly PositionInternalRepo _positionInternalRepo;
         private readonly ProjectGateStepCheckListRepo _checkListRepo;
-        private readonly ProjectGateStepTemplateRepo _templateRepo; 
+        private readonly ProjectGateStepTemplateRepo _templateRepo;
 
         public ProjectGateStepController(
             ProjectGateStepRepo stepRepo,
@@ -135,24 +136,12 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                var gates = _gateRepo.GetAll().OrderBy(x => x.STT ?? int.MaxValue)
-                    .Select(g => new { g.ID, g.GateCode, g.GateName, g.Type })
-                    .ToList();
+                var data = SQLHelper<object>.ProcedureToList("spGetProjectGateStepProduce", null, null);
 
-                var departments = _departmentRepo.GetAll(x => x.IsDeleted != true)
-                    .OrderBy(x => x.STT)
-                    .Select(d => new { d.ID, d.Code, d.Name })
-                    .ToList();
-
-                var positions = _positionInternalRepo.GetAll(x => x.IsDeleted != true)
-                    .OrderBy(x => x.PriorityOrder)
-                    .Select(p => new { p.ID, p.Code, p.Name })
-                    .ToList();
-
-                var templates = _templateRepo.GetAll()
-                    .OrderBy(t => t.Code)
-                    .Select(t => new { t.ID, t.Code, t.Name })
-                    .ToList();
+                var gates = data.Count > 0 ? data[0] : new List<object>();
+                var departments = data.Count > 1 ? data[1] : new List<object>();
+                var positions = data.Count > 2 ? data[2] : new List<object>();
+                var templates = data.Count > 3 ? data[3] : new List<object>();
 
                 return Ok(ApiResponseFactory.Success(new { gates, departments, positions, templates }, "Lấy dữ liệu thành công"));
             }

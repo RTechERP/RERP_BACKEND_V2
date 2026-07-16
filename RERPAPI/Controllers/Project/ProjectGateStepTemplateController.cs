@@ -44,6 +44,23 @@ namespace RERPAPI.Controllers.Project
         }
 
         /// <summary>
+        /// Lấy danh sách mẫu theo ProjectTypeDepartmentID
+        /// </summary>
+        [HttpGet("get-by-project-type-department/{projectTypeDepartmentId}")]
+        public IActionResult GetByProjectTypeDepartment(int projectTypeDepartmentId)
+        {
+            try
+            {
+                var data = _templateRepo.GetAll(x => x.ProjectTypeDepartmentID == projectTypeDepartmentId).OrderBy(x => x.Code).ToList();
+                return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        /// <summary>
         /// Thêm mới hoặc cập nhật danh sách các mẫu bước/công đoạn
         /// </summary>
         [HttpPost("save-data")]
