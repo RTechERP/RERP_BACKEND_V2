@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
 using System.Linq.Expressions;
+using Microsoft.Extensions.Configuration;
+using RERPAPI.Middleware;
+using RERPAPI.Model.DTO;
 
 namespace RERPAPI.Controllers.Project
 {
@@ -16,15 +19,36 @@ namespace RERPAPI.Controllers.Project
         private ProjectPartlistVersionRepo _projectPartlistVersionRepo;
         private ProjectPartListRepo _projectPartListRepo;
         private readonly ProjectHistoryProblemRepo _projectHistoryProblemRepo;
+        private ProjectSolutionRepo _projectSolutionRepo;
         private readonly ProjectHistoryProblemPartListLinkRepo _projectHistoryProblemPartListLinkRepo;
+        private readonly ProjectPartListHistoryLogRepo _partListHistoryLogRepo;
+        private ProjectRequestRepo _projectRequestRepo;
+        private ProjectRepo _projectRepo;
+        private readonly IConfiguration _configuration;
 
-        public ProjectPartListVersionController(ProjectPartlistVersionRepo projectPartlistVersionRepo, ProjectPartListRepo projectPartListRepo, ProjectHistoryProblemRepo projectHistoryProblemRepo, ProjectHistoryProblemPartListLinkRepo projectHistoryProblemPartListLinkRepo)
+        public ProjectPartListVersionController(
+            ProjectPartlistVersionRepo projectPartlistVersionRepo,
+            ProjectPartListRepo projectPartListRepo,
+            ProjectHistoryProblemRepo projectHistoryProblemRepo,
+            ProjectHistoryProblemPartListLinkRepo projectHistoryProblemPartListLinkRepo,
+            ProjectPartListHistoryLogRepo partListHistoryLogRepo,
+            ProjectSolutionRepo projectSolutionRepo,
+            ProjectRepo projectRepo,
+            ProjectRequestRepo projectRequestRepo,
+            IConfiguration configuration)
         {
             _projectPartlistVersionRepo = projectPartlistVersionRepo;
             _projectPartListRepo = projectPartListRepo;
             _projectHistoryProblemRepo = projectHistoryProblemRepo;
             _projectHistoryProblemPartListLinkRepo = projectHistoryProblemPartListLinkRepo;
+            _partListHistoryLogRepo = partListHistoryLogRepo;
+            _projectSolutionRepo = projectSolutionRepo;
+            _projectRepo = projectRepo;
+            _projectRequestRepo = projectRequestRepo;
+            _configuration = configuration;
         }
+
+
 
         [HttpGet("get-all")]
         public IActionResult GetAll(int projectSolutionId, bool isPO)
@@ -56,6 +80,7 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
+
                 var version = request.ProjectPartListVersion;
                 string message = "";
                 int ID = 0;
@@ -63,8 +88,90 @@ namespace RERPAPI.Controllers.Project
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, message));
                 }
+                int? projectId = version.ProjectID;
+                string versionCode = version.Code;
+                string descriptionVersion = version.DescriptionVersion;
+                int? statusVersion = version.StatusVersion;
+
+                string typeName = statusVersion == 2 ? "phiên bản PO" : "phiên bản GP";
+                string actionText = version.ID > 0 ? $"Cập nhật {typeName}" : $"Thêm mới {typeName}";
+
+                ProjectPartListVersion oldClone = null;
+                var projectSolution = _projectSolutionRepo.GetByID(version.ProjectSolutionID ?? 0);
+                var projectRequest = _projectRequestRepo.GetByID(projectSolution.ProjectRequestID ?? 0);
+                int projectID = projectRequest.ProjectID ?? 0;
                 if (version.ID > 0)
                 {
+                    var oldVersion = await _projectPartlistVersionRepo.GetByIDAsync(version.ID);
+                    if (oldVersion != null)
+                    {
+                        oldClone = new ProjectPartListVersion
+                        {
+                            Code = oldVersion.Code,
+                            DescriptionVersion = oldVersion.DescriptionVersion,
+                            StatusVersion = oldVersion.StatusVersion,
+                            IsActive = oldVersion.IsActive,
+                            IsApproved = oldVersion.IsApproved,
+                            IsDeleted = oldVersion.IsDeleted,
+                            IsConsumable = oldVersion.IsConsumable,
+                            ProjectTypeID = oldVersion.ProjectTypeID
+                        };
+
+                        if (projectId == null || projectId <= 0)
+                        {
+                            projectId = oldVersion.ProjectID;
+                        }
+                        if (version.ProjectSolutionID == null || version.ProjectSolutionID <= 0)
+                        {
+                            version.ProjectSolutionID = oldVersion.ProjectSolutionID;
+                        }
+                        if (string.IsNullOrEmpty(versionCode))
+                        {
+                            versionCode = oldVersion.Code;
+                        }
+                        if (string.IsNullOrEmpty(descriptionVersion))
+                        {
+                            descriptionVersion = oldVersion.DescriptionVersion;
+                        }
+                        if (statusVersion == null || statusVersion <= 0)
+                        {
+                            statusVersion = oldVersion.StatusVersion;
+                            version.StatusVersion = oldVersion.StatusVersion;
+                        }
+
+                        bool isCodeChanged = version.Code != null && version.Code != oldVersion.Code;
+                        bool isDescChanged = version.DescriptionVersion != null && version.DescriptionVersion != oldVersion.DescriptionVersion;
+                        bool isActiveChanged = version.IsActive != null && version.IsActive != oldVersion.IsActive;
+                        bool isApprovedChanged = version.IsApproved != null && version.IsApproved != oldVersion.IsApproved;
+                        bool isStatusChanged = version.StatusVersion != null && version.StatusVersion != oldVersion.StatusVersion;
+
+                        int changeCount = (isCodeChanged ? 1 : 0) +
+                                          (isDescChanged ? 1 : 0) +
+                                          (isActiveChanged ? 1 : 0) +
+                                          (isApprovedChanged ? 1 : 0) +
+                                          (isStatusChanged ? 1 : 0);
+
+                        if (changeCount > 1)
+                        {
+                            actionText = $"Cập nhật {typeName}";
+                        }
+                        else
+                        {
+                            if (isActiveChanged)
+                            {
+                                actionText = version.IsActive == true ? $"Sử dụng {typeName}" : $"Bỏ sử dụng {typeName}";
+                            }
+                            else if (isApprovedChanged)
+                            {
+                                actionText = version.IsApproved == true ? $"Duyệt {typeName}" : $"Hủy duyệt {typeName}";
+                            }
+                            else
+                            {
+                                actionText = $"Cập nhật {typeName}";
+                            }
+                        }
+                    }
+
                     await _projectPartlistVersionRepo.UpdateAsync(version);
                     ID = version.ID;
                 }
@@ -72,6 +179,55 @@ namespace RERPAPI.Controllers.Project
                 {
                     await _projectPartlistVersionRepo.CreateAsync(version);
                     ID = version.ID;
+                }
+
+                if (version.IsDeleted == true) actionText = $"Xóa {typeName}";
+
+                if ((projectId == null || projectId <= 0) && version.ProjectSolutionID.HasValue && version.ProjectSolutionID.Value > 0)
+                {
+                    projectId = await _projectPartlistVersionRepo.GetProjectIdFromSolutionAsync(version.ProjectSolutionID.Value);
+                }
+
+                // Log version history
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                string contentLog = $"[{currentUser.FullName}] đã {actionText.ToLower()} [{versionCode}]";
+                bool shouldLog = true;
+                if (version.ID > 0 && oldClone != null)
+                {
+                    var diff = _partListHistoryLogRepo.BuildVersionDiff(oldClone, version);
+                    if (string.IsNullOrEmpty(diff))
+                    {
+                        shouldLog = false;
+                    }
+                    else
+                    {
+                        if (actionText.StartsWith("Cập nhật"))
+                        {
+                            contentLog = $"[{currentUser.FullName}] đã cập nhật phiên bản {(statusVersion == 2 ? "po" : "gp")}:\n{diff}";
+                        }
+                        else
+                        {
+                            contentLog += $".\nChi tiết thay đổi:\n{diff}";
+                        }
+                    }
+                }
+                else
+                {
+                    contentLog += $" - {descriptionVersion}";
+                }
+
+                if (shouldLog)
+                {
+                    await _partListHistoryLogRepo.AddLog(
+                        projectID,
+                        ID,
+                        null,
+                        actionText,
+                        contentLog,
+                        currentUser.LoginName,
+                        currentUser.EmployeeID);
                 }
                 if (version.IsActive == false)
                 {
