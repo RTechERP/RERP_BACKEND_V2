@@ -1008,6 +1008,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<ProjectPartList> ProjectPartLists { get; set; }
 
+    public virtual DbSet<ProjectPartListHistoryLog> ProjectPartListHistoryLogs { get; set; }
+
     public virtual DbSet<ProjectPartListLog> ProjectPartListLogs { get; set; }
 
     public virtual DbSet<ProjectPartListPriceRequestLog> ProjectPartListPriceRequestLogs { get; set; }
@@ -11633,6 +11635,22 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
             entity.Property(e => e.VAT).HasColumnType("decimal(18, 2)");
+        });
+
+        modelBuilder.Entity<ProjectPartListHistoryLog>(entity =>
+        {
+            entity.ToTable("ProjectPartListHistoryLog");
+
+            entity.HasIndex(e => e.ProjectID, "IX_ProjectPartListHistoryLog_ProjectID").HasFilter("([IsDeleted]=(0))");
+
+            entity.HasIndex(e => e.ProjectPartListVersionID, "IX_ProjectPartListHistoryLog_VersionID").HasFilter("([IsDeleted]=(0))");
+
+            entity.Property(e => e.ActionType).HasMaxLength(150);
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
         });
 
         modelBuilder.Entity<ProjectPartListLog>(entity =>

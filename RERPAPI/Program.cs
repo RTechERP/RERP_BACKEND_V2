@@ -778,6 +778,7 @@ builder.Services.AddScoped<ProjectPartlistPurchaseRequestLogRepo>();
 builder.Services.AddScoped<ProjectPartListPriceRequestLogRepo>();
 builder.Services.AddScoped<ProjectPartListLogRepo>();
 builder.Services.AddScoped<JobPerfomanceEvaluationNewLogRepo>();
+builder.Services.AddScoped<ProjectPartListHistoryLogRepo>();
 
 #endregion DI LOG
 

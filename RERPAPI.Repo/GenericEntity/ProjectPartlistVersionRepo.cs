@@ -1,5 +1,7 @@
-﻿using RERPAPI.Model.DTO;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace RERPAPI.Repo.GenericEntity
 {
@@ -144,6 +146,17 @@ namespace RERPAPI.Repo.GenericEntity
             }
 
             return true;
+        }
+
+        public async Task<int?> GetProjectIdFromSolutionAsync(int solutionId)
+        {
+            var solution = await db.ProjectSolutions.FindAsync(solutionId);
+            if (solution != null && solution.ProjectRequestID.HasValue)
+            {
+                var request = await db.ProjectRequests.FindAsync(solution.ProjectRequestID.Value);
+                return request?.ProjectID;
+            }
+            return null;
         }
     }
 }
