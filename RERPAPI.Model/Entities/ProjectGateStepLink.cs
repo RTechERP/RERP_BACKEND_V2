@@ -13,5 +13,9 @@ namespace RERPAPI.Model.Entities
         public bool IsRepeat { get; set; }
         public int? ProjectTaskID { get; set; }
         public bool? IsDeleted { get; set; }
+        public bool? IsApproved { get; set; }
+        public string? ApprovedBy { get; set; }
+        public DateTime? ApprovedDate { get; set; }
+        public string? ApprovalComment { get; set; }
     }
 }
