@@ -28,6 +28,9 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
         private readonly ProductGroupRepo _productGroupRepo;
         private readonly BillExportSaleLogRepo _billExportSaleLogRepo;
         private readonly InventoryProjectRepo _inventoryProjectRepo;
+        private readonly ProjectPartListLogRepo _partListLogRepo;
+        private readonly WarehouseRepo _warehouseRepo;
+        private readonly ProjectPartListRepo _projectPartListRepo;
 
         public BillExportRepo(
             CurrentUser currentUser,
@@ -50,7 +53,10 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
             SupplierRepo supplierRepo,
             ProductGroupRepo productGroupRepo,
             BillExportSaleLogRepo billExportSaleLogRepo,
-            InventoryProjectRepo inventoryProjectRepo
+            InventoryProjectRepo inventoryProjectRepo,
+            ProjectPartListLogRepo projectPartListLogRepo,
+            WarehouseRepo warehouseRepo,
+            ProjectPartListRepo projectPartListRepo
         ) : base(currentUser)
         {
             _currentUser = currentUser;
@@ -74,6 +80,9 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
             _productGroupRepo = productGroupRepo;
             _billExportSaleLogRepo = billExportSaleLogRepo;
             _inventoryProjectRepo = inventoryProjectRepo;
+            _partListLogRepo = projectPartListLogRepo;
+            _warehouseRepo = warehouseRepo;
+            _projectPartListRepo = projectPartListRepo;
         }
 
         #region Bill Code Generation
@@ -1061,6 +1070,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
             foreach (var detail in dto.billExportDetail ?? new List<BillExportDetailExtendedDTO>())
             {
                 detail.BillID = billExportId;
+                BillExport master = GetByID(billExportId);
 
                 if (detail.ID <= 0)
                 {
@@ -1091,6 +1101,25 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                         CreatedBy = _currentUser.LoginName,
                         CreatedDate = DateTime.Now
                     });
+
+                    //lưu log cho partlist
+                    if (newDetail.ProjectPartListID > 0 && newDetail.ProjectPartListID != null)
+                    {
+                        string type = "xuất kho";
+                        string wareHouseTransName = "";
+                        var wareHouse = _warehouseRepo.GetByID(warehouseId);
+                        if (master.IsTransfer == true)
+                        {
+                            type = "xuất chuyển kho";
+                            var wareHouseTrans = _warehouseRepo.GetByID(master.WareHouseTranferID ?? 0);
+                            wareHouseTransName = $"đến kho [{wareHouseTrans.WarehouseName}]";
+                        }
+                      
+                        var projectPartlist = _projectPartListRepo.GetByID(newDetail.ProjectPartListID ?? 0);
+                        string content = $"[{_currentUser.FullName}] đã yêu cầu {type} vật tư TT [{projectPartlist.TT}] mã [{projectPartlist.ProductCode}] từ kho [{wareHouse.WarehouseName}] {wareHouseTransName}";
+                        await _partListLogRepo.AddLog(newDetail.ProjectPartListID, type, content, _currentUser.LoginName, _currentUser.EmployeeID, newDetail.ProjectID);
+                    }
+
 
                     // Tạo Inventory nếu chưa có (dùng pre-fetched set)
                     int productId = detail.ProductID ?? 0;
@@ -1156,6 +1185,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                         // Dùng entity từ entityMap, bỏ GetByIDAsync thừa
                         MapToExistingEntity(detail, existingEntity);
                         await _billExportDetailRepo.UpdateAsync(existingEntity);
+                       
                     }
 
                     // Tạo Inventory nếu chưa có (dùng pre-fetched set)

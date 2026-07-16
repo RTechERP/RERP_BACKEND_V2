@@ -691,8 +691,9 @@ namespace RERPAPI.Repo.GenericEntity
             message = string.Empty;
 
             string productCode = (partlist.ProductCode ?? "").Trim();
+            string productName = (partlist.GroupMaterial ?? "").Trim();
 
-            // 1. Lấy bản ghi sale theo ProductCode
+            // 1. Lấy bản ghi sale theo ProductCode và tên
             var prdSale = _productSaleRepo.GetAll(x =>
                 (x.ProductCode ?? "").Trim() == productCode &&
                 x.IsDeleted != true
