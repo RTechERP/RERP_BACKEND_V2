@@ -25,6 +25,8 @@ namespace RERPAPI.Model.DTO
         public string? ApprovedBy { get; set; }
         public DateTime? ApprovedDate { get; set; }
         public string? ApprovalComment { get; set; }
+        public int? ProjectGateStepTemplateID { get; set; }
+        public int? DepartmentID { get; set; }
     }
 
     public class ProjectGateStepCheckListLinkDto
@@ -78,6 +80,8 @@ namespace RERPAPI.Model.DTO
         public string? ApprovedBy { get; set; }
         public DateTime? ApprovedDate { get; set; }
         public string? ApprovalComment { get; set; }
+        public int? ProjectGateStepTemplateID { get; set; }
+        public int? DepartmentID { get; set; }
     }
 
     /// <summary>

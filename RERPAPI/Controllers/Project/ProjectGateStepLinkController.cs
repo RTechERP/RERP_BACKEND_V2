@@ -94,13 +94,16 @@ namespace RERPAPI.Controllers.Project
                         var matchingLink = existingLinks.FirstOrDefault(l =>
                             l.ProjectTypeID == step.ProjectTypeID &&
                             l.ProjectGateStepID == step.ProjectGateStepID &&
-                            l.IsRepeat == step.IsRepeat);
+                            l.IsRepeat == step.IsRepeat &&
+                            l.DepartmentID == step.DepartmentID);
 
                         if (matchingLink != null)
                         {
                             // ── CẬP NHẬT LINK HIỆN CÓ ──
                             matchingLink.StartDate = step.StartDate;
                             matchingLink.IsDeleted = false; // Đảm bảo chưa bị xóa
+                            matchingLink.ProjectGateStepTemplateID = step.ProjectGateStepTemplateID;
+                            matchingLink.DepartmentID = step.DepartmentID;
                             await _stepLinkRepo.UpdateAsync(matchingLink);
                             processedLinkIDs.Add(matchingLink.ID);
 
@@ -213,7 +216,9 @@ namespace RERPAPI.Controllers.Project
                                 ProjectTypeID = step.ProjectTypeID,
                                 StartDate = step.StartDate,
                                 IsRepeat = step.IsRepeat,
-                                IsDeleted = false
+                                IsDeleted = false,
+                                ProjectGateStepTemplateID = step.ProjectGateStepTemplateID,
+                                DepartmentID = step.DepartmentID
                             };
 
                             await _stepLinkRepo.CreateAsync(newLink);
@@ -463,6 +468,8 @@ namespace RERPAPI.Controllers.Project
                     ApprovedBy = l.ApprovedBy,
                     ApprovedDate = l.ApprovedDate,
                     ApprovalComment = l.ApprovalComment,
+                    ProjectGateStepTemplateID = l.ProjectGateStepTemplateID,
+                    DepartmentID = l.DepartmentID,
                     Workers = workerGroups.TryGetValue(l.ID, out var wList)
                         ? wList.Select(w => new ProjectGateStepWorkerDto
                         {
@@ -694,11 +701,11 @@ namespace RERPAPI.Controllers.Project
                     }
                 }
 
-                // 2. Thực hiện duyệt
-                link.IsApproved = true;
-                link.ApprovedBy = User.Identity?.Name ?? "TBP";
-                link.ApprovedDate = DateTime.Now;
-                link.ApprovalComment = comment;
+                //// 2. Thực hiện duyệt
+                //link.IsApproved = true;
+                //link.ApprovedBy = User.Identity?.Name ?? "TBP";
+                //link.ApprovedDate = DateTime.Now;
+                //link.ApprovalComment = comment;
 
                 await _stepLinkRepo.UpdateAsync(link);
 
@@ -720,10 +727,10 @@ namespace RERPAPI.Controllers.Project
                 if (link == null)
                     return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy bước công việc"));
 
-                link.IsApproved = false;
-                link.ApprovedBy = User.Identity?.Name ?? "TBP";
-                link.ApprovedDate = DateTime.Now;
-                link.ApprovalComment = comment;
+                //link.IsApproved = false;
+                //link.ApprovedBy = User.Identity?.Name ?? "TBP";
+                //link.ApprovedDate = DateTime.Now;
+                //link.ApprovalComment = comment;
 
                 await _stepLinkRepo.UpdateAsync(link);
 
