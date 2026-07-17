@@ -82,23 +82,23 @@ namespace RERPAPI.Controllers.Old.Technical
         }
 
         [HttpGet("get-data-th")]
-        public IActionResult LoadDataTongHop(int month, int year, int kpiErrorId, int employeeId, string departmentIDs = "", string keywords = "")
+        public IActionResult LoadDataTongHop(int month, int year, int kpiErrorId, int employeeId, string departmentIDs = "", string keywords = "", int userLoginDepartmentID = 0)
         {
             try
             {
                 var dataRaw1 = SQLHelper<object>.ProcedureToList("spGetSummaryKPIErrorEmployee_NTA",
-                                                new string[] { "@Month", "@Year", "@KPIErrorID", "@EmployeeID", "@Keyword", "@TypeID", "@DepartmentIDs" },
-                                                new object[] { month, year, kpiErrorId, employeeId, keywords, 0, departmentIDs });
+                                                new string[] { "@Month", "@Year", "@KPIErrorID", "@EmployeeID", "@Keyword", "@TypeID", "@DepartmentIDs", "@UserLoginDepartmentID" },
+                                                new object[] { month, year, kpiErrorId, employeeId, keywords, 0, departmentIDs, userLoginDepartmentID });
                 var data1 = SQLHelper<object>.GetListData(dataRaw1, 0);
 
                 var dataRaw2 = SQLHelper<object>.ProcedureToList("spGetSummaryKPIErrorEmployee_NTA",
-                                new string[] { "@Month", "@Year", "@KPIErrorID", "@EmployeeID", "@Keyword", "@TypeID", "@DepartmentIDs" },
-                                new object[] { month, year, kpiErrorId, employeeId, keywords, 3, departmentIDs });
+                                new string[] { "@Month", "@Year", "@KPIErrorID", "@EmployeeID", "@Keyword", "@TypeID", "@DepartmentIDs", "@UserLoginDepartmentID" },
+                                new object[] { month, year, kpiErrorId, employeeId, keywords, 3, departmentIDs, userLoginDepartmentID });
                 var data2 = SQLHelper<object>.GetListData(dataRaw2, 0);
 
                 var dataRaw3 = SQLHelper<object>.ProcedureToList("spGetSummaryKPIErrorEmployee_NTA",
-                                new string[] { "@Month", "@Year", "@KPIErrorID", "@EmployeeID", "@Keyword", "@TypeID", "@DepartmentIDs" },
-                                new object[] { month, year, kpiErrorId, employeeId, keywords, 9, departmentIDs });
+                                new string[] { "@Month", "@Year", "@KPIErrorID", "@EmployeeID", "@Keyword", "@TypeID", "@DepartmentIDs", "@UserLoginDepartmentID" },
+                                new object[] { month, year, kpiErrorId, employeeId, keywords, 9, departmentIDs, userLoginDepartmentID });
                 var data3 = SQLHelper<object>.GetListData(dataRaw3, 0);
 
                 return Ok(ApiResponseFactory.Success(new { data1, data2, data3 }, ""));
@@ -110,13 +110,13 @@ namespace RERPAPI.Controllers.Old.Technical
         }
 
         [HttpGet("get-data-file")]
-        public IActionResult LoadDataFile(int month, int year, int kpiErrorId, int employeeId, int typeId, string keywords = "", string departmentIDs = "")
+        public IActionResult LoadDataFile(int month, int year, int kpiErrorId, int employeeId, int typeId, string keywords = "", string departmentIDs = "", int userLoginDepartmentID = 0)
         {
             try
             {
                 var dataRaw1 = SQLHelper<object>.ProcedureToList("spGetSummaryKPIErrorEmployee_NTA",
-                                                new string[] { "@Month", "@Year", "@KPIErrorID", "@EmployeeID", "@Keyword", "@TypeID", "@DepartmentIDs" },
-                                                new object[] { month, year, kpiErrorId, employeeId, keywords, typeId, departmentIDs });
+                                                new string[] { "@Month", "@Year", "@KPIErrorID", "@EmployeeID", "@Keyword", "@TypeID", "@DepartmentIDs", "@UserLoginDepartmentID" },
+                                                new object[] { month, year, kpiErrorId, employeeId, keywords, typeId, departmentIDs, userLoginDepartmentID });
                 var datafile = SQLHelper<object>.GetListData(dataRaw1, 1);
                 return Ok(ApiResponseFactory.Success(datafile, ""));
             }

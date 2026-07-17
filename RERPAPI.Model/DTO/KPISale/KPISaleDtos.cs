@@ -552,4 +552,37 @@ namespace RERPAPI.Model.DTO.KPISale
         public string? AssignedBy { get; set; }
         public string? Note { get; set; }
     }
+
+    // ===== KPI Sale Team Weight Override DTOs =====
+    // Dùng để lưu trọng số riêng cho từng Team ở một kỳ KPI — ghi vào KPISaleTarget
+    // với sentinel EmployeeID = 0 + TeamID = teamId (xem KPISaleController.TEAM_EMPLOYEE_ID).
+    /// <summary>Một dòng trọng số team gửi từ frontend khi lưu (PUT).</summary>
+    public class KPISaleTeamWeightUpdateDto
+    {
+        public int PeriodID { get; set; }
+        public int KpiIndexID { get; set; }
+        public decimal WeightPercent { get; set; }
+    }
+
+    /// <summary>Chi tiết 1 chỉ tiêu KPI cho UI "Trọng số Team" — bao gồm cả weight mặc định và override của team (nếu có).</summary>
+    public class KPISaleTeamWeightItemDto
+    {
+        public int KpiIndexID { get; set; }
+        public string? IndexCode { get; set; }
+        public string? IndexName { get; set; }
+
+        /// <summary>Loại chỉ tiêu (DETAIL/GROUP/FORMULA/REPORT) — lấy từ KPISaleIndex.IndexType.</summary>
+        public string? IndexType { get; set; }
+
+        /// <summary>Loại đơn vị (MONEY/NUMBER/PERCENT) — lấy từ KPISaleIndex.UnitType.</summary>
+        public string? UnitType { get; set; }
+
+        /// <summary>Weight mặc định lấy từ KPISaleIndex.WeightPercent.</summary>
+        public decimal? DefaultWeightPercent { get; set; }
+
+        /// <summary>Weight team override lưu trong KPISaleTarget (EmployeeID=0). Null = chưa khai báo → dùng mặc định.</summary>
+        public decimal? TeamWeightPercent { get; set; }
+
+        public string? ApprovalStatus { get; set; }
+    }
 }

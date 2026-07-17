@@ -23,13 +23,13 @@ namespace RERPAPI.Controllers.Old.Technical
         }
 
         [HttpGet("get-kpierror")]
-        public IActionResult GetKPIError(int departmentId, string keyword = "")
+        public IActionResult GetKPIError(int departmentId, string keyword = "", int userLoginDepartmentID = 0)
         {
             try
             {
                 var dataKpiError = SQLHelper<object>.ProcedureToList("spGetKPIError",
-                                                new string[] { "@Keyword", "@DepartmentID" },
-                                                new object[] { keyword, departmentId });
+                                                new string[] { "@Keyword", "@DepartmentID", "@UserLoginDepartmentID" },
+                                                new object[] { keyword, departmentId, userLoginDepartmentID });
                 var data = SQLHelper<object>.GetListData(dataKpiError, 0);
 
                 return Ok(ApiResponseFactory.Success(data, ""));
