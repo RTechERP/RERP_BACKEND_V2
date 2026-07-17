@@ -14,6 +14,9 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<AGVBillDocumentExport> AGVBillDocumentExports { get; set; }
 
+    public virtual DbSet<SalaryIncrease> SalaryIncreases { get; set; }
+    public virtual DbSet<SalaryIncreaseDetail> SalaryIncreaseDetails { get; set; }
+
     public virtual DbSet<VehicleRentalRequest> VehicleRentalRequests { get; set; }
     public virtual DbSet<BusinessVisaRequest> BusinessVisaRequest { get; set; }
 
@@ -472,8 +475,6 @@ public partial class RTCContext : DbContext
     public virtual DbSet<FlightBookingPassenger> FlightBookingPassengers { get; set; }
 
     public virtual DbSet<FlightBookingProposal> FlightBookingProposals { get; set; }
-
-
 
     public virtual DbSet<HotelBookingManagement> HotelBookingManagements { get; set; }
 
