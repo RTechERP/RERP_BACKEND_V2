@@ -3790,6 +3790,11 @@ namespace RERPAPI.Controllers.KPISale
 
                 if (indexType == "REPORT")
                 {
+                    // REPORT không ảnh hưởng trọng số nên luôn tạo bản ghi, dù weight = 0
+                    var reportWeight = teamWeightOverrides.ContainsKey(index.ID)
+                        ? teamWeightOverrides[index.ID]
+                        : (itemsForIndex.FirstOrDefault(i => i.WeightPercent > 0)?.WeightPercent ?? 0);
+
                     decimal avgReport;
                     int adjType;
 
@@ -3844,9 +3849,7 @@ namespace RERPAPI.Controllers.KPISale
                         GoalValue = 0,
                         ResultValue = 0,
                         AchievedPercent = 0,
-                        WeightPercent = teamWeightOverrides.TryGetValue(index.ID, out var teamWReport) && teamWReport > 0
-                            ? teamWReport
-                            : (itemsForIndex.FirstOrDefault(i => i.WeightPercent > 0)?.WeightPercent ?? 0),
+                        WeightPercent = reportWeight,
                         FinalScore = reportFinalScore,
                         UnitType = index.UnitType,
                         ReportScoreAdjustmentType = adjType,
@@ -3866,12 +3869,34 @@ namespace RERPAPI.Controllers.KPISale
                         .Where(i => i.WeightPercent > 0)
                         .ToList();
 
-                    // Với GROUP/FORMULA, luôn tạo aggregated item nếu có dữ liệu từ team.
-                    // validItems.Count == 0 chỉ có nghĩa là không employee nào trong team
-                    // có weight trực tiếp cho index này. Điều đó không có nghĩa là
-                    // GROUP/FORMULA không có goal — goal đến từ con.
-                    if (validItems.Count == 0 && indexType != "GROUP" && indexType != "FORMULA")
+                    // Priority: 1) Team override exists in DB (EmployeeID=0), 2) First member's weight, 3) Default index weight.
+                    // Lưu ý: phải kiểm tra sự tồn tại của bản ghi team weight, không chỉ giá trị > 0.
+                    // Nếu team đặt weight = 0 tường minh, KHÔNG tạo bản ghi (skip).
+                    var hasTeamOverride = teamWeightOverrides.ContainsKey(index.ID);
+                    decimal weightPercent = 0;
+                    if (hasTeamOverride)
+                    {
+                        weightPercent = teamWeightOverrides[index.ID];
+                        // Nếu team override weight = 0 → skip không tạo bản ghi
+                        if (weightPercent == 0)
+                            continue;
+                    }
+                    else if (indexType == "GROUP" || indexType == "FORMULA")
+                    {
+                        // GROUP/FORMULA: luôn tạo bản ghi (weight được tính từ children)
+                        // validItems.Count == 0 chỉ có nghĩa là không employee nào trong team
+                        // có weight trực tiếp cho index này. Điều đó không có nghĩa là
+                        // GROUP/FORMULA không có goal — goal đến từ con.
+                    }
+                    else if (validItems.Count == 0)
+                    {
+                        // DETAIL không có team override và không có employee weight → skip
                         continue;
+                    }
+                    else
+                    {
+                        weightPercent = validItems[0].WeightPercent;
+                    }
 
                     decimal sumGoal = validItems.Sum(i => i.GoalValue);
                     decimal sumResult = validItems.Sum(i => i.ResultValue);
@@ -3879,20 +3904,6 @@ namespace RERPAPI.Controllers.KPISale
                     scoringRules.TryGetValue(index.ID, out var scoringRule);
                     var scoreType = NormalizeOptionalCode(scoringRule?.ScoreType, "NORMAL_PERCENT");
                     var achievedPercent = CalculateAchievedPercent(sumGoal, sumResult, scoreType);
-                    // Priority: 1) Team override (EmployeeID=0), 2) First member's weight, 3) Default index weight.
-                    decimal weightPercent = 0;
-                    if (teamWeightOverrides.TryGetValue(index.ID, out var teamW) && teamW > 0)
-                    {
-                        weightPercent = teamW;
-                    }
-                    else if (validItems.Count > 0)
-                    {
-                        weightPercent = validItems[0].WeightPercent;
-                    }
-                    else
-                    {
-                        weightPercent = index.WeightPercent;
-                    }
                     var finalScore = CalculateFinalScore(achievedPercent, weightPercent, scoringRule, scoreType);
 
                     aggregatedItems.Add(new KPISaleCalculateResult
