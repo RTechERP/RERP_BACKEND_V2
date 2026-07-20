@@ -614,6 +614,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<InventoryStock> InventoryStocks { get; set; }
 
+    public virtual DbSet<InventoryStockLog> InventoryStockLogs { get; set; }
+
     public virtual DbSet<Invoice> Invoices { get; set; }
 
     public virtual DbSet<InvoiceLink> InvoiceLinks { get; set; }
@@ -5918,12 +5920,9 @@ public partial class RTCContext : DbContext
 
         modelBuilder.Entity<FlightBookingPassenger>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("FlightBookingPassenger");
+            entity.ToTable("FlightBookingPassenger");
 
             entity.Property(e => e.FullName).HasMaxLength(250);
-            entity.Property(e => e.ID).ValueGeneratedOnAdd();
         });
 
         modelBuilder.Entity<FlightBookingProposal>(entity =>
@@ -7760,6 +7759,26 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.Quantity).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<InventoryStockLog>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__Inventor__3214EC27E96162C5");
+
+            entity.ToTable("InventoryStockLog");
+
+            entity.Property(e => e.ContentLog).HasComment("Nội dung log");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("người tạo");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo")
+                .HasColumnType("datetime");
+            entity.Property(e => e.InventoryStockID).HasComment("InventoryStockID");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái xóa");
+            entity.Property(e => e.TypeLog)
+                .HasMaxLength(250)
+                .HasComment("Loại log");
         });
 
         modelBuilder.Entity<Invoice>(entity =>

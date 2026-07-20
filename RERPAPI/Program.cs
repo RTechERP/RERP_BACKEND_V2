@@ -52,6 +52,7 @@ using tusdotnet.Models.Configuration;
 using tusdotnet.Models.Expiration;
 using tusdotnet.Stores;
 using RERPAPI.Repo.GenericEntity.HRM.Visa;
+using RERPAPI.Repo.GenericEntity.HRM.HotelBooking;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -730,6 +731,10 @@ builder.Services.AddScoped<KPISaleApprovalRepo>();
 builder.Services.AddScoped<KPISaleApprovalLogRepo>();
 builder.Services.AddScoped<KPISaleTeamMemberRepo>();
 builder.Services.AddScoped<KPISalePeroidRepo>();
+builder.Services.AddScoped<FlightBookingPassengerRepo>();
+builder.Services.AddScoped<HotelBookingManagementRepo>();
+builder.Services.AddScoped<HotelBookingProposalRepo>();
+builder.Services.AddScoped<HotelBookingEmployeeRepo>(); 
 #region DI LOG
 
 builder.Services.AddScoped<POKHLogRepo>();
@@ -745,6 +750,7 @@ builder.Services.AddScoped<ProjectPartListPriceRequestLogRepo>();
 builder.Services.AddScoped<ProjectPartListLogRepo>();
 builder.Services.AddScoped<JobPerfomanceEvaluationNewLogRepo>();
 builder.Services.AddScoped<ProjectPartListHistoryLogRepo>();
+builder.Services.AddScoped<InventoryStockLogRepo>();
 
 #endregion DI LOG
 
