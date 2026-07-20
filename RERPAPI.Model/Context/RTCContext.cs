@@ -961,6 +961,9 @@ public partial class RTCContext : DbContext
     public virtual DbSet<ProjectFile> ProjectFiles { get; set; }
 
     public virtual DbSet<ProjectGate> ProjectGate { get; set; }
+
+    public virtual DbSet<ProjectGateCheckListType> ProjectGateCheckListType { get; set; }
+
     public virtual DbSet<ProjectGateStep> ProjectGateStep { get; set; }
     public virtual DbSet<ProjectGateStepTemplate> ProjectGateStepTemplate { get; set; }
     public virtual DbSet<ProjectGateDepartment> ProjectGateDepartment { get; set; }

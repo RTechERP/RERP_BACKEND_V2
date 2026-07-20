@@ -98,6 +98,7 @@ namespace RERPAPI.Controllers.Project
                     cl.ID,
                     cl.ProjectGateStepID,
                     cl.Type,
+                    cl.ProjectGateCheckListType,
                     cl.Description,
                     cl.PathFolder,
                     Details = details
@@ -246,6 +247,7 @@ namespace RERPAPI.Controllers.Project
                         {
                             ProjectGateStepID = stepId,
                             Type = dto.Type,
+                            ProjectGateCheckListType = dto.ProjectGateCheckListType,
                             Description = dto.Description,
                             PathFolder = dto.PathFolder,
                         };
@@ -258,6 +260,7 @@ namespace RERPAPI.Controllers.Project
                         if (item != null)
                         {
                             item.Type = dto.Type;
+                            item.ProjectGateCheckListType = dto.ProjectGateCheckListType;
                             item.Description = dto.Description;
                             item.PathFolder = dto.PathFolder;
                             await _checkListRepo.UpdateAsync(item);
@@ -307,6 +310,7 @@ namespace RERPAPI.Controllers.Project
                     {
                         ProjectGateStepID = stepId,
                         Type = dto.Type,
+                        ProjectGateCheckListType = dto.ProjectGateCheckListType,
                         Description = dto.Description,
                         PathFolder = dto.PathFolder,
                     };

@@ -32,6 +32,7 @@ namespace RERPAPI.Model.DTO
     public class CheckListWithDetailsDto
     {
         public string? Type { get; set; }
+        public int? ProjectGateCheckListType { get; set; }
         public string? Description { get; set; }
         public string? PathFolder { get; set; }
         public bool IsRequired { get; set; }

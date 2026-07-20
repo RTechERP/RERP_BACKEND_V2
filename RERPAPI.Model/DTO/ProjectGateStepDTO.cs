@@ -100,6 +100,7 @@ namespace RERPAPI.Model.DTO
         public int ID { get; set; }
         public int? ProjectGateStepID { get; set; }
         public string? Type { get; set; }
+        public int? ProjectGateCheckListType { get; set; }
         public string? PathFolder { get; set; }
         public string? Description { get; set; }
     }

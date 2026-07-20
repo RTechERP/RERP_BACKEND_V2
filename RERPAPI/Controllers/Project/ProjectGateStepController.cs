@@ -242,6 +242,7 @@ namespace RERPAPI.Controllers.Project
                         {
                             ProjectGateStepID = stepId,
                             Type = c.Type,
+                            ProjectGateCheckListType = c.ProjectGateCheckListType,
                             PathFolder = c.PathFolder,
                             Description = c.Description
                         }).ToList();

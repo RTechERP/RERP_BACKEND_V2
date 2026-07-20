@@ -23,6 +23,11 @@ namespace RERPAPI.Model.Entities
         public string? Type { get; set; }
 
         /// <summary>
+        /// ID loại checklist (từ bảng ProjectGateCheckListType)
+        /// </summary>
+        public int? ProjectGateCheckListType { get; set; }
+
+        /// <summary>
         /// Đường dẫn thư mục hoặc file cần sử dụng cho checklist
         /// </summary>
         public string? PathFolder { get; set; }
