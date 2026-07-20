@@ -259,6 +259,7 @@ builder.Services.AddScoped<ProjectGateDepartmentRepo>();
 builder.Services.AddScoped<ProjectGateStepPositionRepo>();
 builder.Services.AddScoped<ProjectGateStepCheckListRepo>();
 builder.Services.AddScoped<ProjectGateStepCheckListLinkRepo>();
+builder.Services.AddScoped<ProjectGateStepCheckListDetailLinkRepo>();
 builder.Services.AddScoped<ProjectGateStepCheckListDetailRepo>();
 builder.Services.AddScoped<ProjectGateStepFileRepo>();
 builder.Services.AddScoped<ProjectWorkerTypeRepo>();
@@ -762,6 +763,7 @@ builder.Services.AddScoped<ProjectGateDepartmentRepo>();
 builder.Services.AddScoped<ProjectGateStepPositionRepo>();
 builder.Services.AddScoped<ProjectGateStepCheckListRepo>();
 builder.Services.AddScoped<ProjectGateStepCheckListLinkRepo>();
+builder.Services.AddScoped<ProjectGateStepCheckListDetailLinkRepo>();
 builder.Services.AddScoped<ProjectGateStepCheckListDetailRepo>();
 builder.Services.AddScoped<ProjectGateStepFileRepo>();
 #region DI LOG

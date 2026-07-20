@@ -15,9 +15,8 @@ namespace RERPAPI.Model.Entities
         public bool? IsDeleted { get; set; }
         public int? ProjectGateStepTemplateID { get; set; }
         public int? DepartmentID { get; set; }
-        //public bool? IsApproved { get; set; }
-        //public string? ApprovedBy { get; set; }
-        //public DateTime? ApprovedDate { get; set; }
-        //public string? ApprovalComment { get; set; }
+        public bool? IsApproved { get; set; }
+        public string? ApprovedBy { get; set; }
+        public DateTime? ApprovedDate { get; set; }
     }
 }

@@ -973,6 +973,7 @@ public partial class RTCContext : DbContext
     public virtual DbSet<ProjectGateStepCheckList> ProjectGateStepCheckList { get; set; }
 
     public virtual DbSet<ProjectGateStepCheckListDetail> ProjectGateStepCheckListDetail { get; set; }
+    public virtual DbSet<ProjectGateStepCheckListDetailLink> ProjectGateStepCheckListDetailLink { get; set; }
 
     public virtual DbSet<ProjectGateStepCheckListLink> ProjectGateStepCheckListLink { get; set; }
 

@@ -38,6 +38,19 @@ namespace RERPAPI.Model.DTO
         public bool IsRequired { get; set; }
         public string? Description { get; set; }
         public string? Type { get; set; }
+        
+        // Custom rule-level attributes
+        public bool IsFile { get; set; } = true;
+        public int? STT { get; set; }
+        public string? FileName { get; set; }
+        
+        public int FileQuantity { get; set; }
+        
+        // Rule-level approvals
+        public int IsApprovedTBP { get; set; } = 0;
+        public int? ApprovedTBPBy { get; set; }
+        public DateTime? ApprovedTBPDate { get; set; }
+        
         public List<ProjectGateStepFileDto> Files { get; set; } = new();
     }
 
@@ -52,6 +65,9 @@ namespace RERPAPI.Model.DTO
         public DateTime? CreatedDate { get; set; }
         public string? UpdatedBy { get; set; }
         public DateTime? UpdatedDate { get; set; }
+        public int? ProjectGateStepCheckListDetailLinkID { get; set; }
+        public string? CreatorFullName { get; set; }
+        public int? EmployeeID { get; set; }
     }
 
     public class ProjectGateStepWorkerDto
@@ -113,6 +129,17 @@ namespace RERPAPI.Model.DTO
         public bool IsRequired { get; set; }
         public string? Description { get; set; }
         public string? Type { get; set; }
+        
+        // Custom rule-level attributes
+        public bool IsFile { get; set; }
+        public int? STT { get; set; }
+        public string? StandardFileName { get; set; }
+        
+        // Rule-level approvals
+        public int IsApprovedTBP { get; set; }
+        public int? ApprovedTBPBy { get; set; }
+        public DateTime? ApprovedTBPDate { get; set; }
+
         // File info (có thể NULL nếu chưa upload file)
         public int? FileID { get; set; }
         public string? FileName { get; set; }
@@ -123,5 +150,26 @@ namespace RERPAPI.Model.DTO
         public DateTime? CreatedDate { get; set; }
         public string? UpdatedBy { get; set; }
         public DateTime? UpdatedDate { get; set; }
+    }
+
+    public class CompleteRuleDto
+    {
+        public List<int> DetailLinkIDs { get; set; }
+        public bool IsCompleted { get; set; }
+    }
+
+    public class ApproveRuleDto
+    {
+        public int IsApprovedTBP { get; set; }
+        public int ApprovedTBPBy { get; set; }
+    }
+
+    public class FileCheckViolationDto
+    {
+        public int DetailLinkID { get; set; }
+        public string? Description { get; set; }
+        public string? FileName { get; set; }
+        public int RequiredQuantity { get; set; }
+        public int UploadedQuantity { get; set; }
     }
 }

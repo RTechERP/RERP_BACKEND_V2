@@ -13,6 +13,9 @@ namespace RERPAPI.Model.DTO
         public string? FileFormat { get; set; }
         public int FileQuantity { get; set; } = 0;
         public bool IsCheck { get; set; }
+        public bool IsFile { get; set; }
+        public int? STT { get; set; }
+        public string? FileName { get; set; }
         public string? CreatedBy { get; set; }
     }
 

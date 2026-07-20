@@ -13,9 +13,9 @@ namespace RERPAPI.Model.Entities
         public int ID { get; set; }
 
         /// <summary>
-        /// ID liên kết tới bản ghi ProjectGateStepCheckListLink
+        /// ID liên kết tới bản ghi ProjectGateStepCheckListDetailLink
         /// </summary>
-        public int ProjectGateStepCheckListLinkID { get; set; }
+        public int ProjectGateStepCheckListDetailLinkID { get; set; }
 
         /// <summary>
         /// Tên file gốc (ví dụ: bao_gia.pdf)
@@ -61,5 +61,10 @@ namespace RERPAPI.Model.Entities
         /// Ngày cập nhật thông tin file gần nhất
         /// </summary>
         public DateTime? UpdatedDate { get; set; }
+
+        /// <summary>
+        /// ID nhân viên upload file
+        /// </summary>
+        public int? EmployeeID { get; set; }
     }
 }
