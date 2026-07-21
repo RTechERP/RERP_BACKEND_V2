@@ -79,7 +79,7 @@ namespace RERPAPI.Model.Common
                         }
                     }
 
-                    email.Cc.Add(MailboxAddress.Parse(toEmail));
+                    //email.Cc.Add(MailboxAddress.Parse(toEmail));
                 }
                 email.Subject = subject;
 
