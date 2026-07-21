@@ -737,6 +737,8 @@ builder.Services.AddScoped<HotelBookingProposalRepo>();
 builder.Services.AddScoped<HotelBookingEmployeeRepo>();
 builder.Services.AddScoped<SalaryIncreaseRepo>();
 builder.Services.AddScoped<SalaryIncreaseDetailRepo>();
+builder.Services.AddScoped<HotelBookingEmployeeRepo>();
+builder.Services.AddScoped<TravelRegistrationRepo>();
 #region DI LOG
 
 builder.Services.AddScoped<POKHLogRepo>();
@@ -811,10 +813,10 @@ builder.Services.AddCors(options =>
     });
 });
  //Chỉ khởi tạo 1 lần duy nhất khi chạy server
-FirebaseApp.Create(new AppOptions()
-{
-    Credential = GoogleCredential.FromFile("firebase-adminsdk.json") // Thay bằng đường dẫn thực tế
-});
+//FirebaseApp.Create(new AppOptions()
+//{
+//    Credential = GoogleCredential.FromFile("firebase-adminsdk.json") // Thay bằng đường dẫn thực tế
+//});
 
 builder.Services.AddSingleton<SseService>();
 
