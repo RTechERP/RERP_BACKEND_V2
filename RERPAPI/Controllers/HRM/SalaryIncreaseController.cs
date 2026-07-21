@@ -338,7 +338,17 @@ namespace RERPAPI.Controllers.HRM
         [HttpGet("mail-config")]
         public IActionResult GetMailConfig()
         {
-            return Ok(ApiResponseFactory.Success(_salaryIncreaseMailSettings, "Lấy cấu hình email thành công"));
+            var result = new
+            {
+                _salaryIncreaseMailSettings.BGDEmail,
+                _salaryIncreaseMailSettings.HRMEmail,
+                _salaryIncreaseMailSettings.KTTEmail,
+                _salaryIncreaseMailSettings.TestRecipientEmail,
+                // Footer công ty được gắn vào mail lúc gửi thật (xem SendMail/SendMailQueue) -
+                // trả về đây để frontend ghép vào khi xem trước cho đúng với mail thật.
+                Footer = _configuration["FooterMail:HR:Footer"] ?? ""
+            };
+            return Ok(ApiResponseFactory.Success(result, "Lấy cấu hình email thành công"));
         }
         [RequiresPermission("N2")]
 
@@ -351,7 +361,6 @@ namespace RERPAPI.Controllers.HRM
             }
 
             var results = new List<SalaryIncreaseSendMailResultItem>();
-            var footer = _configuration["FooterMail:HR:Footer"] ?? "";
 
             foreach (var item in items)
             {
@@ -368,7 +377,7 @@ namespace RERPAPI.Controllers.HRM
                         throw new Exception("Nhân viên chưa có email công ty");
                     }
 
-                    await _emailHelper.SendAsync(emailTo, item.Subject, item.Body + footer, true, item.EmailCC);
+                    await _emailHelper.SendAsync(emailTo, item.Subject, item.Body, true, item.EmailCC);
 
                     var entity = await _salaryIncreaseDetailRepo.GetByIDAsync(item.DetailID);
                     if (entity != null)
