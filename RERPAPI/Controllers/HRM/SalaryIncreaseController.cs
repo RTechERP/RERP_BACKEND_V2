@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -52,7 +53,7 @@ namespace RERPAPI.Controllers.HRM
             public DateTime? StartDate { get; set; }
             public DateTime? EndDate { get; set; }
         }
-
+        [RequiresPermission("N2")]
         [HttpPost("search-master")]
         public IActionResult SearchMaster([FromBody] SalaryIncreaseSearchParam param)
         {
@@ -87,6 +88,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [RequiresPermission("N2")]
 
         [HttpPost("save-master")]
         public async Task<IActionResult> SaveMaster([FromBody] SalaryIncrease dto)
@@ -123,6 +125,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [RequiresPermission("N2")]
 
         [HttpPost("delete-master")]
         public async Task<IActionResult> DeleteMaster([FromBody] List<int> ids)
@@ -157,6 +160,7 @@ namespace RERPAPI.Controllers.HRM
             public int SalaryIncreaseID { get; set; }
             public string? Keyword { get; set; }
         }
+        [RequiresPermission("N2")]
 
         [HttpPost("search-detail")]
         public IActionResult SearchDetail([FromBody] SalaryIncreaseDetailParam param)
@@ -180,6 +184,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [RequiresPermission("N2")]
 
         [HttpPost("save-detail")]
         public async Task<IActionResult> SaveDetail([FromBody] SalaryIncreaseDetail dto)
@@ -226,6 +231,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [RequiresPermission("N2")]
 
         [HttpPost("delete-detail")]
         public async Task<IActionResult> DeleteDetail([FromBody] List<int> ids)
@@ -254,6 +260,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [RequiresPermission("N2")]
 
         [HttpPost("save-data-detail")]
         public async Task<IActionResult> SaveDataDetail([FromBody] List<SalaryIncreaseDetail> items)
@@ -333,6 +340,7 @@ namespace RERPAPI.Controllers.HRM
         {
             return Ok(ApiResponseFactory.Success(_salaryIncreaseMailSettings, "Lấy cấu hình email thành công"));
         }
+        [RequiresPermission("N2")]
 
         [HttpPost("send-mail")]
         public async Task<IActionResult> SendMail([FromBody] List<SalaryIncreaseSendMailParam> items)
