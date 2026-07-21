@@ -934,6 +934,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<ProductSaleGroupWarehouseLink> ProductSaleGroupWarehouseLinks { get; set; }
 
+    public virtual DbSet<ProductSaleImportExportLog> ProductSaleImportExportLogs { get; set; }
+
     public virtual DbSet<ProductWorking> ProductWorkings { get; set; }
 
     public virtual DbSet<ProductWorkingAudit> ProductWorkingAudits { get; set; }
@@ -10947,15 +10949,18 @@ public partial class RTCContext : DbContext
             entity.HasIndex(e => e.ProductNewCode, "Index_ProductSale_ProductNewCode");
 
             entity.Property(e => e.AddressBox).HasMaxLength(150);
+            entity.Property(e => e.ApprovedID).HasDefaultValue(0);
             entity.Property(e => e.CreatedBy).HasMaxLength(50);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.Export).HasColumnType("decimal(18, 1)");
             entity.Property(e => e.FirmID).HasDefaultValue(0);
             entity.Property(e => e.Import).HasColumnType("decimal(18, 1)");
+            entity.Property(e => e.IsApproved).HasDefaultValue(true);
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.IsFix)
                 .HasDefaultValue(false)
                 .HasComment("Trường tích xanh (cho phép dữ liệu có được sửa hay không)");
+            entity.Property(e => e.IsStandardized).HasDefaultValue(true);
             entity.Property(e => e.ItemType).HasMaxLength(50);
             entity.Property(e => e.Maker).HasMaxLength(50);
             entity.Property(e => e.Note).HasMaxLength(500);
@@ -10980,6 +10985,25 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.ProductSaleID).HasComment("Link bảng ProductSale");
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProductSaleImportExportLog>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ProductS__3214EC27FB5FDD73");
+
+            entity.ToTable("ProductSaleImportExportLog");
+
+            entity.Property(e => e.ContentLog).HasComment("Nội dung log");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("người tạo");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo")
+                .HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái xóa");
+            entity.Property(e => e.TypeLog)
+                .HasMaxLength(250)
+                .HasComment("Loại log");
         });
 
         modelBuilder.Entity<ProductWorking>(entity =>

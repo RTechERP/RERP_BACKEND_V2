@@ -55,4 +55,10 @@ public partial class ProductSale
     public bool? IsFix { get; set; }
 
     public int? UnitCountID { get; set; }
+
+    public bool? IsStandardized { get; set; }
+
+    public bool? IsApproved { get; set; }
+
+    public int? ApprovedID { get; set; }
 }

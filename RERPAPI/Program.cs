@@ -734,7 +734,9 @@ builder.Services.AddScoped<KPISalePeroidRepo>();
 builder.Services.AddScoped<FlightBookingPassengerRepo>();
 builder.Services.AddScoped<HotelBookingManagementRepo>();
 builder.Services.AddScoped<HotelBookingProposalRepo>();
-builder.Services.AddScoped<HotelBookingEmployeeRepo>(); 
+builder.Services.AddScoped<HotelBookingEmployeeRepo>();
+builder.Services.AddScoped<SalaryIncreaseRepo>();
+builder.Services.AddScoped<SalaryIncreaseDetailRepo>();
 #region DI LOG
 
 builder.Services.AddScoped<POKHLogRepo>();
@@ -751,7 +753,7 @@ builder.Services.AddScoped<ProjectPartListLogRepo>();
 builder.Services.AddScoped<JobPerfomanceEvaluationNewLogRepo>();
 builder.Services.AddScoped<ProjectPartListHistoryLogRepo>();
 builder.Services.AddScoped<InventoryStockLogRepo>();
-
+builder.Services.AddScoped<ProductSaleImportExportLogRepo>();
 #endregion DI LOG
 
 //Config connect databaseCourse
