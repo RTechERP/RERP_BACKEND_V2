@@ -18,7 +18,7 @@ namespace RERPAPI.Controllers.HRM
         private readonly SalaryIncreaseDetailRepo _salaryIncreaseDetailRepo;
         private readonly CurrentUser _currentUser;
         private readonly EmailHelper _emailHelper;
-        private readonly IEmailQueueService _emailQueue;
+        //private readonly IEmailQueueService _emailQueue;
         private readonly SalaryIncreaseMailSettings _salaryIncreaseMailSettings;
         private readonly IConfiguration _configuration;
         private readonly IServiceScopeFactory _scopeFactory;
@@ -29,7 +29,7 @@ namespace RERPAPI.Controllers.HRM
             SalaryIncreaseDetailRepo salaryIncreaseDetailRepo,
             CurrentUser currentUser,
             EmailHelper emailHelper,
-            IEmailQueueService emailQueue,
+            //IEmailQueueService emailQueue,
             IOptions<SalaryIncreaseMailSettings> salaryIncreaseMailSettings,
             IConfiguration configuration,
             IServiceScopeFactory scopeFactory,
@@ -39,7 +39,7 @@ namespace RERPAPI.Controllers.HRM
             _salaryIncreaseDetailRepo = salaryIncreaseDetailRepo;
             _currentUser = currentUser;
             _emailHelper = emailHelper;
-            _emailQueue = emailQueue;
+            //_emailQueue = emailQueue;
             _salaryIncreaseMailSettings = salaryIncreaseMailSettings.Value;
             _configuration = configuration;
             _scopeFactory = scopeFactory;
