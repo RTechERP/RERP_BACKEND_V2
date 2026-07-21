@@ -934,6 +934,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<ProductSaleGroupWarehouseLink> ProductSaleGroupWarehouseLinks { get; set; }
 
+    public virtual DbSet<ProductSaleImportExportLog> ProductSaleImportExportLogs { get; set; }
+
     public virtual DbSet<ProductWorking> ProductWorkings { get; set; }
 
     public virtual DbSet<ProductWorkingAudit> ProductWorkingAudits { get; set; }
@@ -1187,6 +1189,10 @@ public partial class RTCContext : DbContext
     public virtual DbSet<RulePay> RulePays { get; set; }
 
     public virtual DbSet<SALE> SALEs { get; set; }
+
+    public virtual DbSet<SalaryIncrease> SalaryIncreases { get; set; }
+
+    public virtual DbSet<SalaryIncreaseDetail> SalaryIncreaseDetails { get; set; }
 
     public virtual DbSet<SaleUserType> SaleUserTypes { get; set; }
 
@@ -10943,15 +10949,18 @@ public partial class RTCContext : DbContext
             entity.HasIndex(e => e.ProductNewCode, "Index_ProductSale_ProductNewCode");
 
             entity.Property(e => e.AddressBox).HasMaxLength(150);
+            entity.Property(e => e.ApprovedID).HasDefaultValue(0);
             entity.Property(e => e.CreatedBy).HasMaxLength(50);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.Export).HasColumnType("decimal(18, 1)");
             entity.Property(e => e.FirmID).HasDefaultValue(0);
             entity.Property(e => e.Import).HasColumnType("decimal(18, 1)");
+            entity.Property(e => e.IsApproved).HasDefaultValue(true);
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.IsFix)
                 .HasDefaultValue(false)
                 .HasComment("Trường tích xanh (cho phép dữ liệu có được sửa hay không)");
+            entity.Property(e => e.IsStandardized).HasDefaultValue(true);
             entity.Property(e => e.ItemType).HasMaxLength(50);
             entity.Property(e => e.Maker).HasMaxLength(50);
             entity.Property(e => e.Note).HasMaxLength(500);
@@ -10976,6 +10985,25 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.ProductSaleID).HasComment("Link bảng ProductSale");
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProductSaleImportExportLog>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ProductS__3214EC27FB5FDD73");
+
+            entity.ToTable("ProductSaleImportExportLog");
+
+            entity.Property(e => e.ContentLog).HasComment("Nội dung log");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("người tạo");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo")
+                .HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái xóa");
+            entity.Property(e => e.TypeLog)
+                .HasMaxLength(250)
+                .HasComment("Loại log");
         });
 
         modelBuilder.Entity<ProductWorking>(entity =>
@@ -13959,6 +13987,77 @@ public partial class RTCContext : DbContext
                 .HasColumnType("decimal(18, 0)")
                 .HasColumnName("Sale");
             entity.Property(e => e.SaleDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<SalaryIncrease>(entity =>
+        {
+            entity.ToTable("SalaryIncrease", tb => tb.HasComment("Bảng master lưu thông tin các đợt tăng lương"));
+
+            entity.Property(e => e.ID).HasComment("ID bản ghi, tự động tăng");
+            entity.Property(e => e.Code)
+                .HasMaxLength(100)
+                .HasComment("Mã đợt tăng lương");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.EffectiveDate)
+                .HasComment("Ngày bắt đầu có hiệu lực của đợt tăng lương")
+                .HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái xóa mềm: 0 - Chưa xóa, 1 - Đã xóa");
+            entity.Property(e => e.MonthFrom)
+                .HasMaxLength(50)
+                .HasComment("Tháng bắt đầu áp dụng đợt tăng lương, ví dụ: T6/2026");
+            entity.Property(e => e.MonthTo)
+                .HasMaxLength(50)
+                .HasComment("Tháng kết thúc áp dụng đợt tăng lương, ví dụ: T7/2026");
+            entity.Property(e => e.Name)
+                .HasMaxLength(200)
+                .HasComment("Tên đợt tăng lương");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người cập nhật bản ghi gần nhất");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật bản ghi gần nhất")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<SalaryIncreaseDetail>(entity =>
+        {
+            entity.ToTable("SalaryIncreaseDetail", tb => tb.HasComment("Bảng chi tiết lưu danh sách nhân viên thuộc từng đợt tăng lương"));
+
+            entity.Property(e => e.ID).HasComment("ID bản ghi, tự động tăng");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.CurrentBaseSalary)
+                .HasComment("Lương cơ bản mới sau khi tăng")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.EmailTBP)
+                .HasMaxLength(500)
+                .HasComment("Email của trưởng bộ phận nhận thông báo");
+            entity.Property(e => e.EmployeeID).HasComment("ID nhân viên được tăng lương");
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false)
+                .HasComment("Trạng thái xóa mềm: 0 - Chưa xóa, 1 - Đã xóa");
+            entity.Property(e => e.IsSend)
+                .HasDefaultValue(false)
+                .HasComment("Trạng thái gửi hoặc nhận thông báo: 0 - Chưa nhận, 1 - Đã nhận");
+            entity.Property(e => e.PreviousBaseSalary)
+                .HasComment("Lương cơ bản hiện tại trước khi tăng")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.SalaryIncreaseID).HasComment("ID đợt tăng lương thuộc bảng master SalaryIncrease");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người cập nhật bản ghi gần nhất");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật bản ghi gần nhất")
+                .HasColumnType("datetime");
         });
 
         modelBuilder.Entity<SaleUserType>(entity =>
