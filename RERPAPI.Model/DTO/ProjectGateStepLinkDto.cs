@@ -172,4 +172,32 @@ namespace RERPAPI.Model.DTO
         public int RequiredQuantity { get; set; }
         public int UploadedQuantity { get; set; }
     }
+
+    /// <summary>
+    /// DTO cho duyệt/hủy duyệt nhiều công đoạn
+    /// </summary>
+    public class ApproveMultipleDto
+    {
+        public List<int> LinkIDs { get; set; } = new();
+        public bool IsApproved { get; set; }
+        /// <summary>
+        /// Nếu true: bỏ qua cảnh báo checklist TBP chưa duyệt và duyệt luôn
+        /// </summary>
+        public bool ForceApprove { get; set; } = false;
+    }
+
+    /// <summary>
+    /// Kết quả trả về khi check pending TBP trước khi duyệt
+    /// </summary>
+    public class ApproveMultipleResultDto
+    {
+        public bool Success { get; set; }
+        public bool HasPendingTBP { get; set; }
+        public string? Message { get; set; }
+    }
+
+    public class ProjectGateStepPendingCheckDto
+    {
+        public int PendingCount { get; set; }
+    }
 }

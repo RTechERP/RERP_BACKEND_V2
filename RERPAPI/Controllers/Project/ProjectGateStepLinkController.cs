@@ -665,6 +665,63 @@ namespace RERPAPI.Controllers.Project
 
 
 
+        /// <summary>
+        /// Duyệt hoặc hủy duyệt nhiều công đoạn cùng lúc.
+        /// Nếu IsApproved=true và ForceApprove=false: kiểm tra checklist TBP chưa duyệt trước,
+        /// nếu có thì trả về HasPendingTBP=true để frontend hỏi người dùng.
+        /// </summary>
+        [HttpPost("ApproveMultiple")]
+        public async Task<IActionResult> ApproveMultiple([FromBody] ApproveMultipleDto request)
+        {
+            try
+            {
+                if (request == null || request.LinkIDs == null || !request.LinkIDs.Any())
+                    return BadRequest(ApiResponseFactory.Fail(null, "Danh sách công đoạn không được rỗng"));
+
+                // Khi duyệt (IsApproved=true) và chưa force: kiểm tra TBP pending
+                if (request.IsApproved && !request.ForceApprove)
+                {
+                    bool hasPending = await _stepLinkRepo.CheckPendingTbpAsync(request.LinkIDs);
+                    if (hasPending)
+                    {
+                        return Ok(ApiResponseFactory.Success(new ApproveMultipleResultDto
+                        {
+                            Success = false,
+                            HasPendingTBP = true,
+                            Message = "Có công đoạn chứa checklist chưa được Trưởng bộ phận duyệt. Bạn có muốn tiếp tục duyệt không?"
+                        }, "Cần xác nhận"));
+                    }
+                }
+
+                // Tiến hành duyệt / hủy duyệt
+                var updatedCount = 0;
+                foreach (var linkId in request.LinkIDs)
+                {
+                    var link = _stepLinkRepo.GetByID(linkId);
+                    if (link == null) continue;
+
+                    link.IsApproved = request.IsApproved;
+                    link.ApprovedBy = request.IsApproved ? _currentUser.LoginName : null;
+                    link.ApprovedDate = request.IsApproved ? DateTime.Now : null;
+
+                    await _stepLinkRepo.UpdateAsync(link);
+                    updatedCount++;
+                }
+
+                var action = request.IsApproved ? "Duyệt" : "Hủy duyệt";
+                return Ok(ApiResponseFactory.Success(new ApproveMultipleResultDto
+                {
+                    Success = true,
+                    HasPendingTBP = false,
+                    Message = $"{action} thành công {updatedCount} công đoạn"
+                }, $"{action} thành công {updatedCount} công đoạn"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
 
         private async Task SyncCheckListDetailLinksAsync(int stepLinkId, int gateStepId, int projectTypeId, RERPAPI.Model.Entities.Project project)
         {
