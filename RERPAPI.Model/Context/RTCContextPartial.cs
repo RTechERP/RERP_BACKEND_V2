@@ -66,13 +66,25 @@ namespace RERPAPI.Model.Context
                             isDelete.SetValue(item.Entity, 0);
                     }
 
+                    //if (deleteFlag != null && deleteFlag.CanWrite)
+                    //{
+                    //    var propType = deleteFlag.PropertyType;
+                    //    if (propType == typeof(bool) || propType == typeof(bool?))
+                    //        deleteFlag.SetValue(item.Entity, false);
+                    //    else if (propType == typeof(int) || propType == typeof(int?))
+                    //        deleteFlag.SetValue(item.Entity, 0);
+                    //}
                     if (deleteFlag != null && deleteFlag.CanWrite)
                     {
-                        var propType = deleteFlag.PropertyType;
-                        if (propType == typeof(bool) || propType == typeof(bool?))
-                            deleteFlag.SetValue(item.Entity, false);
-                        else if (propType == typeof(int) || propType == typeof(int?))
-                            deleteFlag.SetValue(item.Entity, 0);
+                        var currentValue = deleteFlag.GetValue(item.Entity);
+                        if (currentValue == null) // Chỉ set mặc định nếu chưa được set
+                        {
+                            var propType = deleteFlag.PropertyType;
+                            if (propType == typeof(bool) || propType == typeof(bool?))
+                                deleteFlag.SetValue(item.Entity, false);
+                            else if (propType == typeof(int) || propType == typeof(int?))
+                                deleteFlag.SetValue(item.Entity, 0);
+                        }
                     }
                 }
 

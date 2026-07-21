@@ -1188,6 +1188,10 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<SALE> SALEs { get; set; }
 
+    public virtual DbSet<SalaryIncrease> SalaryIncreases { get; set; }
+
+    public virtual DbSet<SalaryIncreaseDetail> SalaryIncreaseDetails { get; set; }
+
     public virtual DbSet<SaleUserType> SaleUserTypes { get; set; }
 
     public virtual DbSet<SalesPerformanceRanking> SalesPerformanceRankings { get; set; }
@@ -13959,6 +13963,77 @@ public partial class RTCContext : DbContext
                 .HasColumnType("decimal(18, 0)")
                 .HasColumnName("Sale");
             entity.Property(e => e.SaleDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<SalaryIncrease>(entity =>
+        {
+            entity.ToTable("SalaryIncrease", tb => tb.HasComment("Bảng master lưu thông tin các đợt tăng lương"));
+
+            entity.Property(e => e.ID).HasComment("ID bản ghi, tự động tăng");
+            entity.Property(e => e.Code)
+                .HasMaxLength(100)
+                .HasComment("Mã đợt tăng lương");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.EffectiveDate)
+                .HasComment("Ngày bắt đầu có hiệu lực của đợt tăng lương")
+                .HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasComment("Trạng thái xóa mềm: 0 - Chưa xóa, 1 - Đã xóa");
+            entity.Property(e => e.MonthFrom)
+                .HasMaxLength(50)
+                .HasComment("Tháng bắt đầu áp dụng đợt tăng lương, ví dụ: T6/2026");
+            entity.Property(e => e.MonthTo)
+                .HasMaxLength(50)
+                .HasComment("Tháng kết thúc áp dụng đợt tăng lương, ví dụ: T7/2026");
+            entity.Property(e => e.Name)
+                .HasMaxLength(200)
+                .HasComment("Tên đợt tăng lương");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người cập nhật bản ghi gần nhất");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật bản ghi gần nhất")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<SalaryIncreaseDetail>(entity =>
+        {
+            entity.ToTable("SalaryIncreaseDetail", tb => tb.HasComment("Bảng chi tiết lưu danh sách nhân viên thuộc từng đợt tăng lương"));
+
+            entity.Property(e => e.ID).HasComment("ID bản ghi, tự động tăng");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.CurrentBaseSalary)
+                .HasComment("Lương cơ bản mới sau khi tăng")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.EmailTBP)
+                .HasMaxLength(500)
+                .HasComment("Email của trưởng bộ phận nhận thông báo");
+            entity.Property(e => e.EmployeeID).HasComment("ID nhân viên được tăng lương");
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false)
+                .HasComment("Trạng thái xóa mềm: 0 - Chưa xóa, 1 - Đã xóa");
+            entity.Property(e => e.IsSend)
+                .HasDefaultValue(false)
+                .HasComment("Trạng thái gửi hoặc nhận thông báo: 0 - Chưa nhận, 1 - Đã nhận");
+            entity.Property(e => e.PreviousBaseSalary)
+                .HasComment("Lương cơ bản hiện tại trước khi tăng")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.SalaryIncreaseID).HasComment("ID đợt tăng lương thuộc bảng master SalaryIncrease");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người cập nhật bản ghi gần nhất");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật bản ghi gần nhất")
+                .HasColumnType("datetime");
         });
 
         modelBuilder.Entity<SaleUserType>(entity =>
