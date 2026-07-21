@@ -1,9 +1,15 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DocumentFormat.OpenXml.InkML;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
+using NPOI.SS.Formula.Functions;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.AddNewBillExport;
+using System.Text;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 {
@@ -17,17 +23,48 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         private readonly FirmRepo _firmRepo;
         private readonly UnitCountRepo _unitCountRepo;
 
+        private readonly BillImportRepo _billImportRepo;
+        private readonly BillExportRepo _billExportRepo;
+        private readonly BillImportDetailRepo _billImportDetailRepo;
+        private readonly BillExportDetailRepo _billExportDetailRepo;
+        private readonly ProductSaleImportExportLogRepo _productSaleImportExportLogRepo;
+        private readonly WarehouseRepo _warehouseRepo;
+        private readonly ProductGroupRepo _productGroupRepo;
+        private readonly CustomerRepo _customerRepo;
+        private readonly SupplierSaleRepo _supplierRepo;
+
+
         public ProductSaleController(
             ProductGroupRepo productgroupRepo,
             ProductsSaleRepo productsaleRepo,
             InventoryRepo inventoryRepo,
-            FirmRepo firmRepo, UnitCountRepo unitCountRepo)
+            FirmRepo firmRepo,
+            UnitCountRepo unitCountRepo,
+            BillImportRepo billImportRepo,
+            BillExportRepo billExportRepo,
+            BillExportDetailRepo billExportDetailRepo,
+            BillImportDetailRepo billimportDetailRepo,
+            ProductSaleImportExportLogRepo productSaleImportExportLogRepo,
+            WarehouseRepo warehouseRepo,
+            ProductGroupRepo productGroupRepo,
+            CustomerRepo customerRepo,
+            SupplierSaleRepo supplierRepo
+            )
         {
             _productgroupRepo = productgroupRepo;
             _productsaleRepo = productsaleRepo;
             _inventoryRepo = inventoryRepo;
             _firmRepo = firmRepo;
             _unitCountRepo = unitCountRepo;
+            _billImportRepo = billImportRepo;
+            _billExportRepo = billExportRepo;
+            _billImportDetailRepo = billimportDetailRepo;
+            _billExportDetailRepo = billExportDetailRepo;
+            _productSaleImportExportLogRepo = productSaleImportExportLogRepo;
+            _warehouseRepo = warehouseRepo;
+            _productGroupRepo = productGroupRepo;
+            _customerRepo = customerRepo;
+            _supplierRepo = supplierRepo;
         }
 
         //api ngày 12/06/2025
@@ -83,7 +120,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         {
             try
             {
-                List<ProductSale> rs = _productsaleRepo.GetAll(x => x.ProductGroupID == productgroupID);
+                List<ProductSale> rs = _productsaleRepo.GetAll(x => x.ProductGroupID == productgroupID && x.IsStandardized == true); // VTN update 22626
                 return Ok(ApiResponseFactory.Success(rs, "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
@@ -224,6 +261,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         dto.ProductSale.Import = dto.ProductSale.Export = dto.ProductSale.NumberInStoreCuoiKy = dto.ProductSale.NumberInStoreDauky;
                         dto.ProductSale.SupplierName = "";
                         dto.ProductSale.ItemType = "";
+                        dto.ProductSale.IsStandardized = true;
                         //int newId = await _productsaleRepo.CreateAsynC(dto.ProductSale);
                         await _productsaleRepo.CreateAsync(dto.ProductSale);
                         int newId = dto.ProductSale.ID;
@@ -235,13 +273,14 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         dto.Inventory.TotalQuantityLast = 0;
                         dto.Inventory.MinQuantity = 0;
                         dto.Inventory.IsStock = false;
-                        //dto.Inventory.ProductGroupID = dto.ProductSale.ProductGroupID;
+
                         int prdGroupID = dto.ProductSale.ProductGroupID ?? 0;
-                        if (prdGroupID == 83 || prdGroupID == 84) // Nam per update 28/05/2026 nhờ khánh push lên
+                        if (prdGroupID == 83 || prdGroupID == 84)
                         {
                             dto.Inventory.WarehouseID = 6;
                             dto.Inventory.ProductGroupID = dto.ProductSale.ProductGroupID;
                         }
+
                         await _inventoryRepo.CreateAsync(dto.Inventory);
                     }
                     else
@@ -390,7 +429,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
                             dto.SupplierName = "";
                             dto.ItemType = "";
-
+                            dto.IsStandardized = true;
                             await _productsaleRepo.CreateAsync(dto);
 
                             successCount++;
@@ -478,5 +517,313 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
         //    }
         //}
+
+        [HttpPost("standardize-product-group")]
+        public async Task<IActionResult> visibleProductGroup([FromBody] List<ProductSale> data)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                foreach (ProductSale item in data)
+                {
+                    if (item.ID > 0)
+                    {
+                        var productSale = _productsaleRepo.GetByID(item.ID);
+                        if (productSale != null)
+                        {
+                            productSale.IsStandardized = item.IsStandardized;
+                            await _productsaleRepo.UpdateAsync(productSale);
+                        }
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(null, "Xử lý dữ liệu thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-product-sale-new")]
+        public IActionResult getProductSaleNew()
+        {
+            try
+            {
+                var rs = _productsaleRepo.GetAll(x => x.IsDeleted != true);
+                return Ok(ApiResponseFactory.Success(rs, "Lấy dữ liệu thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("products-sale-import-export")]
+        public async Task<IActionResult> ProductsSaleImportExport([FromBody] ProductsSaleImportExportDTO model)
+        {
+            try
+            {
+                var log = new StringBuilder();
+
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var now = DateTime.Now;
+                var dateStr = model.Date?.ToString("yyMMdd");
+
+                var wh = _warehouseRepo.GetByID(model.WarehouseId ?? 0);
+                var pg = _productGroupRepo.GetByID(model.ProductGroupId ?? 0);
+                var customer = _customerRepo.GetByID(model.CustomerId ?? 0);
+                var supplier = _supplierRepo.GetByID(model.SupplierId ?? 0);
+
+                log.AppendLine($"Người tạo   : {currentUser.LoginName}");
+                log.AppendLine($"Thời gian   : {now:dd/MM/yyyy HH:mm:ss}");
+                log.AppendLine($"Ngày chứng từ: {model.Date:dd/MM/yyyy}");
+                log.AppendLine($"Ngày yêu cầu : {model.RequestDate:dd/MM/yyyy}");
+                log.AppendLine($"Kho : {wh.WarehouseCode}");
+                log.AppendLine($"Nhóm sản phẩm : {pg.ProductGroupName}");
+                log.AppendLine($"Khách hàng  : {customer.CustomerName}");
+                log.AppendLine($"Nhà cung cấp  : {supplier.NameNCC}");
+                log.AppendLine($"Người giao hàng xuất  : {model.ReciverExportText}");
+                log.AppendLine($"Người nhận hàng xuất  : {model.SenderExportText}");
+                log.AppendLine($"Người giao hàng nhập  : {model.DeliverImportText}");
+                log.AppendLine($"Người nhận hàng nhập  : {model.ReciverImportText}");
+                log.AppendLine($"Ghi chú     : {model.Note}");
+                log.AppendLine();
+
+
+                // Lấy Số thứ tự tiếp theo cho PXK
+                var lastExport = _billExportRepo
+                    .GetAll(b => b.Code != null && b.Code.StartsWith("PXK" + dateStr))
+                    .OrderByDescending(b => b.Code)
+                    .Select(b => b.Code)
+                    .FirstOrDefault();
+
+                int expSeq = 1;
+                if (lastExport != null && lastExport.Length >= 9)
+                {
+                    if (int.TryParse(lastExport.Substring(9), out int lastSeq)) expSeq = lastSeq + 1;
+                }
+                log.AppendLine($"Mã PXK: PXK{dateStr}{expSeq:D3}");
+                // Lấy Số thứ tự tiếp theo cho PNK
+                var lastImport = _billImportRepo
+                    .GetAll(b => b.BillImportCode != null && b.BillImportCode.StartsWith("PNK" + dateStr))
+                    .OrderByDescending(b => b.BillImportCode)
+                    .Select(b => b.BillImportCode)
+                    .FirstOrDefault();
+
+                int impSeq = 1;
+                if (lastImport != null && lastImport.Length >= 9)
+                {
+                    if (int.TryParse(lastImport.Substring(9), out int lastSeq)) impSeq = lastSeq + 1;
+                }
+                log.AppendLine($"Mã PNK: PNK{dateStr}{impSeq:D3}");
+                log.AppendLine();
+
+                var currentTime = DateTime.Now.TimeOfDay;
+                // 1. Tạo Phiếu Xuất
+                var billExport = new BillExport
+                {
+                    Code = $"PXK{dateStr}{expSeq:D3}",
+                    CreatDate = model.Date,
+                    RequestDate = model.RequestDate,
+                    Status = 2,
+                    IsApproved = false,
+                    WarehouseID = model.WarehouseId,
+                    KhoTypeID = model.ProductGroupId,
+                    CustomerID = model.CustomerId,
+                    SupplierID = model.SupplierId,
+                    SenderID = model.SenderExportId,
+                    UserID = model.ReciverExportId,
+                    Description = model.Note,
+                    CreatedBy = currentUser.LoginName,
+                    CreatedDate = now,
+                    IsDeleted = false,
+
+                    DeliveryTime = DateTime.Now,
+                    IsAfterHours = currentTime < TimeSpan.FromHours(8) || currentTime >= TimeSpan.FromHours(16)
+                };
+
+                await _billExportRepo.CreateAsync(billExport);
+
+                // 2. Chi tiết xuất
+                log.AppendLine("----- Chi tiết phiếu xuất -----");
+
+                // 2. Chi tiết xuất
+                int stt = 1;
+                foreach (var row in model.DataDetails)
+                {
+                    var billExportDetail = new BillExportDetail
+                    {
+                        BillID = billExport.ID,
+                        ProductID = row.ExportProductId,
+                        Qty = row.Quantity,
+                        TotalQty = row.ExportStockQty,
+                        STT = stt++,
+                        ProductFullName = row.ExportProductName,
+                        CreatedBy = currentUser.LoginName,
+                        CreatedDate = now,
+                        IsDeleted = false
+                    };
+
+                    await _billExportDetailRepo.CreateAsync(billExportDetail);
+
+                    log.AppendLine($"[{billExportDetail.STT}]" +
+                            $"Tên SP: {row.ExportProductName} | SL xuất: {row.Quantity} | ");
+
+                    if (billExportDetail.ProductID > 0)
+                    {
+                        var productSale = _productsaleRepo.GetByID((int)billExportDetail.ProductID);
+                        if (productSale != null)
+                        {
+                            productSale.IsStandardized = false;
+                            await _productsaleRepo.UpdateAsync(productSale);
+
+                            log.AppendLine($"-> Đã cập nhật trạng thái chuẩn hóa = false cho [{row.ExportProductName}]");
+                        }
+                    }
+                }
+                log.AppendLine();
+
+                // 3. Tạo Phiếu Nhập
+                var billImport = new BillImport
+                {
+                    BillImportCode = $"PNK{dateStr}{impSeq:D3}",
+                    CreatDate = model.Date,
+                    DateRequestImport = model.RequestDate,
+                    Status = false,
+                    BillTypeNew = 0,
+                    WarehouseID = model.WarehouseId,
+                    BillExportID = billExport.ID,
+                    KhoTypeID = model.ProductGroupId,
+                    SupplierID = model.SupplierId,
+                    RulePayID = model.RulePayId,
+                    DeliverID = model.DeliverImportId,
+                    ReciverID = model.ReciverImportId,
+                    CreatedBy = currentUser.LoginName,
+                    CreatedDate = now,
+                    IsDeleted = false,
+                    Deliver = model.DeliverImportText,
+                    Reciver = model.ReciverImportText,
+                    KhoType = model.ProductGroupText
+
+                };
+
+                await _billImportRepo.CreateAsync(billImport);
+
+                log.AppendLine("----- Chi tiết phiếu nhập -----");
+
+                // 4. Chi tiết nhập
+                stt = 1;
+                foreach (var row in model.DataDetails)
+                {
+                    var billImportDetail = new BillImportDetail
+                    {
+                        BillImportID = billImport.ID,
+                        ProductID = row.ImportProductId,
+                        Qty = row.Quantity,
+                        TotalQty = row.Quantity,
+                        STT = stt++,
+                        CreatedBy = currentUser.LoginName,
+                        CreatedDate = now,
+                        IsDeleted = false
+                    };
+
+                    var prd = _productsaleRepo.GetByID((int)billImportDetail.ProductID);
+
+                    await _billImportDetailRepo.CreateAsync(billImportDetail);
+
+                    if (billImportDetail.ProductID > 0)
+                    {
+                        var productSale = _productsaleRepo.GetByID((int)billImportDetail.ProductID);
+                        if (productSale != null)
+                        {
+                            productSale.IsStandardized = true;
+                            await _productsaleRepo.UpdateAsync(productSale);
+
+                            log.AppendLine($"-> Đã cập nhật trạng thái chuẩn hóa = true cho [{productSale.ProductCode}]");
+                        }
+                    }
+                }
+
+                var groupedForLog = model.DataDetails
+                    .GroupBy(x => x.ImportProductId)
+                    .Select(g => new
+                    {
+                        ProductId = g.Key,
+                        TotalQty = g.Sum(x => x.Quantity)
+                    })
+                    .ToList();
+
+                int logStt = 1;
+                foreach (var group in groupedForLog)
+                {
+                    var prd = group.ProductId.HasValue
+                        ? _productsaleRepo.GetByID((int)group.ProductId)
+                        : null;
+
+                    log.AppendLine($"[{logStt++}]" +
+                                    $"Tên SP: {prd?.ProductName ?? "(không tìm thấy)"} | " +
+                                    $"Tổng SL nhập: {group.TotalQty}");
+                }
+                log.AppendLine();
+
+                await _productSaleImportExportLogRepo.WriteLog("Tạo mới", log.ToString(), currentUser.LoginName);
+
+                return Ok(ApiResponseFactory.Success(null, $"Thành công! PXK: {billExport.Code}, PNK: {billImport.BillImportCode}"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("products-sale-approved-isfix")]
+        public async Task<IActionResult> ProductSaleApprovedIsfix([FromBody] List<ProductSale> request)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var ids = request.Select(x => x.ID).ToList();
+                var dict = request.ToDictionary(x => x.ID);
+
+                var productsales = _productsaleRepo
+                    .GetAll(x => ids.Contains(x.ID));
+
+                foreach (var item in productsales)
+                {
+                    item.IsApproved = dict[item.ID].IsApproved;
+                    item.ApprovedID = currentUser.ID;
+                }
+
+                await _productsaleRepo.UpdateRangeAsync_Binh(productsales);
+
+                return Ok(ApiResponseFactory.Success(null, "Khôi phục thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi:{ex.Message}"));
+            }
+        }
+        
+        [HttpGet("activity-log")]
+        public IActionResult getActivityLog()
+        {
+            try
+            {
+                var rs = _productSaleImportExportLogRepo.GetAll(x => x.IsDeleted != true).OrderByDescending(x=> x.CreatedDate);
+                return Ok(ApiResponseFactory.Success(rs, "Lấy dữ liệu thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
     }
 }
