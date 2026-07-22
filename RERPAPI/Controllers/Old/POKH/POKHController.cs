@@ -1,3 +1,4 @@
+using Google.Api.Gax.ResourceNames;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
@@ -29,6 +30,8 @@ namespace RERPAPI.Controllers.Old.POKH
         private readonly ProductSaleRepo _productSaleRepo;
         private readonly POKHLogRepo _pokhLogRepo;
         private readonly UserRepo _userRepo;
+        private readonly EmployeeRepo _employeeRepo;
+        private readonly EmailHelper _emailHelper;
 
         public POKHController(
             IWebHostEnvironment environment,
@@ -42,7 +45,10 @@ namespace RERPAPI.Controllers.Old.POKH
             ConfigSystemRepo configSystemRepo,
             ProductSaleRepo productSaleRepo,
             POKHLogRepo pokhLogRepo,
-            UserRepo userRepo)
+            UserRepo userRepo,
+            EmployeeRepo employeeRepo,
+            EmailHelper emailHelper
+            )
         {
             _pokhRepo = pokhRepo;
             _pokhDetailRepo = pokhDetailRepo;
@@ -55,6 +61,8 @@ namespace RERPAPI.Controllers.Old.POKH
             _productSaleRepo = productSaleRepo;
             _pokhLogRepo = pokhLogRepo;
             _userRepo = userRepo;
+            _employeeRepo = employeeRepo;
+            _emailHelper = emailHelper;
 
             //_uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "POKH");
             //if (!Directory.Exists(_uploadPath))
@@ -62,9 +70,7 @@ namespace RERPAPI.Controllers.Old.POKH
             //    Directory.CreateDirectory(_uploadPath);
             //}
         }
-
         #region Các hàm get dữ liệu
-
         [HttpGet("get-product")]
         public IActionResult loadProduct()
         {
@@ -81,7 +87,6 @@ namespace RERPAPI.Controllers.Old.POKH
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
         [HttpGet("get-pokh-kpi-detail")]
         [RequiresPermission("N27,N36,N1")]
         public IActionResult loadPOKHKpiDetail(int id)
@@ -97,7 +102,6 @@ namespace RERPAPI.Controllers.Old.POKH
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
         [HttpGet("get-detail-user")]
         public IActionResult loadDetailUser(int id, int idDetail)
         {
@@ -111,7 +115,6 @@ namespace RERPAPI.Controllers.Old.POKH
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
         [HttpGet("get-pokh")]
         [RequiresPermission("N27,N36,N1,N31")]
         public IActionResult GetPOKH(string? filterText, int page, int size, int customerId, int userId, int POType, int status, int group, DateTime startDate, DateTime endDate, int warehouseId, int employeeTeamSaleId)
@@ -198,7 +201,6 @@ namespace RERPAPI.Controllers.Old.POKH
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
         [HttpGet("get-project")]
         public IActionResult LoadProject()
         {
@@ -212,7 +214,6 @@ namespace RERPAPI.Controllers.Old.POKH
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
         [HttpGet("get-typePO")]
         public IActionResult LoadTypePO()
         {
@@ -260,11 +261,8 @@ namespace RERPAPI.Controllers.Old.POKH
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
         #endregion Các hàm get dữ liệu
-
         #region Hàm lưu dữ liệu POKH, POKHDetail, POKHDetailMoney
-
         /// <summary>
         /// Xử lý tạo mới hoặc cập nhật đơn đặt hàng POKH và các chi tiết liên quan.
         /// </summary>
@@ -278,6 +276,8 @@ namespace RERPAPI.Controllers.Old.POKH
         /// - Duyệt qua danh sách POKHDetailsMoney để xử lý tạo/cập nhật thông tin.
         /// </remarks>
         [HttpPost("handle")]
+        //[RequiresPermission("N53,N52,N1")]
+
         public async Task<IActionResult> Handle([FromBody] POKHDTO dto)
         {
             try
@@ -371,17 +371,17 @@ namespace RERPAPI.Controllers.Old.POKH
                             continue;
                         int parentId = 0;
                         var existing = _pokhDetailRepo.GetByID(idOld);
-                        var product = _productSaleRepo.GetByID(item.ProductID ?? existing.ProductID??0);
+                        var product = _productSaleRepo.GetByID(item.ProductID ?? existing.ProductID ?? 0);
 
                         if (item.IsDeleted == true && idOld > 0)
                         {
-                            if (existing.ID>0)
+                            if (existing.ID > 0)
                             {
                                 existing.IsDeleted = true;
                                 await _pokhDetailRepo.UpdateAsync(existing);
                             }
 
-                            productNameDeleted += product.ID>0 ? product.ProductName + ", " : "";
+                            productNameDeleted += product.ID > 0 ? product.ProductName + ", " : "";
                             continue;
                         }
 
@@ -439,7 +439,7 @@ namespace RERPAPI.Controllers.Old.POKH
                         }
                         else
                         {
-                            if (model.ProductID > 0 && product.ID>0)
+                            if (model.ProductID > 0 && product.ID > 0)
                             {
                                 productNameCreated += product.ProductCode + ", ";
                             }
@@ -643,7 +643,6 @@ namespace RERPAPI.Controllers.Old.POKH
         }
 
         #endregion Hàm lưu dữ liệu POKH, POKHDetail, POKHDetailMoney
-
         //Tạo POCode
         [HttpGet("generate-POcode")]
         public IActionResult GeneratePOCode(string customer, bool isCopy, int warehouseID, int pokhID)
@@ -692,7 +691,6 @@ namespace RERPAPI.Controllers.Old.POKH
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
         #endregion Lấy API lịch sử thao tác
 
         #region Hàm xử lí File và lưu bảng POKHFile
@@ -914,9 +912,7 @@ namespace RERPAPI.Controllers.Old.POKH
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
         #endregion Hàm xử lí File và lưu bảng POKHFile
-
         [HttpPost("copy-dto")]
         [RequiresPermission("N27,N36,N1,N31")]
         public async Task<IActionResult> CopyFromDTO([FromBody] POKHDTO dto)
@@ -1293,6 +1289,106 @@ namespace RERPAPI.Controllers.Old.POKH
                 }
 
                 return Ok(ApiResponseFactory.Success(result, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("send-mail-approved")]
+        public async Task<IActionResult> SendMailApproved([FromBody] List<int> productSaleIDs)
+        {
+            try
+            {
+                // Lấy danh sách người có quyền duyệt
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                string permission = "N108";
+                var param = new
+                {
+                    @UserGroupCode = permission
+                };
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetEmailByUserGroup", param);
+
+                var emailList = data as List<dynamic>;
+                var emails = emailList
+                        .Select(x => (string)x.EmailCongTy)
+                        .Where(x => !string.IsNullOrWhiteSpace(x))
+                        .Distinct()
+                        .ToList();
+
+                if (!emails.Any())
+                {
+                    return BadRequest($"Không tìm thấy email của nhóm quyền {permission}");
+                }
+
+                //string emailTo = "tuananh.ng011004@gmail.com";
+                //string emailCc = "tester01@rtc.edu.vn";
+                string emailTo = emails.First();
+                string emailCc = emails.Count > 1
+                    ? string.Join(",", emails.Skip(1))
+                    : "";
+
+                string email = _employeeRepo.GetByID(currentUser.EmployeeID)?.EmailCongTy ?? "";
+
+                var tableRows = "";
+                int stt = 1;
+
+                foreach (var productSaleID in productSaleIDs)
+                {
+                    var productSale = _productSaleRepo.GetByID(productSaleID);
+                    if (productSale == null)
+                        continue;
+
+                    tableRows += $@"
+                        <tr>
+                            <td style='border:1px solid #ddd;padding:8px;text-align:center;'>{stt++}</td>
+                            <td style='border:1px solid #ddd;padding:8px;'>{productSale.ProductNewCode}</td>
+                            <td style='border:1px solid #ddd;padding:8px;'>{productSale.ProductCode}</td>
+                            <td style='border:1px solid #ddd;padding:8px;'>{productSale.ProductName}</td>
+                        </tr>";
+                }
+
+                if (string.IsNullOrEmpty(tableRows))
+                {
+                    return BadRequest("Không có sản phẩm cần duyệt.");
+                }
+
+
+                string subject = "YÊU CẦU DUYỆT SẢN PHẨM";
+
+                string body = $@"
+                <div style='font-family: Arial, sans-serif; line-height: 1.6;'>
+                    <h2 style='color:#d9534f;'>YÊU CẦU DUYỆT SẢN PHẨM</h2>
+
+                    <p>Kính gửi Anh/Chị,</p>
+
+                    <p>Hệ thống R-ERP có danh sách sản phẩm cần xem xét và phê duyệt để thực hiện YCMH/YCBG.</p>
+
+                    <table style='border-collapse:collapse;width:100%;margin-top:15px;'>
+                        <thead>
+                            <tr style='background-color:#f2f2f2;'>
+                                <th style='border:1px solid #ddd;padding:8px;'>STT</th>
+                                <th style='border:1px solid #ddd;padding:8px;'>Mã nội bộ</th>
+                                <th style='border:1px solid #ddd;padding:8px;'>Mã sản phẩm</th>
+                                <th style='border:1px solid #ddd;padding:8px;'>Tên sản phẩm</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {tableRows}
+                        </tbody>
+                    </table>
+
+                    <br/>
+
+                    <p>Vui lòng đăng nhập hệ thống <strong>R-ERP</strong> và truy cập <strong>Sản phẩm kho Sale → Duyệt sản phẩm</strong> để thực hiện phê duyệt.</p>
+                </div>";
+
+                // Gửi mail
+                await _emailHelper.SendAsync(emailTo, subject, body, true, emailCc);
+
+                return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
             {
