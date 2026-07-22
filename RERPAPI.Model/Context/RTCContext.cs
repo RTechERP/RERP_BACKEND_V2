@@ -928,6 +928,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<ProductRTC> ProductRTCs { get; set; }
 
+    public virtual DbSet<ProductRTCFile> ProductRTCFiles { get; set; }
+
     public virtual DbSet<ProductRTCQRCode> ProductRTCQRCodes { get; set; }
 
     public virtual DbSet<ProductSale> ProductSales { get; set; }
@@ -1303,6 +1305,8 @@ public partial class RTCContext : DbContext
     public virtual DbSet<TrainingRegistrationDetail> TrainingRegistrationDetails { get; set; }
 
     public virtual DbSet<TrainingRegistrationFile> TrainingRegistrationFiles { get; set; }
+
+    public virtual DbSet<TravelRegistration> TravelRegistrations { get; set; }
 
     public virtual DbSet<UnitCount> UnitCounts { get; set; }
 
@@ -10911,6 +10915,17 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.WD).HasMaxLength(150);
         });
 
+        modelBuilder.Entity<ProductRTCFile>(entity =>
+        {
+            entity.ToTable("ProductRTCFile");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.FileName).HasMaxLength(550);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
         modelBuilder.Entity<ProductRTCQRCode>(entity =>
         {
             entity.ToTable("ProductRTCQRCode");
@@ -10949,13 +10964,12 @@ public partial class RTCContext : DbContext
             entity.HasIndex(e => e.ProductNewCode, "Index_ProductSale_ProductNewCode");
 
             entity.Property(e => e.AddressBox).HasMaxLength(150);
-            entity.Property(e => e.ApprovedID).HasDefaultValue(0);
             entity.Property(e => e.CreatedBy).HasMaxLength(50);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.Export).HasColumnType("decimal(18, 1)");
             entity.Property(e => e.FirmID).HasDefaultValue(0);
             entity.Property(e => e.Import).HasColumnType("decimal(18, 1)");
-            entity.Property(e => e.IsApproved).HasDefaultValue(true);
+            entity.Property(e => e.IsApproved).HasDefaultValue(false);
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.IsFix)
                 .HasDefaultValue(false)
@@ -15092,6 +15106,36 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.OriginPath).HasMaxLength(550);
             entity.Property(e => e.ServerPath).HasMaxLength(550);
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<TravelRegistration>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__TravelRe__3214EC27B6246792");
+
+            entity.ToTable("TravelRegistration");
+
+            entity.Property(e => e.Address).HasMaxLength(500);
+            entity.Property(e => e.CCCD).HasMaxLength(50);
+            entity.Property(e => e.CCCDIssueDate).HasColumnType("datetime");
+            entity.Property(e => e.CCCDIssuePlace).HasMaxLength(200);
+            entity.Property(e => e.ConfirmBy).HasMaxLength(50);
+            entity.Property(e => e.ConfirmDate).HasColumnType("datetime");
+            entity.Property(e => e.ConfirmStatus).HasDefaultValue(0);
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Department).HasMaxLength(200);
+            entity.Property(e => e.DepartureLocation).HasMaxLength(100);
+            entity.Property(e => e.EmployeeCode).HasMaxLength(50);
+            entity.Property(e => e.EmployeeName).HasMaxLength(200);
+            entity.Property(e => e.Gender).HasMaxLength(10);
+            entity.Property(e => e.Height).HasColumnType("decimal(5, 2)");
+            entity.Property(e => e.PhoneNumber).HasMaxLength(20);
+            entity.Property(e => e.PositionName).HasMaxLength(200);
+            entity.Property(e => e.Relationship).HasMaxLength(50);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
