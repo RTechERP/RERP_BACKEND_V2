@@ -36,6 +36,7 @@ namespace RERPAPI.Controllers.Project
         private ProjectWorkerVersionRepo _projectWorkerVersionRepo;
         private ProjectTaskWorkRepo _projectTaskWorkRepo;
         private ProjectTaskStatusRepo _projectTaskStatusRepo;
+        private ProjectGateStepLinkRepo _projectGateStepLinkRepo;
 
         public ProjectTaskController(ProjectTaskRepo projectTaskRepo,
             ProjectTaskGroupRepo groupRepo,
@@ -56,7 +57,8 @@ namespace RERPAPI.Controllers.Project
             ProjectTaskSettingRepo projectTaskSettingRepo,
             ProjectWorkerVersionRepo projectWorkerVersionRepo,
             ProjectTaskWorkRepo projectTaskWorkRepo,
-            ProjectTaskStatusRepo projectTaskStatusRepo
+            ProjectTaskStatusRepo projectTaskStatusRepo,
+            ProjectGateStepLinkRepo projectGateStepLinkRepo
             )
         {
             _projectTaskRepo = projectTaskRepo;
@@ -79,6 +81,7 @@ namespace RERPAPI.Controllers.Project
             _projectWorkerVersionRepo = projectWorkerVersionRepo;
             _projectTaskWorkRepo = projectTaskWorkRepo;
             _projectTaskStatusRepo = projectTaskStatusRepo;
+            _projectGateStepLinkRepo = projectGateStepLinkRepo;
         }
 
         public class MoveRequest
@@ -206,6 +209,21 @@ namespace RERPAPI.Controllers.Project
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, "Failed to retrieve project task."));
+            }
+        }
+
+        [HttpGet("check-is-gate-step")]
+        public async Task<IActionResult> CheckIsGateStep(int projectTaskID)
+        {
+            try
+            {
+                var exitProjectStep = _projectGateStepLinkRepo.GetAll(x => x.ProjectTaskID == projectTaskID && x.IsDeleted != true).FirstOrDefault();
+               
+                return Ok(ApiResponseFactory.Success(exitProjectStep,"Check is step thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
@@ -590,6 +608,25 @@ namespace RERPAPI.Controllers.Project
                 }
                 else
                 {
+                    // Validation: Nếu có công việc cha thì ngày dự kiến kết thúc của công việc con không được bỏ trống
+                    if (item.ParentID.HasValue && item.ParentID.Value > 0 && !item.PlanEndDate.HasValue)
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, "Nếu có công việc cha thì ngày dự kiến kết thúc của công việc con không được bỏ trống."));
+                    }
+
+                    // Validation: Ngày kết thúc dự kiến của công việc con không được vượt quá ngày kết thúc dự kiến của công việc cha
+                    if (item.ParentID.HasValue && item.ParentID.Value > 0 && item.PlanEndDate.HasValue)
+                    {
+                        var parentTask = await _projectItemRepo.GetByIDAsync(item.ParentID.Value);
+                        if (parentTask != null && parentTask.PlanEndDate.HasValue)
+                        {
+                            if (item.PlanEndDate.Value.Date > parentTask.PlanEndDate.Value.Date)
+                            {
+                                return BadRequest(ApiResponseFactory.Fail(null, $"Ngày kết thúc dự kiến của công việc con không được vượt quá ngày kết thúc dự kiến của công việc cha ({parentTask.PlanEndDate.Value:dd/MM/yyyy})."));
+                            }
+                        }
+                    }
+
                     var newProjectTask = new ProjectItem
                     {
                         ProjectID = item.ProjectID,
@@ -1433,6 +1470,43 @@ namespace RERPAPI.Controllers.Project
                 if (currentUser.EmployeeID <= 0)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Invalid user."));
+                }
+
+                // Validation: Nếu có công việc cha thì ngày dự kiến kết thúc của công việc con không được bỏ trống
+                if (projectTask.ParentID.HasValue && projectTask.ParentID.Value > 0 && !projectTask.PlanEndDate.HasValue)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng điền ngày dự kiến kết thúc của công việc !"));
+                }
+
+                // Validation: Ngày kết thúc dự kiến của công việc con không được vượt quá ngày kết thúc dự kiến của công việc cha
+                if (projectTask.ParentID.HasValue && projectTask.ParentID.Value > 0 && projectTask.PlanEndDate.HasValue)
+                {
+                    var parentTask = await _projectItemRepo.GetByIDAsync(projectTask.ParentID.Value);
+                    if (parentTask != null && parentTask.PlanEndDate.HasValue)
+                    {
+                        if (projectTask.PlanEndDate.Value.Date > parentTask.PlanEndDate.Value.Date)
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null, $"Ngày kết thúc dự kiến của công việc con không được vượt quá ngày kết thúc dự kiến của công việc cha ({parentTask.PlanEndDate.Value:dd/MM/yyyy})."));
+                        }
+                    }
+                }
+
+                // Validation: Nếu công việc sinh ra từ projectgatesteplink thì không cho phép sửa ngày kết thúc dự kiến
+                if (projectTask.ID > 0)
+                {
+                    var existingTask = await _projectItemRepo.GetByIDAsync(projectTask.ID);
+                    if (existingTask != null)
+                    {
+                        var gateStepLink = _projectGateStepLinkRepo.GetAll(x => x.ProjectTaskID == projectTask.ID && x.IsDeleted != true).FirstOrDefault();
+                        if (gateStepLink != null)
+                        {
+                            // Kiểm tra xem ngày kết thúc dự kiến có thay đổi không
+                            if (existingTask.PlanEndDate?.Date != projectTask.PlanEndDate?.Date)
+                            {
+                                return BadRequest(ApiResponseFactory.Fail(null, "Công việc sinh ra từ Project Gate Step không được phép sửa ngày kết thúc dự kiến."));
+                            }
+                        }
+                    }
                 }
 
                 if (projectTask.ID > 0)
