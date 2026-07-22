@@ -442,11 +442,11 @@ namespace RERPAPI.Controllers.Project
                     .GroupBy(w => w.ProjectGateStepLinkID)
                     .ToDictionary(g => g.Key, g => g.ToList());
 
-                // Gom checklist theo LinkID, sau đó gom file theo CheckListLinkID
+                // Gom checklist theo LinkID, sau đó gom file theo ProjectGateStepCheckListID
                 var checklistByLink = checklistFileRows
                     .GroupBy(r => r.ProjectGateStepLinkID)
                     .ToDictionary(g => g.Key, g =>
-                        g.GroupBy(r => r.CheckListLinkID)
+                        g.GroupBy(r => r.ProjectGateStepCheckListID)
                          .Select(clGroup =>
                          {
                              var first = clGroup.First();

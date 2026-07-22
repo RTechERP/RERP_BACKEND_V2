@@ -2847,6 +2847,55 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        [HttpPost("get-control-dashboard")]
+        public async Task<IActionResult> GetControlDashboard([FromBody] ProjectDashboardRequestParam param)
+        {
+            try
+            {
+                var (projects, gates, projectTypes, departments) = await SqlDapper<ProjectDashboardItemResultDto>
+                    .QueryMultipleAsync<ProjectDashboardItemResultDto, GateDistributionResultDto, ProjectTypeDistributionResultDto, DepartmentDistributionResultDto>(
+                        "spGetProjectControlDashboard",
+                        new
+                        {
+                            DateStart = param.DateStart,
+                            DateEnd = param.DateEnd,
+                            DepartmentID = param.DepartmentID,
+                            EmployeeID = param.EmployeeID,
+                            FilterText = param.FilterText ?? ""
+                        }
+                    );
+
+                var totalProjects = projects.Count;
+                var inProgressProjects = projects.Count(p => p.ProjectStatus == 1 || p.ProjectStatus == 0);
+                var completedProjects = projects.Count(p => p.ProjectStatus == 2);
+                var overdueProjects = projects.Count(p => p.IsOverdue);
+                var onTrackCount = projects.Count(p => !p.IsOverdue);
+                var delayedCount = overdueProjects;
+                var overdueList = projects.Where(p => p.IsOverdue).ToList();
+
+                var result = new
+                {
+                    totalProjects,
+                    inProgressProjects,
+                    completedProjects,
+                    overdueProjects,
+                    gateDistributions = gates,
+                    projectTypeDistributions = projectTypes,
+                    departmentDistributions = departments,
+                    onTrackCount,
+                    delayedCount,
+                    projectList = projects,
+                    overdueList
+                };
+
+                return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu dashboard thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 
     #endregion
