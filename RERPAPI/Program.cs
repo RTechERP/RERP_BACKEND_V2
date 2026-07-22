@@ -878,6 +878,7 @@ builder.Services.AddAuthentication();
 var smtpSettings = builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.Configure<SmtpSettingsHr>(builder.Configuration.GetSection("SmtpSettingsHr"));
 builder.Services.Configure<SmtpSettingsHrm>(builder.Configuration.GetSection("SmtpSettingsHrm"));
+builder.Services.Configure<SalaryIncreaseMailSettings>(builder.Configuration.GetSection("SalaryIncreaseMailSettings"));
 
 //Get list static file
 builder.Services.Configure<List<PathStaticFile>>(builder.Configuration.GetSection("PathStaticFiles"));
