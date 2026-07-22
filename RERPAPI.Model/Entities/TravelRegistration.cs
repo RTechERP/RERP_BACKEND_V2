@@ -68,5 +68,4 @@ public partial class TravelRegistration
 
     public int OwnerEmployeeID { get; set; }
 
-    public int? ConfirmStatus { get; set; }
 }

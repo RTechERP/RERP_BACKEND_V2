@@ -1374,7 +1374,6 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<v_HistoryMoney_POKH> v_HistoryMoney_POKHs { get; set; }
         
-    public virtual DbSet<TravelRegistration> TravelRegistrations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -15128,7 +15127,6 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CCCDIssuePlace).HasMaxLength(200);
             entity.Property(e => e.ConfirmBy).HasMaxLength(50);
             entity.Property(e => e.ConfirmDate).HasColumnType("datetime");
-            entity.Property(e => e.ConfirmStatus).HasDefaultValue(0);
             entity.Property(e => e.CreatedBy).HasMaxLength(50);
             entity.Property(e => e.CreatedDate)
                 .HasDefaultValueSql("(getdate())")
