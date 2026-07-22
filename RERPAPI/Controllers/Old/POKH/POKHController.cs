@@ -1301,8 +1301,8 @@ namespace RERPAPI.Controllers.Old.POKH
         {
             try
             {
-                // Lấy danh sách người có quyền duyệt
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                //Lấy danh sách người có quyền duyệt
+               var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 string permission = "N108";
                 var param = new
@@ -1323,14 +1323,10 @@ namespace RERPAPI.Controllers.Old.POKH
                     return BadRequest($"Không tìm thấy email của nhóm quyền {permission}");
                 }
 
-                //string emailTo = "tuananh.ng011004@gmail.com";
-                //string emailCc = "tester01@rtc.edu.vn";
-                string emailTo = emails.First();
+                string emailTo = _employeeRepo.GetByID(currentUser.EmployeeID)?.EmailCongTy ?? "";
                 string emailCc = emails.Count > 1
-                    ? string.Join(",", emails.Skip(1))
+                    ? string.Join(",", emails)
                     : "";
-
-                string email = _employeeRepo.GetByID(currentUser.EmployeeID)?.EmailCongTy ?? "";
 
                 var tableRows = "";
                 int stt = 1;
@@ -1364,7 +1360,7 @@ namespace RERPAPI.Controllers.Old.POKH
 
                     <p>Kính gửi Anh/Chị,</p>
 
-                    <p>Hệ thống R-ERP có danh sách sản phẩm cần xem xét và phê duyệt để thực hiện YCMH/YCBG.</p>
+                    <p>Nhân viên {currentUser.FullName} có danh sách sản phẩm cần xem xét và phê duyệt để thực hiện YCMH/YCBG từ POKH.</p>
 
                     <table style='border-collapse:collapse;width:100%;margin-top:15px;'>
                         <thead>
@@ -1382,17 +1378,61 @@ namespace RERPAPI.Controllers.Old.POKH
 
                     <br/>
 
-                    <p>Vui lòng đăng nhập hệ thống <strong>R-ERP</strong> và truy cập <strong>Sản phẩm kho Sale → Duyệt sản phẩm</strong> để thực hiện phê duyệt.</p>
+                    <p>
+                        Vui lòng đăng nhập hệ thống <strong>R-ERP</strong> và truy cập
+                        <strong>Kho → Sản phẩm kho Sale → TBP duyệt</strong>
+                        để thực hiện phê duyệt.
+                        <a href='https://erp.rtc.edu.vn/rerpweb/product-sale'
+                           target='_blank'>
+                            Truy cập ngay!
+                        </a>.
+                    </p>
                 </div>";
 
                 // Gửi mail
                 await _emailHelper.SendAsync(emailTo, subject, body, true, emailCc);
 
-                return Ok(ApiResponseFactory.Success(data, ""));
+                return Ok(ApiResponseFactory.Success(null, ""));
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("infor-user-approved")]
+        public async Task<IActionResult> inforUserApproved()
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                string permission = "N108";
+                var param = new
+                {
+                    @UserGroupCode = permission
+                };
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetEmailByUserGroup", param);
+
+                var empList = data as List<dynamic>;
+
+                var approvers = empList
+                    .Where(x => x.ID != 54 &&
+                                !string.IsNullOrWhiteSpace((string)x.EmailCongTy))
+                    .Select(x => new
+                    {
+                        Name = (string)x.FullName,
+                        Email = (string)x.EmailCongTy
+                    })
+                    .Distinct()
+                    .ToList();
+
+                var approverNames = approvers.Select(x => x.Name).ToList();
+                return Ok(ApiResponseFactory.Success(approverNames, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi tải file: {ex.Message}"));
             }
         }
 
