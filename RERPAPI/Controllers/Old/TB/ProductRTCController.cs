@@ -24,16 +24,18 @@ namespace RERPAPI.Controllers.Old.TB
         private readonly InventoryDemoRepo _inventoryDemoRepo;
         private readonly UnitCountKTRepo _unitCountKTRepo;
         private readonly ProductGroupRTCLinkRepo _productGroupRTCLinkRepo;
+        private readonly ProductRTCFileRepo _productRTCFileRepo;
 
         public ProductRTCController(
             ProductGroupRTCRepo productGroupRTCRepo,
             ProductRTCRepo productRTCRepo,
             ProductLocationRepo productLocationRepo,
-            ConfigSystemRepo configSystemRepo, 
-            FirmRepo firmRepo, 
-            InventoryDemoRepo inventoryDemoRepo, 
+            ConfigSystemRepo configSystemRepo,
+            FirmRepo firmRepo,
+            InventoryDemoRepo inventoryDemoRepo,
             UnitCountKTRepo unitCountKTRepo,
-            ProductGroupRTCLinkRepo productGroupRTCLinkRepo
+            ProductGroupRTCLinkRepo productGroupRTCLinkRepo,
+            ProductRTCFileRepo productRTCFileRepo
             )
         {
             _productGroupRTCRepo = productGroupRTCRepo;
@@ -44,6 +46,7 @@ namespace RERPAPI.Controllers.Old.TB
             _inventoryDemoRepo = inventoryDemoRepo;
             _unitCountKTRepo = unitCountKTRepo;
             _productGroupRTCLinkRepo = productGroupRTCLinkRepo;
+            _productRTCFileRepo = productRTCFileRepo;
         }
 
         [HttpPost("get-productRTC")]
@@ -524,12 +527,15 @@ namespace RERPAPI.Controllers.Old.TB
                                 await _productRTCRepo.CreateAsync(item);
                             }
                             else
+                            {
+                                item.Number = item.NumberInStore;
                                 await _productRTCRepo.UpdateAsync(item);
+                            }
                         }
                     }
                 }
 
-                return Ok(ApiResponseFactory.Success(null, "Lưu dữ liệu thành công."));
+                return Ok(ApiResponseFactory.Success(new { productRTCs = product.productRTCs }, "Lưu dữ liệu thành công."));
             }
             catch (Exception ex)
             {
@@ -612,6 +618,71 @@ namespace RERPAPI.Controllers.Old.TB
         //    }
 
         //}
+        [HttpGet("get-files")]
+        public IActionResult GetFiles(int productRTCID)
+        {
+            try
+            {
+                var files = _productRTCFileRepo.GetAll(x => x.ProductRTCID == productRTCID && x.IsDeleted != true);
+                return Ok(ApiResponseFactory.Success(files, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("save-files")]
+        public async Task<IActionResult> SaveFiles([FromBody] List<ProductRTCFile> files)
+        {
+            try
+            {
+                if (files == null || !files.Any())
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không có file để lưu."));
+                }
+
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                foreach (var file in files)
+                {
+                    file.CreatedBy = currentUser.FullName;
+                    file.CreatedDate = DateTime.Now;
+                    await _productRTCFileRepo.CreateAsync(file);
+                }
+
+                return Ok(ApiResponseFactory.Success(files, "Lưu file thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("delete-file")]
+        public async Task<IActionResult> DeleteFile(int id)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                await _productRTCFileRepo.UpdateAsync(new ProductRTCFile
+                {
+                    ID = id,
+                    IsDeleted = true,
+                    UpdatedBy = currentUser.FullName,
+                    UpdatedDate = DateTime.Now
+                });
+                return Ok(ApiResponseFactory.Success(null, "Xóa file thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpPost("update-location")]
         public async Task<IActionResult> UpdateLocation(int id, int locationID)
         {
