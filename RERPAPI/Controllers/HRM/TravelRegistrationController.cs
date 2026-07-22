@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -11,6 +12,7 @@ namespace RERPAPI.Controllers.HRM
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     //[Authorize]
     public class TravelRegistrationController : ControllerBase
     {
@@ -21,7 +23,7 @@ namespace RERPAPI.Controllers.HRM
             _currentUser = currentUser;
             _travelRegistrationRepo = travelRegistrationRepo;
         }
-
+        [RequiresPermission("N34,N2")]
         [HttpGet("get-all")]
         public async Task<IActionResult> GetAll()
         {
@@ -35,6 +37,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [RequiresPermission("N34,N2")]
         [HttpGet("get-by-id")]
         public async Task<IActionResult> GetByID(int ID)
         {
@@ -48,7 +51,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N34,N2")]
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] TravelRegistration obj)
         {
@@ -64,7 +67,7 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
+        [RequiresPermission("N34,N2")]
         [HttpGet("delete-by-id")]
         public async Task<IActionResult> DeleteByID(int ID)
         {
@@ -109,10 +112,14 @@ namespace RERPAPI.Controllers.HRM
         }
 
         [HttpGet("get-by-employee")]
-        public IActionResult GetByEmployee(int employeeId)
+        public IActionResult GetByEmployee()
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                int employeeId = currentUser.EmployeeID;
+
                 var data = _travelRegistrationRepo
                     .GetAll(x => x.OwnerEmployeeID == employeeId
                             && !x.IsDeleted)
