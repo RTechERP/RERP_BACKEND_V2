@@ -1373,9 +1373,16 @@ public partial class RTCContext : DbContext
     public virtual DbSet<vUserGroupLink> vUserGroupLinks { get; set; }
 
     public virtual DbSet<v_HistoryMoney_POKH> v_HistoryMoney_POKHs { get; set; }
+        
+    public virtual DbSet<TravelRegistration> TravelRegistrations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<TravelRegistration>(entity =>
+        {
+            entity.ToTable("TravelRegistration");
+        });
+
         modelBuilder.Entity<AGVBillDocumentExport>(entity =>
         {
             entity.ToTable("AGVBillDocumentExport", "agv");

@@ -737,6 +737,8 @@ builder.Services.AddScoped<HotelBookingProposalRepo>();
 builder.Services.AddScoped<HotelBookingEmployeeRepo>();
 builder.Services.AddScoped<SalaryIncreaseRepo>();
 builder.Services.AddScoped<SalaryIncreaseDetailRepo>();
+builder.Services.AddScoped<HotelBookingEmployeeRepo>();
+builder.Services.AddScoped<TravelRegistrationRepo>();
 #region DI LOG
 
 builder.Services.AddScoped<POKHLogRepo>();
