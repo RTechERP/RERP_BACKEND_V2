@@ -27,6 +27,7 @@ namespace RERPAPI.Model.DTO
         public string? ApprovalComment { get; set; }
         public int? ProjectGateStepTemplateID { get; set; }
         public int? DepartmentID { get; set; }
+        public int? ProjectTaskID { get; set; }
     }
 
     public class ProjectGateStepCheckListLinkDto

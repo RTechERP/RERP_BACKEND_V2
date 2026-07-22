@@ -494,6 +494,7 @@ namespace RERPAPI.Controllers.Project
                     ApprovalComment = l.ApprovalComment,
                     ProjectGateStepTemplateID = l.ProjectGateStepTemplateID,
                     DepartmentID = l.DepartmentID,
+                    ProjectTaskID = l.ProjectTaskID,
                     Workers = workerGroups.TryGetValue(l.ID, out var wList)
                         ? wList.Select(w => new ProjectGateStepWorkerDto
                         {
@@ -778,6 +779,21 @@ namespace RERPAPI.Controllers.Project
             if (newDetails.Any())
             {
                 await _stepCheckListDetailLinkRepo.CreateRangeAsync(newDetails);
+            }
+        }
+
+        [HttpGet("GetProjectItemParentChild/{projectTaskId}")]
+        public async Task<IActionResult> GetProjectItemParentChild(int projectTaskId)
+        {
+            try
+            {
+                var param = new { ProjectTaskID = projectTaskId };
+                var list = await SqlDapper<object>.ProcedureToListTAsync("spGetProjectItemParentChild", param);
+                return Ok(ApiResponseFactory.Success(list));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
     }
