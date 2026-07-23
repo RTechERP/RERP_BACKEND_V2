@@ -122,10 +122,33 @@ namespace RERPAPI.Controllers.HRM
 
                 var data = _travelRegistrationRepo
                     .GetAll(x => x.OwnerEmployeeID == employeeId
+                            && x.IsPublish == true  
                             && !x.IsDeleted)
                     .OrderBy(x => x.Relationship);
 
                 return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [RequiresPermission("N34,N2")]
+        [HttpGet("update-publish")]
+        public async Task<IActionResult> UpdatePublish(bool isPublish)
+        {
+            try
+            {
+                var list = _travelRegistrationRepo.GetAll(x => !x.IsDeleted).ToList();
+                foreach (var item in list)
+                {
+                    item.IsPublish = isPublish;
+                    item.UpdatedBy = _currentUser.FullName;
+                    item.UpdatedDate = DateTime.Now;
+                }
+                await _travelRegistrationRepo.UpdateRangeAsync(list);
+                return Ok(ApiResponseFactory.Success(1, "Cập nhật công bố thành công"));
             }
             catch (Exception ex)
             {
