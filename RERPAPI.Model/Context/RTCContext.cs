@@ -1373,15 +1373,9 @@ public partial class RTCContext : DbContext
     public virtual DbSet<vUserGroupLink> vUserGroupLinks { get; set; }
 
     public virtual DbSet<v_HistoryMoney_POKH> v_HistoryMoney_POKHs { get; set; }
-        
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<TravelRegistration>(entity =>
-        {
-            entity.ToTable("TravelRegistration");
-        });
-
         modelBuilder.Entity<AGVBillDocumentExport>(entity =>
         {
             entity.ToTable("AGVBillDocumentExport", "agv");
@@ -15127,6 +15121,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CCCDIssuePlace).HasMaxLength(200);
             entity.Property(e => e.ConfirmBy).HasMaxLength(50);
             entity.Property(e => e.ConfirmDate).HasColumnType("datetime");
+            entity.Property(e => e.ConfirmStatus).HasDefaultValue(0);
             entity.Property(e => e.CreatedBy).HasMaxLength(50);
             entity.Property(e => e.CreatedDate)
                 .HasDefaultValueSql("(getdate())")
@@ -15137,6 +15132,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.EmployeeName).HasMaxLength(200);
             entity.Property(e => e.Gender).HasMaxLength(10);
             entity.Property(e => e.Height).HasColumnType("decimal(5, 2)");
+            entity.Property(e => e.IsPublish).HasDefaultValue(false);
             entity.Property(e => e.PhoneNumber).HasMaxLength(20);
             entity.Property(e => e.PositionName).HasMaxLength(200);
             entity.Property(e => e.Relationship).HasMaxLength(50);
