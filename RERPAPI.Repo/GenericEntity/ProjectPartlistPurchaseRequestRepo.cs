@@ -482,47 +482,78 @@ namespace RERPAPI.Repo.GenericEntity
             return item;
         }
 
+        //public string GenerateProductNewCode(int productGroupId)
+        //{
+        //    string newCodeRTC = "";
+        //    if (productGroupId <= 0) return newCodeRTC;
+
+        //    var ds = SQLHelper<object>.ProcedureToList("spLoadNewCodeRTC", new string[] { "@Group" }, new object[] { productGroupId });
+        //    var ds0 = SQLHelper<object>.GetListData(ds, 0);
+        //    var ds1 = SQLHelper<object>.GetListData(ds, 1);
+        //    string code = "";
+        //    string codeRTC = ds1.Count() > 0 ? ds1[0].ProductGroupID : "";
+
+        //    if (ds0.Count() == 0)
+        //    {
+        //        newCodeRTC = codeRTC + "000000001";
+        //    }
+        //    else
+        //    {
+        //        if (!codeRTC.Contains("HCM"))
+        //        {
+        //            code = (string)(ds0[0].ProductNewCode).Replace(codeRTC, "");
+        //            int stt = Convert.ToInt32(code) + 1;
+        //            for (int i = 0; codeRTC.Length < (9 - stt.ToString().Length); i++)
+        //            {
+        //                codeRTC = codeRTC + "0";
+        //            }
+        //            newCodeRTC = codeRTC + stt.ToString();
+        //        }
+        //        else
+        //        {
+        //            code = (string)(ds0[0].ProductNewCode).Replace(codeRTC, "");
+        //            int stt = Convert.ToInt32(code) + 1;
+        //            string indexString = Convert.ToString(stt);
+        //            for (int i = 0; indexString.Length < code.Length; i++)
+        //            {
+        //                indexString = "0" + indexString;
+        //            }
+        //            newCodeRTC = codeRTC + indexString.ToString();
+        //        }
+        //    }
+
+        //    return newCodeRTC;
+        //}
+
         public string GenerateProductNewCode(int productGroupId)
         {
-            string newCodeRTC = "";
-            if (productGroupId <= 0) return newCodeRTC;
+            if (productGroupId <= 0)
+                return "";
 
-            var ds = SQLHelper<object>.ProcedureToList("spLoadNewCodeRTC", new string[] { "@Group" }, new object[] { productGroupId });
+            var group = _productgroupRepo.GetByID(productGroupId);
+            if (group == null)
+                return "";
+
+            string groupCode = group.ProductGroupID.Trim();
+
+            var ds = SQLHelper<object>.ProcedureToList(
+                "spLoadNewCodeRTC",
+                new[] { "@GroupCode" },
+                new object[] { groupCode });
+
             var ds0 = SQLHelper<object>.GetListData(ds, 0);
-            var ds1 = SQLHelper<object>.GetListData(ds, 1);
-            string code = "";
-            string codeRTC = ds1.Count() > 0 ? ds1[0].ProductGroupID : "";
 
-            if (ds0.Count() == 0)
+            int nextNumber = 1;
+
+            if (ds0.Any())
             {
-                newCodeRTC = codeRTC + "000000001";
-            }
-            else
-            {
-                if (!codeRTC.Contains("HCM"))
-                {
-                    code = (string)(ds0[0].ProductNewCode).Replace(codeRTC, "");
-                    int stt = Convert.ToInt32(code) + 1;
-                    for (int i = 0; codeRTC.Length < (9 - stt.ToString().Length); i++)
-                    {
-                        codeRTC = codeRTC + "0";
-                    }
-                    newCodeRTC = codeRTC + stt.ToString();
-                }
-                else
-                {
-                    code = (string)(ds0[0].ProductNewCode).Replace(codeRTC, "");
-                    int stt = Convert.ToInt32(code) + 1;
-                    string indexString = Convert.ToString(stt);
-                    for (int i = 0; indexString.Length < code.Length; i++)
-                    {
-                        indexString = "0" + indexString;
-                    }
-                    newCodeRTC = codeRTC + indexString.ToString();
-                }
+                string lastCode = ds0[0].ProductNewCode;
+                string numberPart = lastCode.Substring(groupCode.Length);
+
+                nextNumber = Convert.ToInt32(numberPart) + 1;
             }
 
-            return newCodeRTC;
+            return groupCode + nextNumber.ToString().PadLeft(9 - groupCode.Length, '0');
         }
 
         //public bool ValidateSaveDataDetail(ProjectPartlistPurchaseRequestDTO request, out string message)
