@@ -2,12 +2,14 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using NPOI.SS.Formula.Functions;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.AddNewBillExport;
+using System.Linq;
 using System.Text;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -32,6 +34,10 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         private readonly ProductGroupRepo _productGroupRepo;
         private readonly CustomerRepo _customerRepo;
         private readonly SupplierSaleRepo _supplierRepo;
+        private readonly POKHRepo _pokhRepo;
+        private readonly POKHDetailRepo _pokhDetailRepo;
+        private readonly EmployeeRepo _employeeRepo;
+        private readonly EmailHelper _emailHelper;
 
 
         public ProductSaleController(
@@ -48,7 +54,11 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             WarehouseRepo warehouseRepo,
             ProductGroupRepo productGroupRepo,
             CustomerRepo customerRepo,
-            SupplierSaleRepo supplierRepo
+            SupplierSaleRepo supplierRepo,
+            POKHRepo pokhRepo,
+            POKHDetailRepo pokhDetailRepo,
+            EmployeeRepo employeeRepo,
+            EmailHelper emailHelper
             )
         {
             _productgroupRepo = productgroupRepo;
@@ -65,6 +75,10 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             _productGroupRepo = productGroupRepo;
             _customerRepo = customerRepo;
             _supplierRepo = supplierRepo;
+            _pokhRepo = pokhRepo;
+            _pokhDetailRepo = pokhDetailRepo;
+            _employeeRepo = employeeRepo;
+            _emailHelper = emailHelper;
         }
 
         //api ngày 12/06/2025
@@ -174,47 +188,89 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         //    return productGroupCode + numberCodeText;
         //}
 
+        //private string GenerateProductNewCode(int productGroupId)
+        //{
+        //    // 1️⃣ Lấy nhóm hiện tại
+        //    var currentGroup = _productgroupRepo.GetByID(productGroupId);
+        //    if (currentGroup == null)
+        //        return string.Empty;
+
+        //    // 2️⃣ Xác định nhóm CHA
+        //    var parentGroup = currentGroup.ParentID > 0
+        //        ? _productgroupRepo.GetByID(currentGroup.ParentID.Value)
+        //        : currentGroup;
+
+        //    if (parentGroup == null || string.IsNullOrWhiteSpace(parentGroup.ProductGroupID))
+        //        return string.Empty;
+
+        //    string parentGroupCode = parentGroup.ProductGroupID.Trim();
+
+        //    // 3️⃣ Lấy danh sách ID nhóm con (bao gồm cha)
+        //    var groupIds = _productgroupRepo
+        //        .GetAll(x => x.ID == parentGroup.ID || x.ParentID == parentGroup.ID)
+        //        .Select(x => x.ID)
+        //        .ToList();
+
+        //    // 4️⃣ Lấy toàn bộ sản phẩm thuộc nhóm cha + con
+        //    var listProducts = _productsaleRepo.GetAll(x =>
+        //        x.ProductGroupID != null &&
+        //        !string.IsNullOrWhiteSpace(x.ProductNewCode) &&
+        //        x.ProductNewCode.StartsWith(parentGroupCode) &&
+        //        x.IsDeleted == false
+        //    ).ToList();
+
+        //    // 2️⃣ Lọc tiếp trong memory
+        //    //var listProducts = products
+        //    //    .Where(x => groupIds.Contains(x.ProductGroupID!.Value))
+        //    //    .ToList();
+
+        //    // 5️⃣ Tính STT lớn nhất
+        //    int maxSTT = listProducts
+        //        .Select(x =>
+        //        {
+        //            var numberPart = x.ProductNewCode.Substring(parentGroupCode.Length);
+        //            return int.TryParse(numberPart, out int num) ? num : 0;
+        //        })
+        //        .DefaultIfEmpty(0)
+        //        .Max();
+
+        //    int nextSTT = maxSTT + 1;
+
+        //    // 6️ Format số (đủ 9 ký tự)
+        //    string numberCodeText = nextSTT
+        //        .ToString()
+        //        .PadLeft(9 - parentGroupCode.Length, '0');
+
+        //    return parentGroupCode + numberCodeText;
+        //}
+
         private string GenerateProductNewCode(int productGroupId)
         {
-            // 1️⃣ Lấy nhóm hiện tại
             var currentGroup = _productgroupRepo.GetByID(productGroupId);
             if (currentGroup == null)
                 return string.Empty;
 
-            // 2️⃣ Xác định nhóm CHA
-            var parentGroup = currentGroup.ParentID > 0
-                ? _productgroupRepo.GetByID(currentGroup.ParentID.Value)
-                : currentGroup;
+            string groupCode = currentGroup.ProductGroupID.Trim();
 
-            if (parentGroup == null || string.IsNullOrWhiteSpace(parentGroup.ProductGroupID))
-                return string.Empty;
-
-            string parentGroupCode = parentGroup.ProductGroupID.Trim();
-
-            // 3️⃣ Lấy danh sách ID nhóm con (bao gồm cha)
             var groupIds = _productgroupRepo
-                .GetAll(x => x.ID == parentGroup.ID || x.ParentID == parentGroup.ID)
+                .GetAll(x => x.ProductGroupID == groupCode)
                 .Select(x => x.ID)
                 .ToList();
 
-            // 4️⃣ Lấy toàn bộ sản phẩm thuộc nhóm cha + con
-            var listProducts = _productsaleRepo.GetAll(x =>
-                x.ProductGroupID != null &&
-                !string.IsNullOrWhiteSpace(x.ProductNewCode) &&
-                x.ProductNewCode.StartsWith(parentGroupCode) &&
-                x.IsDeleted == false
-            ).ToList();
+            var products = _productsaleRepo.GetAll(x =>
+                    x.ProductGroupID != null &&
+                    !string.IsNullOrWhiteSpace(x.ProductNewCode) &&
+                    x.ProductNewCode.StartsWith(groupCode)
+                ).ToList();
 
-            // 2️⃣ Lọc tiếp trong memory
-            //var listProducts = products
-            //    .Where(x => groupIds.Contains(x.ProductGroupID!.Value))
-            //    .ToList();
+            var listProducts = products
+                .Where(x => groupIds.Contains(x.ProductGroupID!.Value))
+                .ToList();
 
-            // 5️⃣ Tính STT lớn nhất
             int maxSTT = listProducts
                 .Select(x =>
                 {
-                    var numberPart = x.ProductNewCode.Substring(parentGroupCode.Length);
+                    var numberPart = x.ProductNewCode.Substring(groupCode.Length);
                     return int.TryParse(numberPart, out int num) ? num : 0;
                 })
                 .DefaultIfEmpty(0)
@@ -222,12 +278,11 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
             int nextSTT = maxSTT + 1;
 
-            // 6️ Format số (đủ 9 ký tự)
             string numberCodeText = nextSTT
                 .ToString()
-                .PadLeft(9 - parentGroupCode.Length, '0');
+                .PadLeft(9 - groupCode.Length, '0');
 
-            return parentGroupCode + numberCodeText;
+            return groupCode + numberCodeText;
         }
 
         #endregion hàm sinh mã nội bộ (productnewcode)
@@ -789,33 +844,189 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
 
                 var ids = request.Select(x => x.ID).ToList();
-                var dict = request.ToDictionary(x => x.ID);
+                var requestDict = request.ToDictionary(x => x.ID);
 
-                var productsales = _productsaleRepo
-                    .GetAll(x => ids.Contains(x.ID));
+                //Lấy sản phẩm
+                var productSales = _productsaleRepo
+                    .GetAll(x => ids.Contains(x.ID))
+                    .ToList();
 
-                foreach (var item in productsales)
+                //Lấy danh sách employee cần CC
+                var employeeIds = productSales
+                    .Where(x => x.EmployeeRequestApprovedID > 0)
+                    .Select(x => x.EmployeeRequestApprovedID.Value)
+                    .Distinct()
+                    .ToList();
+
+                var employeeDict = _employeeRepo
+                    .GetAll(x => employeeIds.Contains(x.ID))
+                    .ToDictionary(x => x.ID, x => x.EmailCongTy);
+
+                //Lấy POKHDetail
+                var pokhDetails = _pokhDetailRepo
+                    .GetAll(x => ids.Contains((int)x.ProductID))
+                    .ToList();
+
+                //Group theo Product
+                var productPokhGroup = pokhDetails
+                    .GroupBy(x => x.ProductID)
+                    .ToDictionary(x => x.Key, x => x.ToList());
+
+                //Lấy POKH
+                var pokhIds = pokhDetails
+                    .Select(x => x.POKHID)
+                    .Distinct()
+                    .ToList();
+
+                var pokhDict = _pokhRepo
+                    .GetAll(x => pokhIds.Contains(x.ID))
+                    .ToDictionary(x => x.ID, x => x.POCode);
+
+                var emailCC = new HashSet<string>();
+
+                var tableRows = new StringBuilder();
+
+                int stt = 1;
+
+                foreach (var item in productSales)
                 {
-                    item.IsApproved = dict[item.ID].IsApproved;
-                    item.ApprovedID = currentUser.ID;
+                    item.IsApproved = requestDict[item.ID].IsApproved;
+                    item.ApprovedID = currentUser.EmployeeID;
+
+                    if (item.IsApproved != true)
+                        continue;
+
+                    //Email người yêu cầu
+                    if (item.EmployeeRequestApprovedID > 0 &&
+                        employeeDict.TryGetValue(item.EmployeeRequestApprovedID.Value, out var email) &&
+                        !string.IsNullOrWhiteSpace(email))
+                    {
+                        emailCC.Add(email);
+                    }
+
+                    //PO liên quan
+                    string poCodes = "";
+
+                    if (productPokhGroup.TryGetValue(item.ID, out var details))
+                    {
+                        poCodes = string.Join(", ",
+                            details
+                                .Select(x => pokhDict.TryGetValue((int)x.POKHID, out var code) ? code : "")
+                                .Where(x => !string.IsNullOrWhiteSpace(x))
+                                .Distinct());   
+                    }
+
+                    tableRows.Append($@"
+                            <tr>
+                                <td style='border:1px solid #ddd;padding:8px;text-align:center;'>{stt++}</td>
+                                <td style='border:1px solid #ddd;padding:8px;'>{poCodes}</td>
+                                <td style='border:1px solid #ddd;padding:8px;'>{item.ProductNewCode}</td>
+                                <td style='border:1px solid #ddd;padding:8px;'>{item.ProductCode}</td>
+                                <td style='border:1px solid #ddd;padding:8px;'>{item.ProductName}</td>
+                            </tr>");
                 }
 
-                await _productsaleRepo.UpdateRangeAsync_Binh(productsales);
+                //Update một lần
+                await _productsaleRepo.UpdateRangeAsync_Binh(productSales);
 
-                return Ok(ApiResponseFactory.Success(null, "Khôi phục thành công!"));
+                //Không có sản phẩm duyệt thì kết thúc
+                if (tableRows.Length == 0)
+                {
+                    return Ok(ApiResponseFactory.Success(null, ""));
+                }
+
+                string permission = "N108";
+
+                var data = await SqlDapper<object>.ProcedureToListAsync(
+                    "spGetEmailByUserGroup",
+                    new
+                    {
+                        UserGroupCode = permission
+                    });
+
+                var emailList = data as List<dynamic>;
+
+                var emails = emailList
+                    .Select(x => (string)x.EmailCongTy)
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Distinct()
+                    .ToList();
+
+                if (!emails.Any())
+                {
+                    return Ok(ApiResponseFactory.Success(null, $"Không tìm thấy email nhóm quyền {permission}"));
+                }
+
+                string emailTo = emails.First();
+
+                string emailCc = string.Join(",",
+                    emails
+                        .Skip(1)
+                        .Concat(emailCC)
+                        .Where(x => !string.IsNullOrWhiteSpace(x))
+                        .Distinct());
+
+                //string emailTo = "tester01@rtc.edu.vn";
+                //string emailCc = "tech62@rtc.edu.vn";
+
+                string department = string.IsNullOrWhiteSpace(currentUser.DepartmentName)
+                    ? ""
+                    : $" - phòng {currentUser.DepartmentName}";
+
+                string subject = "THÔNG BÁO SẢN PHẨM ĐÃ ĐƯỢC DUYỆT";
+
+                string body = $@"
+                    <div style='font-family:Arial,sans-serif;line-height:1.6'>
+                        <h2 style='color:#28a745'>THÔNG BÁO SẢN PHẨM ĐÃ ĐƯỢC DUYỆT</h2>
+
+                        <p>Kính gửi Anh/Chị,</p>
+
+                        <p>
+                            Các sản phẩm thêm mới đã được duyệt và có thể ycbg/ycmh từ POKH. Vui lòng xem chi tiết thông tin sản phẩm bảng bên dưới
+                        </p>
+
+                        <table style='border-collapse:collapse;width:100%;margin-top:15px'>
+                            <thead>
+                                <tr style='background:#f2f2f2'>
+                                    <th style='border:1px solid #ddd;padding:8px'>STT</th>
+                                    <th style='border:1px solid #ddd;padding:8px'>POKH liên quan</th>
+                                    <th style='border:1px solid #ddd;padding:8px'>Mã nội bộ</th>
+                                    <th style='border:1px solid #ddd;padding:8px'>Mã sản phẩm</th>
+                                    <th style='border:1px solid #ddd;padding:8px'>Tên sản phẩm</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {tableRows}
+                            </tbody>
+                        </table>
+
+                        <br/>
+
+                        <p>
+                            Vui lòng đăng nhập hệ thống <strong>R-ERP</strong> để tiếp tục thực hiện YCMH/YCBG.
+                            <a href='https://erp.rtc.edu.vn/rerpweb/pokh-hn?warehouseId=1'
+                               target='_blank'>
+                                Truy cập ngay!
+                            </a>.
+                        </p>
+                    </div>";
+
+                await _emailHelper.SendAsync(emailTo,subject,body,true,emailCc);
+
+                return Ok(ApiResponseFactory.Success(null, ""));
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi:{ex.Message}"));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        
+
         [HttpGet("activity-log")]
         public IActionResult getActivityLog()
         {
             try
             {
-                var rs = _productSaleImportExportLogRepo.GetAll(x => x.IsDeleted != true).OrderByDescending(x=> x.CreatedDate);
+                var rs = _productSaleImportExportLogRepo.GetAll(x => x.IsDeleted != true).OrderByDescending(x => x.CreatedDate);
                 return Ok(ApiResponseFactory.Success(rs, "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)

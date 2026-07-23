@@ -409,8 +409,8 @@ namespace RERPAPI.Controllers.Old.POKH
                         model.KHID = item.KHID ?? 0;
                         model.GuestCode = item.GuestCode;
                         model.Qty = item.Qty ?? 0;
-                        model.DiscountAmount = item.DiscountAmount ?? 0;
-                        model.IntoMoneyAfterDiscount = item.IntoMoneyAfterDiscount ?? 0;
+                        //model.DiscountAmount = item.DiscountAmount ?? 0;
+                        //model.IntoMoneyAfterDiscount = item.IntoMoneyAfterDiscount ?? 0;
                         model.FilmSize = item.FilmSize;
                         model.UnitPrice = item.UnitPrice ?? 0;
                         model.IntoMoney = item.IntoMoney ?? 0;
@@ -968,8 +968,8 @@ namespace RERPAPI.Controllers.Old.POKH
                         KHID = item.KHID,
                         GuestCode = item.GuestCode,
                         Qty = item.Qty,
-                        DiscountAmount = item.DiscountAmount,
-                        IntoMoneyAfterDiscount = item.IntoMoneyAfterDiscount,
+                        //DiscountAmount = item.DiscountAmount,
+                        //IntoMoneyAfterDiscount = item.IntoMoneyAfterDiscount,
                         FilmSize = item.FilmSize,
                         UnitPrice = item.UnitPrice,
                         IntoMoney = item.IntoMoney,
@@ -1366,6 +1366,9 @@ namespace RERPAPI.Controllers.Old.POKH
                             <td style='border:1px solid #ddd;padding:8px;'>{productSale.ProductCode}</td>
                             <td style='border:1px solid #ddd;padding:8px;'>{productSale.ProductName}</td>
                         </tr>";
+
+                    productSale.EmployeeRequestApprovedID = currentUser.EmployeeID;
+                    await _productSaleRepo.UpdateAsync(productSale);
                 }
 
                 if (string.IsNullOrEmpty(tableRows))
@@ -1373,6 +1376,7 @@ namespace RERPAPI.Controllers.Old.POKH
                     return BadRequest("Không có sản phẩm cần duyệt.");
                 }
 
+                string department = !String.IsNullOrWhiteSpace(currentUser.DepartmentName) ? $" - phòng {currentUser.DepartmentName}" : "";
 
                 string subject = "YÊU CẦU DUYỆT SẢN PHẨM";
 
@@ -1382,7 +1386,7 @@ namespace RERPAPI.Controllers.Old.POKH
 
                     <p>Kính gửi Anh/Chị,</p>
 
-                    <p>Nhân viên {currentUser.FullName} - phòng {currentUser.DepartmentName} có danh sách sản phẩm cần xem xét và phê duyệt để thực hiện YCMH/YCBG từ POKH.</p>
+                    <p>Nhân viên {currentUser.FullName}{department} có danh sách sản phẩm cần xem xét và phê duyệt để thực hiện YCMH/YCBG từ POKH.</p>
 
                     <table style='border-collapse:collapse;width:100%;margin-top:15px;'>
                         <thead>
