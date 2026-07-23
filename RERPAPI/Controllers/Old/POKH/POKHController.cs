@@ -409,8 +409,8 @@ namespace RERPAPI.Controllers.Old.POKH
                         model.KHID = item.KHID ?? 0;
                         model.GuestCode = item.GuestCode;
                         model.Qty = item.Qty ?? 0;
-                        //model.DiscountAmount = item.DiscountAmount ?? 0;
-                        //model.IntoMoneyAfterDiscount = item.IntoMoneyAfterDiscount ?? 0;
+                        model.DiscountAmount = item.DiscountAmount ?? 0;
+                        model.IntoMoneyAfterDiscount = item.IntoMoneyAfterDiscount ?? 0;
                         model.FilmSize = item.FilmSize;
                         model.UnitPrice = item.UnitPrice ?? 0;
                         model.IntoMoney = item.IntoMoney ?? 0;
@@ -968,8 +968,8 @@ namespace RERPAPI.Controllers.Old.POKH
                         KHID = item.KHID,
                         GuestCode = item.GuestCode,
                         Qty = item.Qty,
-                        //DiscountAmount = item.DiscountAmount,
-                        //IntoMoneyAfterDiscount = item.IntoMoneyAfterDiscount,
+                        DiscountAmount = item.DiscountAmount,
+                        IntoMoneyAfterDiscount = item.IntoMoneyAfterDiscount,
                         FilmSize = item.FilmSize,
                         UnitPrice = item.UnitPrice,
                         IntoMoney = item.IntoMoney,

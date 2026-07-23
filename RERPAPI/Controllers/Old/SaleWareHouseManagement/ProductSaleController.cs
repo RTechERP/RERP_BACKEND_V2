@@ -697,8 +697,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     CreatedDate = now,
                     IsDeleted = false,
 
-                    //DeliveryTime = DateTime.Now,
-                    //IsAfterHours = currentTime < TimeSpan.FromHours(8) || currentTime >= TimeSpan.FromHours(16)
+                    DeliveryTime = DateTime.Now,
+                    IsAfterHours = currentTime < TimeSpan.FromHours(8) || currentTime >= TimeSpan.FromHours(16)
                 };
 
                 await _billExportRepo.CreateAsync(billExport);
