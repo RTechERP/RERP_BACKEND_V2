@@ -2107,6 +2107,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.CustomerID).HasComment("ID khách hàng");
+            entity.Property(e => e.DeliveryTime).HasColumnType("datetime");
             entity.Property(e => e.Description)
                 .HasMaxLength(100)
                 .HasComment("Mô tả");
