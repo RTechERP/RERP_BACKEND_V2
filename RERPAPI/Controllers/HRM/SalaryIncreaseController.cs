@@ -377,7 +377,7 @@ namespace RERPAPI.Controllers.HRM
                         throw new Exception("Nhân viên chưa có email công ty");
                     }
 
-                    await _emailHelper.SendAsync(emailTo, item.Subject, item.Body, true, item.EmailCC);
+                    await _emailHelper.SendAsyncHrm(emailTo, item.Subject, item.Body, true, item.EmailCC);
 
                     var entity = await _salaryIncreaseDetailRepo.GetByIDAsync(item.DetailID);
                     if (entity != null)
