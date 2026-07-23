@@ -1297,12 +1297,12 @@ namespace RERPAPI.Controllers.Old.POKH
         }
 
         [HttpPost("send-mail-approved")]
-        public async Task<IActionResult> SendMailApproved([FromBody] List<int> productSaleIDs)
+        public async Task<IActionResult> SendMailApproved([FromBody] SendMailApprovedDTO dto)
         {
             try
             {
                 //Lấy danh sách người có quyền duyệt
-               var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 string permission = "N108";
                 var param = new
@@ -1310,6 +1310,25 @@ namespace RERPAPI.Controllers.Old.POKH
                     @UserGroupCode = permission
                 };
                 var data = await SqlDapper<object>.ProcedureToListAsync("spGetEmailByUserGroup", param);
+
+                var productPoMap = new Dictionary<int, string>();
+
+                foreach (var pokhId in dto.pokhIds)
+                {
+                    var pokh = _pokhRepo.GetByID(pokhId);
+                    if (pokh == null)
+                        continue;
+
+                    var details = _pokhDetailRepo.GetAll(x => x.POKHID == pokhId);
+
+                    foreach (var detail in details)
+                    {
+                        if (!productPoMap.ContainsKey((int)detail.ProductID))
+                        {
+                            productPoMap.Add((int)detail.ProductID, pokh.POCode);
+                        }
+                    }
+                }
 
                 var emailList = data as List<dynamic>;
                 var emails = emailList
@@ -1331,15 +1350,18 @@ namespace RERPAPI.Controllers.Old.POKH
                 var tableRows = "";
                 int stt = 1;
 
-                foreach (var productSaleID in productSaleIDs)
+                foreach (var productSaleID in dto.productSaleIDs)
                 {
                     var productSale = _productSaleRepo.GetByID(productSaleID);
                     if (productSale == null)
                         continue;
 
+                    productPoMap.TryGetValue(productSaleID, out string poNumber);
+
                     tableRows += $@"
                         <tr>
                             <td style='border:1px solid #ddd;padding:8px;text-align:center;'>{stt++}</td>
+                            <td style='border:1px solid #ddd;padding:8px;'>{poNumber}</td>
                             <td style='border:1px solid #ddd;padding:8px;'>{productSale.ProductNewCode}</td>
                             <td style='border:1px solid #ddd;padding:8px;'>{productSale.ProductCode}</td>
                             <td style='border:1px solid #ddd;padding:8px;'>{productSale.ProductName}</td>
@@ -1360,12 +1382,13 @@ namespace RERPAPI.Controllers.Old.POKH
 
                     <p>Kính gửi Anh/Chị,</p>
 
-                    <p>Nhân viên {currentUser.FullName} có danh sách sản phẩm cần xem xét và phê duyệt để thực hiện YCMH/YCBG từ POKH.</p>
+                    <p>Nhân viên {currentUser.FullName} - phòng {currentUser.DepartmentName} có danh sách sản phẩm cần xem xét và phê duyệt để thực hiện YCMH/YCBG từ POKH.</p>
 
                     <table style='border-collapse:collapse;width:100%;margin-top:15px;'>
                         <thead>
                             <tr style='background-color:#f2f2f2;'>
                                 <th style='border:1px solid #ddd;padding:8px;'>STT</th>
+                                <th style='border:1px solid #ddd;padding:8px;'>Số PO</th>
                                 <th style='border:1px solid #ddd;padding:8px;'>Mã nội bộ</th>
                                 <th style='border:1px solid #ddd;padding:8px;'>Mã sản phẩm</th>
                                 <th style='border:1px solid #ddd;padding:8px;'>Tên sản phẩm</th>
@@ -1454,6 +1477,12 @@ namespace RERPAPI.Controllers.Old.POKH
         {
             public int RowIndex { get; set; }
             public int ProductID { get; set; }
+        }
+
+        public class SendMailApprovedDTO
+        {
+            public List<int> productSaleIDs { get; set; }
+            public List<int> pokhIds { get; set; }
         }
     }
 }
