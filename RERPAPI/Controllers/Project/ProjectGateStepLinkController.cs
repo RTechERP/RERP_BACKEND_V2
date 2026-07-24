@@ -556,6 +556,9 @@ namespace RERPAPI.Controllers.Project
                     ApprovedBy = l.ApprovedBy,
                     ApprovedDate = l.ApprovedDate,
                     ApprovalComment = l.ApprovalComment,
+                    ProjectGateStepTemplateID = l.ProjectGateStepTemplateID,
+                    DepartmentID = l.DepartmentID,
+                    ProjectTaskID = l.ProjectTaskID,
                     Workers = workerGroups.TryGetValue(l.ID, out var wList)
                         ? wList.Select(w => new ProjectGateStepWorkerDto
                         {
