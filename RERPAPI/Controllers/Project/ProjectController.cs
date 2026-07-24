@@ -2862,13 +2862,14 @@ namespace RERPAPI.Controllers.Project
                             DateEnd = param.DateEnd,
                             DepartmentID = param.DepartmentID,
                             EmployeeID = param.EmployeeID,
-                            FilterText = param.FilterText ?? ""
+                            FilterText = param.FilterText ?? "",
+                            GateType = param.GateType
                         }
                     );
 
                 var totalProjects = projects.Count;
-                var inProgressProjects = projects.Count(p => p.ProjectStatus == 1 || p.ProjectStatus == 0);
-                var completedProjects = projects.Count(p => p.ProjectStatus == 2);
+                var inProgressProjects = projects.Count(p => p.ProjectStatus != 6 && p.ProjectStatus != 7 && p.ProjectStatus != 9);
+                var completedProjects = projects.Count(p => p.ProjectStatus == 6 || p.ProjectStatus == 9);
                 var overdueProjects = projects.Count(p => p.IsOverdue);
                 var onTrackCount = projects.Count(p => !p.IsOverdue);
                 var delayedCount = overdueProjects;

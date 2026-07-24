@@ -10,6 +10,7 @@ namespace RERPAPI.Model.DTO
         public int DepartmentID { get; set; } = 0;
         public int EmployeeID { get; set; } = 0;
         public string? FilterText { get; set; } = "";
+        public int GateType { get; set; } = 0;
     }
 
     public class ProjectDashboardItemResultDto
@@ -38,7 +39,9 @@ namespace RERPAPI.Model.DTO
         public int ProjectTypeID { get; set; }
         public string ProjectTypeName { get; set; } = "";
         public string CurrentGate { get; set; } = "G0";
+        public int CurrentGateType { get; set; } = 0;
         public bool IsOverdue { get; set; }
+        public bool IsGateCompleted { get; set; }
         public int Progress { get; set; }
     }
 
@@ -46,12 +49,14 @@ namespace RERPAPI.Model.DTO
     {
         public string Gate { get; set; } = "";
         public int Count { get; set; }
+        public string ProjectCodes { get; set; } = "";
     }
 
     public class ProjectTypeDistributionResultDto
     {
         public string Name { get; set; } = "";
         public int Count { get; set; }
+        public string ProjectCodes { get; set; } = "";
     }
 
     public class DepartmentDistributionResultDto
@@ -60,5 +65,6 @@ namespace RERPAPI.Model.DTO
         public int Total { get; set; }
         public int InProgress { get; set; }
         public int Completed { get; set; }
+        public string ProjectCodes { get; set; } = "";
     }
 }
