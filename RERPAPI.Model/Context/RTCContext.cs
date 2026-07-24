@@ -110,6 +110,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<BillExportDetail> BillExportDetails { get; set; }
 
+    public virtual DbSet<BillExportDetailFile> BillExportDetailFiles { get; set; }
+
     public virtual DbSet<BillExportDetailSerialNumber> BillExportDetailSerialNumbers { get; set; }
 
     public virtual DbSet<BillExportDetailSerialNumberModulaLocation> BillExportDetailSerialNumberModulaLocations { get; set; }
@@ -2231,6 +2233,17 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.TotalQty)
                 .HasComment("Tổng số lượng")
                 .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<BillExportDetailFile>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__BillExpo__3214EC2721291AB0");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.FileName).HasMaxLength(550);
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
