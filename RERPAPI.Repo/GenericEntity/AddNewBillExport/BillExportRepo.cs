@@ -31,6 +31,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
         private readonly ProjectPartListLogRepo _partListLogRepo;
         private readonly WarehouseRepo _warehouseRepo;
         private readonly ProjectPartListRepo _projectPartListRepo;
+        private readonly BillExportDetailFilesRepo _billExportDetailFilesRepo;
 
         public BillExportRepo(
             CurrentUser currentUser,
@@ -56,7 +57,8 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
             InventoryProjectRepo inventoryProjectRepo,
             ProjectPartListLogRepo projectPartListLogRepo,
             WarehouseRepo warehouseRepo,
-            ProjectPartListRepo projectPartListRepo
+            ProjectPartListRepo projectPartListRepo,
+            BillExportDetailFilesRepo billExportDetailFilesRepo
         ) : base(currentUser)
         {
             _currentUser = currentUser;
@@ -83,6 +85,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
             _partListLogRepo = projectPartListLogRepo;
             _warehouseRepo = warehouseRepo;
             _projectPartListRepo = projectPartListRepo;
+            _billExportDetailFilesRepo = billExportDetailFilesRepo;
         }
 
         #region Bill Code Generation
@@ -229,6 +232,20 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                 // 9. Xử lý chuyển kho
                 //if (dto.billExport.IsTransfer == true)
                 //    await HandleTransferWarehouse(dto, billExportId);
+
+                if(dto.DeletedFileIds.Count() > 0)
+                {
+                    var billExpFiles = _billExportDetailFilesRepo
+                            .GetAll(x => dto.DeletedFileIds.Contains(x.ID));
+
+                    foreach (var item in billExpFiles)
+                    {
+                        item.IsDeleted = true;
+                    }
+
+                    await _billExportDetailFilesRepo.UpdateRangeAsync_Binh(billExpFiles);
+
+                }
 
                 return (true, "Lưu thành công", billExportId);
             }
@@ -401,7 +418,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
             if (status != 2 && status != 6)
                 return (true, string.Empty);
 
-			//var skipUnitNames = new[] { "m", "mét", "met" };
+            //var skipUnitNames = new[] { "m", "mét", "met" };
             var allDetails = (dto.billExportDetail ?? new List<BillExportDetailExtendedDTO>()).ToList();
 
             var groupedQuantities = allDetails
@@ -413,16 +430,16 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                 })
                 .ToDictionary(g => g.Key, g => g.Sum(d => d.Qty ?? 0));
 
-			//var toValidate = allDetails.Where(d =>
-			//	(string.IsNullOrWhiteSpace(d.Unit) || !skipUnitNames.Contains(d.Unit.Trim().ToLower())) &&
-			//	(string.IsNullOrWhiteSpace(d.UnitName) || !skipUnitNames.Contains(d.UnitName.Trim().ToLower()))
-			//).ToList();
+            //var toValidate = allDetails.Where(d =>
+            //	(string.IsNullOrWhiteSpace(d.Unit) || !skipUnitNames.Contains(d.Unit.Trim().ToLower())) &&
+            //	(string.IsNullOrWhiteSpace(d.UnitName) || !skipUnitNames.Contains(d.UnitName.Trim().ToLower()))
+            //).ToList();
 
-			//if (!toValidate.Any())
-			//	return (true, string.Empty);
+            //if (!toValidate.Any())
+            //	return (true, string.Empty);
 
             // Các key riêng biệt để gọi batch SP 1 lần
-			var distinctKeys = allDetails
+            var distinctKeys = allDetails
                 .Select(d => (
                     ProductID: d.ProductID ?? 0,
                     ProjectID: (d.POKHDetailID ?? 0) > 0 ? 0 : d.ProjectID ?? 0,
@@ -464,7 +481,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                     stockLookup[k] = row; // Giữ row đầu tiên nếu SP trả về duplicate
             }
 
-			foreach (var detail in allDetails)
+            foreach (var detail in allDetails)
             {
                 var groupKey = new
                 {
@@ -1114,7 +1131,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                             var wareHouseTrans = _warehouseRepo.GetByID(master.WareHouseTranferID ?? 0);
                             wareHouseTransName = $"đến kho [{wareHouseTrans.WarehouseName}]";
                         }
-                      
+
                         var projectPartlist = _projectPartListRepo.GetByID(newDetail.ProjectPartListID ?? 0);
                         string content = $"[{_currentUser.FullName}] đã yêu cầu {type} vật tư TT [{projectPartlist.TT}] mã [{projectPartlist.ProductCode}] từ kho [{wareHouse.WarehouseName}] {wareHouseTransName}";
                         await _partListLogRepo.AddLog(newDetail.ProjectPartListID, type, content, _currentUser.LoginName, _currentUser.EmployeeID, newDetail.ProjectID);
@@ -1143,6 +1160,19 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                 else
                 {
                     existingDetailDtos.Add(detail);
+                }
+
+                if (detail.FileIds.Count() > 0)
+                {
+                    var billExpFiles = _billExportDetailFilesRepo
+                            .GetAll(x => detail.FileIds.Contains(x.ID));
+
+                    foreach (var item in billExpFiles)
+                    {
+                        item.BillExportDetailID = detail.ID;
+                    }
+
+                    await _billExportDetailFilesRepo.UpdateRangeAsync_Binh(billExpFiles);
                 }
             }
 
@@ -1185,7 +1215,7 @@ namespace RERPAPI.Repo.GenericEntity.AddNewBillExport
                         // Dùng entity từ entityMap, bỏ GetByIDAsync thừa
                         MapToExistingEntity(detail, existingEntity);
                         await _billExportDetailRepo.UpdateAsync(existingEntity);
-                       
+
                     }
 
                     // Tạo Inventory nếu chưa có (dùng pre-fetched set)
