@@ -745,7 +745,7 @@ namespace RERPAPI.Controllers.Old.TB
 
         #region Set ẩn hiện nhóm sản phẩm
         [HttpGet("product-group-rtc-new")]
-        public async Task<IActionResult> getProductGroupNew(bool isVisible, bool isDeleted, int warehouseId)
+        public async Task<IActionResult> getProductGroupNew(bool isVisible, bool isDeleted, int warehouseId, int warehouseType)
         {
             try
             {
@@ -755,6 +755,7 @@ namespace RERPAPI.Controllers.Old.TB
                 var param = new
                 {
                     WarehouseID = warehouseId,
+                    WarehouseType = warehouseType,
                     IsDeleted = isDeleted,
                     IsVisible = isVisible
                 };

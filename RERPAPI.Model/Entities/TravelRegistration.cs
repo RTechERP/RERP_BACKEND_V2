@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Model.Entities;
 
@@ -28,9 +25,6 @@ public partial class TravelRegistration
 
     public string? Gender { get; set; }
 
-        /// <summary>
-        /// CBNV, Vợ, Chồng, Con...
-        /// </summary>
     public string? Relationship { get; set; }
 
     public string? Address { get; set; }
@@ -44,13 +38,6 @@ public partial class TravelRegistration
     public string? PhoneNumber { get; set; }
 
     public string? DepartureLocation { get; set; }
-
-        /// <summary>
-        /// 0: Chưa xác nhận
-        /// 1: Đã xác nhận
-        /// 2: Không tham gia
-        /// </summary>
-        public int ConfirmStatus { get; set; }
 
     public DateTime? ConfirmDate { get; set; }
 
@@ -68,4 +55,7 @@ public partial class TravelRegistration
 
     public int OwnerEmployeeID { get; set; }
 
+    public int? ConfirmStatus { get; set; }
+
+    public bool? IsPublish { get; set; }
 }

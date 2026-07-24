@@ -61,4 +61,6 @@ public partial class ProductSale
     public bool? IsApproved { get; set; }
 
     public int? ApprovedID { get; set; }
+
+    public int? EmployeeRequestApprovedID { get; set; }
 }

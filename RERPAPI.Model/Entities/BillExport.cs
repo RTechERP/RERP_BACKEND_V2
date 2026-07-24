@@ -126,4 +126,14 @@ public partial class BillExport
     /// Chuyển kho
     /// </summary>
     public bool? IsTransfer { get; set; }
+
+    public DateTime? DeliveryTime { get; set; }
+
+    public bool? IsAfterHours { get; set; }
+
+    public int? ReceiverID { get; set; }
+
+    public bool? IsIncurredApproved { get; set; }
+
+    public int? IncurredApprovedID { get; set; }
 }
