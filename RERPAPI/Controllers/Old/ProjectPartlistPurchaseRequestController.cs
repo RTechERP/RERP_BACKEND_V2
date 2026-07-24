@@ -1050,37 +1050,68 @@ namespace RERPAPI.Controllers.Old
                         List<int> productGroupIDs = _productGroupRepo.GetAll(
                         x => x.ID == item.ProductGroupID || x.ParentID == item.ProductGroupID)
                         .Select(x => x.ID).ToList();
-                        var purchaseReq = _repo.GetSingleNoTracking(x => x.ID == item.ID);
-                        if (purchaseReq.ProductSaleID <= 0)
+
+                        #region Update bỏ check purchaseReq của Mr.Nhật
+                        //var purchaseReq = _repo.GetSingleNoTracking(x => x.ID == item.ID);
+                        //if (purchaseReq.ProductSaleID <= 0)
+                        //{
+                        //    var productSales = _productSaleRepo.GetAll(x =>
+                        //        x.ProductCode.ToLower() == item.ProductCode.ToLower() &&
+                        //        x.IsDeleted != true
+                        //    ).ToList();
+
+                        //    ProductSale productSale = productSales
+                        //        .FirstOrDefault(x => productGroupIDs.Contains((int)x.ProductGroupID))
+                        //        ?? new ProductSale();
+
+                        //    if (productSale.ID <= 0)
+                        //    {
+                        //        productSale.ProductCode = item.ProductCode;
+                        //        productSale.ProductName = item.ProductName;
+                        //        productSale.Unit = item.UnitName;
+                        //        productSale.ProductGroupID = item.ProductGroupID;
+                        //        productSale.ProductNewCode = _repo.GenerateProductNewCode(Convert.ToInt32(item.ProductGroupID));
+                        //        string maker = item.Manufacturer;
+
+                        //        Firm firm = _firmRepo.GetAll(x =>
+                        //                    x.FirmName.Trim().ToLower() == maker.Trim().ToLower())
+                        //                    .FirstOrDefault() ?? new Firm();
+
+                        //        productSale.Maker = maker;
+                        //        productSale.FirmID = firm.ID;
+                        //        await _productSaleRepo.CreateAsync(productSale);
+                        //    }
+                        //    item.ProductSaleID = productSale.ID;
+                        //}
+                        #endregion
+
+                        var productSales = _productSaleRepo.GetAll(x =>
+                                x.ProductCode.ToLower() == item.ProductCode.ToLower() &&
+                                x.IsDeleted != true
+                            ).ToList();
+
+                        ProductSale productSale = productSales
+                            .FirstOrDefault(x => productGroupIDs.Contains((int)x.ProductGroupID))
+                            ?? new ProductSale();
+
+                        if (productSale.ID <= 0)
                         {
-                            var productSales = _productSaleRepo.GetAll(x =>
-                            x.ProductCode.ToLower() == item.ProductCode.ToLower() &&
-                            x.IsDeleted != true
-                        ).ToList();
+                            productSale.ProductCode = item.ProductCode;
+                            productSale.ProductName = item.ProductName;
+                            productSale.Unit = item.UnitName;
+                            productSale.ProductGroupID = item.ProductGroupID;
+                            productSale.ProductNewCode = _repo.GenerateProductNewCode(Convert.ToInt32(item.ProductGroupID));
+                            string maker = item.Manufacturer;
 
-                            ProductSale productSale = productSales
-                                .FirstOrDefault(x => productGroupIDs.Contains((int)x.ProductGroupID))
-                                ?? new ProductSale();
+                            Firm firm = _firmRepo.GetAll(x =>
+                                        x.FirmName.Trim().ToLower() == maker.Trim().ToLower())
+                                        .FirstOrDefault() ?? new Firm();
 
-                            if (productSale.ID <= 0)
-                            {
-                                productSale.ProductCode = item.ProductCode;
-                                productSale.ProductName = item.ProductName;
-                                productSale.Unit = item.UnitName;
-                                productSale.ProductGroupID = item.ProductGroupID;
-                                productSale.ProductNewCode = _repo.GenerateProductNewCode(Convert.ToInt32(item.ProductGroupID));
-                                string maker = item.Manufacturer;
-
-                                Firm firm = _firmRepo.GetAll(x =>
-                                            x.FirmName.Trim().ToLower() == maker.Trim().ToLower())
-                                            .FirstOrDefault() ?? new Firm();
-
-                                productSale.Maker = maker;
-                                productSale.FirmID = firm.ID;
-                                await _productSaleRepo.CreateAsync(productSale);
-                            }
-                            item.ProductSaleID = productSale.ID;
+                            productSale.Maker = maker;
+                            productSale.FirmID = firm.ID;
+                            await _productSaleRepo.CreateAsync(productSale);
                         }
+                        item.ProductSaleID = productSale.ID;
                     }
                     else
                     {
