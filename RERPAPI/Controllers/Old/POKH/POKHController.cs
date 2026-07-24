@@ -1417,7 +1417,7 @@ namespace RERPAPI.Controllers.Old.POKH
                     <p>
                         Vui lòng đăng nhập hệ thống <strong>R-ERP</strong> và truy cập
                         theo đường dẫn sau:  
-                        <a href='http://localhost:4200/rerpweb/product-sale-new-approved?ids={token}'
+                        <a href='https://erp.rtc.edu.vn/rerpweb/product-sale-new-approved?ids={token}'
                            target='_blank'>
                             Duyệt sản phẩm!
                         </a>.
