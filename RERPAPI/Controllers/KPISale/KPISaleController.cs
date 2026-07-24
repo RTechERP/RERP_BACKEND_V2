@@ -1972,6 +1972,79 @@ namespace RERPAPI.Controllers.KPISale
             }
         }
 
+        [HttpPost("targets/{id:int}/board-approve")]
+        public async Task<IActionResult> BoardApproveTarget(int id)
+        {
+            try
+            {
+                var currentUser = GetCurrentUser();
+                var permissions = currentUser.Permissions?.Split(',').Select(p => p.Trim()).ToList() ?? new List<string>();
+                var isN1 = permissions.Contains("N1");
+                var isGlobalAdmin = currentUser?.IsAdmin == true;
+
+                if (!isN1 && !isGlobalAdmin)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Chỉ Admin (N1) mới được duyệt bước Ban Giám Đốc"));
+
+                var target = await _kpiSaleRepo.KPISaleTargets.FirstOrDefaultAsync(x => x.ID == id);
+                if (target == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy mục tiêu"));
+
+                if (target.ApprovalStatus != "Approved")
+                    return BadRequest(ApiResponseFactory.Fail(null, "Mục tiêu phải được Admin/Leader duyệt trước"));
+
+                if (target.IsBoardApproved)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Mục tiêu đã được Ban Giám Đốc duyệt"));
+
+                target.IsBoardApproved = true;
+                target.BoardApprovedBy = currentUser.LoginName;
+                target.BoardApprovedDate = DateTime.Now;
+                target.UpdatedBy = currentUser.LoginName;
+                target.UpdatedDate = DateTime.Now;
+
+                await _kpiSaleRepo.SaveChangesAsync();
+                return Ok(ApiResponseFactory.Success(target, "Ban Giám Đốc duyệt thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("targets/{id:int}/board-unapprove")]
+        public async Task<IActionResult> BoardUnapproveTarget(int id)
+        {
+            try
+            {
+                var currentUser = GetCurrentUser();
+                var permissions = currentUser.Permissions?.Split(',').Select(p => p.Trim()).ToList() ?? new List<string>();
+                var isN1 = permissions.Contains("N1");
+                var isGlobalAdmin = currentUser?.IsAdmin == true;
+
+                if (!isN1 && !isGlobalAdmin)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Chỉ Admin (N1) mới được hủy duyệt bước Ban Giám Đốc"));
+
+                var target = await _kpiSaleRepo.KPISaleTargets.FirstOrDefaultAsync(x => x.ID == id);
+                if (target == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy mục tiêu"));
+
+                if (!target.IsBoardApproved)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Mục tiêu chưa được Ban Giám Đốc duyệt"));
+
+                target.IsBoardApproved = false;
+                target.BoardApprovedBy = null;
+                target.BoardApprovedDate = null;
+                target.UpdatedBy = currentUser.LoginName;
+                target.UpdatedDate = DateTime.Now;
+
+                await _kpiSaleRepo.SaveChangesAsync();
+                return Ok(ApiResponseFactory.Success(target, "Hủy duyệt Ban Giám Đốc thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpPut("targets/{id:int}/weight")]
         public async Task<IActionResult> UpdateTargetWeight(int id, [FromBody] KPISaleTargetUpdateWeightRequest request)
         {
@@ -2807,8 +2880,8 @@ namespace RERPAPI.Controllers.KPISale
             // Chưa có approval record => workflow chưa active, cho phép tính.
             if (approval == null) return;
 
-            // Đã được Admin duyệt rồi -> KHÔNG cho phép tính lại.
-            if (approval.IsAdminApproved)
+            // Đã được Giám đốc duyệt (P4) rồi -> KHÔNG cho phép tính lại.
+            if (approval.IsDirectorApproved)
             {
                 throw new Exception(
                     $"KPI của nhân viên {users.FullName} đã được duyệt cho kỳ {period.PeriodName}. " +
@@ -2832,10 +2905,10 @@ namespace RERPAPI.Controllers.KPISale
                 "TEAM", employeeId: null, teamId: teamId, periodId: quarterPeriodId);
             if (approval == null) return;
 
-            if (approval.IsAdminApproved)
+            if (approval.IsDirectorApproved)
             {
                 throw new Exception(
-                    $"KPI của team đã được duyệt cho kỳ. " +
+                    $"KPI của team đã được Giám đốc duyệt cho kỳ. " +
                     $"Vui lòng hủy duyệt team trước khi tính lại KPI.");
             }
         }
@@ -3572,7 +3645,7 @@ namespace RERPAPI.Controllers.KPISale
                     return Ok(ApiResponseFactory.Success(new { isLeader = false, teams = Array.Empty<object>() }));
 
                 var myTeams = await _kpiSaleRepo.KPISaleTeams.AsNoTracking()
-                    .Where(t => t.IsActive && t.LeaderEmployeeID == currentUser.EmployeeID)
+                    .Where(t => t.IsActive && t.LeaderEmployeeID == currentUser.ID)
                     .Select(t => new
                     {
                         t.ID,
