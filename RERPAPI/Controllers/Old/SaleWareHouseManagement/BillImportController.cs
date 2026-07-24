@@ -1,6 +1,8 @@
 using ClosedXML.Excel;
+using FirebaseAdmin.Messaging;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using OfficeOpenXml;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
@@ -47,7 +49,10 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
         private List<InvoiceDTO> listInvoice = new List<InvoiceDTO>();
 
+        private readonly List<PathStaticFile> _pathStaticFiles;
+
         public BillImportController(
+            IOptions<List<PathStaticFile>> pathStaticFiles,
             BillImportRepo billImportRepo,
             BillImportLogRepo billImportLogRepo,
             DocumentImportRepo documentImportRepo,
@@ -64,6 +69,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             ProductGroupWareHouseRepo productGroupWareHouseRepo, ProductSaleRepo productSaleRepo,
             BillImportSaleLogRepo billImportSaleLogRepo)
         {
+            _pathStaticFiles = pathStaticFiles.Value;
             _billImportRepo = billImportRepo;
             _billImportLogRepo = billImportLogRepo;
             _documentImportRepo = documentImportRepo;
@@ -170,30 +176,32 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             }
         }
 
-        [HttpGet("get-product-new")]
-        public async Task<IActionResult> getOptionProductNew()
-        {
-            try
-            {
-                List<ProductSale> result = _productSaleRepo.GetAll(p => p.IsDeleted.HasValue && !p.IsDeleted.Value);
-                /* List<dynamic> billList = result[0]; // dữ liệu hóa đơn*/
-
-                return Ok(new
-                {
-                    status = 1,
-                    data = result
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
-        }
+		[HttpGet("get-product-new")]
+		public async Task<IActionResult> getOptionProductNew()
+		{
+			try
+			{
+				List<ProductSale> result = _productSaleRepo.
+					GetAll(p => 
+					p.IsDeleted.HasValue && !p.IsDeleted.Value &
+					p.IsStandardized == true
+					);
+				return Ok(new
+				{
+					status = 1,
+					data = result
+				});
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(new
+				{
+					status = 0,
+					message = ex.Message,
+					error = ex.ToString()
+				});
+			}
+		}
 
         /// <summary>
         /// lấy dữ liệu phiếu nhâp theo id
@@ -1775,6 +1783,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("delete-bill-import")]
         public async Task<IActionResult> DeleteBillImport([FromBody] List<int> billImportIDs)
         {
@@ -1785,6 +1794,67 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return Ok(ApiResponseFactory.Success(billImportIDs, "Đã xóa thành công danh sách phiếu nhập được chọn!"));
             }
             else return Ok(ApiResponseFactory.Fail(null, "Xóa danh sách phiếu nhập không thành công!"));
+        }
+
+        [HttpGet("data-print")]
+        public async Task<IActionResult> getDataPrint(int id)
+        {
+            try
+            {
+                var paramDetail = new { ID = id };
+                var result = await SqlDapper<object>.ProcedureToListTAsync("spGetBillImportDetail", paramDetail);
+                return Ok(ApiResponseFactory.Success(result[0], ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("image-signature")]
+        public IActionResult getImageSignature(int id)
+        {
+            try
+            {
+                string message = "";
+                BillImport billImp = _billImportRepo.GetByID(id);
+
+                PathStaticFile pathStaticFile = _pathStaticFiles.Where(x => x.PathName == "Software").FirstOrDefault() ?? new PathStaticFile();
+                if (!Path.Exists(pathStaticFile.PathFull))
+                {
+                    message = $"Thư mục ảnh chữ ký không tồn tại!\n{pathStaticFile.PathName}: {pathStaticFile.PathFull}";
+                }
+
+                Employee emDeliver = _employeeRepo.GetByID((int)billImp.DeliverID); // Người giao
+                Employee emReciver = _employeeRepo.GetByID((int)billImp.ReciverID); // Người nhận
+
+                string pathImage = Path.Combine(pathStaticFile.PathFull, @"Test\signnonback");
+                string picDeliver = Path.Combine(pathImage, $@"{emDeliver.Code.Trim()}.png");
+                string picReciver = Path.Combine(pathImage, $@"{emReciver.Code.Trim()}.png");
+                //string picDeliver = Path.Combine(pathImage, $@"test.png");
+                //string picReciver = Path.Combine(pathImage, $@"test.png");
+
+                var data = new
+                {
+                    picDeliver = ImageHelper.ImageToBase64(picDeliver),
+                    picReciver = ImageHelper.ImageToBase64(picReciver)
+                };
+
+                return Ok(new
+                {
+                    status = 1,
+                    data = data
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
         }
     }
 }
