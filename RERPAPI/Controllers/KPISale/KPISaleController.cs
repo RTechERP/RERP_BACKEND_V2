@@ -1992,7 +1992,7 @@ namespace RERPAPI.Controllers.KPISale
                 if (target.ApprovalStatus != "Approved")
                     return BadRequest(ApiResponseFactory.Fail(null, "Mục tiêu phải được Admin/Leader duyệt trước"));
 
-                if (target.IsBoardApproved)
+                if (target.IsBoardApproved == true)
                     return BadRequest(ApiResponseFactory.Fail(null, "Mục tiêu đã được Ban Giám Đốc duyệt"));
 
                 target.IsBoardApproved = true;
@@ -2027,7 +2027,7 @@ namespace RERPAPI.Controllers.KPISale
                 if (target == null)
                     return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy mục tiêu"));
 
-                if (!target.IsBoardApproved)
+                if (target.IsBoardApproved == false)
                     return BadRequest(ApiResponseFactory.Fail(null, "Mục tiêu chưa được Ban Giám Đốc duyệt"));
 
                 target.IsBoardApproved = false;
