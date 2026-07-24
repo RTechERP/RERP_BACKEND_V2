@@ -756,6 +756,7 @@ builder.Services.AddScoped<JobPerfomanceEvaluationNewLogRepo>();
 builder.Services.AddScoped<ProjectPartListHistoryLogRepo>();
 builder.Services.AddScoped<InventoryStockLogRepo>();
 builder.Services.AddScoped<ProductSaleImportExportLogRepo>();
+builder.Services.AddScoped<ProductRTCFileRepo>();
 #endregion DI LOG
 
 //Config connect databaseCourse
